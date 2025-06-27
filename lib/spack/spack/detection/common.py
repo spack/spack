@@ -20,7 +20,7 @@ import re
 import sys
 from typing import Dict, List, Optional, Set, Tuple, Union
 
-import llnl.util.tty
+from llnl.util import tty
 
 import spack.config
 import spack.error
@@ -93,14 +93,13 @@ def _spec_is_valid(spec: spack.spec.Spec) -> bool:
     except spack.error.SpackError:
         # It is assumed here that we can at least extract the package name from the spec so we
         # can look up the implementation of determine_spec_details
-        msg = f"Constructed spec for {spec.name} does not have a string representation"
-        llnl.util.tty.warn(msg)
+        tty.warn(f"Constructed spec for {spec.name} does not have a string representation")
         return False
 
     try:
         spack.spec.Spec(str(spec))
     except spack.error.SpackError:
-        llnl.util.tty.warn(
+        tty.warn(
             "Constructed spec has a string representation but the string"
             " representation does not evaluate to a valid spec: {0}".format(str(spec))
         )
@@ -109,20 +108,24 @@ def _spec_is_valid(spec: spack.spec.Spec) -> bool:
     return True
 
 
-def path_to_dict(search_paths: List[str]):
+def path_to_dict(search_paths: List[str]) -> Dict[str, str]:
     """Return dictionary[fullpath]: basename from list of paths"""
-    path_to_lib = {}
+    path_to_lib: Dict[str, str] = {}
     # Reverse order of search directories so that a lib in the first
     # entry overrides later entries
     for search_path in reversed(search_paths):
         try:
-            with os.scandir(search_path) as entries:
-                path_to_lib.update(
-                    {entry.path: entry.name for entry in entries if entry.is_file()}
-                )
+            dir_iter = os.scandir(search_path)
         except OSError as e:
-            msg = f"cannot scan '{search_path}' for external software: {str(e)}"
-            llnl.util.tty.debug(msg)
+            tty.debug(f"cannot scan '{search_path}' for external software: {e}")
+            continue
+        with dir_iter as entries:
+            for entry in entries:
+                try:
+                    if entry.is_file():
+                        path_to_lib[entry.path] = entry.name
+                except OSError as e:
+                    tty.debug(f"cannot scan '{search_path}' for external software: {e}")
 
     return path_to_lib
 

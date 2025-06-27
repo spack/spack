@@ -9,7 +9,7 @@ import sys
 from pathlib import Path, PurePath
 from typing import Callable, Dict, List, Optional, Sequence, TextIO, Type, Union, overload
 
-from typing_extensions import Literal
+from _vendoring.typing_extensions import Literal
 
 import llnl.util.tty as tty
 
@@ -31,7 +31,7 @@ class Executable:
         self.exe = [file_path]
         self.default_env: Dict[str, str] = {}
         self.default_envmod = EnvironmentModifications()
-        self.returncode = 0
+        self.returncode = 1  # 1 until proven successful
         self.ignore_quotes = False
 
     def add_default_arg(self, *args: str) -> None:
@@ -294,13 +294,6 @@ class Executable:
 
             raise ProcessError("%s: %s" % (self.exe[0], e.strerror), message)
 
-        except subprocess.CalledProcessError as e:
-            if fail_on_error:
-                raise ProcessError(
-                    str(e),
-                    "\nExit status %d when invoking command: %s"
-                    % (proc.returncode, cmd_line_string),
-                )
         except subprocess.TimeoutExpired as te:
             proc.kill()
             out, err = proc.communicate()

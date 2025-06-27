@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import sys
-from ruamel.yaml.anchor import Anchor
+from _vendoring.ruamel.yaml.anchor import Anchor
 
 if False:  # MYPY
     from typing import Text, Any, Dict, List  # NOQA

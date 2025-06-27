@@ -1,9 +1,9 @@
 import os
 from collections import deque
 
-from macholib.dyld import framework_info
-from macholib.MachOGraph import MachOGraph, MissingMachO
-from macholib.util import (
+from _vendoring.macholib.dyld import framework_info
+from _vendoring.macholib.MachOGraph import MachOGraph, MissingMachO
+from _vendoring.macholib.util import (
     flipwritable,
     has_filename_filter,
     in_system_path,

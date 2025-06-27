@@ -85,6 +85,7 @@ help:
 clean:
 	-rm -f command_index.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
+	-rm -rf .spack/spack-packages
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

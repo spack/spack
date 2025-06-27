@@ -5,6 +5,7 @@
 import contextlib
 import datetime
 import functools
+import gzip
 import json
 import os
 import pathlib
@@ -23,7 +24,7 @@ try:
 except ImportError:
     _use_uuid = False
 
-import jsonschema
+import _vendoring.jsonschema
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
@@ -32,6 +33,7 @@ import spack.concretize
 import spack.database
 import spack.deptypes as dt
 import spack.package_base
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
@@ -485,7 +487,7 @@ def test_005_db_exists(database):
 
     with open(index_file, encoding="utf-8") as fd:
         index_object = json.load(fd)
-        jsonschema.validate(index_object, schema)
+        _vendoring.jsonschema.validate(index_object, schema)
 
 
 def test_010_all_install_sanity(database):
@@ -781,7 +783,7 @@ def test_old_external_entries_prefix(mutable_database):
     with open(spack.store.STORE.db._index_path, "r", encoding="utf-8") as f:
         db_obj = json.loads(f.read())
 
-    jsonschema.validate(db_obj, schema)
+    _vendoring.jsonschema.validate(db_obj, schema)
 
     s = spack.concretize.concretize_one("externaltool")
 
@@ -1243,3 +1245,26 @@ def test_query_with_predicate_fn(database):
 
     specs = database.query(predicate_fn=lambda x: not spack.repo.PATH.exists(x.spec.name))
     assert not specs
+
+
+@pytest.mark.regression("49964")
+def test_querying_reindexed_database_specfilev5(tmp_path):
+    """Tests that we can query a reindexed database from before compilers as dependencies,
+    and get appropriate results for %<compiler> and similar selections.
+    """
+    test_path = pathlib.Path(spack.paths.test_path)
+    zipfile = test_path / "data" / "database" / "index.json.v7_v8.json.gz"
+    with gzip.open(str(zipfile), "rt", encoding="utf-8") as f:
+        data = json.load(f)
+
+    index_json = tmp_path / spack.database._DB_DIRNAME / spack.database.INDEX_JSON_FILE
+    index_json.parent.mkdir(parents=True)
+    index_json.write_text(json.dumps(data))
+
+    db = spack.database.Database(str(tmp_path))
+
+    specs = db.query("%gcc")
+
+    assert len(specs) == 8
+    assert len([x for x in specs if x.external]) == 2
+    assert len([x for x in specs if x.original_spec_format() < 5]) == 8

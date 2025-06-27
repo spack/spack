@@ -6,6 +6,8 @@ import pathlib
 
 import pytest
 
+import llnl.util.lang
+
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
@@ -327,6 +329,38 @@ class TestSpecSemantics:
                     "ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2"
                 ),
             ),
+            # deptypes on direct deps
+            (
+                "mpileaks %[deptypes=build] mpich",
+                "mpileaks %[deptypes=link] mpich",
+                "mpileaks %[deptypes=build,link] mpich",
+            ),
+            # conditional edges
+            (
+                "libelf",
+                "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+                "libelf %[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+            ),
+            (
+                "libelf %[when='%c' virtuals=c]gcc",
+                "%[when='%c' virtuals=c]gcc@10.3.1",
+                "libelf%[when='%c' virtuals=c]gcc@10.3.1",
+            ),
+            (
+                "libelf %[when='%c' virtuals=c]gcc",
+                "%[when='%c' virtuals=c]gcc@10.3.1 ^[when='+mpi'] mpich",
+                "libelf%[when='%c' virtuals=c]gcc@10.3.1 ^[when='+mpi']mpich",
+            ),
+            (
+                "libelf %[when='%c' virtuals=c]gcc",
+                "%[when='%cxx' virtuals=cxx]gcc@10.3.1",
+                "libelf%[when='%c' virtuals=c]gcc %[when='%cxx' virtuals=cxx]gcc@10.3.1",
+            ),
+            (
+                "libelf %[when='+c' virtuals=c]gcc",
+                "%[when='%c' virtuals=c]gcc@10.3.1",
+                "libelf %[when='+c' virtuals=c]gcc %[when='%c' virtuals=c]gcc@10.3.1",
+            ),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
@@ -573,6 +607,20 @@ class TestSpecSemantics:
         c.constrain(lhs)
         assert c == constrained
 
+    def test_basic_satisfies_conditional_dep(self, default_mock_concretization):
+        """Tests basic semantic of satisfies with conditional dependencies, on a concrete spec"""
+        concrete = default_mock_concretization("mpileaks ^mpich")
+
+        # This branch exists, so the condition is met, and is satisfied
+        assert concrete.satisfies("^[virtuals=mpi] mpich")
+        assert concrete.satisfies("^[when='^notapackage' virtuals=mpi] mpich")
+        assert concrete.satisfies("^[when='^mpi' virtuals=mpi] mpich")
+
+        # This branch does not exist, but the condition is not met
+        assert not concrete.satisfies("^zmpi")
+        assert concrete.satisfies("^[when='^notapackage'] zmpi")
+        assert not concrete.satisfies("^[when='^mpi'] zmpi")
+
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
@@ -609,7 +657,7 @@ class TestSpecSemantics:
 
     def test_satisfied_namespace(self):
         spec = spack.concretize.concretize_one("zlib")
-        assert spec.satisfies("namespace=builtin.mock")
+        assert spec.satisfies("namespace=builtin_mock")
         assert not spec.satisfies("namespace=builtin")
 
     @pytest.mark.parametrize(
@@ -773,6 +821,8 @@ class TestSpecSemantics:
             ("libelf^foo", "libelf^foo~debug"),
             ("libelf", "^foo"),
             ("mpileaks ^callpath %gcc@14", "mpileaks ^callpath %gcc@14.1"),
+            ("mpileaks %[deptypes=build] mpich", "mpileaks %[deptypes=link] mpich"),
+            ("mpileaks %mpich", "mpileaks %[deptypes=link] mpich"),
         ],
     )
     def test_lhs_is_changed_when_constraining(self, lhs, rhs):
@@ -807,6 +857,7 @@ class TestSpecSemantics:
             ("libelf^foo~debug", "libelf^foo~debug"),
             ('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"'),
             ("mpileaks ^callpath %gcc@14.1", "mpileaks ^callpath %gcc@14"),
+            ("mpileaks %[deptypes=build] gcc@14.1", "mpileaks %gcc@14"),
         ],
     )
     def test_lhs_is_not_changed_when_constraining(self, lhs, rhs):
@@ -973,13 +1024,10 @@ class TestSpecSemantics:
         with pytest.raises(SpecFormatStringError):
             spec.format(fmt_str)
 
-    def test_combination_of_wildcard_or_none(self):
-        # Test that using 'none' and another value raises
-        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot be combined"):
-            Spec("multivalue-variant foo=none,bar")
-
-        # Test that using wildcard and another value raises
-        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot be combined"):
+    def test_wildcard_is_invalid_variant_value(self):
+        """The spec string x=* is parsed as a multi-valued variant with values the empty set.
+        That excludes * as a literal variant value."""
+        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot use reserved value"):
             Spec("multivalue-variant foo=*,bar")
 
     def test_errors_in_variant_directive(self):
@@ -1368,6 +1416,18 @@ class TestSpecSemantics:
         with pytest.raises(spack.spec.SpliceError, match="virtual"):
             vt.splice(vh, transitive)
 
+    def test_adaptor_optflags(self):
+        """Tests that we can obtain the list of optflags, and debugflags,
+        from the compiler adaptor, and that this list is taken from the
+        appropriate compiler package.
+        """
+        # pkg-a depends on c, so only the gcc compiler should be chosen
+        spec = spack.concretize.concretize_one(Spec("pkg-a %gcc"))
+        assert "-Otestopt" in spec.package.compiler.opt_flags
+        # This is not set, make sure we get an empty list
+        for x in spec.package.compiler.debug_flags:
+            pass
+
     def test_spec_override(self):
         init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
         change_spec = Spec("pkg-a foo=fee cflags=-O2")
@@ -1484,6 +1544,41 @@ class TestSpecSemantics:
     def test_unsatisfiable_virtual_deps_bindings(self, spec_str):
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
             spack.concretize.concretize_one(spec_str)
+
+    @pytest.mark.parametrize(
+        "spec_str,abstract_tests,concrete_tests",
+        [
+            # Ensure the 'when=+debug' is referred to 'callpath', and not to 'mpileaks',
+            # and that we can concretize the spec despite 'callpath' has no debug variant
+            (
+                "mpileaks+debug ^callpath %[when=+debug virtuals=mpi] zmpi",
+                [
+                    ("^zmpi", False),
+                    ("^mpich", False),
+                    ("mpileaks+debug  %[when=+debug virtuals=mpi] zmpi", False),
+                ],
+                [("^zmpi", False), ("^[virtuals=mpi] mpich", True)],
+            ),
+            # Ensure we don't skip conditional edges when testing because we associate them
+            # with the wrong node (e.g. mpileaks instead of mpich)
+            (
+                "mpileaks~debug ^mpich+debug %[when=+debug virtuals=c] llvm",
+                [("^mpich+debug %[when=+debug virtuals=c] gcc", False)],
+                [("^mpich %[virtuals=c] gcc", False), ("^mpich %[virtuals=c] llvm", True)],
+            ),
+        ],
+    )
+    def test_conditional_dependencies_satisfies(
+        self, spec_str, abstract_tests, concrete_tests, default_mock_concretization
+    ):
+        """Tests satisfaction semantics for conditional specs, in different scenarios."""
+        s = Spec(spec_str)
+        for c, result in abstract_tests:
+            assert s.satisfies(c) is result
+
+        concrete = default_mock_concretization(spec_str)
+        for c, result in concrete_tests:
+            assert concrete.satisfies(c) is result
 
 
 @pytest.mark.parametrize(
@@ -1828,7 +1923,7 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@5.4", (True, False, True)),
     ],
 )
-def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
+def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, results):
     lhs = factory(lhs_str)
     rhs = factory(rhs_str)
 
@@ -2004,6 +2099,143 @@ def test_comparison_multivalued_variants():
     assert Spec("x=a") < Spec("x=a,b") < Spec("x==a,b") < Spec("x==a,b,c")
 
 
+@pytest.mark.parametrize(
+    "specs_in_expected_order",
+    [
+        ("a", "b", "c", "d", "e"),
+        ("a@1.0", "a@2.0", "b", "c@3.0", "c@4.0"),
+        ("a^d", "b^c", "c^b", "d^a"),
+        ("e^a", "e^b", "e^c", "e^d"),
+        ("e^a@1.0", "e^a@2.0", "e^a@3.0", "e^a@4.0"),
+        ("e^a@1.0 +a", "e^a@1.0 +b", "e^a@1.0 +c", "e^a@1.0 +c"),
+        ("a^b%c", "a^b%d", "a^b%e", "a^b%f"),
+        ("a^b%c@1.0", "a^b%c@2.0", "a^b%c@3.0", "a^b%c@4.0"),
+        ("a^b%c@1.0 +a", "a^b%c@1.0 +b", "a^b%c@1.0 +c", "a^b%c@1.0 +d"),
+        ("a cflags=-O1", "a cflags=-O2", "a cflags=-O3"),
+        ("a %cmake@1.0 ^b %cmake@2.0", "a %cmake@2.0 ^b %cmake@1.0"),
+        ("a^b^c^d", "a^b^c^e", "a^b^c^f"),
+        ("a^b^c^d", "a^b^c^e", "a^b^c^e", "a^b^c^f"),
+        ("a%b%c%d", "a%b%c%e", "a%b%c%e", "a%b%c%f"),
+        ("d.a", "c.b", "b.c", "a.d"),  # names before namespaces
+    ],
+)
+def test_spec_ordering(specs_in_expected_order):
+    specs_in_expected_order = [Spec(s) for s in specs_in_expected_order]
+    assert sorted(specs_in_expected_order) == specs_in_expected_order
+    assert sorted(reversed(specs_in_expected_order)) == specs_in_expected_order
+
+    for i in range(len(specs_in_expected_order) - 1):
+        lhs, rhs = specs_in_expected_order[i : i + 2]
+        assert lhs <= rhs
+        assert (lhs < rhs and lhs != rhs) or lhs == rhs
+        assert rhs >= lhs
+        assert (rhs > lhs and rhs != lhs) or rhs == lhs
+
+
+EMPTY_VER = vn.VersionList(":")
+EMPTY_VAR = Spec().variants
+EMPTY_FLG = Spec().compiler_flags
+
+
+@pytest.mark.parametrize(
+    "spec,expected_tuplified",
+    [
+        # simple, no dependencies
+        [("a"), ((("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),), ())],
+        # with some node attributes
+        [
+            ("a@1.0 +foo cflags='-O3 -g'"),
+            (
+                (
+                    (
+                        "a",
+                        None,
+                        vn.VersionList(["1.0"]),
+                        Spec("+foo").variants,
+                        Spec("cflags='-O3 -g'").compiler_flags,
+                        None,
+                        None,
+                        None,
+                    ),
+                ),
+                (),
+            ),
+        ],
+        # single edge case
+        [
+            ("a^b"),
+            (
+                (
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                ),
+                ((0, 1, 0, (), False, Spec()),),
+            ),
+        ],
+        # root with multiple deps
+        [
+            ("a^b^c^d"),
+            (
+                (
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                ),
+                (
+                    (0, 1, 0, (), False, Spec()),
+                    (0, 2, 0, (), False, Spec()),
+                    (0, 3, 0, (), False, Spec()),
+                ),
+            ),
+        ],
+        # root with multiple build deps
+        [
+            ("a%b%c%d"),
+            (
+                (
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                ),
+                (
+                    (0, 1, 0, (), True, Spec()),
+                    (0, 2, 0, (), True, Spec()),
+                    (0, 3, 0, (), True, Spec()),
+                ),
+            ),
+        ],
+        # dependencies with dependencies
+        [
+            ("a  ^b %c %d  ^e %f %g"),
+            (
+                (
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("e", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("f", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                ),
+                (
+                    (0, 1, 0, (), False, Spec()),
+                    (0, 2, 0, (), False, Spec()),
+                    (1, 3, 0, (), True, Spec()),
+                    (1, 4, 0, (), True, Spec()),
+                    (2, 5, 0, (), True, Spec()),
+                    (2, 6, 0, (), True, Spec()),
+                ),
+            ),
+        ],
+    ],
+)
+def test_spec_canonical_comparison_form(spec, expected_tuplified):
+    """Tests a few expected canonical comparison form of specs"""
+    assert llnl.util.lang.tuplify(Spec(spec)._cmp_iter) == expected_tuplified
+
+
 def test_comparison_after_breaking_hash_change():
     # We simulate a breaking change in DAG hash computation in Spack. We have two specs that are
     # entirely equal modulo DAG hash. When deserializing these specs, we don't want them to compare
@@ -2054,11 +2286,12 @@ def test_satisfies_and_subscript_with_compilers(default_mock_concretization):
 
     # Direct build dependencies
     assert s.satisfies("^[virtuals=c] gcc")
+    assert s.satisfies("%[virtuals=c] gcc")
     assert s.dependencies(name="gcc")[0] == s["gcc"]
     assert s.dependencies(name="gcc")[0] == s["c"]
 
     # Transitive build dependencies
-    assert s.satisfies("^gmake")
+    assert not s.satisfies("^gmake")
 
     # "gmake" is not in the link/run subdag + direct build deps
     with pytest.raises(KeyError):
@@ -2085,3 +2318,25 @@ def test_spec_format_with_compiler_adaptors(
     """Tests the output of spec format, when involving `Spec.compiler` adaptors"""
     s = default_mock_concretization(spec_str)
     assert s.format(spec_fmt) == expected
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [
+        ("mpich %gcc", "mpich %gcc", True),
+        ("mpich %gcc", "mpich ^gcc", False),
+        ("mpich ^callpath %gcc", "mpich %gcc ^callpath", False),
+    ],
+)
+def test_specs_equality(lhs, rhs, expected):
+    """Tests the semantic of == for abstract specs"""
+    lhs, rhs = Spec(lhs), Spec(rhs)
+    assert (lhs == rhs) is expected
+
+
+def test_edge_equality_accounts_for_when_condition():
+    """Tests that edges can be distinguished by their 'when' condition."""
+    parent, child = Spec("parent"), Spec("child")
+    edge1 = DependencySpec(parent, child, depflag=0, virtuals=(), when=Spec("%c"))
+    edge2 = DependencySpec(parent, child, depflag=0, virtuals=())
+    assert edge1 != edge2

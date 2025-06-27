@@ -23,3 +23,5 @@ packages:
   mpi:
     require:
     - one_of: [msmpi]
+  msvc:
+    buildable: false

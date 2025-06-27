@@ -2,9 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
+import errno
+import glob
+import gzip
 import json
 import os
 import re
+import shutil
 import sys
 import time
 from collections import deque
@@ -25,13 +29,14 @@ import spack.error
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
+import spack.util.compression as compression
 import spack.util.spack_yaml as syaml
-import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
+from spack.url_buildcache import get_url_buildcache_class
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -40,22 +45,67 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 _urlopen = web_util.urlopen
 
 
-def copy_files_to_artifacts(src, artifacts_dir):
+def copy_gzipped(glob_or_path: str, dest: str) -> None:
+    """Copy all of the files in the source glob/path to the destination.
+
+    Args:
+        glob_or_path: path to file to test
+        dest: destination path to copy to
+    """
+
+    files = glob.glob(glob_or_path)
+    if not files:
+        raise OSError("No such file or directory: '{0}'".format(glob_or_path), errno.ENOENT)
+    if len(files) > 1 and not os.path.isdir(dest):
+        raise ValueError(
+            "'{0}' matches multiple files but '{1}' is not a directory".format(glob_or_path, dest)
+        )
+
+    def is_gzipped(path):
+        with open(path, "rb") as fd:
+            return compression.GZipFileType().matches_magic(fd)
+
+    for src in files:
+        if is_gzipped(src):
+            fs.copy(src, dest)
+        else:
+            # Compress and copy in one step
+            src_name = os.path.basename(src)
+            if os.path.isdir(dest):
+                zipped = os.path.join(dest, f"{src_name}.gz")
+            elif not dest.endswith(".gz"):
+                zipped = f"{dest}.gz"
+            else:
+                zipped = dest
+
+            with open(src, "rb") as fin, gzip.open(zipped, "wb") as fout:
+                shutil.copyfileobj(fin, fout)
+
+
+def copy_files_to_artifacts(
+    src: str, artifacts_dir: str, *, compress_artifacts: bool = False
+) -> None:
     """
     Copy file(s) to the given artifacts directory
 
-    Parameters:
+    Args:
         src (str): the glob-friendly path expression for the file(s) to copy
         artifacts_dir (str): the destination directory
+        compress_artifacts (bool): option to compress copied artifacts using Gzip
     """
     try:
-        fs.copy(src, artifacts_dir)
+
+        if compress_artifacts:
+            copy_gzipped(src, artifacts_dir)
+        else:
+            fs.copy(src, artifacts_dir)
     except Exception as err:
-        msg = (
-            f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
-            f"exception: {str(err)}"
+        tty.warn(
+            (
+                f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
+                f"exception: {str(err)}"
+            )
         )
-        tty.warn(msg)
 
 
 def win_quote(quote_str: str) -> str:
@@ -129,33 +179,13 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
 
     for release_spec in specs:
         release_spec_dag_hash = release_spec.dag_hash()
-        # TODO: This assumes signed version of the spec
-        buildcache_copies[release_spec_dag_hash] = [
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-            },
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-            },
-        ]
+        cache_class = get_url_buildcache_class(
+            layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        )
+        buildcache_copies[release_spec_dag_hash] = {
+            "src": cache_class.get_manifest_url(release_spec, src_prefix),
+            "dest": cache_class.get_manifest_url(release_spec, dest_prefix),
+        }
 
     target_dir = os.path.dirname(output_file)
 
@@ -254,56 +284,33 @@ class CDashHandler:
         reports = fs.join_path(source, "*_Test*.xml")
         copy_files_to_artifacts(reports, dest)
 
-    def create_buildgroup(self, headers, url, group_name, group_type):
-        data = {"newbuildgroup": group_name, "project": self.project, "type": group_type}
-
+    def create_buildgroup(self):
+        """Create the CDash buildgroup if it does not already exist."""
+        headers = {
+            "Authorization": f"Bearer {self.auth_token}",
+            "Content-Type": "application/json",
+        }
+        data = {"newbuildgroup": self.build_group, "project": self.project, "type": "Daily"}
         enc_data = json.dumps(data).encode("utf-8")
+        request = Request(f"{self.url}/api/v1/buildgroup.php", data=enc_data, headers=headers)
 
-        request = Request(url, data=enc_data, headers=headers)
+        response_text = None
+        group_id = None
 
         try:
             response_text = _urlopen(request, timeout=SPACK_CDASH_TIMEOUT).read()
         except OSError as e:
             tty.warn(f"Failed to create CDash buildgroup: {e}")
-            return None
 
-        try:
-            response_json = json.loads(response_text)
-            return response_json["id"]
-        except (json.JSONDecodeError, KeyError) as e:
-            tty.warn(f"Failed to parse CDash response: {e}")
-            return None
+        if response_text:
+            try:
+                response_json = json.loads(response_text)
+                group_id = response_json["id"]
+            except (json.JSONDecodeError, KeyError) as e:
+                tty.warn(f"Failed to parse CDash response: {e}")
 
-    def populate_buildgroup(self, job_names):
-        url = f"{self.url}/api/v1/buildgroup.php"
-
-        headers = {
-            "Authorization": f"Bearer {self.auth_token}",
-            "Content-Type": "application/json",
-        }
-
-        parent_group_id = self.create_buildgroup(headers, url, self.build_group, "Daily")
-        group_id = self.create_buildgroup(headers, url, f"Latest {self.build_group}", "Latest")
-
-        if not parent_group_id or not group_id:
-            tty.warn(f"Failed to create or retrieve buildgroups for {self.build_group}")
-            return
-
-        data = {
-            "dynamiclist": [
-                {"match": name, "parentgroupid": parent_group_id, "site": self.site}
-                for name in job_names
-            ]
-        }
-
-        enc_data = json.dumps(data).encode("utf-8")
-
-        request = Request(url, data=enc_data, headers=headers, method="PUT")
-
-        try:
-            _urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
-        except OSError as e:
-            tty.warn(f"Failed to populate CDash buildgroup: {e}")
+        if not group_id:
+            tty.warn(f"Failed to create or retrieve buildgroup for {self.build_group}")
 
     def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
         """Explicitly report skipping testing of a spec (e.g., it's CI

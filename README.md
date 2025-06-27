@@ -46,17 +46,31 @@ See the
 [Feature Overview](https://spack.readthedocs.io/en/latest/features.html)
 for examples and highlights.
 
-To install spack and your first package, make sure you have Python & Git.
+Installation
+----------------
+
+To install spack, first make sure you have Python & Git.
 Then:
 
-    $ git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git
-    $ cd spack/bin
-    $ ./spack install zlib
+```bash
+git clone --depth=2 https://github.com/spack/spack.git
+```
 
-> [!TIP]
-> `-c feature.manyFiles=true` improves git's performance on repositories with 1,000+ files.
->
-> `--depth=2` prunes the git history to reduce the size of the Spack installation.
+```bash
+# For bash/zsh/sh
+. spack/share/spack/setup-env.sh
+
+# For tcsh/csh
+source spack/share/spack/setup-env.csh
+
+# For fish
+. spack/share/spack/setup-env.fish
+```
+
+```bash
+# Now you're ready to install a package!
+spack install zlib-ng
+```
 
 Documentation
 ----------------

@@ -5,6 +5,7 @@ import collections
 import collections.abc
 import contextlib
 import errno
+import glob
 import os
 import pathlib
 import re
@@ -20,7 +21,6 @@ from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import islink, readlink, symlink
 
 import spack
-import spack.caches
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
@@ -192,28 +192,38 @@ def activate(env, use_env_repo=False):
     """
     global _active_environment
 
-    # Fail early to avoid ending in an invalid state
-    if not isinstance(env, Environment):
-        raise TypeError("`env` should be of type {0}".format(Environment.__name__))
+    try:
+        _active_environment = env
 
-    # Check if we need to reinitialize the store due to pushing the configuration
-    # below.
-    install_tree_before = spack.config.get("config:install_tree")
-    upstreams_before = spack.config.get("upstreams")
-    env.manifest.prepare_config_scope()
-    install_tree_after = spack.config.get("config:install_tree")
-    upstreams_after = spack.config.get("upstreams")
-    if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
-        # Hack to store the state of the store before activation
-        env.store_token = spack.store.reinitialize()
+        # Fail early to avoid ending in an invalid state
+        if not isinstance(env, Environment):
+            raise TypeError("`env` should be of type {0}".format(Environment.__name__))
 
-    if use_env_repo:
-        spack.repo.PATH.put_first(env.repo)
+        # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to
+        # config changes.
+        install_tree_before = spack.config.get("config:install_tree")
+        upstreams_before = spack.config.get("upstreams")
+        repos_before = spack.config.get("repos")
+        env.manifest.prepare_config_scope()
+        install_tree_after = spack.config.get("config:install_tree")
+        upstreams_after = spack.config.get("upstreams")
+        repos_after = spack.config.get("repos")
 
-    tty.debug("Using environment '%s'" % env.name)
+        if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
+            setattr(env, "store_token", spack.store.reinitialize())
 
-    # Do this last, because setting up the config must succeed first.
-    _active_environment = env
+        if repos_before != repos_after:
+            setattr(env, "repo_token", spack.repo.PATH)
+            spack.repo.PATH.disable()
+            new_repo = spack.repo.RepoPath.from_config(spack.config.CONFIG)
+            if use_env_repo:
+                new_repo.put_first(env.repo)
+            spack.repo.enable_repo(new_repo)
+
+        tty.debug(f"Using environment '{env.name}'")
+    except Exception:
+        _active_environment = None
+        raise
 
 
 def deactivate():
@@ -223,18 +233,21 @@ def deactivate():
     if not _active_environment:
         return
 
-    # If we attached a store token on activation, restore the previous state
-    # and consume the token
-    if hasattr(_active_environment, "store_token"):
-        spack.store.restore(_active_environment.store_token)
+    # If any config changes affected spack.store.STORE or spack.repo.PATH, undo them.
+    store = getattr(_active_environment, "store_token", None)
+    if store is not None:
+        spack.store.restore(store)
         delattr(_active_environment, "store_token")
+
+    repo = getattr(_active_environment, "repo_token", None)
+
+    if repo is not None:
+        spack.repo.PATH.disable()
+        spack.repo.enable_repo(repo)
+
     _active_environment.manifest.deactivate_config_scope()
 
-    # use _repo so we only remove if a repo was actually constructed
-    if _active_environment._repo:
-        spack.repo.PATH.remove(_active_environment._repo)
-
-    tty.debug("Deactivated environment '%s'" % _active_environment.name)
+    tty.debug(f"Deactivated environment '{_active_environment.name}'")
 
     _active_environment = None
 
@@ -425,7 +438,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
         repos_specs = spack.config.get("repos", default={}, scope=env.scope_name)
         if not repos_specs:
             return
-        for i, entry in enumerate(repos_specs):
+        for name, entry in list(repos_specs.items()):
             repo_path = substitute_path_variables(entry)
             expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
 
@@ -435,7 +448,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
 
             tty.debug("Expanding repo path for {0} to {1}".format(entry, expanded_path))
 
-            repos_specs[i] = expanded_path
+            repos_specs[name] = expanded_path
 
         spack.config.set("repos", repos_specs, scope=env.scope_name)
 
@@ -1049,7 +1062,11 @@ class Environment:
 
     def _process_concrete_includes(self):
         """Extract and load into memory included concrete spec data."""
-        self.included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
+        _included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
+        # Expand config and environment variables
+        self.included_concrete_envs = [
+            spack.util.path.canonicalize_path(_env) for _env in _included_concrete_envs
+        ]
 
         if self.included_concrete_envs:
             if os.path.exists(self.lock_path):
@@ -1405,7 +1422,9 @@ class Environment:
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
 
-    def concretize(self, force=False, tests=False):
+    def concretize(
+        self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
+    ) -> Sequence[SpecPair]:
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -1415,15 +1434,18 @@ class Environment:
         write out a lockfile containing concretized specs.
 
         Arguments:
-            force (bool): re-concretize ALL specs, even those that were
-               already concretized
-            tests (bool or list or set): False to run no tests, True to test
-                all packages, or a list of package names to run tests for some
+            force: re-concretize ALL specs, even those that were already concretized;
+                defaults to ``spack.config.get("concretizer:force")``
+            tests: False to run no tests, True to test all packages, or a list of
+                package names to run tests for some
 
         Returns:
             List of specs that have been concretized. Each entry is a tuple of
             the user spec and the corresponding concretized spec.
         """
+        if force is None:
+            force = spack.config.get("concretizer:force")
+
         if force:
             # Clear previously concretized specs
             self.concretized_user_specs = []
@@ -1507,7 +1529,9 @@ class Environment:
         ]
         return new_user_specs, kept_user_specs, specs_to_concretize
 
-    def _concretize_together_where_possible(self, tests: bool = False) -> Sequence[SpecPair]:
+    def _concretize_together_where_possible(
+        self, tests: Union[bool, Sequence] = False
+    ) -> Sequence[SpecPair]:
         # Exit early if the set of concretized specs is the set of user specs
         new_user_specs, _, specs_to_concretize = self._get_specs_to_concretize()
         if not new_user_specs:
@@ -1532,7 +1556,7 @@ class Environment:
 
         return ret
 
-    def _concretize_together(self, tests: bool = False) -> Sequence[SpecPair]:
+    def _concretize_together(self, tests: Union[bool, Sequence] = False) -> Sequence[SpecPair]:
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
@@ -1573,7 +1597,7 @@ class Environment:
         # Return the portion of the return value that is new
         return concretized_specs[: len(new_user_specs)]
 
-    def _concretize_separately(self, tests=False):
+    def _concretize_separately(self, tests: Union[bool, Sequence] = False):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
@@ -1605,23 +1629,6 @@ class Environment:
 
         # Unify the specs objects, so we get correct references to all parents
         self._read_lockfile_dict(self._to_lockfile_dict())
-
-        # Re-attach information on test dependencies
-        if tests:
-            # This is slow, but the information on test dependency is lost
-            # after unification or when reading from a lockfile.
-            for h in self.specs_by_hash:
-                current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
-                for node in computed_spec.traverse():
-                    test_edges = node.edges_to_dependencies(depflag=dt.TEST)
-                    for current_edge in test_edges:
-                        test_dependency = current_edge.spec
-                        if test_dependency in current_spec[node.name]:
-                            continue
-                        current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), depflag=dt.TEST, virtuals=current_edge.virtuals
-                        )
-
         return concretized_specs
 
     @property
@@ -1869,6 +1876,10 @@ class Environment:
         roots = self.concrete_roots()
         specs = specs if specs is not None else roots
 
+        # Extract reporter arguments
+        reporter = install_args.pop("reporter", None)
+        report_file = install_args.pop("report_file", None)
+
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
             *install_args.get("overwrite", ()),
@@ -1881,7 +1892,17 @@ class Environment:
             *(s.dag_hash() for s in roots),
         }
 
-        PackageInstaller([spec.package for spec in specs], **install_args).install()
+        try:
+            builder = PackageInstaller([spec.package for spec in specs], **install_args)
+            builder.install()
+        finally:
+            if reporter:
+                if isinstance(builder.reports, dict):
+                    reporter.build_report(report_file, list(builder.reports.values()))
+                elif isinstance(builder.reports, list):
+                    reporter.build_report(report_file, builder.reports)
+                else:
+                    raise TypeError("builder.reports must be either a dictionary or a list")
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""
@@ -2247,9 +2268,14 @@ class Environment:
         # and add them to the spec, including build specs
         for lockfile_key, node_dict in json_specs_by_hash.items():
             name, data = reader.name_and_data(node_dict)
-            for _, dep_hash, deptypes, _, virtuals in reader.dependencies_from_node_dict(data):
+            for _, dep_hash, deptypes, _, virtuals, direct in reader.dependencies_from_node_dict(
+                data
+            ):
                 specs_by_hash[lockfile_key]._add_dependency(
-                    specs_by_hash[dep_hash], depflag=dt.canonicalize(deptypes), virtuals=virtuals
+                    specs_by_hash[dep_hash],
+                    depflag=dt.canonicalize(deptypes),
+                    virtuals=virtuals,
+                    direct=direct,
                 )
 
             if "build_spec" in node_dict:
@@ -2329,8 +2355,12 @@ class Environment:
 
     def _add_to_environment_repository(self, spec_node: Spec) -> None:
         """Add the root node of the spec to the environment repository"""
-        repository_dir = os.path.join(self.repos_path, spec_node.namespace)
-        repository = spack.repo.create_or_construct(repository_dir, spec_node.namespace)
+        namespace: str = spec_node.namespace
+        repository = spack.repo.create_or_construct(
+            root=os.path.join(self.repos_path, namespace),
+            namespace=namespace,
+            package_api=spack.repo.PATH.get_repo(namespace).package_api,
+        )
         pkg_dir = repository.dirname_for_package_name(spec_node.name)
         fs.mkdirp(pkg_dir)
         spack.repo.PATH.dump_provenance(spec_node, pkg_dir)
@@ -2433,19 +2463,11 @@ def display_specs(specs):
 
 def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment."""
-    path = spack.repo.RepoPath(cache=spack.caches.MISC_CACHE)
-
-    if os.path.isdir(root):
-        for repo_root in os.listdir(root):
-            repo_root = os.path.join(root, repo_root)
-
-            if not os.path.isdir(repo_root):
-                continue
-
-            repo = spack.repo.from_path(repo_root)
-            path.put_last(repo)
-
-    return path
+    repos = (
+        spack.repo.from_path(os.path.dirname(p))
+        for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
+    )
+    return spack.repo.RepoPath(*repos)
 
 
 def manifest_file(env_name_or_dir):
@@ -2937,11 +2959,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ensure_no_disallowed_env_config_mods(self._env_config_scope)
         return self._env_config_scope
 
-    def prepare_config_scope(self) -> None:
+    def prepare_config_scope(
+        self, priority: ConfigScopePriority = ConfigScopePriority.ENVIRONMENT
+    ) -> None:
         """Add the manifest's scope to the global configuration search path."""
-        spack.config.CONFIG.push_scope(
-            self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
-        )
+        spack.config.CONFIG.push_scope(self.env_config_scope, priority)
 
     def deactivate_config_scope(self) -> None:
         """Remove the manifest's scope from the global config path."""

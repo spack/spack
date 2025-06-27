@@ -1,18 +1,18 @@
 # coding: utf-8
 
-from ruamel.yaml.emitter import Emitter
-from ruamel.yaml.serializer import Serializer
-from ruamel.yaml.representer import (
+from _vendoring.ruamel.yaml.emitter import Emitter
+from _vendoring.ruamel.yaml.serializer import Serializer
+from _vendoring.ruamel.yaml.representer import (
     Representer,
     SafeRepresenter,
     BaseRepresenter,
     RoundTripRepresenter,
 )
-from ruamel.yaml.resolver import Resolver, BaseResolver, VersionedResolver
+from _vendoring.ruamel.yaml.resolver import Resolver, BaseResolver, VersionedResolver
 
 if False:  # MYPY
     from typing import Any, Dict, List, Union, Optional  # NOQA
-    from ruamel.yaml.compat import StreamType, VersionType  # NOQA
+    from _vendoring.ruamel.yaml.compat import StreamType, VersionType  # NOQA
 
 __all__ = ['BaseDumper', 'SafeDumper', 'Dumper', 'RoundTripDumper']
 

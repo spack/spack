@@ -246,8 +246,8 @@ def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
     # os.replace is the same as os.rename on POSIX and is MoveFileExW w/
     # the MOVEFILE_REPLACE_EXISTING flag on Windows
-    # Windows invocation is abstracted behind additonal logic handling
-    # remaining cases of divergent behavior accross platforms
+    # Windows invocation is abstracted behind additional logic handling
+    # remaining cases of divergent behavior across platforms
     if sys.platform == "win32":
         _win_rename(src, dst)
     else:
@@ -475,7 +475,7 @@ def exploding_archive_catch(stage):
     # NOTE: The tar program on Mac OS X will encode HFS metadata in
     # hidden files, which can end up *alongside* a single top-level
     # directory.  We initially ignore presence of hidden files to
-    # accomodate these "semi-exploding" tarballs but ensure the files
+    # accommodate these "semi-exploding" tarballs but ensure the files
     # are copied to the source directory.
 
     # Expand all tarballs in their own directory to contain
@@ -486,7 +486,7 @@ def exploding_archive_catch(stage):
     os.chdir(tarball_container)
     try:
         yield
-        # catch an exploding archive on sucessful extraction
+        # catch an exploding archive on successful extraction
         os.chdir(orig_dir)
         exploding_archive_handler(tarball_container, stage)
     except Exception as e:
@@ -764,7 +764,7 @@ def copy_tree(
 
     files = glob.glob(src)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(src))
+        raise OSError("No such file or directory: '{0}'".format(src), errno.ENOENT)
 
     # For Windows hard-links and junctions, the source path must exist to make a symlink. Add
     # all symlinks to this list while traversing the tree, then when finished, make all
@@ -1030,6 +1030,7 @@ def replace_directory_transaction(directory_name):
     Returns:
         temporary directory where ``directory_name`` has been moved
     """
+
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
     directory_name = os.path.abspath(directory_name)
@@ -1434,7 +1435,7 @@ def visit_directory_tree(
         try:
             isdir = f.is_dir()
         except OSError as e:
-            if sys.platform == "win32" and hasattr(e, "winerror") and e.winerror == 5 and islink:
+            if sys.platform == "win32" and e.errno == errno.EACCES and islink:
                 # if path is a symlink, determine destination and evaluate file vs directory
                 link_target = resolve_link_target_relative_to_the_link(f)
                 # link_target might be relative but resolve_link_target_relative_to_the_link
@@ -2452,7 +2453,7 @@ class WindowsSimulatedRPath:
     One instance of this class is associated with a package (only on Windows)
     For each lib/binary directory in an associated package, this class introduces
     a symlink to any/all dependent libraries/binaries. This includes the packages
-    own bin/lib directories, meaning the libraries are linked to the bianry directory
+    own bin/lib directories, meaning the libraries are linked to the binary directory
     and vis versa.
     """
 
@@ -2579,7 +2580,7 @@ class WindowsSimulatedRPath:
         mode is not enabled"""
 
         def report_already_linked():
-            # We have either already symlinked or we are encoutering a naming clash
+            # We have either already symlinked or we are encountering a naming clash
             # either way, we don't want to overwrite existing libraries
             already_linked = islink(str(dest_file))
             tty.debug(
@@ -2599,7 +2600,7 @@ class WindowsSimulatedRPath:
             # associate with trying to create a file that already exists (winerror 183)
             # Catch OSErrors missed by the SymlinkError checks
             except OSError as e:
-                if sys.platform == "win32" and (e.winerror == 183 or e.errno == errno.EEXIST):
+                if sys.platform == "win32" and e.errno == errno.EEXIST:
                     report_already_linked()
                 else:
                     raise e

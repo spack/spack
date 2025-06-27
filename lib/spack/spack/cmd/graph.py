@@ -1,6 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
+
 from llnl.util import tty
 
 import spack.cmd
@@ -15,8 +17,8 @@ section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
-    setup_parser.parser = subparser
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
+    setattr(setup_parser, "parser", subparser)
     subparser.epilog = """
 Outside of an environment, the command concretizes specs and graphs them, unless the
 --installed option is given. In that case specs are matched from the current DB.

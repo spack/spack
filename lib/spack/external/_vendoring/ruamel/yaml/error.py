@@ -3,7 +3,7 @@
 import warnings
 import textwrap
 
-from ruamel.yaml.compat import _F
+from _vendoring.ruamel.yaml.compat import _F
 
 if False:  # MYPY
     from typing import Any, Dict, Optional, List, Text  # NOQA
@@ -240,11 +240,11 @@ class ReusedAnchorWarning(YAMLWarning):
 class UnsafeLoaderWarning(YAMLWarning):
     text = """
 The default 'Loader' for 'load(stream)' without further arguments can be unsafe.
-Use 'load(stream, Loader=ruamel.yaml.Loader)' explicitly if that is OK.
+Use 'load(stream, Loader=_vendoring.ruamel.yaml.Loader)' explicitly if that is OK.
 Alternatively include the following in your code:
 
   import warnings
-  warnings.simplefilter('ignore', ruamel.yaml.error.UnsafeLoaderWarning)
+  warnings.simplefilter('ignore', _vendoring.ruamel.yaml.error.UnsafeLoaderWarning)
 
 In most other cases you should consider using 'safe_load(stream)'"""
     pass
@@ -273,7 +273,7 @@ Correct your float: "{}" on line: {}, column: {}
 or alternatively include the following in your code:
 
   import warnings
-  warnings.simplefilter('ignore', ruamel.yaml.error.MantissaNoDotYAML1_1Warning)
+  warnings.simplefilter('ignore', _vendoring.ruamel.yaml.error.MantissaNoDotYAML1_1Warning)
 
 """.format(
             self.flt, line, col

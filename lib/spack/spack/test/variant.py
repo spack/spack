@@ -21,7 +21,7 @@ from spack.variant import (
     SingleValuedVariant,
     UnsatisfiableVariantSpecError,
     Variant,
-    VariantBase,
+    VariantValue,
     disjoint_sets,
 )
 
@@ -29,53 +29,37 @@ from spack.variant import (
 class TestMultiValuedVariant:
     def test_initialization(self):
         # Basic properties
-        a = MultiValuedVariant("foo", "bar,baz")
-        assert repr(a) == "MultiValuedVariant('foo', 'bar,baz')"
+        a = MultiValuedVariant("foo", ("bar", "baz"))
         assert str(a) == "foo:=bar,baz"
+        assert a.values == ("bar", "baz")
         assert a.value == ("bar", "baz")
         assert "bar" in a
         assert "baz" in a
-        assert eval(repr(a)) == a
-
-        # Spaces are trimmed
-        b = MultiValuedVariant("foo", "bar, baz")
-        assert repr(b) == "MultiValuedVariant('foo', 'bar, baz')"
-        assert str(b) == "foo:=bar,baz"
-        assert b.value == ("bar", "baz")
-        assert "bar" in b
-        assert "baz" in b
-        assert a == b
-        assert hash(a) == hash(b)
-        assert eval(repr(b)) == a
 
         # Order is not important
-        c = MultiValuedVariant("foo", "baz, bar")
-        assert repr(c) == "MultiValuedVariant('foo', 'baz, bar')"
+        c = MultiValuedVariant("foo", ("baz", "bar"))
         assert str(c) == "foo:=bar,baz"
-        assert c.value == ("bar", "baz")
+        assert c.values == ("bar", "baz")
         assert "bar" in c
         assert "baz" in c
         assert a == c
         assert hash(a) == hash(c)
-        assert eval(repr(c)) == a
 
         # Check the copy
         d = a.copy()
-        assert repr(a) == repr(d)
         assert str(a) == str(d)
-        assert d.value == ("bar", "baz")
+        assert d.values == ("bar", "baz")
         assert "bar" in d
         assert "baz" in d
         assert a == d
         assert a is not d
         assert hash(a) == hash(d)
-        assert eval(repr(d)) == a
 
     def test_satisfies(self):
-        a = MultiValuedVariant("foo", "bar,baz")
-        b = MultiValuedVariant("foo", "bar")
-        c = MultiValuedVariant("fee", "bar,baz")
-        d = MultiValuedVariant("foo", "True")
+        a = MultiValuedVariant("foo", ("bar", "baz"))
+        b = MultiValuedVariant("foo", ("bar",))
+        c = MultiValuedVariant("fee", ("bar", "baz"))
+        d = MultiValuedVariant("foo", (True,))
 
         # concrete, different values do not satisfy each other
         assert not a.satisfies(b) and not b.satisfies(a)
@@ -85,21 +69,19 @@ class TestMultiValuedVariant:
         # eachother
         b_sv = SingleValuedVariant("foo", "bar")
         assert b.satisfies(b_sv) and b_sv.satisfies(b)
-        d_sv = SingleValuedVariant("foo", "True")
+        d_sv = SingleValuedVariant("foo", True)
         assert d.satisfies(d_sv) and d_sv.satisfies(d)
-        almost_d_bv = SingleValuedVariant("foo", "true")
-        assert not d.satisfies(almost_d_bv)
+        almost_d_bv = SingleValuedVariant("foo", True)
+        assert d.satisfies(almost_d_bv)
 
-        # BoolValuedVariant actually stores the value as a boolean, whereas with MV and SV the
-        # value is string "True".
-        d_bv = BoolValuedVariant("foo", "True")
-        assert not d.satisfies(d_bv) and not d_bv.satisfies(d)
+        d_bv = BoolValuedVariant("foo", True)
+        assert d.satisfies(d_bv) and d_bv.satisfies(d)
 
     def test_intersects(self):
-        a = MultiValuedVariant("foo", "bar,baz")
-        b = MultiValuedVariant("foo", "True")
-        c = MultiValuedVariant("fee", "bar,baz")
-        d = MultiValuedVariant("foo", "bar,barbaz")
+        a = MultiValuedVariant("foo", ("bar", "baz"))
+        b = MultiValuedVariant("foo", (True,))
+        c = MultiValuedVariant("fee", ("bar", "baz"))
+        d = MultiValuedVariant("foo", ("bar", "barbaz"))
 
         # concrete, different values do not intersect.
         assert not a.intersects(b) and not b.intersects(a)
@@ -110,47 +92,45 @@ class TestMultiValuedVariant:
         assert not c.intersects(d) and not d.intersects(c)
 
         # SV and MV intersect if they have the same concrete value.
-        b_sv = SingleValuedVariant("foo", "True")
+        b_sv = SingleValuedVariant("foo", True)
         assert b.intersects(b_sv)
         assert not c.intersects(b_sv)
 
-        # BoolValuedVariant stores a bool, which is not the same as the string "True" in MV.
-        b_bv = BoolValuedVariant("foo", "True")
-        assert not b.intersects(b_bv)
+        # BoolValuedVariant intersects if the value is the same
+        b_bv = BoolValuedVariant("foo", True)
+        assert b.intersects(b_bv)
         assert not c.intersects(b_bv)
 
     def test_constrain(self):
         # Concrete values cannot be constrained
-        a = MultiValuedVariant("foo", "bar,baz")
-        b = MultiValuedVariant("foo", "bar")
+        a = MultiValuedVariant("foo", ("bar", "baz"))
+        b = MultiValuedVariant("foo", ("bar",))
         with pytest.raises(UnsatisfiableVariantSpecError):
             a.constrain(b)
         with pytest.raises(UnsatisfiableVariantSpecError):
             b.constrain(a)
 
         # Try to constrain on the same value
-        a = MultiValuedVariant("foo", "bar,baz")
+        a = MultiValuedVariant("foo", ("bar", "baz"))
         b = a.copy()
 
         assert not a.constrain(b)
-        assert a == b == MultiValuedVariant("foo", "bar,baz")
+        assert a == b == MultiValuedVariant("foo", ("bar", "baz"))
 
         # Try to constrain on a different name
-        a = MultiValuedVariant("foo", "bar,baz")
-        b = MultiValuedVariant("fee", "bar")
+        a = MultiValuedVariant("foo", ("bar", "baz"))
+        b = MultiValuedVariant("fee", ("bar",))
 
         with pytest.raises(UnsatisfiableVariantSpecError):
             a.constrain(b)
 
     def test_yaml_entry(self):
-        a = MultiValuedVariant("foo", "bar,baz,barbaz")
-        b = MultiValuedVariant("foo", "bar, baz,  barbaz")
-        expected = ("foo", sorted(["bar", "baz", "barbaz"]))
+        a = MultiValuedVariant("foo", ("bar", "baz", "barbaz"))
+        expected = ("foo", sorted(("bar", "baz", "barbaz")))
 
         assert a.yaml_entry() == expected
-        assert b.yaml_entry() == expected
 
-        a = MultiValuedVariant("foo", "bar")
+        a = MultiValuedVariant("foo", ("bar",))
         expected = ("foo", sorted(["bar"]))
 
         assert a.yaml_entry() == expected
@@ -160,26 +140,20 @@ class TestSingleValuedVariant:
     def test_initialization(self):
         # Basic properties
         a = SingleValuedVariant("foo", "bar")
-        assert repr(a) == "SingleValuedVariant('foo', 'bar')"
         assert str(a) == "foo=bar"
+        assert a.values == ("bar",)
         assert a.value == "bar"
         assert "bar" in a
-        assert eval(repr(a)) == a
-
-        # Raise if multiple values are passed
-        with pytest.raises(ValueError):
-            SingleValuedVariant("foo", "bar, baz")
 
         # Check the copy
         b = a.copy()
-        assert repr(a) == repr(b)
         assert str(a) == str(b)
+        assert b.values == ("bar",)
         assert b.value == "bar"
         assert "bar" in b
         assert a == b
         assert a is not b
         assert hash(a) == hash(b)
-        assert eval(repr(b)) == a
 
     def test_satisfies(self):
         a = SingleValuedVariant("foo", "bar")
@@ -247,54 +221,37 @@ class TestSingleValuedVariant:
 class TestBoolValuedVariant:
     def test_initialization(self):
         # Basic properties - True value
-        for v in (True, "True", "TRUE", "TrUe"):
-            a = BoolValuedVariant("foo", v)
-            assert repr(a) == "BoolValuedVariant('foo', {0})".format(repr(v))
-            assert str(a) == "+foo"
-            assert a.value is True
-            assert True in a
-            assert eval(repr(a)) == a
+        a = BoolValuedVariant("foo", True)
+        assert str(a) == "+foo"
+        assert a.value is True
+        assert a.values == (True,)
+        assert True in a
 
         # Copy - True value
         b = a.copy()
-        assert repr(a) == repr(b)
         assert str(a) == str(b)
         assert b.value is True
+        assert b.values == (True,)
         assert True in b
         assert a == b
         assert a is not b
         assert hash(a) == hash(b)
-        assert eval(repr(b)) == a
 
-        # Basic properties - False value
-        for v in (False, "False", "FALSE", "FaLsE"):
-            a = BoolValuedVariant("foo", v)
-            assert repr(a) == "BoolValuedVariant('foo', {0})".format(repr(v))
-            assert str(a) == "~foo"
-            assert a.value is False
-            assert False in a
-            assert eval(repr(a)) == a
-
-        # Copy - True value
+        # Copy - False value
+        a = BoolValuedVariant("foo", False)
         b = a.copy()
-        assert repr(a) == repr(b)
         assert str(a) == str(b)
         assert b.value is False
+        assert b.values == (False,)
         assert False in b
         assert a == b
         assert a is not b
-        assert eval(repr(b)) == a
-
-        # Invalid values
-        for v in ("bar", "bar,baz"):
-            with pytest.raises(ValueError):
-                BoolValuedVariant("foo", v)
 
     def test_satisfies(self):
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("foo", False)
         c = BoolValuedVariant("fee", False)
-        d = BoolValuedVariant("foo", "True")
+        d = BoolValuedVariant("foo", True)
 
         # concrete, different values do not satisfy each other
         assert not a.satisfies(b) and not b.satisfies(a)
@@ -325,7 +282,7 @@ class TestBoolValuedVariant:
         a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("fee", True)
         c = BoolValuedVariant("foo", False)
-        d = BoolValuedVariant("foo", "True")
+        d = BoolValuedVariant("foo", True)
 
         # concrete, different values do not intersect each other
         assert not a.intersects(b) and not b.intersects(a)
@@ -347,7 +304,7 @@ class TestBoolValuedVariant:
 
     def test_constrain(self):
         # Try to constrain on a value equal to self
-        a = BoolValuedVariant("foo", "True")
+        a = BoolValuedVariant("foo", True)
         b = BoolValuedVariant("foo", True)
 
         assert not a.constrain(b)
@@ -375,24 +332,24 @@ class TestBoolValuedVariant:
         assert a == BoolValuedVariant("foo", True)
 
     def test_yaml_entry(self):
-        a = BoolValuedVariant("foo", "True")
+        a = BoolValuedVariant("foo", True)
         expected = ("foo", True)
         assert a.yaml_entry() == expected
 
-        a = BoolValuedVariant("foo", "False")
+        a = BoolValuedVariant("foo", False)
         expected = ("foo", False)
         assert a.yaml_entry() == expected
 
 
 def test_from_node_dict():
-    a = MultiValuedVariant.from_node_dict("foo", ["bar"])
-    assert type(a) is MultiValuedVariant
+    a = VariantValue.from_node_dict("foo", ["bar"])
+    assert a.type == spack.variant.VariantType.MULTI
 
-    a = MultiValuedVariant.from_node_dict("foo", "bar")
-    assert type(a) is SingleValuedVariant
+    a = VariantValue.from_node_dict("foo", "bar")
+    assert a.type == spack.variant.VariantType.SINGLE
 
-    a = MultiValuedVariant.from_node_dict("foo", "true")
-    assert type(a) is BoolValuedVariant
+    a = VariantValue.from_node_dict("foo", "true")
+    assert a.type == spack.variant.VariantType.BOOL
 
 
 class TestVariant:
@@ -406,7 +363,7 @@ class TestVariant:
 
         # Multiple values are not allowed
         with pytest.raises(MultipleValuesInExclusiveVariantError):
-            vspec.value = "bar,baz"
+            vspec.set("bar", "baz")
 
         # Inconsistent vspec
         vspec.name = "FOO"
@@ -415,10 +372,10 @@ class TestVariant:
 
         # Valid multi-value vspec
         a.multi = True
-        vspec = a.make_variant("bar,baz")
+        vspec = a.make_variant("bar", "baz")
         a.validate_or_raise(vspec, "test-package")
         # Add an invalid value
-        vspec.value = "bar,baz,barbaz"
+        vspec.set("bar", "baz", "barbaz")
         with pytest.raises(InvalidVariantValueError):
             a.validate_or_raise(vspec, "test-package")
 
@@ -429,12 +386,12 @@ class TestVariant:
             except ValueError:
                 return False
 
-        a = Variant("foo", default=1024, description="", values=validator, multi=False)
+        a = Variant("foo", default="1024", description="", values=validator, multi=False)
         vspec = a.make_default()
         a.validate_or_raise(vspec, "test-package")
-        vspec.value = 2056
+        vspec.set("2056")
         a.validate_or_raise(vspec, "test-package")
-        vspec.value = "foo"
+        vspec.set("foo")
         with pytest.raises(InvalidVariantValueError):
             a.validate_or_raise(vspec, "test-package")
 
@@ -464,9 +421,9 @@ class TestVariantMapTest:
             a["foo"] = 2
 
         # Duplicate variant
-        a["foo"] = MultiValuedVariant("foo", "bar,baz")
+        a["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
         with pytest.raises(DuplicateVariantError):
-            a["foo"] = MultiValuedVariant("foo", "bar")
+            a["foo"] = MultiValuedVariant("foo", ("bar",))
 
         with pytest.raises(DuplicateVariantError):
             a["foo"] = SingleValuedVariant("foo", "bar")
@@ -476,7 +433,7 @@ class TestVariantMapTest:
 
         # Non matching names between key and vspec.name
         with pytest.raises(KeyError):
-            a["bar"] = MultiValuedVariant("foo", "bar")
+            a["bar"] = MultiValuedVariant("foo", ("bar",))
 
     def test_set_item(self) -> None:
         # Check that all the three types of variants are accepted
@@ -484,7 +441,7 @@ class TestVariantMapTest:
 
         a["foo"] = BoolValuedVariant("foo", True)
         a["bar"] = SingleValuedVariant("bar", "baz")
-        a["foobar"] = MultiValuedVariant("foobar", "a, b, c, d, e")
+        a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
 
     def test_substitute(self) -> None:
         # Check substitution of a key that exists
@@ -500,13 +457,13 @@ class TestVariantMapTest:
     def test_satisfies_and_constrain(self) -> None:
         # foo=bar foobar=fee feebar=foo
         a = VariantMap(Spec())
-        a["foo"] = MultiValuedVariant("foo", "bar")
+        a["foo"] = MultiValuedVariant("foo", ("bar",))
         a["foobar"] = SingleValuedVariant("foobar", "fee")
         a["feebar"] = SingleValuedVariant("feebar", "foo")
 
         # foo=bar,baz foobar=fee shared=True
         b = VariantMap(Spec())
-        b["foo"] = MultiValuedVariant("foo", "bar, baz")
+        b["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
         b["foobar"] = SingleValuedVariant("foobar", "fee")
         b["shared"] = BoolValuedVariant("shared", True)
 
@@ -516,7 +473,7 @@ class TestVariantMapTest:
 
         # foo=bar,baz foobar=fee feebar=foo shared=True
         c = VariantMap(Spec())
-        c["foo"] = MultiValuedVariant("foo", "bar, baz")
+        c["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
         c["foobar"] = SingleValuedVariant("foobar", "fee")
         c["feebar"] = SingleValuedVariant("feebar", "foo")
         c["shared"] = BoolValuedVariant("shared", True)
@@ -529,14 +486,14 @@ class TestVariantMapTest:
         a = VariantMap(Spec())
         a["foo"] = BoolValuedVariant("foo", True)
         a["bar"] = SingleValuedVariant("bar", "baz")
-        a["foobar"] = MultiValuedVariant("foobar", "a, b, c, d, e")
+        a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
 
         c = a.copy()
         assert a == c
 
     def test_str(self) -> None:
         c = VariantMap(Spec())
-        c["foo"] = MultiValuedVariant("foo", "bar, baz")
+        c["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
         c["foobar"] = SingleValuedVariant("foobar", "fee")
         c["feebar"] = SingleValuedVariant("feebar", "foo")
         c["shared"] = BoolValuedVariant("shared", True)
@@ -635,10 +592,10 @@ def test_wild_card_valued_variants_equivalent_to_str():
 
     several_arbitrary_values = ("doe", "re", "mi")
     # "*" case
-    wild_output = wild_var.make_variant(several_arbitrary_values)
+    wild_output = wild_var.make_variant(*several_arbitrary_values)
     wild_var.validate_or_raise(wild_output, "test-package")
     # str case
-    str_output = str_var.make_variant(several_arbitrary_values)
+    str_output = str_var.make_variant(*several_arbitrary_values)
     str_var.validate_or_raise(str_output, "test-package")
     # equivalence each instance already validated
     assert str_output.value == wild_output.value
@@ -760,21 +717,21 @@ def test_concretize_variant_default_with_multiple_defs(
     "spec,variant_name,narrowed_type",
     [
         # dev_path is a special case
-        ("foo dev_path=/path/to/source", "dev_path", SingleValuedVariant),
+        ("foo dev_path=/path/to/source", "dev_path", spack.variant.VariantType.SINGLE),
         # reserved name: won't be touched
-        ("foo patches=2349dc44", "patches", VariantBase),
+        ("foo patches=2349dc44", "patches", spack.variant.VariantType.MULTI),
         # simple case -- one definition applies
-        ("variant-values@1.0 v=foo", "v", SingleValuedVariant),
+        ("variant-values@1.0 v=foo", "v", spack.variant.VariantType.SINGLE),
         # simple, but with bool valued variant
-        ("pkg-a bvv=true", "bvv", BoolValuedVariant),
+        ("pkg-a bvv=true", "bvv", spack.variant.VariantType.BOOL),
         # takes the second definition, which overrides the single-valued one
-        ("variant-values@2.0 v=bar", "v", MultiValuedVariant),
+        ("variant-values@2.0 v=bar", "v", spack.variant.VariantType.MULTI),
     ],
 )
 def test_substitute_abstract_variants_narrowing(mock_packages, spec, variant_name, narrowed_type):
     spec = Spec(spec)
     spack.spec.substitute_abstract_variants(spec)
-    assert type(spec.variants[variant_name]) is narrowed_type
+    assert spec.variants[variant_name].type == narrowed_type
 
 
 def test_substitute_abstract_variants_failure(mock_packages):
@@ -920,3 +877,12 @@ def test_patches_variant():
     assert not Spec("patches:=abcdef").satisfies("patches:=ab")
     assert not Spec("patches:=abcdef,xyz").satisfies("patches:=abc,xyz")
     assert not Spec("patches:=abcdef").satisfies("patches:=abcdefghi")
+
+
+def test_constrain_narrowing():
+    s = Spec("foo=*")
+    assert s.variants["foo"].type == spack.variant.VariantType.MULTI
+    assert not s.variants["foo"].concrete
+    s.constrain("+foo")
+    assert s.variants["foo"].type == spack.variant.VariantType.BOOL
+    assert s.variants["foo"].concrete

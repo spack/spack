@@ -29,13 +29,13 @@
 #
 
 import inspect
-from ruamel.yaml.error import MarkedYAMLError, CommentMark  # NOQA
-from ruamel.yaml.tokens import *  # NOQA
-from ruamel.yaml.compat import _F, check_anchorname_char, nprint, nprintf  # NOQA
+from _vendoring.ruamel.yaml.error import MarkedYAMLError, CommentMark  # NOQA
+from _vendoring.ruamel.yaml.tokens import *  # NOQA
+from _vendoring.ruamel.yaml.compat import _F, check_anchorname_char, nprint, nprintf  # NOQA
 
 if False:  # MYPY
     from typing import Any, Dict, Optional, List, Union, Text  # NOQA
-    from ruamel.yaml.compat import VersionType  # NOQA
+    from _vendoring.ruamel.yaml.compat import VersionType  # NOQA
 
 __all__ = ['Scanner', 'RoundTripScanner', 'ScannerError']
 

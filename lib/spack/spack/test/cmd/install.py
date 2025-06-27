@@ -9,6 +9,7 @@ import itertools
 import os
 import pathlib
 import re
+import sys
 import time
 
 import pytest
@@ -61,35 +62,39 @@ def test_install_package_and_dependency(
     assert filename in files
 
     content = filename.open().read()
-    assert 'tests="4"' in content
+
+    assert 'tests="5"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content
 
 
+def _check_runtests_none(pkg):
+    assert not pkg.run_tests
+
+
+def _check_runtests_dttop(pkg):
+    assert pkg.run_tests == (pkg.name == "dttop")
+
+
+def _check_runtests_all(pkg):
+    assert pkg.run_tests
+
+
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery):
-    def check(pkg):
-        assert not pkg.run_tests
-
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", check)
+    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _check_runtests_none)
     install("-v", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_root(monkeypatch, mock_packages, install_mockery):
-    def check(pkg):
-        assert pkg.run_tests == (pkg.name == "dttop")
-
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", check)
+    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _check_runtests_dttop)
     install("--test=root", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
-    def check(pkg):
-        assert pkg.run_tests
-
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", check)
+    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _check_runtests_all)
     install("--test=all", "pkg-a")
 
 
@@ -334,40 +339,6 @@ def test_install_invalid_spec():
         install("conflict%~")
 
 
-@pytest.mark.usefixtures("noop_install", "mock_packages", "config")
-@pytest.mark.parametrize(
-    "spec,concretize,error_code",
-    [
-        (Spec("mpi"), False, 1),
-        (Spec("mpi"), True, 0),
-        (Spec("boost"), False, 1),
-        (Spec("boost"), True, 0),
-    ],
-)
-def test_install_from_file(spec, concretize, error_code, tmpdir):
-    if concretize:
-        spec = spack.concretize.concretize_one(spec)
-
-    specfile = tmpdir.join("spec.yaml")
-
-    with specfile.open("w") as f:
-        spec.to_yaml(f)
-
-    err_msg = "does not contain a concrete spec" if error_code else ""
-
-    # Relative path to specfile (regression for #6906)
-    with fs.working_dir(specfile.dirname):
-        # A non-concrete spec will fail to be installed
-        out = install("-f", specfile.basename, fail_on_error=False)
-    assert install.returncode == error_code
-    assert err_msg in out
-
-    # Absolute path to specfile (regression for #6983)
-    out = install("-f", str(specfile), fail_on_error=False)
-    assert install.returncode == error_code
-    assert err_msg in out
-
-
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.usefixtures("mock_packages", "mock_archive", "mock_fetch", "install_mockery")
 @pytest.mark.parametrize(
@@ -377,6 +348,7 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
 def test_junit_output_with_failures(tmpdir, exc_typename, msg):
     with tmpdir.as_cwd():
         install(
+            "--verbose",
             "--log-format=junit",
             "--log-file=test.xml",
             "raiser",
@@ -409,6 +381,21 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
     assert msg in content
 
 
+def _throw(task, exc_typename, exc_type, msg):
+    # Self is a spack.installer.Task
+    exc_type = getattr(builtins, exc_typename)
+    exc = exc_type(msg)
+    task.fail(exc)
+
+
+def _runtime_error(task, *args, **kwargs):
+    _throw(task, "RuntimeError", spack.error.InstallError, "something weird happened")
+
+
+def _keyboard_error(task, *args, **kwargs):
+    _throw(task, "KeyboardInterrupt", KeyboardInterrupt, "Ctrl-C strikes again")
+
+
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize(
     "exc_typename,expected_exc,msg",
@@ -428,14 +415,17 @@ def test_junit_output_with_errors(
     tmpdir,
     monkeypatch,
 ):
-    def just_throw(*args, **kwargs):
-        exc_type = getattr(builtins, exc_typename)
-        raise exc_type(msg)
-
-    monkeypatch.setattr(spack.installer.PackageInstaller, "_install_task", just_throw)
+    throw = _keyboard_error if expected_exc == KeyboardInterrupt else _runtime_error
+    monkeypatch.setattr(spack.installer.BuildTask, "complete", throw)
 
     with tmpdir.as_cwd():
-        install("--log-format=junit", "--log-file=test.xml", "libdwarf", fail_on_error=False)
+        install(
+            "--verbose",
+            "--log-format=junit",
+            "--log-file=test.xml",
+            "trivial-install-test-dependent",
+            fail_on_error=False,
+        )
 
     assert isinstance(install.error, expected_exc)
 
@@ -445,7 +435,7 @@ def test_junit_output_with_errors(
 
     content = filename.open().read()
 
-    # Only libelf error is reported (through libdwarf root spec). libdwarf
+    # Only original error is reported, dependent
     # install is skipped and it is not an error.
     assert 'tests="0"' not in content
     assert 'failures="0"' in content
@@ -459,6 +449,11 @@ def test_junit_output_with_errors(
     assert f'error message="{msg}"' in content
 
 
+@pytest.fixture(params=["yaml", "json"])
+def spec_format(request):
+    return request.param
+
+
 @pytest.mark.usefixtures("noop_install", "mock_packages", "config")
 @pytest.mark.parametrize(
     "clispecs,filespecs",
@@ -470,15 +465,15 @@ def test_junit_output_with_errors(
         [["cmake", "libelf"], ["mpi", "boost"]],
     ],
 )
-def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
+def test_install_mix_cli_and_files(spec_format, clispecs, filespecs, tmpdir):
     args = clispecs
 
     for spec in filespecs:
-        filepath = tmpdir.join(spec + ".yaml")
-        args = ["-f", str(filepath)] + args
+        filepath = tmpdir.join(spec + f".{spec_format}")
+        args = [str(filepath)] + args
         s = spack.concretize.concretize_one(spec)
         with filepath.open("w") as f:
-            s.to_yaml(f)
+            s.to_yaml(f) if spec_format == "yaml" else s.to_json(f)
 
     install(*args, fail_on_error=False)
     assert install.returncode == 0
@@ -614,7 +609,6 @@ def test_cdash_install_from_spec_json(
             "--cdash-build=my_custom_build",
             "--cdash-site=my_custom_site",
             "--cdash-track=my_custom_track",
-            "-f",
             spec_json_path,
         )
 
@@ -827,11 +821,11 @@ def test_install_no_add_in_env(tmpdir, mutable_mock_env_path, mock_fetch, instal
 
         # Make sure we can install a concrete dependency spec from a spec.json
         # file on disk, and the spec is installed but not added as a root
-        mpi_spec_json_path = tmpdir.join("{0}.json".format(mpi_spec.name))
+        mpi_spec_json_path = tmpdir.join(f"{mpi_spec.name}.json")
         with open(mpi_spec_json_path.strpath, "w", encoding="utf-8") as fd:
             fd.write(mpi_spec.to_json(hash=ht.dag_hash))
 
-        install("-f", mpi_spec_json_path.strpath)
+        install(mpi_spec_json_path.strpath)
         assert mpi_spec not in e.roots()
 
         find_output = find("-l", output=str)
@@ -1079,7 +1073,9 @@ def test_install_use_buildcache(
 @pytest.mark.disable_clean_stage_check
 def test_padded_install_runtests_root(install_mockery, mock_fetch):
     spack.config.set("config:install_tree:padded_length", 255)
-    output = install("--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False)
+    output = install(
+        "--verbose", "--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False
+    )
     assert output.count("method not implemented") == 1
 
 
@@ -1094,3 +1090,26 @@ def test_report_filename_for_cdash(install_mockery, mock_fetch):
     specs = spack.cmd.install.concrete_specs_from_cli(args, {})
     filename = spack.cmd.install.report_filename(args, specs)
     assert filename != "https://blahblah/submit.php?project=debugging"
+
+
+def test_setting_concurrent_packages_flag(mutable_config):
+    """Ensure that the number of concurrent packages is properly set from the command-line flag"""
+    install = SpackCommand("install")
+    install("--concurrent-packages", "8", fail_on_error=False)
+    assert spack.config.get("config:concurrent_packages", scope="command_line") == 8
+
+
+def test_invalid_concurrent_packages_flag(mutable_config):
+    """Test that an invalid value for --concurrent-packages CLI flag raises a ValueError"""
+    install = SpackCommand("install")
+    with pytest.raises(ValueError, match="expected a positive integer"):
+        install("--concurrent-packages", "-2", fail_on_error=False)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Feature disabled on windows due to locking")
+def test_concurrent_packages_set_in_config(mutable_config, mock_packages):
+    """Ensure that the number of concurrent packages is properly set from adding to config"""
+    spack.config.set("config:concurrent_packages", 3)
+    spec = spack.concretize.concretize_one("pkg-a")
+    installer = spack.installer.PackageInstaller([spec.package])
+    assert installer.concurrent_packages == 3

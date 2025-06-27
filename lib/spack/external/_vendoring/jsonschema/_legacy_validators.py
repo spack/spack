@@ -1,6 +1,6 @@
-from jsonschema import _utils
-from jsonschema.compat import iteritems
-from jsonschema.exceptions import ValidationError
+from _vendoring.jsonschema import _utils
+from _vendoring.jsonschema.compat import iteritems
+from _vendoring.jsonschema.exceptions import ValidationError
 
 
 def dependencies_draft3(validator, dependencies, instance, schema):

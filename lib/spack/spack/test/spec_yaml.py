@@ -15,8 +15,8 @@ import json
 import os
 import pickle
 
+import _vendoring.ruamel.yaml
 import pytest
-import ruamel.yaml
 
 import spack.concretize
 import spack.config
@@ -420,18 +420,24 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     openmpi_edges = s2.edges_to_dependencies(name="openmpi")
     assert len(openmpi_edges) == 1
 
-    # Check that virtuals have been reconstructed
-    assert "mpi" in openmpi_edges[0].virtuals
+    # Check that virtuals have been reconstructed for specfiles conforming to
+    # version 4 on.
+    if reader_cls.SPEC_VERSION >= spack.spec.SpecfileV4.SPEC_VERSION:
+        assert "mpi" in openmpi_edges[0].virtuals
 
-    # The virtuals attribute must be a tuple, when read from a
-    # JSON or YAML file, not a list
-    for edge in s2.traverse_edges():
-        assert isinstance(edge.virtuals, tuple), edge
+        # The virtuals attribute must be a tuple, when read from a
+        # JSON or YAML file, not a list
+        for edge in s2.traverse_edges():
+            assert isinstance(edge.virtuals, tuple), edge
 
     # Ensure we can format {compiler} tokens
     assert s2.format("{compiler}") != "none"
     assert s2.format("{compiler.name}") == "gcc"
     assert s2.format("{compiler.version}") != "none"
+
+    # Ensure satisfies still works with compilers
+    assert s2.satisfies("%gcc")
+    assert s2.satisfies("%gcc@9.4.0")
 
 
 def test_anchorify_1():
@@ -445,7 +451,7 @@ def test_anchorify_1():
 
     # Check if anchors are used
     out = io.StringIO()
-    ruamel.yaml.YAML().dump(after, out)
+    _vendoring.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\
@@ -468,7 +474,7 @@ def test_anchorify_2():
 
     # Check if anchors are used
     out = io.StringIO()
-    ruamel.yaml.YAML().dump(after, out)
+    _vendoring.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\
@@ -490,6 +496,10 @@ e: *id002
         "hdf5~~mpi++shared",
         "hdf5 cflags==-g foo==bar cxxflags==-O3",
         "hdf5 cflags=-g foo==bar cxxflags==-O3",
+        "hdf5%gcc",
+        "hdf5%cmake",
+        "hdf5^gcc",
+        "hdf5^cmake",
     ],
 )
 def test_pickle_roundtrip_for_abstract_specs(spec_str):
@@ -509,3 +519,25 @@ def test_specfile_alias_is_updated():
     specfile_class_name = f"SpecfileV{spack.spec.SPECFILE_FORMAT_VERSION}"
     specfile_cls = getattr(spack.spec, specfile_class_name)
     assert specfile_cls is spack.spec.SpecfileLatest
+
+
+@pytest.mark.parametrize("spec_str", ["mpileaks %gcc", "mpileaks ^zmpi ^callpath%gcc"])
+def test_direct_edges_and_round_tripping_to_dict(spec_str, default_mock_concretization):
+    """Tests that we preserve edge information when round-tripping to dict"""
+    original = Spec(spec_str)
+    reconstructed = Spec.from_dict(original.to_dict())
+    assert original == reconstructed
+    assert original.to_dict() == reconstructed.to_dict()
+
+    concrete = default_mock_concretization(spec_str)
+    concrete_reconstructed = Spec.from_dict(concrete.to_dict())
+    assert concrete == concrete_reconstructed
+    assert concrete.to_dict() == concrete_reconstructed.to_dict()
+
+    # Ensure we don't get 'direct' in concrete JSON specs, for the time being
+    d = concrete.to_dict()
+    for node in d["spec"]["nodes"]:
+        if "dependencies" not in node:
+            continue
+        for dependency_data in node["dependencies"]:
+            assert "direct" not in dependency_data["parameters"]

@@ -13,7 +13,7 @@ import pathlib
 import sys
 from typing import Dict, Optional, Tuple
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import spack.compilers.config
 import spack.compilers.libraries
@@ -30,7 +30,7 @@ class ClingoBootstrapConcretizer:
     def __init__(self, configuration):
         self.host_platform = spack.platforms.host()
         self.host_os = self.host_platform.default_operating_system()
-        self.host_target = archspec.cpu.host().family
+        self.host_target = _vendoring.archspec.cpu.host().family
         self.host_architecture = spack.spec.ArchSpec.default_arch()
         self.host_architecture.target = str(self.host_target)
         self.host_compiler = self._valid_compiler_or_raise()

@@ -11,14 +11,14 @@ logic needs to consume all related specs in a single pass).
 import json
 import os
 
+import _vendoring.archspec.cpu
 import pytest
-
-import archspec.cpu
 
 import spack
 import spack.cmd
 import spack.cmd.external
 import spack.compilers.config
+import spack.concretize
 import spack.cray_manifest as cray_manifest
 import spack.platforms
 import spack.platforms.test
@@ -104,7 +104,7 @@ class JsonCompilerEntry:
 
 @pytest.fixture
 def _common_arch(test_platform):
-    generic = archspec.cpu.TARGETS[test_platform.default].family
+    generic = _vendoring.archspec.cpu.TARGETS[test_platform.default].family
     return JsonArchEntry(platform=test_platform.name, os="redhat6", target=generic.name)
 
 
@@ -329,7 +329,7 @@ def test_read_cray_manifest(temporary_store, manifest_file):
     query_specs = temporary_store.db.query("openmpi")
     assert any(x.dag_hash() == "openmpifakehasha" for x in query_specs)
 
-    concretized_spec = spack.spec.Spec("depends-on-openmpi ^/openmpifakehasha").concretized()
+    concretized_spec = spack.concretize.concretize_one("depends-on-openmpi ^/openmpifakehasha")
     assert concretized_spec["hwloc"].dag_hash() == "hwlocfakehashaaa"
 
 

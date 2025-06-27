@@ -1,18 +1,18 @@
 """
-altgraph - a python graph library
+_vendoring.altgraph - a python graph library
 =================================
 
-altgraph is a fork of `graphlib <http://pygraphlib.sourceforge.net>`_ tailored
+_vendoring.altgraph is a fork of `graphlib <http://pygraphlib.sourceforge.net>`_ tailored
 to use newer Python 2.3+ features, including additional support used by the
-py2app suite (modulegraph and macholib, specifically).
+py2app suite (modulegraph and _vendoring.macholib, specifically).
 
-altgraph is a python based graph (network) representation and manipulation
+_vendoring.altgraph is a python based graph (network) representation and manipulation
 package.  It has started out as an extension to the
 `graph_lib module
 <http://www.ece.arizona.edu/~denny/python_nest/graph_lib_1.0.1.html>`_
 written by Nathan Denny it has been significantly optimized and expanded.
 
-The :class:`altgraph.Graph.Graph` class is loosely modeled after the
+The :class:`_vendoring.altgraph.Graph.Graph` class is loosely modeled after the
 `LEDA <http://www.algorithmic-solutions.com/enleda.htm>`_
 (Library of Efficient Datatypes) representation. The library
 includes methods for constructing graphs, BFS and DFS traversals,
@@ -22,22 +22,22 @@ via `graphviz <http://www.research.att.com/sw/tools/graphviz/>`_.
 
 The package contains the following modules:
 
-    -  the :py:mod:`altgraph.Graph` module contains the
-       :class:`~altgraph.Graph.Graph` class that stores the graph data
+    -  the :py:mod:`_vendoring.altgraph.Graph` module contains the
+       :class:`~_vendoring.altgraph.Graph.Graph` class that stores the graph data
 
-    -  the :py:mod:`altgraph.GraphAlgo` module implements graph algorithms
-       operating on graphs (:py:class:`~altgraph.Graph.Graph`} instances)
+    -  the :py:mod:`_vendoring.altgraph.GraphAlgo` module implements graph algorithms
+       operating on graphs (:py:class:`~_vendoring.altgraph.Graph.Graph`} instances)
 
-    -  the :py:mod:`altgraph.GraphStat` module contains functions for
+    -  the :py:mod:`_vendoring.altgraph.GraphStat` module contains functions for
        computing statistical measures on graphs
 
-    -  the :py:mod:`altgraph.GraphUtil` module contains functions for
+    -  the :py:mod:`_vendoring.altgraph.GraphUtil` module contains functions for
        generating, reading and saving graphs
 
-    -  the :py:mod:`altgraph.Dot` module  contains functions for displaying
+    -  the :py:mod:`_vendoring.altgraph.Dot` module  contains functions for displaying
        graphs via `graphviz <http://www.research.att.com/sw/tools/graphviz/>`_
 
-    -  the :py:mod:`altgraph.ObjectGraph` module implements a graph of
+    -  the :py:mod:`_vendoring.altgraph.ObjectGraph` module implements a graph of
        objects with a unique identifier
 
 Installation
@@ -62,7 +62,7 @@ Example usage
 Lets assume that we want to analyze the graph below (links to the full picture)
 GRAPH_IMG.  Our script then might look the following way::
 
-    from altgraph import Graph, GraphAlgo, Dot
+    from _vendoring.altgraph import Graph, GraphAlgo, Dot
 
     # these are the edges
     edges = [ (1,2), (2,4), (1,3), (2,4), (3,4), (4,5), (6,5),
@@ -141,7 +141,7 @@ To display the graph we can use the GraphViz backend::
 """
 import pkg_resources
 
-__version__ = pkg_resources.require("altgraph")[0].version
+__version__ = pkg_resources.require("_vendoring.altgraph")[0].version
 
 
 class GraphError(ValueError):

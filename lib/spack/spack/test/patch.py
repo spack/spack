@@ -89,7 +89,7 @@ data_path = os.path.join(spack.paths.test_path, "data", "patch")
         (os.path.join(data_path, "foo.patch"), platform_url_sha, None),
     ],
 )
-def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256, config):
+def test_url_patch(mock_packages, mock_patch_stage, filename, sha256, archive_sha256, config):
     # Make a patch object
     url = url_util.path_to_file_url(filename)
     s = spack.concretize.concretize_one("patch")
@@ -121,11 +121,14 @@ third line
                 )
         # apply the patch and compare files
         patch = spack.patch.UrlPatch(s.package, url, sha256=sha256, archive_sha256=archive_sha256)
-        with patch.stage:
-            patch.stage.create()
-            patch.stage.fetch()
-            patch.stage.expand_archive()
-            patch.apply(stage)
+        patch_stage = Stage(patch.fetcher())
+        with patch_stage:
+            patch_stage.create()
+            patch_stage.fetch()
+            patch_stage.expand_archive()
+            spack.patch.apply_patch(
+                stage, patch_stage.single_file, patch.level, patch.working_dir, patch.reverse
+            )
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
@@ -134,11 +137,14 @@ third line
         patch = spack.patch.UrlPatch(
             s.package, url, sha256=sha256, archive_sha256=archive_sha256, reverse=True
         )
-        with patch.stage:
-            patch.stage.create()
-            patch.stage.fetch()
-            patch.stage.expand_archive()
-            patch.apply(stage)
+        patch_stage = Stage(patch.fetcher())
+        with patch_stage:
+            patch_stage.create()
+            patch_stage.fetch()
+            patch_stage.expand_archive()
+            spack.patch.apply_patch(
+                stage, patch_stage.single_file, patch.level, patch.working_dir, patch.reverse
+            )
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-original.txt")
@@ -360,11 +366,11 @@ def check_multi_dependency_patch_specs(
     assert foo_patch.path == os.path.join(package_dir, "foo.patch")
     assert foo_patch.sha256 == foo_sha256
 
-    assert bar_patch.owner == "builtin.mock.patch-several-dependencies"
+    assert bar_patch.owner == "builtin_mock.patch-several-dependencies"
     assert bar_patch.path == os.path.join(package_dir, "bar.patch")
     assert bar_patch.sha256 == bar_sha256
 
-    assert baz_patch.owner == "builtin.mock.patch-several-dependencies"
+    assert baz_patch.owner == "builtin_mock.patch-several-dependencies"
     assert baz_patch.path == os.path.join(package_dir, "baz.patch")
     assert baz_patch.sha256 == baz_sha256
 
@@ -376,11 +382,11 @@ def check_multi_dependency_patch_specs(
     url1_patch = get_patch(fake, "urlpatch.patch")
     url2_patch = get_patch(fake, "urlpatch2.patch.gz")
 
-    assert url1_patch.owner == "builtin.mock.patch-several-dependencies"
+    assert url1_patch.owner == "builtin_mock.patch-several-dependencies"
     assert url1_patch.url == "http://example.com/urlpatch.patch"
     assert url1_patch.sha256 == url1_sha256
 
-    assert url2_patch.owner == "builtin.mock.patch-several-dependencies"
+    assert url2_patch.owner == "builtin_mock.patch-several-dependencies"
     assert url2_patch.url == "http://example.com/urlpatch2.patch.gz"
     assert url2_patch.sha256 == url2_sha256
     assert url2_patch.archive_sha256 == url2_archive_sha256
@@ -397,7 +403,7 @@ def test_conditional_patched_deps_with_conditions(mock_packages, config):
     fake = spec["fake"]
 
     check_multi_dependency_patch_specs(
-        libelf, libdwarf, fake, "builtin.mock.patch-several-dependencies", spec.package.package_dir
+        libelf, libdwarf, fake, "builtin_mock.patch-several-dependencies", spec.package.package_dir
     )
 
 
@@ -417,7 +423,7 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
 
     # make sure we can still read patches correctly for these specs
     check_multi_dependency_patch_specs(
-        libelf, libdwarf, fake, "builtin.mock.patch-several-dependencies", spec.package.package_dir
+        libelf, libdwarf, fake, "builtin_mock.patch-several-dependencies", spec.package.package_dir
     )
 
 
@@ -431,7 +437,7 @@ def test_patch_no_file():
     patch = spack.patch.Patch(fp, "nonexistent_file", 0, "")
     patch.path = "test"
     with pytest.raises(spack.error.NoSuchPatchError, match="No such patch:"):
-        patch.apply("")
+        spack.patch.apply_patch(Stage("https://example.com/foo.patch"), patch.path)
 
 
 def test_patch_no_sha256():
@@ -466,7 +472,7 @@ def test_equality():
     assert patch1 != "not a patch"
 
 
-def test_sha256_setter(mock_patch_stage, config):
+def test_sha256_setter(mock_packages, mock_patch_stage, config):
     path = os.path.join(data_path, "foo.patch")
     s = spack.concretize.concretize_one("patch")
     patch = spack.patch.FilePatch(s.package, path, level=1, working_dir=".")

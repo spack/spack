@@ -1,0 +1,110 @@
+# -------------------------------------------------------------------------
+# This file controls default concretization preferences for Spack.
+#
+# Settings here are versioned with Spack and are intended to provide
+# sensible defaults out of the box. Spack maintainers should edit this
+# file to keep it current.
+#
+# Users can override these settings by editing the following files.
+#
+# Per-spack-instance settings (overrides defaults):
+#   $SPACK_ROOT/etc/spack/packages.yaml
+#
+# Per-user settings (overrides default and site settings):
+#   ~/.spack/packages.yaml
+# -------------------------------------------------------------------------
+packages:
+  all:
+    providers:
+      awk: [gawk]
+      armci: [armcimpi]
+      blas: [openblas, amdblis]
+      c: [gcc, llvm, intel-oneapi-compilers]
+      cxx: [gcc, llvm, intel-oneapi-compilers]
+      D: [ldc]
+      daal: [intel-oneapi-daal]
+      elf: [elfutils]
+      fftw-api: [fftw, amdfftw]
+      flame: [libflame, amdlibflame]
+      fortran: [gcc, llvm, intel-oneapi-compilers]
+      fortran-rt: [gcc-runtime, intel-oneapi-runtime]
+      fuse: [libfuse]
+      gl: [glx, osmesa]
+      glu: [mesa-glu, openglu]
+      golang: [go, gcc]
+      go-or-gccgo-bootstrap: [go-bootstrap, gcc]
+      iconv: [libiconv]
+      ipp: [intel-oneapi-ipp]
+      java: [openjdk, jdk]
+      jpeg: [libjpeg-turbo, libjpeg]
+      lapack: [openblas, amdlibflame]
+      libc: [glibc, musl]
+      libgfortran: [gcc-runtime]
+      libglx: [mesa+glx]
+      libifcore: [intel-oneapi-runtime]
+      libllvm: [llvm]
+      lua-lang: [lua, lua-luajit-openresty, lua-luajit]
+      luajit: [lua-luajit-openresty, lua-luajit]
+      mariadb-client: [mariadb-c-client, mariadb]
+      mkl: [intel-oneapi-mkl]
+      mpe: [mpe2]
+      mpi: [openmpi, mpich]
+      mysql-client: [mysql, mariadb-c-client]
+      opencl: [pocl]
+      onedal: [intel-oneapi-dal]
+      pbs: [openpbs, torque]
+      pil: [py-pillow]
+      pkgconfig: [pkgconf, pkg-config]
+      qmake: [qt-base, qt]
+      rpc: [libtirpc]
+      scalapack: [netlib-scalapack, amdscalapack]
+      sycl: [hipsycl]
+      szip: [libaec, libszip]
+      tbb: [intel-tbb]
+      unwind: [libunwind]
+      uuid: [util-linux-uuid, libuuid]
+      wasi-sdk: [wasi-sdk-prebuilt]
+      xkbdata-api: [xkeyboard-config, xkbdata]
+      xxd: [xxd-standalone, vim]
+      yacc: [bison, byacc]
+      ziglang: [zig]
+      zlib-api: [zlib-ng+compat, zlib]
+    permissions:
+      read: world
+      write: user
+  cce:
+    buildable: false
+  cray-fftw:
+    buildable: false
+  cray-libsci:
+    buildable: false
+  cray-mpich:
+    buildable: false
+  cray-mvapich2:
+    buildable: false
+  cray-pmi:
+    buildable: false
+  egl:
+    buildable: false
+  essl:
+    buildable: false
+  fj:
+    buildable: false
+  fujitsu-mpi:
+    buildable: false
+  fujitsu-ssl2:
+    buildable: false
+  glibc:
+    buildable: false
+  hpcx-mpi:
+    buildable: false
+  iconv:
+    prefer: [libiconv]
+  mpt:
+    buildable: false
+  musl:
+    buildable: false
+  spectrum-mpi:
+    buildable: false
+  xl:
+    buildable: false

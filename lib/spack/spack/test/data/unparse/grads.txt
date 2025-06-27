@@ -47,10 +47,10 @@ class Grads(AutotoolsPackage):
     depends_on('readline')
     depends_on('pkgconfig', type='build')
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set('SUPPLIBS', '/')
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set('GADDIR', self.prefix.data)
 
     @run_after('install')

@@ -8,17 +8,17 @@
 # mapping ::= MAPPING-START (node node)* MAPPING-END
 
 import sys
-from ruamel.yaml.error import YAMLError, YAMLStreamError
-from ruamel.yaml.events import *  # NOQA
+from _vendoring.ruamel.yaml.error import YAMLError, YAMLStreamError
+from _vendoring.ruamel.yaml.events import *  # NOQA
 
 # fmt: off
-from ruamel.yaml.compat import _F, nprint, dbg, DBG_EVENT, \
+from _vendoring.ruamel.yaml.compat import _F, nprint, dbg, DBG_EVENT, \
     check_anchorname_char, nprintf  # NOQA
 # fmt: on
 
 if False:  # MYPY
     from typing import Any, Dict, List, Union, Text, Tuple, Optional  # NOQA
-    from ruamel.yaml.compat import StreamType  # NOQA
+    from _vendoring.ruamel.yaml.compat import StreamType  # NOQA
 
 __all__ = ['Emitter', 'EmitterError']
 

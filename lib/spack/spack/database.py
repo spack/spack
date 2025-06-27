@@ -21,7 +21,6 @@ import contextlib
 import datetime
 import os
 import pathlib
-import socket
 import sys
 import time
 from json import JSONDecoder
@@ -53,7 +52,6 @@ except ImportError:
     pass
 
 import llnl.util.filesystem as fs
-import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.deptypes as dt
@@ -70,6 +68,7 @@ from spack.directory_layout import (
 )
 from spack.error import SpackError
 from spack.util.crypto import bit_length
+from spack.util.socket import _getfqdn
 
 from .enums import InstallRecordStatus
 
@@ -138,23 +137,12 @@ _INDEX_VERIFIER_FILE = "index_verifier"
 _LOCK_FILE = "lock"
 
 
-@llnl.util.lang.memoized
-def _getfqdn():
-    """Memoized version of `getfqdn()`.
-
-    If we call `getfqdn()` too many times, DNS can be very slow. We only need to call it
-    one time per process, so we cache it here.
-
-    """
-    return socket.getfqdn()
-
-
-def reader(version: vn.ConcreteVersion) -> Type["spack.spec.SpecfileReaderBase"]:
+def reader(version: vn.StandardVersion) -> Type["spack.spec.SpecfileReaderBase"]:
     reader_cls = {
-        vn.Version("5"): spack.spec.SpecfileV1,
-        vn.Version("6"): spack.spec.SpecfileV3,
-        vn.Version("7"): spack.spec.SpecfileV4,
-        vn.Version("8"): spack.spec.SpecfileV5,
+        vn.StandardVersion.from_string("5"): spack.spec.SpecfileV1,
+        vn.StandardVersion.from_string("6"): spack.spec.SpecfileV3,
+        vn.StandardVersion.from_string("7"): spack.spec.SpecfileV4,
+        vn.StandardVersion.from_string("8"): spack.spec.SpecfileV5,
     }
     return reader_cls[version]
 
@@ -778,7 +766,7 @@ class Database:
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _, virtuals in spec_reader.read_specfile_dep_specs(
+            for dname, dhash, dtypes, _, virtuals, direct in spec_reader.read_specfile_dep_specs(
                 yaml_deps
             ):
                 # It is important that we always check upstream installations in the same order,
@@ -797,7 +785,9 @@ class Database:
                     )
                     continue
 
-                spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
+                spec._add_dependency(
+                    child, depflag=dt.canonicalize(dtypes), virtuals=virtuals, direct=direct
+                )
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
         """Fill database from file, do not maintain old data.
@@ -805,11 +795,14 @@ class Database:
 
         Does not do any locking.
         """
+        if not filename.is_file():
+            raise FileNotFoundError(f"database does not exist {filename}")
+
         try:
             # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
             fdata, _ = JSONDecoder().raw_decode(filename.read_text(encoding="utf-8"))
         except Exception as e:
-            raise CorruptDatabaseError("error parsing database:", str(e)) from e
+            raise CorruptDatabaseError(f"error parsing database at {filename}:", str(e)) from e
 
         if fdata is None:
             return
@@ -824,7 +817,7 @@ class Database:
         db = fdata["database"]
         check("version" in db, "no 'version' in JSON DB.")
 
-        self.db_version = vn.Version(db["version"])
+        self.db_version = vn.StandardVersion.from_string(db["version"])
         if self.db_version > _DB_VERSION:
             raise InvalidDatabaseVersionError(self, _DB_VERSION, self.db_version)
         elif self.db_version < _DB_VERSION:
@@ -914,11 +907,22 @@ class Database:
         raise ExplicitDatabaseUpgradeError(
             f"database is v{self.db_version}, but Spack v{spack.__version__} needs v{_DB_VERSION}",
             long_message=(
-                f"\nChange config:install_tree:root to use a different store, or use `spack "
-                f"reindex` to migrate the store at {self.root} to version {_DB_VERSION}.\n\n"
-                f"If you decide to migrate the store, note that:\n"
-                f"1. The operation cannot be reverted, and\n"
-                f"2. Older Spack versions will not be able to read the store anymore\n"
+                f"You will need to either:"
+                f"\n"
+                f"\n  1. Migrate the database to v{_DB_VERSION}, or"
+                f"\n  2. Use a new database by changing config:install_tree:root."
+                f"\n"
+                f"\nTo migrate the database at {self.root} "
+                f"\nto version {_DB_VERSION}, run:"
+                f"\n"
+                f"\n    spack reindex"
+                f"\n"
+                f"\nNOTE that if you do this, older Spack versions will no longer"
+                f"\nbe able to read the database. However, `spack reindex` will create a backup,"
+                f"\nin case you want to revert."
+                f"\n"
+                f"\nIf you still need your old database, you can instead run"
+                f"\n`spack config edit config` and set install_tree:root to a new location."
             ),
         )
 

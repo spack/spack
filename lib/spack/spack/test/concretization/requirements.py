@@ -12,6 +12,7 @@ import spack.package_base
 import spack.paths
 import spack.repo
 import spack.solver.asp
+import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
@@ -28,9 +29,9 @@ def update_packages_config(conf_str):
 
 @pytest.fixture
 def test_repo(mutable_config, monkeypatch, mock_stage):
-    repo_dir = pathlib.Path(spack.paths.repos_path) / "requirements.test"
-    with spack.repo.use_repositories(str(repo_dir)) as mock_repo_path:
-        yield mock_repo_path
+    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "spack_repo" / "requirements_test"
+    with spack.repo.use_repositories(str(repo_dir)) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 def test_one_package_multiple_reqs(concretize_scope, test_repo):
@@ -766,21 +767,21 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
 
 def test_requires_directive(mock_packages, config):
     # This package requires either clang or gcc
-    s = spack.concretize.concretize_one("requires_clang_or_gcc")
+    s = spack.concretize.concretize_one("requires-clang-or-gcc")
     assert s.satisfies("%gcc")
-    s = spack.concretize.concretize_one("requires_clang_or_gcc %gcc")
+    s = spack.concretize.concretize_one("requires-clang-or-gcc %gcc")
     assert s.satisfies("%gcc")
-    s = spack.concretize.concretize_one("requires_clang_or_gcc %clang")
+    s = spack.concretize.concretize_one("requires-clang-or-gcc %clang")
     # Test both the real package (llvm) and its alias (clang)
     assert s.satisfies("%llvm") and s.satisfies("%clang")
 
     # This package can only be compiled with clang
-    s = spack.concretize.concretize_one("requires_clang")
+    s = spack.concretize.concretize_one("requires-clang")
     assert s.satisfies("%llvm")
-    s = spack.concretize.concretize_one("requires_clang %clang")
+    s = spack.concretize.concretize_one("requires-clang %clang")
     assert s.satisfies("%llvm")
     with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
-        spack.concretize.concretize_one("requires_clang %gcc")
+        spack.concretize.concretize_one("requires-clang %gcc")
 
 
 @pytest.mark.parametrize(
@@ -1093,22 +1094,22 @@ def test_conflict_packages_yaml(packages_yaml, spec_str, concretize_scope, mock_
     "spec_str,expected,not_expected",
     [
         (
-            "forward-multi-value+cuda cuda_arch=10^dependency-mv~cuda",
+            "forward-multi-value+cuda cuda_arch=10 ^dependency-mv~cuda",
             ["cuda_arch=10", "^dependency-mv~cuda"],
             ["cuda_arch=11", "^dependency-mv cuda_arch=10", "^dependency-mv cuda_arch=11"],
         ),
         (
-            "forward-multi-value+cuda cuda_arch=10^dependency-mv+cuda",
+            "forward-multi-value+cuda cuda_arch=10 ^dependency-mv+cuda",
             ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
             ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
         ),
         (
-            "forward-multi-value+cuda cuda_arch=11^dependency-mv+cuda",
+            "forward-multi-value+cuda cuda_arch=11 ^dependency-mv+cuda",
             ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
             ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
         ),
         (
-            "forward-multi-value+cuda cuda_arch=10,11^dependency-mv+cuda",
+            "forward-multi-value+cuda cuda_arch=10,11 ^dependency-mv+cuda",
             ["cuda_arch=10,11", "^dependency-mv cuda_arch=10,11"],
             [],
         ),
@@ -1270,13 +1271,10 @@ packages:
 packages:
   all:
     require:
-    - "%gcc"
-  pkg-a:
-    require:
-    - "%gcc@10"
+    - "%gcc@9"
     """,
             True,
-            ["%gcc@10"],
+            ["%gcc@9"],
         ),
     ],
 )
@@ -1303,4 +1301,46 @@ def test_requirements_on_compilers_and_reuse(
 
     assert is_pkgb_reused == expected_reuse
     for c in expected_contraints:
-        assert pkga.satisfies(c), print(pkga.tree())
+        assert pkga.satisfies(c)
+
+
+@pytest.mark.parametrize(
+    "abstract,req_is_noop",
+    [
+        ("hdf5+mpi", False),
+        ("hdf5~mpi", True),
+        ("conditional-languages+c", False),
+        ("conditional-languages+cxx", False),
+        ("conditional-languages+fortran", False),
+        ("conditional-languages~c~cxx~fortran", True),
+    ],
+)
+def test_requirements_conditional_deps(
+    abstract, req_is_noop, mutable_config, mock_packages, config_two_gccs
+):
+    required_spec = (
+        "%[when='^c' virtuals=c]gcc@10.3.1 "
+        "%[when='^cxx' virtuals=cxx]gcc@10.3.1 "
+        "%[when='^fortran' virtuals=fortran]gcc@10.3.1 "
+        "^[when='^mpi' virtuals=mpi]zmpi"
+    )
+    abstract = spack.spec.Spec(abstract)
+
+    no_requirements = spack.concretize.concretize_one(abstract)
+    spack.config.CONFIG.set(f"packages:{abstract.name}", {"require": required_spec})
+    requirements = spack.concretize.concretize_one(abstract)
+
+    assert requirements.satisfies(required_spec)
+    assert (requirements == no_requirements) == req_is_noop  # show the reqs change concretization
+
+
+@pytest.mark.regression("50898")
+def test_preferring_compilers_can_be_overridden(mutable_config, mock_packages):
+    """Tests that we can override preferences for languages, without triggering an error."""
+    mutable_config.set("packages:c", {"prefer": ["llvm"]})
+
+    s = spack.spec.Spec("pkg-a %gcc ^pkg-b %llvm")
+    concrete = spack.concretize.concretize_one(s)
+
+    assert concrete.satisfies("%c=gcc")
+    assert concrete["pkg-b"].satisfies("%c=llvm")

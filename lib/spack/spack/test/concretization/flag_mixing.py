@@ -46,9 +46,9 @@ import spack.util.spack_yaml as syaml
 
 @pytest.fixture
 def test_repo(mutable_config, monkeypatch, mock_stage):
-    repo_dir = pathlib.Path(spack.paths.repos_path) / "flags.test"
-    with spack.repo.use_repositories(str(repo_dir)) as mock_repo_path:
-        yield mock_repo_path
+    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "spack_repo" / "flags_test"
+    with spack.repo.use_repositories(str(repo_dir)) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 def update_concretize_scope(conf_str, section):
@@ -163,15 +163,14 @@ packages:
     if cmp_flags:
         compiler_spec = "%gcc@12.100.100"
 
+    cmd_flags_str = f'cflags="{cmd_flags}"' if cmd_flags else ""
+
     if dflags:
-        spec_str = f"x+activatemultiflag {compiler_spec} ^y"
+        spec_str = f"x+activatemultiflag {compiler_spec} ^y {cmd_flags_str}"
         expected_dflags = "-d1 -d2"
     else:
-        spec_str = f"y {compiler_spec}"
+        spec_str = f"y {cmd_flags_str} {compiler_spec}"
         expected_dflags = None
-
-    if cmd_flags:
-        spec_str += f' cflags="{cmd_flags}"'
 
     root_spec = spack.concretize.concretize_one(spec_str)
     spec = root_spec["y"]
@@ -277,6 +276,6 @@ def test_flag_injection_different_compilers(mock_packages, mutable_config):
     """Tests that flag propagation is not activated on nodes with a compiler that is different
     from the propagation source.
     """
-    s = spack.concretize.concretize_one('mpileaks %gcc cflags=="-O2" ^callpath %llvm')
+    s = spack.concretize.concretize_one('mpileaks cflags=="-O2" %gcc ^callpath %llvm')
     assert s.satisfies('cflags="-O2"') and s["c"].name == "gcc"
     assert not s["callpath"].satisfies('cflags="-O2"') and s["callpath"]["c"].name == "llvm"

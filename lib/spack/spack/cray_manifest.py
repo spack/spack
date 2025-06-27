@@ -8,8 +8,8 @@ import traceback
 import warnings
 from typing import Any, Dict, Iterable, List, Optional
 
-import jsonschema
-import jsonschema.exceptions
+from _vendoring import jsonschema
+from _vendoring.jsonschema import exceptions
 
 import llnl.util.tty as tty
 
@@ -88,7 +88,7 @@ def compiler_spec_from_paths(*, pkg_name: str, compiler_paths: Iterable[str]) ->
     """Returns the external spec associated with a series of compilers, if any."""
     pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
     finder = ExecutablesFinder()
-    specs = finder.detect_specs(pkg=pkg_cls, paths=compiler_paths)
+    specs = finder.detect_specs(pkg=pkg_cls, paths=compiler_paths, repo_path=spack.repo.PATH)
 
     if not specs or len(specs) > 1:
         raise CrayCompilerDetectionError(
@@ -227,7 +227,7 @@ def read(path, apply_updates):
             json_data = json.load(json_file)
 
         jsonschema.validate(json_data, manifest_schema)
-    except (jsonschema.exceptions.ValidationError, decode_exception_type) as e:
+    except (exceptions.ValidationError, decode_exception_type) as e:
         raise ManifestValidationError("error parsing manifest JSON:", str(e)) from e
 
     specs = entries_to_specs(json_data["specs"])
