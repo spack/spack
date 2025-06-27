@@ -2,8 +2,6 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-.. _packaging-guide:
-
 .. list-table::
    :widths: 25 25 25 25
    :header-rows: 0
@@ -127,7 +125,7 @@ The package class is named after the package, and can roughly be divided into tw
   This is the imperative part of the package.
 
 In this part of the packaging guide we will cover the **metadata and directives** in detail.
-In the :ref:`second part <packaging-guide-part-2>`, we will cover the **build instructions**, including how to write custom build logic for different build systems.
+In the :doc:`second part <packaging_guide_build>`, we will cover the **build instructions**, including how to write custom build logic for different build systems.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Package Names and the Package Directory

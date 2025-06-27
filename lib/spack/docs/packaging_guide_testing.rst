@@ -2,8 +2,6 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-.. _packaging-guide-part-3:
-
 .. list-table::
    :widths: 25 25 25 25
    :header-rows: 0
