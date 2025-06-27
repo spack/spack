@@ -872,7 +872,6 @@ class DevelopStage(LockableStagingDir):
     def _update_link_dict(dev_path, updates=None):
         # key: path of symlink in dev path that points to stage path
         # val: stage path
-        # ? when would the target of the link ever not be the stage path...?
         path = os.path.join(dev_path, ".spack-develop-links")
         import json
 
@@ -882,13 +881,22 @@ class DevelopStage(LockableStagingDir):
                 link_to_stage = json.load(f)
             for link_path, stage_path in link_to_stage.items():
                 if not llnl.util.symlink.islink(link_path):
+                    # If spack created this file, it will be a link, but
+                    # we're in a directory mostly-not managed by Spack
+                    # so it might not have been made by us.
                     continue
-                import pdb; pdb.set_trace()
                 target = llnl.util.symlink.readlink(link_path)
                 if target == stage_path and not os.path.exists(stage_path):
                     os.unlink(link_path)
-                else:
+                elif os.path.exists(stage_path):
+                    # The link points where we expect, and the path still
+                    # exists
                     new_refs[link_path] = stage_path
+                else:
+                    # If we're here, then the link exists but points
+                    # somewhere unexpected: something besides us made
+                    # the link
+                    pass
         if updates:
             new_refs.update(updates)
         if new_refs:
