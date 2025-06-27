@@ -33,29 +33,38 @@ Second, it has many powerful features to help make package writing easy.
 Setting up for package development
 ----------------------------------
 
-For developing new packages or working with existing ones, it's often helpful to have the ``spack/spack-packages`` repository in a custom location.
-By default, Spack will download the builtin package repository to ``~/.spack/package_repos/<hash>/``, which can be inconvenient for development purposes.
+For developing new packages or working with existing ones, it's helpful to have the ``spack/spack-packages`` repository in a convenient location like your home directory, rather than the default ``~/.spack/package_repos/<hash>/``.
 
-The best approach is to configure Spack to use a custom repository location, such as ``~/spack-packages``:
+If you plan to contribute changes back to Spack, we recommend creating a fork of the `packages repository <https://github.com/spack/spack-packages>`_.
+See `GitHub's fork documentation <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_ for details.
+Once you have a fork, clone it:
 
 .. code-block:: console
 
-   $ spack repo set --destination ~/spack-packages builtin
+   git clone --depth=100 git@github.com:YOUR-USERNAME/spack-packages.git ~/spack-packages
+   cd ~/spack-packages
+   git remote add --track develop upstream git@github.com:spack/spack-packages.git
 
-and then verify that Spack is picking up the right repository by checking the location of a known package, like ``zlib``:
+Then configure Spack to use your local repository:
+
+.. code-block:: console
+
+   spack repo set --destination ~/spack-packages builtin
+
+Before starting work, it's useful to create a new branch in your local repository.
+
+.. code-block:: console
+
+   git checkout -b add-my-package
+
+Lastly, verify that Spack is picking up the right repository by checking the location of a known package, like ``zlib``:
 
 .. code-block:: console
 
    $ spack location --package-dir zlib
    /home/your-username/spack-packages/repos/spack_repo/builtin/packages/zlib
 
-This gives you direct access to the package files and makes it much easier to:
-
-* Edit existing packages
-* Create new packages
-* Submit pull requests to the ``spack/spack-packages`` repository
-* Track your changes with version control
-* Work with your own fork of the repository
+With this setup, you can conveniently access the package files, and contribute changes back to Spack.
 
 ----------------------
 Structure of a package
