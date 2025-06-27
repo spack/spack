@@ -9,7 +9,7 @@ Developer Guide
 ===============
 
 This guide is intended for people who want to work on Spack itself.
-If you just want to develop packages, see the :ref:`Packaging Guide <packaging_guide_creation>`.
+If you just want to develop packages, see the :doc:`Packaging Guide <packaging_guide_creation>`.
 
 It is assumed that you have read the :ref:`basic-usage` and :doc:`packaging guide <packaging_guide_creation>` sections and that you are familiar with the concepts discussed there.
 
