@@ -11,8 +11,8 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional, Set, Tuple
 
-import llnl.string as string
 import llnl.util.filesystem as fs
+import llnl.util.string as string
 import llnl.util.tty as tty
 from llnl.util.symlink import islink, symlink
 from llnl.util.tty.colify import colify

@@ -13,7 +13,7 @@ from typing import IO, Any, Callable, ContextManager, Dict, Generator, Optional,
 
 from llnl.util import lang, tty
 
-from ..string import plural
+from .string import plural
 
 if sys.platform != "win32":
     import fcntl

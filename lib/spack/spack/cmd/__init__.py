@@ -11,7 +11,7 @@ import sys
 from collections import Counter
 from typing import Generator, List, Optional, Sequence, Union
 
-import llnl.string
+import llnl.util.string
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import attr_setdefault, index_by
@@ -566,7 +566,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % llnl.string.plural(len(specs), pkg_type + " package") + suffix)
+    tty.msg("%s" % llnl.util.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():

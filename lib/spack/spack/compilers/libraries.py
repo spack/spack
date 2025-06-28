@@ -12,8 +12,8 @@ import sys
 import tempfile
 from typing import Dict, List, Optional, Set, Tuple
 
-import llnl.path
 import llnl.util.lang
+import llnl.util.path
 from llnl.util import tty
 from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 
@@ -39,7 +39,7 @@ _LINK_DIR_ARG = re.compile(r"^-L(.:)?(?P<dir>[/\\].*)")
 _LIBPATH_ARG = re.compile(r"^[-/](LIBPATH|libpath):(?P<dir>.*)")
 
 
-@llnl.path.system_path_filter
+@llnl.util.path.system_path_filter
 def parse_non_system_link_dirs(compiler_debug_output: str) -> List[str]:
     """Parses link paths out of compiler debug output.
 

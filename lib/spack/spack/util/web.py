@@ -20,7 +20,7 @@ from typing import IO, Dict, Iterable, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
 
-import llnl.url
+import llnl.util.url
 from llnl.util import lang, tty
 from llnl.util.filesystem import mkdirp, rename, working_dir
 
@@ -726,7 +726,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             links.add(abs_link)
 
             # Skip stuff that looks like an archive
-            if any(raw_link.endswith(s) for s in llnl.url.ALLOWED_ARCHIVE_TYPES):
+            if any(raw_link.endswith(s) for s in llnl.util.url.ALLOWED_ARCHIVE_TYPES):
                 continue
 
             # Skip already-visited links

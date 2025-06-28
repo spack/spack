@@ -9,7 +9,7 @@ import sys
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
 import llnl.util.filesystem
-from llnl.url import allowed_archive
+from llnl.util.url import allowed_archive
 
 import spack
 import spack.error

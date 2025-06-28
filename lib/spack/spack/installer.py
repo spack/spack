@@ -43,8 +43,8 @@ from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
-from llnl.string import ordinal
 from llnl.util.lang import pretty_seconds
+from llnl.util.string import ordinal
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output, preserve_terminal_settings
 

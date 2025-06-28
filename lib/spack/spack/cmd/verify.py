@@ -6,8 +6,8 @@ import io
 from typing import List, Optional
 
 import llnl.util.tty as tty
-from llnl.string import plural
 from llnl.util.filesystem import visit_directory_tree
+from llnl.util.string import plural
 
 import spack.cmd
 import spack.environment as ev

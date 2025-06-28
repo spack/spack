@@ -41,7 +41,7 @@ from llnl.util import tty
 from llnl.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
 
-from ..path import path_to_os_path, system_path_filter
+from .path import path_to_os_path, system_path_filter
 
 if sys.platform != "win32":
     import grp

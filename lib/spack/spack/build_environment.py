@@ -64,9 +64,9 @@ from typing import (
 import _vendoring.archspec.cpu
 
 import llnl.util.tty as tty
-from llnl.string import plural
 from llnl.util.filesystem import join_path
 from llnl.util.lang import dedupe, stable_partition
+from llnl.util.string import plural
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 

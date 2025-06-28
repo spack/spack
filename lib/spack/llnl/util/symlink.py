@@ -11,7 +11,7 @@ from typing import Union
 
 from llnl.util import lang, tty
 
-from ..path import sanitize_win_longpath, system_path_filter
+from .path import sanitize_win_longpath, system_path_filter
 
 if sys.platform == "win32":
     from win32file import CreateHardLink

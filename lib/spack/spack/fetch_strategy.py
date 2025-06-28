@@ -36,12 +36,12 @@ import urllib.response
 from pathlib import PurePath
 from typing import Callable, List, Mapping, Optional
 
-import llnl.url
 import llnl.util
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.string import comma_and, quote
+import llnl.util.url
 from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, working_dir
+from llnl.util.string import comma_and, quote
 from llnl.util.symlink import symlink
 
 import spack.config
@@ -551,7 +551,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = llnl.url.determine_url_file_extension(self.url)
+            self.extension = llnl.util.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug("Source already staged to %s" % self.stage.source_path)
@@ -703,7 +703,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
-        assert llnl.url.extension_from_path(destination) == "tar.gz"
+        assert llnl.util.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
         # We need to prepend this dir name to every entry of the tarfile
         top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))

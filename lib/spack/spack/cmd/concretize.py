@@ -5,7 +5,7 @@
 import argparse
 
 import llnl.util.tty as tty
-from llnl.string import plural
+from llnl.util.string import plural
 
 import spack.cmd
 import spack.cmd.common.arguments

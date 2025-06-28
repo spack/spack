@@ -13,8 +13,8 @@ import sys
 import tempfile
 from typing import Callable, Dict, Generator, Iterable, List, Optional, Set
 
-import llnl.string
 import llnl.util.lang
+import llnl.util.string
 import llnl.util.symlink
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -928,16 +928,16 @@ def interactive_version_filter(
             header = []
             if len(orig_url_dict) > 0 and len(sorted_and_filtered) == len(orig_url_dict):
                 header.append(
-                    f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}"
+                    f"Selected {llnl.util.string.plural(len(sorted_and_filtered), 'version')}"
                 )
             else:
                 header.append(
                     f"Selected {len(sorted_and_filtered)} of "
-                    f"{llnl.string.plural(len(orig_url_dict), 'version')}"
+                    f"{llnl.util.string.plural(len(orig_url_dict), 'version')}"
                 )
             if sorted_and_filtered and known_versions:
                 num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
-                header.append(f"{llnl.string.plural(num_new, 'new version')}")
+                header.append(f"{llnl.util.string.plural(num_new, 'new version')}")
             if has_filter:
                 header.append(colorize(f"Filtered by {VERSION_COLOR}@@{version_filter}@."))
 

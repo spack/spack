@@ -9,8 +9,8 @@ import tempfile
 from typing import List, Optional, Tuple
 
 import llnl.util.tty as tty
-from llnl.string import plural
 from llnl.util.lang import elide_list, stable_partition
+from llnl.util.string import plural
 
 import spack.binary_distribution as bindist
 import spack.cmd

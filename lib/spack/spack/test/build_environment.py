@@ -11,8 +11,8 @@ from typing import Dict, Optional, Tuple
 import _vendoring.archspec.cpu
 import pytest
 
-from llnl.path import Path, convert_to_platform_path
 from llnl.util.filesystem import HeaderList, LibraryList
+from llnl.util.path import Path, convert_to_platform_path
 
 import spack.build_environment
 import spack.concretize

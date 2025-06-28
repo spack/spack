@@ -17,8 +17,8 @@ from typing import Callable, Iterable, List, Optional, Tuple, Type, TypeVar, Uni
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.log
-from llnl.string import plural
 from llnl.util.lang import nullcontext
+from llnl.util.string import plural
 from llnl.util.tty.color import colorize
 
 import spack.config

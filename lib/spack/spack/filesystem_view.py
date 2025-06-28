@@ -14,7 +14,6 @@ from typing import Callable, Dict, List, Optional
 
 from _vendoring.typing_extensions import Literal
 
-from llnl.string import comma_or
 from llnl.util import tty
 from llnl.util.filesystem import (
     mkdirp,
@@ -31,6 +30,7 @@ from llnl.util.link_tree import (
     SingleMergeConflictError,
     SourceMergeVisitor,
 )
+from llnl.util.string import comma_or
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import colorize
 

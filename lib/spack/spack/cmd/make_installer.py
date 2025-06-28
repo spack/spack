@@ -6,7 +6,7 @@ import os
 import posixpath
 import sys
 
-from llnl.path import convert_to_posix_path
+from llnl.util.path import convert_to_posix_path
 
 import spack.concretize
 import spack.paths

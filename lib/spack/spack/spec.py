@@ -77,10 +77,10 @@ from typing import (
 import _vendoring.archspec.cpu
 from _vendoring.typing_extensions import Literal
 
-import llnl.path
-import llnl.string
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
+import llnl.util.path
+import llnl.util.string
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
 
@@ -1576,7 +1576,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return llnl.path.path_to_os_path(self._external_path)[0]
+        return llnl.util.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -2268,7 +2268,7 @@ class Spec:
         return self._prefix
 
     def set_prefix(self, value: str) -> None:
-        self._prefix = spack.util.prefix.Prefix(llnl.path.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(llnl.util.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
@@ -4975,9 +4975,9 @@ def substitute_abstract_variants(spec: Spec):
         spec.variants.substitute(new_variant)
 
     if unknown:
-        variants = llnl.string.plural(len(unknown), "variant")
+        variants = llnl.util.string.plural(len(unknown), "variant")
         raise vt.UnknownVariantError(
-            f"Tried to set {variants} {llnl.string.comma_and(unknown)}. "
+            f"Tried to set {variants} {llnl.util.string.comma_and(unknown)}. "
             f"{spec.name} has no such {variants}",
             unknown_variants=unknown,
         )
@@ -5493,7 +5493,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, llnl.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, llnl.util.string.comma_or(deps))
         )
 
 

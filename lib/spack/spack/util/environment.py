@@ -16,9 +16,9 @@ import sys
 import warnings
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Optional, Tuple, Union
 
-from llnl.path import path_to_os_path, system_path_filter
 from llnl.util import tty
 from llnl.util.lang import dedupe
+from llnl.util.path import path_to_os_path, system_path_filter
 
 import spack.error
 

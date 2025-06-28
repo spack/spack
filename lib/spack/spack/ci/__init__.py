@@ -17,8 +17,8 @@ from collections import namedtuple
 from typing import Callable, Dict, List, Optional, Set, Union
 from urllib.request import Request
 
-import llnl.path
 import llnl.util.filesystem as fs
+import llnl.util.path
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 
@@ -128,7 +128,7 @@ def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
     # git returns posix paths always, normalize input to be comptaible
     # with that
-    env_path = llnl.path.convert_to_posix_path(env_path)
+    env_path = llnl.util.path.convert_to_posix_path(env_path)
     git = spack.util.git.git()
     if git:
         with fs.working_dir(spack.paths.prefix):

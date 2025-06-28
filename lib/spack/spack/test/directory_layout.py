@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from llnl.path import path_to_os_path
+from llnl.util.path import path_to_os_path
 
 import spack.concretize
 import spack.hash_types

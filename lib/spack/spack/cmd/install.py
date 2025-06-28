@@ -9,8 +9,8 @@ import sys
 from typing import List
 
 import llnl.util.filesystem as fs
-from llnl.string import plural
 from llnl.util import tty
+from llnl.util.string import plural
 
 import spack.cmd
 import spack.config

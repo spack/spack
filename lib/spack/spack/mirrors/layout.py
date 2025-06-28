@@ -4,8 +4,8 @@
 import os
 from typing import Optional
 
-import llnl.url
 import llnl.util.symlink
+import llnl.util.url
 from llnl.util.filesystem import mkdirp
 
 import spack.fetch_strategy
@@ -82,7 +82,7 @@ def _determine_extension(fetcher):
     if isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
-            ext = llnl.url.determine_url_file_extension(fetcher.url)
+            ext = llnl.util.url.determine_url_file_extension(fetcher.url)
 
             if ext:
                 # Remove any leading dots

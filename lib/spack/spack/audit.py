@@ -50,7 +50,7 @@ from typing import Iterable, List, Set, Tuple
 from urllib.request import urlopen
 
 import llnl.util.lang
-from llnl.string import plural
+from llnl.util.string import plural
 
 import spack.builder
 import spack.config

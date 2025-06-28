@@ -30,8 +30,8 @@ import pathlib
 import re
 from typing import Any, Dict, Optional, Sequence, Union
 
-import llnl.url
-from llnl.path import convert_to_posix_path
+import llnl.util.url
+from llnl.util.path import convert_to_posix_path
 from llnl.util.tty.color import cescape, colorize
 
 import spack.error
@@ -139,13 +139,13 @@ def parse_version_offset(path):
     # path:   The prefix of the URL, everything before the ext and suffix
     # ext:    The file extension
     # suffix: Any kind of query string that begins with a '?'
-    path, ext, suffix = llnl.url.split_url_extension(path)
+    path, ext, suffix = llnl.util.url.split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
     original_stem = os.path.basename(path)
 
     # Try to strip off anything after the version number
-    stem = llnl.url.strip_version_suffixes(original_stem)
+    stem = llnl.util.url.strip_version_suffixes(original_stem)
 
     # Assumptions:
     #
@@ -334,7 +334,7 @@ def parse_name_offset(path, v=None):
     # path:   The prefix of the URL, everything before the ext and suffix
     # ext:    The file extension
     # suffix: Any kind of query string that begins with a '?'
-    path, ext, suffix = llnl.url.split_url_extension(path)
+    path, ext, suffix = llnl.util.url.split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
     original_stem = os.path.basename(path)
@@ -638,7 +638,7 @@ def find_versions_of_archive(
     if list_url is not None:
         list_urls.add(list_url)
     for aurl in archive_urls:
-        list_urls |= llnl.url.find_list_urls(aurl)
+        list_urls |= llnl.util.url.find_list_urls(aurl)
 
     # Add '/' to the end of the URL. Some web servers require this.
     additional_list_urls = set()
