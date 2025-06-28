@@ -223,7 +223,9 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict):
         results.append("{0:{1}}  {2} {3}".format(str(version), max_len, f"[{status}]", msg))
 
     # Display table of checksum results.
-    tty.msg(f"Verified {num_verified} of {num_total}", "", *spack.util.lang.elide_list(results), "")
+    tty.msg(
+        f"Verified {num_verified} of {num_total}", "", *spack.util.lang.elide_list(results), ""
+    )
 
     # Terminate at the end of function to prevent additional output.
     if failed:

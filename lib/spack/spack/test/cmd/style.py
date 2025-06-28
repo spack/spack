@@ -174,8 +174,6 @@ def external_style_root(git, flake8_package_with_errors, tmpdir):
     script.ensure()
     spack_dir = tmpdir / "lib" / "spack" / "spack"
     spack_dir.ensure("__init__.py")
-    llnl_dir = tmpdir / "lib" / "spack" / "llnl"
-    llnl_dir.ensure("__init__.py")
 
     # create a base develop branch
     with tmpdir.as_cwd():

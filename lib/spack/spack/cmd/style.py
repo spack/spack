@@ -295,7 +295,7 @@ def run_mypy(mypy_cmd, file_list, args):
         os.path.join(spack.paths.prefix, "pyproject.toml"),
         "--show-error-codes",
     ]
-    mypy_arg_sets = [common_mypy_args + ["--package", "spack", "--package", "llnl"]]
+    mypy_arg_sets = [common_mypy_args + ["--package", "spack"]]
     if "SPACK_MYPY_CHECK_PACKAGES" in os.environ:
         mypy_arg_sets.append(
             common_mypy_args + ["--package", "packages", "--disable-error-code", "no-redef"]
@@ -399,11 +399,11 @@ def _run_import_check(
         print("import check requires Python 3.9 or later")
         return 0
 
-    is_use = re.compile(r"(?<!from )(?<!import )(?:llnl|spack)\.[a-zA-Z0-9_\.]+")
+    is_use = re.compile(r"(?<!from )(?<!import )(?:spack)\.[a-zA-Z0-9_\.]+")
 
     # redundant imports followed by a `# comment` are ignored, cause there can be legimitate reason
     # to import a module: execute module scope init code, or to deal with circular imports.
-    is_abs_import = re.compile(r"^import ((?:llnl|spack)\.[a-zA-Z0-9_\.]+)$", re.MULTILINE)
+    is_abs_import = re.compile(r"^import ((?:spack)\.[a-zA-Z0-9_\.]+)$", re.MULTILINE)
 
     exit_code = 0
 

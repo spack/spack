@@ -141,6 +141,7 @@ def fix_darwin_install_name(path):
         with edit_in_place_through_temporary_file(lib) as tmp:
             install_name_tool(*args, tmp)
 
+
 Path = Union[str, pathlib.Path]
 
 if sys.version_info < (3, 7, 4):

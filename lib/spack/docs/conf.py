@@ -86,7 +86,6 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack/test/cmd/*.py",
     ]
 )
-sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
 sphinx_apidoc(
     apidoc_args
     + [

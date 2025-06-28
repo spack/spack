@@ -8,7 +8,7 @@ PAPER         =
 BUILDDIR      = _build
 
 export PYTHONPATH := ../../spack:$(PYTHONPATH)
-APIDOC_FILES  = spack*.rst llnl*.rst
+APIDOC_FILES  = spack*.rst
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -58,7 +58,6 @@ upload:
 
 apidoc:
 	sphinx-apidoc -f -T -o . ../spack
-	sphinx-apidoc -f -T -o . ../llnl
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"

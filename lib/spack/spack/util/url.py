@@ -154,6 +154,7 @@ def parse_link_rel_next(link_value: str) -> Optional[str]:
 
     return None
 
+
 # Archive extensions allowed in Spack
 PREFIX_EXTENSIONS = ("tar", "TAR")
 EXTENSIONS = ("gz", "bz2", "xz", "Z")

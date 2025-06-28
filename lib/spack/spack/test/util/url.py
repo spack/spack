@@ -156,7 +156,9 @@ def test_strip_compression_extension(archive_and_expected):
         or extension
         in [
             ".".join(ext)
-            for ext in itertools.product(spack.util.url.PREFIX_EXTENSIONS, spack.util.url.EXTENSIONS)
+            for ext in itertools.product(
+                spack.util.url.PREFIX_EXTENSIONS, spack.util.url.EXTENSIONS
+            )
         ]
     ):
         assert stripped == "Foo.tar" or stripped == "Foo.TAR"

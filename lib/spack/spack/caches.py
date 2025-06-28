@@ -30,7 +30,9 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-MISC_CACHE: spack.util.file_cache.FileCache = spack.util.lang.Singleton(_misc_cache)  # type: ignore
+MISC_CACHE: spack.util.file_cache.FileCache = spack.util.lang.Singleton(
+    _misc_cache
+)  # type: ignore
 
 
 def fetch_cache_location():

@@ -65,12 +65,12 @@ or another), then we say it is **abstract**.
 
 Spack's job is to take an *abstract* spec from the user, find a
 *concrete* spec that satisfies the constraints, and hand the task of
-building the software off to the package object. 
+building the software off to the package object.
 
 Packages are managed through Spack's **package repositories**, which allow
 packages to be stored in multiple repositories with different namespaces.
-The built-in packages are hosted in a separate Git repository and 
-automatically managed by Spack, while custom repositories can be added 
+The built-in packages are hosted in a separate Git repository and
+automatically managed by Spack, while custom repositories can be added
 for organization-specific or experimental packages.
 
 The rest of this document describes all the pieces that come together to make that
@@ -106,7 +106,6 @@ with a high-level view of Spack's directory structure:
             docs/          <- source for this documentation
 
             external/      <- external libs included in Spack distribution
-            llnl/          <- some general-use libraries
 
             spack/                <- spack module; contains Python code
                build_systems/     <- modules for different build systems
@@ -131,7 +130,7 @@ parts of Spack live in ``lib/spack``.
 
 .. note::
 
-   **Package Repositories**: Built-in packages are hosted 
+   **Package Repositories**: Built-in packages are hosted
    in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_
    and are automatically cloned to ``~/.spack/package_repos/`` when needed.
    The ``var/spack/test_repos/`` directory is used for unit tests only.
@@ -277,9 +276,9 @@ Understanding this system is important for developing Spack itself.
   The core module for managing package repositories. Contains the ``Repo`` and ``RepoPath``
   classes that handle loading and searching packages from multiple repositories.
 
-Built-in packages are stored in a separate Git repository (`spack/spack-packages 
-<https://github.com/spack/spack-packages>`_) rather than being included directly in 
-the Spack source tree. This repository is automatically cloned to ``~/.spack/package_repos/`` 
+Built-in packages are stored in a separate Git repository (`spack/spack-packages
+<https://github.com/spack/spack-packages>`_) rather than being included directly in
+the Spack source tree. This repository is automatically cloned to ``~/.spack/package_repos/``
 when needed.
 
 Key concepts:
@@ -603,8 +602,8 @@ just like you would with the normal Python command.
 ^^^^^^^^^^^^^^^
 
 ``spack blame`` is a way to quickly see contributors to packages or files
-in Spack's source tree. For built-in packages, this shows contributors to the package 
-files in the separate ``spack/spack-packages`` repository. You should provide a target 
+in Spack's source tree. For built-in packages, this shows contributors to the package
+files in the separate ``spack/spack-packages`` repository. You should provide a target
 package name or file name to the command. Here is an example asking to see contributions
 for the package "python":
 

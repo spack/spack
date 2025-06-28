@@ -29,7 +29,7 @@ jobs:
         pip install -r .github/workflows/requirements/style/requirements.txt
     - name: vermin
       run: |
-        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
+        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ bin/ var/spack/test_repos
 
   # Run style checks on the files that have been changed
   style:

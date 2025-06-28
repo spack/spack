@@ -37,12 +37,11 @@ licensed_files = [
     r"^lib/spack/spack/(?!(test/)?util/unparse).*\.py$",
     r"^lib/spack/spack/.*\.sh$",
     r"^lib/spack/spack/.*\.lp$",
-    r"^lib/spack/llnl/.*\.py$",
     # special case some test data files that have license headers
     r"^lib/spack/spack/test/data/style/broken.dummy",
     r"^lib/spack/spack/test/data/unparse/.*\.txt",
     # rst files in documentation
-    r"^lib/spack/docs/(?!command_index|spack|llnl).*\.rst$",
+    r"^lib/spack/docs/(?!command_index|spack).*\.rst$",
     r"^lib/spack/docs/.*\.py$",
     r"^lib/spack/docs/spack.yaml$",
     # 1 file in external
