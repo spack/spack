@@ -56,9 +56,9 @@ import llnl.util.tty as tty
 
 import spack.deptypes as dt
 import spack.hash_types as ht
+import spack.lock as lk
 import spack.spec
 import spack.traverse as tr
-import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
 from spack.directory_layout import (

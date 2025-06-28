@@ -27,6 +27,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
+import spack.lock as lk
 import spack.paths
 import spack.repo
 import spack.schema.env
@@ -35,7 +36,6 @@ import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
 import spack.util.hash
-import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml

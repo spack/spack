@@ -22,12 +22,12 @@ import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.installer as inst
+import spack.lock as lk
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
 import spack.store
-import spack.util.lock as lk
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 

@@ -40,6 +40,7 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
+import spack.lock
 import spack.paths
 import spack.platforms
 import spack.solver.asp
@@ -47,7 +48,6 @@ import spack.spec
 import spack.store
 import spack.util.debug
 import spack.util.environment
-import spack.util.lock
 
 from .enums import ConfigScopePriority
 
@@ -539,7 +539,7 @@ def setup_main_options(args):
     # override lock configuration if passed on command line
     if args.locks is not None:
         if args.locks is False:
-            spack.util.lock.check_lock_safety(spack.paths.prefix)
+            spack.lock.check_lock_safety(spack.paths.prefix)
         spack.config.set("config:locks", args.locks, scope="command_line")
 
     if args.mock:

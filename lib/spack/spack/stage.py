@@ -33,12 +33,12 @@ from llnl.util.tty.color import colorize
 import spack.caches
 import spack.config
 import spack.error
+import spack.lock
 import spack.mirrors.layout
 import spack.mirrors.utils
 import spack.resource
 import spack.spec
 import spack.util.crypto
-import spack.util.lock
 import spack.util.parallel
 import spack.util.path as sup
 import spack.util.pattern as pattern
@@ -247,9 +247,7 @@ class LockableStagingDir:
             sha1 = hashlib.sha1(self.name.encode("utf-8")).digest()
             lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
             stage_lock_path = os.path.join(get_stage_root(), ".lock")
-            self._lock = spack.util.lock.Lock(
-                stage_lock_path, start=lock_id, length=1, desc=self.name
-            )
+            self._lock = spack.lock.Lock(stage_lock_path, start=lock_id, length=1, desc=self.name)
         return self._lock
 
     def __enter__(self):

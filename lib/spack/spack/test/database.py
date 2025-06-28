@@ -33,12 +33,12 @@ from llnl.util.tty.colify import colify
 import spack.concretize
 import spack.database
 import spack.deptypes as dt
+import spack.lock
 import spack.package_base
 import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
-import spack.util.lock
 import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller
@@ -56,7 +56,7 @@ def writable(database):
 
     try:
         # this is safe on all platforms during tests (tests get their own tmpdirs)
-        database.lock = spack.util.lock.Lock(str(database._lock_path), enable=False)
+        database.lock = spack.lock.Lock(str(database._lock_path), enable=False)
         database.is_upstream = False
         db_root.chmod(mode=0o755)
         with database.write_transaction():

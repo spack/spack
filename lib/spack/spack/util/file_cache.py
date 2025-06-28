@@ -12,7 +12,7 @@ from typing import IO, Dict, Optional, Tuple, Union
 from llnl.util.filesystem import rename
 
 from spack.error import SpackError
-from spack.util.lock import Lock, ReadTransaction, WriteTransaction
+from spack.lock import Lock, ReadTransaction, WriteTransaction
 
 
 def _maybe_open(path: Union[str, pathlib.Path]) -> Optional[IO[str]]:

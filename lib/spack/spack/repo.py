@@ -48,6 +48,7 @@ import spack
 import spack.caches
 import spack.config
 import spack.error
+import spack.lock
 import spack.patch
 import spack.paths
 import spack.provider_index
@@ -58,7 +59,6 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
 import spack.util.hash
-import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
@@ -71,11 +71,9 @@ _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 SPACK_REPO_INDEX_FILE_NAME = "spack-repo-index.yaml"
 
 
-def package_repository_lock() -> spack.util.lock.Lock:
+def package_repository_lock() -> spack.lock.Lock:
     """Lock for process safety when cloning remote package repositories"""
-    return spack.util.lock.Lock(
-        os.path.join(spack.paths.user_cache_path, "package-repository.lock")
-    )
+    return spack.lock.Lock(os.path.join(spack.paths.user_cache_path, "package-repository.lock"))
 
 
 def is_package_module(fullname: str) -> bool:
@@ -1633,7 +1631,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
         tag: Optional[str],
         destination: str,
         relative_paths: Optional[List[str]],
-        lock: spack.util.lock.Lock,
+        lock: spack.lock.Lock,
     ) -> None:
         super().__init__(name)
         self.repository = repository
@@ -1643,8 +1641,8 @@ class RemoteRepoDescriptor(RepoDescriptor):
         self.destination = destination
         self.relative_paths = relative_paths
         self.error: Optional[str] = None
-        self.write_transaction = spack.util.lock.WriteTransaction(lock)
-        self.read_transaction = spack.util.lock.ReadTransaction(lock)
+        self.write_transaction = spack.lock.WriteTransaction(lock)
+        self.read_transaction = spack.lock.ReadTransaction(lock)
 
     def _fetched(self) -> bool:
         """Check if the repository has been fetched by looking for the .git
@@ -1835,7 +1833,7 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
 
     @staticmethod
     def from_config(
-        lock: spack.util.lock.Lock, config: spack.config.Configuration, scope=None
+        lock: spack.lock.Lock, config: spack.config.Configuration, scope=None
     ) -> "RepoDescriptors":
         return RepoDescriptors(
             {
@@ -1880,7 +1878,7 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
 
 
 def parse_config_descriptor(
-    name: Optional[str], descriptor: Any, lock: spack.util.lock.Lock
+    name: Optional[str], descriptor: Any, lock: spack.lock.Lock
 ) -> RepoDescriptor:
     """Parse a repository descriptor from validated configuration. This does not instantiate Repo
     objects, but merely turns the config into a more useful RepoDescriptor instance.
