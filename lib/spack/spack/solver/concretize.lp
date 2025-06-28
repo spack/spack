@@ -360,6 +360,9 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      pkg_fact(Package, version_has_commit(Version, Psha)),
      Vsha != Psha.
 
+% if a package preference is to use a commit, prefer a version that has an exact commit match or needs a commit
+% if a package requires a commit, require a version that has an exact commit match or needs a commit
+
 #defined version_satisfies/3.
 #defined deprecated_versions_not_allowed/0.
 #defined deprecated_version/2.
@@ -423,6 +426,9 @@ trigger_condition_holds(ID, RequestorNode) :-
   attr("depends_on", node(X, A1), node(Y, A2), A3) : condition_requirement(ID, "depends_on", A1, A2, A3), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A2));
   not cannot_hold(ID, PackageNode).
 
+% psakiev: when we give commits from cli they are concrete_variant_requests, what are they via variant/preference/requirment?
+% we need a rule to say all packages can use the auto_variant commit
+% we also need a rule that all values of the commit variants are acceptable, we can't list all the possible commits
 condition_with_concrete_variant(ID, Package, Variant) :- condition_requirement(ID, "concrete_variant_request", Package, Variant, _).
 
 cannot_hold(ID, PackageNode) :-
