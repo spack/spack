@@ -1411,14 +1411,19 @@ class Repo:
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
 
+        def defining_class(myclass, name):
+            return next((c for c in myclass.__mro__ if name in c.__dict__), None)
+
         # Clear any prior changes to class attributes in case the class was loaded from the
         # same repo, but with different overrides
         overridden_attrs = getattr(cls, "overridden_attrs", {})
         attrs_exclusively_from_config = getattr(cls, "attrs_exclusively_from_config", [])
+        defclass_attrs = defining_class(cls, "overridden_attrs")
+        defclass_exclusively_from_config = defining_class(cls, "attrs_exclusively_from_config")
         for key, val in overridden_attrs.items():
-            setattr(cls, key, val)
+            setattr(defclass_attrs, key, val)
         for key in attrs_exclusively_from_config:
-            delattr(cls, key)
+            delattr(defclass_exclusively_from_config, key)
 
         # Keep track of every class attribute that is overridden: if different overrides
         # dictionaries are used on the same physical repo, we make sure to restore the original
@@ -1435,11 +1440,11 @@ class Repo:
         if new_overridden_attrs:
             setattr(cls, "overridden_attrs", dict(new_overridden_attrs))
         elif hasattr(cls, "overridden_attrs"):
-            delattr(cls, "overridden_attrs")
+            delattr(defclass_attrs, "overridden_attrs")
         if new_attrs_exclusively_from_config:
             setattr(cls, "attrs_exclusively_from_config", new_attrs_exclusively_from_config)
         elif hasattr(cls, "attrs_exclusively_from_config"):
-            delattr(cls, "attrs_exclusively_from_config")
+            delattr(defclass_exclusively_from_config, "attrs_exclusively_from_config")
 
         return cls
 
