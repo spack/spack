@@ -35,16 +35,15 @@ YamlFilesystemView.
 import argparse
 import sys
 
-import llnl.util.tty as tty
-from llnl.util.link_tree import MergeConflictError
-
 import spack.cmd
 import spack.environment as ev
 import spack.filesystem_view as fsv
 import spack.schema.projections
 import spack.store
+import spack.util.tty as tty
 from spack.config import validate
 from spack.util import spack_yaml as s_yaml
+from spack.util.link_tree import MergeConflictError
 
 description = "project packages to a compact naming scheme on the filesystem"
 section = "environments"

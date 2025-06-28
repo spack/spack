@@ -9,8 +9,6 @@ from typing import Dict, Optional, Union
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.cmd.repo
 import spack.config
 import spack.environment as ev
@@ -20,6 +18,7 @@ import spack.repo_migrate
 from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.util.executable import Executable
+from spack.util.filesystem import working_dir
 
 repo = spack.main.SpackCommand("repo")
 env = SpackCommand("env")

@@ -4,11 +4,10 @@
 
 import os
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-from llnl.util.symlink import symlink
-
 import spack.util.editor as ed
+import spack.util.tty as tty
+from spack.util.filesystem import mkdirp
+from spack.util.symlink import symlink
 
 
 def pre_install(spec):

@@ -8,11 +8,10 @@ from pathlib import PurePath
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack
 import spack.main
 import spack.util.executable as ex
+import spack.util.filesystem as fs
 from spack.hooks.sbang import filter_shebangs_in_directory
 
 

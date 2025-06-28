@@ -334,7 +334,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         def yes_no(varstr):
             return 'YES' if varstr in self.spec else 'NO'
 
-        # See also find_system_libraries in lib/spack/llnl/util/filesystem.py
+        # See also find_system_libraries in lib/spack/spack.util/filesystem.py
         # where the same list of paths is used.
         sys_lib_paths = [
             '/lib64',

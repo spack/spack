@@ -4,18 +4,17 @@
 import os
 import traceback
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
 import spack.caches
 import spack.config
 import spack.error
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 import spack.version
 from spack.error import MirrorError
 from spack.mirrors.mirror import Mirror, MirrorCollection
+from spack.util.filesystem import mkdirp
 
 
 def get_all_versions(specs):

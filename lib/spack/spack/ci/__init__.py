@@ -17,11 +17,6 @@ from collections import namedtuple
 from typing import Callable, Dict, List, Optional, Set, Union
 from urllib.request import Request
 
-import llnl.util.filesystem as fs
-import llnl.util.path
-import llnl.util.tty as tty
-from llnl.util.tty.color import cescape, colorize
-
 import spack
 import spack.binary_distribution as bindist
 import spack.builder
@@ -35,14 +30,18 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
+import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.util.tty.color import cescape, colorize
 from spack.version import GitVersion, StandardVersion
 
 from .common import (
@@ -128,7 +127,7 @@ def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
     # git returns posix paths always, normalize input to be comptaible
     # with that
-    env_path = llnl.util.path.convert_to_posix_path(env_path)
+    env_path = spack.util.path.convert_to_posix_path(env_path)
     git = spack.util.git.git()
     if git:
         with fs.working_dir(spack.paths.prefix):

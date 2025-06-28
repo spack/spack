@@ -6,10 +6,10 @@ from typing import Optional
 
 import _vendoring.archspec.cpu
 
-import llnl.util.lang
+import spack.util.lang
 
 
-@llnl.util.lang.lazy_lexicographic_ordering
+@spack.util.lang.lazy_lexicographic_ordering
 class Platform:
     """Platform is an abstract class extended by subclasses.
 

@@ -14,13 +14,6 @@ import sys
 from collections import Counter, OrderedDict
 from typing import Callable, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-import llnl.util.tty.log
-from llnl.util.lang import nullcontext
-from llnl.util.string import plural
-from llnl.util.tty.color import colorize
-
 import spack.config
 import spack.error
 import spack.package_base
@@ -29,11 +22,17 @@ import spack.repo
 import spack.report
 import spack.spec
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.path
 import spack.util.spack_json as sjson
+import spack.util.tty as tty
+import spack.util.tty.log
 from spack.error import InstallError
 from spack.spec import Spec
+from spack.util.lang import nullcontext
 from spack.util.prefix import Prefix
+from spack.util.string import plural
+from spack.util.tty.color import colorize
 
 #: Stand-alone test failure info type
 TestFailureType = Tuple[BaseException, str]
@@ -49,7 +48,7 @@ spack_install_test_log = "install-time-test-log.txt"
 
 
 ListOrStringType = Union[str, List[str]]
-LogType = Union[llnl.util.tty.log.nixlog, llnl.util.tty.log.winlog]
+LogType = Union[spack.util.tty.log.nixlog, spack.util.tty.log.winlog]
 
 Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
 PackageObjectOrClass = Union[Pb, Type[Pb]]
@@ -287,7 +286,7 @@ class PackageTest:
     def logger(self) -> Optional[LogType]:
         """The current logger or, if none, sets to one."""
         if not self._logger:
-            self._logger = llnl.util.tty.log.log_output(self.test_log_file)
+            self._logger = spack.util.tty.log.log_output(self.test_log_file)
 
         return self._logger
 
@@ -304,7 +303,7 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with llnl.util.tty.log.log_output(self.test_log_file, verbose) as self._logger:
+        with spack.util.tty.log.log_output(self.test_log_file, verbose) as self._logger:
             with self.logger.force_echo():  # type: ignore[union-attr]
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
 

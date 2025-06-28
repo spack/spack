@@ -6,14 +6,13 @@ import os
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.caches
 import spack.cmd.clean
 import spack.main
 import spack.package_base
 import spack.stage
 import spack.store
+import spack.util.filesystem as fs
 
 clean = spack.main.SpackCommand("clean")
 

@@ -5,10 +5,6 @@
 import argparse
 import sys
 
-import llnl.util.lang as lang
-import llnl.util.tty as tty
-import llnl.util.tty.colify as colify
-
 import spack.caches
 import spack.cmd
 import spack.concretize
@@ -18,6 +14,9 @@ import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
 import spack.spec
+import spack.util.lang as lang
+import spack.util.tty as tty
+import spack.util.tty.colify as colify
 import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.error import SpackError

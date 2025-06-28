@@ -6,11 +6,10 @@ import os
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.module_cmd
 
 without_flag_output = "ld -L/path/to/first/lib -L/path/to/second/lib64"

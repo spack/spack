@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Tests for ``llnl/util/argparsewriter.py``
+"""Tests for ``spack.util/argparsewriter.py``
 
 These tests are fairly minimal, and ArgparseWriter is more extensively
 tested in ``cmd/commands.py``.
@@ -10,9 +10,8 @@ tested in ``cmd/commands.py``.
 
 import pytest
 
-import llnl.util.argparsewriter as aw
-
 import spack.main
+import spack.util.argparsewriter as aw
 
 parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)

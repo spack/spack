@@ -11,10 +11,6 @@ from typing import List, Optional, Union
 import py
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.lock as ulk
-import llnl.util.tty as tty
-
 import spack.binary_distribution
 import spack.concretize
 import spack.database
@@ -28,6 +24,9 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
+import spack.util.lock as ulk
+import spack.util.tty as tty
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 

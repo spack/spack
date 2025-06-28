@@ -5,10 +5,9 @@ from typing import Optional
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.util.executable as exe
 import spack.util.git
+from spack.util.filesystem import working_dir
 
 
 def test_git_not_found(monkeypatch):

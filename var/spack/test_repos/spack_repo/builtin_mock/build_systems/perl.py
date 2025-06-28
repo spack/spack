@@ -4,9 +4,6 @@
 import os
 from typing import Iterable
 
-from llnl.util.filesystem import filter_file, find
-from llnl.util.lang import memoized
-
 import spack.builder
 import spack.package_base
 import spack.phase_callbacks
@@ -16,6 +13,8 @@ from spack.directives import build_system, depends_on, extends
 from spack.install_test import SkipTest, test_part
 from spack.multimethod import when
 from spack.util.executable import Executable
+from spack.util.filesystem import filter_file, find
+from spack.util.lang import memoized
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests
 

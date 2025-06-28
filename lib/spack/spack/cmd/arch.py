@@ -8,11 +8,10 @@ import warnings
 
 import _vendoring.archspec.cpu
 
-import llnl.util.tty.colify as colify
-import llnl.util.tty.color as color
-
 import spack.platforms
 import spack.spec
+import spack.util.tty.colify as colify
+import spack.util.tty.color as color
 
 description = "print architecture information about this machine"
 section = "system"

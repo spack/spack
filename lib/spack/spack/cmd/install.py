@@ -8,19 +8,18 @@ import shutil
 import sys
 from typing import List
 
-import llnl.util.filesystem as fs
-from llnl.util import tty
-from llnl.util.string import plural
-
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.paths
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
 from spack.installer import PackageInstaller
+from spack.util import tty
+from spack.util.string import plural
 
 description = "build and install packages"
 section = "build"

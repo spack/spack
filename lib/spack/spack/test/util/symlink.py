@@ -2,13 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Tests for ``llnl/util/symlink.py``"""
+"""Tests for ``spack.util/symlink.py``"""
 import os
 import tempfile
 
 import pytest
 
-from llnl.util import symlink
+from spack.util import symlink
 
 
 def test_symlink_file(tmpdir):

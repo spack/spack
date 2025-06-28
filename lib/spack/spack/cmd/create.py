@@ -8,11 +8,9 @@ import sys
 import urllib.parse
 from typing import List
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
 import spack.repo
 import spack.stage
+import spack.util.tty as tty
 from spack.spec import Spec
 from spack.url import (
     UndetectableNameError,
@@ -23,6 +21,7 @@ from spack.url import (
 )
 from spack.util.editor import editor
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp
 from spack.util.format import get_version_lines
 from spack.util.naming import pkg_name_to_class_name, simplify_name
 

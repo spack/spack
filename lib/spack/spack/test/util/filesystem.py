@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Tests for ``llnl/util/filesystem.py``"""
+"""Tests for ``spack.util/filesystem.py``"""
 import filecmp
 import os
 import pathlib
@@ -13,11 +13,10 @@ from contextlib import contextmanager
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.symlink
-from llnl.util.symlink import _windows_can_symlink, islink, readlink, symlink
-
 import spack.paths
+import spack.util.filesystem as fs
+import spack.util.symlink
+from spack.util.symlink import _windows_can_symlink, islink, readlink, symlink
 
 
 @pytest.fixture()
@@ -1153,7 +1152,7 @@ def complex_dir_structure(request, tmpdir):
     l2_d2 = l1_d2.join("l2-d2").ensure(dir=True)
 
     if use_junctions:
-        link_fn = llnl.util.symlink._windows_create_junction
+        link_fn = spack.util.symlink._windows_create_junction
     else:
         link_fn = os.symlink
 

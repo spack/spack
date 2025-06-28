@@ -5,11 +5,10 @@
 import argparse
 from collections import defaultdict
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.tty.colify import colify
-
 import spack.repo
+import spack.util.tty as tty
+import spack.util.tty.color as color
+from spack.util.tty.colify import colify
 
 description = "get information about package maintainers"
 section = "developer"

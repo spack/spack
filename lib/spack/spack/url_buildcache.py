@@ -17,9 +17,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import _vendoring.jsonschema
 
-import llnl.util.filesystem as fsys
-import llnl.util.tty as tty
-
 import spack.config as config
 import spack.database
 import spack.error
@@ -28,7 +25,9 @@ import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
+import spack.util.filesystem as fsys
 import spack.util.gpg
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema

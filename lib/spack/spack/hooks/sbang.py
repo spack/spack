@@ -10,14 +10,13 @@ import stat
 import sys
 import tempfile
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.error
 import spack.package_prefs
 import spack.paths
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
+import spack.util.tty as tty
 from spack.util.socket import _getfqdn
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.

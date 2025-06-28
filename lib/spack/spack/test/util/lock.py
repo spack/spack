@@ -57,8 +57,8 @@ from multiprocessing import Barrier, Process, Queue
 
 import pytest
 
-import llnl.util.lock as lk
-from llnl.util.filesystem import getuid, touch
+import spack.util.lock as lk
+from spack.util.filesystem import getuid, touch
 
 if sys.platform != "win32":
     import fcntl

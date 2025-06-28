@@ -5,14 +5,13 @@
 """Caches used by Spack to store data"""
 import os
 
-import llnl.util.lang
-from llnl.util.filesystem import mkdirp
-
 import spack.config
 import spack.fetch_strategy
 import spack.paths
 import spack.util.file_cache
+import spack.util.lang
 import spack.util.path
+from spack.util.filesystem import mkdirp
 
 
 def misc_cache_location():
@@ -31,7 +30,7 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-MISC_CACHE: spack.util.file_cache.FileCache = llnl.util.lang.Singleton(_misc_cache)  # type: ignore
+MISC_CACHE: spack.util.file_cache.FileCache = spack.util.lang.Singleton(_misc_cache)  # type: ignore
 
 
 def fetch_cache_location():
@@ -68,4 +67,4 @@ class MirrorCache:
 
 
 #: Spack's local cache for downloaded source archives
-FETCH_CACHE: spack.fetch_strategy.FsCache = llnl.util.lang.Singleton(_fetch_cache)  # type: ignore
+FETCH_CACHE: spack.fetch_strategy.FsCache = spack.util.lang.Singleton(_fetch_cache)  # type: ignore

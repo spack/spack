@@ -28,11 +28,6 @@ import warnings
 from contextlib import closing
 from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
-import llnl.util.filesystem as fsys
-import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
 import spack.caches
 import spack.config
 import spack.database as spack_db
@@ -55,12 +50,15 @@ import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
 import spack.util.file_cache as file_cache
+import spack.util.filesystem as fsys
 import spack.util.gpg
+import spack.util.lang
 import spack.util.parallel
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.timer as timer
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
@@ -83,6 +81,7 @@ from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.stage import Stage
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp
 
 from .enums import InstallRecordStatus
 from .url_buildcache import (
@@ -115,8 +114,8 @@ class BuildCacheDatabase(spack_db.Database):
 
     def __init__(self, root):
         super().__init__(root, lock_cfg=spack_db.NO_LOCK, layout=None)
-        self._write_transaction_impl = llnl.util.lang.nullcontext
-        self._read_transaction_impl = llnl.util.lang.nullcontext
+        self._write_transaction_impl = spack.util.lang.nullcontext
+        self._read_transaction_impl = spack.util.lang.nullcontext
 
     def _handle_old_db_versions_read(self, check, db, *, reindex: bool):
         if not self.is_readable():
@@ -599,7 +598,7 @@ def binary_index_location():
 
 
 #: Default binary cache index instance
-BINARY_INDEX: BinaryCacheIndex = llnl.util.lang.Singleton(BinaryCacheIndex)  # type: ignore
+BINARY_INDEX: BinaryCacheIndex = spack.util.lang.Singleton(BinaryCacheIndex)  # type: ignore
 
 
 def compute_hash(data):
@@ -619,7 +618,7 @@ def read_buildinfo_file(prefix):
         return syaml.load(f)
 
 
-def file_matches(f: IO[bytes], regex: llnl.util.lang.PatternBytes) -> bool:
+def file_matches(f: IO[bytes], regex: spack.util.lang.PatternBytes) -> bool:
     try:
         return bool(regex.search(f.read()))
     finally:
@@ -637,7 +636,7 @@ def specs_to_relocate(spec: spack.spec.Spec) -> List[spack.spec.Spec]:
         )
         if not s.external
     ]
-    return list(llnl.util.lang.dedupe(specs, key=lambda s: s.dag_hash()))
+    return list(spack.util.lang.dedupe(specs, key=lambda s: s.dag_hash()))
 
 
 def get_buildinfo_dict(spec):
@@ -695,7 +694,7 @@ def buildcache_relative_index_url(layout_version: int = CURRENT_BUILD_CACHE_LAYO
     return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.INDEX))
 
 
-@llnl.util.lang.memoized
+@spack.util.lang.memoized
 def warn_v2_layout(mirror_url: str, action: str) -> bool:
     lines = textwrap.wrap(
         f"{action} from a v2 binary mirror layout, located at "

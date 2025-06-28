@@ -8,13 +8,12 @@ import pickle
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.config
 import spack.environment as ev
 import spack.platforms
 import spack.solver.asp
 import spack.spec
+import spack.util.filesystem as fs
 from spack.environment.environment import (
     EnvironmentManifestFile,
     SpackEnvironmentViewError,

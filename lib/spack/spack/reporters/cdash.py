@@ -16,18 +16,17 @@ from typing import Dict, Optional
 from urllib.parse import urlencode
 from urllib.request import Request
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
-
 import spack
 import spack.paths
 import spack.platforms
 import spack.spec
 import spack.tengine
 import spack.util.git
+import spack.util.tty as tty
 import spack.util.web as web_util
 from spack.error import SpackError
 from spack.util.crypto import checksum
+from spack.util.filesystem import working_dir
 from spack.util.log_parse import parse_log_events
 
 from .base import Reporter

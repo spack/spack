@@ -8,9 +8,6 @@ import re
 import sys
 from typing import List, Optional, Set
 
-import llnl.util.tty as tty
-import llnl.util.tty.colify as colify
-
 import spack
 import spack.cmd
 import spack.config
@@ -20,6 +17,8 @@ import spack.error
 import spack.package_base
 import spack.repo
 import spack.spec
+import spack.util.tty as tty
+import spack.util.tty.colify as colify
 from spack.cmd.common import arguments
 
 description = "manage external packages in Spack configuration"

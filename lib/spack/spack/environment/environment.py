@@ -14,12 +14,6 @@ import stat
 import warnings
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-import llnl.util.tty.color as clr
-from llnl.util.link_tree import ConflictingSpecsError
-from llnl.util.symlink import islink, readlink, symlink
-
 import spack
 import spack.concretize
 import spack.config
@@ -35,15 +29,20 @@ import spack.spec
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
+import spack.util.filesystem as fs
 import spack.util.hash
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
+import spack.util.tty.color as clr
 from spack import traverse
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
+from spack.util.link_tree import ConflictingSpecsError
 from spack.util.path import substitute_path_variables
+from spack.util.symlink import islink, readlink, symlink
 
 from ..enums import ConfigScopePriority
 from .list import SpecList, SpecListError, SpecListParser

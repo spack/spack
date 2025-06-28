@@ -6,14 +6,13 @@ import argparse
 import os
 import sys
 
-import llnl.util.tty as tty
-
 import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
 import spack.repo
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 from spack.installer import PackageInstaller
 

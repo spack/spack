@@ -4,14 +4,13 @@
 
 import os
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
-from llnl.util.lang import elide_list
-
 import spack.bootstrap
 import spack.config
 import spack.relocate
+import spack.util.tty as tty
 from spack.util.elf import ElfParsingError, parse_elf
+from spack.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
+from spack.util.lang import elide_list
 
 
 def is_shared_library_elf(filepath):

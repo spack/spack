@@ -14,26 +14,6 @@ from typing import Callable, Dict, List, Optional
 
 from _vendoring.typing_extensions import Literal
 
-from llnl.util import tty
-from llnl.util.filesystem import (
-    mkdirp,
-    remove_dead_links,
-    remove_empty_directories,
-    visit_directory_tree,
-)
-from llnl.util.lang import index_by, match_predicate
-from llnl.util.link_tree import (
-    ConflictingSpecsError,
-    DestinationMergeVisitor,
-    LinkTree,
-    MergeConflictSummary,
-    SingleMergeConflictError,
-    SourceMergeVisitor,
-)
-from llnl.util.string import comma_or
-from llnl.util.symlink import symlink
-from llnl.util.tty.color import colorize
-
 import spack.config
 import spack.directory_layout
 import spack.projections
@@ -44,6 +24,25 @@ import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
+from spack.util import tty
+from spack.util.filesystem import (
+    mkdirp,
+    remove_dead_links,
+    remove_empty_directories,
+    visit_directory_tree,
+)
+from spack.util.lang import index_by, match_predicate
+from spack.util.link_tree import (
+    ConflictingSpecsError,
+    DestinationMergeVisitor,
+    LinkTree,
+    MergeConflictSummary,
+    SingleMergeConflictError,
+    SourceMergeVisitor,
+)
+from spack.util.string import comma_or
+from spack.util.symlink import symlink
+from spack.util.tty.color import colorize
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -169,7 +168,7 @@ class FilesystemView:
         Initialize a filesystem view under the given `root` directory with
         corresponding directory `layout`.
 
-        Files are linked by method `link` (llnl.util.symlink by default).
+        Files are linked by method `link` (spack.util.symlink by default).
         """
         self._root = root
         self.layout = layout

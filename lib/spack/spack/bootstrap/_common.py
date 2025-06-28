@@ -15,14 +15,13 @@ from typing import Optional, Sequence, Union
 import _vendoring.archspec.cpu
 from _vendoring.typing_extensions import TypedDict
 
-import llnl.util.filesystem as fs
-from llnl.util import tty
-
 import spack.platforms
 import spack.spec
 import spack.store
 import spack.util.environment
 import spack.util.executable
+import spack.util.filesystem as fs
+from spack.util import tty
 
 from .config import spec_for_current_python
 

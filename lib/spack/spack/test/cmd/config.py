@@ -7,8 +7,6 @@ import re
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.concretize
 import spack.config
 import spack.database
@@ -16,6 +14,7 @@ import spack.environment as ev
 import spack.main
 import spack.schema.config
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 
 config = spack.main.SpackCommand("config")

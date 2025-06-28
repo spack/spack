@@ -5,9 +5,6 @@
 import argparse
 import sys
 
-import llnl.util.lang as lang
-import llnl.util.tty as tty
-
 import spack
 import spack.cmd
 import spack.environment as ev
@@ -15,6 +12,8 @@ import spack.hash_types as ht
 import spack.spec
 import spack.store
 import spack.traverse
+import spack.util.lang as lang
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "show what would be installed, given a spec"

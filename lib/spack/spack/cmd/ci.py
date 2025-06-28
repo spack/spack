@@ -10,10 +10,6 @@ import sys
 from typing import Dict
 from urllib.parse import urlparse, urlunparse
 
-import llnl.util.filesystem as fs
-import llnl.util.tty.color as clr
-from llnl.util import tty
-
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
 import spack.cmd
@@ -30,11 +26,14 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.gpg as gpg_util
 import spack.util.timer as timer
+import spack.util.tty.color as clr
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
+from spack.util import tty
 
 description = "manage continuous integration pipelines"
 section = "build"

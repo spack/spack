@@ -6,12 +6,11 @@ import argparse
 import sys
 from typing import List
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
 import spack.spec
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "remove specs from the concretized lockfile of an environment"

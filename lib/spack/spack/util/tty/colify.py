@@ -10,8 +10,8 @@ import os
 import sys
 from typing import IO, Any, List, Optional
 
-from llnl.util.tty import terminal_size
-from llnl.util.tty.color import cextra, clen
+from spack.util.tty import terminal_size
+from spack.util.tty.color import cextra, clen
 
 
 class ColumnConfig:

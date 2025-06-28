@@ -9,13 +9,12 @@ import stat
 
 import pytest
 
-import llnl.util.filesystem as fs
-from llnl.util.symlink import symlink
-
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.verify
+from spack.util.symlink import symlink
 
 pytestmark = pytest.mark.not_on_windows("Tests fail on Win")
 

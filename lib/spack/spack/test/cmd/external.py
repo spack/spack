@@ -6,8 +6,6 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import getuid, touch
-
 import spack
 import spack.cmd.external
 import spack.config
@@ -17,6 +15,7 @@ import spack.detection.path
 import spack.repo
 from spack.main import SpackCommand
 from spack.spec import Spec
+from spack.util.filesystem import getuid, touch
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 

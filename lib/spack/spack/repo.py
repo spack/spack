@@ -38,12 +38,6 @@ from typing import (
     Union,
 )
 
-import llnl.util.filesystem as fs
-import llnl.util.lang
-import llnl.util.path
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
-
 import spack
 import spack.caches
 import spack.config
@@ -57,11 +51,15 @@ import spack.tag
 import spack.tengine
 import spack.util.executable
 import spack.util.file_cache
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.hash
+import spack.util.lang
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
+from spack.util.filesystem import working_dir
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
@@ -576,7 +574,7 @@ class RepoIndex:
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
-            self.packages_path = llnl.util.path.convert_to_posix_path(self.packages_path)
+            self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers: Dict[str, Indexer] = {}
@@ -755,11 +753,11 @@ class RepoPath:
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    @llnl.util.lang.memoized
+    @spack.util.lang.memoized
     def _all_package_names_set(self, include_virtuals) -> Set[str]:
         return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
 
-    @llnl.util.lang.memoized
+    @spack.util.lang.memoized
     def _all_package_names(self, include_virtuals: bool) -> List[str]:
         """Return all unique package names in all repositories."""
         return sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
@@ -1464,7 +1462,7 @@ class Repo:
 
     def marshal(self):
         cache = self._cache
-        if isinstance(cache, llnl.util.lang.Singleton):
+        if isinstance(cache, spack.util.lang.Singleton):
             cache = cache.instance
         return self.root, cache, self.overrides
 
@@ -1955,7 +1953,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(
+PATH: RepoPath = spack.util.lang.Singleton(
     lambda: create_and_enable(spack.config.CONFIG)
 )  # type: ignore[assignment]
 

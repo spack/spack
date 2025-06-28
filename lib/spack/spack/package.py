@@ -12,42 +12,6 @@ from shutil import move, rmtree
 # import most common types used in packages
 from typing import Dict, List, Optional
 
-from llnl.util.filesystem import (
-    FileFilter,
-    FileList,
-    HeaderList,
-    LibraryList,
-    ancestor,
-    can_access,
-    change_sed_delimiter,
-    copy,
-    copy_tree,
-    filter_file,
-    find,
-    find_all_headers,
-    find_first,
-    find_headers,
-    find_libraries,
-    find_system_libraries,
-    force_remove,
-    force_symlink,
-    install,
-    install_tree,
-    is_exe,
-    join_path,
-    keep_modification_time,
-    library_extensions,
-    mkdirp,
-    remove_directory_contents,
-    remove_linked_tree,
-    rename,
-    set_executable,
-    set_install_permissions,
-    touch,
-    working_dir,
-)
-from llnl.util.symlink import symlink
-
 from spack.build_environment import MakeExecutable
 from spack.builder import BaseBuilder, Builder, register_builder
 from spack.config import determine_number_of_jobs
@@ -97,8 +61,43 @@ from spack.phase_callbacks import run_after, run_before
 from spack.spec import Spec
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable, ProcessError, which, which_string
-from spack.util.filesystem import fix_darwin_install_name
+from spack.util.filesystem import (
+    FileFilter,
+    FileList,
+    HeaderList,
+    LibraryList,
+    ancestor,
+    can_access,
+    change_sed_delimiter,
+    copy,
+    copy_tree,
+    filter_file,
+    find,
+    find_all_headers,
+    find_first,
+    find_headers,
+    find_libraries,
+    find_system_libraries,
+    fix_darwin_install_name,
+    force_remove,
+    force_symlink,
+    install,
+    install_tree,
+    is_exe,
+    join_path,
+    keep_modification_time,
+    library_extensions,
+    mkdirp,
+    remove_directory_contents,
+    remove_linked_tree,
+    rename,
+    set_executable,
+    set_install_permissions,
+    touch,
+    working_dir,
+)
 from spack.util.prefix import Prefix
+from spack.util.symlink import symlink
 from spack.variant import any_combination_of, auto_or_any_combination_of, disjoint_sets
 from spack.version import Version, ver
 
@@ -109,7 +108,7 @@ pwd = getcwd
 
 
 class tty:
-    import llnl.util.tty as _tty
+    import spack.util.tty as _tty
 
     debug = _tty.debug
     error = _tty.error

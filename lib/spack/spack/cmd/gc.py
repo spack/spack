@@ -4,14 +4,13 @@
 
 import argparse
 
-import llnl.util.tty as tty
-
 import spack.cmd.common.arguments
 import spack.cmd.common.confirmation
 import spack.cmd.uninstall
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.store
+import spack.util.tty as tty
 
 description = "remove specs that are now no longer needed"
 section = "build"

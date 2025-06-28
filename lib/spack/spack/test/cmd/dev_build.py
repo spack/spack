@@ -6,14 +6,13 @@ import os
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
 from spack.main import SpackCommand
 
 dev_build = SpackCommand("dev-build")

@@ -3,12 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from typing import List
 
-import llnl.util.filesystem as fs
-
 import spack.builder
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.filesystem as fs
 import spack.util.prefix
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when

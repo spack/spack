@@ -4,12 +4,11 @@
 
 import argparse
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.traverse
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "fetch archives for packages"

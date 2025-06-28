@@ -10,8 +10,6 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, touch, working_dir
-
 import spack.concretize
 import spack.error
 import spack.fetch_strategy
@@ -24,6 +22,7 @@ import spack.util.url as url_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import Executable
+from spack.util.filesystem import mkdirp, touch, working_dir
 
 # various sha256 sums (using variables for legibility)
 # many file based shas will differ between Windows and other platforms

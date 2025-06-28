@@ -63,13 +63,6 @@ from typing import (
 
 import _vendoring.archspec.cpu
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
-from llnl.util.lang import dedupe, stable_partition
-from llnl.util.string import plural
-from llnl.util.symlink import symlink
-from llnl.util.tty.color import cescape, colorize
-
 import spack.builder
 import spack.compilers.libraries
 import spack.config
@@ -85,6 +78,7 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.util.executable
+import spack.util.tty as tty
 from spack import traverse
 from spack.context import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
@@ -101,8 +95,13 @@ from spack.util.environment import (
     validate,
 )
 from spack.util.executable import Executable
+from spack.util.filesystem import join_path
+from spack.util.lang import dedupe, stable_partition
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module
+from spack.util.string import plural
+from spack.util.symlink import symlink
+from spack.util.tty.color import cescape, colorize
 
 #
 # This can be set by the user to globally disable parallel builds.

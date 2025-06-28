@@ -10,13 +10,12 @@ import urllib.request
 
 import pytest
 
-import llnl.util.tty as tty
-
 import spack.config
 import spack.mirrors.mirror
 import spack.paths
 import spack.url
 import spack.util.s3
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web
 from spack.version import Version

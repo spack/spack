@@ -3,10 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.container.images
 import spack.main
+import spack.util.filesystem as fs
 
 containerize = spack.main.SpackCommand("containerize")
 

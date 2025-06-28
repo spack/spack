@@ -6,7 +6,7 @@ import os.path
 import re
 import sys
 
-import llnl.util.tty as tty
+import spack.util.tty as tty
 
 import spack.build_environment
 import spack.util.executable

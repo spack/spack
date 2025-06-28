@@ -6,16 +6,15 @@ import argparse
 import copy
 import sys
 
-import llnl.util.lang
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-
 import spack.cmd as cmd
 import spack.config
 import spack.environment as ev
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.lang
+import spack.util.tty as tty
+import spack.util.tty.color as color
 from spack.cmd.common import arguments
 
 from ..enums import InstallRecordStatus
@@ -213,7 +212,7 @@ def query_arguments(args):
     for attribute in ("start_date", "end_date"):
         date = getattr(args, attribute)
         if date:
-            q_args[attribute] = llnl.util.lang.pretty_string_to_date(date)
+            q_args[attribute] = spack.util.lang.pretty_string_to_date(date)
 
     return q_args
 

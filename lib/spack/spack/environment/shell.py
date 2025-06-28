@@ -5,15 +5,14 @@ import os
 import textwrap
 from typing import Optional
 
-import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
-
 import spack.config
 import spack.environment as ev
 import spack.repo
 import spack.schema.environment
 import spack.store
+import spack.util.tty as tty
 from spack.util.environment import EnvironmentModifications
+from spack.util.tty.color import colorize
 
 
 def activate_header(env, shell, prompt=None, view: Optional[str] = None):

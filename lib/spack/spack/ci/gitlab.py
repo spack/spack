@@ -8,8 +8,6 @@ from typing import List, Optional
 
 import _vendoring.ruamel.yaml
 
-import llnl.util.tty as tty
-
 import spack
 import spack.binary_distribution as bindist
 import spack.config as cfg
@@ -17,6 +15,7 @@ import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 
 from .common import (
     SPACK_RESERVED_TAGS,

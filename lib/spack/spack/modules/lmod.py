@@ -9,9 +9,6 @@ import pathlib
 import warnings
 from typing import Dict, List, Optional, Tuple
 
-import llnl.util.filesystem as fs
-import llnl.util.lang as lang
-
 import spack.compilers.config
 import spack.config
 import spack.error
@@ -19,6 +16,8 @@ import spack.repo
 import spack.spec
 import spack.tengine as tengine
 import spack.util.environment
+import spack.util.filesystem as fs
+import spack.util.lang as lang
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter

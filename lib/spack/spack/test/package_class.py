@@ -13,8 +13,6 @@ import shutil
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.binary_distribution
 import spack.concretize
 import spack.deptypes as dt
@@ -24,6 +22,7 @@ import spack.package_base
 import spack.spec
 import spack.store
 import spack.subprocess_context
+import spack.util.filesystem as fs
 import spack.util.git
 from spack.error import InstallError
 from spack.package_base import PackageBase

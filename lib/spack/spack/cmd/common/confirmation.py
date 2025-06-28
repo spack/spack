@@ -5,10 +5,9 @@
 import sys
 from typing import List
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.spec
+import spack.util.tty as tty
 
 display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 

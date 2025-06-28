@@ -10,21 +10,20 @@ import shutil
 import stat
 from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.filesystem import HeaderList, LibraryList, join_path
-from llnl.util.lang import ClassProperty, classproperty, match_predicate
-
 import spack.builder
 import spack.multimethod
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.filesystem as fs
 import spack.util.prefix
+import spack.util.tty as tty
 from spack.directives import build_system, depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.install_test import test_part
 from spack.spec import Spec
+from spack.util.filesystem import HeaderList, LibraryList, join_path
+from spack.util.lang import ClassProperty, classproperty, match_predicate
 from spack.util.prefix import Prefix
 
 from ._checks import BuilderWithDefaults, execute_install_time_tests

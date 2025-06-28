@@ -7,14 +7,13 @@ import shutil
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, working_dir
-
 import spack.cmd
 import spack.cmd.pkg
 import spack.main
 import spack.paths
 import spack.repo
 import spack.util.file_cache
+from spack.util.filesystem import mkdirp, working_dir
 
 #: new fake package template
 pkg_template = """\

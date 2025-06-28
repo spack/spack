@@ -8,8 +8,6 @@ import os.path
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack
 import spack.config
 import spack.environment as ev
@@ -18,6 +16,7 @@ import spack.main
 import spack.paths
 import spack.platforms
 import spack.util.executable as exe
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.spack_yaml as syaml
 

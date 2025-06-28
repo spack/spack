@@ -6,13 +6,12 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, touch, working_dir
-
 import spack.concretize
 import spack.config
 from spack.fetch_strategy import SvnFetchStrategy
 from spack.stage import Stage
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp, touch, working_dir
 from spack.version import Version
 
 pytestmark = [

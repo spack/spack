@@ -12,13 +12,12 @@ from http.client import HTTPResponse
 from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
-import llnl.util.tty as tty
-
 import spack.fetch_strategy
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.oci.opener
 import spack.stage
+import spack.util.tty as tty
 import spack.util.url
 
 from .image import Digest, ImageReference

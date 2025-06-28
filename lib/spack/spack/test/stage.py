@@ -13,9 +13,6 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
-from llnl.util.symlink import readlink
-
 import spack.config
 import spack.error
 import spack.fetch_strategy
@@ -24,7 +21,9 @@ import spack.util.executable
 import spack.util.url as url_util
 from spack.resource import Resource
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
+from spack.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
 from spack.util.path import canonicalize_path
+from spack.util.symlink import readlink
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"

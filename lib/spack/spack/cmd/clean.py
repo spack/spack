@@ -6,15 +6,14 @@ import argparse
 import os
 import shutil
 
-import llnl.util.filesystem
-import llnl.util.tty as tty
-
 import spack.caches
 import spack.cmd
 import spack.config
 import spack.stage
 import spack.store
+import spack.util.filesystem
 import spack.util.path
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 from spack.paths import lib_path, var_path
 
@@ -135,4 +134,4 @@ def clean(parser, args):
         bootstrap_prefix = spack.util.path.canonicalize_path(spack.config.get("bootstrap:root"))
         msg = 'Removing bootstrapped software and configuration in "{0}"'
         tty.msg(msg.format(bootstrap_prefix))
-        llnl.util.filesystem.remove_directory_contents(bootstrap_prefix)
+        spack.util.filesystem.remove_directory_contents(bootstrap_prefix)

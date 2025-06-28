@@ -6,14 +6,13 @@
 import argparse
 import sys
 
-import llnl.util.tty as tty
-from llnl.util.tty.color import cprint, get_color_when
-
 import spack.cmd
 import spack.environment as ev
 import spack.solver.asp as asp
 import spack.util.spack_json as sjson
+import spack.util.tty as tty
 from spack.cmd.common import arguments
+from spack.util.tty.color import cprint, get_color_when
 
 description = "compare two specs"
 section = "basic"

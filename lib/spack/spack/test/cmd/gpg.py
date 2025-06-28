@@ -6,10 +6,9 @@ import os
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.binary_distribution as bindist
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.gpg
 from spack.main import SpackCommand
 from spack.paths import mock_gpg_data_path, mock_gpg_keys_path

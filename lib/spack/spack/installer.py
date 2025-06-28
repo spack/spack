@@ -40,14 +40,6 @@ from collections import defaultdict
 from gzip import GzipFile
 from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
-import llnl.util.filesystem as fs
-import llnl.util.lock as lk
-import llnl.util.tty as tty
-from llnl.util.lang import pretty_seconds
-from llnl.util.string import ordinal
-from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output, preserve_terminal_settings
-
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
 import spack.builder
@@ -65,11 +57,18 @@ import spack.rewiring
 import spack.spec
 import spack.store
 import spack.util.executable
+import spack.util.filesystem as fs
+import spack.util.lock as lk
 import spack.util.path
 import spack.util.timer as timer
+import spack.util.tty as tty
 from spack.url_buildcache import BuildcacheEntryError
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
+from spack.util.lang import pretty_seconds
+from spack.util.string import ordinal
+from spack.util.tty.color import colorize
+from spack.util.tty.log import log_output, preserve_terminal_settings
 
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they
@@ -1304,7 +1303,7 @@ class BuildTask(Task):
         self.record.succeed()
 
         # delete the temporary backup for an overwrite
-        # see llnl.util.filesystem.restore_directory_transaction
+        # see spack.util.filesystem.restore_directory_transaction
         if self.install_action == InstallAction.OVERWRITE:
             shutil.rmtree(self.tmpdir, ignore_errors=True)
 
@@ -1315,7 +1314,7 @@ class BuildTask(Task):
             raise inner_exception
 
         # restore the overwrite directory from backup
-        # see llnl.util.filesystem.restore_directory_transaction
+        # see spack.util.filesystem.restore_directory_transaction
         try:
             if os.path.exists(self.pkg.prefix):
                 shutil.rmtree(self.pkg.prefix)

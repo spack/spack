@@ -6,12 +6,11 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, touch
-
 import spack.config
 import spack.util.url as url_util
 from spack.fetch_strategy import CacheURLFetchStrategy, NoCacheError
 from spack.stage import Stage
+from spack.util.filesystem import mkdirp, touch
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])

@@ -36,11 +36,6 @@ from typing import (
 
 import _vendoring.archspec.cpu
 
-import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.filesystem import current_file_position
-from llnl.util.lang import elide_list
-
 import spack
 import spack.binary_distribution
 import spack.compilers.config
@@ -61,16 +56,20 @@ import spack.spec
 import spack.store
 import spack.util.crypto
 import spack.util.hash
+import spack.util.lang
 import spack.util.libc
 import spack.util.module_cmd as md
 import spack.util.path
 import spack.util.timer
+import spack.util.tty as tty
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.util.file_cache import FileCache
+from spack.util.filesystem import current_file_position
+from spack.util.lang import elide_list
 
 from .core import (
     AspFunction,
@@ -913,7 +912,7 @@ class ConcretizationCache:
         return None, None
 
 
-CONC_CACHE: ConcretizationCache = llnl.util.lang.Singleton(
+CONC_CACHE: ConcretizationCache = spack.util.lang.Singleton(
     lambda: ConcretizationCache()
 )  # type: ignore
 
@@ -1241,7 +1240,7 @@ class PyclingoDriver:
             with self.control.solve(**solve_kwargs, async_=True) as handle:
                 finished = handle.wait(time_limit)
                 if not finished:
-                    specs_str = ", ".join(llnl.util.lang.elide_list([str(s) for s in specs], 4))
+                    specs_str = ", ".join(spack.util.lang.elide_list([str(s) for s in specs], 4))
                     header = (
                         f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
                     )
@@ -2764,7 +2763,7 @@ class SpackSolverSetup:
                         )
                     version_defs.extend(matches)
 
-            for weight, vdef in enumerate(llnl.util.lang.dedupe(version_defs)):
+            for weight, vdef in enumerate(spack.util.lang.dedupe(version_defs)):
                 self.declared_versions[pkg_name].append(
                     DeclaredVersion(version=vdef, idx=weight, origin=Provenance.PACKAGES_YAML)
                 )

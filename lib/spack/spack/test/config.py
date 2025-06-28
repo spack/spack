@@ -11,8 +11,6 @@ from datetime import date
 
 import pytest
 
-from llnl.util.filesystem import join_path, touch
-
 import spack
 import spack.config
 import spack.directory_layout
@@ -33,6 +31,7 @@ import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 from spack.enums import ConfigScopePriority
+from spack.util.filesystem import join_path, touch
 
 # sample config data
 config_low = {

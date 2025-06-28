@@ -5,10 +5,10 @@
 
 import socket
 
-import llnl.util.lang
+import spack.util.lang
 
 
-@llnl.util.lang.memoized
+@spack.util.lang.memoized
 def _getfqdn():
     """Memoized version of `getfqdn()`.
 

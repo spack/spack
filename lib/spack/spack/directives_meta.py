@@ -6,11 +6,10 @@ import collections.abc
 import functools
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Type, Union
 
-import llnl.util.lang
-
 import spack.error
 import spack.repo
 import spack.spec
+import spack.util.lang
 
 #: Names of possible directives. This list is mostly populated using the @directive decorator.
 #: Some directives leverage others and in that case are not automatically added.
@@ -48,7 +47,7 @@ class DirectiveMeta(type):
 
         # De-duplicates directives from base classes
         attr_dict["_directives_to_be_executed"] = [
-            x for x in llnl.util.lang.dedupe(attr_dict["_directives_to_be_executed"])
+            x for x in spack.util.lang.dedupe(attr_dict["_directives_to_be_executed"])
         ]
 
         # Move things to be executed from module scope (where they

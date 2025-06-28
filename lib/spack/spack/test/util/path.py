@@ -7,10 +7,9 @@ import sys
 
 import pytest
 
-import llnl.util.tty as tty
-
 import spack.config
 import spack.util.path as sup
+import spack.util.tty as tty
 
 #: Some lines with lots of placeholders
 padded_lines = [

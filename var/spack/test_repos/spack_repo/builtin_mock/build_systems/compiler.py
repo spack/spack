@@ -8,13 +8,12 @@ import re
 import sys
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-import llnl.util.tty as tty
-from llnl.util.lang import classproperty, memoized
-
 import spack
 import spack.compilers.error
 import spack.package_base
 import spack.util.executable
+import spack.util.tty as tty
+from spack.util.lang import classproperty, memoized
 
 # Local "type" for type hints
 Path = Union[str, pathlib.Path]

@@ -14,16 +14,15 @@ installation and its deprecator.
 """
 import argparse
 
-import llnl.util.tty as tty
-from llnl.util.symlink import symlink
-
 import spack.cmd
 import spack.concretize
 import spack.environment as ev
 import spack.installer
 import spack.store
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util.symlink import symlink
 
 from ..enums import InstallRecordStatus
 

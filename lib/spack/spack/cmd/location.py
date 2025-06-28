@@ -5,14 +5,13 @@
 import argparse
 import os
 
-import llnl.util.tty as tty
-
 import spack.builder
 import spack.cmd
 import spack.environment as ev
 import spack.paths
 import spack.repo
 import spack.stage
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "print out locations of packages and spack directories"

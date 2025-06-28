@@ -9,11 +9,10 @@ from typing import List
 import _vendoring.archspec.cpu
 from spack_repo.builtin_mock.build_systems.generic import Package
 
-from llnl.util import lang
-
 import spack.compilers.libraries
 import spack.package_base
 from spack.package import *
+from spack.util import lang
 
 
 class CompilerWrapper(Package):

@@ -11,17 +11,16 @@ from itertools import product
 
 import pytest
 
-import llnl.util.url
-from llnl.util.filesystem import working_dir
-
+import spack.util.url
 from spack.paths import spack_root
 from spack.util import compression
 from spack.util.executable import CommandNotFoundError
+from spack.util.filesystem import working_dir
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data", "compression")
 
 ext_archive = {
-    ext: f"Foo.{ext}" for ext in llnl.util.url.ALLOWED_ARCHIVE_TYPES if "TAR" not in ext
+    ext: f"Foo.{ext}" for ext in spack.util.url.ALLOWED_ARCHIVE_TYPES if "TAR" not in ext
 }
 # Spack does not use Python native handling for tarballs or zip
 # Don't test tarballs or zip in native test

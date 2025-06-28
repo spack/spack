@@ -1256,7 +1256,7 @@ Spack will attempt to establish binary provenance by looking up commit SHA's for
 and tag based versions during concretization. There are 3 sources that it uses. In order, they
 are
 
-1. Staged source code (already cached source code for the version needing provenance) 
+1. Staged source code (already cached source code for the version needing provenance)
 2. Source mirrors (compressed archives of the source code)
 3. The git url provided in the package definition
 
@@ -1969,9 +1969,9 @@ This issue typically manifests with the error below:
      if self._enter() and self._acquire_fn:
    File "./spack/lib/spack/spack/database.py", line 608, in _enter
      return self._db.lock.acquire_read(self._timeout)
-   File "./spack/lib/spack/llnl/util/lock.py", line 103, in acquire_read
+   File "./spack/lib/spack/spack/util/lock.py", line 103, in acquire_read
      self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
-   File "./spack/lib/spack/llnl/util/lock.py", line 64, in _lock
+   File "./spack/lib/spack/spack/util/lock.py", line 64, in _lock
      fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
    IOError: [Errno 38] Function not implemented
 

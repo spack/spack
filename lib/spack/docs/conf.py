@@ -240,17 +240,17 @@ nitpick_ignore = [
     ("py:class", "_vendoring.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.compiler.CompilerCache"),
     # TypeVar that is not handled correctly
-    ("py:class", "llnl.util.lang.T"),
-    ("py:class", "llnl.util.lang.KT"),
-    ("py:class", "llnl.util.lang.VT"),
-    ("py:class", "llnl.util.lang.K"),
-    ("py:class", "llnl.util.lang.V"),
-    ("py:class", "llnl.util.lang.ClassPropertyType"),
-    ("py:obj", "llnl.util.lang.KT"),
-    ("py:obj", "llnl.util.lang.VT"),
-    ("py:obj", "llnl.util.lang.ClassPropertyType"),
-    ("py:obj", "llnl.util.lang.K"),
-    ("py:obj", "llnl.util.lang.V"),
+    ("py:class", "spack.util.lang.T"),
+    ("py:class", "spack.util.lang.KT"),
+    ("py:class", "spack.util.lang.VT"),
+    ("py:class", "spack.util.lang.K"),
+    ("py:class", "spack.util.lang.V"),
+    ("py:class", "spack.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.util.lang.KT"),
+    ("py:obj", "spack.util.lang.VT"),
+    ("py:obj", "spack.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.util.lang.K"),
+    ("py:obj", "spack.util.lang.V"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

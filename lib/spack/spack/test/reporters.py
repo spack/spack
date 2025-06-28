@@ -5,10 +5,9 @@ import os
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.reporters.extract
+import spack.util.filesystem as fs
+import spack.util.tty as tty
 from spack.install_test import TestStatus
 from spack.reporters import CDash, CDashConfiguration
 

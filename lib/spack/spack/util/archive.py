@@ -11,10 +11,9 @@ from contextlib import closing, contextmanager
 from gzip import GzipFile
 from typing import Callable, Dict, List, Tuple
 
-from llnl.util import tty
-from llnl.util.symlink import readlink
-
+from spack.util import tty
 from spack.util.executable import ProcessError, which
+from spack.util.symlink import readlink
 
 
 class ChecksumWriter(io.BufferedIOBase):

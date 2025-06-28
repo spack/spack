@@ -10,8 +10,6 @@ from pathlib import Path
 
 import pytest
 
-from llnl.util.path import path_to_os_path
-
 import spack.concretize
 import spack.hash_types
 import spack.paths
@@ -20,6 +18,7 @@ import spack.spec
 import spack.util.file_cache
 from spack.directory_layout import DirectoryLayout, InvalidDirectoryLayoutParametersError
 from spack.spec import Spec
+from spack.util.path import path_to_os_path
 
 # number of packages to test (to reduce test time)
 max_packages = 10

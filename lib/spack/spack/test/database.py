@@ -27,9 +27,6 @@ except ImportError:
 
 import _vendoring.jsonschema
 
-import llnl.util.lock as lk
-from llnl.util.tty.colify import colify
-
 import spack.concretize
 import spack.database
 import spack.deptypes as dt
@@ -39,11 +36,13 @@ import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.lock as lk
 import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller
 from spack.schema.database_index import schema
 from spack.util.executable import Executable
+from spack.util.tty.colify import colify
 
 pytestmark = pytest.mark.db
 

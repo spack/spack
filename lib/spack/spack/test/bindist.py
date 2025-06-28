@@ -21,9 +21,6 @@ from typing import Any, Callable, Dict, NamedTuple, Optional
 
 import pytest
 
-from llnl.util.filesystem import copy_tree, join_path
-from llnl.util.symlink import readlink
-
 import spack.binary_distribution as bindist
 import spack.caches
 import spack.compilers.config
@@ -58,6 +55,8 @@ from spack.url_buildcache import (
     get_url_buildcache_class,
     get_valid_spec_file,
 )
+from spack.util.filesystem import copy_tree, join_path
+from spack.util.symlink import readlink
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 

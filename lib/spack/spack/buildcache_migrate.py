@@ -9,8 +9,6 @@ import pathlib
 import tempfile
 from typing import NamedTuple
 
-import llnl.util.tty as tty
-
 import spack.binary_distribution as bindist
 import spack.database as spack_db
 import spack.error
@@ -19,6 +17,7 @@ import spack.spec
 import spack.stage
 import spack.util.crypto
 import spack.util.parallel
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web as web_util
 

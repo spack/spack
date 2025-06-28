@@ -9,17 +9,16 @@ import re
 import sys
 from typing import Optional, Union
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
-from llnl.util.lang import pretty_date
-from llnl.util.tty.colify import colify_table
-
 import spack.config
 import spack.repo
 import spack.util.git
 import spack.util.spack_json as sjson
+import spack.util.tty as tty
 from spack.cmd import spack_is_git_repo
 from spack.util.executable import ProcessError
+from spack.util.filesystem import working_dir
+from spack.util.lang import pretty_date
+from spack.util.tty.colify import colify_table
 
 description = "show contributors to packages"
 section = "developer"

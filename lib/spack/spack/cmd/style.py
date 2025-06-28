@@ -10,17 +10,16 @@ import warnings
 from itertools import islice, zip_longest
 from typing import Callable, Dict, List, Optional
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.filesystem import working_dir
-
 import spack.paths
 import spack.repo
 import spack.util.git
 import spack.util.spack_yaml
+import spack.util.tty as tty
+import spack.util.tty.color as color
 from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
 from spack.tokenize import Token, TokenBase, Tokenizer
 from spack.util.executable import Executable, which
+from spack.util.filesystem import working_dir
 
 description = "runs source code style checks on spack"
 section = "developer"

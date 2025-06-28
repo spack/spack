@@ -7,13 +7,12 @@ import os
 import stat
 from typing import Any, Dict
 
-import llnl.util.tty as tty
-from llnl.util.symlink import readlink
-
 import spack.store
 import spack.util.file_permissions as fp
 import spack.util.spack_json as sjson
+import spack.util.tty as tty
 from spack.package_base import spack_times_log
+from spack.util.symlink import readlink
 
 
 def compute_hash(path: str, block_size: int = 1048576) -> str:

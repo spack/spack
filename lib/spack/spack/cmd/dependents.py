@@ -6,14 +6,13 @@ import argparse
 import collections
 import sys
 
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
-
 import spack.cmd
 import spack.environment as ev
 import spack.repo
 import spack.store
+import spack.util.tty as tty
 from spack.cmd.common import arguments
+from spack.util.tty.colify import colify
 
 description = "show packages that depend on another"
 section = "basic"

@@ -77,13 +77,6 @@ from typing import (
 import _vendoring.archspec.cpu
 from _vendoring.typing_extensions import Literal
 
-import llnl.util.filesystem as fs
-import llnl.util.lang as lang
-import llnl.util.path
-import llnl.util.string
-import llnl.util.tty as tty
-import llnl.util.tty.color as clr
-
 import spack
 import spack.aliases
 import spack.compilers.flags
@@ -97,10 +90,16 @@ import spack.repo
 import spack.spec_parser
 import spack.store
 import spack.traverse
+import spack.util.filesystem as fs
 import spack.util.hash
+import spack.util.lang as lang
+import spack.util.path
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.string
+import spack.util.tty as tty
+import spack.util.tty.color as clr
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
@@ -155,7 +154,7 @@ IDENTIFIER_RE = r"\w[\w-]*"
 
 # Coloring of specs when using color output. Fields are printed with
 # different colors to enhance readability.
-# See llnl.util.tty.color for descriptions of the color codes.
+# See spack.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
@@ -1576,7 +1575,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return llnl.util.path.path_to_os_path(self._external_path)[0]
+        return spack.util.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -2268,7 +2267,7 @@ class Spec:
         return self._prefix
 
     def set_prefix(self, value: str) -> None:
-        self._prefix = spack.util.prefix.Prefix(llnl.util.path.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
@@ -4975,9 +4974,9 @@ def substitute_abstract_variants(spec: Spec):
         spec.variants.substitute(new_variant)
 
     if unknown:
-        variants = llnl.util.string.plural(len(unknown), "variant")
+        variants = spack.util.string.plural(len(unknown), "variant")
         raise vt.UnknownVariantError(
-            f"Tried to set {variants} {llnl.util.string.comma_and(unknown)}. "
+            f"Tried to set {variants} {spack.util.string.comma_and(unknown)}. "
             f"{spec.name} has no such {variants}",
             unknown_variants=unknown,
         )
@@ -5493,7 +5492,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, llnl.util.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
         )
 
 

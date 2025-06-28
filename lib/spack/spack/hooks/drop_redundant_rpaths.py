@@ -5,10 +5,9 @@
 import os
 from typing import BinaryIO, Optional, Tuple
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
-
+import spack.util.tty as tty
 from spack.util.elf import ElfParsingError, parse_elf
+from spack.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
 
 
 def should_keep(path: bytes) -> bool:

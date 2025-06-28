@@ -12,12 +12,11 @@ import inspect
 import itertools
 from typing import Any, Callable, Collection, Iterable, List, Optional, Tuple, Type, Union
 
-import llnl.util.lang as lang
-import llnl.util.tty.color
-
 import spack.error
 import spack.spec
 import spack.spec_parser
+import spack.util.lang as lang
+import spack.util.tty.color
 
 #: These are variant names used by Spack internally; packages can't use them
 RESERVED_NAMES = {
@@ -580,7 +579,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
 
             format_args = {"variant": variant_name, "package": pkg_name, "values": values}
             msg = self.error_fmt + " @*r{{[{package}, variant '{variant}']}}"
-            msg = llnl.util.tty.color.colorize(msg.format(**format_args))
+            msg = spack.util.tty.color.colorize(msg.format(**format_args))
             raise spack.error.SpecError(msg)
 
         return _disjoint_set_validator

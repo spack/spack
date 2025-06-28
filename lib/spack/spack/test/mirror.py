@@ -7,9 +7,6 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-from llnl.util.symlink import resolve_link_target_relative_to_the_link
-
 import spack.caches
 import spack.concretize
 import spack.config
@@ -25,7 +22,9 @@ import spack.util.url as url_util
 from spack.cmd.common.arguments import mirror_name_or_url
 from spack.spec import Spec
 from spack.util.executable import which
+from spack.util.filesystem import working_dir
 from spack.util.spack_yaml import SpackYAMLError
+from spack.util.symlink import resolve_link_target_relative_to_the_link
 
 pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")]
 

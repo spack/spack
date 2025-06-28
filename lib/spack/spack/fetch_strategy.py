@@ -36,26 +36,25 @@ import urllib.response
 from pathlib import PurePath
 from typing import Callable, List, Mapping, Optional
 
-import llnl.util
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-import llnl.util.url
-from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, working_dir
-from llnl.util.string import comma_and, quote
-from llnl.util.symlink import symlink
-
 import spack.config
 import spack.error
 import spack.oci.opener
+import spack.util
 import spack.util.archive
 import spack.util.crypto as crypto
+import spack.util.filesystem as fs
 import spack.util.git
+import spack.util.tty as tty
+import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
 import spack.version.git_ref_lookup
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.filesystem import get_single_file, mkdirp, temp_cwd, working_dir
+from spack.util.string import comma_and, quote
+from spack.util.symlink import symlink
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
@@ -551,7 +550,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = llnl.util.url.determine_url_file_extension(self.url)
+            self.extension = spack.util.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug("Source already staged to %s" % self.stage.source_path)
@@ -703,7 +702,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
-        assert llnl.util.url.extension_from_path(destination) == "tar.gz"
+        assert spack.util.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
         # We need to prepend this dir name to every entry of the tarfile
         top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))

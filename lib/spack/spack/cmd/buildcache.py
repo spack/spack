@@ -8,10 +8,6 @@ import sys
 import tempfile
 from typing import List, Optional, Tuple
 
-import llnl.util.tty as tty
-from llnl.util.lang import elide_list, stable_partition
-from llnl.util.string import plural
-
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.concretize
@@ -25,11 +21,14 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.util.parallel
+import spack.util.tty as tty
 import spack.util.web as web_util
 from spack import traverse
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.spec import Spec, save_dependency_specfiles
+from spack.util.lang import elide_list, stable_partition
+from spack.util.string import plural
 
 from ..buildcache_migrate import migrate
 from ..enums import InstallRecordStatus

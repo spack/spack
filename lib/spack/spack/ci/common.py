@@ -17,10 +17,6 @@ from typing import Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-
 import spack.binary_distribution as bindist
 import spack.config as cfg
 import spack.deptypes as dt
@@ -30,13 +26,16 @@ import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.compression as compression
+import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 import spack.util.web as web_util
 from spack import traverse
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.url_buildcache import get_url_buildcache_class
+from spack.util.lang import memoized
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]

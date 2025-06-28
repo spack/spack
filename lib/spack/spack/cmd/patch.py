@@ -4,13 +4,12 @@
 
 import argparse
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.package_base
 import spack.traverse
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "patch expanded archive sources in preparation for install"

@@ -6,9 +6,6 @@ import stat
 import subprocess
 from typing import Callable, List, Optional, Set, Tuple, Union
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.build_environment
 import spack.builder
 import spack.compilers.libraries
@@ -17,7 +14,9 @@ import spack.package_base
 import spack.phase_callbacks
 import spack.spec
 import spack.util.environment
+import spack.util.filesystem as fs
 import spack.util.prefix
+import spack.util.tty as tty
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
 from spack.operating_systems.mac_os import macos_version

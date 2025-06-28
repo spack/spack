@@ -11,8 +11,6 @@ from typing import List
 
 import pytest
 
-from llnl.util.filesystem import copy_tree, find
-
 import spack.binary_distribution
 import spack.buildcache_migrate as migrate
 import spack.cmd.buildcache
@@ -32,6 +30,7 @@ from spack.url_buildcache import (
     check_mirror_for_layout,
     get_url_buildcache_class,
 )
+from spack.util.filesystem import copy_tree, find
 
 buildcache = spack.main.SpackCommand("buildcache")
 install = spack.main.SpackCommand("install")

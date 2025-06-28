@@ -11,9 +11,6 @@ from typing import Dict, Optional, Tuple
 import _vendoring.archspec.cpu
 import pytest
 
-from llnl.util.filesystem import HeaderList, LibraryList
-from llnl.util.path import Path, convert_to_platform_path
-
 import spack.build_environment
 import spack.concretize
 import spack.config
@@ -27,6 +24,8 @@ from spack.context import Context
 from spack.installer import PackageInstaller
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
+from spack.util.filesystem import HeaderList, LibraryList
+from spack.util.path import Path, convert_to_platform_path
 
 
 def os_pathsep_join(path, *pths):

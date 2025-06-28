@@ -6,8 +6,6 @@ import os
 import shutil
 from typing import Optional
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.config
 import spack.environment
@@ -16,6 +14,7 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.path
+import spack.util.tty as tty
 import spack.version
 from spack.cmd.common import arguments
 from spack.error import SpackError

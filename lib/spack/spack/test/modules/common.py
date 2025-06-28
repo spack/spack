@@ -7,8 +7,6 @@ import stat
 
 import pytest
 
-from llnl.util.symlink import readlink
-
 import spack.cmd.modules
 import spack.concretize
 import spack.config
@@ -21,6 +19,7 @@ import spack.package_prefs
 import spack.repo
 from spack.installer import PackageInstaller
 from spack.modules.common import UpstreamModuleIndex
+from spack.util.symlink import readlink
 
 pytestmark = [
     pytest.mark.not_on_windows("does not run on windows"),

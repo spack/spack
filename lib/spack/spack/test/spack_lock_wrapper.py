@@ -2,15 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Tests for Spack's wrapper module around llnl.util.lock."""
+"""Tests for Spack's wrapper module around spack.util.lock."""
 import os
 
 import pytest
 
-from llnl.util.filesystem import getuid, group_ids
-
 import spack.error
 import spack.lock as lk
+from spack.util.filesystem import getuid, group_ids
 
 
 def test_disable_locking(tmpdir):

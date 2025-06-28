@@ -11,13 +11,6 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional, Set, Tuple
 
-import llnl.util.filesystem as fs
-import llnl.util.string as string
-import llnl.util.tty as tty
-from llnl.util.symlink import islink, symlink
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import cescape, colorize
-
 import spack.cmd
 import spack.cmd.common
 import spack.cmd.common.arguments
@@ -28,8 +21,14 @@ import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
 import spack.tengine
+import spack.util.filesystem as fs
+import spack.util.string as string
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 from spack.util.environment import EnvironmentModifications
+from spack.util.symlink import islink, symlink
+from spack.util.tty.colify import colify
+from spack.util.tty.color import cescape, colorize
 
 description = "manage virtual environments"
 section = "environments"

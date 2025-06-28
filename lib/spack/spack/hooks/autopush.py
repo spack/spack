@@ -2,10 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-
 import spack.binary_distribution as bindist
 import spack.mirrors.mirror
+import spack.util.tty as tty
 
 
 def post_install(spec, explicit):

@@ -9,11 +9,10 @@ include Tcl non-hierarchical modules, Lua hierarchical modules, and others.
 import os
 from typing import Dict, Type
 
-import llnl.util.tty as tty
-
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.tty as tty
 
 from . import common
 from .common import BaseModuleFileWriter, disable_modules

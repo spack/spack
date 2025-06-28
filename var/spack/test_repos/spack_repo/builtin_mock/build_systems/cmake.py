@@ -10,21 +10,20 @@ import sys
 from itertools import chain
 from typing import Any, List, Optional, Tuple
 
-import llnl.util.filesystem as fs
-from llnl.util import tty
-from llnl.util.lang import stable_partition
-
 import spack.builder
 import spack.deptypes as dt
 import spack.error
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.filesystem as fs
 import spack.util.prefix
 from spack import traverse
 from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
+from spack.util import tty
 from spack.util.environment import filter_system_paths
+from spack.util.lang import stable_partition
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests
 

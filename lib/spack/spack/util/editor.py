@@ -15,10 +15,9 @@ import os
 import shlex
 from typing import Callable, List
 
-import llnl.util.tty as tty
-
 import spack.config
 import spack.util.executable
+import spack.util.tty as tty
 
 #: editors to try if VISUAL and EDITOR are not set
 _default_editors = ["vim", "vi", "emacs", "nano", "notepad"]

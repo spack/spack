@@ -9,8 +9,7 @@ from typing import Optional
 
 import pytest
 
-import llnl.util.tty.log as log
-
+import spack.util.tty.log as log
 from spack.util.executable import which
 
 termios: Optional[ModuleType] = None
