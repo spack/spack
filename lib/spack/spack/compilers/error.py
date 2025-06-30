@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import warnings
 
-from ..error import SpackError
+from ..error import SpackAPIWarning, SpackError
 
 
 class CompilerAccessError(SpackError):
@@ -22,6 +22,6 @@ class UnsupportedCompilerFlag(SpackError):
     def __init__(self, message, long_message=None):
         warnings.warn(
             "UnsupportedCompilerFlag is deprecated, use CompilerError instead",
-            DeprecationWarning,
+            SpackAPIWarning,
             stacklevel=2,
         )
