@@ -69,7 +69,7 @@ from spack.directives import (
     variant,
     version,
 )
-from spack.error import CompilerError, InstallError, NoHeadersError, NoLibrariesError
+from spack.error import CompilerError, InstallError, NoHeadersError, NoLibrariesError, SpackError
 from spack.install_test import (
     SkipTest,
     cache_extra_test_sources,
@@ -187,6 +187,7 @@ __all__ = [
     "InstallError",
     "NoHeadersError",
     "NoLibrariesError",
+    "SpackError",
     "SkipTest",
     "cache_extra_test_sources",
     "check_outputs",
