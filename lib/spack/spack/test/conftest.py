@@ -79,6 +79,15 @@ mirror_cmd = SpackCommand("mirror")
 
 
 @pytest.fixture(autouse=True)
+def clear_sys_modules():
+    """Clear package repos from sys.modules before each test."""
+    for key in list(sys.modules.keys()):
+        if key.startswith("spack_repo.") or key == "spack.repo":
+            del sys.modules[key]
+    yield
+
+
+@pytest.fixture(autouse=True)
 def check_config_fixture(request):
     if "config" in request.fixturenames and "mutable_config" in request.fixturenames:
         raise RuntimeError("'config' and 'mutable_config' are both requested")
