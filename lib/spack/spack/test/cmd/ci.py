@@ -594,6 +594,7 @@ def activate_rebuild_env(tmp_path: pathlib.Path, pkg_name: str, rebuild_env: Reb
 
 
 @pytest.mark.parametrize("broken_tests", [True, False])
+@pytest.mark.requires_executables("gpg2")
 def test_ci_rebuild_mock_success(
     tmp_path: pathlib.Path,
     working_env,
@@ -627,6 +628,7 @@ def test_ci_rebuild_mock_success(
             assert "Cannot copy test logs" in out
 
 
+@pytest.mark.requires_executables("gpg2")
 def test_ci_rebuild_mock_failure_to_push(
     tmp_path: pathlib.Path,
     working_env,
@@ -769,6 +771,7 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
+@pytest.mark.requires_executables("gpg2")
 def test_push_to_build_cache(
     tmp_path: pathlib.Path,
     mutable_mock_env_path,
