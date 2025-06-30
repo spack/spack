@@ -10,9 +10,3 @@ class CompilerAccessError(SpackError):
             f"Compiler '{compiler.spec}' has executables that are missing"
             f" or are not executable: {paths}"
         )
-
-
-class UnsupportedCompilerFlag(SpackError):
-    """Raised when a compiler does not support a flag type (e.g. a flag to enforce a
-    language standard).
-    """
