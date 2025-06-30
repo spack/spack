@@ -955,6 +955,50 @@ class DevelopStage(LockableStagingDir):
         tty.debug("Sources for Develop stages are not cached")
 
 
+# Note: if this was in user_cache_path, then if users customize this
+# per-spack with SPACK_USER_CACHE_PATH, it would have strange effects
+dev_stage_map_path = os.path.expanduser(os.path.join("~", ".spack", "dev-stage-index"))
+import json
+from collections import defaultdict
+import itertools
+
+class DevStageMap:
+    def __init__(self, data):
+        self.env_map = data
+
+    def write(self, dst=None):
+        dst = dst or dev_stage_map_path
+        with open(dst, "w") as f:
+            json.dump(self.env_map, f)
+
+    @staticmethod
+    def read(src=None):
+        src = src or dev_stage_map_path
+        with open(src, "r") as f:
+            return DevStageMap(json.load(f))
+
+    def update(self, env, dev_path, stage_path):
+        dev_map = self.env_map.setdefault(env.root, {})
+        dev_map[dev_path] = stage_path
+
+    def stages_for_dev_paths(self):
+        """For GC on dev_path: determine all stage links which should
+           still exist.
+        """
+        dev_path_to_stages = defaultdict(set)
+        for env_root, dev_map in self.env_map.items():
+            for dev_path, stage_path in dev_map.items():
+                dev_path_to_stages[dev_path].add(stage_path)
+
+    def env_stage_paths(self):
+        """For GC on stage root: determine all stages that are being
+           used by some environment for a dev path.
+        """
+        return set(itertools.chain.from_iterable(
+            dev_map.values() for dev_map in self.env_map.values()
+        ))
+
+
 def ensure_access(file):
     """Ensure we can access a directory and die with an error if we can't."""
     if not can_access(file):
