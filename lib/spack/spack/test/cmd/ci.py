@@ -1115,7 +1115,7 @@ def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeyp
     def fake_stack_changed(env_path):
         return False
 
-    def fake_change_revisions(env_path, rev1="HEAD^", rev2="HEAD"):
+    def fake_change_revisions(env_path):
         return "HEAD^", "HEAD"
 
     builder = spack.repo.MockRepositoryBuilder(tmpdir)

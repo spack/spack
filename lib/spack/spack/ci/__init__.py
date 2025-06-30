@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, List, Optional, Set, Union
+from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 from urllib.request import Request
 
 import llnl.path
@@ -27,7 +27,6 @@ import spack.binary_distribution as bindist
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
-import spack.error
 import spack.main
 import spack.mirrors.mirror
 import spack.paths
@@ -69,21 +68,19 @@ PushResult = namedtuple("PushResult", "success url")
 urlopen = web_util.urlopen  # alias for mocking in tests
 
 
-def get_git_root(path) -> Optional[str]:
-    git_exe = spack.util.git.git(required=True)
+def get_git_root(path: str) -> Optional[str]:
+    git = spack.util.git.git(required=True)
     try:
         with fs.working_dir(path):
             # Raises SpackError on command failure
-            git_dir = git_exe(
-                "rev-parse", "--show-toplevel", fail_on_error=True, output=str
-            ).strip()
+            git_dir = git("rev-parse", "--show-toplevel", fail_on_error=True, output=str).strip()
             tty.debug(f"{path} git toplevel at {git_dir}")
             return git_dir
     except SpackError:
         return None
 
 
-def get_change_revisions(path):
+def get_change_revisions(path: str) -> Tuple[Optional[str], Optional[str]]:
     """If this is a git repo get the revisions to use when checking
     for changed packages and spack core modules."""
 
@@ -136,31 +133,34 @@ def get_added_versions(
     return [checksums_version_dict[c] for c in added_checksums - removed_checksums]
 
 
-def stack_changed(env_path) -> bool:
-    """Given an environment manifest path and two revisions to compare, return
-    whether or not the stack was changed.  Returns True if the environment
-    manifest changed between the provided revisions (or additionally if the
-    `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
-    # git returns posix paths always, normalize input to be comptaible
-    # with that
-    # Check if the environment changed
+def stack_changed(env_path: str) -> bool:
+    """Given an environment manifest path, return whether or not the stack was changed.
+    Returns True iff the environment manifest changed between the provided revisions (or
+    additionally if the `.gitlab-ci.yml` file itself changed)."""
+    # git returns posix paths always, normalize input to be compatible with that
     env_path = llnl.path.convert_to_posix_path(os.path.dirname(env_path))
 
-    rev1, rev2 = get_change_revisions(env_path)
-    if not (rev1 and rev2):
-        return False
-
-    # This will never be none, we already checked it in get_change_revisions
+    git = spack.util.git.git(required=True)
     git_dir = get_git_root(env_path)
 
-    with fs.working_dir(git_dir):
-        git = spack.util.git.git(required=True)
-        git_log = git(
-            "diff", "--name-only", rev1, rev2, output=str, error=os.devnull, fail_on_error=False
-        ).strip()
-        lines = [] if not git_log else re.split(r"\s+", git_log)
+    if git_dir is None:
+        return False
 
-        for path in lines:
+    with fs.working_dir(git_dir):
+        diff = git(
+            "diff",
+            "--name-only",
+            "HEAD^",
+            "HEAD",
+            output=str,
+            error=os.devnull,
+            fail_on_error=False,
+        ).strip()
+
+        if not diff:
+            return False
+
+        for path in diff.split():
             if ".gitlab-ci.yml" in path or path in env_path:
                 tty.debug(f"env represented by {env_path} changed")
                 tty.debug(f"touched file: {path}")
@@ -176,50 +176,43 @@ def compute_affected_packages(
     return spack.repo.get_all_package_diffs("ARC", repo, rev1=rev1, rev2=rev2)
 
 
-def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
-    """Given a list of package names and an active/concretized
-       environment, return the set of all concrete specs from the
-       environment that could have been affected by changing the
-       list of packages.
+def get_spec_filter_list(
+    env: ev.Environment, affected_pkgs: Set[str], dependent_traverse_depth: Optional[int] = None
+) -> Set[spack.spec.Spec]:
+    """Given a list of package names and an active/concretized environment, return the set of all
+    concrete specs from the environment that could have been affected by changing the list of
+    packages.
 
-       If a ``dependent_traverse_depth`` is given, it is used to limit
-       upward (in the parent direction) traversal of specs of touched
-       packages.  E.g. if 1 is provided, then only direct dependents
-       of touched package specs are traversed to produce specs that
-       could have been affected by changing the package, while if 0 is
-       provided, only the changed specs themselves are traversed. If ``None``
-       is given, upward traversal of touched package specs is done all
-       the way to the environment roots.  Providing a negative number
-       results in no traversals at all, yielding an empty set.
+    If a ``dependent_traverse_depth`` is given, it is used to limit upward (in the parent
+    direction) traversal of specs of touched packages. E.g. if 1 is provided, then only direct
+    dependents of touched package specs are traversed to produce specs that could have been
+    affected by changing the package, while if 0 is provided, only the changed specs themselves
+    are traversed. If ``None`` is given, upward traversal of touched package specs is done all the
+    way to the environment roots. Providing a negative number results in no traversals at all,
+    yielding an empty set.
 
     Arguments:
-
-        env (spack.environment.Environment): Active concrete environment
-        affected_pkgs (List[str]): Affected package names
-        dependent_traverse_depth: Optional integer to limit dependent
-            traversal, or None to disable the limit.
+        env: Active concrete environment
+        affected_pkgs: Affected package names
+        dependent_traverse_depth: Integer to limit dependent traversal, None means no limit
 
     Returns:
-
-        A set of concrete specs from the active environment including
-        those associated with affected packages, their dependencies and
-        dependents, as well as their dependents dependencies.
+        A set of concrete specs from the active environment including those associated with
+        affected packages, their dependencies and dependents, as well as their dependents
+        dependencies.
     """
-    affected_specs = set()
+    affected_specs: Set[spack.spec.Spec] = set()
     all_concrete_specs = env.all_specs()
-    tty.debug("All concrete environment specs:")
-    for s in all_concrete_specs:
-        tty.debug(f"  {s.name}/{s.dag_hash()[:7]}")
-    affected_pkgs = frozenset(affected_pkgs)
     env_matches = [s for s in all_concrete_specs if s.name in affected_pkgs]
-    visited = set()
-    dag_hash = lambda s: s.dag_hash()
+    visited: Set[str] = set()
     for depth, parent in traverse.traverse_nodes(
-        env_matches, direction="parents", key=dag_hash, depth=True, order="breadth"
+        env_matches, direction="parents", key=traverse.by_dag_hash, depth=True, order="breadth"
     ):
         if dependent_traverse_depth is not None and depth > dependent_traverse_depth:
             break
-        affected_specs.update(parent.traverse(direction="children", visited=visited, key=dag_hash))
+        affected_specs.update(
+            parent.traverse(direction="children", visited=visited, key=traverse.by_dag_hash)
+        )
     return affected_specs
 
 
@@ -431,7 +424,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
 
 
 def get_unaffected_pruners(
-    env, untouched_pruning_dependent_depth: Optional[int]
+    env: ev.Environment, untouched_pruning_dependent_depth: Optional[int]
 ) -> Optional[PrunerCallback]:
 
     # If the stack env has changed, do not apply unaffected pruning
@@ -443,7 +436,7 @@ def get_unaffected_pruners(
     # in specific configured repos that are being tested with CI. For now
     # it assumes all configured repos are merge commits that contain relevant
     # changes to run CI on.
-    affected_pkgs: List[str] = []
+    affected_pkgs: Set[str] = set()
     for repo in spack.repo.PATH.repos:
         rev1, rev2 = get_change_revisions(repo.root)
         if not (rev1 and rev2):
@@ -456,7 +449,7 @@ def get_unaffected_pruners(
         for p in repo_affected_pkgs:
             tty.debug(f"  {p}")
 
-        affected_pkgs.extend(repo_affected_pkgs)
+        affected_pkgs.update(repo_affected_pkgs)
 
     affected_specs = get_spec_filter_list(
         env, affected_pkgs, dependent_traverse_depth=untouched_pruning_dependent_depth
@@ -465,13 +458,12 @@ def get_unaffected_pruners(
     for s in affected_specs:
         tty.debug(f"  {PipelineDag.key(s)}")
 
-    # If specs changed, but none of the packages were affected,
-    # rebuild everything that has changed.
-    if affected_specs:
-        return create_unaffected_pruner(affected_specs)
-    else:
+    # If specs changed, but no packages were affected, rebuild everything that has changed.
+    if not affected_specs:
         tty.info("Skipping unaffected pruning no package changes were detected")
         return None
+
+    return create_unaffected_pruner(affected_specs)
 
 
 def generate_pipeline(env: ev.Environment, args) -> None:
