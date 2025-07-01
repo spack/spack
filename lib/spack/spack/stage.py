@@ -960,6 +960,8 @@ class DevStageMap:
         root = get_stage_root()
         if os.path.isdir(root):
             for stage_dir in os.listdir(root):
+                if stage_prefix not in stage_dir:
+                    continue
                 stage_path = os.path.join(root, stage_dir)
                 if stage_path not in keep_stages:
                     if os.path.isdir(stage_path):
