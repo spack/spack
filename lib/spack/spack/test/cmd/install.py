@@ -339,40 +339,6 @@ def test_install_invalid_spec():
         install("conflict%~")
 
 
-@pytest.mark.usefixtures("noop_install", "mock_packages", "config")
-@pytest.mark.parametrize(
-    "spec,concretize,error_code",
-    [
-        (Spec("mpi"), False, 1),
-        (Spec("mpi"), True, 0),
-        (Spec("boost"), False, 1),
-        (Spec("boost"), True, 0),
-    ],
-)
-def test_install_from_file(spec, concretize, error_code, tmpdir):
-    if concretize:
-        spec = spack.concretize.concretize_one(spec)
-
-    specfile = tmpdir.join("spec.yaml")
-
-    with specfile.open("w") as f:
-        spec.to_yaml(f)
-
-    err_msg = "does not contain a concrete spec" if error_code else ""
-
-    # Relative path to specfile (regression for #6906)
-    with fs.working_dir(specfile.dirname):
-        # A non-concrete spec will fail to be installed
-        out = install("-f", specfile.basename, fail_on_error=False)
-    assert install.returncode == error_code
-    assert err_msg in out
-
-    # Absolute path to specfile (regression for #6983)
-    out = install("-f", str(specfile), fail_on_error=False)
-    assert install.returncode == error_code
-    assert err_msg in out
-
-
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.usefixtures("mock_packages", "mock_archive", "mock_fetch", "install_mockery")
 @pytest.mark.parametrize(
@@ -483,6 +449,11 @@ def test_junit_output_with_errors(
     assert f'error message="{msg}"' in content
 
 
+@pytest.fixture(params=["yaml", "json"])
+def spec_format(request):
+    return request.param
+
+
 @pytest.mark.usefixtures("noop_install", "mock_packages", "config")
 @pytest.mark.parametrize(
     "clispecs,filespecs",
@@ -494,15 +465,15 @@ def test_junit_output_with_errors(
         [["cmake", "libelf"], ["mpi", "boost"]],
     ],
 )
-def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
+def test_install_mix_cli_and_files(spec_format, clispecs, filespecs, tmpdir):
     args = clispecs
 
     for spec in filespecs:
-        filepath = tmpdir.join(spec + ".yaml")
-        args = ["-f", str(filepath)] + args
+        filepath = tmpdir.join(spec + f".{spec_format}")
+        args = [str(filepath)] + args
         s = spack.concretize.concretize_one(spec)
         with filepath.open("w") as f:
-            s.to_yaml(f)
+            s.to_yaml(f) if spec_format == "yaml" else s.to_json(f)
 
     install(*args, fail_on_error=False)
     assert install.returncode == 0
@@ -638,7 +609,6 @@ def test_cdash_install_from_spec_json(
             "--cdash-build=my_custom_build",
             "--cdash-site=my_custom_site",
             "--cdash-track=my_custom_track",
-            "-f",
             spec_json_path,
         )
 
@@ -851,11 +821,11 @@ def test_install_no_add_in_env(tmpdir, mutable_mock_env_path, mock_fetch, instal
 
         # Make sure we can install a concrete dependency spec from a spec.json
         # file on disk, and the spec is installed but not added as a root
-        mpi_spec_json_path = tmpdir.join("{0}.json".format(mpi_spec.name))
+        mpi_spec_json_path = tmpdir.join(f"{mpi_spec.name}.json")
         with open(mpi_spec_json_path.strpath, "w", encoding="utf-8") as fd:
             fd.write(mpi_spec.to_json(hash=ht.dag_hash))
 
-        install("-f", mpi_spec_json_path.strpath)
+        install(mpi_spec_json_path.strpath)
         assert mpi_spec not in e.roots()
 
         find_output = find("-l", output=str)

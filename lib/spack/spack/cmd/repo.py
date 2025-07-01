@@ -473,6 +473,7 @@ def _iter_repos_from_descriptors(
 
 
 def repo_update(args: Any) -> int:
+    """update one or more package repositories"""
     descriptors = spack.repo.RepoDescriptors.from_config(
         spack.repo.package_repository_lock(), spack.config.CONFIG
     )

@@ -13,7 +13,7 @@ Getting Spack is easy.  You can clone it from the `GitHub repository
 
 .. code-block:: console
 
-   $ git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git
+   $ git clone --depth=2 https://github.com/spack/spack.git
 
 This will create a directory called ``spack``. Once you have cloned Spack, we recommend sourcing the appropriate script for your shell:
 
@@ -40,8 +40,6 @@ This will create a directory called ``spack``. Once you have cloned Spack, we re
 That's it! You're ready to use Spack.
 
 .. note::
-   ``-c feature.manyFiles=true`` improves Git's performance on repositories with 1,000+ files.
-
    ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
 
 -------------
@@ -661,9 +659,9 @@ compilers:
 Intel compilers may therefore be configured in one of two ways with
 Spack: using modules, or using compiler flags.
 
-^^^
+^^^^^^
 NAG
-^^^
+^^^^^^
 
 The Numerical Algorithms Group provides a licensed Fortran compiler.
 It is recommended to use GCC for your C/C++ compilers.
@@ -771,9 +769,9 @@ For example, to use an OpenMPI installed in /opt/local, you would use:
 In general, *Spack is easier to use and more reliable if it builds all of its own dependencies*.
 However, there are several packages for which one commonly needs to use system versions:
 
-^^^
+^^^^^^
 MPI
-^^^
+^^^^^^
 
 On supercomputers, sysadmins have already built MPI versions that take
 into account the specifics of that computer's hardware.  Unless you
@@ -864,9 +862,9 @@ to add the following to ``packages.yaml``:
    from other dependencies. This ensures that binaries in Spack dependencies
    are preferred over system binaries.
 
-^^^
+^^^^^^
 Git
-^^^
+^^^^^^
 
 Some Spack packages use ``git`` to download, which might not work on
 some computers.  For example, the following error was
@@ -1281,9 +1279,9 @@ to your ``PATH`` in this case.
 .. note::
    Spack currently supports Python versions later than 3.2 inclusive.
 
-"""
+""""""
 Git
-"""
+""""""
 
 A bash console and GUI can be downloaded from https://git-scm.com/downloads.
 If you are unfamiliar with Git, there are a myriad of resources online to help
@@ -1298,9 +1296,9 @@ as the project providing Git support on Windows. This is additionally the recomm
 for installing Git on Windows, a link to which can be found above. Spack requires the
 utilities vendored by this project.
 
-"""
+""""""
 7zip
-"""
+""""""
 
 A tool for extracting ``.xz`` files is required for extracting source tarballs. The latest 7-Zip
 can be located at https://sourceforge.net/projects/sevenzip/.

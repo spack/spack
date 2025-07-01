@@ -644,7 +644,7 @@ account all scopes. For example, to see the fully merged
      - ~/.spack/stage
      - $spack/var/spack/stage
      source_cache: $spack/var/spack/cache
-     misc_cache: $user_cache_path/$spack_instance_id/cache
+     misc_cache: ~/.spack/cache
      locks: true
 
 Likewise, this will show the fully merged ``packages.yaml``:
@@ -691,7 +691,7 @@ down the source of the configuration:
    /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $spack/var/spack/cache
-   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $user_cache_path/$spack_instance_id/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: ~/.spack/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 
 You can see above that the ``build_jobs`` and ``debug`` settings are

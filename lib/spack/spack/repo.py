@@ -1647,8 +1647,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
         self.read_transaction = spack.util.lock.ReadTransaction(lock)
 
     def _fetched(self) -> bool:
-        """Check if the repository has been fetched by looking for the .git directory."""
-        return os.path.isdir(os.path.join(self.destination, ".git"))
+        """Check if the repository has been fetched by looking for the .git
+        directory or file (when a submodule)."""
+        return os.path.exists(os.path.join(self.destination, ".git"))
 
     def fetched(self) -> bool:
         with self.read_transaction:

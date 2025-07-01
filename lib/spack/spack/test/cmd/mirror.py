@@ -642,7 +642,7 @@ def test_binary_provenance_relative_to_mirror(
 
     # push the commit past mirror
     git("-C", repo_path, "checkout", "main", output=str)
-    git("-C", repo_path, "commit", "--allow-empty", "-m", "bump sha")
+    git("-C", repo_path, "commit", "--no-gpg-sign", "--allow-empty", "-m", "bump sha")
     head_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
 
     spec_mirror = spack.concretize.concretize_one("git-test-commit@main")

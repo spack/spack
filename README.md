@@ -53,18 +53,8 @@ To install spack, first make sure you have Python & Git.
 Then:
 
 ```bash
-git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git
+git clone --depth=2 https://github.com/spack/spack.git
 ```
-
-<details>
-<summary>What are <code>manyFiles=true</code> and <code>--depth=2</code>?</summary>
-<br>
-
-> `-c feature.manyFiles=true` improves git's performance on repositories with 1,000+ files.
->
-> `--depth=2` prunes the git history to reduce the size of the Spack installation.
-
-</details>
 
 ```bash
 # For bash/zsh/sh

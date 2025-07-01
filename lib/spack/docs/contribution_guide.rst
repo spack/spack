@@ -455,7 +455,7 @@ Runners require three key pieces:
 
 
 Minimum GitLab Runner Version: ``16.1.0``
-`Intallation instructions <https://docs.gitlab.com/runner/install/>`_
+`Installation instructions <https://docs.gitlab.com/runner/install/>`_
 
 Registration Token
 ~~~~~~~~~~~~~~~~~~

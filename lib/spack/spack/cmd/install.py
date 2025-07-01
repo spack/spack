@@ -13,7 +13,6 @@ from llnl.string import plural
 from llnl.util import tty
 
 import spack.cmd
-import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.paths
@@ -204,16 +203,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="(with environment) do not add spec to the environment as a root",
     )
 
-    subparser.add_argument(
-        "-f",
-        "--file",
-        action="append",
-        default=[],
-        dest="specfiles",
-        metavar="SPEC_YAML_FILE",
-        help="read specs to install from .yaml files",
-    )
-
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ["clean", "dirty"])
 
@@ -334,7 +323,7 @@ def install(parser, args):
     install_kwargs = install_kwargs_from_args(args)
     env = ev.active_environment()
 
-    if not env and not args.spec and not args.specfiles:
+    if not env and not args.spec:
         _die_require_env()
 
     try:
@@ -436,28 +425,8 @@ def concrete_specs_from_cli(args, install_kwargs):
     return concrete_specs
 
 
-def concrete_specs_from_file(args):
-    """Return the list of concrete specs read from files."""
-    result = []
-    for file in args.specfiles:
-        with open(file, "r", encoding="utf-8") as f:
-            if file.endswith("yaml") or file.endswith("yml"):
-                s = spack.spec.Spec.from_yaml(f)
-            else:
-                s = spack.spec.Spec.from_json(f)
-
-        concretized = spack.concretize.concretize_one(s)
-        if concretized.dag_hash() != s.dag_hash():
-            msg = 'skipped invalid file "{0}". '
-            msg += "The file does not contain a concrete spec."
-            tty.warn(msg.format(file))
-            continue
-        result.append(concretized)
-    return result
-
-
 def install_without_active_env(args, install_kwargs, reporter):
-    concrete_specs = concrete_specs_from_cli(args, install_kwargs) + concrete_specs_from_file(args)
+    concrete_specs = concrete_specs_from_cli(args, install_kwargs)
 
     if len(concrete_specs) == 0:
         tty.die("The `spack install` command requires a spec to install.")

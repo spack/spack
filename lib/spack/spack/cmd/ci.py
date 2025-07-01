@@ -89,6 +89,23 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="process up-to-date specs\n\n"
         "generate jobs for specs even when they are up-to-date on the mirror",
     )
+    prune_unaffected_group = generate.add_mutually_exclusive_group()
+    prune_unaffected_group.add_argument(
+        "--prune-unaffected",
+        action="store_true",
+        dest="prune_unaffected",
+        default=True,
+        help="skip up-to-date specs\n\n"
+        "do not generate jobs for specs that are up-to-date on the mirror",
+    )
+    prune_unaffected_group.add_argument(
+        "--no-prune-unaffected",
+        action="store_false",
+        dest="prune_unaffected",
+        default=True,
+        help="process up-to-date specs\n\n"
+        "generate jobs for specs even when they are up-to-date on the mirror",
+    )
     prune_ext_group = generate.add_mutually_exclusive_group()
     prune_ext_group.add_argument(
         "--prune-externals",

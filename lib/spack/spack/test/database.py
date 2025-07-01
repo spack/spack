@@ -16,6 +16,7 @@ import sys
 import pytest
 
 import spack.subprocess_context
+from spack.directory_layout import DirectoryLayoutError
 
 try:
     import uuid
@@ -184,6 +185,53 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
 
         upstream_db._check_ref_counts()
         downstream_db._check_ref_counts()
+
+
+def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypatch, config):
+    upstream_db, downstream_db = upstream_and_downstream_db
+
+    z_y_prefix = str(tmpdir.join("z-y"))
+
+    def fail_for_z(spec):
+        if spec.prefix == z_y_prefix:
+            raise DirectoryLayoutError("Fake layout error for z")
+
+    upstream_db.layout.ensure_installed = fail_for_z
+
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
+    builder.add_package("z")
+    builder.add_package("y", dependencies=[("z", "build", None)])
+
+    monkeypatch.setattr(spack.store.STORE, "db", downstream_db)
+
+    with spack.repo.use_repositories(builder.root):
+        y = spack.concretize.concretize_one("y")
+        z_y = y["z"]
+        z_y.set_prefix(z_y_prefix)
+
+        with writable(upstream_db):
+            upstream_db.add(y)
+        upstream_db._read()
+
+        upstream, record = downstream_db.query_by_spec_hash(z_y.dag_hash())
+        assert upstream
+        assert not record.installed
+
+        assert y.installed
+        assert y.installed_upstream
+
+        assert not z_y.installed
+        assert not z_y.installed_upstream
+
+        # Now add z to downstream with non-triggering prefix
+        # and make sure z *is* installed
+
+        z_new = z_y.copy()
+        z_new.set_prefix(str(tmpdir.join("z-new")))
+        downstream_db.add(z_new)
+
+        assert z_new.installed
+        assert not z_new.installed_upstream
 
 
 def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config):

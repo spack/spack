@@ -362,7 +362,7 @@ def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
     e1.add("hypre")
     e1.concretize()
 
-    touched = ["libdwarf"]
+    touched = {"libdwarf"}
 
     # Make sure we return the correct set of possibly affected specs,
     # given a dependent traversal depth and the fact that the touched
@@ -420,7 +420,7 @@ def test_affected_specs_on_first_concretization(mutable_mock_env_path):
     e.add("mpileaks+shared")
     e.concretize()
 
-    affected_specs = spack.ci.get_spec_filter_list(e, ["callpath"])
+    affected_specs = ci.get_spec_filter_list(e, {"callpath"})
     mpileaks_specs = [s for s in affected_specs if s.name == "mpileaks"]
     assert len(mpileaks_specs) == 2, e.all_specs()
 
