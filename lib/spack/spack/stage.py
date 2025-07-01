@@ -903,8 +903,12 @@ class DevStageMap:
     @staticmethod
     def read(src=None):
         src = src or dev_stage_map_path
-        with open(src, "r") as f:
-            return DevStageMap(json.load(f))
+        if not os.path.exists(src):
+            data = {}
+        else: 
+            with open(src, "r") as f:
+                data = json.load(f)
+        return DevStageMap(data)
 
     def update_env(self, env_root, dev_map):
         self.env_map[env_root] = dev_map
