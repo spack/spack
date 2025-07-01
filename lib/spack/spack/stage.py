@@ -858,18 +858,50 @@ class DevelopStage(LockableStagingDir):
     def create(self):
         super().create()
         try:
+            llnl.util.symlink.symlink(self.dev_path, DevelopStage._dev_path_link(self.path))
+        except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
+            pass
+        try:
             llnl.util.symlink.symlink(self.path, self.reference_link)
         except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
             pass
 
+    @staticmethod
+    def _dev_path_link(stage_path):
+        return os.path.join(stage_path, ".dev-path-link")
+
+    @staticmethod
+    def _get_dev_path(stage_path):
+         dev_path_link = DevelopStage._dev_path_link(stage_path)
+         if os.path.exists(dev_path_link):
+             return llnl.util.symlink.readlink(dev_path_link)
+
+    @staticmethod
+    def _clean_dev_path(dev_path):
+        """Look for stage reference links.
+        """
+        for fname in os.listdir(dev_path):
+            path = os.path.join(dev_path, fname)
+            if llnl.util.symlink.islink(path):
+                target = llnl.util.symlink.readlink(path)
+                if stage_prefix in os.path.basename(target) and not os.path.exists(target):
+                    os.remove(path)
+
     def destroy(self):
+        try:
+            if llnl.util.symlink.islink(self.reference_link):
+                target = llnl.util.symlink.readlink(self.reference_link)
+                if stage_prefix in os.path.basename(target):
+                    os.remove(self.reference_link)
+            # else: we didn't make this link
+        except FileNotFoundError:
+            pass
+
         # Destroy all files, but do not follow symlinks
         try:
             shutil.rmtree(self.path)
         except FileNotFoundError:
             pass
-
-        dev_stage_map.update_links_in_all_dev_paths()
 
         self.created = False
 
@@ -947,31 +979,10 @@ class DevStageMap:
                     else:
                         os.remove(stage_path)
 
-    def update_links_in_dev_path(self, dev_path):
-        dev_path_to_stages = self.stages_for_dev_paths()
-        stages_for_this_dev_path = dev_path_to_stages[dev_path]
-        DevStageMap._clean_link_dict(dev_path, stages_for_this_dev_path)
-
     def update_links_in_all_dev_paths(self):
-        # Like the prior method, but more efficient; runs after a purge
         dev_path_to_stages = self.stages_for_dev_paths()
-        for dev_path, stages in dev_path_to_stages.items():
-            DevStageMap._clean_link_dict(dev_path, stages)
-
-    @staticmethod
-    def _clean_link_dict(dev_path, keep_stage_paths):
-        dev_links_file = os.path.join(dev_path, ".spack-develop-links")
-
-        if os.path.exists(dev_links_file):
-            with open(dev_links_file, "r", encoding="utf-8") as f:
-                link_to_stage = json.load(f)
-            for link_path, stage_path in link_to_stage.items():
-                if not llnl.util.symlink.islink(link_path):
-                    continue
-                target = llnl.util.symlink.readlink(link_path)
-                if target == stage_path:
-                    if not os.path.exists(stage_path) or stage_path not in keep_stage_paths:
-                        os.unlink(link_path)
+        for dev_path, _ in dev_path_to_stages.items():
+            DevelopStage._clean_dev_path(dev_path)
 
     def stages_for_dev_paths(self):
         """For GC on dev_path: determine all stage links which should
@@ -1019,8 +1030,9 @@ def purge():
                 else:
                     os.remove(stage_path)
 
-    dev_stage_map.clean_refs()
     dev_stage_map.update_links_in_all_dev_paths()
+    dev_stage_map.clean_refs()
+
 
 def interactive_version_filter(
     url_dict: Dict[StandardVersion, str],

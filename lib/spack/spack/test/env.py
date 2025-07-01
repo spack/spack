@@ -1248,3 +1248,60 @@ spack:
 
     libelf = mpileaks["libelf"]
     assert libelf.satisfies("%[virtuals=c] gcc")  # libelf only depends on c
+
+
+import spack.stage
+import llnl.util.symlink
+from spack.test.conftest import _create_tree_from_dir_recursive
+
+
+class TestDevelopStage2:
+    @pytest.fixture
+    def prep_env(self, tmpdir, develop_path, config, mock_packages):
+        env_dir = tmpdir.ensure("env-path", dir=True)
+        manifest = env_dir.join("spack.yaml")
+        devtree, srcdir = develop_path
+        manifest.write_text(
+            f"""\
+spack:
+  specs:
+  - dt-diamond
+  - dt-diamond-left
+  develop:
+    dt-diamond-left:
+      spec: dt-diamond-left
+      path: {srcdir}
+""", encoding="utf-8"
+        )
+        with ev.Environment(env_dir) as e:
+            e.concretize()
+        yield e, srcdir
+
+    def test_develop_stage_basic2(self, prep_env):
+        """Check that (a) develop stages update the given
+        `dev_path` with a symlink that points to the stage dir and
+        (b) that destroying the stage does not destroy `dev_path`
+        """
+        env, srcdir = prep_env
+        x, = env.all_matching_specs("dt-diamond-left")
+        x.package.stage.create()
+        assert os.path.exists(x.package.stage[0].path)
+        assert os.path.exists(x.package.stage[0].reference_link)
+
+        x.package.stage.destroy()
+        assert os.path.exists(srcdir)
+
+    def test_develop_stage_purge_rms_ref_link(self, prep_env):
+        """stage.purge removes all `Stage.path`s. Check that for
+        develop stages, this removes the associated symlink.
+        """
+        env, srcdir = prep_env
+        x, = env.all_matching_specs("dt-diamond-left")
+        x.package.stage.create()
+        assert os.path.exists(x.package.stage[0].path)
+        assert os.path.exists(x.package.stage[0].reference_link)
+
+        spack.stage.purge()
+        assert not os.path.exists(x.package.stage[0].path)
+        assert not os.path.exists(x.package.stage[0].reference_link)
+        assert not llnl.util.symlink.islink(x.package.stage[0].reference_link)

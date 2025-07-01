@@ -71,13 +71,6 @@ _include_extra = 3
 #
 
 
-@pytest.fixture
-def clear_stage_root(monkeypatch):
-    """Ensure spack.stage._stage_root is not set at test start."""
-    monkeypatch.setattr(spack.stage, "_stage_root", None)
-    yield
-
-
 def check_expand_archive(stage, stage_name, expected_file_list):
     """
     Ensure the expanded archive directory contains the expected structure and
@@ -181,19 +174,6 @@ def get_stage_path(stage, stage_name):
         assert stage.path is not None
         assert stage.path.startswith(stage_path)
         return stage.path
-
-
-# TODO: Revisit use of the following fixture (and potentially leveraging
-#       the `mock_stage` path in `mock_stage_archive`) per discussions in
-#       #12857.  See also #13065.
-@pytest.fixture
-def tmp_build_stage_dir(tmpdir, clear_stage_root):
-    """Use a temporary test directory for the stage root."""
-    test_path = str(tmpdir.join("stage"))
-    with spack.config.override("config:build_stage", test_path):
-        yield tmpdir, spack.stage.get_stage_root()
-
-    shutil.rmtree(test_path)
 
 
 @pytest.fixture
@@ -796,41 +776,7 @@ class TestStage:
             assert stage.path == testpath
 
 
-def _create_files_from_tree(base, tree):
-    for name, content in tree.items():
-        sub_base = os.path.join(base, name)
-        if isinstance(content, dict):
-            os.mkdir(sub_base)
-            _create_files_from_tree(sub_base, content)
-        else:
-            assert (content is None) or (isinstance(content, str))
-            with open(sub_base, "w", encoding="utf-8") as f:
-                if content:
-                    f.write(content)
-
-
-def _create_tree_from_dir_recursive(path):
-    if os.path.islink(path):
-        return readlink(path)
-    elif os.path.isdir(path):
-        tree = {}
-        for name in os.listdir(path):
-            sub_path = os.path.join(path, name)
-            tree[name] = _create_tree_from_dir_recursive(sub_path)
-        return tree
-    else:
-        with open(path, "r", encoding="utf-8") as f:
-            content = f.read() or None
-        return content
-
-
-@pytest.fixture
-def develop_path(tmpdir):
-    dir_structure = {"a1": {"b1": None, "b2": "b1content"}, "a2": None}
-    srcdir = str(tmpdir.join("test-src"))
-    os.mkdir(srcdir)
-    _create_files_from_tree(srcdir, dir_structure)
-    yield dir_structure, srcdir
+from spack.test.conftest import _create_tree_from_dir_recursive
 
 
 class TestDevelopStage:
@@ -847,14 +793,13 @@ class TestDevelopStage:
         (b) that destroying the stage does not destroy `dev_path`
         """
         devtree, srcdir = develop_path
-        stage = DevelopStage("test-stage", srcdir, reference_link="link-to-stage")
+        stage = DevelopStage(spack.stage.stage_prefix + "-test", srcdir, reference_link="link-to-stage")
         assert not os.path.exists(stage.reference_link)
         stage.create()
         assert os.path.exists(stage.reference_link)
         srctree1 = _create_tree_from_dir_recursive(stage.source_path)
         assert os.path.samefile(srctree1["link-to-stage"], stage.path)
         del srctree1["link-to-stage"]
-        srctree1.pop(".spack-develop-links")
         assert srctree1 == devtree
 
         stage.destroy()
@@ -864,24 +809,7 @@ class TestDevelopStage:
         # about the path
         assert not os.path.exists(stage.path)
         srctree2 = _create_tree_from_dir_recursive(srcdir)
-        srctree2.pop(".spack-develop-links")
         assert srctree2 == devtree
-
-    def test_develop_stage_purge_rms_ref_link(self, develop_path, tmp_build_stage_dir):
-        """stage.purge removes all `Stage.path`s. Check that for
-        develop stages, this removes the associated symlink.
-        """
-        devtree, srcdir = develop_path
-        # Note: the stage name has to start with "spack-stage-" to be
-        # purge-able
-        stage = DevelopStage("spack-stage-test", srcdir, reference_link="link-to-stage1")
-        stage.create()
-        assert os.path.exists(stage.reference_link)
-
-        spack.stage.purge()
-        assert not os.path.exists(stage.path)
-        assert not os.path.exists(stage.reference_link)
-        assert not llnl.util.symlink.islink(stage.reference_link)
 
     def test_develop_stage_link_path_in_use(self, develop_path, tmp_build_stage_dir):
         """We try to put a symlink in dev_path, but if the path where

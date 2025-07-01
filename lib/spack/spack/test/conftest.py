@@ -2268,3 +2268,63 @@ def auto_function_fixture():
     spack.stage.dev_stage_map._clear()
     yield
     spack.stage.dev_stage_map._clear()
+
+
+def _create_files_from_tree(base, tree):
+    for name, content in tree.items():
+        sub_base = os.path.join(base, name)
+        if isinstance(content, dict):
+            os.mkdir(sub_base)
+            _create_files_from_tree(sub_base, content)
+        else:
+            assert (content is None) or (isinstance(content, str))
+            with open(sub_base, "w", encoding="utf-8") as f:
+                if content:
+                    f.write(content)
+
+
+import llnl.util.symlink
+
+
+@pytest.fixture
+def clear_stage_root(monkeypatch):
+    """Ensure spack.stage._stage_root is not set at test start."""
+    monkeypatch.setattr(spack.stage, "_stage_root", None)
+    yield
+
+
+# TODO: Revisit use of the following fixture (and potentially leveraging
+#       the `mock_stage` path in `mock_stage_archive`) per discussions in
+#       #12857.  See also #13065.
+@pytest.fixture
+def tmp_build_stage_dir(tmpdir, clear_stage_root):
+    """Use a temporary test directory for the stage root."""
+    test_path = str(tmpdir.join("stage"))
+    with spack.config.override("config:build_stage", test_path):
+        yield tmpdir, spack.stage.get_stage_root()
+
+    shutil.rmtree(test_path)
+
+
+def _create_tree_from_dir_recursive(path):
+    if os.path.islink(path):
+        return llnl.util.symlink.readlink(path)
+    elif os.path.isdir(path):
+        tree = {}
+        for name in os.listdir(path):
+            sub_path = os.path.join(path, name)
+            tree[name] = _create_tree_from_dir_recursive(sub_path)
+        return tree
+    else:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read() or None
+        return content
+
+
+@pytest.fixture
+def develop_path(tmpdir):
+    dir_structure = {"a1": {"b1": None, "b2": "b1content"}, "a2": None}
+    srcdir = str(tmpdir.join("test-src"))
+    os.mkdir(srcdir)
+    _create_files_from_tree(srcdir, dir_structure)
+    yield dir_structure, srcdir
