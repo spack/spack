@@ -927,7 +927,9 @@ class DevStageMap:
 
     def update_env(self, env_root, dev_map):
         # TODO: any entries in the old map that don't exist anymore
-        # should be cleaned from the filesystem
+        # could be cleaned from the filesystem immediately (although
+        # if it is not done now, that info will be lost, and at that
+        # point can only be handled with `spack clean --stage`).
         self.env_map[env_root] = dev_map
 
     def clean_refs(self):
@@ -1008,20 +1010,23 @@ def ensure_access(file):
         tty.die("Insufficient permissions for %s" % file)
 
 
-def purge():
+def purge(keep_dev_stages_in_use=False):
     """Remove all build directories in the top-level stage path."""
-    root = get_stage_root()
-    if os.path.isdir(root):
-        for stage_dir in os.listdir(root):
-            if stage_dir.startswith(stage_prefix) or stage_dir == ".lock":
-                stage_path = os.path.join(root, stage_dir)
-                if os.path.isdir(stage_path):
-                    remove_linked_tree(stage_path)
-                else:
-                    os.remove(stage_path)
+    if keep_dev_stages_in_use:
+        dev_stage_map.gc_stages()
+    else:
+        root = get_stage_root()
+        if os.path.isdir(root):
+            for stage_dir in os.listdir(root):
+                if stage_dir.startswith(stage_prefix) or stage_dir == ".lock":
+                    stage_path = os.path.join(root, stage_dir)
+                    if os.path.isdir(stage_path):
+                        remove_linked_tree(stage_path)
+                    else:
+                        os.remove(stage_path)
 
-    dev_stage_map.update_links_in_all_dev_paths()
-    dev_stage_map.clean_refs()
+        dev_stage_map.update_links_in_all_dev_paths()
+        dev_stage_map.clean_refs()
 
 
 def interactive_version_filter(

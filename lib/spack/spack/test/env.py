@@ -1294,16 +1294,23 @@ spack:
         x.package.stage.destroy()
         assert os.path.exists(srcdir)
 
-    def test_develop_stage_purge_rms_ref_link(self, prep_env):
-        """stage.purge removes all `Stage.path`s. Check that for
-        develop stages, this removes the associated symlink.
-        """
+    def test_develop_stage_purge(self, prep_env):
         env, srcdir = prep_env()
         x, = env.all_matching_specs("dt-diamond-left")
         x.package.stage.create()
         assert os.path.exists(x.package.stage[0].path)
         assert os.path.exists(x.package.stage[0].reference_link)
 
+        # When option is provided to keep dev stages that are in use,
+        # stages should be kept if any existing environment is using
+        # them (i.e. they are associated with a concretized hash
+        # in the environment).
+        spack.stage.purge(keep_dev_stages_in_use=True)
+        assert os.path.exists(x.package.stage[0].path)
+        assert os.path.exists(x.package.stage[0].reference_link)
+
+        # With no options stage.purge removes all `Stage.path`s. Check
+        # that for develop stages, this removes the associated symlink.
         spack.stage.purge()
         assert not os.path.exists(x.package.stage[0].path)
         assert not os.path.exists(x.package.stage[0].reference_link)
