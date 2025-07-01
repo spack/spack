@@ -954,24 +954,6 @@ class DevStageMap:
             del self.env_map[env_root]
         self.write()
 
-    def gc_stages(self):
-        """This clears out every stage that is not associated with a
-           develop spec in an environment.
-        """
-        keep_stages = self.all_tracked_stages()
-
-        root = get_stage_root()
-        if os.path.isdir(root):
-            for stage_dir in os.listdir(root):
-                if stage_prefix not in stage_dir:
-                    continue
-                stage_path = os.path.join(root, stage_dir)
-                if stage_path not in keep_stages:
-                    if os.path.isdir(stage_path):
-                        remove_linked_tree(stage_path)
-                    else:
-                        os.remove(stage_path)
-
     def update_links_in_all_dev_paths(self):
         dev_path_to_stages = self.stages_for_dev_paths()
         for dev_path, _ in dev_path_to_stages.items():
@@ -1009,17 +991,18 @@ def ensure_access(file):
 def purge(keep_dev_stages_in_use=False):
     """Remove all build directories in the top-level stage path."""
     if keep_dev_stages_in_use:
-        dev_stage_map.gc_stages()
+        keep_stages = dev_stage_map.all_tracked_stages()
     else:
-        root = get_stage_root()
-        if os.path.isdir(root):
-            for stage_dir in os.listdir(root):
-                if stage_dir.startswith(stage_prefix) or stage_dir == ".lock":
-                    stage_path = os.path.join(root, stage_dir)
-                    if os.path.isdir(stage_path):
-                        remove_linked_tree(stage_path)
-                    else:
-                        os.remove(stage_path)
+        keep_stages = set()
+
+    root = get_stage_root()
+    if os.path.isdir(root):
+        for fname in os.listdir(root):
+            path = os.path.join(root, fname)
+            if fname.startswith(stage_prefix) and path not in keep_stages:
+                remove_linked_tree(path)
+            elif fname == ".lock":
+                os.remove(path)
 
     # If `keep_dev_stages_in_use=True`, this won't be doing anything
     # unless a user manually `rm -rf`ed some stages
