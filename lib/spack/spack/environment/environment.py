@@ -31,6 +31,7 @@ import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.spec
+import spack.stage
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
@@ -1470,8 +1471,17 @@ class Environment:
         if self.unify is False:
             return self._concretize_separately(tests=tests)
 
+        self.update_stage_map()
+
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
+
+    def update_stage_map(self):
+        all_updates = list()
+        for spec in self.all_specs_generator():
+            if spec.is_develop:
+                all_updates.append((self.path, spec.variants.get("dev_path"), spec.package.stage.path))
+        spack.stage.dev_stage_map.updates(all_updates)
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
         """

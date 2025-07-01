@@ -819,6 +819,7 @@ class StageComposite(pattern.Composite):
 class DevelopStage(LockableStagingDir):
     requires_patch_success = False
 
+    # Currently this is not initialized with a reference to the interested environment
     def __init__(self, name, dev_path, reference_link):
         super().__init__(name=name, path=None, keep=False, lock=True)
         self.dev_path = dev_path
@@ -833,8 +834,7 @@ class DevelopStage(LockableStagingDir):
             raise StageError(f"The directory containing {link_path} must exist")
 
         # Created inside of dev_path (typically a user-managed source directory
-        # that is not edited by spack except for this and .spack-develop-links),
-        # points to self.path
+        # that is not edited by spack except for this); points to self.path
         self.reference_link = link_path
 
     @property
@@ -858,92 +858,21 @@ class DevelopStage(LockableStagingDir):
     def create(self):
         super().create()
         try:
-            DevelopStage._update_link_dict(self.dev_path, updates={self.reference_link: self.path})
-            llnl.util.symlink.symlink(self.dev_path, DevelopStage._dev_path_link(self.path))
             llnl.util.symlink.symlink(self.path, self.reference_link)
         except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
             pass
 
-    @staticmethod
-    def _dev_path_link(stage_path):
-        return os.path.join(stage_path, ".dev-path-link")
-
-    @staticmethod
-    def _update_link_dict(dev_path, updates=None):
-        # key: path of symlink in dev path that points to stage path
-        # val: stage path
-        path = os.path.join(dev_path, ".spack-develop-links")
-        import json
-
-        new_refs = {}
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                link_to_stage = json.load(f)
-            for link_path, stage_path in link_to_stage.items():
-                if not llnl.util.symlink.islink(link_path):
-                    # If spack created this file, it will be a link, but
-                    # we're in a directory mostly-not managed by Spack
-                    # so it might not have been made by us.
-                    continue
-                target = llnl.util.symlink.readlink(link_path)
-                if target == stage_path and not os.path.exists(stage_path):
-                    os.unlink(link_path)
-                elif os.path.exists(stage_path):
-                    # The link points where we expect, and the path still
-                    # exists
-                    new_refs[link_path] = stage_path
-                else:
-                    # If we're here, then the link exists but points
-                    # somewhere unexpected: something besides us made
-                    # the link
-                    pass
-        if updates:
-            new_refs.update(updates)
-        if new_refs:
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(new_refs, f)
-
-    @staticmethod
-    def _rm_stage_path(stage_path):
-        """Delete everything in a stage path, first check if the stage
-        path contains a reference to a `dev_path` (i.e. if the stage is
-        for a `spack develop`ed package).
-
-        Note this is a path-oriented deletion method: it does not
-        require the instantiation of a stage object.
-
-        When interacting with the stage as a path (rather than as a
-        `Stage` object) this method should always be used.
-
-        Returns whether the stage was a DevelopStage.
-        """
-        if not os.path.exists(stage_path):
-            return False
-
-        dev_path_link = DevelopStage._dev_path_link(stage_path)
-
-        if os.path.exists(dev_path_link):
-            # We are here if the link exists, even if the target
-            # of the link does not exist
-            dev_path = llnl.util.symlink.readlink(dev_path_link)
-        else:
-            return False
-
-        # TODO: right now we always destroy the stage path, but
-        # it would be useful to add an option to not destroy
-        # stages that have existing dev_paths
-
+    def destroy(self):
+        # Destroy all files, but do not follow symlinks
         try:
-            # Destroy all files, but do not follow symlinks
-            shutil.rmtree(stage_path)
+            shutil.rmtree(self.path)
         except FileNotFoundError:
             pass
 
-        DevelopStage._update_link_dict(dev_path)
-        return True
-
-    def destroy(self):
-        DevelopStage._rm_stage_path(self.path)
+        try:
+            os.remove(self.reference_link)
+        except FileNotFoundError:
+            pass
 
         self.created = False
 
@@ -977,9 +906,70 @@ class DevStageMap:
         with open(src, "r") as f:
             return DevStageMap(json.load(f))
 
-    def update(self, env, dev_path, stage_path):
+    def _update(self, env, dev_path, stage_path):
         dev_map = self.env_map.setdefault(env.root, {})
         dev_map[dev_path] = stage_path
+
+    def updates(self, changes):
+        for t in changes:
+            self._update(*t)
+        self.write()
+
+    def clean_refs(self):
+        # If users `rm -rf` stages and envs, this data will not
+        # be automatically updated, so this function handles
+        # clearing "stale" entries
+        deleted_envs = set()
+        for env_root, dev_map in self.env_map.items():
+            if not os.path.exists(env_root):
+                deleted_envs.add(env_root)
+                continue
+            deleted_dev_paths = set()
+            for dev_path, stage_path in dev_map.items():
+                if not os.path.exists(dev_path):
+                    deleted_dev_paths.add(dev_path)
+                elif not os.path.exists(stage_path):
+                    deleted_dev_paths.add(dev_path)
+            for dev_path in deleted_dev_paths:
+                del dev_map[dev_path]
+        for env_root in deleted_envs:
+            del self.env_map[env_root]
+
+    def gc_stages(self):
+        """This clears out every stage that is not associated with a
+           develop spec in an environment.
+        """
+        keep_stages = self.all_tracked_stages()
+
+        root = get_stage_root()
+        if os.path.isdir(root):
+            for stage_dir in os.listdir(root):
+                stage_path = os.path.join(root, stage_dir)
+                if stage_path not in keep_stages:
+                    if os.path.isdir(stage_path):
+                        remove_linked_tree(stage_path)
+                    else:
+                        os.remove(stage_path)
+
+    def update_links_in_dev_path(self, dev_path):
+        dev_path_to_stages = self.stages_for_dev_paths()
+        stages_for_this_dev_path = dev_path_to_stages[dev_path]
+        DevStageMap._clean_link_dict(dev_path, stages_for_this_dev_path)
+
+    @staticmethod
+    def _clean_link_dict(dev_path, keep_stage_paths):
+        dev_links_file = os.path.join(dev_path, ".spack-develop-links")
+
+        if os.path.exists(dev_links_file):
+            with open(dev_links_file, "r", encoding="utf-8") as f:
+                link_to_stage = json.load(f)
+            for link_path, stage_path in link_to_stage.items():
+                if not llnl.util.symlink.islink(link_path):
+                    continue
+                target = llnl.util.symlink.readlink(link_path)
+                if target == stage_path:
+                    if not os.path.exists(stage_path) or stage_path not in keep_stage_paths:
+                        os.unlink(link_path)
 
     def stages_for_dev_paths(self):
         """For GC on dev_path: determine all stage links which should
@@ -989,14 +979,19 @@ class DevStageMap:
         for env_root, dev_map in self.env_map.items():
             for dev_path, stage_path in dev_map.items():
                 dev_path_to_stages[dev_path].add(stage_path)
+    
+        return dev_path_to_stages
 
-    def env_stage_paths(self):
+    def all_tracked_stages(self):
         """For GC on stage root: determine all stages that are being
            used by some environment for a dev path.
         """
         return set(itertools.chain.from_iterable(
             dev_map.values() for dev_map in self.env_map.values()
         ))
+
+
+dev_stage_map = DevStageMap.read()
 
 
 def ensure_access(file):
@@ -1012,14 +1007,10 @@ def purge():
         for stage_dir in os.listdir(root):
             if stage_dir.startswith(stage_prefix) or stage_dir == ".lock":
                 stage_path = os.path.join(root, stage_dir)
-
-                was_a_dev_stage = DevelopStage._rm_stage_path(stage_path)
-
-                if not was_a_dev_stage:
-                    if os.path.isdir(stage_path):
-                        remove_linked_tree(stage_path)
-                    else:
-                        os.remove(stage_path)
+                if os.path.isdir(stage_path):
+                    remove_linked_tree(stage_path)
+                else:
+                    os.remove(stage_path)
 
 
 def interactive_version_filter(
