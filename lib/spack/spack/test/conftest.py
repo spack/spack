@@ -2264,11 +2264,10 @@ def config_two_gccs(mutable_config):
 
 
 @pytest.fixture(autouse=True)
-def auto_function_fixture():
-    spack.stage.dev_stage_map._clear()
+def auto_function_fixture(tmpdir, monkeypatch):
+    tmp_map = tmpdir.join("test-dev-stage-index")
+    monkeypatch.setattr(spack.stage, "dev_stage_map", spack.stage.DevStageMap(tmp_map))
     yield
-    spack.stage.dev_stage_map._clear()
-
 
 def _create_files_from_tree(base, tree):
     for name, content in tree.items():

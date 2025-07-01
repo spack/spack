@@ -901,29 +901,30 @@ class DevelopStage(LockableStagingDir):
 
 # Note: if this was in user_cache_path, then if users customize this
 # per-spack with SPACK_USER_CACHE_PATH, it would have strange effects
-dev_stage_map_path = os.path.expanduser(os.path.join("~", ".spack", "dev-stage-index"))
 import json
 from collections import defaultdict
 import itertools
 
 class DevStageMap:
-    def __init__(self, data):
-        self.env_map = data
+    def __init__(self, path=None):
+        if not path:
+            self.path = os.path.expanduser(os.path.join("~", ".spack", "dev-stage-index"))
+        else:
+            self.path = path
+        self.env_map = DevStageMap._read(self.path)
 
     def write(self, dst=None):
-        dst = dst or dev_stage_map_path
-        with open(dst, "w") as f:
+        with open(self.path, "w") as f:
             json.dump(self.env_map, f)
 
     @staticmethod
-    def read(src=None):
-        src = src or dev_stage_map_path
+    def _read(src):
         if not os.path.exists(src):
             data = {}
         else: 
             with open(src, "r") as f:
                 data = json.load(f)
-        return DevStageMap(data)
+        return data
 
     def update_env(self, env_root, dev_map):
         # TODO: any entries in the old map that don't exist anymore
@@ -995,13 +996,8 @@ class DevStageMap:
             dev_map.values() for dev_map in self.env_map.values()
         ))
 
-    def _clear(self):
-        if os.path.exists(dev_stage_map_path):
-            os.remove(dev_stage_map_path)
-        self.env_map = {}
 
-
-dev_stage_map = DevStageMap.read()
+dev_stage_map = DevStageMap()
 
 
 def ensure_access(file):
