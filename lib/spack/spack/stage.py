@@ -866,6 +866,8 @@ class DevelopStage(LockableStagingDir):
     def _clean_dev_path(dev_path):
         """Look for stage reference links.
         """
+        if not os.path.exists(dev_path):
+            return
         for fname in os.listdir(dev_path):
             path = os.path.join(dev_path, fname)
             if llnl.util.symlink.islink(path):
@@ -933,10 +935,14 @@ class DevStageMap:
         # point can only be handled with `spack clean --stage`).
         self.env_map[env_root] = dev_map
 
-    def clean_refs(self):
-        # If users `rm -rf` stages and envs, this data will not
-        # be automatically updated, so this function handles
-        # clearing "stale" entries
+    def clean_pointers(self):
+        """If users `rm -rf` stages and envs, this map will not
+           be automatically updated, so this function handles
+           clearing "stale" entries.
+
+           This does not delete any files other than the one
+           maintained by this object.
+        """
         deleted_envs = set()
         for env_root, dev_map in self.env_map.items():
             if not os.path.exists(env_root):
@@ -953,10 +959,6 @@ class DevStageMap:
         for env_root in deleted_envs:
             del self.env_map[env_root]
         self.write()
-
-    def update_links_in_all_dev_paths(self):
-        for dev_path in self._all_known_dev_paths():
-            DevelopStage._clean_dev_path(dev_path)
 
     def _all_known_dev_paths(self):
         dev_paths = set()
@@ -984,8 +986,9 @@ def ensure_access(file):
 
 def purge(keep_dev_stages_in_use=False):
     """Remove all build directories in the top-level stage path."""
+    known_dev_paths = dev_stage_map._all_known_dev_paths()
     # A noop unless users manually `rm -rf`ed environments/stages/dev_paths
-    dev_stage_map.clean_refs()
+    dev_stage_map.clean_pointers()
 
     if keep_dev_stages_in_use:
         keep_stages = dev_stage_map.all_tracked_stages()
@@ -1002,7 +1005,10 @@ def purge(keep_dev_stages_in_use=False):
                 os.remove(path)
 
     # A noop unless users manually `rm -rf`ed environments/stages/dev_paths
-    dev_stage_map.update_links_in_all_dev_paths()
+    # or if we purged all stage paths without considering what
+    # environments are tracking.
+    for dev_path in known_dev_paths:
+        DevelopStage._clean_dev_path(dev_path)
 
 
 def interactive_version_filter(
