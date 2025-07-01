@@ -984,6 +984,9 @@ def ensure_access(file):
 
 def purge(keep_dev_stages_in_use=False):
     """Remove all build directories in the top-level stage path."""
+    # A noop unless users manually `rm -rf`ed environments/stages/dev_paths
+    dev_stage_map.clean_refs()
+
     if keep_dev_stages_in_use:
         keep_stages = dev_stage_map.all_tracked_stages()
     else:
@@ -998,10 +1001,8 @@ def purge(keep_dev_stages_in_use=False):
             elif fname == ".lock":
                 os.remove(path)
 
-    # If `keep_dev_stages_in_use=True`, this won't be doing anything
-    # unless a user manually `rm -rf`ed some stages
+    # A noop unless users manually `rm -rf`ed environments/stages/dev_paths
     dev_stage_map.update_links_in_all_dev_paths()
-    dev_stage_map.clean_refs()
 
 
 def interactive_version_filter(

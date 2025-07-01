@@ -1253,6 +1253,7 @@ spack:
 import spack.stage
 import llnl.util.symlink
 from spack.test.conftest import _create_tree_from_dir_recursive
+import shutil
 
 
 class TestDevelopStage2:
@@ -1280,10 +1281,9 @@ spack:
     
         yield create_env
 
-    def test_develop_stage_basic2(self, prep_env):
-        """Check that (a) develop stages update the given
-        `dev_path` with a symlink that points to the stage dir and
-        (b) that destroying the stage does not destroy `dev_path`
+    def test_develop_stage_basic_in_env(self, prep_env):
+        """Check basic develop stage functionality in the context
+        of an environment.
         """
         env, srcdir = prep_env()
         x, = env.all_matching_specs("dt-diamond-left")
@@ -1312,6 +1312,22 @@ spack:
         # With no options stage.purge removes all `Stage.path`s. Check
         # that for develop stages, this removes the associated symlink.
         spack.stage.purge()
+        assert not os.path.exists(x.package.stage[0].path)
+        assert not os.path.exists(x.package.stage[0].reference_link)
+        assert not llnl.util.symlink.islink(x.package.stage[0].reference_link)
+
+    def test_develop_stage_purge_manual_env_deletion(self, prep_env):
+        env, _ = prep_env()
+        x, = env.all_matching_specs("dt-diamond-left")
+        x.package.stage.create()
+        assert os.path.exists(x.package.stage[0].path)
+        assert os.path.exists(x.package.stage[0].reference_link)
+
+        shutil.rmtree(env.path)
+        spack.stage.purge(keep_dev_stages_in_use=True)
+        # The env that cares about the stage was removed, but we
+        # did that manually without updating any data structures
+        # that track this
         assert not os.path.exists(x.package.stage[0].path)
         assert not os.path.exists(x.package.stage[0].reference_link)
         assert not llnl.util.symlink.islink(x.package.stage[0].reference_link)
