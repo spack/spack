@@ -1481,8 +1481,6 @@ class Environment:
             if spec.is_develop:
                 dev_map[spec.variants.get("dev_path").value] = spec.package.stage.path
         spack.stage.dev_stage_map.update_env(self.path, dev_map)
-        for dev_path in dev_map.keys():
-            spack.stage.dev_stage_map.update_links_in_dev_path(self.path, dev_map)
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
         """
