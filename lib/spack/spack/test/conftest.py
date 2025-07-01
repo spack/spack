@@ -2261,3 +2261,10 @@ def config_two_gccs(mutable_config):
             },
         ],
     )
+
+
+@pytest.fixture(autouse=True)
+def auto_function_fixture():
+    spack.stage.dev_stage_map._clear()
+    yield
+    spack.stage.dev_stage_map._clear()

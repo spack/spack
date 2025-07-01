@@ -854,7 +854,7 @@ class TestDevelopStage:
         srctree1 = _create_tree_from_dir_recursive(stage.source_path)
         assert os.path.samefile(srctree1["link-to-stage"], stage.path)
         del srctree1["link-to-stage"]
-        del srctree1[".spack-develop-links"]
+        srctree1.pop(".spack-develop-links")
         assert srctree1 == devtree
 
         stage.destroy()
@@ -864,7 +864,7 @@ class TestDevelopStage:
         # about the path
         assert not os.path.exists(stage.path)
         srctree2 = _create_tree_from_dir_recursive(srcdir)
-        del srctree2[".spack-develop-links"]
+        srctree2.pop(".spack-develop-links")
         assert srctree2 == devtree
 
     def test_develop_stage_purge_rms_ref_link(self, develop_path, tmp_build_stage_dir):

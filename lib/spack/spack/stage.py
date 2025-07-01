@@ -869,10 +869,7 @@ class DevelopStage(LockableStagingDir):
         except FileNotFoundError:
             pass
 
-        try:
-            os.remove(self.reference_link)
-        except FileNotFoundError:
-            pass
+        dev_stage_map.update_links_in_all_dev_paths()
 
         self.created = False
 
@@ -955,6 +952,12 @@ class DevStageMap:
         stages_for_this_dev_path = dev_path_to_stages[dev_path]
         DevStageMap._clean_link_dict(dev_path, stages_for_this_dev_path)
 
+    def update_links_in_all_dev_paths(self):
+        # Like the prior method, but more efficient; runs after a purge
+        dev_path_to_stages = self.stages_for_dev_paths()
+        for dev_path, stages in dev_path_to_stages.items():
+            DevStageMap._clean_link_dict(dev_path, stages)
+
     @staticmethod
     def _clean_link_dict(dev_path, keep_stage_paths):
         dev_links_file = os.path.join(dev_path, ".spack-develop-links")
@@ -989,6 +992,11 @@ class DevStageMap:
             dev_map.values() for dev_map in self.env_map.values()
         ))
 
+    def _clear(self):
+        if os.path.exists(dev_stage_map_path):
+            os.remove(dev_stage_map_path)
+        self.env_map = {}
+
 
 dev_stage_map = DevStageMap.read()
 
@@ -1011,6 +1019,8 @@ def purge():
                 else:
                     os.remove(stage_path)
 
+    dev_stage_map.clean_refs()
+    dev_stage_map.update_links_in_all_dev_paths()
 
 def interactive_version_filter(
     url_dict: Dict[StandardVersion, str],
