@@ -1347,11 +1347,11 @@ def test_preferring_compilers_can_be_overridden(mutable_config, mock_packages):
 
 
 @pytest.mark.regression("50955")
-def test_multiple_externals_and_requirement(concretize_scope, mock_packages):
+def test_multiple_externals_and_requirement(concretize_scope, mock_packages, tmp_path):
     """Tests that we can concretize a required virtual, when we have multiple externals specs for
     it, differing only by the compiler.
     """
-    packages_yaml = """
+    packages_yaml = f"""
 packages:
   c:
     require: gcc
@@ -1361,9 +1361,9 @@ packages:
     buildable: false
     externals:
     - spec: "mpich@4.3.0 %gcc"
-      prefix: /opt/somewhere
+      prefix: {tmp_path / "gcc"}
     - spec: "mpich@4.3.0 %clang"
-      prefix: /opt/somewhere/else
+      prefix: {tmp_path / "clang"}
 """
     update_packages_config(packages_yaml)
 
@@ -1372,4 +1372,4 @@ packages:
 
     assert concrete.satisfies("%gcc")
     assert concrete["mpi"].satisfies("mpich@4.3.0")
-    assert concrete["mpi"].prefix == "/opt/somewhere"
+    assert concrete["mpi"].prefix == str(tmp_path / "gcc")
