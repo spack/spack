@@ -1267,9 +1267,11 @@ spack:
   - dt-diamond
   - dt-diamond-left
   develop:
-    dt-diamond-left:
-      spec: dt-diamond-left
+    dt-diamond:
+      spec: dt-diamond
       path: {srcdir}
+  concretizer:
+    unify: true
 """,
                 encoding="utf-8",
             )
@@ -1284,7 +1286,7 @@ spack:
         of an environment.
         """
         env, srcdir = prep_env()
-        (x,) = env.all_matching_specs("dt-diamond-left")
+        (x,) = env.all_matching_specs("dt-diamond")
         x.package.stage.create()
         assert os.path.exists(x.package.stage[0].path)
         assert os.path.exists(x.package.stage[0].reference_link)
@@ -1294,7 +1296,7 @@ spack:
 
     def test_develop_stage_purge(self, prep_env):
         env, srcdir = prep_env()
-        (x,) = env.all_matching_specs("dt-diamond-left")
+        (x,) = env.all_matching_specs("dt-diamond")
         x.package.stage.create()
         assert os.path.exists(x.package.stage[0].path)
         assert os.path.exists(x.package.stage[0].reference_link)
@@ -1316,7 +1318,7 @@ spack:
 
     def test_develop_stage_purge_manual_env_deletion(self, prep_env):
         env, _ = prep_env()
-        (x,) = env.all_matching_specs("dt-diamond-left")
+        (x,) = env.all_matching_specs("dt-diamond")
         x.package.stage.create()
         assert os.path.exists(x.package.stage[0].path)
         assert os.path.exists(x.package.stage[0].reference_link)
@@ -1329,3 +1331,21 @@ spack:
         assert not os.path.exists(x.package.stage[0].path)
         assert not os.path.exists(x.package.stage[0].reference_link)
         assert not llnl.util.symlink.islink(x.package.stage[0].reference_link)
+
+    def test_develop_stage_new_hash(self, prep_env):
+        env, _ = prep_env()
+        (x,) = env.all_matching_specs("dt-diamond")
+        x.package.stage.create()
+
+        old_stage_path = x.package.stage[0].path
+        old_ref_link = x.package.stage[0].reference_link
+
+        env.add("dt-diamond-right@0.9")
+        env.concretize(force=True)
+        # The root has a new hash. When we purge, we should destroy
+        # the stage path for the old hash (along with the link in
+        # the dev_path)
+        spack.stage.purge(keep_dev_stages_in_use=True)
+        assert not os.path.exists(old_stage_path)
+        assert not os.path.exists(old_ref_link)
+        assert not llnl.util.symlink.islink(old_ref_link)
