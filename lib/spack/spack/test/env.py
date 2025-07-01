@@ -1341,7 +1341,8 @@ spack:
         old_ref_link = x.package.stage[0].reference_link
 
         env.add("dt-diamond-right@0.9")
-        env.concretize(force=True)
+        with env:
+            env.concretize(force=True)
         # The root has a new hash. When we purge, we should destroy
         # the stage path for the old hash (along with the link in
         # the dev_path)
