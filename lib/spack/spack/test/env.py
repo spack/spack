@@ -5,16 +5,19 @@
 import filecmp
 import os
 import pickle
+import shutil
 
 import pytest
 
 import llnl.util.filesystem as fs
+import llnl.util.symlink
 
 import spack.config
 import spack.environment as ev
 import spack.platforms
 import spack.solver.asp
 import spack.spec
+import spack.stage
 from spack.environment.environment import (
     EnvironmentManifestFile,
     SpackEnvironmentViewError,
@@ -1250,12 +1253,6 @@ spack:
     assert libelf.satisfies("%[virtuals=c] gcc")  # libelf only depends on c
 
 
-import spack.stage
-import llnl.util.symlink
-from spack.test.conftest import _create_tree_from_dir_recursive
-import shutil
-
-
 class TestDevelopStage2:
     @pytest.fixture
     def prep_env(self, tmpdir, develop_path, config, mock_packages):
@@ -1273,12 +1270,13 @@ spack:
     dt-diamond-left:
       spec: dt-diamond-left
       path: {srcdir}
-""", encoding="utf-8"
+""",
+                encoding="utf-8",
             )
             with ev.Environment(env_dir) as e:
                 e.concretize()
             return e, srcdir
-    
+
         yield create_env
 
     def test_develop_stage_basic_in_env(self, prep_env):
@@ -1286,7 +1284,7 @@ spack:
         of an environment.
         """
         env, srcdir = prep_env()
-        x, = env.all_matching_specs("dt-diamond-left")
+        (x,) = env.all_matching_specs("dt-diamond-left")
         x.package.stage.create()
         assert os.path.exists(x.package.stage[0].path)
         assert os.path.exists(x.package.stage[0].reference_link)
@@ -1296,7 +1294,7 @@ spack:
 
     def test_develop_stage_purge(self, prep_env):
         env, srcdir = prep_env()
-        x, = env.all_matching_specs("dt-diamond-left")
+        (x,) = env.all_matching_specs("dt-diamond-left")
         x.package.stage.create()
         assert os.path.exists(x.package.stage[0].path)
         assert os.path.exists(x.package.stage[0].reference_link)
@@ -1318,7 +1316,7 @@ spack:
 
     def test_develop_stage_purge_manual_env_deletion(self, prep_env):
         env, _ = prep_env()
-        x, = env.all_matching_specs("dt-diamond-left")
+        (x,) = env.all_matching_specs("dt-diamond-left")
         x.package.stage.create()
         assert os.path.exists(x.package.stage[0].path)
         assert os.path.exists(x.package.stage[0].reference_link)

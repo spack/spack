@@ -6,6 +6,8 @@ import getpass
 import glob
 import hashlib
 import io
+import itertools
+import json
 import os
 import shutil
 import stat
@@ -864,8 +866,7 @@ class DevelopStage(LockableStagingDir):
 
     @staticmethod
     def _clean_dev_path(dev_path):
-        """Look for stage reference links.
-        """
+        """Look for stage reference links."""
         if not os.path.exists(dev_path):
             return
         for fname in os.listdir(dev_path):
@@ -901,15 +902,11 @@ class DevelopStage(LockableStagingDir):
         tty.debug("Sources for Develop stages are not cached")
 
 
-# Note: if this was in user_cache_path, then if users customize this
-# per-spack with SPACK_USER_CACHE_PATH, it would have strange effects
-import json
-from collections import defaultdict
-import itertools
-
 class DevStageMap:
     def __init__(self, path=None):
         if not path:
+            # Note: if this was in user_cache_path, then if users customize this
+            # per-spack with SPACK_USER_CACHE_PATH, it would have strange effects
             self.path = os.path.expanduser(os.path.join("~", ".spack", "dev-stage-index"))
         else:
             self.path = path
@@ -923,7 +920,7 @@ class DevStageMap:
     def _read(src):
         if not os.path.exists(src):
             data = {}
-        else: 
+        else:
             with open(src, "r") as f:
                 data = json.load(f)
         return data
@@ -937,11 +934,11 @@ class DevStageMap:
 
     def clean_pointers(self):
         """If users `rm -rf` stages and envs, this map will not
-           be automatically updated, so this function handles
-           clearing "stale" entries.
+        be automatically updated, so this function handles
+        clearing "stale" entries.
 
-           This does not delete any files other than the one
-           maintained by this object.
+        This does not delete any files other than the one
+        maintained by this object.
         """
         deleted_envs = set()
         for env_root, dev_map in self.env_map.items():
@@ -968,11 +965,11 @@ class DevStageMap:
 
     def all_tracked_stages(self):
         """For GC on stage root: determine all stages that are being
-           used by some environment for a dev path.
+        used by some environment for a dev path.
         """
-        return set(itertools.chain.from_iterable(
-            dev_map.values() for dev_map in self.env_map.values()
-        ))
+        return set(
+            itertools.chain.from_iterable(dev_map.values() for dev_map in self.env_map.values())
+        )
 
 
 dev_stage_map = DevStageMap()

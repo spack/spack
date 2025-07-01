@@ -28,6 +28,7 @@ import pytest
 
 import llnl.util.lang
 import llnl.util.lock
+import llnl.util.symlink
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     copy,
@@ -2269,6 +2270,7 @@ def auto_function_fixture(tmpdir, monkeypatch):
     monkeypatch.setattr(spack.stage, "dev_stage_map", spack.stage.DevStageMap(tmp_map))
     yield
 
+
 def _create_files_from_tree(base, tree):
     for name, content in tree.items():
         sub_base = os.path.join(base, name)
@@ -2280,9 +2282,6 @@ def _create_files_from_tree(base, tree):
             with open(sub_base, "w", encoding="utf-8") as f:
                 if content:
                     f.write(content)
-
-
-import llnl.util.symlink
 
 
 @pytest.fixture

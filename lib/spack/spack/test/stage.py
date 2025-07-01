@@ -15,7 +15,6 @@ import pytest
 
 import llnl.util.symlink
 from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
-from llnl.util.symlink import readlink
 
 import spack.config
 import spack.error
@@ -25,6 +24,7 @@ import spack.util.executable
 import spack.util.url as url_util
 from spack.resource import Resource
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
+from spack.test.conftest import _create_tree_from_dir_recursive
 from spack.util.path import canonicalize_path
 
 # The following values are used for common fetch and stage mocking fixtures:
@@ -776,9 +776,6 @@ class TestStage:
             assert stage.path == testpath
 
 
-from spack.test.conftest import _create_tree_from_dir_recursive
-
-
 class TestDevelopStage:
     def test_sanity_check_develop_path(self, develop_path):
         _, srcdir = develop_path
@@ -793,7 +790,9 @@ class TestDevelopStage:
         (b) that destroying the stage does not destroy `dev_path`
         """
         devtree, srcdir = develop_path
-        stage = DevelopStage(spack.stage.stage_prefix + "-test", srcdir, reference_link="link-to-stage")
+        stage = DevelopStage(
+            spack.stage.stage_prefix + "-test", srcdir, reference_link="link-to-stage"
+        )
         assert not os.path.exists(stage.reference_link)
         stage.create()
         assert os.path.exists(stage.reference_link)
