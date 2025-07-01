@@ -955,20 +955,14 @@ class DevStageMap:
         self.write()
 
     def update_links_in_all_dev_paths(self):
-        dev_path_to_stages = self.stages_for_dev_paths()
-        for dev_path, _ in dev_path_to_stages.items():
+        for dev_path in self._all_known_dev_paths():
             DevelopStage._clean_dev_path(dev_path)
 
-    def stages_for_dev_paths(self):
-        """For GC on dev_path: determine all stage links which should
-           still exist.
-        """
-        dev_path_to_stages = defaultdict(set)
-        for env_root, dev_map in self.env_map.items():
-            for dev_path, stage_path in dev_map.items():
-                dev_path_to_stages[dev_path].add(stage_path)
-    
-        return dev_path_to_stages
+    def _all_known_dev_paths(self):
+        dev_paths = set()
+        for dev_map in self.env_map.values():
+            dev_paths.update(dev_map.keys())
+        return dev_paths
 
     def all_tracked_stages(self):
         """For GC on stage root: determine all stages that are being
