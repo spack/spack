@@ -906,14 +906,8 @@ class DevStageMap:
         with open(src, "r") as f:
             return DevStageMap(json.load(f))
 
-    def _update(self, env, dev_path, stage_path):
-        dev_map = self.env_map.setdefault(env.root, {})
-        dev_map[dev_path] = stage_path
-
-    def updates(self, changes):
-        for t in changes:
-            self._update(*t)
-        self.write()
+    def update_env(self, env_root, dev_map):
+        self.env_map[env_root] = dev_map
 
     def clean_refs(self):
         # If users `rm -rf` stages and envs, this data will not
@@ -934,6 +928,7 @@ class DevStageMap:
                 del dev_map[dev_path]
         for env_root in deleted_envs:
             del self.env_map[env_root]
+        self.write()
 
     def gc_stages(self):
         """This clears out every stage that is not associated with a

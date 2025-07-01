@@ -1477,11 +1477,13 @@ class Environment:
         raise SpackEnvironmentError(msg.format(self.unify))
 
     def update_stage_map(self):
-        all_updates = list()
+        dev_map = {}
         for spec in self.all_specs_generator():
             if spec.is_develop:
-                all_updates.append((self.path, spec.variants.get("dev_path"), spec.package.stage.path))
-        spack.stage.dev_stage_map.updates(all_updates)
+                dev_map[spec.variants.get("dev_path")] = spec.package.stage.path
+        spack.stage.dev_stage_map.update_env(self.path, dev_map)
+        for dev_path in dev_map.keys():
+            spack.stage.dev_stage_map.update_links_in_dev_path(dev_path)
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
         """
