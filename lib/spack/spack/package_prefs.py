@@ -149,9 +149,10 @@ class PackagePrefs:
         # Only return variants that are actually supported by the package
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         spec = spack.spec.Spec(f"{pkg_name} {variants}")
-        allowed_variants = [*pkg_cls.variant_names(), "commit"]
         return {
-            name: variant for name, variant in spec.variants.items() if name in allowed_variants
+            name: variant
+            for name, variant in spec.variants.items()
+            if name in pkg_cls.variant_names()
         }
 
 
