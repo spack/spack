@@ -1004,9 +1004,11 @@ def purge(keep_dev_stages_in_use=False):
             elif fname == ".lock":
                 os.remove(path)
 
-    # A noop unless users manually `rm -rf`ed environments/stages/dev_paths
-    # or if we purged all stage paths without considering what
-    # environments are tracking.
+    # A noop unless
+    # * users manually `rm -rf`ed environments/stages/dev_paths
+    # * or if we purged all stage paths without considering what
+    #   environments are tracking (in this function)
+    # * or if an env was reconcretized
     for dev_path in known_dev_paths:
         DevelopStage._clean_dev_path(dev_path)
 
