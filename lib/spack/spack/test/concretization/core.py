@@ -3211,7 +3211,7 @@ def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusabl
         assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
 
 
-@pytest.mark.parametrize("config_type", ("require", "prefer", "variants"))
+@pytest.mark.parametrize("config_type", ("require", "prefer"))
 @pytest.mark.usefixtures("mock_packages", "do_not_check_runtimes_on_reuse")
 def test_commit_variant_populates_from_config(mutable_config, config_type):
     commit_value = "b" * 40

@@ -1842,23 +1842,12 @@ class SpackSolverSetup:
                 vid, vt.VariantType.MULTI.value if multi else vt.VariantType.SINGLE.value
             )
         )
-        if name == "commit":
-            self.gen.h1("Use commits")
-            for p in self.git_commit_versions.keys():
-                vid = next(self._id_counter)
-                self.gen.fact(fn.pkg_fact(p, fn.variant_definition(name, vid)))
-                self.gen.fact(fn.pkg_fact(p, fn.variant_possible_value(vid, "*")))
 
     def variant_rules(self, pkg: Type[spack.package_base.PackageBase]):
         for name in pkg.variant_names():
             self.gen.h3(f"Variant {name} in package {pkg.name}")
             for when, variant_def in pkg.variant_definitions(name):
                 self.define_variant(pkg, name, when, variant_def)
-            # if pkg.name in self.git_commit_versions:
-            #     print(pkg.name, "can use commit variant")
-            #     when = spack.spec.Spec()
-            #     variant_def = spack.variant.Variant("commit", default="", description="", validator=lambda: True)
-            #     self.define_variant(pkg, "commit", when, variant_def)
 
     def _get_condition_id(
         self,
@@ -2404,8 +2393,6 @@ class SpackSolverSetup:
         """Facts on concretization preferences, as read from packages.yaml"""
         preferences = spack.package_prefs.PackagePrefs
         preferred_variants = preferences.preferred_variants(pkg_name)
-        # if pkg_name == "kokkos":
-            # breakpoint()
         if not preferred_variants:
             return
 
@@ -2757,6 +2744,8 @@ class SpackSolverSetup:
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
                 continue
 
+            # TODO(psakiev) Need facts about versions
+            # - requires_commit (associated with tag or branch)
             version_defs: List[GitOrStandardVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
@@ -3252,10 +3241,8 @@ class SpackSolverSetup:
 
         self.gen.h1("Special variants")
         self.define_auto_variant("dev_path", multi=False)
-        # write a trigger for this method
         self.define_auto_variant("commit", multi=False)
         self.define_auto_variant("patches", multi=True)
-
 
         self.gen.h1("Develop specs")
         # Inject dev_path from environment
@@ -4473,11 +4460,11 @@ def _inject_patches_variant(root: spack.spec.Spec) -> None:
 
         edge_patches: List[spack.patch.Patch] = []
         for cond, deps_by_name in pkg_deps.items():
-            if not dspec.parent.satisfies(cond):
-                continue
-
             dependency = deps_by_name.get(dspec.spec.name)
             if not dependency:
+                continue
+
+            if not dspec.parent.satisfies(cond):
                 continue
 
             for pcond, patch_list in dependency.patches.items():
