@@ -1845,6 +1845,7 @@ class SpackSolverSetup:
         if name == "commit":
             self.gen.h1("Use commits")
             for p in self.git_commit_versions.keys():
+                vid = next(self._id_counter)
                 self.gen.fact(fn.pkg_fact(p, fn.variant_definition(name, vid)))
                 self.gen.fact(fn.pkg_fact(p, fn.variant_possible_value(vid, "*")))
 
@@ -2403,6 +2404,8 @@ class SpackSolverSetup:
         """Facts on concretization preferences, as read from packages.yaml"""
         preferences = spack.package_prefs.PackagePrefs
         preferred_variants = preferences.preferred_variants(pkg_name)
+        # if pkg_name == "kokkos":
+            # breakpoint()
         if not preferred_variants:
             return
 
