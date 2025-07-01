@@ -984,6 +984,11 @@ class DevStageMap:
         for dev_path, _ in dev_path_to_stages.items():
             DevelopStage._clean_dev_path(dev_path)
 
+    def update_links_in_dev_path(self, env_root, dev_map):
+        # TODO: any entries in the old map that don't exist anymore
+        # should be cleaned from the filesystem
+        self.env_map[env_root] = dev_map
+
     def stages_for_dev_paths(self):
         """For GC on dev_path: determine all stage links which should
            still exist.

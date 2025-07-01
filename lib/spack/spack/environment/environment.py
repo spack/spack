@@ -1463,27 +1463,26 @@ class Environment:
 
         # Pick the right concretization strategy
         if self.unify == "when_possible":
-            return self._concretize_together_where_possible(tests=tests)
-
-        if self.unify is True:
-            return self._concretize_together(tests=tests)
-
-        if self.unify is False:
-            return self._concretize_separately(tests=tests)
+            result = self._concretize_together_where_possible(tests=tests)
+        elif self.unify is True:
+            result = self._concretize_together(tests=tests)
+        elif self.unify is False:
+            result = self._concretize_separately(tests=tests)
+        else:
+            msg = "concretization strategy not implemented [{0}]"
+            raise SpackEnvironmentError(msg.format(self.unify))
 
         self.update_stage_map()
-
-        msg = "concretization strategy not implemented [{0}]"
-        raise SpackEnvironmentError(msg.format(self.unify))
+        return result
 
     def update_stage_map(self):
         dev_map = {}
         for spec in self.all_specs_generator():
             if spec.is_develop:
-                dev_map[spec.variants.get("dev_path")] = spec.package.stage.path
+                dev_map[spec.variants.get("dev_path").value] = spec.package.stage.path
         spack.stage.dev_stage_map.update_env(self.path, dev_map)
         for dev_path in dev_map.keys():
-            spack.stage.dev_stage_map.update_links_in_dev_path(dev_path)
+            spack.stage.dev_stage_map.update_links_in_dev_path(self.path, dev_map)
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
         """
