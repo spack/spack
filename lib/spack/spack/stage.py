@@ -858,23 +858,9 @@ class DevelopStage(LockableStagingDir):
     def create(self):
         super().create()
         try:
-            llnl.util.symlink.symlink(self.dev_path, DevelopStage._dev_path_link(self.path))
-        except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
-            pass
-        try:
             llnl.util.symlink.symlink(self.path, self.reference_link)
         except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
             pass
-
-    @staticmethod
-    def _dev_path_link(stage_path):
-        return os.path.join(stage_path, ".dev-path-link")
-
-    @staticmethod
-    def _get_dev_path(stage_path):
-         dev_path_link = DevelopStage._dev_path_link(stage_path)
-         if os.path.exists(dev_path_link):
-             return llnl.util.symlink.readlink(dev_path_link)
 
     @staticmethod
     def _clean_dev_path(dev_path):
