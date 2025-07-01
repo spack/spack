@@ -1021,8 +1021,10 @@ def purge(keep_dev_stages_in_use=False):
                     else:
                         os.remove(stage_path)
 
-        dev_stage_map.update_links_in_all_dev_paths()
-        dev_stage_map.clean_refs()
+    # If `keep_dev_stages_in_use=True`, this won't be doing anything
+    # unless a user manually `rm -rf`ed some stages
+    dev_stage_map.update_links_in_all_dev_paths()
+    dev_stage_map.clean_refs()
 
 
 def interactive_version_filter(
