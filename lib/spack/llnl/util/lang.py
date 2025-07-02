@@ -2,14 +2,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import _thread
 import collections.abc
 import contextlib
 import fnmatch
 import functools
+import inspect
 import itertools
 import os
 import re
+import signal
 import sys
+import threading
 import traceback
 import types
 import typing
@@ -1233,3 +1237,101 @@ class PriorityOrderedMapping(Mapping[KT, VT]):
         self._priorities = [(p, k) for p, k in self._priorities if k != key]
         assert len(self._data) == len(self._priorities)
         return popped_item
+
+
+class ContextTimeout(RuntimeError):
+    """Exception raised when a "timeout" context manager times out before completing execution."""
+
+    pass
+
+
+@contextlib.contextmanager
+def timeout_with_signal(seconds, error_on_timeout=True):
+    """Context manager that sets a timeout for the block to be executed.
+
+    This implementation is based on sending signal.SIGALRM, so it's usable only on Linux and macOS.
+
+    If seconds is 0 there is no timeout.
+
+    Args:
+        seconds (int): seconds before timing out
+        error_on_timeout (bool): if True raise an exception if the block times out
+
+    Raises:
+        ContextTimeout: when error_on_timeout is True and the block times out
+    """
+
+    def _raise_timeout(signum, frame):
+        """Handler to raise a ContextTimeout if called."""
+        msg = "Timeout raised from {0}".format(frame)
+        raise ContextTimeout(msg)
+
+    signal.signal(signal.SIGALRM, _raise_timeout)
+    try:
+        signal.alarm(seconds)
+        yield
+    except ContextTimeout:
+        if error_on_timeout:
+            raise
+    finally:
+        signal.alarm(0)
+
+
+@contextlib.contextmanager
+def timeout_with_threading(seconds, error_on_timeout=True):
+    """Context manager that sets a timeout for the block to be executed.
+
+    This implementation is based on having a separate thread firing a signal.SIGINT in
+    the main thread. It is portable across platforms, but require a separate thread to
+    be spawned.
+
+    If seconds is 0 there is no timeout.
+
+    Args:
+        seconds (int): seconds before timing out
+        error_on_timeout (bool): if True raise an exception if the block times out
+
+    Raises:
+        ContextTimeout: when error_on_timeout is True and the block times out
+    """
+
+    def _raise_timeout():
+        _thread.interrupt_main()  # novermin
+
+    t = threading.Timer(seconds, _raise_timeout)
+    try:
+        if seconds != 0:
+            t.start()
+        yield
+    except KeyboardInterrupt:
+        if error_on_timeout:
+            msg = "Timeout raised from {0}".format(inspect.stack())
+            raise ContextTimeout(msg)
+    finally:
+        if seconds != 0:
+            t.cancel()
+            t.join()
+
+
+@contextlib.contextmanager
+def timeout(seconds, error_on_timeout=True):
+    """Context manager that sets a timeout for the block to be executed.
+
+    The implementation depends on the platform, being ``timeout_with_signal``
+    on linux and macOS and ``timeout_with_threading`` on Windows.
+
+    If seconds is 0 there is no timeout.
+
+    Args:
+        seconds (int): seconds before timing out
+        error_on_timeout (bool): if True raise an exception if the block times out
+
+    Raises:
+        ContextTimeout: when error_on_timeout is True and the block times out
+    """
+    if sys.platform == "win32":
+        with timeout_with_threading(seconds, error_on_timeout):
+            yield
+    else:
+        with timeout_with_signal(seconds, error_on_timeout):
+            yield
