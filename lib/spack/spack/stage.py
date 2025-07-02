@@ -831,8 +831,6 @@ class DevelopStage(LockableStagingDir):
             link_path = reference_link
         else:
             link_path = os.path.join(self.source_path, reference_link)
-        if not os.path.isdir(os.path.dirname(link_path)):
-            raise StageError(f"The directory containing {link_path} must exist")
 
         # Created inside of dev_path (typically a user-managed source directory
         # that is not edited by spack except for this); points to self.path
@@ -858,6 +856,8 @@ class DevelopStage(LockableStagingDir):
 
     def create(self):
         super().create()
+        if not os.path.isdir(os.path.dirname(self.reference_link)):
+            raise StageError(f"The directory containing {self.reference_link} must exist")
         try:
             llnl.util.symlink.symlink(self.path, self.reference_link)
         except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
