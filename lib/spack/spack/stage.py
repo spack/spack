@@ -821,7 +821,6 @@ class StageComposite(pattern.Composite):
 class DevelopStage(LockableStagingDir):
     requires_patch_success = False
 
-    # Currently this is not initialized with a reference to the interested environment
     def __init__(self, name, dev_path, reference_link):
         super().__init__(name=name, path=None, keep=False, lock=True)
         self.dev_path = dev_path
