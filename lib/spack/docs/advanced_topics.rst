@@ -147,53 +147,6 @@ This verification can also be enabled as a post-install hook by setting
 ``config:shared_linking:missing_library_policy`` to ``error`` or ``warn``
 in :ref:`config.yaml <config-yaml>`.
 
-
-=============================
-Deprecating Insecure Packages
-=============================
-
-``spack deprecate`` allows for the removal of insecure packages with
-minimal impact to their dependents.
-
-.. warning::
-
-  The ``spack deprecate`` command is designed for use only in
-  extraordinary circumstances. This is a VERY big hammer to be used
-  with care.
-
-The ``spack deprecate`` command will remove one package and replace it
-with another by replacing the deprecated package's prefix with a link
-to the deprecator package's prefix.
-
-.. warning::
-
-  The ``spack deprecate`` command makes no promises about binary
-  compatibility. It is up to the user to ensure the deprecator is
-  suitable for the deprecated package.
-
-Spack tracks concrete deprecated specs and ensures that no future packages
-concretize to a deprecated spec.
-
-The first spec given to the ``spack deprecate`` command is the package
-to deprecate. It is an abstract spec that must describe a single
-installed package. The second spec argument is the deprecator
-spec. By default it must be an abstract spec that describes a single
-installed package, but with the ``-i/--install-deprecator`` it can be
-any abstract spec that Spack will install and then use as the
-deprecator. The ``-I/--no-install-deprecator`` option will ensure
-the default behavior.
-
-By default, ``spack deprecate`` will deprecate all dependencies of the
-deprecated spec, replacing each by the dependency of the same name in
-the deprecator spec. The ``-d/--dependencies`` option will ensure the
-default, while the ``-D/--no-dependencies`` option will deprecate only
-the root of the deprecate spec in favor of the root of the deprecator
-spec.
-
-``spack deprecate`` can use symbolic links or hard links. The default
-behavior is symbolic links, but the ``-l/--link-type`` flag can take
-options ``hard`` or ``soft``.
-
 =======================
 Filesystem Requirements
 =======================
