@@ -59,7 +59,8 @@ or refer to the full manual below.
    :maxdepth: 2
    :caption: Basic Usage
 
-   basic_usage
+   package_fundamentals
+   configuring_compilers
    replace_conda_homebrew
    frequently_asked_questions
    getting_help
