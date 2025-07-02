@@ -1198,9 +1198,15 @@ def environment_after_sourcing_files(
         with subprocess.Popen(
             cmd, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         ) as shell:
-            output, _ = shell.communicate()
-
-        return json.loads(output)
+            output, error = shell.communicate()
+        if error:
+            # there was an issue sourcing the file
+            # may or may not be fatal, simply report
+            tty.warn(f"Error encountered sourcing file: {source_file}\n\n{error.decode('utf-8')}")
+        try:
+            return json.loads(output)
+        except json.decoder.JSONDecodeError as e:
+            raise EnvironmentError(f"Unable to process environment from {output}") from e
 
     current_environment = kwargs.get("env", dict(os.environ))
     for file in files:
