@@ -101,6 +101,7 @@ class TestConcretizePreferences:
     @pytest.mark.regression("50921")
     @pytest.mark.parametrize("config_type", ("require", "prefer"))
     def test_preferred_commit_variant(self, config_type):
+        """Tests that we can use auto-variants in requirements and preferences."""
         commit_value = "b" * 40
         name = "git-ref-package"
         value = f"commit={commit_value}"
