@@ -462,6 +462,30 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
         assert "libelf" not in cache_list
 
 
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+def test_use_bin_index(monkeypatch, tmpdir, mutable_config):
+    """Check use of binary cache index: perform an operation that
+    instantiates it, and a second operation that reconstructs it.
+    """
+    monkeypatch.setattr(bindist, "BINARY_INDEX", bindist.BinaryCacheIndex())
+
+    # Create a mirror, configure us to point at it, install a spec, and
+    # put it in the mirror
+    mirror_dir = tmpdir.join("mirror_dir")
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
+    spack.config.set("mirrors", {"test": mirror_url})
+    s = spack.concretize.concretize_one("libdwarf")
+    install_cmd("--fake", "--no-cache", s.name)
+    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
+    buildcache_cmd("update-index", mirror_dir.strpath)
+
+    # Now the test
+    buildcache_cmd("list", "-al")
+    bindist.BINARY_INDEX = bindist.BinaryCacheIndex()
+    cache_list = buildcache_cmd("list", "-al")
+    assert "libdwarf" in cache_list
+
+
 def test_generate_key_index_failure(monkeypatch, tmp_path):
     def list_url(url, recursive=False):
         if "fails-listing" in url:
