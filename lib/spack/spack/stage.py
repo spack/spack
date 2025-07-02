@@ -912,7 +912,7 @@ class DevStageMap:
         self.env_map = DevStageMap._read(self.path)
 
     def write(self, dst=None):
-        with open(self.path, "w") as f:
+        with open(self.path, "w", encoding="utf-8") as f:
             json.dump(self.env_map, f)
 
     @staticmethod
@@ -920,7 +920,7 @@ class DevStageMap:
         if not os.path.exists(src):
             data = {}
         else:
-            with open(src, "r") as f:
+            with open(src, "r", encoding="utf-8") as f:
                 data = json.load(f)
         return data
 
