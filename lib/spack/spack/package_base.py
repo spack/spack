@@ -1228,7 +1228,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
             stage_link = self.spec.format_path(link_format)
-            # Is an env necessarily active at this time?
             source_stage = stg.DevelopStage(
                 stg.compute_stage_name(self.spec), dev_path, stage_link
             )
