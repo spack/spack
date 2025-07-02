@@ -98,6 +98,7 @@ class TestConcretizePreferences:
         update_packages(package_name, "variants", variant_value)
         assert_variant_values(package_name, **expected_results)
 
+    @pytest.mark.regression("50921")
     @pytest.mark.parametrize("config_type", ("require", "prefer"))
     def test_preferred_commit_variant(self, config_type):
         commit_value = "b" * 40
