@@ -1049,7 +1049,12 @@ def get_repository(args, name):
     # Figure out where the new package should live
     repo_path = args.repo
     if repo_path is not None:
-        repo = spack.repo.from_path(repo_path)
+        repo = None
+        try:
+            repo = spack.repo.PATH.get_repo(repo_path)
+        except spack.repo.UnknownNamespaceError:
+            repo = spack.repo.from_path(repo_path)
+
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die(
                 "Can't create package with namespace {0} in repo with "
