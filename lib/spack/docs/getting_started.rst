@@ -63,8 +63,7 @@ As you can see it's quite simple to gather basic information on packages, before
    :class: warning
    :collapsible:
 
-   The very first command run with Spack will take a while to finish, as Spack has to build a few caches to speed-up further command execution.
-   This will be just a one-off slowdown though, and subsequent command execution is much faster.
+   The very first command run with Spack will take a while to finish, as Spack has to build a few caches to speed up subsequent command execution.
 
 -----------------------------
 Installing your first package
@@ -87,7 +86,7 @@ If the search was successful, you can now list known compilers, and get an outpu
    -- gcc ubuntu20.04-x86_64 ---------------------------------------
    [e]  gcc@9.4.0  [e]  gcc@8.4.0  [e]  gcc@10.5.0
 
-If no compiler was found, you need either to:
+If no compilers were found, you need either to:
 
 * Install further prerequisites, see :ref:`verify-spack-prerequisites`, and repeat the search above.
 * Register a buildcache that provides a compiler already available as a binary
@@ -157,7 +156,7 @@ Congratulations! You just installed your first package with Spack!
 Use the software you just installed
 -----------------------------------
 
-Once you installed ``tcl``, you can immediately use it starting the ``tcsh`` with its absolute path:
+Once you have installed ``tcl``, you can immediately use it by starting the ``tclsh`` with its absolute path:
 
 .. code-block:: console
 
@@ -165,15 +164,15 @@ Once you installed ``tcl``, you can immediately use it starting the ``tcsh`` wit
    >% echo "Hello world!"
    Hello world!
 
-This works because of how Spack builds packages, setting the ``RPATH`` of their dependencies, but using such a long absolute path is not the most ergonomic way to refer to an executable.
+This works, but using such a long absolute path is not the most convenient way to run an executable.
 
-The simplest way to have ``tcsh`` directory added to your ``PATH`` is to:
+The simplest way to have ``tclsh`` available on the command line is:
 
 .. code-block:: console
 
    $ spack load tcl
 
-Now the environment of the current shell has been modified, and you can use:
+The environment of the current shell has now been modified, and you can run:
 
 .. code-block:: console
 
@@ -195,8 +194,8 @@ directly. To undo these modifications, you can:
 Next steps
 ----------
 
-This section just helped you getting Spack installed, and running, quickly.
-There are further resources in the documentation, that cover both basic and advanced topics more in details:
+This section helped you get Spack installed and running quickly.
+There are further resources in the documentation that cover both basic and advanced topics in more detail:
 
 .. tab-set::
 
