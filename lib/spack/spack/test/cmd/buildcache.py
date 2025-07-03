@@ -777,11 +777,10 @@ def test_buildcache_prune_orphaned_blobs(tmp_path, mutable_database, mock_gnupgh
     cache_entry = URLBuildcacheEntry(
         mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
     )
-    cache_entry.fetch_metadata()
 
     blob_urls = [
         URLBuildcacheEntry.get_blob_url(mirror_url=f"file://{mirror_directory}", record=blob)
-        for blob in cache_entry.manifest.data
+        for blob in cache_entry.read_manifest().data
     ]
 
     # Remove the manifest from the cache, orphaning the blobs
