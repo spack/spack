@@ -715,6 +715,7 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
 
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
     """Execute all environment setup routines."""
+    tty.debug("AAL: In setup_package")
     if context not in (Context.BUILD, Context.TEST):
         raise ValueError(f"'context' must be Context.BUILD or Context.TEST - got {context}")
 
@@ -782,6 +783,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     # Make sure nothing's strange about the Spack environment.
     validate(env_mods, tty.warn)
     env_mods.apply_modifications()
+    print(f" AAL: LD_LIBRARY_PATH: {os.environ.get('LD_LIBRARY_PATH')}")
 
     # Return all env modifications we controlled (excluding module related ones)
     env_base.extend(env_mods)
@@ -1010,6 +1012,9 @@ class SetupContext:
         from leaf to root. That way externals cannot contribute search paths that would shadow
         Spack's prefixes, and dependents override variables set by dependencies."""
         env = EnvironmentModifications()
+        packages_config = spack.config.get("packages")
+        processed_packages = set()
+
         for dspec, flag in chain(self.external, self.nonexternal):
             tty.debug(f"Adding env modifications for {dspec.name}")
             pkg = dspec.package
@@ -1033,12 +1038,23 @@ class SetupContext:
                         pkg.setup_dependent_run_environment(run_env_mods, spec)
                 pkg.setup_run_environment(run_env_mods)
 
-                external_env = (dspec.extra_attributes or {}).get("environment", {})
-                if external_env:
-                    run_env_mods.extend(spack.schema.environment.parse(external_env))
+                # Custom environment variables from packages.yaml
+                if dspec.name not in processed_packages:
+                    processed_packages.add(dspec.name)
+                    package_entry = packages_config.get(dspec.name, {})
+                    package_externals = package_entry.get("externals", [])
+                    for external in package_externals:
+                        package_environment = external.get("environment", {})
+                        if package_environment:
+                            env_config = spack.schema.environment.parse(package_environment)
+                            run_env_mods.extend(env_config)
+
+                    external_env = (dspec.extra_attributes or {}).get("environment", {})
+                    if external_env:
+                        run_env_mods.extend(spack.schema.environment.parse(external_env))
 
                 if self.context == Context.BUILD:
-                    # Don't let the runtime environment of comiler like dependencies leak into the
+                    # Don't let the runtime environment of compiler like dependencies leak into the
                     # build env
                     run_env_mods.drop("CC", "CXX", "F77", "FC")
                 env.extend(run_env_mods)

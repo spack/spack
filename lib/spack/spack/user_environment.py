@@ -11,7 +11,6 @@ import spack.spec
 import spack.util.environment as environment
 from spack import traverse
 from spack.context import Context
-from spack.schema.environment import parse
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = "SPACK_LOADED_HASHES"
@@ -113,17 +112,6 @@ def environment_modifications_for_specs(
     if set_package_py_globals:
         setup_context.set_all_package_py_globals()
     env.extend(setup_context.get_env_modifications())
-
-    # Custom environment modifications from packages.yaml
-    packages_config = spack.config.get("packages")
-    for spec in specs:
-        package_entry = packages_config.get(spec.name, {})
-        package_externals = package_entry.get("externals", [])
-        for external in package_externals:
-            package_environment = external.get("environment", {})
-            if package_environment:
-                env_config = parse(package_environment)
-                env.extend(env_config)
 
     # Apply view projections if any.
     if view:
