@@ -25,7 +25,7 @@ Listing Available Packages
 --------------------------
 
 To install software with Spack, you need to know what software is available.
-You can search the available packages at the `packages.spack.io <https://packages.spack.io>`_ website, or using the ``spack list`` command.
+You can search for available packages on the `packages.spack.io <https://packages.spack.io>`_ website or by using the ``spack list`` command.
 
 .. _cmd-spack-list:
 
@@ -43,7 +43,7 @@ can install:
 Packages are listed by name in alphabetical order.
 A pattern can be used to narrow the list, and the following rules apply:
 
-* A pattern to match with no wildcards, ``*`` or ``?``, will be treated as it started and ended with ``*``
+* A pattern with no wildcards (``*`` or ``?``) will be treated as if it started and ended with ``*``
 * All patterns will be treated as case-insensitive
 
 To search for all packages whose names contain the word ``sql`` you can run the following command:
@@ -54,7 +54,7 @@ To search for all packages whose names contain the word ``sql`` you can run the 
 
 A few options are also provided for more specific searches.
 For instance, it is possible to search the description of packages for a match.
-A way to list all the package whose names or description contain the word ``quantum`` is the following:
+A way to list all the packages whose names or descriptions contain the word ``quantum`` is the following:
 
 .. code-block:: console
 
@@ -67,16 +67,15 @@ A way to list all the package whose names or description contain the word ``quan
 ``spack info``
 ^^^^^^^^^^^^^^
 
-To get more information on a particular package from `spack list`, use
+To get more information about a particular package from `spack list`, use
 `spack info`.  Just supply the name of a package:
 
 .. command-output:: spack info mpich
    :language: console
 
-Most of the information is self-explanatory.  The *safe versions* are
-versions that Spack knows the checksum for, and it will use the
-checksum to verify that these versions download without errors or
-malware.
+Most of the information is self-explanatory.
+The *safe versions* are versions for which Spack knows the checksum.
+Spack uses this checksum to verify that the versions are downloaded without errors or malicious changes.
 
 :ref:`Dependencies <sec-specs>` and :ref:`virtual dependencies
 <sec-virtual-dependencies>` are described in more detail later.
@@ -175,7 +174,7 @@ just add ``@`` after the package name, followed by a version:
    $ spack install mpich@3.0.4
 
 Any number of versions of the same package can be installed at once
-without interfering with each other. This is good for multi-user
+without interfering with each other. This is useful for multi-user
 sites, as installing a version that one user needs will not disrupt
 existing installations for other users.
 
@@ -208,9 +207,7 @@ you can add the ``--fresh`` option:
 
    $ spack install --fresh mpich
 
-Reusing installations in this mode is "accidental" and happening only if
-there's a match between existing installations and what Spack would have installed
-anyhow.
+Reusing installations in this mode is "accidental" and happens only if there's a match between existing installations and what Spack would have installed anyway.
 
 You can use the ``spack spec -I mpich`` command to see what
 will be reused and what will be built before you install.
@@ -229,7 +226,7 @@ You can configure Spack to use the ``--fresh`` behavior by default in
 ``spack uninstall``
 ^^^^^^^^^^^^^^^^^^^
 
-To uninstall a package, type ``spack uninstall <package>``. This will ask
+To uninstall a package, run ``spack uninstall <package>``. This will ask
 the user for confirmation before completely removing the directory
 in which the package was installed.
 
@@ -281,7 +278,7 @@ Garbage collection
 ^^^^^^^^^^^^^^^^^^
 
 When Spack builds software from sources, it often installs tools that are needed
-just to build or test other software. These are not necessary at runtime.
+only to build or test other software. These are not necessary at runtime.
 To support cases where removing these tools can be a benefit, Spack provides
 the ``spack gc`` ("garbage collector") command, which will uninstall all unneeded packages:
 
@@ -311,11 +308,9 @@ the ``spack gc`` ("garbage collector") command, which will uninstall all unneede
    -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
    hdf5@1.10.5  libiconv@1.16  libpciaccess@0.13.5  libszip@2.1.1  libxml2@2.9.9  mpich@3.3.2  openjpeg@2.3.1  xz@5.2.4  zlib@1.2.11
 
-In the example above, Spack went through all the packages in the package database
-and removed everything that is not either:
-
-1. A package installed upon explicit request of the user
-2. A ``link`` or ``run`` dependency, even transitive, of one of the packages at point 1.
+In the example above, ``spack gc`` scans the package database.
+It keeps only the packages that were explicitly installed by a user, along with their required ``link`` and ``run`` dependencies (including transitive dependencies).
+All other packages, such as build-only dependencies or orphaned packages, are identified as "garbage" and removed.
 
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages
 or :ref:`dependency-types` for a more thorough treatment of dependency types.
@@ -753,8 +748,8 @@ When we do ``spack find``, we see the two versions.
     zlib@1.2.11  zlib@1.2.11
 
 
-Let's now say that we want to uninstall zlib. We run the command and hit a problem
-quickly because we have two!
+Let's say we want to uninstall ``zlib``.
+We run the command and quickly encounter a problem because two versions are installed.
 
 .. code-block:: console
 
@@ -881,7 +876,7 @@ Spack has three different ways to solve this problem, which fit different use ca
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have :ref:`shell support <packaging-shell-support>` enabled you can use the
-``spack load`` command to quickly get a package on your ``PATH``.
+``spack load`` command to quickly add a package to your ``PATH``.
 
 For example, this will add the ``mpich`` package built with ``gcc`` to
 your path:
