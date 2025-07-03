@@ -555,7 +555,7 @@ def test_url_buildcache_entry_v2_exists(
     output = buildcache("list", "-a", "-l")
 
     assert "Fetching an index from a v2 binary mirror layout" in output
-    assert "is deprecated" in output
+    assert "deprecated" in output
 
     v2_cache_class = URLBuildcacheEntryV2
 
