@@ -367,6 +367,34 @@ def test_config_add_override_from_file(mutable_empty_config, tmpdir):
     )
 
 
+def test_config_add_preserve_multiline_string(mutable_empty_config, tmpdir):
+    config("--scope", "site", "add", "config:test1:foo")
+    contents = """spack:
+  config::
+    multi_line_test: |-
+      testing a multi
+      line string
+"""
+
+    file = str(tmpdir.join("spack.yaml"))
+    with open(file, "w", encoding="utf-8") as f:
+        f.write(contents)
+    config("add", "-f", file)
+    config("add", "config:test2:bar")
+    output = config("get", "config")
+
+    assert (
+        output
+        == """config:
+  multi_line_test: |-
+    testing a multi
+    line string
+  test2: bar
+  test1: foo
+"""
+    )
+
+
 def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
     config("--scope", "site", "add", "config:template_dirs:test1")
     contents = """spack:
