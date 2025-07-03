@@ -80,16 +80,16 @@ Dependency graphs in Spack have to be acyclic, and the *depends on* relationship
 
 The package name identifier in the spec is the root of some dependency DAG, and the DAG itself is implicit.
 Spack knows the precise dependencies among packages, but users do not need to know the full DAG structure.
-Each ``^`` in the full spec refers to some *transitive* dependency of the root package.
-Each ``%`` refers to some *direct* dependency, either of the root, or of the last defined transitive dependency .
+Each ``^`` in the full spec refers to a *transitive* dependency of the root package.
+Each ``%`` refers to a *direct* dependency, either of the root, or of the last defined transitive dependency .
 
-Spack takes care of allowing only a single configuration of each package, where that is needed for consistency.
+Spack allows only a single configuration of each package, where that is needed for consistency.
 Above, both ``mpileaks`` and ``callpath`` depend on ``mpich``, but ``mpich`` appears only once in the DAG.
 You cannot build an ``mpileaks`` version that depends on one version of ``mpich`` *and* on a ``callpath`` version that depends on some *other* version of ``mpich``.
 In general, such a configuration would likely behave unexpectedly at runtime, and Spack enforces this to ensure a consistent runtime environment.
 
-The point of specs is to abstract this full DAG from Spack users.
-A user that does not care about the DAG at all, can refer to mpileaks by simply writing:
+The purpose of specs is to abstract this full DAG away from Spack users.
+A user who does not care about the DAG at all, can refer to ``mpileaks`` by simply writing:
 
 .. code-block::
 
@@ -251,7 +251,7 @@ Variants
 Variants are named options associated with a particular package and are typically used to enable or disable certain features at build time.
 They are optional, as each package must provide default values for each variant it makes available.
 
-The names of variants available for a particular package depend on what was provided by the package author.
+The variants available for a particular package are defined by the package author.
 ``spack info <package>`` will provide information on what build variants are available.
 
 There are different types of variants:
@@ -365,7 +365,7 @@ will use to build. Checksummed assets are preferred but there are a few
 notable exceptions such as git branches and tags i.e ``pkg@develop``.
 These versions do not naturally have source provenance because they refer to a range
 of commits (branches) or can be changed outside the spack packaging infrastructure
-(tags). Without source provenace we can not have binary provenance.
+(tags). Without source provenance we cannot have binary provenance.
 
 Spack has a reserved variant to allow users to complete source and binary provenance
 for these cases: ``pkg@develop commit=<SHA>``.  The ``commit`` variant must be supplied
@@ -417,7 +417,7 @@ compiler flags is not the last thing on the line, it must be followed
 by a space. The command ``spack install libelf cppflags="-O3"%intel``
 will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
 
-The six compiler flags are injected in the order of implicit make commands
+The six compiler flags are injected in the same order as implicit make commands
 in GNU Autotools. If all flags are set, the order is
 ``$cppflags $cflags|$cxxflags $ldflags <command> $ldlibs`` for C and C++, and
 ``$fflags $cppflags $ldflags <command> $ldlibs`` for Fortran.
@@ -480,8 +480,7 @@ or can't build binaries for that target at all, it will exit with a meaningful e
    $ spack install zlib%gcc@5.5.0 target=icelake
    ==> Error: cannot produce optimized binary for micro-architecture "icelake" with gcc@5.5.0 [supported compiler versions are 8:]
 
-When instead an old compiler is selected on a recent enough microarchitecture but there is
-no explicit ``target`` specification, Spack will optimize for the best match it can find instead
+Conversely, if an old compiler is selected for a newer microarchitecture, Spack will optimize for the best match it can find instead
 of failing:
 
 .. code-block:: console
