@@ -11,6 +11,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.installer
 import spack.repo
+import spack.test.conftest
 import spack.util.hash as hashutil
 import spack.version
 from spack.dependency import Dependency
@@ -69,7 +70,7 @@ def test_test_deptype(tmpdir):
 
     w->y deptypes are (link, build), w->x and y->z deptypes are (test)
     """
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir)
     builder.add_package("x")
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "test", None)])
@@ -127,7 +128,7 @@ def test_specify_preinstalled_dep(tmpdir, monkeypatch):
     """Specify the use of a preinstalled package during concretization with a
     transitive dependency that is only supplied by the preinstalled package.
     """
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir)
     builder.add_package("pkg-c")
     builder.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
     builder.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
@@ -155,7 +156,7 @@ def test_conditional_dep_with_user_constraints(tmpdir, spec_str, expr_str, expec
     met to add the dependency; this checks whether a user-specified constraint
     on Y is applied properly.
     """
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir)
     builder.add_package("y")
     builder.add_package("x", dependencies=[("y", None, "x@2:")])
 

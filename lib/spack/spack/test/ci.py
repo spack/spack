@@ -16,6 +16,7 @@ import spack.environment as ev
 import spack.error
 import spack.paths as spack_paths
 import spack.repo as repo
+import spack.test.conftest
 import spack.util.git
 from spack.test.conftest import MockHTTPResponse
 from spack.version import Version
@@ -83,7 +84,7 @@ def test_pipeline_dag(config, tmpdir):
           f                         f
 
     """
-    builder = repo.MockRepositoryBuilder(tmpdir)
+    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir)
     builder.add_package("pkg-h", dependencies=[("pkg-f", None, None)])
     builder.add_package("pkg-g")
     builder.add_package("pkg-f")

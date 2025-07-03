@@ -24,6 +24,7 @@ import spack.hash_types as ht
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.test.conftest
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec, save_dependency_specfiles
@@ -232,7 +233,7 @@ def check_specs_equal(original_spec, spec_yaml_path):
 def test_save_dependency_spec_jsons_subset(tmpdir, config):
     output_path = str(tmpdir.mkdir("spec_jsons"))
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
+    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
     builder.add_package("pkg-g")
     builder.add_package("pkg-f")
     builder.add_package("pkg-e")

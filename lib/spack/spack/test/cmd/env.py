@@ -36,6 +36,7 @@ import spack.solver.asp
 import spack.spec
 import spack.stage
 import spack.store
+import spack.test.conftest
 import spack.util.environment
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
@@ -1829,7 +1830,7 @@ def test_indirect_build_dep(tmp_path):
     build-only dep. Make sure this concrete DAG is preserved when writing the
     environment out and reading it back.
     """
-    builder = spack.repo.MockRepositoryBuilder(tmp_path)
+    builder = spack.test.conftest.MockRepositoryBuilder(tmp_path)
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
     builder.add_package("x", dependencies=[("y", None, None)])
@@ -1862,7 +1863,7 @@ def test_store_different_build_deps(tmp_path):
               z1
 
     """
-    builder = spack.repo.MockRepositoryBuilder(tmp_path)
+    builder = spack.test.conftest.MockRepositoryBuilder(tmp_path)
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
     builder.add_package("x", dependencies=[("y", None, None), ("z", "build", None)])

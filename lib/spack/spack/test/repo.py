@@ -13,6 +13,7 @@ import spack.paths
 import spack.repo
 import spack.schema.repos
 import spack.spec
+import spack.test.conftest
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.lock
@@ -141,11 +142,11 @@ def test_get_all_mock_packages(mock_packages):
 
 
 def test_repo_path_handles_package_removal(tmpdir, mock_packages):
-    builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="removal")
+    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir)
     builder.add_package("pkg-c")
     with spack.repo.use_repositories(builder.root, override=False) as repos:
         r = repos.repo_for_pkg("pkg-c")
-        assert r.namespace == "removal"
+        assert r.namespace == builder.namespace
 
     builder.remove("pkg-c")
     with spack.repo.use_repositories(builder.root, override=False) as repos:
@@ -178,11 +179,12 @@ def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, r
                     "builtin_mock", spack.paths.mock_packages_path
                 )
             if entry == "extra":
-                name = "extra_mock"
-                repo_dir = tmp_path / name
+                repo_dir = tmp_path / "extra_mock"
                 repo_dir.mkdir()
-                repo = spack.repo.MockRepositoryBuilder(repo_dir, name)
-                descriptors[name] = spack.repo.LocalRepoDescriptor(name, repo.root)
+                repo = spack.test.conftest.MockRepositoryBuilder(repo_dir)
+                descriptors[repo.namespace] = spack.repo.LocalRepoDescriptor(
+                    repo.namespace, repo.root
+                )
         return spack.repo.RepoDescriptors(descriptors)
 
     descriptors = _repo_descriptors(repos)
@@ -430,18 +432,18 @@ def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
     (repo_dir / "packages" / "zlib-ng").mkdir()
     (repo_dir / "packages" / "zlib-ng" / "package.py").write_text(
         """
-from spack_repo.builtin_mock.build_systems.generic import Package
+from spack.package import PackageBase
 
-class ZlibNg(Package):
+class ZlibNg(PackageBase):
     pass
 """
     )
     (repo_dir / "packages" / "UPPERCASE").mkdir()
     (repo_dir / "packages" / "UPPERCASE" / "package.py").write_text(
         """
-from spack_repo.builtin_mock.build_systems.generic import Package
+from spack.package import PackageBase
 
-class Uppercase(Package):
+class Uppercase(PackageBase):
     pass
 """
     )
@@ -463,9 +465,9 @@ def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path, capsys
     (repo_dir / "packages" / "_1example_2_test").mkdir()
     (repo_dir / "packages" / "_1example_2_test" / "package.py").write_text(
         """
-from spack_repo.builtin_mock.build_systems.generic import Package
+from spack.package import PackageBase
 
-class _1example2Test(Package):
+class _1example2Test(PackageBase):
     pass
 """
     )

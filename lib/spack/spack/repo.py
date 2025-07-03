@@ -13,11 +13,9 @@ import importlib.util
 import inspect
 import itertools
 import os
-import random
 import re
 import shutil
 import stat
-import string
 import sys
 import traceback
 import types
@@ -53,7 +51,6 @@ import spack.paths
 import spack.provider_index
 import spack.spec
 import spack.tag
-import spack.tengine
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
@@ -2007,43 +2004,6 @@ def enable_repo(repo_path: RepoPath) -> None:
     global PATH
     PATH = repo_path
     PATH.enable()
-
-
-class MockRepositoryBuilder:
-    """Build a mock repository in a directory"""
-
-    def __init__(self, root_directory, namespace=None):
-        namespace = namespace or "".join(random.choice(string.ascii_lowercase) for _ in range(10))
-        repo_root = os.path.join(root_directory, namespace)
-        os.mkdir(repo_root)
-        self.root, self.namespace = create_repo(repo_root, namespace)
-
-    def add_package(self, name, dependencies=None):
-        """Create a mock package in the repository, using a Jinja2 template.
-
-        Args:
-            name (str): name of the new package
-            dependencies (list): list of ("dep_spec", "dep_type", "condition") tuples.
-                Both "dep_type" and "condition" can default to ``None`` in which case
-                ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
-        """
-        dependencies = dependencies or []
-        context = {"cls_name": nm.pkg_name_to_class_name(name), "dependencies": dependencies}
-        template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
-        text = template.render(context)
-        package_py = self.recipe_filename(name)
-        fs.mkdirp(os.path.dirname(package_py))
-        with open(package_py, "w", encoding="utf-8") as f:
-            f.write(text)
-
-    def remove(self, name):
-        package_py = self.recipe_filename(name)
-        shutil.rmtree(os.path.dirname(package_py))
-
-    def recipe_filename(self, name: str):
-        return os.path.join(
-            self.root, "packages", nm.pkg_name_to_pkg_dir(name, package_api=(2, 0)), "package.py"
-        )
 
 
 class RepoError(spack.error.SpackError):

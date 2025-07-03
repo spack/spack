@@ -27,6 +27,7 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
 import spack.store
+import spack.test.conftest
 import spack.util.lock as lk
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
@@ -246,7 +247,7 @@ def test_installer_prune_built_build_deps(install_mockery, monkeypatch, tmpdir):
     monkeypatch.setattr(spack.spec.Spec, "installed", _mock_installed)
 
     # Create mock repository with packages (a), (b), (c), (d), and (e)
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
+    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
 
     builder.add_package("pkg-a", dependencies=[("pkg-b", "build", None), ("pkg-c", "build", None)])
     builder.add_package("pkg-b", dependencies=[("pkg-d", "build", None)])

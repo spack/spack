@@ -46,18 +46,15 @@ class Cmake(Package):
         return match.group(1) if match else None
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        spack_cc  # Ensure spack module-scope variable is avaiable
+        spack_cc  # Ensure spack module-scope variable is available
         env.set("for_install", "for_install")
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
     ) -> None:
-        spack_cc  # Ensure spack module-scope variable is avaiable
         env.set("from_cmake", "from_cmake")
 
     def setup_dependent_package(self, module, dspec):
-        spack_cc  # Ensure spack module-scope variable is avaiable
-
         module.cmake = Executable(self.spec.prefix.bin.cmake)
         module.ctest = Executable(self.spec.prefix.bin.ctest)
         self.spec.from_cmake = "from_cmake"

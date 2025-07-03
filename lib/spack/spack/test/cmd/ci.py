@@ -33,7 +33,7 @@ from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
 from spack.schema.database_index import schema as db_idx_schema
-from spack.test.conftest import MockHTTPResponse
+from spack.test.conftest import MockHTTPResponse, MockRepositoryBuilder
 
 config_cmd = spack.main.SpackCommand("config")
 ci_cmd = spack.main.SpackCommand("ci")
@@ -1118,7 +1118,7 @@ def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeyp
     def fake_change_revisions(env_path):
         return "HEAD^", "HEAD"
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder = MockRepositoryBuilder(tmpdir)
     builder.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
     builder.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
     builder.add_package("pkg-c")

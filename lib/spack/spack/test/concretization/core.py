@@ -30,6 +30,7 @@ import spack.solver.asp
 import spack.solver.version_order
 import spack.spec
 import spack.store
+import spack.test.conftest
 import spack.util.file_cache
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
@@ -1719,7 +1720,7 @@ class TestConcretize:
 
     @pytest.mark.regression("45538")
     def test_reuse_from_other_namespace_no_raise(self, tmpdir, temporary_store, monkeypatch):
-        myrepo = spack.repo.MockRepositoryBuilder(tmpdir, namespace="mock_repo")
+        myrepo = spack.test.conftest.MockRepositoryBuilder(tmpdir)
         myrepo.add_package("zlib")
 
         builtin = spack.concretize.concretize_one("zlib")
@@ -1727,19 +1728,19 @@ class TestConcretize:
 
         with spack.repo.use_repositories(myrepo.root, override=False):
             with spack.config.override("concretizer:reuse", True):
-                myrepo = spack.concretize.concretize_one("mock_repo.zlib")
+                zlib = spack.concretize.concretize_one(f"{myrepo.namespace}.zlib")
 
-        assert myrepo.namespace == "mock_repo"
+        assert zlib.namespace == myrepo.namespace
 
     @pytest.mark.regression("28259")
     def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
-        builder = spack.repo.MockRepositoryBuilder(str(tmpdir), namespace="myrepo")
+        builder = spack.test.conftest.MockRepositoryBuilder(str(tmpdir))
         builder.add_package("pkg-c")
         with spack.repo.use_repositories(builder.root, override=False):
             s = spack.concretize.concretize_one("pkg-c")
-            assert s.namespace == "myrepo"
+            assert s.namespace == builder.namespace
             PackageInstaller([s.package], fake=True, explicit=True).install()
-        del sys.modules["spack_repo.myrepo.packages.pkg_c"]
+        del sys.modules[f"spack_repo.{builder.namespace}.packages.pkg_c"]
         builder.remove("pkg-c")
         with spack.repo.use_repositories(builder.root, override=False) as repos:
             # TODO (INJECT CONFIGURATION): unclear why the cache needs to be invalidated explicitly
