@@ -208,10 +208,10 @@ def _prune_orphans(
         pruned_object_count = len(orphaned_blobs) + len(orphaned_manifests)
         for manifest in orphaned_manifests:
             manifests.remove(manifest)
-            tty.info(f'  Would prune manifest: {manifest}')
+            tty.info(f"  Would prune manifest: {manifest}")
         for blob in orphaned_blobs:
             blobs.remove(blob)
-            tty.info(f'  Would prune blob: {blob}')
+            tty.info(f"  Would prune blob: {blob}")
         return pruned_object_count
 
     # Try to delete the orphaned manifests using the AWS CLI,
