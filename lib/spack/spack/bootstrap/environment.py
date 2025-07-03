@@ -128,7 +128,7 @@ def isort_root_spec() -> str:
 
 def mypy_root_spec() -> str:
     """Return the root spec used to bootstrap mypy"""
-    return _root_spec("py-mypy@0.900:")
+    return _root_spec("py-mypy@0.900: ^py-mypy-extensions@:1.0")
 
 
 def black_root_spec() -> str:
