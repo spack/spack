@@ -268,7 +268,19 @@ def prune(mirror: Mirror, dry_run: bool) -> None:
                 break
             total_pruned += pruned
 
-        tty.info(
-            ("Would have pruned" if dry_run else "Pruned")
-            + f" {total_pruned} orphaned objects from mirror: {mirror.fetch_url}"
-        )
+        if dry_run:
+            tty.info(
+                f"Would have pruned {total_pruned} orphaned objects from mirror: "
+                + mirror.fetch_url
+            )
+        else:
+            tty.info(f"Pruned {total_pruned} orphaned objects from mirror: {mirror.fetch_url}")
+            if total_pruned > 0:
+                # If we pruned any objects, the buildcache index is likely out of date.
+                # Inform the user about this.
+                tty.info(
+                    "As a consequence of pruning, the buildcache index is now likely out of date."
+                )
+                tty.info(
+                    "Run `spack buildcache update-index` to update the index for this mirror."
+                )
