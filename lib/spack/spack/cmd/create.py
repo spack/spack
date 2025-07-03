@@ -54,6 +54,7 @@ package_template = '''\
 # ----------------------------------------------------------------------------
 
 {package_class_import}
+
 from spack.package import *
 
 
