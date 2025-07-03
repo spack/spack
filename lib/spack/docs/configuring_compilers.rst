@@ -13,7 +13,7 @@ Compilers can be made available to Spack by:
 
 1. Specifying them as externals in ``packages.yaml``, or
 2. Having them installed in the current Spack store, or
-3. Having them available as binaries in some buildcache
+3. Having them available as binaries in a buildcache
 
 For convenience, Spack will automatically detect compilers as externals the first time it needs them, if no compiler is available.
 
@@ -32,7 +32,7 @@ You can see which compilers are available to Spack by running ``spack compiler l
    -- gcc ubuntu20.04-x86_64 ---------------------------------------
    [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
 
-Compilers marked with an ``[e]`` are available as externals, while those marked with a ``[+]`` are installed in the local Spack's store.
+Compilers marked with an ``[e]`` are system compilers (externals), and those marked with a ``[+]`` have been installed by Spack.
 Compilers from remote buildcaches are marked as ``-``, but are not shown by default.
 To see them you need a specific option:
 
@@ -46,7 +46,8 @@ To see them you need a specific option:
    -- gcc ubuntu20.04-x86_64 ---------------------------------------
     -   gcc@12.4.0
 
-Any of these compilers can be used to build Spack packages.  More on how this is done is in :ref:`sec-specs`.
+Any of these compilers can be used to build Spack packages. 
+More details on how this is done can be found in :ref:`sec-specs`.
 
 .. _cmd-spack-compiler-find:
 
@@ -99,7 +100,7 @@ This loads the environment module for gcc-4.9.0 to add it to
 ``spack compiler info``
 -----------------------
 
-If you want to see additional information of specific compilers, you can run
+If you want to see additional information about specific compilers, you can run
 ``spack compiler info``:
 
 .. code-block:: console
@@ -143,7 +144,7 @@ You can do this by running:
 
 which will open the file in :ref:`your favorite editor <controlling-the-editor>`.
 
-Each compiler has an "external" entry in the file with some ``extra_attributes``:
+Each compiler has an "external" entry in the file with ``extra_attributes``:
 
 .. code-block:: yaml
 
@@ -240,7 +241,7 @@ This is useful for forcing certain compilers to RPATH their own runtime librarie
 Compilers Requiring Modules
 ---------------------------
 
-Many installed compilers will work regardless of the environment they are called with.
+Many installed compilers will work regardless of the environment from which they are called.
 However, some installed compilers require environment variables to be set in order to run.
 
 On typical HPC clusters, these environment modifications are usually delegated to some "module" system.
@@ -276,7 +277,7 @@ Note that this MAY interfere with package builds.
 Build Your Own Compiler
 -----------------------
 
-If you are particular about which compiler/version you use, you might wish to have Spack build it for you.
+If you require a specific compiler and version, you can have Spack build it for you.
 For example:
 
 .. code-block:: console
