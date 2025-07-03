@@ -715,7 +715,6 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
 
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
     """Execute all environment setup routines."""
-    tty.debug("AAL: In setup_package")
     if context not in (Context.BUILD, Context.TEST):
         raise ValueError(f"'context' must be Context.BUILD or Context.TEST - got {context}")
 
@@ -783,7 +782,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     # Make sure nothing's strange about the Spack environment.
     validate(env_mods, tty.warn)
     env_mods.apply_modifications()
-    print(f" AAL: LD_LIBRARY_PATH: {os.environ.get('LD_LIBRARY_PATH')}")
 
     # Return all env modifications we controlled (excluding module related ones)
     env_base.extend(env_mods)
