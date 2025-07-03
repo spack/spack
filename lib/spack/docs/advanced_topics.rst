@@ -10,7 +10,7 @@ Defining and Using Toolchains
 
 Spack lets you specify compilers on the CLI with, e.g., ``%gcc`` or ``%c,cxx=clang %fortran=gcc``, and you can specify flags with ``cflags``, ``cxxflags``, and ``fflags``.
 Depending on how complex your compiler setup is, it can be cumbersome to specify all of your preferences on the CLI.
-Spack has a special type configuration called ``toolchains``, which let you encapsulate the configuration for compilers, other libraries, and flags into a single name that you can reference as though it were one option.
+Spack has a special type of configuration called ``toolchains``, which let you encapsulate the configuration for compilers, other libraries, and flags into a single name that you can reference as though it were one option.
 
 Toolchains are referenced by name like a direct dependency, using the ``%`` sigil.
 They are defined under the ``toolchains`` section of the configuration:
@@ -54,7 +54,7 @@ If we had a toolchain named ``gcc_all`` that enforces using ``gcc`` for C, C++ a
 
 to install:
 
-* An ``hdf5`` compiled with ``llvm`` for the C/C++ components, but with the fortran components compiled with ``gfortran``,
+* An ``hdf5`` compiled with ``llvm`` for the C/C++ components, but with its Fortran components compiled with ``gfortran``,
 * Built against an MPICH installation compiled entirely with ``gcc`` for C, C++, and Fortran.
 
 .. note::
@@ -68,26 +68,17 @@ to install:
 Auditing Packages and Configuration
 ===================================
 
-The ``spack audit`` command:
+The ``spack audit`` command detects potential issues with configuration and packages:
 
 .. command-output:: spack audit -h
 
-can be used to detect a number of configuration issues. This command detects
-configuration settings that might not be strictly wrong but are not likely
-to be useful outside of special cases.
-
-It can also be used to detect dependency issues with packages -- for example,
-cases where a package constrains a dependency with a variant that doesn't
-exist (in this case, Spack could report the problem ahead of time, but
-automatically performing the check would slow down most runs of Spack).
-
-A detailed list of the checks currently implemented for each subcommand can be
-printed with:
+For instance, it can detect duplicate external specs in ``packages.yaml``, or the use of non-existing variants in directives.
+A detailed list of the checks currently implemented for each subcommand can be printed with:
 
 .. command-output:: spack -v audit list
 
-Depending on the use case, users might run the appropriate subcommands to obtain
-diagnostics. Issues, if found, are reported to stdout:
+Depending on the use case, users might run the appropriate subcommands to obtain diagnostics.
+Issues, if found, are reported to stdout:
 
 .. code-block:: console
 
@@ -219,5 +210,3 @@ This issue typically manifests with the error below:
    File "./spack/lib/spack/llnl/util/lock.py", line 64, in _lock
      fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
    IOError: [Errno 38] Function not implemented
-
-A nicer error message is to be determined in future versions of Spack.
