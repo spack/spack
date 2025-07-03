@@ -1275,6 +1275,9 @@ want with the spec since it is simply a variant. In this case, or in the case of
    Above all else, the most robust way to ensure binaries have their desired commits is to provide
    the SHAs via user-specs or config i.e. ``commit=<SHA>``.
 
+   Packaging rules for ``commit`` can be set in config (i.e. ``packages.yaml``) using requirments
+   and preferences, but not in the ``variants`` section of the config.
+
 ^^^^^^^^^^^^
 Git versions
 ^^^^^^^^^^^^

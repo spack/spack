@@ -289,10 +289,6 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
      not concrete(node(ID, Package)),
      pkg_fact(Package, deprecated_version(Version)).
 
-possible_version_weight(node(ID, Package), Weight)
- :- attr("version", node(ID, Package), Version),
-    pkg_fact(Package, version_declared(Version, Weight)).
-
 % we can't use the weight for an external version if we don't use the
 % corresponding external spec.
 :- attr("version", node(ID, Package), Version),
@@ -1014,6 +1010,14 @@ attr("external_spec_selected", node(ID, Package), LocalIndex) :-
     attr("node", node(ID, Package)),
     not attr("hash", node(ID, Package), _).
 
+% Allow clingo not to impose an external condition. This is needed to allow solving
+% for externals that are indistinguishable besides compiler "metadata" e.g.
+% mpich@4.2 %gcc vs. mpich@4.2 %clang
+{ do_not_impose(EffectID, node(X, Package)) } :-
+  trigger_condition_holds(TriggerID, node(X, Package)),
+  trigger_and_effect(Package, TriggerID, EffectID),
+  imposed_constraint(EffectID, "external_conditions_hold", Package, _).
+
 % Account for compiler annotation on externals
 :- not attr("root", ExternalNode),
    attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
@@ -1385,6 +1389,14 @@ variant_single_value(PackageNode, Variant)
   :- node_has_variant(PackageNode, Variant, VariantID),
      auto_variant(Variant, VariantID),
      not variant_type(VariantID, "multi").
+
+% to respect requirements/preferences we need to define that an auto_variant is set
+{ attr("variant_set", node(ID, Package), Variant, VariantValue)}
+  :- auto_variant(Variant, _ ),
+     condition_requirement(TriggerID, "variant_value", Package, Variant, VariantValue),
+     pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
+     requirement_group_member(ConditionID , Package, RequirementID),
+     activate_requirement(node(ID, Package), RequirementID).
 
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
