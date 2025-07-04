@@ -1395,12 +1395,17 @@ class Repo:
         class_name = nm.pkg_name_to_class_name(pkg_name)
 
         try:
+            if self.python_path:
+                sys.path.insert(0, self.python_path)
             module = importlib.import_module(fullname)
         except ImportError as e:
             raise UnknownPackageError(fullname) from e
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
             raise RepoError(msg) from e
+        finally:
+            if self.python_path:
+                sys.path.pop(0)
 
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
