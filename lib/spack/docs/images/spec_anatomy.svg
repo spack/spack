@@ -67,7 +67,7 @@
      y="80"
      font-size="16"
      id="text6"
-     style="font-size:16px;font-family:Monaco, monospace;fill:#2c3e50">mpileaks @1.2:1.4 +debug ~qt target=x86_64 %gcc@14.2.0 ^libelf @1.1 %gcc@14.2.0</text>
+     style="font-size:16px;font-family:Monaco, monospace;fill:#2c3e50">mpileaks@1.2:1.4 +debug ~qt target=x86_64_v3 %gcc@15.1.0 ^libelf@1.1 %gcc@14.2.0</text>
   <!-- Component labels with arrows -->
   <!-- Package name -->
   <line
@@ -280,7 +280,7 @@
    font-weight="bold"
    id="tspan60"
    style="font-weight:bold;font-family:Monaco, monospace">mpileaks</tspan>
- - Package name (required)</text>
+ - Package name</text>
     <circle
        cx="10"
        cy="35"
@@ -327,8 +327,8 @@
        style="font-size:14px;font-family:Arial, sans-serif;fill:#2c3e50"><tspan
    font-weight="bold"
    id="tspan78"
-   style="font-weight:bold;font-family:Monaco, monospace">target=x86_64</tspan>
- - Target architecture (generic x86-64 machine)</text>
+   style="font-weight:bold;font-family:Monaco, monospace">target=x86_64_v3</tspan>
+ - Target architecture (x86-64 machine with AVX2 support)</text>
     <circle
        cx="10"
        cy="110"
