@@ -316,7 +316,7 @@ def _file_descriptors_work(*streams):
     a ``StringIO`` object.
 
     We have to actually try this to see whether it works, rather than
-    checking for the fileno attribute, beacuse frameworks like pytest add
+    checking for the fileno attribute, because frameworks like pytest add
     dummy fileno methods on their dummy file objects that return
     ``UnsupportedOperationErrors``.
 

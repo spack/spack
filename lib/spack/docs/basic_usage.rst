@@ -1256,7 +1256,7 @@ Spack will attempt to establish binary provenance by looking up commit SHA's for
 and tag based versions during concretization. There are 3 sources that it uses. In order, they
 are
 
-1. Staged source code (already cached source code for the version needing provenance) 
+1. Staged source code (already cached source code for the version needing provenance)
 2. Source mirrors (compressed archives of the source code)
 3. The git url provided in the package definition
 
@@ -1275,7 +1275,7 @@ want with the spec since it is simply a variant. In this case, or in the case of
    Above all else, the most robust way to ensure binaries have their desired commits is to provide
    the SHAs via user-specs or config i.e. ``commit=<SHA>``.
 
-   Packaging rules for ``commit`` can be set in config (i.e. ``packages.yaml``) using requirments
+   Packaging rules for ``commit`` can be set in config (i.e. ``packages.yaml``) using requirements
    and preferences, but not in the ``variants`` section of the config.
 
 ^^^^^^^^^^^^

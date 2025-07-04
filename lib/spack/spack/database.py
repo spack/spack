@@ -72,7 +72,7 @@ from spack.util.socket import _getfqdn
 
 from .enums import InstallRecordStatus
 
-# TODO: Provide an API automatically retyring a build after detecting and
+# TODO: Provide an API automatically retrying a build after detecting and
 # TODO: clearing a failure.
 
 #: DB goes in this directory underneath the root

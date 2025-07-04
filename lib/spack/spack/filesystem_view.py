@@ -147,9 +147,9 @@ class FilesystemView:
     Governs a filesystem view that is located at certain root-directory.
 
     Packages are linked from their install directories into a common file
-    hierachy.
+    hierarchy.
 
-    In distributed filesystems, loading each installed package seperately
+    In distributed filesystems, loading each installed package separately
     can lead to slow-downs due to too many directories being traversed.
     This can be circumvented by loading all needed modules into a common
     directory structure.

@@ -573,7 +573,7 @@ def allows_unknown_args(command):
     """Implements really simple argument injection for unknown arguments.
 
     Commands may add an optional argument called "unknown args" to
-    indicate they can handle unknonwn args, and we'll pass the unknown
+    indicate they can handle unknown args, and we'll pass the unknown
     args in.
     """
     info = dict(inspect.getmembers(command))
@@ -858,7 +858,7 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
     return cmd_name, cmd
 
 
-# sentinel scope marker for enviroments passed on the command line
+# sentinel scope marker for environments passed on the command line
 _ENV = object()
 
 

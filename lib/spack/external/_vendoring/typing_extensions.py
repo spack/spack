@@ -1417,7 +1417,7 @@ else:
         return len(name) > 4 and name.startswith('__') and name.endswith('__')
 
     # Prior to Python 3.7 types did not have `copy_with`. A lot of the equality
-    # checks, argument expansion etc. are done on the _subs_tre. As a result we
+    # checks, argument expansion etc. are done on the _subs_tree. As a result we
     # can't provide a get_type_hints function that strips out annotations.
 
     class AnnotatedMeta(typing.GenericMeta):

@@ -217,7 +217,7 @@ def get_spec_filter_list(
 
 
 # Pruning functions should take a spack.spec.Spec object and
-# return a RebuildDecision containg the pruners opinion on
+# return a RebuildDecision containing the pruners opinion on
 # whether or not to keep (rebuild) the spec and a message
 # containing the reason for the decision.
 
@@ -616,7 +616,7 @@ def can_sign_binaries():
 
 
 def can_verify_binaries():
-    """Utility method to determin if this spack instance is capable (at
+    """Utility method to determine if this spack instance is capable (at
     least in theory) of verifying signed binaries."""
     return len(gpg_util.public_keys()) >= 1
 
@@ -879,7 +879,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
     """
     work_dir = os.path.realpath(work_dir)
     if os.path.exists(work_dir) and os.listdir(work_dir):
-        raise SpackError(f"Cannot run reproducer in non-emptry working dir:\n  {work_dir}")
+        raise SpackError(f"Cannot run reproducer in non-empty working dir:\n  {work_dir}")
 
     platform_script_ext = "ps1" if IS_WINDOWS else "sh"
     artifact_root = download_and_extract_artifacts(url, work_dir)

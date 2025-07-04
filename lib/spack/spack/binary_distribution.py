@@ -1845,7 +1845,7 @@ def download_tarball(
 
             return cache_entry.get_archive_stage()
 
-    # Falling through the nested loops meeans we exhaustively searched
+    # Falling through the nested loops means we exhaustively searched
     # for all known kinds of spec files on all mirrors and did not find
     # an acceptable one for which we could download a tarball and (if
     # needed) verify a signature. So at this point, we will proceed to
@@ -2850,7 +2850,7 @@ class EtagIndexFetcher(IndexFetcher):
     2) It provides this etag value in the 'If-None-Match' request header for the
     index manifest. 3) It checks for special exception type and response code
     indicating the index manifest is not modified, exiting early and returning
-    'Fresh', if encountered. 4) If it needs to actually read the manfiest, it
+    'Fresh', if encountered. 4) If it needs to actually read the manifest, it
     does not need to do any checks of the url scheme to determine whether an
     etag should be included in the return value."""
 
