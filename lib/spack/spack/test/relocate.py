@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 import shutil
+import subprocess
 
 import pytest
 
 import spack.platforms
 import spack.relocate
 import spack.relocate_text as relocate_text
-import spack.repo
 import spack.util.executable
 
 pytestmark = pytest.mark.not_on_windows("Tests fail on Windows")
@@ -185,13 +185,15 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
 
 @pytest.mark.requires_executables("install_name_tool", "cc")
 def test_fixup_macos_rpaths(make_dylib, make_object_file):
-    compiler_cls = spack.repo.PATH.get_pkg_class("apple-clang")
-    compiler_version = compiler_cls.determine_version("cc")
+    # Get Apple Clang major version for XCode 15+ linker behavior
     try:
-        # See https://forums.swift.org/t/xcode-ships-llvm-15-but-swift-builds-llvm-16/67377
-        xcode_major_version = int(compiler_version.split(".")[0])
-    except IndexError:
-        pytest.xfail("cannot determine the major version of XCode")
+        result = subprocess.check_output(["cc", "--version"], universal_newlines=True)
+        version_match = re.search(r"Apple clang version (\d+)", result)
+        assert version_match, "Apple Clang version not found in output"
+        xcode_major_version = int(version_match.group(1))
+    except Exception:
+        pytest.xfail("cannot determine Apple Clang major version")
+        return
 
     # For each of these tests except for the "correct" case, the first fixup
     # should make changes, and the second fixup should be a null-op.
