@@ -20,30 +20,34 @@ They are defined under the ``toolchains`` section of the configuration:
    toolchains:
      llvm_gfortran:
      - spec: cflags=-O3
-     - spec: '%[virtuals=c] llvm'
+     - spec: '%c=llvm'
        when: '%c'
-     - spec: '%[virtuals=cxx] llvm'
+     - spec: '%cxx=llvm'
        when: '%cxx'
-     - spec: '%[virtuals=fortran] gcc'
+     - spec: '%fortran=gcc'
        when: '%fortran'
 
-When used, the toolchain above enforces using ``llvm`` for the C and C++ languages, and ``gcc`` for Fortran, when these languages are needed.
+A toolchain that uses *conditional dependencies*, when constraining a virtual provider, can be applied to any node - regardless of whether it *needs* that virtual dependency.
+The *guarantee* that the toolchain gives is that *if* the virtual is needed, then the constraint is applied.
+
+The ``llvm_gfortran`` toolchain, for instance, enforces using ``llvm`` for the C and C++ languages, and ``gcc`` for Fortran, when these languages are needed.
 It also adds ``cflags=-O3`` unconditionally.
 
-Using *conditional dependencies*, when constraining a virtual provider in a toolchain, is the key to make the toolchain itself widely applicable.
-For instance, a toolchain written that way can be used to install a list of specs using :ref:`environment-spec-matrices`:
+Toolchains can be used to simplify the construction of a list of specs using :ref:`environment-spec-matrices`, when the list includes packages with different language requirements:
 
 .. code-block:: yaml
 
    specs:
    - matrix:
-     - [kokkos, hdf5, py-scipy]
+     - [kokkos, hdf5~cxx+fortran, py-scipy]
      - ["%llvm_gfortran"]
 
-The user doesn't need to know exactly which package requires which compiler, but is ensured that e.g.  *if* a C++ compiler is needed, then ``llvm`` will be used.
+Note that in this case we can use a single matrix, and the user doesn't need to know exactly which package requires which language.
+If we had to enforce compilers directly, we would need 3 matrices, since:
 
-In fact, the conditional dependencies allow the toolchain to be applied to any package regardless of which languages it depends on.
-Similarly, while any spec constraint can be included, it is most useful to use compiler flags, architectures, and conditional dependencies.
+* ``kokkos`` depends on C and C++, but not Fortran
+* ``hdf5~cxx+fortran`` depends on C and Fortran, but not C++
+* ``py-scipy`` depends on C, C++, and Fortran
 
 Different toolchains could be used independently or even in the same spec.
 If we had a toolchain named ``gcc_all`` that enforces using ``gcc`` for C, C++ and Fortran, we could write:
