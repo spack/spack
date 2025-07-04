@@ -1996,6 +1996,7 @@ def use_repositories(
         yield new_repo
     finally:
         spack.config.CONFIG.remove_scope(scope_name=scope_name)
+        new_repo.disable()
         enable_repo(old_repo)
 
 
