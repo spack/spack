@@ -125,7 +125,7 @@ spack:
     )
 
 
-#: regex for validating enviroment names
+#: regex for validating environment names
 valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
@@ -1479,7 +1479,7 @@ class Environment:
 
         Arguments:
             spec: Spec to deconcretize. This must be a root of the environment
-            concrete: If True, find all instances of spec as concrete in the environemnt.
+            concrete: If True, find all instances of spec as concrete in the environment.
                 If False, find a single instance of the abstract spec as root of the environment.
         """
         # spec has to be a root of the environment

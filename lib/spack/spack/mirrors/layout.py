@@ -40,7 +40,7 @@ class DefaultLayout(MirrorLayout):
         self.digest_path = digest_path
 
     def make_alias(self, root: str) -> None:
-        """Symlink a human readible path in our mirror to the actual storage location."""
+        """Symlink a human readable path in our mirror to the actual storage location."""
         # We already use the human-readable path as the main storage location.
         if not self.digest_path:
             return
