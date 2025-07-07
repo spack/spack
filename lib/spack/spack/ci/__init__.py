@@ -452,7 +452,7 @@ def get_unaffected_pruners(
         affected_pkgs.update(repo_affected_pkgs)
 
     if not affected_pkgs:
-        tty.info("Skipping unaffected pruning no package changes were detected")
+        tty.info("Skipping unaffected pruning: no package changes were detected")
         return None
 
     affected_specs = get_spec_filter_list(
