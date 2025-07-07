@@ -682,6 +682,30 @@ def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
     assert not os.path.exists(root.prefix)
 
 
+def test_install_only_dependencies_already_installed(tmpdir, mock_fetch, install_mockery):
+    dep = spack.concretize.concretize_one("dependency-install")
+    root = spack.concretize.concretize_one("dependent-install")
+
+    install("dependency-install")
+    assert os.path.exists(dep.prefix)
+
+    install("--only", "dependencies", "dependent-install")
+    assert not os.path.exists(root.prefix)
+
+
+@pytest.mark.disable_clean_stage_check
+def test_install_only_dependencies_build_error(tmpdir, mock_fetch, install_mockery):
+    root = spack.concretize.concretize_one("build-error-in-dep")
+    dep = spack.concretize.concretize_one("build-error")
+
+    install("--only", "dependencies", "build-error-in-dep", fail_on_error=False)
+
+    assert install.error
+    assert isinstance(install.error, spack.error.InstallError)
+    assert not os.path.exists(dep.prefix)
+    assert not os.path.exists(root.prefix)
+
+
 def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
     msg = ""
     with capfd.disabled():
