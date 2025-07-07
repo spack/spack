@@ -242,12 +242,11 @@ def test_installer_prune_built_build_deps(
     only include four packages. [(a), (b), (c), (d), (e)]
     """
 
-    @property
     def _mock_installed(self):
         return self.name == "pkg-c"
 
-    # Mock the installed property to say that (b) is installed
-    monkeypatch.setattr(spack.spec.Spec, "installed", _mock_installed)
+    # Mock the installed property to say that (c) is installed
+    monkeypatch.setattr(spack.spec.Spec, "installed", property(_mock_installed))
 
     # Create mock repository with packages (a), (b), (c), (d), and (e)
     tmp_repo.add_package(
