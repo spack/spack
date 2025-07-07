@@ -31,7 +31,7 @@ import spack.test.conftest
 import spack.util.lock as lk
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
-from spack.test.conftest import MockRepositoryBuilder
+from spack.test.conftest import RepoBuilder
 
 
 def _mock_repo(root, namespace):
@@ -223,9 +223,7 @@ def test_installer_str(install_mockery):
     assert "failed (0)" in istr
 
 
-def test_installer_prune_built_build_deps(
-    install_mockery, monkeypatch, tmp_repo: MockRepositoryBuilder
-):
+def test_installer_prune_built_build_deps(install_mockery, monkeypatch, repo_builder: RepoBuilder):
     r"""
     Ensure that build dependencies of installed deps are pruned
     from installer package queues.
@@ -249,19 +247,19 @@ def test_installer_prune_built_build_deps(
     monkeypatch.setattr(spack.spec.Spec, "installed", property(_mock_installed))
 
     # Create mock repository with packages (a), (b), (c), (d), and (e)
-    tmp_repo.add_package(
+    repo_builder.add_package(
         "pkg-a", dependencies=[("pkg-b", "build", None), ("pkg-c", "build", None)]
     )
-    tmp_repo.add_package("pkg-b", dependencies=[("pkg-d", "build", None)])
-    tmp_repo.add_package(
+    repo_builder.add_package("pkg-b", dependencies=[("pkg-d", "build", None)])
+    repo_builder.add_package(
         "pkg-c",
         dependencies=[("pkg-d", "build", None), ("pkg-e", "all", None), ("pkg-f", "build", None)],
     )
-    tmp_repo.add_package("pkg-d")
-    tmp_repo.add_package("pkg-e")
-    tmp_repo.add_package("pkg-f")
+    repo_builder.add_package("pkg-d")
+    repo_builder.add_package("pkg-e")
+    repo_builder.add_package("pkg-f")
 
-    with spack.repo.use_repositories(tmp_repo.root):
+    with spack.repo.use_repositories(repo_builder.root):
         installer = create_installer(["pkg-a"])
 
         installer._init_queue()

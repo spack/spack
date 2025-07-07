@@ -676,16 +676,16 @@ def mutable_mock_repo(mock_packages_repo, request):
         yield mock_packages_repo
 
 
-class MockRepositoryBuilder:
+class RepoBuilder:
     """Build a mock repository in a directory"""
 
     _counter = 0
 
     def __init__(self, root_directory: str) -> None:
-        MockRepositoryBuilder._counter += 1
-        namespace = f"test_namespace_{MockRepositoryBuilder._counter}"
+        RepoBuilder._counter += 1
+        namespace = f"test_namespace_{RepoBuilder._counter}"
         repo_root = os.path.join(root_directory, namespace)
-        os.mkdir(repo_root)
+        os.makedirs(repo_root, exist_ok=True)
         self.root, self.namespace = spack.repo.create_repo(repo_root, namespace)
         self.build_system_name = f"test_build_system_{self.namespace}"
         self._add_build_system()
@@ -740,16 +740,14 @@ class MockRepositoryBuilder:
 
 
 @pytest.fixture
-def tmp_repo(tmp_path: pathlib.Path):
-    repo_path = tmp_path / "tmp_repo"
-    repo_path.mkdir(parents=True, exist_ok=True)
-    return MockRepositoryBuilder(str(repo_path))
+def repo_builder(tmp_path: pathlib.Path):
+    return RepoBuilder(str(tmp_path))
 
 
 @pytest.fixture()
 def mock_custom_repository(tmpdir, mutable_mock_repo):
     """Create a custom repository with a single package "c" and return its path."""
-    builder = MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
+    builder = RepoBuilder(tmpdir.mkdir("myrepo"))
     builder.add_package("pkg-c")
     return builder.root
 

@@ -33,7 +33,7 @@ from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
 from spack.schema.database_index import schema as db_idx_schema
-from spack.test.conftest import MockHTTPResponse, MockRepositoryBuilder
+from spack.test.conftest import MockHTTPResponse, RepoBuilder
 
 config_cmd = spack.main.SpackCommand("config")
 ci_cmd = spack.main.SpackCommand("ci")
@@ -1102,7 +1102,7 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
 
 
 def test_ci_generate_prune_untouched(
-    ci_generate_test, monkeypatch, tmp_path, tmp_repo: MockRepositoryBuilder
+    ci_generate_test, monkeypatch, tmp_path, repo_builder: RepoBuilder
 ):
     """Test pipeline generation with pruning works to eliminate
     specs that were not affected by a change"""
@@ -1120,16 +1120,16 @@ def test_ci_generate_prune_untouched(
     def fake_change_revisions(env_path):
         return "HEAD^", "HEAD"
 
-    tmp_repo.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
-    tmp_repo.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
-    tmp_repo.add_package("pkg-c")
-    tmp_repo.add_package("pkg-d")
+    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
+    repo_builder.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
+    repo_builder.add_package("pkg-c")
+    repo_builder.add_package("pkg-d")
 
     monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
     monkeypatch.setattr(ci, "stack_changed", fake_stack_changed)
     monkeypatch.setattr(ci, "get_change_revisions", fake_change_revisions)
 
-    with spack.repo.use_repositories(tmp_repo.root, override=False):
+    with spack.repo.use_repositories(repo_builder.root, override=False):
         spack_yaml, outputfile, _ = ci_generate_test(
             f"""\
 spack:

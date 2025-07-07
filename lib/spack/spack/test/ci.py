@@ -17,7 +17,7 @@ import spack.error
 import spack.paths as spack_paths
 import spack.repo as repo
 import spack.util.git
-from spack.test.conftest import MockHTTPResponse, MockRepositoryBuilder
+from spack.test.conftest import MockHTTPResponse, RepoBuilder
 from spack.version import Version
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
@@ -68,7 +68,7 @@ def test_get_added_versions_new_commit(mock_git_package_changes):
         assert added_versions[0] == Version("2.1.6")
 
 
-def test_pipeline_dag(config, tmp_repo: MockRepositoryBuilder):
+def test_pipeline_dag(config, repo_builder: RepoBuilder):
     r"""Test creation, pruning, and traversal of PipelineDAG using the
     following package dependency graph:
 
@@ -83,16 +83,16 @@ def test_pipeline_dag(config, tmp_repo: MockRepositoryBuilder):
           f                         f
 
     """
-    tmp_repo.add_package("pkg-h", dependencies=[("pkg-f", None, None)])
-    tmp_repo.add_package("pkg-g")
-    tmp_repo.add_package("pkg-f")
-    tmp_repo.add_package("pkg-e", dependencies=[("pkg-h", None, None)])
-    tmp_repo.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
-    tmp_repo.add_package("pkg-c")
-    tmp_repo.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
-    tmp_repo.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
+    repo_builder.add_package("pkg-h", dependencies=[("pkg-f", None, None)])
+    repo_builder.add_package("pkg-g")
+    repo_builder.add_package("pkg-f")
+    repo_builder.add_package("pkg-e", dependencies=[("pkg-h", None, None)])
+    repo_builder.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
+    repo_builder.add_package("pkg-c")
+    repo_builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
+    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
 
-    with repo.use_repositories(tmp_repo.root):
+    with repo.use_repositories(repo_builder.root):
         spec_a = spack.concretize.concretize_one("pkg-a")
 
         key_a = ci.common.PipelineDag.key(spec_a)

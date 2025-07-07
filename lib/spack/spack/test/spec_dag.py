@@ -16,7 +16,7 @@ import spack.util.hash as hashutil
 import spack.version
 from spack.dependency import Dependency
 from spack.spec import Spec
-from spack.test.conftest import MockRepositoryBuilder
+from spack.test.conftest import RepoBuilder
 
 
 def check_links(spec_to_check):
@@ -59,7 +59,7 @@ def set_dependency(saved_deps, monkeypatch):
 
 
 @pytest.mark.usefixtures("config")
-def test_test_deptype(tmp_repo: MockRepositoryBuilder):
+def test_test_deptype(repo_builder: RepoBuilder):
     """Ensure that test-only dependencies are only included for specified
     packages in the following spec DAG::
 
@@ -71,12 +71,12 @@ def test_test_deptype(tmp_repo: MockRepositoryBuilder):
 
     w->y deptypes are (link, build), w->x and y->z deptypes are (test)
     """
-    tmp_repo.add_package("x")
-    tmp_repo.add_package("z")
-    tmp_repo.add_package("y", dependencies=[("z", "test", None)])
-    tmp_repo.add_package("w", dependencies=[("x", "test", None), ("y", None, None)])
+    repo_builder.add_package("x")
+    repo_builder.add_package("z")
+    repo_builder.add_package("y", dependencies=[("z", "test", None)])
+    repo_builder.add_package("w", dependencies=[("x", "test", None), ("y", None, None)])
 
-    with spack.repo.use_repositories(tmp_repo.root):
+    with spack.repo.use_repositories(repo_builder.root):
         spec = spack.concretize.concretize_one("w", tests=("w",))
         assert "x" in spec
         assert "z" not in spec
@@ -124,15 +124,15 @@ def test_installed_deps(monkeypatch, install_mockery):
 
 
 @pytest.mark.usefixtures("config")
-def test_specify_preinstalled_dep(monkeypatch, tmp_repo: MockRepositoryBuilder):
+def test_specify_preinstalled_dep(monkeypatch, repo_builder: RepoBuilder):
     """Specify the use of a preinstalled package during concretization with a
     transitive dependency that is only supplied by the preinstalled package.
     """
-    tmp_repo.add_package("pkg-c")
-    tmp_repo.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
-    tmp_repo.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
+    repo_builder.add_package("pkg-c")
+    repo_builder.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
+    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
 
-    with spack.repo.use_repositories(tmp_repo.root):
+    with spack.repo.use_repositories(repo_builder.root):
         b_spec = spack.concretize.concretize_one("pkg-b")
         monkeypatch.setattr(Spec, "installed", property(lambda x: x.name != "pkg-a"))
 
@@ -149,7 +149,7 @@ def test_specify_preinstalled_dep(monkeypatch, tmp_repo: MockRepositoryBuilder):
     [("x ^y@2", "y@2", True), ("x@1", "y", False), ("x", "y@3", True)],
 )
 def test_conditional_dep_with_user_constraints(
-    spec_str, expr_str, expected, tmp_repo: MockRepositoryBuilder
+    spec_str, expr_str, expected, repo_builder: RepoBuilder
 ):
     """This sets up packages X->Y such that X depends on Y conditionally. It
     then constructs a Spec with X but with no constraints on X, so that the
@@ -157,10 +157,10 @@ def test_conditional_dep_with_user_constraints(
     met to add the dependency; this checks whether a user-specified constraint
     on Y is applied properly.
     """
-    tmp_repo.add_package("y")
-    tmp_repo.add_package("x", dependencies=[("y", None, "x@2:")])
+    repo_builder.add_package("y")
+    repo_builder.add_package("x", dependencies=[("y", None, "x@2:")])
 
-    with spack.repo.use_repositories(tmp_repo.root):
+    with spack.repo.use_repositories(repo_builder.root):
         spec = spack.concretize.concretize_one(spec_str)
         result = expr_str in spec
         assert result is expected, "{0} in {1}".format(expr_str, spec)
