@@ -1101,7 +1101,9 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
     assert ci.stack_changed(fake_env_path) is True
 
 
-def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeypatch):
+def test_ci_generate_prune_untouched(
+    ci_generate_test, monkeypatch, tmp_path, tmp_repo: MockRepositoryBuilder
+):
     """Test pipeline generation with pruning works to eliminate
     specs that were not affected by a change"""
     monkeypatch.setenv("SPACK_PRUNE_UNTOUCHED", "TRUE")  # enables pruning of untouched specs
@@ -1118,17 +1120,16 @@ def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeyp
     def fake_change_revisions(env_path):
         return "HEAD^", "HEAD"
 
-    builder = MockRepositoryBuilder(tmpdir)
-    builder.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
-    builder.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
-    builder.add_package("pkg-c")
-    builder.add_package("pkg-d")
+    tmp_repo.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
+    tmp_repo.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
+    tmp_repo.add_package("pkg-c")
+    tmp_repo.add_package("pkg-d")
 
     monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
     monkeypatch.setattr(ci, "stack_changed", fake_stack_changed)
     monkeypatch.setattr(ci, "get_change_revisions", fake_change_revisions)
 
-    with spack.repo.use_repositories(builder.root, override=False):
+    with spack.repo.use_repositories(tmp_repo.root, override=False):
         spack_yaml, outputfile, _ = ci_generate_test(
             f"""\
 spack:

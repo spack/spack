@@ -1405,7 +1405,7 @@ class Repo:
             raise RepoError(msg) from e
         finally:
             if self.python_path:
-                sys.path.pop(0)
+                sys.path.remove(self.python_path)
 
         cls = getattr(module, class_name)
         if not isinstance(cls, type):

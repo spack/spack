@@ -36,6 +36,7 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.installer import PackageInstaller
 from spack.spec import Spec
+from spack.test.conftest import MockRepositoryBuilder
 from spack.version import Version, VersionList, ver
 
 
@@ -1719,31 +1720,32 @@ class TestConcretize:
         assert s.namespace == "builtin_mock"
 
     @pytest.mark.regression("45538")
-    def test_reuse_from_other_namespace_no_raise(self, tmpdir, temporary_store, monkeypatch):
-        myrepo = spack.test.conftest.MockRepositoryBuilder(tmpdir)
-        myrepo.add_package("zlib")
+    def test_reuse_from_other_namespace_no_raise(
+        self, temporary_store, monkeypatch, tmp_repo: MockRepositoryBuilder
+    ):
+        tmp_repo.add_package("zlib")
 
         builtin = spack.concretize.concretize_one("zlib")
         PackageInstaller([builtin.package], fake=True, explicit=True).install()
 
-        with spack.repo.use_repositories(myrepo.root, override=False):
+        with spack.repo.use_repositories(tmp_repo.root, override=False):
             with spack.config.override("concretizer:reuse", True):
-                zlib = spack.concretize.concretize_one(f"{myrepo.namespace}.zlib")
+                zlib = spack.concretize.concretize_one(f"{tmp_repo.namespace}.zlib")
 
-        assert zlib.namespace == myrepo.namespace
+        assert zlib.namespace == tmp_repo.namespace
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
-        builder = spack.test.conftest.MockRepositoryBuilder(str(tmpdir))
-        builder.add_package("pkg-c")
-        with spack.repo.use_repositories(builder.root, override=False):
+    def test_reuse_with_unknown_package_dont_raise(
+        self, temporary_store, monkeypatch, tmp_repo: MockRepositoryBuilder
+    ):
+        tmp_repo.add_package("pkg-c")
+        with spack.repo.use_repositories(tmp_repo.root, override=False):
             s = spack.concretize.concretize_one("pkg-c")
-            assert s.namespace == builder.namespace
+            assert s.namespace == tmp_repo.namespace
             PackageInstaller([s.package], fake=True, explicit=True).install()
-        del sys.modules[f"spack_repo.{builder.namespace}.packages.pkg_c"]
-        builder.remove("pkg-c")
-        with spack.repo.use_repositories(builder.root, override=False) as repos:
-            # TODO (INJECT CONFIGURATION): unclear why the cache needs to be invalidated explicitly
+        del sys.modules[f"spack_repo.{tmp_repo.namespace}.packages.pkg_c"]
+        tmp_repo.remove("pkg-c")
+        with spack.repo.use_repositories(tmp_repo.root, override=False) as repos:
             repos.repos[0]._pkg_checker.invalidate()
             with spack.config.override("concretizer:reuse", True):
                 s = spack.concretize.concretize_one("pkg-c")

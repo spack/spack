@@ -16,7 +16,6 @@ import sys
 import pytest
 
 import spack.subprocess_context
-import spack.test.conftest
 from spack.directory_layout import DirectoryLayoutError
 
 try:
@@ -44,6 +43,7 @@ import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller
 from spack.schema.database_index import schema
+from spack.test.conftest import MockRepositoryBuilder
 from spack.util.executable import Executable
 
 pytestmark = pytest.mark.db
@@ -152,16 +152,15 @@ def test_spec_installed_upstream(
 
 
 @pytest.mark.usefixtures("config")
-def test_installed_upstream(upstream_and_downstream_db, tmpdir):
+def test_installed_upstream(upstream_and_downstream_db, tmp_repo: MockRepositoryBuilder):
     upstream_db, downstream_db = upstream_and_downstream_db
 
-    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("x")
-    builder.add_package("z")
-    builder.add_package("y", dependencies=[("z", None, None)])
-    builder.add_package("w", dependencies=[("x", None, None), ("y", None, None)])
+    tmp_repo.add_package("x")
+    tmp_repo.add_package("z")
+    tmp_repo.add_package("y", dependencies=[("z", None, None)])
+    tmp_repo.add_package("w", dependencies=[("x", None, None), ("y", None, None)])
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(tmp_repo.root):
         spec = spack.concretize.concretize_one("w")
         with writable(upstream_db):
             for dep in spec.traverse(root=False):
@@ -188,7 +187,9 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         downstream_db._check_ref_counts()
 
 
-def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypatch, config):
+def test_missing_upstream_build_dep(
+    upstream_and_downstream_db, tmpdir, monkeypatch, config, tmp_repo: MockRepositoryBuilder
+):
     upstream_db, downstream_db = upstream_and_downstream_db
 
     z_y_prefix = str(tmpdir.join("z-y"))
@@ -199,13 +200,12 @@ def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypa
 
     upstream_db.layout.ensure_installed = fail_for_z
 
-    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("z")
-    builder.add_package("y", dependencies=[("z", "build", None)])
+    tmp_repo.add_package("z")
+    tmp_repo.add_package("y", dependencies=[("z", "build", None)])
 
     monkeypatch.setattr(spack.store.STORE, "db", downstream_db)
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(tmp_repo.root):
         y = spack.concretize.concretize_one("y")
         z_y = y["z"]
         z_y.set_prefix(z_y_prefix)
@@ -235,14 +235,15 @@ def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypa
         assert not z_new.installed_upstream
 
 
-def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config):
+def test_removed_upstream_dep(
+    upstream_and_downstream_db, capsys, config, tmp_repo: MockRepositoryBuilder
+):
     upstream_db, downstream_db = upstream_and_downstream_db
 
-    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("z")
-    builder.add_package("y", dependencies=[("z", None, None)])
+    tmp_repo.add_package("z")
+    tmp_repo.add_package("y", dependencies=[("z", None, None)])
 
-    with spack.repo.use_repositories(builder):
+    with spack.repo.use_repositories(tmp_repo.root):
         y = spack.concretize.concretize_one("y")
         z = y["z"]
 
@@ -266,17 +267,18 @@ def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config
 
 
 @pytest.mark.usefixtures("config")
-def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
+def test_add_to_upstream_after_downstream(
+    upstream_and_downstream_db, tmp_repo: MockRepositoryBuilder
+):
     """An upstream DB can add a package after it is installed in the downstream
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
     upstream_db, downstream_db = upstream_and_downstream_db
 
-    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("x")
+    tmp_repo.add_package("x")
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(tmp_repo.root):
         spec = spack.concretize.concretize_one("x")
 
         downstream_db.add(spec)
@@ -314,16 +316,15 @@ def test_cannot_write_upstream(tmp_path, mock_packages, config):
 
 
 @pytest.mark.usefixtures("config", "temporary_store")
-def test_recursive_upstream_dbs(tmpdir, gen_mock_layout):
+def test_recursive_upstream_dbs(tmpdir, gen_mock_layout, tmp_repo: MockRepositoryBuilder):
     roots = [str(tmpdir.mkdir(x)) for x in ["a", "b", "c"]]
     layouts = [gen_mock_layout(x) for x in ["/ra/", "/rb/", "/rc/"]]
 
-    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("z")
-    builder.add_package("y", dependencies=[("z", None, None)])
-    builder.add_package("x", dependencies=[("y", None, None)])
+    tmp_repo.add_package("z")
+    tmp_repo.add_package("y", dependencies=[("z", None, None)])
+    tmp_repo.add_package("x", dependencies=[("y", None, None)])
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(tmp_repo.root):
         spec = spack.concretize.concretize_one("x")
         db_c = spack.database.Database(roots[2], layout=layouts[2])
         db_c.add(spec["z"])
@@ -787,11 +788,11 @@ def test_110_no_write_with_exception_on_install(database):
         assert database.query("cmake", installed=InstallRecordStatus.ANY) == []
 
 
-def test_115_reindex_with_packages_not_in_repo(mutable_database, tmpdir):
+def test_115_reindex_with_packages_not_in_repo(mutable_database, tmp_repo: MockRepositoryBuilder):
     # Dont add any package definitions to this repository, the idea is that
     # packages should not have to be defined in the repository once they
     # are installed
-    with spack.repo.use_repositories(spack.test.conftest.MockRepositoryBuilder(tmpdir).root):
+    with spack.repo.use_repositories(tmp_repo.root):
         spack.store.STORE.reindex()
         _check_db_sanity(mutable_database)
 
@@ -1163,11 +1164,11 @@ def test_consistency_of_dependents_upon_remove(mutable_database):
 
 
 @pytest.mark.regression("30187")
-def test_query_installed_when_package_unknown(database, tmpdir):
+def test_query_installed_when_package_unknown(database, tmp_repo: MockRepositoryBuilder):
     """Test that we can query the installation status of a spec
     when we don't know its package.py
     """
-    with spack.repo.use_repositories(spack.test.conftest.MockRepositoryBuilder(tmpdir).root):
+    with spack.repo.use_repositories(tmp_repo.root):
         specs = database.query("mpileaks")
         for s in specs:
             # Assert that we can query the installation methods even though we

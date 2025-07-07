@@ -18,6 +18,7 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.lock
 import spack.util.naming
+from spack.test.conftest import MockRepositoryBuilder
 from spack.util.naming import valid_module_name
 
 
@@ -141,15 +142,14 @@ def test_get_all_mock_packages(mock_packages):
         mock_packages.get_pkg_class(name)
 
 
-def test_repo_path_handles_package_removal(tmpdir, mock_packages):
-    builder = spack.test.conftest.MockRepositoryBuilder(tmpdir)
-    builder.add_package("pkg-c")
-    with spack.repo.use_repositories(builder.root, override=False) as repos:
+def test_repo_path_handles_package_removal(mock_packages, tmp_repo: MockRepositoryBuilder):
+    tmp_repo.add_package("pkg-c")
+    with spack.repo.use_repositories(tmp_repo.root, override=False) as repos:
         r = repos.repo_for_pkg("pkg-c")
-        assert r.namespace == builder.namespace
+        assert r.namespace == tmp_repo.namespace
 
-    builder.remove("pkg-c")
-    with spack.repo.use_repositories(builder.root, override=False) as repos:
+    tmp_repo.remove("pkg-c")
+    with spack.repo.use_repositories(tmp_repo.root, override=False) as repos:
         r = repos.repo_for_pkg("pkg-c")
         assert r.namespace == "builtin_mock"
 
@@ -170,7 +170,9 @@ def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_deb
 
 
 @pytest.mark.parametrize("repos", [["mock"], ["extra"], ["mock", "extra"], ["extra", "mock"]])
-def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, repos):
+def test_repository_construction_doesnt_use_globals(
+    nullify_globals, tmp_path, repos, tmp_repo: MockRepositoryBuilder
+):
     def _repo_descriptors(repos):
         descriptors = {}
         for entry in repos:
@@ -181,9 +183,8 @@ def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, r
             if entry == "extra":
                 repo_dir = tmp_path / "extra_mock"
                 repo_dir.mkdir()
-                repo = spack.test.conftest.MockRepositoryBuilder(repo_dir)
-                descriptors[repo.namespace] = spack.repo.LocalRepoDescriptor(
-                    repo.namespace, repo.root
+                descriptors[tmp_repo.namespace] = spack.repo.LocalRepoDescriptor(
+                    tmp_repo.namespace, tmp_repo.root
                 )
         return spack.repo.RepoDescriptors(descriptors)
 

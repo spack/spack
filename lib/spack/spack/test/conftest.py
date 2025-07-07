@@ -739,6 +739,13 @@ class MockRepositoryBuilder:
         )
 
 
+@pytest.fixture
+def tmp_repo(tmp_path: pathlib.Path):
+    repo_path = tmp_path / "tmp_repo"
+    repo_path.mkdir(parents=True, exist_ok=True)
+    return MockRepositoryBuilder(str(repo_path))
+
+
 @pytest.fixture()
 def mock_custom_repository(tmpdir, mutable_mock_repo):
     """Create a custom repository with a single package "c" and return its path."""

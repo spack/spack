@@ -45,6 +45,7 @@ from spack.installer import PackageInstaller
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
+from spack.test.conftest import MockRepositoryBuilder
 from spack.util.executable import Executable
 from spack.util.path import substitute_path_variables
 from spack.version import Version
@@ -1825,17 +1826,16 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     assert not test.user_specs
 
 
-def test_indirect_build_dep(tmp_path):
+def test_indirect_build_dep(tmp_repo: MockRepositoryBuilder):
     """Simple case of X->Y->Z where Y is a build/link dep and Z is a
     build-only dep. Make sure this concrete DAG is preserved when writing the
     environment out and reading it back.
     """
-    builder = spack.test.conftest.MockRepositoryBuilder(tmp_path)
-    builder.add_package("z")
-    builder.add_package("y", dependencies=[("z", "build", None)])
-    builder.add_package("x", dependencies=[("y", None, None)])
+    tmp_repo.add_package("z")
+    tmp_repo.add_package("y", dependencies=[("z", "build", None)])
+    tmp_repo.add_package("x", dependencies=[("y", None, None)])
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(tmp_repo.root):
         x_spec = Spec("x")
         x_concretized = spack.concretize.concretize_one(x_spec)
 
@@ -1852,7 +1852,7 @@ def test_indirect_build_dep(tmp_path):
         assert x_env_spec == x_concretized
 
 
-def test_store_different_build_deps(tmp_path):
+def test_store_different_build_deps(tmp_repo: MockRepositoryBuilder):
     r"""Ensure that an environment can store two instances of a build-only
     dependency::
 
@@ -1863,12 +1863,11 @@ def test_store_different_build_deps(tmp_path):
               z1
 
     """
-    builder = spack.test.conftest.MockRepositoryBuilder(tmp_path)
-    builder.add_package("z")
-    builder.add_package("y", dependencies=[("z", "build", None)])
-    builder.add_package("x", dependencies=[("y", None, None), ("z", "build", None)])
+    tmp_repo.add_package("z")
+    tmp_repo.add_package("y", dependencies=[("z", "build", None)])
+    tmp_repo.add_package("x", dependencies=[("y", None, None), ("z", "build", None)])
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(tmp_repo.root):
         y_spec = Spec("y ^z@3")
         y_concretized = spack.concretize.concretize_one(y_spec)
 
