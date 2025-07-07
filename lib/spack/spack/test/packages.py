@@ -372,3 +372,25 @@ def test_pkg_name_can_only_be_derived_when_package_module():
 
     with pytest.raises(ValueError, match="Package ExamplePackage is not a known Spack package"):
         ExamplePackage.name
+
+
+import spack.config
+
+
+def test_pkg_cfg_extra_attrs(mock_packages, mutable_config, tmpdir):
+    spack.config.set("packages:arbitrary-extra-attrs", {
+        "buildable": False,
+        "externals": [
+            { "spec": "arbitrary-extra-attrs@1.0",
+             "prefix": str(tmpdir),
+             "extra_attributes": {
+                 "exampledict": {
+                     "a": 1,
+                     "b": "2"
+                 }
+             }
+            }
+        ]
+    })
+    spec = spack.concretize.concretize_one(Spec("arbitrary-extra-attrs"))
+    spec.package.check()
