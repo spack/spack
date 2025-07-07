@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import _vendoring.archspec.cpu
 import pytest
@@ -430,9 +431,14 @@ class TestLmod:
         assert projection in writer.layout.use_name
 
     def test_modules_relative_to_view(
-        self, tmpdir, modulefile_content, module_configuration, install_mockery, mock_fetch
+        self,
+        tmp_path: pathlib.Path,
+        modulefile_content,
+        module_configuration,
+        install_mockery,
+        mock_fetch,
     ):
-        with ev.create_in_dir(str(tmpdir), with_view=True) as e:
+        with ev.create_in_dir(str(tmp_path), with_view=True) as e:
             module_configuration("with_view")
             install("--fake", "--add", "cmake")
 

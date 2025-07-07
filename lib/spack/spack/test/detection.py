@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import pathlib
 
 import spack.config
 import spack.detection
@@ -28,7 +29,7 @@ def test_detection_update_config(mutable_config):
     assert external_gcc["prefix"] == "/usr/bin"
 
 
-def test_dedupe_paths(tmp_path):
+def test_dedupe_paths(tmp_path: pathlib.Path):
     """Test that ``dedupe_paths`` deals with symlinked directories, retaining the target"""
     x = tmp_path / "x"
     y = tmp_path / "y"

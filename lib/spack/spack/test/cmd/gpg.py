@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -33,16 +34,16 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
         ("gpg2", "gpg (GnuPG) 2.2.19"),  # gpg2 command
     ],
 )
-def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
+def test_find_gpg(cmd_name, version, tmp_path: pathlib.Path, mock_gnupghome, monkeypatch):
     TEMPLATE = "#!/bin/sh\n" 'echo "{version}"\n'
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         for fname in (cmd_name, "gpgconf"):
             with open(fname, "w", encoding="utf-8") as f:
                 f.write(TEMPLATE.format(version=version))
             fs.set_executable(fname)
 
-    monkeypatch.setenv("PATH", str(tmpdir))
+    monkeypatch.setenv("PATH", str(tmp_path))
     if version == "undetectable" or version.endswith("1.3.4"):
         with pytest.raises(spack.util.gpg.SpackGPGError):
             spack.util.gpg.init(force=True)
@@ -52,15 +53,15 @@ def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
         assert spack.util.gpg.GPGCONF is not None
 
 
-def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
-    monkeypatch.setenv("PATH", str(tmpdir))
+def test_no_gpg_in_path(tmp_path: pathlib.Path, mock_gnupghome, monkeypatch, mutable_config):
+    monkeypatch.setenv("PATH", str(tmp_path))
     bootstrap("disable")
     with pytest.raises(RuntimeError):
         spack.util.gpg.init(force=True)
 
 
 @pytest.mark.maybeslow
-def test_gpg(tmpdir, mutable_config, mock_gnupghome):
+def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
         gpg("verify", os.path.join(mock_gpg_data_path, "content.txt"))
@@ -84,7 +85,7 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
         gpg("verify", os.path.join(mock_gpg_data_path, "content.txt"))
 
     # Create a file to test signing.
-    test_path = tmpdir.join("to-sign.txt")
+    test_path = tmp_path / "to-sign.txt"
     with open(str(test_path), "w+", encoding="utf-8") as fout:
         fout.write("Test content for signing.\n")
 
@@ -94,7 +95,7 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
     assert exc_info.value.args[0] == "no signing keys are available"
 
     # Create a key for use in the tests.
-    keypath = tmpdir.join("testing-1.key")
+    keypath = tmp_path / "testing-1.key"
     gpg(
         "create",
         "--comment",
@@ -119,11 +120,11 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
     gpg("verify", str(test_path))
 
     # Export the key for future use.
-    export_path = tmpdir.join("export.testing.key")
+    export_path = tmp_path / "export.testing.key"
     gpg("export", str(export_path))
 
     # Test exporting the private key
-    private_export_path = tmpdir.join("export-secret.testing.key")
+    private_export_path = tmp_path / "export-secret.testing.key"
     gpg("export", "--secret", str(private_export_path))
 
     # Ensure we exported the right content!
@@ -144,7 +145,7 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
     gpg("list", "--trusted")
     gpg("list", "--signing")
 
-    test_path = tmpdir.join("to-sign-2.txt")
+    test_path = tmp_path / "to-sign-2.txt"
     with open(str(test_path), "w+", encoding="utf-8") as fout:
         fout.write("Test content for signing.\n")
 
@@ -176,22 +177,22 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
     relative_keys_path = bindist.buildcache_relative_keys_path()
 
     # Publish the keys using a directory path
-    test_path = tmpdir.join("dir_cache")
+    test_path = tmp_path / "dir_cache"
     os.makedirs(f"{test_path}")
     gpg("publish", "--rebuild-index", "-d", str(test_path))
     assert os.path.exists(f"{test_path}/{relative_keys_path}/keys.manifest.json")
 
     # Publish the keys using a mirror url
-    test_path = tmpdir.join("url_cache")
+    test_path = tmp_path / "url_cache"
     os.makedirs(f"{test_path}")
-    test_url = f"file://{test_path}"
+    test_url = test_path.as_uri()
     gpg("publish", "--rebuild-index", "--mirror-url", test_url)
     assert os.path.exists(f"{test_path}/{relative_keys_path}/keys.manifest.json")
 
     # Publish the keys using a mirror name
-    test_path = tmpdir.join("named_cache")
+    test_path = tmp_path / "named_cache"
     os.makedirs(f"{test_path}")
-    mirror_url = f"file://{test_path}"
+    mirror_url = test_path.as_uri()
     mirror("add", "gpg", mirror_url)
     gpg("publish", "--rebuild-index", "-m", "gpg")
     assert os.path.exists(f"{test_path}/{relative_keys_path}/keys.manifest.json")

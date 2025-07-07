@@ -7,6 +7,7 @@ Test that Spack's shebang filtering works correctly.
 """
 import filecmp
 import os
+import pathlib
 import shutil
 import stat
 import sys
@@ -358,8 +359,8 @@ def test_install_user_sbang(install_mockery, configure_user_perms):
     run_test_install_sbang(False)
 
 
-def test_install_sbang_too_long(tmpdir):
-    root = str(tmpdir)
+def test_install_sbang_too_long(tmp_path: pathlib.Path):
+    root = str(tmp_path)
     num_extend = sbang.system_shebang_limit - len(root) - len("/bin/sbang")
     long_path = root
     while num_extend > 1:
@@ -376,24 +377,24 @@ def test_install_sbang_too_long(tmpdir):
     assert "cannot patch" in err
 
 
-def test_sbang_hook_skips_nonexecutable_blobs(tmpdir):
+def test_sbang_hook_skips_nonexecutable_blobs(tmp_path: pathlib.Path):
     # Write a binary blob to non-executable.sh, with a long interpreter "path"
     # consisting of invalid UTF-8. The latter is technically not really necessary for
     # the test, but binary blobs accidentally starting with b'#!' usually do not contain
     # valid UTF-8, so we also ensure that Spack does not attempt to decode as UTF-8.
     contents = b"#!" + b"\x80" * sbang.system_shebang_limit
-    file = str(tmpdir.join("non-executable.sh"))
+    file = str(tmp_path / "non-executable.sh")
     with open(file, "wb") as f:
         f.write(contents)
 
-    sbang.filter_shebangs_in_directory(str(tmpdir))
+    sbang.filter_shebangs_in_directory(str(tmp_path))
 
     # Make sure there is no sbang shebang.
     with open(file, "rb") as f:
         assert b"sbang" not in f.readline()
 
 
-def test_sbang_handles_non_utf8_files(tmpdir):
+def test_sbang_handles_non_utf8_files(tmp_path: pathlib.Path):
     # We have an executable with a copyright sign as filename
     contents = b"#!" + b"\xa9" * sbang.system_shebang_limit + b"\nand another symbol: \xa9"
 
@@ -403,7 +404,7 @@ def test_sbang_handles_non_utf8_files(tmpdir):
         contents.decode("utf-8")
 
     # Put it in an executable file
-    file = str(tmpdir.join("latin1.sh"))
+    file = str(tmp_path / "latin1.sh")
     with open(file, "wb") as f:
         f.write(contents)
 
@@ -426,9 +427,11 @@ def shebang_limits_system_8_spack_16():
     sbang.spack_shebang_limit = spack_limit
 
 
-def test_shebang_exceeds_spack_shebang_limit(shebang_limits_system_8_spack_16, tmpdir):
+def test_shebang_exceeds_spack_shebang_limit(
+    shebang_limits_system_8_spack_16, tmp_path: pathlib.Path
+):
     """Tests whether shebangs longer than Spack's limit are skipped"""
-    file = str(tmpdir.join("longer_than_spack_limit.sh"))
+    file = str(tmp_path / "longer_than_spack_limit.sh")
     with open(file, "wb") as f:
         f.write(b"#!" + b"x" * sbang.spack_shebang_limit)
 
@@ -439,8 +442,8 @@ def test_shebang_exceeds_spack_shebang_limit(shebang_limits_system_8_spack_16, t
         assert b"sbang" not in f.read()
 
 
-def test_sbang_hook_handles_non_writable_files_preserving_permissions(tmpdir):
-    path = str(tmpdir.join("file.sh"))
+def test_sbang_hook_handles_non_writable_files_preserving_permissions(tmp_path: pathlib.Path):
+    path = str(tmp_path / "file.sh")
     with open(path, "w", encoding="utf-8") as f:
         f.write(long_line)
     os.chmod(path, 0o555)

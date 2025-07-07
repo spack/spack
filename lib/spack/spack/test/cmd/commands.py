@@ -4,6 +4,7 @@
 
 import filecmp
 import os
+import pathlib
 import shutil
 import textwrap
 
@@ -99,8 +100,8 @@ def test_rst():
     assert "spack compiler add" in out2
 
 
-def test_rst_with_input_files(tmpdir):
-    filename = tmpdir.join("file.rst")
+def test_rst_with_input_files(tmp_path: pathlib.Path):
+    filename = tmp_path / "file.rst"
     with filename.open("w") as f:
         f.write(
             """
@@ -120,11 +121,11 @@ _cmd-spack-install:
         assert (":ref:`More documentation <cmd-spack-%s>`" % name) not in out
 
 
-def test_rst_with_header(tmpdir):
+def test_rst_with_header(tmp_path: pathlib.Path):
     local_commands = spack.main.SpackCommand("commands")
     fake_header = "this is a header!\n\n"
 
-    filename = tmpdir.join("header.txt")
+    filename = tmp_path / "header.txt"
     with filename.open("w") as f:
         f.write(fake_header)
 
@@ -135,21 +136,21 @@ def test_rst_with_header(tmpdir):
         local_commands("--format=rst", "--header", "asdfjhkf")
 
 
-def test_rst_update(tmpdir):
-    update_file = tmpdir.join("output")
+def test_rst_update(tmp_path: pathlib.Path):
+    update_file = tmp_path / "output"
 
     commands("--update", str(update_file))
     assert update_file.exists()
 
 
-def test_update_with_header(tmpdir):
-    update_file = tmpdir.join("output")
+def test_update_with_header(tmp_path: pathlib.Path):
+    update_file = tmp_path / "output"
 
     commands("--update", str(update_file))
     assert update_file.exists()
     fake_header = "this is a header!\n\n"
 
-    filename = tmpdir.join("header.txt")
+    filename = tmp_path / "header.txt"
     with filename.open("w") as f:
         f.write(fake_header)
 
@@ -217,12 +218,12 @@ def test_fish_completion():
 
 
 @pytest.mark.parametrize("shell", ["bash", "fish"])
-def test_update_completion_arg(shell, tmpdir, monkeypatch):
+def test_update_completion_arg(shell, tmp_path: pathlib.Path, monkeypatch):
     """Test the update completion flag."""
 
-    tmpdir.join(shell).mkdir()
-    mock_infile = tmpdir.join(shell).join(f"spack-completion.{shell}")
-    mock_outfile = tmpdir.join(f"spack-completion.{shell}")
+    (tmp_path / shell).mkdir()
+    mock_infile = tmp_path / shell / f"spack-completion.{shell}"
+    mock_outfile = tmp_path / f"spack-completion.{shell}"
 
     mock_args = {
         shell: {
@@ -249,15 +250,15 @@ def test_update_completion_arg(shell, tmpdir, monkeypatch):
         local_commands("--update-completion", "-a")
 
     # ensure arg is restored
-    assert "update-completion" not in mock_outfile.read()
+    assert "update-completion" not in mock_outfile.read_text()
     local_commands("--update-completion")
-    assert "update-completion" in mock_outfile.read()
+    assert "update-completion" in mock_outfile.read_text()
 
 
 # Note: this test is never expected to be supported on Windows
 @pytest.mark.not_on_windows("Shell completion script generator fails on windows")
 @pytest.mark.parametrize("shell", ["bash", "fish"])
-def test_updated_completion_scripts(shell, tmpdir):
+def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
     """Make sure our shell tab completion scripts remain up-to-date."""
 
     width = 72
@@ -280,7 +281,7 @@ def test_updated_completion_scripts(shell, tmpdir):
     header = os.path.join(spack.paths.share_path, shell, f"spack-completion.{shell}")
     script = f"spack-completion.{shell}"
     old_script = os.path.join(spack.paths.share_path, script)
-    new_script = str(tmpdir.join(script))
+    new_script = str(tmp_path / script)
 
     commands("--aliases", "--format", shell, "--header", header, "--update", new_script)
 

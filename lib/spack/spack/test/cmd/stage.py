@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
+import pathlib
 
 import pytest
 
@@ -38,8 +38,8 @@ def test_stage_spec(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def check_stage_path(monkeypatch, tmpdir):
-    expected_path = os.path.join(str(tmpdir), "x")
+def check_stage_path(monkeypatch, tmp_path: pathlib.Path):
+    expected_path = str(tmp_path / "x")
 
     def fake_stage(pkg, mirror_only=False):
         assert pkg.path == expected_path

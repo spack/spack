@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 
 import pytest
 
@@ -157,7 +158,7 @@ fake::test_skip .. SKIPPED
     assert part["loglines"][0].startswith("SKIPPED:")
 
 
-def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
+def test_reporters_report_for_package_no_stdout(tmp_path: pathlib.Path, monkeypatch, capfd):
     class MockCDash(CDash):
         def upload(*args, **kwargs):
             # Just return (Do NOT try to upload the report to the fake site)
@@ -175,7 +176,7 @@ def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
 
     reporter = MockCDash(configuration=configuration)
     pkg_data = {"name": "fake-package"}
-    reporter.test_report_for_package(tmpdir.strpath, pkg_data, 0)
+    reporter.test_report_for_package(str(tmp_path), pkg_data, 0)
     err = capfd.readouterr()[1]
     assert "Skipping report for" in err
     assert "No generated output" in err

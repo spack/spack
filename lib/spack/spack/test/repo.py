@@ -154,24 +154,26 @@ def test_repo_path_handles_package_removal(mock_packages, repo_builder: RepoBuil
         assert r.namespace == "builtin_mock"
 
 
-def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_debug, capsys):
+def test_repo_dump_virtuals(
+    tmp_path: pathlib.Path, mutable_mock_repo, mock_packages, ensure_debug, capsys
+):
     # Start with a package-less virtual
     vspec = spack.spec.Spec("something")
-    mutable_mock_repo.dump_provenance(vspec, tmpdir)
+    mutable_mock_repo.dump_provenance(vspec, str(tmp_path))
     captured = capsys.readouterr()[1]
     assert "does not have a package" in captured
 
     # Now with a virtual with a package
     vspec = spack.spec.Spec("externalvirtual")
-    mutable_mock_repo.dump_provenance(vspec, tmpdir)
+    mutable_mock_repo.dump_provenance(vspec, str(tmp_path))
     captured = capsys.readouterr()[1]
     assert "Installing" in captured
-    assert "package.py" in os.listdir(tmpdir), "Expected the virtual's package to be copied"
+    assert "package.py" in os.listdir(str(tmp_path)), "Expected the virtual's package to be copied"
 
 
 @pytest.mark.parametrize("repos", [["mock"], ["extra"], ["mock", "extra"], ["extra", "mock"]])
 def test_repository_construction_doesnt_use_globals(
-    nullify_globals, tmp_path, repos, repo_builder: RepoBuilder
+    nullify_globals, tmp_path: pathlib.Path, repos, repo_builder: RepoBuilder
 ):
     def _repo_descriptors(repos):
         descriptors = {}
@@ -252,7 +254,7 @@ class TestRepo:
             ("unknown", None),
         ],
     )
-    def test_real_name(self, module_name, pkg_name, mock_test_cache, tmp_path):
+    def test_real_name(self, module_name, pkg_name, mock_test_cache, tmp_path: pathlib.Path):
         """Test that we can correctly compute the 'real' name of a package, from the one
         used to import the Python module.
         """

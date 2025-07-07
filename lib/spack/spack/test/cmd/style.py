@@ -11,7 +11,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import FileFilter
+from llnl.util.filesystem import FileFilter, working_dir
 
 import spack.cmd.style
 import spack.main
@@ -42,7 +42,7 @@ def has_develop_branch(git):
 
 
 @pytest.fixture(scope="function")
-def flake8_package(tmpdir):
+def flake8_package(tmp_path: pathlib.Path):
     """Style only checks files that have been modified. This fixture makes a small
     change to the ``flake8`` mock package, yields the filename, then undoes the
     change on cleanup.
@@ -50,8 +50,9 @@ def flake8_package(tmpdir):
     repo = spack.repo.from_path(spack.paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
     rel_path = os.path.dirname(os.path.relpath(filename, spack.paths.prefix))
-    tmp = tmpdir / rel_path / "flake8-ci-package.py"
-    tmp.ensure()
+    tmp = tmp_path / rel_path / "flake8-ci-package.py"
+    tmp.parent.mkdir(parents=True, exist_ok=True)
+    tmp.touch()
     tmp = str(tmp)
 
     shutil.copy(filename, tmp)
@@ -80,16 +81,17 @@ def flake8_package_with_errors(scope="function"):
     yield tmp
 
 
-def test_changed_files_from_git_rev_base(git, tmpdir, capfd):
+def test_changed_files_from_git_rev_base(git, tmp_path: pathlib.Path, capfd):
     """Test arbitrary git ref as base."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         git("init")
         git("checkout", "-b", "main")
         git("config", "user.name", "test user")
         git("config", "user.email", "test@user.com")
         git("commit", "--no-gpg-sign", "--allow-empty", "-m", "initial commit")
 
-        tmpdir.ensure("bin/spack")
+        (tmp_path / "bin").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "bin" / "spack").touch()
         assert changed_files(base="HEAD") == ["bin/spack"]
         assert changed_files(base="main") == ["bin/spack"]
 
@@ -99,10 +101,11 @@ def test_changed_files_from_git_rev_base(git, tmpdir, capfd):
         assert changed_files(base="HEAD~") == ["bin/spack"]
 
 
-def test_changed_no_base(git, tmpdir, capfd):
+def test_changed_no_base(git, tmp_path: pathlib.Path, capfd):
     """Ensure that we fail gracefully with no base branch."""
-    tmpdir.join("bin").ensure("spack")
-    with tmpdir.as_cwd():
+    (tmp_path / "bin").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "bin" / "spack").touch()
+    with working_dir(str(tmp_path)):
         git("init")
         git("config", "user.name", "test user")
         git("config", "user.email", "test@user.com")
@@ -148,14 +151,14 @@ def test_changed_files_all_files(mock_packages):
     assert not any(f.startswith(spack.paths.external_path) for f in files)
 
 
-def test_bad_root(tmpdir):
+def test_bad_root(tmp_path: pathlib.Path):
     """Ensure that `spack style` doesn't run on non-spack directories."""
-    output = style("--root", str(tmpdir), fail_on_error=False)
+    output = style("--root", str(tmp_path), fail_on_error=False)
     assert "This does not look like a valid spack root" in output
     assert style.returncode != 0
 
 
-def test_style_is_package(tmpdir):
+def test_style_is_package():
     """Ensure the is_package() function works."""
     assert spack.cmd.style.is_package(
         "var/spack/repos/spack_repo/builtin/packages/hdf5/package.py"
@@ -168,18 +171,21 @@ def test_style_is_package(tmpdir):
 
 
 @pytest.fixture
-def external_style_root(git, flake8_package_with_errors, tmpdir):
+def external_style_root(git, flake8_package_with_errors, tmp_path: pathlib.Path):
     """Create a mock git repository for running spack style."""
     # create a sort-of spack-looking directory
-    script = tmpdir / "bin" / "spack"
-    script.ensure()
-    spack_dir = tmpdir / "lib" / "spack" / "spack"
-    spack_dir.ensure("__init__.py")
-    llnl_dir = tmpdir / "lib" / "spack" / "llnl"
-    llnl_dir.ensure("__init__.py")
+    script = tmp_path / "bin" / "spack"
+    script.parent.mkdir(parents=True, exist_ok=True)
+    script.touch()
+    spack_dir = tmp_path / "lib" / "spack" / "spack"
+    spack_dir.mkdir(parents=True, exist_ok=True)
+    (spack_dir / "__init__.py").touch()
+    llnl_dir = tmp_path / "lib" / "spack" / "llnl"
+    llnl_dir.mkdir(parents=True, exist_ok=True)
+    (llnl_dir / "__init__.py").touch()
 
     # create a base develop branch
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         git("init")
         git("config", "user.name", "test user")
         git("config", "user.email", "test@user.com")
@@ -190,32 +196,32 @@ def external_style_root(git, flake8_package_with_errors, tmpdir):
 
     # copy the buggy package in
     py_file = spack_dir / "dummy.py"
-    py_file.ensure()
+    py_file.touch()
     shutil.copy(flake8_package_with_errors, str(py_file))
 
     # add the buggy file on the feature branch
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         git("add", str(py_file))
         git("commit", "--no-gpg-sign", "-m", "add new file")
 
-    yield tmpdir, py_file
+    yield tmp_path, py_file
 
 
 @pytest.mark.skipif(not ISORT, reason="isort is not installed.")
 @pytest.mark.skipif(not BLACK, reason="black is not installed.")
 def test_fix_style(external_style_root):
     """Make sure spack style --fix works."""
-    tmpdir, py_file = external_style_root
+    tmp_path, py_file = external_style_root
 
     broken_dummy = os.path.join(style_data, "broken.dummy")
-    broken_py = str(tmpdir / "lib" / "spack" / "spack" / "broken.py")
+    broken_py = str(tmp_path / "lib" / "spack" / "spack" / "broken.py")
     fixed_py = os.path.join(style_data, "fixed.py")
 
     shutil.copy(broken_dummy, broken_py)
     assert not filecmp.cmp(broken_py, fixed_py)
 
     # black and isort are the tools that actually fix things
-    style("--root", str(tmpdir), "--tool", "isort,black", "--fix")
+    style("--root", str(tmp_path), "--tool", "isort,black", "--fix")
 
     assert filecmp.cmp(broken_py, fixed_py)
 
@@ -226,11 +232,11 @@ def test_fix_style(external_style_root):
 @pytest.mark.skipif(not BLACK, reason="black is not installed.")
 def test_external_root(external_style_root, capfd):
     """Ensure we can run in a separate root directory w/o configuration files."""
-    tmpdir, py_file = external_style_root
+    tmp_path, py_file = external_style_root
 
     # make sure tools are finding issues with external root,
     # not the real one.
-    output = style("--root-relative", "--root", str(tmpdir), fail_on_error=False)
+    output = style("--root-relative", "--root", str(tmp_path), fail_on_error=False)
 
     # make sure it failed
     assert style.returncode != 0
@@ -250,12 +256,12 @@ def test_external_root(external_style_root, capfd):
 
 
 @pytest.mark.skipif(not FLAKE8, reason="flake8 is not installed.")
-def test_style(flake8_package, tmpdir):
+def test_style(flake8_package, tmp_path: pathlib.Path):
     root_relative = os.path.relpath(flake8_package, spack.paths.prefix)
 
     # use a working directory to test cwd-relative paths, as tests run in
     # the spack prefix by default
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         relative = os.path.relpath(flake8_package)
 
         # one specific arg
@@ -412,7 +418,7 @@ def test_pkg_imports():
     assert spack.cmd.style._module_part(spack.paths.prefix, "spack.pkg") is None
 
 
-def test_spec_strings(tmp_path):
+def test_spec_strings(tmp_path: pathlib.Path):
     (tmp_path / "example.py").write_text(
         """\
 def func(x):

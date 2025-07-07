@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import _vendoring.archspec.cpu
 import pytest
@@ -45,7 +46,7 @@ def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo):
 
 
 @pytest.mark.regression("41972")
-def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_path):
+def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_path: pathlib.Path):
     """Tests that external nodes don't have runtime dependencies."""
 
     packages_yaml = {"pkg-b": {"externals": [{"spec": "pkg-b@1.0", "prefix": f"{str(tmp_path)}"}]}}
@@ -131,7 +132,7 @@ def test_reusing_specs_with_gcc_runtime(root_str, reused_str, expected, nruntime
     ],
 )
 def test_views_can_handle_duplicate_runtime_nodes(
-    root_str, reused_str, expected, not_expected, runtime_repo, tmp_path, monkeypatch
+    root_str, reused_str, expected, not_expected, runtime_repo, tmp_path: pathlib.Path, monkeypatch
 ):
     """Tests that an environment is able to select the latest version of a runtime node to be
     linked in a view, in case more than one compatible version is in the DAG.

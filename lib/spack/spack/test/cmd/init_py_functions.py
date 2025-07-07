@@ -1,6 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pathlib
+
 import pytest
 
 import spack.config
@@ -55,7 +57,7 @@ def test_require_cmd_name():
     ],
 )
 def test_special_cases_concretization_parse_specs(
-    unify, spec_strs, error, monkeypatch, mutable_config, mutable_database, tmpdir
+    unify, spec_strs, error, monkeypatch, mutable_config, mutable_database, tmp_path: pathlib.Path
 ):
     """Test that special cases in parse_specs(concretize=True) bypass solver"""
 
@@ -70,7 +72,7 @@ def test_special_cases_concretization_parse_specs(
     args = [f"/{spack.store.STORE.db.query(s)[0].dag_hash()}" for s in spec_strs]
     if len(args) > 1:
         # We convert the last one to a specfile input
-        filename = tmpdir.join("spec.json")
+        filename = tmp_path / "spec.json"
         spec = parse_specs(args[-1], concretize=True)[0]
         with open(filename, "w", encoding="utf-8") as f:
             spec.to_json(f)
@@ -103,7 +105,7 @@ def test_special_cases_concretization_matching_specs_from_env(
     monkeypatch,
     mutable_config,
     mutable_database,
-    tmpdir,
+    tmp_path: pathlib.Path,
     mutable_mock_env_path,
 ):
     """Test that special cases in parse_specs(concretize=True) bypass solver"""
@@ -122,7 +124,7 @@ def test_special_cases_concretization_matching_specs_from_env(
     args = [f"/{spack.store.STORE.db.query(s)[0].dag_hash()}" for s in spec_strs]
     if len(args) > 1:
         # We convert the last one to a specfile input
-        filename = tmpdir.join("spec.json")
+        filename = tmp_path / "spec.json"
         spec = parse_specs(args[-1], concretize=True)[0]
         with open(filename, "w", encoding="utf-8") as f:
             spec.to_json(f)

@@ -96,7 +96,7 @@ def setup_combined_multiple_env():
 
 
 @pytest.fixture()
-def environment_from_manifest(tmp_path):
+def environment_from_manifest(tmp_path: pathlib.Path):
     """Returns a new environment named 'test' from the content of a manifest file."""
 
     def _create(content):
@@ -107,17 +107,17 @@ def environment_from_manifest(tmp_path):
     return _create
 
 
-def check_mpileaks_and_deps_in_view(viewdir):
+def check_mpileaks_and_deps_in_view(viewdir: pathlib.Path):
     """Check that the expected install directories exist."""
-    assert os.path.exists(str(viewdir.join(".spack", "mpileaks")))
-    assert os.path.exists(str(viewdir.join(".spack", "libdwarf")))
+    assert (viewdir / ".spack" / "mpileaks").exists()
+    assert (viewdir / ".spack" / "libdwarf").exists()
 
 
-def check_viewdir_removal(viewdir):
+def check_viewdir_removal(viewdir: pathlib.Path):
     """Check that the uninstall/removal worked."""
-    assert not os.path.exists(str(viewdir.join(".spack"))) or os.listdir(
-        str(viewdir.join(".spack"))
-    ) == ["projections.yaml"]
+    assert not (viewdir / ".spack").exists() or list((viewdir / ".spack").iterdir()) == [
+        viewdir / "projections.yaml"
+    ]
 
 
 def test_env_track_nonexistant_path_fails(capfd):
@@ -138,7 +138,7 @@ def test_env_track_existing_env_fails(capfd):
     assert "environment named track_test already exists" in out
 
 
-def test_env_track_valid(tmp_path):
+def test_env_track_valid(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
         # create an independent environment
         env("create", "-d", ".")
@@ -152,7 +152,7 @@ def test_env_track_valid(tmp_path):
         assert os.path.isfile("spack.yaml")
 
 
-def test_env_untrack_valid(tmp_path):
+def test_env_untrack_valid(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
         # create an independent environment
         env("create", "-d", ".")
@@ -175,7 +175,7 @@ def test_env_untrack_invalid_name():
     assert f"Environment '{env_name}' does not exist" in out
 
 
-def test_env_untrack_when_active(tmp_path, capfd):
+def test_env_untrack_when_active(tmp_path: pathlib.Path, capfd):
     env_name = "test_untrack_active"
 
     with fs.working_dir(str(tmp_path)):
@@ -199,7 +199,7 @@ def test_env_untrack_when_active(tmp_path, capfd):
         assert env_name not in out
 
 
-def test_env_untrack_managed(tmp_path, capfd):
+def test_env_untrack_managed(capfd):
     env_name = "test_untrack_managed"
 
     # create an managed environment
@@ -214,7 +214,9 @@ def test_env_untrack_managed(tmp_path, capfd):
 
 
 @pytest.fixture()
-def installed_environment(tmp_path, mock_fetch, mock_packages, mock_archive, install_mockery):
+def installed_environment(
+    tmp_path: pathlib.Path, mock_fetch, mock_packages, mock_archive, install_mockery
+):
     spack_yaml = tmp_path / "spack.yaml"
 
     @contextlib.contextmanager
@@ -232,7 +234,7 @@ def installed_environment(tmp_path, mock_fetch, mock_packages, mock_archive, ins
 
 
 @pytest.fixture()
-def template_combinatorial_env(tmp_path):
+def template_combinatorial_env(tmp_path: pathlib.Path):
     """Returns a template base environment for tests. Since the environment configuration is
     extended using str.format, we need double '{' escaping for the projections.
     """
@@ -420,7 +422,7 @@ def test_env_rename_managed(capfd):
     assert "baz" in out
 
 
-def test_env_rename_independent(capfd, tmpdir):
+def test_env_rename_independent(capfd, tmp_path: pathlib.Path):
     # Need real environment
     with pytest.raises(spack.main.SpackCommandError):
         env("rename", "-d", "./non-existing", "./also-non-existing")
@@ -429,17 +431,17 @@ def test_env_rename_independent(capfd, tmpdir):
         in capfd.readouterr()[0]
     )
 
-    anon_foo = str(tmpdir / "foo")
+    anon_foo = str(tmp_path / "foo")
     env("create", "-d", anon_foo)
 
-    anon_bar = str(tmpdir / "bar")
+    anon_bar = str(tmp_path / "bar")
     out = env("rename", "-d", anon_foo, anon_bar)
     assert f"Successfully renamed environment {anon_foo} to {anon_bar}" in out
     assert not ev.is_env_dir(anon_foo)
     assert ev.is_env_dir(anon_bar)
 
     # Cannot rename active environment
-    anon_baz = str(tmpdir / "baz")
+    anon_baz = str(tmp_path / "baz")
     env("activate", "--sh", "-d", anon_bar)
     with pytest.raises(spack.main.SpackCommandError):
         env("rename", "-d", anon_bar, anon_baz)
@@ -466,7 +468,7 @@ def test_env_rename_independent(capfd, tmpdir):
     assert ev.is_env_dir(anon_baz)
 
     # Cannot rename to existing (non-environment) path without --force
-    qux = tmpdir / "qux"
+    qux = tmp_path / "qux"
     qux.mkdir()
     anon_qux = str(qux)
     assert not ev.is_env_dir(anon_qux)
@@ -630,9 +632,9 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
     assert env_variables["DEPENDENCY_ENV_VAR"] == "1"
 
 
-def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
-    filepath = str(tmpdir.join("spack.yaml"))
-    filepath_mid = str(tmpdir.join("spack_mid.yaml"))
+def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.Path):
+    filepath = str(tmp_path / "spack.yaml")
+    filepath_mid = str(tmp_path / "spack_mid.yaml")
 
     env("create", "test")
     e = ev.read("test")
@@ -649,14 +651,16 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
     assert os.path.islink(filepath_mid)
 
 
-def test_env_install_two_specs_same_dep(install_mockery, mock_fetch, tmpdir, capsys):
+def test_env_install_two_specs_same_dep(
+    install_mockery, mock_fetch, tmp_path: pathlib.Path, capsys, monkeypatch
+):
     """Test installation of two packages that share a dependency with no
     connection and the second specifying the dependency as a 'build'
     dependency.
     """
-    path = tmpdir.join("spack.yaml")
+    path = tmp_path / "spack.yaml"
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -832,8 +836,8 @@ def test_force_remove_included_env():
     assert "test" not in list_output
 
 
-def test_environment_status(capsys, tmpdir):
-    with tmpdir.as_cwd():
+def test_environment_status(capsys, tmp_path: pathlib.Path, monkeypatch):
+    with fs.working_dir(str(tmp_path)):
         with capsys.disabled():
             assert "No active environment" in env("status")
 
@@ -847,7 +851,7 @@ def test_environment_status(capsys, tmpdir):
 
             e = ev.create_in_dir("myproject")
             e.write()
-            with tmpdir.join("myproject").as_cwd():
+            with fs.working_dir(str(tmp_path / "myproject")):
                 with e:
                     with capsys.disabled():
                         assert "in current directory" in env("status")
@@ -859,7 +863,7 @@ def test_env_status_broken_view(
     mock_fetch,
     mock_custom_repository,
     install_mockery,
-    tmp_path,
+    tmp_path: pathlib.Path,
 ):
     with ev.create_in_dir(tmp_path):
         install("--add", "trivial-install-test-package")
@@ -1040,7 +1044,7 @@ spack:
     assert not e2.specs_by_hash
 
 
-def test_init_from_yaml_relative_includes(tmp_path):
+def test_init_from_yaml_relative_includes(tmp_path: pathlib.Path):
     files = [
         "relative_copied/packages.yaml",
         "./relative_copied/compilers.yaml",
@@ -1056,14 +1060,15 @@ spack:
 
     e1_path = tmp_path / "e1"
     e1_manifest = e1_path / "spack.yaml"
-    fs.mkdirp(e1_path)
+    e1_path.mkdir(parents=True, exist_ok=True)
     with open(e1_manifest, "w", encoding="utf-8") as f:
         f.write(manifest)
 
     for f in files:
-        fs.touchp(e1_path / f)
+        (e1_path / f).parent.mkdir(parents=True, exist_ok=True)
+        (e1_path / f).touch()
 
-    e2 = _env_create("test2", init_file=e1_manifest)
+    e2 = _env_create("test2", init_file=str(e1_manifest))
 
     for f in files:
         assert os.path.exists(os.path.join(e2.path, f))
@@ -1071,7 +1076,7 @@ spack:
 
 # TODO: Should we be supporting relative path rewrites when creating new env from existing?
 # TODO: If so, then this should confirm that the absolute include paths in the new env exist.
-def test_init_from_yaml_relative_includes_outside_env(tmp_path):
+def test_init_from_yaml_relative_includes_outside_env(tmp_path: pathlib.Path):
     """Ensure relative includes to files outside the environment fail."""
     files = ["../outside_env/repos.yaml"]
 
@@ -1085,18 +1090,20 @@ spack:
     # subdir to ensure parent of environment dir is not shared
     e1_path = tmp_path / "e1_subdir" / "e1"
     e1_manifest = e1_path / "spack.yaml"
-    fs.mkdirp(e1_path)
+    e1_path.mkdir(parents=True, exist_ok=True)
     with open(e1_manifest, "w", encoding="utf-8") as f:
         f.write(manifest)
 
     for f in files:
-        fs.touchp(e1_path / f)
+        file_path = e1_path / f
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.touch()
 
     with pytest.raises(ValueError, match="does not exist"):
-        _ = _env_create("test2", init_file=e1_manifest)
+        _ = _env_create("test2", init_file=str(e1_manifest))
 
 
-def test_env_view_external_prefix(tmp_path, mutable_database, mock_packages):
+def test_env_view_external_prefix(tmp_path: pathlib.Path, mutable_database, mock_packages):
     fake_prefix = tmp_path / "a-prefix"
     fake_bin = fake_prefix / "bin"
     fake_bin.mkdir(parents=True, exist_ok=False)
@@ -1141,16 +1148,16 @@ packages:
 
         env_mod = spack.util.environment.EnvironmentModifications()
         e.add_view_to_env(env_mod, "default")
-        env_variables = {}
+        env_variables: Dict[str, str] = {}
         env_mod.apply_modifications(env_variables)
         assert str(fake_bin) in env_variables["PATH"]
 
 
-def test_init_with_file_and_remove(tmpdir):
+def test_init_with_file_and_remove(tmp_path: pathlib.Path, monkeypatch):
     """Ensure a user can remove from any position in the spack.yaml file."""
-    path = tmpdir.join("spack.yaml")
+    path = tmp_path / "spack.yaml"
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -1204,8 +1211,9 @@ spack:
         )
 
 
-def test_with_config_bad_include_activate(environment_from_manifest, tmpdir):
-    env_root = pathlib.Path(tmpdir.ensure("env-root", dir=True))
+def test_with_config_bad_include_activate(environment_from_manifest, tmp_path: pathlib.Path):
+    env_root = tmp_path / "env-root"
+    env_root.mkdir()
     include1 = env_root / "include1.yaml"
     include1.touch()
 
@@ -1231,9 +1239,11 @@ spack:
     assert ev.active_environment() is None
 
 
-def test_env_with_include_config_files_same_basename(tmp_path, environment_from_manifest):
-    file1 = fs.join_path(tmp_path, "path", "to", "included-config.yaml")
-    fs.mkdirp(os.path.dirname(file1))
+def test_env_with_include_config_files_same_basename(
+    tmp_path: pathlib.Path, environment_from_manifest
+):
+    file1 = tmp_path / "path" / "to" / "included-config.yaml"
+    file1.parent.mkdir(parents=True, exist_ok=True)
     with open(file1, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -1243,8 +1253,8 @@ def test_env_with_include_config_files_same_basename(tmp_path, environment_from_
         """
         )
 
-    file2 = fs.join_path(tmp_path, "second", "path", "included-config.yaml")
-    fs.mkdirp(os.path.dirname(file2))
+    file2 = tmp_path / "second" / "path" / "included-config.yaml"
+    file2.parent.mkdir(parents=True, exist_ok=True)
     with open(file2, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -1276,15 +1286,17 @@ spack:
 
 
 @pytest.fixture(scope="function")
-def packages_file(tmpdir):
+def packages_file(tmp_path: pathlib.Path):
     """Return the path to the packages configuration file."""
     raw_yaml = """
 packages:
   mpileaks:
     version: ["2.2"]
 """
-    filename = tmpdir.ensure("testconfig", "packages.yaml")
-    filename.write(raw_yaml)
+    config_dir = tmp_path / "testconfig"
+    config_dir.mkdir()
+    filename = config_dir / "packages.yaml"
+    filename.write_text(raw_yaml)
     yield filename
 
 
@@ -1307,10 +1319,10 @@ def test_env_with_included_config_file(mutable_mock_env_path, packages_file):
     existing environment.
     """
     env_root = mutable_mock_env_path
-    fs.mkdirp(env_root)
+    env_root.mkdir(parents=True, exist_ok=True)
     include_filename = "included-config.yaml"
     included_path = env_root / include_filename
-    shutil.move(packages_file.strpath, included_path)
+    shutil.move(str(packages_file), included_path)
 
     spack_yaml = env_root / ev.manifest_name
     spack_yaml.write_text(
@@ -1330,13 +1342,15 @@ spack:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_config_change_existing(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+def test_config_change_existing(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+):
     """Test ``config change`` with config in the ``spack.yaml`` as well as an
     included file scope.
     """
 
     env_path = tmp_path / "test_config"
-    fs.mkdirp(env_path)
+    env_path.mkdir(parents=True, exist_ok=True)
     included_file = "included-packages.yaml"
     included_path = env_path / included_file
     with open(included_path, "w", encoding="utf-8") as f:
@@ -1412,7 +1426,9 @@ spack:
             spack.concretize.concretize_one("bowtie@1.2.0")
 
 
-def test_config_change_new(mutable_mock_env_path, tmp_path, mock_packages, mutable_config):
+def test_config_change_new(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+):
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(
         """\
@@ -1444,15 +1460,17 @@ spack:
             config("change", "packages:mpich:require:~debug")
 
 
-def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
+def test_env_with_included_config_file_url(
+    tmp_path: pathlib.Path, mutable_empty_config, packages_file
+):
     """Test configuration inclusion of a file whose path is a URL before
     the environment is concretized."""
 
-    spack_yaml = tmpdir.join("spack.yaml")
+    spack_yaml = tmp_path / "spack.yaml"
     with spack_yaml.open("w") as f:
-        f.write("spack:\n  include:\n    - file://{0}\n".format(packages_file))
+        f.write("spack:\n  include:\n    - {0}\n".format(packages_file.as_uri()))
 
-    env = ev.Environment(tmpdir.strpath)
+    env = ev.Environment(str(tmp_path))
     ev.activate(env)
 
     cfg = spack.config.get("packages")
@@ -1469,10 +1487,10 @@ def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
     # Copy the packages.yaml file to the environment configuration
     # directory, so it is picked up during concretization. (Using
     # copy instead of rename in case the fixture scope changes.)
-    fs.mkdirp(config_scope_path)
-    include_filename = os.path.basename(packages_file.strpath)
+    config_scope_path.mkdir(parents=True, exist_ok=True)
+    include_filename = packages_file.name
     included_path = config_scope_path / include_filename
-    fs.copy(packages_file.strpath, included_path)
+    fs.copy(str(packages_file), included_path)
 
     # Configure the environment to include file(s) from the environment's
     # remote configuration stage directory.
@@ -1488,11 +1506,11 @@ def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_var_path(tmpdir, packages_file):
+def test_env_with_included_config_var_path(tmp_path: pathlib.Path, packages_file):
     """Test inclusion of a package configuration file with path variables
     "staged" in the environment's configuration stage directory."""
-    included_file = packages_file.strpath
-    env_path = pathlib.PosixPath(tmpdir)
+    included_file = str(packages_file)
+    env_path = tmp_path
     config_var_path = os.path.join("$tempdir", "included-packages.yaml")
 
     spack_yaml = env_path / ev.manifest_name
@@ -1509,7 +1527,7 @@ def test_env_with_included_config_var_path(tmpdir, packages_file):
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_precedence(tmp_path):
+def test_env_with_included_config_precedence(tmp_path: pathlib.Path):
     """Test included scope and manifest precedence when including a package
     configuration file."""
 
@@ -1552,7 +1570,7 @@ spack:
     assert any(x.satisfies("libelf@0.8.12") for x in specs)
 
 
-def test_env_with_included_configs_precedence(tmp_path):
+def test_env_with_included_configs_precedence(tmp_path: pathlib.Path):
     """Test precedence of multiple included configuration files."""
     file1 = "high-config.yaml"
     file2 = "low-config.yaml"
@@ -1653,7 +1671,9 @@ spack:
         ),
     ],
 )
-def test_bad_env_yaml_create_fails(tmp_path, mutable_mock_env_path, error, message, contents):
+def test_bad_env_yaml_create_fails(
+    tmp_path: pathlib.Path, mutable_mock_env_path, error, message, contents
+):
     """Ensure creation with invalid yaml does NOT create or leave the environment."""
     filename = tmp_path / ev.manifest_name
     filename.write_text(contents)
@@ -1902,8 +1922,8 @@ def test_store_different_build_deps(repo_builder: RepoBuilder):
         assert x_read["y"].dag_hash() != y_read.dag_hash()
 
 
-def test_env_updates_view_install(tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.join("view")
+def test_env_updates_view_install(tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
         add("mpileaks")
@@ -1912,13 +1932,15 @@ def test_env_updates_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-def test_env_view_fails(tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+def test_env_view_fails(
+    tmp_path: pathlib.Path, mock_packages, mock_stage, mock_fetch, install_mockery
+):
     # We currently ignore file-file conflicts for the prefix merge,
     # so in principle there will be no errors in this test. But
     # the .spack metadata dir is handled separately and is more strict.
     # It also throws on file-file conflicts. That's what we're checking here
     # by adding the same package twice to a view.
-    view_dir = tmpdir.join("view")
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
         add("libelf")
@@ -1929,10 +1951,12 @@ def test_env_view_fails(tmpdir, mock_packages, mock_stage, mock_fetch, install_m
             install("--fake")
 
 
-def test_env_view_fails_dir_file(tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+def test_env_view_fails_dir_file(
+    tmp_path: pathlib.Path, mock_packages, mock_stage, mock_fetch, install_mockery
+):
     # This environment view fails to be created because a file
     # and a dir are in the same path. Test that it mentions the problematic path.
-    view_dir = tmpdir.join("view")
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
         add("view-file")
@@ -1944,10 +1968,10 @@ def test_env_view_fails_dir_file(tmpdir, mock_packages, mock_stage, mock_fetch, 
 
 
 def test_env_view_succeeds_symlinked_dir_file(
-    tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery
+    tmp_path: pathlib.Path, mock_packages, mock_stage, mock_fetch, install_mockery
 ):
     # A symlinked dir and an ordinary dir merge happily
-    view_dir = tmpdir.join("view")
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
         add("view-symlinked-dir")
@@ -1958,7 +1982,7 @@ def test_env_view_succeeds_symlinked_dir_file(
         assert os.path.exists(os.path.join(x_dir, "file_in_symlinked_dir"))
 
 
-def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_without_view_install(tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery):
     # Test enabling a view after installing specs
     env("create", "--without-view", "test")
 
@@ -1966,7 +1990,7 @@ def test_env_without_view_install(tmpdir, mock_stage, mock_fetch, install_mocker
     with pytest.raises(ev.SpackEnvironmentError):
         test_env.default_view
 
-    view_dir = tmpdir.join("view")
+    view_dir = tmp_path / "view"
 
     with ev.read("test"):
         add("mpileaks")
@@ -2002,7 +2026,7 @@ def test_env_include_concrete_env_yaml(env_name):
 
 @pytest.mark.regression("45766")
 @pytest.mark.parametrize("format", ["v1", "v2", "v3"])
-def test_env_include_concrete_old_env(format, tmpdir):
+def test_env_include_concrete_old_env(format):
     lockfile = os.path.join(spack.paths.test_path, "data", "legacy_env", f"{format}.lock")
     # create an env from old .lock file -- this does not update the format
     env("create", "old-env", lockfile)
@@ -2382,17 +2406,21 @@ spack:
     assert os.path.isdir(os.path.join(e.default_view.view()._root, ".spack", "mpileaks"))
 
 
-def test_env_updates_view_install_package(tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.join("view")
+def test_env_updates_view_install_package(
+    tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
         install("--fake", "--add", "mpileaks")
 
-    assert os.path.exists(str(view_dir.join(".spack/mpileaks")))
+    assert os.path.exists(str(view_dir / ".spack/mpileaks"))
 
 
-def test_env_updates_view_add_concretize(tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.join("view")
+def test_env_updates_view_add_concretize(
+    tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     install("--fake", "mpileaks")
     with ev.read("test"):
@@ -2402,8 +2430,10 @@ def test_env_updates_view_add_concretize(tmpdir, mock_stage, mock_fetch, install
     check_mpileaks_and_deps_in_view(view_dir)
 
 
-def test_env_updates_view_uninstall(tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.join("view")
+def test_env_updates_view_uninstall(
+    tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
         install("--fake", "--add", "mpileaks")
@@ -2417,9 +2447,9 @@ def test_env_updates_view_uninstall(tmpdir, mock_stage, mock_fetch, install_mock
 
 
 def test_env_updates_view_uninstall_referenced_elsewhere(
-    tmpdir, mock_stage, mock_fetch, install_mockery
+    tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
-    view_dir = tmpdir.join("view")
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     install("--fake", "mpileaks")
     with ev.read("test"):
@@ -2434,8 +2464,10 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
     check_viewdir_removal(view_dir)
 
 
-def test_env_updates_view_remove_concretize(tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.join("view")
+def test_env_updates_view_remove_concretize(
+    tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     install("--fake", "mpileaks")
     with ev.read("test"):
@@ -2451,8 +2483,10 @@ def test_env_updates_view_remove_concretize(tmpdir, mock_stage, mock_fetch, inst
     check_viewdir_removal(view_dir)
 
 
-def test_env_updates_view_force_remove(tmpdir, mock_stage, mock_fetch, install_mockery):
-    view_dir = tmpdir.join("view")
+def test_env_updates_view_force_remove(
+    tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    view_dir = tmp_path / "view"
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
         install("--add", "--fake", "mpileaks")
@@ -2465,14 +2499,14 @@ def test_env_updates_view_force_remove(tmpdir, mock_stage, mock_fetch, install_m
     check_viewdir_removal(view_dir)
 
 
-def test_env_activate_view_fails(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_activate_view_fails(mock_stage, mock_fetch, install_mockery):
     """Sanity check on env activate to make sure it requires shell support"""
     out = env("activate", "test")
     assert "To set up shell support" in out
 
 
-def test_stack_yaml_definitions(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_yaml_definitions(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2483,7 +2517,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
         test = ev.read("test")
 
@@ -2491,8 +2525,8 @@ spack:
         assert Spec("callpath") in test.user_specs
 
 
-def test_stack_yaml_definitions_as_constraints(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_yaml_definitions_as_constraints(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2506,7 +2540,7 @@ spack:
       - [$^mpis]
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
         test = ev.read("test")
 
@@ -2516,8 +2550,8 @@ spack:
         assert Spec("callpath^openmpi") in test.user_specs
 
 
-def test_stack_yaml_definitions_as_constraints_on_matrix(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_yaml_definitions_as_constraints_on_matrix(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2534,7 +2568,7 @@ spack:
       - [$^mpis]
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
         test = ev.read("test")
 
@@ -2545,8 +2579,8 @@ spack:
 
 
 @pytest.mark.regression("12095")
-def test_stack_yaml_definitions_write_reference(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_yaml_definitions_write_reference(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2558,7 +2592,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
 
         with ev.read("test"):
@@ -2569,8 +2603,8 @@ spack:
         assert Spec("callpath") in test.user_specs
 
 
-def test_stack_yaml_add_to_list(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_yaml_add_to_list(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2581,7 +2615,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
             add("-l", "packages", "libelf")
@@ -2593,8 +2627,8 @@ spack:
         assert Spec("callpath") in test.user_specs
 
 
-def test_stack_yaml_remove_from_list(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_yaml_remove_from_list(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2605,7 +2639,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
             remove("-l", "packages", "mpileaks")
@@ -2616,7 +2650,7 @@ spack:
         assert Spec("callpath") in test.user_specs
 
 
-def test_stack_yaml_remove_from_list_force(tmp_path):
+def test_stack_yaml_remove_from_list_force(tmp_path: pathlib.Path):
     spack_yaml = tmp_path / ev.manifest_name
     spack_yaml.write_text(
         """\
@@ -2644,8 +2678,8 @@ spack:
     assert Spec("callpath ^mpich") in test.user_specs
 
 
-def test_stack_yaml_remove_from_matrix_no_effect(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_yaml_remove_from_matrix_no_effect(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2659,7 +2693,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
         with ev.read("test") as e:
             before = e.user_specs.specs
@@ -2669,8 +2703,8 @@ spack:
             assert before == after
 
 
-def test_stack_yaml_force_remove_from_matrix(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_yaml_force_remove_from_matrix(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2684,7 +2718,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
         with ev.read("test") as e:
             e.concretize()
@@ -2704,8 +2738,8 @@ spack:
             assert mpileaks_spec not in after_conc
 
 
-def test_stack_definition_extension(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_definition_extension(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2717,7 +2751,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
 
         test = ev.read("test")
@@ -2727,8 +2761,8 @@ spack:
         assert Spec("callpath") in test.user_specs
 
 
-def test_stack_definition_conditional_false(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_definition_conditional_false(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2741,7 +2775,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
 
         test = ev.read("test")
@@ -2751,8 +2785,8 @@ spack:
         assert Spec("callpath") not in test.user_specs
 
 
-def test_stack_definition_conditional_true(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_definition_conditional_true(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2765,7 +2799,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
 
         test = ev.read("test")
@@ -2775,8 +2809,8 @@ spack:
         assert Spec("callpath") in test.user_specs
 
 
-def test_stack_definition_conditional_with_variable(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_definition_conditional_with_variable(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2789,7 +2823,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
 
         test = ev.read("test")
@@ -2799,8 +2833,8 @@ spack:
         assert Spec("callpath") in test.user_specs
 
 
-def test_stack_definition_conditional_with_satisfaction(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_definition_conditional_with_satisfaction(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2814,7 +2848,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
 
         test = ev.read("test")
@@ -2824,8 +2858,8 @@ spack:
         assert Spec("callpath") in test.user_specs
 
 
-def test_stack_definition_complex_conditional(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_definition_complex_conditional(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2838,7 +2872,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
 
         test = ev.read("test")
@@ -2848,8 +2882,8 @@ spack:
         assert Spec("callpath") not in test.user_specs
 
 
-def test_stack_definition_conditional_invalid_variable(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_definition_conditional_invalid_variable(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2862,13 +2896,13 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         with pytest.raises(NameError):
             env("create", "test", "./spack.yaml")
 
 
-def test_stack_definition_conditional_add_write(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_stack_definition_conditional_add_write(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -2881,7 +2915,7 @@ spack:
     - $packages
 """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
             add("-l", "packages", "zmpi")
@@ -2899,7 +2933,9 @@ spack:
         assert "zmpi" not in packages_lists[1]["packages"]
 
 
-def test_stack_combinatorial_view(installed_environment, template_combinatorial_env, tmp_path):
+def test_stack_combinatorial_view(
+    installed_environment, template_combinatorial_env, tmp_path: pathlib.Path
+):
     """Tests creating a default view for a combinatorial stack."""
     view_dir = tmp_path / "view"
     with installed_environment(template_combinatorial_env.format(view_config="")) as test:
@@ -2910,7 +2946,9 @@ def test_stack_combinatorial_view(installed_environment, template_combinatorial_
             assert current_dir.exists() and current_dir.is_dir()
 
 
-def test_stack_view_select(installed_environment, template_combinatorial_env, tmp_path):
+def test_stack_view_select(
+    installed_environment, template_combinatorial_env, tmp_path: pathlib.Path
+):
     view_dir = tmp_path / "view"
     content = template_combinatorial_env.format(view_config="select: ['target=x86_64']\n")
     with installed_environment(content) as test:
@@ -2921,7 +2959,9 @@ def test_stack_view_select(installed_environment, template_combinatorial_env, tm
             assert current_dir.exists() is spec.satisfies("target=x86_64")
 
 
-def test_stack_view_exclude(installed_environment, template_combinatorial_env, tmp_path):
+def test_stack_view_exclude(
+    installed_environment, template_combinatorial_env, tmp_path: pathlib.Path
+):
     view_dir = tmp_path / "view"
     content = template_combinatorial_env.format(view_config="exclude: [callpath]\n")
     with installed_environment(content) as test:
@@ -2933,7 +2973,7 @@ def test_stack_view_exclude(installed_environment, template_combinatorial_env, t
 
 
 def test_stack_view_select_and_exclude(
-    installed_environment, template_combinatorial_env, tmp_path
+    installed_environment, template_combinatorial_env, tmp_path: pathlib.Path
 ):
     view_dir = tmp_path / "view"
     content = template_combinatorial_env.format(
@@ -2951,7 +2991,9 @@ def test_stack_view_select_and_exclude(
             )
 
 
-def test_view_link_roots(installed_environment, template_combinatorial_env, tmp_path):
+def test_view_link_roots(
+    installed_environment, template_combinatorial_env, tmp_path: pathlib.Path
+):
     view_dir = tmp_path / "view"
     content = template_combinatorial_env.format(
         view_config="""select: ['target=x86_64']
@@ -2970,10 +3012,12 @@ def test_view_link_roots(installed_environment, template_combinatorial_env, tmp_
             assert current_dir.exists() == expected_exists
 
 
-def test_view_link_run(tmpdir, mock_fetch, mock_packages, mock_archive, install_mockery):
-    yaml = str(tmpdir.join("spack.yaml"))
-    viewdir = str(tmpdir.join("view"))
-    envdir = str(tmpdir)
+def test_view_link_run(
+    tmp_path: pathlib.Path, mock_fetch, mock_packages, mock_archive, install_mockery
+):
+    yaml = str(tmp_path / "spack.yaml")
+    viewdir = str(tmp_path / "view")
+    envdir = str(tmp_path)
     with open(yaml, "w", encoding="utf-8") as f:
         f.write(
             """
@@ -3011,7 +3055,7 @@ spack:
 
 
 @pytest.mark.parametrize("link_type", ["hardlink", "copy", "symlink"])
-def test_view_link_type(link_type, installed_environment, tmp_path):
+def test_view_link_type(link_type, installed_environment, tmp_path: pathlib.Path):
     view_dir = tmp_path / "view"
     with installed_environment(
         f"""\
@@ -3030,7 +3074,7 @@ spack:
             assert bin_file.is_symlink() == (link_type == "symlink")
 
 
-def test_view_link_all(installed_environment, template_combinatorial_env, tmp_path):
+def test_view_link_all(installed_environment, template_combinatorial_env, tmp_path: pathlib.Path):
     view_dir = tmp_path / "view"
     content = template_combinatorial_env.format(
         view_config="""select: ['target=x86_64']
@@ -3050,7 +3094,7 @@ def test_view_link_all(installed_environment, template_combinatorial_env, tmp_pa
 
 
 def test_stack_view_activate_from_default(
-    installed_environment, template_combinatorial_env, tmp_path
+    installed_environment, template_combinatorial_env, tmp_path: pathlib.Path
 ):
     view_dir = tmp_path / "view"
     content = template_combinatorial_env.format(view_config="select: ['target=x86_64']")
@@ -3063,7 +3107,7 @@ def test_stack_view_activate_from_default(
         assert "FOOBAR=mpileaks" in shell
 
 
-def test_envvar_set_in_activate(tmp_path, mock_packages, install_mockery):
+def test_envvar_set_in_activate(tmp_path: pathlib.Path, mock_packages, install_mockery):
     spack_yaml = tmp_path / "spack.yaml"
     env_vars_yaml = tmp_path / "env_vars.yaml"
 
@@ -3108,7 +3152,7 @@ spack:
 
 
 def test_stack_view_no_activate_without_default(
-    installed_environment, template_combinatorial_env, tmp_path
+    installed_environment, template_combinatorial_env, tmp_path: pathlib.Path
 ):
     view_dir = tmp_path / "view"
     content = template_combinatorial_env.format(view_config="select: ['target=x86_64']")
@@ -3119,7 +3163,7 @@ def test_stack_view_no_activate_without_default(
 
 
 @pytest.mark.parametrize("include_views", [True, False, "split"])
-def test_stack_view_multiple_views(installed_environment, tmp_path, include_views):
+def test_stack_view_multiple_views(installed_environment, tmp_path: pathlib.Path, include_views):
     """Test multiple views as both included views (True), as both environment
     views (False), or as one included and the other in the environment.
     """
@@ -3186,7 +3230,7 @@ def test_stack_view_multiple_views(installed_environment, tmp_path, include_view
             assert current_dir.exists() is not spec.satisfies("target=core2")
 
 
-def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_activate_sh_prints_shell_output(mock_stage, mock_fetch, install_mockery):
     """Check the shell commands output by ``spack env activate --sh``.
 
     This is a cursory check; ``share/spack/qa/setup-env-test.sh`` checks
@@ -3205,7 +3249,7 @@ def test_env_activate_sh_prints_shell_output(tmpdir, mock_stage, mock_fetch, ins
     assert "alias despacktivate=" in out
 
 
-def test_env_activate_csh_prints_shell_output(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_env_activate_csh_prints_shell_output(mock_stage, mock_fetch, install_mockery):
     """Check the shell commands output by ``spack env activate --csh``."""
     env("create", "test")
 
@@ -3320,12 +3364,12 @@ def test_env_write_only_non_default():
 
 
 @pytest.mark.regression("20526")
-def test_env_write_only_non_default_nested(tmpdir):
+def test_env_write_only_non_default_nested(tmp_path: pathlib.Path):
     # setup an environment file
     # the environment includes configuration because nested configs proved the
     # most difficult to avoid writing.
     filename = "spack.yaml"
-    filepath = str(tmpdir.join(filename))
+    filepath = str(tmp_path / filename)
     contents = """\
 spack:
   specs:
@@ -3354,7 +3398,7 @@ spack:
 
 
 @pytest.mark.regression("18147")
-def test_can_update_attributes_with_override(tmpdir):
+def test_can_update_attributes_with_override(tmp_path: pathlib.Path):
     spack_yaml = """
 spack:
   mirrors::
@@ -3366,15 +3410,15 @@ spack:
   specs:
   - hdf5
 """
-    abspath = tmpdir.join("spack.yaml")
-    abspath.write(spack_yaml)
+    abspath = tmp_path / "spack.yaml"
+    abspath.write_text(spack_yaml)
 
     # Check that an update does not raise
-    env("update", "-y", str(abspath.dirname))
+    env("update", "-y", str(tmp_path))
 
 
 @pytest.mark.regression("18338")
-def test_newline_in_commented_sequence_is_not_an_issue(tmpdir):
+def test_newline_in_commented_sequence_is_not_an_issue(tmp_path: pathlib.Path):
     spack_yaml = """
 spack:
   specs:
@@ -3389,20 +3433,20 @@ spack:
   concretizer:
     unify: false
 """
-    abspath = tmpdir.join("spack.yaml")
-    abspath.write(spack_yaml)
+    abspath = tmp_path / "spack.yaml"
+    abspath.write_text(spack_yaml)
 
     def extract_dag_hash(environment):
         _, dyninst = next(iter(environment.specs_by_hash.items()))
         return dyninst["libelf"].dag_hash()
 
     # Concretize a first time and create a lockfile
-    with ev.Environment(str(tmpdir)) as e:
+    with ev.Environment(str(tmp_path)) as e:
         concretize()
         libelf_first_hash = extract_dag_hash(e)
 
     # Check that a second run won't error
-    with ev.Environment(str(tmpdir)) as e:
+    with ev.Environment(str(tmp_path)) as e:
         concretize()
         libelf_second_hash = extract_dag_hash(e)
 
@@ -3410,7 +3454,7 @@ spack:
 
 
 @pytest.mark.regression("18441")
-def test_lockfile_not_deleted_on_write_error(tmpdir, monkeypatch):
+def test_lockfile_not_deleted_on_write_error(tmp_path: pathlib.Path, monkeypatch):
     raw_yaml = """
 spack:
   specs:
@@ -3421,12 +3465,12 @@ spack:
       - spec: libelf@0.8.13
         prefix: /usr
 """
-    spack_yaml = tmpdir.join("spack.yaml")
-    spack_yaml.write(raw_yaml)
-    spack_lock = tmpdir.join("spack.lock")
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(raw_yaml)
+    spack_lock = tmp_path / "spack.lock"
 
     # Concretize a first time and create a lockfile
-    with ev.Environment(str(tmpdir)):
+    with ev.Environment(str(tmp_path)):
         concretize()
     assert os.path.exists(str(spack_lock))
 
@@ -3438,7 +3482,7 @@ spack:
     monkeypatch.setattr(
         spack.environment.environment.EnvironmentManifestFile, "flush", _write_helper_raise
     )
-    with ev.Environment(str(tmpdir)) as e:
+    with ev.Environment(str(tmp_path)) as e:
         e.concretize(force=True)
         with pytest.raises(RuntimeError):
             e.clear()
@@ -3446,16 +3490,16 @@ spack:
     assert os.path.exists(str(spack_lock))
 
 
-def _setup_develop_packages(tmpdir):
+def _setup_develop_packages(tmp_path: pathlib.Path):
     """Sets up a structure ./init_env/spack.yaml, ./build_folder, ./dest_env
     where spack.yaml has a relative develop path to build_folder"""
-    init_env = tmpdir.join("init_env")
-    build_folder = tmpdir.join("build_folder")
-    dest_env = tmpdir.join("dest_env")
+    init_env = tmp_path / "init_env"
+    build_folder = tmp_path / "build_folder"
+    dest_env = tmp_path / "dest_env"
 
-    fs.mkdirp(str(init_env))
-    fs.mkdirp(str(build_folder))
-    fs.mkdirp(str(dest_env))
+    init_env.mkdir(parents=True, exist_ok=True)
+    build_folder.mkdir(parents=True, exist_ok=True)
+    dest_env.mkdir(parents=True, exist_ok=True)
 
     raw_yaml = """
 spack:
@@ -3468,16 +3512,16 @@ spack:
       path: /some/other/path
       spec: mypkg@main
 """
-    spack_yaml = init_env.join("spack.yaml")
-    spack_yaml.write(raw_yaml)
+    spack_yaml = init_env / "spack.yaml"
+    spack_yaml.write_text(raw_yaml)
 
     return init_env, build_folder, dest_env, spack_yaml
 
 
-def test_rewrite_rel_dev_path_new_dir(tmpdir):
+def test_rewrite_rel_dev_path_new_dir(tmp_path: pathlib.Path):
     """Relative develop paths should be rewritten for new environments in
     a different directory from the original manifest file"""
-    _, build_folder, dest_env, spack_yaml = _setup_develop_packages(tmpdir)
+    _, build_folder, dest_env, spack_yaml = _setup_develop_packages(tmp_path)
 
     env("create", "-d", str(dest_env), str(spack_yaml))
     with ev.Environment(str(dest_env)) as e:
@@ -3485,20 +3529,20 @@ def test_rewrite_rel_dev_path_new_dir(tmpdir):
         assert e.dev_specs["mypkg2"]["path"] == sep + os.path.join("some", "other", "path")
 
 
-def test_rewrite_rel_dev_path_named_env(tmpdir):
+def test_rewrite_rel_dev_path_named_env(tmp_path: pathlib.Path):
     """Relative develop paths should by default be rewritten for new named
     environment"""
-    _, build_folder, _, spack_yaml = _setup_develop_packages(tmpdir)
+    _, build_folder, _, spack_yaml = _setup_develop_packages(tmp_path)
     env("create", "named_env", str(spack_yaml))
     with ev.read("named_env") as e:
         assert e.dev_specs["mypkg1"]["path"] == str(build_folder)
         assert e.dev_specs["mypkg2"]["path"] == sep + os.path.join("some", "other", "path")
 
 
-def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmpdir):
+def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmp_path: pathlib.Path):
     """Relative develop paths should not be rewritten when --keep-relative is
     passed to create"""
-    _, _, _, spack_yaml = _setup_develop_packages(tmpdir)
+    _, _, _, spack_yaml = _setup_develop_packages(tmp_path)
     env("create", "--keep-relative", "named_env", str(spack_yaml))
     with ev.read("named_env") as e:
         assert e.dev_specs["mypkg1"]["path"] == "../build_folder"
@@ -3506,7 +3550,7 @@ def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmpdir):
 
 
 @pytest.mark.regression("23440")
-def test_custom_version_concretize_together(tmpdir):
+def test_custom_version_concretize_together():
     # Custom versions should be permitted in specs when
     # concretizing together
     e = ev.create("custom_version")
@@ -3598,7 +3642,7 @@ spack:
 
 @pytest.mark.disable_clean_stage_check
 def test_install_develop_keep_stage(
-    environment_from_manifest, install_mockery, mock_fetch, monkeypatch, tmpdir
+    environment_from_manifest, install_mockery, mock_fetch, monkeypatch, tmp_path: pathlib.Path
 ):
     """Develop a dependency of a package and make sure that the associated
     stage for the package is retained after a successful install.
@@ -3614,7 +3658,8 @@ spack:
     monkeypatch.setattr(spack.stage.DevelopStage, "destroy", _always_fail)
 
     with ev.read("test") as e:
-        libelf_dev_path = tmpdir.ensure("libelf-test-dev-path", dir=True)
+        libelf_dev_path = tmp_path / "libelf-test-dev-path"
+        libelf_dev_path.mkdir(parents=True)
         develop(f"--path={libelf_dev_path}", "libelf@0.8.13")
         concretize()
         (libelf_spec,) = e.all_matching_specs("libelf")
@@ -3632,7 +3677,7 @@ def _always_fail(cls, *args, **kwargs):
 
 
 @pytest.mark.regression("24148")
-def test_virtual_spec_concretize_together(tmpdir):
+def test_virtual_spec_concretize_together():
     # An environment should permit to concretize "mpi"
     e = ev.create("virtual_spec")
     e.unify = True
@@ -3643,9 +3688,10 @@ def test_virtual_spec_concretize_together(tmpdir):
     assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
 
 
-def test_query_develop_specs(tmpdir):
+def test_query_develop_specs(tmp_path: pathlib.Path):
     """Test whether a spec is develop'ed or not"""
-    srcdir = tmpdir.ensure("here")
+    srcdir = tmp_path / "here"
+    srcdir.mkdir()
 
     env("create", "test")
     with ev.read("test") as e:
@@ -3673,10 +3719,10 @@ def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, 
 
 
 @pytest.mark.regression("26548")
-def test_custom_store_in_environment(mutable_config, tmpdir):
-    spack_yaml = tmpdir.join("spack.yaml")
-    install_root = tmpdir.join("store")
-    spack_yaml.write(
+def test_custom_store_in_environment(mutable_config, tmp_path: pathlib.Path):
+    spack_yaml = tmp_path / "spack.yaml"
+    install_root = tmp_path / "store"
+    spack_yaml.write_text(
         """
 spack:
   specs:
@@ -3689,21 +3735,21 @@ spack:
         )
     )
     current_store_root = str(spack.store.STORE.root)
-    assert str(current_store_root) != install_root
-    with spack.environment.Environment(str(tmpdir)):
-        assert str(spack.store.STORE.root) == install_root
+    assert str(current_store_root) != str(install_root)
+    with spack.environment.Environment(str(tmp_path)):
+        assert str(spack.store.STORE.root) == str(install_root)
     assert str(spack.store.STORE.root) == current_store_root
 
 
-def test_activate_temp(monkeypatch, tmpdir):
+def test_activate_temp(monkeypatch, tmp_path: pathlib.Path):
     """Tests whether `spack env activate --temp` creates an environment in a
     temporary directory"""
-    env_dir = lambda: str(tmpdir)
+    env_dir = lambda: str(tmp_path)
     monkeypatch.setattr(spack.cmd.env, "create_temp_env_directory", env_dir)
     shell = env("activate", "--temp", "--sh")
     active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
-    assert str(tmpdir) in active_env_var
-    assert ev.is_env_dir(str(tmpdir))
+    assert str(tmp_path) in active_env_var
+    assert ev.is_env_dir(str(tmp_path))
 
 
 @pytest.mark.parametrize(
@@ -3714,17 +3760,17 @@ def test_activate_parser_conflicts_with_temp(conflict_arg):
         env("activate", "--sh", "--temp", *conflict_arg)
 
 
-def test_create_and_activate_managed(tmp_path):
+def test_create_and_activate_managed(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
         shell = env("activate", "--without-view", "--create", "--sh", "foo")
         active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
         assert str(tmp_path) in active_env_var
         active_ev = ev.active_environment()
-        assert "foo" == active_ev.name
+        assert active_ev and "foo" == active_ev.name
         env("deactivate")
 
 
-def test_create_and_activate_independent(tmp_path):
+def test_create_and_activate_independent(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
         env_dir = os.path.join(str(tmp_path), "foo")
         shell = env("activate", "--without-view", "--create", "--sh", env_dir)
@@ -3753,10 +3799,13 @@ def test_activate_default(monkeypatch):
     assert not ev.exists("default")
 
 
-def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock_fetch):
-    view = str(tmpdir.join("view"))
+def test_env_view_fail_if_symlink_points_elsewhere(
+    tmp_path: pathlib.Path, install_mockery, mock_fetch
+):
+    view = str(tmp_path / "view")
     # Put a symlink to an actual directory in view
-    non_view_dir = str(tmpdir.mkdir("dont-delete-me"))
+    non_view_dir = str(tmp_path / "dont-delete-me")
+    os.mkdir(non_view_dir)
     os.symlink(non_view_dir, view)
     with ev.create("env", with_view=view):
         add("libelf")
@@ -3764,7 +3813,7 @@ def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock
     assert os.path.isdir(non_view_dir)
 
 
-def test_failed_view_cleanup(tmp_path, mock_stage, mock_fetch, install_mockery):
+def test_failed_view_cleanup(tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery):
     """Tests whether Spack cleans up after itself when a view fails to create"""
     view_dir = tmp_path / "view"
     with ev.create("env", with_view=str(view_dir)):
@@ -3789,13 +3838,15 @@ def test_failed_view_cleanup(tmp_path, mock_stage, mock_fetch, install_mockery):
     assert view_dir.samefile(resolved_view), view_dir
 
 
-def test_environment_view_target_already_exists(tmpdir, mock_stage, mock_fetch, install_mockery):
+def test_environment_view_target_already_exists(
+    tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
     """When creating a new view, Spack should check whether
     the new view dir already exists. If so, it should not be
     removed or modified."""
 
     # Create a new environment
-    view = str(tmpdir.join("view"))
+    view = str(tmp_path / "view")
     env("create", "--with-view={0}".format(view), "test")
     with ev.read("test"):
         add("libelf")
@@ -3838,7 +3889,7 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
 
 
 @pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])
-def test_read_old_lock_and_write_new(tmpdir, lockfile):
+def test_read_old_lock_and_write_new(tmp_path: pathlib.Path, lockfile):
     # v1 lockfiles stored by a coarse DAG hash that did not include build deps.
     # They could not represent multiple build deps with different build hashes.
     #
@@ -3887,7 +3938,7 @@ def test_read_old_lock_and_write_new(tmpdir, lockfile):
                 shadowed_hash = dag_hash
 
     # make an env out of the old lockfile -- env should be able to read v1/v2/v3
-    test_lockfile_path = str(tmpdir.join("spack.lock"))
+    test_lockfile_path = str(tmp_path / "spack.lock")
     shutil.copy(lockfile_path, test_lockfile_path)
     _env_create("test", init_file=test_lockfile_path, with_view=False)
 
@@ -3904,7 +3955,7 @@ def test_read_old_lock_and_write_new(tmpdir, lockfile):
     assert old_hashes == hashes
 
 
-def test_read_v1_lock_creates_backup(tmp_path):
+def test_read_v1_lock_creates_backup(tmp_path: pathlib.Path):
     """When reading a version-1 lockfile, make sure that a backup of that file
     is created.
     """
@@ -3920,7 +3971,7 @@ def test_read_v1_lock_creates_backup(tmp_path):
 
 @pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])
 def test_read_legacy_lockfile_and_reconcretize(
-    mock_stage, mock_fetch, install_mockery, lockfile, tmp_path
+    mock_stage, mock_fetch, install_mockery, lockfile, tmp_path: pathlib.Path
 ):
     # In legacy lockfiles v2 and v3 (keyed by build hash), there may be multiple
     # versions of the same spec with different build dependencies, which means
@@ -4042,10 +4093,12 @@ def _parse_dry_run_package_installs(make_output):
         ),
     ],
 )
-def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, mock_packages):
+def test_environment_depfile_makefile(
+    depfile_flags, expected_installs, tmp_path: pathlib.Path, mock_packages
+):
     env("create", "test")
     make = Executable("make")
-    makefile = str(tmpdir.join("Makefile"))
+    makefile = str(tmp_path / "Makefile")
     with ev.read("test"):
         add("dttop")
         concretize()
@@ -4083,14 +4136,14 @@ def test_depfile_safe_format():
     assert spec.unsafe_format("{name}") == "abc@def=ghi"
 
 
-def test_depfile_works_with_gitversions(tmpdir, mock_packages, monkeypatch):
+def test_depfile_works_with_gitversions(tmp_path: pathlib.Path, mock_packages, monkeypatch):
     """Git versions may contain = chars, which should be escaped in targets,
     otherwise they're interpreted as makefile variable assignments."""
     monkeypatch.setattr(spack.package_base.PackageBase, "git", "repo.git", raising=False)
     env("create", "test")
 
     make = Executable("make")
-    makefile = str(tmpdir.join("Makefile"))
+    makefile = str(tmp_path / "Makefile")
 
     # Create an environment with dttop and dtlink1 both at a git version,
     # and generate a depfile
@@ -4146,12 +4199,12 @@ def test_depfile_works_with_gitversions(tmpdir, mock_packages, monkeypatch):
     ],
 )
 def test_depfile_phony_convenience_targets(
-    picked_package, expected_installs: set, tmpdir, mock_packages
+    picked_package, expected_installs: set, tmp_path: pathlib.Path, mock_packages
 ):
     """Check whether convenience targets "install/%" and "install-deps/%" are created for
     each package if "--make-prefix" is absent."""
     make = Executable("make")
-    with fs.working_dir(str(tmpdir)):
+    with fs.working_dir(str(tmp_path)):
         with ev.create_in_dir("."):
             add("dttop")
             concretize()
@@ -4187,9 +4240,9 @@ def test_depfile_phony_convenience_targets(
         assert len(specs_that_make_would_install) == len(set(specs_that_make_would_install))
 
 
-def test_environment_depfile_out(tmpdir, mock_packages):
+def test_environment_depfile_out(tmp_path: pathlib.Path, mock_packages):
     env("create", "test")
-    makefile_path = str(tmpdir.join("Makefile"))
+    makefile_path = str(tmp_path / "Makefile")
     with ev.read("test"):
         add("libdwarf")
         concretize()
@@ -4200,12 +4253,12 @@ def test_environment_depfile_out(tmpdir, mock_packages):
             assert stdout == f.read()
 
 
-def test_spack_package_ids_variable(tmpdir, mock_packages):
+def test_spack_package_ids_variable(tmp_path: pathlib.Path, mock_packages):
     # Integration test for post-install hooks through prefix/SPACK_PACKAGE_IDS
     # variable
     env("create", "test")
-    makefile_path = str(tmpdir.join("Makefile"))
-    include_path = str(tmpdir.join("include.mk"))
+    makefile_path = str(tmp_path / "Makefile")
+    include_path = str(tmp_path / "include.mk")
 
     # Create env and generate depfile in include.mk with prefix example/
     with ev.read("test"):
@@ -4240,7 +4293,7 @@ post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
     make = Executable("make")
 
     # Do dry run.
-    out = make("-n", "-C", str(tmpdir), "SPACK=spack", output=str)
+    out = make("-n", "-C", str(tmp_path), "SPACK=spack", output=str)
 
     # post-install: <hash> should've been executed
     with ev.read("test") as test:
@@ -4248,7 +4301,7 @@ post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
             assert "post-install: {}".format(s.dag_hash()) in out
 
 
-def test_depfile_empty_does_not_error(tmp_path):
+def test_depfile_empty_does_not_error(tmp_path: pathlib.Path):
     # For empty environments Spack should create a depfile that does nothing
     make = Executable("make")
     makefile = str(tmp_path / "Makefile")
@@ -4281,14 +4334,18 @@ def test_unify_when_possible_works_around_conflicts():
 # Using mock_include_cache to ensure the "remote" file is cached in a temporary
 # location and not polluting the user cache.
 def test_env_include_packages_url(
-    tmpdir, mutable_empty_config, mock_fetch_url_text, mock_curl_configs, mock_include_cache
+    tmp_path: pathlib.Path,
+    mutable_empty_config,
+    mock_fetch_url_text,
+    mock_curl_configs,
+    mock_include_cache,
 ):
     """Test inclusion of a (GitHub) URL."""
     develop_url = "https://github.com/fake/fake/blob/develop/"
     default_packages = develop_url + "etc/fake/defaults/packages.yaml"
     sha256 = "6a1b26c857ca7e5bcd7342092e2f218da43d64b78bd72771f603027ea3c8b4af"
-    spack_yaml = tmpdir.join("spack.yaml")
-    with spack_yaml.open("w") as f:
+    spack_yaml = tmp_path / "spack.yaml"
+    with open(spack_yaml, "w", encoding="utf-8") as f:
         f.write(
             f"""\
 spack:
@@ -4299,7 +4356,7 @@ spack:
         )
 
     with spack.config.override("config:url_fetch_method", "curl"):
-        env = ev.Environment(tmpdir.strpath)
+        env = ev.Environment(str(tmp_path))
         ev.activate(env)
 
         # Make sure a setting from test/data/config/packages.yaml is present
@@ -4307,7 +4364,7 @@ spack:
         assert "mpich" in cfg["all"]["providers"]["mpi"]
 
 
-def test_relative_view_path_on_command_line_is_made_absolute(tmp_path):
+def test_relative_view_path_on_command_line_is_made_absolute(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
         env("create", "--with-view", "view", "--dir", "env")
         environment = ev.Environment(os.path.join(".", "env"))
@@ -4315,7 +4372,7 @@ def test_relative_view_path_on_command_line_is_made_absolute(tmp_path):
         assert os.path.samefile("view", environment.default_view.root)
 
 
-def test_environment_created_in_users_location(mutable_mock_env_path, tmp_path):
+def test_environment_created_in_users_location(mutable_mock_env_path, tmp_path: pathlib.Path):
     """Test that an environment is created in a location based on the config"""
     env_dir = str(mutable_mock_env_path)
 
@@ -4331,10 +4388,12 @@ def test_environment_created_in_users_location(mutable_mock_env_path, tmp_path):
     assert os.path.isdir(os.path.join(env_dir, dir_name))
 
 
-def test_environment_created_from_lockfile_has_view(mock_packages, temporary_store, tmpdir):
+def test_environment_created_from_lockfile_has_view(
+    mock_packages, temporary_store, tmp_path: pathlib.Path
+):
     """When an env is created from a lockfile, a view should be generated for it"""
-    env_a = str(tmpdir.join("a"))
-    env_b = str(tmpdir.join("b"))
+    env_a = str(tmp_path / "a")
+    env_b = str(tmp_path / "b")
 
     # Create an environment and install a package in it
     env("create", "-d", env_a)
@@ -4350,7 +4409,7 @@ def test_environment_created_from_lockfile_has_view(mock_packages, temporary_sto
         assert os.path.isdir(e.view_path_default)
 
 
-def test_env_view_disabled(tmp_path, mutable_mock_env_path):
+def test_env_view_disabled(tmp_path: pathlib.Path, mutable_mock_env_path):
     """Ensure an inlined view being disabled means not even the default view
     is created (since the case doesn't appear to be covered in this module)."""
     spack_yaml = tmp_path / ev.manifest_name
@@ -4371,7 +4430,9 @@ spack:
 
 
 @pytest.mark.parametrize("first", ["false", "true", "custom"])
-def test_env_include_mixed_views(tmp_path, mutable_config, mutable_mock_env_path, first):
+def test_env_include_mixed_views(
+    tmp_path: pathlib.Path, mutable_config, mutable_mock_env_path, first
+):
     """Ensure including path and boolean views in different combinations result
     in the creation of only the first view if it is not disabled."""
     false_yaml = tmp_path / "false-view.yaml"
@@ -4428,7 +4489,7 @@ spack:
 
 
 def test_stack_view_multiple_views_same_name(
-    installed_environment, template_combinatorial_env, tmp_path
+    installed_environment, template_combinatorial_env, tmp_path: pathlib.Path
 ):
     """Test multiple views with the same name combine settings with precedence
     given to the options in spack.yaml."""
@@ -4488,7 +4549,9 @@ spack:
             )
 
 
-def test_env_view_resolves_identical_file_conflicts(tmp_path, install_mockery, mock_fetch):
+def test_env_view_resolves_identical_file_conflicts(
+    tmp_path: pathlib.Path, install_mockery, mock_fetch
+):
     """When files clash in a view, but refer to the same file on disk (for example, the dependent
     symlinks to a file in the dependency at the same relative path), Spack links the first regular
     file instead of symlinks. This is important for copy type views where we need the underlying
@@ -4518,7 +4581,9 @@ def test_env_view_resolves_identical_file_conflicts(tmp_path, install_mockery, m
     assert readlink(tmp_path / "view" / "bin" / "y") == top.bin.y
 
 
-def test_env_view_ignores_different_file_conflicts(tmp_path, install_mockery, mock_fetch):
+def test_env_view_ignores_different_file_conflicts(
+    tmp_path: pathlib.Path, install_mockery, mock_fetch
+):
     """Test that file-file conflicts for two unique files in environment views are ignored, and
     that the dependent's file is linked into the view, not the dependency's file."""
     with ev.create("env", with_view=tmp_path / "view") as e:

@@ -46,6 +46,7 @@ import errno
 import getpass
 import glob
 import os
+import pathlib
 import shutil
 import socket
 import stat
@@ -58,7 +59,7 @@ from multiprocessing import Barrier, Process, Queue
 import pytest
 
 import llnl.util.lock as lk
-from llnl.util.filesystem import getuid, touch
+from llnl.util.filesystem import getuid, touch, working_dir
 
 if sys.platform != "win32":
     import fcntl
@@ -1259,17 +1260,17 @@ def test_lock_debug_output(lock_path):
     local_multiproc_test(test_debug.p2, test_debug.p1, extra_args=(q1, q2))
 
 
-def test_lock_with_no_parent_directory(tmpdir):
+def test_lock_with_no_parent_directory(tmp_path: pathlib.Path):
     """Make sure locks work even when their parent directory does not exist."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("foo/bar/baz/lockfile")
         with lk.WriteTransaction(lock):
             pass
 
 
-def test_lock_in_current_directory(tmpdir):
+def test_lock_in_current_directory(tmp_path: pathlib.Path):
     """Make sure locks work even when their parent directory does not exist."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         # test we can create a lock in the current directory
         lock = lk.Lock("lockfile")
         for i in range(10):
@@ -1301,9 +1302,9 @@ def test_lock_str():
     assert "#reads=0, #writes=0" in lockstr
 
 
-def test_downgrade_write_okay(tmpdir):
+def test_downgrade_write_okay(tmp_path: pathlib.Path):
     """Test the lock write-to-read downgrade operation."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("lockfile")
         lock.acquire_write()
         lock.downgrade_write_to_read()
@@ -1312,9 +1313,9 @@ def test_downgrade_write_okay(tmpdir):
         lock.release_read()
 
 
-def test_downgrade_write_fails(tmpdir):
+def test_downgrade_write_fails(tmp_path: pathlib.Path):
     """Test failing the lock write-to-read downgrade operation."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("lockfile")
         lock.acquire_read()
         msg = "Cannot downgrade lock from write to read on file: lockfile"
@@ -1331,13 +1332,13 @@ def test_downgrade_write_fails(tmpdir):
         (errno.ENOENT, "Fake ENOENT error"),
     ],
 )
-def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
+def test_poll_lock_exception(tmp_path: pathlib.Path, monkeypatch, err_num, err_msg):
     """Test poll lock exception handling."""
 
     def _lockf(fd, cmd, len, start, whence):
         raise OSError(err_num, err_msg)
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lockfile = "lockfile"
         lock = lk.Lock(lockfile)
         lock.acquire_read()
@@ -1354,9 +1355,9 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
         lock.release_read()
 
 
-def test_upgrade_read_okay(tmpdir):
+def test_upgrade_read_okay(tmp_path: pathlib.Path):
     """Test the lock read-to-write upgrade operation."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("lockfile")
         lock.acquire_read()
         lock.upgrade_read_to_write()
@@ -1365,9 +1366,9 @@ def test_upgrade_read_okay(tmpdir):
         lock.release_write()
 
 
-def test_upgrade_read_fails(tmpdir):
+def test_upgrade_read_fails(tmp_path: pathlib.Path):
     """Test failing the lock read-to-write upgrade operation."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("lockfile")
         lock.acquire_write()
         msg = "Cannot upgrade lock from read to write on file: lockfile"

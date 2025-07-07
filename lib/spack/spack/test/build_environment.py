@@ -4,6 +4,7 @@
 import collections
 import multiprocessing
 import os
+import pathlib
 import posixpath
 import sys
 from typing import Dict, Optional, Tuple
@@ -41,7 +42,7 @@ def prep_and_join(path, *pths):
 
 
 @pytest.fixture
-def build_environment(monkeypatch, wrapper_dir, tmp_path):
+def build_environment(monkeypatch, wrapper_dir, tmp_path: pathlib.Path):
     realcc = "/bin/mycc"
     prefix = str(tmp_path)
 

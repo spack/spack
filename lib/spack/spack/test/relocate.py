@@ -1,9 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pathlib
 import re
 import shutil
 import subprocess
+import tempfile
 
 import pytest
 
@@ -24,7 +26,7 @@ def skip_unless_linux(f):
 
 def rpaths_for(new_binary):
     """Return the RPATHs or RUNPATHs of a binary."""
-    patchelf = spack.util.executable.which("patchelf")
+    patchelf = spack.util.executable.which("patchelf", required=True)
     output = patchelf("--print-rpath", str(new_binary), output=str)
     return output.strip()
 
@@ -40,23 +42,25 @@ def text_in_bin(text, binary):
 
 
 @pytest.fixture()
-def make_dylib(tmpdir_factory):
+def make_dylib(tmp_path_factory):
     """Create a shared library with unfriendly qualities.
 
     - Writes the same rpath twice
     - Writes its install path as an absolute path
     """
-    cc = spack.util.executable.which("cc")
+    cc = spack.util.executable.which("cc", required=True)
 
     def _factory(abs_install_name="abs", extra_rpaths=[]):
         assert all(extra_rpaths)
 
-        tmpdir = tmpdir_factory.mktemp(abs_install_name + "-".join(extra_rpaths).replace("/", ""))
-        src = tmpdir.join("foo.c")
-        src.write("int foo() { return 1; }\n")
+        tmpdir = tmp_path_factory.mktemp(
+            abs_install_name + "-".join(extra_rpaths).replace("/", "")
+        )
+        src = tmpdir / "foo.c"
+        src.write_text("int foo() { return 1; }\n")
 
         filename = "foo.dylib"
-        lib = tmpdir.join(filename)
+        lib = tmpdir / filename
 
         args = ["-shared", str(src), "-o", str(lib)]
         rpaths = list(extra_rpaths)
@@ -78,21 +82,21 @@ def make_dylib(tmpdir_factory):
 
 
 @pytest.fixture()
-def make_object_file(tmpdir):
-    cc = spack.util.executable.which("cc")
+def make_object_file(tmp_path: pathlib.Path):
+    cc = spack.util.executable.which("cc", required=True)
 
     def _factory():
-        src = tmpdir.join("bar.c")
-        src.write("int bar() { return 2; }\n")
+        src = tmp_path / "bar.c"
+        src.write_text("int bar() { return 2; }\n")
 
         filename = "bar.o"
-        lib = tmpdir.join(filename)
+        lib = tmp_path / filename
 
         args = ["-c", str(src), "-o", str(lib)]
 
         cc(*args)
 
-        return (str(tmpdir), filename)
+        return (str(tmp_path), filename)
 
     return _factory
 
@@ -104,8 +108,11 @@ def copy_binary(prefix_like):
     """
 
     def _copy_somewhere(orig_binary):
-        new_root = orig_binary.mkdtemp().mkdir(prefix_like)
-        new_binary = new_root.join("main.x")
+        # Create a temporary directory
+        temp_dir = pathlib.Path(tempfile.mkdtemp())
+        new_root = temp_dir / prefix_like
+        new_root.mkdir(parents=True, exist_ok=True)
+        new_binary = new_root / "main.x"
         shutil.copy(str(orig_binary), str(new_binary))
         return new_binary
 
@@ -133,11 +140,13 @@ def test_relocate_text_bin(binary_with_rpaths, prefix_like):
 @skip_unless_linux
 def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, prefix_tmpdir):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = binary_with_rpaths(rpaths=[str(prefix_tmpdir.mkdir("lib")), "/usr/lib64"])
+    lib_dir = prefix_tmpdir / "lib"
+    lib_dir.mkdir()
+    orig_binary = binary_with_rpaths(rpaths=[str(lib_dir), "/usr/lib64"])
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
-        binaries=[str(new_binary)], prefix_to_prefix={str(orig_binary.dirpath()): "/foo"}
+        binaries=[str(new_binary)], prefix_to_prefix={str(orig_binary.parent): "/foo"}
     )
 
     # Some compilers add rpaths so ensure changes included in final result
@@ -147,36 +156,35 @@ def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, p
 @pytest.mark.requires_executables("patchelf", "gcc")
 @skip_unless_linux
 def test_relocate_text_bin_with_message(binary_with_rpaths, copy_binary, prefix_tmpdir):
+    lib_dir = prefix_tmpdir / "lib"
+    lib_dir.mkdir()
+    lib64_dir = prefix_tmpdir / "lib64"
+    lib64_dir.mkdir()
     orig_binary = binary_with_rpaths(
-        rpaths=[
-            str(prefix_tmpdir.mkdir("lib")),
-            str(prefix_tmpdir.mkdir("lib64")),
-            "/opt/local/lib",
-        ],
-        message=str(prefix_tmpdir),
+        rpaths=[str(lib_dir), str(lib64_dir), "/opt/local/lib"], message=str(prefix_tmpdir)
     )
     new_binary = copy_binary(orig_binary)
 
     # Check original directory is in the executable and the new one is not
     assert text_in_bin(str(prefix_tmpdir), new_binary)
-    assert not text_in_bin(str(new_binary.dirpath()), new_binary)
+    assert not text_in_bin(str(new_binary.parent), new_binary)
 
     # Check this call succeed
-    orig_path_bytes = str(orig_binary.dirpath()).encode("utf-8")
-    new_path_bytes = str(new_binary.dirpath()).encode("utf-8")
+    orig_path_bytes = str(orig_binary.parent).encode("utf-8")
+    new_path_bytes = str(new_binary.parent).encode("utf-8")
 
     spack.relocate.relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
 
     # Check original directory is not there anymore and it was
     # substituted with the new one
     assert not text_in_bin(str(prefix_tmpdir), new_binary)
-    assert text_in_bin(str(new_binary.dirpath()), new_binary)
+    assert text_in_bin(str(new_binary.parent), new_binary)
 
 
-def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
+def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmp_path: pathlib.Path):
     short_prefix = b"/short"
     long_prefix = b"/much/longer"
-    fpath = str(tmpdir.join("fakebin"))
+    fpath = str(tmp_path / "fakebin")
     with open(fpath, "w", encoding="utf-8") as f:
         f.write("/short")
     with pytest.raises(relocate_text.BinaryTextReplaceError):

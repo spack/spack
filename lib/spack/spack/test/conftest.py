@@ -137,16 +137,17 @@ commit_counter = 0
 
 
 @pytest.fixture
-def override_git_repos_cache_path(tmpdir):
+def override_git_repos_cache_path(tmp_path: pathlib.Path):
     saved = spack.paths.user_repos_cache_path
-    tmp_path = tmpdir.mkdir("git-repo-cache-path-for-tests")
-    spack.paths.user_repos_cache_path = str(tmp_path)
+    tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
+    tmp_git_path.mkdir()
+    spack.paths.user_repos_cache_path = str(tmp_git_path)
     yield
     spack.paths.user_repos_cache_path = saved
 
 
 @pytest.fixture
-def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
+def mock_git_version_info(git, tmp_path: pathlib.Path, override_git_repos_cache_path):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::
@@ -171,7 +172,9 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
     version tags on multiple branches, and version order is not equal to time
     order or topological order.
     """
-    repo_path = str(tmpdir.mkdir("git_version_info_repo"))
+    repo_dir = tmp_path / "git_version_info_repo"
+    repo_dir.mkdir()
+    repo_path = str(repo_dir)
     filename = "file.txt"
 
     def commit(message):
@@ -250,7 +253,9 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
 
 @pytest.fixture
-def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path, monkeypatch):
+def mock_git_package_changes(
+    git, tmp_path: pathlib.Path, override_git_repos_cache_path, monkeypatch
+):
     """Create a mock git repo with known structure of package edits
 
     The structure of commits in this repo is as follows::
@@ -268,8 +273,10 @@ def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path, monkeyp
     """
     filename = "diff_test/package.py"
 
-    repo_path, _ = spack.repo.create_repo(str(tmpdir), namespace="myrepo")
-    repo_cache = spack.util.file_cache.FileCache(str(tmpdir.mkdir("cache")))
+    repo_path, _ = spack.repo.create_repo(str(tmp_path), namespace="myrepo")
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
 
     repo = spack.repo.Repo(repo_path, cache=repo_cache)
 
@@ -415,11 +422,13 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="function")
-def use_concretization_cache(mutable_config, tmpdir):
+def use_concretization_cache(mutable_config, tmp_path: pathlib.Path):
     """Enables the use of the concretization cache"""
     spack.config.set("config:concretization_cache:enable", True)
     # ensure we have an isolated concretization cache
-    new_conc_cache_loc = str(tmpdir.mkdir("concretization"))
+    conc_cache_dir = tmp_path / "concretization"
+    conc_cache_dir.mkdir()
+    new_conc_cache_loc = str(conc_cache_dir)
     spack.config.set("config:concretization_cache:path", new_conc_cache_loc)
     yield
 
@@ -579,8 +588,8 @@ def mock_binary_index(monkeypatch, tmpdir_factory):
     every test. Clears its own index when it's done.
     """
     tmpdir = tmpdir_factory.mktemp("mock_binary_index")
-    index_path = tmpdir.join("binary_index").strpath
-    mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
+    index_path = tmpdir / "binary_index"
+    mock_index = spack.binary_distribution.BinaryCacheIndex(str(index_path))
     monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
     yield
 
@@ -828,35 +837,37 @@ def configuration_dir(tmpdir_factory, linux_os):
     """Copies mock configuration files in a temporary directory. Returns the
     directory path.
     """
-    tmpdir = tmpdir_factory.mktemp("configurations")
+    tmp_path = tmpdir_factory.mktemp("configurations")
     install_tree_root = tmpdir_factory.mktemp("opt")
     modules_root = tmpdir_factory.mktemp("share")
-    tcl_root = modules_root.ensure("modules", dir=True)
-    lmod_root = modules_root.ensure("lmod", dir=True)
+    tcl_root = modules_root / "modules"
+    tcl_root.mkdir()
+    lmod_root = modules_root / "lmod"
+    lmod_root.mkdir()
 
     # <test_path>/data/config has mock config yaml files in it
     # copy these to the site config.
     test_config = pathlib.Path(spack.paths.test_path) / "data" / "config"
-    shutil.copytree(test_config, tmpdir.join("site"))
+    shutil.copytree(test_config, tmp_path / "site")
 
     # Create temporary 'defaults', 'site' and 'user' folders
-    tmpdir.ensure("user", dir=True)
+    (tmp_path / "user").mkdir()
 
     # Fill out config.yaml, compilers.yaml and modules.yaml templates.
     locks = sys.platform != "win32"
-    config = tmpdir.join("site", "config.yaml")
+    config = tmp_path / "site" / "config.yaml"
     config_template = test_config / "config.yaml"
     config.write(config_template.read_text().format(install_tree_root, locks))
 
     target = str(_vendoring.archspec.cpu.host().family)
-    compilers = tmpdir.join("site", "packages.yaml")
+    compilers = tmp_path / "site" / "packages.yaml"
     compilers_template = test_config / "packages.yaml"
     compilers.write(compilers_template.read_text().format(linux_os=linux_os, target=target))
 
-    modules = tmpdir.join("site", "modules.yaml")
+    modules = tmp_path / "site" / "modules.yaml"
     modules_template = test_config / "modules.yaml"
     modules.write(modules_template.read_text().format(tcl_root, lmod_root))
-    yield tmpdir
+    yield tmp_path
 
 
 def _create_mock_configuration_scopes(configuration_dir):
@@ -868,15 +879,15 @@ def _create_mock_configuration_scopes(configuration_dir):
         ),
         (
             ConfigScopePriority.CONFIG_FILES,
-            spack.config.DirectoryConfigScope("site", str(configuration_dir.join("site"))),
+            spack.config.DirectoryConfigScope("site", str(configuration_dir / "site")),
         ),
         (
             ConfigScopePriority.CONFIG_FILES,
-            spack.config.DirectoryConfigScope("system", str(configuration_dir.join("system"))),
+            spack.config.DirectoryConfigScope("system", str(configuration_dir / "system")),
         ),
         (
             ConfigScopePriority.CONFIG_FILES,
-            spack.config.DirectoryConfigScope("user", str(configuration_dir.join("user"))),
+            spack.config.DirectoryConfigScope("user", str(configuration_dir / "user")),
         ),
         (ConfigScopePriority.COMMAND_LINE, spack.config.InternalConfigScope("command_line")),
     ]
@@ -942,13 +953,14 @@ def mock_wsdk_externals(monkeypatch_session):
 
 
 @pytest.fixture(scope="function")
-def concretize_scope(mutable_config, tmpdir):
+def concretize_scope(mutable_config, tmp_path: pathlib.Path):
     """Adds a scope for concretization preferences"""
-    tmpdir.ensure_dir("concretize")
+    concretize_dir = tmp_path / "concretize"
+    concretize_dir.mkdir()
     with spack.config.override(
-        spack.config.DirectoryConfigScope("concretize", str(tmpdir.join("concretize")))
+        spack.config.DirectoryConfigScope("concretize", str(concretize_dir))
     ):
-        yield str(tmpdir.join("concretize"))
+        yield str(concretize_dir)
 
     spack.repo.PATH._provider_index = None
 
@@ -967,10 +979,10 @@ def no_packages_yaml(mutable_config):
 
 
 @pytest.fixture()
-def mock_low_high_config(tmpdir):
+def mock_low_high_config(tmp_path: pathlib.Path):
     """Mocks two configuration scopes: 'low' and 'high'."""
     scopes = [
-        spack.config.DirectoryConfigScope(name, str(tmpdir.join(name))) for name in ["low", "high"]
+        spack.config.DirectoryConfigScope(name, str(tmp_path / name)) for name in ["low", "high"]
     ]
 
     with spack.config.use_configuration(*scopes) as config:
@@ -1170,14 +1182,14 @@ def mutable_temporary_mirror(mutable_temporary_mirror_dir):
 
 
 @pytest.fixture(scope="function")
-def temporary_store(tmpdir, request):
+def temporary_store(tmp_path: pathlib.Path, request):
     """Hooks a temporary empty store for the test function."""
     ensure_configuration_fixture_run_before(request)
-    temporary_store_path = tmpdir.join("opt")
+    temporary_store_path = tmp_path / "opt"
     with spack.store.use_store(str(temporary_store_path)) as s:
         yield s
     if temporary_store_path.exists():
-        temporary_store_path.remove()
+        shutil.rmtree(temporary_store_path)
 
 
 @pytest.fixture()
@@ -1200,12 +1212,13 @@ class MockLayout:
 
 
 @pytest.fixture()
-def gen_mock_layout(tmpdir):
+def gen_mock_layout(tmp_path: pathlib.Path):
     # Generate a MockLayout in a temporary directory. In general the prefixes
     # specified by MockLayout should never be written to, but this ensures
     # that even if they are, that it causes no harm
     def create_layout(root):
-        subroot = tmpdir.mkdir(root)
+        subroot = tmp_path / root
+        subroot.mkdir(parents=True, exist_ok=True)
         return MockLayout(str(subroot))
 
     yield create_layout
@@ -1266,7 +1279,7 @@ def module_configuration(monkeypatch, request, mutable_config):
 @pytest.fixture()
 def mock_gnupghome(monkeypatch):
     # GNU PGP can't handle paths longer than 108 characters (wtf!@#$) so we
-    # have to make our own tmpdir with a shorter name than pytest's.
+    # have to make our own tmp_path with a shorter name than pytest's.
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
     try:
@@ -1754,7 +1767,7 @@ def mock_svn_repository(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_env_path(tmp_path, mutable_config, monkeypatch):
+def mutable_mock_env_path(tmp_path: pathlib.Path, mutable_config, monkeypatch):
     """Fixture for mocking the internal spack environments directory."""
     mock_path = tmp_path / "mock-env-path"
     mutable_config.set("config:environments_root", str(mock_path))
@@ -1880,7 +1893,7 @@ def clear_directive_functions():
 
 
 @pytest.fixture
-def mock_executable(tmp_path):
+def mock_executable(tmp_path: pathlib.Path):
     """Factory to create a mock executable in a temporary directory that
     output a custom string when run.
     """
@@ -1900,11 +1913,11 @@ def mock_executable(tmp_path):
 
 
 @pytest.fixture()
-def mock_test_stage(mutable_config, tmpdir):
+def mock_test_stage(mutable_config, tmp_path: pathlib.Path):
     # NOTE: This fixture MUST be applied after any fixture that uses
     # the config fixture under the hood
     # No need to unset because we use mutable_config
-    tmp_stage = str(tmpdir.join("test_stage"))
+    tmp_stage = str(tmp_path / "test_stage")
     mutable_config.set("config:test_stage", tmp_stage)
 
     yield tmp_stage
@@ -1932,7 +1945,7 @@ def brand_new_binary_cache():
 
 
 @pytest.fixture()
-def noncyclical_dir_structure(tmpdir):
+def noncyclical_dir_structure(tmp_path: pathlib.Path):
     """
     Create some non-trivial directory structure with
     symlinks to dirs and dangling symlinks, but no cycles::
@@ -1949,9 +1962,11 @@ def noncyclical_dir_structure(tmpdir):
         |   `-- file_2
         `-- file_3
     """
-    d, j = tmpdir.mkdir("nontrivial-dir"), os.path.join
+    d = tmp_path / "nontrivial-dir"
+    d.mkdir()
+    j = os.path.join
 
-    with d.as_cwd():
+    with working_dir(str(d)):
         os.mkdir(j("a"))
         os.mkdir(j("a", "d"))
         with open(j("a", "file_1"), "wb"):
@@ -2011,7 +2026,7 @@ def mock_curl_configs(mock_config_data, monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_fetch_url_text(tmpdir, mock_config_data, monkeypatch):
+def mock_fetch_url_text(mock_config_data, monkeypatch):
     """Mock spack.util.web.fetch_url_text."""
 
     stage_dir, config_files = mock_config_data
@@ -2039,19 +2054,21 @@ def prefix_like():
 
 
 @pytest.fixture()
-def prefix_tmpdir(tmpdir, prefix_like):
-    return tmpdir.mkdir(prefix_like)
+def prefix_tmpdir(tmp_path: pathlib.Path, prefix_like: str):
+    prefix_dir = tmp_path / prefix_like
+    prefix_dir.mkdir()
+    return prefix_dir
 
 
 @pytest.fixture()
-def binary_with_rpaths(prefix_tmpdir):
+def binary_with_rpaths(prefix_tmpdir: pathlib.Path):
     """Factory fixture that compiles an ELF binary setting its RPATH. Relative
     paths are encoded with `$ORIGIN` prepended.
     """
 
     def _factory(rpaths, message="Hello world!", dynamic_linker="/lib64/ld-linux.so.2"):
-        source = prefix_tmpdir.join("main.c")
-        source.write(
+        source = prefix_tmpdir / "main.c"
+        source.write_text(
             """
         #include <stdio.h>
         int main(){{
@@ -2061,8 +2078,8 @@ def binary_with_rpaths(prefix_tmpdir):
                 message
             )
         )
-        gcc = spack.util.executable.which("gcc")
-        executable = source.dirpath("main.x")
+        gcc = spack.util.executable.which("gcc", required=True)
+        executable = source.parent / "main.x"
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
         rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
         opts = [
@@ -2160,7 +2177,7 @@ def _root_path(x, y, *, path):
 
 
 @pytest.fixture
-def mock_modules_root(tmp_path, monkeypatch):
+def mock_modules_root(tmp_path: pathlib.Path, monkeypatch):
     """Sets the modules root to a temporary directory, to avoid polluting configuration scopes."""
     fn = functools.partial(_root_path, path=str(tmp_path))
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
@@ -2265,12 +2282,13 @@ def mock_runtimes(config, mock_packages):
 
 
 @pytest.fixture()
-def write_config_file(tmpdir):
+def write_config_file(tmp_path: pathlib.Path):
     """Returns a function that writes a config file."""
 
     def _write(config, data, scope):
-        config_yaml = tmpdir.join(scope, config + ".yaml")
-        config_yaml.ensure()
+        config_dir = tmp_path / scope
+        config_dir.mkdir(parents=True, exist_ok=True)
+        config_yaml = config_dir / (config + ".yaml")
         with config_yaml.open("w") as f:
             syaml.dump_config(data, f)
         return config_yaml

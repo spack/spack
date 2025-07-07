@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
+
 import pytest
 
 import spack.concretize
@@ -173,7 +175,9 @@ def test_concretize_deprecated(mock_packages, mock_archive, mock_fetch, install_
 
 @pytest.mark.usefixtures("mock_packages", "mock_archive", "mock_fetch", "install_mockery")
 @pytest.mark.regression("46915")
-def test_deprecate_spec_with_external_dependency(mutable_config, temporary_store, tmp_path):
+def test_deprecate_spec_with_external_dependency(
+    mutable_config, temporary_store, tmp_path: pathlib.Path
+):
     """Tests that we can deprecate a spec that has an external dependency"""
     packages_yaml = {
         "libelf": {

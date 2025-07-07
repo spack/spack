@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import re
 
 import pytest
@@ -24,14 +25,14 @@ def test_list_files():
     assert os.path.abspath(__file__) in files
 
 
-def test_verify(tmpdir):
-    source_dir = tmpdir.join("lib", "spack", "spack")
+def test_verify(tmp_path: pathlib.Path):
+    source_dir = tmp_path / "lib" / "spack" / "spack"
     mkdirp(str(source_dir))
 
-    no_header = source_dir.join("no_header.py")
+    no_header = source_dir / "no_header.py"
     touch(str(no_header))
 
-    lgpl_header = source_dir.join("lgpl_header.py")
+    lgpl_header = source_dir / "lgpl_header.py"
     with lgpl_header.open("w") as f:
         f.write(
             """\
@@ -41,7 +42,7 @@ def test_verify(tmpdir):
 """
         )
 
-    not_in_first_n_lines = source_dir.join("not_in_first_n_lines.py")
+    not_in_first_n_lines = source_dir / "not_in_first_n_lines.py"
     with not_in_first_n_lines.open("w") as f:
         f.write(
             """\
@@ -56,7 +57,7 @@ def test_verify(tmpdir):
 """
         )
 
-    correct_header = source_dir.join("correct_header.py")
+    correct_header = source_dir / "correct_header.py"
     with correct_header.open("w") as f:
         f.write(
             """\
@@ -66,7 +67,7 @@ def test_verify(tmpdir):
 """
         )
 
-    out = license("--root", str(tmpdir), "verify", fail_on_error=False)
+    out = license("--root", str(tmp_path), "verify", fail_on_error=False)
 
     assert str(no_header) in out
     assert str(lgpl_header) in out

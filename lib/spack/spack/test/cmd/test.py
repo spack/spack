@@ -4,10 +4,11 @@
 
 import argparse
 import os
+import pathlib
 
 import pytest
 
-from llnl.util.filesystem import copy_tree
+from llnl.util.filesystem import copy_tree, working_dir
 
 import spack.cmd.common.arguments
 import spack.cmd.test
@@ -25,7 +26,7 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_test_package_not_installed(
-    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, mock_test_stage
+    mock_packages, mock_archive, mock_fetch, install_mockery, mock_test_stage
 ):
     output = spack_test("run", "libdwarf")
 
@@ -111,19 +112,19 @@ def test_test_output_fails(
         ("test-fail", ["not callable", "TestFailure"]),
     ],
 )
-def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
+def test_junit_output_with_failures(tmp_path: pathlib.Path, mock_test_stage, pkg_name, msgs):
     """Confirm stand-alone test failure expected outputs in JUnit reporting."""
     install(pkg_name)
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         spack_test(
             "run", "--log-format=junit", "--log-file=test.xml", pkg_name, fail_on_error=False
         )
 
-    files = tmpdir.listdir()
-    filename = tmpdir.join("test.xml")
+    files = list(tmp_path.iterdir())
+    filename = tmp_path / "test.xml"
     assert filename in files
 
-    content = filename.open().read()
+    content = filename.read_text()
 
     # Count failures and errors correctly
     assert 'tests="1"' in content
@@ -137,11 +138,17 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
 
 
 def test_cdash_output_test_error(
-    tmpdir, mock_fetch, install_mockery, mock_packages, mock_archive, mock_test_stage, capfd
+    tmp_path: pathlib.Path,
+    mock_fetch,
+    install_mockery,
+    mock_packages,
+    mock_archive,
+    mock_test_stage,
+    capfd,
 ):
     """Confirm stand-alone test error expected outputs in CDash reporting."""
     install("test-error")
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         spack_test(
             "run",
             "--log-format=cdash",
@@ -149,23 +156,28 @@ def test_cdash_output_test_error(
             "test-error",
             fail_on_error=False,
         )
-        report_dir = tmpdir.join("cdash_reports")
-        reports = [name for name in report_dir.listdir() if str(name).endswith("Testing.xml")]
+        report_dir = tmp_path / "cdash_reports"
+        reports = [name for name in report_dir.iterdir() if str(name).endswith("Testing.xml")]
         assert len(reports) == 1
-        content = reports[0].open().read()
+        content = reports[0].read_text()
         assert "Command exited with status 1" in content
 
 
 def test_cdash_upload_clean_test(
-    tmpdir, mock_fetch, install_mockery, mock_packages, mock_archive, mock_test_stage
+    tmp_path: pathlib.Path,
+    mock_fetch,
+    install_mockery,
+    mock_packages,
+    mock_archive,
+    mock_test_stage,
 ):
     install("printing-package")
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         spack_test("run", "--log-file=cdash_reports", "--log-format=cdash", "printing-package")
-        report_dir = tmpdir.join("cdash_reports")
-        reports = [name for name in report_dir.listdir() if str(name).endswith("Testing.xml")]
+        report_dir = tmp_path / "cdash_reports"
+        reports = [name for name in report_dir.iterdir() if str(name).endswith("Testing.xml")]
         assert len(reports) == 1
-        content = reports[0].open().read()
+        content = reports[0].read_text()
         assert "passed" in content
         assert "Running test_print" in content, "Expected first command output"
         assert "second command" in content, "Expected second command output"

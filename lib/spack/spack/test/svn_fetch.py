@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -70,9 +71,9 @@ def test_fetch(type_of_test, secure, mock_svn_repository, config, mutable_mock_r
             assert h() == t.revision
 
 
-def test_svn_extra_fetch(tmpdir):
+def test_svn_extra_fetch(tmp_path: pathlib.Path):
     """Ensure a fetch after downloading is effectively a no-op."""
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
 
     fetcher = SvnFetchStrategy(svn="file:///not-a-real-svn-repo")
     assert fetcher is not None

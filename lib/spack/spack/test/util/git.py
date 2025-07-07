@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pathlib
 from typing import Optional
 
 import pytest
@@ -33,7 +34,7 @@ def test_modified_files(mock_git_package_changes):
         assert files[0] == filename
 
 
-def test_init_git_repo(git, tmp_path):
+def test_init_git_repo(git, tmp_path: pathlib.Path):
     repo_url = "https://github.com/spack/spack.git"
     destination = tmp_path / "test_git_init"
 
@@ -43,7 +44,7 @@ def test_init_git_repo(git, tmp_path):
         assert "No commits yet" in git("status", output=str)
 
 
-def test_pull_checkout_commit(git, tmp_path, mock_git_version_info):
+def test_pull_checkout_commit(git, tmp_path: pathlib.Path, mock_git_version_info):
     repo, _, commits = mock_git_version_info
     destination = tmp_path / "test_git_checkout_commit"
 
@@ -54,7 +55,7 @@ def test_pull_checkout_commit(git, tmp_path, mock_git_version_info):
         assert commits[0] in git("rev-parse", "HEAD", output=str)
 
 
-def test_pull_checkout_tag(git, tmp_path, mock_git_version_info):
+def test_pull_checkout_tag(git, tmp_path: pathlib.Path, mock_git_version_info):
     repo, _, _ = mock_git_version_info
     destination = tmp_path / "test_git_checkout_tag"
 
@@ -65,7 +66,7 @@ def test_pull_checkout_tag(git, tmp_path, mock_git_version_info):
         assert "v1.1" in git("describe", "--exact-match", "--tags", output=str)
 
 
-def test_pull_checkout_branch(git, tmp_path, mock_git_version_info):
+def test_pull_checkout_branch(git, tmp_path: pathlib.Path, mock_git_version_info):
     repo, _, _ = mock_git_version_info
     destination = tmp_path / "test_git_checkout_branch"
 

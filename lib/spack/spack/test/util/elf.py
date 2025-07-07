@@ -4,6 +4,7 @@
 
 
 import io
+import pathlib
 
 import pytest
 
@@ -30,10 +31,10 @@ def skip_unless_linux(f):
     "linker_flag,is_runpath",
     [("-Wl,--disable-new-dtags", False), ("-Wl,--enable-new-dtags", True)],
 )
-def test_elf_parsing_shared_linking(linker_flag, is_runpath, tmpdir):
-    gcc = spack.util.executable.which("gcc")
+def test_elf_parsing_shared_linking(linker_flag, is_runpath, tmp_path: pathlib.Path):
+    gcc = spack.util.executable.which("gcc", required=True)
 
-    with fs.working_dir(str(tmpdir)):
+    with fs.working_dir(str(tmp_path)):
         # Create a library to link to so we can force a dynamic section in an ELF file
         with open("foo.c", "w", encoding="utf-8") as f:
             f.write("int foo(){return 0;}")
@@ -178,32 +179,33 @@ def test_elf_get_and_replace_rpaths_and_pt_interp(binary_with_rpaths):
 
 @pytest.mark.requires_executables("gcc")
 @skip_unless_linux
-def test_drop_redundant_rpath(tmpdir, binary_with_rpaths):
+def test_drop_redundant_rpath(tmp_path: pathlib.Path, binary_with_rpaths):
     """Test the post install hook that drops redundant rpath entries"""
 
-    # Use existing and non-existing dirs in tmpdir
-    non_existing_dirs = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
-    existing_dirs = [str(tmpdir.join("c")), str(tmpdir.join("d"))]
+    # Use existing and non-existing dirs in tmp_path
+    non_existing_dirs = [str(tmp_path / "a"), str(tmp_path / "b")]
+    existing_dirs = [str(tmp_path / "c"), str(tmp_path / "d")]
     all_dirs = non_existing_dirs + existing_dirs
 
-    tmpdir.ensure("c", dir=True)
-    tmpdir.ensure("d", dir=True)
+    (tmp_path / "c").mkdir()
+    (tmp_path / "d").mkdir()
 
     # Create a binary with rpaths to both existing and non-existing dirs
     binary = binary_with_rpaths(rpaths=all_dirs)
 
     # Verify that the binary has all the rpaths
     # sometimes compilers add extra rpaths, so we test for a subset
-    assert set(all_dirs).issubset(elf.get_rpaths(binary))
+    all_rpaths = elf.get_rpaths(binary)
+    assert all_rpaths and set(all_dirs).issubset(all_rpaths)
 
     # Test whether the right rpaths are dropped
     drop_redundant_rpaths(binary)
     new_rpaths = elf.get_rpaths(binary)
-    assert set(existing_dirs).issubset(new_rpaths)
+    assert new_rpaths and set(existing_dirs).issubset(new_rpaths)
     assert set(non_existing_dirs).isdisjoint(new_rpaths)
 
 
-def test_elf_invalid_e_shnum(tmp_path):
+def test_elf_invalid_e_shnum(tmp_path: pathlib.Path):
     # from llvm/test/Object/Inputs/invalid-e_shnum.elf
     path = tmp_path / "invalid-e_shnum.elf"
     with open(path, "wb") as file:

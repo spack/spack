@@ -200,21 +200,24 @@ def polite_filename(filename: str) -> str:
     return _polite_antipattern().sub("_", filename)
 
 
-def getuid() -> Union[str, int]:
-    """Returns os getuid on non Windows
-    On Windows returns 0 for admin users, login string otherwise
-    This is in line with behavior from get_owner_uid which
-    always returns the login string on Windows
-    """
-    if sys.platform == "win32":
+if sys.platform == "win32":
+
+    def _getuid_win32() -> Union[str, int]:
+        """Returns os getuid on non Windows
+        On Windows returns 0 for admin users, login string otherwise
+        This is in line with behavior from get_owner_uid which
+        always returns the login string on Windows
+        """
         import ctypes
 
         # If not admin, use the string name of the login as a unique ID
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return os.getlogin()
         return 0
-    else:
-        return os.getuid()
+
+    getuid = _getuid_win32
+else:
+    getuid = os.getuid
 
 
 def _win_rename(src, dst):
@@ -572,14 +575,13 @@ def set_install_permissions(path):
         os.chmod(path, 0o644)
 
 
-def group_ids(uid=None):
+def group_ids(uid: Optional[int] = None) -> List[int]:
     """Get group ids that a uid is a member of.
 
     Arguments:
-        uid (int): id of user, or None for current user
+        uid: id of user, or None for current user
 
-    Returns:
-        (list of int): gids of groups the user is a member of
+    Returns: gids of groups the user is a member of
     """
     if sys.platform == "win32":
         tty.warn("Function is not supported on Windows")

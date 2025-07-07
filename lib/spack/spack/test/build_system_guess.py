@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
+
 import pytest
 
 import spack.cmd.create
@@ -36,19 +38,22 @@ import spack.util.url as url_util
         ("foobar", "generic"),
     ],
 )
-def url_and_build_system(request, tmpdir):
+def url_and_build_system(request, tmp_path: pathlib.Path):
     """Sets up the resources to be pulled by the stage with
     the appropriate file name and returns their url along with
     the correct build-system guess
     """
-    tar = spack.util.executable.which("tar")
-    orig_dir = tmpdir.chdir()
-    filename, system = request.param
-    tmpdir.ensure("archive", filename)
-    tar("czf", "archive.tar.gz", "archive")
-    url = url_util.path_to_file_url(str(tmpdir.join("archive.tar.gz")))
-    yield url, system
-    orig_dir.chdir()
+    tar = spack.util.executable.which("tar", required=True)
+    import llnl.util.filesystem as fs
+
+    with fs.working_dir(str(tmp_path)):
+        filename, system = request.param
+        archive_dir = tmp_path / "archive"
+        archive_dir.mkdir()
+        (archive_dir / filename).touch()
+        tar("czf", "archive.tar.gz", "archive")
+        url = url_util.path_to_file_url(str(tmp_path / "archive.tar.gz"))
+        yield url, system
 
 
 def test_build_systems(url_and_build_system):

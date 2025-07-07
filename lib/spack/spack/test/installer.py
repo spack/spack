@@ -4,6 +4,7 @@
 
 import glob
 import os
+import pathlib
 import shutil
 import sys
 from typing import List, Optional, Union
@@ -321,7 +322,7 @@ def test_installer_ensure_ready_errors(install_mockery, monkeypatch):
         installer._ensure_install_ready(spec.package)
 
 
-def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
+def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path, capsys):
     """Test _ensure_locked when a non-lock exception is raised."""
     mock_err_msg = "Mock exception error"
 
@@ -332,7 +333,7 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
     spec = installer.build_requests[0].pkg.spec
 
     monkeypatch.setattr(ulk.Lock, "acquire_read", _raise)
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         with pytest.raises(RuntimeError):
             installer._ensure_locked("read", spec.package)
 
@@ -341,13 +342,13 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
         assert mock_err_msg in out
 
 
-def test_ensure_locked_have(install_mockery, tmpdir, capsys):
+def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capsys):
     """Test _ensure_locked when already have lock."""
     installer = create_installer(["trivial-install-test-package"], {})
     spec = installer.build_requests[0].pkg.spec
     pkg_id = inst.package_id(spec)
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         # Test "downgrade" of a read lock (to a read lock)
         lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
         lock_type = "read"
@@ -377,10 +378,10 @@ def test_ensure_locked_have(install_mockery, tmpdir, capsys):
 
 
 @pytest.mark.parametrize("lock_type,reads,writes", [("read", 1, 0), ("write", 0, 1)])
-def test_ensure_locked_new_lock(install_mockery, tmpdir, lock_type, reads, writes):
+def test_ensure_locked_new_lock(install_mockery, tmp_path: pathlib.Path, lock_type, reads, writes):
     installer = create_installer(["pkg-a"], {})
     spec = installer.build_requests[0].pkg.spec
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         ltype, lock = installer._ensure_locked(lock_type, spec.package)
         assert ltype == lock_type
         assert lock is not None
@@ -388,7 +389,7 @@ def test_ensure_locked_new_lock(install_mockery, tmpdir, lock_type, reads, write
         assert lock._writes == writes
 
 
-def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
+def test_ensure_locked_new_warn(install_mockery, monkeypatch, capsys):
     orig_pl = spack.database.SpecLocker.lock
 
     def _pl(db, spec, timeout):
@@ -431,19 +432,19 @@ def test_fake_install(install_mockery):
     assert os.path.isdir(pkg.prefix.lib)
 
 
-def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
+def test_dump_packages_deps_ok(install_mockery, tmp_path: pathlib.Path, mock_packages):
     """Test happy path for dump_packages with dependencies."""
 
     spec_name = "simple-inheritance"
     spec = spack.concretize.concretize_one(spec_name)
-    inst.dump_packages(spec, str(tmpdir))
+    inst.dump_packages(spec, str(tmp_path))
 
     repo = mock_packages.repos[0]
     dest_pkg = repo.filename_for_package_name(spec_name)
     assert os.path.isfile(dest_pkg)
 
 
-def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
+def test_dump_packages_deps_errs(install_mockery, tmp_path: pathlib.Path, monkeypatch, capsys):
     """Test error paths for dump_packages with dependencies."""
     orig_bpp = spack.store.STORE.layout.build_packages_path
     orig_dirname = spack.repo.Repo.dirname_for_package_name
@@ -467,7 +468,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     monkeypatch.setattr(spack.store.STORE.layout, "build_packages_path", bpp_path)
 
     spec = spack.concretize.concretize_one("simple-inheritance")
-    path = str(tmpdir)
+    path = str(tmp_path)
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
@@ -484,9 +485,9 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
-def test_clear_failures_success(tmpdir):
+def test_clear_failures_success(tmp_path: pathlib.Path):
     """Test the clear_failures happy path."""
-    failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)
+    failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
 
     spec = spack.spec.Spec("pkg-a")
     spec._mark_concrete()
@@ -511,9 +512,9 @@ def test_clear_failures_success(tmpdir):
 
 
 @pytest.mark.not_on_windows("chmod does not prevent removal on Win")
-def test_clear_failures_errs(tmpdir, capsys):
+def test_clear_failures_errs(tmp_path: pathlib.Path, capsys):
     """Test the clear_failures exception paths."""
-    failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)
+    failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
     spec = spack.spec.Spec("pkg-a")
     spec._mark_concrete()
     failures.mark(spec)
@@ -530,7 +531,7 @@ def test_clear_failures_errs(tmpdir, capsys):
     failures.dir.chmod(0o750)
 
 
-def test_combine_phase_logs(tmpdir):
+def test_combine_phase_logs(tmp_path: pathlib.Path):
     """Write temporary files, and assert that combine phase logs works
     to combine them into one file. We aren't currently using this function,
     but it's available when the logs are refactored to be written separately.
@@ -540,14 +541,14 @@ def test_combine_phase_logs(tmpdir):
 
     # Create and write to dummy phase log files
     for log_file in log_files:
-        phase_log_file = os.path.join(str(tmpdir), log_file)
+        phase_log_file = tmp_path / log_file
         with open(phase_log_file, "w", encoding="utf-8") as plf:
             plf.write("Output from %s\n" % log_file)
-        phase_log_files.append(phase_log_file)
+        phase_log_files.append(str(phase_log_file))
 
     # This is the output log we will combine them into
-    combined_log = os.path.join(str(tmpdir), "combined-out.txt")
-    inst.combine_phase_logs(phase_log_files, combined_log)
+    combined_log = tmp_path / "combined-out.txt"
+    inst.combine_phase_logs(phase_log_files, str(combined_log))
     with open(combined_log, "r", encoding="utf-8") as log_file:
         out = log_file.read()
 
@@ -556,11 +557,11 @@ def test_combine_phase_logs(tmpdir):
         assert "Output from %s\n" % log_file in out
 
 
-def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
+def test_combine_phase_logs_does_not_care_about_encoding(tmp_path: pathlib.Path):
     # this is invalid utf-8 at a minimum
     data = b"\x00\xf4\xbf\x00\xbf\xbf"
-    input = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
-    output = str(tmpdir.join("c"))
+    input = [str(tmp_path / "a"), str(tmp_path / "b")]
+    output = str(tmp_path / "c")
 
     for path in input:
         with open(path, "wb") as f:
@@ -722,7 +723,7 @@ def test_install_splice_root_from_binary(
     assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
 
 
-class MockInstallStatus:
+class MockInstallStatus(inst.InstallStatus):
     def next_pkg(self, *args, **kwargs):
         pass
 
@@ -730,10 +731,10 @@ class MockInstallStatus:
         pass
 
     def get_progress(self):
-        pass
+        return "1/1"
 
 
-class MockTermStatusLine:
+class MockTermStatusLine(inst.TermStatusLine):
     def add(self, *args, **kwargs):
         pass
 
@@ -745,8 +746,8 @@ def test_installing_task_use_cache(install_mockery, monkeypatch):
     installer = create_installer(["trivial-install-test-package"], {})
     request = installer.build_requests[0]
     task = create_build_task(request.pkg)
-    install_status = MockInstallStatus()
-    term_status = MockTermStatusLine()
+    install_status = MockInstallStatus(1)
+    term_status = MockTermStatusLine(True)
 
     monkeypatch.setattr(inst, "_install_from_cache", _true)
     installer.start_task(task, install_status, term_status)
@@ -780,12 +781,12 @@ def test_install_task_requeue_build_specs(install_mockery, monkeypatch, capfd):
     assert inst.package_id(popped_task.pkg.spec) in installer.build_tasks
 
 
-def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
+def test_release_lock_write_n_exception(install_mockery, tmp_path: pathlib.Path, capsys):
     """Test _release_lock for supposed write lock with exception."""
     installer = create_installer(["trivial-install-test-package"], {})
 
     pkg_id = "test"
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
         installer.locks[pkg_id] = ("write", lock)
         assert lock._writes == 0
@@ -896,7 +897,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     assert expected_msg in out
 
 
-def test_cleanup_failed_err(install_mockery, tmpdir, monkeypatch, capsys):
+def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch, capsys):
     """Test _cleanup_failed exception path."""
     msg = "Fake release_write exception"
 
@@ -907,7 +908,7 @@ def test_cleanup_failed_err(install_mockery, tmpdir, monkeypatch, capsys):
 
     monkeypatch.setattr(lk.Lock, "release_write", _raise_except)
     pkg_id = "test"
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
         installer.failed[pkg_id] = lock
 
@@ -1231,9 +1232,7 @@ def fail(*args, **kwargs):
     assert False
 
 
-def test_overwrite_install_backup_success(
-    monkeypatch, temporary_store, config, mock_packages, tmpdir
-):
+def test_overwrite_install_backup_success(monkeypatch, temporary_store, config, mock_packages):
     """
     When doing an overwrite install that fails, Spack should restore the backup
     of the original prefix, and leave the original spec marked installed.
@@ -1243,8 +1242,8 @@ def test_overwrite_install_backup_success(
     installer = create_installer(["pkg-c"])
     installer._init_queue()
     task = installer._pop_task()
-    install_status = MockInstallStatus()
-    term_status = MockTermStatusLine()
+    install_status = MockInstallStatus(1)
+    term_status = MockTermStatusLine(True)
 
     # Make sure the install prefix exists with some trivial file
     installed_file = os.path.join(task.pkg.prefix, "some_file")
@@ -1276,9 +1275,7 @@ def remove_backup(pkg, install_args):
     raise Exception("Some fatal install error")
 
 
-def test_overwrite_install_backup_failure(
-    monkeypatch, temporary_store, config, mock_packages, tmpdir
-):
+def test_overwrite_install_backup_failure(monkeypatch, temporary_store, config, mock_packages):
     """
     When doing an overwrite install that fails, Spack should try to recover the
     original prefix. If that fails, the spec is lost, and it should be removed
@@ -1288,8 +1285,8 @@ def test_overwrite_install_backup_failure(
     installer = create_installer(["pkg-c"])
     installer._init_queue()
     task = installer._pop_task()
-    install_status = MockInstallStatus()
-    term_status = MockTermStatusLine()
+    install_status = MockInstallStatus(1)
+    term_status = MockTermStatusLine(True)
 
     # Make sure the install prefix exists
     installed_file = os.path.join(task.pkg.prefix, "some_file")
@@ -1362,7 +1359,7 @@ def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, r
 
 
 def test_print_install_test_log_failures(
-    tmpdir, install_mockery, mock_packages, ensure_debug, capfd
+    tmp_path: pathlib.Path, install_mockery, mock_packages, ensure_debug, capfd
 ):
     """Confirm expected outputs when there are test failures."""
     name = "trivial-install-test-package"
@@ -1371,7 +1368,7 @@ def test_print_install_test_log_failures(
 
     # Missing test log is an error
     pkg.run_tests = True
-    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.test_log_file = str(tmp_path / "test-log.txt")
     pkg.tester.add_failure(AssertionError("test"), "test-failure")
     spack.installer.print_install_test_log(pkg)
     err = capfd.readouterr()[1]

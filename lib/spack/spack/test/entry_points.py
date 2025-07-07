@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import sys
 
 import pytest
@@ -14,7 +15,7 @@ import spack.extensions
 
 
 class MockConfigEntryPoint:
-    def __init__(self, tmp_path):
+    def __init__(self, tmp_path: pathlib.Path):
         self.dir = tmp_path
         self.name = "mypackage_config"
 
@@ -32,7 +33,7 @@ class MockConfigEntryPoint:
 
 
 class MockExtensionsEntryPoint:
-    def __init__(self, tmp_path):
+    def __init__(self, tmp_path: pathlib.Path):
         self.dir = tmp_path
         self.name = "mypackage_extensions"
 
@@ -53,7 +54,7 @@ class MockExtensionsEntryPoint:
         return ep
 
 
-def entry_points_factory(tmp_path):
+def entry_points_factory(tmp_path: pathlib.Path):
     def entry_points(group=None):
         if group == "spack.config":
             return (MockConfigEntryPoint(tmp_path),)
@@ -65,12 +66,12 @@ def entry_points_factory(tmp_path):
 
 
 @pytest.fixture()
-def mock_get_entry_points(tmp_path, monkeypatch):
+def mock_get_entry_points(tmp_path: pathlib.Path, monkeypatch):
     entry_points = entry_points_factory(tmp_path)
     monkeypatch.setattr(llnl.util.lang, "get_entry_points", entry_points)
 
 
-def test_spack_entry_point_config(tmp_path, mock_get_entry_points):
+def test_spack_entry_point_config(tmp_path: pathlib.Path, mock_get_entry_points):
     """Test config scope entry point"""
     config_paths = dict(spack.config.config_paths_from_entry_points())
     config_path = config_paths.get("plugin-mypackage_config")
@@ -83,7 +84,7 @@ def test_spack_entry_point_config(tmp_path, mock_get_entry_points):
     assert config.get("config:install_tree:root", scope="plugin-mypackage_config") == "/spam/opt"
 
 
-def test_spack_entry_point_extension(tmp_path, mock_get_entry_points):
+def test_spack_entry_point_extension(tmp_path: pathlib.Path, mock_get_entry_points):
     """Test config scope entry point"""
     my_ext = tmp_path / "spack/spack-myext"
     extensions = spack.extensions.get_extension_paths()
@@ -101,7 +102,7 @@ def test_spack_entry_point_extension(tmp_path, mock_get_entry_points):
 
 
 @pytest.mark.skipif(sys.version_info[:2] < (3, 8), reason="Python>=3.8 required")
-def test_llnl_util_lang_get_entry_points(tmp_path, monkeypatch):
+def test_llnl_util_lang_get_entry_points(tmp_path: pathlib.Path, monkeypatch):
     import importlib.metadata  # type: ignore # novermin
 
     monkeypatch.setattr(importlib.metadata, "entry_points", entry_points_factory(tmp_path))

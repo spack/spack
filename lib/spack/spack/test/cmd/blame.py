@@ -62,7 +62,7 @@ def test_blame_directory():
         assert "not tracked" in out
 
 
-def test_blame_file_outside_spack_repo(tmp_path):
+def test_blame_file_outside_spack_repo(tmp_path: Path):
     """Ensure attempts to get blame outside a package repository are flagged."""
     test_file = tmp_path / "test"
     test_file.write_text("This is a test")
@@ -169,13 +169,12 @@ def test_repo_root_remote_descriptor(mock_git_version_info, monkeypatch):
     assert prefix == git_repo_path
 
 
-def test_git_prefix_bad(tmp_path):
+def test_git_prefix_bad(tmp_path: Path):
     """Exercise git_prefix paths with arguments that will not return success."""
     assert git_prefix("no/such/file.txt") is None
 
     with pytest.raises(SystemExit):
-        out = git_prefix(tmp_path)
-        assert "not in a git repository" in out
+        git_prefix(tmp_path)
 
 
 def test_ensure_full_history_shallow_works(mock_git_version_info, monkeypatch):

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 import sys
 
 import pytest
@@ -159,13 +160,14 @@ def test_find_external_no_manifest(mutable_config, working_env, monkeypatch):
 
 
 def test_find_external_empty_default_manifest_dir(
-    mutable_config, working_env, tmpdir, monkeypatch
+    mutable_config, working_env, tmp_path: pathlib.Path, monkeypatch
 ):
     """The user runs 'spack external find'; the default path for storing
     manifest files exists but is empty. Ensure that the command does not
     fail.
     """
-    empty_manifest_dir = str(tmpdir.mkdir("manifest_dir"))
+    empty_manifest_dir = str(tmp_path / "manifest_dir")
+    (tmp_path / "manifest_dir").mkdir()
     monkeypatch.setenv("PATH", "")
     monkeypatch.setattr(spack.cray_manifest, "default_path", empty_manifest_dir)
     external("find")
@@ -174,13 +176,14 @@ def test_find_external_empty_default_manifest_dir(
 @pytest.mark.not_on_windows("Can't chmod on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_find_external_manifest_with_bad_permissions(
-    mutable_config, working_env, tmpdir, monkeypatch
+    mutable_config, working_env, tmp_path: pathlib.Path, monkeypatch
 ):
     """The user runs 'spack external find'; the default path for storing
     manifest files exists but with insufficient permissions. Check that
     the command does not fail.
     """
-    test_manifest_dir = str(tmpdir.mkdir("manifest_dir"))
+    test_manifest_dir = str(tmp_path / "manifest_dir")
+    (tmp_path / "manifest_dir").mkdir()
     test_manifest_file_path = os.path.join(test_manifest_dir, "badperms.json")
     touch(test_manifest_file_path)
     monkeypatch.setenv("PATH", "")
@@ -194,14 +197,15 @@ def test_find_external_manifest_with_bad_permissions(
         os.chmod(test_manifest_file_path, 0o700)
 
 
-def test_find_external_manifest_failure(mutable_config, tmpdir, monkeypatch):
+def test_find_external_manifest_failure(mutable_config, tmp_path: pathlib.Path, monkeypatch):
     """The user runs 'spack external find'; the manifest parsing fails with
     some exception. Ensure that the command still succeeds (i.e. moves on
     to other external detection mechanisms).
     """
     # First, create an empty manifest file (without a file to read, the
     # manifest parsing is skipped)
-    test_manifest_dir = str(tmpdir.mkdir("manifest_dir"))
+    test_manifest_dir = str(tmp_path / "manifest_dir")
+    (tmp_path / "manifest_dir").mkdir()
     test_manifest_file_path = os.path.join(test_manifest_dir, "test.json")
     touch(test_manifest_file_path)
 
@@ -214,7 +218,7 @@ def test_find_external_manifest_failure(mutable_config, tmpdir, monkeypatch):
     assert "Skipping manifest and continuing" in output
 
 
-def test_find_external_merge(mutable_config, tmp_path):
+def test_find_external_merge(mutable_config):
     """Checks that 'spack find external' doesn't overwrite an existing spec in packages.yaml."""
     pkgs_cfg_init = {
         "find-externals1": {

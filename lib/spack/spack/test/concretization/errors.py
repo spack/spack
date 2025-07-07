@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
 from io import StringIO
 
 import pytest
@@ -66,7 +67,7 @@ def test_error_messages(error_messages, config_set, spec, mock_packages, mutable
         assert em in str(e.value)
 
 
-def test_internal_error_handling_formatting(tmp_path):
+def test_internal_error_handling_formatting(tmp_path: pathlib.Path):
     log = StringIO()
     input_to_output = [
         (spack.spec.Spec("foo+x"), spack.spec.Spec("foo@=1.0~x")),

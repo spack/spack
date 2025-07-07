@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests conversions from compilers.yaml"""
+import pathlib
+
 import pytest
 
 from spack.compilers.config import CompilerFactory
@@ -35,7 +37,7 @@ def mock_compiler(mock_executable):
 #     extra_rpaths: []
 
 
-def test_basic_compiler_conversion(mock_compiler, tmp_path):
+def test_basic_compiler_conversion(mock_compiler, tmp_path: pathlib.Path):
     """Tests the conversion of a compiler using a single toolchain, with default options."""
     compilers = CompilerFactory.from_legacy_yaml(mock_compiler)
     compiler_spec = compilers[0]

@@ -21,6 +21,7 @@ from typing import Any, Callable, Dict, NamedTuple, Optional
 
 import pytest
 
+import llnl.util.filesystem as fs
 from llnl.util.filesystem import copy_tree, join_path
 from llnl.util.symlink import readlink
 
@@ -70,15 +71,16 @@ legacy_mirror_dir = os.path.join(test_path, "data", "mirrors", "legacy_yaml")
 
 
 @pytest.fixture(scope="function")
-def cache_directory(tmpdir):
-    fetch_cache_dir = tmpdir.ensure("fetch_cache", dir=True)
+def cache_directory(tmp_path: pathlib.Path):
+    fetch_cache_dir = tmp_path / "fetch_cache"
+    fetch_cache_dir.mkdir()
     fsc = spack.fetch_strategy.FsCache(str(fetch_cache_dir))
-    spack.config.caches, old_cache_path = fsc, spack.caches.FETCH_CACHE
+    spack.caches.FETCH_CACHE, old_cache_path = fsc, spack.caches.FETCH_CACHE
 
-    yield spack.config.caches
+    yield spack.caches.FETCH_CACHE
 
-    fetch_cache_dir.remove()
-    spack.config.caches = old_cache_path
+    shutil.rmtree(str(fetch_cache_dir))
+    spack.caches.FETCH_CACHE = old_cache_path
 
 
 @pytest.fixture(scope="module")
@@ -105,7 +107,7 @@ def config_directory(tmp_path_factory):
 
 
 @pytest.fixture(scope="function")
-def default_config(tmp_path, config_directory, mock_packages_repo, install_mockery):
+def default_config(tmp_path: pathlib.Path, config_directory, mock_packages_repo, install_mockery):
     # This fixture depends on install_mockery to ensure
     # there is a clear order of initialization. The substitution of the
     # config scopes here is done on top of the substitution that comes with
@@ -145,9 +147,9 @@ def default_config(tmp_path, config_directory, mock_packages_repo, install_mocke
 
 
 @pytest.fixture(scope="function")
-def install_dir_default_layout(tmpdir):
+def install_dir_default_layout(tmp_path: pathlib.Path):
     """Hooks a fake install directory with a default layout"""
-    opt_dir = tmpdir.join("opt")
+    opt_dir = tmp_path / "opt"
     original_store, spack.store.STORE = spack.store.STORE, spack.store.Store(str(opt_dir))
     try:
         yield spack.store
@@ -156,9 +158,9 @@ def install_dir_default_layout(tmpdir):
 
 
 @pytest.fixture(scope="function")
-def install_dir_non_default_layout(tmpdir):
+def install_dir_non_default_layout(tmp_path: pathlib.Path):
     """Hooks a fake install directory with a non-default layout"""
-    opt_dir = tmpdir.join("opt")
+    opt_dir = tmp_path / "opt"
     original_store, spack.store.STORE = spack.store.STORE, spack.store.Store(
         str(opt_dir), projections={"all": "{name}-{version}-{hash:4}"}
     )
@@ -169,19 +171,20 @@ def install_dir_non_default_layout(tmpdir):
 
 
 @pytest.fixture(scope="function")
-def dummy_prefix(tmpdir):
+def dummy_prefix(tmp_path: pathlib.Path):
     """Dummy prefix used for testing tarball creation, validation, extraction"""
-    p = tmpdir.mkdir("prefix")
-    assert os.path.isabs(p)
+    p = tmp_path / "prefix"
+    p.mkdir()
+    assert os.path.isabs(str(p))
 
-    p.mkdir("bin")
-    p.mkdir("share")
-    p.mkdir(".spack")
+    (p / "bin").mkdir()
+    (p / "share").mkdir()
+    (p / ".spack").mkdir()
 
-    app = p.join("bin", "app")
-    relative_app_link = p.join("bin", "relative_app_link")
-    absolute_app_link = p.join("bin", "absolute_app_link")
-    data = p.join("share", "file")
+    app = p / "bin" / "app"
+    relative_app_link = p / "bin" / "relative_app_link"
+    absolute_app_link = p / "bin" / "absolute_app_link"
+    data = p / "share" / "file"
 
     with open(app, "w", encoding="utf-8") as f:
         f.write("hello world")
@@ -189,11 +192,11 @@ def dummy_prefix(tmpdir):
     with open(data, "w", encoding="utf-8") as f:
         f.write("hello world")
 
-    with open(p.join(".spack", "binary_distribution"), "w", encoding="utf-8") as f:
+    with open(p / ".spack" / "binary_distribution", "w", encoding="utf-8") as f:
         f.write("{}")
 
-    os.symlink("app", relative_app_link)
-    os.symlink(app, absolute_app_link)
+    os.symlink("app", str(relative_app_link))
+    os.symlink(str(app), str(absolute_app_link))
 
     return str(p)
 
@@ -330,7 +333,7 @@ def test_relative_rpaths_install_nondefault(temporary_mirror_dir):
     buildcache_cmd("install", "-ufo", cspec.name)
 
 
-def test_push_and_fetch_keys(mock_gnupghome, tmp_path):
+def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
     testpath = str(mock_gnupghome)
 
     mirror = os.path.join(testpath, "mirror")
@@ -393,13 +396,13 @@ def fake_dag_hash(spec, length=None):
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch", "temporary_mirror")
-def test_spec_needs_rebuild(monkeypatch, tmpdir):
+def test_spec_needs_rebuild(monkeypatch, tmp_path: pathlib.Path):
     """Make sure needs_rebuild properly compares remote hash
     against locally computed one, avoiding unnecessary rebuilds"""
 
     # Create a temp mirror directory for buildcache usage
-    mirror_dir = tmpdir.join("mirror_dir")
-    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
+    mirror_dir = tmp_path / "mirror_dir"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
 
     s = spack.concretize.concretize_one("libdwarf")
 
@@ -407,7 +410,7 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     install_cmd("--fake", s.name)
 
     # Put installed package in the buildcache
-    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-u", str(mirror_dir), s.name)
 
     rebuild = bindist.needs_rebuild(s, mirror_url)
 
@@ -422,12 +425,12 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
-def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
+def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     """Ensure spack buildcache index only reports available packages"""
 
     # Create a temp mirror directory for buildcache usage
-    mirror_dir = tmpdir.join("mirror_dir")
-    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
+    mirror_dir = tmp_path / "mirror_dir"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
     spack.config.set("mirrors", {"test": mirror_url})
 
     s = spack.concretize.concretize_one("libdwarf")
@@ -436,8 +439,8 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     install_cmd("--fake", "--no-cache", s.name)
 
     # Create a buildcache and update index
-    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
-    buildcache_cmd("update-index", mirror_dir.strpath)
+    buildcache_cmd("push", "-u", str(mirror_dir), s.name)
+    buildcache_cmd("update-index", str(mirror_dir))
 
     # Check package and dependency in buildcache
     cache_list = buildcache_cmd("list", "--allarch")
@@ -447,13 +450,13 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     # Remove dependency from cache
     libelf_files = glob.glob(
         os.path.join(
-            mirror_dir.join(bindist.buildcache_relative_specs_path()).strpath, "libelf", "*libelf*"
+            str(mirror_dir / bindist.buildcache_relative_specs_path()), "libelf", "*libelf*"
         )
     )
     os.remove(*libelf_files)
 
     # Update index
-    buildcache_cmd("update-index", mirror_dir.strpath)
+    buildcache_cmd("update-index", str(mirror_dir))
 
     with spack.config.override("config:binary_index_ttl", 0):
         # Check dependency not in buildcache
@@ -463,7 +466,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
-def test_use_bin_index(monkeypatch, tmpdir, mutable_config):
+def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
     """
@@ -471,13 +474,13 @@ def test_use_bin_index(monkeypatch, tmpdir, mutable_config):
 
     # Create a mirror, configure us to point at it, install a spec, and
     # put it in the mirror
-    mirror_dir = tmpdir.join("mirror_dir")
-    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
+    mirror_dir = tmp_path / "mirror_dir"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
     spack.config.set("mirrors", {"test": mirror_url})
     s = spack.concretize.concretize_one("libdwarf")
     install_cmd("--fake", "--no-cache", s.name)
-    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
-    buildcache_cmd("update-index", mirror_dir.strpath)
+    buildcache_cmd("push", "-u", str(mirror_dir), s.name)
+    buildcache_cmd("update-index", str(mirror_dir))
 
     # Now the test
     buildcache_cmd("list", "-al")
@@ -486,7 +489,7 @@ def test_use_bin_index(monkeypatch, tmpdir, mutable_config):
     assert "libdwarf" in cache_list
 
 
-def test_generate_key_index_failure(monkeypatch, tmp_path):
+def test_generate_key_index_failure(monkeypatch, tmp_path: pathlib.Path):
     def list_url(url, recursive=False):
         if "fails-listing" in url:
             raise Exception("Couldn't list the directory")
@@ -505,7 +508,7 @@ def test_generate_key_index_failure(monkeypatch, tmp_path):
         bindist.generate_key_index("s3://non-existent/fails-uploading", str(tmp_path))
 
 
-def test_generate_package_index_failure(monkeypatch, tmp_path, capfd):
+def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, capfd):
     def mock_list_url(url, recursive=False):
         raise Exception("Some HTTP error")
 
@@ -522,7 +525,7 @@ def test_generate_package_index_failure(monkeypatch, tmp_path, capfd):
     )
 
 
-def test_generate_indices_exception(monkeypatch, tmp_path, capfd):
+def test_generate_indices_exception(monkeypatch, tmp_path: pathlib.Path, capfd):
     def mock_list_url(url, recursive=False):
         raise Exception("Test Exception handling")
 
@@ -539,7 +542,7 @@ def test_generate_indices_exception(monkeypatch, tmp_path, capfd):
     assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 
 
-def test_update_sbang(tmp_path, temporary_mirror, mock_fetch, install_mockery):
+def test_update_sbang(tmp_path: pathlib.Path, temporary_mirror, mock_fetch, install_mockery):
     """Test relocation of the sbang shebang line in a package script"""
     s = spack.concretize.concretize_one("old-sbang")
     PackageInstaller([s.package]).install()
@@ -597,7 +600,9 @@ def test_FetchCacheError_pretty_printing_single():
     assert str_e.rstrip() == str_e
 
 
-def test_text_relocate_if_needed(install_mockery, temporary_store, mock_fetch, tmp_path):
+def test_text_relocate_if_needed(
+    install_mockery, temporary_store, mock_fetch, tmp_path: pathlib.Path
+):
     install_cmd("needs-text-relocation")
     spec = temporary_store.db.query_one("needs-text-relocation")
     tgz_path = tmp_path / "relocatable.tar.gz"
@@ -614,7 +619,7 @@ def test_text_relocate_if_needed(install_mockery, temporary_store, mock_fetch, t
     assert join_path("bin", "secretexe") not in manifest["relocate_textfiles"]
 
 
-def test_compression_writer(tmp_path):
+def test_compression_writer(tmp_path: pathlib.Path):
     text = "This is some text. We might or might not like to compress it as we write."
     checksum_algo = "sha256"
 
@@ -972,15 +977,16 @@ def test_reproducible_tarball_is_reproducible(tmp_path: Path):
         }
 
 
-def test_tarball_normalized_permissions(tmpdir):
-    p = tmpdir.mkdir("prefix")
-    p.mkdir("bin")
-    p.mkdir("share")
-    p.mkdir(".spack")
+def test_tarball_normalized_permissions(tmp_path: pathlib.Path):
+    p = tmp_path / "prefix"
+    p.mkdir()
+    (p / "bin").mkdir()
+    (p / "share").mkdir()
+    (p / ".spack").mkdir()
 
-    app = p.join("bin", "app")
-    data = p.join("share", "file")
-    tarball = str(tmpdir.join("prefix.tar.gz"))
+    app = p / "bin" / "app"
+    data = p / "share" / "file"
+    tarball = str(tmp_path / "prefix.tar.gz")
 
     # Everyone can write & execute. This should turn into 0o755 when the tarball is
     # extracted (on a different system).
@@ -996,9 +1002,9 @@ def test_tarball_normalized_permissions(tmpdir):
     ) as f:
         f.write("hello world")
 
-    bindist._do_create_tarball(tarball, prefix=p.strpath, buildinfo={}, prefixes_to_relocate=[])
+    bindist._do_create_tarball(tarball, prefix=str(p), buildinfo={}, prefixes_to_relocate=[])
 
-    expected_prefix = p.strpath.lstrip("/")
+    expected_prefix = str(p).lstrip("/")
 
     with tarfile.open(tarball) as tar:
         path_to_member = {member.name: member for member in tar.getmembers()}
@@ -1015,7 +1021,7 @@ def test_tarball_normalized_permissions(tmpdir):
     assert path_to_member[f"{expected_prefix}/share/file"].mode == 0o644
 
 
-def test_tarball_common_prefix(dummy_prefix, tmpdir):
+def test_tarball_common_prefix(dummy_prefix, tmp_path: pathlib.Path):
     """Tests whether Spack can figure out the package directory from the tarball contents, and
     strip them when extracting. This test creates a CURRENT_BUILD_CACHE_LAYOUT_VERSION=1 type
     tarball where the parent directories of the package prefix are missing. Spack should be able
@@ -1026,7 +1032,7 @@ def test_tarball_common_prefix(dummy_prefix, tmpdir):
     assert os.path.isabs(dummy_prefix)
     expected_prefix = PurePath(dummy_prefix).as_posix().lstrip("/")
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         # Create a tarball (using absolute path for prefix dir)
         with tarfile.open("example.tar", mode="w") as tar:
             tar.add(name=dummy_prefix)
@@ -1059,10 +1065,10 @@ def test_tarball_common_prefix(dummy_prefix, tmpdir):
         )
 
 
-def test_tarfile_missing_binary_distribution_file(tmpdir):
+def test_tarfile_missing_binary_distribution_file(tmp_path: pathlib.Path):
     """A tarfile that does not contain a .spack/binary_distribution file cannot be
     used to install."""
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         # An empty .spack dir.
         with tarfile.open("empty.tar", mode="w") as tar:
             tarinfo = tarfile.TarInfo(name="example/.spack")
@@ -1073,10 +1079,10 @@ def test_tarfile_missing_binary_distribution_file(tmpdir):
             bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
 
 
-def test_tarfile_without_common_directory_prefix_fails(tmpdir):
+def test_tarfile_without_common_directory_prefix_fails(tmp_path: pathlib.Path):
     """A tarfile that only contains files without a common package directory
     should fail to extract, as we won't know where to put the files."""
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         # Create a broken tarball with just a file, no directories.
         with tarfile.open("empty.tar", mode="w") as tar:
             tar.addfile(
@@ -1088,9 +1094,9 @@ def test_tarfile_without_common_directory_prefix_fails(tmpdir):
             bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
 
 
-def test_tarfile_with_files_outside_common_prefix(tmpdir, dummy_prefix):
+def test_tarfile_with_files_outside_common_prefix(tmp_path: pathlib.Path, dummy_prefix):
     """If a file is outside of the common prefix, we should fail."""
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         with tarfile.open("broken.tar", mode="w") as tar:
             tar.add(name=dummy_prefix)
             tar.addfile(tarfile.TarInfo(name="/etc/config_file"), fileobj=io.BytesIO(b"hello"))
@@ -1101,25 +1107,33 @@ def test_tarfile_with_files_outside_common_prefix(tmpdir, dummy_prefix):
             bindist._ensure_common_prefix(tarfile.open("broken.tar", mode="r"))
 
 
-def test_tarfile_of_spec_prefix(tmpdir):
+def test_tarfile_of_spec_prefix(tmp_path: pathlib.Path):
     """Tests whether hardlinks, symlinks, files and dirs are added correctly,
     and that the order of entries is correct."""
-    prefix = tmpdir.mkdir("prefix")
-    prefix.ensure("a_directory", dir=True).join("file").write("hello")
-    prefix.ensure("c_directory", dir=True).join("file").write("hello")
-    prefix.ensure("b_directory", dir=True).join("file").write("hello")
-    prefix.join("file").write("hello")
-    os.symlink(prefix.join("file"), prefix.join("symlink"))
-    os.link(prefix.join("file"), prefix.join("hardlink"))
+    prefix = tmp_path / "prefix"
+    prefix.mkdir()
 
-    file = tmpdir.join("example.tar")
+    (prefix / "a_directory").mkdir()
+    (prefix / "a_directory" / "file").write_text("hello")
 
-    with tarfile.open(file, mode="w") as tar:
-        bindist.tarfile_of_spec_prefix(tar, prefix.strpath, prefixes_to_relocate=[])
+    (prefix / "c_directory").mkdir()
+    (prefix / "c_directory" / "file").write_text("hello")
 
-    expected_prefix = prefix.strpath.lstrip("/")
+    (prefix / "b_directory").mkdir()
+    (prefix / "b_directory" / "file").write_text("hello")
 
-    with tarfile.open(file, mode="r") as tar:
+    (prefix / "file").write_text("hello")
+    os.symlink(str(prefix / "file"), str(prefix / "symlink"))
+    os.link(str(prefix / "file"), str(prefix / "hardlink"))
+
+    file = tmp_path / "example.tar"
+
+    with tarfile.open(str(file), mode="w") as tar:
+        bindist.tarfile_of_spec_prefix(tar, str(prefix), prefixes_to_relocate=[])
+
+    expected_prefix = str(prefix).lstrip("/")
+
+    with tarfile.open(str(file), mode="r") as tar:
         # Verify that entries are added in depth-first pre-order, files preceding dirs,
         # entries ordered alphabetically
         assert tar.getnames() == [
@@ -1149,7 +1163,7 @@ def test_tarfile_of_spec_prefix(tmpdir):
 
 
 @pytest.mark.parametrize("layout,expect_success", [(None, True), (1, True), (2, False)])
-def test_get_valid_spec_file(tmp_path, layout, expect_success):
+def test_get_valid_spec_file(tmp_path: pathlib.Path, layout, expect_success):
     # Test reading a spec.json file that does not specify a layout version.
     spec_dict = Spec("example").to_dict()
     path = tmp_path / "spec.json"
@@ -1172,25 +1186,25 @@ def test_get_valid_spec_file(tmp_path, layout, expect_success):
         assert not expect_success
 
 
-def test_get_valid_spec_file_doesnt_exist(tmp_path):
+def test_get_valid_spec_file_doesnt_exist(tmp_path: pathlib.Path):
     with pytest.raises(bindist.InvalidMetadataFile, match="No such file"):
         get_valid_spec_file(str(tmp_path / "no-such-file"), max_supported_layout=1)
 
 
 @pytest.mark.parametrize("filename", ["spec.json", "spec.json.sig"])
-def test_get_valid_spec_file_no_json(tmp_path, filename):
+def test_get_valid_spec_file_no_json(tmp_path: pathlib.Path, filename):
     tmp_path.joinpath(filename).write_text("not json")
     with pytest.raises(bindist.InvalidMetadataFile):
         get_valid_spec_file(str(tmp_path / filename), max_supported_layout=1)
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch", "temporary_mirror")
-def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
+def test_url_buildcache_entry_v3(monkeypatch, tmp_path: pathlib.Path):
     """Make sure URLBuildcacheEntry behaves as expected"""
 
     # Create a temp mirror directory for buildcache usage
-    mirror_dir = tmpdir.join("mirror_dir")
-    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
+    mirror_dir = tmp_path / "mirror_dir"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
 
     s = spack.concretize.concretize_one("libdwarf")
 
@@ -1198,7 +1212,7 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
     install_cmd("--fake", s.name)
 
     # Push libdwarf to buildcache
-    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
+    buildcache_cmd("push", "-u", str(mirror_dir), s.name)
 
     cache_class = get_url_buildcache_class(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     build_cache = cache_class(mirror_url, s, allow_unsigned=True)
@@ -1263,7 +1277,7 @@ class IndexInformation(NamedTuple):
 
 
 @pytest.fixture
-def mock_index(tmp_path, monkeypatch) -> IndexInformation:
+def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
     mirror_root = tmp_path / "mymirror"
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)

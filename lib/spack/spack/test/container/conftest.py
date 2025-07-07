@@ -1,6 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pathlib
+
 import pytest
 
 import spack.util.spack_yaml as syaml
@@ -20,14 +22,15 @@ def minimal_configuration():
 
 
 @pytest.fixture()
-def config_dumper(tmpdir):
+def config_dumper(tmp_path: pathlib.Path):
     """Function that dumps an environment config in a temporary folder."""
 
     def dumper(configuration):
         content = syaml.dump(configuration, default_flow_style=False)
-        config_file = tmpdir / "spack.yaml"
-        config_file.write(content)
-        return str(tmpdir)
+        config_file = tmp_path / "spack.yaml"
+        with open(config_file, "w", encoding="utf-8") as f:
+            f.write(content or "")
+        return str(tmp_path)
 
     return dumper
 

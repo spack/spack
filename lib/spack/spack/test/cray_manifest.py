@@ -9,7 +9,7 @@ establish dependency relationships (and in general the manifest-parsing
 logic needs to consume all related specs in a single pass).
 """
 import json
-import os
+import pathlib
 
 import _vendoring.archspec.cpu
 import pytest
@@ -349,7 +349,7 @@ def test_read_cray_manifest_add_compiler_failure(temporary_store, manifest_file,
 
 
 def test_read_cray_manifest_twice_no_duplicates(
-    mutable_config, temporary_store, manifest_file, monkeypatch, tmp_path
+    mutable_config, temporary_store, manifest_file, monkeypatch, tmp_path: pathlib.Path
 ):
     def _mock(entry, *, manifest_path):
         return spack.spec.Spec(f"{entry['name']}@{entry['version']}", external_path=str(tmp_path))
@@ -368,7 +368,7 @@ def test_read_cray_manifest_twice_no_duplicates(
     assert len([c for c in specs if c.satisfies("gcc@10.2.0.2112")]) == 1
 
 
-def test_read_old_manifest_v1_2(tmp_path, temporary_store):
+def test_read_old_manifest_v1_2(tmp_path: pathlib.Path, temporary_store):
     """Test reading a file using the older format ('version' instead of 'schema-version')."""
     manifest = tmp_path / "manifest_dir" / "test.json"
     manifest.parent.mkdir(parents=True)
@@ -387,10 +387,13 @@ def test_read_old_manifest_v1_2(tmp_path, temporary_store):
     cray_manifest.read(str(manifest), True)
 
 
-def test_convert_validation_error(tmpdir, mutable_config, mock_packages, temporary_store):
-    manifest_dir = str(tmpdir.mkdir("manifest_dir"))
+def test_convert_validation_error(
+    tmp_path: pathlib.Path, mutable_config, mock_packages, temporary_store
+):
+    manifest_dir = tmp_path / "manifest_dir"
+    manifest_dir.mkdir()
     # Does not parse as valid JSON
-    invalid_json_path = os.path.join(manifest_dir, "invalid-json.json")
+    invalid_json_path = manifest_dir / "invalid-json.json"
     with open(invalid_json_path, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -403,7 +406,7 @@ def test_convert_validation_error(tmpdir, mutable_config, mock_packages, tempora
 
     # Valid JSON, but does not conform to schema (schema-version is not a string
     # of length > 0)
-    invalid_schema_path = os.path.join(manifest_dir, "invalid-schema.json")
+    invalid_schema_path = manifest_dir / "invalid-schema.json"
     with open(invalid_schema_path, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -422,7 +425,7 @@ def test_convert_validation_error(tmpdir, mutable_config, mock_packages, tempora
 
 
 @pytest.fixture
-def manifest_file(tmp_path, manifest_content):
+def manifest_file(tmp_path: pathlib.Path, manifest_content):
     """Create a manifest file in a directory. Used by 'spack external'."""
     filename = tmp_path / "external-db.json"
     with open(filename, "w", encoding="utf-8") as db_file:
@@ -431,7 +434,7 @@ def manifest_file(tmp_path, manifest_content):
 
 
 def test_find_external_nonempty_default_manifest_dir(
-    temporary_store, mutable_mock_repo, tmpdir, monkeypatch, manifest_file
+    temporary_store, mutable_mock_repo, monkeypatch, manifest_file
 ):
     """The user runs 'spack external find'; the default manifest directory
     contains a manifest file. Ensure that the specs are read.

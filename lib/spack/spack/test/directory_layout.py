@@ -6,6 +6,7 @@
 This test verifies that the Spack directory layout works properly.
 """
 import os
+import pathlib
 from pathlib import Path
 
 import pytest
@@ -25,22 +26,22 @@ from spack.spec import Spec
 max_packages = 10
 
 
-def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
+def test_yaml_directory_layout_parameters(tmp_path: pathlib.Path, default_mock_concretization):
     """This tests the various parameters that can be used to configure
     the install location"""
     spec = default_mock_concretization("python")
 
     # Ensure default layout matches expected spec format
-    layout_default = DirectoryLayout(str(tmpdir))
+    layout_default = DirectoryLayout(str(tmp_path))
     path_default = layout_default.relative_path_for_spec(spec)
     assert path_default == str(
         Path(spec.format("{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"))
     )
 
     # Test hash_length parameter works correctly
-    layout_10 = DirectoryLayout(str(tmpdir), hash_length=10)
+    layout_10 = DirectoryLayout(str(tmp_path), hash_length=10)
     path_10 = layout_10.relative_path_for_spec(spec)
-    layout_7 = DirectoryLayout(str(tmpdir), hash_length=7)
+    layout_7 = DirectoryLayout(str(tmp_path), hash_length=7)
     path_7 = layout_7.relative_path_for_spec(spec)
 
     assert len(path_default) - len(path_10) == 22
@@ -49,7 +50,7 @@ def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     # Test path_scheme
     arch, package7 = path_7.split(os.sep)
     projections_package7 = {"all": "{name}-{version}-{hash:7}"}
-    layout_package7 = DirectoryLayout(str(tmpdir), projections=projections_package7)
+    layout_package7 = DirectoryLayout(str(tmp_path), projections=projections_package7)
     path_package7 = layout_package7.relative_path_for_spec(spec)
 
     assert package7 == path_package7
@@ -62,7 +63,7 @@ def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
     )
     ns_scheme = "{architecture}/{namespace}/{name}-{version}-{hash:7}"
     arch_ns_scheme_projections = {"all": arch_scheme, "python": ns_scheme}
-    layout_arch_ns = DirectoryLayout(str(tmpdir), projections=arch_ns_scheme_projections)
+    layout_arch_ns = DirectoryLayout(str(tmp_path), projections=arch_ns_scheme_projections)
 
     arch_path_spec2 = layout_arch_ns.relative_path_for_spec(spec2)
     assert arch_path_spec2 == str(Path(spec2.format(arch_scheme)))
@@ -72,7 +73,7 @@ def test_yaml_directory_layout_parameters(tmpdir, default_mock_concretization):
 
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):
-        DirectoryLayout(str(tmpdir), hash_length=20, projections=projections_package7)
+        DirectoryLayout(str(tmp_path), hash_length=20, projections=projections_package7)
 
 
 def test_read_and_write_spec(temporary_store, config, mock_packages):
@@ -144,7 +145,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         assert not os.path.exists(install_dir)
 
 
-def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path):
+def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path: pathlib.Path):
     """This test ensures that spack can at least do *some*
     operations with packages that are installed but that it
     does not know about.  This is actually not such an uncommon
@@ -215,9 +216,9 @@ def test_find(temporary_store, config, mock_packages):
         assert found_specs[name].eq_dag(spec)
 
 
-def test_yaml_directory_layout_build_path(tmpdir, default_mock_concretization):
+def test_yaml_directory_layout_build_path(tmp_path: pathlib.Path, default_mock_concretization):
     """This tests build path method."""
     spec = default_mock_concretization("python")
-    layout = DirectoryLayout(str(tmpdir))
+    layout = DirectoryLayout(str(tmp_path))
     rel_path = os.path.join(layout.metadata_dir, layout.packages_dir)
     assert layout.build_packages_path(spec) == os.path.join(spec.prefix, rel_path)

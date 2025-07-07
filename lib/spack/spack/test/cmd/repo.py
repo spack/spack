@@ -51,7 +51,7 @@ def test_create_add_list_remove(mutable_config, tmp_path: pathlib.Path):
 
 
 def test_env_repo_path_vars_substitution(
-    tmpdir, install_mockery, mutable_mock_env_path, monkeypatch
+    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, monkeypatch
 ):
     """Test Spack correctly substitues repo paths with environment variables when creating an
     environment from a manifest file."""
@@ -59,8 +59,9 @@ def test_env_repo_path_vars_substitution(
     monkeypatch.setenv("CUSTOM_REPO_PATH", ".")
 
     # setup environment from spack.yaml
-    envdir = tmpdir.mkdir("env")
-    with envdir.as_cwd():
+    envdir = tmp_path / "env"
+    envdir.mkdir()
+    with working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -550,7 +551,7 @@ def test_add_repo_git_url_with_single_repo_path_new(monkeypatch):
     assert key == "test_git_repo"
 
 
-def test_add_repo_local_path_success(monkeypatch, tmp_path):
+def test_add_repo_local_path_success(monkeypatch, tmp_path: pathlib.Path):
     """Test successful addition of a local repository."""
     config = make_repo_config()
 
@@ -577,7 +578,7 @@ def test_add_repo_local_path_success(monkeypatch, tmp_path):
     assert repos_config["test_local_repo"] == str(tmp_path)
 
 
-def test_add_repo_auto_name_from_namespace(monkeypatch, tmp_path):
+def test_add_repo_auto_name_from_namespace(monkeypatch, tmp_path: pathlib.Path):
     """Test successful addition of a repository with auto-generated name from namespace."""
     config = make_repo_config()
 
@@ -602,7 +603,7 @@ def test_add_repo_auto_name_from_namespace(monkeypatch, tmp_path):
     assert repos_config["auto_name_repo"] == str(tmp_path)
 
 
-def test_add_repo_partial_repo_construction_warning(monkeypatch, tmp_path, capsys):
+def test_add_repo_partial_repo_construction_warning(monkeypatch, capsys):
     """Test that _add_repo issues warnings for repos that can't be constructed but
     succeeds if at least one can be."""
 
@@ -697,7 +698,7 @@ def test_repo_set_does_not_work_on_local_path(mutable_config):
         repo("set", "--destination", "/some/path", "local-repo")
 
 
-def test_add_repo_prepends_instead_of_appends(monkeypatch, tmp_path):
+def test_add_repo_prepends_instead_of_appends(monkeypatch, tmp_path: pathlib.Path):
     """Test that newly added repositories are prepended to the configuration,
     giving them higher priority than existing repositories."""
     existing_path = str(tmp_path / "existing_repo")
@@ -788,7 +789,7 @@ def test_repo_list_format_flags(
         ("new_repo", ["--commit", "abc123"]),
     ],
 )
-def test_repo_update_successful_flags(monkeypatch, mutable_config, tmp_path, repo_name, flags):
+def test_repo_update_successful_flags(monkeypatch, mutable_config, repo_name, flags):
     """Test repo update with flags."""
 
     def mock_parse_config_descriptor(name, entry, lock):
@@ -824,7 +825,7 @@ def test_repo_update_successful_flags(monkeypatch, mutable_config, tmp_path, rep
         ["--branch", "develop", "unknown_repo"],
     ],
 )
-def test_repo_update_invalid_flags(monkeypatch, mutable_config, tmp_path, flags):
+def test_repo_update_invalid_flags(monkeypatch, mutable_config, flags):
     """Test repo update with invalid flags."""
 
     with pytest.raises(SpackError):

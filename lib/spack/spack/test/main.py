@@ -5,6 +5,7 @@
 
 import os
 import os.path
+import pathlib
 
 import pytest
 
@@ -26,22 +27,22 @@ pytestmark = pytest.mark.not_on_windows(
 )
 
 
-def test_version_git_nonsense_output(tmpdir, working_env, monkeypatch):
-    git = str(tmpdir.join("git"))
+def test_version_git_nonsense_output(tmp_path: pathlib.Path, working_env, monkeypatch):
+    git = tmp_path / "git"
     with open(git, "w", encoding="utf-8") as f:
         f.write(
             """#!/bin/sh
 echo --|not a hash|----
 """
         )
-    fs.set_executable(git)
+    fs.set_executable(str(git))
 
-    monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(git))
+    monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(str(git)))
     assert spack.spack_version == spack.get_version()
 
 
-def test_version_git_fails(tmpdir, working_env, monkeypatch):
-    git = str(tmpdir.join("git"))
+def test_version_git_fails(tmp_path: pathlib.Path, working_env, monkeypatch):
+    git = tmp_path / "git"
     with open(git, "w", encoding="utf-8") as f:
         f.write(
             """#!/bin/sh
@@ -49,14 +50,14 @@ echo 26552533be04e83e66be2c28e0eb5011cb54e8fa
 exit 1
 """
         )
-    fs.set_executable(git)
+    fs.set_executable(str(git))
 
-    monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(git))
+    monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(str(git)))
     assert spack.spack_version == spack.get_version()
 
 
-def test_git_sha_output(tmpdir, working_env, monkeypatch):
-    git = str(tmpdir.join("git"))
+def test_git_sha_output(tmp_path: pathlib.Path, working_env, monkeypatch):
+    git = tmp_path / "git"
     sha = "26552533be04e83e66be2c28e0eb5011cb54e8fa"
     with open(git, "w", encoding="utf-8") as f:
         f.write(
@@ -66,24 +67,24 @@ echo {0}
                 sha
             )
         )
-    fs.set_executable(git)
+    fs.set_executable(str(git))
 
-    monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(git))
+    monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(str(git)))
     expected = "{0} ({1})".format(spack.spack_version, sha)
     assert expected == spack.get_version()
 
 
-def test_get_version_no_repo(tmpdir, monkeypatch):
-    monkeypatch.setattr(spack.paths, "prefix", str(tmpdir))
+def test_get_version_no_repo(tmp_path: pathlib.Path, monkeypatch):
+    monkeypatch.setattr(spack.paths, "prefix", str(tmp_path))
     assert spack.spack_version == spack.get_version()
 
 
-def test_get_version_no_git(tmpdir, working_env, monkeypatch):
+def test_get_version_no_git(working_env, monkeypatch):
     monkeypatch.setattr(spack.util.git, "git", lambda: None)
     assert spack.spack_version == spack.get_version()
 
 
-def test_main_calls_get_version(tmpdir, capsys, working_env, monkeypatch):
+def test_main_calls_get_version(capsys, working_env, monkeypatch):
     # act like git is not found in the PATH
     monkeypatch.setattr(spack.util.git, "git", lambda: None)
 
@@ -93,8 +94,8 @@ def test_main_calls_get_version(tmpdir, capsys, working_env, monkeypatch):
     assert spack.spack_version == out.strip()
 
 
-def test_get_version_bad_git(tmpdir, working_env, monkeypatch):
-    bad_git = str(tmpdir.join("git"))
+def test_get_version_bad_git(tmp_path: pathlib.Path, working_env, monkeypatch):
+    bad_git = str(tmp_path / "git")
     with open(bad_git, "w", encoding="utf-8") as f:
         f.write(
             """#!/bin/sh
@@ -112,7 +113,7 @@ def fail_if_add_env(env):
     assert False, "Should not add env from scope test."
 
 
-def test_bad_command_line_scopes(tmp_path, config):
+def test_bad_command_line_scopes(tmp_path: pathlib.Path, config):
     cfg = spack.config.Configuration()
     file_path = tmp_path / "file_instead_of_dir"
     non_existing_path = tmp_path / "non_existing_dir"
@@ -126,8 +127,8 @@ def test_bad_command_line_scopes(tmp_path, config):
         spack.main.add_command_line_scopes(cfg, [str(non_existing_path)], fail_if_add_env)
 
 
-def test_add_command_line_scopes(tmpdir, mutable_config):
-    config_yaml = str(tmpdir.join("config.yaml"))
+def test_add_command_line_scopes(tmp_path: pathlib.Path, mutable_config):
+    config_yaml = str(tmp_path / "config.yaml")
     with open(config_yaml, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -137,12 +138,12 @@ config:
 """
         )
 
-    spack.main.add_command_line_scopes(mutable_config, [str(tmpdir)], fail_if_add_env)
+    spack.main.add_command_line_scopes(mutable_config, [str(tmp_path)], fail_if_add_env)
     assert mutable_config.get("config:verify_ssl") is False
     assert mutable_config.get("config:dirty") is False
 
 
-def test_add_command_line_scope_env(tmp_path, mutable_mock_env_path):
+def test_add_command_line_scope_env(tmp_path: pathlib.Path, mutable_mock_env_path):
     """Test whether --config-scope <env> works, either by name or path."""
     managed_env = ev.create("example").manifest_path
 
@@ -179,8 +180,8 @@ spack:
     assert ev.active_environment() is None  # shouldn't cause an environment to be activated
 
 
-def test_include_cfg(mock_low_high_config, write_config_file, tmpdir):
-    cfg1_path = str(tmpdir.join("include1.yaml"))
+def test_include_cfg(mock_low_high_config, write_config_file, tmp_path: pathlib.Path):
+    cfg1_path = str(tmp_path / "include1.yaml")
     with open(cfg1_path, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -203,7 +204,7 @@ packages:
 """
 
     def write_python_cfg(_spec, _cfg_name):
-        cfg_path = str(tmpdir.join(_cfg_name))
+        cfg_path = str(tmp_path / _cfg_name)
         with open(cfg_path, "w", encoding="utf-8") as f:
             f.write(python_cfg(_spec))
         return cfg_path
@@ -215,18 +216,18 @@ packages:
     # namely $os; we expect that Spack resolves these variables
     # into the actual path of the config
     this_os = spack.platforms.host().default_os
-    cfg3_expanded_path = os.path.join(str(tmpdir), f"{this_os}", "include3.yaml")
+    cfg3_expanded_path = os.path.join(str(tmp_path), f"{this_os}", "include3.yaml")
     fs.mkdirp(os.path.dirname(cfg3_expanded_path))
     with open(cfg3_expanded_path, "w", encoding="utf-8") as f:
         f.write(python_cfg("+ssl"))
-    cfg3_abstract_path = os.path.join(str(tmpdir), "$os", "include3.yaml")
+    cfg3_abstract_path = os.path.join(str(tmp_path), "$os", "include3.yaml")
 
     # This will be included unconditionally
     cfg4_path = write_python_cfg("+tk", "include4.yaml")
 
     # This config will not exist, and the config will explicitly
     # allow this
-    cfg5_path = os.path.join(str(tmpdir), "non-existent.yaml")
+    cfg5_path = os.path.join(str(tmp_path), "non-existent.yaml")
 
     include_entries = [
         {"path": f"{cfg1_path}", "when": f'os == "{this_os}"'},
@@ -250,7 +251,7 @@ packages:
     assert req_specs == set(["@3.11:", "+ssl", "+tk"])
 
 
-def test_include_duplicate_source(tmpdir, mutable_config):
+def test_include_duplicate_source(mutable_config):
     """Check precedence when include.yaml files have the same path."""
     include_yaml = "debug.yaml"
     include_list = {"include": [f"./{include_yaml}"]}
@@ -283,12 +284,12 @@ def test_include_duplicate_source(tmpdir, mutable_config):
     assert mutable_config.get("config:debug") == site_config["config"]["debug"]
 
 
-def test_include_recurse_limit(tmpdir, mutable_config):
+def test_include_recurse_limit(tmp_path: pathlib.Path, mutable_config):
     """Ensure hit the recursion limit."""
     include_yaml = "include.yaml"
     include_list = {"include": [f"./{include_yaml}"]}
 
-    include_path = str(tmpdir.join(include_yaml))
+    include_path = str(tmp_path / include_yaml)
     with open(include_path, "w", encoding="utf-8") as f:
         syaml.dump_config(include_list, f)
 
@@ -300,12 +301,12 @@ def test_include_recurse_limit(tmpdir, mutable_config):
 
 # TODO: Fix this once recursive includes are processed in the expected order.
 @pytest.mark.parametrize("child,expected", [("b", True), ("c", False)])
-def test_include_recurse_diamond(tmpdir, mutable_config, child, expected):
+def test_include_recurse_diamond(tmp_path: pathlib.Path, mutable_config, child, expected):
     """Demonstrate include parent's value overrides that of child in diamond include.
 
     Check that the value set by b or c overrides that set by d.
     """
-    configs_root = tmpdir.join("configs")
+    configs_root = tmp_path / "configs"
     configs_root.mkdir()
 
     def write(path, contents):
@@ -320,11 +321,11 @@ def test_include_recurse_diamond(tmpdir, mutable_config, child, expected):
         values = indent.join([str(p) for p in paths])
         return f"include:{indent}{values}"
 
-    a_yaml = tmpdir.join("a.yaml")
-    b_yaml = configs_root.join("b.yaml")
-    c_yaml = configs_root.join("c.yaml")
-    d_yaml = configs_root.join("d.yaml")
-    debug_yaml = configs_root.join("enable_debug.yaml")
+    a_yaml = tmp_path / "a.yaml"
+    b_yaml = configs_root / "b.yaml"
+    c_yaml = configs_root / "c.yaml"
+    d_yaml = configs_root / "d.yaml"
+    debug_yaml = configs_root / "enable_debug.yaml"
 
     write(debug_yaml, debug_contents("true"))
 
@@ -339,7 +340,7 @@ include:
     write(b_yaml, include_contents([debug_yaml, d_yaml] if child == "b" else [d_yaml]))
     write(c_yaml, include_contents([debug_yaml, d_yaml] if child == "c" else [d_yaml]))
 
-    spack.main.add_command_line_scopes(mutable_config, [str(tmpdir)], fail_if_add_env)
+    spack.main.add_command_line_scopes(mutable_config, [str(tmp_path)], fail_if_add_env)
 
     try:
         assert mutable_config.get("config:debug") is expected
