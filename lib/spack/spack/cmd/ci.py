@@ -94,7 +94,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--prune-unaffected",
         action="store_true",
         dest="prune_unaffected",
-        default=True,
+        default=False,
         help="skip up-to-date specs\n\n"
         "do not generate jobs for specs that are up-to-date on the mirror",
     )
@@ -102,7 +102,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--no-prune-unaffected",
         action="store_false",
         dest="prune_unaffected",
-        default=True,
+        default=False,
         help="process up-to-date specs\n\n"
         "generate jobs for specs even when they are up-to-date on the mirror",
     )
