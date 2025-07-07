@@ -122,7 +122,9 @@ recipes. To do that, you should visit the
 [spack-packages repository](https://github.com/spack/spack-packages).
 
 If you want to contribute to Spack itself, you can submit a pull request
-to [this repository](https://github.com/spack/spack). Your PR must:
+to the [spack repository](https://github.com/spack/spack) (this repository).
+
+Your PR must:
 
   1. Make ``develop`` the destination branch;
   2. Pass Spack's unit tests, documentation tests, and package build tests;
