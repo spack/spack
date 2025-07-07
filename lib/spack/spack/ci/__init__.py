@@ -451,17 +451,16 @@ def get_unaffected_pruners(
 
         affected_pkgs.update(repo_affected_pkgs)
 
+    if not affected_pkgs:
+        tty.info("Skipping unaffected pruning no package changes were detected")
+        return None
+
     affected_specs = get_spec_filter_list(
         env, affected_pkgs, dependent_traverse_depth=untouched_pruning_dependent_depth
     )
     tty.debug(f"dependent_traverse_depth={untouched_pruning_dependent_depth}, affected specs:")
     for s in affected_specs:
         tty.debug(f"  {PipelineDag.key(s)}")
-
-    # If specs changed, but no packages were affected, rebuild everything that has changed.
-    if not affected_specs:
-        tty.info("Skipping unaffected pruning no package changes were detected")
-        return None
 
     return create_unaffected_pruner(affected_specs)
 
