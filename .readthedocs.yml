@@ -11,6 +11,10 @@ sphinx:
   configuration: lib/spack/docs/conf.py
   fail_on_warning: true
 
+formats:
+  - pdf
+  - epub
+
 python:
   install:
     - requirements: lib/spack/docs/requirements.txt
