@@ -386,16 +386,16 @@ def iter_groups(specs, indent, all_headers):
             print()
 
         # Drop the leading space from compilers to clean up output and aid checks.
-        compilers_info = compilers[1:] if compilers.startswith(" ") else compilers
+        compilers_info = compilers.strip() or "no compilers"
         header = "%s{%s} / %s{%s}" % (
             spack.spec.ARCHITECTURE_COLOR,
             architecture if architecture else "no arch",
             spack.spec.COMPILER_COLOR,
-            compilers_info if compilers_info else "no compilers",
+            compilers_info,
         )
 
         # Sometimes we want to display specs that are not yet concretized.
-        # If they don't have a compilers / architecture attached to them,
+        # If they don't have compilers / architecture attached to them,
         # then skip the header
         if all_headers or (architecture is not None or compilers_info):
             sys.stdout.write(ispace)
