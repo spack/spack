@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class ArbitraryExtraAttrs(Package):
-    """Simple package with one optional dependency"""
+    """Package that depends on extra_attributes from external config."""
 
     url = "http://www.example.com/a-1.0.tar.gz"
 
