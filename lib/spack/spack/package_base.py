@@ -618,6 +618,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Store whether a given Spec source/binary should not be redistributed.
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
 
+    #: Must be defined as a fallback for old specs that don't have the `build_system` variant
+    legacy_buildsystem: str
+
+    #: Must be defined in derived classes. Used when reporting the build system to users
+    build_system_class: str
+
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
     virtual = False
