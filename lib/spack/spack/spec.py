@@ -469,7 +469,7 @@ class ArchSpec:
         return True
 
     def _target_intersection(self, other):
-        results = []
+        results = list()
 
         if not self.target or not other.target:
             return results
