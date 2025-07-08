@@ -6,3 +6,4 @@ command_index.rst
 llnl*.rst
 spack*.rst
 spack.lock
+.spack/packages.yaml
