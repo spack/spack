@@ -875,8 +875,7 @@ Spack has three different ways to solve this problem, which fit different use ca
 ``spack load / unload``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have :ref:`shell support <packaging-shell-support>` enabled you can use the
-``spack load`` command to quickly add a package to your ``PATH``.
+If you sourced the appropriate shell script, as shown in :ref:`getting_started`, you can use the ``spack load`` command to quickly add a package to your ``PATH``.
 
 For example, this will add the ``mpich`` package built with ``gcc`` to
 your path:
