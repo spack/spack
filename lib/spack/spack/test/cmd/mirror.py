@@ -103,6 +103,7 @@ def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_m
     stats1.merge(stats2)
     assert "pkg2" in stats1.existing_resources
 
+
 # Test for command line-specified spec in concretized environment
 def test_mirror_spec_from_env(
     mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mock_fetch
