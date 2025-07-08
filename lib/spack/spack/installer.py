@@ -1500,7 +1500,7 @@ class PackageInstaller:
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
 
         if concurrent_packages is None:
-            concurrent_packages = spack.config.get("config:concurrent_packages", default=4)
+            concurrent_packages = spack.config.get("config:concurrent_packages", default=1)
         self.concurrent_packages = concurrent_packages
 
         install_args = {

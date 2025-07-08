@@ -151,7 +151,7 @@ config:
   url_fetch_method: urllib
 
   # The maximum number of jobs to use for the build system (e.g. `make`), when
-  # the -j flag is not given on the command line. Defaults to 4 when not set.
+  # the -j flag is not given on the command line. Defaults to 16 when not set.
   # Note that the maximum number of jobs is limited by the number of cores
   # available, taking thread affinity into account when supported.
   # For instance:
@@ -162,7 +162,7 @@ config:
 
   # The maximum number of concurrent package builds a single Spack instance will run,
   # when the `-p` / `--concurrent-packages`  flag is not given on the command line.
-  # Defaults to 4 when not set.
+  # Defaults to 1 when not set.
   # Generally, big builds like LLVM are going to perform better with a higher -j, and
   # builds with lots of dependencies may build better with higher -p. It is currently
   # up to the user to balance between -j (build_jobs) and -p (concurrent_packages)
@@ -171,7 +171,7 @@ config:
   # This, like `build_jobs`, is also limited by available cores.
   # Note: This option has no effect on windows, as parallel builds are disabled on
   # windows due to a lack of filesystem locks.
-  concurrent_packages: 4
+  concurrent_packages: 1
 
 
   # If set to true, Spack will use ccache to cache C compiles.
