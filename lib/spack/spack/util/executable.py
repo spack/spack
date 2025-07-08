@@ -258,6 +258,7 @@ class Executable:
                 )
 
         cmd = self.exe + list(args)
+        joined_cmd = " ".join(cmd)
 
         escaped_cmd = ["'%s'" % arg.replace("'", "'\"'\"'") for arg in cmd]
         cmd_line_string = " ".join(escaped_cmd)
@@ -291,6 +292,8 @@ class Executable:
             message = "Command: " + cmd_line_string
             if " " in self.exe[0]:
                 message += "\nDid you mean to add a space to the command?"
+            message += f"\nCommand len: {len(joined_cmd)}"
+            message += f"\n{str(cmd[:15])}"
 
             raise ProcessError("%s: %s" % (self.exe[0], e.strerror), message)
 
