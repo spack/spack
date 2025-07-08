@@ -36,7 +36,7 @@ def compr_support_check(monkeypatch):
 
 
 @pytest.fixture
-def archive_file_and_extension(tmp_path_factory, request):
+def archive_file_and_extension(tmp_path_factory: pytest.TempPathFactory, request):
     """Copy example archive to temp directory into an extension-less file for test"""
     archive_file_stub = os.path.join(datadir, "Foo")
     extension, add_extension = request.param
@@ -51,7 +51,7 @@ def archive_file_and_extension(tmp_path_factory, request):
 @pytest.mark.parametrize(
     "archive_file_and_extension", product(native_archive_list, [True, False]), indirect=True
 )
-def test_native_unpacking(tmp_path_factory, archive_file_and_extension):
+def test_native_unpacking(tmp_path_factory: pytest.TempPathFactory, archive_file_and_extension):
     archive_file, extension = archive_file_and_extension
     util = compression.decompressor_for(archive_file, extension)
     tmpdir = tmp_path_factory.mktemp("comp_test")
@@ -71,7 +71,9 @@ def test_native_unpacking(tmp_path_factory, archive_file_and_extension):
     [(ext, True) for ext in ext_archive.keys() if "whl" not in ext],
     indirect=True,
 )
-def test_system_unpacking(tmp_path_factory, archive_file_and_extension, compr_support_check):
+def test_system_unpacking(
+    tmp_path_factory: pytest.TempPathFactory, archive_file_and_extension, compr_support_check
+):
     # actually run test
     archive_file, _ = archive_file_and_extension
     util = compression.decompressor_for(archive_file)

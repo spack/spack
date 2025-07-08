@@ -96,7 +96,9 @@ def source_for_pkg_with_hash(mock_packages, tmp_path: pathlib.Path):
     s.package.versions[spack.version.Version("1.0")]["url"] = local_url
 
 
-def test_mirror_skip_unstable(tmp_path_factory, mock_packages, config, source_for_pkg_with_hash):
+def test_mirror_skip_unstable(
+    tmp_path_factory: pytest.TempPathFactory, mock_packages, config, source_for_pkg_with_hash
+):
     mirror_dir = str(tmp_path_factory.mktemp("mirror-dir"))
 
     specs = [

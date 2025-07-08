@@ -84,7 +84,7 @@ def cache_directory(tmp_path: pathlib.Path):
 
 
 @pytest.fixture(scope="module")
-def config_directory(tmp_path_factory):
+def config_directory(tmp_path_factory: pytest.TempPathFactory):
     # Copy defaults to a temporary "site" scope
     defaults_dir = tmp_path_factory.mktemp("test_configs")
     config_path = pathlib.Path(spack.paths.etc_path)

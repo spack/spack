@@ -327,7 +327,9 @@ class TestTcl:
         with pytest.raises(spack.modules.common.ModulesError):
             modulefile_content("mpileaks")
 
-    def test_module_index(self, module_configuration, factory, tmp_path_factory):
+    def test_module_index(
+        self, module_configuration, factory, tmp_path_factory: pytest.TempPathFactory
+    ):
         module_configuration("suffix")
 
         w1, s1 = factory("mpileaks")

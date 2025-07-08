@@ -42,7 +42,7 @@ def text_in_bin(text, binary):
 
 
 @pytest.fixture()
-def make_dylib(tmp_path_factory):
+def make_dylib(tmp_path_factory: pytest.TempPathFactory):
     """Create a shared library with unfriendly qualities.
 
     - Writes the same rpath twice

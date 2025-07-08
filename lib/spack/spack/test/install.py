@@ -219,7 +219,7 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
 
 
 @pytest.fixture()
-def install_upstream(tmp_path_factory, gen_mock_layout, install_mockery):
+def install_upstream(tmp_path_factory: pytest.TempPathFactory, gen_mock_layout, install_mockery):
     """Provides a function that installs a specified set of specs to an
     upstream database. The function returns a store which points to the
     upstream, as well as the upstream layout (for verifying that dependent

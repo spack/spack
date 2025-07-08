@@ -23,7 +23,7 @@ from spack.util.naming import valid_module_name
 
 
 @pytest.fixture(params=["packages", "", "foo"])
-def extra_repo(tmp_path_factory, request):
+def extra_repo(tmp_path_factory: pytest.TempPathFactory, request):
     repo_namespace = "extra_test_repo"
     repo_dir = tmp_path_factory.mktemp(repo_namespace)
     cache_dir = tmp_path_factory.mktemp("cache")

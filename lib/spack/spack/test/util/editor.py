@@ -40,7 +40,7 @@ def editor_var(request):
     return request.param
 
 
-def _make_exe(tmp_path_factory, name, contents=None):
+def _make_exe(tmp_path_factory: pytest.TempPathFactory, name, contents=None):
     if sys.platform == "win32":
         name += ".exe"
     exe_dir = tmp_path_factory.mktemp(f"{name}_exe")
@@ -52,27 +52,27 @@ def _make_exe(tmp_path_factory, name, contents=None):
 
 
 @pytest.fixture(scope="session")
-def good_exe(tmp_path_factory):
+def good_exe(tmp_path_factory: pytest.TempPathFactory):
     return _make_exe(tmp_path_factory, "good", "exit 0")
 
 
 @pytest.fixture(scope="session")
-def bad_exe(tmp_path_factory):
+def bad_exe(tmp_path_factory: pytest.TempPathFactory):
     return _make_exe(tmp_path_factory, "bad", "exit 1")
 
 
 @pytest.fixture(scope="session")
-def nosuch_exe(tmp_path_factory):
+def nosuch_exe(tmp_path_factory: pytest.TempPathFactory):
     return _make_exe(tmp_path_factory, "nosuch")
 
 
 @pytest.fixture(scope="session")
-def vim_exe(tmp_path_factory):
+def vim_exe(tmp_path_factory: pytest.TempPathFactory):
     return _make_exe(tmp_path_factory, "vim", "exit 0")
 
 
 @pytest.fixture(scope="session")
-def gvim_exe(tmp_path_factory):
+def gvim_exe(tmp_path_factory: pytest.TempPathFactory):
     return _make_exe(tmp_path_factory, "gvim", "exit 0")
 
 

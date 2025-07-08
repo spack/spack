@@ -66,7 +66,7 @@ platform_url_sha = (
 
 
 @pytest.fixture()
-def mock_patch_stage(tmp_path_factory, monkeypatch):
+def mock_patch_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch):
     # Don't disrupt the spack install directory with tests.
     mock_path = str(tmp_path_factory.mktemp("mock-patch-stage"))
     monkeypatch.setattr(spack.stage, "_stage_root", mock_path)

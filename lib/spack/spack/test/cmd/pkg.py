@@ -36,7 +36,9 @@ class {name}(Package):
 
 # Force all tests to use a git repository *in* the mock packages repo.
 @pytest.fixture(scope="module")
-def _builtin_mock_copy(git: spack.util.executable.Executable, tmp_path_factory):
+def _builtin_mock_copy(
+    git: spack.util.executable.Executable, tmp_path_factory: pytest.TempPathFactory
+):
     """Copy the builtin_mock repo and make a mutable git repo inside it."""
     root_dir: pathlib.Path = tmp_path_factory.mktemp("builtin_mock_copy")
     # create spack_repo subdir

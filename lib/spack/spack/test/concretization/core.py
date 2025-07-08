@@ -175,7 +175,7 @@ def fuzz_dep_order(request, monkeypatch):
 
 
 @pytest.fixture()
-def repo_with_changing_recipe(tmp_path_factory, mutable_mock_repo):
+def repo_with_changing_recipe(tmp_path_factory: pytest.TempPathFactory, mutable_mock_repo):
     repos_dir: pathlib.Path = tmp_path_factory.mktemp("repos_dir")
     root, _ = spack.repo.create_repo(str(repos_dir), "changing")
     packages_dir = pathlib.Path(root, "packages")

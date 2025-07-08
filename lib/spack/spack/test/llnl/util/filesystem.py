@@ -21,7 +21,7 @@ import spack.paths
 
 
 @pytest.fixture()
-def stage(tmp_path_factory):
+def stage(tmp_path_factory: pytest.TempPathFactory):
     """Creates a stage with the directory structure for the tests."""
 
     s = tmp_path_factory.mktemp("filesystem_test")
@@ -1066,7 +1066,7 @@ def test_windows_sfn(tmp_path: pathlib.Path):
 
 
 @pytest.fixture
-def dir_structure_with_things_to_find(tmp_path_factory):
+def dir_structure_with_things_to_find(tmp_path_factory: pytest.TempPathFactory):
     """
     <root>/
         dir_one/
@@ -1163,7 +1163,7 @@ def test_max_depth_and_recursive_errors(tmp_path: pathlib.Path, recursive, max_d
 
 
 @pytest.fixture(params=[True, False])
-def complex_dir_structure(request, tmp_path_factory):
+def complex_dir_structure(request, tmp_path_factory: pytest.TempPathFactory):
     """
     "lx-dy" means "level x, directory y"
     "lx-fy" means "level x, file y"
@@ -1206,7 +1206,7 @@ def complex_dir_structure(request, tmp_path_factory):
     l2_d2 = l1_d2 / "l2-d2"
     l2_d2.mkdir()
 
-    if use_junctions:
+    if sys.platform == "win32" and use_junctions:
         link_fn = llnl.util.symlink._windows_create_junction
     else:
         link_fn = os.symlink

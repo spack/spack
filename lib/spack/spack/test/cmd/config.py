@@ -640,7 +640,12 @@ def test_config_update_shared_linking(mutable_config):
 
 
 def test_config_prefer_upstream(
-    tmp_path_factory, install_mockery, mock_fetch, mutable_config, gen_mock_layout, monkeypatch
+    tmp_path_factory: pytest.TempPathFactory,
+    install_mockery,
+    mock_fetch,
+    mutable_config,
+    gen_mock_layout,
+    monkeypatch,
 ):
     """Check that when a dependency package is recorded as installed in
     an upstream database that it is not reinstalled.
