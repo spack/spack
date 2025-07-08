@@ -93,6 +93,9 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# Spack docs configuration files
+lib/spack/docs/.spack/packages.yaml
+
 # PyBuilder
 .pybuilder/
 target/
