@@ -425,7 +425,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
 
 def _compute_all_affected_packages() -> Set[str]:
     """Compute affected packages across all configured repositories.
-    
+
     Returns:
         Set of affected package names across all repositories.
     """
@@ -448,7 +448,7 @@ def _compute_all_affected_packages() -> Set[str]:
 
 
 def get_unaffected_pruners(
-        env: ev.Environment, untouched_pruning_dependent_depth: Optional[int]
+    env: ev.Environment, untouched_pruning_dependent_depth: Optional[int]
 ) -> Optional[PrunerCallback]:
     """Returns a pruner callback for unaffected packages in the specified environment.
 
