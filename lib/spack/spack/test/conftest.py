@@ -764,9 +764,9 @@ def repo_builder(tmp_path: Path):
 
 
 @pytest.fixture()
-def mock_custom_repository(tmpdir, mutable_mock_repo):
+def mock_custom_repository(temp_path: Path, mutable_mock_repo):
     """Create a custom repository with a single package "c" and return its path."""
-    builder = RepoBuilder(tmpdir.mkdir("myrepo"))
+    builder = RepoBuilder(str(temp_path))
     builder.add_package("pkg-c")
     return builder.root
 
