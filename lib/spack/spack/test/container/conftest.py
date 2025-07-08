@@ -27,9 +27,7 @@ def config_dumper(tmp_path: pathlib.Path):
 
     def dumper(configuration):
         content = syaml.dump(configuration, default_flow_style=False)
-        config_file = tmp_path / "spack.yaml"
-        with open(config_file, "w", encoding="utf-8") as f:
-            f.write(content or "")
+        (tmp_path / "spack.yaml").write_text(content or "", encoding="utf-8")
         return str(tmp_path)
 
     return dumper
