@@ -423,8 +423,32 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     return options
 
 
+def _compute_all_affected_packages() -> Set[str]:
+    """Compute affected packages across all configured repositories.
+    
+    Returns:
+        Set of affected package names across all repositories.
+    """
+    # TODO: This should be configurable to only check for changed packages
+    # in specific configured repos that are being tested with CI. For now
+    # it assumes all configured repos are merge commits that contain relevant
+    # changes to run CI on.
+    affected_pkgs: Set[str] = set()
+    for repo in spack.repo.PATH.repos:
+        rev1, rev2 = get_change_revisions(repo.root)
+        if not (rev1 and rev2):
+            continue
+        tty.debug(f"repo {repo.namespace}: revisions rev1={rev1}, rev2={rev2}")
+        repo_affected_pkgs = compute_affected_packages(repo, rev1=rev1, rev2=rev2)
+        tty.debug(f"repo {repo.namespace}: affected pkgs")
+        for p in repo_affected_pkgs:
+            tty.debug(f"  {p}")
+        affected_pkgs.update(repo_affected_pkgs)
+    return affected_pkgs
+
+
 def get_unaffected_pruners(
-    env: ev.Environment, untouched_pruning_dependent_depth: Optional[int]
+        env: ev.Environment, untouched_pruning_dependent_depth: Optional[int]
 ) -> Optional[PrunerCallback]:
     """Returns a pruner callback for unaffected packages in the specified environment.
 
@@ -445,24 +469,7 @@ def get_unaffected_pruners(
         tty.info("Skipping unaffected pruning: stack environment changed")
         return None
 
-    # TODO: This should be configurable to only check for changed packages
-    # in specific configured repos that are being tested with CI. For now
-    # it assumes all configured repos are merge commits that contain relevant
-    # changes to run CI on.
-    affected_pkgs: Set[str] = set()
-    for repo in spack.repo.PATH.repos:
-        rev1, rev2 = get_change_revisions(repo.root)
-        if not (rev1 and rev2):
-            continue
-
-        tty.debug(f"repo {repo.namespace}: revisions rev1={rev1}, rev2={rev2}")
-
-        repo_affected_pkgs = compute_affected_packages(repo, rev1=rev1, rev2=rev2)
-        tty.debug(f"repo {repo.namespace}: affected pkgs")
-        for p in repo_affected_pkgs:
-            tty.debug(f"  {p}")
-
-        affected_pkgs.update(repo_affected_pkgs)
+    affected_pkgs = _compute_all_affected_packages()
 
     if not affected_pkgs:
         tty.info("Skipping unaffected pruning: no package changes were detected")
