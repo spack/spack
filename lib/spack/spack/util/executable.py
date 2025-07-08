@@ -294,6 +294,9 @@ class Executable:
                 message += "\nDid you mean to add a space to the command?"
             message += f"\nCommand len: {len(joined_cmd)}"
             message += f"\n{str(cmd[:15])}"
+            what_subproc_sees = subprocess.list2cmdline(cmd)
+            message += f"\nsubproc len: {len(what_subproc_sees)}"
+            message += f"\nsubproc cmdline: {what_subproc_sees[:300]}"
 
             raise ProcessError("%s: %s" % (self.exe[0], e.strerror), message)
 
