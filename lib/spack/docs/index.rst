@@ -44,6 +44,7 @@ package:
 If you're new to Spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
+
 .. toctree::
    :maxdepth: 2
    :caption: Introduction
