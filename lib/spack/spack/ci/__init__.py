@@ -426,7 +426,20 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
 def get_unaffected_pruners(
     env: ev.Environment, untouched_pruning_dependent_depth: Optional[int]
 ) -> Optional[PrunerCallback]:
+    """Returns a pruner callback for unaffected packages in the specified environment.
 
+    This method evaluates changes in the stack environment, computes the set of affected packages
+    across repositories, and filters specifications based on pruning criteria.
+
+    Parameters:
+        env: the environment to evaluate for unaffected pruning.
+        untouched_pruning_dependent_depth: depth to traverse dependents while filtering
+            specifications. None indicates no dependent traversal.
+
+    Returns:
+        Pruner callback for unaffected specifications, or None if the stack
+        environment has changed or no affected packages are detected.
+    """
     # If the stack env has changed, do not apply unaffected pruning
     if stack_changed(env.manifest_path):
         tty.info("Skipping unaffected pruning: stack environment changed")
