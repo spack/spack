@@ -1219,7 +1219,7 @@ class ForwardQueryToPackage:
             _ = instance.wrapped_obj[instance.wrapped_obj.name]  # NOQA: ignore=F841
             query = instance.last_query
 
-        callbacks_chain = []
+        callbacks_chain = list()
         # First in the chain : specialized attribute for virtual packages
         if query.isvirtual:
             specialized_name = "{0}_{1}".format(query.name, self.attribute_name)
