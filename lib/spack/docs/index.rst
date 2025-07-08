@@ -44,6 +44,10 @@ package:
 If you're new to Spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
+.. note::
+   This documentation is also available for offline reading in PDF and ePub formats.
+   Download links are available in the sidebar on `ReadTheDocs <https://spack.readthedocs.io>`_.
+
 
 .. toctree::
    :maxdepth: 2
