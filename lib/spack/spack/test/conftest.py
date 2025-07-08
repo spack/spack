@@ -464,31 +464,32 @@ def onerror(func, path, error_info):
 
 
 @pytest.fixture(scope="function", autouse=True)
-def mock_stage(tmpdir_factory, monkeypatch, request):
+def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
     """Establish the temporary build_stage for the mock archive."""
     # The approach with this autouse fixture is to set the stage root
     # instead of using spack.config.override() to avoid configuration
     # conflicts with dozens of tests that rely on other configuration
     # fixtures, such as config.
-    if "nomockstage" not in request.keywords:
-        # Set the build stage to the requested path
-        new_stage = tmpdir_factory.mktemp("mock-stage")
-        new_stage_path = str(new_stage)
 
-        # Ensure the source directory exists within the new stage path
-        source_path = os.path.join(new_stage_path, spack.stage._source_path_subdir)
-        mkdirp(source_path)
+    if "nomockstage" in request.keywords:
+        # Tests can opt-out with @pytest.mark.nomockstage
+        yield None
+        return
 
-        monkeypatch.setattr(spack.stage, "_stage_root", new_stage_path)
+    # Set the build stage to the requested path
+    new_stage = tmp_path_factory.mktemp("mock-stage")
 
-        yield new_stage_path
+    # Ensure the source directory exists within the new stage path
+    source_path = new_stage / spack.stage._source_path_subdir
+    source_path.mkdir(parents=True, exist_ok=True)
 
-        # Clean up the test stage directory
-        if os.path.isdir(new_stage_path):
-            shutil.rmtree(new_stage_path, onerror=onerror)
-    else:
-        # Must yield a path to avoid a TypeError on test teardown
-        yield str(tmpdir_factory)
+    monkeypatch.setattr(spack.stage, "_stage_root", str(new_stage))
+
+    yield str(new_stage)
+
+    # Clean up the test stage directory
+    if new_stage.is_dir():
+        shutil.rmtree(new_stage, onerror=onerror)
 
 
 @pytest.fixture(scope="session")
@@ -534,13 +535,15 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
 
     and the associated stage files will be removed.
     """
-    stage_path = mock_stage
-
     yield
+
+    if mock_stage is None:
+        # When tests opt out with @pytest.mark.nomockstage, do not check for left-over files
+        return
 
     files_in_stage = set()
     try:
-        stage_files = os.listdir(stage_path)
+        stage_files = os.listdir(mock_stage)
         files_in_stage = set(stage_files) - ignore_stage_files
     except OSError as err:
         if err.errno == errno.ENOENT or err.errno == errno.EINVAL:
@@ -551,7 +554,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
     if "disable_clean_stage_check" in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(stage_path, f)
+            path = os.path.join(mock_stage, f)
             remove_whatever_it_is(path)
     else:
         ignore_stage_files |= files_in_stage
