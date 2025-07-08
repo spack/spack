@@ -1761,7 +1761,7 @@ def mock_svn_repository(tmp_path_factory: pytest.TempPathFactory):
         tmp_path.mkdir()
         (tmp_path / r0_file).touch()
         svn("import", str(tmp_path), url, "-m", "Initial import r0")
-        shutil.rmtree(tmp_path)
+        shutil.rmtree(tmp_path, onerror=onerror)
 
         # Second commit
         r1_file = "r1_file"
@@ -1772,7 +1772,7 @@ def mock_svn_repository(tmp_path_factory: pytest.TempPathFactory):
             svn("add", str(tmp_path / r1_file))
             svn("ci", "-m", "second revision r1")
 
-        shutil.rmtree(tmp_path)
+        shutil.rmtree(tmp_path, onerror=onerror)
         r0 = "1"
         r1 = "2"
 
