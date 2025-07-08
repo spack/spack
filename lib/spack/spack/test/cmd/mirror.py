@@ -20,6 +20,7 @@ import spack.util.git
 import spack.util.url as url_util
 import spack.version
 from spack.main import SpackCommand, SpackCommandError
+from spack.mirrors.utils import MirrorStats
 
 config = SpackCommand("config")
 mirror = SpackCommand("mirror")
@@ -65,6 +66,7 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_pac
 
 
 def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path):
+    print("AAL in test_mirror_from_env_parallel")
     mirror_dir = str(tmp_path / "mirror")
     env_name = "test-parallel"
 
@@ -83,6 +85,23 @@ def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_m
         expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
         assert mirror_res == expected
 
+    # Test merge() function in depth
+    test_spec1 = spack.spec.Spec("test-package@1.0")
+    test_spec2 = spack.spec.Spec("test-package@2.0")
+
+    stats1 = MirrorStats()
+    stats2 = MirrorStats()
+
+    stats1.current_spec = test_spec1
+    stats1.existing_resources.add("pkg1")
+    stats1.merge(stats2)
+    assert "pkg1" in stats1.existing_resources
+
+    stats1.current_spec = test_spec1
+    stats2.current_spec = test_spec2
+    stats2.existing_resources.add("pkg2")
+    stats1.merge(stats2)
+    assert "pkg2" in stats1.existing_resources
 
 # Test for command line-specified spec in concretized environment
 def test_mirror_spec_from_env(
