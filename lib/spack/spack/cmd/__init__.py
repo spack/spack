@@ -734,7 +734,9 @@ def group_arguments(
 
     """
     if max_group_length is None:
-        max_group_length = 32768  # default to the Windows limit
+        # Windows limit is 32767, including null terminator (not measured by len)
+        # so max length is 32766
+        max_group_length = 32766
         if hasattr(os, "sysconf"):  # sysconf is only on unix
             try:
                 # returns -1 if an option isn't present (soem older POSIXes)
@@ -744,21 +746,24 @@ def group_arguments(
                 pass  # keep windows default if SC_ARG_MAX isn't in sysconf_names
 
     group: List[str] = []
-    grouplen, space = prefix_length, 0
+    grouplen, space, quotes = prefix_length, 0, 0
     for arg in args:
         arglen = len(arg)
         if arglen > max_group_length:
             raise ValueError(f"Argument is longer than max command line size: '{arg}'")
         if arglen + prefix_length > max_group_length:
             raise ValueError(f"Argument with prefix is longer than max command line size: '{arg}'")
+        if sys.platform == "win32" and " " in arg:
+            quotes = 2
 
-        next_grouplen = grouplen + arglen + space
+        next_grouplen = grouplen + arglen + space + quotes
         if len(group) == max_group_size or next_grouplen > max_group_length:
             yield group
             group, grouplen, space = [], prefix_length, 0
 
         group.append(arg)
-        grouplen += arglen + space
+        grouplen += arglen + space + quotes
+        quotes = 0
         space = 1  # add a space for elements 1, 2, etc. but not 0
 
     if group:
