@@ -7,6 +7,7 @@ import difflib
 import importlib
 import os
 import re
+import subprocess
 import sys
 from collections import Counter
 from typing import Generator, List, Optional, Sequence, Union
@@ -704,6 +705,13 @@ def first_line(docstring):
     return docstring.split("\n")[0]
 
 
+def converted_arg_length(arg: str):
+    # An argument may have extra characters inserted for a command
+    # line invocation (e.g. on Windows, an argument with a space
+    # is quoted)
+    return len(subprocess.list2cmdline([arg]))
+
+
 def group_arguments(
     args: Sequence[str],
     *,
@@ -746,24 +754,21 @@ def group_arguments(
                 pass  # keep windows default if SC_ARG_MAX isn't in sysconf_names
 
     group: List[str] = []
-    grouplen, space, quotes = prefix_length, 0, 0
+    grouplen, space = prefix_length, 0
     for arg in args:
-        arglen = len(arg)
+        arglen = converted_arg_length(arg)
         if arglen > max_group_length:
             raise ValueError(f"Argument is longer than max command line size: '{arg}'")
         if arglen + prefix_length > max_group_length:
             raise ValueError(f"Argument with prefix is longer than max command line size: '{arg}'")
-        if sys.platform == "win32" and " " in arg:
-            quotes = 2
 
-        next_grouplen = grouplen + arglen + space + quotes
+        next_grouplen = grouplen + arglen + space
         if len(group) == max_group_size or next_grouplen > max_group_length:
             yield group
             group, grouplen, space = [], prefix_length, 0
 
         group.append(arg)
-        grouplen += arglen + space + quotes
-        quotes = 0
+        grouplen += arglen + space
         space = 1  # add a space for elements 1, 2, etc. but not 0
 
     if group:
