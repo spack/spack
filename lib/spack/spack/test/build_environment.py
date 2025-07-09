@@ -902,14 +902,10 @@ def test_set_external_env_variables(mock_packages, mutable_config, working_env):
             {
                 "spec": "zlib@1.2.13",
                 "prefix": "/usr",
-                "environment": {
-                    "set": {
-                        "LD_LIBRARY_PATH": "/test/fake/lib"
-                    }
-                }
+                "environment": {"set": {"LD_LIBRARY_PATH": "/test/fake/lib"}},
             }
         ],
-        "buildable": False
+        "buildable": False,
     }
 
     spack.config.set("packages:zlib", zlib_config)
