@@ -16,7 +16,6 @@ import pathlib
 import pprint
 import re
 import sys
-import types
 import typing
 import warnings
 from contextlib import contextmanager
@@ -261,25 +260,6 @@ def build_criteria_names(costs, arg_tuples):
         criteria.append((costs[indices[i]], costs[indices[b]], name))
 
     return criteria
-
-
-def issequence(obj):
-    if isinstance(obj, str):
-        return False
-    return isinstance(obj, (collections.abc.Sequence, types.GeneratorType))
-
-
-def listify(args):
-    if len(args) == 1 and issequence(args[0]):
-        return list(args[0])
-    return list(args)
-
-
-def packagize(pkg):
-    if isinstance(pkg, str):
-        return spack.repo.PATH.get_pkg_class(pkg)
-    else:
-        return pkg
 
 
 def specify(spec):
