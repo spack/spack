@@ -706,10 +706,13 @@ def first_line(docstring):
 
 
 def converted_arg_length(arg: str):
-    # An argument may have extra characters inserted for a command
-    # line invocation (e.g. on Windows, an argument with a space
-    # is quoted)
-    return len(subprocess.list2cmdline([arg]))
+    if sys.platform == "win32":
+        # An argument may have extra characters inserted for a command
+        # line invocation (e.g. on Windows, an argument with a space
+        # is quoted)
+        return len(subprocess.list2cmdline([arg]))
+    else:
+        return len(arg)
 
 
 def group_arguments(
