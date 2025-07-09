@@ -148,6 +148,7 @@ def extension_paths_from_entry_points() -> List[str]:
     spack extensions
 
     """
+
     extension_paths: List[str] = []
     for entry_point in llnl.util.lang.get_entry_points(group="spack.extensions"):
         hook = entry_point.load()
@@ -166,8 +167,11 @@ def get_command_paths():
     extension_paths = get_extension_paths()
 
     for path in extension_paths:
+        # Skip duplicate paths, only load extensions once
+        if any([p.startswith(path) for _, p in command_paths]):
+            continue
         extension = _python_name(extension_name(path))
-        command_paths.append(os.path.join(path, extension, "cmd"))
+        command_paths.append((extension, os.path.join(path, extension, "cmd")))
 
     return command_paths
 

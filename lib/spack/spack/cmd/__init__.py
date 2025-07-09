@@ -86,15 +86,36 @@ def all_commands():
     global _all_commands
     if _all_commands is None:
         _all_commands = []
-        command_paths = [spack.paths.command_path]  # Built-in commands
+        command_module = {}
+        ambiguous_command = {}
+
+        command_paths = [("_builtin", spack.paths.command_path)]  # Built-in commands
         command_paths += spack.extensions.get_command_paths()  # Extensions
-        for path in command_paths:
+        for module, path in command_paths:
             for file in os.listdir(path):
                 if file.endswith(".py") and not re.search(ignore_files, file):
                     cmd = re.sub(r".py$", "", file)
-                    _all_commands.append(cmd_name(cmd))
+                    name = cmd_name(cmd)
+                    if name in command_module:
+                        cmd_modules = ambiguous_command.get(name, [])
+                        cmd_modules.append((module, path))
+                        ambiguous_command[name] = cmd_modules
+                    else:
+                        command_module[name] = (module, path)
+                        _all_commands.append(name)
 
         _all_commands.sort()
+
+        if ambiguous_command:
+            tty.warn(
+                "Detected ambiguous commands: " + ", ".join([c for c in ambiguous_command.keys()])
+            )
+            for cmd in ambiguous_command:
+                tty.debug(f"  Command: {cmd}")
+                tty.debug(f"      First defined in: {command_module[cmd]}")
+                tty.debug("      Redefined in:")
+                for amb_cmd in ambiguous_command[cmd]:
+                    tty.debug(f"         {amb_cmd}")
 
     return _all_commands
 
