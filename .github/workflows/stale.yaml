@@ -39,7 +39,7 @@ jobs:
 
           # General configuration
           ascending: true
-          operations-per-run: 200
+          operations-per-run: 1000
           remove-stale-when-updated: true
           enable-statistics: true
           days-before-stale: 180
