@@ -894,3 +894,29 @@ def test_build_process_timeout(mock_build_process, runtime, timeout, expected_ca
     _ = spack.build_environment.complete_build_process(process)
 
     assert _TestProcess.calls == expected_calls
+
+
+def test_set_external_env_variables(mock_packages, mutable_config, working_env):
+    zlib_config = {
+        "externals": [
+            {
+                "spec": "zlib@1.2.13",
+                "prefix": "/usr",
+                "environment": {
+                    "set": {
+                        "LD_LIBRARY_PATH": "/test/fake/lib"
+                    }
+                }
+            }
+        ],
+        "buildable": False
+    }
+
+    spack.config.set("packages:zlib", zlib_config)
+    zlib_spec = spack.concretize.concretize_one("zlib")
+    setup_context = spack.build_environment.SetupContext(zlib_spec, context=Context.RUN)
+    env_modifications = setup_context.get_env_modifications()
+    test_env = os.environ.copy()
+    env_modifications.apply_modifications(test_env)
+
+    assert test_env["LD_LIBRARY_PATH"] == "/test/fake/lib"
