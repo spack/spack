@@ -260,10 +260,18 @@ def test_get_command_paths(config):
         ext_paths.append(ext_path)
         path = os.path.join(ext_path, spack.cmd.python_name(ext), "cmd")
         path = os.path.abspath(path)
-        expected_cmd_paths.append(path)
+        expected_cmd_paths.append((ext, path))
 
     with spack.config.override("config:extensions", ext_paths):
-        assert spack.extensions.get_command_paths() == expected_cmd_paths
+        found_paths = spack.extensions.get_command_paths()
+
+        def check_path(p):
+            return any([p[1] == x[1] for x in found_paths])
+
+        # Verify all of the test extensions are found
+        # If running unit-tests with other extensions enabled there
+        # may be additional extensions found
+        assert all([check_path(p) for p in expected_cmd_paths])
 
 
 def test_variable_in_extension_path(config, working_env):
@@ -276,7 +284,15 @@ def test_variable_in_extension_path(config, working_env):
         os.path.join(os.environ[home_env], os.environ["_MY_VAR"], "spack-extension-1")
     ]
     with spack.config.override("config:extensions", ext_paths):
-        assert spack.extensions.get_extension_paths() == expected_ext_paths
+        found_paths = spack.extensions.get_extension_paths()
+
+        def check_path(p):
+            return any([p[1] == x[1] for x in found_paths])
+
+        # Verify all of the test extensions are found
+        # If running unit-tests with other extensions enabled there
+        # may be additional extensions found
+        assert all([check_path(p) for p in expected_ext_paths])
 
 
 @pytest.mark.parametrize(
