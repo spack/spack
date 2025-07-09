@@ -1745,6 +1745,18 @@ repo:
 
 
 @pytest.fixture(scope="function")
+def mock_test_multi_repo(mock_test_repo, mock_packages):
+    """Create an empty repository."""
+
+    mock_repo, _ = mock_test_repo
+    builtin_mock_repo = mock_packages
+
+    # Enable both of the mock repos at the same time
+    with spack.repo.use_repositories(*mock_repo.repos, *builtin_mock_repo.repos) as repo:
+        yield repo
+
+
+@pytest.fixture(scope="function")
 def mock_clone_repo(tmpdir_factory):
     """Create a cloned repository."""
     repo_namespace = "mock_clone_repo"

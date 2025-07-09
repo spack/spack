@@ -244,3 +244,22 @@ def test_language_and_build_system_detection(tmp_path, source_files, languages):
 
     assert guesser.build_system == "autotools"
     assert guesser.languages == languages
+
+
+def test_create_in_repo(mock_test_multi_repo):
+    """Test creating a repo using the repo path or the repo name
+    when there are multiple repositories
+    """
+    repo_path = mock_test_multi_repo
+
+    mock_repo = repo_path.get_repo("mock_test_repo")
+
+    name = "create-new-package-in-repo"
+    create("--skip-editor", "-r", mock_repo.namespace, "-n", name)
+    filename = mock_repo.filename_for_package_name(name)
+    assert os.path.exists(filename)
+
+    name = "create-new-package-in-path"
+    create("--skip-editor", "-r", mock_repo.root, "-n", name)
+    filename = mock_repo.filename_for_package_name(name)
+    assert os.path.exists(filename)
