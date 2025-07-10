@@ -17,6 +17,7 @@ import hashlib
 import io
 import os
 import re
+import shutil
 import sys
 import textwrap
 import time
@@ -1353,6 +1354,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # Otherwise, return the current install log path name.
         return os.path.join(self.metadata_dir, _spack_build_logfile + ".gz")
+
+    def relocate_staged_wrapper_logs(self):
+        wrapper_logs = list()
+        for fname in os.listdir(self.stage.path):
+            if fname.startswith("spack-cc-"):
+                wrapper_logs.append(os.path.join(self.stage.path, fname))
+        for log in wrapper_logs:
+            shutil.copy(log, self.metadata_dir)
 
     @property
     def configure_args_path(self):

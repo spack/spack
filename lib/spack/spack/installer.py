@@ -705,6 +705,7 @@ def log(pkg: "spack.package_base.PackageBase") -> None:
             tty.warn(f"Errors occurred when archiving files.\n\tSee: {error_file}")
 
     dump_packages(pkg.spec, packages_dir)
+    pkg.relocate_staged_wrapper_logs()
 
 
 def package_id(spec: "spack.spec.Spec") -> str:
