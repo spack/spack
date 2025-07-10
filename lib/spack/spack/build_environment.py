@@ -713,6 +713,27 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
     return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
+def get_cmake_prefix_path(spec: spack.spec.Spec) -> List[str]:
+    """Obtain the CMAKE_PREFIX_PATH entries for a package, based on the cmake_prefix_path package
+    attribute of direct build/test and transitive link dependencies."""
+    edges = traverse.traverse_topo_edges_generator(
+        traverse.with_artificial_edges([spec]),
+        visitor=traverse.MixedDepthVisitor(
+            direct=dt.BUILD | dt.TEST, transitive=dt.LINK, key=traverse.by_dag_hash
+        ),
+        key=traverse.by_dag_hash,
+        root=False,
+        all_edges=False,  # cover all nodes, not all edges
+    )
+    ordered_specs = [edge.spec for edge in edges]
+    # Separate out externals so they do not shadow Spack prefixes
+    externals, spack_built = stable_partition((s for s in ordered_specs), lambda x: x.external)
+
+    return filter_system_paths(
+        path for spec in chain(spack_built, externals) for path in spec.package.cmake_prefix_paths
+    )
+
+
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
     """Execute all environment setup routines."""
     if context not in (Context.BUILD, Context.TEST):
