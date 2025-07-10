@@ -133,7 +133,7 @@ SPACK_DEBUG_LOG_DIR = "SPACK_DEBUG_LOG_DIR"
 SPACK_CCACHE_BINARY = "SPACK_CCACHE_BINARY"
 SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
 
-# Platform-specific library suffix.
+# Platform-specific library suffix (deprecated)
 if sys.platform == "darwin":
     dso_suffix = "dylib"
 elif sys.platform == "win32":
@@ -142,6 +142,24 @@ else:
     dso_suffix = "so"
 
 stat_suffix = "lib" if sys.platform == "win32" else "a"
+
+
+def shared_library_suffix(spec: spack.spec.Spec) -> str:
+    """Return the shared library suffix for the given spec."""
+    if spec.platform == "darwin":
+        return "dylib"
+    elif spec.platform == "windows":
+        return "dll"
+    else:
+        return "so"
+
+
+def static_library_suffix(spec: spack.spec.Spec) -> str:
+    """Return the static library suffix for the given spec."""
+    if spec.platform == "windows":
+        return "lib"
+    else:
+        return "a"
 
 
 def jobserver_enabled():
