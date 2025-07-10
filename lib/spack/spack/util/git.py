@@ -9,12 +9,11 @@ from typing import List, Optional, overload
 
 from _vendoring.typing_extensions import Literal
 
-import llnl.util.lang
-
+import spack.llnl.util.lang
 import spack.util.executable as exe
 
 
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def _find_git() -> Optional[str]:
     """Find the git executable in the system path."""
     return exe.which_string("git", required=False)

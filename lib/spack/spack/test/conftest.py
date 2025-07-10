@@ -26,19 +26,6 @@ import _vendoring.archspec.cpu.microarchitecture
 import _vendoring.archspec.cpu.schema
 import pytest
 
-import llnl.util.lang
-import llnl.util.lock
-import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    copy,
-    copy_tree,
-    join_path,
-    mkdirp,
-    remove_linked_tree,
-    touchp,
-    working_dir,
-)
-
 import spack.binary_distribution
 import spack.bootstrap.core
 import spack.caches
@@ -49,6 +36,9 @@ import spack.config
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.lang
+import spack.llnl.util.lock
+import spack.llnl.util.tty as tty
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -73,6 +63,15 @@ import spack.version
 from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import (
+    copy,
+    copy_tree,
+    join_path,
+    mkdirp,
+    remove_linked_tree,
+    touchp,
+    working_dir,
+)
 from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
@@ -1953,21 +1952,21 @@ def mock_test_stage(mutable_config, tmp_path: Path):
 
 @pytest.fixture(autouse=True)
 def inode_cache():
-    llnl.util.lock.FILE_TRACKER.purge()
+    spack.llnl.util.lock.FILE_TRACKER.purge()
     yield
     # TODO: it is a bug when the file tracker is non-empty after a test,
     # since it means a lock was not released, or the inode was not purged
     # when acquiring the lock failed. So, we could assert that here, but
     # currently there are too many issues to fix, so look for the more
     # serious issue of having a closed file descriptor in the cache.
-    assert not any(f.fh.closed for f in llnl.util.lock.FILE_TRACKER._descriptors.values())
-    llnl.util.lock.FILE_TRACKER.purge()
+    assert not any(f.fh.closed for f in spack.llnl.util.lock.FILE_TRACKER._descriptors.values())
+    spack.llnl.util.lock.FILE_TRACKER.purge()
 
 
 @pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
-    spack.binary_distribution.BINARY_INDEX = llnl.util.lang.Singleton(
+    spack.binary_distribution.BINARY_INDEX = spack.llnl.util.lang.Singleton(
         spack.binary_distribution.BinaryCacheIndex
     )
 

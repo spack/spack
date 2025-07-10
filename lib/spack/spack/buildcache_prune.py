@@ -8,9 +8,8 @@ import tempfile
 from concurrent.futures import Future, as_completed
 from typing import Callable, Dict, List, Optional, Set, Tuple, cast
 
-import llnl.util.tty as tty
-
 import spack.binary_distribution as bindist
+import spack.llnl.util.tty as tty
 import spack.stage
 import spack.util.parallel
 import spack.util.url as url_util

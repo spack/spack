@@ -11,12 +11,11 @@ dependencies.
 import os
 from pathlib import PurePath
 
-import llnl.util.filesystem
-
+import spack.llnl.util.filesystem
 import spack.util.hash as hash
 
 #: This file lives in $prefix/lib/spack/spack/__file__
-prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
+prefix = str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
 
 #: synonym for prefix
 spack_root = prefix

@@ -11,8 +11,6 @@ from typing import Dict, List
 
 import pytest
 
-from llnl.util.filesystem import copy_tree, find
-
 import spack.binary_distribution
 import spack.buildcache_migrate as migrate
 import spack.cmd.buildcache
@@ -25,6 +23,7 @@ import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import copy_tree, find
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,

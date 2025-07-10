@@ -20,7 +20,7 @@ from multiprocessing.connection import Connection
 from threading import Thread
 from typing import IO, Callable, Optional, Tuple
 
-import llnl.util.tty as tty
+import spack.llnl.util.tty as tty
 
 try:
     import termios

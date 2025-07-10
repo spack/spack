@@ -10,9 +10,8 @@ from typing import Optional
 
 import pytest
 
-import llnl.util.tty.log as log
-from llnl.util.filesystem import working_dir
-
+import spack.llnl.util.tty.log as log
+from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import which
 
 termios: Optional[ModuleType] = None

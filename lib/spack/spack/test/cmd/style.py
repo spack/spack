@@ -11,13 +11,12 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import FileFilter, working_dir
-
 import spack.cmd.style
 import spack.main
 import spack.paths
 import spack.repo
 from spack.cmd.style import _run_import_check, changed_files
+from spack.llnl.util.filesystem import FileFilter, working_dir
 from spack.util.executable import which
 
 #: directory with sample style files

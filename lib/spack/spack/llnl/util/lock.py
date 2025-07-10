@@ -11,7 +11,7 @@ from datetime import datetime
 from types import TracebackType
 from typing import IO, Any, Callable, ContextManager, Dict, Generator, Optional, Tuple, Type, Union
 
-from llnl.util import lang, tty
+from spack.llnl.util import lang, tty
 
 from ..string import plural
 

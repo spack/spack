@@ -20,9 +20,8 @@ from typing import IO, Any, Callable, Dict, List, Optional, Union
 
 from _vendoring.ruamel.yaml import YAML, comments, constructor, emitter, error, representer
 
-from llnl.util.tty.color import cextra, clen, colorize
-
 import spack.error
+from spack.llnl.util.tty.color import cextra, clen, colorize
 
 # Only export load and dump
 __all__ = ["load", "dump", "SpackYAMLError"]

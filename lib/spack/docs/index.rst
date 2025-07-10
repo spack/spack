@@ -121,7 +121,6 @@ or refer to the full manual below.
 
    Spack API Docs <spack>
    Spack Builtin Repo <spack_repo>
-   LLNL API Docs <llnl>
 
 ==================
 Indices and tables

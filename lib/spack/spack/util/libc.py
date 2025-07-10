@@ -9,10 +9,9 @@ import sys
 from subprocess import PIPE, run
 from typing import Dict, List, Optional
 
-from llnl.util.lang import memoized
-
 import spack.spec
 import spack.util.elf
+from spack.llnl.util.lang import memoized
 
 #: Pattern to distinguish glibc from other libc implementations
 GLIBC_PATTERN = r"\b(?:Free Software Foundation|Roland McGrath|Ulrich Depper)\b"

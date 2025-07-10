@@ -7,13 +7,12 @@ import shutil
 
 import pytest
 
-from llnl.util.filesystem import mkdirp
-
 import spack.concretize
 import spack.environment as ev
 import spack.paths
 import spack.repo
 import spack.stage
+from spack.llnl.util.filesystem import mkdirp
 from spack.main import SpackCommand, SpackCommandError
 
 # Everything here uses (or can use) the mock config and database.

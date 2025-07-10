@@ -8,10 +8,9 @@ import sys
 
 import pytest
 
-import llnl.util.lang
-
 import spack.config
 import spack.extensions
+import spack.llnl.util.lang
 
 
 class MockConfigEntryPoint:
@@ -68,7 +67,7 @@ def entry_points_factory(tmp_path: pathlib.Path):
 @pytest.fixture()
 def mock_get_entry_points(tmp_path: pathlib.Path, monkeypatch):
     entry_points = entry_points_factory(tmp_path)
-    monkeypatch.setattr(llnl.util.lang, "get_entry_points", entry_points)
+    monkeypatch.setattr(spack.llnl.util.lang, "get_entry_points", entry_points)
 
 
 def test_spack_entry_point_config(tmp_path: pathlib.Path, mock_get_entry_points):
@@ -107,8 +106,8 @@ def test_llnl_util_lang_get_entry_points(tmp_path: pathlib.Path, monkeypatch):
 
     monkeypatch.setattr(importlib.metadata, "entry_points", entry_points_factory(tmp_path))
 
-    entry_points = list(llnl.util.lang.get_entry_points(group="spack.config"))
+    entry_points = list(spack.llnl.util.lang.get_entry_points(group="spack.config"))
     assert isinstance(entry_points[0], MockConfigEntryPoint)
 
-    entry_points = list(llnl.util.lang.get_entry_points(group="spack.extensions"))
+    entry_points = list(spack.llnl.util.lang.get_entry_points(group="spack.extensions"))
     assert isinstance(entry_points[0], MockExtensionsEntryPoint)

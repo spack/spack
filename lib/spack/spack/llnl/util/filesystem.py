@@ -36,10 +36,15 @@ from typing import (
     Union,
 )
 
-import llnl.util.symlink
-from llnl.util import tty
-from llnl.util.lang import dedupe, fnmatch_translate_multiple, memoized
-from llnl.util.symlink import islink, readlink, resolve_link_target_relative_to_the_link, symlink
+import spack.llnl.util.symlink
+from spack.llnl.util import tty
+from spack.llnl.util.lang import dedupe, fnmatch_translate_multiple, memoized
+from spack.llnl.util.symlink import (
+    islink,
+    readlink,
+    resolve_link_target_relative_to_the_link,
+    symlink,
+)
 
 from ..path import path_to_os_path, system_path_filter
 
@@ -2423,7 +2428,7 @@ def find_all_shared_libraries(root, recursive=False, runtime=True):
     """Convenience function that returns the list of all shared libraries found
     in the directory passed as argument.
 
-    See documentation for `llnl.util.filesystem.find_libraries` for more information
+    See documentation for `spack.llnl.util.filesystem.find_libraries` for more information
     """
     return find_libraries("*", root=root, shared=True, recursive=recursive, runtime=runtime)
 
@@ -2432,7 +2437,7 @@ def find_all_static_libraries(root, recursive=False):
     """Convenience function that returns the list of all static libraries found
     in the directory passed as argument.
 
-    See documentation for `llnl.util.filesystem.find_libraries` for more information
+    See documentation for `spack.llnl.util.filesystem.find_libraries` for more information
     """
     return find_libraries("*", root=root, shared=False, recursive=recursive)
 
@@ -2441,7 +2446,7 @@ def find_all_libraries(root, recursive=False):
     """Convenience function that returns the list of all libraries found
     in the directory passed as argument.
 
-    See documentation for `llnl.util.filesystem.find_libraries` for more information
+    See documentation for `spack.llnl.util.filesystem.find_libraries` for more information
     """
 
     return find_all_shared_libraries(root, recursive=recursive) + find_all_static_libraries(
@@ -2607,7 +2612,7 @@ class WindowsSimulatedRPath:
                 else:
                     raise e
             # catch errors we raise ourselves from Spack
-            except llnl.util.symlink.AlreadyExistsError:
+            except spack.llnl.util.symlink.AlreadyExistsError:
                 report_already_linked()
 
     def establish_link(self):

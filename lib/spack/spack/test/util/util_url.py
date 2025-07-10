@@ -9,10 +9,9 @@ import urllib.parse
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.util.path
 import spack.util.url as url_util
+from spack.llnl.util.filesystem import working_dir
 
 
 def test_url_local_file_path(tmp_path: pathlib.Path):

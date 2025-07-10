@@ -17,13 +17,12 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import _vendoring.jsonschema
 
-import llnl.util.filesystem as fsys
-import llnl.util.tty as tty
-
 import spack.config as config
 import spack.database
 import spack.error
 import spack.hash_types as ht
+import spack.llnl.util.filesystem as fsys
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage

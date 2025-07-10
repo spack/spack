@@ -63,18 +63,12 @@ from typing import (
 
 import _vendoring.archspec.cpu
 
-import llnl.util.tty as tty
-from llnl.string import plural
-from llnl.util.filesystem import join_path
-from llnl.util.lang import dedupe, stable_partition
-from llnl.util.symlink import symlink
-from llnl.util.tty.color import cescape, colorize
-
 import spack.builder
 import spack.compilers.libraries
 import spack.config
 import spack.deptypes as dt
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.multimethod
 import spack.package_base
 import spack.paths
@@ -89,6 +83,11 @@ from spack import traverse
 from spack.context import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
+from spack.llnl.string import plural
+from spack.llnl.util.filesystem import join_path
+from spack.llnl.util.lang import dedupe, stable_partition
+from spack.llnl.util.symlink import symlink
+from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,

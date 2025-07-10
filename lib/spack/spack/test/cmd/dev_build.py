@@ -7,11 +7,10 @@ import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.concretize
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
 import spack.repo
 import spack.spec
 import spack.store

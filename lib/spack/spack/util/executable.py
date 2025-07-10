@@ -11,9 +11,8 @@ from typing import Callable, Dict, List, Optional, Sequence, TextIO, Type, Union
 
 from _vendoring.typing_extensions import Literal
 
-import llnl.util.tty as tty
-
 import spack.error
+import spack.llnl.util.tty as tty
 from spack.util.environment import EnvironmentModifications
 
 __all__ = ["Executable", "which", "which_string", "ProcessError"]

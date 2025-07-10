@@ -6,9 +6,8 @@ import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.reporters.extract
 from spack.install_test import TestStatus
 from spack.reporters import CDash, CDashConfiguration

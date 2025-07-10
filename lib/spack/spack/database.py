@@ -51,11 +51,10 @@ except ImportError:
     _use_uuid = False
     pass
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.deptypes as dt
 import spack.hash_types as ht
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.spec
 import spack.traverse as tr
 import spack.util.lock as lk

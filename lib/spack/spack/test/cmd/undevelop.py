@@ -3,10 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pathlib
 
-from llnl.util.filesystem import working_dir
-
 import spack.concretize
 import spack.environment as ev
+from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
 
 undevelop = SpackCommand("undevelop")

@@ -11,7 +11,7 @@ import re
 import sys
 from contextlib import contextmanager
 
-from llnl.util import tty
+from spack.llnl.util import tty
 
 if sys.platform == "win32":
     import winreg

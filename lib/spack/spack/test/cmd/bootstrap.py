@@ -7,8 +7,6 @@ import sys
 
 import pytest
 
-from llnl.path import convert_to_posix_path
-
 import spack.bootstrap
 import spack.bootstrap.core
 import spack.concretize
@@ -17,6 +15,7 @@ import spack.environment as ev
 import spack.main
 import spack.mirrors.utils
 import spack.spec
+from spack.llnl.path import convert_to_posix_path
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
 

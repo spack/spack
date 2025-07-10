@@ -15,50 +15,6 @@ from typing import Dict, Iterable, List, Optional
 
 from _vendoring.macholib.MachO import LC_ID_DYLIB, MachO
 
-from llnl.util.filesystem import (
-    FileFilter,
-    FileList,
-    HeaderList,
-    LibraryList,
-    ancestor,
-    can_access,
-    change_sed_delimiter,
-    copy,
-    copy_tree,
-    filter_file,
-    find,
-    find_all_headers,
-    find_all_libraries,
-    find_first,
-    find_headers,
-    find_libraries,
-    find_system_libraries,
-    force_remove,
-    force_symlink,
-    has_shebang,
-    install,
-    install_tree,
-    is_exe,
-    join_path,
-    keep_modification_time,
-    library_extensions,
-    make_package_test_rpath,
-    mkdirp,
-    path_contains_subdirectory,
-    remove_directory_contents,
-    remove_linked_tree,
-    rename,
-    safe_remove,
-    set_executable,
-    set_install_permissions,
-    touch,
-    windows_sfn,
-    working_dir,
-)
-from llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
-from llnl.util.link_tree import LinkTree
-from llnl.util.symlink import readlink, symlink
-
 import spack.builder
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
 from spack.build_environment import (
@@ -118,6 +74,49 @@ from spack.install_test import (
     install_test_root,
     test_part,
 )
+from spack.llnl.util.filesystem import (
+    FileFilter,
+    FileList,
+    HeaderList,
+    LibraryList,
+    ancestor,
+    can_access,
+    change_sed_delimiter,
+    copy,
+    copy_tree,
+    filter_file,
+    find,
+    find_all_headers,
+    find_all_libraries,
+    find_first,
+    find_headers,
+    find_libraries,
+    find_system_libraries,
+    force_remove,
+    force_symlink,
+    has_shebang,
+    install,
+    install_tree,
+    is_exe,
+    join_path,
+    keep_modification_time,
+    library_extensions,
+    make_package_test_rpath,
+    mkdirp,
+    path_contains_subdirectory,
+    remove_directory_contents,
+    remove_linked_tree,
+    rename,
+    safe_remove,
+    set_executable,
+    set_install_permissions,
+    touch,
+    windows_sfn,
+    working_dir,
+)
+from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
+from spack.llnl.util.link_tree import LinkTree
+from spack.llnl.util.symlink import readlink, symlink
 from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import default_args, when
 from spack.operating_systems.linux_distro import kernel_version
@@ -168,7 +167,7 @@ create_builder = spack.builder.create
 
 
 class tty:
-    import llnl.util.tty as _tty
+    import spack.llnl.util.tty as _tty
 
     debug = _tty.debug
     error = _tty.error

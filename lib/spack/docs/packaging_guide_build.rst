@@ -365,8 +365,8 @@ A more advanced example where we explicitly pass libraries and headers to the co
            f"--with-libxml2-include={self.spec['libxml2'].headers.include_flags}",
        ]
 
-The ``libs`` attribute is a :class:`LibraryList <llnl.util.filesystem.LibraryList>` object that can be used to get a list of libraries by path, but also to get the appropriate linker flags.
-Similarly, the ``headers`` attribute is a :class:`HeaderList <llnl.util.filesystem.HeaderList>`, which also has methods to get the relevant include flags.
+The ``libs`` attribute is a :class:`LibraryList <spack.llnl.util.filesystem.LibraryList>` object that can be used to get a list of libraries by path, but also to get the appropriate linker flags.
+Similarly, the ``headers`` attribute is a :class:`HeaderList <spack.llnl.util.filesystem.HeaderList>`, which also has methods to get the relevant include flags.
 
 .. _blas_lapack_scalapack:
 
@@ -634,7 +634,7 @@ This is already part of the boilerplate for packages created with ``spack create
 File filtering functions
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-:py:func:`filter_file(regex, repl, *filenames, **kwargs) <llnl.util.filesystem.filter_file>`
+:py:func:`filter_file(regex, repl, *filenames, **kwargs) <spack.llnl.util.filesystem.filter_file>`
   Works like ``sed`` but with Python regular expression syntax.  Takes
   a regular expression, a replacement, and a set of files.  ``repl``
   can be a raw string or a callable function.  If it is a raw string,
@@ -672,7 +672,7 @@ File filtering functions
         filter_file("CXX='c++'", "CXX='%s'" % self.compiler.cxx,
                     prefix.bin.mpicxx)
 
-:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <llnl.util.filesystem.change_sed_delimiter>`
+:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.llnl.util.filesystem.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install
     into directories with, e.g. "@" in the name, because they use
     hard-coded ``sed`` commands in their build.
@@ -694,14 +694,14 @@ File filtering functions
 File functions
 ^^^^^^^^^^^^^^
 
-:py:func:`ancestor(dir, n=1) <llnl.util.filesystem.ancestor>`
+:py:func:`ancestor(dir, n=1) <spack.llnl.util.filesystem.ancestor>`
   Get the n\ :sup:`th` ancestor of the directory ``dir``.
 
-:py:func:`can_access(path) <llnl.util.filesystem.can_access>`
+:py:func:`can_access(path) <spack.llnl.util.filesystem.can_access>`
   True if we can read and write to the file at ``path``.  Same as
   native Python ``os.access(file_name, os.R_OK|os.W_OK)``.
 
-:py:func:`install(src, dest) <llnl.util.filesystem.install>`
+:py:func:`install(src, dest) <spack.llnl.util.filesystem.install>`
   Install a file to a particular location.  For example, install a
   header into the ``include`` directory under the install ``prefix``:
 
@@ -709,14 +709,14 @@ File functions
 
      install("my-header.h", prefix.include)
 
-:py:func:`join_path(*paths) <llnl.util.filesystem.join_path>`
+:py:func:`join_path(*paths) <spack.llnl.util.filesystem.join_path>`
   An alias for ``os.path.join``. This joins paths using the OS path separator.
 
-:py:func:`mkdirp(*paths) <llnl.util.filesystem.mkdirp>`
+:py:func:`mkdirp(*paths) <spack.llnl.util.filesystem.mkdirp>`
   Create each of the directories in ``paths``, creating any parent
   directories if they do not exist.
 
-:py:func:`working_dir(dirname, kwargs) <llnl.util.filesystem.working_dir>`
+:py:func:`working_dir(dirname, kwargs) <spack.llnl.util.filesystem.working_dir>`
   This is a Python `Context Manager
   <https://docs.python.org/2/library/contextlib.html>`_ that makes it
   easier to work with subdirectories in builds.  You use this with the
@@ -758,7 +758,7 @@ File functions
      The ``create=True`` keyword argument causes the command to create
      the directory if it does not exist.
 
-:py:func:`touch(path) <llnl.util.filesystem.touch>`
+:py:func:`touch(path) <spack.llnl.util.filesystem.touch>`
   Create an empty file at ``path``.
 
 

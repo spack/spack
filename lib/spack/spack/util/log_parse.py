@@ -7,8 +7,8 @@ import sys
 
 from ctest_log_parser import BuildError, BuildWarning, CTestLogParser
 
-import llnl.util.tty as tty
-from llnl.util.tty.color import cescape, colorize
+import spack.llnl.util.tty as tty
+from spack.llnl.util.tty.color import cescape, colorize
 
 __all__ = ["parse_log_events", "make_log_context"]
 

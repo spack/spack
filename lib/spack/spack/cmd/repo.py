@@ -8,18 +8,17 @@ import shlex
 import tempfile
 from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
-import llnl.util.tty as tty
-from llnl.util.tty import color
-
 import spack
 import spack.caches
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.llnl.util.tty import color
 
 description = "manage package source repositories"
 section = "config"

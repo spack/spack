@@ -7,9 +7,8 @@ import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.binary_distribution as bindist
+import spack.llnl.util.filesystem as fs
 import spack.util.executable
 import spack.util.gpg
 from spack.main import SpackCommand

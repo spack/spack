@@ -558,7 +558,7 @@ def dedupe(sequence, key=None):
 
             [x for x in dedupe([1, 2, 1, 3, 2])] == [1, 2, 3]
 
-            [x for x in llnl.util.lang.dedupe([1,-2,1,3,2], key=abs)] == [1, -2, 3]
+            [x for x in spack.llnl.util.lang.dedupe([1,-2,1,3,2], key=abs)] == [1, -2, 3]
     """
     seen = set()
     for x in sequence:

@@ -4,10 +4,9 @@
 import os
 import shutil
 
-from llnl.util import tty
-
 import spack.database
 import spack.store
+from spack.llnl.util import tty
 
 description = "rebuild Spack's package database"
 section = "admin"

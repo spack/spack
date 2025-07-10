@@ -10,9 +10,6 @@ import shutil
 import sys
 from collections import Counter
 
-from llnl.util import tty
-from llnl.util.tty import colify
-
 import spack.cmd
 import spack.config
 import spack.environment as ev
@@ -20,6 +17,8 @@ import spack.install_test
 import spack.repo
 import spack.store
 from spack.cmd.common import arguments
+from spack.llnl.util import tty
+from spack.llnl.util.tty import colify
 
 description = "run spack's tests for an install"
 section = "admin"

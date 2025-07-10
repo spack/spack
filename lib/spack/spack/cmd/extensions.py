@@ -5,14 +5,13 @@
 import argparse
 import sys
 
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
-
 import spack.cmd as cmd
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.store
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify
 
 description = "list extensions for package"
 section = "extensions"

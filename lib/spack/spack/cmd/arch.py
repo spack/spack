@@ -8,9 +8,8 @@ import warnings
 
 import _vendoring.archspec.cpu
 
-import llnl.util.tty.colify as colify
-import llnl.util.tty.color as color
-
+import spack.llnl.util.tty.colify as colify
+import spack.llnl.util.tty.color as color
 import spack.platforms
 import spack.spec
 

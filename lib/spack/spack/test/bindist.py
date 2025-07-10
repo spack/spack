@@ -21,10 +21,6 @@ from typing import Any, Callable, Dict, NamedTuple, Optional
 
 import pytest
 
-import llnl.util.filesystem as fs
-from llnl.util.filesystem import copy_tree, join_path
-from llnl.util.symlink import readlink
-
 import spack.binary_distribution as bindist
 import spack.caches
 import spack.compilers.config
@@ -32,6 +28,7 @@ import spack.concretize
 import spack.config
 import spack.fetch_strategy
 import spack.hooks.sbang as sbang
+import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.mirrors.mirror
 import spack.oci.image
@@ -47,6 +44,8 @@ import spack.util.web as web_util
 from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import copy_tree, join_path
+from spack.llnl.util.symlink import readlink
 from spack.paths import test_path
 from spack.spec import Spec
 from spack.url_buildcache import (

@@ -28,13 +28,11 @@ except ImportError:
 
 import _vendoring.jsonschema
 
-import llnl.util.filesystem as fs
-import llnl.util.lock as lk
-from llnl.util.tty.colify import colify
-
 import spack.concretize
 import spack.database
 import spack.deptypes as dt
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lock as lk
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -44,6 +42,7 @@ import spack.util.lock
 import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller
+from spack.llnl.util.tty.colify import colify
 from spack.schema.database_index import schema
 from spack.test.conftest import RepoBuilder
 from spack.util.executable import Executable

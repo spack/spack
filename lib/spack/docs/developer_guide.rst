@@ -103,7 +103,6 @@ with a high-level view of Spack's directory structure:
             docs/          <- source for this documentation
 
             external/      <- external libs included in Spack distribution
-            llnl/          <- some general-use libraries
 
             spack/                <- spack module; contains Python code
                build_systems/     <- modules for different build systems
@@ -250,14 +249,14 @@ Other Modules
   :class:`~spack.error.SpackError`, the base class for
   Spack's exception hierarchy.
 
-:mod:`llnl.util.tty`
+:mod:`spack.llnl.util.tty`
   Basic output functions for all of the messages Spack writes to the
   terminal.
 
-:mod:`llnl.util.tty.color`
+:mod:`spack.llnl.util.tty.color`
   Implements a color formatting syntax used by ``spack.tty``.
 
-:mod:`llnl.util`
+:mod:`spack.llnl.util`
   In this package are a number of utility modules for the rest of
   Spack.
 

@@ -36,15 +36,13 @@ import re
 import string
 from typing import List, Optional
 
-import llnl.util.filesystem
-import llnl.util.tty as tty
-from llnl.util.lang import Singleton, dedupe, memoized
-
 import spack.build_environment
 import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
+import spack.llnl.util.filesystem
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.projections as proj
 import spack.schema
@@ -58,6 +56,7 @@ import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.context import Context
+from spack.llnl.util.lang import Singleton, dedupe, memoized
 
 
 #: config section for this file
@@ -235,7 +234,7 @@ def generate_module_index(root, modules, overwrite=False):
         entry = {"path": m.layout.filename, "use_name": m.layout.use_name}
         entries[m.spec.dag_hash()] = entry
     index = {"module_index": entries}
-    llnl.util.filesystem.mkdirp(root)
+    spack.llnl.util.filesystem.mkdirp(root)
     with open(index_path, "w", encoding="utf-8") as index_file:
         syaml.dump(index, default_flow_style=False, stream=index_file)
 
@@ -868,7 +867,7 @@ class BaseModuleFileWriter:
         # create it
         module_dir = os.path.dirname(self.layout.filename)
         if not os.path.exists(module_dir):
-            llnl.util.filesystem.mkdirp(module_dir)
+            spack.llnl.util.filesystem.mkdirp(module_dir)
 
         # Get the template for the module
         template_name = self._get_template()

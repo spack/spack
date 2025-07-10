@@ -10,12 +10,11 @@ from typing import Iterable, List
 
 import _vendoring.archspec.cpu
 
-from llnl.util import tty
-
 import spack.environment
 import spack.spec
 import spack.tengine
 import spack.util.path
+from spack.llnl.util import tty
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path

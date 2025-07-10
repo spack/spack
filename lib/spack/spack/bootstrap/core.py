@@ -29,9 +29,6 @@ import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from llnl.util import tty
-from llnl.util.lang import GroupedExceptionHandler
-
 import spack.binary_distribution
 import spack.concretize
 import spack.config
@@ -48,6 +45,8 @@ import spack.util.spack_yaml
 import spack.util.url
 import spack.version
 from spack.installer import PackageInstaller
+from spack.llnl.util import tty
+from spack.llnl.util.lang import GroupedExceptionHandler
 
 from ._common import (
     QueryInfo,

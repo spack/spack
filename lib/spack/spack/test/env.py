@@ -9,10 +9,9 @@ import pickle
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.config
 import spack.environment as ev
+import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.solver.asp
 import spack.spec

@@ -168,7 +168,7 @@ class TestConcretizePreferences:
                 {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
                 "http://www.somewhereelse.com/mpileaks-2.3.tar.gz",
             ),
-            ({}, "http://www.llnl.gov/mpileaks-2.3.tar.gz"),
+            ({}, "http://www.spack.llnl.gov/mpileaks-2.3.tar.gz"),
         ],
     )
     def test_config_set_pkg_property_url(self, update, expected, mock_packages_repo):

@@ -6,15 +6,14 @@ import argparse
 import re
 import sys
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-
 import spack
 import spack.cmd
 import spack.cmd.spec
 import spack.config
 import spack.environment
 import spack.hash_types as ht
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.solver.asp as asp
 import spack.spec
 

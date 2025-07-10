@@ -5,10 +5,9 @@ import itertools
 import textwrap
 from typing import List, Optional, Tuple
 
-import llnl.util.lang
-
 import spack.config
 import spack.extensions
+import spack.llnl.util.lang
 from spack.util.path import canonicalize_path
 
 
@@ -30,7 +29,7 @@ class ContextMeta(type):
                 context_properties.extend(x.context_properties)
             except AttributeError:
                 pass
-        context_properties = list(llnl.util.lang.dedupe(context_properties))
+        context_properties = list(spack.llnl.util.lang.dedupe(context_properties))
 
         # Flush the list
         cls._new_context_properties = []
@@ -65,7 +64,7 @@ class Context(metaclass=ContextMeta):
         return dict(d)
 
 
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def make_environment(dirs: Optional[Tuple[str, ...]] = None):
     """Returns a configured environment for template rendering."""
     # Import at this scope to avoid slowing Spack startup down

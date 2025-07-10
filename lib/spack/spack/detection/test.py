@@ -8,11 +8,10 @@ import pathlib
 import tempfile
 from typing import Any, Deque, Dict, Generator, List, NamedTuple, Tuple
 
-from llnl.util import filesystem
-
 import spack.platforms
 import spack.repo
 import spack.spec
+from spack.llnl.util import filesystem
 from spack.util import spack_yaml
 
 from .path import by_path

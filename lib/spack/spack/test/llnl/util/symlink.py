@@ -9,8 +9,8 @@ import tempfile
 
 import pytest
 
-from llnl.util import symlink
-from llnl.util.filesystem import working_dir
+from spack.llnl.util import symlink
+from spack.llnl.util.filesystem import working_dir
 
 
 def test_symlink_file(tmp_path: pathlib.Path):

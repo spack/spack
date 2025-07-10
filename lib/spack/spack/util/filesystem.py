@@ -4,14 +4,13 @@
 
 """
 Utilities for interacting with files,
-like those in llnl.util.filesystem, but which require logic from spack.util
+like those in spack.llnl.util.filesystem, but which require logic from spack.util
 """
 
 import glob
 import os
 
-from llnl.util.filesystem import edit_in_place_through_temporary_file
-
+from spack.llnl.util.filesystem import edit_in_place_through_temporary_file
 from spack.util.executable import Executable
 
 

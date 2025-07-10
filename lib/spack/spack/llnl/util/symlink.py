@@ -9,7 +9,7 @@ import sys
 import tempfile
 from typing import Union
 
-from llnl.util import lang, tty
+from spack.llnl.util import lang, tty
 
 from ..path import sanitize_win_longpath, system_path_filter
 
@@ -160,7 +160,7 @@ def _windows_can_symlink() -> bool:
     dlink = os.path.join(tempdir, "dlink")
     flink = os.path.join(tempdir, "flink.txt")
 
-    import llnl.util.filesystem as fs
+    import spack.llnl.util.filesystem as fs
 
     fs.touchp(fpath)
     fs.mkdirp(dpath)

@@ -10,14 +10,13 @@ import warnings
 from itertools import islice, zip_longest
 from typing import Callable, Dict, List, Optional
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.filesystem import working_dir
-
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.repo
 import spack.util.git
 import spack.util.spack_yaml
+from spack.llnl.util.filesystem import working_dir
 from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
 from spack.tokenize import Token, TokenBase, Tokenizer
 from spack.util.executable import Executable, which
@@ -400,11 +399,11 @@ def _run_import_check(
         print("import check requires Python 3.9 or later")
         return 0
 
-    is_use = re.compile(r"(?<!from )(?<!import )(?:llnl|spack)\.[a-zA-Z0-9_\.]+")
+    is_use = re.compile(r"(?<!from )(?<!import )spack\.[a-zA-Z0-9_\.]+")
 
     # redundant imports followed by a `# comment` are ignored, cause there can be legimitate reason
     # to import a module: execute module scope init code, or to deal with circular imports.
-    is_abs_import = re.compile(r"^import ((?:llnl|spack)\.[a-zA-Z0-9_\.]+)$", re.MULTILINE)
+    is_abs_import = re.compile(r"^import (spack\.[a-zA-Z0-9_\.]+)$", re.MULTILINE)
 
     exit_code = 0
 

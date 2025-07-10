@@ -7,8 +7,6 @@ import argparse
 import os
 import textwrap
 
-from llnl.util.lang import stable_partition
-
 import spack.cmd
 import spack.config
 import spack.deptypes as dt
@@ -18,6 +16,7 @@ import spack.mirrors.utils
 import spack.reporters
 import spack.spec
 import spack.store
+from spack.llnl.util.lang import stable_partition
 from spack.util.pattern import Args
 
 __all__ = ["add_common_arguments"]

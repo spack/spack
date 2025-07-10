@@ -4,9 +4,6 @@
 import os
 from typing import Iterable
 
-from llnl.util.filesystem import filter_file, find
-from llnl.util.lang import memoized
-
 import spack.builder
 import spack.package_base
 import spack.phase_callbacks
@@ -14,6 +11,8 @@ import spack.spec
 import spack.util.prefix
 from spack.directives import build_system, depends_on, extends
 from spack.install_test import SkipTest, test_part
+from spack.llnl.util.filesystem import filter_file, find
+from spack.llnl.util.lang import memoized
 from spack.multimethod import when
 from spack.util.executable import Executable
 

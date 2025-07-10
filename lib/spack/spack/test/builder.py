@@ -6,12 +6,11 @@ import pathlib
 
 import pytest
 
-from llnl.util.filesystem import touch
-
 import spack.builder
 import spack.concretize
 import spack.paths
 import spack.repo
+from spack.llnl.util.filesystem import touch
 
 
 @pytest.fixture()

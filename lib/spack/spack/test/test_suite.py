@@ -8,14 +8,13 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import touch
-
 import spack.concretize
 import spack.config
 import spack.install_test
 import spack.spec
 import spack.util.executable
 from spack.install_test import TestStatus
+from spack.llnl.util.filesystem import touch
 from spack.util.executable import which
 
 

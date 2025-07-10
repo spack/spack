@@ -12,13 +12,12 @@ import sys
 from html import escape
 from typing import Type
 
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
-
 import spack.deptypes as dt
+import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.repo
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify
 from spack.version import VersionList
 
 description = "list and search available packages"

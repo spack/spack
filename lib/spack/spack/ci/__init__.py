@@ -17,16 +17,14 @@ from collections import namedtuple
 from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 from urllib.request import Request
 
-import llnl.path
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.tty.color import cescape, colorize
-
 import spack
 import spack.binary_distribution as bindist
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
+import spack.llnl.path
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
 import spack.paths
@@ -41,6 +39,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
+from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.version import GitVersion, StandardVersion
 
@@ -138,7 +137,7 @@ def stack_changed(env_path: str) -> bool:
     Returns True iff the environment manifest changed between the provided revisions (or
     additionally if the `.gitlab-ci.yml` file itself changed)."""
     # git returns posix paths always, normalize input to be compatible with that
-    env_path = llnl.path.convert_to_posix_path(os.path.dirname(env_path))
+    env_path = spack.llnl.path.convert_to_posix_path(os.path.dirname(env_path))
 
     git = spack.util.git.git(required=True)
     git_dir = get_git_root(env_path)

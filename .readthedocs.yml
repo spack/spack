@@ -19,8 +19,6 @@ search:
   ranking:
     spack.html: -10
     spack.*.html: -10
-    llnl.html: -10
-    llnl.*.html: -10
     _modules/*: -10
     command_index.html: -9
     basic_usage.html: 5

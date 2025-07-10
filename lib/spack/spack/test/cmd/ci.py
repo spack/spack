@@ -10,8 +10,6 @@ from typing import NamedTuple
 import _vendoring.jsonschema
 import pytest
 
-from llnl.util.filesystem import mkdirp, working_dir
-
 import spack
 import spack.binary_distribution
 import spack.ci as ci
@@ -32,6 +30,7 @@ from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
+from spack.llnl.util.filesystem import mkdirp, working_dir
 from spack.schema.database_index import schema as db_idx_schema
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 

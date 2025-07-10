@@ -6,9 +6,8 @@ import os
 import urllib.parse
 from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
-import llnl.util.tty as tty
-
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml

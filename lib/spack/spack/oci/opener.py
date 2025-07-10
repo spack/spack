@@ -17,9 +17,8 @@ from http.client import HTTPResponse
 from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple
 from urllib.request import Request
 
-import llnl.util.lang
-
 import spack.config
+import spack.llnl.util.lang
 import spack.mirrors.mirror
 import spack.tokenize
 import spack.util.web
@@ -41,7 +40,7 @@ OpenType = Callable[..., HTTPResponse]
 MaybeOpen = Optional[OpenType]
 
 #: Opener that automatically uses OCI authentication based on mirror config
-urlopen: OpenType = llnl.util.lang.Singleton(_urlopen)
+urlopen: OpenType = spack.llnl.util.lang.Singleton(_urlopen)
 
 
 SP = r" "

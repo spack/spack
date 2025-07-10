@@ -11,13 +11,12 @@ from typing import Any, Dict, Iterable, List, Optional
 from _vendoring import jsonschema
 from _vendoring.jsonschema import exceptions
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.compilers.config
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as hash_types
+import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec

@@ -7,10 +7,9 @@ import pathlib
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, touch, working_dir
-
 import spack.concretize
 from spack.fetch_strategy import CvsFetchStrategy
+from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.stage import Stage
 from spack.util.executable import which
 from spack.version import Version

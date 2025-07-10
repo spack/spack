@@ -35,11 +35,6 @@ from typing import (
 
 import _vendoring.archspec.cpu
 
-import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.filesystem import current_file_position
-from llnl.util.lang import elide_list
-
 import spack
 import spack.binary_distribution
 import spack.compilers.config
@@ -49,6 +44,8 @@ import spack.deptypes as dt
 import spack.detection
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs
 import spack.patch
@@ -69,6 +66,8 @@ import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
+from spack.llnl.util.filesystem import current_file_position
+from spack.llnl.util.lang import elide_list
 from spack.util.file_cache import FileCache
 
 from .core import (
@@ -893,7 +892,7 @@ class ConcretizationCache:
         return None, None
 
 
-CONC_CACHE: ConcretizationCache = llnl.util.lang.Singleton(
+CONC_CACHE: ConcretizationCache = spack.llnl.util.lang.Singleton(
     lambda: ConcretizationCache()
 )  # type: ignore
 
@@ -1132,7 +1131,7 @@ class PyclingoDriver:
             solve, and the internal statistics from clingo.
         """
         # avoid circular import
-        import spack.bootstrap.core
+        from spack.bootstrap.core import ensure_winsdk_external_or_raise
 
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         timer = spack.util.timer.Timer()
@@ -1145,7 +1144,7 @@ class PyclingoDriver:
         # bootstrap config scope
         if sys.platform == "win32":
             tty.debug("Ensuring basic dependencies {win-sdk, wgl} available")
-            spack.bootstrap.core.ensure_winsdk_external_or_raise()
+            ensure_winsdk_external_or_raise()
         control_files = ["concretize.lp", "heuristic.lp", "display.lp", "direct_dependency.lp"]
         if not setup.concretize_everything:
             control_files.append("when_possible.lp")
@@ -1221,7 +1220,9 @@ class PyclingoDriver:
             with self.control.solve(**solve_kwargs, async_=True) as handle:
                 finished = handle.wait(time_limit)
                 if not finished:
-                    specs_str = ", ".join(llnl.util.lang.elide_list([str(s) for s in specs], 4))
+                    specs_str = ", ".join(
+                        spack.llnl.util.lang.elide_list([str(s) for s in specs], 4)
+                    )
                     header = (
                         f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
                     )
@@ -2744,7 +2745,7 @@ class SpackSolverSetup:
                         )
                     version_defs.extend(matches)
 
-            for weight, vdef in enumerate(llnl.util.lang.dedupe(version_defs)):
+            for weight, vdef in enumerate(spack.llnl.util.lang.dedupe(version_defs)):
                 self.declared_versions[pkg_name].append(
                     DeclaredVersion(version=vdef, idx=weight, origin=Provenance.PACKAGES_YAML)
                 )

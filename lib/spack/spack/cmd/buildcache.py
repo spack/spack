@@ -8,10 +8,6 @@ import sys
 import tempfile
 from typing import List, Optional, Tuple
 
-import llnl.util.tty as tty
-from llnl.string import plural
-from llnl.util.lang import elide_list, stable_partition
-
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.concretize
@@ -19,6 +15,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.oci.oci
 import spack.spec
@@ -29,6 +26,8 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
+from spack.llnl.string import plural
+from spack.llnl.util.lang import elide_list, stable_partition
 from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate

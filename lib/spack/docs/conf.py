@@ -86,7 +86,6 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack/test/cmd/*.py",
     ]
 )
-sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
 sphinx_apidoc(
     apidoc_args
     + [
@@ -206,7 +205,9 @@ gettext_uuid = False
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build", "_spack_root", ".spack-env"]
+exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack"]
+
+autodoc_mock_imports = ["llnl"]
 
 nitpicky = True
 nitpick_ignore = [
@@ -240,17 +241,17 @@ nitpick_ignore = [
     ("py:class", "_vendoring.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.compiler.CompilerCache"),
     # TypeVar that is not handled correctly
-    ("py:class", "llnl.util.lang.T"),
-    ("py:class", "llnl.util.lang.KT"),
-    ("py:class", "llnl.util.lang.VT"),
-    ("py:class", "llnl.util.lang.K"),
-    ("py:class", "llnl.util.lang.V"),
-    ("py:class", "llnl.util.lang.ClassPropertyType"),
-    ("py:obj", "llnl.util.lang.KT"),
-    ("py:obj", "llnl.util.lang.VT"),
-    ("py:obj", "llnl.util.lang.ClassPropertyType"),
-    ("py:obj", "llnl.util.lang.K"),
-    ("py:obj", "llnl.util.lang.V"),
+    ("py:class", "spack.llnl.util.lang.T"),
+    ("py:class", "spack.llnl.util.lang.KT"),
+    ("py:class", "spack.llnl.util.lang.VT"),
+    ("py:class", "spack.llnl.util.lang.K"),
+    ("py:class", "spack.llnl.util.lang.V"),
+    ("py:class", "spack.llnl.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.llnl.util.lang.KT"),
+    ("py:obj", "spack.llnl.util.lang.VT"),
+    ("py:obj", "spack.llnl.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.llnl.util.lang.K"),
+    ("py:obj", "spack.llnl.util.lang.V"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

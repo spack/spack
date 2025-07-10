@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from typing import List
 
-import llnl.util.filesystem as fs
-
 import spack.builder
+import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec

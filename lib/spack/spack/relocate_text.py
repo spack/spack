@@ -8,9 +8,8 @@ paths inside text files and binaries."""
 import re
 from typing import IO, Dict, Iterable, List, Union
 
-from llnl.util.lang import PatternBytes
-
 import spack.error
+from spack.llnl.util.lang import PatternBytes
 
 Prefix = Union[str, bytes]
 PrefixToPrefix = Union[Dict[str, str], Dict[bytes, bytes]]

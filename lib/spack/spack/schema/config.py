@@ -8,10 +8,9 @@
 """
 from typing import Any, Dict
 
-from llnl.util.lang import union_dicts
-
 import spack.schema
 import spack.schema.projections
+from spack.llnl.util.lang import union_dicts
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {

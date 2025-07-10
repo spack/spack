@@ -13,11 +13,10 @@ from contextlib import contextmanager
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.symlink
-from llnl.util.symlink import _windows_can_symlink, islink, readlink, symlink
-
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.symlink
 import spack.paths
+from spack.llnl.util.symlink import _windows_can_symlink, islink, readlink, symlink
 
 
 @pytest.fixture()
@@ -1207,7 +1206,7 @@ def complex_dir_structure(request, tmp_path_factory: pytest.TempPathFactory):
     l2_d2.mkdir()
 
     if sys.platform == "win32" and use_junctions:
-        link_fn = llnl.util.symlink._windows_create_junction
+        link_fn = spack.llnl.util.symlink._windows_create_junction
     else:
         link_fn = os.symlink
 

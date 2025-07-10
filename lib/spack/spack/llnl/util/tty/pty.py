@@ -4,7 +4,7 @@
 
 """The pty module handles pseudo-terminals.
 
-Currently, the infrastructure here is only used to test llnl.util.tty.log.
+Currently, the infrastructure here is only used to test spack.llnl.util.tty.log.
 
 If this is used outside a testing environment, we will want to reconsider
 things like timeouts in ``ProcessController.wait()``, which are set to
@@ -20,8 +20,7 @@ import sys
 import time
 import traceback
 
-import llnl.util.tty.log as log
-
+import spack.llnl.util.tty.log as log
 from spack.util.executable import which
 
 termios = None

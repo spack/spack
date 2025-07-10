@@ -8,8 +8,7 @@ import stat
 
 import pytest
 
-import llnl.util.filesystem as fs
-
+import spack.llnl.util.filesystem as fs
 from spack.util.file_permissions import InvalidPermissionsError, set_permissions
 
 pytestmark = pytest.mark.not_on_windows("chmod unsupported on Windows")

@@ -9,8 +9,7 @@ import re
 from collections import defaultdict
 from typing import Dict
 
-import llnl.util.tty as tty
-
+import spack.llnl.util.tty as tty
 import spack.paths
 
 description = "list and check license headers on files in spack"

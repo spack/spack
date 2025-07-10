@@ -25,10 +25,6 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Ty
 
 from _vendoring.typing_extensions import Literal
 
-import llnl.util.filesystem as fsys
-import llnl.util.tty as tty
-from llnl.util.lang import ClassProperty, classproperty, memoized
-
 import spack.config
 import spack.dependency
 import spack.deptypes as dt
@@ -36,6 +32,8 @@ import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
+import spack.llnl.util.filesystem as fsys
+import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.multimethod
@@ -57,6 +55,7 @@ import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
+from spack.llnl.util.lang import ClassProperty, classproperty, memoized
 from spack.resource import Resource
 from spack.solver.version_order import concretization_version_order
 from spack.util.package_hash import package_hash

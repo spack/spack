@@ -5,7 +5,7 @@
 import argparse
 import sys
 
-from llnl.util.tty.color import colorize
+from spack.llnl.util.tty.color import colorize
 
 description = "get help on spack and its commands"
 section = "help"

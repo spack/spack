@@ -27,12 +27,6 @@ from typing import Any, Callable, List, Tuple
 
 import _vendoring.archspec.cpu
 
-import llnl.util.lang
-import llnl.util.tty as tty
-import llnl.util.tty.colify
-import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output
-
 import spack
 import spack.cmd
 import spack.config
@@ -40,6 +34,10 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.colify
+import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.platforms
 import spack.solver.asp
@@ -48,6 +46,7 @@ import spack.store
 import spack.util.debug
 import spack.util.environment
 import spack.util.lock
+from spack.llnl.util.tty.log import log_output
 
 from .enums import ConfigScopePriority
 
@@ -329,7 +328,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
     def _check_value(self, action, value):
         # converted value must be one of the choices (if specified)
         if action.choices is not None and value not in action.choices:
-            cols = llnl.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
+            cols = spack.llnl.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
             msg = "invalid choice: %r choose from:\n%s" % (value, cols)
             raise argparse.ArgumentError(action, msg)
 
@@ -725,7 +724,7 @@ def _profile_wrapper(command, parser, args, unknown_args):
         stats.print_stats(nlines)
 
 
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def _compatible_sys_types():
     """Return a list of all the platform-os-target tuples compatible
     with the current host.
@@ -1033,7 +1032,7 @@ def _main(argv=None):
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things
     # like `ConstraintAction` and `ConfigSetAction` happen at parse time.
-    bootstrap_context = llnl.util.lang.nullcontext()
+    bootstrap_context = spack.llnl.util.lang.nullcontext()
     if args.bootstrap:
         import spack.bootstrap as bootstrap  # avoid circular imports
 

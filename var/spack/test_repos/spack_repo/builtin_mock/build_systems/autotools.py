@@ -6,13 +6,12 @@ import stat
 import subprocess
 from typing import Callable, List, Optional, Set, Tuple, Union
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.build_environment
 import spack.builder
 import spack.compilers.libraries
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec

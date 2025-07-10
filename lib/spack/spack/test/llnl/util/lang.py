@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
-import llnl.util.lang
-from llnl.util.lang import dedupe, match_predicate, memoized, pretty_date, stable_args
+import spack.llnl.util.lang
+from spack.llnl.util.lang import dedupe, match_predicate, memoized, pretty_date, stable_args
 
 
 @pytest.fixture()
@@ -98,7 +98,7 @@ def test_pretty_date():
 )
 def test_pretty_string_to_date_delta(now, delta, pretty_string):
     t1 = now - delta
-    t2 = llnl.util.lang.pretty_string_to_date(pretty_string, now)
+    t2 = spack.llnl.util.lang.pretty_string_to_date(pretty_string, now)
     assert t1 == t2
 
 
@@ -114,16 +114,16 @@ def test_pretty_string_to_date_delta(now, delta, pretty_string):
 )
 def test_pretty_string_to_date(format, pretty_string):
     t1 = datetime.strptime(pretty_string, format)
-    t2 = llnl.util.lang.pretty_string_to_date(pretty_string, now)
+    t2 = spack.llnl.util.lang.pretty_string_to_date(pretty_string, now)
     assert t1 == t2
 
 
 def test_pretty_seconds():
-    assert llnl.util.lang.pretty_seconds(2.1) == "2.100s"
-    assert llnl.util.lang.pretty_seconds(2.1 / 1000) == "2.100ms"
-    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000) == "2.100us"
-    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000) == "2.100ns"
-    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000 / 10) == "0.210ns"
+    assert spack.llnl.util.lang.pretty_seconds(2.1) == "2.100s"
+    assert spack.llnl.util.lang.pretty_seconds(2.1 / 1000) == "2.100ms"
+    assert spack.llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000) == "2.100us"
+    assert spack.llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000) == "2.100ns"
+    assert spack.llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000 / 10) == "0.210ns"
 
 
 def test_match_predicate():
@@ -152,24 +152,24 @@ def test_load_modules_from_file(module_path):
     assert "foo" not in sys.modules
 
     # Check that the module is loaded correctly from file
-    foo = llnl.util.lang.load_module_from_file("foo", module_path)
+    foo = spack.llnl.util.lang.load_module_from_file("foo", module_path)
     assert "foo" in sys.modules
     assert foo.value == 1
     assert foo.path == os.path.join("/usr", "bin")
 
     # Check that the module is not reloaded a second time on subsequent calls
     foo.value = 2
-    foo = llnl.util.lang.load_module_from_file("foo", module_path)
+    foo = spack.llnl.util.lang.load_module_from_file("foo", module_path)
     assert "foo" in sys.modules
     assert foo.value == 2
     assert foo.path == os.path.join("/usr", "bin")
 
 
 def test_uniq():
-    assert [1, 2, 3] == llnl.util.lang.uniq([1, 2, 3])
-    assert [1, 2, 3] == llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 3, 3])
-    assert [1, 2, 1] == llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 1, 1])
-    assert [] == llnl.util.lang.uniq([])
+    assert [1, 2, 3] == spack.llnl.util.lang.uniq([1, 2, 3])
+    assert [1, 2, 3] == spack.llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 3, 3])
+    assert [1, 2, 1] == spack.llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 1, 1])
+    assert [] == spack.llnl.util.lang.uniq([])
 
 
 def test_key_ordering():
@@ -177,12 +177,12 @@ def test_key_ordering():
 
     with pytest.raises(TypeError):
 
-        @llnl.util.lang.key_ordering
+        @spack.llnl.util.lang.key_ordering
         class ClassThatHasNoCmpKeyMethod:
             # this will raise b/c it does not define _cmp_key
             pass
 
-    @llnl.util.lang.key_ordering
+    @spack.llnl.util.lang.key_ordering
     class KeyComparable:
         def __init__(self, t):
             self.t = t
@@ -265,7 +265,7 @@ def test_memoized_unhashable(args, kwargs):
     def f(*args, **kwargs):
         return None
 
-    with pytest.raises(llnl.util.lang.UnhashableArguments) as exc_info:
+    with pytest.raises(spack.llnl.util.lang.UnhashableArguments) as exc_info:
         f(*args, **kwargs)
     exc_msg = str(exc_info.value)
     key = stable_args(*args, **kwargs)
@@ -279,7 +279,7 @@ def test_dedupe():
 
 
 def test_grouped_exception():
-    h = llnl.util.lang.GroupedExceptionHandler()
+    h = spack.llnl.util.lang.GroupedExceptionHandler()
 
     def inner():
         raise ValueError("wow!")
@@ -292,7 +292,7 @@ def test_grouped_exception():
 
 
 def test_grouped_exception_base_type():
-    h = llnl.util.lang.GroupedExceptionHandler()
+    h = spack.llnl.util.lang.GroupedExceptionHandler()
 
     with h.forward("catch-runtime-error", RuntimeError):
         raise NotImplementedError()
@@ -310,7 +310,7 @@ def test_class_level_constant_value():
     """Tests that the Const descriptor does not allow overwriting the value from an instance"""
 
     class _SomeClass:
-        CONST_VALUE = llnl.util.lang.Const(10)
+        CONST_VALUE = spack.llnl.util.lang.Const(10)
 
     with pytest.raises(TypeError, match="not support assignment"):
         _SomeClass().CONST_VALUE = 11
@@ -321,7 +321,7 @@ def test_deprecated_property():
     deprecating an attribute.
     """
 
-    class _Deprecated(llnl.util.lang.DeprecatedProperty):
+    class _Deprecated(spack.llnl.util.lang.DeprecatedProperty):
         def factory(self, instance, owner):
             return 46
 
@@ -345,7 +345,7 @@ def test_deprecated_property():
 
 def test_fnmatch_multiple():
     named_patterns = {"a": "libf*o.so", "b": "libb*r.so"}
-    regex = re.compile(llnl.util.lang.fnmatch_translate_multiple(named_patterns))
+    regex = re.compile(spack.llnl.util.lang.fnmatch_translate_multiple(named_patterns))
 
     a = regex.match("libfoo.so")
     assert a and a.group("a") == "libfoo.so"
@@ -379,14 +379,14 @@ class TestPriorityOrderedMapping:
     )
     def test_iteration_order(self, elements, expected):
         """Tests that the iteration order respects priorities, no matter the insertion order."""
-        m = llnl.util.lang.PriorityOrderedMapping()
+        m = spack.llnl.util.lang.PriorityOrderedMapping()
         for key, priority in elements:
             m.add(key, value=None, priority=priority)
         assert list(m) == expected
 
     def test_reverse_iteration(self):
         """Tests that we can conveniently use reverse iteration"""
-        m = llnl.util.lang.PriorityOrderedMapping()
+        m = spack.llnl.util.lang.PriorityOrderedMapping()
         for key, value in [("a", 1), ("b", 2), ("c", 3)]:
             m.add(key, value=value)
 

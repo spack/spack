@@ -8,19 +8,18 @@ import shutil
 import sys
 from typing import List
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify_table
-
 import spack.config
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.schema
 import spack.schema.env
 import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify_table
 from spack.util.editor import editor
 
 description = "get and set configuration options"

@@ -237,7 +237,7 @@ def test_extension_naming(tmp_path: pathlib.Path, extension_path, expected_excep
     """
     # NOTE: if the directory is a valid extension directory name the "vacuous" test will
     # fail because it resolves to current working directory
-    import llnl.util.filesystem as fs
+    import spack.llnl.util.filesystem as fs
 
     with fs.working_dir(str(tmp_path)):
         with spack.config.override("config:extensions", [extension_path]):

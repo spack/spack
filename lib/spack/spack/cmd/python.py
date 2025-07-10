@@ -9,9 +9,8 @@ import platform
 import runpy
 import sys
 
-import llnl.util.tty as tty
-
 import spack
+import spack.llnl.util.tty as tty
 import spack.repo
 
 description = "launch an interpreter as spack would launch a command"

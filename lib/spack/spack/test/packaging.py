@@ -15,9 +15,6 @@ from collections import OrderedDict
 
 import pytest
 
-from llnl.util import filesystem as fs
-from llnl.util.symlink import readlink, symlink
-
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 import spack.concretize
@@ -31,6 +28,8 @@ import spack.util.gpg
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
+from spack.llnl.util import filesystem as fs
+from spack.llnl.util.symlink import readlink, symlink
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import _macho_find_paths, relocate_links, relocate_text
 

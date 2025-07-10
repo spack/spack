@@ -12,18 +12,13 @@ import sys
 from collections import Counter
 from typing import Generator, List, Optional, Sequence, Union
 
-import llnl.string
-import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
-from llnl.util.lang import attr_setdefault, index_by
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import colorize
-
 import spack.concretize
 import spack.config  # breaks a cycle.
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.llnl.string
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.spec
@@ -33,6 +28,10 @@ import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.llnl.util.filesystem import join_path
+from spack.llnl.util.lang import attr_setdefault, index_by
+from spack.llnl.util.tty.colify import colify
+from spack.llnl.util.tty.color import colorize
 
 from ..enums import InstallRecordStatus
 
@@ -569,7 +568,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % llnl.string.plural(len(specs), pkg_type + " package") + suffix)
+    tty.msg("%s" % spack.llnl.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():

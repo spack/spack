@@ -8,11 +8,10 @@ import sys
 
 import pytest
 
-import llnl.util.symlink
-from llnl.util.filesystem import mkdirp, touchp, visit_directory_tree, working_dir
-from llnl.util.link_tree import DestinationMergeVisitor, LinkTree, SourceMergeVisitor
-from llnl.util.symlink import _windows_can_symlink, islink, readlink, symlink
-
+import spack.llnl.util.symlink
+from spack.llnl.util.filesystem import mkdirp, touchp, visit_directory_tree, working_dir
+from spack.llnl.util.link_tree import DestinationMergeVisitor, LinkTree, SourceMergeVisitor
+from spack.llnl.util.symlink import _windows_can_symlink, islink, readlink, symlink
 from spack.stage import Stage
 
 
@@ -46,7 +45,7 @@ def link_tree(stage):
 def check_file_link(filename, expected_target):
     assert os.path.isfile(filename)
     assert islink(filename)
-    if sys.platform != "win32" or llnl.util.symlink._windows_can_symlink():
+    if sys.platform != "win32" or spack.llnl.util.symlink._windows_can_symlink():
         assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
 
 
@@ -62,7 +61,7 @@ def test_merge_to_new_directory(stage, link_tree, monkeypatch, run_as_root):
         else:
             pytest.skip("Skipping duplicate test.")
     elif _windows_can_symlink() or not run_as_root:
-        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: run_as_root)
+        monkeypatch.setattr(spack.llnl.util.symlink, "_windows_can_symlink", lambda: run_as_root)
     else:
         # Skip if trying to run as dev-mode without having dev-mode.
         pytest.skip("Skipping portion of test which required dev-mode privileges.")
@@ -97,7 +96,7 @@ def test_merge_to_new_directory_relative(stage, link_tree, monkeypatch, run_as_r
         else:
             pytest.skip("Skipping duplicate test.")
     elif _windows_can_symlink() or not run_as_root:
-        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: run_as_root)
+        monkeypatch.setattr(spack.llnl.util.symlink, "_windows_can_symlink", lambda: run_as_root)
     else:
         # Skip if trying to run as dev-mode without having dev-mode.
         pytest.skip("Skipping portion of test which required dev-mode privileges.")
@@ -134,7 +133,7 @@ def test_merge_to_existing_directory(stage, link_tree, monkeypatch, run_as_root)
         else:
             pytest.skip("Skipping duplicate test.")
     elif _windows_can_symlink() or not run_as_root:
-        monkeypatch.setattr(llnl.util.symlink, "_windows_can_symlink", lambda: run_as_root)
+        monkeypatch.setattr(spack.llnl.util.symlink, "_windows_can_symlink", lambda: run_as_root)
     else:
         # Skip if trying to run as dev-mode without having dev-mode.
         pytest.skip("Skipping portion of test which required dev-mode privileges.")

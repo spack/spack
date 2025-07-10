@@ -8,11 +8,10 @@ from typing import List, Optional
 
 import _vendoring.ruamel.yaml
 
-import llnl.util.tty as tty
-
 import spack
 import spack.binary_distribution as bindist
 import spack.config as cfg
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec

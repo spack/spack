@@ -5,7 +5,7 @@
 import inspect
 import sys
 
-import llnl.util.tty as tty
+import spack.llnl.util.tty as tty
 
 #: at what level we should write stack traces or short error messages
 #: this is module-scoped because it needs to be set very early

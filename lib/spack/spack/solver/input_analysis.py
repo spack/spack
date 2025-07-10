@@ -7,8 +7,6 @@ from typing import Dict, List, NamedTuple, Set, Tuple, Union
 
 import _vendoring.archspec.cpu
 
-from llnl.util import lang, tty
-
 import spack.binary_distribution
 import spack.config
 import spack.deptypes as dt
@@ -17,6 +15,7 @@ import spack.repo
 import spack.spec
 import spack.store
 from spack.error import SpackError
+from spack.llnl.util import lang, tty
 
 
 class PossibleGraph(NamedTuple):

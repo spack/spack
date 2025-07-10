@@ -4,11 +4,10 @@
 import argparse
 import os
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.deptypes as dt
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 from spack import build_environment, traverse

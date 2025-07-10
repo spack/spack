@@ -179,9 +179,6 @@ def try_enable_terminal_color_on_windows():
             # color
             global _force_color
             _force_color = False
-            from . import debug
-
-            debug("Unable to support color on Windows terminal")
 
 
 def get_color_when():

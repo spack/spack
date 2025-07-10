@@ -13,13 +13,12 @@ import shutil
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.binary_distribution
 import spack.concretize
 import spack.deptypes as dt
 import spack.error
 import spack.install_test
+import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.spec
 import spack.store

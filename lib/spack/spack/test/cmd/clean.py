@@ -7,10 +7,9 @@ import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.caches
 import spack.cmd.clean
+import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.package_base
 import spack.stage
