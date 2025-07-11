@@ -191,9 +191,12 @@ def test_reading_api_v20_attributes():
 
     class TestBuilder(spack.builder.Builder):
         legacy_methods = ("configure", "install")
+        legacy_attributes = ("foo", "bar")
 
     methods = spack.builder.package_methods(TestBuilder)
     assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")
 
 
 def test_reading_api_v22_attributes():
@@ -201,6 +204,9 @@ def test_reading_api_v22_attributes():
 
     class TestBuilder(spack.builder.Builder):
         package_methods = ("configure", "install")
+        package_attributes = ("foo", "bar")
 
     methods = spack.builder.package_methods(TestBuilder)
     assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")

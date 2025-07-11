@@ -16,7 +16,7 @@ class Package(PackageBase):
 class GenericBuilder(Builder):
     phases = ("install",)
     package_methods: Tuple[str, ...] = ()
-    legacy_attributes: Tuple[str, ...] = ()
+    package_attributes: Tuple[str, ...] = ()
 
     def install(self, pkg: Package, spec: Spec, prefix: Prefix) -> None:
         raise NotImplementedError

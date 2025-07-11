@@ -118,7 +118,7 @@ class AutotoolsBuilder(BuilderWithDefaults):
     package_methods = ("configure_args", "check", "installcheck")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = (
+    package_attributes = (
         "archive_files",
         "patch_libtool",
         "build_targets",
