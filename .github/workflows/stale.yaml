@@ -34,7 +34,7 @@ jobs:
           close-pr-message: |
             This pull request was closed because it had no activity for 30 days after being marked stale.
           stale-pr-label: 'stale'
-          any-of-pr-labels: 'new-package'
+          any-of-pr-labels: 'new-package,update-package'
           exempt-pr-labels: 'pinned'
 
           # General configuration
