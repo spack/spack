@@ -619,6 +619,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
 
     #: Must be defined as a fallback for old specs that don't have the `build_system` variant
+    default_buildsystem: str
+
+    #: (DEPRECATED) Deprecated name for `default_buildsystem`
     legacy_buildsystem: str
 
     #: Must be defined in derived classes. Used when reporting the build system to users

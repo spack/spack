@@ -27,7 +27,7 @@ class PerlPackage(spack.package_base.PackageBase):
     #: system base class
     build_system_class = "PerlPackage"
     #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "perl"
+    default_buildsystem = "perl"
 
     build_system("perl")
 
