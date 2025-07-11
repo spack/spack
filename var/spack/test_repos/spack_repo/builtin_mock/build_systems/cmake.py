@@ -315,7 +315,7 @@ class CMakeBuilder(BuilderWithDefaults):
     package_methods: Tuple[str, ...] = ("cmake_args", "check")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes: Tuple[str, ...] = (
+    package_attributes: Tuple[str, ...] = (
         "build_targets",
         "install_targets",
         "build_time_test_callbacks",

@@ -163,7 +163,7 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
 
         return __forward
 
-    for attribute_name in base_cls.legacy_attributes:  # type: ignore
+    for attribute_name in package_attributes(base_cls):  # type: ignore
         setattr(
             _ForwardToBaseBuilder,
             attribute_name,
@@ -307,7 +307,7 @@ class _PackageAdapterMeta(BuilderMeta):
         for method_name in getattr(default_builder_cls, "legacy_long_methods", []):
             attr_dict[method_name] = _PackageAdapterMeta.legacy_long_method_adapter(method_name)
 
-        for attribute_name in default_builder_cls.legacy_attributes:
+        for attribute_name in package_attributes(default_builder_cls):
             attr_dict[attribute_name] = _PackageAdapterMeta.legacy_attribute_adapter(
                 attribute_name
             )
@@ -509,6 +509,9 @@ class Builder(BaseBuilder, collections.abc.Sequence):
     #: (DEPRECATED) Deprecated attribute with the same semantics as "package_methods"
     legacy_methods: Tuple[str, ...] = ()
 
+    #: Attributes that the adapter can find in Package classes, if a builder is not defined
+    package_attributes: Tuple[str, ...]
+    #: (DEPRECATED) Deprecated attribute with the same semantics as "package_attributes"
     legacy_attributes: Tuple[str, ...] = ()
 
     # type hints for some of the legacy methods
@@ -545,3 +548,14 @@ def package_methods(builder: Type[Builder]) -> Tuple[str, ...]:
         return builder.package_methods
 
     return builder.legacy_methods
+
+
+def package_attributes(builder: Type[Builder]) -> Tuple[str, ...]:
+    """Returns the list of attributes that are defined in the package class and are associated
+    with the builder.
+    """
+    if hasattr(builder, "package_attributes"):
+        # Package API v2.2
+        return builder.package_attributes
+
+    return builder.legacy_attributes

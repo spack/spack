@@ -114,7 +114,7 @@ class PerlBuilder(BuilderWithDefaults):
     package_methods = ("configure_args", "check", "test_use")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = ()
+    package_attributes = ()
 
     #: Callback names for build-time test
     build_time_test_callbacks = ["check"]
