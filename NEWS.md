@@ -4,10 +4,14 @@
 - Added:
   - `PackageBase.default_buildsystem`
   - `Builder.package_methods`
+  - `Builder.package_attributes`
+  - `Builder.package_long_methods`
 
   Deprecated the implicit attributes:
   - `PackageBase.legacy_buildsystem`
   - `Builder.legacy_methods`
+  - `Builder.legacy_attributes`
+  - `Builder.legacy_long_methods`
 
   Bumped the package API to v2.2
 
