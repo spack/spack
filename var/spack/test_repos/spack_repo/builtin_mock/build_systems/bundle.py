@@ -14,7 +14,7 @@ class BundlePackage(spack.package_base.PackageBase):
     build_system_class = "BundlePackage"
 
     #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "bundle"
+    default_buildsystem = "bundle"
 
     #: Bundle packages do not have associated source or binary code.
     has_code = False

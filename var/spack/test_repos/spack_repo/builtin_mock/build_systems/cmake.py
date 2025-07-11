@@ -197,7 +197,7 @@ class CMakePackage(spack.package_base.PackageBase):
     build_system_class = "CMakePackage"
 
     #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "cmake"
+    default_buildsystem = "cmake"
 
     #: When this package depends on Python and ``find_python_hints`` is set to True, pass the
     #: defines {Python3,Python,PYTHON}_EXECUTABLE explicitly, so that CMake locates the right

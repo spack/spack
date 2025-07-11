@@ -8,7 +8,7 @@ from spack.package import Builder, PackageBase, Prefix, Spec, build_system, regi
 
 class Package(PackageBase):
     build_system_class = "Package"
-    legacy_buildsystem = "{{ build_system_name }}"
+    default_buildsystem = "{{ build_system_name }}"
     build_system("{{ build_system_name }}")
 
 

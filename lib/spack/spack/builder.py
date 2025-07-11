@@ -14,6 +14,7 @@ import spack.phase_callbacks
 import spack.repo
 import spack.spec
 import spack.util.environment
+from spack.error import SpackError
 
 #: Builder classes, as registered by the "builder" decorator
 BUILDER_CLS: Dict[str, Type["Builder"]] = {}
@@ -205,9 +206,15 @@ def buildsystem_name(pkg: spack.package_base.PackageBase) -> str:
     return the name of its build system."""
     try:
         return pkg.spec.variants["build_system"].value
-    except KeyError:
+    except KeyError as e:
         # We are reading an old spec without the build_system variant
-        return pkg.legacy_buildsystem  # type: ignore
+        if hasattr(pkg, "default_buildsystem"):
+            # Package API v2.2
+            return pkg.default_buildsystem
+        elif hasattr(pkg, "legacy_buildsystem"):
+            return pkg.legacy_buildsystem
+
+        raise SpackError(f"Package {pkg.name} does not define a build system.") from e
 
 
 class BuilderMeta(
