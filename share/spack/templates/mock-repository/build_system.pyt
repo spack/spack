@@ -15,7 +15,7 @@ class Package(PackageBase):
 @register_builder("{{ build_system_name }}")
 class GenericBuilder(Builder):
     phases = ("install",)
-    legacy_methods: Tuple[str, ...] = ()
+    package_methods: Tuple[str, ...] = ()
     legacy_attributes: Tuple[str, ...] = ()
 
     def install(self, pkg: Package, spec: Spec, prefix: Prefix) -> None:

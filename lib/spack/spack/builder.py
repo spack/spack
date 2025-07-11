@@ -151,7 +151,7 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
     # (when _ForwardToBaseBuilder is initialized)
     for method_name in (
         base_cls.phases  # type: ignore
-        + base_cls.legacy_methods  # type: ignore
+        + package_methods(base_cls)  # type: ignore
         + getattr(base_cls, "legacy_long_methods", tuple())
         + ("setup_build_environment", "setup_dependent_build_environment")
     ):
@@ -300,7 +300,7 @@ class _PackageAdapterMeta(BuilderMeta):
         for phase_name in default_builder_cls.phases:
             attr_dict[phase_name] = _PackageAdapterMeta.phase_method_adapter(phase_name)
 
-        for method_name in default_builder_cls.legacy_methods:
+        for method_name in package_methods(default_builder_cls):
             attr_dict[method_name] = _PackageAdapterMeta.legacy_method_adapter(method_name)
 
         # These exist e.g. for Python, see discussion in https://github.com/spack/spack/pull/32068
@@ -504,7 +504,11 @@ class Builder(BaseBuilder, collections.abc.Sequence):
     #: Build system name. Must also be defined in derived classes.
     build_system: Optional[str] = None
 
+    #: Methods that the adapter can find in Package classes, if a builder is not defined
+    package_methods: Tuple[str, ...]
+    #: (DEPRECATED) Deprecated attribute with the same semantics as "package_methods"
     legacy_methods: Tuple[str, ...] = ()
+
     legacy_attributes: Tuple[str, ...] = ()
 
     # type hints for some of the legacy methods
@@ -530,3 +534,14 @@ class Builder(BaseBuilder, collections.abc.Sequence):
 
     def __len__(self):
         return len(self.phases)
+
+
+def package_methods(builder: Type[Builder]) -> Tuple[str, ...]:
+    """Returns the list of methods that are defined in the package class and are associated
+    with the builder.
+    """
+    if hasattr(builder, "package_methods"):
+        # Package API v2.2
+        return builder.package_methods
+
+    return builder.legacy_methods

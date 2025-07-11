@@ -37,7 +37,7 @@ class GenericBuilder(BuilderWithDefaults):
     phases = ("install",)
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods: Tuple[str, ...] = ()
+    package_methods: Tuple[str, ...] = ()
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes: Tuple[str, ...] = ("archive_files", "install_time_test_callbacks")
