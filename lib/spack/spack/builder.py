@@ -152,7 +152,7 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
     for method_name in (
         base_cls.phases  # type: ignore
         + package_methods(base_cls)  # type: ignore
-        + getattr(base_cls, "legacy_long_methods", tuple())
+        + package_long_methods(base_cls)  # type: ignore
         + ("setup_build_environment", "setup_dependent_build_environment")
     ):
         setattr(_ForwardToBaseBuilder, method_name, forward_method_to_getattr(method_name))
@@ -304,7 +304,7 @@ class _PackageAdapterMeta(BuilderMeta):
             attr_dict[method_name] = _PackageAdapterMeta.legacy_method_adapter(method_name)
 
         # These exist e.g. for Python, see discussion in https://github.com/spack/spack/pull/32068
-        for method_name in getattr(default_builder_cls, "legacy_long_methods", []):
+        for method_name in package_long_methods(default_builder_cls):
             attr_dict[method_name] = _PackageAdapterMeta.legacy_long_method_adapter(method_name)
 
         for attribute_name in package_attributes(default_builder_cls):
@@ -504,10 +504,17 @@ class Builder(BaseBuilder, collections.abc.Sequence):
     #: Build system name. Must also be defined in derived classes.
     build_system: Optional[str] = None
 
-    #: Methods that the adapter can find in Package classes, if a builder is not defined
+    #: Methods, with no arguments, that the adapter can find in Package classes,
+    #: if a builder is not defined.
     package_methods: Tuple[str, ...]
     #: (DEPRECATED) Deprecated attribute with the same semantics as "package_methods"
     legacy_methods: Tuple[str, ...] = ()
+
+    #: Methods with the same signature as phases, that the adapter can find in Package classes,
+    #: if a builder is not defined.
+    package_long_methods: Tuple[str, ...]
+    #: (DEPRECATED) Deprecated attribute with the same semantics as "package_long_methods"
+    legacy_long_methods: Tuple[str, ...]
 
     #: Attributes that the adapter can find in Package classes, if a builder is not defined
     package_attributes: Tuple[str, ...]
@@ -540,8 +547,8 @@ class Builder(BaseBuilder, collections.abc.Sequence):
 
 
 def package_methods(builder: Type[Builder]) -> Tuple[str, ...]:
-    """Returns the list of methods that are defined in the package class and are associated
-    with the builder.
+    """Returns the list of methods, taking no arguments, that are defined in the package
+    class and are associated with the builder.
     """
     if hasattr(builder, "package_methods"):
         # Package API v2.2
@@ -559,3 +566,14 @@ def package_attributes(builder: Type[Builder]) -> Tuple[str, ...]:
         return builder.package_attributes
 
     return builder.legacy_attributes
+
+
+def package_long_methods(builder: Type[Builder]) -> Tuple[str, ...]:
+    """Returns the list of methods, with the same signature as phases, that are defined in
+    the package class and are associated with the builder.
+    """
+    if hasattr(builder, "package_long_methods"):
+        # Package API v2.2
+        return builder.package_long_methods
+
+    return getattr(builder, "legacy_long_methods", tuple())
