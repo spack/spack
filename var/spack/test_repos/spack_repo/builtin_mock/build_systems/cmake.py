@@ -312,7 +312,7 @@ class CMakeBuilder(BuilderWithDefaults):
     phases: Tuple[str, ...] = ("cmake", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods: Tuple[str, ...] = ("cmake_args", "check")
+    package_methods: Tuple[str, ...] = ("cmake_args", "check")
 
     #: Names associated with package attributes in the old build-system format
     legacy_attributes: Tuple[str, ...] = (

@@ -341,7 +341,7 @@ class PythonPipBuilder(BuilderWithDefaults):
     phases = ("install",)
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("test_imports",)
+    package_methods = ("test_imports",)
 
     #: Same as legacy_methods, but the signature is different
     legacy_long_methods = ("install_options", "global_options", "config_settings")
