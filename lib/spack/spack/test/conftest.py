@@ -416,6 +416,13 @@ def pytest_addoption(parser):
         help='runs only "fast" unit tests, instead of the whole suite',
     )
 
+    group.addoption(
+        "--minio-integration-tests",
+        action="store_true",
+        default=False,
+        help="Run tests that require a MinIO server to be running",
+    )
+
 
 def pytest_collection_modifyitems(config, items):
     if not config.getoption("--fast"):

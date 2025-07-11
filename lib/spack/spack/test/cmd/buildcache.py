@@ -73,7 +73,11 @@ def buildcache_url_fs(tmp_path):
 
 
 @pytest.fixture
-def buildcache_url_minio(request):
+def buildcache_url_minio(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch):
+    if not request.config.getoption("--minio-integration-tests", default=False):
+        pytest.skip("MinIO tests disabled, use --minio-integration-tests to enable")
+
+    # Assume boto3 is installed, since the user has requested MinIO integration tests
     import boto3
 
     # Set up MinIO environment variables.
