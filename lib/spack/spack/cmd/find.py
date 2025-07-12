@@ -142,6 +142,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="show variants in output (can be long)",
     )
     subparser.add_argument(
+        "--runtime",
+        action="store_true",
+        help="show packages loaded into the user's PATH or PYTHONPATH environment",
+    )
+    subparser.add_argument(
         "--loaded", action="store_true", help="show only packages loaded in the user environment"
     )
     only_missing_or_deprecated = subparser.add_mutually_exclusive_group()
@@ -314,6 +319,18 @@ def display_env(env, args, decorator, results):
         print()
 
 
+def _get_run_dependents(spec):
+    """Get the specs which are run-time dependencies of the given spec,
+    including transitive runtime dependencies"""
+    run_dependents = spec.dependencies(deptype=["run", "link"])
+    if len(run_dependents) == 0:
+        return []
+    dependent_dependents = []
+    for dependency in run_dependents:
+        dependent_dependents += _get_run_dependents(dependency)
+    return run_dependents + dependent_dependents
+
+
 def _find_query(args, env):
     q_args = query_arguments(args)
     concretized_but_not_installed = list()
@@ -358,7 +375,16 @@ def _find_query(args, env):
             x for x in concretized_but_not_installed if x.name in packages_with_tags
         ]
 
-    if args.loaded:
+    if args.runtime:
+        if env:
+            results = cmd.filter_loaded_specs(results) + env.concrete_roots()
+            dependencies = []
+            for spec in results:
+                dependencies += _get_run_dependents(spec)
+            results = list(set(results + dependencies))
+        else:
+            results = cmd.filter_runtime_specs(results)
+    elif args.loaded:
         results = cmd.filter_loaded_specs(results)
 
     return results, concretized_but_not_installed
@@ -419,7 +445,7 @@ def find(parser, args):
                 if env and not args.show_concretized:
                     concretized_suffix += " (show with `spack find -c`)"
 
-            pkg_type = "loaded" if args.loaded else "installed"
+            pkg_type = "runtime" if args.runtime else "loaded" if args.loaded else "installed"
             cmd.print_how_many_pkgs(results, pkg_type, suffix=installed_suffix)
 
             if env:

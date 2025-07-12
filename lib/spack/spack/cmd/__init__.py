@@ -551,6 +551,17 @@ def display_specs(specs, args=None, **kwargs):
     output.flush()
 
 
+def filter_runtime_specs(specs):
+    """Filter a list of specs returning only those that have entries in PATH or PYTHONPATH."""
+    run_dirs = os.environ.get("PATH", "").split(os.pathsep)
+    run_dirs += os.environ.get("PYTHONPATH", "").split(os.pathsep)
+    runtime_specs = []
+    for spec in specs:
+        if any(spec.prefix in x for x in run_dirs):
+            runtime_specs.append(spec)
+    return runtime_specs
+
+
 def filter_loaded_specs(specs):
     """Filter a list of specs returning only those that are
     currently loaded."""

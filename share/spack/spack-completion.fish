@@ -1819,7 +1819,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status specfile-format d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status specfile-format d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants runtime loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1867,6 +1867,8 @@ complete -c spack -n '__fish_spack_using_command find' -s m -l missing -f -a mis
 complete -c spack -n '__fish_spack_using_command find' -s m -l missing -d 'show missing dependencies as well as installed specs'
 complete -c spack -n '__fish_spack_using_command find' -s v -l variants -f -a variants
 complete -c spack -n '__fish_spack_using_command find' -s v -l variants -d 'show variants in output (can be long)'
+complete -c spack -n '__fish_spack_using_command find' -l runtime -f -a runtime
+complete -c spack -n '__fish_spack_using_command find' -l runtime -d 'show packages loaded into the user'"'"'s PATH or PYTHONPATH environment'
 complete -c spack -n '__fish_spack_using_command find' -l loaded -f -a loaded
 complete -c spack -n '__fish_spack_using_command find' -l loaded -d 'show only packages loaded in the user environment'
 complete -c spack -n '__fish_spack_using_command find' -s M -l only-missing -f -a only_missing
