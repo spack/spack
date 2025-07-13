@@ -95,7 +95,7 @@ from spack.package_completions import (
 )
 from spack.phase_callbacks import run_after, run_before
 from spack.spec import Spec
-from spack.util.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications, set_env
 from spack.util.executable import Executable, ProcessError, which, which_string
 from spack.util.filesystem import fix_darwin_install_name
 from spack.util.prefix import Prefix
@@ -209,6 +209,7 @@ __all__ = [
     "run_before",
     "Spec",
     "EnvironmentModifications",
+    "set_env",
     "Executable",
     "ProcessError",
     "which",
