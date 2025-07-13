@@ -49,7 +49,14 @@ from llnl.util.filesystem import (
 from llnl.util.symlink import symlink
 
 from spack.build_environment import MakeExecutable
-from spack.builder import BaseBuilder, Builder, BuilderWithDefaults, register_builder
+from spack.builder import (
+    BaseBuilder,
+    Builder,
+    BuilderWithDefaults,
+    apply_macos_rpath_fixups,
+    execute_install_time_tests,
+    register_builder,
+)
 from spack.config import determine_number_of_jobs
 from spack.deptypes import ALL_TYPES as all_deptypes
 from spack.directives import (
@@ -228,6 +235,8 @@ __all__ = [
     "Builder",
     "BuilderWithDefaults",
     "PackageBase",
+    "apply_macos_rpath_fixups",
+    "execute_install_time_tests",
     "register_builder",
 ]
 

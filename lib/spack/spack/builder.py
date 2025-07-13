@@ -12,6 +12,7 @@ import spack.error
 import spack.multimethod
 import spack.package_base
 import spack.phase_callbacks
+import spack.relocate
 import spack.repo
 import spack.spec
 import spack.util.environment
@@ -620,3 +621,33 @@ class BuilderWithDefaults(Builder):
 
     # Check that self.prefix is there after installation
     spack.phase_callbacks.run_after("install")(sanity_check_prefix)
+
+
+def apply_macos_rpath_fixups(builder: Builder):
+    """On Darwin, make installed libraries more easily relocatable.
+
+    Some build systems (handrolled, autotools, makefiles) can set their own
+    rpaths that are duplicated by spack's compiler wrapper. This fixup
+    interrogates, and postprocesses if necessary, all libraries installed
+    by the code.
+
+    It should be added as a @run_after to packaging systems (or individual
+    packages) that do not install relocatable libraries by default.
+
+    Args:
+        builder: builder that installed the package
+    """
+    spack.relocate.fixup_macos_rpaths(builder.spec)
+
+
+def execute_install_time_tests(builder: Builder):
+    """Execute the install-time tests prescribed by builder.
+
+    Args:
+        builder: builder prescribing the test callbacks. The name of the callbacks is
+            stored as a list of strings in the ``install_time_test_callbacks`` attribute.
+    """
+    if not builder.pkg.run_tests or not builder.install_time_test_callbacks:
+        return
+
+    builder.pkg.tester.phase_tests(builder, "install", builder.install_time_test_callbacks)
