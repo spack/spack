@@ -5,7 +5,8 @@ import collections
 import collections.abc
 import copy
 import functools
-from typing import Dict, List, Optional, Tuple, Type
+import os
+from typing import Callable, Dict, List, Optional, Tuple, Type
 
 import spack.error
 import spack.multimethod
@@ -577,3 +578,45 @@ def package_long_methods(builder: Type[Builder]) -> Tuple[str, ...]:
         return builder.package_long_methods
 
     return getattr(builder, "legacy_long_methods", tuple())
+
+
+def sanity_check_prefix(builder: Builder):
+    """Check that specific directories and files are created after installation.
+
+    The files to be checked are in the ``sanity_check_is_file`` attribute of the
+    package object, while the directories are in the ``sanity_check_is_dir``.
+
+    Args:
+        builder: builder that installed the package
+    """
+    pkg = builder.pkg
+
+    def check_paths(path_list: List[str], filetype: str, predicate: Callable[[str], bool]) -> None:
+        if isinstance(path_list, str):
+            path_list = [path_list]
+
+        for path in path_list:
+            if not predicate(os.path.join(pkg.prefix, path)):
+                raise spack.error.InstallError(
+                    f"Install failed for {pkg.name}. No such {filetype} in prefix: {path}"
+                )
+
+    check_paths(pkg.sanity_check_is_file, "file", os.path.isfile)
+    check_paths(pkg.sanity_check_is_dir, "directory", os.path.isdir)
+
+    # Check that the prefix is not empty apart from the .spack/ directory
+    with os.scandir(pkg.prefix) as entries:
+        f = next(
+            (f for f in entries if not (f.name == ".spack" and f.is_dir(follow_symlinks=False))),
+            None,
+        )
+
+    if f is None:
+        raise spack.error.InstallError(f"Install failed for {pkg.name}.  Nothing was installed!")
+
+
+class BuilderWithDefaults(Builder):
+    """Base class for all specific builders with common callbacks registered."""
+
+    # Check that self.prefix is there after installation
+    spack.phase_callbacks.run_after("install")(sanity_check_prefix)

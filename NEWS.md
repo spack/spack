@@ -7,6 +7,7 @@
   - `Builder.package_attributes`
   - `Builder.package_long_methods`
   - `set_env` context manager
+  - `BuilderWithDefaults` base class
 
   Deprecated the implicit attributes:
   - `PackageBase.legacy_buildsystem`
