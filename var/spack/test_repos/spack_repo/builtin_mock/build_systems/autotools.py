@@ -21,16 +21,11 @@ import spack.util.prefix
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
 from spack.operating_systems.mac_os import macos_version
+from spack.package import BuilderWithDefaults, apply_macos_rpath_fixups, execute_install_time_tests
 from spack.util.executable import Executable
 from spack.version import Version
 
-from ._checks import (
-    BuilderWithDefaults,
-    apply_macos_rpath_fixups,
-    ensure_build_dependencies_or_raise,
-    execute_build_time_tests,
-    execute_install_time_tests,
-)
+from ._checks import ensure_build_dependencies_or_raise, execute_build_time_tests
 
 
 class AutotoolsPackage(spack.package_base.PackageBase):

@@ -12,13 +12,9 @@ import spack.spec
 import spack.util.prefix
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
+from spack.package import BuilderWithDefaults, apply_macos_rpath_fixups, execute_install_time_tests
 
-from ._checks import (
-    BuilderWithDefaults,
-    apply_macos_rpath_fixups,
-    execute_build_time_tests,
-    execute_install_time_tests,
-)
+from ._checks import execute_build_time_tests
 
 
 class MakefilePackage(spack.package_base.PackageBase):
