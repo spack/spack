@@ -9,6 +9,7 @@
   - `set_env` context manager
   - `BuilderWithDefaults` base class
   - `apply_macos_rpath_fixups`and `execute_install_time_tests` helper functions
+  - `GenericBuilder` and `Package` classes
 
   Deprecated the implicit attributes:
   - `PackageBase.legacy_buildsystem`
