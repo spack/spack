@@ -8,11 +8,16 @@ import pathlib
 import spack.paths as paths
 
 
-def test_install_location(working_env, tmpdir):
+def _ensure_dir(pathlike):
+    pathlike.mkdir(parents=True, exist_ok=True)
+    return str(pathlike)
+
+
+def test_install_location(working_env, tmp_path):
     # With no direction from env vars, a fresh clone of Spack
     # should default to using the Spack prefix. It was moved from
     # where it used to be
-    base_prefix = str(tmpdir.join("base-prefix").ensure(dir=True))
+    base_prefix = _ensure_dir(tmp_path / "base-prefix")
     p1 = paths.SpackPaths(base_prefix)
     assert p1.default_install_location == str(
         pathlib.Path(base_prefix) / "opt" / "data" / "installs"
@@ -26,48 +31,48 @@ def test_install_location(working_env, tmpdir):
     assert p1.default_install_location == str(preexisting_install_dir.parent)
 
     # XDG_DATA_HOME overrides all the above
-    xdg_data_home = str(tmpdir.join("xdg_data_home"))
+    xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
     os.environ["XDG_DATA_HOME"] = xdg_data_home
     p1 = paths.SpackPaths(base_prefix)
     assert p1.default_install_location == str(pathlib.Path(xdg_data_home) / "spack" / "installs")
 
     # Check that SPACK_DATA_HOME overrides all the above
-    spack_data_home = str(tmpdir.join("spack_data_home"))
+    spack_data_home = _ensure_dir(tmp_path / "spack_data_home")
     os.environ["SPACK_DATA_HOME"] = spack_data_home
     p2 = paths.SpackPaths(base_prefix)
     assert p2.default_install_location == str(pathlib.Path(spack_data_home) / "installs")
 
 
-def test_system_config_path_is_overridable(working_env, tmpdir):
-    redirect_syscfg_path = str(pathlib.Path(tmpdir) / "redirected_syscfg")
+def test_system_config_path_is_overridable(working_env, tmp_path):
+    redirect_syscfg_path = str(pathlib.Path(tmp_path) / "redirected_syscfg")
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = redirect_syscfg_path
-    p1 = paths.SpackPaths(str(tmpdir.join("base-prefix").ensure(dir=True)))
+    p1 = paths.SpackPaths(_ensure_dir(tmp_path / "base-prefix"))
     assert p1.system_config_path == redirect_syscfg_path
 
 
-def test_system_config_path_is_default_when_env_var_is_empty(working_env, tmpdir):
+def test_system_config_path_is_default_when_env_var_is_empty(working_env, tmp_path):
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = ""
-    p1 = paths.SpackPaths(str(tmpdir))
+    p1 = paths.SpackPaths(str(tmp_path))
     assert os.sep + os.path.join("etc", "spack") == p1.system_config_path
 
 
-def test_user_config_path_is_overridable(working_env, tmpdir):
-    redirect_usrcfg_path = str(pathlib.Path(tmpdir) / "redirected_usrcfg")
+def test_user_config_path_is_overridable(working_env, tmp_path):
+    redirect_usrcfg_path = str(pathlib.Path(tmp_path) / "redirected_usrcfg")
     os.environ["SPACK_USER_CONFIG_PATH"] = redirect_usrcfg_path
-    p1 = paths.SpackPaths(str(tmpdir.join("base-prefix").ensure(dir=True)))
+    p1 = paths.SpackPaths(_ensure_dir(tmp_path / "base-prefix"))
     assert p1.user_config_path == redirect_usrcfg_path
 
 
-def test_user_config_path_is_default_when_env_var_is_empty(working_env, tmpdir):
+def test_user_config_path_is_default_when_env_var_is_empty(working_env, tmp_path):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    p1 = paths.SpackPaths(str(tmpdir))
+    p1 = paths.SpackPaths(str(tmp_path))
     assert os.path.expanduser(os.path.join("~", ".config", "spack")) == p1.user_config_path
 
 
-def test_user_cache_path_is_overridable(working_env, tmpdir):
-    redirect_usr_cache = str(pathlib.Path(tmpdir) / "redirected_usr_cache")
+def test_user_cache_path_is_overridable(working_env, tmp_path):
+    redirect_usr_cache = str(pathlib.Path(tmp_path) / "redirected_usr_cache")
     os.environ["SPACK_USER_CACHE_PATH"] = redirect_usr_cache
-    p1 = paths.SpackPaths(str(tmpdir.join("base-prefix").ensure(dir=True)))
+    p1 = paths.SpackPaths(_ensure_dir(tmp_path / "base-prefix"))
     assert p1.user_cache_path == redirect_usr_cache
 
     # Check that things that are supposed to be bundled inside of
@@ -75,9 +80,9 @@ def test_user_cache_path_is_overridable(working_env, tmpdir):
     assert p1.package_repos_path == str(pathlib.Path(redirect_usr_cache) / "package_repos")
 
 
-def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmpdir):
-    user_cache_path = str(tmpdir.join("user_cache"))
-    base_prefix = str(tmpdir.join("base-prefix").ensure(dir=True))
+def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path):
+    user_cache_path = _ensure_dir(tmp_path / "user-cache")
+    base_prefix = _ensure_dir(tmp_path / "base-prefix")
     os.environ["SPACK_USER_CACHE_PATH"] = user_cache_path
 
     p1 = paths.SpackPaths(base_prefix)
@@ -103,7 +108,7 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmpdir):
     assert p1.gpg_keys_path == str(old_gpg_keys_dir)
 
 
-def test_user_cache_path_is_default_when_env_var_is_empty(working_env, tmpdir):
+def test_user_cache_path_is_default_when_env_var_is_empty(working_env, tmp_path):
     os.environ["SPACK_USER_CACHE_PATH"] = ""
-    p1 = paths.SpackPaths(str(tmpdir))
+    p1 = paths.SpackPaths(str(tmp_path))
     assert os.path.expanduser(os.path.join("~", ".local", "share", "spack")) == p1.user_cache_path
