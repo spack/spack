@@ -262,7 +262,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             )
 
             job_object["stage"] = stage_name
-            job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
+            job_object["retry"] = spack.schema.merge_yaml(
+                {"max": 2, "when": JOB_RETRY_CONDITIONS}, job_object.get("retry", {})
+            )
             job_object["interruptible"] = True
 
             length_needs = len(job_object["needs"])
