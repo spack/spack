@@ -17,7 +17,7 @@ if _platform != "win32":
     import fcntl
     import termios
 
-from spack.llnl.util.tty.color import cescape, clen, cprint, cwrite
+from .color import cescape, clen, cprint, cwrite
 
 # Globals
 _debug = 0
