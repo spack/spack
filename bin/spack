@@ -41,9 +41,10 @@ spack_prefix = os.path.dirname(os.path.dirname(spack_file))
 
 # Allow spack libs to be imported in our scripts
 spack_lib_path = os.path.join(spack_prefix, "lib", "spack")
-sys.path.insert(0, spack_lib_path)
+external_lib_path = os.path.join(spack_lib_path, "external")
+sys.path[:0] = [spack_lib_path, external_lib_path]
 
-from spack_installable.main import main  # noqa: E402
+from spack.main import main  # noqa: E402
 
 # Once we've set up the system path, run the spack main method
 if __name__ == "__main__":
