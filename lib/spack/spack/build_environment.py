@@ -84,9 +84,8 @@ from spack.context import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.llnl.string import plural
-from spack.llnl.util.filesystem import join_path
+from spack.llnl.util.filesystem import join_path, symlink
 from spack.llnl.util.lang import dedupe, stable_partition
-from spack.llnl.util.symlink import symlink
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,

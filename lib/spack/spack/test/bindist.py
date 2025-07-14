@@ -44,8 +44,7 @@ import spack.util.web as web_util
 from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import copy_tree, join_path
-from spack.llnl.util.symlink import readlink
+from spack.llnl.util.filesystem import copy_tree, join_path, readlink
 from spack.paths import test_path
 from spack.spec import Spec
 from spack.url_buildcache import (

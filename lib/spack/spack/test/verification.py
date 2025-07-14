@@ -15,7 +15,7 @@ import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
 import spack.verify
-from spack.llnl.util.symlink import symlink
+from spack.llnl.util.filesystem import symlink
 
 pytestmark = pytest.mark.not_on_windows("Tests fail on Win")
 

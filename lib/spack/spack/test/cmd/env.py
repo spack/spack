@@ -40,7 +40,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
 from spack.installer import PackageInstaller
-from spack.llnl.util.symlink import readlink
+from spack.llnl.util.filesystem import readlink
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix

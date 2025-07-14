@@ -11,7 +11,7 @@ import spack.llnl.util.tty as tty
 import spack.store
 import spack.util.file_permissions as fp
 import spack.util.spack_json as sjson
-from spack.llnl.util.symlink import readlink
+from spack.llnl.util.filesystem import readlink
 from spack.package_base import spack_times_log
 
 

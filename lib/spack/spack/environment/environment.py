@@ -38,8 +38,8 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack import traverse
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import islink, readlink, symlink
 from spack.llnl.util.link_tree import ConflictingSpecsError
-from spack.llnl.util.symlink import islink, readlink, symlink
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.util.path import substitute_path_variables

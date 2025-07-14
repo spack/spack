@@ -25,7 +25,7 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.tengine
 from spack.cmd.common import arguments
-from spack.llnl.util.symlink import islink, symlink
+from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import EnvironmentModifications

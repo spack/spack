@@ -17,7 +17,6 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 import spack.error
 import spack.llnl.util.filesystem
 import spack.llnl.util.lang
-import spack.llnl.util.symlink
 import spack.llnl.util.tty
 import spack.spec
 import spack.util.elf as elf_utils
@@ -75,7 +74,7 @@ def dedupe_paths(paths: List[str]) -> List[str]:
     seen: Dict[Tuple[int, int], str] = {}
 
     linked_parent_check = lambda x: any(
-        [spack.llnl.util.symlink.islink(str(y)) for y in pathlib.Path(x).parents]
+        [spack.llnl.util.filesystem.islink(str(y)) for y in pathlib.Path(x).parents]
     )
 
     for path in paths:
@@ -85,7 +84,7 @@ def dedupe_paths(paths: List[str]) -> List[str]:
         # we also want to deprioritize paths if they contain a symlink in any parent
         # (not just the basedir): e.g. oneapi has "latest/bin",
         # where "latest" is a symlink to 2025.0"
-        elif not (spack.llnl.util.symlink.islink(path) or linked_parent_check(path)):
+        elif not (spack.llnl.util.filesystem.islink(path) or linked_parent_check(path)):
             seen[identifier] = path
     return list(seen.values())
 

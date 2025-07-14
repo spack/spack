@@ -8,7 +8,7 @@ import spack.error
 import spack.llnl
 
 warnings.warn(
-    "The top-level `llnl` module is removed in Spack v1.0",
+    "The `llnl` module will be removed in Spack v1.1",
     category=spack.error.SpackAPIWarning,
     stacklevel=2,
 )

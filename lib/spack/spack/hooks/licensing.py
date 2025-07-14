@@ -6,8 +6,7 @@ import os
 
 import spack.llnl.util.tty as tty
 import spack.util.editor as ed
-from spack.llnl.util.filesystem import mkdirp
-from spack.llnl.util.symlink import symlink
+from spack.llnl.util.filesystem import mkdirp, symlink
 
 
 def pre_install(spec):

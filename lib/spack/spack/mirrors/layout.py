@@ -6,12 +6,11 @@ from typing import Optional
 
 import spack.fetch_strategy
 import spack.llnl.url
-import spack.llnl.util.symlink
 import spack.oci.image
 import spack.repo
 import spack.spec
 from spack.error import MirrorError
-from spack.llnl.util.filesystem import mkdirp
+from spack.llnl.util.filesystem import mkdirp, symlink
 
 
 class MirrorLayout:
@@ -51,7 +50,7 @@ class DefaultLayout(MirrorLayout):
 
         mkdirp(alias_dir)
         tmp = f"{alias}.tmp"
-        spack.llnl.util.symlink.symlink(relative_dst, tmp)
+        symlink(relative_dst, tmp)
 
         try:
             os.rename(tmp, alias)

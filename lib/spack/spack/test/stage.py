@@ -20,8 +20,7 @@ import spack.fetch_strategy
 import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
-from spack.llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
-from spack.llnl.util.symlink import readlink
+from spack.llnl.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
 from spack.resource import Resource
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path

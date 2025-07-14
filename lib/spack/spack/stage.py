@@ -18,7 +18,6 @@ import spack.config
 import spack.error
 import spack.llnl.string
 import spack.llnl.util.lang
-import spack.llnl.util.symlink
 import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.utils
@@ -41,6 +40,7 @@ from spack.llnl.util.filesystem import (
     mkdirp,
     partition_path,
     remove_linked_tree,
+    symlink,
 )
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
@@ -854,7 +854,7 @@ class DevelopStage(LockableStagingDir):
     def create(self):
         super().create()
         try:
-            spack.llnl.util.symlink.symlink(self.path, self.reference_link)
+            symlink(self.path, self.reference_link)
         except (AlreadyExistsError, FileExistsError):
             pass
 

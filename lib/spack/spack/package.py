@@ -104,19 +104,20 @@ from spack.llnl.util.filesystem import (
     make_package_test_rpath,
     mkdirp,
     path_contains_subdirectory,
+    readlink,
     remove_directory_contents,
     remove_linked_tree,
     rename,
     safe_remove,
     set_executable,
     set_install_permissions,
+    symlink,
     touch,
     windows_sfn,
     working_dir,
 )
 from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.llnl.util.link_tree import LinkTree
-from spack.llnl.util.symlink import readlink, symlink
 from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import default_args, when
 from spack.operating_systems.linux_distro import kernel_version

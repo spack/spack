@@ -30,6 +30,7 @@ from spack.llnl.util.filesystem import (
     mkdirp,
     remove_dead_links,
     remove_empty_directories,
+    symlink,
     visit_directory_tree,
 )
 from spack.llnl.util.lang import index_by, match_predicate
@@ -41,7 +42,6 @@ from spack.llnl.util.link_tree import (
     SingleMergeConflictError,
     SourceMergeVisitor,
 )
-from spack.llnl.util.symlink import symlink
 from spack.llnl.util.tty.color import colorize
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
@@ -168,7 +168,7 @@ class FilesystemView:
         Initialize a filesystem view under the given `root` directory with
         corresponding directory `layout`.
 
-        Files are linked by method `link` (spack.llnl.util.symlink by default).
+        Files are linked by method `link` (spack.llnl.util.filesystem.symlink by default).
         """
         self._root = root
         self.layout = layout

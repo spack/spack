@@ -17,7 +17,7 @@ import spack.projections
 import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
-from spack.llnl.util.symlink import readlink
+from spack.llnl.util.filesystem import readlink
 
 default_projections = {
     "all": "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"

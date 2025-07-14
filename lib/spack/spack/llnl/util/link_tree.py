@@ -10,8 +10,14 @@ import shutil
 from typing import Callable, Dict, List, Optional, Tuple
 
 import spack.llnl.util.tty as tty
-from spack.llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, touch, traverse_tree
-from spack.llnl.util.symlink import islink, symlink
+from spack.llnl.util.filesystem import (
+    BaseDirectoryVisitor,
+    islink,
+    mkdirp,
+    symlink,
+    touch,
+    traverse_tree,
+)
 
 __all__ = ["LinkTree"]
 
@@ -468,7 +474,8 @@ class LinkTree:
         ignore (callable): callable that returns True if a file is to be
             ignored in the merge (by default ignore nothing)
 
-        link (callable): function to create links with (defaults to spack.llnl.util.symlink)
+        link (callable): function to create links with
+            (defaults to spack.llnl.util.filesystem.symlink)
 
         relative (bool): create all symlinks relative to the target
             (default False)

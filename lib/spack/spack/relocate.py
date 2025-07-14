@@ -17,8 +17,8 @@ import spack.llnl.util.tty as tty
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
+from spack.llnl.util.filesystem import readlink, symlink
 from spack.llnl.util.lang import memoized
-from spack.llnl.util.symlink import readlink, symlink
 
 from .relocate_text import BinaryFilePrefixReplacer, PrefixToPrefix, TextFilePrefixReplacer
 
