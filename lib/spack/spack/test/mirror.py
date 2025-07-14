@@ -21,8 +21,7 @@ import spack.util.executable
 import spack.util.spack_json as sjson
 import spack.util.url as url_util
 from spack.cmd.common.arguments import mirror_name_or_url
-from spack.llnl.util.filesystem import working_dir
-from spack.llnl.util.symlink import resolve_link_target_relative_to_the_link
+from spack.llnl.util.filesystem import resolve_link_target_relative_to_the_link, working_dir
 from spack.spec import Spec
 from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
