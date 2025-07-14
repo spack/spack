@@ -32,6 +32,7 @@ import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
 from spack.llnl.util.filesystem import (
+    AlreadyExistsError,
     can_access,
     get_owner_uid,
     getuid,
@@ -854,7 +855,7 @@ class DevelopStage(LockableStagingDir):
         super().create()
         try:
             spack.llnl.util.symlink.symlink(self.path, self.reference_link)
-        except (spack.llnl.util.symlink.AlreadyExistsError, FileExistsError):
+        except (AlreadyExistsError, FileExistsError):
             pass
 
     def destroy(self):
