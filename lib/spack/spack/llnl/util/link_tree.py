@@ -9,15 +9,8 @@ import os
 import shutil
 from typing import Callable, Dict, List, Optional, Tuple
 
+import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
-from spack.llnl.util.filesystem import (
-    BaseDirectoryVisitor,
-    islink,
-    mkdirp,
-    symlink,
-    touch,
-    traverse_tree,
-)
 
 __all__ = ["LinkTree"]
 
@@ -25,7 +18,7 @@ empty_file_name = ".spack-empty"
 
 
 def remove_link(src, dest):
-    if not islink(dest):
+    if not fs.islink(dest):
         raise ValueError("%s is not a link tree!" % dest)
     # remove if dest is a hardlink/symlink to src; this will only
     # be false if two packages are merged into a prefix and have a
@@ -58,7 +51,7 @@ def _samefile(a: str, b: str):
         return False
 
 
-class SourceMergeVisitor(BaseDirectoryVisitor):
+class SourceMergeVisitor(fs.BaseDirectoryVisitor):
     """
     Visitor that produces actions:
     - An ordered list of directories to create in dst
@@ -308,7 +301,7 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
                 )
 
 
-class DestinationMergeVisitor(BaseDirectoryVisitor):
+class DestinationMergeVisitor(fs.BaseDirectoryVisitor):
     """DestinationMergeVisitor takes a SourceMergeVisitor and:
 
     a. registers additional conflicts when merging to the destination prefix
@@ -414,7 +407,7 @@ class LinkTree:
     def find_dir_conflicts(self, dest_root, ignore):
         conflicts = []
         kwargs = {"follow_nonexisting": False, "ignore": ignore}
-        for src, dest in traverse_tree(self._root, dest_root, **kwargs):
+        for src, dest in fs.traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
                 if os.path.exists(dest) and not os.path.isdir(dest):
                     conflicts.append("File blocks directory: %s" % dest)
@@ -425,16 +418,16 @@ class LinkTree:
     def get_file_map(self, dest_root, ignore):
         merge_map = {}
         kwargs = {"follow_nonexisting": True, "ignore": ignore}
-        for src, dest in traverse_tree(self._root, dest_root, **kwargs):
+        for src, dest in fs.traverse_tree(self._root, dest_root, **kwargs):
             if not os.path.isdir(src):
                 merge_map[src] = dest
         return merge_map
 
     def merge_directories(self, dest_root, ignore):
-        for src, dest in traverse_tree(self._root, dest_root, ignore=ignore):
+        for src, dest in fs.traverse_tree(self._root, dest_root, ignore=ignore):
             if os.path.isdir(src):
                 if not os.path.exists(dest):
-                    mkdirp(dest)
+                    fs.mkdirp(dest)
                     continue
 
                 if not os.path.isdir(dest):
@@ -443,10 +436,10 @@ class LinkTree:
                 # mark empty directories so they aren't removed on unmerge.
                 if not os.listdir(dest):
                     marker = os.path.join(dest, empty_file_name)
-                    touch(marker)
+                    fs.touch(marker)
 
     def unmerge_directories(self, dest_root, ignore):
-        for src, dest in traverse_tree(self._root, dest_root, ignore=ignore, order="post"):
+        for src, dest in fs.traverse_tree(self._root, dest_root, ignore=ignore, order="post"):
             if os.path.isdir(src):
                 if not os.path.exists(dest):
                     continue
@@ -462,7 +455,9 @@ class LinkTree:
                 if os.path.exists(marker):
                     os.remove(marker)
 
-    def merge(self, dest_root, ignore_conflicts=False, ignore=None, link=symlink, relative=False):
+    def merge(
+        self, dest_root, ignore_conflicts=False, ignore=None, link=fs.symlink, relative=False
+    ):
         """Link all files in src into dest, creating directories
            if necessary.
 
