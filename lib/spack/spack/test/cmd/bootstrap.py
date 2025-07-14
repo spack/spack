@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 import sys
 
 import pytest
@@ -143,8 +144,10 @@ def test_enable_or_disable_fails_with_more_than_one_method(mutable_config):
 
 
 @pytest.mark.parametrize("use_existing_dir", [True, False])
-def test_add_failures_for_non_existing_files(mutable_config, tmpdir, use_existing_dir):
-    metadata_dir = str(tmpdir) if use_existing_dir else "/foo/doesnotexist"
+def test_add_failures_for_non_existing_files(
+    mutable_config, tmp_path: pathlib.Path, use_existing_dir
+):
+    metadata_dir = str(tmp_path) if use_existing_dir else "/foo/doesnotexist"
     with pytest.raises(RuntimeError, match="does not exist"):
         _bootstrap("add", "mock-mirror", metadata_dir)
 
@@ -177,7 +180,7 @@ def test_remove_and_add_a_source(mutable_config):
 
 @pytest.mark.maybeslow
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
-def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmpdir):
+def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmp_path: pathlib.Path):
     """Test that `spack bootstrap mirror` creates a folder that can be ingested by
     `spack bootstrap add`. Here we don't download data, since that would be an
     expensive operation for a unit test.
@@ -203,10 +206,10 @@ def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmpdir
         }
     ]
     with spack.config.override("compilers", compilers):
-        _bootstrap("mirror", str(tmpdir))
+        _bootstrap("mirror", str(tmp_path))
 
     # Register the mirror
-    metadata_dir = tmpdir.join("metadata", "sources")
+    metadata_dir = tmp_path / "metadata" / "sources"
     _bootstrap("add", "--trust", "test-mirror", str(metadata_dir))
 
     assert _bootstrap.returncode == 0

@@ -175,6 +175,8 @@ def _cdash_reporter(namespace):
 
     def _factory():
         def installed_specs(args):
+            packages = []
+
             if getattr(args, "spec", ""):
                 packages = args.spec
             elif getattr(args, "specs", ""):
@@ -182,13 +184,8 @@ def _cdash_reporter(namespace):
             elif getattr(args, "package", ""):
                 # Ensure CI 'spack test run' can output CDash results
                 packages = args.package
-            else:
-                packages = []
-                for file in args.specfiles:
-                    with open(file, "r", encoding="utf-8") as f:
-                        s = spack.spec.Spec.from_yaml(f)
-                        packages.append(s.format())
-            return packages
+
+            return [str(spack.spec.Spec(s)) for s in packages]
 
         configuration = spack.reporters.CDashConfiguration(
             upload_url=namespace.cdash_upload_url,
@@ -198,6 +195,7 @@ def _cdash_reporter(namespace):
             buildstamp=namespace.cdash_buildstamp,
             track=namespace.cdash_track,
         )
+
         return spack.reporters.CDash(configuration=configuration)
 
     return _factory
@@ -533,10 +531,21 @@ class ConfigSetAction(argparse.Action):
     """
 
     def __init__(
-        self, option_strings, dest, const, default=None, required=False, help=None, metavar=None
+        self,
+        option_strings,
+        dest,
+        const,
+        default=None,
+        required=False,
+        help=None,
+        metavar=None,
+        require_environment=False,
     ):
         # save the config option we're supposed to set
         self.config_path = dest
+
+        # save whether the option requires an active env
+        self.require_environment = require_environment
 
         # destination is translated to a legal python identifier by
         # substituting '_' for ':'.
@@ -553,6 +562,11 @@ class ConfigSetAction(argparse.Action):
         )
 
     def __call__(self, parser, namespace, values, option_string):
+        if self.require_environment and not ev.active_environment():
+            raise argparse.ArgumentTypeError(
+                f"argument '{self.option_strings[-1]}' requires an environment"
+            )
+
         # Retrieve the name of the config option and set it to
         # the const from the constructor or a value from the CLI.
         # Note that this is only called if the argument is actually
@@ -573,6 +587,16 @@ def add_concretizer_args(subparser):
     Just substitute ``_`` for ``:``.
     """
     subgroup = subparser.add_argument_group("concretizer arguments")
+    subgroup.add_argument(
+        "-f",
+        "--force",
+        action=ConfigSetAction,
+        require_environment=True,
+        dest="concretizer:force",
+        const=True,
+        default=False,
+        help="allow changes to concretized specs in spack.lock (in an env)",
+    )
     subgroup.add_argument(
         "-U",
         "--fresh",

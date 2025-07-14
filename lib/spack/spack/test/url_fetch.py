@@ -5,6 +5,7 @@
 import collections
 import filecmp
 import os
+import pathlib
 import sys
 import urllib.error
 
@@ -77,7 +78,7 @@ def pkg_factory():
 
 
 @pytest.mark.parametrize("method", ["curl", "urllib"])
-def test_urlfetchstrategy_bad_url(tmp_path, mutable_config, method):
+def test_urlfetchstrategy_bad_url(tmp_path: pathlib.Path, mutable_config, method):
     """Ensure fetch with bad URL fails as expected."""
     mutable_config.set("config:url_fetch_method", method)
     fetcher = fs.URLFetchStrategy(url=(tmp_path / "does-not-exist").as_uri())
@@ -97,7 +98,7 @@ def test_urlfetchstrategy_bad_url(tmp_path, mutable_config, method):
         assert isinstance(exception.reason, FileNotFoundError)
 
 
-def test_fetch_options(tmp_path, mock_archive):
+def test_fetch_options(tmp_path: pathlib.Path, mock_archive):
     with spack.config.override("config:url_fetch_method", "curl"):
         fetcher = fs.URLFetchStrategy(
             url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
@@ -106,10 +107,12 @@ def test_fetch_options(tmp_path, mock_archive):
         with Stage(fetcher, path=str(tmp_path)):
             assert fetcher.archive_file is None
             fetcher.fetch()
-            assert filecmp.cmp(fetcher.archive_file, mock_archive.archive_file)
+            archive_file = fetcher.archive_file
+            assert archive_file is not None
+            assert filecmp.cmp(archive_file, mock_archive.archive_file)
 
 
-def test_fetch_curl_options(tmp_path, mock_archive, monkeypatch):
+def test_fetch_curl_options(tmp_path: pathlib.Path, mock_archive, monkeypatch):
     with spack.config.override("config:url_fetch_method", "curl -k -q"):
         fetcher = fs.URLFetchStrategy(
             url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
@@ -130,7 +133,7 @@ def test_fetch_curl_options(tmp_path, mock_archive, monkeypatch):
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_archive_file_errors(tmp_path, mutable_config, mock_archive, _fetch_method):
+def test_archive_file_errors(tmp_path: pathlib.Path, mutable_config, mock_archive, _fetch_method):
     """Ensure FetchStrategy commands may only be used as intended"""
     with spack.config.override("config:url_fetch_method", _fetch_method):
         fetcher = fs.URLFetchStrategy(url=mock_archive.url)
@@ -145,7 +148,9 @@ def test_archive_file_errors(tmp_path, mutable_config, mock_archive, _fetch_meth
             stage.fetch()
             with pytest.raises(fs.NoDigestError):
                 fetcher.check()
-            assert filecmp.cmp(fetcher.archive_file, mock_archive.archive_file)
+            archive_file = fetcher.archive_file
+            assert archive_file is not None
+            assert filecmp.cmp(archive_file, mock_archive.archive_file)
 
 
 files = [(".tar.gz", "z"), (".tgz", "z")]
@@ -270,13 +275,13 @@ def test_unknown_hash(checksum_type):
 
 
 @pytest.mark.skipif(which("curl") is None, reason="Urllib does not have built-in status bar")
-def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
+def test_url_with_status_bar(tmp_path: pathlib.Path, mock_archive, monkeypatch, capfd):
     """Ensure fetch with status bar option succeeds."""
 
     def is_true():
         return True
 
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
 
     monkeypatch.setattr(sys.stdout, "isatty", is_true)
     monkeypatch.setattr(tty, "msg_enabled", is_true)
@@ -291,14 +296,16 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_url_extra_fetch(tmp_path, mutable_config, mock_archive, _fetch_method):
+def test_url_extra_fetch(tmp_path: pathlib.Path, mutable_config, mock_archive, _fetch_method):
     """Ensure a fetch after downloading is effectively a no-op."""
     mutable_config.set("config:url_fetch_method", _fetch_method)
     fetcher = fs.URLFetchStrategy(url=mock_archive.url)
     with Stage(fetcher, path=str(tmp_path)) as stage:
         assert fetcher.archive_file is None
         stage.fetch()
-        assert filecmp.cmp(fetcher.archive_file, mock_archive.archive_file)
+        archive_file = fetcher.archive_file
+        assert archive_file is not None
+        assert filecmp.cmp(archive_file, mock_archive.archive_file)
         fetcher.fetch()
 
 
@@ -335,7 +342,7 @@ def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method
 
 
 @pytest.mark.regression("19673")
-def test_missing_curl(tmp_path, missing_curl, mutable_config, monkeypatch):
+def test_missing_curl(tmp_path: pathlib.Path, missing_curl, mutable_config, monkeypatch):
     """Ensure a fetch involving missing curl package reports the error."""
     mutable_config.set("config:url_fetch_method", "curl")
     fetcher = fs.URLFetchStrategy(url="http://example.com/file.tar.gz")

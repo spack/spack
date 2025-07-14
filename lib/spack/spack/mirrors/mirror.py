@@ -1,11 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import collections.abc
 import operator
 import os
 import urllib.parse
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 import llnl.util.tty as tty
 
@@ -361,7 +360,7 @@ class Mirror:
         return self._get_value("endpoint_url", direction)
 
 
-class MirrorCollection(collections.abc.Mapping):
+class MirrorCollection(Mapping[str, Mirror]):
     """A mapping of mirror names to mirrors."""
 
     def __init__(

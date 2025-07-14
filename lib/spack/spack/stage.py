@@ -465,6 +465,13 @@ class Stage(LockableStagingDir):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
+    @property
+    def single_file(self):
+        assert self.expanded, "Must expand stage before calling single_file"
+        files = os.listdir(self.source_path)
+        assert len(files) == 1, f"Expected one file in stage, found {files}"
+        return os.path.join(self.source_path, files[0])
+
     def _generate_fetchers(self, mirror_only=False) -> Generator["fs.FetchStrategy", None, None]:
         fetchers: List[fs.FetchStrategy] = []
         if not mirror_only:

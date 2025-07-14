@@ -33,9 +33,9 @@ This package provides a method for populating mirror URLs.
     for information on how Spack uses the `urls` attribute during
     fetching.
 
-^^^^^
+^^^^^^
 Usage
-^^^^^
+^^^^^^
 
 This helper package can be added to your package by adding it as a base
 class of your package and defining the relative location of an archive

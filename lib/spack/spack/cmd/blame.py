@@ -4,23 +4,28 @@
 
 import argparse
 import os
+import pathlib
 import re
 import sys
+from typing import Optional, Union
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 from llnl.util.lang import pretty_date
 from llnl.util.tty.colify import colify_table
 
-import spack.paths
+import spack.config
 import spack.repo
 import spack.util.git
 import spack.util.spack_json as sjson
 from spack.cmd import spack_is_git_repo
+from spack.util.executable import ProcessError
 
 description = "show contributors to packages"
 section = "developer"
 level = "long"
+
+git = spack.util.git.git(required=True)
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
@@ -112,41 +117,169 @@ def dump_json(rows, last_mod, total_lines, emails):
     sjson.dump(result, sys.stdout)
 
 
+def git_prefix(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
+    """Return the top level directory if path is under a git repository.
+
+    Args:
+      path: path of the item presumably under a git repository
+
+    Returns: path to the root of the git repository
+    """
+    if not os.path.exists(path):
+        return None
+
+    work_dir = path if os.path.isdir(path) else os.path.dirname(path)
+    with working_dir(work_dir):
+        try:
+            result = git("rev-parse", "--show-toplevel", output=str, error=str)
+            return pathlib.Path(result.split("\n")[0])
+        except ProcessError:
+            tty.die(f"'{path}' is not in a git repository.")
+
+
+def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
+    """Find the appropriate package repository's git root directory.
+
+    Provides a warning for a remote package repository since there is a risk that
+    the blame results are inaccurate.
+
+    Args:
+      path: path to an arbitrary file presumably in one of the spack package repos
+
+    Returns: path to the package repository's git root directory or None
+    """
+    descriptors = spack.repo.RepoDescriptors.from_config(
+        lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG
+    )
+    path = pathlib.Path(path)
+    prefix: Optional[pathlib.Path] = None
+    for _, desc in descriptors.items():
+        # Handle the remote case, whose destination is by definition the git root
+        if hasattr(desc, "destination"):
+            repo_dest = pathlib.Path(desc.destination)
+            if (repo_dest / ".git").exists():
+                prefix = repo_dest
+
+                # TODO: replace check with `is_relative_to` once supported
+                if prefix and str(path).startswith(str(prefix)):
+                    return prefix
+
+        # Handle the local repository case, making sure it's a spack repository.
+        if hasattr(desc, "path"):
+            repo_path = pathlib.Path(desc.path)
+            if "spack_repo" in repo_path.parts:
+                prefix = git_prefix(repo_path)
+
+                # TODO: replace check with `is_relative_to` once supported
+                if prefix and str(path).startswith(str(prefix)):
+                    return prefix
+
+    return None
+
+
+def git_supports_unshallow() -> bool:
+    output = git("fetch", "--help", output=str, error=str)
+    return "--unshallow" in output
+
+
+def ensure_full_history(prefix: str, path: str) -> None:
+    """Ensure the git repository at the prefix has its full history.
+
+    Args:
+        prefix: the root directory of the git repository
+        path: the package or file name under consideration (for messages)
+    """
+    assert os.path.isdir(prefix)
+
+    with working_dir(prefix):
+        shallow_dir = os.path.join(prefix, ".git", "shallow")
+        if os.path.isdir(shallow_dir):
+            if git_supports_unshallow():
+                try:
+                    # Capture the error output (e.g., irrelevant for full repo)
+                    # to ensure the output is clean.
+                    git("fetch", "--unshallow", error=str)
+                except ProcessError as e:
+                    tty.die(
+                        f"Cannot report blame for {path}.\n"
+                        "Unable to retrieve the full git history for "
+                        f'{prefix} due to "{str(e)}" error.'
+                    )
+            else:
+                tty.die(
+                    f"Cannot report blame for {path}.\n"
+                    f"Unable to retrieve the full git history for {prefix}. "
+                    "Use a newer 'git' that supports 'git fetch --unshallow'."
+                )
+
+
 def blame(parser, args):
     # make sure this is a git repo
     if not spack_is_git_repo():
-        tty.die("This spack is not a git clone. Can't use 'spack blame'")
-    git = spack.util.git.git(required=True)
+        tty.die("This spack is not a git clone. You cannot use 'spack blame'.")
 
-    # Get name of file to blame
+    # Get the name of the path to blame and its repository prefix
+    # so we can honor any .git-blame-ignore-revs that may be present.
     blame_file = None
-    if os.path.isfile(args.package_or_file):
-        path = os.path.realpath(args.package_or_file)
-        if path.startswith(spack.paths.prefix):
-            blame_file = path
+    prefix = None
+    if os.path.exists(args.package_or_file):
+        blame_file = os.path.realpath(args.package_or_file)
+        prefix = package_repo_root(blame_file)
 
+    # Get path to what we assume is a package (including to a cached version
+    # of a remote package repository.)
     if not blame_file:
-        pkg_cls = spack.repo.PATH.get_pkg_class(args.package_or_file)
-        blame_file = pkg_cls.module.__file__.rstrip("c")  # .pyc -> .py
+        try:
+            blame_file = spack.repo.PATH.filename_for_package_name(args.package_or_file)
+        except spack.repo.UnknownNamespaceError:
+            # the argument is not a package (or does not exist)
+            pass
 
-    # get git blame for the package
-    with working_dir(spack.paths.prefix):
+        if blame_file and os.path.isfile(blame_file):
+            prefix = package_repo_root(blame_file)
+
+    if not blame_file or not os.path.exists(blame_file):
+        tty.die(f"'{args.package_or_file}' does not exist.")
+
+    if prefix is None:
+        tty.msg(f"'{args.package_or_file}' is not within a spack package repository")
+
+    path_prefix = git_prefix(blame_file)
+    if path_prefix != prefix:
+        # You are attempting to get 'blame' for a path outside of a configured
+        # package repository (e.g., within a spack/spack clone). We'll use the
+        # path's prefix instead to ensure working under the proper git
+        # repository.
+        prefix = path_prefix
+
+    # Make sure we can get the full/known blame even when the repository
+    # is remote.
+    ensure_full_history(prefix, args.package_or_file)
+
+    # Get blame information for the path EVEN when it is located in a different
+    # spack repository (e.g., spack/spack-packages) or a different git
+    # repository.
+    with working_dir(prefix):
+        # Now we can get the blame results.
+        options = ["blame"]
+
         # ignore the great black reformatting of 2022
-        ignore_file = os.path.join(spack.paths.prefix, ".git-blame-ignore-revs")
+        ignore_file = prefix / ".git-blame-ignore-revs"
+        if ignore_file.exists():
+            options.extend(["--ignore-revs-file", str(ignore_file)])
 
-        if args.view == "git":
-            git("blame", "--ignore-revs-file", ignore_file, blame_file)
-            return
-        else:
-            output = git(
-                "blame",
-                "--line-porcelain",
-                "--ignore-revs-file",
-                ignore_file,
-                blame_file,
-                output=str,
-            )
-            lines = output.split("\n")
+        try:
+            if args.view == "git":
+                options.append(str(blame_file))
+                git(*options)
+                return
+            else:
+                options.extend(["--line-porcelain", str(blame_file)])
+                output = git(*options, output=str, error=str)
+                lines = output.split("\n")
+        except ProcessError as err:
+            # e.g., blame information is not tracked if the path is a directory
+            tty.die(f"Blame information is not tracked for '{blame_file}':\n{err.long_message}")
 
     # Histogram authors
     counts = {}

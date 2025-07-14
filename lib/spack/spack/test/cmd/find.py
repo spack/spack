@@ -11,6 +11,8 @@ from textwrap import dedent
 
 import pytest
 
+from llnl.util.filesystem import working_dir
+
 import spack.cmd as cmd
 import spack.cmd.find
 import spack.concretize
@@ -358,10 +360,12 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
-def test_find_specs_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
-    path = tmpdir.join("spack.yaml")
+def test_find_specs_include_concrete_env(
+    mutable_mock_env_path, mutable_mock_repo, tmp_path: pathlib.Path
+):
+    path = tmp_path / "spack.yaml"
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -376,7 +380,7 @@ spack:
     test1.concretize()
     test1.write()
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -402,10 +406,12 @@ spack:
     assert "libelf" in output
 
 
-def test_find_specs_nested_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
-    path = tmpdir.join("spack.yaml")
+def test_find_specs_nested_include_concrete_env(
+    mutable_mock_env_path, mutable_mock_repo, tmp_path: pathlib.Path
+):
+    path = tmp_path / "spack.yaml"
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -450,7 +456,9 @@ def test_find_loaded(database, working_env):
 
 
 @pytest.mark.regression("37712")
-def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path, mock_packages):
+def test_environment_with_version_range_in_compiler_doesnt_fail(
+    tmp_path: pathlib.Path, mock_packages
+):
     """Tests that having an active environment with a root spec containing a compiler constrained
     by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
     when invoking "spack find".

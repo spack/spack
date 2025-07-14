@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -70,9 +71,9 @@ def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo):
             assert os.path.isfile(file_path)
 
 
-def test_cvs_extra_fetch(tmpdir):
+def test_cvs_extra_fetch(tmp_path: pathlib.Path):
     """Ensure a fetch after downloading is effectively a no-op."""
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
 
     fetcher = CvsFetchStrategy(cvs=":pserver:not-a-real-cvs-repo%module=not-a-real-module")
     assert fetcher is not None

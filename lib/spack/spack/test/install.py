@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import shutil
 import sys
 
@@ -218,14 +219,14 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
 
 
 @pytest.fixture()
-def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
+def install_upstream(tmp_path_factory: pytest.TempPathFactory, gen_mock_layout, install_mockery):
     """Provides a function that installs a specified set of specs to an
     upstream database. The function returns a store which points to the
     upstream, as well as the upstream layout (for verifying that dependent
     installs are using the upstream installs).
     """
-    mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
-    upstream_layout = gen_mock_layout("/a/")
+    mock_db_root = str(tmp_path_factory.mktemp("mock_db_root"))
+    upstream_layout = gen_mock_layout("a")
     prepared_db = spack.database.Database(mock_db_root, layout=upstream_layout)
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(
@@ -237,7 +238,7 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     def _install_upstream(*specs):
         for spec_str in specs:
             prepared_db.add(spack.concretize.concretize_one(spec_str))
-        downstream_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
+        downstream_root = str(tmp_path_factory.mktemp("mock_downstream_db_root"))
         return downstream_root, upstream_layout
 
     return _install_upstream
@@ -311,13 +312,13 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypa
     PackageInstaller([s.package], explicit=True).install()
 
 
-def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmpdir):
+def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmp_path: pathlib.Path):
     """
     Test that different specs with coinciding install prefixes will fail
     to install.
     """
     projections = {"projections": {"all": "one-prefix-per-package-{name}"}}
-    with spack.store.use_store(str(tmpdir), extra_data=projections):
+    with spack.store.use_store(str(tmp_path), extra_data=projections):
         with spack.config.override("config:checksum", False):
             pkg_a = spack.concretize.concretize_one("libelf@0.8.13").package
             pkg_b = spack.concretize.concretize_one("libelf@0.8.12").package
@@ -555,7 +556,7 @@ def test_empty_install_sanity_check_prefix(
 
 
 def test_install_from_binary_with_missing_patch_succeeds(
-    temporary_store: spack.store.Store, mutable_config, tmp_path, mock_packages
+    temporary_store: spack.store.Store, mutable_config, tmp_path: pathlib.Path, mock_packages
 ):
     """If a patch is missing in the local package repository, but was present when building and
     pushing the package to a binary cache, installation from that binary cache shouldn't error out

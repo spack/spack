@@ -4,9 +4,9 @@
 
 .. _cmakepackage:
 
------
+------
 CMake
------
+------
 
 Like Autotools, CMake is a widely-used build-script generator. Designed
 by Kitware, CMake is the most popular build system for new C, C++, and
@@ -121,6 +121,8 @@ their parent flag has been selected. For example, flags to specify the
 unless CMake found the dependency it was looking for. You may need to
 manually specify certain flags to explore the full depth of supported
 build flags, or check the ``CMakeLists.txt`` yourself.
+
+.. _cmake_args:
 
 ^^^^^^^^^^^^^^^^^^^^^
 Adding flags to cmake

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import sys
 
 import pytest
@@ -30,7 +31,7 @@ else:
     commands = ["hardlink", "symlink", "hard", "add", "copy", "relocate"]
 
 
-def create_projection_file(tmp_path, projection):
+def create_projection_file(tmp_path: pathlib.Path, projection):
     if "projections" not in projection:
         projection = {"projections": projection}
     projection_file = tmp_path / "projection" / "projection.yaml"
@@ -40,7 +41,9 @@ def create_projection_file(tmp_path, projection):
 
 
 @pytest.mark.parametrize("cmd", commands)
-def test_view_link_type(tmp_path, mock_packages, mock_archive, mock_fetch, install_mockery, cmd):
+def test_view_link_type(
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery, cmd
+):
     install("--fake", "libdwarf")
     view_dir = tmp_path / f"view_{cmd}"
     view(cmd, str(view_dir), "libdwarf")
@@ -54,10 +57,11 @@ def test_view_link_type(tmp_path, mock_packages, mock_archive, mock_fetch, insta
 
 @pytest.mark.parametrize("add_cmd", commands)
 def test_view_link_type_remove(
-    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, add_cmd
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery, add_cmd
 ):
     install("needs-relocation")
-    viewpath = str(tmpdir.mkdir("view_{0}".format(add_cmd)))
+    viewpath = str(tmp_path / "view_{0}".format(add_cmd))
+    (tmp_path / "view_{0}".format(add_cmd)).mkdir()
     view(add_cmd, viewpath, "needs-relocation")
     bindir = os.path.join(viewpath, "bin")
     assert os.path.exists(bindir)
@@ -67,7 +71,9 @@ def test_view_link_type_remove(
 
 
 @pytest.mark.parametrize("cmd", commands)
-def test_view_projections(tmp_path, mock_packages, mock_archive, mock_fetch, install_mockery, cmd):
+def test_view_projections(
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery, cmd
+):
     install("--fake", "libdwarf@20130207")
     view_dir = tmp_path / f"view_{cmd}"
 
@@ -84,7 +90,7 @@ def test_view_projections(tmp_path, mock_packages, mock_archive, mock_fetch, ins
 
 
 def test_view_multiple_projections(
-    tmp_path, mock_packages, mock_archive, mock_fetch, install_mockery
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
 ):
     install("--fake", "libdwarf@20130207")
     install("--fake", "extendee@1.0")
@@ -104,7 +110,7 @@ def test_view_multiple_projections(
 
 
 def test_view_multiple_projections_all_first(
-    tmp_path, mock_packages, mock_archive, mock_fetch, install_mockery
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
 ):
     install("--fake", "libdwarf@20130207")
     install("--fake", "extendee@1.0")
@@ -123,19 +129,25 @@ def test_view_multiple_projections_all_first(
     assert extendee_prefix.exists()
 
 
-def test_view_external(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_view_external(
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
+):
     install("externaltool")
-    viewpath = str(tmpdir.mkdir("view"))
+    viewpath = str(tmp_path / "view")
+    (tmp_path / "view").mkdir()
     output = view("symlink", viewpath, "externaltool")
     assert "Skipping external package: externaltool" in output
 
 
-def test_view_extension(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_view_extension(
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
+):
     install("extendee")
     install("extension1@1.0")
     install("extension1@2.0")
     install("extension2@1.0")
-    viewpath = str(tmpdir.mkdir("view"))
+    viewpath = str(tmp_path / "view")
+    (tmp_path / "view").mkdir()
     view("symlink", viewpath, "extension1@1.0")
     all_installed = extensions("--show", "installed", "extendee")
     assert "extension1@1.0" in all_installed
@@ -144,10 +156,13 @@ def test_view_extension(tmpdir, mock_packages, mock_archive, mock_fetch, install
     assert os.path.exists(os.path.join(viewpath, "bin", "extension1"))
 
 
-def test_view_extension_remove(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_view_extension_remove(
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
+):
     install("extendee")
     install("extension1@1.0")
-    viewpath = str(tmpdir.mkdir("view"))
+    viewpath = str(tmp_path / "view")
+    (tmp_path / "view").mkdir()
     view("symlink", viewpath, "extension1@1.0")
     view("remove", viewpath, "extension1@1.0")
     all_installed = extensions("--show", "installed", "extendee")
@@ -155,32 +170,37 @@ def test_view_extension_remove(tmpdir, mock_packages, mock_archive, mock_fetch, 
     assert not os.path.exists(os.path.join(viewpath, "bin", "extension1"))
 
 
-def test_view_extension_conflict(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_view_extension_conflict(
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
+):
     install("extendee")
     install("extension1@1.0")
     install("extension1@2.0")
-    viewpath = str(tmpdir.mkdir("view"))
+    viewpath = str(tmp_path / "view")
+    (tmp_path / "view").mkdir()
     view("symlink", viewpath, "extension1@1.0")
     output = view("symlink", viewpath, "extension1@2.0")
     assert "Package conflict detected" in output
 
 
 def test_view_extension_conflict_ignored(
-    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
 ):
     install("extendee")
     install("extension1@1.0")
     install("extension1@2.0")
-    viewpath = str(tmpdir.mkdir("view"))
+    viewpath = str(tmp_path / "view")
+    (tmp_path / "view").mkdir()
     view("symlink", viewpath, "extension1@1.0")
     view("symlink", viewpath, "-i", "extension1@2.0")
     with open(os.path.join(viewpath, "bin", "extension1"), "r", encoding="utf-8") as fin:
         assert fin.read() == "1.0"
 
 
-def test_view_fails_with_missing_projections_file(tmpdir):
-    viewpath = str(tmpdir.mkdir("view"))
-    projection_file = os.path.join(str(tmpdir), "nonexistent")
+def test_view_fails_with_missing_projections_file(tmp_path: pathlib.Path):
+    viewpath = str(tmp_path / "view")
+    (tmp_path / "view").mkdir()
+    projection_file = str(tmp_path / "nonexistent")
     with pytest.raises(SystemExit):
         view("symlink", "--projection-file", projection_file, viewpath, "foo")
 
@@ -188,7 +208,13 @@ def test_view_fails_with_missing_projections_file(tmpdir):
 @pytest.mark.parametrize("with_projection", [False, True])
 @pytest.mark.parametrize("cmd", ["symlink", "copy"])
 def test_view_files_not_ignored(
-    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, cmd, with_projection
+    tmp_path: pathlib.Path,
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    install_mockery,
+    cmd,
+    with_projection,
 ):
     spec = spack.concretize.concretize_one("view-not-ignored")
     pkg = spec.package
@@ -197,10 +223,11 @@ def test_view_files_not_ignored(
 
     install("view-file")  # Arbitrary package to add noise
 
-    viewpath = str(tmpdir.mkdir("view_{0}".format(cmd)))
+    viewpath = str(tmp_path / "view_{0}".format(cmd))
+    (tmp_path / "view_{0}".format(cmd)).mkdir()
 
     if with_projection:
-        proj = str(tmpdir.join("proj.yaml"))
+        proj = str(tmp_path / "proj.yaml")
         with open(proj, "w", encoding="utf-8") as f:
             f.write('{"projections":{"all":"{name}"}}')
         prefix_in_view = os.path.join(viewpath, "view-not-ignored")

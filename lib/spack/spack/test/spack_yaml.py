@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test Spack's custom YAML format."""
 import io
+import pathlib
 
 import pytest
 
@@ -124,7 +125,7 @@ def test_yaml_aliases():
     ],
 )
 @pytest.mark.not_on_windows(reason="fails on Windows")
-def test_round_trip_configuration(initial_content, expected_final_content, tmp_path):
+def test_round_trip_configuration(initial_content, expected_final_content, tmp_path: pathlib.Path):
     """Test that configuration can be loaded and dumped without too many changes"""
     file = tmp_path / "test.yaml"
     file.write_text(initial_content)

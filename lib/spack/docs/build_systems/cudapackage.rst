@@ -4,9 +4,9 @@
 
 .. _cudapackage:
 
-----
+------
 Cuda
-----
+------
 
 Different from other packages, ``CudaPackage`` does not represent a build system.
 Instead its goal is to simplify and unify usage of ``CUDA`` in other packages by providing a `mixin-class <https://en.wikipedia.org/wiki/Mixin>`_.
@@ -89,9 +89,9 @@ standard CUDA compiler flags.
     This method must be explicitly called when you are creating the
     arguments for your build in order to use the values.
 
-^^^^^
+^^^^^^
 Usage
-^^^^^
+^^^^^^
 
 This helper package can be added to your package by adding it as a base
 class of your package.  For example, you can add it to your

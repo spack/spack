@@ -205,7 +205,7 @@ def test_ignore(stage, link_tree):
         assert os.path.isfile("dest/.spec")
 
 
-def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):
+def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmp_path: pathlib.Path):
     """Given an dir structure like this::
 
         .
@@ -223,7 +223,7 @@ def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):
     symlink_b will be expanded, but symlink_c and symlink_d will not.
     """
     j = os.path.join
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         os.mkdir(j("a"))
         os.mkdir(j("a", "b"))
         os.mkdir(j("a", "b", "c"))
@@ -235,7 +235,7 @@ def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):
             pass
 
     visitor = SourceMergeVisitor()
-    visit_directory_tree(str(tmpdir), visitor)
+    visit_directory_tree(str(tmp_path), visitor)
     assert [p for p in visitor.files.keys()] == [
         j("a", "b", "c", "d", "file"),
         j("a", "b", "c", "symlink_d"),  # treated as a file, not expanded
@@ -255,7 +255,7 @@ def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):
     ]
 
 
-def test_source_merge_visitor_cant_be_cyclical(tmpdir):
+def test_source_merge_visitor_cant_be_cyclical(tmp_path: pathlib.Path):
     """Given an dir structure like this::
 
         .
@@ -270,7 +270,7 @@ def test_source_merge_visitor_cant_be_cyclical(tmpdir):
     pointing deeper into the directory structure.
     """
     j = os.path.join
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         os.mkdir(j("a"))
         os.mkdir(j("b"))
 
@@ -279,7 +279,7 @@ def test_source_merge_visitor_cant_be_cyclical(tmpdir):
         symlink(j("..", "a"), j("b", "symlink_a"))
 
     visitor = SourceMergeVisitor()
-    visit_directory_tree(str(tmpdir), visitor)
+    visit_directory_tree(str(tmp_path), visitor)
     assert [p for p in visitor.files.keys()] == [
         j("a", "symlink_b"),
         j("a", "symlink_b_b"),
@@ -288,29 +288,33 @@ def test_source_merge_visitor_cant_be_cyclical(tmpdir):
     assert [p for p in visitor.directories.keys()] == [j("a"), j("b")]
 
 
-def test_destination_merge_visitor_always_errors_on_symlinked_dirs(tmpdir):
+def test_destination_merge_visitor_always_errors_on_symlinked_dirs(tmp_path: pathlib.Path):
     """When merging prefixes into a non-empty destination folder, and
     this destination folder has a symlinked dir where the prefix has a dir,
     we should never merge any files there, but register a fatal error."""
     j = os.path.join
 
     # Here example_a and example_b are symlinks.
-    with tmpdir.mkdir("dst").as_cwd():
+    dst_path = tmp_path / "dst"
+    dst_path.mkdir()
+    with working_dir(str(dst_path)):
         os.mkdir("a")
         os.symlink("a", "example_a")
         os.symlink("a", "example_b")
 
     # Here example_a is a directory, and example_b is a (non-expanded) symlinked
     # directory.
-    with tmpdir.mkdir("src").as_cwd():
+    src_path = tmp_path / "src"
+    src_path.mkdir()
+    with working_dir(str(src_path)):
         os.mkdir("example_a")
         with open(j("example_a", "file"), "wb"):
             pass
         os.symlink("..", "example_b")
 
     visitor = SourceMergeVisitor()
-    visit_directory_tree(str(tmpdir.join("src")), visitor)
-    visit_directory_tree(str(tmpdir.join("dst")), DestinationMergeVisitor(visitor))
+    visit_directory_tree(str(src_path), visitor)
+    visit_directory_tree(str(dst_path), DestinationMergeVisitor(visitor))
 
     assert visitor.fatal_conflicts
     conflicts = [c.dst for c in visitor.fatal_conflicts]
@@ -318,25 +322,29 @@ def test_destination_merge_visitor_always_errors_on_symlinked_dirs(tmpdir):
     assert "example_b" in conflicts
 
 
-def test_destination_merge_visitor_file_dir_clashes(tmpdir):
+def test_destination_merge_visitor_file_dir_clashes(tmp_path: pathlib.Path):
     """Tests whether non-symlink file-dir and dir-file clashes as registered as fatal
     errors"""
-    with tmpdir.mkdir("a").as_cwd():
+    a_path = tmp_path / "a"
+    a_path.mkdir()
+    with working_dir(str(a_path)):
         os.mkdir("example")
 
-    with tmpdir.mkdir("b").as_cwd():
+    b_path = tmp_path / "b"
+    b_path.mkdir()
+    with working_dir(str(b_path)):
         with open("example", "wb"):
             pass
 
     a_to_b = SourceMergeVisitor()
-    visit_directory_tree(str(tmpdir.join("a")), a_to_b)
-    visit_directory_tree(str(tmpdir.join("b")), DestinationMergeVisitor(a_to_b))
+    visit_directory_tree(str(a_path), a_to_b)
+    visit_directory_tree(str(b_path), DestinationMergeVisitor(a_to_b))
     assert a_to_b.fatal_conflicts
     assert a_to_b.fatal_conflicts[0].dst == "example"
 
     b_to_a = SourceMergeVisitor()
-    visit_directory_tree(str(tmpdir.join("b")), b_to_a)
-    visit_directory_tree(str(tmpdir.join("a")), DestinationMergeVisitor(b_to_a))
+    visit_directory_tree(str(b_path), b_to_a)
+    visit_directory_tree(str(a_path), DestinationMergeVisitor(b_to_a))
     assert b_to_a.fatal_conflicts
     assert b_to_a.fatal_conflicts[0].dst == "example"
 

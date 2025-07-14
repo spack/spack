@@ -2,11 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
+
 from ctest_log_parser import CTestLogParser
 
 
-def test_log_parser(tmpdir):
-    log_file = tmpdir.join("log.txt")
+def test_log_parser(tmp_path: pathlib.Path):
+    log_file = tmp_path / "log.txt"
 
     with log_file.open("w") as f:
         f.write(

@@ -38,7 +38,7 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_gnupghome")
-def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
+def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_config):
     # Install a test package
     spec = spack.concretize.concretize_one("trivial-install-test-package")
     monkeypatch.setattr(spec.package, "fetcher", URLFetchStrategy(url=mock_archive.url))
@@ -122,7 +122,7 @@ def test_buildcache(mock_archive, tmp_path, monkeypatch, mutable_config):
         buildcache.buildcache(parser, args)
 
 
-def test_relocate_text(tmp_path):
+def test_relocate_text(tmp_path: pathlib.Path):
     """Tests that a text file containing the original directory of an installation, can be
     relocated to a target directory.
     """
@@ -138,13 +138,13 @@ def test_relocate_text(tmp_path):
     assert original_dir not in text
 
 
-def test_relocate_links(tmpdir):
-    tmpdir.ensure("new_prefix_a", dir=True)
+def test_relocate_links(tmp_path: pathlib.Path):
+    (tmp_path / "new_prefix_a").mkdir()
 
-    own_prefix_path = str(tmpdir.join("prefix_a", "file"))
-    dep_prefix_path = str(tmpdir.join("prefix_b", "file"))
-    new_own_prefix_path = str(tmpdir.join("new_prefix_a", "file"))
-    new_dep_prefix_path = str(tmpdir.join("new_prefix_b", "file"))
+    own_prefix_path = str(tmp_path / "prefix_a" / "file")
+    dep_prefix_path = str(tmp_path / "prefix_b" / "file")
+    new_own_prefix_path = str(tmp_path / "new_prefix_a" / "file")
+    new_dep_prefix_path = str(tmp_path / "new_prefix_b" / "file")
     system_path = os.path.join(os.path.sep, "system", "path")
 
     fs.touchp(own_prefix_path)
@@ -155,16 +155,16 @@ def test_relocate_links(tmpdir):
     # Old prefixes to new prefixes
     prefix_to_prefix = OrderedDict(
         [
-            # map <tmpdir>/prefix_a -> <tmpdir>/new_prefix_a
-            (str(tmpdir.join("prefix_a")), str(tmpdir.join("new_prefix_a"))),
-            # map <tmpdir>/prefix_b -> <tmpdir>/new_prefix_b
-            (str(tmpdir.join("prefix_b")), str(tmpdir.join("new_prefix_b"))),
-            # map <tmpdir> -> /fallback/path -- this is just to see we respect order.
-            (str(tmpdir), os.path.join(os.path.sep, "fallback", "path")),
+            # map <tmp_path>/prefix_a -> <tmp_path>/new_prefix_a
+            (str(tmp_path / "prefix_a"), str(tmp_path / "new_prefix_a")),
+            # map <tmp_path>/prefix_b -> <tmp_path>/new_prefix_b
+            (str(tmp_path / "prefix_b"), str(tmp_path / "new_prefix_b")),
+            # map <tmp_path> -> /fallback/path -- this is just to see we respect order.
+            (str(tmp_path), os.path.join(os.path.sep, "fallback", "path")),
         ]
     )
 
-    with tmpdir.join("new_prefix_a").as_cwd():
+    with fs.working_dir(str(tmp_path / "new_prefix_a")):
         # To be relocated
         os.symlink(own_prefix_path, "to_self")
         os.symlink(dep_prefix_path, "to_dependency")
@@ -176,16 +176,16 @@ def test_relocate_links(tmpdir):
         relocate_links(["to_self", "to_dependency", "to_system"], prefix_to_prefix)
 
         # These two are relocated
-        assert readlink("to_self") == str(tmpdir.join("new_prefix_a", "file"))
-        assert readlink("to_dependency") == str(tmpdir.join("new_prefix_b", "file"))
+        assert readlink("to_self") == str(tmp_path / "new_prefix_a" / "file")
+        assert readlink("to_dependency") == str(tmp_path / "new_prefix_b" / "file")
 
         # These two are not.
         assert readlink("to_system") == system_path
         assert readlink("to_self_but_relative") == "relative"
 
 
-def test_replace_paths(tmpdir):
-    with tmpdir.as_cwd():
+def test_replace_paths(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
         suffix = "dylib" if platform.system().lower() == "darwin" else "so"
         hash_a = "53moz6jwnw3xpiztxwhc4us26klribws"
         hash_b = "tk62dzu62kd4oh3h3heelyw23hw2sfee"
@@ -195,7 +195,7 @@ def test_replace_paths(tmpdir):
 
         prefix2hash = {}
 
-        old_spack_dir = os.path.join(f"{tmpdir}", "Users", "developer", "spack")
+        old_spack_dir = os.path.join(f"{tmp_path}", "Users", "developer", "spack")
         fs.mkdirp(old_spack_dir)
 
         oldprefix_a = os.path.join(f"{old_spack_dir}", f"pkgA-{hash_a}")
@@ -219,7 +219,7 @@ def test_replace_paths(tmpdir):
         fs.mkdirp(oldlibdir_d)
         prefix2hash[str(oldprefix_d)] = hash_d
 
-        oldprefix_local = os.path.join(f"{tmpdir}", "usr", "local")
+        oldprefix_local = os.path.join(f"{tmp_path}", "usr", "local")
         oldlibdir_local = os.path.join(f"{oldprefix_local}", "lib")
         fs.mkdirp(oldlibdir_local)
         prefix2hash[str(oldprefix_local)] = hash_loco
@@ -242,7 +242,7 @@ def test_replace_paths(tmpdir):
 
         hash2prefix = dict()
 
-        new_spack_dir = os.path.join(f"{tmpdir}", "Users", "Shared", "spack")
+        new_spack_dir = os.path.join(f"{tmp_path}", "Users", "Shared", "spack")
         fs.mkdirp(new_spack_dir)
 
         prefix_a = os.path.join(new_spack_dir, f"pkgA-{hash_a}")
@@ -266,7 +266,7 @@ def test_replace_paths(tmpdir):
         fs.mkdirp(libdir_d)
         hash2prefix[hash_d] = str(prefix_d)
 
-        prefix_local = os.path.join(f"{tmpdir}", "usr", "local")
+        prefix_local = os.path.join(f"{tmp_path}", "usr", "local")
         libdir_local = os.path.join(prefix_local, "lib")
         fs.mkdirp(libdir_local)
         hash2prefix[hash_loco] = str(prefix_local)

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import pathlib
 import sys
 
 import pytest
@@ -76,7 +77,7 @@ packages_yaml_sha256 = (
     ],
 )
 def test_rfc_remote_local_path(
-    tmpdir, mutable_empty_config, mock_fetch_url_text, url, sha256, err, msg
+    tmp_path: pathlib.Path, mutable_empty_config, mock_fetch_url_text, url, sha256, err, msg
 ):
     def _has_content(filename):
         # The first element of all configuration files for this test happen to
@@ -91,7 +92,7 @@ def test_rfc_remote_local_path(
         return False
 
     def _dest_dir():
-        return join_path(tmpdir.strpath, "cache")
+        return join_path(str(tmp_path), "cache")
 
     if err is not None:
         with spack.config.override("config:url_fetch_method", "curl"):

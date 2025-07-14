@@ -133,7 +133,7 @@ SPACK_DEBUG_LOG_DIR = "SPACK_DEBUG_LOG_DIR"
 SPACK_CCACHE_BINARY = "SPACK_CCACHE_BINARY"
 SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
 
-# Platform-specific library suffix.
+# Platform-specific library suffix (deprecated)
 if sys.platform == "darwin":
     dso_suffix = "dylib"
 elif sys.platform == "win32":
@@ -142,6 +142,24 @@ else:
     dso_suffix = "so"
 
 stat_suffix = "lib" if sys.platform == "win32" else "a"
+
+
+def shared_library_suffix(spec: spack.spec.Spec) -> str:
+    """Return the shared library suffix for the given spec."""
+    if spec.platform == "darwin":
+        return "dylib"
+    elif spec.platform == "windows":
+        return "dll"
+    else:
+        return "so"
+
+
+def static_library_suffix(spec: spack.spec.Spec) -> str:
+    """Return the static library suffix for the given spec."""
+    if spec.platform == "windows":
+        return "lib"
+    else:
+        return "a"
 
 
 def jobserver_enabled():
@@ -409,7 +427,7 @@ def set_wrapper_environment_variables_for_flags(pkg, env):
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Always convert flag_handler to function type.
-        # This avoids discrepencies in calling conventions between functions
+        # This avoids discrepancies in calling conventions between functions
         # and methods, or between bound and unbound methods in python 2.
         # We cannot effectively convert everything to a bound method, which
         # would be the simpler solution.
@@ -881,7 +899,7 @@ def effective_deptypes(
         if not parent_mode:
             continue
 
-        # Dependending on the context, include particular deps from the root.
+        # Depending on the context, include particular deps from the root.
         if UseMode.ROOT & parent_mode:
             if context == Context.BUILD:
                 if (dt.BUILD | dt.TEST) & depflag:
@@ -1038,7 +1056,7 @@ class SetupContext:
                     run_env_mods.extend(spack.schema.environment.parse(external_env))
 
                 if self.context == Context.BUILD:
-                    # Don't let the runtime environment of comiler like dependencies leak into the
+                    # Don't let the runtime environment of compiler like dependencies leak into the
                     # build env
                     run_env_mods.drop("CC", "CXX", "F77", "FC")
                 env.extend(run_env_mods)

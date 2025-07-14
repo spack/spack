@@ -43,6 +43,7 @@ import spack.patch
 import spack.phase_callbacks
 import spack.repo
 import spack.spec
+import spack.stage as stg
 import spack.store
 import spack.url
 import spack.util.archive
@@ -58,7 +59,6 @@ from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
 from spack.solver.version_order import concretization_version_order
-from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
@@ -743,7 +743,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             raise ValueError(msg.format(self))
 
         # init internal variables
-        self._stage: Optional[StageComposite] = None
+        self._stage: Optional[stg.StageComposite] = None
+        self._patch_stages = []  # need to track patch stages separately, in order to apply them
         self._fetcher = None
         self._tester: Optional[Any] = None
 
@@ -1170,7 +1171,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def _make_resource_stage(self, root_stage, resource):
         pretty_resource_name = fsys.polite_filename(f"{resource.name}-{self.version}")
-        return ResourceStage(
+        return stg.ResourceStage(
             resource.fetcher,
             root=root_stage,
             resource=resource,
@@ -1195,8 +1196,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         )
         # Construct a path where the stage should build..
         s = self.spec
-        stage_name = compute_stage_name(s)
-        stage = Stage(
+        stage_name = stg.compute_stage_name(s)
+        stage = stg.Stage(
             fetcher,
             mirror_paths=mirror_paths,
             mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
@@ -1206,7 +1207,19 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         )
         return stage
 
-    def _make_stage(self):
+    def _make_stages(self) -> Tuple[stg.StageComposite, List[stg.Stage]]:
+        """Create stages for this package, its resources, and any patches to be applied.
+
+        Returns:
+            A StageComposite containing all stages created, as well as a list of patch stages for
+            any patches that need to be fetched remotely.
+
+        The StageComposite is used to manage (create destroy, etc.) the stages.
+
+        The list of patch stages will be in the same order that patches are to be applied
+        to the package's staged source code. This is needed in order to apply the patches later.
+
+        """
         # If it's a dev package (not transitively), use a DIY stage object
         dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
@@ -1215,31 +1228,56 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
             stage_link = self.spec.format_path(link_format)
-            source_stage = DevelopStage(compute_stage_name(self.spec), dev_path, stage_link)
+            source_stage = stg.DevelopStage(
+                stg.compute_stage_name(self.spec), dev_path, stage_link
+            )
         else:
             source_stage = self._make_root_stage(self.fetcher)
 
         # all_stages is source + resources + patches
-        all_stages = StageComposite()
+        all_stages = stg.StageComposite()
         all_stages.append(source_stage)
         all_stages.extend(
             self._make_resource_stage(source_stage, r) for r in self._get_needed_resources()
         )
+
+        def make_patch_stage(patch: spack.patch.UrlPatch, uniqe_part: str):
+            # UrlPatches can make their own fetchers
+            fetcher = patch.fetcher()
+
+            # The same package can have multiple patches with the same name but
+            # with different contents, therefore apply a subset of the hash.
+            fetch_digest = patch.archive_sha256 or patch.sha256
+
+            name = f"{os.path.basename(patch.url)}-{fetch_digest[:7]}"
+            per_package_ref = os.path.join(patch.owner.split(".")[-1], name)
+            mirror_ref = spack.mirrors.layout.default_mirror_layout(fetcher, per_package_ref)
+
+            return stg.Stage(
+                fetcher,
+                name=f"{stg.stage_prefix}-{uniqe_part}-patch-{fetch_digest}",
+                mirror_paths=mirror_ref,
+                mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
+            )
+
         if self.spec.concrete:
-            all_stages.extend(
-                p.stage for p in self.spec.patches if isinstance(p, spack.patch.UrlPatch)
-            )
+            patches = self.spec.patches
+            uniqe_part = self.spec.dag_hash(7)
         else:
-            # The only code path that gets here is spack mirror create --all which just needs all
-            # matching patches.
-            all_stages.extend(
-                p.stage
-                for when_spec, patch_list in self.patches.items()
-                if self.spec.intersects(when_spec)
-                for p in patch_list
-                if isinstance(p, spack.patch.UrlPatch)
-            )
-        return all_stages
+            # The only code path that gets here is `spack mirror create --all`,
+            # which needs all matching patches.
+            patch_lists = [
+                plist for when, plist in self.patches.items() if self.spec.intersects(when)
+            ]
+            patches = sum(patch_lists, [])
+            uniqe_part = self.name
+
+        patch_stages = [
+            make_patch_stage(p, uniqe_part) for p in patches if isinstance(p, spack.patch.UrlPatch)
+        ]
+        all_stages.extend(patch_stages)
+
+        return all_stages, patch_stages
 
     @property
     def stage(self):
@@ -1252,11 +1290,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if not self.spec.versions.concrete:
             raise ValueError("Cannot retrieve stage for package without concrete version.")
         if self._stage is None:
-            self._stage = self._make_stage()
+            self._stage, self._patch_stages = self._make_stages()
         return self._stage
 
     @stage.setter
-    def stage(self, stage: StageComposite):
+    def stage(self, stage: stg.StageComposite):
         """Allow a stage object to be set to override the default."""
         self._stage = stage
 
@@ -1645,15 +1683,27 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return
 
         errors = []
-
         # Apply all the patches for specs that match this one
         patched = False
+        patch_stages = iter(self._patch_stages)
+
         for patch in patches:
             try:
                 with fsys.working_dir(self.stage.source_path):
-                    patch.apply(self.stage)
-                tty.msg("Applied patch {0}".format(patch.path_or_url))
+                    # get the path either from the stage where it was fetched, or from the Patch
+                    if isinstance(patch, spack.patch.UrlPatch):
+                        patch_stage = next(patch_stages)
+                        patch_path = patch_stage.single_file
+                    else:
+                        patch_path = patch.path
+
+                    spack.patch.apply_patch(
+                        self.stage, patch_path, patch.level, patch.working_dir, patch.reverse
+                    )
+
+                tty.msg(f"Applied patch {patch.path_or_url}")
                 patched = True
+
             except spack.error.SpackError as e:
                 # Touch bad file if anything goes wrong.
                 fsys.touch(bad_file)

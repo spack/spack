@@ -19,13 +19,14 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import textwrap
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import warnings
 from contextlib import closing
-from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import IO, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fsys
 import llnl.util.lang
@@ -34,7 +35,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.caches
 import spack.config
-import spack.database as spack_db
+import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
@@ -63,7 +64,6 @@ import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
-from spack.caches import misc_cache_location
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -102,7 +102,7 @@ from .url_buildcache import (
 )
 
 
-class BuildCacheDatabase(spack_db.Database):
+class BuildCacheDatabase(spack.database.Database):
     """A database for binary buildcaches.
 
     A database supports writing buildcache index files, in which case certain fields are not
@@ -113,13 +113,13 @@ class BuildCacheDatabase(spack_db.Database):
     record_fields = ("spec", "ref_count", "in_buildcache")
 
     def __init__(self, root):
-        super().__init__(root, lock_cfg=spack_db.NO_LOCK, layout=None)
+        super().__init__(root, lock_cfg=spack.database.NO_LOCK, layout=None)
         self._write_transaction_impl = llnl.util.lang.nullcontext
         self._read_transaction_impl = llnl.util.lang.nullcontext
 
     def _handle_old_db_versions_read(self, check, db, *, reindex: bool):
         if not self.is_readable():
-            raise spack_db.DatabaseNotReadableError(
+            raise spack.database.DatabaseNotReadableError(
                 f"cannot read buildcache v{self.db_version} at {self.root}"
             )
         return self._handle_current_version_read(check, db)
@@ -193,16 +193,10 @@ class BinaryCacheIndex:
         self._mirrors_for_spec: Dict[str, List[MirrorForSpec]] = {}
 
     def _init_local_index_cache(self):
-        # seems logical but fails bootstrapping
-        # cache_key = self._index_contents_key
-        # exists = self._index_file_cache.init_entry(cache_key)
-        # cache_path = self._index_file_cache.cache_path(cache_key)
-        # if not exists and self._index_file_cache_initialized:
-        # raise FileNotFoundError(f"Missing {cache_path}")
-
         if not self._index_file_cache_initialized:
             cache_key = self._index_contents_key
             self._index_file_cache.init_entry(cache_key)
+
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
@@ -217,7 +211,6 @@ class BinaryCacheIndex:
         clear associated data structures."""
         if self._index_file_cache:
             self._index_file_cache.destroy()
-            self._index_file_cache_initialized = False
             self._index_file_cache = file_cache.FileCache(self._index_cache_root)
         self._local_index_cache = {}
         self._specs_already_associated = set()
@@ -259,15 +252,11 @@ class BinaryCacheIndex:
             db = BuildCacheDatabase(tmpdir)
 
             try:
-                cache_file_exists = self._index_file_cache.init_entry(cache_key)
-                with self._index_file_cache.write_transaction(cache_key):
-                    cache_file_path = self._index_file_cache.cache_path(cache_key)
-                    if not cache_file_exists:
-                        # recreate index if it is missing
-                        cache_entry = self._local_index_cache[str(url_and_version)]
-                        self._fetch_and_cache_index(url_and_version, cache_entry)
-                    db._read_from_file(cache_file_path)
-            except spack_db.InvalidDatabaseVersionError as e:
+                self._index_file_cache.init_entry(cache_key)
+                cache_path = self._index_file_cache.cache_path(cache_key)
+                with self._index_file_cache.read_transaction(cache_key):
+                    db._read_from_file(pathlib.Path(cache_path))
+            except spack.database.InvalidDatabaseVersionError as e:
                 tty.warn(
                     "you need a newer Spack version to read the buildcache index "
                     f"for the following v{layout_version} mirror: '{mirror_url}'. "
@@ -563,7 +552,7 @@ class BinaryCacheIndex:
 
         # clean up the old cache_key if necessary
         old_cache_key = cache_entry.get("index_path", None)
-        if old_cache_key and old_cache_key != cache_key:
+        if old_cache_key:
             self._index_file_cache.remove(old_cache_key)
 
         # We fetched an index and updated the local index cache, we should
@@ -573,7 +562,7 @@ class BinaryCacheIndex:
 
 def binary_index_location():
     """Set up a BinaryCacheIndex for remote buildcache dbs in the user's homedir."""
-    cache_root = os.path.join(misc_cache_location(), "indices")
+    cache_root = os.path.join(spack.caches.misc_cache_location(), "indices")
     return spack.util.path.canonicalize_path(cache_root)
 
 
@@ -676,12 +665,24 @@ def buildcache_relative_index_url(layout_version: int = CURRENT_BUILD_CACHE_LAYO
 
 @llnl.util.lang.memoized
 def warn_v2_layout(mirror_url: str, action: str) -> bool:
-    tty.warn(
-        f"{action} from a v2 binary mirror layout, located at \n"
-        f"    {mirror_url} is deprecated. Support for this will be \n"
-        "    removed in a future version of spack. Please consider running `spack \n"
-        "    buildcache migrate' or rebuilding the specs in this mirror."
+    lines = textwrap.wrap(
+        f"{action} from a v2 binary mirror layout, located at "
+        f"{mirror_url} is deprecated. Support for this will be "
+        "removed in a future version of spack. "
+        "If you manage the buildcache please consider running:",
+        width=72,
+        subsequent_indent="  ",
     )
+    lines.extend(
+        [
+            "    'spack buildcache migrate'",
+            "  or rebuilding the specs in this mirror. Otherwise, consider running:",
+            "    'spack mirror list'",
+            "    'spack mirror remove <name>'",
+            "  with the <name> for the mirror url shown in the list.",
+        ]
+    )
+    tty.warn("\n".join(lines))
     return True
 
 
@@ -701,7 +702,7 @@ def select_signing_key() -> str:
 
 def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
     """Generate the index, compute its hash, and push the files to the mirror"""
-    index_json_path = os.path.join(temp_dir, spack_db.INDEX_JSON_FILE)
+    index_json_path = os.path.join(temp_dir, spack.database.INDEX_JSON_FILE)
     with open(index_json_path, "w", encoding="utf-8") as f:
         db._write_to_file(f)
 
@@ -1636,7 +1637,7 @@ def _oci_update_index(
         db.mark(spec, "in_buildcache", True)
 
     # Create the index.json file
-    index_json_path = os.path.join(tmpdir, spack_db.INDEX_JSON_FILE)
+    index_json_path = os.path.join(tmpdir, spack.database.INDEX_JSON_FILE)
     with open(index_json_path, "w", encoding="utf-8") as f:
         db._write_to_file(f)
 
@@ -1843,7 +1844,7 @@ def download_tarball(
 
             return cache_entry.get_archive_stage()
 
-    # Falling through the nested loops meeans we exhaustively searched
+    # Falling through the nested loops means we exhaustively searched
     # for all known kinds of spec files on all mirrors and did not find
     # an acceptable one for which we could download a tarball and (if
     # needed) verify a signature. So at this point, we will proceed to
@@ -2271,7 +2272,7 @@ def get_keys(
     install: bool = False,
     trust: bool = False,
     force: bool = False,
-    mirrors: Optional[Dict[Any, spack.mirrors.mirror.Mirror]] = None,
+    mirrors: Optional[Mapping[str, spack.mirrors.mirror.Mirror]] = None,
 ):
     """Get pgp public keys available on mirror with suffix .pub"""
     mirror_collection = mirrors or spack.mirrors.mirror.MirrorCollection(binary=True)
@@ -2658,7 +2659,7 @@ class DefaultIndexFetcherV2(IndexFetcher):
             return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
         # Otherwise, download index.json
-        url_index = url_util.join(self.url, "build_cache", spack_db.INDEX_JSON_FILE)
+        url_index = url_util.join(self.url, "build_cache", spack.database.INDEX_JSON_FILE)
 
         try:
             response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
@@ -2704,7 +2705,7 @@ class EtagIndexFetcherV2(IndexFetcher):
 
     def conditional_fetch(self) -> FetchIndexResult:
         # Just do a conditional fetch immediately
-        url = url_util.join(self.url, "build_cache", spack_db.INDEX_JSON_FILE)
+        url = url_util.join(self.url, "build_cache", spack.database.INDEX_JSON_FILE)
         headers = {"User-Agent": web_util.SPACK_USER_AGENT, "If-None-Match": f'"{self.etag}"'}
 
         try:
@@ -2848,7 +2849,7 @@ class EtagIndexFetcher(IndexFetcher):
     2) It provides this etag value in the 'If-None-Match' request header for the
     index manifest. 3) It checks for special exception type and response code
     indicating the index manifest is not modified, exiting early and returning
-    'Fresh', if encountered. 4) If it needs to actually read the manfiest, it
+    'Fresh', if encountered. 4) If it needs to actually read the manifest, it
     does not need to do any checks of the url scheme to determine whether an
     etag should be included in the return value."""
 

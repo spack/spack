@@ -117,7 +117,7 @@ class CDash(Reporter):
         )
         self.buildIds: Dict[str, str] = {}
         self.revision = ""
-        git = spack.util.git.git()
+        git = spack.util.git.git(required=True)
         with working_dir(spack.paths.spack_root):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.get_version())

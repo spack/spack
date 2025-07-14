@@ -219,7 +219,7 @@ _mirrors() {
 _repos() {
     if [[ -z "${SPACK_REPOS:-}" ]]
     then
-        SPACK_REPOS="$(spack repo list | awk '{print $1}')"
+        SPACK_REPOS="$(spack repo list --names)"
     fi
     SPACK_COMPREPLY="$SPACK_REPOS"
 }
@@ -400,7 +400,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -b --bootstrap -p --profile --sorted-profile --lines -v --verbose --stacktrace -t --backtrace -V --version --print-shell-vars --disable-end-user-config --warn-writes-into-spack"
     else
-        SPACK_COMPREPLY="add arch audit blame bootstrap build-env buildcache cd change checksum ci clean clone commands compiler compilers concretize concretise config containerize containerise create debug deconcretize dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse logs maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="add arch audit blame bootstrap build-env buildcache cd change checksum ci clean commands compiler compilers concretize concretise config containerize containerise create debug deconcretize dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse logs maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -552,7 +552,7 @@ _spack_bootstrap_mirror() {
 _spack_build_env() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --clean --dirty -U --fresh --reuse --fresh-roots --reuse-deps --deprecated --dump --pickle"
+        SPACK_COMPREPLY="-h --help --clean --dirty -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated --dump --pickle"
     else
         _all_packages
     fi
@@ -697,7 +697,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --prune-dag --no-prune-dag --prune-externals --no-prune-externals --check-index-only --artifacts-root -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
+    SPACK_COMPREPLY="-h --help --output-file --prune-dag --no-prune-dag --prune-unaffected --no-prune-unaffected --prune-externals --no-prune-externals --check-index-only --artifacts-root -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
 }
 
 _spack_ci_rebuild_index() {
@@ -732,15 +732,6 @@ _spack_clean() {
         SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -b --bootstrap -a --all"
     else
         _all_packages
-    fi
-}
-
-_spack_clone() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help -r --remote"
-    else
-        SPACK_COMPREPLY=""
     fi
 }
 
@@ -820,11 +811,11 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
-    SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
+    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
 }
 
 _spack_concretise() {
-    SPACK_COMPREPLY="-h --help -f --force --test -q --quiet -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
+    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
 }
 
 _spack_config() {
@@ -1003,7 +994,7 @@ _spack_deprecate() {
 _spack_dev_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -n --no-checksum -d --source-path -i --ignore-dependencies --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help -j --jobs -n --no-checksum -d --source-path -i --ignore-dependencies --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1223,7 +1214,7 @@ _spack_external_read_cray_manifest() {
 _spack_fetch() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum -m --missing -D --dependencies -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help -n --no-checksum -m --missing -D --dependencies -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1357,7 +1348,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -p --concurrent-packages -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --use-buildcache --include-build-deps --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete --add --no-add -f --file --clean --dirty --test --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help --only -u --until -p --concurrent-packages -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --use-buildcache --include-build-deps --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete --add --no-add --clean --dirty --test --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1457,14 +1448,14 @@ _spack_mirror() {
     then
         SPACK_COMPREPLY="-h --help -n --no-checksum"
     else
-        SPACK_COMPREPLY="create destroy add remove rm set-url set list"
+        SPACK_COMPREPLY="create destroy add remove rm set-url set list ls"
     fi
 }
 
 _spack_mirror_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --exclude-file --exclude-specs --skip-unstable-versions -D --dependencies -n --versions-per-spec --private -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help -d --directory -a --all --file --exclude-file --exclude-specs --skip-unstable-versions -D --dependencies -n --versions-per-spec --private -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1520,6 +1511,10 @@ _spack_mirror_set() {
 }
 
 _spack_mirror_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_mirror_ls() {
     SPACK_COMPREPLY="-h --help --scope"
 }
 
@@ -1643,7 +1638,7 @@ _spack_module_tcl_setdefault() {
 _spack_patch() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help -n --no-checksum -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1793,7 +1788,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list ls add set remove rm migrate"
+        SPACK_COMPREPLY="create list ls add set remove rm migrate update"
     fi
 }
 
@@ -1807,11 +1802,11 @@ _spack_repo_create() {
 }
 
 _spack_repo_list() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --names --namespaces"
 }
 
 _spack_repo_ls() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --names --namespaces"
 }
 
 _spack_repo_add() {
@@ -1859,6 +1854,15 @@ _spack_repo_migrate() {
     fi
 }
 
+_spack_repo_update() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --remote -r --scope --branch -b --tag -t --commit -c"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
 _spack_resource() {
     if $list_options
     then
@@ -1893,7 +1897,7 @@ _spack_restage() {
 _spack_solve() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --show --timers --stats -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json --format -c --cover -t --types -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help --show --timers --stats -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json --format -c --cover -t --types -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1902,7 +1906,7 @@ _spack_solve() {
 _spack_spec() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json --format -c --cover -t --types -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json --format -c --cover -t --types -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1911,7 +1915,7 @@ _spack_spec() {
 _spack_stage() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum -p --path -e --exclude -s --skip-installed -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help -n --no-checksum -p --path -e --exclude -s --skip-installed -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -2001,7 +2005,7 @@ _spack_test_remove() {
 _spack_test_env() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --clean --dirty -U --fresh --reuse --fresh-roots --reuse-deps --deprecated --dump --pickle"
+        SPACK_COMPREPLY="-h --help --clean --dirty -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated --dump --pickle"
     else
         _all_packages
     fi

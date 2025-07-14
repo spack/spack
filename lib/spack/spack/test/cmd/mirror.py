@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -34,16 +35,16 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.regression("8083")
-def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
+def test_regression_8083(tmp_path: pathlib.Path, capfd, mock_packages, mock_fetch, config):
     with capfd.disabled():
-        output = mirror("create", "-d", str(tmpdir), "externaltool")
+        output = mirror("create", "-d", str(tmp_path), "externaltool")
     assert "Skipping" in output
     assert "as it is an external spec" in output
 
 
 # Unit tests should not be affected by the user's managed environments
 @pytest.mark.regression("12345")
-def test_mirror_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fetch):
+def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mock_fetch):
     mirror_dir = str(tmp_path / "mirror")
     env_name = "test"
 
@@ -64,7 +65,9 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fe
 
 
 # Test for command line-specified spec in concretized environment
-def test_mirror_spec_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fetch):
+def test_mirror_spec_from_env(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mock_fetch
+):
     mirror_dir = str(tmp_path / "mirror-B")
     env_name = "test"
 
@@ -84,18 +87,19 @@ def test_mirror_spec_from_env(mutable_mock_env_path, tmp_path, mock_packages, mo
 
 
 @pytest.fixture
-def source_for_pkg_with_hash(mock_packages, tmpdir):
+def source_for_pkg_with_hash(mock_packages, tmp_path: pathlib.Path):
     s = spack.concretize.concretize_one("trivial-pkg-with-valid-hash")
     local_url_basename = os.path.basename(s.package.url)
-    local_path = os.path.join(str(tmpdir), local_url_basename)
-    with open(local_path, "w", encoding="utf-8") as f:
-        f.write(s.package.hashed_content)
-    local_url = url_util.path_to_file_url(local_path)
+    local_path = tmp_path / local_url_basename
+    local_path.write_text(s.package.hashed_content, encoding="utf-8")
+    local_url = url_util.path_to_file_url(str(local_path))
     s.package.versions[spack.version.Version("1.0")]["url"] = local_url
 
 
-def test_mirror_skip_unstable(tmpdir_factory, mock_packages, config, source_for_pkg_with_hash):
-    mirror_dir = str(tmpdir_factory.mktemp("mirror-dir"))
+def test_mirror_skip_unstable(
+    tmp_path_factory: pytest.TempPathFactory, mock_packages, config, source_for_pkg_with_hash
+):
+    mirror_dir = str(tmp_path_factory.mktemp("mirror-dir"))
 
     specs = [
         spack.concretize.concretize_one(x) for x in ["git-test", "trivial-pkg-with-valid-hash"]
@@ -158,17 +162,17 @@ def test_exclude_specs_public_mirror(mock_packages, config):
     assert any(s.name == "no-redistribute-dependent" for s in mirror_specs)
 
 
-def test_exclude_file(mock_packages, tmpdir, config):
-    exclude_path = os.path.join(str(tmpdir), "test-exclude.txt")
-    with open(exclude_path, "w", encoding="utf-8") as exclude_file:
-        exclude_file.write(
-            """\
+def test_exclude_file(mock_packages, tmp_path: pathlib.Path, config):
+    exclude_path = tmp_path / "test-exclude.txt"
+    exclude_path.write_text(
+        """\
 mpich@3.0.1:3.0.2
 mpich@1.0
-"""
-        )
+""",
+        encoding="utf-8",
+    )
 
-    args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=exclude_path)
+    args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=str(exclude_path))
 
     mirror_specs, _ = spack.cmd.mirror._specs_and_action(args)
     expected_include = set(
@@ -375,38 +379,28 @@ def test_mirror_destroy(
     mock_archive,
     mutable_config,
     monkeypatch,
-    tmpdir,
+    tmp_path: pathlib.Path,
 ):
     # Create a temp mirror directory for buildcache usage
-    mirror_dir = tmpdir.join("mirror_dir")
-    mirror_url = "file://{0}".format(mirror_dir.strpath)
+    mirror_dir = tmp_path / "mirror_dir"
+    mirror_url = mirror_dir.as_uri()
     mirror("add", "atest", mirror_url)
 
     spec_name = "libdwarf"
 
     # Put a binary package in a buildcache
     install("--fake", "--no-cache", spec_name)
-    buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
+    buildcache("push", "-u", "-f", str(mirror_dir), spec_name)
 
     blobs_path = bindist.buildcache_relative_blobs_path()
 
-    contents = os.listdir(mirror_dir.strpath)
+    contents = os.listdir(str(mirror_dir))
     assert blobs_path in contents
 
     # Destroy mirror by name
     mirror("destroy", "-m", "atest")
 
-    assert not os.path.exists(mirror_dir.strpath)
-
-    buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
-
-    contents = os.listdir(mirror_dir.strpath)
-    assert blobs_path in contents
-
-    # Destroy mirror by url
-    mirror("destroy", "--mirror-url", mirror_url)
-
-    assert not os.path.exists(mirror_dir.strpath)
+    assert not os.path.exists(str(mirror_dir))
 
     uninstall("-y", spec_name)
     mirror("remove", "atest")
@@ -479,12 +473,14 @@ class TestMirrorCreate:
         assert not any(s.satisfies(y) for s in mirror_specs for y in not_expected)
 
     @pytest.mark.parametrize("abstract_specs", [("bowtie", "callpath")])
-    def test_specs_from_cli_are_the_same_as_from_file(self, abstract_specs, config, tmpdir):
+    def test_specs_from_cli_are_the_same_as_from_file(
+        self, abstract_specs, config, tmp_path: pathlib.Path
+    ):
         args = MockMirrorArgs(specs=" ".join(abstract_specs))
         specs_from_cli = spack.cmd.mirror.concrete_specs_from_user(args)
 
-        input_file = tmpdir.join("input.txt")
-        input_file.write("\n".join(abstract_specs))
+        input_file = tmp_path / "input.txt"
+        input_file.write_text("\n".join(abstract_specs))
         args = MockMirrorArgs(file=str(input_file))
         specs_from_file = spack.cmd.mirror.concrete_specs_from_user(args)
 
@@ -592,7 +588,7 @@ def test_binary_provenance_url_fails_mirror_resolves_commit(
     mock_git_repository,
     mock_packages,
     monkeypatch,
-    tmpdir,
+    tmp_path: pathlib.Path,
     mutable_config,
     mirror_knows_commit,
 ):
@@ -605,7 +601,7 @@ def test_binary_provenance_url_fails_mirror_resolves_commit(
 
     gold_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
     # create a fake mirror
-    mirror_path = str(tmpdir.join("test-mirror"))
+    mirror_path = str(tmp_path / "test-mirror")
     if mirror_knows_commit:
         mirror("create", "-d", mirror_path, f"git-test-commit@main commit={gold_commit}")
     else:
@@ -621,7 +617,7 @@ def test_binary_provenance_url_fails_mirror_resolves_commit(
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
 def test_binary_provenance_relative_to_mirror(
-    git, mock_git_version_info, mock_packages, monkeypatch, tmpdir, mutable_config
+    git, mock_git_version_info, mock_packages, monkeypatch, tmp_path: pathlib.Path, mutable_config
 ):
     """Integration test to evaluate how commit resolution should behave with a mirror
 
@@ -635,14 +631,14 @@ def test_binary_provenance_relative_to_mirror(
     )
 
     # create a fake mirror
-    mirror_path = str(tmpdir.join("test-mirror"))
+    mirror_path = str(tmp_path / "test-mirror")
     mirror("create", "-d", mirror_path, "git-test-commit@main")
     mirror("add", "--type", "source", "test-mirror", mirror_path)
     mirror_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
 
     # push the commit past mirror
     git("-C", repo_path, "checkout", "main", output=str)
-    git("-C", repo_path, "commit", "--allow-empty", "-m", "bump sha")
+    git("-C", repo_path, "commit", "--no-gpg-sign", "--allow-empty", "-m", "bump sha")
     head_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
 
     spec_mirror = spack.concretize.concretize_one("git-test-commit@main")

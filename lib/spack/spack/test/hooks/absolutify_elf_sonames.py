@@ -4,6 +4,7 @@
 
 
 import os
+import pathlib
 
 import pytest
 
@@ -34,7 +35,7 @@ class ExecutableIntercept:
 
 @pytest.mark.requires_executables("gcc")
 @skip_unless_linux
-def test_shared_libraries_visitor(tmpdir):
+def test_shared_libraries_visitor(tmp_path: pathlib.Path):
     """Integration test for soname rewriting"""
     gcc = Executable("gcc")
 
@@ -46,7 +47,7 @@ def test_shared_libraries_visitor(tmpdir):
     # ./mydir/parent_dir -> ..              # a symlinked dir, causing a cycle
     # ./mydir/skip_symlink -> ../libskipme  # a symlink to a library
 
-    with fs.working_dir(str(tmpdir)):
+    with fs.working_dir(str(tmp_path)):
         with open("hello.c", "w", encoding="utf-8") as f:
             f.write("int main(){return 0;}")
         gcc("hello.c", "-o", "no-soname.so", "--shared")
@@ -59,7 +60,7 @@ def test_shared_libraries_visitor(tmpdir):
 
     # Visit the whole prefix, but exclude `skip_symlink`
     visitor = SharedLibrariesVisitor(exclude_list=["skip_symlink"])
-    fs.visit_directory_tree(str(tmpdir), visitor)
+    fs.visit_directory_tree(str(tmp_path), visitor)
     relative_paths = visitor.get_shared_libraries_relative_paths()
 
     assert "no-soname.so" in relative_paths
@@ -69,9 +70,9 @@ def test_shared_libraries_visitor(tmpdir):
 
     # Run the full hook of finding libs and setting sonames.
     patchelf = ExecutableIntercept()
-    find_and_patch_sonames(str(tmpdir), ["skip_symlink"], patchelf)
+    find_and_patch_sonames(str(tmp_path), ["skip_symlink"], patchelf)
     assert len(patchelf.calls) == 2
-    elf_1 = tmpdir.join("no-soname.so")
-    elf_2 = tmpdir.join("soname.so")
-    assert ("--set-soname", elf_1, elf_1) in patchelf.calls
-    assert ("--set-soname", elf_2, elf_2) in patchelf.calls
+    elf_1 = tmp_path / "no-soname.so"
+    elf_2 = tmp_path / "soname.so"
+    assert ("--set-soname", str(elf_1), str(elf_1)) in patchelf.calls
+    assert ("--set-soname", str(elf_2), str(elf_2)) in patchelf.calls

@@ -58,9 +58,9 @@ The ``BundlePackage`` base class does not provide any phases by default
 since the bundle does not represent a build system.
 
 
-^^^
+^^^^^^
 URL
-^^^
+^^^^^^
 
 The ``url`` property does not have meaning since there is no package-specific
 code to fetch.

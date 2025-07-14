@@ -9,7 +9,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set, Tuple, Union
 
 import llnl.string as string
 import llnl.util.filesystem as fs
@@ -134,7 +134,7 @@ def _env_create(
     *,
     init_file: Optional[str] = None,
     dir: bool = False,
-    with_view: Optional[str] = None,
+    with_view: Optional[Union[bool, str]] = None,
     keep_relative: bool = False,
     include_concrete: Optional[List[str]] = None,
 ):

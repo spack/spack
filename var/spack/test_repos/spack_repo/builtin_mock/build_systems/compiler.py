@@ -12,9 +12,9 @@ import llnl.util.tty as tty
 from llnl.util.lang import classproperty, memoized
 
 import spack
-import spack.compilers.error
 import spack.package_base
 import spack.util.executable
+from spack.package import CompilerError
 
 # Local "type" for type hints
 Path = Union[str, pathlib.Path]
@@ -169,13 +169,11 @@ class CompilerPackage(spack.package_base.PackageBase):
     def standard_flag(self, *, language: str, standard: str) -> str:
         """Returns the flag used to enforce a given standard for a language"""
         if language not in self.supported_languages:
-            raise spack.compilers.error.UnsupportedCompilerFlag(
-                f"{self.spec} does not provide the '{language}' language"
-            )
+            raise CompilerError(f"{self.spec} does not provide the '{language}' language")
         try:
             return self._standard_flag(language=language, standard=standard)
         except (KeyError, RuntimeError) as e:
-            raise spack.compilers.error.UnsupportedCompilerFlag(
+            raise CompilerError(
                 f"{self.spec} does not provide the '{language}' standard {standard}"
             ) from e
 

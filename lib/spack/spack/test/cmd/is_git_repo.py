@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import sys
 
 import pytest
@@ -16,7 +17,7 @@ from spack.version import ver
 
 
 @pytest.fixture(scope="function")
-def git_tmp_worktree(git, tmpdir, mock_git_version_info):
+def git_tmp_worktree(git, tmp_path: pathlib.Path, mock_git_version_info):
     """Create new worktree in a temporary folder and monkeypatch
     spack.paths.prefix to point to it.
     """
@@ -33,10 +34,10 @@ def git_tmp_worktree(git, tmpdir, mock_git_version_info):
         # Path length is occasionally too long on Windows
         # the following reduces the path length to acceptable levels
         if sys.platform == "win32":
-            long_pth = str(tmpdir).split(os.path.sep)
+            long_pth = str(tmp_path).split(os.path.sep)
             tmp_worktree = os.path.sep.join(long_pth[:-1])
         else:
-            tmp_worktree = str(tmpdir)
+            tmp_worktree = str(tmp_path)
         worktree_root = os.path.sep.join([tmp_worktree, "wrktree"])
 
         mkdirp(worktree_root)
@@ -55,8 +56,8 @@ def test_is_git_repo_in_worktree(git_tmp_worktree):
     assert spack.cmd.is_git_repo(git_tmp_worktree)
 
 
-def test_spack_is_git_repo_nongit(tmpdir, monkeypatch):
+def test_spack_is_git_repo_nongit(tmp_path: pathlib.Path, monkeypatch):
     """Verify that spack.cmd.spack_is_git_repo() correctly returns False if we
     are in a non-git directory.
     """
-    assert not spack.cmd.is_git_repo(str(tmpdir))
+    assert not spack.cmd.is_git_repo(str(tmp_path))

@@ -110,8 +110,7 @@ be; see :ref:`xdg_overrides` and :ref:`config-file-variables` for more on
 When Spack builds a package, it creates a temporary directory within the
 ``build_stage``. After the package is successfully installed, Spack deletes
 the temporary directory it used to build. Unsuccessful builds are not
-deleted, but you can manually purge them with :ref:`spack clean --stage
-<cmd-spack-clean>`.
+deleted, but you can manually purge them with ``spack clean --stage``.
 
 .. note::
 
@@ -124,8 +123,7 @@ deleted, but you can manually purge them with :ref:`spack clean --stage
 
 Location to cache downloaded tarballs and repositories. By default,
 these are stored in ``$spack/opt/data/downloads``. These are stored
-indefinitely by default and can be purged with :ref:`spack
-clean --downloads <cmd-spack-clean>`.
+indefinitely by default and can be purged with ``spack clean --downloads``.
 
 .. _Misc Cache:
 
@@ -133,10 +131,17 @@ clean --downloads <cmd-spack-clean>`.
 ``misc_cache``
 --------------------
 
-Temporary directory to store long-lived cache files, such as indices
-of packages available in repositories.  Defaults to
+Temporary directory to store long-lived cache files, such as indices of
+packages available in repositories.  Defaults to
 ``~/.local/state/spack/$spack_instance_id/spack``.  Can be purged with
-:ref:`spack clean --misc-cache <cmd-spack-clean>`.
+``spack clean --misc-cache``.
+
+In some cases, e.g., if you work with many Spack instances or many different
+versions of Spack, it makes sense to have a cache per instance or per version.
+You can do that by changing the value to either:
+
+* ``~/.spack/$spack_instance_id/cache`` for per-instance caches, or
+* ``~/.spack/$spack_short_version/cache`` for per-spack-version caches.
 
 --------------------
 ``verify_ssl``
@@ -357,7 +362,7 @@ about the run that produced a given solver result.
 This cache is a subcache of the :ref:`Misc Cache` and as such will be cleaned when the Misc
 Cache is cleaned.
 
-When ``false`` or ommitted, all concretization requests will be performed from scatch
+When ``false`` or omitted, all concretization requests will be performed from scatch
 
 ----------------------------
 ``concretization_cache:url``

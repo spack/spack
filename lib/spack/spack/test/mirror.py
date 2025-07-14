@@ -4,6 +4,7 @@
 
 import filecmp
 import os
+import pathlib
 
 import pytest
 
@@ -275,13 +276,13 @@ class MockFetcher:
 
 
 @pytest.mark.regression("14067")
-def test_mirror_layout_make_alias(tmpdir):
+def test_mirror_layout_make_alias(tmp_path: pathlib.Path):
     """Confirm that the cosmetic symlink created in the mirror cache (which may
     be relative) targets the storage path correctly.
     """
     alias = os.path.join("zlib", "zlib-1.2.11.tar.gz")
     path = os.path.join("_source-cache", "archive", "c3", "c3e5.tar.gz")
-    cache = spack.caches.MirrorCache(root=str(tmpdir), skip_unstable_versions=False)
+    cache = spack.caches.MirrorCache(root=str(tmp_path), skip_unstable_versions=False)
     layout = spack.mirrors.layout.DefaultLayout(alias, path)
 
     cache.store(MockFetcher(), layout.path)
@@ -343,7 +344,7 @@ def test_update_4():
 
 
 @pytest.mark.parametrize("direction", ["fetch", "push"])
-def test_update_connection_params(direction, tmpdir, monkeypatch):
+def test_update_connection_params(direction, monkeypatch):
     """Test whether new connection params expand the mirror config to a dict."""
     m = spack.mirrors.mirror.Mirror("https://example.com", "example")
 
@@ -427,7 +428,7 @@ def test_update_connection_params(direction, tmpdir, monkeypatch):
     assert m.get_access_token(direction) == "expanded_token"
 
 
-def test_mirror_name_or_url_dir_parsing(tmp_path):
+def test_mirror_name_or_url_dir_parsing(tmp_path: pathlib.Path):
     curdir = tmp_path / "mirror"
     curdir.mkdir()
 

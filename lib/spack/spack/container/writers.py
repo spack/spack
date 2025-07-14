@@ -243,7 +243,7 @@ class PathContext(tengine.Context):
 
         Returns:
             Enough information to know how to update the cache, install
-            a list opf packages, and clean in the end.
+            a list of packages, and clean in the end.
         """
         if not package_list:
             return package_list

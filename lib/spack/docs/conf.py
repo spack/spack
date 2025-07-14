@@ -50,7 +50,7 @@ sys.path[0:0] = [
     os.path.abspath(".spack/spack-packages/repos"),
 ]
 
-subprocess.call(["spack", "list"])
+subprocess.call(["spack", "list"], stdout=subprocess.DEVNULL)
 
 # Generate a command index if an update is needed -- this also clones the package repository.
 subprocess.call(
@@ -141,9 +141,12 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinx_copybutton",
     "sphinx_design",
     "sphinxcontrib.programoutput",
 ]
+
+copybutton_exclude = ".linenos, .gp, .go"
 
 # Set default graphviz options
 graphviz_dot_args = [

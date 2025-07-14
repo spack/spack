@@ -160,7 +160,7 @@ of some build tool. For instance, in the figure below, the latest `py-shapely` r
 while `py-numpy` still needs an older version:
 
 .. figure::  images/shapely_duplicates.svg
-   :scale: 70 %
+   :width: 100%
    :align: center
 
 Up to Spack v0.20, ``duplicates:strategy:none`` was the default (and only) behavior. From Spack v0.21, the

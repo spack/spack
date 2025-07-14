@@ -327,14 +327,16 @@ class TestTcl:
         with pytest.raises(spack.modules.common.ModulesError):
             modulefile_content("mpileaks")
 
-    def test_module_index(self, module_configuration, factory, tmpdir_factory):
+    def test_module_index(
+        self, module_configuration, factory, tmp_path_factory: pytest.TempPathFactory
+    ):
         module_configuration("suffix")
 
         w1, s1 = factory("mpileaks")
         w2, s2 = factory("callpath")
         w3, s3 = factory("openblas")
 
-        test_root = str(tmpdir_factory.mktemp("module-root"))
+        test_root = str(tmp_path_factory.mktemp("module-root"))
 
         spack.modules.common.generate_module_index(test_root, [w1, w2])
 

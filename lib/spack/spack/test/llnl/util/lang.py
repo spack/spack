@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import re
 import sys
 from datetime import datetime, timedelta
@@ -19,15 +20,15 @@ def now():
 
 
 @pytest.fixture()
-def module_path(tmpdir):
-    m = tmpdir.join("foo.py")
+def module_path(tmp_path: pathlib.Path):
+    m = tmp_path / "foo.py"
     content = """
 import os
 
 value = 1
 path = os.path.join('/usr', 'bin')
 """
-    m.write(content)
+    m.write_text(content)
 
     yield str(m)
 

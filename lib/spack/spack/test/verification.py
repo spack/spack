@@ -4,6 +4,7 @@
 
 """Tests for the `spack.verify` module"""
 import os
+import pathlib
 import shutil
 import stat
 
@@ -20,36 +21,36 @@ import spack.verify
 pytestmark = pytest.mark.not_on_windows("Tests fail on Win")
 
 
-def test_link_manifest_entry(tmpdir):
+def test_link_manifest_entry(tmp_path: pathlib.Path):
     # Test that symlinks are properly checked against the manifest.
     # Test that the appropriate errors are generated when the check fails.
-    file = str(tmpdir.join("file"))
-    open(file, "a", encoding="utf-8").close()
-    link = str(tmpdir.join("link"))
-    os.symlink(file, link)
+    file = tmp_path / "file"
+    file.touch()
+    link = tmp_path / "link"
+    os.symlink(str(file), str(link))
 
-    data = spack.verify.create_manifest_entry(link)
-    assert data["dest"] == file
+    data = spack.verify.create_manifest_entry(str(link))
+    assert data["dest"] == str(file)
     assert all(x in data for x in ("mode", "owner", "group"))
 
-    results = spack.verify.check_entry(link, data)
+    results = spack.verify.check_entry(str(link), data)
     assert not results.has_errors()
 
-    file2 = str(tmpdir.join("file2"))
-    open(file2, "a", encoding="utf-8").close()
-    os.remove(link)
-    os.symlink(file2, link)
+    file2 = tmp_path / "file2"
+    file2.touch()
+    os.remove(str(link))
+    os.symlink(str(file2), str(link))
 
-    results = spack.verify.check_entry(link, data)
+    results = spack.verify.check_entry(str(link), data)
     assert results.has_errors()
-    assert link in results.errors
-    assert results.errors[link] == ["link"]
+    assert str(link) in results.errors
+    assert results.errors[str(link)] == ["link"]
 
 
-def test_dir_manifest_entry(tmpdir):
+def test_dir_manifest_entry(tmp_path: pathlib.Path):
     # Test that directories are properly checked against the manifest.
     # Test that the appropriate errors are generated when the check fails.
-    dirent = str(tmpdir.join("dir"))
+    dirent = str(tmp_path / "dir")
     fs.mkdirp(dirent)
 
     data = spack.verify.create_manifest_entry(dirent)
@@ -67,13 +68,13 @@ def test_dir_manifest_entry(tmpdir):
     assert results.errors[dirent] == ["mode"]
 
 
-def test_file_manifest_entry(tmpdir):
+def test_file_manifest_entry(tmp_path: pathlib.Path):
     # Test that files are properly checked against the manifest.
     # Test that the appropriate errors are generated when the check fails.
     orig_str = "This is a file"
     new_str = "The file has changed"
 
-    file = str(tmpdir.join("dir"))
+    file = str(tmp_path / "dir")
     with open(file, "w", encoding="utf-8") as f:
         f.write(orig_str)
 
@@ -109,10 +110,10 @@ def test_file_manifest_entry(tmpdir):
     assert sorted(results.errors[file]) == sorted(expected)
 
 
-def test_check_chmod_manifest_entry(tmpdir):
+def test_check_chmod_manifest_entry(tmp_path: pathlib.Path):
     # Check that the verification properly identifies errors for files whose
     # permissions have been modified.
-    file = str(tmpdir.join("dir"))
+    file = str(tmp_path / "dir")
     with open(file, "w", encoding="utf-8") as f:
         f.write("This is a file")
 
@@ -126,9 +127,9 @@ def test_check_chmod_manifest_entry(tmpdir):
     assert results.errors[file] == ["mode"]
 
 
-def test_check_prefix_manifest(tmpdir):
+def test_check_prefix_manifest(tmp_path: pathlib.Path):
     # Test the verification of an entire prefix and its contents
-    prefix_path = tmpdir.join("prefix")
+    prefix_path = tmp_path / "prefix"
     prefix = str(prefix_path)
 
     spec = spack.spec.Spec("libelf")
@@ -140,9 +141,9 @@ def test_check_prefix_manifest(tmpdir):
     assert prefix in results.errors
     assert results.errors[prefix] == ["manifest missing"]
 
-    metadata_dir = str(prefix_path.join(".spack"))
-    bin_dir = str(prefix_path.join("bin"))
-    other_dir = str(prefix_path.join("other"))
+    metadata_dir = str(prefix_path / ".spack")
+    bin_dir = str(prefix_path / "bin")
+    other_dir = str(prefix_path / "other")
 
     for d in (metadata_dir, bin_dir, other_dir):
         fs.mkdirp(d)
@@ -184,45 +185,45 @@ def test_check_prefix_manifest(tmpdir):
     assert results.errors[spec.prefix] == ["manifest corrupted"]
 
 
-def test_single_file_verification(tmpdir):
+def test_single_file_verification(tmp_path: pathlib.Path):
     # Test the API to verify a single file, including finding the package
     # to which it belongs
-    filedir = os.path.join(str(tmpdir), "a", "b", "c", "d")
-    filepath = os.path.join(filedir, "file")
-    metadir = os.path.join(str(tmpdir), spack.store.STORE.layout.metadata_dir)
+    filedir = tmp_path / "a" / "b" / "c" / "d"
+    filepath = filedir / "file"
+    metadir = tmp_path / spack.store.STORE.layout.metadata_dir
 
-    fs.mkdirp(filedir)
-    fs.mkdirp(metadir)
+    fs.mkdirp(str(filedir))
+    fs.mkdirp(str(metadir))
 
-    with open(filepath, "w", encoding="utf-8") as f:
+    with open(str(filepath), "w", encoding="utf-8") as f:
         f.write("I'm a file")
 
-    data = spack.verify.create_manifest_entry(filepath)
+    data = spack.verify.create_manifest_entry(str(filepath))
 
     manifest_file = os.path.join(metadir, spack.store.STORE.layout.manifest_file_name)
 
     with open(manifest_file, "w", encoding="utf-8") as f:
-        sjson.dump({filepath: data}, f)
+        sjson.dump({str(filepath): data}, f)
 
-    results = spack.verify.check_file_manifest(filepath)
+    results = spack.verify.check_file_manifest(str(filepath))
     assert not results.has_errors()
 
-    os.utime(filepath, (0, 0))
-    with open(filepath, "w", encoding="utf-8") as f:
+    os.utime(str(filepath), (0, 0))
+    with open(str(filepath), "w", encoding="utf-8") as f:
         f.write("I changed.")
 
-    results = spack.verify.check_file_manifest(filepath)
+    results = spack.verify.check_file_manifest(str(filepath))
 
     expected = ["hash"]
-    mtime = os.stat(filepath).st_mtime
+    mtime = os.stat(str(filepath)).st_mtime
     if mtime != data["time"]:
         expected.append("mtime")
 
     assert results.has_errors()
-    assert filepath in results.errors
-    assert sorted(results.errors[filepath]) == sorted(expected)
+    assert str(filepath) in results.errors
+    assert sorted(results.errors[str(filepath)]) == sorted(expected)
 
-    shutil.rmtree(metadir)
+    shutil.rmtree(str(metadir))
     results = spack.verify.check_file_manifest(filepath)
     assert results.has_errors()
     assert results.errors[filepath] == ["not owned by any package"]

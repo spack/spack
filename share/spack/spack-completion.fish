@@ -242,7 +242,7 @@ function __fish_spack_providers
 end
 
 function __fish_spack_repos
-    spack repo list | awk {'printf ("%s\t%s", $1, $2)'}
+    spack repo list --names
 end
 
 function __fish_spack_scopes
@@ -359,7 +359,6 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a change -d 'change
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a checksum -d 'checksum available versions of a package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a ci -d 'manage continuous integration pipelines'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a clean -d 'remove temporary build files and/or downloaded archives'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a clone -d 'create a new installation of spack in another prefix'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a commands -d 'list available spack commands'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a compiler -d 'manage compilers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a compilers -d 'list available compilers'
@@ -667,7 +666,7 @@ complete -c spack -n '__fish_spack_using_command bootstrap mirror' -l dev -f -a 
 complete -c spack -n '__fish_spack_using_command bootstrap mirror' -l dev -d 'download dev dependencies too'
 
 # spack build-env
-set -g __fish_spack_optspecs_spack_build_env h/help clean dirty U/fresh reuse fresh-roots deprecated dump= pickle=
+set -g __fish_spack_optspecs_spack_build_env h/help clean dirty f/force U/fresh reuse fresh-roots deprecated dump= pickle=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 build-env' -f -a '(__fish_spack_build_env_spec)'
 complete -c spack -n '__fish_spack_using_command build-env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command build-env' -s h -l help -d 'show this help message and exit'
@@ -675,6 +674,8 @@ complete -c spack -n '__fish_spack_using_command build-env' -l clean -f -a dirty
 complete -c spack -n '__fish_spack_using_command build-env' -l clean -d 'unset harmful variables in the build environment (default)'
 complete -c spack -n '__fish_spack_using_command build-env' -l dirty -f -a dirty
 complete -c spack -n '__fish_spack_using_command build-env' -l dirty -d 'preserve user environment in spack'"'"'s build environment (danger!)'
+complete -c spack -n '__fish_spack_using_command build-env' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command build-env' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command build-env' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command build-env' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command build-env' -l reuse -f -a concretizer_reuse
@@ -950,7 +951,7 @@ complete -c spack -n '__fish_spack_using_command ci' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -d 'show this help message and exit'
 
 # spack ci generate
-set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= prune-dag no-prune-dag prune-externals no-prune-externals check-index-only artifacts-root= U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= prune-dag no-prune-dag prune-unaffected no-prune-unaffected prune-externals no-prune-externals check-index-only artifacts-root= f/force U/fresh reuse fresh-roots deprecated j/jobs=
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ci generate' -l output-file -r -f -a output_file
@@ -959,6 +960,10 @@ complete -c spack -n '__fish_spack_using_command ci generate' -l prune-dag -f -a
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-dag -d 'skip up-to-date specs'
 complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-dag -f -a prune_dag
 complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-dag -d 'process up-to-date specs'
+complete -c spack -n '__fish_spack_using_command ci generate' -l prune-unaffected -f -a prune_unaffected
+complete -c spack -n '__fish_spack_using_command ci generate' -l prune-unaffected -d 'skip up-to-date specs'
+complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-unaffected -f -a prune_unaffected
+complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-unaffected -d 'process up-to-date specs'
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-externals -f -a prune_externals
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-externals -d 'skip external specs'
 complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-externals -f -a prune_externals
@@ -967,6 +972,8 @@ complete -c spack -n '__fish_spack_using_command ci generate' -l check-index-onl
 complete -c spack -n '__fish_spack_using_command ci generate' -l check-index-only -d 'only check spec state from buildcache indices'
 complete -c spack -n '__fish_spack_using_command ci generate' -l artifacts-root -r -f -a artifacts_root
 complete -c spack -n '__fish_spack_using_command ci generate' -l artifacts-root -r -d 'path to the root of the artifacts directory'
+complete -c spack -n '__fish_spack_using_command ci generate' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command ci generate' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command ci generate' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command ci generate' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command ci generate' -l reuse -f -a concretizer_reuse
@@ -1039,14 +1046,6 @@ complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -f -a 
 complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -d 'remove software and configuration needed to bootstrap Spack'
 complete -c spack -n '__fish_spack_using_command clean' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command clean' -s a -l all -d 'equivalent to -sdfmp (does not include --bootstrap)'
-
-# spack clone
-set -g __fish_spack_optspecs_spack_clone h/help r/remote=
-complete -c spack -n '__fish_spack_using_command_pos 0 clone' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command clone' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command clone' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command clone' -s r -l remote -r -f -a remote
-complete -c spack -n '__fish_spack_using_command clone' -s r -l remote -r -d 'name of the remote to clone from'
 
 # spack commands
 set -g __fish_spack_optspecs_spack_commands h/help update-completion a/aliases format= header= update=
@@ -1160,15 +1159,15 @@ complete -c spack -n '__fish_spack_using_command compilers' -l remote -f -a remo
 complete -c spack -n '__fish_spack_using_command compilers' -l remote -d 'list also compilers from registered buildcaches'
 
 # spack concretize
-set -g __fish_spack_optspecs_spack_concretize h/help f/force test= q/quiet U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_concretize h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs=
 complete -c spack -n '__fish_spack_using_command concretize' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command concretize' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command concretize' -s f -l force -f -a force
-complete -c spack -n '__fish_spack_using_command concretize' -s f -l force -d 're-concretize even if already concretized'
 complete -c spack -n '__fish_spack_using_command concretize' -l test -r -f -a 'root all'
 complete -c spack -n '__fish_spack_using_command concretize' -l test -r -d 'concretize with test dependencies of only root packages or all packages'
 complete -c spack -n '__fish_spack_using_command concretize' -s q -l quiet -f -a quiet
 complete -c spack -n '__fish_spack_using_command concretize' -s q -l quiet -d 'don'"'"'t print concretized specs'
+complete -c spack -n '__fish_spack_using_command concretize' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command concretize' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command concretize' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command concretize' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command concretize' -l reuse -f -a concretizer_reuse
@@ -1181,15 +1180,15 @@ complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -f 
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack concretise
-set -g __fish_spack_optspecs_spack_concretise h/help f/force test= q/quiet U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_concretise h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs=
 complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command concretise' -s f -l force -f -a force
-complete -c spack -n '__fish_spack_using_command concretise' -s f -l force -d 're-concretize even if already concretized'
 complete -c spack -n '__fish_spack_using_command concretise' -l test -r -f -a 'root all'
 complete -c spack -n '__fish_spack_using_command concretise' -l test -r -d 'concretize with test dependencies of only root packages or all packages'
 complete -c spack -n '__fish_spack_using_command concretise' -s q -l quiet -f -a quiet
 complete -c spack -n '__fish_spack_using_command concretise' -s q -l quiet -d 'don'"'"'t print concretized specs'
+complete -c spack -n '__fish_spack_using_command concretise' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command concretise' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command concretise' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command concretise' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command concretise' -l reuse -f -a concretizer_reuse
@@ -1412,7 +1411,7 @@ complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r
 complete -c spack -n '__fish_spack_using_command deprecate' -s l -l link-type -r -d '(deprecated)'
 
 # spack dev-build
-set -g __fish_spack_optspecs_spack_dev_build h/help j/jobs= n/no-checksum d/source-path= i/ignore-dependencies keep-prefix skip-patch q/quiet drop-in= test= b/before= u/until= clean dirty U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_dev_build h/help j/jobs= n/no-checksum d/source-path= i/ignore-dependencies keep-prefix skip-patch q/quiet drop-in= test= b/before= u/until= clean dirty f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 dev-build' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command dev-build' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command dev-build' -s h -l help -d 'show this help message and exit'
@@ -1442,6 +1441,8 @@ complete -c spack -n '__fish_spack_using_command dev-build' -l clean -f -a dirty
 complete -c spack -n '__fish_spack_using_command dev-build' -l clean -d 'unset harmful variables in the build environment (default)'
 complete -c spack -n '__fish_spack_using_command dev-build' -l dirty -f -a dirty
 complete -c spack -n '__fish_spack_using_command dev-build' -l dirty -d 'preserve user environment in spack'"'"'s build environment (danger!)'
+complete -c spack -n '__fish_spack_using_command dev-build' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command dev-build' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command dev-build' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command dev-build' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command dev-build' -l reuse -f -a concretizer_reuse
@@ -1800,7 +1801,7 @@ complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l
 complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l fail-on-error -d 'if a manifest file cannot be parsed, fail and report the full stack trace'
 
 # spack fetch
-set -g __fish_spack_optspecs_spack_fetch h/help n/no-checksum m/missing D/dependencies U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_fetch h/help n/no-checksum m/missing D/dependencies f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 fetch' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command fetch' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command fetch' -s h -l help -d 'show this help message and exit'
@@ -1810,6 +1811,8 @@ complete -c spack -n '__fish_spack_using_command fetch' -s m -l missing -f -a mi
 complete -c spack -n '__fish_spack_using_command fetch' -s m -l missing -d 'fetch only missing (not yet installed) dependencies'
 complete -c spack -n '__fish_spack_using_command fetch' -s D -l dependencies -f -a dependencies
 complete -c spack -n '__fish_spack_using_command fetch' -s D -l dependencies -d 'also fetch all dependencies'
+complete -c spack -n '__fish_spack_using_command fetch' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command fetch' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command fetch' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command fetch' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command fetch' -l reuse -f -a concretizer_reuse
@@ -2053,7 +2056,7 @@ complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -f -a
 complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -d 'list variants in strict name order; don'"'"'t group by condition'
 
 # spack install
-set -g __fish_spack_optspecs_spack_install h/help only= u/until= p/concurrent-packages= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum v/verbose fake only-concrete add no-add f/file= clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_install h/help only= u/until= p/concurrent-packages= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum v/verbose fake only-concrete add no-add clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 install' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command install' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command install' -s h -l help -d 'show this help message and exit'
@@ -2103,8 +2106,6 @@ complete -c spack -n '__fish_spack_using_command install' -l add -f -a add
 complete -c spack -n '__fish_spack_using_command install' -l add -d '(with environment) add spec to the environment as a root'
 complete -c spack -n '__fish_spack_using_command install' -l no-add -f -a add
 complete -c spack -n '__fish_spack_using_command install' -l no-add -d '(with environment) do not add spec to the environment as a root'
-complete -c spack -n '__fish_spack_using_command install' -s f -l file -r -f -a specfiles
-complete -c spack -n '__fish_spack_using_command install' -s f -l file -r -d 'read specs to install from .yaml files'
 complete -c spack -n '__fish_spack_using_command install' -l clean -f -a dirty
 complete -c spack -n '__fish_spack_using_command install' -l clean -d 'unset harmful variables in the build environment (default)'
 complete -c spack -n '__fish_spack_using_command install' -l dirty -f -a dirty
@@ -2124,6 +2125,8 @@ complete -c spack -n '__fish_spack_using_command install' -l cdash-track -r -f -
 complete -c spack -n '__fish_spack_using_command install' -l cdash-buildstamp -r -f -a cdash_buildstamp
 complete -c spack -n '__fish_spack_using_command install' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command install' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
+complete -c spack -n '__fish_spack_using_command install' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command install' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command install' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command install' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command install' -l reuse -f -a concretizer_reuse
@@ -2290,13 +2293,14 @@ complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a rm -d 'remo
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a set-url -d 'change the URL of a mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a set -d 'configure the connection details of a mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a list -d 'print out available mirrors to the console'
+complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a ls -d 'print out available mirrors to the console'
 complete -c spack -n '__fish_spack_using_command mirror' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command mirror' -s n -l no-checksum -f -a no_checksum
 complete -c spack -n '__fish_spack_using_command mirror' -s n -l no-checksum -d 'do not use checksums to verify downloaded files (unsafe)'
 
 # spack mirror create
-set -g __fish_spack_optspecs_spack_mirror_create h/help d/directory= a/all f/file= exclude-file= exclude-specs= skip-unstable-versions D/dependencies n/versions-per-spec= private U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_mirror_create h/help d/directory= a/all file= exclude-file= exclude-specs= skip-unstable-versions D/dependencies n/versions-per-spec= private f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 mirror create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command mirror create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror create' -s h -l help -d 'show this help message and exit'
@@ -2304,8 +2308,8 @@ complete -c spack -n '__fish_spack_using_command mirror create' -s d -l director
 complete -c spack -n '__fish_spack_using_command mirror create' -s d -l directory -r -d 'directory in which to create mirror'
 complete -c spack -n '__fish_spack_using_command mirror create' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command mirror create' -s a -l all -d 'mirror all versions of all packages in Spack, or all packages in the current environment if there is an active environment (this requires significant time and space)'
-complete -c spack -n '__fish_spack_using_command mirror create' -s f -l file -r -f -a file
-complete -c spack -n '__fish_spack_using_command mirror create' -s f -l file -r -d 'file with specs of packages to put in mirror'
+complete -c spack -n '__fish_spack_using_command mirror create' -l file -r -f -a file
+complete -c spack -n '__fish_spack_using_command mirror create' -l file -r -d 'file with specs of packages to put in mirror'
 complete -c spack -n '__fish_spack_using_command mirror create' -l exclude-file -r -f -a exclude_file
 complete -c spack -n '__fish_spack_using_command mirror create' -l exclude-file -r -d 'specs which Spack should not try to add to a mirror (listed in a file, one per line)'
 complete -c spack -n '__fish_spack_using_command mirror create' -l exclude-specs -r -f -a exclude_specs
@@ -2318,6 +2322,8 @@ complete -c spack -n '__fish_spack_using_command mirror create' -s n -l versions
 complete -c spack -n '__fish_spack_using_command mirror create' -s n -l versions-per-spec -r -d 'the number of versions to fetch for each spec, choose '"'"'all'"'"' to retrieve all versions of each package'
 complete -c spack -n '__fish_spack_using_command mirror create' -l private -f -a private
 complete -c spack -n '__fish_spack_using_command mirror create' -l private -d 'for a private mirror, include non-redistributable packages'
+complete -c spack -n '__fish_spack_using_command mirror create' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command mirror create' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command mirror create' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command mirror create' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command mirror create' -l reuse -f -a concretizer_reuse
@@ -2483,6 +2489,13 @@ complete -c spack -n '__fish_spack_using_command mirror list' -s h -l help -d 's
 complete -c spack -n '__fish_spack_using_command mirror list' -l scope -r -f -a '_builtin defaults:base defaults system end-user site user this-spack command_line'
 complete -c spack -n '__fish_spack_using_command mirror list' -l scope -r -d 'configuration scope to read from'
 
+# spack mirror ls
+set -g __fish_spack_optspecs_spack_mirror_ls h/help scope=
+complete -c spack -n '__fish_spack_using_command mirror ls' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command mirror ls' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command mirror ls' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command mirror ls' -l scope -r -d 'configuration scope to read from'
+
 # spack module
 set -g __fish_spack_optspecs_spack_module h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 module' -f -a lmod -d 'manipulate hierarchical module files'
@@ -2615,12 +2628,14 @@ complete -c spack -n '__fish_spack_using_command module tcl setdefault' -s h -l 
 complete -c spack -n '__fish_spack_using_command module tcl setdefault' -s h -l help -d 'show this help message and exit'
 
 # spack patch
-set -g __fish_spack_optspecs_spack_patch h/help n/no-checksum U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_patch h/help n/no-checksum f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 patch' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command patch' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command patch' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command patch' -s n -l no-checksum -f -a no_checksum
 complete -c spack -n '__fish_spack_using_command patch' -s n -l no-checksum -d 'do not use checksums to verify downloaded files (unsafe)'
+complete -c spack -n '__fish_spack_using_command patch' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command patch' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command patch' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command patch' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command patch' -l reuse -f -a concretizer_reuse
@@ -2775,6 +2790,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a set -d 'modif
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a remove -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a rm -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a migrate -d 'migrate a package repository to the latest Package API'
+complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a update -d 'update one or more package repositories'
 complete -c spack -n '__fish_spack_using_command repo' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo' -s h -l help -d 'show this help message and exit'
 
@@ -2787,18 +2803,26 @@ complete -c spack -n '__fish_spack_using_command repo create' -s d -l subdirecto
 complete -c spack -n '__fish_spack_using_command repo create' -s d -l subdirectory -r -d 'subdirectory to store packages in the repository'
 
 # spack repo list
-set -g __fish_spack_optspecs_spack_repo_list h/help scope=
+set -g __fish_spack_optspecs_spack_repo_list h/help scope= names namespaces
 complete -c spack -n '__fish_spack_using_command repo list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo list' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -f -a '_builtin defaults:base defaults system end-user site user this-spack command_line'
 complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -d 'configuration scope to read from'
+complete -c spack -n '__fish_spack_using_command repo list' -l names -f -a names
+complete -c spack -n '__fish_spack_using_command repo list' -l names -d 'show configuration names only'
+complete -c spack -n '__fish_spack_using_command repo list' -l namespaces -f -a namespaces
+complete -c spack -n '__fish_spack_using_command repo list' -l namespaces -d 'show repository namespaces only'
 
 # spack repo ls
-set -g __fish_spack_optspecs_spack_repo_ls h/help scope=
+set -g __fish_spack_optspecs_spack_repo_ls h/help scope= names namespaces
 complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -f -a '_builtin defaults:base defaults system end-user site user this-spack command_line'
 complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -d 'configuration scope to read from'
+complete -c spack -n '__fish_spack_using_command repo ls' -l names -f -a names
+complete -c spack -n '__fish_spack_using_command repo ls' -l names -d 'show configuration names only'
+complete -c spack -n '__fish_spack_using_command repo ls' -l namespaces -f -a namespaces
+complete -c spack -n '__fish_spack_using_command repo ls' -l namespaces -d 'show repository namespaces only'
 
 # spack repo add
 set -g __fish_spack_optspecs_spack_repo_add h/help name= path= scope=
@@ -2850,6 +2874,22 @@ complete -c spack -n '__fish_spack_using_command repo migrate' -l dry-run -d 'do
 complete -c spack -n '__fish_spack_using_command repo migrate' -l fix -f -a fix
 complete -c spack -n '__fish_spack_using_command repo migrate' -l fix -d 'automatically migrate the repository to the latest Package API'
 
+# spack repo update
+set -g __fish_spack_optspecs_spack_repo_update h/help r/remote= scope= b/branch= t/tag= c/commit=
+
+complete -c spack -n '__fish_spack_using_command repo update' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command repo update' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command repo update' -l remote -s r -r -f -a remote
+complete -c spack -n '__fish_spack_using_command repo update' -l remote -s r -r -d 'name of remote to check for branches, tags, or commits'
+complete -c spack -n '__fish_spack_using_command repo update' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command repo update' -l scope -r -d 'configuration scope to modify'
+complete -c spack -n '__fish_spack_using_command repo update' -l branch -s b -r -f -a branch
+complete -c spack -n '__fish_spack_using_command repo update' -l branch -s b -r -d 'name of a branch to change to'
+complete -c spack -n '__fish_spack_using_command repo update' -l tag -s t -r -f -a tag
+complete -c spack -n '__fish_spack_using_command repo update' -l tag -s t -r -d 'name of a tag to change to'
+complete -c spack -n '__fish_spack_using_command repo update' -l commit -s c -r -f -a commit
+complete -c spack -n '__fish_spack_using_command repo update' -l commit -s c -r -d 'name of a commit to change to'
+
 # spack resource
 set -g __fish_spack_optspecs_spack_resource h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 resource' -f -a list -d 'list all resources known to spack (currently just patches)'
@@ -2877,7 +2917,7 @@ complete -c spack -n '__fish_spack_using_command restage' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -d 'show this help message and exit'
 
 # spack solve
-set -g __fish_spack_optspecs_spack_solve h/help show= timers stats l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_solve h/help show= timers stats l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 solve' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -d 'show this help message and exit'
@@ -2907,6 +2947,8 @@ complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -f -a '
 complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
 complete -c spack -n '__fish_spack_using_command solve' -s t -l types -f -a types
 complete -c spack -n '__fish_spack_using_command solve' -s t -l types -d 'show dependency types'
+complete -c spack -n '__fish_spack_using_command solve' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command solve' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command solve' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command solve' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command solve' -l reuse -f -a concretizer_reuse
@@ -2917,7 +2959,7 @@ complete -c spack -n '__fish_spack_using_command solve' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack spec
-set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 spec' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -d 'show this help message and exit'
@@ -2941,6 +2983,8 @@ complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -f -a 'n
 complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
 complete -c spack -n '__fish_spack_using_command spec' -s t -l types -f -a types
 complete -c spack -n '__fish_spack_using_command spec' -s t -l types -d 'show dependency types'
+complete -c spack -n '__fish_spack_using_command spec' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command spec' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command spec' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command spec' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command spec' -l reuse -f -a concretizer_reuse
@@ -2951,7 +2995,7 @@ complete -c spack -n '__fish_spack_using_command spec' -l deprecated -f -a confi
 complete -c spack -n '__fish_spack_using_command spec' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack stage
-set -g __fish_spack_optspecs_spack_stage h/help n/no-checksum p/path= e/exclude= s/skip-installed U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_stage h/help n/no-checksum p/path= e/exclude= s/skip-installed f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 stage' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command stage' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command stage' -s h -l help -d 'show this help message and exit'
@@ -2963,6 +3007,8 @@ complete -c spack -n '__fish_spack_using_command stage' -s e -l exclude -r -f -a
 complete -c spack -n '__fish_spack_using_command stage' -s e -l exclude -r -d 'exclude packages that satisfy the specified specs'
 complete -c spack -n '__fish_spack_using_command stage' -s s -l skip-installed -f -a skip_installed
 complete -c spack -n '__fish_spack_using_command stage' -s s -l skip-installed -d 'dont restage already installed specs'
+complete -c spack -n '__fish_spack_using_command stage' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command stage' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command stage' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command stage' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command stage' -l reuse -f -a concretizer_reuse
@@ -3091,7 +3137,7 @@ complete -c spack -n '__fish_spack_using_command test remove' -s y -l yes-to-all
 complete -c spack -n '__fish_spack_using_command test remove' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack test-env
-set -g __fish_spack_optspecs_spack_test_env h/help clean dirty U/fresh reuse fresh-roots deprecated dump= pickle=
+set -g __fish_spack_optspecs_spack_test_env h/help clean dirty f/force U/fresh reuse fresh-roots deprecated dump= pickle=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 test-env' -f -a '(__fish_spack_build_env_spec)'
 complete -c spack -n '__fish_spack_using_command test-env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command test-env' -s h -l help -d 'show this help message and exit'
@@ -3099,6 +3145,8 @@ complete -c spack -n '__fish_spack_using_command test-env' -l clean -f -a dirty
 complete -c spack -n '__fish_spack_using_command test-env' -l clean -d 'unset harmful variables in the build environment (default)'
 complete -c spack -n '__fish_spack_using_command test-env' -l dirty -f -a dirty
 complete -c spack -n '__fish_spack_using_command test-env' -l dirty -d 'preserve user environment in spack'"'"'s build environment (danger!)'
+complete -c spack -n '__fish_spack_using_command test-env' -s f -l force -f -a concretizer_force
+complete -c spack -n '__fish_spack_using_command test-env' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command test-env' -s U -l fresh -f -a concretizer_reuse
 complete -c spack -n '__fish_spack_using_command test-env' -s U -l fresh -d 'do not reuse installed deps; build newest configuration'
 complete -c spack -n '__fish_spack_using_command test-env' -l reuse -f -a concretizer_reuse

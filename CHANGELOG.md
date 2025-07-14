@@ -120,7 +120,7 @@
 
 2. **Improved `spack find` UI for Environments**
 
-   If you're working in an enviroment, you likely care about:
+   If you're working in an environment, you likely care about:
 
    * What are the roots
    * Which ones are installed / not installed
@@ -154,7 +154,7 @@
     Quoted can also now include special characters, so you can supply flags like:
 
     ```
-    spack intall zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'
+    spack install zlib ldflags='-Wl,-rpath=$ORIGIN/_libs'
     ```
 
     To reduce ambiguity in parsing, we now require that you *not* put spaces around `=`
@@ -325,7 +325,7 @@
 * `spack logs`: print log files for packages (either partially built or installed) (#42202)
 * `patch`: support reversing patches (#43040)
 * `develop`: Add -b/--build-directory option to set build_directory package attribute (#39606)
-* `spack list`: add `--namesapce` / `--repo` option (#41948)
+* `spack list`: add `--namespace` / `--repo` option (#41948)
 * directives: add `checked_by` field to `license()`, add some license checks
 * `spack gc`: add options for environments and build dependencies (#41731)
 * Add `--create` to `spack env activate` (#40896)
@@ -1023,7 +1023,7 @@ Spack now supports Python 3.12 (#40155)
 
    Spack's traditional [package preferences](
      https://spack.readthedocs.io/en/latest/build_settings.html#package-preferences)
-   are soft, but we've added hard requriements to `packages.yaml` and `spack.yaml`
+   are soft, but we've added hard requirements to `packages.yaml` and `spack.yaml`
    (#32528, #32369). Package requirements use the same syntax as specs:
 
    ```yaml
@@ -1118,7 +1118,7 @@ Spack now supports Python 3.12 (#40155)
    - `package cflags=-g`:
          `cflags` will NOT be propagated to dependencies
 
-   Syntax for non-boolan variants is similar to compiler flags. More in the docs for
+   Syntax for non-boolean variants is similar to compiler flags. More in the docs for
    [variants](
      https://spack.readthedocs.io/en/latest/basic_usage.html#variants) and [compiler flags](
      https://spack.readthedocs.io/en/latest/basic_usage.html#compiler-flags).
@@ -1741,7 +1741,7 @@ Spack now supports Python 3.12 (#40155)
 * `spack fetch` is now environment-aware. (#19166)
 * Numerous fixes for the new, `clingo`-based concretizer. (#23016, #23307,
   #23090, #22896, #22534, #20644, #20537, #21148)
-* Supoprt for automatically bootstrapping `clingo` from source. (#20652, #20657
+* Support for automatically bootstrapping `clingo` from source. (#20652, #20657
   #21364, #21446, #21913, #22354, #22444, #22460, #22489, #22610, #22631)
 * Python 3.10 support: `collections.abc` (#20441)
 * Fix import issues by using `__import__` instead of Spack package importe.

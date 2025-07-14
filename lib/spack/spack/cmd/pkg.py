@@ -187,7 +187,9 @@ def pkg_grep(args, unknown_args):
 
     # these args start every command invocation (grep arg1 arg2 ...)
     all_prefix_args = grep.exe + args.grep_args + unknown_args
-    prefix_length = sum(len(arg) for arg in all_prefix_args) + len(all_prefix_args)
+    prefix_length = sum(spack.cmd.converted_arg_length(arg) for arg in all_prefix_args) + len(
+        all_prefix_args
+    )
 
     # set up iterator and save the first group to ensure we don't end up with a group of size 1
     groups = spack.cmd.group_arguments(all_paths, prefix_length=prefix_length)

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -68,7 +69,7 @@ def test_function_calls(command_line, effects, mock_calls_for_clean):
         assert mock_calls_for_clean[name] == (1 if name in effects else 0)
 
 
-def test_remove_python_cache(tmpdir, monkeypatch):
+def test_remove_python_cache(tmp_path: pathlib.Path, monkeypatch):
     cache_files = ["file1.pyo", "file2.pyc"]
     source_file = "file1.py"
 
@@ -89,8 +90,8 @@ def test_remove_python_cache(tmpdir, monkeypatch):
         assert not os.path.exists(fs.join_path(directory, cache_files[0]))
         assert not os.path.exists(fs.join_path(directory, "__pycache__"))
 
-    source_dir = fs.join_path(tmpdir, "lib", "spack", "spack")
-    repos_dir = fs.join_path(tmpdir, "var", "spack", "repos")
+    source_dir = fs.join_path(tmp_path, "lib", "spack", "spack")
+    repos_dir = fs.join_path(tmp_path, "var", "spack", "repos")
 
     for d in [source_dir, repos_dir]:
         _setup_files(d)

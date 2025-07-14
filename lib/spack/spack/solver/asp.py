@@ -16,7 +16,6 @@ import pathlib
 import pprint
 import re
 import sys
-import types
 import typing
 import warnings
 from contextlib import contextmanager
@@ -261,25 +260,6 @@ def build_criteria_names(costs, arg_tuples):
         criteria.append((costs[indices[i]], costs[indices[b]], name))
 
     return criteria
-
-
-def issequence(obj):
-    if isinstance(obj, str):
-        return False
-    return isinstance(obj, (collections.abc.Sequence, types.GeneratorType))
-
-
-def listify(args):
-    if len(args) == 1 and issequence(args[0]):
-        return list(args[0])
-    return list(args)
-
-
-def packagize(pkg):
-    if isinstance(pkg, str):
-        return spack.repo.PATH.get_pkg_class(pkg)
-    else:
-        return pkg
 
 
 def specify(spec):
@@ -4460,11 +4440,11 @@ def _inject_patches_variant(root: spack.spec.Spec) -> None:
 
         edge_patches: List[spack.patch.Patch] = []
         for cond, deps_by_name in pkg_deps.items():
-            if not dspec.parent.satisfies(cond):
-                continue
-
             dependency = deps_by_name.get(dspec.spec.name)
             if not dependency:
+                continue
+
+            if not dspec.parent.satisfies(cond):
                 continue
 
             for pcond, patch_list in dependency.patches.items():

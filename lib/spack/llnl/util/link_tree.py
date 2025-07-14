@@ -303,7 +303,7 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
 
 
 class DestinationMergeVisitor(BaseDirectoryVisitor):
-    """DestinatinoMergeVisitor takes a SourceMergeVisitor and:
+    """DestinationMergeVisitor takes a SourceMergeVisitor and:
 
     a. registers additional conflicts when merging to the destination prefix
     b. removes redundant mkdir operations when directories already exist in the destination prefix.
@@ -379,7 +379,7 @@ class LinkTree:
     LinkTree objects are constructed with a source root.  Their
     methods allow you to create and delete trees of symbolic links
     back to the source tree in specific destination directories.
-    Trees comprise symlinks only to files; directries are never
+    Trees comprise symlinks only to files; directories are never
     symlinked to, to prevent the source directory from ever being
     modified.
     """

@@ -14,8 +14,6 @@ from llnl.url import allowed_archive
 import spack
 import spack.error
 import spack.fetch_strategy
-import spack.mirrors.layout
-import spack.mirrors.mirror
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
@@ -39,6 +37,9 @@ def apply_patch(
         working_dir: relative path *within* the stage to change to
         reverse: reverse the patch
     """
+    if not patch_path or not os.path.isfile(patch_path):
+        raise spack.error.NoSuchPatchError(f"No such patch: {patch_path}")
+
     git_utils_path = os.environ.get("PATH", "")
     if sys.platform == "win32":
         git = which_string("git")
@@ -113,17 +114,6 @@ class Patch:
         # ordering_key is irrelevant. In that case, use a default value so we don't need to branch
         # on whether ordering_key is None where it's used, just to make static analysis happy.
         self.ordering_key: Tuple[str, int] = ordering_key or ("", 0)
-
-    def apply(self, stage: "spack.stage.Stage") -> None:
-        """Apply a patch to source in a stage.
-
-        Args:
-            stage: stage where source code lives
-        """
-        if not self.path or not os.path.isfile(self.path):
-            raise spack.error.NoSuchPatchError(f"No such patch: {self.path}")
-
-        apply_patch(stage, self.path, self.level, self.working_dir, self.reverse)
 
     # TODO: Use TypedDict once Spack supports Python 3.8+ only
     def to_dict(self) -> Dict[str, Any]:
@@ -277,7 +267,6 @@ class UrlPatch(Patch):
         super().__init__(pkg, url, level, working_dir, reverse, ordering_key)
 
         self.url = url
-        self._stage: Optional["spack.stage.Stage"] = None
 
         if allowed_archive(self.url) and not archive_sha256:
             raise spack.error.PatchDirectiveError(
@@ -290,58 +279,17 @@ class UrlPatch(Patch):
             raise spack.error.PatchDirectiveError("URL patches require a sha256 checksum")
         self.sha256 = sha256
 
-    def apply(self, stage: "spack.stage.Stage") -> None:
-        """Apply a patch to source in a stage.
-
-        Args:
-            stage: stage where source code lives
-        """
-        assert self.stage.expanded, "Stage must be expanded before applying patches"
-
-        # Get the patch file.
-        files = os.listdir(self.stage.source_path)
-        assert len(files) == 1, "Expected one file in stage source path, found %s" % files
-        self.path = os.path.join(self.stage.source_path, files[0])
-
-        return super().apply(stage)
-
-    @property
-    def stage(self) -> "spack.stage.Stage":
-        """The stage in which to download (and unpack) the URL patch.
-
-        Returns:
-            The stage object.
-        """
-        if self._stage:
-            return self._stage
-
-        fetch_digest = self.archive_sha256 or self.sha256
-
+    def fetcher(self) -> "spack.fetch_strategy.FetchStrategy":
+        """Construct a fetcher that can download (and unpack) this patch."""
         # Two checksums, one for compressed file, one for its contents
         if self.archive_sha256 and self.sha256:
-            fetcher: spack.fetch_strategy.FetchStrategy = (
-                spack.fetch_strategy.FetchAndVerifyExpandedFile(
-                    self.url, archive_sha256=self.archive_sha256, expanded_sha256=self.sha256
-                )
+            return spack.fetch_strategy.FetchAndVerifyExpandedFile(
+                self.url, archive_sha256=self.archive_sha256, expanded_sha256=self.sha256
             )
         else:
-            fetcher = spack.fetch_strategy.URLFetchStrategy(
+            return spack.fetch_strategy.URLFetchStrategy(
                 url=self.url, sha256=self.sha256, expand=False
             )
-
-        # The same package can have multiple patches with the same name but
-        # with different contents, therefore apply a subset of the hash.
-        name = "{0}-{1}".format(os.path.basename(self.url), fetch_digest[:7])
-
-        per_package_ref = os.path.join(self.owner.split(".")[-1], name)
-        mirror_ref = spack.mirrors.layout.default_mirror_layout(fetcher, per_package_ref)
-        self._stage = spack.stage.Stage(
-            fetcher,
-            name=f"{spack.stage.stage_prefix}patch-{fetch_digest}",
-            mirror_paths=mirror_ref,
-            mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
-        )
-        return self._stage
 
     def to_dict(self) -> Dict[str, Any]:
         """Dictionary representation of the patch.

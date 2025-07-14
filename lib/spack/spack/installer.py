@@ -46,7 +46,7 @@ import llnl.util.tty as tty
 from llnl.string import ordinal
 from llnl.util.lang import pretty_seconds
 from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output
+from llnl.util.tty.log import log_output, preserve_terminal_settings
 
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
@@ -92,7 +92,7 @@ class BuildStatus(enum.Enum):
     #: process)
     INSTALLING = enum.auto()
 
-    #: Build status indicating the spec was sucessfully installed
+    #: Build status indicating the spec was successfully installed
     INSTALLED = enum.auto()
 
     #: Build status indicating the task has been popped from the queue
@@ -1059,7 +1059,7 @@ class Task:
             installed (bool):  install status of the dependency package
         """
         if pkg_id != self.pkg_id and pkg_id not in self.dependencies:
-            tty.debug(f"Adding {pkg_id} as a depencency of {self.pkg_id}")
+            tty.debug(f"Adding {pkg_id} as a dependency of {self.pkg_id}")
             self.dependencies.add(pkg_id)
             if not installed:
                 self.uninstalled_deps.add(pkg_id)
@@ -1493,14 +1493,14 @@ class PackageInstaller:
         if sys.platform == "win32":
             # No locks on Windows, we should always use 1 process
             # TODO: perhaps raise an error instead and update cmd-line interface
-            # to omit this option on Windows for nwo
+            # to omit this option on Windows for now
             concurrent_packages = 1
 
         if isinstance(explicit, bool):
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
 
         if concurrent_packages is None:
-            concurrent_packages = spack.config.get("config:concurrent_packages", default=4)
+            concurrent_packages = spack.config.get("config:concurrent_packages", default=1)
         self.concurrent_packages = concurrent_packages
 
         install_args = {
@@ -2049,7 +2049,7 @@ class PackageInstaller:
         # Remove any associated task since its sequence will change
         self._remove_task(task.pkg_id)
         desc = (
-            "Queueing" if task.attempts == 1 else f"Requeueing ({ordinal(task.attempts)} attempt)"
+            "Queueing" if task.attempts == 1 else f"Requeuing ({ordinal(task.attempts)} attempt)"
         )
         tty.debug(msg.format(desc, task.pkg_id, task.status))
 
@@ -2187,7 +2187,7 @@ class PackageInstaller:
             tty.debug(f"Removing {pkg_id} from {dep_id}'s uninstalled dependencies.")
             if dep_id in self.build_tasks:
                 # Ensure the dependent's uninstalled dependencies are
-                # up-to-date.  This will require requeueing the task.
+                # up-to-date.  This will require requeuing the task.
                 dep_task = self.build_tasks[dep_id]
                 self._push_task(dep_task.next_attempt(self.installed))
             else:
@@ -2350,7 +2350,7 @@ class PackageInstaller:
             # Checking hash on downloaded binary failed.
             tty.error(
                 f"Failed to install {pkg.name} from binary cache due "
-                f"to {str(exc)}: Requeueing to install from source."
+                f"to {str(exc)}: Requeuing to install from source."
             )
             # this overrides a full method, which is ugly.
             task.use_cache = False  # type: ignore[misc]
@@ -2407,7 +2407,18 @@ class PackageInstaller:
         return None
 
     def install(self) -> None:
-        """Install the requested package(s) and or associated dependencies."""
+        """Install the requested package(s) and/or associated dependencies."""
+        # ensure that build processes do not permanently bork terminal settings
+        with preserve_terminal_settings(sys.stdin):
+            self._install()
+
+    def _install(self) -> None:
+        """Helper with main implementation of ``install()``.
+
+        We need to wrap the installation routine with a context manager for preserving
+        keyboard sanity. Wrappers go in ``install()``. This does the real work.
+
+        """
 
         self._init_queue()
         failed_build_requests = []
@@ -2540,7 +2551,7 @@ class BuildProcessInstaller:
         # whether to do a fake install
         self.fake = install_args.get("fake", False)
 
-        # whether to install source code with the packag
+        # whether to install source code with the package
         self.install_source = install_args.get("install_source", False)
 
         is_develop = pkg.spec.is_develop
@@ -2585,10 +2596,10 @@ class BuildProcessInstaller:
         stage = self.pkg.stage
         stage.keep = self.keep_stage
 
-        if self.restage:
-            stage.destroy()
-
         with stage:
+            if self.restage:
+                stage.destroy()
+
             self.timer.start("stage")
 
             if not self.fake:

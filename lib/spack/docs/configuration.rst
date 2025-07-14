@@ -11,13 +11,12 @@ Configuration Files
 Spack has many configuration files. Here is a quick list of them, in
 case you want to skip directly to specific docs:
 
-* :ref:`packages.yaml <compiler-config>`
 * :ref:`concretizer.yaml <concretizer-options>`
 * :ref:`config.yaml <config-yaml>`
 * :ref:`include.yaml <include-yaml>`
 * :ref:`mirrors.yaml <mirrors>`
 * :ref:`modules.yaml <modules>`
-* :ref:`packages.yaml <packages-config>`
+* :ref:`packages.yaml <packages-config>` (including :ref:`compiler configuration <compiler-config>`)
 * :ref:`repos.yaml <repositories>`
 
 You can also add any of these as inline configuration in the YAML

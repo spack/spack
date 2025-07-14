@@ -18,9 +18,6 @@ level = "long"
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
-        "-f", "--force", action="store_true", help="re-concretize even if already concretized"
-    )
-    subparser.add_argument(
         "--test",
         default=None,
         choices=["root", "all"],
@@ -45,7 +42,7 @@ def concretize(parser, args):
         tests = False
 
     with env.write_transaction():
-        concretized_specs = env.concretize(force=args.force, tests=tests)
+        concretized_specs = env.concretize(tests=tests)
         if not args.quiet:
             if concretized_specs:
                 tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}:")

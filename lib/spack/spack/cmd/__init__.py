@@ -7,6 +7,7 @@ import difflib
 import importlib
 import os
 import re
+import subprocess
 import sys
 from collections import Counter
 from typing import Generator, List, Optional, Sequence, Union
@@ -370,9 +371,9 @@ def display_specs_as_json(specs, deps=False):
 
 
 def iter_groups(specs, indent, all_headers):
-    """Break a list of specs into groups indexed by arch/compiler."""
-    # Make a dict with specs keyed by architecture and compiler.
-    index = index_by(specs, ("architecture", "compiler"))
+    """Break a list of specs into groups indexed by arch/compilers."""
+    # Make a dict with specs keyed by architecture and compilers.
+    index = index_by(specs, ("architecture", "compilers"))
     ispace = indent * " "
 
     def _key(item):
@@ -381,25 +382,27 @@ def iter_groups(specs, indent, all_headers):
         return str(item)
 
     # Traverse the index and print out each package
-    for i, (architecture, compiler) in enumerate(sorted(index, key=_key)):
+    for i, (architecture, compilers) in enumerate(sorted(index, key=_key)):
         if i > 0:
             print()
 
+        # Drop the leading space from compilers to clean up output and aid checks.
+        compilers_info = compilers.strip() or "no compilers"
         header = "%s{%s} / %s{%s}" % (
             spack.spec.ARCHITECTURE_COLOR,
             architecture if architecture else "no arch",
             spack.spec.COMPILER_COLOR,
-            f"{compiler.display_str}" if compiler else "no compiler",
+            compilers_info,
         )
 
         # Sometimes we want to display specs that are not yet concretized.
-        # If they don't have a compiler / architecture attached to them,
+        # If they don't have compilers / architecture attached to them,
         # then skip the header
-        if all_headers or (architecture is not None or compiler is not None):
+        if all_headers or (architecture is not None or compilers_info):
             sys.stdout.write(ispace)
             tty.hline(colorize(header), char="-")
 
-        specs = index[(architecture, compiler)]
+        specs = index[(architecture, compilers)]
         specs.sort()
         yield specs
 
@@ -704,6 +707,16 @@ def first_line(docstring):
     return docstring.split("\n")[0]
 
 
+def converted_arg_length(arg: str):
+    if sys.platform == "win32":
+        # An argument may have extra characters inserted for a command
+        # line invocation (e.g. on Windows, an argument with a space
+        # is quoted)
+        return len(subprocess.list2cmdline([arg]))
+    else:
+        return len(arg)
+
+
 def group_arguments(
     args: Sequence[str],
     *,
@@ -734,7 +747,9 @@ def group_arguments(
 
     """
     if max_group_length is None:
-        max_group_length = 32768  # default to the Windows limit
+        # Windows limit is 32767, including null terminator (not measured by len)
+        # so max length is 32766
+        max_group_length = 32766
         if hasattr(os, "sysconf"):  # sysconf is only on unix
             try:
                 # returns -1 if an option isn't present (soem older POSIXes)
@@ -746,7 +761,7 @@ def group_arguments(
     group: List[str] = []
     grouplen, space = prefix_length, 0
     for arg in args:
-        arglen = len(arg)
+        arglen = converted_arg_length(arg)
         if arglen > max_group_length:
             raise ValueError(f"Argument is longer than max command line size: '{arg}'")
         if arglen + prefix_length > max_group_length:

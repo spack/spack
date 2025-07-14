@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
+
 import pytest
 
 import spack.concretize
@@ -10,9 +12,9 @@ import spack.store
 
 @pytest.mark.parametrize("hash_length", [1, 2, 3, 4, 5, 9])
 @pytest.mark.usefixtures("mock_packages")
-def test_set_install_hash_length(hash_length, mutable_config, tmpdir):
+def test_set_install_hash_length(hash_length, mutable_config, tmp_path: pathlib.Path):
     mutable_config.set("config:install_hash_length", hash_length)
-    with spack.store.use_store(str(tmpdir)):
+    with spack.store.use_store(str(tmp_path)):
         spec = spack.concretize.concretize_one("libelf")
         prefix = spec.prefix
         hash_str = prefix.rsplit("-")[-1]
@@ -20,9 +22,11 @@ def test_set_install_hash_length(hash_length, mutable_config, tmpdir):
 
 
 @pytest.mark.usefixtures("mock_packages")
-def test_set_install_hash_length_upper_case(mutable_config, tmpdir):
+def test_set_install_hash_length_upper_case(mutable_config, tmp_path: pathlib.Path):
     mutable_config.set("config:install_hash_length", 5)
-    with spack.store.use_store(str(tmpdir), extra_data={"projections": {"all": "{name}-{HASH}"}}):
+    with spack.store.use_store(
+        str(tmp_path), extra_data={"projections": {"all": "{name}-{HASH}"}}
+    ):
         spec = spack.concretize.concretize_one("libelf")
         prefix = spec.prefix
         hash_str = prefix.rsplit("-")[-1]

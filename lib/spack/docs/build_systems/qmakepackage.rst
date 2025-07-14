@@ -4,9 +4,9 @@
 
 .. _qmakepackage:
 
------
+------
 QMake
------
+------
 
 Much like Autotools and CMake, QMake is a build-script generator
 designed by the developers of Qt. In its simplest form, Spack's

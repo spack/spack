@@ -4,9 +4,9 @@
 
 .. _perlpackage:
 
-----
+------
 Perl
-----
+------
 
 Much like Octave, Perl has its own language-specific
 build system.
@@ -101,9 +101,9 @@ for the package. This should be used instead of the current URL, as
 it doesn't contain the version number and will always link to the
 latest release.
 
-^^^
+^^^^^^
 URL
-^^^
+^^^^^^
 
 If you haven't found it already, the download URL is on the right
 side of the page below the permalink. Search for "Download".

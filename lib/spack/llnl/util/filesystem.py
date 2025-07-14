@@ -200,21 +200,24 @@ def polite_filename(filename: str) -> str:
     return _polite_antipattern().sub("_", filename)
 
 
-def getuid() -> Union[str, int]:
-    """Returns os getuid on non Windows
-    On Windows returns 0 for admin users, login string otherwise
-    This is in line with behavior from get_owner_uid which
-    always returns the login string on Windows
-    """
-    if sys.platform == "win32":
+if sys.platform == "win32":
+
+    def _getuid_win32() -> Union[str, int]:
+        """Returns os getuid on non Windows
+        On Windows returns 0 for admin users, login string otherwise
+        This is in line with behavior from get_owner_uid which
+        always returns the login string on Windows
+        """
         import ctypes
 
         # If not admin, use the string name of the login as a unique ID
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return os.getlogin()
         return 0
-    else:
-        return os.getuid()
+
+    getuid = _getuid_win32
+else:
+    getuid = os.getuid
 
 
 def _win_rename(src, dst):
@@ -246,8 +249,8 @@ def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
     # os.replace is the same as os.rename on POSIX and is MoveFileExW w/
     # the MOVEFILE_REPLACE_EXISTING flag on Windows
-    # Windows invocation is abstracted behind additonal logic handling
-    # remaining cases of divergent behavior accross platforms
+    # Windows invocation is abstracted behind additional logic handling
+    # remaining cases of divergent behavior across platforms
     if sys.platform == "win32":
         _win_rename(src, dst)
     else:
@@ -475,7 +478,7 @@ def exploding_archive_catch(stage):
     # NOTE: The tar program on Mac OS X will encode HFS metadata in
     # hidden files, which can end up *alongside* a single top-level
     # directory.  We initially ignore presence of hidden files to
-    # accomodate these "semi-exploding" tarballs but ensure the files
+    # accommodate these "semi-exploding" tarballs but ensure the files
     # are copied to the source directory.
 
     # Expand all tarballs in their own directory to contain
@@ -486,7 +489,7 @@ def exploding_archive_catch(stage):
     os.chdir(tarball_container)
     try:
         yield
-        # catch an exploding archive on sucessful extraction
+        # catch an exploding archive on successful extraction
         os.chdir(orig_dir)
         exploding_archive_handler(tarball_container, stage)
     except Exception as e:
@@ -572,14 +575,13 @@ def set_install_permissions(path):
         os.chmod(path, 0o644)
 
 
-def group_ids(uid=None):
+def group_ids(uid: Optional[int] = None) -> List[int]:
     """Get group ids that a uid is a member of.
 
     Arguments:
-        uid (int): id of user, or None for current user
+        uid: id of user, or None for current user
 
-    Returns:
-        (list of int): gids of groups the user is a member of
+    Returns: gids of groups the user is a member of
     """
     if sys.platform == "win32":
         tty.warn("Function is not supported on Windows")
@@ -2453,7 +2455,7 @@ class WindowsSimulatedRPath:
     One instance of this class is associated with a package (only on Windows)
     For each lib/binary directory in an associated package, this class introduces
     a symlink to any/all dependent libraries/binaries. This includes the packages
-    own bin/lib directories, meaning the libraries are linked to the bianry directory
+    own bin/lib directories, meaning the libraries are linked to the binary directory
     and vis versa.
     """
 
@@ -2580,7 +2582,7 @@ class WindowsSimulatedRPath:
         mode is not enabled"""
 
         def report_already_linked():
-            # We have either already symlinked or we are encoutering a naming clash
+            # We have either already symlinked or we are encountering a naming clash
             # either way, we don't want to overwrite existing libraries
             already_linked = islink(str(dest_file))
             tty.debug(

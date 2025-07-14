@@ -77,7 +77,7 @@ class ProcessController:
         return (bool(cfg[3] & termios.ICANON), bool(cfg[3] & termios.ECHO))
 
     def horizontal_line(self, name):
-        """Labled horizontal line for debugging."""
+        """Labeled horizontal line for debugging."""
         if self.debug:
             sys.stderr.write("------------------------------------------- %s\n" % name)
 

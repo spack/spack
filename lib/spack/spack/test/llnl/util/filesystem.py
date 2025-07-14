@@ -21,12 +21,12 @@ import spack.paths
 
 
 @pytest.fixture()
-def stage(tmpdir_factory):
+def stage(tmp_path_factory: pytest.TempPathFactory):
     """Creates a stage with the directory structure for the tests."""
 
-    s = tmpdir_factory.mktemp("filesystem_test")
+    s = tmp_path_factory.mktemp("filesystem_test")
 
-    with s.as_cwd():
+    with fs.working_dir(s):
         # Create source file hierarchy
         fs.touchp("source/1")
         fs.touchp("source/a/b/2")
@@ -323,35 +323,41 @@ def test_paths_containing_libs(dirs_with_libfiles):
     assert set(fs.paths_containing_libs(all_dirs, ["libirc"])) == set(lib_to_dirs["libirc"])
 
 
-def test_move_transaction_commit(tmpdir):
-    fake_library = tmpdir.mkdir("lib").join("libfoo.so")
-    fake_library.write("Just some fake content.")
+def test_move_transaction_commit(tmp_path: pathlib.Path):
+    lib_dir = tmp_path / "lib"
+    lib_dir.mkdir()
+    fake_library = lib_dir / "libfoo.so"
+    fake_library.write_text("Just some fake content.")
 
-    with fs.replace_directory_transaction(str(tmpdir.join("lib"))) as backup:
+    with fs.replace_directory_transaction(str(lib_dir)) as backup:
         assert os.path.isdir(backup)
-        fake_library = tmpdir.mkdir("lib").join("libfoo.so")
-        fake_library.write("Other content.")
+        lib_dir.mkdir()
+        fake_library = lib_dir / "libfoo.so"
+        fake_library.write_text("Other content.")
 
     assert not os.path.lexists(backup)
-    with open(str(tmpdir.join("lib", "libfoo.so")), "r", encoding="utf-8") as f:
+    with open(str(lib_dir / "libfoo.so"), "r", encoding="utf-8") as f:
         assert "Other content." == f.read()
 
 
-def test_move_transaction_rollback(tmpdir):
-    fake_library = tmpdir.mkdir("lib").join("libfoo.so")
-    fake_library.write("Initial content.")
+def test_move_transaction_rollback(tmp_path: pathlib.Path):
+    lib_dir = tmp_path / "lib"
+    lib_dir.mkdir()
+    fake_library = lib_dir / "libfoo.so"
+    fake_library.write_text("Initial content.")
 
     try:
-        with fs.replace_directory_transaction(str(tmpdir.join("lib"))) as backup:
+        with fs.replace_directory_transaction(str(lib_dir)) as backup:
             assert os.path.isdir(backup)
-            fake_library = tmpdir.mkdir("lib").join("libfoo.so")
-            fake_library.write("New content.")
+            lib_dir.mkdir()
+            fake_library = lib_dir / "libfoo.so"
+            fake_library.write_text("New content.")
             raise RuntimeError("")
     except RuntimeError:
         pass
 
     assert not os.path.lexists(backup)
-    with open(str(tmpdir.join("lib", "libfoo.so")), "r", encoding="utf-8") as f:
+    with open(str(lib_dir / "libfoo.so"), "r", encoding="utf-8") as f:
         assert "Initial content." == f.read()
 
 
@@ -495,12 +501,14 @@ def test_prefixes(path, expected):
         (r"CDIR", "CURRENT_DIRECTORY", "selfextract.bsx", {"stop_at": "__ARCHIVE_BELOW__"}),
     ],
 )
-def test_filter_files_with_different_encodings(regex, replacement, filename, tmpdir, keyword_args):
+def test_filter_files_with_different_encodings(
+    regex, replacement, filename, tmp_path: pathlib.Path, keyword_args
+):
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
     # that there's at least one match for the regex
     original_file = os.path.join(spack.paths.test_path, "data", "filter_file", filename)
-    target_file = os.path.join(str(tmpdir), filename)
+    target_file = os.path.join(str(tmp_path), filename)
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
     fs.filter_file(regex, replacement, target_file, **keyword_args)
@@ -510,8 +518,8 @@ def test_filter_files_with_different_encodings(regex, replacement, filename, tmp
 
 
 @pytest.mark.not_on_windows("chgrp isn't used on Windows")
-def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
-    with fs.working_dir(tmpdir):
+def test_chgrp_dont_set_group_if_already_set(tmp_path: pathlib.Path, monkeypatch):
+    with fs.working_dir(str(tmp_path)):
         os.mkdir("test-dir_chgrp_dont_set_group_if_already_set")
 
     def _fail(*args, **kwargs):
@@ -537,18 +545,18 @@ def test_chgrp_dont_set_group_if_already_set(tmpdir, monkeypatch):
     monkeypatch.setattr(os, "lchown", _fail)
     monkeypatch.setattr(os, "stat", _stat)
 
-    with fs.working_dir(tmpdir):
+    with fs.working_dir(str(tmp_path)):
         with pytest.raises(Exception):
             fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1002)
         fs.chgrp("test-dir_chgrp_dont_set_group_if_already_set", 1001)
 
 
-def test_filter_files_multiple(tmpdir):
+def test_filter_files_multiple(tmp_path: pathlib.Path):
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
     # that there's at least one match for the regex
     original_file = os.path.join(spack.paths.test_path, "data", "filter_file", "x86_cpuid_info.c")
-    target_file = os.path.join(str(tmpdir), "x86_cpuid_info.c")
+    target_file = os.path.join(str(tmp_path), "x86_cpuid_info.c")
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
     fs.filter_file(r"\<malloc.h\>", "<unistd.h>", target_file)
@@ -561,9 +569,9 @@ def test_filter_files_multiple(tmpdir):
         assert "<stdio.h>" not in f.read()
 
 
-def test_filter_files_start_stop(tmpdir):
+def test_filter_files_start_stop(tmp_path: pathlib.Path):
     original_file = os.path.join(spack.paths.test_path, "data", "filter_file", "start_stop.txt")
-    target_file = os.path.join(str(tmpdir), "start_stop.txt")
+    target_file = os.path.join(str(tmp_path), "start_stop.txt")
     shutil.copy(original_file, target_file)
     # None of the following should happen:
     #   - filtering starts after A is found in the file:
@@ -585,7 +593,7 @@ def test_filter_files_start_stop(tmpdir):
 
 
 # Each test input is a tuple of entries which prescribe
-# - the 'subdirs' to be created from tmpdir
+# - the 'subdirs' to be created from tmp_path
 # - the 'files' in that directory
 # - what is to be removed
 @pytest.mark.parametrize(
@@ -650,24 +658,30 @@ def test_filter_files_start_stop(tmpdir):
     ],
 )
 @pytest.mark.regression("18441")
-def test_safe_remove(files_or_dirs, tmpdir):
+def test_safe_remove(files_or_dirs, tmp_path: pathlib.Path):
     # Create a fake directory structure as prescribed by test input
     to_be_removed, to_be_checked = [], []
     for entry in files_or_dirs:
         # Create relative dir
         subdirs = entry["subdirs"]
-        dir = tmpdir if not subdirs else tmpdir.ensure(*subdirs.split("/"), dir=True)
+        if not subdirs:
+            dir_path = tmp_path
+        else:
+            dir_path = tmp_path
+            for subdir in subdirs.split("/"):
+                dir_path = dir_path / subdir
+            dir_path.mkdir(parents=True, exist_ok=True)
 
         # Create files in the directory
         files = entry["files"]
         for f in files:
-            abspath = str(dir.join(f))
+            abspath = str(dir_path / f)
             to_be_checked.append(abspath)
             fs.touch(abspath)
 
         # List of things to be removed
         for r in entry["remove"]:
-            to_be_removed.append(str(tmpdir.join(r)))
+            to_be_removed.append(str(tmp_path / r))
 
     # Assert that files are deleted in the context block,
     # mock a failure by raising an exception
@@ -683,12 +697,18 @@ def test_safe_remove(files_or_dirs, tmpdir):
 
 
 @pytest.mark.regression("18441")
-def test_content_of_files_with_same_name(tmpdir):
+def test_content_of_files_with_same_name(tmp_path: pathlib.Path):
     # Create two subdirectories containing a file with the same name,
     # differentiate the files by their content
-    file1 = tmpdir.ensure("myenv1/spack.lock")
-    file2 = tmpdir.ensure("myenv2/spack.lock")
-    file1.write("file1"), file2.write("file2")
+    myenv1_dir = tmp_path / "myenv1"
+    myenv1_dir.mkdir()
+    file1 = myenv1_dir / "spack.lock"
+    file1.write_text("file1")
+
+    myenv2_dir = tmp_path / "myenv2"
+    myenv2_dir.mkdir()
+    file2 = myenv2_dir / "spack.lock"
+    file2.write_text("file2")
 
     # Use 'safe_remove' to remove the two files
     with pytest.raises(RuntimeError):
@@ -697,27 +717,30 @@ def test_content_of_files_with_same_name(tmpdir):
 
     # Check both files have been restored correctly
     # and have not been mixed
-    assert file1.read().strip() == "file1"
-    assert file2.read().strip() == "file2"
+    assert file1.read_text().strip() == "file1"
+    assert file2.read_text().strip() == "file2"
 
 
-def test_keep_modification_time(tmpdir):
-    file1 = tmpdir.ensure("file1")
-    file2 = tmpdir.ensure("file2")
+def test_keep_modification_time(tmp_path: pathlib.Path):
+    file1 = tmp_path / "file1"
+    file1.touch()
+    file2 = tmp_path / "file2"
+    file2.touch()
 
     # Shift the modification time of the file 10 seconds back:
-    mtime1 = file1.mtime() - 10
-    file1.setmtime(mtime1)
+    stat1 = file1.stat()
+    mtime1 = stat1.st_mtime - 10
+    os.utime(file1, (stat1.st_atime, mtime1))
 
-    with fs.keep_modification_time(file1.strpath, file2.strpath, "non-existing-file"):
-        file1.write("file1")
-        file2.remove()
+    with fs.keep_modification_time(str(file1), str(file2), "non-existing-file"):
+        file1.write_text("file1")
+        file2.unlink()
 
     # Assert that the modifications took place the modification time has not
     # changed;
-    assert file1.read().strip() == "file1"
+    assert file1.read_text().strip() == "file1"
     assert not file2.exists()
-    assert int(mtime1) == int(file1.mtime())
+    assert int(mtime1) == int(file1.stat().st_mtime)
 
 
 def test_temporary_dir_context_manager():
@@ -728,8 +751,8 @@ def test_temporary_dir_context_manager():
 
 
 @pytest.mark.not_on_windows("No shebang on Windows")
-def test_is_nonsymlink_exe_with_shebang(tmpdir):
-    with tmpdir.as_cwd():
+def test_is_nonsymlink_exe_with_shebang(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
         # Create an executable with shebang.
         with open("executable_script", "wb") as f:
             f.write(b"#!/interpreter")
@@ -855,11 +878,12 @@ def test_visit_directory_tree_follow_none(noncyclical_dir_structure):
 @pytest.mark.regression("29687")
 @pytest.mark.parametrize("initial_mode", [stat.S_IRUSR | stat.S_IXUSR, stat.S_IWGRP])
 @pytest.mark.not_on_windows("Windows might change permissions")
-def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
+def test_remove_linked_tree_doesnt_change_file_permission(tmp_path: pathlib.Path, initial_mode):
     # Here we test that a failed call to remove_linked_tree, due to passing a file
     # as an argument instead of a directory, doesn't leave the file with different
     # permissions as a side effect of trying to handle the error.
-    file_instead_of_dir = tmpdir.ensure("foo")
+    file_instead_of_dir = tmp_path / "foo"
+    file_instead_of_dir.touch()
     file_instead_of_dir.chmod(initial_mode)
     initial_stat = os.stat(str(file_instead_of_dir))
     fs.remove_linked_tree(str(file_instead_of_dir))
@@ -867,8 +891,8 @@ def test_remove_linked_tree_doesnt_change_file_permission(tmpdir, initial_mode):
     assert final_stat == initial_stat
 
 
-def test_filesummary(tmpdir):
-    p = str(tmpdir.join("xyz"))
+def test_filesummary(tmp_path: pathlib.Path):
+    p = str(tmp_path / "xyz")
     with open(p, "wb") as f:
         f.write(b"abcdefghijklmnopqrstuvwxyz")
 
@@ -878,57 +902,59 @@ def test_filesummary(tmpdir):
 
 
 @pytest.mark.parametrize("bfs_depth", [1, 2, 10])
-def test_find_first_file(tmpdir, bfs_depth):
+def test_find_first_file(tmp_path: pathlib.Path, bfs_depth):
     # Create a structure: a/a/a/{file1,file2}, b/a, c/a, d/{a,file1}
-    tmpdir.join("a", "a", "a").ensure(dir=True)
-    tmpdir.join("b", "a").ensure(dir=True)
-    tmpdir.join("c", "a").ensure(dir=True)
-    tmpdir.join("d", "a").ensure(dir=True)
-    tmpdir.join("e").ensure(dir=True)
+    (tmp_path / "a" / "a" / "a").mkdir(parents=True)
+    (tmp_path / "b" / "a").mkdir(parents=True)
+    (tmp_path / "c" / "a").mkdir(parents=True)
+    (tmp_path / "d" / "a").mkdir(parents=True)
+    (tmp_path / "e").mkdir()
 
-    fs.touch(tmpdir.join("a", "a", "a", "file1"))
-    fs.touch(tmpdir.join("a", "a", "a", "file2"))
-    fs.touch(tmpdir.join("d", "file1"))
+    fs.touch(str(tmp_path / "a" / "a" / "a" / "file1"))
+    fs.touch(str(tmp_path / "a" / "a" / "a" / "file2"))
+    fs.touch(str(tmp_path / "d" / "file1"))
 
-    root = str(tmpdir)
+    root = str(tmp_path)
 
     # Iterative deepening: should find low-depth file1.
-    assert os.path.samefile(
-        fs.find_first(root, "file*", bfs_depth=bfs_depth), os.path.join(root, "d", "file1")
-    )
+    f1 = fs.find_first(root, "file*", bfs_depth=bfs_depth)
+    assert f1 is not None and os.path.samefile(f1, os.path.join(root, "d", "file1"))
 
     assert fs.find_first(root, "nonexisting", bfs_depth=bfs_depth) is None
 
-    assert os.path.samefile(
-        fs.find_first(root, ["nonexisting", "file2"], bfs_depth=bfs_depth),
-        os.path.join(root, "a", "a", "a", "file2"),
-    )
+    f2 = fs.find_first(root, ["nonexisting", "file2"], bfs_depth=bfs_depth)
+    assert f2 is not None and os.path.samefile(f2, os.path.join(root, "a", "a", "a", "file2"))
 
     # Should find first dir
-    assert os.path.samefile(fs.find_first(root, "a", bfs_depth=bfs_depth), os.path.join(root, "a"))
+    f3 = fs.find_first(root, "a", bfs_depth=bfs_depth)
+    assert f3 is not None and os.path.samefile(f3, os.path.join(root, "a"))
 
 
-def test_rename_dest_exists(tmpdir):
+def test_rename_dest_exists(tmp_path: pathlib.Path):
     @contextmanager
     def setup_test_files():
-        a = tmpdir.join("a", "file1")
-        b = tmpdir.join("a", "file2")
-        fs.touchp(a)
-        fs.touchp(b)
+        a_dir = tmp_path / "a"
+        a_dir.mkdir()
+        a = a_dir / "file1"
+        b = a_dir / "file2"
+        fs.touchp(str(a))
+        fs.touchp(str(b))
         with open(a, "w", encoding="utf-8") as oa, open(b, "w", encoding="utf-8") as ob:
             oa.write("I am A")
             ob.write("I am B")
         yield a, b
-        shutil.rmtree(tmpdir.join("a"))
+        shutil.rmtree(str(a_dir))
 
     @contextmanager
     def setup_test_dirs():
-        a = tmpdir.join("d", "a")
-        b = tmpdir.join("d", "b")
-        fs.mkdirp(a)
-        fs.mkdirp(b)
+        d_dir = tmp_path / "d"
+        d_dir.mkdir()
+        a = d_dir / "a"
+        b = d_dir / "b"
+        fs.mkdirp(str(a))
+        fs.mkdirp(str(b))
         yield a, b
-        shutil.rmtree(tmpdir.join("d"))
+        shutil.rmtree(str(d_dir))
 
     # test standard behavior of rename
     # smoke test
@@ -945,7 +971,7 @@ def test_rename_dest_exists(tmpdir):
     # another sanity check/smoke test
     with setup_test_files() as files:
         a, b = files
-        with fs.working_dir(str(tmpdir)):
+        with fs.working_dir(str(tmp_path)):
             fs.rename(os.path.join("a", "file1"), os.path.join("a", "file2"))
             assert os.path.exists(b)
             assert not os.path.exists(a)
@@ -954,51 +980,56 @@ def test_rename_dest_exists(tmpdir):
             assert content == "I am A"
 
     # Test rename symlinks to same file
-    c = tmpdir.join("a", "file1")
-    a = tmpdir.join("a", "link1")
-    b = tmpdir.join("a", "link2")
-    fs.touchp(c)
-    symlink(c, a)
-    symlink(c, b)
+    a_dir = tmp_path / "a"
+    a_dir.mkdir()
+    c = a_dir / "file1"
+    a = a_dir / "link1"
+    b = a_dir / "link2"
+    fs.touchp(str(c))
+    symlink(str(c), str(a))
+    symlink(str(c), str(b))
     fs.rename(str(a), str(b))
     assert os.path.exists(b)
     assert not os.path.exists(a)
-    assert os.path.realpath(b) == c
-    shutil.rmtree(tmpdir.join("a"))
+    assert os.path.realpath(str(b)) == str(c)
+    shutil.rmtree(str(a_dir))
 
     # test rename onto itself
-    a = tmpdir.join("a", "file1")
+    a_dir = tmp_path / "a"
+    a_dir.mkdir()
+    a = a_dir / "file1"
     b = a
-    fs.touchp(a)
+    fs.touchp(str(a))
     with open(a, "w", encoding="utf-8") as oa:
         oa.write("I am A")
     fs.rename(str(a), str(b))
     # check a, or b, doesn't matter, same file
     assert os.path.exists(a)
     # ensure original file was not duplicated
-    assert len(os.listdir(tmpdir.join("a"))) == 1
+    assert len(os.listdir(str(a_dir))) == 1
     with open(a, "r", encoding="utf-8") as oa:
         assert oa.read()
-    shutil.rmtree(tmpdir.join("a"))
+    shutil.rmtree(str(a_dir))
 
     # test rename onto symlink
     # to directory from symlink to directory
     # (this is something spack does when regenerating views)
     with setup_test_dirs() as dirs:
         a, b = dirs
-        link1 = tmpdir.join("f", "link1")
-        link2 = tmpdir.join("f", "link2")
-        fs.mkdirp(tmpdir.join("f"))
-        symlink(a, link1)
-        symlink(b, link2)
+        f_dir = tmp_path / "f"
+        f_dir.mkdir()
+        link1 = f_dir / "link1"
+        link2 = f_dir / "link2"
+        symlink(str(a), str(link1))
+        symlink(str(b), str(link2))
         fs.rename(str(link1), str(link2))
         assert os.path.exists(link2)
-        assert os.path.realpath(link2) == a
-        shutil.rmtree(tmpdir.join("f"))
+        assert os.path.realpath(str(link2)) == str(a)
+        shutil.rmtree(str(f_dir))
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")
-def test_windows_sfn(tmpdir):
+def test_windows_sfn(tmp_path: pathlib.Path):
     # first check some standard Windows locations
     # we know require sfn names
     # this is basically a smoke test
@@ -1009,33 +1040,33 @@ def test_windows_sfn(tmpdir):
 
     # test user created paths
     # ensure longer path with spaces is properly abbreviated
-    a = tmpdir.join("d", "this is a test", "a", "still test")
+    a = tmp_path / "d" / "this is a test" / "a" / "still test"
     # ensure longer path is properly abbreviated
-    b = tmpdir.join("d", "long_path_with_no_spaces", "more_long_path")
+    b = tmp_path / "d" / "long_path_with_no_spaces" / "more_long_path"
     # ensure path not in need of abbreviation is properly roundtripped
-    c = tmpdir.join("d", "this", "is", "short")
+    c = tmp_path / "d" / "this" / "is" / "short"
     # ensure paths that are the same in the first six letters
     # are incremented post tilde
-    d = tmpdir.join("d", "longerpath1")
-    e = tmpdir.join("d", "longerpath2")
-    fs.mkdirp(a)
-    fs.mkdirp(b)
-    fs.mkdirp(c)
-    fs.mkdirp(d)
-    fs.mkdirp(e)
+    d = tmp_path / "d" / "longerpath1"
+    e = tmp_path / "d" / "longerpath2"
+    fs.mkdirp(str(a))
+    fs.mkdirp(str(b))
+    fs.mkdirp(str(c))
+    fs.mkdirp(str(d))
+    fs.mkdirp(str(e))
     # check only for path of path we can control,
     # pytest prefix may or may not be mangled by windows_sfn
     # based on user/pytest config
-    assert "d\\THISIS~1\\a\\STILLT~1" in fs.windows_sfn(a)
-    assert "d\\LONG_P~1\\MORE_L~1" in fs.windows_sfn(b)
-    assert "d\\this\\is\\short" in fs.windows_sfn(c)
-    assert "d\\LONGER~1" in fs.windows_sfn(d)
-    assert "d\\LONGER~2" in fs.windows_sfn(e)
-    shutil.rmtree(tmpdir.join("d"))
+    assert "d\\THISIS~1\\a\\STILLT~1" in fs.windows_sfn(str(a))
+    assert "d\\LONG_P~1\\MORE_L~1" in fs.windows_sfn(str(b))
+    assert "d\\this\\is\\short" in fs.windows_sfn(str(c))
+    assert "d\\LONGER~1" in fs.windows_sfn(str(d))
+    assert "d\\LONGER~2" in fs.windows_sfn(str(e))
+    shutil.rmtree(str(tmp_path / "d"))
 
 
 @pytest.fixture
-def dir_structure_with_things_to_find(tmpdir):
+def dir_structure_with_things_to_find(tmp_path_factory: pytest.TempPathFactory):
     """
     <root>/
         dir_one/
@@ -1047,18 +1078,34 @@ def dir_structure_with_things_to_find(tmpdir):
             file_three
         file_four
     """
-    dir_one = tmpdir.join("dir_one").ensure(dir=True)
-    tmpdir.join("dir_two").ensure(dir=True)
-    dir_three = tmpdir.join("dir_three").ensure(dir=True)
-    dir_four = dir_three.join("dir_four").ensure(dir=True)
+    tmp_main_dir = tmp_path_factory.mktemp("dir_structure_with_things_to_find")
+    dir_one = tmp_main_dir / "dir_one"
+    dir_one.mkdir()
+    dir_two = tmp_main_dir / "dir_two"
+    dir_two.mkdir()
+    dir_three = tmp_main_dir / "dir_three"
+    dir_three.mkdir()
+    dir_four = dir_three / "dir_four"
+    dir_four.mkdir()
 
     locations = {}
-    locations["file_one"] = str(dir_one.join("file_one").ensure())
-    locations["file_two"] = str(dir_four.join("file_two").ensure())
-    locations["file_three"] = str(dir_three.join("file_three").ensure())
-    locations["file_four"] = str(tmpdir.join("file_four").ensure())
+    file_one = dir_one / "file_one"
+    file_one.touch()
+    locations["file_one"] = str(file_one)
 
-    return str(tmpdir), locations
+    file_two = dir_four / "file_two"
+    file_two.touch()
+    locations["file_two"] = str(file_two)
+
+    file_three = dir_three / "file_three"
+    file_three.touch()
+    locations["file_three"] = str(file_three)
+
+    file_four = tmp_main_dir / "file_four"
+    file_four.touch()
+    locations["file_four"] = str(file_four)
+
+    return str(tmp_main_dir), locations
 
 
 def test_find_path_glob_matches(dir_structure_with_things_to_find):
@@ -1105,8 +1152,8 @@ def test_find_max_depth_relative(dir_structure_with_things_to_find):
 
 
 @pytest.mark.parametrize("recursive,max_depth", [(False, -1), (False, 1)])
-def test_max_depth_and_recursive_errors(tmpdir, recursive, max_depth):
-    root = str(tmpdir)
+def test_max_depth_and_recursive_errors(tmp_path: pathlib.Path, recursive, max_depth):
+    root = str(tmp_path)
     error_str = "cannot be set if recursive is False"
     with pytest.raises(ValueError, match=error_str):
         fs.find(root, ["some_file"], recursive=recursive, max_depth=max_depth)
@@ -1116,7 +1163,7 @@ def test_max_depth_and_recursive_errors(tmpdir, recursive, max_depth):
 
 
 @pytest.fixture(params=[True, False])
-def complex_dir_structure(request, tmpdir):
+def complex_dir_structure(request, tmp_path_factory: pytest.TempPathFactory):
     """
     "lx-dy" means "level x, directory y"
     "lx-fy" means "level x, file y"
@@ -1145,36 +1192,53 @@ def complex_dir_structure(request, tmpdir):
     elif sys.platform != "win32" and use_junctions:
         pytest.skip("Junctions are a Windows-only feature")
 
-    l1_d1 = tmpdir.join("l1-d1").ensure(dir=True)
-    l2_d1 = l1_d1.join("l2-d1").ensure(dir=True)
-    l3_d2 = l2_d1.join("l3-d2").ensure(dir=True)
-    l3_d4 = l2_d1.join("l3-d4").ensure(dir=True)
-    l1_d2 = tmpdir.join("l1-d2").ensure(dir=True)
-    l2_d2 = l1_d2.join("l2-d2").ensure(dir=True)
+    tmp_complex_dir = tmp_path_factory.mktemp("complex_dir_structure")
+    l1_d1 = tmp_complex_dir / "l1-d1"
+    l1_d1.mkdir()
+    l2_d1 = l1_d1 / "l2-d1"
+    l2_d1.mkdir()
+    l3_d2 = l2_d1 / "l3-d2"
+    l3_d2.mkdir()
+    l3_d4 = l2_d1 / "l3-d4"
+    l3_d4.mkdir()
+    l1_d2 = tmp_complex_dir / "l1-d2"
+    l1_d2.mkdir()
+    l2_d2 = l1_d2 / "l2-d2"
+    l2_d2.mkdir()
 
-    if use_junctions:
+    if sys.platform == "win32" and use_junctions:
         link_fn = llnl.util.symlink._windows_create_junction
     else:
         link_fn = os.symlink
 
-    link_fn(l1_d2, pathlib.Path(l2_d1) / "l3-s1")
-    link_fn(l1_d1, pathlib.Path(l2_d1) / "l3-s3")
-    link_fn(l3_d4, pathlib.Path(tmpdir) / "l1-s3")
-    l2_s3 = pathlib.Path(l1_d2) / "l2-s3"
-    link_fn(l2_d2, l2_s3)
-    link_fn(l2_s3, pathlib.Path(tmpdir) / "l1-s4")
+    link_fn(str(l1_d2), str(l2_d1 / "l3-s1"))
+    link_fn(str(l1_d1), str(l2_d1 / "l3-s3"))
+    link_fn(str(l3_d4), str(tmp_complex_dir / "l1-s3"))
+    l2_s3 = l1_d2 / "l2-s3"
+    link_fn(str(l2_d2), str(l2_s3))
+    link_fn(str(l2_s3), str(tmp_complex_dir / "l1-s4"))
+
+    # Create files
+    l4_f1 = l3_d2 / "l4-f1"
+    l4_f1.touch()
+    l4_f2 = l3_d4 / "l4-f2"
+    l4_f2.touch()
+    l2_f1 = l1_d2 / "l2-f1"
+    l2_f1.touch()
+    l3_f3 = l2_d2 / "l3-f3"
+    l3_f3.touch()
 
     locations = {
-        "l4-f1": str(l3_d2.join("l4-f1").ensure()),
-        "l4-f2-full": str(l3_d4.join("l4-f2").ensure()),
-        "l4-f2-link": str(pathlib.Path(tmpdir) / "l1-s3" / "l4-f2"),
-        "l2-f1": str(l1_d2.join("l2-f1").ensure()),
-        "l2-f1-link": str(pathlib.Path(tmpdir) / "l1-d1" / "l2-d1" / "l3-s1" / "l2-f1"),
-        "l3-f3-full": str(l2_d2.join("l3-f3").ensure()),
-        "l3-f3-link-l1": str(pathlib.Path(tmpdir) / "l1-s4" / "l3-f3"),
+        "l4-f1": str(l4_f1),
+        "l4-f2-full": str(l4_f2),
+        "l4-f2-link": str(tmp_complex_dir / "l1-s3" / "l4-f2"),
+        "l2-f1": str(l2_f1),
+        "l2-f1-link": str(tmp_complex_dir / "l1-d1" / "l2-d1" / "l3-s1" / "l2-f1"),
+        "l3-f3-full": str(l3_f3),
+        "l3-f3-link-l1": str(tmp_complex_dir / "l1-s4" / "l3-f3"),
     }
 
-    return str(tmpdir), locations
+    return str(tmp_complex_dir), locations
 
 
 def test_find_max_depth_symlinks(complex_dir_structure):
@@ -1246,10 +1310,10 @@ def test_find_input_types(tmp_path: pathlib.Path):
         fs.find(1, "file.txt")  # type: ignore
 
 
-def test_edit_in_place_through_temporary_file(tmp_path):
+def test_edit_in_place_through_temporary_file(tmp_path: pathlib.Path):
     (tmp_path / "example.txt").write_text("Hello")
     current_ino = os.stat(tmp_path / "example.txt").st_ino
-    with fs.edit_in_place_through_temporary_file(tmp_path / "example.txt") as temporary:
+    with fs.edit_in_place_through_temporary_file(str(tmp_path / "example.txt")) as temporary:
         os.unlink(temporary)
         with open(temporary, "w", encoding="utf-8") as f:
             f.write("World")

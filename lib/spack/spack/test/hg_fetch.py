@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -70,9 +71,9 @@ def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_re
             assert h() == t.revision
 
 
-def test_hg_extra_fetch(tmpdir):
+def test_hg_extra_fetch(tmp_path: pathlib.Path):
     """Ensure a fetch after expanding is effectively a no-op."""
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
 
     fetcher = HgFetchStrategy(hg="file:///not-a-real-hg-repo")
     with Stage(fetcher, path=testpath) as stage:

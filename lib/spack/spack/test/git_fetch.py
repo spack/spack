@@ -70,9 +70,9 @@ def mock_bad_git(monkeypatch):
     yield
 
 
-def test_bad_git(tmpdir, mock_bad_git):
+def test_bad_git(tmp_path: pathlib.Path, mock_bad_git):
     """Trigger a SpackError when attempt a fetch with a bad git."""
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
 
     with pytest.raises(spack.error.SpackError):
         fetcher = GitFetchStrategy(git="file:///not-a-real-git-repo")
@@ -218,9 +218,9 @@ def test_debug_fetch(
             assert os.path.isdir(s.package.stage.source_path)
 
 
-def test_git_extra_fetch(git, tmpdir):
+def test_git_extra_fetch(git, tmp_path: pathlib.Path):
     """Ensure a fetch after 'expanding' is effectively a no-op."""
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
 
     fetcher = GitFetchStrategy(git="file:///not-a-real-git-repo")
     with Stage(fetcher, path=testpath) as stage:

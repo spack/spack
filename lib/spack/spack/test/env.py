@@ -4,6 +4,7 @@
 """Test environment internals without CLI"""
 import filecmp
 import os
+import pathlib
 import pickle
 
 import pytest
@@ -38,7 +39,7 @@ class TestDirectoryInitialization:
             ev.environment_dir_from_name("test", exists_ok=False)
 
 
-def test_hash_change_no_rehash_concrete(tmp_path, config):
+def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     # create an environment
     env_path = tmp_path / "env_dir"
     env_path.mkdir(exist_ok=False)
@@ -53,7 +54,7 @@ def test_hash_change_no_rehash_concrete(tmp_path, config):
     # rewrite the hash
     old_hash = env.concretized_order[0]
     new_hash = "abc"
-    env.specs_by_hash[old_hash]._hash = new_hash
+    env.specs_by_hash[old_hash]._hash = new_hash  # type: ignore[attr-defined]
     env.concretized_order[0] = new_hash
     env.specs_by_hash[new_hash] = env.specs_by_hash[old_hash]
     del env.specs_by_hash[old_hash]
@@ -65,10 +66,11 @@ def test_hash_change_no_rehash_concrete(tmp_path, config):
     # Ensure read hashes are used (rewritten hash seen on read)
     assert read_in.concretized_order
     assert read_in.concretized_order[0] in read_in.specs_by_hash
-    assert read_in.specs_by_hash[read_in.concretized_order[0]]._hash == new_hash
+    _hash = read_in.specs_by_hash[read_in.concretized_order[0]]._hash  # type: ignore[attr-defined]
+    assert _hash == new_hash
 
 
-def test_env_change_spec(tmp_path, config):
+def test_env_change_spec(tmp_path: pathlib.Path, config):
     env_path = tmp_path / "env_dir"
     env_path.mkdir(exist_ok=False)
     env = ev.create_in_dir(env_path)
@@ -101,7 +103,7 @@ spack:
 """
 
 
-def test_env_change_spec_in_definition(tmp_path, mutable_mock_env_path):
+def test_env_change_spec_in_definition(tmp_path: pathlib.Path, mutable_mock_env_path):
     manifest_file = tmp_path / ev.manifest_name
     manifest_file.write_text(_test_matrix_yaml)
     e = ev.create("test", manifest_file)
@@ -124,7 +126,7 @@ def test_env_change_spec_in_definition(tmp_path, mutable_mock_env_path):
     assert not any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
 
 
-def test_env_change_spec_in_matrix_raises_error(tmp_path, mutable_mock_env_path):
+def test_env_change_spec_in_matrix_raises_error(tmp_path: pathlib.Path, mutable_mock_env_path):
     manifest_file = tmp_path / ev.manifest_name
     manifest_file.write_text(_test_matrix_yaml)
     e = ev.create("test", manifest_file)
@@ -144,12 +146,13 @@ def test_activate_should_require_an_env():
         ev.activate(env=None)
 
 
-def test_user_view_path_is_not_canonicalized_in_yaml(tmpdir, config):
+def test_user_view_path_is_not_canonicalized_in_yaml(tmp_path: pathlib.Path, config):
     # When spack.yaml files are checked into version control, we
     # don't want view: ./relative to get canonicalized on disk.
 
-    # We create a view in <tmpdir>/env_dir
-    env_path = tmpdir.mkdir("env_dir").strpath
+    # We create a view in <tmp_path>/env_dir
+    env_path = str(tmp_path / "env_dir")
+    (tmp_path / "env_dir").mkdir()
 
     # And use a relative path to specify the view dir
     view = os.path.join(".", "view")
@@ -158,7 +161,7 @@ def test_user_view_path_is_not_canonicalized_in_yaml(tmpdir, config):
     absolute_view = os.path.join(env_path, "view")
 
     # Serialize environment with relative view path
-    with fs.working_dir(str(tmpdir)):
+    with fs.working_dir(str(tmp_path)):
         fst = ev.create_in_dir(env_path, with_view=view)
         fst.regenerate_views()
 
@@ -167,14 +170,14 @@ def test_user_view_path_is_not_canonicalized_in_yaml(tmpdir, config):
 
     # Deserialize and check if the view path is still relative in yaml
     # and also check that the getter is pointing to the right dir.
-    with fs.working_dir(str(tmpdir)):
+    with fs.working_dir(str(tmp_path)):
         snd = ev.Environment(env_path)
         assert snd.manifest["spack"]["view"] == view
         assert os.path.samefile(snd.default_view.root, absolute_view)
 
 
-def test_environment_cant_modify_environments_root(tmpdir):
-    filename = str(tmpdir.join("spack.yaml"))
+def test_environment_cant_modify_environments_root(tmp_path: pathlib.Path):
+    filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -185,9 +188,9 @@ def test_environment_cant_modify_environments_root(tmpdir):
    specs: []
  """
         )
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         with pytest.raises(ev.SpackEnvironmentError):
-            e = ev.Environment(tmpdir.strpath)
+            e = ev.Environment(str(tmp_path))
             ev.activate(e)
 
 
@@ -205,7 +208,7 @@ spack:
     unify: false"""
     ],
 )
-def test_roundtrip_spack_yaml_with_comments(original_content, config, tmp_path):
+def test_roundtrip_spack_yaml_with_comments(original_content, config, tmp_path: pathlib.Path):
     """Ensure that round-tripping a spack.yaml file doesn't change its content."""
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(original_content)
@@ -217,7 +220,7 @@ def test_roundtrip_spack_yaml_with_comments(original_content, config, tmp_path):
     assert content == original_content
 
 
-def test_adding_anonymous_specs_to_env_fails(tmp_path):
+def test_adding_anonymous_specs_to_env_fails(tmp_path: pathlib.Path):
     """Tests that trying to add an anonymous spec to the 'specs' section of an environment
     raises an exception
     """
@@ -226,7 +229,7 @@ def test_adding_anonymous_specs_to_env_fails(tmp_path):
         env.add("%gcc")
 
 
-def test_removing_from_non_existing_list_fails(tmp_path):
+def test_removing_from_non_existing_list_fails(tmp_path: pathlib.Path):
     """Tests that trying to remove a spec from a non-existing definition fails."""
     env = ev.create_in_dir(tmp_path)
     with pytest.raises(ev.SpackEnvironmentError, match="'bar' does not exist"):
@@ -245,7 +248,7 @@ def test_removing_from_non_existing_list_fails(tmp_path):
         (False, False),
     ],
 )
-def test_update_default_view(init_view, update_value, tmp_path, config):
+def test_update_default_view(init_view, update_value, tmp_path: pathlib.Path, config):
     """Tests updating the default view with different values."""
     env = ev.create_in_dir(tmp_path, with_view=init_view)
     env.update_default_view(update_value)
@@ -294,7 +297,7 @@ spack:
     ],
 )
 def test_update_default_complex_view(
-    initial_content, update_value, expected_view, tmp_path, config
+    initial_content, update_value, expected_view, tmp_path: pathlib.Path, config
 ):
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(initial_content)
@@ -307,7 +310,7 @@ def test_update_default_complex_view(
 
 
 @pytest.mark.parametrize("filename", [ev.manifest_name, ev.lockfile_name])
-def test_cannot_initialize_in_dir_with_init_file(tmp_path, filename):
+def test_cannot_initialize_in_dir_with_init_file(tmp_path: pathlib.Path, filename):
     """Tests that initializing an environment in a directory with an already existing
     spack.yaml or spack.lock raises an exception.
     """
@@ -317,7 +320,7 @@ def test_cannot_initialize_in_dir_with_init_file(tmp_path, filename):
         ev.create_in_dir(tmp_path)
 
 
-def test_cannot_initiliaze_if_dirname_exists_as_a_file(tmp_path):
+def test_cannot_initiliaze_if_dirname_exists_as_a_file(tmp_path: pathlib.Path):
     """Tests that initializing an environment using as a location an existing file raises
     an error.
     """
@@ -327,23 +330,23 @@ def test_cannot_initiliaze_if_dirname_exists_as_a_file(tmp_path):
         ev.create_in_dir(dir_name)
 
 
-def test_cannot_initialize_if_init_file_does_not_exist(tmp_path):
+def test_cannot_initialize_if_init_file_does_not_exist(tmp_path: pathlib.Path):
     """Tests that initializing an environment passing a non-existing init file raises an error."""
     init_file = tmp_path / ev.manifest_name
     with pytest.raises(ev.SpackEnvironmentError, match="cannot initialize"):
         ev.create_in_dir(tmp_path, init_file=init_file)
 
 
-def test_environment_pickle(tmp_path):
+def test_environment_pickle(tmp_path: pathlib.Path):
     env1 = ev.create_in_dir(tmp_path)
     obj = pickle.dumps(env1)
     env2 = pickle.loads(obj)
     assert isinstance(env2, ev.Environment)
 
 
-def test_error_on_nonempty_view_dir(tmpdir):
+def test_error_on_nonempty_view_dir(tmp_path: pathlib.Path):
     """Error when the target is not an empty dir"""
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         os.mkdir("empty_dir")
         os.mkdir("nonempty_dir")
         with open(os.path.join("nonempty_dir", "file"), "wb"):
@@ -369,7 +372,7 @@ def test_error_on_nonempty_view_dir(tmpdir):
             _error_on_nonempty_view_dir("file")
 
 
-def test_can_add_specs_to_environment_without_specs_attribute(tmp_path, config):
+def test_can_add_specs_to_environment_without_specs_attribute(tmp_path: pathlib.Path, config):
     """Sometimes users have template manifest files, and save one line in the YAML file by
     removing the empty 'specs: []' attribute. This test ensures that adding a spec to an
     environment without the 'specs' attribute, creates the attribute first instead of returning
@@ -411,7 +414,7 @@ spack:
     ],
 )
 def test_preserving_comments_when_adding_specs(
-    original_yaml, new_spec, expected_yaml, config, tmp_path
+    original_yaml, new_spec, expected_yaml, config, tmp_path: pathlib.Path
 ):
     """Ensure that round-tripping a spack.yaml file doesn't change its content."""
     spack_yaml = tmp_path / "spack.yaml"
@@ -427,7 +430,7 @@ def test_preserving_comments_when_adding_specs(
 
 @pytest.mark.parametrize("filename", [ev.lockfile_name, "as9582g54.lock", "m3ia54s.json"])
 @pytest.mark.regression("37410")
-def test_initialize_from_lockfile(tmp_path, filename):
+def test_initialize_from_lockfile(tmp_path: pathlib.Path, filename):
     """Some users have workflows where they store multiple lockfiles in the
     same directory, and pick one of them to create an environment depending
     on external parameters e.g. while running CI jobs. This test ensures that
@@ -444,7 +447,7 @@ def test_initialize_from_lockfile(tmp_path, filename):
     assert filecmp.cmp(env_dir / ev.lockfile_name, init_file, shallow=False)
 
 
-def test_cannot_initialize_from_bad_lockfile(tmp_path):
+def test_cannot_initialize_from_bad_lockfile(tmp_path: pathlib.Path):
     """Test that we fail on an incorrectly constructed lockfile"""
 
     init_file = tmp_path / ev.lockfile_name
@@ -458,7 +461,7 @@ def test_cannot_initialize_from_bad_lockfile(tmp_path):
 
 @pytest.mark.parametrize("filename", ["random.txt", "random.yaml", ev.manifest_name])
 @pytest.mark.regression("37410")
-def test_initialize_from_random_file_as_manifest(tmp_path, filename):
+def test_initialize_from_random_file_as_manifest(tmp_path: pathlib.Path, filename):
     """Some users have workflows where they store multiple lockfiles in the
     same directory, and pick one of them to create an environment depending
     on external parameters e.g. while running CI jobs. This test ensures that
@@ -486,7 +489,7 @@ spack:
     assert filecmp.cmp(env_dir / ev.manifest_name, init_file, shallow=False)
 
 
-def test_error_message_when_using_too_new_lockfile(tmp_path):
+def test_error_message_when_using_too_new_lockfile(tmp_path: pathlib.Path):
     """Sometimes the lockfile format needs to be bumped. When that happens, we have forward
     incompatibilities that need to be reported in a clear way to the user, in case we moved
     back to an older version of Spack. This test ensures that the error message for a too
@@ -525,7 +528,7 @@ def test_error_message_when_using_too_new_lockfile(tmp_path):
     ],
 )
 def test_environment_concretizer_scheme_used(
-    tmp_path, mutable_config, unify_in_lower_scope, unify_in_spack_yaml
+    tmp_path: pathlib.Path, mutable_config, unify_in_lower_scope, unify_in_spack_yaml
 ):
     """Tests that "unify" settings in spack.yaml always take precedence over settings in lower
     configuration scopes.
@@ -548,7 +551,7 @@ spack:
 
 
 @pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
-def test_environment_config_scheme_used(tmp_path, unify_in_config):
+def test_environment_config_scheme_used(tmp_path: pathlib.Path, unify_in_config):
     """Tests that "unify" settings in lower configuration scopes is taken into account,
     if absent in spack.yaml.
     """
@@ -575,7 +578,7 @@ spack:
     ],
 )
 def test_conflicts_with_packages_that_are_not_dependencies(
-    spec_str, expected_raise, expected_spec, tmp_path, config
+    spec_str, expected_raise, expected_spec, tmp_path: pathlib.Path, config
 ):
     """Tests that we cannot concretize two specs together, if one conflicts with the other,
     even though they don't have a dependency relation.
@@ -604,7 +607,9 @@ spack:
 @pytest.mark.parametrize(
     "possible_mpi_spec,unify", [("mpich", False), ("mpich", True), ("zmpi", False), ("zmpi", True)]
 )
-def test_requires_on_virtual_and_potential_providers(possible_mpi_spec, unify, tmp_path, config):
+def test_requires_on_virtual_and_potential_providers(
+    possible_mpi_spec, unify, tmp_path: pathlib.Path, config
+):
     """Tests that in an environment we can add packages explicitly, even though they provide
     a virtual package, and we require the provider of the same virtual to be another package,
     if they are added explicitly by their name.
@@ -639,7 +644,7 @@ def test_requires_on_virtual_and_potential_providers(possible_mpi_spec, unify, t
 @pytest.mark.parametrize(
     "spec_str", ["mpileaks +opt", "mpileaks  +opt   ~shared", "mpileaks  ~shared   +opt"]
 )
-def test_manifest_file_removal_works_if_spec_is_not_normalized(tmp_path, spec_str):
+def test_manifest_file_removal_works_if_spec_is_not_normalized(tmp_path: pathlib.Path, spec_str):
     """Tests that we can remove a spec from a manifest file even if its string
     representation is not normalized.
     """
@@ -672,7 +677,7 @@ spack:
     ],
 )
 def test_removing_spec_from_manifest_with_exact_duplicates(
-    duplicate_specs, expected_number, tmp_path
+    duplicate_specs, expected_number, tmp_path: pathlib.Path
 ):
     """Tests that we can remove exact duplicates from a manifest file.
 
@@ -699,7 +704,7 @@ def test_removing_spec_from_manifest_with_exact_duplicates(
 
 
 @pytest.mark.regression("35298")
-def test_variant_propagation_with_unify_false(tmp_path, config):
+def test_variant_propagation_with_unify_false(tmp_path: pathlib.Path, config):
     """Spack distributes concretizations to different processes, when unify:false is selected and
     the number of roots is 2 or more. When that happens, the specs to be concretized need to be
     properly reconstructed on the worker process, if variant propagation was requested.
@@ -739,7 +744,7 @@ def test_env_with_include_defs(mutable_mock_env_path):
     spack_yaml.write_text(
         f"""spack:
   include:
-  - file://{defs_file}
+  - {defs_file.as_uri()}
 
   definitions:
   - my_packages: [zlib]
@@ -769,7 +774,7 @@ def test_env_with_include_def_missing(mutable_mock_env_path):
     spack_yaml.write_text(
         f"""spack:
   include:
-  - file://{defs_file}
+  - {defs_file.as_uri()}
 
   specs:
   - matrix:
@@ -840,7 +845,7 @@ def test_root_version_weights_for_old_versions(mutable_mock_env_path):
     assert gcc.satisfies("@=1.0")
 
 
-def test_env_view_on_empty_dir_is_fine(tmp_path, config, temporary_store):
+def test_env_view_on_empty_dir_is_fine(tmp_path: pathlib.Path, config, temporary_store):
     """Tests that creating a view pointing to an empty dir is not an error."""
     view_dir = tmp_path / "view"
     view_dir.mkdir()
@@ -852,7 +857,7 @@ def test_env_view_on_empty_dir_is_fine(tmp_path, config, temporary_store):
     assert view_dir.is_symlink()
 
 
-def test_env_view_on_non_empty_dir_errors(tmp_path, config, temporary_store):
+def test_env_view_on_non_empty_dir_errors(tmp_path: pathlib.Path, config, temporary_store):
     """Tests that creating a view pointing to a non-empty dir errors."""
     view_dir = tmp_path / "view"
     view_dir.mkdir()
@@ -869,7 +874,7 @@ def test_env_view_on_non_empty_dir_errors(tmp_path, config, temporary_store):
     "matrix_line", [("^zmpi", "^mpich"), ("~shared", "+shared"), ("shared=False", "+shared-libs")]
 )
 @pytest.mark.regression("40791")
-def test_stack_enforcement_is_strict(tmp_path, matrix_line, config):
+def test_stack_enforcement_is_strict(tmp_path: pathlib.Path, matrix_line, config):
     """Ensure that constraints in matrices are applied strictly after expansion, to avoid
     inconsistencies between abstract user specs and concrete specs.
     """
@@ -895,7 +900,7 @@ spack:
             e.concretize()
 
 
-def test_only_roots_are_explicitly_installed(tmp_path, config, temporary_store):
+def test_only_roots_are_explicitly_installed(tmp_path: pathlib.Path, config, temporary_store):
     """When installing specific non-root specs from an environment, we continue to mark them
     as implicitly installed. What makes installs explicit is that they are root of the env."""
     env = ev.create_in_dir(tmp_path)
@@ -909,7 +914,7 @@ def test_only_roots_are_explicitly_installed(tmp_path, config, temporary_store):
     assert temporary_store.db.query(explicit=True) == [mpileaks]
 
 
-def test_environment_from_name_or_dir(mutable_mock_env_path, tmp_path):
+def test_environment_from_name_or_dir(mutable_mock_env_path):
     test_env = ev.create("test")
 
     name_env = ev.environment_from_name_or_dir(test_env.name)
@@ -971,7 +976,7 @@ spack:
         assert req_specs == set(["@3.11:"])
 
 
-def test_using_multiple_compilers_on_a_node_is_discouraged(tmp_path, mutable_config):
+def test_using_multiple_compilers_on_a_node_is_discouraged(tmp_path: pathlib.Path, mutable_config):
     """Tests that when we specify %<compiler> Spack tries to use that compiler for all the
     languages needed by that node.
     """
@@ -1045,7 +1050,7 @@ spack:
     ],
 )
 def test_toolchain_definitions_are_allowed(
-    spack_yaml, expected, not_expected, tmp_path, mutable_config
+    spack_yaml, expected, not_expected, tmp_path: pathlib.Path, mutable_config
 ):
     """Tests that we can use toolchain definitions in spack.yaml files."""
     manifest = tmp_path / "spack.yaml"
@@ -1074,7 +1079,7 @@ MIXED_TOOLCHAIN = """
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
-def test_single_toolchain_and_matrix(unify, tmp_path, mutable_config):
+def test_single_toolchain_and_matrix(unify, tmp_path: pathlib.Path, mutable_config):
     """Tests that toolchains can be used with matrices in environments"""
     spack_yaml = f"""
 spack:
@@ -1121,7 +1126,7 @@ GCC_ZMPI = """
 
 
 @pytest.mark.parametrize("unify", ["false", "when_possible"])
-def test_toolchains_as_matrix_dimension(unify, tmp_path, mutable_config):
+def test_toolchains_as_matrix_dimension(unify, tmp_path: pathlib.Path, mutable_config):
     """Tests expanding a matrix using different toolchains as the last dimension"""
     spack_yaml = f"""
 spack:
@@ -1157,7 +1162,7 @@ spack:
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
-def test_using_toolchain_as_requirement(unify, tmp_path, mutable_config):
+def test_using_toolchain_as_requirement(unify, tmp_path: pathlib.Path, mutable_config):
     """Tests using a toolchain as a default requirement in an environment"""
     spack_yaml = f"""
 spack:
@@ -1192,7 +1197,7 @@ spack:
 
 
 @pytest.mark.parametrize("unify", ["false", "when_possible"])
-def test_using_toolchain_as_preferences(unify, tmp_path, mutable_config):
+def test_using_toolchain_as_preferences(unify, tmp_path: pathlib.Path, mutable_config):
     """Tests using a toolchain as a strong preference in an environment"""
     spack_yaml = f"""
 spack:
@@ -1221,7 +1226,7 @@ spack:
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
-def test_mixing_toolchains_in_an_input_spec(unify, tmp_path, mutable_config):
+def test_mixing_toolchains_in_an_input_spec(unify, tmp_path: pathlib.Path, mutable_config):
     """Tests using a toolchain as a strong preference in an environment"""
     spack_yaml = f"""
 spack:

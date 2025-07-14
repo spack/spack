@@ -393,7 +393,7 @@ def find_win32_additional_install_paths() -> List[str]:
     windows_search_ext = []
     cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
     # The list below should be expanded with other
-    # common Windows install locations as neccesary
+    # common Windows install locations as necessary
     path_ext_keys = ["I_MPI_ONEAPI_ROOT", "MSMPI_BIN", "MLAB_ROOT", "NUGET_PACKAGES"]
     user = os.environ["USERPROFILE"]
     add_path = lambda key: re.search(cuda_re, key) or key in path_ext_keys

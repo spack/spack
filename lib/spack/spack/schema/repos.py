@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/repos.py
    :lines: 18-
 """
+
 from typing import Any, Dict
 
 #: Properties for inclusion in other schemas
@@ -36,6 +37,9 @@ properties: Dict[str, Any] = {
                             "type": "object",
                             "properties": {
                                 "git": {"type": "string"},
+                                "branch": {"type": "string"},
+                                "commit": {"type": "string"},
+                                "tag": {"type": "string"},
                                 "destination": {"type": "string"},
                                 "paths": {"type": "array", "items": {"type": "string"}},
                             },

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
 import os
+import pathlib
 
 import pytest
 
@@ -77,7 +78,7 @@ class TestCompilerPropertyDetector:
         assert detector._compile_dummy_c_source() is None
 
     @pytest.mark.not_on_windows("Module files are not supported on Windows")
-    def test_compile_dummy_c_source_load_env(self, mock_gcc, monkeypatch, tmp_path):
+    def test_compile_dummy_c_source_load_env(self, mock_gcc, monkeypatch, tmp_path: pathlib.Path):
         gcc = tmp_path / "gcc"
         gcc.write_text(
             f"""#!/bin/sh

@@ -215,3 +215,7 @@ class NoChecksumException(SpackError):
             f"Expected {expected} but got {computed}. "
             f"File size = {size} bytes. Contents = {contents!r}",
         )
+
+
+class CompilerError(SpackError):
+    """Raised if something goes wrong when probing, or querying, a compiler."""

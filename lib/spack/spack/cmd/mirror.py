@@ -46,7 +46,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         " in the current environment if there is an active environment"
         " (this requires significant time and space)",
     )
-    create_parser.add_argument("-f", "--file", help="file with specs of packages to put in mirror")
+    create_parser.add_argument("--file", help="file with specs of packages to put in mirror")
     create_parser.add_argument(
         "--exclude-file",
         help="specs which Spack should not try to add to a mirror"
@@ -226,7 +226,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_connection_args(set_parser, False)
 
     # List
-    list_parser = sp.add_parser("list", help=mirror_list.__doc__)
+    list_parser = sp.add_parser("list", aliases=["ls"], help=mirror_list.__doc__)
     list_parser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
@@ -697,6 +697,7 @@ def mirror(parser, args):
         "set-url": mirror_set_url,
         "set": mirror_set,
         "list": mirror_list,
+        "ls": mirror_list,
     }
 
     if args.no_checksum:

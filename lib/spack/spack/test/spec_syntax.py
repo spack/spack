@@ -3,10 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import os
+import pathlib
 import re
 import sys
 
 import pytest
+
+import llnl.util.filesystem as fs
 
 import spack.binary_distribution
 import spack.cmd
@@ -1543,26 +1546,26 @@ def test_specfile_parsing(filename, regex):
     assert match.end() == len(filename)
 
 
-def test_parse_specfile_simple(specfile_for, tmpdir):
-    specfile = tmpdir.join("libdwarf.json")
+def test_parse_specfile_simple(specfile_for, tmp_path: pathlib.Path):
+    specfile = tmp_path / "libdwarf.json"
     s = specfile_for("libdwarf", specfile)
 
-    spec = SpecParser(specfile.strpath).next_spec()
+    spec = SpecParser(str(specfile)).next_spec()
     assert spec == s
 
     # Check we can mix literal and spec-file in text
-    specs = SpecParser(f"mvapich_foo {specfile.strpath}").all_specs()
+    specs = SpecParser(f"mvapich_foo {str(specfile)}").all_specs()
     assert len(specs) == 2
 
 
 @pytest.mark.parametrize("filename", ["libelf.yaml", "libelf.json"])
-def test_parse_filename_missing_slash_as_spec(specfile_for, tmpdir, filename):
+def test_parse_filename_missing_slash_as_spec(specfile_for, tmp_path: pathlib.Path, filename):
     """Ensure that libelf(.yaml|.json) parses as a spec, NOT a file."""
-    specfile = tmpdir.join(filename)
+    specfile = tmp_path / filename
     specfile_for(filename.split(".")[0], specfile)
 
     # Move to where the specfile is located so that libelf.yaml is there
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         specs = SpecParser("libelf.yaml").all_specs()
     assert len(specs) == 1
 
@@ -1582,71 +1585,70 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmpdir, filename):
 
     # make sure that only happens when the spec ends in yaml
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
-        spack.concretize.concretize_one(SpecParser("builtin_mock.doesnotexist").next_spec())
+        spack.concretize.concretize_one("builtin_mock.doesnotexist")
     assert not exc_info.value.long_message or (
         "Did you mean to specify a filename with" not in exc_info.value.long_message
     )
 
 
-def test_parse_specfile_dependency(default_mock_concretization, tmpdir):
+def test_parse_specfile_dependency(default_mock_concretization, tmp_path: pathlib.Path):
     """Ensure we can use a specfile as a dependency"""
     s = default_mock_concretization("libdwarf")
 
-    specfile = tmpdir.join("libelf.json")
-    with specfile.open("w") as f:
+    specfile = tmp_path / "libelf.json"
+    with open(specfile, "w", encoding="utf-8") as f:
         f.write(s["libelf"].to_json())
 
     # Make sure we can use yaml path as dependency, e.g.:
     #     "spack spec libdwarf ^ /path/to/libelf.json"
-    spec = SpecParser(f"libdwarf ^ {specfile.strpath}").next_spec()
-    assert spec["libelf"] == s["libelf"]
+    spec = SpecParser(f"libdwarf ^ {str(specfile)}").next_spec()
+    assert spec and spec["libelf"] == s["libelf"]
 
-    with specfile.dirpath().as_cwd():
+    with fs.working_dir(str(tmp_path)):
         # Make sure this also works: "spack spec ./libelf.yaml"
-        spec = SpecParser(f"libdwarf^.{os.path.sep}{specfile.basename}").next_spec()
-        assert spec["libelf"] == s["libelf"]
+        spec = SpecParser(f"libdwarf^.{os.path.sep}{specfile.name}").next_spec()
+        assert spec and spec["libelf"] == s["libelf"]
 
         # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
         spec = SpecParser(
-            f"libdwarf^..{os.path.sep}{specfile.dirpath().basename}"
-            f"{os.path.sep}{specfile.basename}"
+            f"libdwarf^..{os.path.sep}{specfile.parent.name}" f"{os.path.sep}{specfile.name}"
         ).next_spec()
-        assert spec["libelf"] == s["libelf"]
+        assert spec and spec["libelf"] == s["libelf"]
 
 
-def test_parse_specfile_relative_paths(specfile_for, tmpdir):
-    specfile = tmpdir.join("libdwarf.json")
+def test_parse_specfile_relative_paths(specfile_for, tmp_path: pathlib.Path):
+    specfile = tmp_path / "libdwarf.json"
     s = specfile_for("libdwarf", specfile)
 
-    basename = specfile.basename
-    parent_dir = specfile.dirpath()
+    basename = specfile.name
+    parent_dir = specfile.parent
 
-    with parent_dir.as_cwd():
+    with fs.working_dir(str(parent_dir)):
         # Make sure this also works: "spack spec ./libelf.yaml"
         spec = SpecParser(f".{os.path.sep}{basename}").next_spec()
         assert spec == s
 
         # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
-        spec = SpecParser(
-            f"..{os.path.sep}{parent_dir.basename}{os.path.sep}{basename}"
-        ).next_spec()
+        spec = SpecParser(f"..{os.path.sep}{parent_dir.name}{os.path.sep}{basename}").next_spec()
         assert spec == s
 
         # Should also handle mixed clispecs and relative paths, e.g.:
         #     "spack spec mvapich_foo ../<cur-dir>/libelf.yaml"
         specs = SpecParser(
-            f"mvapich_foo ..{os.path.sep}{parent_dir.basename}{os.path.sep}{basename}"
+            f"mvapich_foo ..{os.path.sep}{parent_dir.name}{os.path.sep}{basename}"
         ).all_specs()
         assert len(specs) == 2
         assert specs[1] == s
 
 
-def test_parse_specfile_relative_subdir_path(specfile_for, tmpdir):
-    specfile = tmpdir.mkdir("subdir").join("libdwarf.json")
+def test_parse_specfile_relative_subdir_path(specfile_for, tmp_path: pathlib.Path):
+    subdir = tmp_path / "subdir"
+    subdir.mkdir()
+    specfile = subdir / "libdwarf.json"
     s = specfile_for("libdwarf", specfile)
 
-    with tmpdir.as_cwd():
-        spec = SpecParser(f"subdir{os.path.sep}{specfile.basename}").next_spec()
+    with fs.working_dir(str(tmp_path)):
+        spec = SpecParser(f"subdir{os.path.sep}{specfile.name}").next_spec()
         assert spec == s
 
 

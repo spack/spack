@@ -98,6 +98,16 @@ class TestConcretizePreferences:
         update_packages(package_name, "variants", variant_value)
         assert_variant_values(package_name, **expected_results)
 
+    @pytest.mark.regression("50921")
+    @pytest.mark.parametrize("config_type", ("require", "prefer"))
+    def test_preferred_commit_variant(self, config_type):
+        """Tests that we can use auto-variants in requirements and preferences."""
+        commit_value = "b" * 40
+        name = "git-ref-package"
+        value = f"commit={commit_value}"
+        update_packages(name, config_type, [value])
+        assert_variant_values(name, **{"commit": commit_value})
+
     def test_preferred_variants_from_wildcard(self):
         """
         Test that 'foo=*' concretizes to any value

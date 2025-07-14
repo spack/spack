@@ -13,11 +13,9 @@ import importlib.util
 import inspect
 import itertools
 import os
-import random
 import re
 import shutil
 import stat
-import string
 import sys
 import traceback
 import types
@@ -53,7 +51,6 @@ import spack.paths
 import spack.provider_index
 import spack.spec
 import spack.tag
-import spack.tengine
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
@@ -1092,8 +1089,7 @@ class Repo:
             # From Package API v2.0 the namespace follows from the directory structure.
             check(
                 f"{os.sep}spack_repo{os.sep}" in self.root,
-                f"Invalid repository path '{self.root}'. "
-                f"Path must contain 'spack_repo{os.sep}'",
+                f"Invalid repository path '{self.root}'. Path must contain 'spack_repo{os.sep}'",
             )
             derived_namespace = self.root.rpartition(f"spack_repo{os.sep}")[2].replace(os.sep, ".")
             if "namespace" in config:
@@ -1399,12 +1395,17 @@ class Repo:
         class_name = nm.pkg_name_to_class_name(pkg_name)
 
         try:
+            if self.python_path:
+                sys.path.insert(0, self.python_path)
             module = importlib.import_module(fullname)
         except ImportError as e:
             raise UnknownPackageError(fullname) from e
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
             raise RepoError(msg) from e
+        finally:
+            if self.python_path:
+                sys.path.remove(self.python_path)
 
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
@@ -1596,6 +1597,9 @@ class RepoDescriptor:
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         return None
 
+    def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
+        return None
+
     def construct(
         self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Union[Repo, Exception]]:
@@ -1623,14 +1627,21 @@ class LocalRepoDescriptor(RepoDescriptor):
 class RemoteRepoDescriptor(RepoDescriptor):
     def __init__(
         self,
+        *,
         name: Optional[str],
         repository: str,
+        branch: Optional[str],
+        commit: Optional[str],
+        tag: Optional[str],
         destination: str,
         relative_paths: Optional[List[str]],
         lock: spack.util.lock.Lock,
     ) -> None:
         super().__init__(name)
         self.repository = repository
+        self.branch = branch
+        self.commit = commit
+        self.tag = tag
         self.destination = destination
         self.relative_paths = relative_paths
         self.error: Optional[str] = None
@@ -1638,13 +1649,81 @@ class RemoteRepoDescriptor(RepoDescriptor):
         self.read_transaction = spack.util.lock.ReadTransaction(lock)
 
     def _fetched(self) -> bool:
-        """Check if the repository has been fetched by looking for the .git directory."""
-        return os.path.isdir(os.path.join(self.destination, ".git"))
+        """Check if the repository has been fetched by looking for the .git
+        directory or file (when a submodule)."""
+        return os.path.exists(os.path.join(self.destination, ".git"))
 
     def fetched(self) -> bool:
         with self.read_transaction:
             return self._fetched()
         return False
+
+    def _clone_or_pull(
+        self,
+        git: spack.util.executable.Executable,
+        update: bool = False,
+        remote: str = "origin",
+        depth: int = 20,
+    ) -> None:
+        with self.write_transaction:
+            try:
+                with fs.working_dir(self.destination, create=True):
+                    # do not fetch if the package repository was fetched by another
+                    # process while we were waiting for the lock
+                    fetched = self._fetched()
+                    if fetched and not update:
+                        self.read_index_file()
+                        return
+
+                    # setup the repository if it does not exist
+                    if not fetched:
+                        spack.util.git.init_git_repo(self.repository, remote=remote, git_exe=git)
+
+                        # determine the default branch from ls-remote
+                        refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
+                        ref_match = re.search(r"refs/heads/(\S+)", refs)
+                        if not ref_match:
+                            self.error = f"Unable to locate a default branch for {self.repository}"
+                            return
+                        self.branch = ref_match.group(1)
+
+                    # determine the branch and remote if no config values exist
+                    elif not (self.commit or self.tag or self.branch):
+                        self.branch = git("rev-parse", "--abbrev-ref", "HEAD", output=str).strip()
+                        remote = git("config", f"branch.{self.branch}.remote", output=str).strip()
+
+                    if self.commit:
+                        spack.util.git.pull_checkout_commit(self.commit, git_exe=git)
+
+                    elif self.tag:
+                        spack.util.git.pull_checkout_tag(self.tag, remote, depth, git_exe=git)
+
+                    elif self.branch:
+                        # if the branch already exists we should use the
+                        # previously configured remote
+                        try:
+                            output = git("config", f"branch.{self.branch}.remote", output=str)
+                            remote = output.strip()
+                        except spack.util.executable.ProcessError:
+                            pass
+                        spack.util.git.pull_checkout_branch(
+                            self.branch, remote=remote, depth=depth, git_exe=git
+                        )
+
+            except spack.util.executable.ProcessError:
+                self.error = f"Failed to {'update' if update else 'clone'} repository {self.name}"
+                return
+
+            self.read_index_file()
+
+    def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
+        if git is None:
+            raise RepoError("Git executable not found")
+
+        self._clone_or_pull(git, update=True, remote=remote)
+
+        if self.error:
+            raise RepoError(self.error)
 
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         """Clone the remote repository if it has not been fetched yet and read the index file
@@ -1656,22 +1735,11 @@ class RemoteRepoDescriptor(RepoDescriptor):
         if not fetch:
             return
 
-        if git is None:
+        if not git:
             self.error = "Git executable not found"
             return
 
-        with self.write_transaction:
-            try:
-                # do not fetch if the package repository was fetched by another process while we
-                # were waiting for the lock
-                if not self._fetched():
-                    # users can always unshallow manually to fetch more.
-                    git("clone", "--depth=100", self.repository, self.destination)
-            except spack.util.executable.ProcessError as e:
-                self.error = f"Failed to clone repository {self.repository}: {e}"
-                return
-
-            self.read_index_file()
+        self._clone_or_pull(git)
 
     def read_index_file(self) -> None:
         if self.relative_paths is not None:
@@ -1782,7 +1850,7 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
         self,
         cache: spack.util.file_cache.FileCache,
         fetch: bool = True,
-        find_git: Callable[[], MaybeExecutable] = lambda: spack.util.executable.which("git"),
+        find_git: Callable[[], MaybeExecutable] = lambda: spack.util.git.git(required=True),
         overrides: Optional[Dict[str, Any]] = None,
     ) -> Tuple[RepoPath, Dict[str, Exception]]:
         """Construct a RepoPath from the descriptors.
@@ -1858,12 +1926,16 @@ def parse_config_descriptor(
     else:
         destination = spack.util.path.canonicalize_path(destination)
 
-    if "paths" in descriptor:
-        rel_paths = descriptor["paths"]
-    else:
-        rel_paths = None
-
-    return RemoteRepoDescriptor(name, repository, destination, rel_paths, lock)
+    return RemoteRepoDescriptor(
+        name=name,
+        repository=repository,
+        branch=descriptor.get("branch"),
+        commit=descriptor.get("commit"),
+        tag=descriptor.get("tag"),
+        destination=destination,
+        relative_paths=descriptor.get("paths"),
+        lock=lock,
+    )
 
 
 def create_or_construct(
@@ -1890,6 +1962,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 PATH: RepoPath = llnl.util.lang.Singleton(
     lambda: create_and_enable(spack.config.CONFIG)
 )  # type: ignore[assignment]
+
 
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
@@ -1928,6 +2001,7 @@ def use_repositories(
         yield new_repo
     finally:
         spack.config.CONFIG.remove_scope(scope_name=scope_name)
+        new_repo.disable()
         enable_repo(old_repo)
 
 
@@ -1936,43 +2010,6 @@ def enable_repo(repo_path: RepoPath) -> None:
     global PATH
     PATH = repo_path
     PATH.enable()
-
-
-class MockRepositoryBuilder:
-    """Build a mock repository in a directory"""
-
-    def __init__(self, root_directory, namespace=None):
-        namespace = namespace or "".join(random.choice(string.ascii_lowercase) for _ in range(10))
-        repo_root = os.path.join(root_directory, namespace)
-        os.mkdir(repo_root)
-        self.root, self.namespace = create_repo(repo_root, namespace)
-
-    def add_package(self, name, dependencies=None):
-        """Create a mock package in the repository, using a Jinja2 template.
-
-        Args:
-            name (str): name of the new package
-            dependencies (list): list of ("dep_spec", "dep_type", "condition") tuples.
-                Both "dep_type" and "condition" can default to ``None`` in which case
-                ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
-        """
-        dependencies = dependencies or []
-        context = {"cls_name": nm.pkg_name_to_class_name(name), "dependencies": dependencies}
-        template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
-        text = template.render(context)
-        package_py = self.recipe_filename(name)
-        fs.mkdirp(os.path.dirname(package_py))
-        with open(package_py, "w", encoding="utf-8") as f:
-            f.write(text)
-
-    def remove(self, name):
-        package_py = self.recipe_filename(name)
-        shutil.rmtree(os.path.dirname(package_py))
-
-    def recipe_filename(self, name: str):
-        return os.path.join(
-            self.root, "packages", nm.pkg_name_to_pkg_dir(name, package_api=(2, 0)), "package.py"
-        )
 
 
 class RepoError(spack.error.SpackError):

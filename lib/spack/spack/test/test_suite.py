@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import os
+import pathlib
 import sys
 
 import pytest
 
-from llnl.util.filesystem import join_path, mkdirp, touch
+from llnl.util.filesystem import touch
 
 import spack.concretize
 import spack.config
@@ -294,11 +295,11 @@ def test_process_test_parts(mock_packages):
     assert "test suite is missing" in str(exc_info)
 
 
-def test_test_part_fail(tmpdir, install_mockery, mock_fetch, mock_test_stage):
+def test_test_part_fail(tmp_path: pathlib.Path, install_mockery, mock_fetch, mock_test_stage):
     """Confirm test_part with a ProcessError results in FAILED status."""
     s = spack.concretize.concretize_one("trivial-smoke-test")
     pkg = s.package
-    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.test_log_file = str(tmp_path / "test-log.txt")
     touch(pkg.tester.test_log_file)
 
     name = "test_fail"
@@ -321,7 +322,7 @@ def test_test_part_pass(install_mockery, mock_fetch, mock_test_stage):
         if sys.platform == "win32":
             print(msg)
         else:
-            echo = which("echo")
+            echo = which("echo", required=True)
             echo(msg)
 
     for part_name, status in pkg.tester.test_parts.items():
@@ -343,11 +344,13 @@ def test_test_part_skip(install_mockery, mock_fetch, mock_test_stage):
         assert status == TestStatus.SKIPPED
 
 
-def test_test_part_missing_exe_fail_fast(tmpdir, install_mockery, mock_fetch, mock_test_stage):
+def test_test_part_missing_exe_fail_fast(
+    tmp_path: pathlib.Path, install_mockery, mock_fetch, mock_test_stage
+):
     """Confirm test_part with fail fast enabled raises exception."""
     s = spack.concretize.concretize_one("trivial-smoke-test")
     pkg = s.package
-    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.test_log_file = str(tmp_path / "test-log.txt")
     touch(pkg.tester.test_log_file)
 
     name = "test_fail_fast"
@@ -355,7 +358,7 @@ def test_test_part_missing_exe_fail_fast(tmpdir, install_mockery, mock_fetch, mo
         with pytest.raises(spack.install_test.TestFailure, match="object is not callable"):
             with spack.install_test.test_part(pkg, name, "fail fast"):
                 missing = which("no-possible-program")
-                missing()
+                missing()  # type: ignore
 
     test_parts = pkg.tester.test_parts
     assert len(test_parts) == 1
@@ -364,17 +367,19 @@ def test_test_part_missing_exe_fail_fast(tmpdir, install_mockery, mock_fetch, mo
         assert status == TestStatus.FAILED
 
 
-def test_test_part_missing_exe(tmpdir, install_mockery, mock_fetch, mock_test_stage):
+def test_test_part_missing_exe(
+    tmp_path: pathlib.Path, install_mockery, mock_fetch, mock_test_stage
+):
     """Confirm test_part with missing executable fails."""
     s = spack.concretize.concretize_one("trivial-smoke-test")
     pkg = s.package
-    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.test_log_file = str(tmp_path / "test-log.txt")
     touch(pkg.tester.test_log_file)
 
     name = "test_missing_exe"
     with spack.install_test.test_part(pkg, name, "missing exe"):
         missing = which("no-possible-program")
-        missing()
+        missing()  # type: ignore
 
     test_parts = pkg.tester.test_parts
     assert len(test_parts) == 1
@@ -426,7 +431,7 @@ def test_embedded_test_part_status(
     ],
 )
 def test_write_tested_status(
-    tmpdir, install_mockery, mock_fetch, mock_test_stage, statuses, expected
+    tmp_path: pathlib.Path, install_mockery, mock_fetch, mock_test_stage, statuses, expected
 ):
     """Check to ensure the status of the enclosing test part reflects summary of embedded parts."""
     s = spack.concretize.concretize_one("trivial-smoke-test")
@@ -435,7 +440,7 @@ def test_write_tested_status(
         pkg.tester.test_parts[f"test_{i}"] = status
         pkg.tester.counts[status] += 1
 
-    pkg.tester.tested_file = tmpdir.join("test-log.txt")
+    pkg.tester.tested_file = str(tmp_path / "test-log.txt")
     pkg.tester.write_tested_status()
     with open(pkg.tester.tested_file, "r", encoding="utf-8") as f:
         status = int(f.read().strip("\n"))
@@ -443,7 +448,9 @@ def test_write_tested_status(
 
 
 @pytest.mark.regression("37840")
-def test_write_tested_status_no_repeats(tmpdir, install_mockery, mock_fetch, mock_test_stage):
+def test_write_tested_status_no_repeats(
+    tmp_path: pathlib.Path, install_mockery, mock_fetch, mock_test_stage
+):
     """Emulate re-running the same stand-alone tests a second time."""
     s = spack.concretize.concretize_one("trivial-smoke-test")
     pkg = s.package
@@ -452,7 +459,7 @@ def test_write_tested_status_no_repeats(tmpdir, install_mockery, mock_fetch, moc
         pkg.tester.test_parts[f"test_{i}"] = status
         pkg.tester.counts[status] += 1
 
-    pkg.tester.tested_file = tmpdir.join("test-log.txt")
+    pkg.tester.tested_file = str(tmp_path / "test-log.txt")
     pkg.tester.write_tested_status()
     pkg.tester.write_tested_status()
 
@@ -460,11 +467,11 @@ def test_write_tested_status_no_repeats(tmpdir, install_mockery, mock_fetch, moc
     # with base 10: '2\n2' (i.e., the results being appended instead of
     # written to the file).
     with open(pkg.tester.tested_file, "r", encoding="utf-8") as f:
-        status = int(f.read().strip("\n"))
-        assert TestStatus(status) == TestStatus.PASSED
+        status_no = int(f.read().strip("\n"))
+        assert TestStatus(status_no) == TestStatus.PASSED
 
 
-def test_check_special_outputs(tmpdir):
+def test_check_special_outputs(tmp_path: pathlib.Path):
     """This test covers two related helper methods"""
     contents = """CREATE TABLE packages (
 name varchar(80) primary key,
@@ -475,11 +482,11 @@ INSERT INTO packages VALUES('readline',1,'https://tiswww.case.edu/php/chet/readl
 INSERT INTO packages VALUES('xsdk',0,'http://xsdk.info');
 COMMIT;
 """
-    filename = tmpdir.join("special.txt")
+    filename = tmp_path / "special.txt"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(contents)
 
-    expected = spack.install_test.get_escaped_text_output(filename)
+    expected = spack.install_test.get_escaped_text_output(str(filename))
     spack.install_test.check_outputs(expected, contents)
 
     # Let's also cover case where something expected is NOT in the output
@@ -488,32 +495,31 @@ COMMIT;
         spack.install_test.check_outputs(expected, contents)
 
 
-def test_find_required_file(tmpdir):
+def test_find_required_file(tmp_path: pathlib.Path):
     filename = "myexe"
-    dirs = ["a", "b"]
-    for d in dirs:
-        path = tmpdir.join(d)
-        mkdirp(path)
-        touch(join_path(path, filename))
-    path = join_path(tmpdir.join("c"), "d")
-    mkdirp(path)
-    touch(join_path(path, filename))
+    for d in ["a", "b"]:
+        path = tmp_path / d / filename
+        os.makedirs(path.parent, exist_ok=True)
+        path.touch()
+    path = tmp_path / "c" / "d" / filename
+    os.makedirs(path.parent, exist_ok=True)
+    path.touch()
 
     # First just find a single path
     results = spack.install_test.find_required_file(
-        str(tmpdir.join("c")), filename, expected=1, recursive=True
+        str(tmp_path / "c"), filename, expected=1, recursive=True
     )
     assert isinstance(results, str)
 
     # Ensure none file if do not recursively search that directory
     with pytest.raises(spack.install_test.SkipTest, match="Expected 1"):
         spack.install_test.find_required_file(
-            str(tmpdir.join("c")), filename, expected=1, recursive=False
+            str(tmp_path / "c"), filename, expected=1, recursive=False
         )
 
     # Now make sure we get all of the files
     results = spack.install_test.find_required_file(
-        str(tmpdir), filename, expected=3, recursive=True
+        str(tmp_path), filename, expected=3, recursive=True
     )
     assert isinstance(results, list) and len(results) == 3
 

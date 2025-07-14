@@ -54,7 +54,7 @@ def test_immediate_installed_dependents(mock_packages, database):
         out = dependents("--installed", "libelf")
 
     lines = [li for li in out.strip().split("\n") if not li.startswith("--")]
-    hashes = set([re.split(r"\s+", li)[0] for li in lines])
+    hashes = set([re.split(r"\s+", li)[0] for li in lines if li])
 
     expected = set(
         [spack.store.STORE.db.query_one(s).dag_hash(7) for s in ["dyninst", "libdwarf"]]

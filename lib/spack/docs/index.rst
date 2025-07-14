@@ -34,13 +34,11 @@ package:
 
 .. code-block:: console
 
-   $ git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git
+   $ git clone --depth=2 https://github.com/spack/spack.git
    $ cd spack/bin
    $ ./spack install libelf
 
 .. note::
-   ``-c feature.manyFiles=true`` improves Git's performance on repositories with 1,000+ files.
-
    ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
 
 If you're new to Spack and want to start using it, see :doc:`getting_started`,
@@ -49,13 +47,29 @@ or refer to the full manual below.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Basics
+   :caption: Introduction
 
    features
    getting_started
-   basic_usage
+   spec_syntax
+   installing_prerequisites
+   windows
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Basic Usage
+
+   package_fundamentals
+   configuring_compilers
    replace_conda_homebrew
    frequently_asked_questions
+   getting_help
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced Topics
+
+   advanced_topics
 
 .. toctree::
    :maxdepth: 2
@@ -93,9 +107,12 @@ or refer to the full manual below.
    :maxdepth: 2
    :caption: Contributing
 
-   contribution_guide
-   packaging_guide
+   packaging_guide_creation
+   packaging_guide_build
+   packaging_guide_testing
+   packaging_guide_advanced
    build_systems
+   contribution_guide
    developer_guide
 
 .. toctree::
