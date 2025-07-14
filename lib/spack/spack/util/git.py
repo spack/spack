@@ -67,23 +67,21 @@ def pull_checkout_commit(commit: str, git_exe: Optional[exe.Executable] = None):
     git_exe("checkout", commit)
 
 
-def pull_checkout_tag(
-    tag: str, remote: str = "origin", depth: int = 20, git_exe: Optional[exe.Executable] = None
-):
+def pull_checkout_tag(tag: str, remote: str = "origin", git_exe: Optional[exe.Executable] = None):
     """Fetch tags with specified depth and checkout the given tag."""
     git_exe = git_exe or git(required=True)
 
-    git_exe("fetch", f"--depth={depth}", "--force", "--tags", remote)
+    git_exe("fetch", "--tags", remote)
     git_exe("checkout", tag)
 
 
 def pull_checkout_branch(
-    branch: str, remote: str = "origin", depth: int = 20, git_exe: Optional[exe.Executable] = None
+    branch: str, remote: str = "origin", git_exe: Optional[exe.Executable] = None
 ):
     """Fetch and checkout branch, then rebase with remote tracking branch."""
     git_exe = git_exe or git(required=True)
 
-    git_exe("fetch", f"--depth={depth}", remote, branch)
+    git_exe("fetch", remote, branch)
     git_exe("checkout", "--quiet", branch)
 
     try:

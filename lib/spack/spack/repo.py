@@ -1696,7 +1696,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         spack.util.git.pull_checkout_commit(self.commit, git_exe=git)
 
                     elif self.tag:
-                        spack.util.git.pull_checkout_tag(self.tag, remote, depth, git_exe=git)
+                        spack.util.git.pull_checkout_tag(self.tag, remote, git_exe=git)
 
                     elif self.branch:
                         # if the branch already exists we should use the
@@ -1707,7 +1707,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         except spack.util.executable.ProcessError:
                             pass
                         spack.util.git.pull_checkout_branch(
-                            self.branch, remote=remote, depth=depth, git_exe=git
+                            self.branch, remote=remote, git_exe=git
                         )
 
             except spack.util.executable.ProcessError:
