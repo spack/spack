@@ -85,7 +85,12 @@ def pull_checkout_branch(
     git_exe("checkout", "--quiet", branch)
 
     try:
-        git_exe("rebase", f"{remote}/{branch}")
+        # git rebase output breaks pytest xdist when sharing stdout
+        # capturing output and echoing it via a print statement as a work around
+        # stderr is not captured so it will still be available to users on a
+        # failed repository update
+        out = git_exe("rebase", f"{remote}/{branch}", output=str)
+        print(out, end="")
     except exe.ProcessError:
         git_exe("rebase", "--abort", fail_on_error=False, error=str, output=str)
         raise
