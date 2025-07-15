@@ -2419,16 +2419,22 @@ class PackageInstaller:
         """
 
         self._init_queue()
+        print("queue initialized")
         failed_build_requests = []
         install_status = InstallStatus(len(self.build_pq))
         active_tasks: List[Task] = []
 
         # Determine which type of jobserver to set up and then enable it
-        packages = [task.pkg for _, task in self.build_pq]
-        jobserver_class = spack.jobserver.Jobserver.determine_type(packages)
-        jobserver = jobserver_class()
-        jobserver.enable()
-
+        try:
+            packages = [task.pkg for _, task in self.build_pq]
+            jobserver_class = spack.jobserver.Jobserver.determine_type(packages)
+            jobserver = jobserver_class()
+            jobserver.enable()
+            print("post js enabled")
+        except BaseException as e:
+            print("Raised", e)
+            raise
+            
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
         term_status = TermStatusLine(
@@ -2509,6 +2515,7 @@ class PackageInstaller:
             for request in self.build_requests
             if request.install_args.get("install_package") and request.pkg_id not in self.installed
         ]
+        print("this ran")
 
         if failed_build_requests or missing:
             for _, pkg_id, err in failed_build_requests:

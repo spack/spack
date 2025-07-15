@@ -49,6 +49,8 @@ class Jobserver:
     ) -> Type["spack.jobserver.Jobserver"]:
         """Determine the type of jobserver to be used based on the packages
         required for the build."""
+        if not packages:
+            return NoopJobserver
         js_types = [package_type(pkg) for pkg in packages]
         js_type = max(js_types)
         js_class = jobserver_class_table[js_type]
