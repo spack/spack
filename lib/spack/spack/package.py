@@ -77,7 +77,10 @@ from spack.builder import (
     apply_macos_rpath_fixups,
 )
 from spack.builder import create as create_builder
-from spack.builder import execute_install_time_tests, register_builder
+from spack.builder import (
+    execute_install_time_tests,
+    register_builder,
+)
 from spack.compilers.config import find_compilers
 from spack.compilers.libraries import CompilerPropertyDetector, compiler_spec
 from spack.config import determine_number_of_jobs
