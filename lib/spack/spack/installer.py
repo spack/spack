@@ -2428,7 +2428,7 @@ class PackageInstaller:
         jobserver_class = spack.jobserver.Jobserver.determine_type(packages)
         jobserver = jobserver_class()
         jobserver.enable()
-            
+
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
         term_status = TermStatusLine(
