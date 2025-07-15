@@ -20,63 +20,40 @@ from spack.llnl.util.filesystem import (
     working_dir,
 )
 from spack.llnl.util.link_tree import DestinationMergeVisitor, LinkTree, SourceMergeVisitor
-from spack.stage import Stage
 
 
-@pytest.fixture()
-def stage():
-    """Creates a stage with the directory structure for the tests."""
-    s = Stage("link-tree-test")
-    s.create()
-
-    with working_dir(s.path):
-        touchp("source/1")
-        touchp("source/a/b/2")
-        touchp("source/a/b/3")
-        touchp("source/c/4")
-        touchp("source/c/d/5")
-        touchp("source/c/d/6")
-        touchp("source/c/d/e/7")
-
-    yield s
-
-    s.destroy()
+@pytest.fixture
+def stage(tmp_path: pathlib.Path):
+    touchp(str(tmp_path / "source" / "1"))
+    touchp(str(tmp_path / "source" / "a" / "b" / "2"))
+    touchp(str(tmp_path / "source" / "a" / "b" / "3"))
+    touchp(str(tmp_path / "source" / "c" / "4"))
+    touchp(str(tmp_path / "source" / "c" / "d" / "5"))
+    touchp(str(tmp_path / "source" / "c" / "d" / "6"))
+    touchp(str(tmp_path / "source" / "c" / "d" / "e" / "7"))
+    yield str(tmp_path)
 
 
-@pytest.fixture()
-def link_tree(stage):
-    """Return a properly initialized LinkTree instance."""
-    source_path = os.path.join(stage.path, "source")
-    return LinkTree(source_path)
-
-
-def check_file_link(filename, expected_target):
+def check_file_link(filename: str, expected_target: str):
     assert os.path.isfile(filename)
     assert islink(filename)
     if sys.platform != "win32" or _windows_can_symlink():
         assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
 
 
-def check_dir(filename):
-    assert os.path.isdir(filename)
+@pytest.mark.parametrize("run_as_root", [True, False] if sys.platform == "win32" else [False])
+def test_merge_to_new_directory(stage: str, monkeypatch, run_as_root: bool):
+    if sys.platform == "win32":
+        if run_as_root and not _windows_can_symlink():
+            pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-
-@pytest.mark.parametrize("run_as_root", [True, False])
-def test_merge_to_new_directory(stage, link_tree, monkeypatch, run_as_root):
-    if sys.platform != "win32":
-        if run_as_root:
-            pass
-        else:
-            pytest.skip("Skipping duplicate test.")
-    elif _windows_can_symlink() or not run_as_root:
         monkeypatch.setattr(
             spack.llnl.util.filesystem, "_windows_can_symlink", lambda: run_as_root
         )
-    else:
-        # Skip if trying to run as dev-mode without having dev-mode.
-        pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-    with working_dir(stage.path):
+    link_tree = LinkTree(os.path.join(stage, "source"))
+
+    with working_dir(stage):
         link_tree.merge("dest")
 
         files = [
@@ -98,22 +75,18 @@ def test_merge_to_new_directory(stage, link_tree, monkeypatch, run_as_root):
         assert not os.path.exists("dest")
 
 
-@pytest.mark.parametrize("run_as_root", [True, False])
-def test_merge_to_new_directory_relative(stage, link_tree, monkeypatch, run_as_root):
-    if sys.platform != "win32":
-        if run_as_root:
-            pass
-        else:
-            pytest.skip("Skipping duplicate test.")
-    elif _windows_can_symlink() or not run_as_root:
+@pytest.mark.parametrize("run_as_root", [True, False] if sys.platform == "win32" else [False])
+def test_merge_to_new_directory_relative(stage: str, monkeypatch, run_as_root: bool):
+    if sys.platform == "win32":
+        if run_as_root and not _windows_can_symlink():
+            pytest.skip("Skipping portion of test which required dev-mode privileges.")
+
         monkeypatch.setattr(
             spack.llnl.util.filesystem, "_windows_can_symlink", lambda: run_as_root
         )
-    else:
-        # Skip if trying to run as dev-mode without having dev-mode.
-        pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-    with working_dir(stage.path):
+    link_tree = LinkTree(os.path.join(stage, "source"))
+    with working_dir(stage):
         link_tree.merge("dest", relative=True)
 
         files = [
@@ -137,22 +110,19 @@ def test_merge_to_new_directory_relative(stage, link_tree, monkeypatch, run_as_r
         assert not os.path.exists("dest")
 
 
-@pytest.mark.parametrize("run_as_root", [True, False])
-def test_merge_to_existing_directory(stage, link_tree, monkeypatch, run_as_root):
-    if sys.platform != "win32":
-        if run_as_root:
-            pass
-        else:
-            pytest.skip("Skipping duplicate test.")
-    elif _windows_can_symlink() or not run_as_root:
+@pytest.mark.parametrize("run_as_root", [True, False] if sys.platform == "win32" else [False])
+def test_merge_to_existing_directory(stage: str, monkeypatch, run_as_root):
+    if sys.platform == "win32":
+        if run_as_root and not _windows_can_symlink():
+            pytest.skip("Skipping portion of test which required dev-mode privileges.")
+
         monkeypatch.setattr(
             spack.llnl.util.filesystem, "_windows_can_symlink", lambda: run_as_root
         )
-    else:
-        # Skip if trying to run as dev-mode without having dev-mode.
-        pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-    with working_dir(stage.path):
+    link_tree = LinkTree(os.path.join(stage, "source"))
+
+    with working_dir(stage):
         touchp("dest/x")
         touchp("dest/a/b/y")
 
@@ -182,8 +152,9 @@ def test_merge_to_existing_directory(stage, link_tree, monkeypatch, run_as_root)
             assert not os.path.isfile(dest)
 
 
-def test_merge_with_empty_directories(stage, link_tree):
-    with working_dir(stage.path):
+def test_merge_with_empty_directories(stage: str):
+    link_tree = LinkTree(os.path.join(stage, "source"))
+    with working_dir(stage):
         mkdirp("dest/f/g")
         mkdirp("dest/a/b/h")
 
@@ -202,8 +173,9 @@ def test_merge_with_empty_directories(stage, link_tree):
         assert os.path.isdir("dest/f/g")
 
 
-def test_ignore(stage, link_tree):
-    with working_dir(stage.path):
+def test_ignore(stage: str):
+    link_tree = LinkTree(os.path.join(stage, "source"))
+    with working_dir(stage):
         touchp("source/.spec")
         touchp("dest/.spec")
 
