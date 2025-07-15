@@ -31,6 +31,8 @@ def make_executable(tmp_path: pathlib.Path, working_env):
 
 def test_make_normal():
     make = MakeExecutable("make", jobs=8)
+    result = make(output=str)
+    print("RESULT:", result)
     assert make(output=str).strip() == "-j8"
     assert make("install", output=str).strip() == "-j8 install"
 
