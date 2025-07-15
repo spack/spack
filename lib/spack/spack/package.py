@@ -59,6 +59,7 @@ from llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.symlink import readlink, symlink
 
+import spack.builder
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
 from spack.build_environment import (
     MakeExecutable,
@@ -75,9 +76,6 @@ from spack.builder import (
     GenericBuilder,
     Package,
     apply_macos_rpath_fixups,
-)
-from spack.builder import create as create_builder
-from spack.builder import (
     execute_install_time_tests,
     register_builder,
 )
@@ -164,6 +162,9 @@ from spack.version import Version, ver
 env = environ
 cd = chdir
 pwd = getcwd
+
+# Not an import alias because black and isort disagree about style
+create_builder = spack.builder.create
 
 
 class tty:
