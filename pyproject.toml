@@ -93,7 +93,7 @@ llnl = ["llnl"]
 line-length = 99
 include = "(lib/spack|var/spack/test_repos)/.*\\.pyi?$|bin/spack$"
 extend-exclude = "lib/spack/external"
-skip_magic_trailing_comma = true
+skip-magic-trailing-comma = true
 
 [tool.isort]
 line_length = 99
