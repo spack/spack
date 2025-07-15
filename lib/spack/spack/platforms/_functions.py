@@ -19,7 +19,7 @@ def _host():
     for platform_cls in sorted(platforms, key=lambda plt: plt.priority):
         if platform_cls.detect():
             return platform_cls()
-    return None
+    assert False, "No platform detected. Spack cannot run without a platform."
 
 
 def reset():
