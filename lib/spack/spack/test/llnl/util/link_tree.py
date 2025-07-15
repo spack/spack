@@ -37,7 +37,7 @@ def stage(tmp_path: pathlib.Path):
 def check_file_link(filename: str, expected_target: str):
     assert os.path.isfile(filename)
     assert islink(filename)
-    if sys.platform != "win32" or _windows_can_symlink():
+    if sys.platform != "win32" or spack.llnl.util.filesystem._windows_can_symlink():
         assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
 
 
