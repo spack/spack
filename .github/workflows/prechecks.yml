@@ -35,7 +35,7 @@ jobs:
                --backport typing \
                -t=3.6- \
                -vvv \
-               --exclude lib/spack/spack/vendor \
+               --exclude spack.vendor \
                lib/spack/spack lib/spack/llnl bin/ var/spack/test_repos
 
 
