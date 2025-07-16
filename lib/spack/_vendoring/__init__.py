@@ -5,8 +5,9 @@
 
 import warnings
 
-import spack.error
 import spack.vendor
+
+import spack.error
 
 warnings.warn(
     "The `_vendoring` module will be removed in Spack v1.1",

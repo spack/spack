@@ -36,6 +36,8 @@ import re
 import string
 from typing import List, Optional
 
+import spack.vendor.jinja2
+
 import spack.build_environment
 import spack.config
 import spack.deptypes as dt
@@ -55,7 +57,6 @@ import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
-import spack.vendor.jinja2
 from spack.context import Context
 from spack.llnl.util.lang import Singleton, dedupe, memoized
 
