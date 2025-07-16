@@ -400,6 +400,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a make-installer -d
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mark -d 'mark packages as explicitly or implicitly installed'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mirror -d 'manage mirrors (source and binary)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a module -d 'generate/manage module files'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a parse -d 'check that a spec string parses'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a patch -d 'patch expanded sources in preparation for install'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a pkg -d 'query packages associated with particular git revisions'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a providers -d 'list packages that provide a particular virtual package'
@@ -1056,7 +1057,7 @@ complete -c spack -n '__fish_spack_using_command clean' -s p -l python-cache -d 
 complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -f -a bootstrap
 complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -d 'remove software and configuration needed to bootstrap Spack'
 complete -c spack -n '__fish_spack_using_command clean' -s a -l all -f -a all
-complete -c spack -n '__fish_spack_using_command clean' -s a -l all -d 'equivalent to ``-sdfmp`` (does not include ``--bootstrap``)'
+complete -c spack -n '__fish_spack_using_command clean' -s a -l all -d 'equivalent to ``-sdfmpb``'
 
 # spack commands
 set -g __fish_spack_optspecs_spack_commands h/help update-completion a/aliases format= header= update=
@@ -2634,6 +2635,12 @@ set -g __fish_spack_optspecs_spack_module_tcl_setdefault h/help
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 module tcl setdefault' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command module tcl setdefault' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command module tcl setdefault' -s h -l help -d 'show this help message and exit'
+
+# spack parse
+set -g __fish_spack_optspecs_spack_parse h/help
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 parse' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command parse' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command parse' -s h -l help -d 'show this help message and exit'
 
 # spack patch
 set -g __fish_spack_optspecs_spack_patch h/help n/no-checksum f/force U/fresh reuse fresh-roots deprecated
