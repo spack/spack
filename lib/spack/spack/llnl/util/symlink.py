@@ -8,8 +8,7 @@ import spack.error
 import spack.llnl.util.filesystem
 
 warnings.warn(
-    "The `spack.llnl.util.symlink` module will be removed in Spack v1.1, "
-    "use `spack.llnl.util.filesystem` instead",
+    "The `spack.llnl.util.symlink` module will be removed in Spack v1.1",
     category=spack.error.SpackAPIWarning,
     stacklevel=2,
 )
