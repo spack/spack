@@ -74,6 +74,7 @@ import sys
 import threading
 import time
 from contextlib import contextmanager
+from typing import Optional, TextIO, Union
 
 _error_matches = [
     "^FAIL: ",
@@ -382,12 +383,12 @@ class CTestLogParser:
                 print("%16.2f        %s" % (self.timings[index][i] * 1e6, stringify(elt)))
             index += 1
 
-    def parse(self, stream, context=6, jobs=None):
+    def parse(self, stream: Union[str, TextIO], context: int = 6, jobs: Optional[int] = None):
         """Parse a log file by searching each line for errors and warnings.
 
         Args:
-            stream (str or file-like): filename or stream to read from
-            context (int): lines of context to extract around each log event
+            stream: filename or stream to read from
+            context: lines of context to extract around each log event
 
         Returns:
             (tuple): two lists containing ``BuildError`` and
