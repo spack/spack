@@ -973,7 +973,7 @@ def _parse_package_api_version(
     min_str = ".".join(str(i) for i in min_api)
     max_str = ".".join(str(i) for i in max_api)
     curr_str = ".".join(str(i) for i in package_api)
-    raise BadRepoError(
+    raise BadRepoVersionError(
         f"Package API v{curr_str} is not supported by this version of Spack ("
         f"must be between v{min_str} and v{max_str})"
     )
@@ -1658,6 +1658,14 @@ class RemoteRepoDescriptor(RepoDescriptor):
             return self._fetched()
         return False
 
+    def get_commit(self, git: spack.util.executable.Executable) -> Optional[str]:
+        with self.read_transaction:
+            if not self._fetched():
+                return None
+
+            with fs.working_dir(self.destination):
+                return git("rev-parse", "HEAD", output=str).strip()
+
     def _clone_or_pull(
         self,
         git: spack.util.executable.Executable,
@@ -2037,6 +2045,10 @@ class InvalidNamespaceError(RepoError):
 
 class BadRepoError(RepoError):
     """Raised when repo layout is invalid."""
+
+
+class BadRepoVersionError(BadRepoError):
+    """Raised when repo API version is too high or too low for Spack."""
 
 
 class UnknownEntityError(RepoError):

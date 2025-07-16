@@ -516,7 +516,26 @@ def repo_update(args: Any) -> int:
             updated_entry[active_flag] = args.commit or args.tag or args.branch
             scope_repos[name] = updated_entry
 
-        descriptor.update(git=spack.util.executable.which("git"), remote=args.remote)
+        git = spack.util.git.git(required=True)
+
+        previous_commit = descriptor.get_commit(git=git)
+        descriptor.update(git=git, remote=args.remote)
+        new_commit = descriptor.get_commit(git=git)
+
+        if previous_commit == new_commit:
+            tty.msg(f"{name}: Already up to date.")
+        else:
+            if any(
+                type(r) is spack.repo.BadRepoVersionError
+                for r in descriptor.construct(cache=spack.caches.MISC_CACHE).values()
+            ):
+                tty.error(
+                    f"{name}: repo is too new for this version of Spack. "
+                    "Please upgrade Spack or revert with:\n",
+                    f"      spack repo update -c {previous_commit[:7]}\n",
+                )
+            else:
+                tty.msg(f"{name}: Updated sucessfully.")
 
     if active_flag:
         spack.config.set("repos", scope_repos, args.scope)
