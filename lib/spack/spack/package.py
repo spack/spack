@@ -158,9 +158,13 @@ from spack.util.windows_registry import HKEY, WindowsRegistryView
 from spack.variant import any_combination_of, auto_or_any_combination_of, disjoint_sets
 from spack.version import Version, ver
 
-# Emulate some shell commands for convenience
+#: alias for ``os.environ``
 env = environ
+
+#: alias for ``os.chdir``
 cd = chdir
+
+#: alias for ``os.getcwd``
 pwd = getcwd
 
 # Not an import alias because black and isort disagree about style
@@ -228,7 +232,6 @@ __all__ = [
     "can_splice",
     "cd",
     "change_sed_delimiter",
-    "chdir",
     "check_outputs",
     "conditional",
     "conflicts",
@@ -240,7 +243,6 @@ __all__ = [
     "disjoint_sets",
     "env_flags",
     "env",
-    "environ",
     "extends",
     "filter_compiler_wrappers",
     "filter_file",
@@ -256,7 +258,6 @@ __all__ = [
     "force_remove",
     "force_symlink",
     "get_escaped_text_output",
-    "getcwd",
     "inject_flags",
     "install_test_root",
     "install_tree",
