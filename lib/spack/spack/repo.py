@@ -1663,7 +1663,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
         git: spack.util.executable.Executable,
         update: bool = False,
         remote: str = "origin",
-        depth: int = 20,
+        depth: Optional[int] = None,
     ) -> None:
         with self.write_transaction:
             try:
@@ -1674,6 +1674,11 @@ class RemoteRepoDescriptor(RepoDescriptor):
                     if fetched and not update:
                         self.read_index_file()
                         return
+
+                    # download a partial copy of the package repository the first
+                    # time it is loaded to speed up CI/CD executions of Spack.
+                    # when updating an existing copy of the repository perform a full fetch
+                    depth = 2 if not fetched else None
 
                     # setup the repository if it does not exist
                     if not fetched:
@@ -1696,7 +1701,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         spack.util.git.pull_checkout_commit(self.commit, git_exe=git)
 
                     elif self.tag:
-                        spack.util.git.pull_checkout_tag(self.tag, remote, git_exe=git)
+                        spack.util.git.pull_checkout_tag(
+                            self.tag, remote, depth=depth, git_exe=git
+                        )
 
                     elif self.branch:
                         # if the branch already exists we should use the
@@ -1707,7 +1714,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         except spack.util.executable.ProcessError:
                             pass
                         spack.util.git.pull_checkout_branch(
-                            self.branch, remote=remote, git_exe=git
+                            self.branch, remote=remote, depth=depth, git_exe=git
                         )
 
             except spack.util.executable.ProcessError:
