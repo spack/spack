@@ -34,19 +34,19 @@ licensed_files = [
     r"^bin/haspywin\.py$",
     # all of spack core except unparse
     r"^lib/spack/spack_installable/main\.py$",
-    r"^lib/spack/spack/(?!(test/)?util/unparse).*\.py$",
+    r"^lib/spack/spack/(?!((test/)?util/(unparse|ctest))|vendor/|).*\.py$",
     r"^lib/spack/spack/.*\.sh$",
     r"^lib/spack/spack/.*\.lp$",
     r"^lib/spack/llnl/.*\.py$",
+    # 1 file in vendored packages
+    r"^lib/spack/spack/vendor/__init__.py$",
     # special case some test data files that have license headers
     r"^lib/spack/spack/test/data/style/broken.dummy",
     r"^lib/spack/spack/test/data/unparse/.*\.txt",
     # rst files in documentation
     r"^lib/spack/docs/(?!command_index|spack|llnl).*\.rst$",
-    r"^lib/spack/docs/.*\.py$",
+    r"^lib/spack/docs/(?!\.spack/).*\.py$",
     r"^lib/spack/docs/spack.yaml$",
-    # 1 file in external
-    r"^lib/spack/external/__init__.py$",
     # shell scripts in share
     r"^share/spack/.*\.sh$",
     r"^share/spack/.*\.bash$",
