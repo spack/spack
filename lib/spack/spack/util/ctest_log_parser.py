@@ -1,3 +1,4 @@
+# pylint: skip-file
 # -----------------------------------------------------------------------------
 # CMake - Cross Platform Makefile Generator
 # Copyright 2000-2017 Kitware, Inc. and Contributors
