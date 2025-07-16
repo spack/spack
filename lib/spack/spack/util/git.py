@@ -77,7 +77,9 @@ def pull_checkout_tag(
     git_exe = git_exe or git(required=True)
 
     fetch_args = ["--quiet", "--progress", "--tags"]
-    if depth:
+    if depth is not None:
+        if depth <= 0:
+            raise ValueError("depth must be a positive integer")
         fetch_args.append(f"--depth={depth}")
 
     git_exe("fetch", *fetch_args, remote)
