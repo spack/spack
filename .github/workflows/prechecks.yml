@@ -36,7 +36,7 @@ jobs:
                -t=3.6- \
                -vvv \
                --exclude lib/spack/spack/vendor \
-               lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
+               lib/spack/spack lib/spack/llnl bin/ var/spack/test_repos
 
 
   # Run style checks on the files that have been changed
