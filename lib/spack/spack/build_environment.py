@@ -729,11 +729,11 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
     return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
-def get_cmake_prefix_path(spec: spack.spec.Spec) -> List[str]:
+def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
     """Obtain the CMAKE_PREFIX_PATH entries for a package, based on the cmake_prefix_path package
     attribute of direct build/test and transitive link dependencies."""
     edges = traverse.traverse_topo_edges_generator(
-        traverse.with_artificial_edges([spec]),
+        traverse.with_artificial_edges([pkg.spec]),
         visitor=traverse.MixedDepthVisitor(
             direct=dt.BUILD | dt.TEST, transitive=dt.LINK, key=traverse.by_dag_hash
         ),
