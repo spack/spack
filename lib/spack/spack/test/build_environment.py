@@ -9,8 +9,9 @@ import posixpath
 import sys
 from typing import Dict, Optional, Tuple
 
-import _vendoring.archspec.cpu
 import pytest
+
+import spack.vendor.archspec.cpu
 
 import spack.build_environment
 import spack.concretize
@@ -726,14 +727,14 @@ def test_rpath_with_duplicate_link_deps():
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
 def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
-    target = _vendoring.archspec.cpu.TARGETS[target_name]
+    target = spack.vendor.archspec.cpu.TARGETS[target_name]
     compiler = spack.spec.parse_with_version_concrete(compiler_spec)
     opt_flags = spack.build_environment.optimization_flags(compiler, target)
     assert opt_flags == expected_flags
 
 
 @pytest.mark.skipif(
-    str(_vendoring.archspec.cpu.host().family) != "x86_64",
+    str(spack.vendor.archspec.cpu.host().family) != "x86_64",
     reason="tests check specific x86_64 uarch flags",
 )
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")

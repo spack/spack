@@ -33,7 +33,7 @@ from typing import (
     Union,
 )
 
-import _vendoring.archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack
 import spack.binary_distribution
@@ -1602,7 +1602,7 @@ class SpackSolverSetup:
         target = spec.architecture.target
 
         # Check if the target is a concrete target
-        if str(target) in _vendoring.archspec.cpu.TARGETS:
+        if str(target) in spack.vendor.archspec.cpu.TARGETS:
             return [single_target_fn(spec.name, target)]
 
         self.target_constraints.add(target)
@@ -2791,7 +2791,7 @@ class SpackSolverSetup:
                         compiler_name, compiler_version.dotted_numeric_string
                     )
                 supported.append(target)
-            except _vendoring.archspec.cpu.UnsupportedMicroarchitecture:
+            except spack.vendor.archspec.cpu.UnsupportedMicroarchitecture:
                 continue
             except ValueError:
                 continue
@@ -2856,7 +2856,7 @@ class SpackSolverSetup:
             if not spec.architecture or not spec.architecture.target:
                 continue
 
-            target = _vendoring.archspec.cpu.TARGETS.get(spec.target.name)
+            target = spack.vendor.archspec.cpu.TARGETS.get(spec.target.name)
             if not target:
                 self.target_ranges(spec, None)
                 continue
@@ -2868,7 +2868,7 @@ class SpackSolverSetup:
                         candidate_targets.append(ancestor)
 
         platform = spack.platforms.host()
-        uarch = _vendoring.archspec.cpu.TARGETS.get(platform.default)
+        uarch = spack.vendor.archspec.cpu.TARGETS.get(platform.default)
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
             supported = self._supported_targets(compiler.name, compiler.version, candidate_targets)
@@ -2986,7 +2986,7 @@ class SpackSolverSetup:
                 return [single_constraint]
 
             t_min, _, t_max = single_constraint.partition(":")
-            for test_target in _vendoring.archspec.cpu.TARGETS.values():
+            for test_target in spack.vendor.archspec.cpu.TARGETS.values():
                 # Check lower bound
                 if t_min and not t_min <= test_target:
                     continue
@@ -4345,7 +4345,7 @@ def _attach_python_to_external(
                     if not python.architecture.os:
                         python.architecture.os = platform.default_operating_system()
                     if not python.architecture.target:
-                        python.architecture.target = _vendoring.archspec.cpu.host().family.name
+                        python.architecture.target = spack.vendor.archspec.cpu.host().family.name
 
                 python.external_path = dependent_package.spec.external_path
                 python._mark_concrete()

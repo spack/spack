@@ -5,8 +5,9 @@
 import os
 import pathlib
 
-import _vendoring.archspec.cpu
 import pytest
+
+import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.config
@@ -221,7 +222,7 @@ class TestLmod:
         assert len([x for x in content if 'setenv("FOO", "{{name}}, {name}, {{}}, {}")' in x]) == 1
 
     @pytest.mark.skipif(
-        str(_vendoring.archspec.cpu.host().family) != "x86_64",
+        str(spack.vendor.archspec.cpu.host().family) != "x86_64",
         reason="test data is specific for x86_64",
     )
     def test_help_message(self, modulefile_content, module_configuration):

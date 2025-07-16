@@ -5,7 +5,7 @@
 import collections
 from typing import Dict, List, NamedTuple, Set, Tuple, Union
 
-import _vendoring.archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack.binary_distribution
 import spack.config
@@ -33,7 +33,7 @@ class PossibleDependencyGraph:
         """
         raise NotImplementedError
 
-    def candidate_targets(self) -> List[_vendoring.archspec.cpu.Microarchitecture]:
+    def candidate_targets(self) -> List[spack.vendor.archspec.cpu.Microarchitecture]:
         """Returns a list of targets that are candidate for concretization"""
         raise NotImplementedError
 
@@ -69,7 +69,7 @@ class NoStaticAnalysis(PossibleDependencyGraph):
         self.configuration = configuration
         self.repo = repo
         self._platform_condition = spack.spec.Spec(
-            f"platform={spack.platforms.host()} target={_vendoring.archspec.cpu.host().family}:"
+            f"platform={spack.platforms.host()} target={spack.vendor.archspec.cpu.host().family}:"
         )
 
         try:
@@ -109,10 +109,10 @@ class NoStaticAnalysis(PossibleDependencyGraph):
         """
         return False
 
-    def candidate_targets(self) -> List[_vendoring.archspec.cpu.Microarchitecture]:
+    def candidate_targets(self) -> List[spack.vendor.archspec.cpu.Microarchitecture]:
         """Returns a list of targets that are candidate for concretization"""
         platform = spack.platforms.host()
-        default_target = _vendoring.archspec.cpu.TARGETS[platform.default]
+        default_target = spack.vendor.archspec.cpu.TARGETS[platform.default]
 
         # Construct the list of targets which are compatible with the host
         candidate_targets = [default_target] + default_target.ancestors
@@ -124,7 +124,7 @@ class NoStaticAnalysis(PossibleDependencyGraph):
             additional_targets_in_family = sorted(
                 [
                     t
-                    for t in _vendoring.archspec.cpu.TARGETS.values()
+                    for t in spack.vendor.archspec.cpu.TARGETS.values()
                     if (t.family.name == default_target.family.name and t not in candidate_targets)
                 ],
                 key=lambda x: len(x.ancestors),

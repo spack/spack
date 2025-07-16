@@ -6,7 +6,8 @@ import json
 import os
 
 import pytest
-from _vendoring import jsonschema
+
+from spack.vendor import jsonschema
 
 import spack.paths
 import spack.schema

@@ -74,8 +74,8 @@ from typing import (
     overload,
 )
 
-import _vendoring.archspec.cpu
-from _vendoring.typing_extensions import Literal
+import spack.vendor.archspec.cpu
+from spack.vendor.typing_extensions import Literal
 
 import spack
 import spack.aliases
@@ -216,11 +216,11 @@ def ensure_modern_format_string(fmt: str) -> None:
         )
 
 
-def _make_microarchitecture(name: str) -> _vendoring.archspec.cpu.Microarchitecture:
-    if isinstance(name, _vendoring.archspec.cpu.Microarchitecture):
+def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchitecture:
+    if isinstance(name, spack.vendor.archspec.cpu.Microarchitecture):
         return name
-    return _vendoring.archspec.cpu.TARGETS.get(
-        name, _vendoring.archspec.cpu.generic_microarchitecture(name)
+    return spack.vendor.archspec.cpu.TARGETS.get(
+        name, spack.vendor.archspec.cpu.generic_microarchitecture(name)
     )
 
 
@@ -365,7 +365,7 @@ class ArchSpec:
         # will assumed to be the host machine's platform.
 
         def target_or_none(t):
-            if isinstance(t, _vendoring.archspec.cpu.Microarchitecture):
+            if isinstance(t, spack.vendor.archspec.cpu.Microarchitecture):
                 return t
             if t and t != "None":
                 return _make_microarchitecture(t)

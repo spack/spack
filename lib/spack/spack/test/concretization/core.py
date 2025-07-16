@@ -7,9 +7,10 @@ import platform
 import sys
 from typing import Any, Dict
 
-import _vendoring.archspec.cpu
-import _vendoring.jinja2
 import pytest
+
+import spack.vendor.archspec.cpu
+import spack.vendor.jinja2
 
 import spack.binary_distribution
 import spack.cmd
@@ -150,12 +151,12 @@ def current_host(request, monkeypatch):
 
     monkeypatch.setattr(spack.platforms.Test, "default", cpu)
     if not is_preference:
-        target = _vendoring.archspec.cpu.TARGETS[cpu]
-        monkeypatch.setattr(_vendoring.archspec.cpu, "host", lambda: target)
+        target = spack.vendor.archspec.cpu.TARGETS[cpu]
+        monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: target)
         yield target
     else:
-        target = _vendoring.archspec.cpu.TARGETS["sapphirerapids"]
-        monkeypatch.setattr(_vendoring.archspec.cpu, "host", lambda: target)
+        target = spack.vendor.archspec.cpu.TARGETS["sapphirerapids"]
+        monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: target)
         with spack.config.override("packages:all", {"target": [cpu]}):
             yield target
 
@@ -263,7 +264,7 @@ class Changing(Package):
                     del sys.modules[module]
 
                 # Change the recipe
-                t = _vendoring.jinja2.Template(changing_template)
+                t = spack.vendor.jinja2.Template(changing_template)
                 changing_pkg_str = t.render(**context)
                 package_py = packages_dir / "changing" / "package.py"
                 package_py.parent.mkdir(parents=True, exist_ok=True)
@@ -387,7 +388,7 @@ class TestConcretize:
                 "gcc": {"externals": [gcc11_with_flags]},
             },
         )
-        t = _vendoring.archspec.cpu.host().family
+        t = spack.vendor.archspec.cpu.host().family
         client = spack.concretize.concretize_one(
             Spec(
                 f"cmake-client platform=test os=redhat6 target={t} %gcc@11.1.0"
@@ -980,7 +981,7 @@ class TestConcretize:
     def test_adjusting_default_target_based_on_compiler(
         self, spec, compiler_spec, best_achievable, current_host, compiler_factory, mutable_config
     ):
-        best_achievable = _vendoring.archspec.cpu.TARGETS[best_achievable]
+        best_achievable = spack.vendor.archspec.cpu.TARGETS[best_achievable]
         expected = best_achievable if best_achievable < current_host else current_host
         mutable_config.set(
             "packages", {"gcc": {"externals": [compiler_factory(spec=f"{compiler_spec}")]}}
@@ -1649,7 +1650,7 @@ class TestConcretize:
         # The test architecture uses core2 as the default target. Check that when
         # we configure Spack for "generic" granularity we concretize for x86_64
         default_target = spack.platforms.test.Test.default
-        generic_target = _vendoring.archspec.cpu.TARGETS[default_target].generic.name
+        generic_target = spack.vendor.archspec.cpu.TARGETS[default_target].generic.name
         s = Spec("python")
         assert spack.concretize.concretize_one(s).satisfies("target=%s" % default_target)
         with spack.config.override("concretizer:targets", {"granularity": "generic"}):
@@ -2018,7 +2019,9 @@ class TestConcretize:
     def test_require_targets_are_allowed(self, mutable_config, mutable_database):
         """Test that users can set target constraints under the require attribute."""
         # Configuration to be added to packages.yaml
-        required_target = _vendoring.archspec.cpu.TARGETS[spack.platforms.test.Test.default].family
+        required_target = spack.vendor.archspec.cpu.TARGETS[
+            spack.platforms.test.Test.default
+        ].family
         external_conf = {"all": {"require": f"target={required_target}"}}
         mutable_config.set("packages", external_conf)
 

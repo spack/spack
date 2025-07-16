@@ -60,7 +60,7 @@ features = ["dev", "ci"]
 [tool.ruff]
 line-length = 99
 extend-include = ["bin/spack"]
-extend-exclude = ["lib/spack/external", "*.pyi"]
+extend-exclude = ["lib/spack/spack/vendor", "*.pyi"]
 
 [tool.ruff.format]
 skip-magic-trailing-comma = true
@@ -90,7 +90,7 @@ spack = ["spack"]
 [tool.black]
 line-length = 99
 include = "(lib/spack|var/spack/test_repos)/.*\\.pyi?$|bin/spack$"
-extend-exclude = "lib/spack/external"
+extend-exclude = "lib/spack/spack/vendor"
 skip-magic-trailing-comma = true
 
 [tool.isort]
@@ -100,11 +100,12 @@ sections = [
   "FUTURE",
   "STDLIB",
   "THIRDPARTY",
+  "VENDOR",
   "FIRSTPARTY",
   "LOCALFOLDER",
 ]
 known_first_party = "spack"
-known_third_party = ["ruamel", "six"]
+known_vendor = ["spack.vendor"]
 src_paths = "lib"
 honor_noqa = true
 
@@ -112,7 +113,8 @@ honor_noqa = true
 files = [
   "lib/spack/spack/**/*.py",
 ]
-mypy_path = ["lib/spack", "lib/spack/external"]
+exclude = "lib/spack/spack/vendor"
+mypy_path = ["lib/spack"]
 allow_redefinition = true
 
 # This and a generated import file allows supporting packages
@@ -145,6 +147,10 @@ module = "spack.pkg.*"
 ignore_errors = true
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "spack.vendor.*"
+ignore_errors = true
+
 # Spack imports a number of external packages, and they *may* require Python 3.8 or
 # higher in recent versions. This can cause mypy to fail because we check for 3.7
 # compatibility. We could restrict mypy to run for the oldest supported version (3.7),
@@ -173,13 +179,14 @@ module = [
 follow_imports = "skip"
 follow_imports_for_stubs = true
 
+
 [tool.pyright]
 useLibraryCodeForTypes = true
 reportMissingImports = true
 reportWildcardImportFromLibrary = false
 include = ["lib/spack", "var/spack/test_repos"]
-ignore = ["lib/spack/external"]
-extraPaths = ["lib/spack", "lib/spack/external"]
+ignore = ["lib/spack/spack/vendor"]
+extraPaths = ["lib/spack"]
 
 
 [tool.coverage.run]
@@ -191,7 +198,7 @@ data_file = "./tests-coverage/.coverage"
 omit = [
   "lib/spack/spack/test/*",
   "lib/spack/docs/*",
-  "lib/spack/external/*",
+  "lib/spack/spack/vendor/*",
   "share/spack/qa/*",
 ]
 
@@ -228,7 +235,7 @@ source = [
 directory = "htmlcov"
 
 [tool.vendoring]
-destination = "lib/spack/external/_vendoring"
+destination = "lib/spack/spack/vendor"
 requirements = "lib/spack/external/vendor.txt"
 namespace = ""
 
@@ -237,18 +244,18 @@ patches-dir = "lib/spack/external/patches"
 
 [tool.vendoring.transformations]
 substitute = [
-  { match = "typing_extensions", replace = "_vendoring.typing_extensions" },
-  { match = "ruamel.yaml", replace = "_vendoring.ruamel.yaml" },
-  { match = "altgraph", replace = "_vendoring.altgraph" },
-  { match = "macholib", replace = "_vendoring.macholib" },
-  { match = "from six", replace = "from _vendoring.six" },
-  { match = "markupsafe", replace = "_vendoring.markupsafe" },
-  { match = "jinja2", replace = "_vendoring.jinja2" },
-  { match = "pyrsistent", replace = "_vendoring.pyrsistent" },
-  { match = "import attr\n", replace = "import _vendoring.attr\n" },
-  { match = "from attr", replace = "from _vendoring.attr" },
-  { match = "import jsonschema", replace = "import _vendoring.jsonschema" },
-  { match = "from jsonschema", replace = "from _vendoring.jsonschema" },
+  { match = "typing_extensions", replace = "spack.vendor.typing_extensions" },
+  { match = "ruamel.yaml", replace = "spack.vendor.ruamel.yaml" },
+  { match = "altgraph", replace = "spack.vendor.altgraph" },
+  { match = "macholib", replace = "spack.vendor.macholib" },
+  { match = "from six", replace = "from spack.vendor.six" },
+  { match = "markupsafe", replace = "spack.vendor.markupsafe" },
+  { match = "jinja2", replace = "spack.vendor.jinja2" },
+  { match = "pyrsistent", replace = "spack.vendor.pyrsistent" },
+  { match = "import attr\n", replace = "import spack.vendor.attr\n" },
+  { match = "from attr", replace = "from spack.vendor.attr" },
+  { match = "import jsonschema", replace = "import spack.vendor.jsonschema" },
+  { match = "from jsonschema", replace = "from spack.vendor.jsonschema" },
 ]
 drop = [
   # contains unnecessary scripts

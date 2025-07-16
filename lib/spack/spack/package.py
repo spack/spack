@@ -13,7 +13,7 @@ from shutil import move, rmtree
 # import most common types used in packages
 from typing import Dict, Iterable, List, Optional
 
-from _vendoring.macholib.MachO import LC_ID_DYLIB, MachO
+from spack.vendor.macholib.MachO import LC_ID_DYLIB, MachO
 
 import spack.builder
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target

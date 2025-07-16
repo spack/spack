@@ -5,10 +5,9 @@
 import io
 import sys
 
-from ctest_log_parser import BuildError, BuildWarning, CTestLogParser
-
 import spack.llnl.util.tty as tty
 from spack.llnl.util.tty.color import cescape, colorize
+from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser
 
 __all__ = ["parse_log_events", "make_log_context"]
 

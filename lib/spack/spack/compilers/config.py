@@ -10,7 +10,7 @@ import sys
 import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
-import _vendoring.archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack.config
 import spack.detection
@@ -315,7 +315,7 @@ class CompilerFactory:
     @staticmethod
     def _finalize_external_concretization(abstract_spec):
         if CompilerFactory._GENERIC_TARGET is None:
-            CompilerFactory._GENERIC_TARGET = _vendoring.archspec.cpu.host().family
+            CompilerFactory._GENERIC_TARGET = spack.vendor.archspec.cpu.host().family
 
         if abstract_spec.architecture:
             abstract_spec.architecture.complete_with_defaults()

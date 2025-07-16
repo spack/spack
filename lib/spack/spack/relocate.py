@@ -8,8 +8,8 @@ import re
 import sys
 from typing import Dict, Iterable, List, Optional
 
-import _vendoring.macholib.mach_o
-import _vendoring.macholib.MachO
+import spack.vendor.macholib.mach_o
+import spack.vendor.macholib.MachO
 
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
@@ -131,7 +131,7 @@ def _macholib_get_paths(cur_path):
     """Get rpaths, dependent libraries, and library id of mach-o objects."""
     headers = []
     try:
-        headers = _vendoring.macholib.MachO.MachO(cur_path).headers
+        headers = spack.vendor.macholib.MachO.MachO(cur_path).headers
     except ValueError:
         pass
     if not headers:
@@ -146,9 +146,9 @@ def _macholib_get_paths(cur_path):
             tty.warn("File is a stub, not a full library: {0}".format(cur_path))
         commands = headers[-1].commands
 
-    LC_ID_DYLIB = _vendoring.macholib.mach_o.LC_ID_DYLIB
-    LC_LOAD_DYLIB = _vendoring.macholib.mach_o.LC_LOAD_DYLIB
-    LC_RPATH = _vendoring.macholib.mach_o.LC_RPATH
+    LC_ID_DYLIB = spack.vendor.macholib.mach_o.LC_ID_DYLIB
+    LC_LOAD_DYLIB = spack.vendor.macholib.mach_o.LC_LOAD_DYLIB
+    LC_RPATH = spack.vendor.macholib.mach_o.LC_RPATH
 
     ident = None
     rpaths = []

@@ -38,7 +38,7 @@ class LinuxDistro(OperatingSystem):
     def __init__(self):
         try:
             # This will throw an error if imported on a non-Linux platform.
-            from _vendoring import distro
+            from spack.vendor import distro
 
             distname, version = distro.id(), distro.version()
         except ImportError:

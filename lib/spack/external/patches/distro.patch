@@ -1,7 +1,7 @@
-diff --git a/lib/spack/external/_vendoring/distro/distro.py b/lib/spack/external/_vendoring/distro/distro.py
+diff --git a/lib/spack/spack/vendor/distro/distro.py b/lib/spack/external/spack.vendor/distro/distro.py
 index 89e1868047..50c3b18d4d 100644
---- a/lib/spack/external/_vendoring/distro/distro.py
-+++ b/lib/spack/external/_vendoring/distro/distro.py
+--- a/lib/spack/spack/vendor/distro/distro.py
++++ b/lib/spack/spack/vendor/distro/distro.py
 @@ -1265,27 +1265,29 @@ def _distro_release_info(self) -> Dict[str, str]:
              match = _DISTRO_RELEASE_BASENAME_PATTERN.match(basename)
          else:

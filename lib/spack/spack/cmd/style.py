@@ -35,7 +35,9 @@ def grouper(iterable, n, fillvalue=None):
 
 
 #: List of directories to exclude from checks -- relative to spack root
-exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.prefix)]
+exclude_directories = [
+    os.path.relpath(os.path.join(spack.paths.module_path, "vendor"), spack.paths.prefix)
+]
 
 #: Order in which tools should be run. flake8 is last so that it can
 #: double-check the results of other tools (if, e.g., --fix was provided)

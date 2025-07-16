@@ -238,7 +238,7 @@ nitpick_ignore = [
     ("py:class", "spack.install_test.Pb"),
     ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
     ("py:class", "spack.traverse.EdgeAndDepth"),
-    ("py:class", "_vendoring.archspec.cpu.microarchitecture.Microarchitecture"),
+    ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.compiler.CompilerCache"),
     # TypeVar that is not handled correctly
     ("py:class", "spack.llnl.util.lang.T"),

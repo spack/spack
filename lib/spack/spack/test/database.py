@@ -26,7 +26,7 @@ try:
 except ImportError:
     _use_uuid = False
 
-import _vendoring.jsonschema
+import spack.vendor.jsonschema
 
 import spack.concretize
 import spack.database
@@ -546,7 +546,7 @@ def test_005_db_exists(database):
 
     with open(index_file, encoding="utf-8") as fd:
         index_object = json.load(fd)
-        _vendoring.jsonschema.validate(index_object, schema)
+        spack.vendor.jsonschema.validate(index_object, schema)
 
 
 def test_010_all_install_sanity(database):
@@ -842,7 +842,7 @@ def test_old_external_entries_prefix(mutable_database):
     with open(spack.store.STORE.db._index_path, "r", encoding="utf-8") as f:
         db_obj = json.loads(f.read())
 
-    _vendoring.jsonschema.validate(db_obj, schema)
+    spack.vendor.jsonschema.validate(db_obj, schema)
 
     s = spack.concretize.concretize_one("externaltool")
 

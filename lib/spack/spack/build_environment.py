@@ -61,7 +61,7 @@ from typing import (
     overload,
 )
 
-import _vendoring.archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack.builder
 import spack.compilers.libraries
@@ -458,12 +458,12 @@ def optimization_flags(compiler, target):
     # Try to check if the current compiler comes with a version number or
     # has an unexpected suffix. If so, treat it as a compiler with a
     # custom spec.
-    version_number, _ = _vendoring.archspec.cpu.version_components(
+    version_number, _ = spack.vendor.archspec.cpu.version_components(
         compiler.version.dotted_numeric_string
     )
     try:
         result = target.optimization_flags(compiler.name, version_number)
-    except (ValueError, _vendoring.archspec.cpu.UnsupportedMicroarchitecture):
+    except (ValueError, spack.vendor.archspec.cpu.UnsupportedMicroarchitecture):
         result = ""
 
     return result

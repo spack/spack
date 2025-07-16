@@ -4,7 +4,7 @@
 import warnings
 from typing import Optional
 
-import _vendoring.archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack.llnl.util.lang
 
@@ -38,15 +38,15 @@ class Platform:
         self.name = name
         self._init_targets()
 
-    def add_target(self, name: str, target: _vendoring.archspec.cpu.Microarchitecture) -> None:
+    def add_target(self, name: str, target: spack.vendor.archspec.cpu.Microarchitecture) -> None:
         if name in Platform.reserved_targets:
             msg = f"{name} is a spack reserved alias and cannot be the name of a target"
             raise ValueError(msg)
         self.targets[name] = target
 
     def _init_targets(self):
-        self.default = _vendoring.archspec.cpu.host().name
-        for name, microarchitecture in _vendoring.archspec.cpu.TARGETS.items():
+        self.default = spack.vendor.archspec.cpu.host().name
+        for name, microarchitecture in spack.vendor.archspec.cpu.TARGETS.items():
             self.add_target(name, microarchitecture)
 
     def target(self, name):

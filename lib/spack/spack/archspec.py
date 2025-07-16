@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Adapter for the archspec library."""
 
-import _vendoring.archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack.spec
 
@@ -24,12 +24,12 @@ def microarchitecture_flags(spec: spack.spec.Spec, language: str) -> str:
 
 
 def microarchitecture_flags_from_target(
-    target: _vendoring.archspec.cpu.Microarchitecture, compiler: spack.spec.Spec
+    target: spack.vendor.archspec.cpu.Microarchitecture, compiler: spack.spec.Spec
 ) -> str:
     """Return the microarchitecture flags for a given compiler and target."""
     # Try to check if the current compiler comes with a version number or has an unexpected suffix.
     # If so, treat it as a compiler with a custom spec.
-    version_number, _ = _vendoring.archspec.cpu.version_components(
+    version_number, _ = spack.vendor.archspec.cpu.version_components(
         compiler.version.dotted_numeric_string
     )
     try:

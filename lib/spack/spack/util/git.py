@@ -7,7 +7,7 @@ import os
 import sys
 from typing import List, Optional, overload
 
-from _vendoring.typing_extensions import Literal
+from spack.vendor.typing_extensions import Literal
 
 import spack.llnl.util.lang
 import spack.util.executable as exe

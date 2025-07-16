@@ -36,7 +36,7 @@ import sys
 from collections import defaultdict
 from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
-from _vendoring import jsonschema
+from spack.vendor import jsonschema
 
 import spack.error
 import spack.paths

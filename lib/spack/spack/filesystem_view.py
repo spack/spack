@@ -12,7 +12,7 @@ import sys
 import tempfile
 from typing import Callable, Dict, List, Optional
 
-from _vendoring.typing_extensions import Literal
+from spack.vendor.typing_extensions import Literal
 
 import spack.config
 import spack.directory_layout

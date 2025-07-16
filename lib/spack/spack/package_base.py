@@ -23,7 +23,7 @@ import time
 import traceback
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
-from _vendoring.typing_extensions import Literal
+from spack.vendor.typing_extensions import Literal
 
 import spack.config
 import spack.dependency

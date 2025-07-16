@@ -15,7 +15,7 @@ from contextlib import closing, contextmanager
 from tempfile import TemporaryDirectory
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
-import _vendoring.jsonschema
+import spack.vendor.jsonschema
 
 import spack.config as config
 import spack.database
@@ -133,7 +133,7 @@ class BuildcacheManifest:
 
     @classmethod
     def from_dict(cls, manifest_json: Dict[str, Any]) -> "BuildcacheManifest":
-        _vendoring.jsonschema.validate(manifest_json, buildcache_manifest_schema)
+        spack.vendor.jsonschema.validate(manifest_json, buildcache_manifest_schema)
         return BuildcacheManifest(
             layout_version=manifest_json["version"],
             data=[BlobRecord.from_dict(blob_json) for blob_json in manifest_json["data"]],
