@@ -1675,10 +1675,13 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         self.read_index_file()
                         return
 
-                    # download a partial copy of the package repository the first
-                    # time it is loaded to speed up CI/CD executions of Spack.
-                    # when updating an existing copy of the repository perform a full fetch
-                    if not depth:
+                    # If depth is not provided, default to:
+                    # 1. The first time the repo is loaded, download a partial clone. This speeds
+                    #    up CI/CD and other cases where the user never updates the repository.
+                    # 2. When *updating* an already cloned copy of the repository, perform a
+                    #    full fetch (unshallowing the repo if necessary) to optimize for full history.
+                    if depth is None and not fetched:
+                        depth = 2
                         depth = 2 if not fetched else None
 
                     # setup the repository if it does not exist
