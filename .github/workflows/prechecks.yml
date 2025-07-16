@@ -35,8 +35,9 @@ jobs:
                --backport typing \
                -t=3.6- \
                -vvv \
-               lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos \
-               --exclude lib/spack/spack/vendor
+               --exclude lib/spack/spack/vendor \
+               lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
+
 
   # Run style checks on the files that have been changed
   style:
