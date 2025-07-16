@@ -62,7 +62,6 @@ line-length = 99
 extend-include = ["bin/spack"]
 extend-exclude = [
   "lib/spack/spack/vendor",
-  "lib/spack/spack/util/ctest_log_parser.py",
   "*.pyi",
 ]
 
@@ -94,7 +93,7 @@ spack = ["spack"]
 [tool.black]
 line-length = 99
 include = "(lib/spack|var/spack/test_repos)/.*\\.pyi?$|bin/spack$"
-extend-exclude = "lib/spack/spack/vendor|lib/spack/spack/util/ctest_log_parser\\.py"
+extend-exclude = "lib/spack/spack/vendor"
 skip-magic-trailing-comma = true
 
 [tool.isort]
@@ -110,13 +109,13 @@ sections = [
 ]
 known_first_party = "spack"
 known_vendor = ["spack.vendor"]
-skip = ["lib/spack/spack/vendor", "lib/spack/spack/util/ctest_log_parser.py"]
+skip = ["lib/spack/spack/vendor"]
 src_paths = "lib"
 honor_noqa = true
 
 [tool.mypy]
 files = ["lib/spack/spack/**/*.py"]
-exclude = "lib/spack/spack/vendor|lib/spack/spack/util/ctest_log_parser\\.py"
+exclude = "lib/spack/spack/vendor"
 mypy_path = ["lib/spack"]
 allow_redefinition = true
 
@@ -202,7 +201,6 @@ omit = [
   "lib/spack/spack/test/*",
   "lib/spack/docs/*",
   "lib/spack/spack/vendor/*",
-  "lib/spack/spack/util/ctest_log_parser.py",
   "share/spack/qa/*",
 ]
 

@@ -44,7 +44,6 @@ exclude =
   var/spack/junit-report/
   var/spack/mock-configs/
   lib/spack/spack/vendor/
-  lib/spack/spack/util/ctest_log_parser.py
   __pycache__
   var
 

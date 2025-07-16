@@ -1,4 +1,3 @@
 *.py diff=python
 lib/spack/spack/vendor/* linguist-vendored
-lib/spack/spack/util/ctest_log_parser.py linguist-vendored
 *.bat text eol=crlf
