@@ -77,6 +77,21 @@ def buildcache_url_minio(request: pytest.FixtureRequest, monkeypatch: pytest.Mon
     if not request.config.getoption("--minio-integration-tests", default=False):
         pytest.skip("MinIO tests disabled, use --minio-integration-tests to enable")
 
+    def _entries_from_cache_fallback_patch(*args, **kwargs):
+        raise NotImplementedError()
+
+    # We want to ensure the MinIO tests use the `_entries_from_cache_aws_cli`
+    # function, and do not fall back to the `_entries_from_cache_fallback`
+    # (which happens when awscli is not installed).
+    # So, we patch the fallback function to raise an error if it is called.
+    import spack.url_buildcache
+
+    monkeypatch.setattr(
+        target=spack.url_buildcache,
+        name="_entries_from_cache_fallback",
+        value=_entries_from_cache_fallback_patch,
+    )
+
     # Assume boto3 is installed, since the user has requested MinIO integration tests
     import boto3
 
