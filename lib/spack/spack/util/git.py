@@ -97,6 +97,8 @@ def pull_checkout_branch(
 
     fetch_args = ["--quiet", "--progress"]
     if depth:
+        if depth <= 0:
+            raise ValueError("depth must be a positive integer")
         fetch_args.append(f"--depth={depth}")
 
     git_exe("fetch", *fetch_args, remote, branch)
