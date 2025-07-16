@@ -648,7 +648,7 @@ def variant(
         sticky: The variant should not be changed by the concretizer to find a valid concrete spec
 
     Raises:
-        DirectiveError: If arguments passed to the directive are invalid
+        spack.directives_meta.DirectiveError: If arguments passed to the directive are invalid
     """
 
     # This validation can be removed at runtime and enforced with an audit in Spack v1.0.

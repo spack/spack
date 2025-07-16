@@ -2983,7 +2983,7 @@ class Spec:
             root (Spec): root spec to be analyzed
 
         Raises:
-            SpecDeprecatedError: if any deprecated spec is found
+            spack.spec.SpecDeprecatedError: if any deprecated spec is found
         """
         deprecated = []
         with spack.store.STORE.db.read_transaction():
