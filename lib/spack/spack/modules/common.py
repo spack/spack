@@ -55,6 +55,7 @@ import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.vendor.jinja2
 from spack.context import Context
 from spack.llnl.util.lang import Singleton, dedupe, memoized
 
@@ -871,7 +872,6 @@ class BaseModuleFileWriter:
 
         # Get the template for the module
         template_name = self._get_template()
-        import spack.vendor.jinja2
 
         try:
             env = tengine.make_environment()
