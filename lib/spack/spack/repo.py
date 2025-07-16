@@ -1401,7 +1401,7 @@ class Repo:
                 sys.path.insert(0, self.python_path)
             module = importlib.import_module(fullname)
         except Exception as e:
-            msg = f"Cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
+            msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
             raise RepoError(msg) from e
         finally:
             if self.python_path:
@@ -2035,7 +2035,13 @@ class UnknownEntityError(RepoError):
 class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
-    def __init__(self, name, repo: Optional[Union[Repo, RepoPath, str]] = None):
+    def __init__(
+        self,
+        name,
+        repo: Optional[Union[Repo, RepoPath, str]] = None,
+        *,
+        get_close_matches=difflib.get_close_matches,
+    ):
         msg = "Attempting to retrieve anonymous package."
         long_msg = None
         if name:
@@ -2063,7 +2069,7 @@ class UnknownPackageError(UnknownEntityError):
                 similar = []
                 if isinstance(repo, RepoPath):
                     try:
-                        similar = difflib.get_close_matches(pkg_name, repo.all_package_names())
+                        similar = get_close_matches(pkg_name, repo.all_package_names())
                     except Exception:
                         pass
 

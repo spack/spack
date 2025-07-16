@@ -1,13 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import difflib
 import os
 import pathlib
 
 import pytest
-
-import llnl.util.filesystem as fs
 
 import spack
 import spack.environment
@@ -16,7 +13,6 @@ import spack.paths
 import spack.repo
 import spack.schema.repos
 import spack.spec
-import spack.test.conftest
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.lock
@@ -916,78 +912,53 @@ def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
             descriptor.update(git=MockGitInvalidRemote())
 
 
-def test_repo_use_bad_import(
-    config, mock_packages_repo, repo_builder: RepoBuilder, tmpdir, monkeypatch
-):
+def test_repo_use_bad_import(config, repo_builder: RepoBuilder):
     """Demonstrate failure when attempt to get the class for package containing
     a failing import (e.g., missing repository)."""
-    package_name = "importer"
-    package_py = repo_builder._recipe_filename(package_name)
-    fs.mkdirp(os.path.dirname(package_py))
-    with open(package_py, "w", encoding="utf-8") as f:
-        f.write(
-            f"""
+    package_py = pathlib.Path(repo_builder._recipe_filename("importer"))
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(
+        """\
 from spack_repo.missing.packages import base
 from spack.package import *
 
 
-class {package_name.capitalize()}(PackageBase):
+class Importer(PackageBase):
     homepage = "https://www.bad-importer.com"
     url = "https://www.bad-importer.com/v1.0.tar.gz"
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")
-"""
-        )
+""",
+        encoding="utf-8",
+    )
 
     with spack.repo.use_repositories(repo_builder.root):
-        with pytest.raises(spack.repo.RepoError, match="Cannot load"):
-            spack.repo.PATH.get_pkg_class(package_name)
+        with pytest.raises(spack.repo.RepoError, match="cannot load"):
+            spack.repo.PATH.get_pkg_class("importer")
 
 
-def test_repo_use_bad_syntax(
-    config, mock_packages_repo, repo_builder: RepoBuilder, tmpdir, monkeypatch
-):
+def test_repo_use_bad_syntax(config, repo_builder: RepoBuilder):
     """Demonstrate failure when attempt to get class for package with invalid syntax."""
-    package_name = "erroneous"
-    package_py = repo_builder._recipe_filename(package_name)
-    fs.mkdirp(os.path.dirname(package_py))
-    with open(package_py, "w", encoding="utf-8") as f:
-        f.write(
-            f"""
-from spack.package import *
-
-class {package_name.capitalize()}(PackageBase)
-    homepage = "https://www.bad-syntax.com"
-    url = "https://www.bad-syntax.com/v1.0.tar.gz"
-
-    version("1.0", md5="0123456789abcdef0123456789abcdef")
-"""
-        )
+    package_py = pathlib.Path(repo_builder._recipe_filename("erroneous"))
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text("class 123: pass", encoding="utf-8")
 
     with spack.repo.use_repositories(repo_builder.root):
         with pytest.raises(spack.repo.RepoError):
-            spack.repo.PATH.get_pkg_class(package_name)
+            spack.repo.PATH.get_pkg_class("erroneous")
 
 
-def test_unknownpkgerror_match_fails(monkeypatch):
+def test_unknownpkgerror_match_fails():
     """Ensure fails with basic message when get_close_matches fails."""
 
     def _get_close_matches(*args, **kwargs):
         raise MemoryError("Too many packages to compare")
 
-    monkeypatch.setattr(difflib, "get_close_matches", _get_close_matches)
-
-    with pytest.raises(spack.repo.UnknownPackageError) as exc:
-        raise spack.repo.UnknownPackageError("pkg_a")
-
     # Confirm that the error indicates there were no matches (default).
-    assert "mean one of the following" not in str(exc)
+    exception = spack.repo.UnknownPackageError("pkg_a", get_close_matches=_get_close_matches)
+    assert "mean one of the following" not in str(exception)
 
 
-def test_unknownpkgerror_str_repo(tmpdir):
+def test_unknownpkgerror_str_repo():
     """Ensure reasonable error message when repo is a string."""
-    with pytest.raises(spack.repo.UnknownPackageError) as exc:
-        raise spack.repo.UnknownPackageError("pkg_a", "my_special_repo")
-
-    # Confirm that the error includes the repository part of the message.
-    assert "not found in repository" in str(exc)
+    assert "not found in repository" in str(spack.repo.UnknownPackageError("pkg_a", "my_repo"))
