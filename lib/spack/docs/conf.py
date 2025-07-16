@@ -45,7 +45,6 @@ os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
 
 sys.path[0:0] = [
-    os.path.abspath("_spack_root/lib/spack/external"),
     os.path.abspath("_spack_root/lib/spack/"),
     os.path.abspath(".spack/spack-packages/repos"),
 ]

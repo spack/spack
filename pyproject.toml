@@ -236,11 +236,10 @@ directory = "htmlcov"
 
 [tool.vendoring]
 destination = "lib/spack/spack/vendor"
-requirements = "lib/spack/external/vendor.txt"
+requirements = "var/spack/vendoring/vendor.txt"
 namespace = ""
-
 protected-files = ["__init__.py", "README.rst", "vendor.txt"]
-patches-dir = "lib/spack/external/patches"
+patches-dir = "var/spack/vendoring/patches"
 
 [tool.vendoring.transformations]
 substitute = [

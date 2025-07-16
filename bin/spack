@@ -40,9 +40,7 @@ spack_file = os.path.realpath(os.path.expanduser(__file__))
 spack_prefix = os.path.dirname(os.path.dirname(spack_file))
 
 # Allow spack libs to be imported in our scripts
-spack_lib_path = os.path.join(spack_prefix, "lib", "spack")
-external_lib_path = os.path.join(spack_lib_path, "external")
-sys.path[:0] = [spack_lib_path, external_lib_path]
+sys.path.insert(0, os.path.join(spack_prefix, "lib", "spack"))
 
 from spack.main import main  # noqa: E402
 
