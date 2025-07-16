@@ -147,7 +147,7 @@ def test_changed_files_all_files(mock_packages):
     assert __file__ in files
 
     # ensure externals are excluded
-    assert not any(f.startswith(spack.paths.external_path) for f in files)
+    assert not any(f.startswith(spack.paths.vendor_path) for f in files)
 
 
 def test_bad_root(tmp_path: pathlib.Path):
