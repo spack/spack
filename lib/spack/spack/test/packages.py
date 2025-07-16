@@ -337,6 +337,33 @@ def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, 
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
 
 
+def test_package_can_have_sparse_checkout_properties_with_commit_version(
+    mock_packages, mock_fetch, mock_stage
+):
+    spec = Spec("git-sparsepaths-pkg commit=abcdefg")
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    assert hasattr(pkg_cls, "git_sparse_paths")
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), "1.0")
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert hasattr(fetcher, "git_sparse_paths")
+    assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
+
+
+def test_package_can_have_sparse_checkout_properties_with_gitversion(
+    mock_packages, mock_fetch, mock_stage
+):
+    spec = Spec("git-sparsepaths-pkg")
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    assert hasattr(pkg_cls, "git_sparse_paths")
+
+    version = "git.foo=1.0"
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), version)
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert hasattr(fetcher, "git_sparse_paths")
+    assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
+
+
 def test_package_can_depend_on_commit_of_dependency(mock_packages, config):
     spec = spack.concretize.concretize_one(Spec("git-ref-commit-dep@1.0.0"))
     assert spec.satisfies(f"^git-ref-package commit={'a' * 40}")

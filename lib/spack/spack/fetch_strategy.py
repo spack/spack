@@ -1737,6 +1737,7 @@ def for_package_version(pkg, version=None):
         kwargs = {ref_type: ref_value, "no_cache": ref_type != "commit"}
         kwargs["git"] = pkg.version_or_package_attr("git", version)
         kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
+        kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)
 
         # if the ref_version is a known version from the package, use that version's
         # attributes
