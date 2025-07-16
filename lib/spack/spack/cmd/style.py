@@ -14,6 +14,7 @@ import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.repo
+import spack.util.ctest_log_parser
 import spack.util.git
 import spack.util.spack_yaml
 from spack.llnl.util.filesystem import working_dir
@@ -34,8 +35,11 @@ def grouper(iterable, n, fillvalue=None):
         yield filter(None, group)
 
 
-#: List of directories to exclude from checks -- relative to spack root
-exclude_directories = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
+#: List of paths to exclude from checks -- relative to spack root
+exclude_paths = [
+    os.path.relpath(spack.util.ctest_log_parser.__file__, spack.paths.prefix),
+    os.path.relpath(spack.paths.vendor_path, spack.paths.prefix),
+]
 
 #: Order in which tools should be run. flake8 is last so that it can
 #: double-check the results of other tools (if, e.g., --fix was provided)
@@ -130,7 +134,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if all_files:
         git_args.append(["ls-files", "--exclude-standard"])
 
-    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_directories]
+    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_paths]
     changed = set()
 
     for arg_list in git_args:
