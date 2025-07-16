@@ -36,7 +36,8 @@ jobs:
                -t=3.6- \
                -vvv \
                lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos \
-               --exclude lib/spack/spack/vendor
+               --exclude lib/spack/spack/vendor \
+               --exclude lib/spack/spack/util/ctest_log_parser.py
 
   # Run style checks on the files that have been changed
   style:
@@ -55,7 +56,7 @@ jobs:
       run: |
         bin/spack style --base HEAD^1
         bin/spack license verify
-        pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/external lib
+        pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/spack/vendor lib
 
 
   # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
