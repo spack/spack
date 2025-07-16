@@ -36,8 +36,7 @@ jobs:
                -t=3.6- \
                -vvv \
                lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos \
-               --exclude lib/spack/spack/vendor \
-               --exclude lib/spack/spack/util/ctest_log_parser.py
+               --exclude lib/spack/spack/vendor
 
   # Run style checks on the files that have been changed
   style:
