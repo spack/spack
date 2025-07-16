@@ -1678,7 +1678,8 @@ class RemoteRepoDescriptor(RepoDescriptor):
                     # download a partial copy of the package repository the first
                     # time it is loaded to speed up CI/CD executions of Spack.
                     # when updating an existing copy of the repository perform a full fetch
-                    depth = 2 if not fetched else None
+                    if not depth:
+                        depth = 2 if not fetched else None
 
                     # setup the repository if it does not exist
                     if not fetched:
