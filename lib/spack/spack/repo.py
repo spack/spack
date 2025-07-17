@@ -974,8 +974,9 @@ def _parse_package_api_version(
     max_str = ".".join(str(i) for i in max_api)
     curr_str = ".".join(str(i) for i in package_api)
     raise BadRepoVersionError(
+        api,
         f"Package API v{curr_str} is not supported by this version of Spack ("
-        f"must be between v{min_str} and v{max_str})"
+        f"must be between v{min_str} and v{max_str})",
     )
 
 
@@ -1659,12 +1660,15 @@ class RemoteRepoDescriptor(RepoDescriptor):
         return False
 
     def get_commit(self, git: spack.util.executable.Executable) -> Optional[str]:
+        result = None
         with self.read_transaction:
             if not self._fetched():
-                return None
+                return result
 
             with fs.working_dir(self.destination):
-                return git("rev-parse", "HEAD", output=str).strip()
+                result = git("rev-parse", "HEAD", output=str).strip()
+
+        return result
 
     def _clone_or_pull(
         self,
@@ -1684,13 +1688,14 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         return
 
                     # If depth is not provided, default to:
-                    # 1. The first time the repo is loaded, download a partial clone. This speeds
-                    #    up CI/CD and other cases where the user never updates the repository.
-                    # 2. When *updating* an already cloned copy of the repository, perform a
-                    #    full fetch (unshallowing the repo if necessary) to optimize for full history.
+                    # 1. The first time the repo is loaded, download a partial clone.
+                    #     This speeds  up CI/CD and other cases where the user never
+                    #     updates the repository.
+                    # 2. When *updating* an already cloned copy of the repository,
+                    #    perform a full fetch (unshallowing the repo if necessary) to
+                    #    optimize for full history.
                     if depth is None and not fetched:
                         depth = 2
-                        depth = 2 if not fetched else None
 
                     # setup the repository if it does not exist
                     if not fetched:
@@ -2049,6 +2054,10 @@ class BadRepoError(RepoError):
 
 class BadRepoVersionError(BadRepoError):
     """Raised when repo API version is too high or too low for Spack."""
+
+    def __init__(self, api, *args, **kwargs):
+        self.api = api
+        super().__init__(*args, **kwargs)
 
 
 class UnknownEntityError(RepoError):

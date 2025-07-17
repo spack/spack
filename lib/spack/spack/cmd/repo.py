@@ -14,6 +14,7 @@ import spack.config
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.executable
+import spack.util.git
 import spack.util.path
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
@@ -151,10 +152,10 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
-    refspec = update_parser.add_mutually_exclusive_group(required=False)
-    refspec.add_argument(
+    update_parser.add_argument(
         "--branch", "-b", nargs="?", default=None, help="name of a branch to change to"
     )
+    refspec = update_parser.add_mutually_exclusive_group(required=False)
     refspec.add_argument("--tag", "-t", nargs="?", default=None, help="name of a tag to change to")
     refspec.add_argument(
         "--commit", "-c", nargs="?", default=None, help="name of a commit to change to"
@@ -509,7 +510,7 @@ def repo_update(args: Any) -> int:
             updated_entry = scope_repos[name] if name in scope_repos else {}
 
             # prune previous values of git fields
-            for entry in {"commit", "tag", "branch"} - {active_flag}:
+            for entry in {"commit", "tag"} - {active_flag}:
                 setattr(descriptor, entry, None)
                 updated_entry.pop(entry, None)
 
@@ -525,15 +526,21 @@ def repo_update(args: Any) -> int:
         if previous_commit == new_commit:
             tty.msg(f"{name}: Already up to date.")
         else:
-            if any(
-                type(r) is spack.repo.BadRepoVersionError
+            fails = [
+                r
                 for r in descriptor.construct(cache=spack.caches.MISC_CACHE).values()
-            ):
+                if type(r) is spack.repo.BadRepoVersionError
+            ]
+            if fails:
+                min_ver = ".".join(str(n) for n in spack.min_package_api_version)
+                max_ver = ".".join(str(n) for n in spack.package_api_version)
                 tty.error(
-                    f"{name}: repo is too new for this version of Spack. "
-                    "Please upgrade Spack or revert with:\n",
-                    f"      spack repo update -c {previous_commit[:7]}\n",
+                    f"{name}: repo is too new for this version of Spack. ",
+                    f"  Spack supports API v{min_ver} to v{max_ver}, but repo is {fails[0].api}",
+                    "  Please upgrade Spack or revert with:\n",
+                    f"       spack repo update --commit {previous_commit}\n",
                 )
+
             else:
                 tty.msg(f"{name}: Updated sucessfully.")
 
