@@ -2392,8 +2392,8 @@ def config_two_gccs(mutable_config):
 
 
 @pytest.fixture(autouse=True)
-def auto_function_fixture(tmpdir, monkeypatch):
-    tmp_map = tmpdir.join("test-dev-stage-index")
+def auto_function_fixture(tmp_path, monkeypatch):
+    tmp_map = str(tmp_path / "test-dev-stage-index")
     monkeypatch.setattr(spack.stage, "dev_stage_map", spack.stage.DevStageMap(tmp_map))
     yield
 
@@ -2422,7 +2422,7 @@ def clear_stage_root(monkeypatch):
 #       the `mock_stage` path in `mock_stage_archive`) per discussions in
 #       #12857.  See also #13065.
 @pytest.fixture
-def tmp_build_stage_dir(tmp_path: pathlib.Path, clear_stage_root):
+def tmp_build_stage_dir(tmp_path: Path, clear_stage_root):
     """Use a temporary test directory for the stage root."""
     test_path = str(tmp_path / "stage")
     with spack.config.override("config:build_stage", test_path):
@@ -2447,7 +2447,7 @@ def _create_tree_from_dir_recursive(path):
 
 
 @pytest.fixture
-def develop_path(tmp_path: pathlib.Path):
+def develop_path(tmp_path: Path):
     dir_structure = {"a1": {"b1": None, "b2": "b1content"}, "a2": None}
     srcdir = str(tmp_path / "test-src")
     os.mkdir(srcdir)
