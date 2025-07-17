@@ -50,7 +50,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "-j",
         "--jobs",
         type=int,
-        default=1,
+        default=None,
         help="Use a given number of workers to make the mirror (used in combination with -a)",
     )
     create_parser.add_argument("--file", help="file with specs of packages to put in mirror")
@@ -606,12 +606,20 @@ def mirror_create(args):
     # When no directory is provided, the source dir is used
     path = args.directory or spack.caches.fetch_cache_location()
 
+    if args.jobs is None:
+        if args.all:
+            workers = 16
+        else:
+            workers = 1
+    else:
+        workers = args.jobs
+
     mirror_specs = _specs_and_action(args)
     create_mirror_for_all_specs(
         mirror_specs,
         path=path,
         skip_unstable_versions=args.skip_unstable_versions,
-        workers=getattr(args, "jobs", 1),
+        workers=workers,
     )
 
 
