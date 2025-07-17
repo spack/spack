@@ -1009,6 +1009,20 @@ def force_remove(*paths):
 @contextmanager
 @system_path_filter
 def working_dir(dirname: str, *, create: bool = False):
+    """Context manager to change the current working directory to ``dirname``.
+
+    Args:
+        dirname: the directory to change to
+        create: if :obj:`True`, create the directory if it does not exist
+
+    Example usage:
+
+        .. code-block:: python
+
+            with working_dir("/path/to/dir"):
+                # do something in /path/to/dir
+                pass
+    """
     if create:
         mkdirp(dirname)
 

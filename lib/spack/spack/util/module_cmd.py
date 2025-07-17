@@ -22,11 +22,22 @@ awk_cmd = r"""awk 'BEGIN{for(name in ENVIRON)""" r"""printf("%s=%s%c", name, ENV
 
 
 def module(
-    *args,
+    *args: str,
     module_template: Optional[str] = None,
     module_src_cmd: Optional[str] = None,
     environb: Optional[MutableMapping[bytes, bytes]] = None,
 ):
+    """Run the ``module`` shell function in ``/bin/bash`` subprocess, and either collect its
+    changes to environment variables and apply them in the current process (for ``module load``,
+    ``module swap``, etc.), or return its output as a string (for ``module show``, etc.).
+
+    This requires ``/bin/bash`` to be available on the system and ``awk`` to be in ``PATH``.
+
+    Args:
+        args: Command line arguments for the module command.
+        environb: (Binary) environment variables dictionary. If not provided, the current
+            process's environment is modified.
+    """
     module_cmd = module_template or ("module " + " ".join(args))
     environb = environb or os.environb
     if b"MODULESHOME" in environb:
