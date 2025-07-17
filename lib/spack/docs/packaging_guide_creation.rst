@@ -510,23 +510,31 @@ Spack will use the nearest URL *before* the requested version.
 This is useful for packages that have an easy to extrapolate URL, but keep changing their URL format every few releases.
 With this method, you only need to specify the ``url`` when the URL changes.
 
+.. _checksum-verification:
+
 ^^^^^^^^^^^^^^^^^^^^^
 Checksum verification
 ^^^^^^^^^^^^^^^^^^^^^
 
 In the above example we see that each version is associated with a ``sha256`` checksum.
 Spack uses these checksums to verify that downloaded source code has not been modified, corrupted or compromised.
-This is both a critical security feature and a way to ensure reproducibility of builds.
+Therefore, Spack requires that all URL downloads have a checksum, and refuses
+to install packages when checksum verification fails.
+While this check can be disabled for development with ``spack install
+--no-checksum``, it is **not recommended**.
 
-Spack considers a download *trusted* if its contents can be verified.
-For downloads from URLs, this is done by providing a ``sha256`` checksum for the archive.
-For :ref:`Git downloads <git-fetch>`, which we will cover in more detail later, this is done by specifying a full commit hash.
+.. warning:: Trusted Downloads
 
-Spack requires that all URL downloads have a checksum, and refuses to install packages when checksum verification fails.
-While this check can be disabled for development with ``spack install --no-checksum``, it is not recommended.
+   It is critical from a security and reproducibility standpoint that Spack
+   be able to verify the downloaded source. This is accomplished through a
+   hash.
 
-For URL downloads, Spack supports multiple cryptographic hash algorithms, including ``sha256``, ``sha384``, and ``sha512``.
-We currently recommend ``sha256``.
+   For URL downloads, Spack supports multiple cryptographic hash algorithms,
+   including ``sha256`` (recommended), ``sha384``, and ``sha512``.
+
+   For Git downloads, which we will cover in more detail later, this is done
+   by specifying a **full** :ref:`commit hash <git-commits>`.
+
 
 .. _cmd-spack-checksum:
 
@@ -874,6 +882,18 @@ but git commits are guaranteed to be unique points in the git history.
 
 The destination directory for the clone is the standard stage source path.
 
+.. warning:: Trusted Downloads
+
+   It is critical from a security and reproducibility standpoint that Spack
+   be able to verify the downloaded source.
+
+   A git download *is trusted* only if the full commit sha is specified.
+   Therefore, it is *the* recommended way to securely download from a Git
+   repository.
+
+
+.. _default-git-branch:
+
 Default branch
   To fetch a repository's default branch:
 
@@ -885,11 +905,20 @@ Default branch
 
          version("develop")
 
-  This download method is untrusted, and is not recommended. Aside from HTTPS,
+  Unfortunately, aside from HTTPS,
   there is no way to verify that the repository has not been compromised, and
   the commit you get when you install the package likely won't be the same
   commit that was used when the package was first written. Additionally, the
-  default branch may change. It is best to at least specify a branch name.
+  default branch may change.
+
+.. warning::
+
+  This download method is untrusted, and is not recommended.
+
+  If you do use it, it is best to at least specify a branch name (see below).
+
+
+.. _git-branches:
 
 Branches
   To fetch a particular branch, use the ``branch`` parameter:
@@ -898,8 +927,15 @@ Branches
 
      version("experimental", branch="experimental")
 
-  This download method is untrusted, and is not recommended for production installations.
   Branches are moving targets, so the commit you get when you install the package likely won't be the same commit that was used when the package was first written.
+
+.. warning::
+
+  This download method is untrusted, and is not recommended for production
+  installations.
+
+
+.. _git-tags:
 
 Tags
   To fetch from a particular tag, use ``tag`` instead:
@@ -908,10 +944,18 @@ Tags
 
      version("1.0.1", tag="v1.0.1")
 
-  This download method is untrusted, and is not recommended.
   Although tags are generally more stable than branches, Git allows tags to be moved.
   Many developers use tags to denote rolling releases, and may move the tag when a bug is fixed.
-  Instead, it is recommended to combine the ``tag`` and ``commit`` options (see below).
+
+.. warning::
+
+  This download method is untrusted, and is not recommended.
+
+  If you must use a ``tag``, it is recommended to combine it with the
+  ``commit`` options (see below).
+
+
+.. _git-commits:
 
 Commits
   Finally, to fetch a particular commit, use ``commit``:
@@ -921,13 +965,24 @@ Commits
      version("2014-10-08", commit="1e6ef73d93a28240f954513bc4c2ed46178fa32b")
      version("1.0.4", tag="v1.0.4", commit="420136f6f1f26050d95138e27cf8bc905bc5e7f52")   
 
-  This download method *is trusted*, provided that the full commit sha is specified.
-  It is the recommended way to securely download from a Git repository.
-
   It may be useful to provide a saner version for commits like this, e.g., you might use the date as the version, as done above.
   Or, if you know the commit at which a release was cut, you can use the release version.
-  It's up to the package author to decide what makes the most sense.
-  It is not recommended to use the commit hash as the version itself, since it won't sort properly.
+  It is up to the package author to decide which approach makes the most sense.
+
+.. warning::
+
+  A git download is *trusted only if* the full commit sha is specified.
+
+
+.. hint::
+
+   **Avoid using the commit hash as the version.**
+
+   It is not recommended to use the commit hash as the version itself, since
+   it won't sort properly.
+
+
+.. _git-submodules:
 
 Submodules
   You can supply ``submodules=True`` to cause Spack to fetch submodules
@@ -935,7 +990,9 @@ Submodules
 
   .. code-block:: python
 
-     version("1.0.1", tag="v1.0.1", submodules=True)
+     version(
+         "1.1.0", tag="v1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=True
+     )
 
   If a package needs more fine-grained control over submodules, define
   ``submodules`` to be a callable function that takes the package instance as
@@ -953,10 +1010,12 @@ Submodules
 
 
       class MyPackage(Package):
-          version("0.1.0", submodules=submodules)
+          version("1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=submodules)
 
   For more information about git submodules see the manpage of git: ``man
   git-submodule``.
+
+.. _git-sparse-checkout:
 
 Sparse-Checkout
   You can supply ``git_sparse_paths`` at the package or version level to utilize git's
@@ -993,6 +1052,13 @@ Sparse-Checkout
         version("1.2.5", git_sparse_paths=sparse_path_func)
         version("1.1.5", git_sparse_paths=sparse_path_func)
 
+.. note::
+
+   The version directives in the example above are simplified to emphasize
+   the option described in this section. Trusted downloads require a hash,
+   such as a :ref:`sha256 <checksum-verification>` or :ref:`commit <git-commits>`.
+
+
 .. _github-fetch:
 
 """"""
@@ -1008,8 +1074,11 @@ checksum.
 
 .. code-block:: python
 
-       version("1.9.5.1.1", sha256="8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
-               url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f")
+       version(
+           "1.9.5.1.1",
+           sha256="8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
+           url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f"
+       )
 
 .. _hg-fetch:
 
