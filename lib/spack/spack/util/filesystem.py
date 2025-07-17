@@ -3485,7 +3485,7 @@ def collect_import_exports(pkg, lib):
     raw_exports = raw_exports[8:]
     exports = []
     for export_line in raw_exports:
-        if export_line == "  Summary":
+        if export_line == "  Summary\r":
             # exports end just before this section, terminate
             break
         sanitized_line = export_line.strip("\r").strip(" ")
