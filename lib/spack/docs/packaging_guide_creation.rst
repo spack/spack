@@ -523,14 +523,14 @@ to install packages when checksum verification fails.
 
 .. note::
 
-   While this check can be disabled for development with ``spack install
+   While this requirement can be disabled for development with ``spack install
    --no-checksum``, it is **not recommended**.
 
 .. warning::
 
-   **Trusted Downloads**
+   **Trusted Downloads.**
    It is critical from a security and reproducibility standpoint that Spack
-   be able to verify the downloaded source. This is accomplished through a
+   be able to verify the downloaded source. This is accomplished using a
    hash.
 
    For URL downloads, Spack supports multiple cryptographic hash algorithms,
@@ -539,7 +539,7 @@ to install packages when checksum verification fails.
 
    For repository downloads, which we will cover in more detail later, this is
    done by specifying a **full commit hash** (e.g., :ref:`git <git-commits>`,
-   :ref:`hg <hg-revisions>`.
+   :ref:`hg <hg-revisions>`).
 
 
 .. _cmd-spack-checksum:
@@ -859,7 +859,7 @@ than the default repo, it can be overridden with a version-specific argument.
 Git
 """""""
 
-Git fetching supports the following parameters to ``version``:
+Git fetching supports the following parameters to the ``version`` directive:
 
 * ``git``: URL of the git repository, if different than the class-level ``git``.
 * ``branch``: Name of a :ref:`branch <git-branches>` to fetch.
@@ -904,7 +904,7 @@ The destination directory for the clone is the standard stage source path.
 .. _git-default-branch:
 
 Default branch
-  To fetch a repository's default branch:
+  A version with only a name results in fetching a repository's default branch:
 
   .. code-block:: python
 
@@ -914,30 +914,37 @@ Default branch
 
          version("develop")
 
-  Unfortunately, aside from HTTPS,
-  there is no way to verify that the repository has not been compromised, and
-  the commit you get when you install the package likely won't be the same
-  commit that was used when the package was first written. Additionally, the
-  default branch may change.
+  Aside from use of HTTPS, there is no way to verify that the repository has
+  not been compromised. Furthermore, the commit you get when you install the
+  package likely won't be the same commit that was used when the package was
+  first written. There is also the risk that the default branch may change.
 
   .. warning::
 
     This download method is **untrusted**, and is **not recommended**.
 
-    If you do use it, it is best to at least specify a branch name (see
-    :ref:`below <git-branches>`).
+    It is better to specify a branch name (see :ref:`below <git-branches>`).
 
 
 .. _git-branches:
 
 Branches
-  To fetch a particular branch, use the ``branch`` parameter:
+  To fetch a particular branch, use the ``branch`` parameter, preferrably
+  with the same name as the version. For example,
 
   .. code-block:: python
 
+     version("main", branch="main")
      version("experimental", branch="experimental")
 
-  Branches are moving targets, so the commit you get when you install the package likely won't be the same commit that was used when the package was first written.
+  Branches are moving targets, which means the commit you get when you install
+  the package likely won't be the one used when the package was first written.
+
+  .. note::
+
+     Common branch names are special in terms of how Spack determines the latest
+     version of a package. See "infinity versions" in :ref:`version ordering
+     <version-comparison>` for more information.
 
   .. warning::
 
@@ -954,7 +961,7 @@ Tags
 
      version("1.0.1", tag="v1.0.1")
 
-  Although tags are generally more stable than branches, Git allows tags to be moved.
+  While tags are generally more stable than branches, Git allows tags to be moved.
   Many developers use tags to denote rolling releases, and may move the tag when a bug is fixed.
 
   .. warning::
@@ -962,20 +969,21 @@ Tags
     This download method is **untrusted**, and is **not recommended**.
 
     If you must use a ``tag``, it is recommended to combine it with the
-    ``commit`` options (see below).
+    ``commit`` option (see `below <git-commits>`).
 
 
 .. _git-commits:
 
 Commits
-  Finally, to fetch a particular commit, use ``commit``:
+  To fetch a particular commit, use the ``commit`` argument:
 
   .. code-block:: python
 
      version("2014-10-08", commit="1e6ef73d93a28240f954513bc4c2ed46178fa32b")
      version("1.0.4", tag="v1.0.4", commit="420136f6f1f26050d95138e27cf8bc905bc5e7f52")   
 
-  It may be useful to provide a saner version for commits like this, e.g., you might use the date as the version, as done above.
+  It may be useful to provide a saner version for commits like this, e.g., you
+  might use the date as the version, as done in the first example above.
   Or, if you know the commit at which a release was cut, you can use the release version.
   It is up to the package author to decide which approach makes the most sense.
 
@@ -988,24 +996,23 @@ Commits
 
      **Avoid using the commit hash as the version.**
      It is not recommended to use the commit hash as the version itself, since
-     it won't sort properly.
+     it won't sort properly for version ordering purposes.
 
 
 .. _git-submodules:
 
 Submodules
   You can supply ``submodules=True`` to cause Spack to fetch submodules
-  recursively along with the repository at fetch time.
+  recursively along with the repository.
 
   .. code-block:: python
 
-     version(
-         "1.1.0", tag="v1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=True
-     )
+     version("1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=True)
 
   If a package needs more fine-grained control over submodules, define
   ``submodules`` to be a callable function that takes the package instance as
-  its only argument.  The function should return a list of submodules to be fetched.
+  its only argument.  The function needs to return a list of submodules to be
+  fetched.
 
   .. code-block:: python
 
@@ -1021,7 +1028,7 @@ Submodules
       class MyPackage(Package):
           version("1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=submodules)
 
-  For more information about git submodules see the manpage of git: ``man
+  For more information about git submodules see the man page of git: ``man
   git-submodule``.
 
 
@@ -1030,28 +1037,42 @@ Submodules
 Sparse-Checkout
   If you only want to clone a subset of the contents of a git repository, you
   can supply ``git_sparse_paths`` at the package or version level to utilize
-  git's sparse-checkout feature. The package can have an attribute (or property)
-  that contains (or returns) a list of relative paths, for example:
+  git's sparse-checkout feature. The paths can be specified through an
+  attribute, property or callable function. This option is useful for large
+  repositories containing separate features that can be built independently.
+
+  .. note::
+
+     This leverages a newer feature in git that requires version ``2.25.0`` or
+     greater.
+
+     If ``git_sparse_paths`` is supplied to a git version that is too old
+     then a warning will be issued before using the standard cloning operations.
+
+  .. note::
+
+     Paths to directories result in all of their contents -- files and
+     subdirectories -- being cloned.
+
+  The ``git_sparse_paths`` attribute needs to provide a list of relative
+  paths within the repository. If using a property -- a function decorated with
+  ``@property`` -- or an argument that is a callable function, the function
+  needs to return a list of paths.
+
+  For example, using the attribute approach:
 
   .. code-block:: python
 
     class MyPackage(package):
-        # using a property
+        # using an attribute
         git_sparse_paths = ["doe", "rae"]
 
         version("1.0.0")
         version("1.1.0")
 
   results in the files from the top level directory of the repository and the
-  contents of the ``doe`` and ``rae`` paths to be cloned. If paths are
-  directories then all of the subdirectories and associated files are included.
-
-  .. note::
-
-     This is a newer feature in git that requires git ``2.25.0`` or greater.
-
-     If ``git_sparse_paths`` is supplied and the git version is too old then a
-     warning will be issued before using the standard cloning operations instead.
+  contents of the ``doe`` and ``rae`` relative paths within the repository to
+  be cloned.
 
   Alternatively, you can provide the paths to the version directive argument
   using a callable function whose return value is a list for paths. For example:
@@ -1070,14 +1091,11 @@ Sparse-Checkout
         version("1.2.5", git_sparse_paths=sparse_path_func)
         version("1.1.5", git_sparse_paths=sparse_path_func)
 
-  This feature is useful for large repositories containing separate features
-  that can be built independently.
-
   .. note::
 
      The version directives in the examples above are simplified to emphasize
      use of this feature. Trusted downloads require a hash, such as a
-     :ref:`sha256 <checksum-verification>` or :ref:`commit <git-commits>`.
+     :ref:`sha256 <github-fetch>` or :ref:`commit <git-commits>`.
 
 
 .. _github-fetch:
@@ -1100,6 +1118,11 @@ checksum.
            sha256="8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
            url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f",
        )
+
+Alternatively, you could provide the GitHub ``url`` for one version as a
+property and Spack will extrapolate the URL for other versions as described
+in :ref:`Versions and URLs <versions-and-urls>`.
+
 
 .. _hg-fetch:
 
@@ -1142,7 +1165,7 @@ Revisions
      version("1.0", revision="v1.0")
 
   Unlike ``git``, which has special parameters for different types of
-  revisions, you can use ``revision`` for branches, tags, and commits
+  revisions, you can use ``revision`` for branches, tags, and **commits**
   when you fetch with Mercurial.
 
   .. warning::
@@ -1315,7 +1338,7 @@ In Spack it is possible to describe such a need with the ``resource`` directive:
         name="cargo",
         git="https://github.com/rust-lang/cargo.git",
         tag="0.10.0",
-        destination="cargo"
+        destination="cargo",
      )
 
 The arguments are similar to those of the ``versions`` directive.
