@@ -492,7 +492,7 @@ If a URL cannot be derived systematically, or there is a special URL for one of 
    version(
        "8.2.1",
        sha256="91ee5e9f42ba3d34e414443b36a27b797a56a47aad6bb1e4c1769e69c77ce0ca",
-       url="http://example.com/foo-8.2.1-special-version.tar.gz"
+       url="http://example.com/foo-8.2.1-special-version.tar.gz",
    )
 
 
@@ -520,20 +520,26 @@ In the above example we see that each version is associated with a ``sha256`` ch
 Spack uses these checksums to verify that downloaded source code has not been modified, corrupted or compromised.
 Therefore, Spack requires that all URL downloads have a checksum, and refuses
 to install packages when checksum verification fails.
-While this check can be disabled for development with ``spack install
---no-checksum``, it is **not recommended**.
 
-.. warning:: Trusted Downloads
+.. note::
 
+   While this check can be disabled for development with ``spack install
+   --no-checksum``, it is **not recommended**.
+
+.. warning::
+
+   **Trusted Downloads**
    It is critical from a security and reproducibility standpoint that Spack
    be able to verify the downloaded source. This is accomplished through a
    hash.
 
    For URL downloads, Spack supports multiple cryptographic hash algorithms,
-   including ``sha256`` (recommended), ``sha384``, and ``sha512``.
+   including :ref:```sha256`` (recommended) <versions-and-fetching>`,
+   ``sha384``, and ``sha512``.
 
-   For Git downloads, which we will cover in more detail later, this is done
-   by specifying a **full** :ref:`commit hash <git-commits>`.
+   For repository downloads, which we will cover in more detail later, this is
+   done by specifying a **full commit hash** (e.g., :ref:`git <git-commits>`,
+   :ref:`hg <hg-revisions>`.
 
 
 .. _cmd-spack-checksum:
@@ -882,8 +888,9 @@ but git commits are guaranteed to be unique points in the git history.
 
 The destination directory for the clone is the standard stage source path.
 
-.. warning:: Trusted Downloads
+.. warning:
 
+   **Trusted Downloads**
    It is critical from a security and reproducibility standpoint that Spack
    be able to verify the downloaded source.
 
@@ -892,7 +899,7 @@ The destination directory for the clone is the standard stage source path.
    repository.
 
 
-.. _default-git-branch:
+.. _git-default-branch:
 
 Default branch
   To fetch a repository's default branch:
@@ -913,7 +920,7 @@ Default branch
 
 .. warning::
 
-  This download method is untrusted, and is not recommended.
+  This download method is **untrusted**, and is **not recommended**.
 
   If you do use it, it is best to at least specify a branch name (see below).
 
@@ -931,8 +938,8 @@ Branches
 
 .. warning::
 
-  This download method is untrusted, and is not recommended for production
-  installations.
+  This download method is **untrusted**, and is **not recommended** for
+  production installations.
 
 
 .. _git-tags:
@@ -949,7 +956,7 @@ Tags
 
 .. warning::
 
-  This download method is untrusted, and is not recommended.
+  This download method is **untrusted**, and is **not recommended**.
 
   If you must use a ``tag``, it is recommended to combine it with the
   ``commit`` options (see below).
@@ -977,7 +984,6 @@ Commits
 .. hint::
 
    **Avoid using the commit hash as the version.**
-
    It is not recommended to use the commit hash as the version itself, since
    it won't sort properly.
 
@@ -1077,7 +1083,7 @@ checksum.
        version(
            "1.9.5.1.1",
            sha256="8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
-           url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f"
+           url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f",
        )
 
 .. _hg-fetch:
@@ -1090,6 +1096,8 @@ Fetching with Mercurial works much like `Git <git-fetch>`_, but you
 use the ``hg`` parameter.
 The destination directory is still the standard stage source path.
 
+.. _hg-default-branch:
+
 Default branch
   Add the ``hg`` attribute with no ``revision`` passed to ``version``:
 
@@ -1101,9 +1109,15 @@ Default branch
 
          version("develop")
 
-  This download method is untrusted, and is not recommended. As with
-  Git's default fetching strategy, there is no way to verify the
+  As with Git's default fetching strategy, there is no way to verify the
   integrity of the download.
+
+.. warning::
+
+  This download method is **untrusted**, and is **not recommended**.
+
+
+.. _hg-revisions:
 
 Revisions
   To fetch a particular revision, use the ``revision`` parameter:
@@ -1114,10 +1128,15 @@ Revisions
 
   Unlike ``git``, which has special parameters for different types of
   revisions, you can use ``revision`` for branches, tags, and commits
-  when you fetch with Mercurial. Like Git, fetching specific branches
-  or tags is an untrusted download method, and is not recommended.
-  The recommended fetch strategy is to specify a particular commit
-  hash as the revision.
+  when you fetch with Mercurial.
+
+.. warning::
+
+  Like Git, fetching specific branches or tags is an **untrusted** download
+  method, and is **not recommended**.
+
+  The recommended fetch strategy is to specify a particular commit hash as
+  the revision.
 
 
 .. _svn-fetch:
@@ -1140,8 +1159,13 @@ Fetching the head
 
          version("develop")
 
-  This download method is untrusted, and is not recommended for the
+.. warning::
+
+  This download method is **untrusted**, and is **not recommended** for the
   same reasons as mentioned above.
+
+
+.. _svn-revisions:
 
 Fetching a revision
   To fetch a particular revision, add a ``revision`` argument to the
@@ -1151,17 +1175,21 @@ Fetching a revision
 
      version("develop", revision=128)
 
-  This download method is untrusted, and is not recommended.
-
   Unfortunately, Subversion has no commit hashing scheme like Git and
   Mercurial do, so there is no way to guarantee that the download you
   get is the same as the download used when the package was created.
   Use at your own risk.
 
+.. warning::
+
+  This download method is **untrusted**, and is **not recommended**.
+
+
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the URL. If you want to
 package multiple branches, simply add a ``svn`` argument to each
 version directive.
+
 
 .. _cvs-fetch:
 
@@ -1174,6 +1202,8 @@ system. It is a predecessor of Subversion.
 
 To fetch with CVS, use the ``cvs``, branch, and ``date`` parameters.
 The destination directory will be the standard stage source path.
+
+.. _cvs-head:
 
 Fetching the head
   Simply add a ``cvs`` parameter to the package:
@@ -1194,7 +1224,12 @@ Fetching the head
   Spack combines both into one string using the ``%module=modulename``
   suffix shown above.
 
-  This download method is untrusted.
+.. warning::
+
+  This download method is **untrusted**.
+
+
+.. _cvs-date:
 
 Fetching a date
   Versions in CVS are commonly specified by date. To fetch a
@@ -1208,6 +1243,11 @@ Fetching a date
   Unfortunately, CVS does not identify repository-wide commits via a
   revision or hash like Subversion, Git, or Mercurial do. This makes
   it impossible to specify an exact commit to check out.
+
+.. warning::
+
+  This download method is **untrusted**.
+
 
 CVS has more features, but since CVS is rarely used these days, Spack does not support all of them.
 
@@ -1223,8 +1263,12 @@ executables and other custom archive types), you can add ``expand=False`` to a
 
 .. code-block:: python
 
-   version("8.2.1", sha256="a2bbdb2de53523b8099b37013f251546f3d65dbe7a0774fa41af0a4176992fd4",
-           url="http://example.com/foo-8.2.1-special-version.sh", expand=False)
+   version(
+       "8.2.1",
+       sha256="a2bbdb2de53523b8099b37013f251546f3d65dbe7a0774fa41af0a4176992fd4",
+       url="http://example.com/foo-8.2.1-special-version.sh",
+       expand=False,
+   )
 
 When ``expand`` is set to ``False``, Spack sets the current working
 directory to the directory containing the downloaded archive before it
