@@ -563,7 +563,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="push create install list keys check download save-specfile sync update-index rebuild-index migrate"
+        SPACK_COMPREPLY="push create install list keys check download prune save-specfile sync update-index rebuild-index migrate"
     fi
 }
 
@@ -618,6 +618,15 @@ _spack_buildcache_check() {
 
 _spack_buildcache_download() {
     SPACK_COMPREPLY="-h --help -s --spec -p --path"
+}
+
+_spack_buildcache_prune() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --dry-run"
+    else
+        _mirrors
+    fi
 }
 
 _spack_buildcache_save_specfile() {
@@ -697,7 +706,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --prune-dag --no-prune-dag --prune-externals --no-prune-externals --check-index-only --artifacts-root -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
+    SPACK_COMPREPLY="-h --help --output-file --prune-dag --no-prune-dag --prune-unaffected --no-prune-unaffected --prune-externals --no-prune-externals --check-index-only --artifacts-root -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
 }
 
 _spack_ci_rebuild_index() {

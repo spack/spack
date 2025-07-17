@@ -116,18 +116,27 @@ Contributing
 ------------------------
 Contributing to Spack is relatively easy.  Just send us a
 [pull request](https://help.github.com/articles/using-pull-requests/).
-When you send your request, make ``develop`` the destination branch on the
-[Spack repository](https://github.com/spack/spack).
 
-Your PR must pass Spack's unit tests and documentation tests, and must be
-[PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant.  We enforce
-these guidelines with our CI process. To run these tests locally, and for
-helpful tips on git, see our
+Most contributors will want to contribute to Spack's community package
+recipes. To do that, you should visit the
+[spack-packages repository](https://github.com/spack/spack-packages).
+
+If you want to contribute to Spack itself, you can submit a pull request
+to the [spack repository](https://github.com/spack/spack) (this repository).
+
+Your PR must:
+
+  1. Make ``develop`` the destination branch;
+  2. Pass Spack's unit tests, documentation tests, and package build tests;
+  3. Be [PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant;
+  4. Sign off all commits with `git commit --signoff`. Signoff says that you
+     agree to the [Developer Certificate of Origin](https://developercertificate.org).
+     Note that this is different from [signing commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits),
+     which you may also do, but it's not required.
+
+We enforce these guidelines with our continuous integration (CI) process.
+To run tests locally, and for helpful tips on git, see our
 [Contribution Guide](https://spack.readthedocs.io/en/latest/contribution_guide.html).
-
-Spack's `develop` branch has the latest contributions. Pull requests
-should target `develop`, and users who want the latest package versions,
-features, etc. can use `develop`.
 
 Releases
 --------

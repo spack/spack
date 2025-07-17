@@ -10,10 +10,9 @@ import stat
 import sys
 import tempfile
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.package_prefs
 import spack.paths
 import spack.spec

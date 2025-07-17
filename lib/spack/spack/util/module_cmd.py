@@ -11,7 +11,7 @@ import re
 import subprocess
 from typing import MutableMapping, Optional
 
-import llnl.util.tty as tty
+import spack.llnl.util.tty as tty
 
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.

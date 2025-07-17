@@ -16,12 +16,11 @@ try:
 except ImportError:
     pytest = None  # type: ignore
 
-import llnl.util.filesystem
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.tty.colify import colify
-
+import spack.llnl.util.filesystem
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.paths
+from spack.llnl.util.tty.colify import colify
 
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"
@@ -121,7 +120,9 @@ def do_list(args, extra_args):
     # To list the files we just need to inspect the filesystem,
     # which doesn't need to wait for pytest collection and doesn't
     # require parsing pytest output
-    files = llnl.util.filesystem.find(root=spack.paths.test_path, files="*.py", recursive=True)
+    files = spack.llnl.util.filesystem.find(
+        root=spack.paths.test_path, files="*.py", recursive=True
+    )
     files = [
         os.path.relpath(f, start=spack.paths.spack_root)
         for f in files
@@ -253,7 +254,7 @@ def unit_test(parser, args, unknown_args):
         )
 
     # pytest.ini lives in the root of the spack repository.
-    with llnl.util.filesystem.working_dir(pytest_root):
+    with spack.llnl.util.filesystem.working_dir(pytest_root):
         if args.list:
             do_list(args, pytest_args)
             return

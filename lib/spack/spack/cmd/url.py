@@ -6,14 +6,13 @@ import argparse
 import urllib.parse
 from collections import defaultdict
 
-import llnl.util.tty.color as color
-from llnl.util import tty
-
 import spack.fetch_strategy as fs
+import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.spec
 import spack.url
 import spack.util.crypto as crypto
+from spack.llnl.util import tty
 from spack.url import (
     UndetectableNameError,
     UndetectableVersionError,

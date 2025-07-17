@@ -5,17 +5,16 @@ import argparse
 import io
 from typing import List, Optional
 
-import llnl.util.tty as tty
-from llnl.string import plural
-from llnl.util.filesystem import visit_directory_tree
-
 import spack.cmd
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 import spack.verify
 import spack.verify_libraries
 from spack.cmd.common import arguments
+from spack.llnl.string import plural
+from spack.llnl.util.filesystem import visit_directory_tree
 
 description = "verify spack installations on disk"
 section = "admin"

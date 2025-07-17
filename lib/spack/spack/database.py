@@ -51,11 +51,10 @@ except ImportError:
     _use_uuid = False
     pass
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.deptypes as dt
 import spack.hash_types as ht
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.spec
 import spack.traverse as tr
 import spack.util.lock as lk
@@ -72,7 +71,7 @@ from spack.util.socket import _getfqdn
 
 from .enums import InstallRecordStatus
 
-# TODO: Provide an API automatically retyring a build after detecting and
+# TODO: Provide an API automatically retrying a build after detecting and
 # TODO: clearing a failure.
 
 #: DB goes in this directory underneath the root
@@ -727,8 +726,13 @@ class Database:
 
         Return:
             (tuple): (bool, optional InstallRecord): bool tells us whether
-                the spec is installed upstream. Its InstallRecord is also
-                returned if it's installed at all; otherwise None.
+                the record is from an upstream. Its InstallRecord is also
+                returned if available (the record must be checked to know
+                whether the hash is installed).
+
+        If the record is available locally, this function will always have
+        a preference for returning that, even if it is not installed locally
+        and is installed upstream.
         """
         if data and hash_key in data:
             return False, data[hash_key]
@@ -795,9 +799,6 @@ class Database:
 
         Does not do any locking.
         """
-        if not filename.is_file():
-            raise FileNotFoundError(f"database does not exist {filename}")
-
         try:
             # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
             fdata, _ = JSONDecoder().raw_decode(filename.read_text(encoding="utf-8"))
@@ -1175,7 +1176,7 @@ class Database:
         key = spec.dag_hash()
         spec_pkg_hash = spec._package_hash  # type: ignore[attr-defined]
         upstream, record = self.query_by_spec_hash(key)
-        if upstream:
+        if upstream and record and record.installed:
             return
 
         installation_time = installation_time or _now()
@@ -1264,7 +1265,7 @@ class Database:
     def _get_matching_spec_key(self, spec: "spack.spec.Spec", **kwargs) -> str:
         """Get the exact spec OR get a single spec that matches."""
         key = spec.dag_hash()
-        upstream, record = self.query_by_spec_hash(key)
+        _, record = self.query_by_spec_hash(key)
         if not record:
             match = self.query_one(spec, **kwargs)
             if match:
@@ -1275,7 +1276,7 @@ class Database:
     @_autospec
     def get_record(self, spec: "spack.spec.Spec", **kwargs) -> Optional[InstallRecord]:
         key = self._get_matching_spec_key(spec, **kwargs)
-        upstream, record = self.query_by_spec_hash(key)
+        _, record = self.query_by_spec_hash(key)
         return record
 
     def _decrement_ref_count(self, spec: "spack.spec.Spec") -> None:
@@ -1783,7 +1784,7 @@ class Database:
 
     def missing(self, spec):
         key = spec.dag_hash()
-        upstream, record = self.query_by_spec_hash(key)
+        _, record = self.query_by_spec_hash(key)
         return record and not record.installed
 
     def is_occupied_install_prefix(self, path):

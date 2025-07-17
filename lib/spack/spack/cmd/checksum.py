@@ -7,16 +7,15 @@ import re
 import sys
 from typing import Dict, Optional, Tuple
 
-import llnl.string
-import llnl.util.lang
-from llnl.util import tty
-
 import spack.cmd
+import spack.llnl.string
+import spack.llnl.util.lang
 import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.web as web_util
 from spack.cmd.common import arguments
+from spack.llnl.util import tty
 from spack.package_base import (
     ManualDownloadRequiredError,
     PackageBase,
@@ -165,7 +164,7 @@ def checksum(parser, args):
             exit(0)
         url_dict = filtered_url_dict
     else:
-        tty.info(f"Found {llnl.string.plural(len(url_dict), 'version')} of {pkg.name}")
+        tty.info(f"Found {spack.llnl.string.plural(len(url_dict), 'version')} of {pkg.name}")
 
     version_hashes = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage, fetch_options=pkg.fetch_options
@@ -224,7 +223,12 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict):
         results.append("{0:{1}}  {2} {3}".format(str(version), max_len, f"[{status}]", msg))
 
     # Display table of checksum results.
-    tty.msg(f"Verified {num_verified} of {num_total}", "", *llnl.util.lang.elide_list(results), "")
+    tty.msg(
+        f"Verified {num_verified} of {num_total}",
+        "",
+        *spack.llnl.util.lang.elide_list(results),
+        "",
+    )
 
     # Terminate at the end of function to prevent additional output.
     if failed:

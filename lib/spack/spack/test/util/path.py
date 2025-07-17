@@ -7,9 +7,8 @@ import sys
 
 import pytest
 
-import llnl.util.tty as tty
-
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.util.path as sup
 
 #: Some lines with lots of placeholders

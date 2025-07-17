@@ -17,11 +17,12 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.lock
 import spack.util.naming
+from spack.test.conftest import RepoBuilder
 from spack.util.naming import valid_module_name
 
 
 @pytest.fixture(params=["packages", "", "foo"])
-def extra_repo(tmp_path_factory, request):
+def extra_repo(tmp_path_factory: pytest.TempPathFactory, request):
     repo_namespace = "extra_test_repo"
     repo_dir = tmp_path_factory.mktemp(repo_namespace)
     cache_dir = tmp_path_factory.mktemp("cache")
@@ -140,36 +141,39 @@ def test_get_all_mock_packages(mock_packages):
         mock_packages.get_pkg_class(name)
 
 
-def test_repo_path_handles_package_removal(tmpdir, mock_packages):
-    builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="removal")
-    builder.add_package("pkg-c")
-    with spack.repo.use_repositories(builder.root, override=False) as repos:
+def test_repo_path_handles_package_removal(mock_packages, repo_builder: RepoBuilder):
+    repo_builder.add_package("pkg-c")
+    with spack.repo.use_repositories(repo_builder.root, override=False) as repos:
         r = repos.repo_for_pkg("pkg-c")
-        assert r.namespace == "removal"
+        assert r.namespace == repo_builder.namespace
 
-    builder.remove("pkg-c")
-    with spack.repo.use_repositories(builder.root, override=False) as repos:
+    repo_builder.remove("pkg-c")
+    with spack.repo.use_repositories(repo_builder.root, override=False) as repos:
         r = repos.repo_for_pkg("pkg-c")
         assert r.namespace == "builtin_mock"
 
 
-def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_debug, capsys):
+def test_repo_dump_virtuals(
+    tmp_path: pathlib.Path, mutable_mock_repo, mock_packages, ensure_debug, capsys
+):
     # Start with a package-less virtual
     vspec = spack.spec.Spec("something")
-    mutable_mock_repo.dump_provenance(vspec, tmpdir)
+    mutable_mock_repo.dump_provenance(vspec, str(tmp_path))
     captured = capsys.readouterr()[1]
     assert "does not have a package" in captured
 
     # Now with a virtual with a package
     vspec = spack.spec.Spec("externalvirtual")
-    mutable_mock_repo.dump_provenance(vspec, tmpdir)
+    mutable_mock_repo.dump_provenance(vspec, str(tmp_path))
     captured = capsys.readouterr()[1]
     assert "Installing" in captured
-    assert "package.py" in os.listdir(tmpdir), "Expected the virtual's package to be copied"
+    assert "package.py" in os.listdir(str(tmp_path)), "Expected the virtual's package to be copied"
 
 
 @pytest.mark.parametrize("repos", [["mock"], ["extra"], ["mock", "extra"], ["extra", "mock"]])
-def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, repos):
+def test_repository_construction_doesnt_use_globals(
+    nullify_globals, tmp_path: pathlib.Path, repos, repo_builder: RepoBuilder
+):
     def _repo_descriptors(repos):
         descriptors = {}
         for entry in repos:
@@ -178,11 +182,11 @@ def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, r
                     "builtin_mock", spack.paths.mock_packages_path
                 )
             if entry == "extra":
-                name = "extra_mock"
-                repo_dir = tmp_path / name
+                repo_dir = tmp_path / "extra_mock"
                 repo_dir.mkdir()
-                repo = spack.repo.MockRepositoryBuilder(repo_dir, name)
-                descriptors[name] = spack.repo.LocalRepoDescriptor(name, repo.root)
+                descriptors[repo_builder.namespace] = spack.repo.LocalRepoDescriptor(
+                    repo_builder.namespace, repo_builder.root
+                )
         return spack.repo.RepoDescriptors(descriptors)
 
     descriptors = _repo_descriptors(repos)
@@ -249,7 +253,7 @@ class TestRepo:
             ("unknown", None),
         ],
     )
-    def test_real_name(self, module_name, pkg_name, mock_test_cache, tmp_path):
+    def test_real_name(self, module_name, pkg_name, mock_test_cache, tmp_path: pathlib.Path):
         """Test that we can correctly compute the 'real' name of a package, from the one
         used to import the Python module.
         """
@@ -430,18 +434,18 @@ def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
     (repo_dir / "packages" / "zlib-ng").mkdir()
     (repo_dir / "packages" / "zlib-ng" / "package.py").write_text(
         """
-from spack_repo.builtin_mock.build_systems.generic import Package
+from spack.package import PackageBase
 
-class ZlibNg(Package):
+class ZlibNg(PackageBase):
     pass
 """
     )
     (repo_dir / "packages" / "UPPERCASE").mkdir()
     (repo_dir / "packages" / "UPPERCASE" / "package.py").write_text(
         """
-from spack_repo.builtin_mock.build_systems.generic import Package
+from spack.package import PackageBase
 
-class Uppercase(Package):
+class Uppercase(PackageBase):
     pass
 """
     )
@@ -463,9 +467,9 @@ def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path, capsys
     (repo_dir / "packages" / "_1example_2_test").mkdir()
     (repo_dir / "packages" / "_1example_2_test" / "package.py").write_text(
         """
-from spack_repo.builtin_mock.build_systems.generic import Package
+from spack.package import PackageBase
 
-class _1example2Test(Package):
+class _1example2Test(PackageBase):
     pass
 """
     )
@@ -906,3 +910,55 @@ def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
     with pytest.raises(spack.repo.RepoError, match="Unable to locate a default branch"):
         for descriptor in repos_1.values():
             descriptor.update(git=MockGitInvalidRemote())
+
+
+def test_repo_use_bad_import(config, repo_builder: RepoBuilder):
+    """Demonstrate failure when attempt to get the class for package containing
+    a failing import (e.g., missing repository)."""
+    package_py = pathlib.Path(repo_builder._recipe_filename("importer"))
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(
+        """\
+from spack_repo.missing.packages import base
+from spack.package import *
+
+
+class Importer(PackageBase):
+    homepage = "https://www.bad-importer.com"
+    url = "https://www.bad-importer.com/v1.0.tar.gz"
+
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
+""",
+        encoding="utf-8",
+    )
+
+    with spack.repo.use_repositories(repo_builder.root):
+        with pytest.raises(spack.repo.RepoError, match="cannot load"):
+            spack.repo.PATH.get_pkg_class("importer")
+
+
+def test_repo_use_bad_syntax(config, repo_builder: RepoBuilder):
+    """Demonstrate failure when attempt to get class for package with invalid syntax."""
+    package_py = pathlib.Path(repo_builder._recipe_filename("erroneous"))
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text("class 123: pass", encoding="utf-8")
+
+    with spack.repo.use_repositories(repo_builder.root):
+        with pytest.raises(spack.repo.RepoError):
+            spack.repo.PATH.get_pkg_class("erroneous")
+
+
+def test_unknownpkgerror_match_fails():
+    """Ensure fails with basic message when get_close_matches fails."""
+
+    def _get_close_matches(*args, **kwargs):
+        raise MemoryError("Too many packages to compare")
+
+    # Confirm that the error indicates there were no matches (default).
+    exception = spack.repo.UnknownPackageError("pkg_a", get_close_matches=_get_close_matches)
+    assert "mean one of the following" not in str(exception)
+
+
+def test_unknownpkgerror_str_repo():
+    """Ensure reasonable error message when repo is a string."""
+    assert "not found in repository" in str(spack.repo.UnknownPackageError("pkg_a", "my_repo"))

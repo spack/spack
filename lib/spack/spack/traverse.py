@@ -17,7 +17,7 @@ from typing import (
     overload,
 )
 
-from _vendoring.typing_extensions import Literal
+from spack.vendor.typing_extensions import Literal
 
 import spack.deptypes as dt
 import spack.spec

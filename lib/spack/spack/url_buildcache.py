@@ -15,15 +15,14 @@ from contextlib import closing, contextmanager
 from tempfile import TemporaryDirectory
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
-import _vendoring.jsonschema
-
-import llnl.util.filesystem as fsys
-import llnl.util.tty as tty
+import spack.vendor.jsonschema
 
 import spack.config as config
 import spack.database
 import spack.error
 import spack.hash_types as ht
+import spack.llnl.util.filesystem as fsys
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
@@ -134,7 +133,7 @@ class BuildcacheManifest:
 
     @classmethod
     def from_dict(cls, manifest_json: Dict[str, Any]) -> "BuildcacheManifest":
-        _vendoring.jsonschema.validate(manifest_json, buildcache_manifest_schema)
+        spack.vendor.jsonschema.validate(manifest_json, buildcache_manifest_schema)
         return BuildcacheManifest(
             layout_version=manifest_json["version"],
             data=[BlobRecord.from_dict(blob_json) for blob_json in manifest_json["data"]],

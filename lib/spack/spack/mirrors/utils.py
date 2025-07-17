@@ -4,17 +4,16 @@
 import os
 import traceback
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
 import spack.caches
 import spack.config
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
 import spack.version
 from spack.error import MirrorError
+from spack.llnl.util.filesystem import mkdirp
 from spack.mirrors.mirror import Mirror, MirrorCollection
 
 

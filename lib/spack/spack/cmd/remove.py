@@ -4,9 +4,8 @@
 
 import argparse
 
-import llnl.util.tty as tty
-
 import spack.cmd
+import spack.llnl.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "remove specs from an environment"

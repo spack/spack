@@ -17,15 +17,13 @@ from typing import Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-
 import spack.binary_distribution as bindist
 import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
@@ -33,6 +31,7 @@ import spack.util.compression as compression
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 from spack import traverse
+from spack.llnl.util.lang import memoized
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
@@ -360,6 +359,7 @@ class PipelineOptions:
         untouched_pruning_dependent_depth: Optional[int] = None,
         prune_untouched: bool = False,
         prune_up_to_date: bool = True,
+        prune_unaffected: bool = True,
         prune_external: bool = True,
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
@@ -396,6 +396,7 @@ class PipelineOptions:
         self.untouched_pruning_dependent_depth = untouched_pruning_dependent_depth
         self.prune_untouched = prune_untouched
         self.prune_up_to_date = prune_up_to_date
+        self.prune_unaffected = prune_unaffected
         self.prune_external = prune_external
         self.stack_name = stack_name
         self.pipeline_type = pipeline_type

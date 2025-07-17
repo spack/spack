@@ -12,17 +12,16 @@ import sys
 import tempfile
 from typing import Dict, List, Optional, Set, Tuple
 
-import llnl.path
-import llnl.util.lang
-from llnl.util import tty
-from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
-
 import spack.caches
+import spack.llnl.path
+import spack.llnl.util.lang
 import spack.schema.environment
 import spack.spec
 import spack.util.executable
 import spack.util.libc
 import spack.util.module_cmd
+from spack.llnl.util import tty
+from spack.llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 from spack.util.environment import filter_system_paths
 from spack.util.file_cache import FileCache
 
@@ -39,7 +38,7 @@ _LINK_DIR_ARG = re.compile(r"^-L(.:)?(?P<dir>[/\\].*)")
 _LIBPATH_ARG = re.compile(r"^[-/](LIBPATH|libpath):(?P<dir>.*)")
 
 
-@llnl.path.system_path_filter
+@spack.llnl.path.system_path_filter
 def parse_non_system_link_dirs(compiler_debug_output: str) -> List[str]:
     """Parses link paths out of compiler debug output.
 
@@ -428,4 +427,6 @@ def _make_compiler_cache():
     return FileCompilerCache(spack.caches.MISC_CACHE)
 
 
-COMPILER_CACHE: CompilerCache = llnl.util.lang.Singleton(_make_compiler_cache)  # type: ignore
+COMPILER_CACHE: CompilerCache = spack.llnl.util.lang.Singleton(  # type: ignore
+    _make_compiler_cache
+)

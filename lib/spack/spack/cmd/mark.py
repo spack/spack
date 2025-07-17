@@ -5,11 +5,10 @@
 import argparse
 import sys
 
-from llnl.util import tty
-
 import spack.cmd
 import spack.store
 from spack.cmd.common import arguments
+from spack.llnl.util import tty
 
 from ..enums import InstallRecordStatus
 

@@ -15,9 +15,8 @@ import os
 import shlex
 from typing import Callable, List
 
-import llnl.util.tty as tty
-
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.util.executable
 
 #: editors to try if VISUAL and EDITOR are not set

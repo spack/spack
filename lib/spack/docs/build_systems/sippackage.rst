@@ -4,9 +4,9 @@
 
 .. _sippackage:
 
----
+------
 SIP
----
+------
 
 SIP is a tool that makes it very easy to create Python bindings for C and C++
 libraries. It was originally developed to create PyQt, the Python bindings for

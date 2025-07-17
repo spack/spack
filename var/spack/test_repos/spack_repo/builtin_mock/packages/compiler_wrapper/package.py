@@ -6,13 +6,13 @@ import shutil
 import sys
 from typing import List
 
-import _vendoring.archspec.cpu
 from spack_repo.builtin_mock.build_systems.generic import Package
 
-from llnl.util import lang
+import spack.vendor.archspec.cpu
 
 import spack.compilers.libraries
 import spack.package_base
+from spack.llnl.util import lang
 from spack.package import *
 
 
@@ -183,7 +183,7 @@ class CompilerWrapper(Package):
             env.set(f"SPACK_{wrapper_var_name}_RPATH_ARG", compiler_pkg.rpath_arg)
 
             uarch = dependent_spec.architecture.target
-            version_number, _ = _vendoring.archspec.cpu.version_components(
+            version_number, _ = spack.vendor.archspec.cpu.version_components(
                 compiler_pkg.spec.version.dotted_numeric_string
             )
             try:

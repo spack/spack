@@ -11,9 +11,8 @@ from contextlib import closing, contextmanager
 from gzip import GzipFile
 from typing import Callable, Dict, List, Tuple
 
-from llnl.util import tty
-from llnl.util.symlink import readlink
-
+from spack.llnl.util import tty
+from spack.llnl.util.filesystem import readlink
 from spack.util.executable import ProcessError, which
 
 

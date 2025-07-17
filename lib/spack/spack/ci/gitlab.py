@@ -6,13 +6,12 @@ import os
 import shutil
 from typing import List, Optional
 
-import _vendoring.ruamel.yaml
-
-import llnl.util.tty as tty
+import spack.vendor.ruamel.yaml
 
 import spack
 import spack.binary_distribution as bindist
 import spack.config as cfg
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
@@ -422,4 +421,4 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     syaml.anchorify(sorted_output)
 
     with open(output_file, "w", encoding="utf-8") as f:
-        _vendoring.ruamel.yaml.YAML().dump(sorted_output, f)
+        spack.vendor.ruamel.yaml.YAML().dump(sorted_output, f)

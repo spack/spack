@@ -9,14 +9,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
-
-import llnl.string as string
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.symlink import islink, symlink
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import cescape, colorize
+from typing import List, Optional, Set, Tuple, Union
 
 import spack.cmd
 import spack.cmd.common
@@ -27,8 +20,14 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
+import spack.llnl.string as string
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.tengine
 from spack.cmd.common import arguments
+from spack.llnl.util.filesystem import islink, symlink
+from spack.llnl.util.tty.colify import colify
+from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
@@ -134,7 +133,7 @@ def _env_create(
     *,
     init_file: Optional[str] = None,
     dir: bool = False,
-    with_view: Optional[str] = None,
+    with_view: Optional[Union[bool, str]] = None,
     keep_relative: bool = False,
     include_concrete: Optional[List[str]] = None,
 ):

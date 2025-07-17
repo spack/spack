@@ -6,13 +6,12 @@ import stat
 import subprocess
 from typing import Callable, List, Optional, Set, Tuple, Union
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.build_environment
 import spack.builder
 import spack.compilers.libraries
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
@@ -21,16 +20,11 @@ import spack.util.prefix
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
 from spack.operating_systems.mac_os import macos_version
+from spack.package import BuilderWithDefaults, apply_macos_rpath_fixups, execute_install_time_tests
 from spack.util.executable import Executable
 from spack.version import Version
 
-from ._checks import (
-    BuilderWithDefaults,
-    apply_macos_rpath_fixups,
-    ensure_build_dependencies_or_raise,
-    execute_build_time_tests,
-    execute_install_time_tests,
-)
+from ._checks import ensure_build_dependencies_or_raise, execute_build_time_tests
 
 
 class AutotoolsPackage(spack.package_base.PackageBase):
@@ -41,7 +35,7 @@ class AutotoolsPackage(spack.package_base.PackageBase):
     build_system_class = "AutotoolsPackage"
 
     #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "autotools"
+    default_buildsystem = "autotools"
 
     build_system("autotools")
 
@@ -115,10 +109,10 @@ class AutotoolsBuilder(BuilderWithDefaults):
     phases = ("autoreconf", "configure", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods = ("configure_args", "check", "installcheck")
+    package_methods = ("configure_args", "check", "installcheck")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes = (
+    package_attributes = (
         "archive_files",
         "patch_libtool",
         "build_targets",

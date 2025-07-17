@@ -6,9 +6,6 @@ import argparse
 import sys
 from typing import Dict, List, Optional
 
-from llnl.util import tty
-from llnl.util.tty.colify import colify
-
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
@@ -17,6 +14,8 @@ import spack.spec
 import spack.store
 import spack.traverse as traverse
 from spack.cmd.common import arguments
+from spack.llnl.util import tty
+from spack.llnl.util.tty.colify import colify
 
 from ..enums import InstallRecordStatus
 

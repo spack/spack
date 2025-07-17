@@ -8,9 +8,8 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import HeaderList, LibraryList, find_headers, find_libraries
-
 import spack.paths
+from spack.llnl.util.filesystem import HeaderList, LibraryList, find_headers, find_libraries
 
 
 @pytest.fixture()
@@ -55,7 +54,7 @@ def header_list():
     return h
 
 
-# TODO: Remove below when llnl.util.filesystem.find_libraries becomes spec aware
+# TODO: Remove below when spack.llnl.util.filesystem.find_libraries becomes spec aware
 plat_static_ext = "lib" if sys.platform == "win32" else "a"
 
 

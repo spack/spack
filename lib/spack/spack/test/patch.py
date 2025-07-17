@@ -5,12 +5,11 @@
 import collections
 import filecmp
 import os
+import pathlib
 import shutil
 import sys
 
 import pytest
-
-from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.concretize
 import spack.error
@@ -21,6 +20,7 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.url as url_util
+from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import Executable
@@ -65,9 +65,9 @@ platform_url_sha = (
 
 
 @pytest.fixture()
-def mock_patch_stage(tmpdir_factory, monkeypatch):
+def mock_patch_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch):
     # Don't disrupt the spack install directory with tests.
-    mock_path = str(tmpdir_factory.mktemp("mock-patch-stage"))
+    mock_path = str(tmp_path_factory.mktemp("mock-patch-stage"))
     monkeypatch.setattr(spack.stage, "_stage_root", mock_path)
     return mock_path
 
@@ -272,11 +272,11 @@ def trigger_bad_patch(pkg):
 
 
 def test_patch_failure_develop_spec_exits_gracefully(
-    mock_packages, install_mockery, mock_fetch, tmpdir, mock_stage
+    mock_packages, install_mockery, mock_fetch, tmp_path: pathlib.Path, mock_stage
 ):
     """ensure that a failing patch does not trigger exceptions for develop specs"""
 
-    spec = spack.concretize.concretize_one(f"patch-a-dependency ^libelf dev_path={tmpdir}")
+    spec = spack.concretize.concretize_one(f"patch-a-dependency ^libelf dev_path={tmp_path}")
     libelf = spec["libelf"]
     assert "patches" in list(libelf.variants.keys())
     pkg = libelf.package

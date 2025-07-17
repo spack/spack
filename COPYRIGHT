@@ -30,12 +30,13 @@ text in the license header:
 External Packages
 -------------------
 
-Spack bundles most external dependencies in `lib/spack/external/_vendoring/`.
-It also includes other vendored components like `ast.unparse` (in
-`lib/spack/spack/util/unparse/`) and `sbang` (in `lib/spack/spack/hooks/`
-and `bin/`). These packages are covered by various permissive
-licenses. A summary listing follows. See the license included with each
-package for full details.
+Spack bundles most external dependencies in `lib/spack/spack/vendor/`.
+This directory is automatically maintained using the `vendoring` tool.
+Spack also includes other vendored components like `ast.unparse` (in
+`lib/spack/spack/util/unparse/`), `sbang` (in `lib/spack/spack/hooks/`
+and `bin/`), and `spack.util.ctest_log_parser`. These packages are
+covered by various permissive licenses. A summary listing follows.
+See the license included with each for full details.
 
 PackageName: altgraph
 PackageHomePage: https://altgraph.readthedocs.io/en/latest/index.html

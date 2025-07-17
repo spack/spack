@@ -74,15 +74,8 @@ from typing import (
     overload,
 )
 
-import _vendoring.archspec.cpu
-from _vendoring.typing_extensions import Literal
-
-import llnl.path
-import llnl.string
-import llnl.util.filesystem as fs
-import llnl.util.lang as lang
-import llnl.util.tty as tty
-import llnl.util.tty.color as clr
+import spack.vendor.archspec.cpu
+from spack.vendor.typing_extensions import Literal
 
 import spack
 import spack.aliases
@@ -90,6 +83,12 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
+import spack.llnl.path
+import spack.llnl.string
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lang as lang
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as clr
 import spack.paths
 import spack.platforms
 import spack.provider_index
@@ -155,7 +154,7 @@ IDENTIFIER_RE = r"\w[\w-]*"
 
 # Coloring of specs when using color output. Fields are printed with
 # different colors to enhance readability.
-# See llnl.util.tty.color for descriptions of the color codes.
+# See spack.llnl.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
@@ -217,11 +216,11 @@ def ensure_modern_format_string(fmt: str) -> None:
         )
 
 
-def _make_microarchitecture(name: str) -> _vendoring.archspec.cpu.Microarchitecture:
-    if isinstance(name, _vendoring.archspec.cpu.Microarchitecture):
+def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchitecture:
+    if isinstance(name, spack.vendor.archspec.cpu.Microarchitecture):
         return name
-    return _vendoring.archspec.cpu.TARGETS.get(
-        name, _vendoring.archspec.cpu.generic_microarchitecture(name)
+    return spack.vendor.archspec.cpu.TARGETS.get(
+        name, spack.vendor.archspec.cpu.generic_microarchitecture(name)
     )
 
 
@@ -366,7 +365,7 @@ class ArchSpec:
         # will assumed to be the host machine's platform.
 
         def target_or_none(t):
-            if isinstance(t, _vendoring.archspec.cpu.Microarchitecture):
+            if isinstance(t, spack.vendor.archspec.cpu.Microarchitecture):
                 return t
             if t and t != "None":
                 return _make_microarchitecture(t)
@@ -1350,7 +1349,7 @@ def tree(
 
     Args:
         color: if True, always colorize the tree. If False, don't colorize the tree. If None,
-            use the default from llnl.tty.color
+            use the default from spack.llnl.tty.color
         depth: print the depth from the root
         hashes: if True, print the hash of each node
         hashlen: length of the hash to be printed
@@ -1576,7 +1575,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return llnl.path.path_to_os_path(self._external_path)[0]
+        return spack.llnl.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -2019,8 +2018,8 @@ class Spec:
         if not self.concrete:
             return False
 
-        upstream, _ = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
-        return upstream
+        upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
+        return upstream and record and record.installed
 
     @overload
     def traverse(
@@ -2268,7 +2267,7 @@ class Spec:
         return self._prefix
 
     def set_prefix(self, value: str) -> None:
-        self._prefix = spack.util.prefix.Prefix(llnl.path.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(spack.llnl.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
@@ -2984,7 +2983,7 @@ class Spec:
             root (Spec): root spec to be analyzed
 
         Raises:
-            SpecDeprecatedError: if any deprecated spec is found
+            spack.spec.SpecDeprecatedError: if any deprecated spec is found
         """
         deprecated = []
         with spack.store.STORE.db.read_transaction():
@@ -4404,7 +4403,7 @@ class Spec:
         Args:
             specs: List of specs to format.
             color: if True, always colorize the tree. If False, don't colorize the tree. If None,
-                use the default from llnl.tty.color
+                use the default from spack.llnl.tty.color
             depth: print the depth from the root
             hashes: if True, print the hash of each node
             hashlen: length of the hash to be printed
@@ -4975,9 +4974,9 @@ def substitute_abstract_variants(spec: Spec):
         spec.variants.substitute(new_variant)
 
     if unknown:
-        variants = llnl.string.plural(len(unknown), "variant")
+        variants = spack.llnl.string.plural(len(unknown), "variant")
         raise vt.UnknownVariantError(
-            f"Tried to set {variants} {llnl.string.comma_and(unknown)}. "
+            f"Tried to set {variants} {spack.llnl.string.comma_and(unknown)}. "
             f"{spec.name} has no such {variants}",
             unknown_variants=unknown,
         )
@@ -5493,7 +5492,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, llnl.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, spack.llnl.string.comma_or(deps))
         )
 
 

@@ -125,6 +125,82 @@ follows:
 See :ref:`configuration_environment_variables` for more information on
 how to configure environment modifications in Spack config files.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Extra attributes for external compilers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+External package configuration allows several extra attributes for
+configuring compilers. The ``compilers`` extra attribute field is
+required to clarify which paths within the compiler prefix are used
+for which languages:
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@10.5.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc-10
+             cxx: /usr/bin/g++-10
+             fortran: /usr/bin/gfortran-10
+
+Other fields accepted by compilers under ``extra_attributes`` are ``flags``, ``environment``, ``extra_rpaths``, and ``implicit_rpaths``.
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@10.5.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc-10
+             cxx: /usr/bin/g++-10
+             fortran: /usr/bin/gfortran-10
+           flags:
+             cflags: -O3
+             fflags: -g -O2
+           environment:
+             set:
+               GCC_ROOT: /usr
+             prepend_path:
+               PATH: /usr/unusual_path_for_ld/bin
+           implicit_rpaths:
+             - /usr/lib/gcc
+           extra_rpaths:
+             - /usr/lib/unusual_gcc_path
+
+The ``flags`` attribute specifies compiler flags to apply to every
+spec that depends on this compiler. The accepted flag types are
+``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and
+``ldlibs``. In the example above, every spec compiled with this
+compiler will pass the flags ``-g -O2`` to ``/usr/bin/gfortran-10``
+and will pass the flag ``-O3`` to ``/usr/bin/gcc-10``.
+
+The ``environment`` attribute specifies user environment modifications
+to apply before every time the compiler is invoked. The available
+operations are ``set``, ``unset``, ``prepend_path``, ``append_path``,
+and ``remove_path``. In the example above, Spack will set
+``GCC_ROOT=/usr`` and set ``PATH=/usr/unusual_path_for_ld/bin:$PATH``
+before handing control to the build system that will use this
+compiler.
+
+The ``extra_rpaths`` and ``implicit_rpaths`` fields specify additional
+paths to pass as rpaths to the linker when using this compiler. The
+``implicit_rpaths`` field is filled in automatically by Spack when
+detecting compilers, and the ``extra_rpaths`` field is available for
+users to configure necessary rpaths that have not been detected by
+Spack. In addition, paths from ``extra_rpaths`` are added as library
+search paths for the linker. In the example above, both
+``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as
+rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be
+added as well.
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Prevent packages from being built from sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -328,7 +404,7 @@ and they can optionally have a ``when`` and a ``message`` attribute:
    packages:
      openmpi:
        require:
-       - any_of: ["@4.1.5", "%gcc"]
+       - any_of: ["@4.1.5", "%c,cxx,fortran=gcc"]
          message: "in this example only 4.1.5 can build with other compilers"
 
 ``any_of`` is a list of specs. One of those specs must be satisfied
@@ -352,7 +428,7 @@ We could express a similar requirement using the ``when`` attribute:
    packages:
      openmpi:
        require:
-       - any_of: ["%gcc"]
+       - any_of: ["%c,cxx,fortran=gcc"]
          when: "@:4.1.4"
          message: "in this example only 4.1.5 can build with other compilers"
 
@@ -365,7 +441,7 @@ constraint:
    packages:
      openmpi:
        require:
-       - spec: "%gcc"
+       - spec: "%c,cxx,fortran=gcc"
          when: "@:4.1.4"
          message: "in this example only 4.1.5 can build with other compilers"
 
@@ -407,9 +483,18 @@ like this:
 
    packages:
      all:
-       require: '%clang'
+       require: '%[when=%c]c=clang %[when=%cxx]cxx=clang'
 
-which means every spec will be required to use ``clang`` as a compiler.
+which means every spec will be required to use ``clang`` as the compiler for C and C++ code.
+
+.. warning::
+
+   The simpler config ``require: %clang`` will fail to build any
+   package that does not include compiled code, because those packages
+   cannot depend on ``clang`` (alias for ``llvm+clang``). In most
+   contexts, default requirements must use either conditional
+   dependencies or a :ref:`toolchain <toolchains>` that combines conditional
+   dependencies.
 
 Requirements on variants for all packages are possible too, but note that they
 are only enforced for those packages that define these variants, otherwise they
@@ -447,11 +532,11 @@ under ``all`` are disregarded. For example, with a configuration like this:
      all:
        require:
        - 'build_type=Debug'
-       - '%clang'
+       - '%[when=%c]c=clang %[when=%cxx]cxx=clang'
      cmake:
        require:
        - 'build_type=Debug'
-       - '%gcc'
+       - '%c,cxx=gcc'
 
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake``
 dependencies) to use ``clang``. If enforcing ``build_type=Debug`` is needed also
@@ -469,9 +554,10 @@ This can be useful for fixing which virtual provider you want to use:
 
    packages:
      mpi:
-       require: 'mvapich2 %gcc'
+       require: 'mvapich2 %c,cxx,fortran=gcc'
 
-With the configuration above the only allowed ``mpi`` provider is ``mvapich2 %gcc``.
+With the configuration above the only allowed ``mpi`` provider is
+``mvapich2`` built with ``gcc``/``g++``/``gfortran``.
 
 Requirements on the virtual spec and on the specific provider are both applied, if
 present. For instance with a configuration like:
@@ -480,11 +566,11 @@ present. For instance with a configuration like:
 
    packages:
      mpi:
-       require: 'mvapich2 %gcc'
+       require: 'mvapich2 %c,cxx,fortran=gcc'
      mvapich2:
        require: '~cuda'
 
-you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
+you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
 .. _package-strong-preferences:
 
@@ -500,7 +586,7 @@ from configuration files:
    packages:
      all:
        prefer:
-       - '%clang'
+       - '%c,cxx=clang'
        conflict:
        - '+shared'
 
@@ -513,7 +599,7 @@ or a more complex object:
    packages:
      all:
        conflict:
-       - spec: '%clang'
+       - spec: '%c,cxx=clang'
          when: 'target=x86_64_v3'
          message: 'reason why clang cannot be used'
 
@@ -533,10 +619,8 @@ The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are opt
           - one_of: ['%clang', '@:']
 
    Since only one of the requirements must hold, and ``@:`` is always true, the rule above is
-   equivalent to a conflict. For "strong preferences" we need to substitute the ``one_of`` policy
-   with ``any_of``.
-
-
+   equivalent to a conflict. For "strong preferences" the same construction works, with the ``any_of``
+   policy instead of the ``one_of`` policy.
 
 .. _package-preferences:
 
@@ -573,9 +657,8 @@ when looking for the best compiler, target or virtual package provider. Each
 preference takes an ordered list of spec constraints, with earlier entries in
 the list being preferred over later entries.
 
-In the example above all packages prefer to be compiled with ``gcc@12.2.0``,
-to target the ``x86_64_v3`` microarchitecture and to use ``mvapich2`` if they
-depend on ``mpi``.
+In the example above all packages prefer to target the ``x86_64_v3``
+microarchitecture and to use ``mvapich2`` if they depend on ``mpi``.
 
 The ``variants`` and ``version`` preferences can be set under
 package specific sections of the ``packages.yaml`` file:

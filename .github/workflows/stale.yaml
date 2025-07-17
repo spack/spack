@@ -1,0 +1,46 @@
+name: 'Close stale issues and PRs'
+on:
+  schedule:
+    # Run every day at 1:14 UTC
+    - cron: '14 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639
+        with:
+          # Issues configuration
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it has not had 
+            any activity in the last 6 months. It will be closed if there is no further activity.
+            Thank you for your contributions!
+          close-issue-message: |
+            This issue was closed because it had no activity for 30 days after being marked stale.
+          stale-issue-label: 'stale'
+          any-of-issue-labels: 'build-error'
+          exempt-issue-labels: 'pinned,bug'
+
+          # Pull requests configuration
+          stale-pr-message: |
+            This pull request has been automatically marked as stale because it has not had 
+            any activity in the last 6 months. It will be closed if there is no further activity.
+            Thank you for your contributions!
+          close-pr-message: |
+            This pull request was closed because it had no activity for 30 days after being marked stale.
+          stale-pr-label: 'stale'
+          any-of-pr-labels: 'new-package,update-package'
+          exempt-pr-labels: 'pinned'
+
+          # General configuration
+          ascending: true
+          operations-per-run: 1000
+          remove-stale-when-updated: true
+          enable-statistics: true
+          days-before-stale: 180
+          days-before-close: 30

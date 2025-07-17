@@ -61,20 +61,14 @@ from typing import (
     overload,
 )
 
-import _vendoring.archspec.cpu
-
-import llnl.util.tty as tty
-from llnl.string import plural
-from llnl.util.filesystem import join_path
-from llnl.util.lang import dedupe, stable_partition
-from llnl.util.symlink import symlink
-from llnl.util.tty.color import cescape, colorize
+import spack.vendor.archspec.cpu
 
 import spack.builder
 import spack.compilers.libraries
 import spack.config
 import spack.deptypes as dt
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.multimethod
 import spack.package_base
 import spack.paths
@@ -89,6 +83,10 @@ from spack import traverse
 from spack.context import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
+from spack.llnl.string import plural
+from spack.llnl.util.filesystem import join_path, symlink
+from spack.llnl.util.lang import dedupe, stable_partition
+from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
@@ -133,7 +131,7 @@ SPACK_DEBUG_LOG_DIR = "SPACK_DEBUG_LOG_DIR"
 SPACK_CCACHE_BINARY = "SPACK_CCACHE_BINARY"
 SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
 
-# Platform-specific library suffix.
+# Platform-specific library suffix (deprecated)
 if sys.platform == "darwin":
     dso_suffix = "dylib"
 elif sys.platform == "win32":
@@ -142,6 +140,24 @@ else:
     dso_suffix = "so"
 
 stat_suffix = "lib" if sys.platform == "win32" else "a"
+
+
+def shared_library_suffix(spec: spack.spec.Spec) -> str:
+    """Return the shared library suffix for the given spec."""
+    if spec.platform == "darwin":
+        return "dylib"
+    elif spec.platform == "windows":
+        return "dll"
+    else:
+        return "so"
+
+
+def static_library_suffix(spec: spack.spec.Spec) -> str:
+    """Return the static library suffix for the given spec."""
+    if spec.platform == "windows":
+        return "lib"
+    else:
+        return "a"
 
 
 def jobserver_enabled():
@@ -409,7 +425,7 @@ def set_wrapper_environment_variables_for_flags(pkg, env):
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Always convert flag_handler to function type.
-        # This avoids discrepencies in calling conventions between functions
+        # This avoids discrepancies in calling conventions between functions
         # and methods, or between bound and unbound methods in python 2.
         # We cannot effectively convert everything to a bound method, which
         # would be the simpler solution.
@@ -442,12 +458,12 @@ def optimization_flags(compiler, target):
     # Try to check if the current compiler comes with a version number or
     # has an unexpected suffix. If so, treat it as a compiler with a
     # custom spec.
-    version_number, _ = _vendoring.archspec.cpu.version_components(
+    version_number, _ = spack.vendor.archspec.cpu.version_components(
         compiler.version.dotted_numeric_string
     )
     try:
         result = target.optimization_flags(compiler.name, version_number)
-    except (ValueError, _vendoring.archspec.cpu.UnsupportedMicroarchitecture):
+    except (ValueError, spack.vendor.archspec.cpu.UnsupportedMicroarchitecture):
         result = ""
 
     return result
@@ -713,6 +729,27 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
     return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
+def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
+    """Obtain the CMAKE_PREFIX_PATH entries for a package, based on the cmake_prefix_path package
+    attribute of direct build/test and transitive link dependencies."""
+    edges = traverse.traverse_topo_edges_generator(
+        traverse.with_artificial_edges([pkg.spec]),
+        visitor=traverse.MixedDepthVisitor(
+            direct=dt.BUILD | dt.TEST, transitive=dt.LINK, key=traverse.by_dag_hash
+        ),
+        key=traverse.by_dag_hash,
+        root=False,
+        all_edges=False,  # cover all nodes, not all edges
+    )
+    ordered_specs = [edge.spec for edge in edges]
+    # Separate out externals so they do not shadow Spack prefixes
+    externals, spack_built = stable_partition((s for s in ordered_specs), lambda x: x.external)
+
+    return filter_system_paths(
+        path for spec in chain(spack_built, externals) for path in spec.package.cmake_prefix_paths
+    )
+
+
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
     """Execute all environment setup routines."""
     if context not in (Context.BUILD, Context.TEST):
@@ -881,7 +918,7 @@ def effective_deptypes(
         if not parent_mode:
             continue
 
-        # Dependending on the context, include particular deps from the root.
+        # Depending on the context, include particular deps from the root.
         if UseMode.ROOT & parent_mode:
             if context == Context.BUILD:
                 if (dt.BUILD | dt.TEST) & depflag:
@@ -1038,7 +1075,7 @@ class SetupContext:
                     run_env_mods.extend(spack.schema.environment.parse(external_env))
 
                 if self.context == Context.BUILD:
-                    # Don't let the runtime environment of comiler like dependencies leak into the
+                    # Don't let the runtime environment of compiler like dependencies leak into the
                     # build env
                     run_env_mods.drop("CC", "CXX", "F77", "FC")
                 env.extend(run_env_mods)

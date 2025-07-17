@@ -6,7 +6,7 @@ generate container recipes from a Spack environment
 """
 import warnings
 
-import _vendoring.jsonschema
+import spack.vendor.jsonschema
 
 import spack.environment as ev
 import spack.schema.env as env
@@ -83,5 +83,5 @@ def validate(configuration_file):
         )
         warnings.warn(msg)
 
-    _vendoring.jsonschema.validate(config, schema=env.schema)
+    spack.vendor.jsonschema.validate(config, schema=env.schema)
     return config

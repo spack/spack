@@ -4,10 +4,9 @@
 import argparse
 import os
 
-import llnl.util.tty
-
 import spack.container
 import spack.container.images
+import spack.llnl.util.tty
 
 description = "creates recipes to build images for different container runtimes"
 section = "container"
@@ -34,7 +33,7 @@ def containerize(parser, args):
         possible_os = spack.container.images.all_bootstrap_os()
         msg = "The following operating systems can be used to bootstrap Spack:"
         msg += "\n{0}".format(" ".join(possible_os))
-        llnl.util.tty.msg(msg)
+        spack.llnl.util.tty.msg(msg)
         return
 
     config_dir = args.env_dir or os.getcwd()

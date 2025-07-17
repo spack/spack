@@ -64,8 +64,6 @@ import traceback
 import warnings
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
-from llnl.util.tty import color
-
 import spack.config
 import spack.deptypes
 import spack.error
@@ -74,6 +72,7 @@ import spack.spec
 import spack.util.spack_yaml
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
+from spack.llnl.util.tty import color
 from spack.tokenize import Token, TokenBase, Tokenizer
 
 #: Valid name for specs and variants. Here we are not using

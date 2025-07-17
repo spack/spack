@@ -694,6 +694,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a list -d
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a keys -d 'get public keys available on mirrors'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a check -d 'check specs against remote binary mirror(s) to see if any need to be rebuilt'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a download -d 'download buildcache entry from a remote mirror to local folder'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a prune -d 'prune stale buildcache entries from the mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a save-specfile -d 'get full spec for dependencies and write them to files in the specified output directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a sync -d 'sync binaries (and associated metadata) from one mirror to another'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a update-index -d 'update a buildcache index'
@@ -828,6 +829,14 @@ complete -c spack -n '__fish_spack_using_command buildcache download' -s s -l sp
 complete -c spack -n '__fish_spack_using_command buildcache download' -s p -l path -r -f -a path
 complete -c spack -n '__fish_spack_using_command buildcache download' -s p -l path -r -d 'path to directory where tarball should be downloaded'
 
+# spack buildcache prune
+set -g __fish_spack_optspecs_spack_buildcache_prune h/help dry-run
+
+complete -c spack -n '__fish_spack_using_command buildcache prune' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command buildcache prune' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache prune' -l dry-run -f -a dry_run
+complete -c spack -n '__fish_spack_using_command buildcache prune' -l dry-run -d 'do not actually delete anything from the buildcache, but log what would be deleted'
+
 # spack buildcache save-specfile
 set -g __fish_spack_optspecs_spack_buildcache_save_specfile h/help root-spec= s/specs= specfile-dir=
 complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -s h -l help -f -a help
@@ -947,7 +956,7 @@ complete -c spack -n '__fish_spack_using_command ci' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -d 'show this help message and exit'
 
 # spack ci generate
-set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= prune-dag no-prune-dag prune-externals no-prune-externals check-index-only artifacts-root= f/force U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= prune-dag no-prune-dag prune-unaffected no-prune-unaffected prune-externals no-prune-externals check-index-only artifacts-root= f/force U/fresh reuse fresh-roots deprecated j/jobs=
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ci generate' -l output-file -r -f -a output_file
@@ -956,6 +965,10 @@ complete -c spack -n '__fish_spack_using_command ci generate' -l prune-dag -f -a
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-dag -d 'skip up-to-date specs'
 complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-dag -f -a prune_dag
 complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-dag -d 'process up-to-date specs'
+complete -c spack -n '__fish_spack_using_command ci generate' -l prune-unaffected -f -a prune_unaffected
+complete -c spack -n '__fish_spack_using_command ci generate' -l prune-unaffected -d 'skip up-to-date specs'
+complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-unaffected -f -a prune_unaffected
+complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-unaffected -d 'process up-to-date specs'
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-externals -f -a prune_externals
 complete -c spack -n '__fish_spack_using_command ci generate' -l prune-externals -d 'skip external specs'
 complete -c spack -n '__fish_spack_using_command ci generate' -l no-prune-externals -f -a prune_externals
@@ -2784,7 +2797,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a set -d 'modif
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a remove -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a rm -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a migrate -d 'migrate a package repository to the latest Package API'
-complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a update
+complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a update -d 'update one or more package repositories'
 complete -c spack -n '__fish_spack_using_command repo' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo' -s h -l help -d 'show this help message and exit'
 

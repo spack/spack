@@ -5,8 +5,7 @@
 import os
 import stat as st
 
-import llnl.util.filesystem as fs
-
+import spack.llnl.util.filesystem as fs
 import spack.package_prefs as pp
 from spack.error import SpackError
 

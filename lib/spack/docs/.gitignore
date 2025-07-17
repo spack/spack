@@ -1,8 +1,8 @@
 .spack/spack-packages
+.spack/packages.yaml
 .spack-env
 _build
 _spack_root
 command_index.rst
-llnl*.rst
 spack*.rst
 spack.lock

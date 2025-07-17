@@ -7,8 +7,7 @@ package.
 """
 import os
 
-import llnl.util.filesystem
-
+import spack.llnl.util.filesystem
 import spack.phase_callbacks
 
 
@@ -65,10 +64,10 @@ def filter_compiler_wrappers(*files, **kwargs):
 
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
-        abs_files = llnl.util.filesystem.find(root, files, **find_kwargs)
+        abs_files = spack.llnl.util.filesystem.find(root, files, **find_kwargs)
         abs_files = [x for x in abs_files if not os.path.islink(x)]
 
-        x = llnl.util.filesystem.FileFilter(*abs_files)
+        x = spack.llnl.util.filesystem.FileFilter(*abs_files)
 
         compiler_vars = []
         if "c" in pkg.spec:

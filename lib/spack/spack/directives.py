@@ -37,11 +37,10 @@ import re
 import warnings
 from typing import Any, Callable, List, Optional, Tuple, Type, Union
 
-import llnl.util.tty.color
-
 import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
+import spack.llnl.util.tty.color
 import spack.package_base
 import spack.patch
 import spack.spec
@@ -649,7 +648,7 @@ def variant(
         sticky: The variant should not be changed by the concretizer to find a valid concrete spec
 
     Raises:
-        DirectiveError: If arguments passed to the directive are invalid
+        spack.directives_meta.DirectiveError: If arguments passed to the directive are invalid
     """
 
     # This validation can be removed at runtime and enforced with an audit in Spack v1.0.
@@ -672,7 +671,7 @@ def variant(
 
     def format_error(msg, pkg):
         msg += " @*r{{[{0}, variant '{1}']}}"
-        return llnl.util.tty.color.colorize(msg.format(pkg.name, name))
+        return spack.llnl.util.tty.color.colorize(msg.format(pkg.name, name))
 
     if name in spack.variant.RESERVED_NAMES:
 

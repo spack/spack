@@ -14,7 +14,7 @@ import urllib.response
 from urllib.error import URLError
 from urllib.request import BaseHandler
 
-import llnl.util.tty as tty
+import spack.llnl.util.tty as tty
 
 
 def gcs_client():

@@ -5,15 +5,20 @@ import collections
 import collections.abc
 import copy
 import functools
-from typing import Dict, List, Optional, Tuple, Type
+import os
+from typing import Callable, Dict, List, Optional, Tuple, Type
 
+import spack.directives
 import spack.error
 import spack.multimethod
 import spack.package_base
 import spack.phase_callbacks
+import spack.relocate
 import spack.repo
 import spack.spec
 import spack.util.environment
+from spack.error import SpackError
+from spack.util.prefix import Prefix
 
 #: Builder classes, as registered by the "builder" decorator
 BUILDER_CLS: Dict[str, Type["Builder"]] = {}
@@ -150,8 +155,8 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
     # (when _ForwardToBaseBuilder is initialized)
     for method_name in (
         base_cls.phases  # type: ignore
-        + base_cls.legacy_methods  # type: ignore
-        + getattr(base_cls, "legacy_long_methods", tuple())
+        + package_methods(base_cls)  # type: ignore
+        + package_long_methods(base_cls)  # type: ignore
         + ("setup_build_environment", "setup_dependent_build_environment")
     ):
         setattr(_ForwardToBaseBuilder, method_name, forward_method_to_getattr(method_name))
@@ -162,7 +167,7 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
 
         return __forward
 
-    for attribute_name in base_cls.legacy_attributes:  # type: ignore
+    for attribute_name in package_attributes(base_cls):  # type: ignore
         setattr(
             _ForwardToBaseBuilder,
             attribute_name,
@@ -205,9 +210,15 @@ def buildsystem_name(pkg: spack.package_base.PackageBase) -> str:
     return the name of its build system."""
     try:
         return pkg.spec.variants["build_system"].value
-    except KeyError:
+    except KeyError as e:
         # We are reading an old spec without the build_system variant
-        return pkg.legacy_buildsystem  # type: ignore
+        if hasattr(pkg, "default_buildsystem"):
+            # Package API v2.2
+            return pkg.default_buildsystem
+        elif hasattr(pkg, "legacy_buildsystem"):
+            return pkg.legacy_buildsystem
+
+        raise SpackError(f"Package {pkg.name} does not define a build system.") from e
 
 
 class BuilderMeta(
@@ -293,14 +304,14 @@ class _PackageAdapterMeta(BuilderMeta):
         for phase_name in default_builder_cls.phases:
             attr_dict[phase_name] = _PackageAdapterMeta.phase_method_adapter(phase_name)
 
-        for method_name in default_builder_cls.legacy_methods:
+        for method_name in package_methods(default_builder_cls):
             attr_dict[method_name] = _PackageAdapterMeta.legacy_method_adapter(method_name)
 
         # These exist e.g. for Python, see discussion in https://github.com/spack/spack/pull/32068
-        for method_name in getattr(default_builder_cls, "legacy_long_methods", []):
+        for method_name in package_long_methods(default_builder_cls):
             attr_dict[method_name] = _PackageAdapterMeta.legacy_long_method_adapter(method_name)
 
-        for attribute_name in default_builder_cls.legacy_attributes:
+        for attribute_name in package_attributes(default_builder_cls):
             attr_dict[attribute_name] = _PackageAdapterMeta.legacy_attribute_adapter(
                 attribute_name
             )
@@ -497,7 +508,21 @@ class Builder(BaseBuilder, collections.abc.Sequence):
     #: Build system name. Must also be defined in derived classes.
     build_system: Optional[str] = None
 
+    #: Methods, with no arguments, that the adapter can find in Package classes,
+    #: if a builder is not defined.
+    package_methods: Tuple[str, ...]
+    #: (DEPRECATED) Deprecated attribute with the same semantics as "package_methods"
     legacy_methods: Tuple[str, ...] = ()
+
+    #: Methods with the same signature as phases, that the adapter can find in Package classes,
+    #: if a builder is not defined.
+    package_long_methods: Tuple[str, ...]
+    #: (DEPRECATED) Deprecated attribute with the same semantics as "package_long_methods"
+    legacy_long_methods: Tuple[str, ...]
+
+    #: Attributes that the adapter can find in Package classes, if a builder is not defined
+    package_attributes: Tuple[str, ...]
+    #: (DEPRECATED) Deprecated attribute with the same semantics as "package_attributes"
     legacy_attributes: Tuple[str, ...] = ()
 
     # type hints for some of the legacy methods
@@ -523,3 +548,150 @@ class Builder(BaseBuilder, collections.abc.Sequence):
 
     def __len__(self):
         return len(self.phases)
+
+
+def package_methods(builder: Type[Builder]) -> Tuple[str, ...]:
+    """Returns the list of methods, taking no arguments, that are defined in the package
+    class and are associated with the builder.
+    """
+    if hasattr(builder, "package_methods"):
+        # Package API v2.2
+        return builder.package_methods
+
+    return builder.legacy_methods
+
+
+def package_attributes(builder: Type[Builder]) -> Tuple[str, ...]:
+    """Returns the list of attributes that are defined in the package class and are associated
+    with the builder.
+    """
+    if hasattr(builder, "package_attributes"):
+        # Package API v2.2
+        return builder.package_attributes
+
+    return builder.legacy_attributes
+
+
+def package_long_methods(builder: Type[Builder]) -> Tuple[str, ...]:
+    """Returns the list of methods, with the same signature as phases, that are defined in
+    the package class and are associated with the builder.
+    """
+    if hasattr(builder, "package_long_methods"):
+        # Package API v2.2
+        return builder.package_long_methods
+
+    return getattr(builder, "legacy_long_methods", tuple())
+
+
+def sanity_check_prefix(builder: Builder):
+    """Check that specific directories and files are created after installation.
+
+    The files to be checked are in the ``sanity_check_is_file`` attribute of the
+    package object, while the directories are in the ``sanity_check_is_dir``.
+
+    Args:
+        builder: builder that installed the package
+    """
+    pkg = builder.pkg
+
+    def check_paths(path_list: List[str], filetype: str, predicate: Callable[[str], bool]) -> None:
+        if isinstance(path_list, str):
+            path_list = [path_list]
+
+        for path in path_list:
+            if not predicate(os.path.join(pkg.prefix, path)):
+                raise spack.error.InstallError(
+                    f"Install failed for {pkg.name}. No such {filetype} in prefix: {path}"
+                )
+
+    check_paths(pkg.sanity_check_is_file, "file", os.path.isfile)
+    check_paths(pkg.sanity_check_is_dir, "directory", os.path.isdir)
+
+    # Check that the prefix is not empty apart from the .spack/ directory
+    with os.scandir(pkg.prefix) as entries:
+        f = next(
+            (f for f in entries if not (f.name == ".spack" and f.is_dir(follow_symlinks=False))),
+            None,
+        )
+
+    if f is None:
+        raise spack.error.InstallError(f"Install failed for {pkg.name}.  Nothing was installed!")
+
+
+class BuilderWithDefaults(Builder):
+    """Base class for all specific builders with common callbacks registered."""
+
+    # Check that self.prefix is there after installation
+    spack.phase_callbacks.run_after("install")(sanity_check_prefix)
+
+
+def apply_macos_rpath_fixups(builder: Builder):
+    """On Darwin, make installed libraries more easily relocatable.
+
+    Some build systems (handrolled, autotools, makefiles) can set their own
+    rpaths that are duplicated by spack's compiler wrapper. This fixup
+    interrogates, and postprocesses if necessary, all libraries installed
+    by the code.
+
+    It should be added as a @run_after to packaging systems (or individual
+    packages) that do not install relocatable libraries by default.
+
+    Args:
+        builder: builder that installed the package
+    """
+    spack.relocate.fixup_macos_rpaths(builder.spec)
+
+
+def execute_install_time_tests(builder: Builder):
+    """Execute the install-time tests prescribed by builder.
+
+    Args:
+        builder: builder prescribing the test callbacks. The name of the callbacks is
+            stored as a list of strings in the ``install_time_test_callbacks`` attribute.
+    """
+    if not builder.pkg.run_tests or not builder.install_time_test_callbacks:
+        return
+
+    builder.pkg.tester.phase_tests(builder, "install", builder.install_time_test_callbacks)
+
+
+class Package(spack.package_base.PackageBase):
+    """General purpose class with a single ``install`` phase that needs to be
+    coded by packagers.
+    """
+
+    #: This attribute is used in UI queries that require to know which
+    #: build-system class we are using
+    build_system_class = "Package"
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    default_buildsystem = "generic"
+
+    spack.directives.build_system("generic")
+
+
+@register_builder("generic")
+class GenericBuilder(BuilderWithDefaults):
+    """A builder for a generic build system, that require packagers
+    to implement an "install" phase.
+    """
+
+    #: A generic package has only the "install" phase
+    phases = ("install",)
+
+    #: Names associated with package methods in the old build-system format
+    package_methods: Tuple[str, ...] = ()
+
+    #: Names associated with package attributes in the old build-system format
+    package_attributes: Tuple[str, ...] = ("archive_files", "install_time_test_callbacks")
+
+    #: Callback names for post-install phase tests
+    install_time_test_callbacks = []
+
+    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
+    spack.phase_callbacks.run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
+
+    # unconditionally perform any post-install phase tests
+    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+
+    def install(self, pkg: Package, spec: spack.spec.Spec, prefix: Prefix) -> None:
+        raise NotImplementedError

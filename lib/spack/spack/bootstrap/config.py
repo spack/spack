@@ -8,8 +8,6 @@ import os
 import sys
 from typing import Any, Dict, Generator, MutableSequence, Sequence
 
-from llnl.util import tty
-
 import spack.compilers.config
 import spack.config
 import spack.environment
@@ -20,6 +18,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.path
+from spack.llnl.util import tty
 
 #: Reference counter for the bootstrapping configuration context manager
 _REF_COUNT = 0

@@ -9,12 +9,11 @@ import pathlib
 import warnings
 from typing import Dict, List, Optional, Tuple
 
-import llnl.util.filesystem as fs
-import llnl.util.lang as lang
-
 import spack.compilers.config
 import spack.config
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lang as lang
 import spack.repo
 import spack.spec
 import spack.tengine as tengine

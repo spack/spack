@@ -13,10 +13,9 @@ import types
 from pathlib import Path
 from typing import List
 
-import llnl.util.lang
-
 import spack.config
 import spack.error
+import spack.llnl.util.lang
 import spack.util.path
 
 _extension_regexp = re.compile(r"spack-(\w[-\w]*)$")
@@ -90,7 +89,7 @@ def ensure_extension_loaded(extension, *, path):
         parts = [path] + name.split(".") + ["__init__.py"]
         init_file = os.path.join(*parts)
         if os.path.exists(init_file):
-            m = llnl.util.lang.load_module_from_file(package_name, init_file)
+            m = spack.llnl.util.lang.load_module_from_file(package_name, init_file)
         else:
             m = types.ModuleType(package_name)
 
@@ -149,7 +148,7 @@ def extension_paths_from_entry_points() -> List[str]:
 
     """
     extension_paths: List[str] = []
-    for entry_point in llnl.util.lang.get_entry_points(group="spack.extensions"):
+    for entry_point in spack.llnl.util.lang.get_entry_points(group="spack.extensions"):
         hook = entry_point.load()
         if callable(hook):
             paths = hook() or []

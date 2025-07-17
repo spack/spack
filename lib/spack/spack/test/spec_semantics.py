@@ -6,12 +6,11 @@ import pathlib
 
 import pytest
 
-import llnl.util.lang
-
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
 import spack.error
+import spack.llnl.util.lang
 import spack.paths
 import spack.solver.asp
 import spack.spec
@@ -2233,7 +2232,7 @@ EMPTY_FLG = Spec().compiler_flags
 )
 def test_spec_canonical_comparison_form(spec, expected_tuplified):
     """Tests a few expected canonical comparison form of specs"""
-    assert llnl.util.lang.tuplify(Spec(spec)._cmp_iter) == expected_tuplified
+    assert spack.llnl.util.lang.tuplify(Spec(spec)._cmp_iter) == expected_tuplified
 
 
 def test_comparison_after_breaking_hash_change():

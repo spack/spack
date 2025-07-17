@@ -831,6 +831,8 @@ user support groups providing a large software stack for their HPC center.
    ``unify: when_possible``. You can force Spack to ignore the existing concrete environment
    with ``spack concretize -f``.
 
+.. _environment-spec-matrices:
+
 ^^^^^^^^^^^^^
 Spec Matrices
 ^^^^^^^^^^^^^

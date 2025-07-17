@@ -6,13 +6,12 @@ import os
 import re
 import sys
 import urllib.parse
-from typing import List
+from typing import List, Optional
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.stage
+from spack.llnl.util.filesystem import mkdirp
 from spack.spec import Spec
 from spack.url import (
     UndetectableNameError,
@@ -991,7 +990,9 @@ def get_versions(args, name):
     return versions, guesser
 
 
-def get_build_system(template: str, url: str, guesser: BuildSystemAndLanguageGuesser) -> str:
+def get_build_system(
+    template: Optional[str], url: str, guesser: BuildSystemAndLanguageGuesser
+) -> str:
     """Determine the build system template.
 
     If a template is specified, always use that. Otherwise, if a URL

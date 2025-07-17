@@ -47,13 +47,29 @@ or refer to the full manual below.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Basics
+   :caption: Introduction
 
    features
    getting_started
-   basic_usage
+   spec_syntax
+   installing_prerequisites
+   windows
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Basic Usage
+
+   package_fundamentals
+   configuring_compilers
    replace_conda_homebrew
    frequently_asked_questions
+   getting_help
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced Topics
+
+   advanced_topics
 
 .. toctree::
    :maxdepth: 2
@@ -91,9 +107,12 @@ or refer to the full manual below.
    :maxdepth: 2
    :caption: Contributing
 
-   contribution_guide
-   packaging_guide
+   packaging_guide_creation
+   packaging_guide_build
+   packaging_guide_testing
+   packaging_guide_advanced
    build_systems
+   contribution_guide
    developer_guide
 
 .. toctree::
@@ -102,7 +121,6 @@ or refer to the full manual below.
 
    Spack API Docs <spack>
    Spack Builtin Repo <spack_repo>
-   LLNL API Docs <llnl>
 
 ==================
 Indices and tables

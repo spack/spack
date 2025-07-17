@@ -9,12 +9,9 @@ Developer Guide
 ===============
 
 This guide is intended for people who want to work on Spack itself.
-If you just want to develop packages, see the :ref:`packaging-guide`.
+If you just want to develop packages, see the :doc:`Packaging Guide <packaging_guide_creation>`.
 
-It is assumed that you have read the :ref:`basic-usage` and
-:ref:`packaging-guide` sections and that you are familiar with the
-concepts discussed there. If you are not, we recommend reading those
-first.
+It is assumed that you have read the :ref:`basic-usage` and :doc:`packaging guide <packaging_guide_creation>` sections and that you are familiar with the concepts discussed there.
 
 --------
 Overview
@@ -106,7 +103,6 @@ with a high-level view of Spack's directory structure:
             docs/          <- source for this documentation
 
             external/      <- external libs included in Spack distribution
-            llnl/          <- some general-use libraries
 
             spack/                <- spack module; contains Python code
                build_systems/     <- modules for different build systems
@@ -253,14 +249,14 @@ Other Modules
   :class:`~spack.error.SpackError`, the base class for
   Spack's exception hierarchy.
 
-:mod:`llnl.util.tty`
+:mod:`spack.llnl.util.tty`
   Basic output functions for all of the messages Spack writes to the
   terminal.
 
-:mod:`llnl.util.tty.color`
+:mod:`spack.llnl.util.tty.color`
   Implements a color formatting syntax used by ``spack.tty``.
 
-:mod:`llnl.util`
+:mod:`spack.llnl.util`
   In this package are a number of utility modules for the rest of
   Spack.
 
@@ -291,24 +287,64 @@ Key concepts:
 
 See :ref:`repositories` for complete details on configuring and managing package repositories.
 
-------------
-Spec objects
-------------
+.. _package_class_structure:
 
----------------
-Package objects
----------------
+--------------------------
+Package class architecture
+--------------------------
 
-Most Spack commands look something like this:
+.. note::
 
-#. Parse an abstract spec (or specs) from the command line,
-#. *Normalize* the spec based on information in package files,
-#. *Concretize* the spec according to some customizable policies,
-#. Instantiate a package based on the spec, and
-#. Call methods (e.g., ``install()``) on the package object.
+   This section aims to provide a high-level knowledge of how the package class architecture evolved
+   in Spack, and provides some insights on the current design.
 
-The information in package files is used at all stages in this
-process.
+Packages in Spack were originally designed to support only a single build system. The overall
+class structure for a package looked like:
+
+.. image:: images/original_package_architecture.png
+   :scale: 60 %
+   :align: center
+
+In this architecture the base class ``AutotoolsPackage`` was responsible for both the metadata
+related to the ``autotools`` build system (e.g. dependencies or variants common to all packages
+using it), and for encoding the default installation procedure.
+
+In reality, a non-negligible number of packages are either changing their build system during the evolution of the
+project, or using different build systems for different platforms. An architecture based on a single class
+requires hacks or other workarounds to deal with these cases.
+
+To support a model more adherent to reality, Spack v0.19 changed its internal design by extracting
+the attributes and methods related to building a software into a separate hierarchy:
+
+.. image:: images/builder_package_architecture.png
+   :scale: 60 %
+   :align: center
+
+In this new format each ``package.py`` contains one ``*Package`` class that gathers all the metadata,
+and one or more ``*Builder`` classes that encode the installation procedure. A specific builder object
+is created just before the software is built, so at a time where Spack knows which build system needs
+to be used for the current installation, and receives a ``package`` object during initialization.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Compatibility with single-class format
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Internally, Spack always uses builders to perform operations related to the installation of a specific software.
+The builders are created in the ``spack.builder.create`` function.
+
+.. literalinclude:: _spack_root/lib/spack/spack/builder.py
+   :pyobject: create
+
+To achieve backward compatibility with the single-class format Spack creates in this function a special
+"adapter builder", if no custom builder is detected in the recipe:
+
+.. image:: images/adapter.png
+   :scale: 60 %
+   :align: center
+
+Overall the role of the adapter is to route access to attributes of methods first through the ``*Package``
+hierarchy, and then back to the base class builder. This is schematically shown in the diagram above, where
+the adapter role is to "emulate" a method resolution order like the one represented by the red arrows.
 
 
 .. _writing-commands:

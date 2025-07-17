@@ -230,7 +230,7 @@ packages:
     # the note about #37180 in concretize.lp
 
 
-def test_dev_mix_flags(tmp_path, concretize_scope, mutable_mock_env_path, test_repo):
+def test_dev_mix_flags(tmp_path: pathlib.Path, concretize_scope, mutable_mock_env_path, test_repo):
     src_dir = tmp_path / "x-src"
 
     env_content = f"""\

@@ -10,15 +10,14 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import llnl.util.filesystem as fs
-from llnl.util.symlink import readlink
-
 import spack.config
 import spack.hash_types as ht
+import spack.llnl.util.filesystem as fs
 import spack.projections
 import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
+from spack.llnl.util.filesystem import readlink
 
 default_projections = {
     "all": "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
@@ -135,7 +134,7 @@ class DirectoryLayout:
         _check_concrete(spec)
         with open(path, "w", encoding="utf-8") as f:
             # The hash of the projection is the DAG hash which contains
-            # the full provenance, so it's availabe if we want it later
+            # the full provenance, so it's available if we want it later
             spec.to_json(f, hash=ht.dag_hash)
 
     def write_host_environment(self, spec: "spack.spec.Spec") -> None:

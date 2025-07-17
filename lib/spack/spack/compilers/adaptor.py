@@ -4,9 +4,8 @@
 import enum
 from typing import Dict, List
 
-from llnl.util import lang
-
 import spack.spec
+from spack.llnl.util import lang
 
 from .libraries import CompilerPropertyDetector
 

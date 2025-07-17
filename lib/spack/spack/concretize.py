@@ -7,12 +7,11 @@ import sys
 import time
 from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
-import llnl.util.tty as tty
-
 import spack.compilers
 import spack.compilers.config
 import spack.config
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.parallel
 from spack.spec import ArchSpec, CompilerSpec, Spec

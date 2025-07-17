@@ -6,11 +6,10 @@ import argparse
 import collections
 import warnings
 
-import _vendoring.archspec.cpu
+import spack.vendor.archspec.cpu
 
-import llnl.util.tty.colify as colify
-import llnl.util.tty.color as color
-
+import spack.llnl.util.tty.colify as colify
+import spack.llnl.util.tty.color as color
 import spack.platforms
 import spack.spec
 
@@ -93,11 +92,11 @@ def display_targets(targets):
 def arch(parser, args):
     if args.generic_target:
         # TODO: add deprecation warning in 0.24
-        print(_vendoring.archspec.cpu.host().generic)
+        print(spack.vendor.archspec.cpu.host().generic)
         return
 
     if args.known_targets:
-        display_targets(_vendoring.archspec.cpu.TARGETS)
+        display_targets(spack.vendor.archspec.cpu.TARGETS)
         return
 
     if args.frontend:

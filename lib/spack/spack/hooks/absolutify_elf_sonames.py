@@ -4,13 +4,12 @@
 
 import os
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
-from llnl.util.lang import elide_list
-
 import spack.bootstrap
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.relocate
+from spack.llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
+from spack.llnl.util.lang import elide_list
 from spack.util.elf import ElfParsingError, parse_elf
 
 

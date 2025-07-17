@@ -16,11 +16,10 @@ import sys
 import warnings
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Optional, Tuple, Union
 
-from llnl.path import path_to_os_path, system_path_filter
-from llnl.util import tty
-from llnl.util.lang import dedupe
-
 import spack.error
+from spack.llnl.path import path_to_os_path, system_path_filter
+from spack.llnl.util import tty
+from spack.llnl.util.lang import dedupe
 
 # List is invariant, so List[str] is not a subtype of List[Union[str, pathlib.PurePath]].
 # Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exlude it

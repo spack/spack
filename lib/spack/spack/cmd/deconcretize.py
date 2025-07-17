@@ -6,11 +6,10 @@ import argparse
 import sys
 from typing import List
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.spec
 from spack.cmd.common import arguments
 

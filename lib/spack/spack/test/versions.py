@@ -11,12 +11,11 @@ import pathlib
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.concretize
 import spack.package_base
 import spack.spec
 import spack.version
+from spack.llnl.util.filesystem import working_dir
 from spack.version import (
     EmptyRangeError,
     GitVersion,

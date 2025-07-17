@@ -140,9 +140,9 @@ wheels or if the PyPI sdist is missing a file needed to build the
 package. If this is the case, please add a comment above the ``url``
 explaining this.
 
-^^^^
+^^^^^^
 PyPI
-^^^^
+^^^^^^
 
 Since PyPI is so commonly used to host Python libraries, the
 ``PythonPackage`` base class has a ``pypi`` attribute that can be
@@ -303,9 +303,9 @@ for more information on how setuptools handles dependency management.
 See `PEP 440 <https://www.python.org/dev/peps/pep-0440/#version-specifiers>`_
 for documentation on version specifiers in setuptools.
 
-""""
+""""""
 flit
-""""
+""""""
 
 There are actually two possible build backends for flit, ``flit``
 and ``flit_core``. If you see these in the ``pyproject.toml``, add a
@@ -357,9 +357,9 @@ uses the default ``pyproject.toml`` keys to list dependencies.
 See https://hatch.pypa.io/latest/config/dependency/ for more
 information.
 
-"""""
+""""""
 meson
-"""""
+""""""
 
 If the ``pyproject.toml`` lists ``mesonpy`` as the ``build-backend``,
 it uses the meson build system. Meson uses the default
@@ -368,9 +368,9 @@ it uses the meson build system. Meson uses the default
 See https://meson-python.readthedocs.io/en/latest/tutorials/introduction.html
 for more information.
 
-"""
+""""""
 pdm
-"""
+""""""
 
 If the ``pyproject.toml`` lists ``pdm.pep517.api`` as the ``build-backend``,
 it uses the PDM build system. PDM uses the default ``pyproject.toml``

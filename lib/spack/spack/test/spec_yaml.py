@@ -13,10 +13,12 @@ import gzip
 import io
 import json
 import os
+import pathlib
 import pickle
 
-import _vendoring.ruamel.yaml
 import pytest
+
+import spack.vendor.ruamel.yaml
 
 import spack.concretize
 import spack.config
@@ -24,9 +26,11 @@ import spack.hash_types as ht
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.test.conftest
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec, save_dependency_specfiles
+from spack.test.conftest import RepoBuilder
 from spack.util.spack_yaml import SpackYAMLError, syaml_dict
 
 
@@ -229,30 +233,32 @@ def check_specs_equal(original_spec, spec_yaml_path):
         return original_spec.eq_dag(spec_from_yaml)
 
 
-def test_save_dependency_spec_jsons_subset(tmpdir, config):
-    output_path = str(tmpdir.mkdir("spec_jsons"))
+def test_save_dependency_spec_jsons_subset(
+    tmp_path: pathlib.Path, config, repo_builder: RepoBuilder
+):
+    output_path = tmp_path / "spec_jsons"
+    output_path.mkdir()
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
-    builder.add_package("pkg-g")
-    builder.add_package("pkg-f")
-    builder.add_package("pkg-e")
-    builder.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
-    builder.add_package("pkg-c")
-    builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
-    builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
+    repo_builder.add_package("pkg-g")
+    repo_builder.add_package("pkg-f")
+    repo_builder.add_package("pkg-e")
+    repo_builder.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
+    repo_builder.add_package("pkg-c")
+    repo_builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
+    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(repo_builder.root):
         spec_a = spack.concretize.concretize_one("pkg-a")
         b_spec = spec_a["pkg-b"]
         c_spec = spec_a["pkg-c"]
 
-        save_dependency_specfiles(spec_a, output_path, [Spec("pkg-b"), Spec("pkg-c")])
+        save_dependency_specfiles(spec_a, str(output_path), [Spec("pkg-b"), Spec("pkg-c")])
 
-        assert check_specs_equal(b_spec, os.path.join(output_path, "pkg-b.json"))
-        assert check_specs_equal(c_spec, os.path.join(output_path, "pkg-c.json"))
+        assert check_specs_equal(b_spec, str(output_path / "pkg-b.json"))
+        assert check_specs_equal(c_spec, str(output_path / "pkg-c.json"))
 
 
-def test_legacy_yaml(tmpdir, install_mockery, mock_packages):
+def test_legacy_yaml(install_mockery, mock_packages):
     """Tests a simple legacy YAML with a dependency and ensures spec survives
     concretization."""
     yaml = """
@@ -451,7 +457,7 @@ def test_anchorify_1():
 
     # Check if anchors are used
     out = io.StringIO()
-    _vendoring.ruamel.yaml.YAML().dump(after, out)
+    spack.vendor.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\
@@ -474,7 +480,7 @@ def test_anchorify_2():
 
     # Check if anchors are used
     out = io.StringIO()
-    _vendoring.ruamel.yaml.YAML().dump(after, out)
+    spack.vendor.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\

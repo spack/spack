@@ -15,8 +15,7 @@ Spack defines a number of classes that understand how to use common
 classes in order to streamline their builds.
 
 This guide provides information specific to each particular build system.
-It assumes that you've read the :ref:`packaging-guide` and expands
-on these ideas for each distinct build system that Spack supports:
+It assumes that you've read the Packaging Guide :doc:`part 1 <packaging_guide_creation>` and :doc:`part 2 <packaging_guide_build>` and expands on these ideas for each distinct build system that Spack supports:
 
 .. toctree::
    :maxdepth: 1

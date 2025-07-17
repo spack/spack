@@ -10,19 +10,18 @@ import sys
 from itertools import chain
 from typing import Any, List, Optional, Tuple
 
-import llnl.util.filesystem as fs
-from llnl.util import tty
-from llnl.util.lang import stable_partition
-
 import spack.builder
 import spack.deptypes as dt
 import spack.error
+import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
 import spack.util.prefix
 from spack import traverse
 from spack.directives import build_system, conflicts, depends_on, variant
+from spack.llnl.util import tty
+from spack.llnl.util.lang import stable_partition
 from spack.multimethod import when
 from spack.util.environment import filter_system_paths
 
@@ -197,7 +196,7 @@ class CMakePackage(spack.package_base.PackageBase):
     build_system_class = "CMakePackage"
 
     #: Legacy buildsystem attribute used to deserialize and install old specs
-    legacy_buildsystem = "cmake"
+    default_buildsystem = "cmake"
 
     #: When this package depends on Python and ``find_python_hints`` is set to True, pass the
     #: defines {Python3,Python,PYTHON}_EXECUTABLE explicitly, so that CMake locates the right
@@ -312,10 +311,10 @@ class CMakeBuilder(BuilderWithDefaults):
     phases: Tuple[str, ...] = ("cmake", "build", "install")
 
     #: Names associated with package methods in the old build-system format
-    legacy_methods: Tuple[str, ...] = ("cmake_args", "check")
+    package_methods: Tuple[str, ...] = ("cmake_args", "check")
 
     #: Names associated with package attributes in the old build-system format
-    legacy_attributes: Tuple[str, ...] = (
+    package_attributes: Tuple[str, ...] = (
         "build_targets",
         "install_targets",
         "build_time_test_callbacks",

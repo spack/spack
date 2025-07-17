@@ -9,7 +9,7 @@
 """
 from typing import Any, Dict
 
-import _vendoring.jsonschema
+import spack.vendor.jsonschema
 
 #: Common properties for connection specification
 connection = {
@@ -124,4 +124,4 @@ def update(data):
             check_access_pair(name, section.get("push"))
 
     if errors:
-        raise _vendoring.jsonschema.ValidationError("\n".join(errors))
+        raise spack.vendor.jsonschema.ValidationError("\n".join(errors))

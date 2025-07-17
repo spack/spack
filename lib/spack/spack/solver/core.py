@@ -7,7 +7,7 @@ import pathlib
 from types import ModuleType
 from typing import Any, Callable, NamedTuple, Optional, Tuple, Union
 
-from llnl.util import lang
+from spack.llnl.util import lang
 
 
 def _ast_getter(*names: str) -> Callable[[Any], Any]:

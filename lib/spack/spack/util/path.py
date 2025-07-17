@@ -17,10 +17,9 @@ import tempfile
 from datetime import date
 from typing import Optional
 
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-
+import spack.llnl.util.tty as tty
 import spack.util.spack_yaml as syaml
+from spack.llnl.util.lang import memoized
 
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
 

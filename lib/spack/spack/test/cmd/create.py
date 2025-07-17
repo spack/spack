@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import tarfile
 
 import pytest
@@ -161,7 +162,7 @@ def test_build_system_guesser_no_stage():
         guesser(None, "/the/url/does/not/matter")
 
 
-def test_build_system_guesser_octave(tmp_path):
+def test_build_system_guesser_octave(tmp_path: pathlib.Path):
     """
     Test build system guesser for the special case, where the same base URL
     identifies the build system rather than guessing the build system from
@@ -219,7 +220,7 @@ def test_no_url():
         (["fst.jl", "snd.py"], []),
     ],
 )
-def test_language_and_build_system_detection(tmp_path, source_files, languages):
+def test_language_and_build_system_detection(tmp_path: pathlib.Path, source_files, languages):
     """Test that languages are detected from tarball, and the build system is guessed from the
     most top-level build system file."""
 

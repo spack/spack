@@ -11,10 +11,9 @@ import urllib.parse
 import urllib.request
 from typing import Callable, Optional
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import copy, join_path, mkdirp
-
+import spack.llnl.util.tty as tty
 import spack.util.crypto
+from spack.llnl.util.filesystem import copy, join_path, mkdirp
 from spack.util.path import canonicalize_path
 from spack.util.url import validate_scheme
 

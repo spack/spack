@@ -13,11 +13,9 @@ import importlib.util
 import inspect
 import itertools
 import os
-import random
 import re
 import shutil
 import stat
-import string
 import sys
 import traceback
 import types
@@ -38,22 +36,19 @@ from typing import (
     Union,
 )
 
-import llnl.path
-import llnl.util.filesystem as fs
-import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
-
 import spack
 import spack.caches
 import spack.config
 import spack.error
+import spack.llnl.path
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
 import spack.patch
 import spack.paths
 import spack.provider_index
 import spack.spec
 import spack.tag
-import spack.tengine
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
@@ -62,6 +57,7 @@ import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
+from spack.llnl.util.filesystem import working_dir
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
@@ -578,7 +574,7 @@ class RepoIndex:
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
-            self.packages_path = llnl.path.convert_to_posix_path(self.packages_path)
+            self.packages_path = spack.llnl.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers: Dict[str, Indexer] = {}
@@ -757,11 +753,11 @@ class RepoPath:
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    @llnl.util.lang.memoized
+    @spack.llnl.util.lang.memoized
     def _all_package_names_set(self, include_virtuals) -> Set[str]:
         return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
 
-    @llnl.util.lang.memoized
+    @spack.llnl.util.lang.memoized
     def _all_package_names(self, include_virtuals: bool) -> List[str]:
         """Return all unique package names in all repositories."""
         return sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
@@ -1397,13 +1393,19 @@ class Repo:
 
         class_name = nm.pkg_name_to_class_name(pkg_name)
 
+        if not self.exists(pkg_name):
+            raise UnknownPackageError(fullname, self)
+
         try:
+            if self.python_path:
+                sys.path.insert(0, self.python_path)
             module = importlib.import_module(fullname)
-        except ImportError as e:
-            raise UnknownPackageError(fullname) from e
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
             raise RepoError(msg) from e
+        finally:
+            if self.python_path:
+                sys.path.remove(self.python_path)
 
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
@@ -1466,7 +1468,7 @@ class Repo:
 
     def marshal(self):
         cache = self._cache
-        if isinstance(cache, llnl.util.lang.Singleton):
+        if isinstance(cache, spack.llnl.util.lang.Singleton):
             cache = cache.instance
         return self.root, cache, self.overrides
 
@@ -1957,7 +1959,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(
+PATH: RepoPath = spack.llnl.util.lang.Singleton(
     lambda: create_and_enable(spack.config.CONFIG)
 )  # type: ignore[assignment]
 
@@ -1999,6 +2001,7 @@ def use_repositories(
         yield new_repo
     finally:
         spack.config.CONFIG.remove_scope(scope_name=scope_name)
+        new_repo.disable()
         enable_repo(old_repo)
 
 
@@ -2007,43 +2010,6 @@ def enable_repo(repo_path: RepoPath) -> None:
     global PATH
     PATH = repo_path
     PATH.enable()
-
-
-class MockRepositoryBuilder:
-    """Build a mock repository in a directory"""
-
-    def __init__(self, root_directory, namespace=None):
-        namespace = namespace or "".join(random.choice(string.ascii_lowercase) for _ in range(10))
-        repo_root = os.path.join(root_directory, namespace)
-        os.mkdir(repo_root)
-        self.root, self.namespace = create_repo(repo_root, namespace)
-
-    def add_package(self, name, dependencies=None):
-        """Create a mock package in the repository, using a Jinja2 template.
-
-        Args:
-            name (str): name of the new package
-            dependencies (list): list of ("dep_spec", "dep_type", "condition") tuples.
-                Both "dep_type" and "condition" can default to ``None`` in which case
-                ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
-        """
-        dependencies = dependencies or []
-        context = {"cls_name": nm.pkg_name_to_class_name(name), "dependencies": dependencies}
-        template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
-        text = template.render(context)
-        package_py = self.recipe_filename(name)
-        fs.mkdirp(os.path.dirname(package_py))
-        with open(package_py, "w", encoding="utf-8") as f:
-            f.write(text)
-
-    def remove(self, name):
-        package_py = self.recipe_filename(name)
-        shutil.rmtree(os.path.dirname(package_py))
-
-    def recipe_filename(self, name: str):
-        return os.path.join(
-            self.root, "packages", nm.pkg_name_to_pkg_dir(name, package_api=(2, 0)), "package.py"
-        )
 
 
 class RepoError(spack.error.SpackError):
@@ -2069,15 +2035,22 @@ class UnknownEntityError(RepoError):
 class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
-    def __init__(self, name, repo=None):
+    def __init__(
+        self,
+        name,
+        repo: Optional[Union[Repo, RepoPath, str]] = None,
+        *,
+        get_close_matches=difflib.get_close_matches,
+    ):
         msg = "Attempting to retrieve anonymous package."
         long_msg = None
         if name:
+            msg = f"Package '{name}' not found"
             if repo:
-                msg = "Package '{0}' not found in repository '{1.root}'"
-                msg = msg.format(name, repo)
-            else:
-                msg = "Package '{0}' not found.".format(name)
+                if isinstance(repo, Repo):
+                    msg += f" in repository '{repo.root}'"
+                elif isinstance(repo, str):
+                    msg += f" in repository '{repo}'"
 
             # Special handling for specs that may have been intended as
             # filenames: prompt the user to ask whether they intended to write
@@ -2089,14 +2062,16 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Use 'spack create' to create a new package."
 
                 if not repo:
-                    repo = PATH
+                    repo = PATH.ensure_unwrapped()
 
                 # We need to compare the base package name
                 pkg_name = name.rsplit(".", 1)[-1]
-                try:
-                    similar = difflib.get_close_matches(pkg_name, repo.all_package_names())
-                except Exception:
-                    similar = []
+                similar = []
+                if isinstance(repo, RepoPath):
+                    try:
+                        similar = get_close_matches(pkg_name, repo.all_package_names())
+                    except Exception:
+                        pass
 
                 if 1 <= len(similar) <= 5:
                     long_msg += "\n\nDid you mean one of the following packages?\n  "

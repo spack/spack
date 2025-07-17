@@ -8,15 +8,14 @@ import pathlib
 import sys
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
-import llnl.util.filesystem
-from llnl.url import allowed_archive
-
 import spack
 import spack.error
 import spack.fetch_strategy
+import spack.llnl.util.filesystem
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
+from spack.llnl.url import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
 
@@ -60,7 +59,7 @@ def apply_patch(
     # has issues handling CRLF line endings unless the --binary
     # flag is passed.
     patch = which("patch", required=True, path=git_utils_path)
-    with llnl.util.filesystem.working_dir(stage.source_path):
+    with spack.llnl.util.filesystem.working_dir(stage.source_path):
         patch(*args)
 
 
