@@ -606,34 +606,27 @@ def mirror_create(args):
     # When no directory is provided, the source dir is used
     path = args.directory or spack.caches.fetch_cache_location()
 
-    mirror_specs, mirror_fn = _specs_and_action(args)
-    mirror_fn(
+    mirror_specs = _specs_and_action(args)
+    create_mirror_for_all_specs(
         mirror_specs,
         path=path,
         skip_unstable_versions=args.skip_unstable_versions,
-        workers=args.jobs,
+        workers=getattr(args, "jobs", 1),
     )
 
 
 def _specs_and_action(args):
     include_fn = IncludeFilter(args)
-    parallel = getattr(args, "jobs", 1) > 1
 
     if args.all and not ev.active_environment():
         mirror_specs = all_specs_with_all_versions()
-        parallel = True
     elif args.all and ev.active_environment():
         mirror_specs = concrete_specs_from_environment()
     else:
         mirror_specs = concrete_specs_from_user(args)
 
-    if parallel:
-        mirror_fn = create_mirror_for_all_specs
-    else:
-        mirror_fn = create_mirror_for_individual_specs
-
     mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=include_fn)
-    return mirror_specs, mirror_fn
+    return mirror_specs
 
 
 def create_mirror_for_one_spec(candidate, mirror_cache):
@@ -659,14 +652,6 @@ def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, work
 
     process_mirror_stats(*mirror_stats.stats())
     return mirror_stats
-
-
-def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions, workers):
-    present, mirrored, error = spack.mirrors.utils.create(
-        path, mirror_specs, skip_unstable_versions
-    )
-    tty.msg("Summary for mirror in {}".format(path))
-    process_mirror_stats(present, mirrored, error)
 
 
 def mirror_destroy(args):
