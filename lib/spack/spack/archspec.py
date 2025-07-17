@@ -18,8 +18,12 @@ def microarchitecture_flags(spec: spack.spec.Spec, language: str) -> str:
 
     Example::
 
-        >>> microarchitecture_flags(Spec("foo target=zen2 %c=gcc@=14.1.0"), language="c")
-        '-march=znver2 -mtune=znver2'
+        >>> spec.format("{target}")
+        'm1'
+        >>> spec["c"].format("{name}{@version}")
+        'apple-clang@17.0.0'
+        >>> microarchitecture_flags(spec, language="c")
+        '-mcpu=apple-m1'
     """
     target = spec.target
 
