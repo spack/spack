@@ -534,8 +534,8 @@ to install packages when checksum verification fails.
    hash.
 
    For URL downloads, Spack supports multiple cryptographic hash algorithms,
-   including :ref:```sha256`` (recommended) <versions-and-fetching>`,
-   ``sha384``, and ``sha512``.
+   including ``sha256`` (recommended), ``sha384`` and ``sha512``. See
+   :ref:`version urls <versions-and-fetching>` for more information.
 
    For repository downloads, which we will cover in more detail later, this is
    done by specifying a **full commit hash** (e.g., :ref:`git <git-commits>`,
@@ -862,10 +862,10 @@ Git
 Git fetching supports the following parameters to ``version``:
 
 * ``git``: URL of the git repository, if different than the class-level ``git``.
-* ``branch``: Name of a branch to fetch.
-* ``tag``: Name of a tag to fetch.
-* ``commit``: SHA hash (or prefix) of a commit to fetch.
-* ``submodules``: Also fetch submodules recursively when checking out this repository.
+* ``branch``: Name of a :ref:`branch <git-branches>` to fetch.
+* ``tag``: Name of a :ref:`tag <git-tags>` to fetch.
+* ``commit``: SHA hash (or prefix) of a :ref:`commit <git-commits>` to fetch.
+* ``submodules``: Also fetch :ref:`submodules <git-submodules>` recursively when checking out this repository.
 * ``submodules_delete``: A list of submodules to forcibly delete from the repository
   after fetching. Useful if a version in the repository has submodules that
   have disappeared/are no longer accessible.
@@ -874,19 +874,16 @@ Git fetching supports the following parameters to ``version``:
   option ``--depth 1`` will be used if the version of git and the specified
   transport protocol support it, and ``--single-branch`` will be used if the
   version of git supports it.
-* ``git_sparse_paths``: Use ``sparse-checkout`` to only clone these relative paths.
-  This feature requires ``git`` to be version ``2.25.0`` or later but is useful for
-  large repositories that have separate portions that can be built independently.
-  If paths provided are directories then all the subdirectories and associated files
-  will also be cloned.
-
-``tag`` and ``branch`` should not be combined in the version parameters. We strongly
-recommend that all ``tag`` entries be paired with ``commit``. Providing the full 
-``commit`` SHA hash allows for Spack to preserve binary provenance for all binaries. 
-This is due to the fact that git tags and branches are mutable references to commits, 
-but git commits are guaranteed to be unique points in the git history.
+* ``git_sparse_paths``: Only clone the provided :ref:`relative paths <git-sparse-checkout>`.
 
 The destination directory for the clone is the standard stage source path.
+
+.. note::
+
+   ``tag`` and ``branch`` should not be combined in the version parameters.
+
+   We strongly recommend that all ``tag`` entries be paired with ``commit``.
+
 
 .. warning:
 
@@ -894,7 +891,12 @@ The destination directory for the clone is the standard stage source path.
    It is critical from a security and reproducibility standpoint that Spack
    be able to verify the downloaded source.
 
-   A git download *is trusted* only if the full commit sha is specified.
+   Providing the full ``commit`` SHA hash allows for Spack to preserve binary
+   provenance for all binaries since git commits are guaranteed to be unique
+   points in the git history. Whereas, the mutable nature of branches and tags
+   cannot provide such a guarantee.
+
+   A git download *is trusted* only if the full commit SHA is specified.
    Therefore, it is *the* recommended way to securely download from a Git
    repository.
 
@@ -918,11 +920,12 @@ Default branch
   commit that was used when the package was first written. Additionally, the
   default branch may change.
 
-.. warning::
+  .. warning::
 
-  This download method is **untrusted**, and is **not recommended**.
+    This download method is **untrusted**, and is **not recommended**.
 
-  If you do use it, it is best to at least specify a branch name (see below).
+    If you do use it, it is best to at least specify a branch name (see
+    :ref:`below <git-branches>`).
 
 
 .. _git-branches:
@@ -936,10 +939,10 @@ Branches
 
   Branches are moving targets, so the commit you get when you install the package likely won't be the same commit that was used when the package was first written.
 
-.. warning::
+  .. warning::
 
-  This download method is **untrusted**, and is **not recommended** for
-  production installations.
+    This download method is **untrusted**, and is **not recommended** for
+    production installations.
 
 
 .. _git-tags:
@@ -954,12 +957,12 @@ Tags
   Although tags are generally more stable than branches, Git allows tags to be moved.
   Many developers use tags to denote rolling releases, and may move the tag when a bug is fixed.
 
-.. warning::
+  .. warning::
 
-  This download method is **untrusted**, and is **not recommended**.
+    This download method is **untrusted**, and is **not recommended**.
 
-  If you must use a ``tag``, it is recommended to combine it with the
-  ``commit`` options (see below).
+    If you must use a ``tag``, it is recommended to combine it with the
+    ``commit`` options (see below).
 
 
 .. _git-commits:
@@ -976,16 +979,16 @@ Commits
   Or, if you know the commit at which a release was cut, you can use the release version.
   It is up to the package author to decide which approach makes the most sense.
 
-.. warning::
+  .. warning::
 
-  A git download is *trusted only if* the full commit sha is specified.
+    A git download is *trusted only if* the **full commit sha** is specified.
 
 
-.. hint::
+  .. hint::
 
-   **Avoid using the commit hash as the version.**
-   It is not recommended to use the commit hash as the version itself, since
-   it won't sort properly.
+     **Avoid using the commit hash as the version.**
+     It is not recommended to use the commit hash as the version itself, since
+     it won't sort properly.
 
 
 .. _git-submodules:
@@ -1021,48 +1024,60 @@ Submodules
   For more information about git submodules see the manpage of git: ``man
   git-submodule``.
 
+
 .. _git-sparse-checkout:
 
 Sparse-Checkout
-  You can supply ``git_sparse_paths`` at the package or version level to utilize git's
-  sparse-checkout feature. This will only clone the paths that are specified in the
-  ``git_sparse_paths`` attribute for the package along with the files in the top level directory.
-  This feature allows you to only clone what you need from a large repository.
-  Note that this is a newer feature in git and requires git ``2.25.0`` or greater.
-  If ``git_sparse_paths`` is supplied and the git version is too old
-  then a warning will be issued and that package will use the standard cloning operations instead.
-  ``git_sparse_paths`` should be supplied as a list of paths, a callable function for versions,
-  or a more complex package attribute using the ``@property`` decorator. The return value should be
-  a list for a callable implementation of ``git_sparse_paths``.
+  If you only want to clone a subset of the contents of a git repository, you
+  can supply ``git_sparse_paths`` at the package or version level to utilize
+  git's sparse-checkout feature. The package can have an attribute (or property)
+  that contains (or returns) a list of relative paths, for example:
+
+  .. code-block:: python
+
+    class MyPackage(package):
+        # using a property
+        git_sparse_paths = ["doe", "rae"]
+
+        version("1.0.0")
+        version("1.1.0")
+
+  results in the files from the top level directory of the repository and the
+  contents of the ``doe`` and ``rae`` paths to be cloned. If paths are
+  directories then all of the subdirectories and associated files are included.
+
+  .. note::
+
+     This is a newer feature in git that requires git ``2.25.0`` or greater.
+
+     If ``git_sparse_paths`` is supplied and the git version is too old then a
+     warning will be issued before using the standard cloning operations instead.
+
+  Alternatively, you can provide the paths to the version directive argument
+  using a callable function whose return value is a list for paths. For example:
 
   .. code-block:: python
 
     def sparse_path_function(package)
-        """a callable function that can be used in side a version"""
-        # paths can be directories or functions, all subdirectories and files are included
         paths = ["doe", "rae", "me/file.cpp"]
         if package.spec.version >  Version("1.2.0"):
             paths.extend(["fae"])
         return paths
 
     class MyPackage(package):
-        # can also be a package attribute that will be used if not specified in versions
-        git_sparse_paths = ["doe", "rae"]
-
-        # use the package attribute
-        version("1.0.0")
-        version("1.1.0")
-        # use the function
         version("1.1.5", git_sparse_paths=sparse_path_func)
         version("1.2.0", git_sparse_paths=sparse_path_func)
         version("1.2.5", git_sparse_paths=sparse_path_func)
         version("1.1.5", git_sparse_paths=sparse_path_func)
 
-.. note::
+  This feature is useful for large repositories containing separate features
+  that can be built independently.
 
-   The version directives in the example above are simplified to emphasize
-   the option described in this section. Trusted downloads require a hash,
-   such as a :ref:`sha256 <checksum-verification>` or :ref:`commit <git-commits>`.
+  .. note::
+
+     The version directives in the examples above are simplified to emphasize
+     use of this feature. Trusted downloads require a hash, such as a
+     :ref:`sha256 <checksum-verification>` or :ref:`commit <git-commits>`.
 
 
 .. _github-fetch:
@@ -1112,9 +1127,9 @@ Default branch
   As with Git's default fetching strategy, there is no way to verify the
   integrity of the download.
 
-.. warning::
+  .. warning::
 
-  This download method is **untrusted**, and is **not recommended**.
+    This download method is **untrusted**, and is **not recommended**.
 
 
 .. _hg-revisions:
@@ -1130,13 +1145,13 @@ Revisions
   revisions, you can use ``revision`` for branches, tags, and commits
   when you fetch with Mercurial.
 
-.. warning::
+  .. warning::
 
-  Like Git, fetching specific branches or tags is an **untrusted** download
-  method, and is **not recommended**.
+    Like Git, fetching specific branches or tags is an **untrusted** download
+    method, and is **not recommended**.
 
-  The recommended fetch strategy is to specify a particular commit hash as
-  the revision.
+    The recommended fetch strategy is to specify a particular commit hash as
+    the revision.
 
 
 .. _svn-fetch:
@@ -1159,10 +1174,10 @@ Fetching the head
 
          version("develop")
 
-.. warning::
+  .. warning::
 
-  This download method is **untrusted**, and is **not recommended** for the
-  same reasons as mentioned above.
+    This download method is **untrusted**, and is **not recommended** for the
+    same reasons as mentioned above.
 
 
 .. _svn-revisions:
@@ -1180,9 +1195,9 @@ Fetching a revision
   get is the same as the download used when the package was created.
   Use at your own risk.
 
-.. warning::
+  .. warning::
 
-  This download method is **untrusted**, and is **not recommended**.
+    This download method is **untrusted**, and is **not recommended**.
 
 
 Subversion branches are handled as part of the directory structure, so
@@ -1224,9 +1239,9 @@ Fetching the head
   Spack combines both into one string using the ``%module=modulename``
   suffix shown above.
 
-.. warning::
+  .. warning::
 
-  This download method is **untrusted**.
+    This download method is **untrusted**.
 
 
 .. _cvs-date:
@@ -1244,9 +1259,9 @@ Fetching a date
   revision or hash like Subversion, Git, or Mercurial do. This makes
   it impossible to specify an exact commit to check out.
 
-.. warning::
+  .. warning::
 
-  This download method is **untrusted**.
+    This download method is **untrusted**.
 
 
 CVS has more features, but since CVS is rarely used these days, Spack does not support all of them.
