@@ -95,7 +95,9 @@ def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_m
     specs = list(e.specs_by_hash.values())
 
     with spack.config.override("config:checksum", False):
-        mirror_stats = spack.cmd.mirror.create_mirror_for_all_specs(specs, mirror_dir, False, workers=2)
+        mirror_stats = spack.cmd.mirror.create_mirror_for_all_specs(
+            specs, mirror_dir, False, workers=2
+        )
 
     assert len(mirror_stats.errors) == 0
     assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
