@@ -1659,16 +1659,13 @@ class RemoteRepoDescriptor(RepoDescriptor):
             return self._fetched()
         return False
 
-    def get_commit(self, git: spack.util.executable.Executable) -> Optional[str]:
-        result = None
+    def get_commit(self, git: spack.util.executable.Executable):
         with self.read_transaction:
             if not self._fetched():
-                return result
+                return None
 
             with fs.working_dir(self.destination):
-                result = git("rev-parse", "HEAD", output=str).strip()
-
-        return result
+                return git("rev-parse", "HEAD", output=str).strip()
 
     def _clone_or_pull(
         self,
@@ -1986,6 +1983,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 PATH: RepoPath = spack.llnl.util.lang.Singleton(
     lambda: create_and_enable(spack.config.CONFIG)
 )  # type: ignore[assignment]
+
 
 
 # Add the finder to sys.meta_path
