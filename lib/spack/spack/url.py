@@ -505,7 +505,7 @@ def wildcard_version(path):
     return result
 
 
-def substitute_version(path, new_version):
+def substitute_version(path: str, new_version) -> str:
     """Given a URL or archive name, find the version in the path and
     substitute the new version for it.  Replace all occurrences of
     the version *if* they don't overlap with the package name.

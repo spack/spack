@@ -29,11 +29,18 @@ _BUILDERS: Dict[int, "Builder"] = {}
 
 
 def register_builder(build_system_name: str):
-    """Class decorator used to register the default builder
-    for a given build-system.
+    """Class decorator used to register the default builder for a given build system. The name
+    corresponds to the ``build_system`` variant value of the package.
+
+    Example::
+
+       @register_builder("cmake")
+       class CMakeBuilder(BuilderWithDefaults):
+           pass
+
 
     Args:
-        build_system_name: name of the build-system
+        build_system_name: name of the build system
     """
 
     def _decorator(cls):
@@ -406,8 +413,9 @@ class InstallationPhase:
 
 class BaseBuilder(metaclass=BuilderMeta):
     """An interface for builders, without any phases defined. This class is exposed in the package
-    API, so that packagers can create a single class to define ``setup_build_environment`` and
-    ``@run_before`` and ``@run_after`` callbacks that can be shared among different builders.
+    API, so that packagers can create a single class to define :meth:`setup_build_environment` and
+    :func:`spack.phase_callbacks.run_before` and :func:`spack.phase_callbacks.run_after`
+    callbacks that can be shared among different builders.
 
     Example:
 
@@ -511,18 +519,18 @@ class Builder(BaseBuilder, collections.abc.Sequence):
     #: Methods, with no arguments, that the adapter can find in Package classes,
     #: if a builder is not defined.
     package_methods: Tuple[str, ...]
-    #: (DEPRECATED) Deprecated attribute with the same semantics as "package_methods"
+    # Use :attr:`package_methods` instead of this attribute, which is deprecated
     legacy_methods: Tuple[str, ...] = ()
 
     #: Methods with the same signature as phases, that the adapter can find in Package classes,
     #: if a builder is not defined.
     package_long_methods: Tuple[str, ...]
-    #: (DEPRECATED) Deprecated attribute with the same semantics as "package_long_methods"
+    # Use :attr:`package_long_methods` instead of this attribute, which is deprecated
     legacy_long_methods: Tuple[str, ...]
 
     #: Attributes that the adapter can find in Package classes, if a builder is not defined
     package_attributes: Tuple[str, ...]
-    #: (DEPRECATED) Deprecated attribute with the same semantics as "package_attributes"
+    # Use :attr:`package_attributes` instead of this attribute, which is deprecated
     legacy_attributes: Tuple[str, ...] = ()
 
     # type hints for some of the legacy methods
@@ -656,13 +664,47 @@ def execute_install_time_tests(builder: Builder):
 
 
 class Package(spack.package_base.PackageBase):
-    """General purpose class with a single ``install`` phase that needs to be
-    coded by packagers.
+    """Build system base class for packages that do not use a specific build system. It adds the
+    ``build_system=generic`` variant to the package.
+
+    This is the only build system base class defined in Spack core. All other build systems
+    are defined in the builtin package repository :mod:`spack_repo.builtin.build_systems`.
+
+    The associated builder is :class:`GenericBuilder`, which is only necessary when the package
+    has multiple build systems.
+
+    Example::
+
+       from spack.package import *
+
+       class MyPackage(Package):
+           \"\"\"A package that does not use a specific build system.\"\"\"
+
+           homepage = "https://example.com/mypackage"
+           url = "https://example.com/mypackage-1.0.tar.gz"
+
+           version("1.0", sha256="...")
+
+           def install(self, spec: Spec, prefix: Prefix) -> None:
+               # Custom installation logic here
+               pass
+
+    .. note::
+
+       The difference between :class:`Package` and :class:`~spack.package_base.PackageBase` is that
+       :class:`~spack.package_base.PackageBase` is the universal base class for all package
+       classes, no matter their build system.
+
+       The :class:`Package` class is a *build system base class*, similar to
+       ``CMakePackage``, and ``AutotoolsPackage``. It is called ``Package`` and not
+       ``GenericPackage`` because of legacy reasons.
+
     """
 
     #: This attribute is used in UI queries that require to know which
     #: build-system class we are using
     build_system_class = "Package"
+
     #: Legacy buildsystem attribute used to deserialize and install old specs
     default_buildsystem = "generic"
 
@@ -671,8 +713,27 @@ class Package(spack.package_base.PackageBase):
 
 @register_builder("generic")
 class GenericBuilder(BuilderWithDefaults):
-    """A builder for a generic build system, that require packagers
-    to implement an "install" phase.
+    """The associated builder for the :class:`Package` base class. This class is typically only
+    used in ``package.py`` files when a package has multiple build systems. Packagers need to
+    implement the :meth:`install` phase to define how the package is installed.
+
+    This is the only builder that is defined in the Spack core, all other builders are defined
+    in the builtin package repository :mod:`spack_repo.builtin.build_systems`.
+
+    Example::
+
+       from spack.package import *
+
+       class MyPackage(Package):
+           \"\"\"A package that does not use a specific build system.\"\"\"
+           homepage = "https://example.com/mypackage"
+           url = "https://example.com/mypackage-1.0.tar.gz"
+
+           version("1.0", sha256="...")
+
+       class GenericBuilder(GenericBuilder):
+           def install(self, pkg: Package, spec: Spec, prefix: Prefix) -> None:
+               pass
     """
 
     #: A generic package has only the "install" phase
@@ -694,4 +755,5 @@ class GenericBuilder(BuilderWithDefaults):
     spack.phase_callbacks.run_after("install")(execute_install_time_tests)
 
     def install(self, pkg: Package, spec: spack.spec.Spec, prefix: Prefix) -> None:
+        """Install phase for the generic builder, to be implemented by packagers."""
         raise NotImplementedError

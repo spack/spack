@@ -256,7 +256,7 @@ class MakeExecutable(Executable):
             jobs_env: environment variable that will be set to the current level of parallelism
             jobs_env_supports_jobserver: whether the jobs env supports a job server
 
-        For all the other **kwargs, refer to the base class.
+        For all the other ``**kwargs``, refer to :func:`spack.util.executable.Executable.__call__`.
         """
         jobs = get_effective_jobs(
             self.jobs, parallel=parallel, supports_jobserver=self.supports_jobserver
@@ -730,8 +730,9 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
 
 
 def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
-    """Obtain the CMAKE_PREFIX_PATH entries for a package, based on the cmake_prefix_path package
-    attribute of direct build/test and transitive link dependencies."""
+    """Obtain the ``CMAKE_PREFIX_PATH`` entries for a package, based on the
+    :attr:`~spack.package_base.PackageBase.cmake_prefix_paths` package attribute of direct
+    build/test and transitive link dependencies."""
     edges = traverse.traverse_topo_edges_generator(
         traverse.with_artificial_edges([pkg.spec]),
         visitor=traverse.MixedDepthVisitor(
@@ -1645,11 +1646,12 @@ def write_log_summary(out, log_type, log, last=None):
 
 
 class ModuleChangePropagator:
-    """Wrapper class to accept changes to a package.py Python module, and propagate them in the
-    MRO of the package.
-
-    It is mainly used as a substitute of the ``package.py`` module, when calling the
-    "setup_dependent_package" function during build environment setup.
+    """The function :meth:`spack.package_base.PackageBase.setup_dependent_package` receives
+    an instance of this class for the ``module`` argument. It's used to set global variables in the
+    module of a package, and propagate those globals to the modules of all classes in the
+    inheritance hierarchy of the package. It's reminiscent of
+    :class:`spack.util.environment.EnvironmentModifications`, but sets Python variables instead
+    of environment variables. This class should typically not be instantiated in packages directly.
     """
 
     _PROTECTED_NAMES = ("package", "current_module", "modules_in_mro", "_set_attributes")

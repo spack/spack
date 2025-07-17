@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
+from typing import Optional
 
 import spack.llnl.util.lang as lang
 
@@ -18,9 +19,9 @@ CallbackTemporaryStage = collections.namedtuple(
 )
 
 #: Shared global state to aggregate "@run_before" callbacks
-_RUN_BEFORE = CallbackTemporaryStage(attribute_name="run_before_callbacks", callbacks=[])
+_RUN_BEFORE = CallbackTemporaryStage(attribute_name="_run_before_callbacks", callbacks=[])
 #: Shared global state to aggregate "@run_after" callbacks
-_RUN_AFTER = CallbackTemporaryStage(attribute_name="run_after_callbacks", callbacks=[])
+_RUN_AFTER = CallbackTemporaryStage(attribute_name="_run_after_callbacks", callbacks=[])
 
 
 class PhaseCallbacksMeta(type):
@@ -65,12 +66,19 @@ class PhaseCallbacksMeta(type):
         return super(PhaseCallbacksMeta, mcs).__new__(mcs, name, bases, attr_dict)
 
     @staticmethod
-    def run_after(phase, when=None):
+    def run_after(phase: str, when: Optional[str] = None):
         """Decorator to register a function for running after a given phase.
 
+        Example::
+
+            @run_after("install", when="@2:")
+            def install_missing_files(self):
+                # Do something after the install phase for versions 2.x and above
+                pass
+
         Args:
-            phase (str): phase after which the function must run.
-            when (str): condition under which the function is run (if None, it is always run).
+            phase: phase after which the function must run.
+            when: condition under which the function is run (if :obj:`None`, it is always run).
         """
 
         def _decorator(fn):
@@ -82,12 +90,19 @@ class PhaseCallbacksMeta(type):
         return _decorator
 
     @staticmethod
-    def run_before(phase, when=None):
+    def run_before(phase: str, when: Optional[str] = None):
         """Decorator to register a function for running before a given phase.
 
+        Example::
+
+            @run_before("build", when="@2:")
+            def patch_generated_source_file(pkg):
+                # Do something before the build phase for versions 2.x and above
+                pass
+
         Args:
-           phase (str): phase before which the function must run.
-           when (str): condition under which the function is run (if None, it is always run).
+           phase: phase before which the function must run.
+           when: condition under which the function is run (if :obj:`None`, it is always run).
         """
 
         def _decorator(fn):

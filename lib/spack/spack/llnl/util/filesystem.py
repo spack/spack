@@ -219,7 +219,13 @@ else:
     getuid = os.getuid
 
 
+@system_path_filter
 def _win_rename(src, dst):
+    # On Windows, os.rename will fail if the destination file already exists
+    # os.replace is the same as os.rename on POSIX and is MoveFileExW w/
+    # the MOVEFILE_REPLACE_EXISTING flag on Windows
+    # Windows invocation is abstracted behind additional logic handling
+    # remaining cases of divergent behavior across platforms
     # os.replace will still fail if on Windows (but not POSIX) if the dst
     # is a symlink to a directory (all other cases have parity Windows <-> Posix)
     if os.path.islink(dst) and os.path.isdir(os.path.realpath(dst)):
@@ -244,20 +250,9 @@ def msdos_escape_parens(path):
 
 
 @system_path_filter
-def rename(src, dst):
-    # On Windows, os.rename will fail if the destination file already exists
-    # os.replace is the same as os.rename on POSIX and is MoveFileExW w/
-    # the MOVEFILE_REPLACE_EXISTING flag on Windows
-    # Windows invocation is abstracted behind additional logic handling
-    # remaining cases of divergent behavior across platforms
-    if sys.platform == "win32":
-        _win_rename(src, dst)
-    else:
-        os.replace(src, dst)
-
-
-@system_path_filter
-def path_contains_subdirectory(path, root):
+def path_contains_subdirectory(path: str, root: str) -> bool:
+    """Check if the path is a subdirectory of the root directory. Note: this is a symbolic check,
+    and does not resolve symlinks."""
     norm_root = os.path.abspath(root).rstrip(os.path.sep) + os.path.sep
     norm_path = os.path.abspath(path).rstrip(os.path.sep) + os.path.sep
     return norm_path.startswith(norm_root)
@@ -305,14 +300,14 @@ def filter_file(
     stop_at: Optional[str] = None,
     encoding: Optional[str] = "utf-8",
 ) -> None:
-    r"""Like sed, but uses python regular expressions.
+    r"""Like ``sed``, but uses Python regular expressions.
 
     Filters every line of each file through regex and replaces the file with a filtered version.
     Preserves mode of filtered files.
 
-    As with re.sub, ``repl`` can be either a string or a callable. If it is a callable, it is
-    passed the match object and should return a suitable replacement string.  If it is a string, it
-    can contain ``\1``, ``\2``, etc. to represent back-substitution as sed would allow.
+    As with :func:`re.sub`, ``repl`` can be either a string or a callable. If it is a callable, it
+    is passed the match object and should return a suitable replacement string. If it is a string,
+    it can contain ``\1``, ``\2``, etc. to represent back-substitution as sed would allow.
 
     Args:
         regex: The regular expression to search for
@@ -397,7 +392,21 @@ def filter_file(
 
 
 class FileFilter:
-    """Convenience class for calling ``filter_file`` a lot."""
+    """
+    Convenience class for repeatedly applying :func:`filter_file` to one or more files.
+
+    This class allows you to specify a set of filenames and then call :meth:`filter`
+    multiple times to perform search-and-replace operations using Python regular expressions,
+    similar to ``sed``.
+
+    Example usage:
+
+        .. code-block:: python
+
+            foo_c = FileFilter("foo.c")
+            foo_c.filter(r"#define FOO", "#define BAR")
+            foo_c.filter(r"old_func", "new_func")
+    """
 
     def __init__(self, *filenames):
         self.filenames = filenames
@@ -657,36 +666,33 @@ def unset_executable_mode(path):
 
 
 @system_path_filter
-def copy(src, dest, _permissions=False):
-    """Copy the file(s) *src* to the file or directory *dest*.
+def copy(src: str, dest: str, _permissions: bool = False) -> None:
+    """Copy the file(s) ``src`` to the file or directory ``dest``.
 
-    If *dest* specifies a directory, the file will be copied into *dest*
-    using the base filename from *src*.
+    If ``dest`` specifies a directory, the file will be copied into ``dest``
+    using the base filename from ``src``.
 
-    *src* may contain glob characters.
+    ``src`` may contain glob characters.
 
     Parameters:
-        src (str): the file(s) to copy
-        dest (str): the destination file or directory
+        src: the file(s) to copy
+        dest: the destination file or directory
         _permissions (bool): for internal use only
 
     Raises:
-        OSError: if *src* does not match any files or directories
-        ValueError: if *src* matches multiple files but *dest* is
-            not a directory
+        OSError: if ``src`` does not match any files or directories
+        ValueError: if ``src`` matches multiple files but ``dest`` is not a directory
     """
     if _permissions:
-        tty.debug("Installing {0} to {1}".format(src, dest))
+        tty.debug(f"Installing {src} to {dest}")
     else:
-        tty.debug("Copying {0} to {1}".format(src, dest))
+        tty.debug(f"Copying {src} to {dest}")
 
     files = glob.glob(src)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(src))
+        raise OSError(f"No such file or directory: '{src}'")
     if len(files) > 1 and not os.path.isdir(dest):
-        raise ValueError(
-            "'{0}' matches multiple files but '{1}' is not a directory".format(src, dest)
-        )
+        raise ValueError(f"'{src}' matches multiple files but '{dest}' is not a directory")
 
     for src in files:
         # Expand dest to its eventual full path if it is a directory.
@@ -702,20 +708,19 @@ def copy(src, dest, _permissions=False):
 
 
 @system_path_filter
-def install(src, dest):
-    """Install the file(s) *src* to the file or directory *dest*.
+def install(src: str, dest: str):
+    """Install the file(s) ``src`` to the file or directory ``dest``.
 
     Same as :py:func:`copy` with the addition of setting proper
     permissions on the installed file.
 
     Parameters:
-        src (str): the file(s) to install
-        dest (str): the destination file or directory
+        src: the file(s) to install
+        dest: the destination file or directory
 
     Raises:
-        OSError: if *src* does not match any files or directories
-        ValueError: if *src* matches multiple files but *dest* is
-            not a directory
+        OSError: if ``src`` does not match any files or directories
+        ValueError: if ``src`` matches multiple files but ``dest`` is not a directory
     """
     copy(src, dest, _permissions=True)
 
@@ -728,31 +733,31 @@ def copy_tree(
     ignore: Optional[Callable[[str], bool]] = None,
     _permissions: bool = False,
 ):
-    """Recursively copy an entire directory tree rooted at *src*.
+    """Recursively copy an entire directory tree rooted at ``src``.
 
-    If the destination directory *dest* does not already exist, it will
+    If the destination directory ``dest`` does not already exist, it will
     be created as well as missing parent directories.
 
-    *src* may contain glob characters.
+    ``src`` may contain glob characters.
 
     If *symlinks* is true, symbolic links in the source tree are represented
     as symbolic links in the new tree and the metadata of the original links
     will be copied as far as the platform allows; if false, the contents and
     metadata of the linked files are copied to the new tree.
 
-    If *ignore* is set, then each path relative to *src* will be passed to
+    If *ignore* is set, then each path relative to ``src`` will be passed to
     this function; the function returns whether that path should be skipped.
 
     Parameters:
-        src (str): the directory to copy
-        dest (str): the destination directory
-        symlinks (bool): whether or not to preserve symlinks
-        ignore (typing.Callable): function indicating which files to ignore
-        _permissions (bool): for internal use only
+        src: the directory to copy
+        dest: the destination directory
+        symlinks: whether or not to preserve symlinks
+        ignore: function indicating which files to ignore
+        _permissions: for internal use only
 
     Raises:
-        OSError: if *src* does not match any files or directories
-        ValueError: if *src* is a parent directory of *dest*
+        OSError: if ``src`` does not match any files or directories
+        ValueError: if ``src`` is a parent directory of ``dest``
     """
     if _permissions:
         tty.debug("Installing {0} to {1}".format(src, dest))
@@ -833,28 +838,31 @@ def copy_tree(
 
 
 @system_path_filter
-def install_tree(src, dest, symlinks=True, ignore=None):
-    """Recursively install an entire directory tree rooted at *src*.
+def install_tree(
+    src: str, dest: str, symlinks: bool = True, ignore: Optional[Callable[[str], bool]] = None
+):
+    """Recursively install an entire directory tree rooted at ``src``.
 
     Same as :py:func:`copy_tree` with the addition of setting proper
     permissions on the installed files and directories.
 
     Parameters:
-        src (str): the directory to install
-        dest (str): the destination directory
-        symlinks (bool): whether or not to preserve symlinks
-        ignore (typing.Callable): function indicating which files to ignore
+        src: the directory to install
+        dest: the destination directory
+        symlinks: whether or not to preserve symlinks
+        ignore: function indicating which files to ignore
 
     Raises:
-        OSError: if *src* does not match any files or directories
-        ValueError: if *src* is a parent directory of *dest*
+        OSError: if ``src`` does not match any files or directories
+        ValueError: if ``src`` is a parent directory of ``dest``
     """
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
 
 @system_path_filter
 def is_exe(path):
-    """True if path is an executable file."""
+    """Returns :obj:`True` iff the specified path exists, is a regular file, and has executable
+    permissions for the current process."""
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
@@ -1133,6 +1141,7 @@ def touchp(path):
 
 @system_path_filter
 def force_symlink(src, dest):
+    """Create a symlink at ``dest`` pointing to ``src``. Similar to ``ln -sf``."""
     try:
         symlink(src, dest)
     except OSError:
@@ -1224,7 +1233,7 @@ def temp_cwd():
 
 @system_path_filter
 def can_access(file_name):
-    """True if we have read/write access to the file."""
+    """True if the current process has read and write access to the file."""
     return os.access(file_name, os.R_OK | os.W_OK)
 
 
@@ -1462,6 +1471,7 @@ def visit_directory_tree(
 
 @system_path_filter
 def set_executable(path):
+    """Set the executable bit on a file or directory."""
     mode = os.stat(path).st_mode
     if mode & stat.S_IRUSR:
         mode |= stat.S_IXUSR
@@ -3359,10 +3369,12 @@ if sys.platform == "win32":
     symlink = _windows_symlink
     readlink = _windows_readlink
     islink = _windows_islink
+    rename = _win_rename
 else:
     symlink = os.symlink
     readlink = os.readlink
     islink = os.path.islink
+    rename = os.rename
 
 
 class SymlinkError(RuntimeError):

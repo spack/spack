@@ -158,6 +158,7 @@ def get_timestamp(force=False):
 
 
 def msg(message: Any, *args: Any, newline: bool = True) -> None:
+    """Print a message to the console."""
     if not msg_enabled():
         return
 
@@ -178,6 +179,7 @@ def msg(message: Any, *args: Any, newline: bool = True) -> None:
 
 
 def info(message, *args, **kwargs):
+    """Print an informational message."""
     if isinstance(message, Exception):
         message = "%s: %s" % (message.__class__.__name__, str(message))
 
@@ -211,12 +213,14 @@ def info(message, *args, **kwargs):
 
 
 def verbose(message, *args, **kwargs):
+    """Print a verbose message if the verbose flag is set."""
     if _verbose:
         kwargs.setdefault("format", "c")
         info(message, *args, **kwargs)
 
 
 def debug(message, *args, **kwargs):
+    """Print a debug message if the debug level is set."""
     level = kwargs.get("level", 1)
     if is_debug(level):
         kwargs.setdefault("format", "g")
@@ -225,6 +229,7 @@ def debug(message, *args, **kwargs):
 
 
 def error(message, *args, **kwargs):
+    """Print an error message."""
     if not error_enabled():
         return
 
@@ -234,6 +239,7 @@ def error(message, *args, **kwargs):
 
 
 def warn(message, *args, **kwargs):
+    """Print a warning message."""
     if not warn_enabled():
         return
 

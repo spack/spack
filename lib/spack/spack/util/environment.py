@@ -187,9 +187,17 @@ def pickle_environment(path: Path, environment: Optional[Dict[str, str]] = None)
 
 @contextlib.contextmanager
 def set_env(**kwargs):
-    """Temporarily sets and restores environment variables.
+    """Temporarily sets and restores environment variables. Variables can be set as keyword
+    arguments to this function.
 
-    Variables can be set as keyword arguments to this function.
+    .. note::
+
+       If the goal is to set environment variables for a subprocess, it is strongly recommended to
+       use the ``extra_env`` argument of :func:`spack.util.executable.Executable.__call__` instead
+       of this function.
+
+       This function is intended to modify the *current* process's environment (which is an unsafe
+       operation in general).
     """
     saved = {}
     for var, value in kwargs.items():
@@ -467,13 +475,37 @@ def _validate_value(name: str, value: Any) -> str:
 
 
 class EnvironmentModifications:
-    """Keeps track of requests to modify the current environment."""
+    """
+    Tracks and applies a sequence of environment variable modifications.
+
+    This class provides a high-level interface for building up a list of environment changes,
+    such as setting, unsetting, appending, prepending, or removing values from environment
+    variables. Modifications are stored and can be applied to a given environment dictionary, or
+    rendered as shell code.
+
+    Package authors typically receive an instance of this class and call :meth:`set`,
+    :meth:`unset`, :meth:`prepend_path`, :meth:`remove_path`, etc., to queue up modifications.
+    Spack runs :meth:`apply_modifications` to apply these modifications to the environment when
+    needed.
+
+    Modifications can be grouped by variable name, reversed (where possible), validated for
+    suspicious patterns, and extended from other instances. The class also supports tracing the
+    origin of modifications for debugging.
+
+    Example:
+
+        .. code-block:: python
+
+           env = EnvironmentModifications()
+           env.set("FOO", "bar")
+           env.prepend_path("PATH", "/custom/bin")
+           env.apply_modifications()  # applies changes to os.environ
+    """
 
     def __init__(
         self, other: Optional["EnvironmentModifications"] = None, traced: Union[None, bool] = None
     ):
-        """Initializes a new instance, copying commands from 'other'
-        if it is not None.
+        """Initializes a new instance, copying commands from 'other' if it is not None.
 
         Args:
             other: list of environment modifications to be extended (optional)
@@ -492,6 +524,7 @@ class EnvironmentModifications:
         return len(self.env_modifications)
 
     def extend(self, other: "EnvironmentModifications"):
+        """Extends the current instance with modifications from another instance."""
         self._check_other(other)
         self.env_modifications.extend(other.env_modifications)
 
@@ -531,7 +564,7 @@ class EnvironmentModifications:
         self.env_modifications.append(item)
 
     def append_flags(self, name: str, value: str, sep: str = " ") -> None:
-        """Stores a request to append 'flags' to an environment variable.
+        """Stores a request to append flags to an environment variable.
 
         Args:
             name: name of the environment variable
@@ -700,10 +733,10 @@ class EnvironmentModifications:
         """Returns the EnvironmentModifications object that will reverse self
 
         Only creates reversals for additions to the environment, as reversing
-        ``unset`` and ``remove_path`` modifications is impossible.
+        :meth:`unset` and :meth:`remove_path` modifications is impossible.
 
-        Reversable operations are set(), prepend_path(), append_path(),
-        set_path(), and append_flags().
+        Reversible operations are :meth:`set`, :meth:`prepend_path`, :meth:`append_path`,
+        :meth:`set_path`, and :meth:`append_flags`.
         """
         rev = EnvironmentModifications()
 
@@ -728,10 +761,10 @@ class EnvironmentModifications:
         return rev
 
     def apply_modifications(self, env: Optional[MutableMapping[str, str]] = None):
-        """Applies the modifications and clears the list.
+        """Applies the modifications to the environment.
 
         Args:
-            env: environment to be modified. If None, os.environ will be used.
+            env: environment to be modified. If None, :obj:`os.environ` will be used.
         """
         env = os.environ if env is None else env
 
@@ -746,7 +779,7 @@ class EnvironmentModifications:
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
     ) -> str:
-        """Return shell code to apply the modifications and clears the list."""
+        """Return shell code to apply the modifications."""
         modifications = self.group_by_name()
 
         env = os.environ if env is None else env
@@ -780,7 +813,7 @@ class EnvironmentModifications:
         filename: Path, *arguments: str, **kwargs: Any
     ) -> "EnvironmentModifications":
         """Returns the environment modifications that have the same effect as
-        sourcing the input file.
+        sourcing the input file in a shell.
 
         Args:
             filename: the file to be sourced

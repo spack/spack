@@ -19,7 +19,22 @@ __all__ = ["Executable", "which", "which_string", "ProcessError"]
 
 
 class Executable:
-    """Class representing a program that can be run on the command line."""
+    """
+    Represent an executable file that can be run as a subprocess.
+
+    This class provides a simple interface for running executables with custom arguments and
+    environment variables. It supports setting default arguments and environment modifications,
+    copying instances, and running commands with various options for input/output/error handling.
+
+    Example usage:
+
+        .. code-block:: python
+
+            ls = Executable("ls")
+            ls.add_default_arg("-l")
+            ls.add_default_env("LC_ALL", "C")
+            output = ls("-a", output=str)  # Run 'ls -l -a' and capture output as string
+    """
 
     def __init__(self, name: Union[str, Path]) -> None:
         file_path = str(Path(name))
@@ -28,10 +43,12 @@ class Executable:
             file_path = os.path.join(".", file_path)
 
         self.exe = [file_path]
-        self.default_env: Dict[str, str] = {}
-        self.default_envmod = EnvironmentModifications()
-        self.returncode = 1  # 1 until proven successful
-        self.ignore_quotes = False
+        self._default_env: Dict[str, str] = {}
+        self._default_envmod = EnvironmentModifications()
+        #: Return code of the last executed command.
+        self.returncode: int = 1  # 1 until proven successful
+        #: Whether to warn users that quotes are not needed, as Spack does not use a shell.
+        self.ignore_quotes: bool = False
 
     def add_default_arg(self, *args: str) -> None:
         """Add default argument(s) to the command."""
@@ -47,8 +64,8 @@ class Executable:
         """Return a copy of this Executable."""
         new = Executable(self.exe[0])
         new.exe[:] = self.exe
-        new.default_env.update(self.default_env)
-        new.default_envmod.extend(self.default_envmod)
+        new._default_env.update(self._default_env)
+        new._default_envmod.extend(self._default_envmod)
         return new
 
     def add_default_env(self, key: str, value: str) -> None:
@@ -58,11 +75,12 @@ class Executable:
             key: The environment variable to set
             value: The value to set it to
         """
-        self.default_env[key] = value
+        self._default_env[key] = value
 
     def add_default_envmod(self, envmod: EnvironmentModifications) -> None:
-        """Set an EnvironmentModifications to use when the command is run."""
-        self.default_envmod.extend(envmod)
+        """Set an :class:`spack.util.environment.EnvironmentModifications` to use when the command
+        is run."""
+        self._default_envmod.extend(envmod)
 
     @property
     def command(self) -> str:
@@ -146,11 +164,11 @@ class Executable:
         Parameters:
             *args: command-line arguments to the executable to run
             fail_on_error: if True, raises an exception if the subprocess returns an error
-                The return code is available as ``self.returncode``
+                The return code is available as :attr:`returncode`
             ignore_errors: a sequence of error codes to ignore. If these codes are returned, this
                 process will not raise an exception, even if ``fail_on_error`` is set to ``True``
             ignore_quotes: if False, warn users that quotes are not needed, as Spack does not
-                use a shell. If None, use ``self.ignore_quotes``.
+                use a shell. If None, use :attr:`ignore_quotes`.
             timeout: the number of seconds to wait before killing the child process
             env: the environment with which to run the executable
             extra_env: extra items to add to the environment (neither requires nor precludes env)
@@ -160,21 +178,20 @@ class Executable:
             _dump_env: dict to be set to the environment actually used (envisaged for
                 testing purposes only)
 
-        Accepted values for input, output, and error:
+        Accepted values for ``input``, ``output``, and ``error``:
 
-        * python streams, e.g. open Python file objects, or ``os.devnull``
-        * ``str``, as in the Python string type. If you set these to ``str``,
+        * Python streams: open Python file objects or ``os.devnull``
+        * :obj:`str`: the Python string **type**. If you set these to :obj:`str`,
           output and error will be written to pipes and returned as a string.
-          If both ``output`` and ``error`` are set to ``str``, then one string
+          If both ``output`` and ``error`` are set to :obj:`str`, then one string
           is returned containing output concatenated with error. Not valid
-          for ``input``
-        * ``str.split``, as in the ``split`` method of the Python string type.
-          Behaves the same as ``str``, except that value is also written to
+          for ``input``.
+        * :obj:`str.split`: the split method of the Python string type.
+          Behaves the same as :obj:`str`, except that value is also written to
           ``stdout`` or ``stderr``.
 
-        For output and error it's also accepted:
-
-        * filenames, which will be automatically opened for writing
+        For ``output`` and ``error`` it's also accepted to pass a string with a filename, which
+        will be automatically opened for writing.
 
         By default, the subprocess inherits the parent's file descriptors.
         """
@@ -203,8 +220,8 @@ class Executable:
 
         # Setup default environment
         current_environment = os.environ.copy() if env is None else {}
-        self.default_envmod.apply_modifications(current_environment)
-        current_environment.update(self.default_env)
+        self._default_envmod.apply_modifications(current_environment)
+        current_environment.update(self._default_env)
 
         # Apply env argument
         if isinstance(env, EnvironmentModifications):
@@ -347,7 +364,7 @@ def which_string(
 def which_string(
     *args: str, path: Optional[Union[List[str], str]] = None, required: bool = False
 ) -> Optional[str]:
-    """Like ``which()``, but returns a string instead of an ``Executable``."""
+    """Like :func:`which`, but returns a string instead of an :class:`Executable`."""
     if path is None:
         path = os.environ.get("PATH", "")
 
@@ -430,13 +447,12 @@ def which(
 
 
 class ProcessError(spack.error.SpackError):
-    """ProcessErrors are raised when Executables exit with an error code."""
+    """Raised when :class:`Executable` exits with an error code."""
 
 
 class ProcessTimeoutError(ProcessError):
-    """ProcessTimeoutErrors are raised when Executable calls with a
-    specified timeout exceed that time"""
+    """Raised when :class:`Executable` calls with a specified timeout exceed that time."""
 
 
 class CommandNotFoundError(spack.error.SpackError):
-    """Raised when ``which()`` can't find a required executable."""
+    """Raised when :func:`which()` can't find a required executable."""

@@ -513,7 +513,7 @@ class DisableRedistribute:
 
 
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
-    """This is the superclass for all spack packages.
+    """This is the universal base class for all spack packages.
 
     ***The Package class***
 
@@ -620,7 +620,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Must be defined as a fallback for old specs that don't have the `build_system` variant
     default_buildsystem: str
 
-    #: (DEPRECATED) Deprecated name for `default_buildsystem`
+    # Use :attr:`default_buildsystem` instead of this attribute, which is deprecated
     legacy_buildsystem: str
 
     #: Must be defined in derived classes. Used when reporting the build system to users
@@ -1846,7 +1846,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return b32_hash
 
     @property
-    def cmake_prefix_paths(self):
+    def cmake_prefix_paths(self) -> List[str]:
+        """Return a list of paths to be used in CMake's ``CMAKE_PREFIX_PATH``."""
         return [self.prefix]
 
     def _has_make_target(self, target):

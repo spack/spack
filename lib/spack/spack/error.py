@@ -218,4 +218,4 @@ class NoChecksumException(SpackError):
 
 
 class CompilerError(SpackError):
-    """Raised if something goes wrong when probing, or querying, a compiler."""
+    """Raised if something goes wrong when probing or querying a compiler."""

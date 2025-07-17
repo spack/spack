@@ -605,27 +605,37 @@ def any_combination_of(*values):
     values, and also allows the user to specify 'none' (as a string) to choose
     none of them.
 
-    It is up to the package implementation to handle the value 'none'
-    specially, if at all.
+    It is up to the package implementation to handle the value `"none"` specially, if at all.
 
     Args:
         *values: allowed variant values
 
+    Example::
+
+        variant("cuda_arch", values=any_combination_of("10", "11"))
+
     Returns:
-        a properly initialized instance of DisjointSetsOfValues
+        a properly initialized instance of :class:`~spack.variant.DisjointSetsOfValues`
     """
     return _a_single_value_or_a_combination("none", *values)
 
 
 def auto_or_any_combination_of(*values):
     """Multi-valued variant that allows any combination of a set of values
-    (but not the empty set) or 'auto'.
+    (but not the empty set) or `"auto"`.
 
     Args:
         *values: allowed variant values
 
+    Example::
+
+       variant(
+           "file_systems",
+           values=auto_or_any_combination_of("lustre", "gpfs", "nfs", "ufs"),
+       )
+
     Returns:
-        a properly initialized instance of DisjointSetsOfValues
+        a properly initialized instance of :class:`~spack.variant.DisjointSetsOfValues`
     """
     return _a_single_value_or_a_combination("auto", *values)
 
@@ -644,7 +654,7 @@ def disjoint_sets(*sets):
         *sets:
 
     Returns:
-        a properly initialized instance of DisjointSetsOfValues
+        a properly initialized instance of :class:`~spack.variant.DisjointSetsOfValues`
     """
     return DisjointSetsOfValues(*sets).allow_empty_set().with_default("none")
 

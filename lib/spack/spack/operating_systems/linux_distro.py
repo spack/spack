@@ -5,26 +5,16 @@ import platform as py_platform
 import re
 from subprocess import check_output
 
-from spack.version import Version
+from spack.version import StandardVersion
 
 from ._operating_system import OperatingSystem
 
 
-def kernel_version():
-    """Return the kernel version as a Version object.
-    Note that the kernel version is distinct from OS and/or
-    distribution versions. For instance:
-    >>> distro.id()
-    'centos'
-    >>> distro.version()
-    '7'
-    >>> platform.release()
-    '5.10.84+'
-    """
+def kernel_version() -> StandardVersion:
+    """Return the host's kernel version as a :class:`~spack.version.StandardVersion` object."""
     # Strip '+' characters just in case we're running a
     # version built from git/etc
-    clean_version = re.sub(r"\+", r"", py_platform.release())
-    return Version(clean_version)
+    return StandardVersion.from_string(re.sub(r"\+", r"", py_platform.release()))
 
 
 class LinuxDistro(OperatingSystem):

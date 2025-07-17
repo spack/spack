@@ -164,7 +164,8 @@ def generator(*names: str, default: Optional[str] = None) -> None:
 
 
 def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
-    """Obtain the CMAKE_PREFIX_PATH entries for a package, based on the cmake_prefix_path package
+    """Obtain the CMAKE_PREFIX_PATH entries for a package, based on the
+    :attr:`~spack.package_base.PackageBase.cmake_prefix_paths` package
     attribute of direct build/test and transitive link dependencies."""
     edges = traverse.traverse_topo_edges_generator(
         traverse.with_artificial_edges([pkg.spec]),

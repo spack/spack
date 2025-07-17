@@ -20,6 +20,7 @@ import os
 import subprocess
 import sys
 from glob import glob
+from typing import List
 
 from docutils.statemachine import StringList
 from sphinx.domains.python import PythonDomain
@@ -82,6 +83,7 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack",
         "_spack_root/lib/spack/spack/vendor",
         "_spack_root/lib/spack/spack/test",
+        "_spack_root/lib/spack/spack/package.py",
     ]
 )
 sphinx_apidoc(
@@ -101,10 +103,10 @@ todo_include_todos = True
 # Disable duplicate cross-reference warnings.
 #
 class PatchedPythonDomain(PythonDomain):
-    def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
+    def resolve_xref(self, env, fromdocname, builder, type, target, node, contnode):
         if "refspecific" in node:
             del node["refspecific"]
-        return super().resolve_xref(env, fromdocname, builder, typ, target, node, contnode)
+        return super().resolve_xref(env, fromdocname, builder, type, target, node, contnode)
 
 
 #
@@ -119,7 +121,29 @@ class NoTabExpansionRSTParser(RSTParser):
         super().parse(inputstring, document)
 
 
+def add_package_api_version_line(app, what, name: str, obj, options, lines: List[str]):
+    """Add versionadded directive to package API docstrings"""
+    # We're adding versionadded directive here instead of in spack/package.py because most symbols
+    # are re-exported, and we don't want to modify __doc__ of symbols we don't own.
+    if name.startswith("spack.package."):
+        symbol = name[len("spack.package.") :]
+        for version, symbols in spack.package.api.items():
+            if symbol in symbols:
+                lines.extend(["", f".. versionadded:: {version}"])
+                break
+
+
+def skip_member(app, what, name, obj, skip, options):
+    # Do not skip (Make)Executable.__call__
+    if name == "__call__" and "Executable" in obj.__qualname__:
+        return False
+    return skip
+
+
 def setup(sphinx):
+    # autodoc-process-docstring
+    sphinx.connect("autodoc-process-docstring", add_package_api_version_line)
+    sphinx.connect("autodoc-skip-member", skip_member)
     sphinx.add_domain(PatchedPythonDomain, override=True)
     sphinx.add_source_parser(NoTabExpansionRSTParser, override=True)
 
@@ -179,6 +203,7 @@ copyright = "2013-2023, Lawrence Livermore National Laboratory."
 #
 # The short X.Y version.
 import spack
+import spack.package
 
 version = ".".join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
@@ -233,7 +258,6 @@ nitpick_ignore = [
     ("py:class", "spack.spec.ArchSpec"),
     ("py:class", "spack.spec.InstallStatus"),
     ("py:class", "spack.spec.SpecfileReaderBase"),
-    ("py:class", "spack.install_test.Pb"),
     ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
     ("py:class", "spack.traverse.EdgeAndDepth"),
     ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
@@ -428,3 +452,12 @@ texinfo_documents = [
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+
+rst_epilog = f"""
+.. |package_api_version| replace:: v{spack.package_api_version[0]}.{spack.package_api_version[1]}
+.. |min_package_api_version| replace:: v{spack.min_package_api_version[0]}.{spack.min_package_api_version[1]}
+.. |spack_version| replace:: {spack.spack_version}
+"""
+
+html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]

@@ -119,8 +119,9 @@ or refer to the full manual below.
    :maxdepth: 2
    :caption: API Docs
 
-   Spack API Docs <spack>
+   Spack Package API <package_api>
    Spack Builtin Repo <spack_repo>
+   Spack API Docs <spack>
 
 ==================
 Indices and tables

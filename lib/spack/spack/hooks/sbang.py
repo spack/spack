@@ -39,7 +39,7 @@ interpreter_regex = re.compile(b"#![ \t]*?([^ \t\0\n]+)")
 
 
 def sbang_install_path():
-    """Location sbang should be installed within Spack's ``install_tree``."""
+    """Location sbang is installed within the install tree."""
     sbang_root = str(spack.store.STORE.unpadded_root)
     install_path = os.path.join(sbang_root, "bin", "sbang")
     path_length = len(install_path)

@@ -178,11 +178,11 @@ def test_mixins_with_builders(working_env):
     builder = spack.builder.create(s.package)
 
     # Check that callbacks added by the mixin are in the list
-    assert any(fn.__name__ == "before_install" for _, fn in builder.run_before_callbacks)
-    assert any(fn.__name__ == "after_install" for _, fn in builder.run_after_callbacks)
+    assert any(fn.__name__ == "before_install" for _, fn in builder._run_before_callbacks)
+    assert any(fn.__name__ == "after_install" for _, fn in builder._run_after_callbacks)
 
     # Check that callback from the GenericBuilder are in the list too
-    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder.run_after_callbacks)
+    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder._run_after_callbacks)
 
 
 def test_reading_api_v20_attributes():

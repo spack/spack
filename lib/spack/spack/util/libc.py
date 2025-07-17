@@ -60,6 +60,7 @@ def default_search_paths_from_dynamic_linker(dynamic_linker: str) -> List[str]:
 
 
 def libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]:
+    """Get the libc spec from the dynamic linker path."""
     maybe_spec = _libc_from_dynamic_linker(dynamic_linker)
     if maybe_spec:
         return maybe_spec.copy()
@@ -155,7 +156,7 @@ def libc_from_current_python_process() -> Optional["spack.spec.Spec"]:
 
 
 def parse_dynamic_linker(output: str):
-    """Parse -dynamic-linker /path/to/ld.so from compiler output"""
+    """Parse ``-dynamic-linker /path/to/ld.so`` from compiler output"""
     for line in reversed(output.splitlines()):
         if "-dynamic-linker" not in line:
             continue

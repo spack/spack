@@ -1,0 +1,9 @@
+div.versionadded {
+    border-left: 3px solid #0c731f;
+    color: #0c731f;
+    padding-left: 1rem;
+}
+
+.py.property {
+  display: block !important;
+}

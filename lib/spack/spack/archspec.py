@@ -9,8 +9,18 @@ import spack.spec
 
 
 def microarchitecture_flags(spec: spack.spec.Spec, language: str) -> str:
-    """Return the microarchitecture flags for a given spec and compiler associated with the given
-    language."""
+    """Get compiler flags for the spec's microarchitecture.
+
+    Args:
+        spec: The spec defining the target microarchitecture and compiler.
+        language: The language (``"c"``, ``"cxx"``, ``"fortran"``) used to select the appropriate
+            compiler from the spec.
+
+    Example::
+
+        >>> microarchitecture_flags(Spec("foo target=zen2 %c=gcc@=14.1.0"), language="c")
+        '-march=znver2 -mtune=znver2'
+    """
     target = spec.target
 
     if not spec.has_virtual_dependency(language):
@@ -26,7 +36,14 @@ def microarchitecture_flags(spec: spack.spec.Spec, language: str) -> str:
 def microarchitecture_flags_from_target(
     target: spack.vendor.archspec.cpu.Microarchitecture, compiler: spack.spec.Spec
 ) -> str:
-    """Return the microarchitecture flags for a given compiler and target."""
+    """Get compiler flags for the spec's microarchitecture. Similar to
+    :func:`microarchitecture_flags`, but takes a ``target`` and ``compiler`` directly instead of a
+    spec.
+
+    Args:
+        target: The target microarchitecture.
+        compiler: The spec defining the compiler.
+    """
     # Try to check if the current compiler comes with a version number or has an unexpected suffix.
     # If so, treat it as a compiler with a custom spec.
     version_number, _ = spack.vendor.archspec.cpu.version_components(

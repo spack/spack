@@ -137,6 +137,7 @@ def _parse_link_paths(string):
 
 
 class CompilerPropertyDetector:
+    """Detects compiler properties of a given compiler spec. Useful for compiler wrappers."""
 
     def __init__(self, compiler_spec: spack.spec.Spec):
         assert compiler_spec.concrete, "only concrete compiler specs are allowed"
@@ -219,9 +220,11 @@ class CompilerPropertyDetector:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
     def compiler_verbose_output(self) -> Optional[str]:
+        """Get the compiler verbose output from the cache or by compiling a dummy C source."""
         return self.cache.get(self.spec).c_compiler_output
 
     def default_dynamic_linker(self) -> Optional[str]:
+        """Determine the default dynamic linker path from the compiler verbose output."""
         output = self.compiler_verbose_output()
 
         if not output:
@@ -244,6 +247,8 @@ class CompilerPropertyDetector:
         return spack.util.libc.libc_from_dynamic_linker(dynamic_linker)
 
     def implicit_rpaths(self) -> List[str]:
+        """Obtain the implicit rpaths to be added from the default ``-L`` link directories,
+        excluding system directories."""
         output = self.compiler_verbose_output()
         if output is None:
             return []
