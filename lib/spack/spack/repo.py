@@ -1985,7 +1985,6 @@ PATH: RepoPath = spack.llnl.util.lang.Singleton(
 )  # type: ignore[assignment]
 
 
-
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)
