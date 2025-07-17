@@ -263,7 +263,10 @@ class MockDescriptor(spack.repo.RepoDescriptor):
     def initialize(self, fetch=True, git=None) -> None:
         self.initialized = True
 
-    def update(self, git: Optional[Executable] = None, remote: Optional[str] = "origin") -> None:
+    def get_commit(self, git: Optional[Executable]):
+        pass
+
+    def update(self, git: Optional[Executable], remote: Optional[str] = "origin") -> None:
         pass
 
     def construct(self, cache, overrides=None):
