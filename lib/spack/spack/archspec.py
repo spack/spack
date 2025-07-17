@@ -33,6 +33,6 @@ def microarchitecture_flags_from_target(
         compiler.version.dotted_numeric_string
     )
     try:
-        return target.optimization_flags(compiler.name, version_number)
+        return target.optimization_flags(compiler.package.archspec_name(), version_number)
     except ValueError:
         return ""
