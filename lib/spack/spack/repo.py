@@ -1659,7 +1659,8 @@ class RemoteRepoDescriptor(RepoDescriptor):
             return self._fetched()
         return False
 
-    def get_commit(self, git: spack.util.executable.Executable):
+    def get_commit(self, git: MaybeExecutable = None):
+        git = git or spack.util.git.git(required=True)
         with self.read_transaction:
             if not self._fetched():
                 return None
