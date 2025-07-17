@@ -1165,6 +1165,7 @@ def force_symlink(src, dest):
 
 @system_path_filter
 def join_path(prefix, *args):
+    """Alias for :func:`os.path.join`"""
     path = str(prefix)
     for elt in args:
         path = os.path.join(path, str(elt))

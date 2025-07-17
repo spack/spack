@@ -27,7 +27,7 @@ def module(
     module_src_cmd: Optional[str] = None,
     environb: Optional[MutableMapping[bytes, bytes]] = None,
 ):
-    """Run the ``module`` shell function in ``/bin/bash`` subprocess, and either collect its
+    """Run the ``module`` shell function in a ``/bin/bash`` subprocess, and either collect its
     changes to environment variables and apply them in the current process (for ``module load``,
     ``module swap``, etc.), or return its output as a string (for ``module show``, etc.).
 

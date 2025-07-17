@@ -11,40 +11,42 @@ import spack.llnl.util.filesystem
 import spack.phase_callbacks
 
 
-def filter_compiler_wrappers(*files, **kwargs):
-    """Substitutes any path referring to a Spack compiler wrapper with the
-    path of the underlying compiler that has been used.
+def filter_compiler_wrappers(*files: str, **kwargs):
+    """Registers a phase callback (e.g. post-install) to look for references to Spack's compiler
+    wrappers in the given files and replace them with the underlying compilers.
 
-    If this isn't done, the files will have CC, CXX, F77, and FC set to
-    Spack's generic cc, c++, f77, and f90. We want them to be bound to
-    whatever compiler they were built with.
+    Example usage::
+
+        class MyPackage(Package):
+
+            filter_compiler_wrappers("mpicc", "mpicxx", relative_root="bin")
+
+    This is useful for packages that register the path to the compiler they are built with to be
+    used later at runtime. Spack's compiler wrappers cannot be used at runtime, as they require
+    Spack's build environment to be set up. Using this function, the compiler wrappers are replaced
+    with the actual compilers, so that the package works correctly at runtime.
 
     Args:
-        *files: files to be filtered relative to the search root (which is,
-            by default, the installation prefix)
+        *files: files to be filtered relative to the search root (install prefix by default).
 
         **kwargs: allowed keyword arguments
 
             after
-                specifies after which phase the files should be
-                filtered (defaults to 'install')
+                specifies after which phase the files should be filtered (defaults to "install")
 
             relative_root
-                path relative to prefix where to start searching for
-                the files to be filtered. If not set the install prefix
-                wil be used as the search root. **It is highly recommended
-                to set this, as searching from the installation prefix may
-                affect performance severely in some cases**.
+                path relative to install prefix where to start searching for the files to be
+                filtered. If not set the install prefix will be used as the search root.
+                It is *highly recommended* to set this, as searching recursively from the
+                installation prefix can be very slow.
 
             ignore_absent, backup
-                these two keyword arguments, if present, will be forwarded
-                to ``filter_file`` (see its documentation for more information
-                on their behavior)
+                these two keyword arguments, if present, will be forwarded to
+                :func:`~spack.llnl.util.filesystem.filter_file`
 
             recursive
                 this keyword argument, if present, will be forwarded to
-                ``find`` (see its documentation for more information on the
-                behavior)
+                :func:`~spack.llnl.util.filesystem.find`
     """
     after = kwargs.get("after", "install")
     relative_root = kwargs.get("relative_root", None)

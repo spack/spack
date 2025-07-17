@@ -68,7 +68,7 @@ def format(parsed_url):
 
 
 def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> str:
-    """Convenience wrapper around ``urllib.parse.urljoin``, with a few differences:
+    """Convenience wrapper around :func:`urllib.parse.urljoin`, with a few differences:
 
     1. By default ``resolve_href=False``, which makes the function like :func:`os.path.join`.
        For example ``https://example.com/a/b + c/d = https://example.com/a/b/c/d``. If
