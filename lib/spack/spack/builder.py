@@ -697,7 +697,7 @@ class Package(spack.package_base.PackageBase):
 
        The :class:`Package` class is a *build system base class*, similar to
        ``CMakePackage``, and ``AutotoolsPackage``. It is called ``Package`` and not
-       ``GenericPackage`` because of legacy reasons.
+       ``GenericPackage`` for legacy reasons.
 
     """
 
