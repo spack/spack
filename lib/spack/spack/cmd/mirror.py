@@ -606,13 +606,12 @@ def mirror_create(args):
     # When no directory is provided, the source dir is used
     path = args.directory or spack.caches.fetch_cache_location()
 
-    if args.jobs is None:
+    workers = args.jobs
+    if workers is None:
         if args.all:
             workers = 16
         else:
             workers = 1
-    else:
-        workers = args.jobs
 
     mirror_specs = _specs_and_action(args)
     create_mirror_for_all_specs(
