@@ -65,8 +65,8 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_pac
         assert mirror_res == expected
 
 
-def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path):
-    print("AAL in test_mirror_from_env_parallel")
+def test_mirror_cli_parallel_args(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path):
+    """Test the CLI parallel args"""
     mirror_dir = str(tmp_path / "mirror")
     env_name = "test-parallel"
 
@@ -77,15 +77,36 @@ def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_m
         concretize()
         with spack.config.override("config:checksum", False):
             mirror("create", "-d", mirror_dir, "--all", "-j", "2")
+    assert os.path.exists(mirror_dir)
+
+
+def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path):
+    """Directly test create_mirror_for_all_specs with parallel option"""
+    mirror_dir = str(tmp_path / "mirror")
+    env_name = "test-parallel"
+
+    env("create", env_name)
+    with ev.read(env_name):
+        add("trivial-install-test-package")
+        add("git-test")
+        concretize()
 
     e = ev.read(env_name)
+    specs = list(e.specs_by_hash.values())
+
+    with spack.config.override("config:checksum", False):
+        mirror_stats = spack.cmd.mirror.create_mirror_for_all_specs(specs, mirror_dir, False, workers=2)
+
+    assert len(mirror_stats.errors) == 0
     assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
     for spec in e.specs_by_hash.values():
         mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
         expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
         assert mirror_res == expected
 
-    # Test merge() function in depth
+
+def test_mirror_stats_merge():
+    """Test MirrorStats merge functionality"""
     test_spec1 = spack.spec.Spec("test-package@1.0")
     test_spec2 = spack.spec.Spec("test-package@2.0")
 

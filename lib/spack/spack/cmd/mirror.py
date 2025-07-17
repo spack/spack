@@ -658,6 +658,7 @@ def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, work
             mirror_stats.merge(ext_mirror_stats)
 
     process_mirror_stats(*mirror_stats.stats())
+    return mirror_stats
 
 
 def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions, workers):
