@@ -8,12 +8,12 @@ build:
     python: "3.11"
 
 sphinx:
-  configuration: share/spack/docs/conf.py
+  configuration: share/spack/docs-src/conf.py
   fail_on_warning: true
 
 python:
   install:
-    - requirements: share/spack/docs/requirements.txt
+    - requirements: share/spack/docs-src/requirements.txt
 
 search:
   ranking:

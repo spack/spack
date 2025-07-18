@@ -9,6 +9,6 @@ updates:
   - package-ecosystem: "pip"
     directories:
      - /.github/workflows/requirements/style/*
-     - /share/spack/docs
+     - /share/spack/docs-src
     schedule:
       interval: "daily"

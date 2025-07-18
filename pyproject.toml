@@ -200,7 +200,7 @@ data_file = "./tests-coverage/.coverage"
 omit = [
   "lib/spack/spack/test/*",
   "lib/spack/spack/vendor/*",
-  "share/spack/docs/*",
+  "share/spack/docs-src/*",
   "share/spack/qa/*",
 ]
 

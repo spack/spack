@@ -45,9 +45,9 @@ licensed_files_patterns = [
     r"^lib/spack/spack/test/data/style/broken.dummy",
     r"^lib/spack/spack/test/data/unparse/.*\.txt",
     # rst files in documentation
-    r"^share/spack/docs/(?!command_index|spack).*\.rst$",
-    r"^share/spack/docs/(?!\.spack/|\.spack-env/).*\.py$",
-    r"^share/spack/docs/spack.yaml$",
+    r"^share/spack/docs-src/(?!command_index|spack).*\.rst$",
+    r"^share/spack/docs-src/(?!\.spack/|\.spack-env/).*\.py$",
+    r"^share/spack/docs-src/spack.yaml$",
     # shell scripts in share
     r"^share/spack/.*\.sh$",
     r"^share/spack/.*\.bash$",

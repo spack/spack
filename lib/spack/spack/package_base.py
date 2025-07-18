@@ -545,7 +545,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     **Package DSL**
 
-    Look in ``share/spack/docs`` or check https://spack.readthedocs.io for
+    Look in ``share/spack/docs-src`` or check https://spack.readthedocs.io for
     the full documentation of the package domain-specific language.  That
     used to be partially documented here, but as it grew, the docs here
     became increasingly out of date.
