@@ -305,7 +305,7 @@ Once all of the dependencies are installed, you can try building the documentati
 
 .. code-block:: console
 
-   $ cd path/to/spack/lib/spack/docs/
+   $ cd path/to/spack/share/spack/docs/
    $ make clean
    $ make
 

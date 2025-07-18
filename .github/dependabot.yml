@@ -8,7 +8,7 @@ updates:
   # Requirements to run style checks and build documentation
   - package-ecosystem: "pip"
     directories:
-     - "/.github/workflows/requirements/style/*"
-     - "/lib/spack/docs"
+     - /.github/workflows/requirements/style/*
+     - /share/spack/docs
     schedule:
       interval: "daily"

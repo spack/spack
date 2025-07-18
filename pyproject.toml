@@ -199,8 +199,8 @@ source = ["bin", "lib"]
 data_file = "./tests-coverage/.coverage"
 omit = [
   "lib/spack/spack/test/*",
-  "lib/spack/docs/*",
   "lib/spack/spack/vendor/*",
+  "share/spack/docs/*",
   "share/spack/qa/*",
 ]
 
