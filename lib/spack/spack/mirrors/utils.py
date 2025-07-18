@@ -215,18 +215,6 @@ class MirrorStats:
         self.present.update(ext_mirror_stat.present)
         self.new.update(ext_mirror_stat.new)
         self.errors.update(ext_mirror_stat.errors)
-
-        if self.current_spec is not None and ext_mirror_stat.current_spec is not None:
-            # If we already have a current_spec it needs to be tallied
-            # and then the new one set (via next_spec)
-            self.next_spec(ext_mirror_stat.current_spec)
-        elif self.current_spec is not None and ext_mirror_stat.current_spec is None:
-            # If we have a current_spec, and there's no new one coming, leave things alone
-            pass
-        else:
-            # In anycase where current_spec is None, use the incoming mirror_stat current.
-            self.current_spec = ext_mirror_stat.current_spec
-
         self.added_resources.update(ext_mirror_stat.added_resources)
         self.existing_resources.update(ext_mirror_stat.existing_resources)
 
