@@ -14,15 +14,13 @@ import sys
 
 import pytest
 
-import llnl.util.symlink
-
 import spack.config
 import spack.error
 import spack.fetch_strategy
 import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
-from spack.llnl.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
+from spack.llnl.util.filesystem import getuid, islink, mkdirp, partition_path, touch, working_dir
 from spack.resource import Resource
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
 from spack.test.conftest import _create_tree_from_dir_recursive
@@ -808,7 +806,7 @@ class TestDevelopStage:
 
         stage.destroy()
         assert not os.path.exists(stage.reference_link)
-        assert not llnl.util.symlink.islink(stage.reference_link)
+        assert not islink(stage.reference_link)
         # Make sure destroying the stage doesn't change anything
         # about the path
         assert not os.path.exists(stage.path)

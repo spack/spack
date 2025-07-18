@@ -21,9 +21,8 @@ import xml.etree.ElementTree
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-import pytest
-
 import llnl.util.symlink
+import pytest
 
 import spack.vendor.archspec.cpu
 import spack.vendor.archspec.cpu.microarchitecture

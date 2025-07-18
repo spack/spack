@@ -8,9 +8,8 @@ import pathlib
 import pickle
 import shutil
 
-import pytest
-
 import llnl.util.symlink
+import pytest
 
 import spack.config
 import spack.environment as ev

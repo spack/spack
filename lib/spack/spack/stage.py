@@ -39,11 +39,11 @@ from spack.llnl.util.filesystem import (
     getuid,
     install,
     install_tree,
+    islink,
     mkdirp,
     partition_path,
-    remove_linked_tree,
-    islink,
     readlink,
+    remove_linked_tree,
     symlink,
 )
 from spack.llnl.util.tty.colify import colify
