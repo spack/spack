@@ -53,11 +53,11 @@ is a descriptor for one or more instances of that template. Users
 express the configuration they want using a spec, and a package turns
 the spec into a complete build.
 
-The obvious difficulty with this design is that users under-specify
+The obvious difficulty with this design is that users underspecify
 what they want. To build a software package, the package object needs
 a *complete* specification. In Spack, if a spec describes only one
 instance of a package, then we say it is **concrete**. If a spec
-could describe many instances (i.e., it is under-specified in one way
+could describe many instances (i.e., it is underspecified in one way
 or another), then we say it is **abstract**.
 
 Spack's job is to take an *abstract* spec from the user, find a
@@ -428,7 +428,7 @@ It expects a single argument of a spec.
 ``post_install(spec, explicit=None)``
 """""""""""""""""""""""""""""""""""""
 
-A ``post_install`` hook is run within the install subprocess, directly after the installation finishes
+A ``post_install`` hook is run within the install subprocess, directly after the installation finishes,
 but before the build stage is removed and the spec is registered in the database. It expects two
 arguments: the spec and an optional boolean indicating whether this spec is being installed explicitly.
 
@@ -867,7 +867,7 @@ Backporting bug fixes
 ^^^^^^^^^^^^^^^^^^^^^
 
 When a bug is fixed in the ``develop`` branch, it is often necessary to backport the fix to one
-(or more) of the ``release/vX.Y`` branches. Only the release manager is responsible for doing
+(or more) of the ``releases/vX.Y`` branches. Only the release manager is responsible for doing
 backports, but Spack maintainers are responsible for labelling pull requests (and issues if no bug
 fix is available yet) with ``vX.Y.Z`` labels. The label should correspond to the next patch version
 that the bug fix should be backported to.

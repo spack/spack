@@ -185,7 +185,7 @@ Docker images with Spack preinstalled and ready to be used are
 built when a release is tagged, or nightly on ``develop``. The images
 are then pushed both to `Docker Hub <https://hub.docker.com/u/spack>`_
 and to `GitHub Container Registry <https://github.com/orgs/spack/packages?repo_name=spack>`_.
-The OS that are currently supported are summarized in the table below:
+The OSes that are currently supported are summarized in the table below:
 
 .. _containers-supported-os:
 
@@ -370,7 +370,7 @@ Use a Bootstrap Stage for Spack
 
 In some cases, users may want to pin the commit SHA that is used for Spack to ensure later
 reproducibility or start from a fork of the official Spack repository to try a bugfix or
-a feature in the early stage of development. This is possible by being just a little more
+a feature in an early stage of development. This is possible by being just a little more
 verbose when specifying information about Spack in the ``spack.yaml`` file:
 
 .. code-block:: yaml
@@ -679,7 +679,7 @@ to customize the generation of container recipes:
      - See :ref:`containers-supported-os`
      - Yes, if using constrained selection of base images
    * - ``images:spack``
-     - Version of Spack use in the ``build`` stage
+     - Version of Spack used in the ``build`` stage
      - Valid tags for ``base:image``
      - Yes, if using constrained selection of base images
    * - ``images:spack:url``

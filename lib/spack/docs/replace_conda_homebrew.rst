@@ -166,7 +166,7 @@ If we want to clean up old, out-of-date packages from our environment after an u
    $ spack install
    $ spack gc --except-any-environment
 
-The final step, ``spack gc --except-any-environment``, runs Spack's garbage collector and removes any packages that are no longer needed by any managed Spack environment—which will clean up those old versions that got replaced during the upgrade.
+The final step, ``spack gc --except-any-environment``, runs Spack's garbage collector and removes any packages that are no longer needed by any managed Spack environment -- which will clean up those old versions that got replaced during the upgrade.
 
 ------------------------
 Removing the Environment

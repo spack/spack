@@ -359,7 +359,7 @@ about the run that produced a given solver result.
 This cache is a subcache of the :ref:`Misc Cache` and as such will be cleaned when the Misc
 Cache is cleaned.
 
-When ``false`` or omitted, all concretization requests will be performed from scatch
+When ``false`` or omitted, all concretization requests will be performed from scratch
 
 ----------------------------
 ``concretization_cache:url``

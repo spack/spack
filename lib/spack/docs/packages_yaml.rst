@@ -233,10 +233,8 @@ OpenMPI.
 
 .. note::
 
-   If ``concretizer:reuse`` is on (see :ref:`concretizer-options` for more information on that flag)
-   pre-built specs include specs already available from a local store, an upstream store, a registered
-   buildcache or specs marked as externals in ``packages.yaml``. If ``concretizer:reuse`` is off, only
-   external specs in ``packages.yaml`` are included in the list of pre-built specs.
+   If ``concretizer:reuse`` is on (see :ref:`concretizer-options` for more information on that flag) pre-built specs are taken from: the local store, an upstream store, a registered buildcache and externals in ``packages.yaml``.
+   If ``concretizer:reuse`` is off, only external specs in ``packages.yaml`` are included in the list of pre-built specs.
 
 If an external module is specified as not buildable, then Spack will load the
 external module into the build environment which can be used for linking.
@@ -275,7 +273,7 @@ to satisfy a dependency, and will choose depending on the compiler and
 architecture.
 
 In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers
-(available via stores or buildcaches) are not wanted, Spack can be configured to require
+(available via stores or buildcaches) are not desirable, Spack can be configured to require
 specs matching only the available externals:
 
 .. code-block:: yaml

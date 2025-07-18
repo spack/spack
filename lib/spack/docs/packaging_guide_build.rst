@@ -1219,15 +1219,15 @@ of MPI builds:
      supply includes/libs/etc.  This is fairly uncommon.
 
   2. Others really want the wrappers and assume you're using an MPI
-     "compiler" – i.e., they have no mechanism to add MPI
+     "compiler" -- i.e., they have no mechanism to add MPI
      includes/libraries/etc.
 
   3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
-     extract ``–I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
+     extract ``-I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
      regular library.
 
 Note that some CMake builds fall into case 2 because they either don't
-know about or don't like CMake's ``FindMPI`` support – they just assume
+know about or don't like CMake's ``FindMPI`` support -- they just assume
 an MPI compiler. Also, some autotools builds fall into case 3 (e.g., `here
 is an autotools version of CMake's FindMPI
 <https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
@@ -1242,7 +1242,7 @@ Packaging Conventions
 As mentioned above, in the ``install()`` method, ``CC``, ``CXX``,
 ``F77``, and ``FC`` point to Spack's wrappers around the chosen compiler.
 Spack's wrappers are not the MPI compiler wrappers, though they do
-automatically add ``–I``, ``–L``, and ``–Wl,-rpath`` args for
+automatically add ``-I``, ``-L``, and ``-Wl,-rpath`` args for
 dependencies in a similar way.  The MPI wrappers are a bit different in
 that they also add ``-l`` arguments for the MPI libraries, and some add
 special ``-D`` arguments to trigger build options in MPI programs.
@@ -1256,7 +1256,7 @@ interrogate them.
 
 For case 2, things are a bit more complicated, as you'll need to tell the
 build to use the MPI compiler wrappers instead of Spack's compiler
-wrappers.  All it takes some lines like this:
+wrappers.  All it takes is some lines like this:
 
 .. code-block:: python
 
@@ -1310,7 +1310,7 @@ Wrapping wrappers
 Spack likes to use its own compiler wrappers to make it easy to add
 ``RPATHs`` to builds, and to try hard to ensure that your builds use the
 right dependencies.  This doesn't play nicely by default with MPI, so we
-have to do a couple tricks.
+have to do a couple of tricks.
 
   1. If we build MPI with Spack's wrappers, mpicc and friends will be
      installed with hard-coded paths to Spack's wrappers, and using them
@@ -1323,7 +1323,7 @@ have to do a couple tricks.
      calling mpicc. Luckily, wrappers in all mainstream MPI
      implementations provide environment variables that allow us to
      dynamically set the compiler to be used by mpicc, mpicxx, etc.
-     Denis pasted some code from this below – Spack's build environment
+     Spack's build environment
      sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and
      ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI. This makes the MPI
      compiler wrappers use the Spack compiler wrappers so that your

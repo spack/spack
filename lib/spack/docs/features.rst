@@ -65,7 +65,7 @@ dependencies, using the ``^`` sigil:
    # Install hdf5 using hwloc with CUDA enabled (transitive dependency)
    $ spack install hdf5@1.14.6 ^hwloc+cuda
 
-The expression on the command line can be as simple, or as complicated, as the user need:
+The expression on the command line can be as simple, or as complicated, as the user needs:
 
 .. code-block:: console
 
