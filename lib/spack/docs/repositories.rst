@@ -38,7 +38,7 @@ An individual Spack package repository is a directory structured as follows::
 
 * ``repo.yaml``.
   This file contains metadata for this specific repository, for example:
-  
+
   .. code-block:: yaml
 
     repo:
@@ -140,10 +140,21 @@ If the ``git`` URL is defined in a lower-precedence configuration (like Spack's 
       destination: ~/spack-packages
 
 **Updating and pinning.**
-There is currently no automatic update mechanism for Git-based repositories in Spack.
-Additionally, package repositories cannot be pinned to a specific commit or branch in configuration files.
-We are still gathering feedback and use cases from the community to determine the best approach for these features.
-For now, we encourage users to update Git repositories manually, by navigating to the clone directory ``spack cd --repo`` or ``spack cd --repo [name]`` and using standard Git commands (e.g., ``git pull`` to get the latest changes, or ``git checkout <commit|tag>`` to switch to a specific version).
+
+Repos can be pinned to a git branch, tag, or commit.
+
+.. code-block:: yaml
+
+   # ~/.spack/repos.yaml
+   repos:
+     builtin:
+       branch: releases/v2025.07
+       # tag: v2025.07.0
+       # commit: 6427933daecef74b981d1f773731aeace3b06ede
+
+The ``spack repo update`` command will update the repo on disk to match the current state of the config.
+If the repo is pinned to a commit or tag, it will ensure the repo on disk reflects that commit or tag.
+If the repo is pinned to a branch or unpinned, ``spack repo update`` will pull the most recent state of the branch (the default branch if unpinned).
 
 **Git repositories need a package repo index.**
 A single Git repository can contain one or more Spack package repositories. To enable Spack to discover these, the root of the Git repository should contain a ``spack-repo-index.yaml`` file. This file lists the relative paths to package repository roots within the git repo.
@@ -192,7 +203,7 @@ Spack will clone ``my_pkgs.git`` and look for ``spack-repo-index.yaml``. It will
 If you want only one of the package repositories from a Git mono-repo, you can override the paths in your user-level ``repos.yaml``. For example, if you only want the computer science packages:
 
 .. code-block:: yaml
-   
+
    # ~/.spack/repos.yaml
    repos:
      example_mono_repo:
