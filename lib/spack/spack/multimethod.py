@@ -233,7 +233,7 @@ class when:
                 # Do more common install stuff
 
     Note that the default version of decorated methods must *always* come first. Otherwise it will
-    override all of the decorated versions. This is a limitation of Python itself.
+    override all of the decorated versions. This is a limitation of the Python language.
     """
 
     def __init__(self, condition: Union[str, bool]):
