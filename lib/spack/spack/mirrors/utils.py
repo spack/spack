@@ -229,7 +229,6 @@ class MirrorStats:
 
         self.added_resources.update(ext_mirror_stat.added_resources)
         self.existing_resources.update(ext_mirror_stat.existing_resources)
-        return self
 
 
 def create_mirror_from_package_object(
@@ -267,42 +266,6 @@ def create_mirror_from_package_object(
                 mirror_stats.error()
                 return False
     return True
-
-
-def cache_single_package(pkg_obj, mirror_cache: "spack.caches.MirrorCache") -> MirrorStats:
-    """Cache a single package object, and return the MirrorStats object.
-
-    The package object is only required to have an associated spec
-    with a concrete version.
-
-    Args:
-        pkg_obj (spack.package_base.PackageBase): package object with to be added.
-        mirror_cache: mirror where to add the spec.
-
-    Return:
-        statistics on the current mirror
-    """
-    # Create an empty MirrorStats object we will later combine with others
-    mirror_stats = MirrorStats()
-    tty.msg("Adding package {} to mirror".format(pkg_obj.spec.format("{name}{@version}")))
-    max_retries = 3
-    for num_retries in range(max_retries):
-        try:
-            # Includes patches and resources
-            with pkg_obj.stage as pkg_stage:
-                pkg_stage.cache_mirror(mirror_cache, mirror_stats)
-            break
-        except Exception as e:
-            if num_retries + 1 == max_retries:
-                if spack.config.get("config:debug"):
-                    traceback.print_exc()
-                else:
-                    tty.warn(
-                        "Error while fetching %s" % pkg_obj.spec.format("{name}{@version}"), str(e)
-                    )
-                mirror_stats.error()
-                return mirror_stats
-    return mirror_stats
 
 
 def require_mirror_name(mirror_name):

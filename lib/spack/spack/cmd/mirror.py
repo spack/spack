@@ -639,7 +639,8 @@ def _specs_and_action(args):
 def create_mirror_for_one_spec(candidate, mirror_cache):
     pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
     pkg_obj = pkg_cls(spack.spec.Spec(candidate))
-    mirror_stats = spack.mirrors.utils.cache_single_package(pkg_obj, mirror_cache)
+    mirror_stats = spack.mirrors.utils.MirrorStats()
+    spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
     return mirror_stats
 
 
