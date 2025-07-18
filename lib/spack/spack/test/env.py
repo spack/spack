@@ -1260,10 +1260,11 @@ spack:
 
 class TestDevelopStage2:
     @pytest.fixture
-    def prep_env(self, tmpdir, develop_path, config, mock_packages):
+    def prep_env(self, tmp_path, develop_path, config, mock_packages):
         def create_env():
-            env_dir = tmpdir.ensure("env-path", dir=True)
-            manifest = env_dir.join("spack.yaml")
+            env_dir = tmp_path / "env-path"
+            env_dir.mkdir(parents=True, exist_ok=True)
+            manifest = env_dir / "spack.yaml"
             devtree, srcdir = develop_path
             manifest.write_text(
                 f"""\

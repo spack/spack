@@ -42,6 +42,8 @@ from spack.llnl.util.filesystem import (
     mkdirp,
     partition_path,
     remove_linked_tree,
+    islink,
+    readlink,
     symlink,
 )
 from spack.llnl.util.tty.colify import colify
@@ -870,15 +872,15 @@ class DevelopStage(LockableStagingDir):
             return
         for fname in os.listdir(dev_path):
             path = os.path.join(dev_path, fname)
-            if llnl.util.symlink.islink(path):
-                target = llnl.util.symlink.readlink(path)
+            if islink(path):
+                target = readlink(path)
                 if stage_prefix in os.path.basename(target) and not os.path.exists(target):
                     os.remove(path)
 
     def destroy(self):
         try:
-            if llnl.util.symlink.islink(self.reference_link):
-                target = llnl.util.symlink.readlink(self.reference_link)
+            if islink(self.reference_link):
+                target = readlink(self.reference_link)
                 if stage_prefix in os.path.basename(target):
                     os.remove(self.reference_link)
             # else: we didn't make this link
