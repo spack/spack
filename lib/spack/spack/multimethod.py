@@ -240,7 +240,6 @@ class when:
         """Can be used both as a decorator, for multimethods, or as a context
         manager to group ``when=`` arguments together.
 
-        Examples are given in the docstrings below.
 
         Args:
             condition (str): condition to be met
