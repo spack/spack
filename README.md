@@ -20,13 +20,7 @@
 
 </h2>
 
-**[Getting Started] &nbsp; • &nbsp; [Config] &nbsp; • &nbsp; [Community] &nbsp; • &nbsp; [Contributing] &nbsp; • &nbsp; [Packaging Guide]**
-
-[Getting Started]: https://spack.readthedocs.io/en/latest/getting_started.html
-[Config]: https://spack.readthedocs.io/en/latest/configuration.html
-[Community]: #community
-[Contributing]: https://spack.readthedocs.io/en/latest/contribution_guide.html
-[Packaging Guide]: https://spack.readthedocs.io/en/latest/packaging_guide.html
+**[Getting Started] &nbsp; • &nbsp; [Config] &nbsp; • &nbsp; [Community] &nbsp; • &nbsp; [Contributing] &nbsp; • &nbsp; [Packaging Guide] &nbsp; • &nbsp; [Packages]**
 
 </div>
 
@@ -119,7 +113,7 @@ Contributing to Spack is relatively easy.  Just send us a
 
 Most contributors will want to contribute to Spack's community package
 recipes. To do that, you should visit the
-[spack-packages repository](https://github.com/spack/spack-packages).
+**[spack-packages repository][Packages]**.
 
 If you want to contribute to Spack itself, you can submit a pull request
 to the [spack repository](https://github.com/spack/spack) (this repository).
@@ -201,3 +195,10 @@ See [LICENSE-MIT](https://github.com/spack/spack/blob/develop/LICENSE-MIT),
 SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 LLNL-CODE-811652
+
+[Getting Started]: https://spack.readthedocs.io/en/latest/getting_started.html
+[Config]: https://spack.readthedocs.io/en/latest/configuration.html
+[Community]: #community
+[Contributing]: https://spack.readthedocs.io/en/latest/contribution_guide.html
+[Packaging Guide]: https://spack.readthedocs.io/en/latest/packaging_guide_creation.html
+[Packages]: https://github.com/spack/spack-packages
