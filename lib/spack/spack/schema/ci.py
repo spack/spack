@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for gitlab-ci.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/ci.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/ci.py
    :lines: 16-
 """
 from typing import Any, Dict

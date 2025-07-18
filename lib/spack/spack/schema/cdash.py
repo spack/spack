@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for cdash.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/cdash.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/cdash.py
    :lines: 13-
 """
 from typing import Any, Dict
