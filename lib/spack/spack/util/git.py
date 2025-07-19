@@ -140,9 +140,19 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
 
     for try_ref in ref_list:
         # this command enabled in git@1.7 so no version checking supplied (1.7 released in 2009)
-        query = git(required=True)("ls-remote", path, try_ref, output=str, error=str)
+        try:
+            query = git(required=True)(
+                "ls-remote",
+                path,
+                try_ref,
+                output=str,
+                error=str,
+                extra_env={"GIT_TERMINAL_PROMPT": "0"},
+            )
 
-        if query:
-            return query.strip().split()[0]
+            if query:
+                return query.strip().split()[0]
+        except spack.util.executable.ProcessError:
+            continue
 
     return None
