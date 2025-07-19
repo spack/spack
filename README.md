@@ -22,6 +22,13 @@
 
 **[Getting Started] &nbsp; • &nbsp; [Config] &nbsp; • &nbsp; [Community] &nbsp; • &nbsp; [Contributing] &nbsp; • &nbsp; [Packaging Guide] &nbsp; • &nbsp; [Packages]**
 
+[Getting Started]: https://spack.readthedocs.io/en/latest/getting_started.html
+[Config]: https://spack.readthedocs.io/en/latest/configuration.html
+[Community]: #community
+[Contributing]: https://spack.readthedocs.io/en/latest/contribution_guide.html
+[Packaging Guide]: https://spack.readthedocs.io/en/latest/packaging_guide_creation.html
+[Packages]: https://github.com/spack/spack-packages
+
 </div>
 
 Spack is a multi-platform package manager that builds and installs
@@ -195,10 +202,3 @@ See [LICENSE-MIT](https://github.com/spack/spack/blob/develop/LICENSE-MIT),
 SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 LLNL-CODE-811652
-
-[Getting Started]: https://spack.readthedocs.io/en/latest/getting_started.html
-[Config]: https://spack.readthedocs.io/en/latest/configuration.html
-[Community]: #community
-[Contributing]: https://spack.readthedocs.io/en/latest/contribution_guide.html
-[Packaging Guide]: https://spack.readthedocs.io/en/latest/packaging_guide_creation.html
-[Packages]: https://github.com/spack/spack-packages
