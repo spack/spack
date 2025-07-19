@@ -195,7 +195,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Spack"
-copyright = "2013-2023, Lawrence Livermore National Laboratory."
+copyright = "Spack Project Developers"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
