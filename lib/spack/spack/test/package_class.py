@@ -23,7 +23,6 @@ import spack.package_base
 import spack.spec
 import spack.store
 import spack.subprocess_context
-import spack.util.git
 from spack.error import InstallError
 from spack.package_base import PackageBase
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
