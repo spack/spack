@@ -4,6 +4,7 @@
 
 import pathlib
 import shutil
+import sys
 
 import pytest
 
@@ -343,6 +344,9 @@ def test_group_arguments(
     )
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="`pkg grep` generates cmdline length > 40000 chars"
+)
 @pytest.mark.skipif(not spack.cmd.pkg.get_grep(), reason="grep is not installed")
 def test_pkg_grep(mock_packages, capfd):
     # only splice-* mock packages have the string "splice" in them

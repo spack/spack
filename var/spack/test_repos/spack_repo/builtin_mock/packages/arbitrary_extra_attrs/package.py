@@ -1,0 +1,22 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack_repo.builtin_mock.build_systems.generic import Package
+
+from spack.package import *
+
+
+class ArbitraryExtraAttrs(Package):
+    """Package that depends on extra_attributes from external config."""
+
+    url = "http://www.example.com/a-1.0.tar.gz"
+
+    version("1.0", sha256=64 * "a")
+
+    depends_on("c", type="build")
+
+    parallel = False
+
+    def check(self):
+        exampledict = self.spec.extra_attributes["exampledict"]
+        assert exampledict == {"a": 1, "b": "2"}
