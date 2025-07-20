@@ -56,7 +56,7 @@ dynamic = ["version"]
 
 [project.scripts]
 # https://packaging.python.org/en/latest/specifications/entry-points/
-spack = "lib.spack.spack.main:main"
+spack = "spack.main:main"
 
 [tool.hatch.version]
 path = "lib/spack/spack/__init__.py"
