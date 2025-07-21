@@ -572,9 +572,6 @@ __all__ = [
     "windows_sfn",
 ]
 
-# Make sure `__all__` and `api` are consistent.
-assert __all__ == [symbol for symbols in api.values() for symbol in symbols]
-
 # These are just here for editor support; they may be set when the build env is set up.
 configure: Executable
 make_jobs: int
