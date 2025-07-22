@@ -16,10 +16,12 @@ import inspect
 import io
 import json
 import os
+import pickle
 
 import pytest
 import ruamel.yaml
 
+import spack.config
 import spack.hash_types as ht
 import spack.paths
 import spack.repo
@@ -117,8 +119,9 @@ def test_yaml_subdag(config, mock_packages):
         assert spec[dep].eq_dag(json_spec[dep])
 
 
-def test_using_ordered_dict(mock_packages):
-    """Checks that dicts are ordered
+@pytest.mark.parametrize("spec_str", ["mpileaks ^zmpi", "dttop", "dtuse"])
+def test_using_ordered_dict(default_mock_concretization, spec_str):
+    """Checks that we use syaml_dicts for spec serialization.
 
     Necessary to make sure that dag_hash is stable across python
     versions and processes.
@@ -136,96 +139,89 @@ def test_using_ordered_dict(mock_packages):
                     max_level = nlevel
         return max_level
 
-    specs = ["mpileaks ^zmpi", "dttop", "dtuse"]
-    for spec in specs:
-        dag = Spec(spec)
-        dag.normalize()
-        level = descend_and_check(dag.to_node_dict())
-
-        # level just makes sure we are doing something here
-        assert level >= 5
+    s = default_mock_concretization(spec_str)
+    level = descend_and_check(s.to_node_dict())
+    # level just makes sure we are doing something here
+    assert level >= 5
 
 
-def test_ordered_read_not_required_for_consistent_dag_hash(config, mock_packages):
+@pytest.mark.parametrize("spec_str", ["mpileaks ^zmpi", "dttop", "dtuse"])
+def test_ordered_read_not_required_for_consistent_dag_hash(
+    spec_str, mutable_config: spack.config.Configuration, mock_packages
+):
     """Make sure ordered serialization isn't required to preserve hashes.
 
-    For consistent hashes, we require that YAML and json documents
-    have their keys serialized in a deterministic order. However, we
-    don't want to require them to be serialized in order. This
-    ensures that is not required.
-    """
-    specs = ["mpileaks ^zmpi", "dttop", "dtuse"]
-    for spec in specs:
-        spec = Spec(spec)
-        spec.concretize()
+    For consistent hashes, we require that YAML and JSON serializations have their keys in a
+    deterministic order. However, we don't want to require them to be serialized in order. This
+    ensures that is not required."""
 
-        #
-        # Dict & corresponding YAML & JSON from the original spec.
-        #
-        spec_dict = spec.to_dict()
-        spec_yaml = spec.to_yaml()
-        spec_json = spec.to_json()
+    # Make sure that `extra_attributes` of externals is order independent for hashing.
+    extra_attributes = {
+        "compilers": {"c": "/some/path/bin/cc", "cxx": "/some/path/bin/c++"},
+        "foo": "bar",
+        "baz": "qux",
+    }
+    mutable_config.set(
+        "packages:dtuse",
+        {
+            "buildable": False,
+            "externals": [
+                {"spec": "dtuse@=1.0", "prefix": "/usr", "extra_attributes": extra_attributes}
+            ],
+        },
+    )
 
-        #
-        # Make a spec with reversed OrderedDicts for every
-        # OrderedDict in the original.
-        #
-        reversed_spec_dict = reverse_all_dicts(spec.to_dict())
+    spec = spack.spec.Spec(spec_str).concretized()
 
-        #
-        # Dump to YAML and JSON
-        #
-        yaml_string = syaml.dump(spec_dict, default_flow_style=False)
-        reversed_yaml_string = syaml.dump(reversed_spec_dict, default_flow_style=False)
-        json_string = sjson.dump(spec_dict)
-        reversed_json_string = sjson.dump(reversed_spec_dict)
+    if spec_str == "dtuse":
+        assert spec.external and spec.extra_attributes == extra_attributes
 
-        #
-        # Do many consistency checks
-        #
+    spec_dict = spec.to_dict(hash=ht.dag_hash)
+    spec_yaml = spec.to_yaml()
+    spec_json = spec.to_json()
 
-        # spec yaml is ordered like the spec dict
-        assert yaml_string == spec_yaml
-        assert json_string == spec_json
+    # Make a spec with dict keys reversed recursively
+    spec_dict_rev = reverse_all_dicts(spec_dict)
 
-        # reversed string is different from the original, so it
-        # *would* generate a different hash
-        assert yaml_string != reversed_yaml_string
-        assert json_string != reversed_json_string
+    # Dump to YAML and JSON
+    yaml_string = syaml.dump(spec_dict, default_flow_style=False)
+    yaml_string_rev = syaml.dump(spec_dict_rev, default_flow_style=False)
+    json_string = sjson.dump(spec_dict)
+    json_string_rev = sjson.dump(spec_dict_rev)
 
-        # build specs from the "wrongly" ordered data
-        round_trip_yaml_spec = Spec.from_yaml(yaml_string)
-        round_trip_json_spec = Spec.from_json(json_string)
-        round_trip_reversed_yaml_spec = Spec.from_yaml(reversed_yaml_string)
-        round_trip_reversed_json_spec = Spec.from_yaml(reversed_json_string)
+    # spec yaml is ordered like the spec dict
+    assert yaml_string == spec_yaml
+    assert json_string == spec_json
 
-        # Strip spec if we stripped the yaml
-        spec = spec.copy(deps=ht.dag_hash.depflag)
+    # reversed string is different from the original, so it *would* generate a different hash
+    assert yaml_string != yaml_string_rev
+    assert json_string != json_string_rev
 
-        # specs are equal to the original
-        assert spec == round_trip_yaml_spec
-        assert spec == round_trip_json_spec
+    # build specs from the "wrongly" ordered data
+    from_yaml = Spec.from_yaml(yaml_string)
+    from_json = Spec.from_json(json_string)
+    from_yaml_rev = Spec.from_yaml(yaml_string_rev)
+    from_json_rev = Spec.from_json(json_string_rev)
 
-        assert spec == round_trip_reversed_yaml_spec
-        assert spec == round_trip_reversed_json_spec
-        assert round_trip_yaml_spec == round_trip_reversed_yaml_spec
-        assert round_trip_json_spec == round_trip_reversed_json_spec
-        # dag_hashes are equal
-        assert spec.dag_hash() == round_trip_yaml_spec.dag_hash()
-        assert spec.dag_hash() == round_trip_json_spec.dag_hash()
-        assert spec.dag_hash() == round_trip_reversed_yaml_spec.dag_hash()
-        assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
+    # Strip spec if we stripped the yaml
+    spec = spec.copy(deps=ht.dag_hash.depflag)
 
-        # dag_hash is equal after round-trip by dag_hash
-        spec.concretize()
-        round_trip_yaml_spec.concretize()
-        round_trip_json_spec.concretize()
-        round_trip_reversed_yaml_spec.concretize()
-        round_trip_reversed_json_spec.concretize()
-        assert spec.dag_hash() == round_trip_yaml_spec.dag_hash()
-        assert spec.dag_hash() == round_trip_json_spec.dag_hash()
-        assert spec.dag_hash() == round_trip_reversed_yaml_spec.dag_hash()
-        assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
+    # specs and their hashes are equal to the original
+    assert (
+        spec.process_hash()
+        == from_yaml.process_hash()
+        == from_json.process_hash()
+        == from_yaml_rev.process_hash()
+        == from_json_rev.process_hash()
+    )
+    assert (
+        spec.dag_hash()
+        == from_yaml.dag_hash()
+        == from_json.dag_hash()
+        == from_yaml_rev.dag_hash()
+        == from_json_rev.dag_hash()
+    )
+    assert spec == from_yaml == from_json == from_yaml_rev == from_json_rev
 
 
 @pytest.mark.parametrize("module", [spack.spec, spack.version])
@@ -296,13 +292,10 @@ def test_hashes_use_no_python_dicts(module):
 def reverse_all_dicts(data):
     """Descend into data and reverse all the dictionaries"""
     if isinstance(data, dict):
-        return syaml_dict(
-            reversed([(reverse_all_dicts(k), reverse_all_dicts(v)) for k, v in data.items()])
-        )
+        return type(data)((k, reverse_all_dicts(v)) for k, v in reversed(list(data.items())))
     elif isinstance(data, (list, tuple)):
         return type(data)(reverse_all_dicts(elt) for elt in data)
-    else:
-        return data
+    return data
 
 
 def check_specs_equal(original_spec, spec_yaml_path):
@@ -554,3 +547,26 @@ d: *id001
 e: *id002
 """
     )
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "hdf5 ++mpi",
+        "hdf5 cflags==-g",
+        "hdf5 foo==bar",
+        "hdf5~~mpi++shared",
+        "hdf5 cflags==-g foo==bar cxxflags==-O3",
+        "hdf5 cflags=-g foo==bar cxxflags==-O3",
+    ],
+)
+def test_pickle_roundtrip_for_abstract_specs(spec_str):
+    """Tests that abstract specs correctly round trip when pickled.
+
+    This test compares both spec objects and their string representation, due to some
+    inconsistencies in how `Spec.__eq__` is implemented.
+    """
+    s = spack.spec.Spec(spec_str)
+    t = pickle.loads(pickle.dumps(s))
+    assert s == t
+    assert str(s) == str(t)

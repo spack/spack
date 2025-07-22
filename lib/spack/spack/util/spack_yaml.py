@@ -14,7 +14,6 @@
 """
 import collections
 import collections.abc
-import copy
 import ctypes
 import enum
 import functools
@@ -400,20 +399,6 @@ class ConfigYAML:
         return result.getvalue()
 
 
-def deepcopy(data):
-    """Returns a deepcopy of the input YAML data."""
-    result = copy.deepcopy(data)
-
-    if isinstance(result, comments.CommentedMap):
-        # HACK to fully copy ruamel CommentedMap that doesn't provide copy
-        # method. Especially necessary for environments
-        extracted_comments = extract_comments(data)
-        if extracted_comments:
-            set_comments(result, data_comments=extracted_comments)
-
-    return result
-
-
 def load_config(str_or_file):
     """Load but modify the loader instance so that it will add __line__
     attributes to the returned object."""
@@ -462,20 +447,13 @@ def _dump_annotated(handler, data, stream=None):
         return getvalue()
 
 
-def sorted_dict(dict_like):
-    """Return an ordered dict with all the fields sorted recursively.
-
-    Args:
-        dict_like (dict): dictionary to be sorted
-
-    Returns:
-        dictionary sorted recursively
-    """
-    result = syaml_dict(sorted(dict_like.items()))
-    for key, value in result.items():
-        if isinstance(value, collections.abc.Mapping):
-            result[key] = sorted_dict(value)
-    return result
+def sorted_dict(data):
+    """Descend into data and sort all dictionary keys."""
+    if isinstance(data, dict):
+        return type(data)((k, sorted_dict(v)) for k, v in sorted(data.items()))
+    elif isinstance(data, (list, tuple)):
+        return type(data)(sorted_dict(v) for v in data)
+    return data
 
 
 def extract_comments(data):

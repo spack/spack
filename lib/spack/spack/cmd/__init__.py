@@ -4,9 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import importlib
 import os
 import re
 import sys
+from collections import Counter
 from typing import List, Union
 
 import llnl.string
@@ -16,12 +18,14 @@ from llnl.util.lang import attr_setdefault, index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
-import spack.config
+import spack.concretize
+import spack.config  # breaks a cycle.
 import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.parser
 import spack.paths
+import spack.repo
 import spack.spec
 import spack.store
 import spack.traverse as traverse
@@ -114,8 +118,8 @@ def get_module(cmd_name):
 
     try:
         # Try to import the command from the built-in directory
-        module_name = "%s.%s" % (__name__, pname)
-        module = __import__(module_name, fromlist=[pname, SETUP_PARSER, DESCRIPTION], level=0)
+        module_name = f"{__name__}.{pname}"
+        module = importlib.import_module(module_name)
         tty.debug("Imported {0} from built-in commands".format(pname))
     except ImportError:
         module = spack.extensions.get_module(cmd_name)
@@ -163,7 +167,9 @@ def quote_kvp(string: str) -> str:
 
 
 def parse_specs(
-    args: Union[str, List[str]], concretize: bool = False, tests: bool = False
+    args: Union[str, List[str]],
+    concretize: bool = False,
+    tests: spack.concretize.TestsType = False,
 ) -> List[spack.spec.Spec]:
     """Convenience function for parsing arguments from specs.  Handles common
     exceptions and dies if there are errors.
@@ -172,10 +178,68 @@ def parse_specs(
     arg_string = " ".join([quote_kvp(arg) for arg in args])
 
     specs = spack.parser.parse(arg_string)
-    for spec in specs:
-        if concretize:
-            spec.concretize(tests=tests)
-    return specs
+    if not concretize:
+        return specs
+
+    to_concretize: List[spack.concretize.SpecPairInput] = [(s, None) for s in specs]
+    return _concretize_spec_pairs(to_concretize, tests=tests)
+
+
+def _concretize_spec_pairs(
+    to_concretize: List[spack.concretize.SpecPairInput], tests: spack.concretize.TestsType = False
+) -> List[spack.spec.Spec]:
+    """Helper method that concretizes abstract specs from a list of abstract,concrete pairs.
+
+    Any spec with a concrete spec associated with it will concretize to that spec. Any spec
+    with ``None`` for its concrete spec will be newly concretized. This method respects unification
+    rules from config."""
+    unify = spack.config.get("concretizer:unify", False)
+
+    # Special case for concretizing a single spec
+    if len(to_concretize) == 1:
+        abstract, concrete = to_concretize[0]
+        return [concrete or abstract.concretized(tests=tests)]
+
+    # Special case if every spec is either concrete or has an abstract hash
+    if all(
+        concrete or abstract.concrete or abstract.abstract_hash
+        for abstract, concrete in to_concretize
+    ):
+        # Get all the concrete specs
+        ret = [
+            concrete or (abstract if abstract.concrete else abstract.lookup_hash())
+            for abstract, concrete in to_concretize
+        ]
+
+        # If unify: true, check that specs don't conflict
+        # Since all concrete, "when_possible" is not relevant
+        if unify is True:  # True, "when_possible", False are possible values
+            runtimes = spack.repo.PATH.packages_with_tags("runtime")
+            specs_per_name = Counter(
+                spec.name
+                for spec in traverse.traverse_nodes(
+                    ret, deptype=("link", "run"), key=traverse.by_dag_hash
+                )
+                if spec.name not in runtimes  # runtimes are allowed multiple times
+            )
+
+            conflicts = sorted(name for name, count in specs_per_name.items() if count > 1)
+            if conflicts:
+                raise spack.error.SpecError(
+                    "Specs conflict and `concretizer:unify` is configured true.",
+                    f"    specs depend on multiple versions of {', '.join(conflicts)}",
+                )
+        return ret
+
+    # Standard case
+    concretize_method = spack.concretize.concretize_separately  # unify: false
+    if unify is True:
+        concretize_method = spack.concretize.concretize_together
+    elif unify == "when_possible":
+        concretize_method = spack.concretize.concretize_together_when_possible
+
+    concretized = concretize_method(to_concretize, tests=tests)
+    return [concrete for _, concrete in concretized]
 
 
 def matching_spec_from_env(spec):
@@ -189,6 +253,22 @@ def matching_spec_from_env(spec):
         return env.matching_spec(spec) or spec.concretized()
     else:
         return spec.concretized()
+
+
+def matching_specs_from_env(specs):
+    """
+    Same as ``matching_spec_from_env`` but respects spec unification rules.
+
+    For each spec, if there is a matching spec in the environment it is used. If no
+    matching spec is found, this will return the given spec but concretized in the
+    context of the active environment and other given specs, with unification rules applied.
+    """
+    env = ev.active_environment()
+    spec_pairs = [(spec, env.matching_spec(spec) if env else None) for spec in specs]
+    additional_concrete_specs = (
+        [(concrete, concrete) for _, concrete in env.concretized_specs()] if env else []
+    )
+    return _concretize_spec_pairs(spec_pairs + additional_concrete_specs)[: len(spec_pairs)]
 
 
 def disambiguate_spec(spec, env, local=False, installed=True, first=False):
@@ -506,6 +586,18 @@ class CommandNameError(spack.error.SpackError):
     def __init__(self, name):
         self.name = name
         super().__init__("{0} is not a permissible Spack command name.".format(name))
+
+
+class MultipleSpecsMatch(Exception):
+    """Raised when multiple specs match a constraint, in a context where
+    this is not allowed.
+    """
+
+
+class NoSpecMatches(Exception):
+    """Raised when no spec matches a constraint, in a context where
+    this is not allowed.
+    """
 
 
 ########################################

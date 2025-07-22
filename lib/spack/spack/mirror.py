@@ -18,9 +18,10 @@ import os.path
 import sys
 import traceback
 import urllib.parse
-from typing import List, Optional, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import llnl.url
+import llnl.util.symlink
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
@@ -28,8 +29,8 @@ import spack.caches
 import spack.config
 import spack.error
 import spack.fetch_strategy
-import spack.mirror
 import spack.oci.image
+import spack.repo
 import spack.spec
 import spack.util.path
 import spack.util.spack_json as sjson
@@ -87,9 +88,8 @@ class Mirror:
         """Create an anonymous mirror by URL. This method validates the URL."""
         if not urllib.parse.urlparse(url).scheme in supported_url_schemes:
             raise ValueError(
-                '"{}" is not a valid mirror URL. Scheme must be once of {}.'.format(
-                    url, ", ".join(supported_url_schemes)
-                )
+                f'"{url}" is not a valid mirror URL. '
+                f"Scheme must be one of {supported_url_schemes}."
             )
         return Mirror(url)
 
@@ -153,8 +153,66 @@ class Mirror:
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("push")
 
+    def ensure_mirror_usable(self, direction: str = "push"):
+        access_pair = self._get_value("access_pair", direction)
+        access_token_variable = self._get_value("access_token_variable", direction)
+
+        errors = []
+
+        # Verify that the credentials that are variables expand
+        if access_pair and isinstance(access_pair, dict):
+            if "id_variable" in access_pair and access_pair["id_variable"] not in os.environ:
+                errors.append(f"id_variable {access_pair['id_variable']} not set in environment")
+            if "secret_variable" in access_pair:
+                if access_pair["secret_variable"] not in os.environ:
+                    errors.append(
+                        f"environment variable `{access_pair['secret_variable']}` "
+                        "(secret_variable) not set"
+                    )
+
+        if access_token_variable:
+            if access_token_variable not in os.environ:
+                errors.append(
+                    f"environment variable `{access_pair['access_token_variable']}` "
+                    "(access_token_variable) not set"
+                )
+
+        if errors:
+            msg = f"invalid {direction} configuration for mirror {self.name}: "
+            msg += "\n    ".join(errors)
+            raise MirrorError(msg)
+
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
-        keys = ["url", "access_pair", "access_token", "profile", "endpoint_url"]
+        # Only allow one to exist in the config
+        if "access_token" in current_data and "access_token_variable" in new_data:
+            current_data.pop("access_token")
+        elif "access_token_variable" in current_data and "access_token" in new_data:
+            current_data.pop("access_token_variable")
+
+        # If updating to a new access_pair that is the deprecated list, warn
+        warn_deprecated_access_pair = False
+        if "access_pair" in new_data:
+            warn_deprecated_access_pair = isinstance(new_data["access_pair"], list)
+        # If the not updating the current access_pair, and it is the deprecated list, warn
+        elif "access_pair" in current_data:
+            warn_deprecated_access_pair = isinstance(current_data["access_pair"], list)
+
+        if warn_deprecated_access_pair:
+            tty.warn(
+                f"in mirror {self.name}: support for plain text secrets in config files "
+                "(access_pair: [id, secret]) is deprecated and will be removed in a future Spack "
+                "version. Use environment variables instead (access_pair: "
+                "{id: ..., secret_variable: ...})"
+            )
+
+        keys = [
+            "url",
+            "access_pair",
+            "access_token",
+            "access_token_variable",
+            "profile",
+            "endpoint_url",
+        ]
         if top_level:
             keys += ["binary", "source", "signed", "autopush"]
         changed = False
@@ -270,11 +328,53 @@ class Mirror:
 
         return _url_or_path_to_url(url)
 
-    def get_access_token(self, direction: str) -> Optional[str]:
-        return self._get_value("access_token", direction)
+    def get_credentials(self, direction: str) -> Dict[str, Any]:
+        """Get the mirror credentials from the mirror config
 
-    def get_access_pair(self, direction: str) -> Optional[List]:
-        return self._get_value("access_pair", direction)
+        Args:
+            direction: fetch or push mirror config
+
+        Returns:
+            Dictionary from credential type string to value
+
+            Credential Type Map:
+                access_token -> str
+                access_pair  -> tuple(str,str)
+                profile      -> str
+        """
+        creddict: Dict[str, Any] = {}
+        access_token = self.get_access_token(direction)
+        if access_token:
+            creddict["access_token"] = access_token
+
+        access_pair = self.get_access_pair(direction)
+        if access_pair:
+            creddict.update({"access_pair": access_pair})
+
+        profile = self.get_profile(direction)
+        if profile:
+            creddict["profile"] = profile
+
+        return creddict
+
+    def get_access_token(self, direction: str) -> Optional[str]:
+        tok = self._get_value("access_token_variable", direction)
+        if tok:
+            return os.environ.get(tok)
+        else:
+            return self._get_value("access_token", direction)
+        return None
+
+    def get_access_pair(self, direction: str) -> Optional[Tuple[str, str]]:
+        pair = self._get_value("access_pair", direction)
+        if isinstance(pair, (tuple, list)) and len(pair) == 2:
+            return (pair[0], pair[1]) if all(pair) else None
+        elif isinstance(pair, dict):
+            id_ = os.environ.get(pair["id_variable"]) if "id_variable" in pair else pair["id"]
+            secret = os.environ.get(pair["secret_variable"])
+            return (id_, secret) if id_ and secret else None
+        else:
+            return None
 
     def get_profile(self, direction: str) -> Optional[str]:
         return self._get_value("profile", direction)
@@ -426,51 +526,74 @@ Spack not to expand it with the following syntax:
     return ext
 
 
-class MirrorReference:
-    """A ``MirrorReference`` stores the relative paths where you can store a
-    package/resource in a mirror directory.
+class MirrorLayout:
+    """A ``MirrorLayout`` object describes the relative path of a mirror entry."""
 
-    The appropriate storage location is given by ``storage_path``. The
-    ``cosmetic_path`` property provides a reference that a human could generate
-    themselves based on reading the details of the package.
-
-    A user can iterate over a ``MirrorReference`` object to get all the
-    possible names that might be used to refer to the resource in a mirror;
-    this includes names generated by previous naming schemes that are no-longer
-    reported by ``storage_path`` or ``cosmetic_path``.
-    """
-
-    def __init__(self, cosmetic_path, global_path=None):
-        self.global_path = global_path
-        self.cosmetic_path = cosmetic_path
-
-    @property
-    def storage_path(self):
-        if self.global_path:
-            return self.global_path
-        else:
-            return self.cosmetic_path
+    def __init__(self, path: str) -> None:
+        self.path = path
 
     def __iter__(self):
-        if self.global_path:
-            yield self.global_path
-        yield self.cosmetic_path
+        """Yield all paths including aliases where the resource can be found."""
+        yield self.path
+
+    def make_alias(self, root: str) -> None:
+        """Make the entry ``root / self.path`` available under a human readable alias"""
+        pass
 
 
-class OCIImageLayout:
-    """Follow the OCI Image Layout Specification to archive blobs
+class DefaultLayout(MirrorLayout):
+    def __init__(self, alias_path: str, digest_path: Optional[str] = None) -> None:
+        # When we have a digest, it is used as the primary storage location. If not, then we use
+        # the human-readable alias. In case of mirrors of a VCS checkout, we currently do not have
+        # a digest, that's why an alias is required and a digest optional.
+        super().__init__(path=digest_path or alias_path)
+        self.alias = alias_path
+        self.digest_path = digest_path
 
-    Paths are of the form `blobs/<algorithm>/<digest>`
-    """
+    def make_alias(self, root: str) -> None:
+        """Symlink a human readible path in our mirror to the actual storage location."""
+        # We already use the human-readable path as the main storage location.
+        if not self.digest_path:
+            return
+
+        alias, digest = os.path.join(root, self.alias), os.path.join(root, self.digest_path)
+
+        alias_dir = os.path.dirname(alias)
+        relative_dst = os.path.relpath(digest, start=alias_dir)
+
+        mkdirp(alias_dir)
+        tmp = f"{alias}.tmp"
+        llnl.util.symlink.symlink(relative_dst, tmp)
+
+        try:
+            os.rename(tmp, alias)
+        except OSError:
+            # Clean up the temporary if possible
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
+
+    def __iter__(self):
+        if self.digest_path:
+            yield self.digest_path
+        yield self.alias
+
+
+class OCILayout(MirrorLayout):
+    """Follow the OCI Image Layout Specification to archive blobs where paths are of the form
+    ``blobs/<algorithm>/<digest>``"""
 
     def __init__(self, digest: spack.oci.image.Digest) -> None:
-        self.storage_path = os.path.join("blobs", digest.algorithm, digest.digest)
-
-    def __iter__(self):
-        yield self.storage_path
+        super().__init__(os.path.join("blobs", digest.algorithm, digest.digest))
 
 
-def mirror_archive_paths(fetcher, per_package_ref, spec=None):
+def default_mirror_layout(
+    fetcher: "spack.fetch_strategy.FetchStrategy",
+    per_package_ref: str,
+    spec: Optional["spack.spec.Spec"] = None,
+) -> MirrorLayout:
     """Returns a ``MirrorReference`` object which keeps track of the relative
     storage path of the resource associated with the specified ``fetcher``."""
     ext = None
@@ -494,7 +617,7 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     if global_ref and ext:
         global_ref += ".%s" % ext
 
-    return MirrorReference(per_package_ref, global_ref)
+    return DefaultLayout(per_package_ref, global_ref)
 
 
 def get_all_versions(specs):
@@ -732,9 +855,9 @@ def create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats):
 
 def require_mirror_name(mirror_name):
     """Find a mirror by name and raise if it does not exist"""
-    mirror = spack.mirror.MirrorCollection().get(mirror_name)
+    mirror = MirrorCollection().get(mirror_name)
     if not mirror:
-        raise ValueError('no mirror named "{0}"'.format(mirror_name))
+        raise ValueError(f'no mirror named "{mirror_name}"')
     return mirror
 
 
