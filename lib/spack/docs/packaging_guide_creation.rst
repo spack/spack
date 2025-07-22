@@ -2028,7 +2028,7 @@ Spack makes it possible to express such constraints with the ``conflicts`` direc
 
 The ``when`` argument is a spec that triggers the conflict.
 
-The ``msg`` argument allows you to provide a custom error message that Spack prints when the spec to be installed matches the spec and ``when`` arguments.
+The ``msg`` argument allows you to provide a custom error message that Spack prints when the spec to be installed satisfies the conflict spec and ``when`` trigger.
 
 Adding the following to a package:
 
@@ -2042,7 +2042,7 @@ Adding the following to a package:
 
 expresses that the current package *cannot be built* with Intel oneAPI compilers up through any version ``2024`` when trying to install the package with a version up to ``1.2``.
 
-If the ``when`` argument is omitted, then the conflict is *always active* for specs matching the first, or conflict, spec.
+If the ``when`` argument is omitted, then the conflict is *always triggered* for specs satisfying the conflict spec.
 For example,
 
 .. code-block:: python
@@ -2051,7 +2051,7 @@ For example,
 
 means the package cannot be installed with both variants enabled.
 
-Similarly, you can indicate a conflict based on where the build is being performed.
+Similarly, a conflict can be based on where the build is being performed.
 For example,
 
 .. code-block:: python
@@ -2076,9 +2076,9 @@ Requires
 Sometimes packages can be built only with specific options.
 In those cases the ``requires`` directive can be used.
 It allows for complex conditions involving more than a single spec through the ability to specify multiple required specs before keyword arguments.
-It supports the same optional ``when`` and ``msg`` arguments as ``conflicts`` (see :ref:`packaging_conflicts`).
-It also allows for a ``policy`` argument, which is used to determine how the multiple required specs apply.
-The values for ``policy`` may be either ``any_of`` or ``one_of`` (default) and have the same semantics described in :ref:`package-requirements`.
+The same optional ``when`` and ``msg`` arguments as ``conflicts`` are supported (see :ref:`packaging_conflicts`).
+The directive also supports a ``policy`` argument for determining how the multiple required specs apply.
+Values for ``policy`` may be either ``any_of`` or ``one_of`` (default) and have the same semantics described for their equivalents in :ref:`package-requirements`.
 
 .. hint::
 
@@ -2101,14 +2101,14 @@ Similarly, suppose a package only builds for the ``x86_64`` target:
 
     requires("target=x86_64:", msg="package is only available on x86_64")
 
-Or the package must be built with a GCC or Clang that supports C++ 20, which you could ensure by adding the following ``requires`` directive:
+Or the package must be built with a GCC or Clang that supports C++ 20, which you could ensure by adding the following:
 
 .. code-block:: python
 
     requires(
         "%gcc@10:", "%clang@16:",
         policy="one_of",
-        msg="builds only with GCC or Clang that support C++ 20",
+        msg="builds only with a GCC or Clang that support C++ 20",
     )
 
 .. note::
