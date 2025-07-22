@@ -1,9 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -71,12 +71,12 @@ fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
 
 
 @pytest.mark.requires_executables("gpg2")
-def test_really_long_gnupghome_dir(tmpdir, has_socket_dir):
+def test_really_long_gnupghome_dir(tmp_path: pathlib.Path, has_socket_dir):
     if not has_socket_dir:
         pytest.skip("This test requires /var/run/user/$(id -u)")
 
     N = 960
-    tdir = str(tmpdir)
+    tdir = str(tmp_path)
     while len(tdir) < N:
         tdir = os.path.join(tdir, "filler")
 

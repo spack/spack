@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -120,7 +119,7 @@ _spack_shell_wrapper() {
                 case $_sp_arg in
                     activate)
                         # Get --sh, --csh, or -h/--help arguments.
-                        # Space needed here becauses regexes start with a space
+                        # Space needed here because regexes start with a space
                         # and `-h` may be the only argument.
                         _a=" $@"
                         # Space needed here to differentiate between `-h`
@@ -141,7 +140,7 @@ _spack_shell_wrapper() {
                         ;;
                     deactivate)
                         # Get --sh, --csh, or -h/--help arguments.
-                        # Space needed here becauses regexes start with a space
+                        # Space needed here because regexes start with a space
                         # and `-h` may be the only argument.
                         _a=" $@"
                         # Space needed here to differentiate between `--sh`
@@ -170,7 +169,7 @@ _spack_shell_wrapper() {
             ;;
         "load"|"unload")
             # Get --sh, --csh, -h, or --help arguments.
-            # Space needed here becauses regexes start with a space
+            # Space needed here because regexes start with a space
             # and `-h` may be the only argument.
             _a=" $@"
             # Space needed here to differentiate between `-h`

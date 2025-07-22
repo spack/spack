@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,7 +21,7 @@ def validate_scheme(scheme):
     helps mostly in validation of paths vs urls, as Windows paths such as
     C:/x/y/z (with backward not forward slash) may parse as a URL with scheme
     C and path /x/y/z."""
-    return scheme in ("file", "http", "https", "ftp", "s3", "gs", "ssh", "git")
+    return scheme in ("file", "http", "https", "ftp", "s3", "gs", "ssh", "git", "oci")
 
 
 def local_file_path(url):
@@ -69,13 +68,15 @@ def format(parsed_url):
 
 
 def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> str:
-    """Convenience wrapper around ``urllib.parse.urljoin``, with a few differences:
-    1. By default resolve_href=False, which makes the function like os.path.join: for example
-    https://example.com/a/b + c/d = https://example.com/a/b/c/d. If resolve_href=True, the
-    behavior is how a browser would resolve the URL: https://example.com/a/c/d.
-    2. s3://, gs://, oci:// URLs are joined like http:// URLs.
-    3. It accepts multiple components for convenience. Note that components[1:] are treated as
-    literal path components and appended to components[0] separated by slashes."""
+    """Convenience wrapper around :func:`urllib.parse.urljoin`, with a few differences:
+
+    1. By default ``resolve_href=False``, which makes the function like :func:`os.path.join`.
+       For example ``https://example.com/a/b + c/d = https://example.com/a/b/c/d``. If
+       ``resolve_href=True``, the behavior is how a browser would resolve the URL:
+       ``https://example.com/a/c/d``.
+    2. ``s3://``, ``gs://``, ``oci://`` URLs are joined like ``http://`` URLs.
+    3. It accepts multiple components for convenience. Note that ``components[1:]`` are treated as
+       literal path components and appended to ``components[0]`` separated by slashes."""
     # Ensure a trailing slash in the path component of the base URL to get os.path.join-like
     # behavior instead of web browser behavior.
     if not resolve_href:

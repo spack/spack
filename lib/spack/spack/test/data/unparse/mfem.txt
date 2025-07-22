@@ -1,6 +1,5 @@
 # -*- python -*-
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This is an unparser test package.
@@ -319,7 +318,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch('mfem-4.0.0-makefile-syntax-fix.patch', when='@4.0.0')
     phases = ['configure', 'build', 'install']
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset('MFEM_DIR')
         env.unset('MFEM_BUILD_DIR')
 

@@ -1,38 +1,45 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 import glob
 import json
-import os
-import shutil
 import sys
 import tempfile
-from typing import List, Tuple
-
-import llnl.util.tty as tty
-from llnl.string import plural
-from llnl.util.lang import elide_list, stable_partition
+from typing import List, Optional, Tuple
 
 import spack.binary_distribution as bindist
 import spack.cmd
+import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.mirror
+import spack.llnl.util.tty as tty
+import spack.mirrors.mirror
 import spack.oci.oci
 import spack.spec
 import spack.stage
 import spack.store
 import spack.util.parallel
-import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
+from spack.llnl.string import plural
+from spack.llnl.util.lang import elide_list, stable_partition
 from spack.spec import Spec, save_dependency_specfiles
+
+from ..buildcache_migrate import migrate
+from ..buildcache_prune import prune
+from ..enums import InstallRecordStatus
+from ..url_buildcache import (
+    BuildcacheComponent,
+    BuildcacheEntryError,
+    URLBuildcacheEntry,
+    check_mirror_for_layout,
+    get_url_buildcache_class,
+)
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -73,9 +80,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         default=False,
         help="regenerate buildcache index after building package(s)",
-    )
-    push.add_argument(
-        "--spec-file", default=None, help="create buildcache entry for spec from json or yaml file"
     )
     push.add_argument(
         "--only",
@@ -190,28 +194,14 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
-    # Unfortunately there are 3 ways to do the same thing here:
-    check_specs = check.add_mutually_exclusive_group()
-    check_specs.add_argument(
-        "-s", "--spec", help="check single spec instead of release specs file"
-    )
-    check_specs.add_argument(
-        "--spec-file",
-        help="check single spec from json or yaml file instead of release specs file",
-    )
+
     arguments.add_common_arguments(check, ["specs"])
 
     check.set_defaults(func=check_fn)
 
     # Download tarball and specfile
     download = subparsers.add_parser("download", help=download_fn.__doc__)
-    download_spec_or_specfile = download.add_mutually_exclusive_group(required=True)
-    download_spec_or_specfile.add_argument(
-        "-s", "--spec", help="download built tarball for spec from mirror"
-    )
-    download_spec_or_specfile.add_argument(
-        "--spec-file", help="download built tarball for spec (from json or yaml file) from mirror"
-    )
+    download.add_argument("-s", "--spec", help="download built tarball for spec from mirror")
     download.add_argument(
         "-p",
         "--path",
@@ -221,28 +211,21 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     download.set_defaults(func=download_fn)
 
-    # Get buildcache name
-    getbuildcachename = subparsers.add_parser(
-        "get-buildcache-name", help=get_buildcache_name_fn.__doc__
+    prune = subparsers.add_parser("prune", help=prune_fn.__doc__)
+    prune.add_argument(
+        "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
     )
-    getbuildcachename_spec_or_specfile = getbuildcachename.add_mutually_exclusive_group(
-        required=True
+    prune.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="do not actually delete anything from the buildcache, but log what would be deleted",
     )
-    getbuildcachename_spec_or_specfile.add_argument(
-        "-s", "--spec", help="spec string for which buildcache name is desired"
-    )
-    getbuildcachename_spec_or_specfile.add_argument(
-        "--spec-file", help="path to spec json or yaml file for which buildcache name is desired"
-    )
-    getbuildcachename.set_defaults(func=get_buildcache_name_fn)
+    prune.set_defaults(func=prune_fn)
 
     # Given the root spec, save the yaml of the dependent spec to a file
     savespecfile = subparsers.add_parser("save-specfile", help=save_specfile_fn.__doc__)
     savespecfile_spec_or_specfile = savespecfile.add_mutually_exclusive_group(required=True)
     savespecfile_spec_or_specfile.add_argument("--root-spec", help="root spec of dependent spec")
-    savespecfile_spec_or_specfile.add_argument(
-        "--root-specfile", help="path to json or yaml file containing root spec of dependent spec"
-    )
     savespecfile.add_argument(
         "-s",
         "--specs",
@@ -305,10 +288,34 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     update_index.set_defaults(func=update_index_fn)
 
+    # Migrate a buildcache from layout_version 2 to version 3
+    migrate = subparsers.add_parser("migrate", help=migrate_fn.__doc__)
+    migrate.add_argument("mirror", type=arguments.mirror_name, help="name of a configured mirror")
+    migrate.add_argument(
+        "-u",
+        "--unsigned",
+        default=False,
+        action="store_true",
+        help="Ignore signatures and do not resign, default is False",
+    )
+    migrate.add_argument(
+        "-d",
+        "--delete-existing",
+        default=False,
+        action="store_true",
+        help="Delete the previous layout, the default is to keep it.",
+    )
+    arguments.add_common_arguments(migrate, ["yes_to_all"])
+    # TODO: add -y argument to prompt if user really means to delete existing
+    migrate.set_defaults(func=migrate_fn)
+
 
 def _matching_specs(specs: List[Spec]) -> List[Spec]:
     """Disambiguate specs and return a list of matching specs"""
-    return [spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=any) for s in specs]
+    return [
+        spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=InstallRecordStatus.ANY)
+        for s in specs
+    ]
 
 
 def _format_spec(spec: Spec) -> str:
@@ -375,19 +382,13 @@ def _specs_to_be_packaged(
 
 def push_fn(args):
     """create a binary package and push it to a mirror"""
-    if args.spec_file:
-        tty.warn(
-            "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
-            "Use positional arguments instead."
-        )
-
-    if args.specs or args.spec_file:
-        roots = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
+    if args.specs:
+        roots = _matching_specs(spack.cmd.parse_specs(args.specs))
     else:
         roots = spack.cmd.require_active_env(cmd_name="buildcache push").concrete_roots()
 
     mirror = args.mirror
-    assert isinstance(mirror, spack.mirror.Mirror)
+    assert isinstance(mirror, spack.mirrors.mirror.Mirror)
 
     push_url = mirror.push_url
 
@@ -432,6 +433,10 @@ def push_fn(args):
                 failed.extend(
                     (s, PackageNotInstalledError("package not installed")) for s in not_installed
                 )
+
+    # Warn about possible old binary mirror layout
+    if not mirror.push_url.startswith("oci://"):
+        check_mirror_for_layout(mirror)
 
     with bindist.make_uploader(
         mirror=mirror,
@@ -524,22 +529,7 @@ def check_fn(args: argparse.Namespace):
     this command uses the process exit code to indicate its result, specifically, if the
     exit code is non-zero, then at least one of the indicated specs needs to be rebuilt
     """
-    if args.spec_file:
-        specs_arg = (
-            args.spec_file if os.path.sep in args.spec_file else os.path.join(".", args.spec_file)
-        )
-        tty.warn(
-            "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
-            f"Use `spack buildcache check {specs_arg}` instead."
-        )
-    elif args.spec:
-        specs_arg = args.spec
-        tty.warn(
-            "The flag `--spec` is deprecated and will be removed in Spack 0.23. "
-            f"Use `spack buildcache check {specs_arg}` instead."
-        )
-    else:
-        specs_arg = args.specs
+    specs_arg = args.specs
 
     if specs_arg:
         specs = _matching_specs(spack.cmd.parse_specs(specs_arg))
@@ -550,8 +540,7 @@ def check_fn(args: argparse.Namespace):
         tty.msg("No specs provided, exiting.")
         return
 
-    for spec in specs:
-        spec.concretize()
+    specs = [spack.concretize.concretize_one(s) for s in specs]
 
     # Next see if there are any configured binary mirrors
     configured_mirrors = spack.config.get("mirrors", scope=args.scope)
@@ -574,28 +563,12 @@ def download_fn(args):
     code indicates that the command failed to download at least one of the required buildcache
     components
     """
-    if args.spec_file:
-        tty.warn(
-            "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
-            "Use --spec instead."
-        )
-
-    specs = _matching_specs(spack.cmd.parse_specs(args.spec or args.spec_file))
+    specs = _matching_specs(spack.cmd.parse_specs(args.spec))
 
     if len(specs) != 1:
         tty.die("a single spec argument is required to download from a buildcache")
 
-    if not bindist.download_single_spec(specs[0], args.path):
-        sys.exit(1)
-
-
-def get_buildcache_name_fn(args):
-    """get name (prefix) of buildcache entries for this spec"""
-    tty.warn("This command is deprecated and will be removed in Spack 0.22.")
-    specs = _matching_specs(spack.cmd.parse_specs(args.spec or args.spec_file))
-    if len(specs) != 1:
-        tty.die("a single spec argument is required to get buildcache name")
-    print(bindist.tarball_name(specs[0], ""))
+    bindist.download_single_spec(specs[0], args.path)
 
 
 def save_specfile_fn(args):
@@ -605,13 +578,7 @@ def save_specfile_fn(args):
     successful. if any errors or exceptions are encountered, or if expected command-line arguments
     are not provided, then the exit code will be non-zero
     """
-    if args.root_specfile:
-        tty.warn(
-            "The flag `--root-specfile` is deprecated and will be removed in Spack 0.22. "
-            "Use --root-spec instead."
-        )
-
-    specs = spack.cmd.parse_specs(args.root_spec or args.root_specfile)
+    specs = spack.cmd.parse_specs(args.root_spec)
 
     if len(specs) != 1:
         tty.die("a single spec argument is required to save specfile")
@@ -619,36 +586,85 @@ def save_specfile_fn(args):
     root = specs[0]
 
     if not root.concrete:
-        root.concretize()
+        root = spack.concretize.concretize_one(root)
 
     save_dependency_specfiles(
         root, args.specfile_dir, dependencies=spack.cmd.parse_specs(args.specs)
     )
 
 
-def copy_buildcache_file(src_url, dest_url, local_path=None):
-    """Copy from source url to destination url"""
-    tmpdir = None
+def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str):
+    """Download buildcache entry and copy it to the destination_url"""
+    try:
+        spec_dict = cache_entry.fetch_metadata()
+        cache_entry.fetch_archive()
+    except bindist.BuildcacheEntryError as e:
+        tty.warn(f"Failed to retrieve buildcache for copying due to {e}")
+        cache_entry.destroy()
+        return
 
-    if not local_path:
-        tmpdir = tempfile.mkdtemp()
-        local_path = os.path.join(tmpdir, os.path.basename(src_url))
+    spec_blob_record = cache_entry.get_blob_record(BuildcacheComponent.SPEC)
+    local_spec_path = cache_entry.get_local_spec_path()
+    tarball_blob_record = cache_entry.get_blob_record(BuildcacheComponent.TARBALL)
+    local_tarball_path = cache_entry.get_local_archive_path()
+
+    target_spec = spack.spec.Spec.from_dict(spec_dict)
+    spec_label = f"{target_spec.name}/{target_spec.dag_hash()[:7]}"
+
+    if not tarball_blob_record:
+        cache_entry.destroy()
+        raise BuildcacheEntryError(f"No source tarball blob record, failed to sync {spec_label}")
+
+    # Try to push the tarball
+    tarball_dest_url = cache_entry.get_blob_url(destination_url, tarball_blob_record)
 
     try:
-        temp_stage = spack.stage.Stage(src_url, path=os.path.dirname(local_path))
-        try:
-            temp_stage.create()
-            temp_stage.fetch()
-            web_util.push_to_url(local_path, dest_url, keep_original=True)
-        except spack.error.FetchError as e:
-            # Expected, since we have to try all the possible extensions
-            tty.debug("no such file: {0}".format(src_url))
-            tty.debug(e)
-        finally:
-            temp_stage.destroy()
-    finally:
-        if tmpdir and os.path.exists(tmpdir):
-            shutil.rmtree(tmpdir)
+        web_util.push_to_url(local_tarball_path, tarball_dest_url, keep_original=True)
+    except Exception as e:
+        tty.warn(f"Failed to push {local_tarball_path} to {tarball_dest_url} due to {e}")
+        cache_entry.destroy()
+        return
+
+    if not spec_blob_record:
+        cache_entry.destroy()
+        raise BuildcacheEntryError(f"No source spec blob record, failed to sync {spec_label}")
+
+    # Try to push the spec file
+    spec_dest_url = cache_entry.get_blob_url(destination_url, spec_blob_record)
+
+    try:
+        web_util.push_to_url(local_spec_path, spec_dest_url, keep_original=True)
+    except Exception as e:
+        tty.warn(f"Failed to push {local_spec_path} to {spec_dest_url} due to {e}")
+        cache_entry.destroy()
+        return
+
+    # Stage the manifest locally, since if it's signed, we don't want to try to
+    # to reproduce that here. Instead just push the locally staged manifest to
+    # the expected path at the destination url.
+    manifest_src_url = cache_entry.remote_manifest_url
+    manifest_dest_url = cache_entry.get_manifest_url(target_spec, destination_url)
+
+    manifest_stage = spack.stage.Stage(manifest_src_url)
+
+    try:
+        manifest_stage.create()
+        manifest_stage.fetch()
+    except Exception as e:
+        tty.warn(f"Failed to fetch manifest from {manifest_src_url} due to {e}")
+        manifest_stage.destroy()
+        cache_entry.destroy()
+        return
+
+    local_manifest_path = manifest_stage.save_filename
+
+    try:
+        web_util.push_to_url(local_manifest_path, manifest_dest_url, keep_original=True)
+    except Exception as e:
+        tty.warn(f"Failed to push manifest to {manifest_dest_url} due to {e}")
+
+    manifest_stage.destroy()
+    cache_entry.destroy()
 
 
 def sync_fn(args):
@@ -688,37 +704,21 @@ def sync_fn(args):
         )
     )
 
-    build_cache_dir = bindist.build_cache_relative_path()
-    buildcache_rel_paths = []
-
     tty.debug("Syncing the following specs:")
-    for s in env.all_specs():
+    specs_to_sync = [s for s in env.all_specs() if not s.external]
+    for s in specs_to_sync:
         tty.debug("  {0}{1}: {2}".format("* " if s in env.roots() else "  ", s.name, s.dag_hash()))
-
-        buildcache_rel_paths.extend(
-            [
-                os.path.join(build_cache_dir, bindist.tarball_path_name(s, ".spack")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json.sig")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.yaml")),
-            ]
+        cache_class = get_url_buildcache_class(
+            layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-
-    tmpdir = tempfile.mkdtemp()
-
-    try:
-        for rel_path in buildcache_rel_paths:
-            src_url = url_util.join(src_mirror_url, rel_path)
-            local_path = os.path.join(tmpdir, rel_path)
-            dest_url = url_util.join(dest_mirror_url, rel_path)
-
-            tty.debug("Copying {0} to {1} via {2}".format(src_url, dest_url, local_path))
-            copy_buildcache_file(src_url, dest_url, local_path=local_path)
-    finally:
-        shutil.rmtree(tmpdir)
+        src_cache_entry = cache_class(src_mirror_url, s, allow_unsigned=True)
+        src_cache_entry.read_manifest()
+        copy_buildcache_entry(src_cache_entry, dest_mirror_url)
 
 
-def manifest_copy(manifest_file_list, dest_mirror=None):
+def manifest_copy(
+    manifest_file_list: List[str], dest_mirror: Optional[spack.mirrors.mirror.Mirror] = None
+):
     """Read manifest files containing information about specific specs to copy
     from source to destination, remove duplicates since any binary packge for
     a given hash should be the same as any other, and copy all files specified
@@ -726,26 +726,29 @@ def manifest_copy(manifest_file_list, dest_mirror=None):
     deduped_manifest = {}
 
     for manifest_path in manifest_file_list:
-        with open(manifest_path) as fd:
+        with open(manifest_path, encoding="utf-8") as fd:
             manifest = json.loads(fd.read())
-            for spec_hash, copy_list in manifest.items():
+            for spec_hash, copy_obj in manifest.items():
                 # Last duplicate hash wins
-                deduped_manifest[spec_hash] = copy_list
+                deduped_manifest[spec_hash] = copy_obj
 
-    build_cache_dir = bindist.build_cache_relative_path()
-    for spec_hash, copy_list in deduped_manifest.items():
-        for copy_file in copy_list:
-            dest = copy_file["dest"]
-            if dest_mirror:
-                src_relative_path = os.path.join(
-                    build_cache_dir, copy_file["src"].rsplit(build_cache_dir, 1)[1].lstrip("/")
-                )
-                dest = url_util.join(dest_mirror.push_url, src_relative_path)
-            tty.debug("copying {0} to {1}".format(copy_file["src"], dest))
-            copy_buildcache_file(copy_file["src"], dest)
+    for spec_hash, copy_obj in deduped_manifest.items():
+        cache_class = get_url_buildcache_class(
+            layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        )
+        src_cache_entry = cache_class(
+            cache_class.get_base_url(copy_obj["src"]), allow_unsigned=True
+        )
+        src_cache_entry.read_manifest(manifest_url=copy_obj["src"])
+        if dest_mirror:
+            destination_url = dest_mirror.push_url
+        else:
+            destination_url = cache_class.get_base_url(copy_obj["dest"])
+        tty.debug("copying {0} to {1}".format(copy_obj["src"], destination_url))
+        copy_buildcache_entry(src_cache_entry, destination_url)
 
 
-def update_index(mirror: spack.mirror.Mirror, update_keys=False):
+def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
     # Special case OCI images for now.
     try:
         image_ref = spack.oci.oci.image_from_mirror(mirror)
@@ -766,13 +769,9 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
         bindist._url_generate_package_index(url, tmpdir)
 
     if update_keys:
-        keys_url = url_util.join(
-            url, bindist.build_cache_relative_path(), bindist.build_cache_keys_relative_path()
-        )
-
         try:
             with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-                bindist.generate_key_index(keys_url, tmpdir)
+                bindist.generate_key_index(url, tmpdir)
         except bindist.CannotListKeys as e:
             # Do not error out if listing keys went wrong. This usually means that the _gpg path
             # does not exist. TODO: distinguish between this and other errors.
@@ -782,6 +781,63 @@ def update_index(mirror: spack.mirror.Mirror, update_keys=False):
 def update_index_fn(args):
     """update a buildcache index"""
     return update_index(args.mirror, update_keys=args.keys)
+
+
+def migrate_fn(args):
+    """perform in-place binary mirror migration (2 to 3)
+
+    A mirror can contain both layout version 2 and version 3 simultaneously without
+    interference. This command performs in-place migration of a binary mirror laid
+    out according to version 2, to a binary mirror laid out according to layout
+    version 3.  Only indexed specs will be migrated, so consider updating the mirror
+    index before running this command.  Re-run the command to migrate any missing
+    items.
+
+    The default mode of operation is to perform a signed migration, that is, spack
+    will attempt to verify the signatures on specs, and then re-sign them before
+    migration, using whatever keys are already installed in your key ring.  You can
+    migrate a mirror of unsigned binaries (or convert a mirror of signed binaries
+    to unsigned) by providing the --unsigned argument.
+
+    By default spack will leave the original mirror contents (in the old layout) in
+    place after migration. You can have spack remove the old contents by providing
+    the --delete-existing argument.  Because migrating a mostly-already-migrated
+    mirror should be fast, consider a workflow where you perform a default migration,
+    (i.e. preserve the existing layout rather than deleting it) then evaluate the
+    state of the migrated mirror by attempting to install from it, and finally
+    running the migration again with --delete-existing."""
+    target_mirror = args.mirror
+    unsigned = args.unsigned
+    assert isinstance(target_mirror, spack.mirrors.mirror.Mirror)
+    delete_existing = args.delete_existing
+
+    proceed = True
+    if delete_existing and not args.yes_to_all:
+        msg = (
+            "Using --delete-existing will delete the entire contents \n"
+            "    of the old layout within the mirror. Because migrating a mirror \n"
+            "    that has already been migrated should be fast, consider a workflow \n"
+            "    where you perform a default migration (i.e. preserve the existing \n"
+            "    layout rather than deleting it), then evaluate the state of the \n"
+            "    migrated mirror by attempting to install from it, and finally, \n"
+            "    run the migration again with --delete-existing."
+        )
+        tty.warn(msg)
+        proceed = tty.get_yes_or_no("Do you want to proceed?", default=False)
+
+    if not proceed:
+        tty.die("Migration aborted.")
+
+    migrate(target_mirror, unsigned=unsigned, delete_existing=delete_existing)
+
+
+def prune_fn(args):
+    """prune stale buildcache entries from the mirror"""
+    mirror: spack.mirrors.mirror.Mirror = args.mirror
+    dry_run: bool = args.dry_run
+    assert isinstance(mirror, spack.mirrors.mirror.Mirror)
+
+    prune(mirror, dry_run)
 
 
 def buildcache(parser, args):

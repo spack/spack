@@ -1,17 +1,18 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 import sys
 
-import llnl.util.tty as tty
-
+import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments
+import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.version
 from spack.cmd.common import arguments
@@ -24,7 +25,7 @@ section = "build"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["jobs", "no_checksum", "spec"])
     subparser.add_argument(
         "-d",
@@ -137,9 +138,8 @@ def dev_build(self, args):
             source_path = os.getcwd()
         source_path = os.path.abspath(source_path)
 
-        # Forces the build to run out of the source directory.
-        spec.constrain("dev_path=%s" % source_path)
-        spec.concretize()
+    spec.constrain(f'dev_path="{source_path}"')
+    spec.concretize()
 
         if spec.installed:
             tty.error("Already installed in %s" % spec.prefix)

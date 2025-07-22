@@ -1,9 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test Spack's custom YAML format."""
 import io
+import pathlib
 
 import pytest
 
@@ -125,7 +125,7 @@ def test_yaml_aliases():
     ],
 )
 @pytest.mark.not_on_windows(reason="fails on Windows")
-def test_round_trip_configuration(initial_content, expected_final_content, tmp_path):
+def test_round_trip_configuration(initial_content, expected_final_content, tmp_path: pathlib.Path):
     """Test that configuration can be loaded and dumped without too many changes"""
     file = tmp_path / "test.yaml"
     file.write_text(initial_content)
@@ -138,3 +138,19 @@ def test_round_trip_configuration(initial_content, expected_final_content, tmp_p
         expected_final_content = initial_content
 
     assert final_content.getvalue() == expected_final_content
+
+
+def test_sorted_dict():
+    assert syaml.sorted_dict(
+        {
+            "z": 0,
+            "y": [{"x": 0, "w": [2, 1, 0]}, 0],
+            "v": ({"u": 0, "t": 0, "s": 0}, 0, {"r": 0, "q": 0}),
+            "p": 0,
+        }
+    ) == {
+        "p": 0,
+        "v": ({"s": 0, "t": 0, "u": 0}, 0, {"q": 0, "r": 0}),
+        "y": [{"w": [2, 1, 0], "x": 0}, 0],
+        "z": 0,
+    }

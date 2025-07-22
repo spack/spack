@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Detection of software installed in the system, based on paths inspections
@@ -8,18 +7,17 @@ and running executables.
 import collections
 import concurrent.futures
 import os
-import os.path
+import pathlib
 import re
 import sys
 import traceback
 import warnings
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 
-import llnl.util.filesystem
-import llnl.util.lang
-import llnl.util.tty
-
 import spack.error
+import spack.llnl.util.filesystem
+import spack.llnl.util.lang
+import spack.llnl.util.tty
 import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
@@ -72,13 +70,21 @@ def dedupe_paths(paths: List[str]) -> List[str]:
     """Deduplicate paths based on inode and device number. In case the list contains first a
     symlink and then the directory it points to, the symlink is replaced with the directory path.
     This ensures that we pick for example ``/usr/bin`` over ``/bin`` if the latter is a symlink to
-    the former`."""
+    the former."""
     seen: Dict[Tuple[int, int], str] = {}
+
+    linked_parent_check = lambda x: any(
+        [spack.llnl.util.filesystem.islink(str(y)) for y in pathlib.Path(x).parents]
+    )
+
     for path in paths:
         identifier = file_identifier(path)
         if identifier not in seen:
             seen[identifier] = path
-        elif not os.path.islink(path):
+        # we also want to deprioritize paths if they contain a symlink in any parent
+        # (not just the basedir): e.g. oneapi has "latest/bin",
+        # where "latest" is a symlink to 2025.0"
+        elif not (spack.llnl.util.filesystem.islink(path) or linked_parent_check(path)):
             seen[identifier] = path
     return list(seen.values())
 
@@ -97,7 +103,7 @@ def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
         path_hints: list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
+    search_paths = spack.llnl.util.filesystem.search_paths_for_executables(*path_hints)
     # Make use we don't doubly list /usr/lib and /lib etc
     return path_to_dict(dedupe_paths(search_paths))
 
@@ -108,11 +114,11 @@ def accept_elf(path, host_compat):
     # Fast path: assume libraries at least have .so in their basename.
     # Note: don't replace with splitext, because of libsmth.so.1.2.3 file names.
     if ".so" not in os.path.basename(path):
-        return llnl.util.filesystem.is_readable_file(path)
+        return spack.llnl.util.filesystem.is_readable_file(path)
     try:
         return host_compat == elf_utils.get_elf_compat(path)
     except (OSError, elf_utils.ElfParsingError):
-        return llnl.util.filesystem.is_readable_file(path)
+        return spack.llnl.util.filesystem.is_readable_file(path)
 
 
 def libraries_in_ld_and_system_library_path(
@@ -142,7 +148,7 @@ def libraries_in_ld_and_system_library_path(
             system paths are used.
     """
     if path_hints:
-        search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
+        search_paths = spack.llnl.util.filesystem.search_paths_for_libraries(*path_hints)
     else:
         search_paths = []
 
@@ -166,7 +172,7 @@ def libraries_in_ld_and_system_library_path(
         host_compat = elf_utils.get_elf_compat(sys.executable)
         accept = lambda path: accept_elf(path, host_compat)
     except (OSError, elf_utils.ElfParsingError):
-        accept = llnl.util.filesystem.is_readable_file
+        accept = spack.llnl.util.filesystem.is_readable_file
 
     path_to_lib = {}
     # Reverse order of search directories so that a lib in the first
@@ -193,10 +199,10 @@ def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[s
     search_hints = (
         path_hints if path_hints is not None else spack.util.environment.get_path("PATH")
     )
-    search_paths = llnl.util.filesystem.search_paths_for_libraries(*search_hints)
+    search_paths = spack.llnl.util.filesystem.search_paths_for_libraries(*search_hints)
     # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
     # at the search root. Add both of those options to the search scheme
-    search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*search_hints))
+    search_paths.extend(spack.llnl.util.filesystem.search_paths_for_executables(*search_hints))
     if path_hints is None:
         # if no user provided path was given, add defaults to the search
         search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
@@ -245,7 +251,7 @@ class Finder:
         raise NotImplementedError("must be implemented by derived classes")
 
     def detect_specs(
-        self, *, pkg: Type["spack.package_base.PackageBase"], paths: List[str]
+        self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str], repo_path
     ) -> List["spack.spec.Spec"]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
 
@@ -263,7 +269,7 @@ class Finder:
 
         result = []
         for candidate_path, items_in_prefix in _group_by_prefix(
-            llnl.util.lang.dedupe(paths)
+            spack.llnl.util.lang.dedupe(paths)
         ).items():
             # TODO: multiple instances of a package can live in the same
             # prefix, and a package implementation can return multiple specs
@@ -286,7 +292,7 @@ class Finder:
 
             if not specs:
                 files = ", ".join(_convert_to_iterable(items_in_prefix))
-                llnl.util.tty.debug(
+                spack.llnl.util.tty.debug(
                     f"The following files in {candidate_path} were decidedly not "
                     f"part of the package {pkg.name}: {files}"
                 )
@@ -299,7 +305,7 @@ class Finder:
 
                 if spec in resolved_specs:
                     prior_prefix = ", ".join(_convert_to_iterable(resolved_specs[spec]))
-                    llnl.util.tty.debug(
+                    spack.llnl.util.tty.debug(
                         f"Files in {candidate_path} and {prior_prefix} are both associated"
                         f" with the same spec {str(spec)}"
                     )
@@ -307,7 +313,10 @@ class Finder:
 
                 resolved_specs[spec] = candidate_path
                 try:
-                    spec.validate_detection()
+                    # Validate the spec calling a package specific method
+                    pkg_cls = repo_path.get_pkg_class(spec.name)
+                    validate_fn = getattr(pkg_cls, "validate_detected_spec", lambda x, y: None)
+                    validate_fn(spec, spec.extra_attributes)
                 except Exception as e:
                     msg = (
                         f'"{spec}" has been detected on the system but will '
@@ -342,8 +351,7 @@ class Finder:
             initial_guess = self.default_path_hints()
             initial_guess.extend(common_windows_package_paths(pkg_cls))
         candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
-        result = self.detect_specs(pkg=pkg_cls, paths=candidates)
-        return result
+        return self.detect_specs(pkg=pkg_cls, paths=candidates, repo_path=repository)
 
 
 class ExecutablesFinder(Finder):
@@ -367,7 +375,7 @@ class ExecutablesFinder(Finder):
         result = executable_prefix(path)
         if not result:
             msg = f"no bin/ dir found in {path}. Cannot add it as a Spack package"
-            llnl.util.tty.debug(msg)
+            spack.llnl.util.tty.debug(msg)
         return result
 
 
@@ -400,7 +408,7 @@ class LibrariesFinder(Finder):
         result = library_prefix(path)
         if not result:
             msg = f"no lib/ or lib64/ dir found in {path}. Cannot add it as a Spack package"
-            llnl.util.tty.debug(msg)
+            spack.llnl.util.tty.debug(msg)
         return result
 
 
@@ -419,7 +427,7 @@ def by_path(
         path_hints: initial list of paths to be searched
         max_workers: maximum number of workers to search for packages in parallel
     """
-    import spack.repo
+    from spack.repo import PATH, partition_package_name
 
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
@@ -427,8 +435,14 @@ def by_path(
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
     result = collections.defaultdict(list)
-    repository = spack.repo.PATH.ensure_unwrapped()
-    with spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False) as executor:
+    repository = PATH.ensure_unwrapped()
+
+    executor: concurrent.futures.Executor
+    if max_workers == 1:
+        executor = spack.util.parallel.SequentialExecutor()
+    else:
+        executor = spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False)
+    with executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
                 executables_finder.find,
@@ -449,14 +463,14 @@ def by_path(
                 try:
                     detected = future.result(timeout=DETECTION_TIMEOUT)
                     if detected:
-                        _, unqualified_name = spack.repo.partition_package_name(pkg_name)
+                        _, unqualified_name = partition_package_name(pkg_name)
                         result[unqualified_name].extend(detected)
                 except concurrent.futures.TimeoutError:
-                    llnl.util.tty.debug(
+                    spack.llnl.util.tty.debug(
                         f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"
                     )
                 except Exception:
-                    llnl.util.tty.debug(
+                    spack.llnl.util.tty.debug(
                         f"[EXTERNAL DETECTION] Skipping {pkg_name}: {traceback.format_exc()}"
                     )
 

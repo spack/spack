@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,8 +9,7 @@ include Tcl non-hierarchical modules, Lua hierarchical modules, and others.
 import os
 from typing import Dict, Type
 
-import llnl.util.tty as tty
-
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.store

@@ -1,7 +1,8 @@
-black==24.10.0
-clingo==5.7.1
-flake8==7.1.1
-isort==5.13.2
-mypy==1.8.0
-types-six==1.16.21.20241105
+black==25.1.0
+clingo==5.8.0
+flake8==7.3.0
+isort==6.0.1
+mypy==1.17.0
+types-six==1.17.0.20250515
 vermin==1.6.0
+pylint==3.3.7

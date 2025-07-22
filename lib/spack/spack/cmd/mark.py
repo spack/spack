@@ -1,16 +1,16 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
-
-from llnl.util import tty
 
 import spack.cmd
 import spack.store
 from spack.cmd.common import arguments
-from spack.database import InstallStatuses
+from spack.llnl.util import tty
+
+from ..enums import InstallRecordStatus
 
 description = "mark packages as explicitly or implicitly installed"
 section = "admin"
@@ -25,7 +25,7 @@ error_message = """You can either:
 display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["installed_specs"])
     subparser.add_argument(
         "-a",
@@ -67,8 +67,7 @@ def find_matching_specs(specs, allow_multiple_matches=False):
     has_errors = False
 
     for spec in specs:
-        install_query = [InstallStatuses.INSTALLED]
-        matching = spack.store.STORE.db.query_local(spec, installed=install_query)
+        matching = spack.store.STORE.db.query_local(spec, installed=InstallRecordStatus.INSTALLED)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:

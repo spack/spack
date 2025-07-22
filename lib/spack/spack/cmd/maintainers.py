@@ -1,23 +1,21 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
 from collections import defaultdict
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.tty.colify import colify
-
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.repo
+from spack.llnl.util.tty.colify import colify
 
 description = "get information about package maintainers"
 section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     maintained_group = subparser.add_mutually_exclusive_group()
     maintained_group.add_argument(
         "--maintained",

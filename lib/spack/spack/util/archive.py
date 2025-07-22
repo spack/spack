@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import errno
@@ -10,9 +9,11 @@ import pathlib
 import tarfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, List, Tuple
 
-from llnl.util.symlink import readlink
+from spack.llnl.util import tty
+from spack.llnl.util.filesystem import readlink
+from spack.util.executable import ProcessError, which
 
 
 class ChecksumWriter(io.BufferedIOBase):
@@ -130,6 +131,15 @@ def default_path_to_name(path: str) -> str:
     return pathlib.PurePath(*p.parts[1:]).as_posix() if p.is_absolute() else p.as_posix()
 
 
+def default_add_file(tar: tarfile.TarFile, file_info: tarfile.TarInfo, path: str) -> None:
+    with open(path, "rb") as f:
+        tar.addfile(file_info, f)
+
+
+def default_add_link(tar: tarfile.TarFile, file_info: tarfile.TarInfo, path: str) -> None:
+    tar.addfile(file_info)
+
+
 def reproducible_tarfile_from_prefix(
     tar: tarfile.TarFile,
     prefix: str,
@@ -137,6 +147,9 @@ def reproducible_tarfile_from_prefix(
     include_parent_directories: bool = False,
     skip: Callable[[os.DirEntry], bool] = lambda entry: False,
     path_to_name: Callable[[str], str] = default_path_to_name,
+    add_file: Callable[[tarfile.TarFile, tarfile.TarInfo, str], None] = default_add_file,
+    add_symlink: Callable[[tarfile.TarFile, tarfile.TarInfo, str], None] = default_add_link,
+    add_hardlink: Callable[[tarfile.TarFile, tarfile.TarInfo, str], None] = default_add_link,
 ) -> None:
     """Create a tarball from a given directory. Only adds regular files, symlinks and dirs.
     Skips devices, fifos. Preserves hardlinks. Normalizes permissions like git. Tar entries are
@@ -161,17 +174,19 @@ def reproducible_tarfile_from_prefix(
     hardlink_to_tarinfo_name: Dict[Tuple[int, int], str] = dict()
 
     if include_parent_directories:
-        parent_dirs = reversed(pathlib.Path(prefix).parents)
+        parent_dirs = reversed(pathlib.PurePosixPath(path_to_name(prefix)).parents)
         next(parent_dirs)  # skip the root: slices are supported from python 3.10
         for parent_dir in parent_dirs:
-            dir_info = tarfile.TarInfo(path_to_name(str(parent_dir)))
+            dir_info = tarfile.TarInfo(str(parent_dir))
             dir_info.type = tarfile.DIRTYPE
             dir_info.mode = 0o755
             tar.addfile(dir_info)
 
     dir_stack = [prefix]
+    new_dirs: List[str] = []
     while dir_stack:
         dir = dir_stack.pop()
+        new_dirs.clear()
 
         # Add the dir before its contents
         dir_info = tarfile.TarInfo(path_to_name(dir))
@@ -183,7 +198,6 @@ def reproducible_tarfile_from_prefix(
         with os.scandir(dir) as it:
             entries = sorted(it, key=lambda entry: entry.name)
 
-        new_dirs = []
         for entry in entries:
             if skip(entry):
                 continue
@@ -201,7 +215,7 @@ def reproducible_tarfile_from_prefix(
                 # st_mode field of the stat structure is unspecified." So we set it to
                 # something sensible without lstat'ing the link.
                 file_info.mode = 0o755
-                tar.addfile(file_info)
+                add_symlink(tar, file_info, entry.path)
 
             elif entry.is_file(follow_symlinks=False):
                 # entry.stat has zero (st_ino, st_dev, st_nlink) on Windows: use lstat.
@@ -216,15 +230,47 @@ def reproducible_tarfile_from_prefix(
                     if ident in hardlink_to_tarinfo_name:
                         file_info.type = tarfile.LNKTYPE
                         file_info.linkname = hardlink_to_tarinfo_name[ident]
-                        tar.addfile(file_info)
+                        add_hardlink(tar, file_info, entry.path)
                         continue
                     hardlink_to_tarinfo_name[ident] = file_info.name
 
                 # If file not yet seen, copy it
                 file_info.type = tarfile.REGTYPE
                 file_info.size = s.st_size
-
-                with open(entry.path, "rb") as f:
-                    tar.addfile(file_info, f)
+                add_file(tar, file_info, entry.path)
 
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
+
+
+def _git_prefix(archive_path, tar):
+    # This is an annoying method, but since we always have a prefix and can't gaurantee what
+    # it is we need this.
+    paths = tar("-tf", archive_path, output=str, error=str, fail_on_error=False)
+    if paths:
+        paths = paths.strip().split()
+        for p in paths:
+            if p.endswith(".git/"):
+                return p[:-5]
+    return ""
+
+
+def retrieve_commit_from_archive(archive_path, ref):
+    """extract git data from an archive with out expanding it"""
+    if not os.path.isfile(archive_path):
+        raise FileNotFoundError(f"The file {archive_path} does not exist")
+
+    tar = which("tar", required=True)
+    prefix = _git_prefix(archive_path, tar)
+    # try branch, tags then detached states
+    for ref_path in [f"refs/heads/{ref}/", f"refs/tags/{ref}/", "HEAD"]:
+        try:
+            commit = tar(
+                "-Oxzf", archive_path, f"{prefix}.git/{ref_path}", output=str, error=str
+            ).strip()
+            if commit and len(commit) == 40:
+                return commit
+        except ProcessError:
+            pass
+
+    tty.warn(f"Archive {archive_path} does not appear to contain git data")
+    return None

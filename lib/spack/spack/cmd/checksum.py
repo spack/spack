@@ -1,22 +1,21 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import re
 import sys
-from typing import Dict, Optional
-
-import llnl.string
-import llnl.util.lang
-from llnl.util import tty
+from typing import Dict, Optional, Tuple
 
 import spack.cmd
+import spack.llnl.string
+import spack.llnl.util.lang
 import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.web as web_util
 from spack.cmd.common import arguments
+from spack.llnl.util import tty
 from spack.package_base import (
     ManualDownloadRequiredError,
     PackageBase,
@@ -32,7 +31,7 @@ section = "packaging"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--keep-stage",
         action="store_true",
@@ -165,7 +164,7 @@ def checksum(parser, args):
             exit(0)
         url_dict = filtered_url_dict
     else:
-        tty.info(f"Found {llnl.string.plural(len(url_dict), 'version')} of {pkg.name}")
+        tty.info(f"Found {spack.llnl.string.plural(len(url_dict), 'version')} of {pkg.name}")
 
     version_hashes = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage, fetch_options=pkg.fetch_options
@@ -182,7 +181,11 @@ def checksum(parser, args):
     print()
 
     if args.add_to_package:
-        add_versions_to_package(pkg, version_lines, args.batch)
+        path = spack.repo.PATH.filename_for_package_name(pkg.name)
+        num_versions_added = add_versions_to_pkg(path, version_lines)
+        tty.msg(f"Added {num_versions_added} new versions to {pkg.name} in {path}")
+        if not args.batch and sys.stdin.isatty():
+            editor(path)
 
 
 def print_checksum_status(pkg: PackageBase, version_hashes: dict):
@@ -220,7 +223,12 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict):
         results.append("{0:{1}}  {2} {3}".format(str(version), max_len, f"[{status}]", msg))
 
     # Display table of checksum results.
-    tty.msg(f"Verified {num_verified} of {num_total}", "", *llnl.util.lang.elide_list(results), "")
+    tty.msg(
+        f"Verified {num_verified} of {num_total}",
+        "",
+        *spack.llnl.util.lang.elide_list(results),
+        "",
+    )
 
     # Terminate at the end of function to prevent additional output.
     if failed:
@@ -228,20 +236,9 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict):
         tty.die("Invalid checksums found.")
 
 
-def add_versions_to_package(pkg: PackageBase, version_lines: str, is_batch: bool):
-    """
-    Add checksumed versions to a package's instructions and open a user's
-    editor so they may double check the work of the function.
-
-    Args:
-        pkg (spack.package_base.PackageBase): A package class for a given package in Spack.
-        version_lines (str): A string of rendered version lines.
-
-    """
-    # Get filename and path for package
-    filename = spack.repo.PATH.filename_for_package_name(pkg.name)
+def _update_version_statements(package_src: str, version_lines: str) -> Tuple[int, str]:
+    """Returns a tuple of number of versions added and the package's modified contents."""
     num_versions_added = 0
-
     version_statement_re = re.compile(r"([\t ]+version\([^\)]*\))")
     version_re = re.compile(r'[\t ]+version\(\s*"([^"]+)"[^\)]*\)')
 
@@ -253,33 +250,34 @@ def add_versions_to_package(pkg: PackageBase, version_lines: str, is_batch: bool
         if match:
             new_versions.append((Version(match.group(1)), ver_line))
 
-    with open(filename, "r+") as f:
-        contents = f.read()
-        split_contents = version_statement_re.split(contents)
+    split_contents = version_statement_re.split(package_src)
 
-        for i, subsection in enumerate(split_contents):
-            # If there are no more versions to add we should exit
-            if len(new_versions) <= 0:
-                break
+    for i, subsection in enumerate(split_contents):
+        # If there are no more versions to add we should exit
+        if len(new_versions) <= 0:
+            break
 
-            # Check if the section contains a version
-            contents_version = version_re.match(subsection)
-            if contents_version is not None:
-                parsed_version = Version(contents_version.group(1))
+        # Check if the section contains a version
+        contents_version = version_re.match(subsection)
+        if contents_version is not None:
+            parsed_version = Version(contents_version.group(1))
 
-                if parsed_version < new_versions[0][0]:
-                    split_contents[i:i] = [new_versions.pop(0)[1], " # FIXME", "\n"]
-                    num_versions_added += 1
+            if parsed_version < new_versions[0][0]:
+                split_contents[i:i] = [new_versions.pop(0)[1], "  # FIXME", "\n"]
+                num_versions_added += 1
 
-                elif parsed_version == new_versions[0][0]:
-                    new_versions.pop(0)
+            elif parsed_version == new_versions[0][0]:
+                new_versions.pop(0)
 
-        # Seek back to the start of the file so we can rewrite the file contents.
-        f.seek(0)
-        f.writelines("".join(split_contents))
+    return num_versions_added, "".join(split_contents)
 
-        tty.msg(f"Added {num_versions_added} new versions to {pkg.name}")
-        tty.msg(f"Open {filename} to review the additions.")
 
-    if sys.stdout.isatty() and not is_batch:
-        editor(filename)
+def add_versions_to_pkg(path: str, version_lines: str) -> int:
+    """Add new versions to a package.py file. Returns the number of versions added."""
+    with open(path, "r", encoding="utf-8") as f:
+        package_src = f.read()
+    num_versions_added, package_src = _update_version_statements(package_src, version_lines)
+    if num_versions_added > 0:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(package_src)
+    return num_versions_added

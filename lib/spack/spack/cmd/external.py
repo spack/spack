@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
@@ -9,15 +8,14 @@ import re
 import sys
 from typing import List, Optional, Set
 
-import llnl.util.tty as tty
-import llnl.util.tty.colify as colify
-
 import spack
 import spack.cmd
 import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.colify as colify
 import spack.package_base
 import spack.repo
 import spack.spec
@@ -28,7 +26,7 @@ section = "config"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
 
     find_parser = sp.add_parser("find", help="add external packages to packages.yaml")
@@ -63,7 +61,7 @@ def setup_parser(subparser):
         "package Spack knows how to find."
     )
 
-    sp.add_parser("list", help="list detectable packages, by repository and name")
+    sp.add_parser("list", aliases=["ls"], help="list detectable packages, by repository and name")
 
     read_cray_manifest = sp.add_parser(
         "read-cray-manifest",
@@ -111,10 +109,7 @@ def external_find(args):
             # Note that KeyboardInterrupt does not subclass Exception
             # (so CTRL-C will terminate the program as expected).
             skip_msg = "Skipping manifest and continuing with other external checks"
-            if (isinstance(e, IOError) or isinstance(e, OSError)) and e.errno in [
-                errno.EPERM,
-                errno.EACCES,
-            ]:
+            if isinstance(e, OSError) and e.errno in (errno.EPERM, errno.EACCES):
                 # The manifest file does not have sufficient permissions enabled:
                 # print a warning and keep going
                 tty.warn("Unable to read manifest due to insufficient permissions.", skip_msg)
@@ -263,6 +258,7 @@ def external(parser, args):
     action = {
         "find": external_find,
         "list": external_list,
+        "ls": external_list,
         "read-cray-manifest": external_read_cray_manifest,
     }
     action[args.external_command](args)

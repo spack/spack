@@ -1,15 +1,15 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import collections
+import warnings
 
-import archspec.cpu
+import spack.vendor.archspec.cpu
 
-import llnl.util.tty.colify as colify
-import llnl.util.tty.color as color
-
+import spack.llnl.util.tty.colify as colify
+import spack.llnl.util.tty.color as color
 import spack.platforms
 import spack.spec
 
@@ -18,7 +18,7 @@ section = "system"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # DEPRECATED: equivalent to --generic --target
     subparser.add_argument(
         "-g",
@@ -52,10 +52,10 @@ def setup_parser(subparser):
         "-t", "--target", action="store_true", default=False, help="print only the target"
     )
     parts2.add_argument(
-        "-f", "--frontend", action="store_true", default=False, help="print frontend"
+        "-f", "--frontend", action="store_true", default=False, help="print frontend (DEPRECATED)"
     )
     parts2.add_argument(
-        "-b", "--backend", action="store_true", default=False, help="print backend"
+        "-b", "--backend", action="store_true", default=False, help="print backend (DEPRECATED)"
     )
 
 
@@ -92,22 +92,21 @@ def display_targets(targets):
 def arch(parser, args):
     if args.generic_target:
         # TODO: add deprecation warning in 0.24
-        print(archspec.cpu.host().generic)
+        print(spack.vendor.archspec.cpu.host().generic)
         return
 
     if args.known_targets:
-        display_targets(archspec.cpu.TARGETS)
+        display_targets(spack.vendor.archspec.cpu.TARGETS)
         return
 
-    os_args, target_args = "default_os", "default_target"
     if args.frontend:
-        os_args, target_args = "frontend", "frontend"
+        warnings.warn("the argument --frontend is deprecated, and will be removed in Spack v1.0")
     elif args.backend:
-        os_args, target_args = "backend", "backend"
+        warnings.warn("the argument --backend is deprecated, and will be removed in Spack v1.0")
 
     host_platform = spack.platforms.host()
-    host_os = host_platform.operating_system(os_args)
-    host_target = host_platform.target(target_args)
+    host_os = host_platform.default_operating_system()
+    host_target = host_platform.default_target()
     if args.family:
         host_target = host_target.family
     elif args.generic:

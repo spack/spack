@@ -1,11 +1,12 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
 
 import pytest
 
+import spack.concretize
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.main
@@ -21,13 +22,13 @@ install = spack.main.SpackCommand("install")
 @pytest.mark.db
 def test_gc_without_build_dependency(mutable_database):
     assert "There are no unused specs." in gc("-yb")
-    assert "There are no unused specs." in gc("-y")
+    # 'gcc' is a pure build dependency in the DB
+    assert "There are no unused specs." not in gc("-y")
 
 
 @pytest.mark.db
 def test_gc_with_build_dependency(mutable_database):
-    s = spack.spec.Spec("simple-inheritance")
-    s.concretize()
+    s = spack.concretize.concretize_one("simple-inheritance")
     PackageInstaller([s.package], explicit=True, fake=True).install()
 
     assert "There are no unused specs." in gc("-yb")
@@ -37,8 +38,8 @@ def test_gc_with_build_dependency(mutable_database):
 
 @pytest.mark.db
 def test_gc_with_constraints(mutable_database):
-    s_cmake1 = spack.spec.Spec("simple-inheritance ^cmake@3.4.3").concretized()
-    s_cmake2 = spack.spec.Spec("simple-inheritance ^cmake@3.23.1").concretized()
+    s_cmake1 = spack.concretize.concretize_one("simple-inheritance ^cmake@3.4.3")
+    s_cmake2 = spack.concretize.concretize_one("simple-inheritance ^cmake@3.23.1")
     PackageInstaller([s_cmake1.package], explicit=True, fake=True).install()
     PackageInstaller([s_cmake2.package], explicit=True, fake=True).install()
 
@@ -53,8 +54,7 @@ def test_gc_with_constraints(mutable_database):
 
 @pytest.mark.db
 def test_gc_with_environment(mutable_database, mutable_mock_env_path):
-    s = spack.spec.Spec("simple-inheritance")
-    s.concretize()
+    s = spack.concretize.concretize_one("simple-inheritance")
     PackageInstaller([s.package], explicit=True, fake=True).install()
 
     e = ev.create("test_gc")
@@ -62,15 +62,14 @@ def test_gc_with_environment(mutable_database, mutable_mock_env_path):
         add("cmake")
         install()
         assert mutable_database.query_local("cmake")
-        output = gc("-y")
+        output = gc("-by")
     assert "Restricting garbage collection" in output
     assert "There are no unused specs" in output
 
 
 @pytest.mark.db
 def test_gc_with_build_dependency_in_environment(mutable_database, mutable_mock_env_path):
-    s = spack.spec.Spec("simple-inheritance")
-    s.concretize()
+    s = spack.concretize.concretize_one("simple-inheritance")
     PackageInstaller([s.package], explicit=True, fake=True).install()
 
     e = ev.create("test_gc")
@@ -121,8 +120,7 @@ def test_gc_except_any_environments(mutable_database, mutable_mock_env_path):
 
 @pytest.mark.db
 def test_gc_except_specific_environments(mutable_database, mutable_mock_env_path):
-    s = spack.spec.Spec("simple-inheritance")
-    s.concretize()
+    s = spack.concretize.concretize_one("simple-inheritance")
     PackageInstaller([s.package], explicit=True, fake=True).install()
 
     assert mutable_database.query_local("zmpi")
@@ -140,27 +138,30 @@ def test_gc_except_specific_environments(mutable_database, mutable_mock_env_path
 
 
 @pytest.mark.db
-def test_gc_except_nonexisting_dir_env(mutable_database, mutable_mock_env_path, tmpdir):
-    output = gc("-ye", tmpdir.strpath, fail_on_error=False)
+def test_gc_except_nonexisting_dir_env(
+    mutable_database, mutable_mock_env_path, tmp_path: pathlib.Path
+):
+    output = gc("-ye", str(tmp_path), fail_on_error=False)
     assert "No such environment" in output
-    gc.returncode == 1
+    assert gc.returncode == 1
 
 
 @pytest.mark.db
-def test_gc_except_specific_dir_env(mutable_database, mutable_mock_env_path, tmpdir):
-    s = spack.spec.Spec("simple-inheritance")
-    s.concretize()
+def test_gc_except_specific_dir_env(
+    mutable_database, mutable_mock_env_path, tmp_path: pathlib.Path
+):
+    s = spack.concretize.concretize_one("simple-inheritance")
     PackageInstaller([s.package], explicit=True, fake=True).install()
 
     assert mutable_database.query_local("zmpi")
 
-    e = ev.create_in_dir(tmpdir.strpath)
+    e = ev.create_in_dir(str(tmp_path))
     with e:
         add("simple-inheritance")
         install()
         assert mutable_database.query_local("simple-inheritance")
 
-    output = gc("-ye", tmpdir.strpath)
+    output = gc("-ye", str(tmp_path))
     assert "Restricting garbage collection" not in output
     assert "Successfully uninstalled zmpi" in output
     assert not mutable_database.query_local("zmpi")

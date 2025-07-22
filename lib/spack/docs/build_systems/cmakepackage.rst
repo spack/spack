@@ -1,13 +1,12 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _cmakepackage:
 
------
+------
 CMake
------
+------
 
 Like Autotools, CMake is a widely-used build-script generator. Designed
 by Kitware, CMake is the most popular build system for new C, C++, and
@@ -49,7 +48,7 @@ Important files
 
 A CMake-based package can be identified by the presence of a
 ``CMakeLists.txt`` file. This file defines the build flags that can be
-passed to the cmake invocation, as well as linking instructions. If
+passed to the CMake invocation, as well as linking instructions. If
 you are familiar with CMake, it can prove very useful for determining
 dependencies and dependency version requirements.
 
@@ -123,6 +122,8 @@ unless CMake found the dependency it was looking for. You may need to
 manually specify certain flags to explore the full depth of supported
 build flags, or check the ``CMakeLists.txt`` yourself.
 
+.. _cmake_args:
+
 ^^^^^^^^^^^^^^^^^^^^^
 Adding flags to cmake
 ^^^^^^^^^^^^^^^^^^^^^
@@ -130,8 +131,8 @@ Adding flags to cmake
 To add additional flags to the ``cmake`` call, simply override the
 ``cmake_args`` function. The following example defines values for the flags
 ``WHATEVER``, ``ENABLE_BROKEN_FEATURE``, ``DETECT_HDF5``, and ``THREADS`` with
-and without the :meth:`~spack.build_systems.cmake.CMakeBuilder.define` and
-:meth:`~spack.build_systems.cmake.CMakeBuilder.define_from_variant` helper functions:
+and without the :meth:`~spack_repo.builtin.build_systems.cmake.CMakeBuilder.define` and
+:meth:`~spack_repo.builtin.build_systems.cmake.CMakeBuilder.define_from_variant` helper functions:
 
 .. code-block:: python
 
@@ -147,7 +148,7 @@ and without the :meth:`~spack.build_systems.cmake.CMakeBuilder.define` and
 
 Spack supports CMake defines from conditional variants too. Whenever the condition on
 the variant is not met, ``define_from_variant()`` will simply return an empty string,
-and CMake simply ignores the empty command line argument. For example the following
+and CMake simply ignores the empty command line argument. For example, the following
 
 .. code-block:: python
 
@@ -169,7 +170,7 @@ The following default arguments are controlled by Spack:
 ``CMAKE_INSTALL_PREFIX``
 ------------------------
 
-Is set to the the package's install directory.
+Is set to the package's install directory.
 
 
 ``CMAKE_PREFIX_PATH``
@@ -200,7 +201,7 @@ a variant to control this:
 However, not every CMake package accepts all four of these options.
 Grep the ``CMakeLists.txt`` file to see if the default values are
 missing or replaced. For example, the
-`dealii <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/dealii/package.py>`_
+`dealii <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/dealii/package.py>`_
 package overrides the default variant with:
 
 .. code-block:: python

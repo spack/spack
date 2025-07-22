@@ -1,32 +1,31 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
+import multiprocessing
 import os
-import platform
+import pathlib
 import posixpath
 import sys
+from typing import Dict, Optional, Tuple
 
 import pytest
 
-import archspec.cpu
-
-from llnl.path import Path, convert_to_platform_path
-from llnl.util.filesystem import HeaderList, LibraryList
+import spack.vendor.archspec.cpu
 
 import spack.build_environment
-import spack.compiler
-import spack.compilers
+import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.package_base
-import spack.paths
 import spack.spec
+import spack.util.environment
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.context import Context
 from spack.installer import PackageInstaller
-from spack.paths import build_env_path
+from spack.llnl.path import Path, convert_to_platform_path
+from spack.llnl.util.filesystem import HeaderList, LibraryList
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -43,61 +42,45 @@ def prep_and_join(path, *pths):
 
 
 @pytest.fixture
-def build_environment(working_env):
-    cc = Executable(os.path.join(build_env_path, "cc"))
-    cxx = Executable(os.path.join(build_env_path, "c++"))
-    fc = Executable(os.path.join(build_env_path, "fc"))
-
+def build_environment(monkeypatch, wrapper_dir, tmp_path: pathlib.Path):
     realcc = "/bin/mycc"
-    prefix = "/spack-test-prefix"
+    prefix = str(tmp_path)
 
-    os.environ["SPACK_CC"] = realcc
-    os.environ["SPACK_CXX"] = realcc
-    os.environ["SPACK_FC"] = realcc
+    monkeypatch.setenv("SPACK_CC", realcc)
+    monkeypatch.setenv("SPACK_CXX", realcc)
+    monkeypatch.setenv("SPACK_FC", realcc)
 
-    os.environ["SPACK_PREFIX"] = prefix
-    os.environ["SPACK_ENV_PATH"] = "test"
-    os.environ["SPACK_DEBUG_LOG_DIR"] = "."
-    os.environ["SPACK_DEBUG_LOG_ID"] = "foo-hashabc"
-    os.environ["SPACK_COMPILER_SPEC"] = "gcc@4.4.7"
-    os.environ["SPACK_SHORT_SPEC"] = "foo@1.2 arch=linux-rhel6-x86_64 /hashabc"
+    monkeypatch.setenv("SPACK_PREFIX", prefix)
+    monkeypatch.setenv("SPACK_COMPILER_WRAPPER_PATH", "test")
+    monkeypatch.setenv("SPACK_DEBUG_LOG_DIR", ".")
+    monkeypatch.setenv("SPACK_DEBUG_LOG_ID", "foo-hashabc")
+    monkeypatch.setenv("SPACK_SHORT_SPEC", "foo@1.2 arch=linux-rhel6-x86_64 /hashabc")
 
-    os.environ["SPACK_CC_RPATH_ARG"] = "-Wl,-rpath,"
-    os.environ["SPACK_CXX_RPATH_ARG"] = "-Wl,-rpath,"
-    os.environ["SPACK_F77_RPATH_ARG"] = "-Wl,-rpath,"
-    os.environ["SPACK_FC_RPATH_ARG"] = "-Wl,-rpath,"
-    os.environ["SPACK_LINKER_ARG"] = "-Wl,"
-    os.environ["SPACK_DTAGS_TO_ADD"] = "--disable-new-dtags"
-    os.environ["SPACK_DTAGS_TO_STRIP"] = "--enable-new-dtags"
-    os.environ["SPACK_SYSTEM_DIRS"] = "/usr/include|/usr/lib"
-    os.environ["SPACK_MANAGED_DIRS"] = f"{prefix}/opt/spack"
-    os.environ["SPACK_TARGET_ARGS"] = ""
+    monkeypatch.setenv("SPACK_CC_RPATH_ARG", "-Wl,-rpath,")
+    monkeypatch.setenv("SPACK_CXX_RPATH_ARG", "-Wl,-rpath,")
+    monkeypatch.setenv("SPACK_F77_RPATH_ARG", "-Wl,-rpath,")
+    monkeypatch.setenv("SPACK_FC_RPATH_ARG", "-Wl,-rpath,")
+    monkeypatch.setenv("SPACK_CC_LINKER_ARG", "-Wl,")
+    monkeypatch.setenv("SPACK_CXX_LINKER_ARG", "-Wl,")
+    monkeypatch.setenv("SPACK_FC_LINKER_ARG", "-Wl,")
+    monkeypatch.setenv("SPACK_F77_LINKER_ARG", "-Wl,")
+    monkeypatch.setenv("SPACK_DTAGS_TO_ADD", "--disable-new-dtags")
+    monkeypatch.setenv("SPACK_DTAGS_TO_STRIP", "--enable-new-dtags")
+    monkeypatch.setenv("SPACK_SYSTEM_DIRS", "/usr/include|/usr/lib")
+    monkeypatch.setenv("SPACK_MANAGED_DIRS", f"{prefix}/opt/spack")
+    monkeypatch.setenv("SPACK_TARGET_ARGS", "")
 
-    if "SPACK_DEPENDENCIES" in os.environ:
-        del os.environ["SPACK_DEPENDENCIES"]
+    monkeypatch.delenv("SPACK_DEPENDENCIES", raising=False)
 
-    yield {"cc": cc, "cxx": cxx, "fc": fc}
+    cc = Executable(str(wrapper_dir / "cc"))
+    cxx = Executable(str(wrapper_dir / "c++"))
+    fc = Executable(str(wrapper_dir / "fc"))
 
-    for name in (
-        "SPACK_CC",
-        "SPACK_CXX",
-        "SPACK_FC",
-        "SPACK_PREFIX",
-        "SPACK_ENV_PATH",
-        "SPACK_DEBUG_LOG_DIR",
-        "SPACK_COMPILER_SPEC",
-        "SPACK_SHORT_SPEC",
-        "SPACK_CC_RPATH_ARG",
-        "SPACK_CXX_RPATH_ARG",
-        "SPACK_F77_RPATH_ARG",
-        "SPACK_FC_RPATH_ARG",
-        "SPACK_TARGET_ARGS",
-    ):
-        del os.environ[name]
+    return {"cc": cc, "cxx": cxx, "fc": fc}
 
 
 @pytest.fixture
-def ensure_env_variables(config, mock_packages, monkeypatch, working_env):
+def ensure_env_variables(mutable_config, mock_packages, monkeypatch, working_env):
     """Returns a function that takes a dictionary and updates os.environ
     for the test lifetime accordingly. Plugs-in mock config and repo.
     """
@@ -162,20 +145,24 @@ def test_static_to_shared_library(build_environment):
 
 
 @pytest.mark.regression("8345")
-@pytest.mark.usefixtures("config", "mock_packages")
-def test_cc_not_changed_by_modules(monkeypatch, working_env):
-    s = spack.spec.Spec("cmake")
-    s.concretize()
-    pkg = s.package
+@pytest.mark.usefixtures("mock_packages")
+@pytest.mark.not_on_windows("Module files are not supported on Windows")
+def test_cc_not_changed_by_modules(monkeypatch, mutable_config, working_env, compiler_factory):
+    """Tests that external module files that are loaded cannot change the
+    CC environment variable.
+    """
+    gcc_entry = compiler_factory(spec="gcc@14.0.1 languages=c,c++")
+    gcc_entry["modules"] = ["some_module"]
+    mutable_config.set("packages", {"gcc": {"externals": [gcc_entry]}})
 
     def _set_wrong_cc(x):
         os.environ["CC"] = "NOT_THIS_PLEASE"
         os.environ["ANOTHER_VAR"] = "THIS_IS_SET"
 
     monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
-    monkeypatch.setattr(pkg.compiler, "modules", ["some_module"])
 
-    spack.build_environment.setup_package(pkg, False)
+    s = spack.concretize.concretize_one("cmake %gcc@14")
+    spack.build_environment.setup_package(s.package, dirty=False)
 
     assert os.environ["CC"] != "NOT_THIS_PLEASE"
     assert os.environ["ANOTHER_VAR"] == "THIS_IS_SET"
@@ -185,8 +172,8 @@ def test_setup_dependent_package_inherited_modules(
     working_env, mock_packages, install_mockery, mock_fetch
 ):
     # This will raise on regression
-    s = spack.spec.Spec("cmake-client-inheritor").concretized()
-    PackageInstaller([s.package]).install()
+    s = spack.concretize.concretize_one("cmake-client-inheritor")
+    PackageInstaller([s.package], fake=True).install()
 
 
 @pytest.mark.parametrize(
@@ -266,10 +253,20 @@ def test_setup_dependent_package_inherited_modules(
     ],
 )
 def test_compiler_config_modifications(
-    initial, modifications, expected, ensure_env_variables, monkeypatch
+    initial,
+    modifications,
+    expected,
+    ensure_env_variables,
+    compiler_factory,
+    mutable_config,
+    monkeypatch,
 ):
     # Set the environment as per prerequisites
     ensure_env_variables(initial)
+
+    gcc_entry = compiler_factory(spec="gcc@14.0.1 languages=c,c++")
+    gcc_entry["extra_attributes"]["environment"] = modifications
+    mutable_config.set("packages", {"gcc": {"externals": [gcc_entry]}})
 
     def platform_pathsep(pathlist):
         if Path.platform_path == Path.windows:
@@ -277,11 +274,9 @@ def test_compiler_config_modifications(
 
         return convert_to_platform_path(pathlist)
 
-    # Monkeypatch a pkg.compiler.environment with the required modifications
-    pkg = spack.spec.Spec("cmake").concretized().package
-    monkeypatch.setattr(pkg.compiler, "environment", modifications)
+    pkg = spack.concretize.concretize_one("cmake %gcc@14").package
     # Trigger the modifications
-    spack.build_environment.setup_package(pkg, False)
+    spack.build_environment.setup_package(pkg, dirty=False)
 
     # Check they were applied
     for name, value in expected.items():
@@ -290,25 +285,6 @@ def test_compiler_config_modifications(
             assert os.environ[name] == value
             continue
         assert name not in os.environ
-
-
-def test_compiler_custom_env(config, mock_packages, monkeypatch, working_env):
-    if sys.platform == "win32":
-        test_path = r"C:\test\path\element\custom-env" + "\\"
-    else:
-        test_path = r"/test/path/element/custom-env/"
-
-    def custom_env(pkg, env):
-        env.prepend_path("PATH", test_path)
-        env.append_flags("ENV_CUSTOM_CC_FLAGS", "--custom-env-flag1")
-
-    pkg = spack.spec.Spec("cmake").concretized().package
-    monkeypatch.setattr(pkg.compiler, "setup_custom_environment", custom_env)
-    spack.build_environment.setup_package(pkg, False)
-
-    # Note: trailing slash may be stripped by internal logic
-    assert test_path[:-1] in os.environ["PATH"]
-    assert "--custom-env-flag1" in os.environ["ENV_CUSTOM_CC_FLAGS"]
 
 
 def test_external_config_env(mock_packages, mutable_config, working_env):
@@ -323,38 +299,39 @@ def test_external_config_env(mock_packages, mutable_config, working_env):
     }
     spack.config.set("packages:cmake", cmake_config)
 
-    cmake_client = spack.spec.Spec("cmake-client").concretized()
+    cmake_client = spack.concretize.concretize_one("cmake-client")
     spack.build_environment.setup_package(cmake_client.package, False)
 
     assert os.environ["TEST_ENV_VAR_SET"] == "yes it's set"
 
 
 @pytest.mark.regression("9107")
-def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch, working_env):
-    s = spack.spec.Spec("cmake")
-    s.concretize()
-    pkg = s.package
+@pytest.mark.not_on_windows("Windows does not support module files")
+def test_spack_paths_before_module_paths(
+    mutable_config, mock_packages, compiler_factory, monkeypatch, working_env, wrapper_dir
+):
+    gcc_entry = compiler_factory(spec="gcc@14.0.1 languages=c,c++")
+    gcc_entry["modules"] = ["some_module"]
+    mutable_config.set("packages", {"gcc": {"externals": [gcc_entry]}})
 
     module_path = os.path.join("path", "to", "module")
+    monkeypatch.setenv("SPACK_COMPILER_WRAPPER_PATH", wrapper_dir)
 
     def _set_wrong_cc(x):
         os.environ["PATH"] = module_path + os.pathsep + os.environ["PATH"]
 
     monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
-    monkeypatch.setattr(pkg.compiler, "modules", ["some_module"])
 
-    spack.build_environment.setup_package(pkg, False)
+    s = spack.concretize.concretize_one("cmake")
 
-    spack_path = os.path.join(spack.paths.prefix, os.path.join("lib", "spack", "env"))
+    spack.build_environment.setup_package(s.package, dirty=False)
 
     paths = os.environ["PATH"].split(os.pathsep)
-
-    assert paths.index(spack_path) < paths.index(module_path)
+    assert paths.index(str(wrapper_dir)) < paths.index(module_path)
 
 
 def test_package_inheritance_module_setup(config, mock_packages, working_env):
-    s = spack.spec.Spec("multimodule-inheritance")
-    s.concretize()
+    s = spack.concretize.concretize_one("multimodule-inheritance")
     pkg = s.package
 
     spack.build_environment.setup_package(pkg, False)
@@ -388,11 +365,10 @@ def test_wrapper_variables(
         not in cuda_include_dirs
     )
 
-    root = spack.spec.Spec("dt-diamond")
-    root.concretize()
+    root = spack.concretize.concretize_one("dt-diamond")
 
     for s in root.traverse():
-        s.prefix = "/{0}-prefix/".format(s.name)
+        s.set_prefix(f"/{s.name}-prefix/")
 
     dep_pkg = root["dt-diamond-left"].package
     dep_lib_paths = ["/test/path/to/ex1.so", "/test/path/to/subdir/ex2.so"]
@@ -400,7 +376,7 @@ def test_wrapper_variables(
     dep_libs = LibraryList(dep_lib_paths)
 
     dep2_pkg = root["dt-diamond-right"].package
-    dep2_pkg.spec.prefix = str(installation_dir_with_headers)
+    dep2_pkg.spec.set_prefix(str(installation_dir_with_headers))
 
     setattr(dep_pkg, "libs", dep_libs)
     try:
@@ -454,7 +430,7 @@ dt-diamond-left:
 """
     )
     spack.config.set("packages", cfg_data)
-    top = spack.spec.Spec("dt-diamond").concretized()
+    top = spack.concretize.concretize_one("dt-diamond")
 
     def _trust_me_its_a_dir(path):
         return True
@@ -494,20 +470,16 @@ def test_parallel_false_is_not_propagating(default_mock_concretization):
 
 @pytest.mark.parametrize(
     "config_setting,expected_flag",
-    [
-        ("runpath", "" if platform.system() == "Darwin" else "--enable-new-dtags"),
-        ("rpath", "" if platform.system() == "Darwin" else "--disable-new-dtags"),
-    ],
+    [("runpath", "--enable-new-dtags"), ("rpath", "--disable-new-dtags")],
 )
-def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mock_packages):
+@pytest.mark.skipif(sys.platform != "linux", reason="dtags make sense only on linux")
+def test_setting_dtags_based_on_config(
+    config_setting, expected_flag, config, mock_packages, working_env
+):
     # Pick a random package to be able to set compiler's variables
-    s = spack.spec.Spec("cmake")
-    s.concretize()
-    pkg = s.package
-
-    env = EnvironmentModifications()
+    s = spack.concretize.concretize_one("cmake")
     with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
-        spack.build_environment.set_compiler_environment_variables(pkg, env)
+        env = spack.build_environment.setup_package(s.package, dirty=False)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications
         assert "SPACK_DTAGS_TO_ADD" in modifications
@@ -534,7 +506,7 @@ def test_module_globals_available_at_setup_dependent_time(
         assert dependent_module.ninja is not None
         dependent_spec.package.test_attr = True
 
-    externaltool = spack.spec.Spec("externaltest").concretized()
+    externaltool = spack.concretize.concretize_one("externaltest")
     monkeypatch.setattr(
         externaltool["externaltool"].package, "setup_dependent_package", setup_dependent_package
     )
@@ -547,7 +519,7 @@ def test_build_jobs_sequential_is_sequential():
         spack.config.determine_number_of_jobs(
             parallel=False,
             max_cpus=8,
-            config=spack.config.Configuration(
+            config=spack.config.create_from(
                 spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 8}}),
                 spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 8}}),
             ),
@@ -561,7 +533,7 @@ def test_build_jobs_command_line_overrides():
         spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=1,
-            config=spack.config.Configuration(
+            config=spack.config.create_from(
                 spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
                 spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}}),
             ),
@@ -572,7 +544,7 @@ def test_build_jobs_command_line_overrides():
         spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=100,
-            config=spack.config.Configuration(
+            config=spack.config.create_from(
                 spack.config.InternalConfigScope("command_line", {"config": {"build_jobs": 10}}),
                 spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}}),
             ),
@@ -586,7 +558,7 @@ def test_build_jobs_defaults():
         spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=10,
-            config=spack.config.Configuration(
+            config=spack.config.create_from(
                 spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 1}})
             ),
         )
@@ -596,7 +568,7 @@ def test_build_jobs_defaults():
         spack.config.determine_number_of_jobs(
             parallel=True,
             max_cpus=10,
-            config=spack.config.Configuration(
+            config=spack.config.create_from(
                 spack.config.InternalConfigScope("defaults", {"config": {"build_jobs": 100}})
             ),
         )
@@ -719,36 +691,6 @@ def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_con
     assert result["ANOTHER_VAR"] == "this-should-be-present"
 
 
-@pytest.mark.parametrize("context", [Context.BUILD, Context.RUN])
-def test_build_system_globals_only_set_on_root_during_build(default_mock_concretization, context):
-    """Test whether when setting up a build environment, the build related globals are set only
-    in the top level spec.
-
-    TODO: Since module instances are globals themselves, and Spack defines properties on them, they
-    persist across tests. In principle this is not terrible, cause the variables are mostly static.
-    But obviously it can lead to very hard to find bugs... We should get rid of those globals and
-    define them instead as a property on the package instance.
-    """
-    root = spack.spec.Spec("mpileaks").concretized()
-    build_variables = ("std_cmake_args", "std_meson_args", "std_pip_args")
-
-    # See todo above, we clear out any properties that may have been set by the previous test.
-    # Commenting this loop will make the test fail. I'm leaving it here as a reminder that those
-    # globals were always a bad idea, and we should pass them to the package instance.
-    for spec in root.traverse():
-        for variable in build_variables:
-            spec.package.module.__dict__.pop(variable, None)
-
-    spack.build_environment.SetupContext(root, context=context).set_all_package_py_globals()
-
-    # Excpect the globals to be set at the root in a build context only.
-    should_be_set = lambda depth: context == Context.BUILD and depth == 0
-
-    for depth, spec in root.traverse(depth=True, root=True):
-        for variable in build_variables:
-            assert hasattr(spec.package.module, variable) == should_be_set(depth)
-
-
 def test_rpath_with_duplicate_link_deps():
     """If we have two instances of one package in the same link sub-dag, only the newest version is
     rpath'ed. This is for runtime support without splicing."""
@@ -770,59 +712,186 @@ def test_rpath_with_duplicate_link_deps():
 @pytest.mark.parametrize(
     "compiler_spec,target_name,expected_flags",
     [
-        # Homogeneous compilers
+        # Semver versions
         ("gcc@4.7.2", "ivybridge", "-march=core-avx-i -mtune=core-avx-i"),
         ("clang@3.5", "x86_64", "-march=x86-64 -mtune=generic"),
         ("apple-clang@9.1.0", "x86_64", "-march=x86-64"),
-        # Mixed toolchain
-        ("clang@8.0.0", "broadwell", ""),
+        ("gcc@=9.2.0", "haswell", "-march=haswell -mtune=haswell"),
+        # Check that custom string versions are accepted
+        ("gcc@=9.2.0-foo", "icelake", "-march=icelake-client -mtune=icelake-client"),
+        # Check that the special case for Apple's clang is treated correctly
+        # i.e. it won't try to detect the version again
+        ("apple-clang@=9.1.0", "x86_64", "-march=x86-64"),
     ],
 )
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
 def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
-    target = archspec.cpu.TARGETS[target_name]
-    compiler_dict = compiler_factory(spec=compiler_spec, operating_system="")["compiler"]
-    if compiler_spec == "clang@8.0.0":
-        compiler_dict["paths"] = {
-            "cc": "/path/to/clang-8",
-            "cxx": "/path/to/clang++-8",
-            "f77": "/path/to/gfortran-9",
-            "fc": "/path/to/gfortran-9",
-        }
-    compiler = spack.compilers.compiler_from_dict(compiler_dict)
+    target = spack.vendor.archspec.cpu.TARGETS[target_name]
+    compiler = spack.spec.parse_with_version_concrete(compiler_spec)
     opt_flags = spack.build_environment.optimization_flags(compiler, target)
     assert opt_flags == expected_flags
+
+
+@pytest.mark.skipif(
+    str(spack.vendor.archspec.cpu.host().family) != "x86_64",
+    reason="tests check specific x86_64 uarch flags",
+)
+@pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
+def test_optimization_flags_are_using_node_target(default_mock_concretization, monkeypatch):
+    """Tests that we are using the target on the node to be compiled to retrieve the uarch
+    specific flags, and not the target of the compiler.
+    """
+    compiler_wrapper_pkg = default_mock_concretization("compiler-wrapper target=core2").package
+    mpileaks = default_mock_concretization("mpileaks target=x86_64")
+
+    env = EnvironmentModifications()
+    compiler_wrapper_pkg.setup_dependent_build_environment(env, mpileaks)
+    actions = env.group_by_name()["SPACK_TARGET_ARGS_CC"]
+
+    assert len(actions) == 1 and isinstance(actions[0], spack.util.environment.SetEnv)
+    assert actions[0].value == "-march=x86-64 -mtune=generic"
+
+
+@pytest.mark.regression("49827")
+@pytest.mark.parametrize(
+    "gcc_config,expected_rpaths",
+    [
+        (
+            """\
+gcc:
+  externals:
+  - spec: gcc@14.2.0 languages=c
+    prefix: /fake/path1
+    extra_attributes:
+      compilers:
+        c: /fake/path1
+      extra_rpaths:
+      - /extra/rpaths1
+      - /extra/rpaths2
+""",
+            "/extra/rpaths1:/extra/rpaths2",
+        ),
+        (
+            """\
+gcc:
+  externals:
+  - spec: gcc@14.2.0 languages=c
+    prefix: /fake/path1
+    extra_attributes:
+      compilers:
+        c: /fake/path1
+""",
+            None,
+        ),
+    ],
+)
+@pytest.mark.not_on_windows("Windows doesn't use the compiler-wrapper")
+def test_extra_rpaths_is_set(
+    working_env, mutable_config, mock_packages, gcc_config, expected_rpaths
+):
+    """Tests that using a compiler with an 'extra_rpaths' section will set the corresponding
+    SPACK_COMPILER_EXTRA_RPATHS variable for the wrapper.
+    """
+    cfg_data = syaml.load_config(gcc_config)
+    spack.config.set("packages", cfg_data)
+    mpich = spack.concretize.concretize_one("mpich %gcc@14")
+    spack.build_environment.setup_package(mpich.package, dirty=False)
+
+    if expected_rpaths is not None:
+        assert os.environ["SPACK_COMPILER_EXTRA_RPATHS"] == expected_rpaths
+    else:
+        assert "SPACK_COMPILER_EXTRA_RPATHS" not in os.environ
+
+
+class _TestProcess:
+    calls: Dict[str, int] = collections.defaultdict(int)
+    terminated = False
+    runtime = 0
+
+    def __init__(self, *, target, args, pkg, read_pipe, timeout):
+        self.alive = None
+        self.exitcode = 0
+        self._reset()
+        self.read_pipe = read_pipe
+        self.timeout = timeout
+
+    def start(self):
+        self.calls["start"] += 1
+        self.alive = True
+
+    def poll(self):
+        return True
+
+    def complete(self):
+        return None
+
+    def is_alive(self):
+        self.calls["is_alive"] += 1
+        return self.alive
+
+    def join(self, timeout: Optional[int] = None):
+        self.calls["join"] += 1
+        if timeout is not None and timeout > self.runtime:
+            self.alive = False
+
+    def terminate(self):
+        self.calls["terminate"] += 1
+        self._set_terminated()
+        self.alive = False
+        # Do not set exit code. A non-zero exit code will trigger an error
+        # instead of gracefully inspecting values for test
+
+    @classmethod
+    def _set_terminated(cls):
+        cls.terminated = True
+
+    @classmethod
+    def _reset(cls):
+        cls.calls.clear()
+        cls.terminated = False
+
+
+class _TestPipe:
+    def close(self):
+        pass
+
+    def recv(self):
+        if _TestProcess.terminated is True:
+            return 1
+        return 0
+
+
+def _pipe_fn(*, duplex: bool = False) -> Tuple[_TestPipe, _TestPipe]:
+    return _TestPipe(), _TestPipe()
+
+
+@pytest.fixture()
+def mock_build_process(monkeypatch):
+    monkeypatch.setattr(spack.build_environment, "BuildProcess", _TestProcess)
+    monkeypatch.setattr(multiprocessing, "Pipe", _pipe_fn)
+
+    def _factory(*, runtime: int):
+        _TestProcess.runtime = runtime
+
+    return _factory
 
 
 @pytest.mark.parametrize(
-    "compiler_str,real_version,target_str,expected_flags",
+    "runtime,timeout,expected_calls",
     [
-        ("gcc@=9.2.0", None, "haswell", "-march=haswell -mtune=haswell"),
-        # Check that custom string versions are accepted
-        ("gcc@=10foo", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
-        # Check that we run version detection (4.4.0 doesn't support icelake)
-        ("gcc@=4.4.0-special", "9.2.0", "icelake", "-march=icelake-client -mtune=icelake-client"),
-        # Check that the special case for Apple's clang is treated correctly
-        # i.e. it won't try to detect the version again
-        ("apple-clang@=9.1.0", None, "x86_64", "-march=x86-64"),
+        # execution time < timeout
+        (2, 5, {"start": 1, "join": 1, "is_alive": 1}),
+        # execution time > timeout
+        (5, 2, {"start": 1, "join": 1, "is_alive": 1, "terminate": 1}),
     ],
 )
-def test_optimization_flags_with_custom_versions(
-    compiler_str,
-    real_version,
-    target_str,
-    expected_flags,
-    monkeypatch,
-    mutable_config,
-    compiler_factory,
-):
-    target = archspec.cpu.TARGETS[target_str]
-    compiler_dict = compiler_factory(spec=compiler_str, operating_system="redhat6")
-    mutable_config.set("compilers", [compiler_dict])
-    if real_version:
-        monkeypatch.setattr(spack.compiler.Compiler, "get_real_version", lambda x: real_version)
-    compiler = spack.compilers.compiler_from_dict(compiler_dict["compiler"])
+def test_build_process_timeout(mock_build_process, runtime, timeout, expected_calls):
+    """Tests that we make the correct function calls in different timeout scenarios."""
+    mock_build_process(runtime=runtime)
+    process = spack.build_environment.start_build_process(
+        pkg=None, function=None, kwargs={}, timeout=timeout
+    )
+    _ = spack.build_environment.complete_build_process(process)
 
-    opt_flags = spack.build_environment.optimization_flags(compiler, target)
-    assert opt_flags == expected_flags
+    assert _TestProcess.calls == expected_calls

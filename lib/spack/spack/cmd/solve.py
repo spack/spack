@@ -1,13 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import re
 import sys
-
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
 
 import spack
 import spack.cmd
@@ -15,6 +12,8 @@ import spack.cmd.spec
 import spack.config
 import spack.environment
 import spack.hash_types as ht
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.solver.asp as asp
 import spack.spec
 
@@ -26,7 +25,7 @@ level = "long"
 show_options = ("asp", "opt", "output", "solutions")
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Solver arguments
     subparser.add_argument(
         "--show",
@@ -137,20 +136,7 @@ def solve(parser, args):
     setup_only = set(show) == {"asp"}
     unify = spack.config.get("concretizer:unify")
     allow_deprecated = spack.config.get("config:deprecated", False)
-    if unify != "when_possible":
-        # set up solver parameters
-        # Note: reuse and other concretizer prefs are passed as configuration
-        result = solver.solve(
-            specs,
-            out=output,
-            timers=args.timers,
-            stats=args.stats,
-            setup_only=setup_only,
-            allow_deprecated=allow_deprecated,
-        )
-        if not setup_only:
-            _process_result(result, show, required_format, kwargs)
-    else:
+    if unify == "when_possible":
         for idx, result in enumerate(
             solver.solve_in_rounds(
                 specs,
@@ -165,5 +151,31 @@ def solve(parser, args):
                 tty.msg("")
             else:
                 print("% END ROUND {0}\n".format(idx))
+            if not setup_only:
+                _process_result(result, show, required_format, kwargs)
+    elif unify:
+        # set up solver parameters
+        # Note: reuse and other concretizer prefs are passed as configuration
+        result = solver.solve(
+            specs,
+            out=output,
+            timers=args.timers,
+            stats=args.stats,
+            setup_only=setup_only,
+            allow_deprecated=allow_deprecated,
+        )
+        if not setup_only:
+            _process_result(result, show, required_format, kwargs)
+    else:
+        for spec in specs:
+            tty.msg("SOLVING SPEC:", spec)
+            result = solver.solve(
+                [spec],
+                out=output,
+                timers=args.timers,
+                stats=args.stats,
+                setup_only=setup_only,
+                allow_deprecated=allow_deprecated,
+            )
             if not setup_only:
                 _process_result(result, show, required_format, kwargs)

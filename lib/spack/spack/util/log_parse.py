@@ -1,15 +1,13 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import io
 import sys
 
-from ctest_log_parser import BuildError, BuildWarning, CTestLogParser
-
-import llnl.util.tty as tty
-from llnl.util.tty.color import cescape, colorize
+import spack.llnl.util.tty as tty
+from spack.llnl.util.tty.color import cescape, colorize
+from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser
 
 __all__ = ["parse_log_events", "make_log_context"]
 

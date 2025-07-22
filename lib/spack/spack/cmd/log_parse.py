@@ -1,12 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
-import llnl.util.tty as tty
-
+import spack.llnl.util.tty as tty
 from spack.util.log_parse import make_log_context, parse_log_events
 
 description = "filter errors and warnings from build logs"
@@ -16,7 +15,7 @@ level = "long"
 event_types = ("errors", "warnings")
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--show",
         action="store",

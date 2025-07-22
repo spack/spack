@@ -1,17 +1,15 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
-from llnl.util.lang import elide_list
-
 import spack.bootstrap
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.relocate
+from spack.llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
+from spack.llnl.util.lang import elide_list
 from spack.util.elf import ElfParsingError, parse_elf
 
 
@@ -27,7 +25,7 @@ def is_shared_library_elf(filepath):
         with open(filepath, "rb") as f:
             elf = parse_elf(f, interpreter=True, dynamic_section=True)
             return elf.has_pt_dynamic and (elf.has_soname or not elf.has_pt_interp)
-    except (IOError, OSError, ElfParsingError):
+    except (OSError, ElfParsingError):
         return False
 
 

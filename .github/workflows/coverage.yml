@@ -12,7 +12,6 @@ jobs:
     - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
       with:
         python-version: '3.11'
-        cache: 'pip'
 
     - name: Install python dependencies
       run: pip install -r .github/workflows/requirements/coverage/requirements.txt
@@ -29,6 +28,8 @@ jobs:
     - run: coverage xml
 
     - name: "Upload coverage report to CodeCov"
-      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238
+      uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303
       with:
         verbose: true
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}

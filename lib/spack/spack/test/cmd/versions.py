@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,6 +8,9 @@ from spack.main import SpackCommand
 from spack.version import Version
 
 versions = SpackCommand("versions")
+
+
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
 
 def test_safe_versions():
@@ -34,7 +36,7 @@ def test_remote_versions_only():
 @pytest.mark.usefixtures("mock_packages")
 def test_new_versions_only(monkeypatch):
     """Test a package for which new versions should be available."""
-    from spack.pkg.builtin.mock.brillig import Brillig  # type: ignore[import]
+    from spack_repo.builtin_mock.packages.brillig.package import Brillig  # type: ignore[import]
 
     def mock_fetch_remote_versions(*args, **kwargs):
         mock_remote_versions = {
@@ -61,13 +63,6 @@ def test_new_versions_only(monkeypatch):
 
 
 @pytest.mark.maybeslow
-def test_no_versions():
-    """Test a package for which no remote versions are available."""
-
-    versions("converge")
-
-
-@pytest.mark.maybeslow
 def test_no_unchecksummed_versions():
     """Test a package for which no unchecksummed versions are available."""
 
@@ -78,11 +73,11 @@ def test_no_unchecksummed_versions():
 def test_versions_no_url():
     """Test a package with versions but without a ``url`` attribute."""
 
-    versions("graphviz")
+    versions("attributes-foo-app")
 
 
 @pytest.mark.maybeslow
 def test_no_versions_no_url():
     """Test a package without versions or a ``url`` attribute."""
 
-    versions("opengl")
+    versions("no-url-or-version")

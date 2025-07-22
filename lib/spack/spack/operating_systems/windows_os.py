@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,9 +8,8 @@ import pathlib
 import platform
 import subprocess
 
-from llnl.util import tty
-
 from spack.error import SpackError
+from spack.llnl.util import tty
 from spack.util import windows_registry as winreg
 from spack.version import Version
 

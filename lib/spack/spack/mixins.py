@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -8,45 +7,46 @@ package.
 """
 import os
 
-import llnl.util.filesystem
+import spack.llnl.util.filesystem
+import spack.phase_callbacks
 
-import spack.builder
 
+def filter_compiler_wrappers(*files: str, **kwargs):
+    """Registers a phase callback (e.g. post-install) to look for references to Spack's compiler
+    wrappers in the given files and replace them with the underlying compilers.
 
-def filter_compiler_wrappers(*files, **kwargs):
-    """Substitutes any path referring to a Spack compiler wrapper with the
-    path of the underlying compiler that has been used.
+    Example usage::
 
-    If this isn't done, the files will have CC, CXX, F77, and FC set to
-    Spack's generic cc, c++, f77, and f90. We want them to be bound to
-    whatever compiler they were built with.
+        class MyPackage(Package):
+
+            filter_compiler_wrappers("mpicc", "mpicxx", relative_root="bin")
+
+    This is useful for packages that register the path to the compiler they are built with to be
+    used later at runtime. Spack's compiler wrappers cannot be used at runtime, as they require
+    Spack's build environment to be set up. Using this function, the compiler wrappers are replaced
+    with the actual compilers, so that the package works correctly at runtime.
 
     Args:
-        *files: files to be filtered relative to the search root (which is,
-            by default, the installation prefix)
+        *files: files to be filtered relative to the search root (install prefix by default).
 
         **kwargs: allowed keyword arguments
 
             after
-                specifies after which phase the files should be
-                filtered (defaults to 'install')
+                specifies after which phase the files should be filtered (defaults to "install")
 
             relative_root
-                path relative to prefix where to start searching for
-                the files to be filtered. If not set the install prefix
-                wil be used as the search root. **It is highly recommended
-                to set this, as searching from the installation prefix may
-                affect performance severely in some cases**.
+                path relative to install prefix where to start searching for the files to be
+                filtered. If not set the install prefix will be used as the search root.
+                It is *highly recommended* to set this, as searching recursively from the
+                installation prefix can be very slow.
 
             ignore_absent, backup
-                these two keyword arguments, if present, will be forwarded
-                to ``filter_file`` (see its documentation for more information
-                on their behavior)
+                these two keyword arguments, if present, will be forwarded to
+                :func:`~spack.llnl.util.filesystem.filter_file`
 
             recursive
                 this keyword argument, if present, will be forwarded to
-                ``find`` (see its documentation for more information on the
-                behavior)
+                :func:`~spack.llnl.util.filesystem.find`
     """
     after = kwargs.get("after", "install")
     relative_root = kwargs.get("relative_root", None)
@@ -66,17 +66,21 @@ def filter_compiler_wrappers(*files, **kwargs):
 
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
-        abs_files = llnl.util.filesystem.find(root, files, **find_kwargs)
+        abs_files = spack.llnl.util.filesystem.find(root, files, **find_kwargs)
         abs_files = [x for x in abs_files if not os.path.islink(x)]
 
-        x = llnl.util.filesystem.FileFilter(*abs_files)
+        x = spack.llnl.util.filesystem.FileFilter(*abs_files)
 
-        compiler_vars = [
-            ("CC", pkg.compiler.cc),
-            ("CXX", pkg.compiler.cxx),
-            ("F77", pkg.compiler.f77),
-            ("FC", pkg.compiler.fc),
-        ]
+        compiler_vars = []
+        if "c" in pkg.spec:
+            compiler_vars.append(("CC", pkg.spec["c"].package.cc))
+
+        if "cxx" in pkg.spec:
+            compiler_vars.append(("CXX", pkg.spec["cxx"].package.cxx))
+
+        if "fortran" in pkg.spec:
+            compiler_vars.append(("FC", pkg.spec["fortran"].package.fortran))
+            compiler_vars.append(("F77", pkg.spec["fortran"].package.fortran))
 
         # Some paths to the compiler wrappers might be substrings of the others.
         # For example:
@@ -104,11 +108,15 @@ def filter_compiler_wrappers(*files, **kwargs):
             x.filter(wrapper_path, compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
-        x.filter("{0}--enable-new-dtags".format(pkg.compiler.linker_arg), "", **filter_kwargs)
+        for compiler_lang in ("c", "cxx", "fortran"):
+            if compiler_lang not in pkg.spec:
+                continue
+            compiler_pkg = pkg.spec[compiler_lang].package
+            x.filter(f"{compiler_pkg.linker_arg}--enable-new-dtags", "", **filter_kwargs)
 
         # NAG compiler is usually mixed with GCC, which has a different
         # prefix for linker arguments.
         if pkg.compiler.name == "nag":
             x.filter("-Wl,--enable-new-dtags", "", **filter_kwargs)
 
-    spack.builder.run_after(after)(_filter_compiler_wrappers_impl)
+    spack.phase_callbacks.run_after(after)(_filter_compiler_wrappers_impl)

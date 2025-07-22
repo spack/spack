@@ -1,5 +1,4 @@
-% Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-% Spack Project Developers. See the top-level COPYRIGHT file for details.
+% Copyright Spack Project Developers. See COPYRIGHT file for details.
 %
 % SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -118,7 +117,7 @@ error(0, "Cannot find a valid provider for virtual {0}", Virtual, startcauses, C
      condition_holds(Cause, node(CID, TriggerPkg)).
 
 % At most one variant value for single-valued variants
-error(0, "'{0}' required multiple values for single-valued variant '{1}'\n    Requested 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2, startcauses, Cause1, X, Cause2, X)
+error(0, "'{0}' requires conflicting variant values 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2, startcauses, Cause1, X, Cause2, X)
   :- attr("node", node(X, Package)),
      node_has_variant(node(X, Package), Variant, VariantID),
      variant_single_value(node(X, Package), Variant),

@@ -1,9 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import tarfile
 
 import pytest
@@ -63,7 +63,7 @@ create = SpackCommand("create")
         (
             ["-t", "intel", "/test-intel"],
             "test-intel",
-            [r"TestIntel(IntelPackage)", r"setup_environment"],
+            [r"TestIntel(IntelOneApiPackage)", r"setup_environment"],
         ),
         (
             ["-t", "makefile", "/test-makefile"],
@@ -131,7 +131,7 @@ def test_create_template(mock_test_repo, args, name, expected):
     filename = repo.filename_for_package_name(name)
     assert os.path.exists(filename)
 
-    with open(filename, "r") as package_file:
+    with open(filename, "r", encoding="utf-8") as package_file:
         content = package_file.read()
         for entry in expected:
             assert entry in content
@@ -162,7 +162,7 @@ def test_build_system_guesser_no_stage():
         guesser(None, "/the/url/does/not/matter")
 
 
-def test_build_system_guesser_octave(tmp_path):
+def test_build_system_guesser_octave(tmp_path: pathlib.Path):
     """
     Test build system guesser for the special case, where the same base URL
     identifies the build system rather than guessing the build system from
@@ -220,7 +220,7 @@ def test_no_url():
         (["fst.jl", "snd.py"], []),
     ],
 )
-def test_language_and_build_system_detection(tmp_path, source_files, languages):
+def test_language_and_build_system_detection(tmp_path: pathlib.Path, source_files, languages):
     """Test that languages are detected from tarball, and the build system is guessed from the
     most top-level build system file."""
 

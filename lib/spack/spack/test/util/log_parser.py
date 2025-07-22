@@ -1,13 +1,14 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from ctest_log_parser import CTestLogParser
+import pathlib
+
+from spack.util.ctest_log_parser import CTestLogParser
 
 
-def test_log_parser(tmpdir):
-    log_file = tmpdir.join("log.txt")
+def test_log_parser(tmp_path: pathlib.Path):
+    log_file = tmp_path / "log.txt"
 
     with log_file.open("w") as f:
         f.write(

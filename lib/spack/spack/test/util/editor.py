@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -8,9 +7,8 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import set_executable
-
 import spack.util.editor as ed
+from spack.llnl.util.filesystem import set_executable
 
 pytestmark = [
     pytest.mark.usefixtures("working_env"),
@@ -41,40 +39,40 @@ def editor_var(request):
     return request.param
 
 
-def _make_exe(tmpdir_factory, name, contents=None):
+def _make_exe(tmp_path_factory: pytest.TempPathFactory, name, contents=None):
     if sys.platform == "win32":
         name += ".exe"
-    path = str(tmpdir_factory.mktemp("%s_exe" % name).join(name))
+    exe_dir = tmp_path_factory.mktemp(f"{name}_exe")
+    path = exe_dir / name
     if contents is not None:
-        with open(path, "w") as f:
-            f.write("#!/bin/sh\n%s\n" % contents)
-        set_executable(path)
-    return path
+        path.write_text(f"#!/bin/sh\n{contents}\n", encoding="utf-8")
+        set_executable(str(path))
+    return str(path)
 
 
 @pytest.fixture(scope="session")
-def good_exe(tmpdir_factory):
-    return _make_exe(tmpdir_factory, "good", "exit 0")
+def good_exe(tmp_path_factory: pytest.TempPathFactory):
+    return _make_exe(tmp_path_factory, "good", "exit 0")
 
 
 @pytest.fixture(scope="session")
-def bad_exe(tmpdir_factory):
-    return _make_exe(tmpdir_factory, "bad", "exit 1")
+def bad_exe(tmp_path_factory: pytest.TempPathFactory):
+    return _make_exe(tmp_path_factory, "bad", "exit 1")
 
 
 @pytest.fixture(scope="session")
-def nosuch_exe(tmpdir_factory):
-    return _make_exe(tmpdir_factory, "nosuch")
+def nosuch_exe(tmp_path_factory: pytest.TempPathFactory):
+    return _make_exe(tmp_path_factory, "nosuch")
 
 
 @pytest.fixture(scope="session")
-def vim_exe(tmpdir_factory):
-    return _make_exe(tmpdir_factory, "vim", "exit 0")
+def vim_exe(tmp_path_factory: pytest.TempPathFactory):
+    return _make_exe(tmp_path_factory, "vim", "exit 0")
 
 
 @pytest.fixture(scope="session")
-def gvim_exe(tmpdir_factory):
-    return _make_exe(tmpdir_factory, "gvim", "exit 0")
+def gvim_exe(tmp_path_factory: pytest.TempPathFactory):
+    return _make_exe(tmp_path_factory, "gvim", "exit 0")
 
 
 def test_find_exe_from_env_var(good_exe):
@@ -205,13 +203,13 @@ def test_no_editor():
     def assert_exec(exe, args):
         assert False
 
-    with pytest.raises(EnvironmentError, match=r"No text editor found.*"):
+    with pytest.raises(OSError, match=r"No text editor found.*"):
         ed.editor("/path/to/file", exec_fn=assert_exec)
 
     def assert_exec(exe, args):
         return False
 
-    with pytest.raises(EnvironmentError, match=r"No text editor found.*"):
+    with pytest.raises(OSError, match=r"No text editor found.*"):
         ed.editor("/path/to/file", exec_fn=assert_exec)
 
 
@@ -221,5 +219,5 @@ def test_exec_fn_executable(editor_var, good_exe, bad_exe):
     assert ed.editor(exec_fn=ed.executable)
 
     os.environ[editor_var] = bad_exe
-    with pytest.raises(EnvironmentError, match=r"No text editor found.*"):
+    with pytest.raises(OSError, match=r"No text editor found.*"):
         ed.editor(exec_fn=ed.executable)

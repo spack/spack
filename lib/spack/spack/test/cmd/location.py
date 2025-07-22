@@ -1,18 +1,18 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import shutil
 
 import pytest
 
-from llnl.util.filesystem import mkdirp
-
+import spack.concretize
 import spack.environment as ev
 import spack.paths
-import spack.spec
+import spack.repo
 import spack.stage
+from spack.llnl.util.filesystem import mkdirp
 from spack.main import SpackCommand, SpackCommandError
 
 # Everything here uses (or can use) the mock config and database.
@@ -26,7 +26,7 @@ env = SpackCommand("env")
 @pytest.fixture
 def mock_spec():
     # Make it look like the source was actually expanded.
-    s = spack.spec.Spec("externaltest").concretized()
+    s = spack.concretize.concretize_one("externaltest")
     source_path = s.package.stage.source_path
     mkdirp(source_path)
     yield s, s.package
@@ -37,8 +37,8 @@ def mock_spec():
 def test_location_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
     install = SpackCommand("install")
-    install("libelf@0.8.12")
-    install("libelf@0.8.13")
+    install("--fake", "libelf@0.8.12")
+    install("--fake", "libelf@0.8.13")
     # This would normally return an error without --first
     assert location("--first", "--install-dir", "libelf")
 
@@ -173,3 +173,24 @@ def test_location_stage_dir(mock_spec):
 def test_location_stages(mock_spec):
     """Tests spack location --stages."""
     assert location("--stages").strip() == spack.stage.get_stage_root()
+
+
+def test_location_specified_repo():
+    """Tests spack location --repo <repo>."""
+    with spack.repo.use_repositories(
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "builtin_mock"),
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "builder_test"),
+    ):
+        assert location("--repo").strip() == spack.repo.PATH.get_repo("builtin_mock").root
+        assert (
+            location("--repo", "builtin_mock").strip()
+            == spack.repo.PATH.get_repo("builtin_mock").root
+        )
+        assert (
+            location("--packages", "builder_test").strip()
+            == spack.repo.PATH.get_repo("builder_test").root
+        )
+        assert (
+            location("--repo", "nonexistent", fail_on_error=False).strip()
+            == "==> Error: no such repository: 'nonexistent'"
+        )

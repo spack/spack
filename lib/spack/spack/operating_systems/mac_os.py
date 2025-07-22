@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,15 +6,14 @@ import os
 import platform as py_platform
 import re
 
-import llnl.util.lang
-
+import spack.llnl.util.lang
 from spack.util.executable import Executable
 from spack.version import Version
 
 from ._operating_system import OperatingSystem
 
 
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def macos_version():
     """Get the current macOS version as a version object.
 
@@ -62,7 +60,7 @@ def macos_version():
     return Version(py_platform.mac_ver()[0])
 
 
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def macos_cltools_version():
     """Find the last installed version of the CommandLineTools.
 
@@ -86,7 +84,7 @@ def macos_cltools_version():
     return None
 
 
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def macos_sdk_path():
     """Return path to the active macOS SDK."""
     xcrun = Executable("xcrun")

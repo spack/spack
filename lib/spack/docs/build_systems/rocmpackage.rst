@@ -1,20 +1,18 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _rocmpackage:
 
-----
+------
 ROCm
-----
+------
 
 The ``ROCmPackage`` is not a build system but a helper package. Like ``CudaPackage``,
 it provides standard variants, dependencies, and conflicts to facilitate building
-packages using GPUs though for AMD in this case.
+packages targeting AMD GPUs.
 
-You can find the source for this package (and suggestions for setting up your
-``compilers.yaml`` and ``packages.yaml`` files) at
+You can find the source for this package (and suggestions for setting up your ``packages.yaml`` file) at
 `<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/rocm.py>`__.
 
 ^^^^^^^^
@@ -38,14 +36,14 @@ This package provides the following variants:
 Dependencies
 ^^^^^^^^^^^^
 
-This package defines basic ``rocm`` dependencies, including ``llvm`` and ``hip``.
+This package defines basic ROCm dependencies, including ``llvm`` and ``hip``.
 
 ^^^^^^^^^
 Conflicts
 ^^^^^^^^^
 
 Conflicts are used to prevent builds with known bugs or issues. This package
-already requires that the ``amdgpu_target`` always be specified for ``rocm``
+already requires that the ``amdgpu_target`` always be specified for ROCm
 builds. It also defines a conflict that prevents builds with an ``amdgpu_target``
 when ``rocm`` is disabled.
 
@@ -57,7 +55,7 @@ Methods
 ^^^^^^^
 
 This package provides one custom helper method, which is used to build
-standard AMD hip compiler flags.
+standard AMD HIP compiler flags.
 
 **hip_flags**
 
@@ -67,9 +65,9 @@ standard AMD hip compiler flags.
     This method must be explicitly called when you are creating the
     arguments for your build in order to use the values.
 
-^^^^^
+^^^^^^
 Usage
-^^^^^
+^^^^^^
 
 This helper package can be added to your package by adding it as a base
 class of your package.  For example, you can add it to your
@@ -92,22 +90,22 @@ class of your package.  For example, you can add it to your
             args = []
             ...
             if spec.satisfies("+rocm"):
-                # Set up the hip macros needed by the build
+                # Set up the HIP macros needed by the build
                 args.extend([
                     "-DENABLE_HIP=ON",
                     f"-DHIP_ROOT_DIR={spec['hip'].prefix}"])
                 rocm_archs = spec.variants["amdgpu_target"].value
                 if "none" not in rocm_archs:
-                    args.append(f"-DHIP_HIPCC_FLAGS=--amdgpu-target={','.join(rocm_archs}")
+                    args.append(f"-DHIP_HIPCC_FLAGS=--amdgpu-target={','.join(rocm_archs)}")
             else:
-                # Ensure build with hip is disabled
+                # Ensure build with HIP is disabled
                 args.append("-DENABLE_HIP=OFF")
             ...
             return args
         ...
 
-assuming only on the ``ENABLE_HIP``, ``HIP_ROOT_DIR``, and ``HIP_HIPCC_FLAGS``
-macros are required to be set and the only dependency needing rocm options
+assuming only the ``ENABLE_HIP``, ``HIP_ROOT_DIR``, and ``HIP_HIPCC_FLAGS``
+macros are required to be set and the only dependency needing ROCm options
 is ``mydeppackage``. You will need to customize the flags as needed for your
 build.
 
@@ -116,6 +114,6 @@ This example also illustrates how to check for the ``rocm`` variant using
 using ``self.spec.variants["amdgpu_target"].value``.
 
 All five packages using ``ROCmPackage`` as of January 2021 also use the
-:ref:`CudaPackage <cudapackage>`. So it is worth looking at those packages
+:ref:`CudaPackage <cudapackage>`. So, it is worth looking at those packages
 to get ideas for creating a package that can support both ``cuda`` and
 ``rocm``.

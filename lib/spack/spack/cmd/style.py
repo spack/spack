@@ -1,20 +1,25 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
+import ast
 import os
 import re
 import sys
-from itertools import zip_longest
+import warnings
+from itertools import islice, zip_longest
+from typing import Callable, Dict, List, Optional
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.filesystem import working_dir
-
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.paths
+import spack.repo
 import spack.util.git
-from spack.util.executable import which
+import spack.util.spack_yaml
+from spack.llnl.util.filesystem import working_dir
+from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
+from spack.tokenize import Token, TokenBase, Tokenizer
+from spack.util.executable import Executable, which
 
 description = "runs source code style checks on spack"
 section = "developer"
@@ -29,17 +34,14 @@ def grouper(iterable, n, fillvalue=None):
         yield filter(None, group)
 
 
-#: List of directories to exclude from checks -- relative to spack root
-exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.prefix)]
+#: List of paths to exclude from checks -- relative to spack root
+exclude_paths = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
 
 #: Order in which tools should be run. flake8 is last so that it can
 #: double-check the results of other tools (if, e.g., --fix was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_names = ["isort", "black", "flake8", "mypy"]
-
-#: tools we run in spack style
-tools = {}
+tool_names = ["import", "isort", "black", "flake8", "mypy"]
 
 #: warnings to ignore in mypy
 mypy_ignores = [
@@ -53,21 +55,35 @@ def is_package(f):
     """Whether flake8 should consider a file as a core file or a package.
 
     We run flake8 with different exceptions for the core and for
-    packages, since we allow `from spack import *` and poking globals
+    packages, since we allow `from spack.package import *` and poking globals
     into packages.
     """
-    return f.startswith("var/spack/repos/") and f.endswith("package.py")
+    return f.startswith("var/spack/") and f.endswith("package.py")
 
 
 #: decorator for adding tools to the list
 class tool:
-    def __init__(self, name, required=False):
+    def __init__(self, name: str, required: bool = False, external: bool = True) -> None:
         self.name = name
+        self.external = external
         self.required = required
 
     def __call__(self, fun):
-        tools[self.name] = (fun, self.required)
+        self.fun = fun
+        tools[self.name] = self
         return fun
+
+    @property
+    def installed(self) -> bool:
+        return bool(which(self.name)) if self.external else True
+
+    @property
+    def executable(self) -> Optional[Executable]:
+        return which(self.name) if self.external else None
+
+
+#: tools we run in spack style
+tools: Dict[str, tool] = {}
 
 
 def changed_files(base="develop", untracked=True, all_files=False, root=None):
@@ -114,7 +130,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if all_files:
         git_args.append(["ls-files", "--exclude-standard"])
 
-    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_directories]
+    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_paths]
     changed = set()
 
     for arg_list in git_args:
@@ -134,7 +150,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     return sorted(changed)
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-b",
         "--base",
@@ -176,22 +192,29 @@ def setup_parser(subparser):
         "-t",
         "--tool",
         action="append",
-        help="specify which tools to run (default: %s)" % ",".join(tool_names),
+        help="specify which tools to run (default: %s)" % ", ".join(tool_names),
     )
     tool_group.add_argument(
         "-s",
         "--skip",
         metavar="TOOL",
         action="append",
-        help="specify tools to skip (choose from %s)" % ",".join(tool_names),
+        help="specify tools to skip (choose from %s)" % ", ".join(tool_names),
+    )
+    subparser.add_argument(
+        "--spec-strings",
+        action="store_true",
+        help="upgrade spec strings in Python, JSON and YAML files for compatibility with Spack "
+        "v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: must be "
+        "used only on specs from spack v0.X.",
     )
 
     subparser.add_argument("files", nargs=argparse.REMAINDER, help="specific files to check")
 
 
-def cwd_relative(path, args):
+def cwd_relative(path, root, initial_working_dir):
     """Translate prefix-relative path to current working directory-relative."""
-    return os.path.relpath(os.path.join(args.root, path), args.initial_working_dir)
+    return os.path.relpath(os.path.join(root, path), initial_working_dir)
 
 
 def rewrite_and_print_output(
@@ -201,7 +224,10 @@ def rewrite_and_print_output(
 
     # print results relative to current working directory
     def translate(match):
-        return replacement.format(cwd_relative(match.group(1), args), *list(match.groups()[1:]))
+        return replacement.format(
+            cwd_relative(match.group(1), args.root, args.initial_working_dir),
+            *list(match.groups()[1:]),
+        )
 
     for line in output.split("\n"):
         if not line:
@@ -220,7 +246,7 @@ def print_style_header(file_list, args, tools_to_run):
     # translate modified paths to cwd_relative if needed
     paths = [filename.strip() for filename in file_list]
     if not args.root_relative:
-        paths = [cwd_relative(filename, args) for filename in paths]
+        paths = [cwd_relative(filename, args.root, args.initial_working_dir) for filename in paths]
 
     tty.msg("Modified files", *paths)
     sys.stdout.flush()
@@ -305,20 +331,8 @@ def run_isort(isort_cmd, file_list, args):
 
             rewrite_and_print_output(output, args, pat, replacement)
 
-    packages_isort_args = (
-        "--rm",
-        "spack",
-        "--rm",
-        "spack.pkgkit",
-        "--rm",
-        "spack.package_defs",
-        "-a",
-        "from spack.package import *",
-    )
-    packages_isort_args = packages_isort_args + isort_args
-
     # packages
-    process_files(filter(is_package, file_list), packages_isort_args)
+    process_files(filter(is_package, file_list), isort_args)
     # non-packages
     process_files(filter(lambda f: not is_package(f), file_list), isort_args)
 
@@ -352,17 +366,138 @@ def run_black(black_cmd, file_list, args):
     return returncode
 
 
+def _module_part(root: str, expr: str):
+    parts = expr.split(".")
+    # spack.pkg is for repositories, don't try to resolve it here.
+    if expr.startswith(spack.repo.PKG_MODULE_PREFIX_V1) or expr == "spack.pkg":
+        return None
+    while parts:
+        f1 = os.path.join(root, "lib", "spack", *parts) + ".py"
+        f2 = os.path.join(root, "lib", "spack", *parts, "__init__.py")
+
+        if (
+            os.path.exists(f1)
+            # ensure case sensitive match
+            and f"{parts[-1]}.py" in os.listdir(os.path.dirname(f1))
+            or os.path.exists(f2)
+        ):
+            return ".".join(parts)
+        parts.pop()
+    return None
+
+
+def _run_import_check(
+    file_list: List[str],
+    *,
+    fix: bool,
+    root_relative: bool,
+    root=spack.paths.prefix,
+    working_dir=spack.paths.prefix,
+    out=sys.stdout,
+):
+    if sys.version_info < (3, 9):
+        print("import check requires Python 3.9 or later")
+        return 0
+
+    is_use = re.compile(r"(?<!from )(?<!import )spack\.[a-zA-Z0-9_\.]+")
+
+    # redundant imports followed by a `# comment` are ignored, cause there can be legimitate reason
+    # to import a module: execute module scope init code, or to deal with circular imports.
+    is_abs_import = re.compile(r"^import (spack\.[a-zA-Z0-9_\.]+)$", re.MULTILINE)
+
+    exit_code = 0
+
+    for file in file_list:
+        to_add = set()
+        to_remove = []
+
+        pretty_path = file if root_relative else cwd_relative(file, root, working_dir)
+
+        try:
+            with open(file, "r", encoding="utf-8") as f:
+                contents = f.read()
+            parsed = ast.parse(contents)
+        except Exception:
+            exit_code = 1
+            print(f"{pretty_path}: could not parse", file=out)
+            continue
+
+        for m in is_abs_import.finditer(contents):
+            # Find at most two occurences: the first is the import itself, the second is its usage.
+            if len(list(islice(re.finditer(rf"{re.escape(m.group(1))}(?!\w)", contents), 2))) == 1:
+                to_remove.append(m.group(0))
+                exit_code = 1
+                print(f"{pretty_path}: redundant import: {m.group(1)}", file=out)
+
+        # Clear all strings to avoid matching comments/strings etc.
+        for node in ast.walk(parsed):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                node.value = ""
+
+        filtered_contents = ast.unparse(parsed)  # novermin
+        for m in is_use.finditer(filtered_contents):
+            module = _module_part(root, m.group(0))
+            if not module or module in to_add:
+                continue
+            if re.search(rf"import {re.escape(module)}(?!\w|\.)", contents):
+                continue
+            to_add.add(module)
+            exit_code = 1
+            print(f"{pretty_path}: missing import: {module} ({m.group(0)})", file=out)
+
+        if not fix or not to_add and not to_remove:
+            continue
+
+        with open(file, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        if to_add:
+            # insert missing imports before the first import, delegate ordering to isort
+            for node in parsed.body:
+                if isinstance(node, (ast.Import, ast.ImportFrom)):
+                    first_line = node.lineno
+                    break
+            else:
+                print(f"{pretty_path}: could not fix", file=out)
+                continue
+            lines.insert(first_line, "\n".join(f"import {x}" for x in to_add) + "\n")
+
+        new_contents = "".join(lines)
+
+        # remove redundant imports
+        for statement in to_remove:
+            new_contents = new_contents.replace(f"{statement}\n", "")
+
+        with open(file, "w", encoding="utf-8") as f:
+            f.write(new_contents)
+
+    return exit_code
+
+
+@tool("import", external=False)
+def run_import_check(import_check_cmd, file_list, args):
+    exit_code = _run_import_check(
+        file_list,
+        fix=args.fix,
+        root_relative=args.root_relative,
+        root=args.root,
+        working_dir=args.initial_working_dir,
+    )
+    print_tool_result("import", exit_code)
+    return exit_code
+
+
 def validate_toolset(arg_value):
     """Validate --tool and --skip arguments (sets of optionally comma-separated tools)."""
     tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
     for tool in tools:
         if tool not in tool_names:
-            tty.die("Invaild tool: '%s'" % tool, "Choose from: %s" % ", ".join(tool_names))
+            tty.die("Invalid tool: '%s'" % tool, "Choose from: %s" % ", ".join(tool_names))
     return tools
 
 
-def missing_tools(tools_to_run):
-    return [t for t in tools_to_run if which(t) is None]
+def missing_tools(tools_to_run: List[str]) -> List[str]:
+    return [t for t in tools_to_run if not tools[t].installed]
 
 
 def _bootstrap_dev_dependencies():
@@ -372,7 +507,230 @@ def _bootstrap_dev_dependencies():
         spack.bootstrap.ensure_environment_dependencies()
 
 
+IS_PROBABLY_COMPILER = re.compile(r"%[a-zA-Z_][a-zA-Z0-9\-]")
+
+
+class _LegacySpecTokens(TokenBase):
+    """Reconstructs the tokens for previous specs, so we can reuse code to rotate them"""
+
+    # Dependency
+    START_EDGE_PROPERTIES = r"(?:\^\[)"
+    END_EDGE_PROPERTIES = r"(?:\])"
+    DEPENDENCY = r"(?:\^)"
+    # Version
+    VERSION_HASH_PAIR = SpecTokens.VERSION_HASH_PAIR.regex
+    GIT_VERSION = SpecTokens.GIT_VERSION.regex
+    VERSION = SpecTokens.VERSION.regex
+    # Variants
+    PROPAGATED_BOOL_VARIANT = SpecTokens.PROPAGATED_BOOL_VARIANT.regex
+    BOOL_VARIANT = SpecTokens.BOOL_VARIANT.regex
+    PROPAGATED_KEY_VALUE_PAIR = SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex
+    KEY_VALUE_PAIR = SpecTokens.KEY_VALUE_PAIR.regex
+    # Compilers
+    COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
+    COMPILER = rf"(?:%\s*(?:{NAME}))"
+    # FILENAME
+    FILENAME = SpecTokens.FILENAME.regex
+    # Package name
+    FULLY_QUALIFIED_PACKAGE_NAME = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex
+    UNQUALIFIED_PACKAGE_NAME = SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex
+    # DAG hash
+    DAG_HASH = SpecTokens.DAG_HASH.regex
+    # White spaces
+    WS = SpecTokens.WS.regex
+    # Unexpected character(s)
+    UNEXPECTED = SpecTokens.UNEXPECTED.regex
+
+
+def _spec_str_reorder_compiler(idx: int, blocks: List[List[Token]]) -> None:
+    # only move the compiler to the back if it exists and is not already at the end
+    if not 0 <= idx < len(blocks) - 1:
+        return
+    # if there's only whitespace after the compiler, don't move it
+    if all(token.kind == _LegacySpecTokens.WS for block in blocks[idx + 1 :] for token in block):
+        return
+    # rotate left and always add at least one WS token between compiler and previous token
+    compiler_block = blocks.pop(idx)
+    if compiler_block[0].kind != _LegacySpecTokens.WS:
+        compiler_block.insert(0, Token(_LegacySpecTokens.WS, " "))
+    # delete the WS tokens from the new first block if it was at the very start, to prevent leading
+    # WS tokens.
+    while idx == 0 and blocks[0][0].kind == _LegacySpecTokens.WS:
+        blocks[0].pop(0)
+    blocks.append(compiler_block)
+
+
+def _spec_str_format(spec_str: str) -> Optional[str]:
+    """Given any string, try to parse as spec string, and rotate the compiler token to the end
+    of each spec instance. Returns the formatted string if it was changed, otherwise None."""
+    # We parse blocks of tokens that include leading whitespace, and move the compiler block to
+    # the end when we hit a dependency ^... or the end of a string.
+    # [@3.1][ +foo][ +bar][ %gcc@3.1][ +baz]
+    # [@3.1][ +foo][ +bar][ +baz][ %gcc@3.1]
+
+    current_block: List[Token] = []
+    blocks: List[List[Token]] = []
+    compiler_block_idx = -1
+    in_edge_attr = False
+
+    legacy_tokenizer = Tokenizer(_LegacySpecTokens)
+
+    for token in legacy_tokenizer.tokenize(spec_str):
+        if token.kind == _LegacySpecTokens.UNEXPECTED:
+            # parsing error, we cannot fix this string.
+            return None
+        elif token.kind in (_LegacySpecTokens.COMPILER, _LegacySpecTokens.COMPILER_AND_VERSION):
+            # multiple compilers are not supported in Spack v0.x, so early return
+            if compiler_block_idx != -1:
+                return None
+            current_block.append(token)
+            blocks.append(current_block)
+            current_block = []
+            compiler_block_idx = len(blocks) - 1
+        elif token.kind in (
+            _LegacySpecTokens.START_EDGE_PROPERTIES,
+            _LegacySpecTokens.DEPENDENCY,
+            _LegacySpecTokens.UNQUALIFIED_PACKAGE_NAME,
+            _LegacySpecTokens.FULLY_QUALIFIED_PACKAGE_NAME,
+        ):
+            _spec_str_reorder_compiler(compiler_block_idx, blocks)
+            compiler_block_idx = -1
+            if token.kind == _LegacySpecTokens.START_EDGE_PROPERTIES:
+                in_edge_attr = True
+            current_block.append(token)
+            blocks.append(current_block)
+            current_block = []
+        elif token.kind == _LegacySpecTokens.END_EDGE_PROPERTIES:
+            in_edge_attr = False
+            current_block.append(token)
+            blocks.append(current_block)
+            current_block = []
+        elif in_edge_attr:
+            current_block.append(token)
+        elif token.kind in (
+            _LegacySpecTokens.VERSION_HASH_PAIR,
+            _LegacySpecTokens.GIT_VERSION,
+            _LegacySpecTokens.VERSION,
+            _LegacySpecTokens.PROPAGATED_BOOL_VARIANT,
+            _LegacySpecTokens.BOOL_VARIANT,
+            _LegacySpecTokens.PROPAGATED_KEY_VALUE_PAIR,
+            _LegacySpecTokens.KEY_VALUE_PAIR,
+            _LegacySpecTokens.DAG_HASH,
+        ):
+            current_block.append(token)
+            blocks.append(current_block)
+            current_block = []
+        elif token.kind == _LegacySpecTokens.WS:
+            current_block.append(token)
+        else:
+            raise ValueError(f"unexpected token {token}")
+
+    if current_block:
+        blocks.append(current_block)
+    _spec_str_reorder_compiler(compiler_block_idx, blocks)
+
+    new_spec_str = "".join(token.value for block in blocks for token in block)
+    return new_spec_str if spec_str != new_spec_str else None
+
+
+SpecStrHandler = Callable[[str, int, int, str, str], None]
+
+
+def _spec_str_default_handler(path: str, line: int, col: int, old: str, new: str):
+    """A SpecStrHandler that prints formatted spec strings and their locations."""
+    print(f"{path}:{line}:{col}: `{old}` -> `{new}`")
+
+
+def _spec_str_fix_handler(path: str, line: int, col: int, old: str, new: str):
+    """A SpecStrHandler that updates formatted spec strings in files."""
+    with open(path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    new_line = lines[line - 1].replace(old, new)
+    if new_line == lines[line - 1]:
+        tty.warn(f"{path}:{line}:{col}: could not apply fix: `{old}` -> `{new}`")
+        return
+    lines[line - 1] = new_line
+    print(f"{path}:{line}:{col}: fixed `{old}` -> `{new}`")
+    with open(path, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
+
+def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
+    """Walk the AST of a Python file and apply handler to formatted spec strings."""
+    has_constant = sys.version_info >= (3, 8)
+    for node in ast.walk(tree):
+        if has_constant and isinstance(node, ast.Constant) and isinstance(node.value, str):
+            current_str = node.value
+        elif not has_constant and isinstance(node, ast.Str):
+            current_str = node.s
+        else:
+            continue
+        if not IS_PROBABLY_COMPILER.search(current_str):
+            continue
+        new = _spec_str_format(current_str)
+        if new is not None:
+            handler(path, node.lineno, node.col_offset, current_str, new)
+
+
+def _spec_str_json_and_yaml(path: str, data: dict, handler: SpecStrHandler) -> None:
+    """Walk a YAML or JSON data structure and apply handler to formatted spec strings."""
+    queue = [data]
+    seen = set()
+
+    while queue:
+        current = queue.pop(0)
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, dict):
+            queue.extend(current.values())
+            queue.extend(current.keys())
+        elif isinstance(current, list):
+            queue.extend(current)
+        elif isinstance(current, str) and IS_PROBABLY_COMPILER.search(current):
+            new = _spec_str_format(current)
+            if new is not None:
+                mark = getattr(current, "_start_mark", None)
+                if mark:
+                    line, col = mark.line + 1, mark.column + 1
+                else:
+                    line, col = 0, 0
+                handler(path, line, col, current, new)
+
+
+def _check_spec_strings(
+    paths: List[str], handler: SpecStrHandler = _spec_str_default_handler
+) -> None:
+    """Open Python, JSON and YAML files, and format their string literals that look like spec
+    strings. A handler is called for each formatting, which can be used to print or apply fixes."""
+    for path in paths:
+        is_json_or_yaml = path.endswith(".json") or path.endswith(".yaml") or path.endswith(".yml")
+        is_python = path.endswith(".py")
+        if not is_json_or_yaml and not is_python:
+            continue
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                # skip files that are likely too large to be user code or config
+                if os.fstat(f.fileno()).st_size > 1024 * 1024:
+                    warnings.warn(f"skipping {path}: too large.")
+                    continue
+                if is_json_or_yaml:
+                    _spec_str_json_and_yaml(path, spack.util.spack_yaml.load_config(f), handler)
+                elif is_python:
+                    _spec_str_ast(path, ast.parse(f.read()), handler)
+        except (OSError, spack.util.spack_yaml.SpackYAMLError, SyntaxError, ValueError):
+            warnings.warn(f"skipping {path}")
+            continue
+
+
 def style(parser, args):
+    if args.spec_strings:
+        if not args.files:
+            tty.die("No files provided to check spec strings.")
+        handler = _spec_str_fix_handler if args.fix else _spec_str_default_handler
+        return _check_spec_strings(args.files, handler)
+
     # save initial working directory for relativizing paths later
     args.initial_working_dir = os.getcwd()
 
@@ -417,9 +775,9 @@ def style(parser, args):
 
         print_style_header(file_list, args, tools_to_run)
         for tool_name in tools_to_run:
-            run_function, required = tools[tool_name]
+            tool = tools[tool_name]
             print_tool_header(tool_name)
-            return_code |= run_function(which(tool_name), file_list, args)
+            return_code |= tool.fun(tool.executable, file_list, args)
 
     if return_code == 0:
         tty.msg(color.colorize("@*{spack style checks were clean}"))

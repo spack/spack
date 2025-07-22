@@ -1,24 +1,25 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import collections
 import os
 import shutil
 import sys
 from typing import List
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.config
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
+import spack.schema
 import spack.schema.env
 import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify_table
 from spack.util.editor import editor
 
 description = "get and set configuration options"
@@ -26,7 +27,7 @@ section = "config"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # User can only choose one
     subparser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read/modify"
@@ -68,6 +69,34 @@ def setup_parser(subparser):
 
     sp.add_parser("list", help="list configuration sections")
 
+    scopes_parser = sp.add_parser(
+        "scopes", help="list defined scopes in descending order of precedence"
+    )
+    scopes_parser.add_argument(
+        "-p",
+        "--paths",
+        action="store_true",
+        default=False,
+        help="show associated paths for appropriate scopes",
+    )
+    scopes_parser.add_argument(
+        "-t",
+        "--type",
+        default=["all"],
+        metavar="scope-type",
+        nargs="+",
+        choices=("all", "env", "include", "internal", "path"),
+        help="list only scopes of the specified type(s)\n\noptions: %(choices)s",
+    )
+    scopes_parser.add_argument(
+        "section",
+        help="tailor scope path information to the specified section (implies -p|--paths)"
+        "\n\noptions: %(choices)s",
+        metavar="section",
+        nargs="?",
+        choices=spack.config.SECTION_SCHEMAS,
+    )
+
     add_parser = sp.add_parser("add", help="add configuration parameters")
     add_parser.add_argument(
         "path",
@@ -99,7 +128,7 @@ def setup_parser(subparser):
     )
 
     # Make the add parser available later
-    setup_parser.add_parser = add_parser
+    setattr(setup_parser, "add_parser", add_parser)
 
     update = sp.add_parser("update", help="update configuration files to the latest format")
     arguments.add_common_arguments(update, ["yes_to_all"])
@@ -213,6 +242,49 @@ def config_list(args):
     Used primarily for shell tab completion scripts.
     """
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
+
+
+def _config_scope_info(args, scope):
+    scope_path = None
+    if (args.section or args.paths) and hasattr(scope, "path"):
+        section_path = scope.get_section_filename(args.section) if args.section else None
+        scope_path = (
+            section_path
+            if section_path and os.path.exists(section_path)
+            else f"{scope.path}{os.sep}"
+        )
+    return (scope.name, scope_path or " ")
+
+
+def _config_basic_scope_types(scope):
+    types = []
+    if isinstance(scope, spack.config.InternalConfigScope):
+        types.append("internal")
+    elif hasattr(scope, "yaml_path") and scope.yaml_path == [spack.schema.env.TOP_LEVEL_KEY]:
+        types.append("env")
+    if hasattr(scope, "path"):
+        types.append("path")
+    return sorted(types)
+
+
+def config_scopes(args):
+    """List configured scopes in descending order of precedence."""
+
+    included_scopes = list(
+        i.name for s in spack.config.scopes().reversed_values() for i in s.included_scopes
+    )
+
+    scopes = list(
+        s
+        for s in spack.config.scopes().reversed_values()
+        if (
+            "include" in args.type
+            and s.name in included_scopes
+            or any(i in ("all", *_config_basic_scope_types(s)) for i in args.type)
+        )
+    )
+    if scopes:
+        colify_table([_config_scope_info(args, s) for s in scopes])
 
 
 def config_add(args):
@@ -350,9 +422,12 @@ def _config_change(config_path, match_spec_str=None):
                 if spack.config.get(key_path, scope=scope):
                     ideal_scope_to_modify = scope
                     break
+            # If we find our key in a specific scope, that's the one we want
+            # to modify. Otherwise we use the default write scope.
+            write_scope = ideal_scope_to_modify or spack.config.default_modify_scope()
 
             update_path = f"{key_path}:[{str(spec)}]"
-            spack.config.add(update_path, scope=ideal_scope_to_modify)
+            spack.config.add(update_path, scope=write_scope)
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
 
@@ -366,7 +441,7 @@ def config_update(args):
     spack.config.CONFIG.get_config(args.section, scope=args.scope)
     updates: List[spack.config.ConfigScope] = [
         x
-        for x in spack.config.CONFIG.format_updates[args.section]
+        for x in spack.config.CONFIG.updated_scopes_by_section[args.section]
         if not isinstance(x, spack.config.InternalConfigScope) and x.writable
     ]
 
@@ -428,13 +503,17 @@ def config_update(args):
     # Get a function to update the format
     update_fn = spack.config.ensure_latest_format_fn(args.section)
     for scope in updates:
-        data = scope.get_section(args.section).pop(args.section)
+        cfg_file = spack.config.CONFIG.get_config_filename(scope.name, args.section)
+        data = scope.get_section(args.section)
+        assert data is not None, f"Cannot find section {args.section} in {scope.name} scope"
         update_fn(data)
 
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + ".bkp"
         shutil.copy(cfg_file, bkp_file)
-        spack.config.CONFIG.update_config(args.section, data, scope=scope.name, force=True)
+        spack.config.CONFIG.update_config(
+            args.section, data[args.section], scope=scope.name, force=True
+        )
         tty.msg(f'File "{cfg_file}" update [backup={bkp_file}]')
 
 
@@ -518,8 +597,6 @@ def config_prefer_upstream(args):
     for spec in pref_specs:
         # Collect all the upstream compilers and versions for this package.
         pkg = pkgs.get(spec.name, {"version": []})
-        all = pkgs.get("all", {"compiler": []})
-        pkgs["all"] = all
         pkgs[spec.name] = pkg
 
         # We have no existing variant if this is our first added version.
@@ -528,10 +605,6 @@ def config_prefer_upstream(args):
         version = spec.version.string
         if version not in pkg["version"]:
             pkg["version"].append(version)
-
-        compiler = str(spec.compiler)
-        if compiler not in all["compiler"]:
-            all["compiler"].append(compiler)
 
         # Get and list all the variants that differ from the default.
         variants = []
@@ -566,7 +639,7 @@ def config_prefer_upstream(args):
 
     # Simply write the config to the specified file.
     existing = spack.config.get("packages", scope=scope)
-    new = spack.config.merge_yaml(existing, pkgs)
+    new = spack.schema.merge_yaml(existing, pkgs)
     spack.config.set("packages", new, scope)
     config_file = spack.config.CONFIG.get_config_filename(scope, section)
 
@@ -579,6 +652,7 @@ def config(parser, args):
         "blame": config_blame,
         "edit": config_edit,
         "list": config_list,
+        "scopes": config_scopes,
         "add": config_add,
         "rm": config_remove,
         "remove": config_remove,

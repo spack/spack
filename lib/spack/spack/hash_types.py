@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Definitions that control how Spack creates Spec hashes."""
@@ -7,7 +6,7 @@
 import spack.deptypes as dt
 import spack.repo
 
-hashes = []
+HASHES = []
 
 
 class SpecHashDescriptor:
@@ -24,7 +23,7 @@ class SpecHashDescriptor:
         self.depflag = depflag
         self.package_hash = package_hash
         self.name = name
-        hashes.append(self)
+        HASHES.append(self)
         # Allow spec hashes to have an alternate computation method
         self.override = override
 
@@ -44,13 +43,9 @@ class SpecHashDescriptor:
         )
 
 
-#: Spack's deployment hash. Includes all inputs that can affect how a package is built.
-dag_hash = SpecHashDescriptor(depflag=dt.BUILD | dt.LINK | dt.RUN, package_hash=True, name="hash")
-
-
-#: Hash descriptor used only to transfer a DAG, as is, across processes
-process_hash = SpecHashDescriptor(
-    depflag=dt.BUILD | dt.LINK | dt.RUN | dt.TEST, package_hash=True, name="process_hash"
+#: The DAG hash includes all inputs that can affect how a package is built.
+dag_hash = SpecHashDescriptor(
+    depflag=dt.BUILD | dt.LINK | dt.RUN | dt.TEST, package_hash=True, name="hash"
 )
 
 

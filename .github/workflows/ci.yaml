@@ -9,6 +9,7 @@ on:
     branches:
       - develop
       - releases/**
+  merge_group:
 
 concurrency:
   group: ci-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
@@ -25,29 +26,22 @@ jobs:
       packages: ${{ steps.filter.outputs.packages }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'merge_group' }}
         with:
           fetch-depth: 0
             # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
         id: filter
         with:
+          # For merge group events, compare against the target branch (main)
+          base: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_ref || '' }}
+          # For merge group events, use the merge group head ref
+          ref: ${{ github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.ref }}
           # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below
           # Don't run if we only modified packages in the
           # built-in repository or documentation
           filters: |
             bootstrap:
-            - 'var/spack/repos/builtin/packages/clingo-bootstrap/**'
-            - 'var/spack/repos/builtin/packages/clingo/**'
-            - 'var/spack/repos/builtin/packages/python/**'
-            - 'var/spack/repos/builtin/packages/re2c/**'
-            - 'var/spack/repos/builtin/packages/gnupg/**'
-            - 'var/spack/repos/builtin/packages/libassuan/**'
-            - 'var/spack/repos/builtin/packages/libgcrypt/**'
-            - 'var/spack/repos/builtin/packages/libgpg-error/**'
-            - 'var/spack/repos/builtin/packages/libksba/**'
-            - 'var/spack/repos/builtin/packages/npth/**'
-            - 'var/spack/repos/builtin/packages/pinentry/**'
             - 'lib/spack/**'
             - 'share/spack/**'
             - '.github/workflows/bootstrap.yml'
@@ -76,10 +70,15 @@ jobs:
 
   prechecks:
     needs: [ changes ]
-    uses: ./.github/workflows/valid-style.yml
+    uses: ./.github/workflows/prechecks.yml
     secrets: inherit
     with:
       with_coverage: ${{ needs.changes.outputs.core }}
+      with_packages: ${{ needs.changes.outputs.packages }}
+
+  import-check:
+    needs: [ changes ]
+    uses: ./.github/workflows/import-check.yaml
 
   all-prechecks:
     needs: [ prechecks ]
@@ -89,7 +88,7 @@ jobs:
     - name: Success
       run: |
         if [ "${{ needs.prechecks.result }}" == "failure" ] || [ "${{ needs.prechecks.result }}" == "canceled" ]; then
-          echo "Unit tests failed." 
+          echo "Unit tests failed."
           exit 1
         else
           exit 0
@@ -97,6 +96,7 @@ jobs:
 
   coverage:
     needs: [ unit-tests, prechecks ]
+    if: ${{ needs.changes.outputs.core }}
     uses: ./.github/workflows/coverage.yml
     secrets: inherit
 
@@ -109,10 +109,10 @@ jobs:
     - name: Status summary
       run: |
         if [ "${{ needs.unit-tests.result }}" == "failure" ] || [ "${{ needs.unit-tests.result }}" == "canceled" ]; then
-          echo "Unit tests failed." 
+          echo "Unit tests failed."
           exit 1
         elif [ "${{ needs.bootstrap.result }}" == "failure" ] || [ "${{ needs.bootstrap.result }}" == "canceled" ]; then
-          echo "Bootstrap tests failed." 
+          echo "Bootstrap tests failed."
           exit 1
         else
           exit 0

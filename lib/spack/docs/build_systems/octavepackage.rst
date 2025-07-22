@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -40,7 +39,7 @@ Most Octave packages are listed at https://octave.sourceforge.io/packages.php.
 Dependencies
 ^^^^^^^^^^^^
 
-Usually, the homepage of a package will list dependencies, i.e.
+Usually, the homepage of a package will list dependencies, i.e.,
 ``Dependencies:	Octave >= 3.6.0 struct >= 1.0.12``. The same information should
 be available in the ``DESCRIPTION`` file in the root of each archive.
 

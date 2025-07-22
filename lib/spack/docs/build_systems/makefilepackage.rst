@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,7 +24,7 @@ The ``MakefileBuilder`` and ``MakefilePackage`` base classes come with 3 phases:
 #. ``install`` - install the project
 
 By default, ``edit`` does nothing, but you can override it to replace
-hard-coded Makefile variables. The ``build`` and ``install`` phases
+hardcoded Makefile variables. The ``build`` and ``install`` phases
 run:
 
 .. code-block:: console
@@ -92,14 +91,14 @@ there are any other variables you need to set, you can do this in the
 
 .. code-block:: python
 
-   def setup_build_environment(self, env):
+   def setup_build_environment(self, env: EnvironmentModifications) -> None:
        env.set("PREFIX", prefix)
        env.set("BLASLIB", spec["blas"].libs.ld_flags)
 
 
-`cbench <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cbench/package.py>`_
+`cbench <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/cbench/package.py>`_
 is a good example of a simple package that does this, while
-`esmf <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/esmf/package.py>`_
+`esmf <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/esmf/package.py>`_
 is a good example of a more complex package.
 
 """"""""""""""""""""""
@@ -130,7 +129,7 @@ If you do need access to the spec, you can create a property like so:
        ]
 
 
-`cloverleaf <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cloverleaf/package.py>`_
+`cloverleaf <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/cloverleaf/package.py>`_
 is a good example of a package that uses this strategy.
 
 """""""""""""
@@ -153,7 +152,7 @@ and a ``filter`` method to help with this. For example:
        makefile.filter(r"^\s*FC\s*=.*",  f"FC = {spack_fc}")
 
 
-`stream <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/stream/package.py>`_
+`stream <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/stream/package.py>`_
 is a good example of a package that involves editing a Makefile to set
 the appropriate variables.
 
@@ -193,7 +192,7 @@ well for storing variables:
                inc.write(f"{key} = {config[key]}\n")
 
 
-`elk <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/elk/package.py>`_
+`elk <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/elk/package.py>`_
 is a good example of a package that uses a dictionary to store
 configuration variables.
 
@@ -214,7 +213,7 @@ them in a list:
                inc.write(f"{var}\n")
 
 
-`hpl <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/hpl/package.py>`_
+`hpl <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/hpl/package.py>`_
 is a good example of a package that uses a list to store
 configuration variables.
 
@@ -236,7 +235,7 @@ user-defined variables and may vary from package to package.
 
 * **Compiler flags**
 
-  This includes variables for specific compilers, like ``CFLAGS``,
+  This includes variables for compiler flags, such as ``CFLAGS``,
   ``CXXFLAGS``, ``F77FLAGS``, ``F90FLAGS``, ``FCFLAGS``, and ``CPPFLAGS``.
   These variables are often hard-coded to contain flags specific to a
   certain compiler. If these flags don't work for every compiler,
@@ -254,7 +253,7 @@ user-defined variables and may vary from package to package.
 * **Platform flags**
 
   These flags control the type of architecture that the executable
-  is compiler for. Watch out for variables like ``PLAT`` or ``ARCH``.
+  is compiled for. Watch out for variables like ``PLAT`` or ``ARCH``.
 
 * **Dependencies**
 

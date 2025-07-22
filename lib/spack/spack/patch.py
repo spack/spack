@@ -1,25 +1,21 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import hashlib
 import os
-import os.path
 import pathlib
 import sys
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
-import llnl.util.filesystem
-from llnl.url import allowed_archive
-
 import spack
 import spack.error
 import spack.fetch_strategy
-import spack.mirror
+import spack.llnl.util.filesystem
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
+from spack.llnl.url import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
 
@@ -40,6 +36,9 @@ def apply_patch(
         working_dir: relative path *within* the stage to change to
         reverse: reverse the patch
     """
+    if not patch_path or not os.path.isfile(patch_path):
+        raise spack.error.NoSuchPatchError(f"No such patch: {patch_path}")
+
     git_utils_path = os.environ.get("PATH", "")
     if sys.platform == "win32":
         git = which_string("git")
@@ -60,7 +59,7 @@ def apply_patch(
     # has issues handling CRLF line endings unless the --binary
     # flag is passed.
     patch = which("patch", required=True, path=git_utils_path)
-    with llnl.util.filesystem.working_dir(stage.source_path):
+    with spack.llnl.util.filesystem.working_dir(stage.source_path):
         patch(*args)
 
 
@@ -84,6 +83,7 @@ class Patch:
         level: int,
         working_dir: str,
         reverse: bool = False,
+        ordering_key: Optional[Tuple[str, int]] = None,
     ) -> None:
         """Initialize a new Patch instance.
 
@@ -93,6 +93,7 @@ class Patch:
             level: patch level
             working_dir: relative path *within* the stage to change to
             reverse: reverse the patch
+            ordering_key: key used to ensure patches are applied in a consistent order
         """
         # validate level (must be an integer >= 0)
         if not isinstance(level, int) or not level >= 0:
@@ -106,16 +107,12 @@ class Patch:
         self.working_dir = working_dir
         self.reverse = reverse
 
-    def apply(self, stage: "spack.stage.Stage") -> None:
-        """Apply a patch to source in a stage.
-
-        Args:
-            stage: stage where source code lives
-        """
-        if not self.path or not os.path.isfile(self.path):
-            raise spack.error.NoSuchPatchError(f"No such patch: {self.path}")
-
-        apply_patch(stage, self.path, self.level, self.working_dir, self.reverse)
+        # The ordering key is passed when executing package.py directives, and is only relevant
+        # after a solve to build concrete specs with consistently ordered patches. For concrete
+        # specs read from a file, we add patches in the order of its patches variants and the
+        # ordering_key is irrelevant. In that case, use a default value so we don't need to branch
+        # on whether ordering_key is None where it's used, just to make static analysis happy.
+        self.ordering_key: Tuple[str, int] = ordering_key or ("", 0)
 
     # TODO: Use TypedDict once Spack supports Python 3.8+ only
     def to_dict(self) -> Dict[str, Any]:
@@ -203,9 +200,8 @@ class FilePatch(Patch):
             msg += "package %s.%s does not exist." % (pkg.namespace, pkg.name)
             raise ValueError(msg)
 
-        super().__init__(pkg, abs_path, level, working_dir, reverse)
+        super().__init__(pkg, abs_path, level, working_dir, reverse, ordering_key)
         self.path = abs_path
-        self.ordering_key = ordering_key
 
     @property
     def sha256(self) -> str:
@@ -267,12 +263,9 @@ class UrlPatch(Patch):
             archive_sha256: sha256 sum of the *archive*, if the patch is compressed
                 (only required for compressed URL patches)
         """
-        super().__init__(pkg, url, level, working_dir, reverse)
+        super().__init__(pkg, url, level, working_dir, reverse, ordering_key)
 
         self.url = url
-        self._stage: Optional["spack.stage.Stage"] = None
-
-        self.ordering_key = ordering_key
 
         if allowed_archive(self.url) and not archive_sha256:
             raise spack.error.PatchDirectiveError(
@@ -285,58 +278,17 @@ class UrlPatch(Patch):
             raise spack.error.PatchDirectiveError("URL patches require a sha256 checksum")
         self.sha256 = sha256
 
-    def apply(self, stage: "spack.stage.Stage") -> None:
-        """Apply a patch to source in a stage.
-
-        Args:
-            stage: stage where source code lives
-        """
-        assert self.stage.expanded, "Stage must be expanded before applying patches"
-
-        # Get the patch file.
-        files = os.listdir(self.stage.source_path)
-        assert len(files) == 1, "Expected one file in stage source path, found %s" % files
-        self.path = os.path.join(self.stage.source_path, files[0])
-
-        return super().apply(stage)
-
-    @property
-    def stage(self) -> "spack.stage.Stage":
-        """The stage in which to download (and unpack) the URL patch.
-
-        Returns:
-            The stage object.
-        """
-        if self._stage:
-            return self._stage
-
-        fetch_digest = self.archive_sha256 or self.sha256
-
+    def fetcher(self) -> "spack.fetch_strategy.FetchStrategy":
+        """Construct a fetcher that can download (and unpack) this patch."""
         # Two checksums, one for compressed file, one for its contents
         if self.archive_sha256 and self.sha256:
-            fetcher: spack.fetch_strategy.FetchStrategy = (
-                spack.fetch_strategy.FetchAndVerifyExpandedFile(
-                    self.url, archive_sha256=self.archive_sha256, expanded_sha256=self.sha256
-                )
+            return spack.fetch_strategy.FetchAndVerifyExpandedFile(
+                self.url, archive_sha256=self.archive_sha256, expanded_sha256=self.sha256
             )
         else:
-            fetcher = spack.fetch_strategy.URLFetchStrategy(
+            return spack.fetch_strategy.URLFetchStrategy(
                 url=self.url, sha256=self.sha256, expand=False
             )
-
-        # The same package can have multiple patches with the same name but
-        # with different contents, therefore apply a subset of the hash.
-        name = "{0}-{1}".format(os.path.basename(self.url), fetch_digest[:7])
-
-        per_package_ref = os.path.join(self.owner.split(".")[-1], name)
-        mirror_ref = spack.mirror.default_mirror_layout(fetcher, per_package_ref)
-        self._stage = spack.stage.Stage(
-            fetcher,
-            name=f"{spack.stage.stage_prefix}patch-{fetch_digest}",
-            mirror_paths=mirror_ref,
-            mirrors=spack.mirror.MirrorCollection(source=True).values(),
-        )
-        return self._stage
 
     def to_dict(self) -> Dict[str, Any]:
         """Dictionary representation of the patch.

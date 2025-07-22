@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,14 +9,13 @@
 Build Systems
 =============
 
-Spack defines a number of classes which understand how to use common
+Spack defines a number of classes that understand how to use common
 `build systems  <https://en.wikipedia.org/wiki/List_of_build_automation_software>`_
 (Makefiles, CMake, etc.). Spack package definitions can inherit these
 classes in order to streamline their builds.
 
 This guide provides information specific to each particular build system.
-It assumes that you've read the :ref:`packaging-guide` and expands
-on these ideas for each distinct build system that Spack supports:
+It assumes that you've read the Packaging Guide :doc:`part 1 <packaging_guide_creation>` and :doc:`part 2 <packaging_guide_build>` and expands on these ideas for each distinct build system that Spack supports:
 
 .. toctree::
    :maxdepth: 1
@@ -64,11 +62,10 @@ on these ideas for each distinct build system that Spack supports:
    build_systems/cudapackage
    build_systems/custompackage
    build_systems/inteloneapipackage
-   build_systems/intelpackage
    build_systems/rocmpackage
    build_systems/sourceforgepackage
 
-For reference, the :py:mod:`Build System API docs <spack.build_systems>`
+For reference, the :py:mod:`Build System API docs <spack_repo.builtin.build_systems>`
 provide a list of build systems and methods/attributes that can be
 overridden. If you are curious about the implementation of a particular
 build system, you can view the source code by running:
@@ -85,14 +82,14 @@ packages. You can quickly find examples by running:
 
 .. code-block:: console
 
-   $ cd var/spack/repos/builtin/packages
+   $ spack cd --packages
    $ grep -l QMakePackage */package.py
 
 
 You can then view these packages with ``spack edit``.
 
 This guide is intended to supplement the
-:py:mod:`Build System API docs <spack.build_systems>` with examples of
+:py:mod:`Build System API docs <spack_repo.builtin.build_systems>` with examples of
 how to override commonly used methods. It also provides rules of thumb
 and suggestions for package developers who are unfamiliar with a
 particular build system.

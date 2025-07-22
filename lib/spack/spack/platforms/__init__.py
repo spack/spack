@@ -1,8 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
+from typing import Callable
 
 from ._functions import _host, by_name, platforms, reset
 from ._platform import Platform
@@ -31,7 +31,7 @@ real_host = _host
 
 #: The current platform used by Spack. May be swapped by the use_platform
 #: context manager.
-host = _host
+host: Callable[[], Platform] = _host
 
 
 class _PickleableCallable:
@@ -53,8 +53,7 @@ def use_platform(new_platform):
 
     import spack.config
 
-    msg = '"{0}" must be an instance of Platform'
-    assert isinstance(new_platform, Platform), msg.format(new_platform)
+    assert isinstance(new_platform, Platform), f'"{new_platform}" must be an instance of Platform'
 
     original_host_fn = host
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,6 +6,8 @@
 import pytest
 
 from spack.main import SpackCommand
+
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
 providers = SpackCommand("providers")
 
@@ -25,18 +26,28 @@ def test_it_just_runs(pkg):
         (
             ("mpi",),
             [
-                "intel-mpi",
                 "intel-parallel-studio",
-                "mpich",
-                "mpilander",
-                "mvapich2",
-                "openmpi",
-                "openmpi@1.7.5:",
-                "openmpi@2.0.0:",
-                "spectrum-mpi",
+                "low-priority-provider",
+                "mpich@3:",
+                "mpich2",
+                "multi-provider-mpi@1.10.0",
+                "multi-provider-mpi@2.0.0",
+                "zmpi",
             ],
         ),
-        (("D", "awk"), ["ldc", "gawk", "mawk"]),  # Call 2 virtual packages at once
+        (
+            ("lapack", "something"),
+            [
+                "intel-parallel-studio",
+                "low-priority-provider",
+                "netlib-lapack",
+                "openblas-with-lapack",
+                "simple-inheritance",
+                "splice-a",
+                "splice-h",
+                "splice-vh",
+            ],
+        ),  # Call 2 virtual packages at once
     ],
 )
 def test_provider_lists(vpkg, provider_list):

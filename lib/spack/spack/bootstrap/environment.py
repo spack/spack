@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Bootstrap non-core Spack dependencies from an environment."""
@@ -9,14 +8,13 @@ import pathlib
 import sys
 from typing import Iterable, List
 
-import archspec.cpu
-
-from llnl.util import tty
+import spack.vendor.archspec.cpu
 
 import spack.environment
 import spack.spec
 import spack.tengine
 import spack.util.path
+from spack.llnl.util import tty
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
@@ -52,7 +50,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         """Environment root directory"""
         bootstrap_root_path = root_path()
         python_part = spec_for_current_python().replace("@", "")
-        arch_part = archspec.cpu.host().family
+        arch_part = spack.vendor.archspec.cpu.host().family
         interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
         environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"
         return pathlib.Path(
@@ -93,7 +91,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                self.install_all()
+                self.install_all(fail_fast=True)
                 self.write(regenerate=True)
 
     def load(self) -> None:
@@ -113,7 +111,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         context = {
             "python_spec": spec_for_current_python(),
             "python_prefix": sys.exec_prefix,
-            "architecture": archspec.cpu.host().family,
+            "architecture": spack.vendor.archspec.cpu.host().family,
             "environment_path": self.environment_root(),
             "environment_specs": self.spack_dev_requirements(),
             "store_path": store_path(),
@@ -129,12 +127,12 @@ def isort_root_spec() -> str:
 
 def mypy_root_spec() -> str:
     """Return the root spec used to bootstrap mypy"""
-    return _root_spec("py-mypy@0.900:")
+    return _root_spec("py-mypy@0.900: ^py-mypy-extensions@:1.0")
 
 
 def black_root_spec() -> str:
     """Return the root spec used to bootstrap black"""
-    return _root_spec("py-black@:24.1.0")
+    return _root_spec("py-black@:25.1.0")
 
 
 def flake8_root_spec() -> str:

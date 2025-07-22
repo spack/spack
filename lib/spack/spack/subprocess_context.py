@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,6 +17,7 @@ import multiprocessing
 import pickle
 import pydoc
 from types import ModuleType
+from typing import Any
 
 import spack.config
 import spack.environment
@@ -36,11 +36,19 @@ def append_patch(patch):
     patches.append(patch)
 
 
-def serialize(obj):
-    serialized_obj = io.BytesIO()
-    pickle.dump(obj, serialized_obj)
-    serialized_obj.seek(0)
-    return serialized_obj
+def serialize(pkg) -> io.BytesIO:
+    serialized_pkg = io.BytesIO()
+    pickle.dump(pkg, serialized_pkg)
+    serialized_pkg.seek(0)
+    return serialized_pkg
+
+
+def deserialize(serialized_pkg: io.BytesIO) -> Any:
+    pkg = pickle.load(serialized_pkg)
+    pkg.spec._package = pkg
+    # ensure overwritten package class attributes get applied
+    spack.repo.PATH.get_pkg_class(pkg.spec.name)
+    return pkg
 
 
 class SpackTestProcess:
@@ -67,29 +75,31 @@ class PackageInstallContext:
         if self.serialize:
             self.serialized_pkg = serialize(pkg)
             self.global_state = GlobalStateMarshaler()
+            self.test_patches = store_patches()
             self.serialized_env = serialize(spack.environment.active_environment())
         else:
             self.pkg = pkg
             self.global_state = None
+            self.test_patches = None
             self.env = spack.environment.active_environment()
         self.spack_working_dir = spack.paths.spack_working_dir
 
     def restore(self):
         spack.paths.spack_working_dir = self.spack_working_dir
-        env = pickle.load(self.serialized_env) if self.serialize else self.env
         # Activating the environment modifies the global configuration, so globals have to
         # be restored afterward, in case other modifications were applied on top (e.g. from
         # command line)
+        if self.serialize:
+            self.global_state.restore()
+            self.test_patches.restore()
+
+        env = pickle.load(self.serialized_env) if self.serialize else self.env
         if env:
             spack.environment.activate(env)
 
-        if self.serialize:
-            self.global_state.restore()
-
         # Order of operation is important, since the package might be retrieved
         # from a repo defined within the environment configuration
-        pkg = pickle.load(self.serialized_pkg) if self.serialize else self.pkg
-        return pkg
+        return deserialize(self.serialized_pkg) if self.serialize else self.pkg
 
 
 class GlobalStateMarshaler:
@@ -102,15 +112,13 @@ class GlobalStateMarshaler:
     def __init__(self):
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.platform = spack.platforms.host
-        self.test_patches = store_patches()
         self.store = spack.store.STORE
 
     def restore(self):
         spack.config.CONFIG = self.config
-        spack.repo.PATH = spack.repo.create(self.config)
+        spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
-        self.test_patches.restore()
 
 
 class TestPatches:
@@ -130,7 +138,6 @@ class TestPatches:
 
 
 def store_patches():
-    global patches
     module_patches = list()
     class_patches = list()
     if not patches:

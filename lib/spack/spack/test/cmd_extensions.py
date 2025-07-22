@@ -1,10 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import contextlib
 import os
+import pathlib
 import sys
 
 import pytest
@@ -20,19 +20,21 @@ class Extension:
     directory structures with a conventional format for testing.
     """
 
-    def __init__(self, name, root):
+    def __init__(self, name, root: pathlib.Path):
         """Create a command extension.
 
         Args:
             name (str): The name of the command extension.
             root (path object): The temporary root for the command extension
-                (e.g. from tmpdir.mkdir()).
+                (e.g. from tmp_path.mkdir()).
         """
         self.name = name
         self.pname = spack.cmd.python_name(name)
         self.root = root
-        self.main = self.root.ensure(self.pname, dir=True)
-        self.cmd = self.main.ensure("cmd", dir=True)
+        self.main = self.root / self.pname
+        self.main.mkdir(parents=True, exist_ok=True)
+        self.cmd = self.main / "cmd"
+        self.cmd.mkdir(parents=True, exist_ok=True)
 
     def add_command(self, command_name, contents):
         """Add a command to this command extension.
@@ -43,17 +45,18 @@ class Extension:
                 file."""
         spack.cmd.require_cmd_name(command_name)
         python_name = spack.cmd.python_name(command_name)
-        cmd = self.cmd.ensure(python_name + ".py")
-        cmd.write(contents)
+        cmd = self.cmd / (python_name + ".py")
+        cmd.write_text(contents)
 
 
 @pytest.fixture(scope="function")
-def extension_creator(tmpdir, config):
+def extension_creator(tmp_path: pathlib.Path, config):
     """Create a basic extension command directory structure"""
 
     @contextlib.contextmanager
     def _ce(extension_name="testcommand"):
-        root = tmpdir.mkdir("spack-" + extension_name)
+        root = tmp_path / ("spack-" + extension_name)
+        root.mkdir()
         extension = Extension(extension_name, root)
         with spack.config.override("config:extensions", [str(extension.root)]):
             yield extension
@@ -145,9 +148,10 @@ def hello(parser, args):
                 ),
             )
 
-            extension.main.ensure("__init__.py")
-            implementation = extension.main.ensure("implementation.py")
-            implementation.write(
+            init_file = extension.main / "__init__.py"
+            init_file.touch()
+            implementation = extension.main / "implementation.py"
+            implementation.write_text(
                 """
 def hello_world():
     print('Hello world!')
@@ -210,7 +214,7 @@ def test_missing_command():
     """Ensure that we raise the expected exception if the desired command is
     not present.
     """
-    with pytest.raises(spack.extensions.CommandNotFoundError):
+    with pytest.raises(spack.cmd.CommandNotFoundError):
         spack.cmd.get_module("no-such-command")
 
 
@@ -220,20 +224,22 @@ def test_missing_command():
         ("/my/bad/extension", spack.extensions.ExtensionNamingError),
         ("", spack.extensions.ExtensionNamingError),
         ("/my/bad/spack--extra-hyphen", spack.extensions.ExtensionNamingError),
-        ("/my/good/spack-extension", spack.extensions.CommandNotFoundError),
-        ("/my/still/good/spack-extension/", spack.extensions.CommandNotFoundError),
-        ("/my/spack-hyphenated-extension", spack.extensions.CommandNotFoundError),
+        ("/my/good/spack-extension", spack.cmd.CommandNotFoundError),
+        ("/my/still/good/spack-extension/", spack.cmd.CommandNotFoundError),
+        ("/my/spack-hyphenated-extension", spack.cmd.CommandNotFoundError),
     ],
     ids=["no_stem", "vacuous", "leading_hyphen", "basic_good", "trailing_slash", "hyphenated"],
 )
-def test_extension_naming(tmpdir, extension_path, expected_exception, config):
+def test_extension_naming(tmp_path: pathlib.Path, extension_path, expected_exception, config):
     """Ensure that we are correctly validating configured extension paths
     for conformity with the rules: the basename should match
     ``spack-<name>``; <name> may have embedded hyphens but not begin with one.
     """
     # NOTE: if the directory is a valid extension directory name the "vacuous" test will
     # fail because it resolves to current working directory
-    with tmpdir.as_cwd():
+    import spack.llnl.util.filesystem as fs
+
+    with fs.working_dir(str(tmp_path)):
         with spack.config.override("config:extensions", [extension_path]):
             with pytest.raises(expected_exception):
                 spack.cmd.get_module("no-such-command")

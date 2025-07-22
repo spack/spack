@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,34 +28,48 @@ maintain a single file for many different builds of the same package.
 
 See the :doc:`features` for examples and highlights.
 
-Get spack from the `github repository
+Get Spack from the `GitHub repository
 <https://github.com/spack/spack>`_ and install your first
 package:
 
 .. code-block:: console
 
-   $ git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git
+   $ git clone --depth=2 https://github.com/spack/spack.git
    $ cd spack/bin
    $ ./spack install libelf
 
 .. note::
-   ``-c feature.manyFiles=true`` improves git's performance on repositories with 1,000+ files.
-
    ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
 
-If you're new to spack and want to start using it, see :doc:`getting_started`,
+If you're new to Spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Basics
+   :caption: Introduction
 
    features
    getting_started
-   basic_usage
+   spec_syntax
+   installing_prerequisites
+   windows
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Basic Usage
+
+   package_fundamentals
+   configuring_compilers
    replace_conda_homebrew
    frequently_asked_questions
+   getting_help
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced Topics
+
+   advanced_topics
 
 .. toctree::
    :maxdepth: 2
@@ -72,9 +85,11 @@ or refer to the full manual below.
 
    configuration
    config_yaml
+   include_yaml
    packages_yaml
    build_settings
    environments
+   env_vars_yaml
    containers
    mirrors
    module_file_support
@@ -92,17 +107,21 @@ or refer to the full manual below.
    :maxdepth: 2
    :caption: Contributing
 
-   contribution_guide
-   packaging_guide
+   packaging_guide_creation
+   packaging_guide_build
+   packaging_guide_testing
+   packaging_guide_advanced
    build_systems
+   contribution_guide
    developer_guide
 
 .. toctree::
    :maxdepth: 2
    :caption: API Docs
 
+   Spack Package API <package_api>
+   Spack Builtin Repo <spack_repo>
    Spack API Docs <spack>
-   LLNL API Docs <llnl>
 
 ==================
 Indices and tables

@@ -1,25 +1,26 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import email.message
 import os
+import pathlib
 import pickle
 import ssl
 import urllib.request
+from typing import Dict
 
 import pytest
 
-import llnl.util.tty as tty
-
 import spack.config
-import spack.mirror
+import spack.llnl.util.tty as tty
+import spack.mirrors.mirror
 import spack.paths
 import spack.url
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
+from spack.llnl.util.filesystem import working_dir
 from spack.version import Version
 
 
@@ -206,20 +207,20 @@ def test_etag_parser():
     assert spack.util.web.parse_etag("abc def") is None
 
 
-def test_list_url(tmpdir):
-    testpath = str(tmpdir)
+def test_list_url(tmp_path: pathlib.Path):
+    testpath = str(tmp_path)
     testpath_url = url_util.path_to_file_url(testpath)
 
     os.mkdir(os.path.join(testpath, "dir"))
 
-    with open(os.path.join(testpath, "file-0.txt"), "w"):
+    with open(os.path.join(testpath, "file-0.txt"), "w", encoding="utf-8"):
         pass
-    with open(os.path.join(testpath, "file-1.txt"), "w"):
+    with open(os.path.join(testpath, "file-1.txt"), "w", encoding="utf-8"):
         pass
-    with open(os.path.join(testpath, "file-2.txt"), "w"):
+    with open(os.path.join(testpath, "file-2.txt"), "w", encoding="utf-8"):
         pass
 
-    with open(os.path.join(testpath, "dir", "another-file.txt"), "w"):
+    with open(os.path.join(testpath, "dir", "another-file.txt"), "w", encoding="utf-8"):
         pass
 
     list_url = lambda recursive: list(
@@ -276,7 +277,7 @@ class MockS3Client:
 
 
 def test_gather_s3_information(monkeypatch, capfd):
-    mirror = spack.mirror.Mirror(
+    mirror = spack.mirrors.mirror.Mirror(
         {
             "fetch": {
                 "access_token": "AAAAAAA",
@@ -349,14 +350,14 @@ def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
 
 
-def test_detailed_http_error_pickle(tmpdir):
-    tmpdir.join("response").write("response")
+def test_detailed_http_error_pickle(tmp_path: pathlib.Path):
+    (tmp_path / "response").write_text("response")
 
     headers = email.message.Message()
     headers.add_header("Content-Type", "text/plain")
 
     # Use a temporary file object as a response body
-    with open(str(tmpdir.join("response")), "rb") as f:
+    with open(str(tmp_path / "response"), "rb") as f:
         error = spack.util.web.DetailedHTTPError(
             urllib.request.Request("http://example.com"), 404, "Not Found", headers, f
         )
@@ -385,7 +386,7 @@ def ssl_scrubbed_env(mutable_config, monkeypatch):
     [
         pytest.param(
             lambda base_path: os.path.join(base_path, "mock_cert.crt"),
-            lambda cert_path: open(cert_path, "w").close(),
+            lambda cert_path: open(cert_path, "w", encoding="utf-8").close(),
             id="cert_file",
         ),
         pytest.param(
@@ -396,7 +397,7 @@ def ssl_scrubbed_env(mutable_config, monkeypatch):
     ],
 )
 def test_ssl_urllib(
-    cert_path, cert_creator, tmpdir, ssl_scrubbed_env, mutable_config, monkeypatch
+    cert_path, cert_creator, tmp_path: pathlib.Path, ssl_scrubbed_env, mutable_config, monkeypatch
 ):
     """
     create a proposed cert type and then verify that they exist inside ssl's checks
@@ -413,8 +414,8 @@ def test_ssl_urllib(
 
     monkeypatch.setattr(ssl.SSLContext, "load_verify_locations", mock_verify_locations)
 
-    with tmpdir.as_cwd():
-        mock_cert = cert_path(tmpdir.strpath)
+    with working_dir(str(tmp_path)):
+        mock_cert = cert_path(str(tmp_path))
         cert_creator(mock_cert)
         spack.config.set("config:ssl_certs", mock_cert)
 
@@ -425,22 +426,24 @@ def test_ssl_urllib(
 
 
 @pytest.mark.parametrize("cert_exists", [True, False], ids=["exists", "missing"])
-def test_ssl_curl_cert_file(cert_exists, tmpdir, ssl_scrubbed_env, mutable_config, monkeypatch):
+def test_ssl_curl_cert_file(
+    cert_exists, tmp_path: pathlib.Path, ssl_scrubbed_env, mutable_config, monkeypatch
+):
     """
     Assure that if a valid cert file is specified curl executes
     with CURL_CA_BUNDLE in the env
     """
     spack.config.set("config:url_fetch_method", "curl")
-    with tmpdir.as_cwd():
-        mock_cert = str(tmpdir.join("mock_cert.crt"))
+    with working_dir(str(tmp_path)):
+        mock_cert = str(tmp_path / "mock_cert.crt")
         spack.config.set("config:ssl_certs", mock_cert)
         if cert_exists:
-            open(mock_cert, "w").close()
+            open(mock_cert, "w", encoding="utf-8").close()
             assert os.path.isfile(mock_cert)
         curl = spack.util.web.require_curl()
 
         # arbitrary call to query the run env
-        dump_env = {}
+        dump_env: Dict[str, str] = {}
         curl("--help", output=str, _dump_env=dump_env)
 
         if cert_exists:

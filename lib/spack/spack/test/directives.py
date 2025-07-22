@@ -1,16 +1,15 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from collections import namedtuple
 
 import pytest
 
+import spack.concretize
 import spack.directives
 import spack.repo
 import spack.spec
 import spack.version
-from spack.test.conftest import create_test_repo
 
 
 def test_false_directives_do_not_exist(mock_packages):
@@ -60,11 +59,25 @@ def test_constraints_from_context_are_merged(mock_packages):
 
 @pytest.mark.regression("27754")
 def test_extends_spec(config, mock_packages):
-    extender = spack.spec.Spec("extends-spec").concretized()
-    extendee = spack.spec.Spec("extendee").concretized()
+    extender = spack.concretize.concretize_one("extends-spec")
+    extendee = spack.concretize.concretize_one("extendee")
 
     assert extender.dependencies
     assert extender.package.extends(extendee)
+
+
+@pytest.mark.regression("48024")
+def test_conditionally_extends_transitive_dep(config, mock_packages):
+    spec = spack.concretize.concretize_one("conditionally-extends-transitive-dep")
+
+    assert not spec.package.extendee_spec
+
+
+@pytest.mark.regression("48025")
+def test_conditionally_extends_direct_dep(config, mock_packages):
+    spec = spack.concretize.concretize_one("conditionally-extends-direct-dep")
+
+    assert not spec.package.extendee_spec
 
 
 @pytest.mark.regression("34368")
@@ -145,65 +158,22 @@ def test_version_type_validation():
         spack.directives._execute_version(package(name="python"), {})
 
 
-_pkgx = (
-    "x",
-    """\
-class X(Package):
-    version("1.3")
-    version("1.2")
-    version("1.1")
-    version("1.0")
-
-    variant("foo", default=False)
-
-    redistribute(binary=False, when="@1.1")
-    redistribute(binary=False, when="@1.0:1.2+foo")
-    redistribute(source=False, when="@1.0:1.2")
-""",
-)
-
-
-_pkgy = (
-    "y",
-    """\
-class Y(Package):
-    version("2.1")
-    version("2.0")
-
-    variant("bar", default=False)
-
-    redistribute(binary=False, source=False)
-""",
-)
-
-
-@pytest.fixture
-def _create_test_repo(tmpdir, mutable_config):
-    yield create_test_repo(tmpdir, [_pkgx, _pkgy])
-
-
-@pytest.fixture
-def test_repo(_create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
-        yield mock_repo_path
-
-
 @pytest.mark.parametrize(
     "spec_str,distribute_src,distribute_bin",
     [
-        ("x@1.1~foo", False, False),
-        ("x@1.2+foo", False, False),
-        ("x@1.2~foo", False, True),
-        ("x@1.0~foo", False, True),
-        ("x@1.3+foo", True, True),
-        ("y@2.0", False, False),
-        ("y@2.1+bar", False, False),
+        ("redistribute-x@1.1~foo", False, False),
+        ("redistribute-x@1.2+foo", False, False),
+        ("redistribute-x@1.2~foo", False, True),
+        ("redistribute-x@1.0~foo", False, True),
+        ("redistribute-x@1.3+foo", True, True),
+        ("redistribute-y@2.0", False, False),
+        ("redistribute-y@2.1+bar", False, False),
     ],
 )
-def test_redistribute_directive(test_repo, spec_str, distribute_src, distribute_bin):
+def test_redistribute_directive(mock_packages, spec_str, distribute_src, distribute_bin):
     spec = spack.spec.Spec(spec_str)
-    assert spec.package_class.redistribute_source(spec) == distribute_src
-    concretized_spec = spec.concretized()
+    assert spack.repo.PATH.get_pkg_class(spec.fullname).redistribute_source(spec) == distribute_src
+    concretized_spec = spack.concretize.concretize_one(spec)
     assert concretized_spec.package.redistribute_binary == distribute_bin
 
 
@@ -219,10 +189,10 @@ def test_redistribute_override_when():
         disable_redistribute = {}
 
     cls = MockPackage
-    spack.directives._execute_redistribute(cls, source=False, when="@1.0")
+    spack.directives._execute_redistribute(cls, source=False, binary=None, when="@1.0")
     spec_key = spack.directives._make_when_spec("@1.0")
     assert not cls.disable_redistribute[spec_key].binary
     assert cls.disable_redistribute[spec_key].source
-    spack.directives._execute_redistribute(cls, binary=False, when="@1.0")
+    spack.directives._execute_redistribute(cls, source=None, binary=False, when="@1.0")
     assert cls.disable_redistribute[spec_key].binary
     assert cls.disable_redistribute[spec_key].source

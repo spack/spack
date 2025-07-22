@@ -1,20 +1,17 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import os.path
 import re
 import shlex
 import sys
 from subprocess import PIPE, run
 from typing import Dict, List, Optional
 
-from llnl.util.lang import memoized
-
 import spack.spec
 import spack.util.elf
+from spack.llnl.util.lang import memoized
 
 #: Pattern to distinguish glibc from other libc implementations
 GLIBC_PATTERN = r"\b(?:Free Software Foundation|Roland McGrath|Ulrich Depper)\b"
@@ -63,6 +60,7 @@ def default_search_paths_from_dynamic_linker(dynamic_linker: str) -> List[str]:
 
 
 def libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]:
+    """Get the libc spec from the dynamic linker path."""
     maybe_spec = _libc_from_dynamic_linker(dynamic_linker)
     if maybe_spec:
         return maybe_spec.copy()
@@ -157,37 +155,8 @@ def libc_from_current_python_process() -> Optional["spack.spec.Spec"]:
     return libc_from_dynamic_linker(dynamic_linker)
 
 
-def startfile_prefix(prefix: str, compatible_with: str = sys.executable) -> Optional[str]:
-    # Search for crt1.o at max depth 2 compatible with the ELF file provided in compatible_with.
-    # This is useful for finding external libc startfiles on a multiarch system.
-    try:
-        compat = spack.util.elf.get_elf_compat(compatible_with)
-        accept = lambda path: spack.util.elf.get_elf_compat(path) == compat
-    except Exception:
-        accept = lambda path: True
-
-    stack = [(0, prefix)]
-    while stack:
-        depth, path = stack.pop()
-        try:
-            iterator = os.scandir(path)
-        except OSError:
-            continue
-        with iterator:
-            for entry in iterator:
-                try:
-                    if entry.is_dir(follow_symlinks=True):
-                        if depth < 2:
-                            stack.append((depth + 1, entry.path))
-                    elif entry.name == "crt1.o" and accept(entry.path):
-                        return path
-                except Exception:
-                    continue
-    return None
-
-
 def parse_dynamic_linker(output: str):
-    """Parse -dynamic-linker /path/to/ld.so from compiler output"""
+    """Parse ``-dynamic-linker /path/to/ld.so`` from compiler output"""
     for line in reversed(output.splitlines()):
         if "-dynamic-linker" not in line:
             continue
@@ -199,16 +168,3 @@ def parse_dynamic_linker(output: str):
                 return args[idx + 1]
             elif arg.startswith("--dynamic-linker=") or arg.startswith("-dynamic-linker="):
                 return arg.split("=", 1)[1]
-
-
-def libc_include_dir_from_startfile_prefix(
-    libc_prefix: str, startfile_prefix: str
-) -> Optional[str]:
-    """Heuristic to determine the glibc include directory from the startfile prefix. Replaces
-    $libc_prefix/lib*/<multiarch> with $libc_prefix/include/<multiarch>. This function does not
-    check if the include directory actually exists or is correct."""
-    parts = os.path.relpath(startfile_prefix, libc_prefix).split(os.path.sep)
-    if parts[0] not in ("lib", "lib64", "libx32", "lib32"):
-        return None
-    parts[0] = "include"
-    return os.path.join(libc_prefix, *parts)

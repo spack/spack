@@ -1,20 +1,22 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import pytest
 
-import llnl.util.tty as tty
-
 import spack.cmd.uninstall
 import spack.environment
+import spack.llnl.util.tty as tty
 import spack.store
+from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand, SpackCommandError
 
 uninstall = SpackCommand("uninstall")
 install = SpackCommand("install")
+
+# Unit tests should not be affected by the user's managed environments
+pytestmark = pytest.mark.usefixtures("mutable_mock_env_path")
 
 
 class MockArgs:
@@ -77,9 +79,8 @@ def test_recursive_uninstall(mutable_database):
     """Test recursive uninstall."""
     uninstall("-y", "-a", "--dependents", "callpath")
 
-    all_specs = spack.store.STORE.layout.all_specs()
-    assert len(all_specs) == 9
     # query specs with multiple configurations
+    all_specs = spack.store.STORE.layout.all_specs()
     mpileaks_specs = [s for s in all_specs if s.satisfies("mpileaks")]
     callpath_specs = [s for s in all_specs if s.satisfies("callpath")]
     mpi_specs = [s for s in all_specs if s.satisfies("mpi")]
@@ -91,23 +92,21 @@ def test_recursive_uninstall(mutable_database):
 
 @pytest.mark.db
 @pytest.mark.regression("3690")
-@pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 8), ("libelf", 6)])
+@pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 10), ("libelf", 8)])
 def test_uninstall_spec_with_multiple_roots(
     constraint, expected_number_of_specs, mutable_database
 ):
     uninstall("-y", "-a", "--dependents", constraint)
-
     all_specs = spack.store.STORE.layout.all_specs()
     assert len(all_specs) == expected_number_of_specs
 
 
 @pytest.mark.db
-@pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 14), ("libelf", 14)])
+@pytest.mark.parametrize("constraint,expected_number_of_specs", [("dyninst", 16), ("libelf", 16)])
 def test_force_uninstall_spec_with_ref_count_not_zero(
     constraint, expected_number_of_specs, mutable_database
 ):
     uninstall("-f", "-y", constraint)
-
     all_specs = spack.store.STORE.layout.all_specs()
     assert len(all_specs) == expected_number_of_specs
 
@@ -129,10 +128,10 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
         specs = spack.store.STORE.db.get_by_hash(dag_hash[:7], installed=installed)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.STORE.db.get_by_hash(dag_hash, installed=any)
+        specs = spack.store.STORE.db.get_by_hash(dag_hash, installed=InstallRecordStatus.ANY)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
-        specs = spack.store.STORE.db.get_by_hash(dag_hash[:7], installed=any)
+        specs = spack.store.STORE.db.get_by_hash(dag_hash[:7], installed=InstallRecordStatus.ANY)
         assert len(specs) == 1 and specs[0] == callpath_spec
 
         specs = spack.store.STORE.db.get_by_hash(dag_hash, installed=not installed)
@@ -147,7 +146,7 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
         spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=installed)
         assert spec == callpath_spec
 
-        spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=any)
+        spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=InstallRecordStatus.ANY)
         assert spec == callpath_spec
 
         spec = spack.store.STORE.db.query_one("callpath ^mpich", installed=not installed)
@@ -173,7 +172,7 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
 
     all_specs, mpileaks_specs, callpath_specs, mpi_specs = db_specs()
     total_specs = len(all_specs)
-    assert total_specs == 14
+    assert total_specs == 16
     assert len(mpileaks_specs) == 3
     assert len(callpath_specs) == 2
     assert len(mpi_specs) == 3
@@ -220,9 +219,7 @@ class TestUninstallFromEnv:
     find = SpackCommand("find")
 
     @pytest.fixture(scope="function")
-    def environment_setup(
-        self, mutable_mock_env_path, mock_packages, mutable_database, install_mockery
-    ):
+    def environment_setup(self, mock_packages, mutable_database, install_mockery):
         TestUninstallFromEnv.env("create", "e1")
         e1 = spack.environment.read("e1")
         with e1:
@@ -247,7 +244,7 @@ class TestUninstallFromEnv:
             e = spack.environment.read(env_name)
             with e:
                 for _, concretized_spec in e.concretized_specs():
-                    assert concretized_spec.package.installed
+                    assert concretized_spec.installed
 
     def test_uninstall_force_dependency_shared_between_envs(self, environment_setup):
         """If you "spack uninstall -f --dependents diamond-link-bottom" from
@@ -265,7 +262,7 @@ class TestUninstallFromEnv:
             )
 
             for _, concretized_spec in e1.concretized_specs():
-                assert not concretized_spec.package.installed
+                assert not concretized_spec.installed
 
         # Everything in e2 depended on diamond-link-bottom, so should also
         # have been uninstalled. The roots should be unchanged though.
@@ -275,7 +272,7 @@ class TestUninstallFromEnv:
                 ["diamond-link-right", "diamond-link-bottom"]
             )
             for _, concretized_spec in e2.concretized_specs():
-                assert not concretized_spec.package.installed
+                assert not concretized_spec.installed
 
     def test_uninstall_remove_dependency_shared_between_envs(self, environment_setup):
         """If you "spack uninstall --dependents --remove diamond-link-bottom" from
@@ -293,7 +290,7 @@ class TestUninstallFromEnv:
             output = uninstall("-y", "--dependents", "--remove", "diamond-link-bottom")
             assert "The following specs will be removed but not uninstalled" in output
             assert not list(e1.roots())
-            assert not dtdiamondleft.package.installed
+            assert not dtdiamondleft.installed
 
         # Since -f was not specified, all specs in e2 should still be installed
         # (and e2 should be unchanged)
@@ -303,7 +300,7 @@ class TestUninstallFromEnv:
                 ["diamond-link-right", "diamond-link-bottom"]
             )
             for _, concretized_spec in e2.concretized_specs():
-                assert concretized_spec.package.installed
+                assert concretized_spec.installed
 
     def test_uninstall_dependency_shared_between_envs_fail(self, environment_setup):
         """If you "spack uninstall --dependents diamond-link-bottom" from
@@ -322,7 +319,7 @@ class TestUninstallFromEnv:
             ["diamond-link-left", "diamond-link-bottom"]
         )
         for _, concretized_spec in e1.concretized_specs():
-            assert concretized_spec.package.installed
+            assert concretized_spec.installed
 
     def test_uninstall_force_and_remove_dependency_shared_between_envs(self, environment_setup):
         """If you "spack uninstall -f --dependents --remove diamond-link-bottom" from
@@ -339,7 +336,7 @@ class TestUninstallFromEnv:
             )
             uninstall("-f", "-y", "--dependents", "--remove", "diamond-link-bottom")
             assert not list(e1.roots())
-            assert not dtdiamondleft.package.installed
+            assert not dtdiamondleft.installed
 
         e2 = spack.environment.read("e2")
         with e2:
@@ -347,7 +344,7 @@ class TestUninstallFromEnv:
                 ["diamond-link-right", "diamond-link-bottom"]
             )
             for _, concretized_spec in e2.concretized_specs():
-                assert not concretized_spec.package.installed
+                assert not concretized_spec.installed
 
     def test_uninstall_keep_dependents_dependency_shared_between_envs(self, environment_setup):
         """If you "spack uninstall -f --remove diamond-link-bottom" from
@@ -366,7 +363,7 @@ class TestUninstallFromEnv:
             # diamond-link-bottom was removed from the list of roots (note that
             # it would still be installed since diamond-link-left depends on it)
             assert set(x.name for x in e1.roots()) == set(["diamond-link-left"])
-            assert dtdiamondleft.package.installed
+            assert dtdiamondleft.installed
 
         e2 = spack.environment.read("e2")
         with e2:
@@ -378,10 +375,10 @@ class TestUninstallFromEnv:
                 for (_, concrete) in e2.concretized_specs()
                 if concrete.name == "diamond-link-right"
             )
-            assert dtdiamondright.package.installed
+            assert dtdiamondright.installed
             dtdiamondbottom = next(
                 concrete
                 for (_, concrete) in e2.concretized_specs()
                 if concrete.name == "diamond-link-bottom"
             )
-            assert not dtdiamondbottom.package.installed
+            assert not dtdiamondbottom.installed

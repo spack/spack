@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ import spack.error
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
 
 # Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ["stable", "trunk", "head", "master", "main", "develop"]
+infinity_versions = ["stable", "nightly", "trunk", "head", "master", "main", "develop"]
 
 iv_min_len = min(len(s) for s in infinity_versions)
 
@@ -24,13 +23,12 @@ PRERELEASE_TO_STRING = ["alpha", "beta", "rc"]
 STRING_TO_PRERELEASE = {"alpha": ALPHA, "beta": BETA, "rc": RC, "final": FINAL}
 
 
+def is_git_commit_sha(string: str) -> bool:
+    return len(string) == 40 and bool(COMMIT_VERSION.match(string))
+
+
 def is_git_version(string: str) -> bool:
-    return (
-        string.startswith("git.")
-        or len(string) == 40
-        and bool(COMMIT_VERSION.match(string))
-        or "=" in string[1:]
-    )
+    return string.startswith("git.") or is_git_commit_sha(string) or "=" in string[1:]
 
 
 class VersionError(spack.error.SpackError):

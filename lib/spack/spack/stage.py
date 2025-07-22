@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import errno
@@ -14,26 +13,14 @@ import sys
 import tempfile
 from typing import Callable, Dict, Generator, Iterable, List, Optional, Set
 
-import llnl.string
-import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    can_access,
-    get_owner_uid,
-    getuid,
-    install,
-    install_tree,
-    mkdirp,
-    partition_path,
-    remove_linked_tree,
-)
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import colorize
-
 import spack.caches
 import spack.config
 import spack.error
-import spack.mirror
+import spack.llnl.string
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
+import spack.mirrors.layout
+import spack.mirrors.utils
 import spack.resource
 import spack.spec
 import spack.util.crypto
@@ -43,6 +30,20 @@ import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
+from spack.llnl.util.filesystem import (
+    AlreadyExistsError,
+    can_access,
+    get_owner_uid,
+    getuid,
+    install,
+    install_tree,
+    mkdirp,
+    partition_path,
+    remove_linked_tree,
+    symlink,
+)
+from spack.llnl.util.tty.colify import colify
+from spack.llnl.util.tty.color import colorize
 from spack.util.crypto import bit_length, prefix_bits
 from spack.util.editor import editor, executable
 from spack.version import StandardVersion, VersionList
@@ -352,8 +353,8 @@ class Stage(LockableStagingDir):
         url_or_fetch_strategy,
         *,
         name=None,
-        mirror_paths: Optional["spack.mirror.MirrorLayout"] = None,
-        mirrors: Optional[Iterable["spack.mirror.Mirror"]] = None,
+        mirror_paths: Optional["spack.mirrors.layout.MirrorLayout"] = None,
+        mirrors: Optional[Iterable["spack.mirrors.mirror.Mirror"]] = None,
         keep=False,
         path=None,
         lock=True,
@@ -464,6 +465,13 @@ class Stage(LockableStagingDir):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
+    @property
+    def single_file(self):
+        assert self.expanded, "Must expand stage before calling single_file"
+        files = os.listdir(self.source_path)
+        assert len(files) == 1, f"Expected one file in stage, found {files}"
+        return os.path.join(self.source_path, files[0])
+
     def _generate_fetchers(self, mirror_only=False) -> Generator["fs.FetchStrategy", None, None]:
         fetchers: List[fs.FetchStrategy] = []
         if not mirror_only:
@@ -487,7 +495,7 @@ class Stage(LockableStagingDir):
             # Insert fetchers in the order that the URLs are provided.
             fetchers[:0] = (
                 fs.from_url_scheme(
-                    url_util.join(mirror.fetch_url, self.mirror_layout.path),
+                    url_util.join(mirror.fetch_url, *self.mirror_layout.path.split(os.sep)),
                     checksum=digest,
                     expand=expand,
                     extension=extension,
@@ -600,7 +608,7 @@ class Stage(LockableStagingDir):
         spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_layout.path)
 
     def cache_mirror(
-        self, mirror: "spack.caches.MirrorCache", stats: "spack.mirror.MirrorStats"
+        self, mirror: "spack.caches.MirrorCache", stats: "spack.mirrors.utils.MirrorStats"
     ) -> None:
         """Perform a fetch if the resource is not already cached
 
@@ -846,8 +854,8 @@ class DevelopStage(LockableStagingDir):
     def create(self):
         super().create()
         try:
-            llnl.util.symlink.symlink(self.path, self.reference_link)
-        except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
+            symlink(self.path, self.reference_link)
+        except (AlreadyExistsError, FileExistsError):
             pass
 
     def destroy(self):
@@ -920,16 +928,16 @@ def interactive_version_filter(
             header = []
             if len(orig_url_dict) > 0 and len(sorted_and_filtered) == len(orig_url_dict):
                 header.append(
-                    f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}"
+                    f"Selected {spack.llnl.string.plural(len(sorted_and_filtered), 'version')}"
                 )
             else:
                 header.append(
                     f"Selected {len(sorted_and_filtered)} of "
-                    f"{llnl.string.plural(len(orig_url_dict), 'version')}"
+                    f"{spack.llnl.string.plural(len(orig_url_dict), 'version')}"
                 )
             if sorted_and_filtered and known_versions:
                 num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
-                header.append(f"{llnl.string.plural(num_new, 'new version')}")
+                header.append(f"{spack.llnl.string.plural(num_new, 'new version')}")
             if has_filter:
                 header.append(colorize(f"Filtered by {VERSION_COLOR}@@{version_filter}@."))
 
@@ -940,7 +948,7 @@ def interactive_version_filter(
                 )
                 for v in sorted_and_filtered
             ]
-            tty.msg(". ".join(header), *llnl.util.lang.elide_list(version_with_url))
+            tty.msg(". ".join(header), *spack.llnl.util.lang.elide_list(version_with_url))
             print()
 
         print_header = True
@@ -990,7 +998,7 @@ def interactive_version_filter(
             editor(filepath, exec_fn=executable)
 
             # Read back in
-            with open(filepath, "r") as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 orig_url_dict, url_dict = url_dict, {}
                 for line in f:
                     line = line.strip()

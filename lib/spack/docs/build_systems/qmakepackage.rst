@@ -1,13 +1,12 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _qmakepackage:
 
------
+------
 QMake
------
+------
 
 Much like Autotools and CMake, QMake is a build-script generator
 designed by the developers of Qt. In its simplest form, Spack's
@@ -24,6 +23,14 @@ designed by the developers of Qt. In its simplest form, Spack's
 QMake does not appear to have a standardized way of specifying
 the installation directory, so you may have to set environment
 variables or edit ``*.pro`` files to get things working properly.
+
+QMake packages will depend on the virtual ``qmake`` package which
+is provided by multiple versions of Qt: ``qt`` provides Qt up to
+Qt5, and ``qt-base`` provides Qt from version Qt6 onwards. This
+split was motivated by the desire to split the single Qt package
+into its components to allow for more fine-grained installation.
+To depend on a specific version, refer to the documentation on
+:ref:`virtual-dependencies`.
 
 ^^^^^^
 Phases

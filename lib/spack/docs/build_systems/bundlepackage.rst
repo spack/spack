@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,10 +27,10 @@ it could use the ``require`` directive as follows:
 
 Spack has a number of built-in bundle packages, such as:
 
-* `AmdAocl <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/amd-aocl/package.py>`_
-* `EcpProxyApps <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/ecp-proxy-apps/package.py>`_
-* `Libc <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/libc/package.py>`_
-* `Xsdk <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/xsdk/package.py>`_
+* `AmdAocl <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/amd_aocl/package.py>`_
+* `EcpProxyApps <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/ecp_proxy_apps/package.py>`_
+* `Libc <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/libc/package.py>`_
+* `Xsdk <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/xsdk/package.py>`_
 
 where ``Xsdk`` also inherits from ``CudaPackage`` and ``RocmPackage`` and
 ``Libc`` is a virtual bundle package for the C standard library.
@@ -59,9 +58,9 @@ The ``BundlePackage`` base class does not provide any phases by default
 since the bundle does not represent a build system.
 
 
-^^^
+^^^^^^
 URL
-^^^
+^^^^^^
 
 The ``url`` property does not have meaning since there is no package-specific
 code to fetch.

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -13,10 +12,10 @@ from http.client import HTTPResponse
 from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
-import llnl.util.tty as tty
-
 import spack.fetch_strategy
-import spack.mirror
+import spack.llnl.util.tty as tty
+import spack.mirrors.layout
+import spack.mirrors.mirror
 import spack.oci.opener
 import spack.stage
 import spack.util.url
@@ -213,7 +212,7 @@ def upload_manifest(
     return digest, size
 
 
-def image_from_mirror(mirror: spack.mirror.Mirror) -> ImageReference:
+def image_from_mirror(mirror: spack.mirrors.mirror.Mirror) -> ImageReference:
     """Given an OCI based mirror, extract the URL and image name from it"""
     url = mirror.push_url
     if not url.startswith("oci://"):
@@ -275,7 +274,7 @@ def copy_missing_layers(
         stages.cache_local()
 
         for stage, digest in zip(stages, missing_digests):
-            # No need to check existince again, force=True.
+            # No need to check existence again, force=True.
             upload_blob(
                 dst, file=stage.save_filename, force=True, digest=digest, _urlopen=_urlopen
             )
@@ -385,5 +384,8 @@ def make_stage(
     # is the `oci-layout` and `index.json` files, which are
     # required by the spec.
     return spack.stage.Stage(
-        fetch_strategy, mirror_paths=spack.mirror.OCILayout(digest), name=digest.digest, keep=keep
+        fetch_strategy,
+        mirror_paths=spack.mirrors.layout.OCILayout(digest),
+        name=digest.digest,
+        keep=keep,
     )

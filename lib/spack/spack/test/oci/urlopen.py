@@ -1,11 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import hashlib
 import json
+import pathlib
 import random
 import urllib.error
 import urllib.parse
@@ -14,7 +14,7 @@ from urllib.request import Request
 
 import pytest
 
-import spack.mirror
+import spack.mirrors.mirror
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import (
     copy_missing_layers,
@@ -33,6 +33,7 @@ from spack.oci.opener import (
     get_bearer_challenge,
     parse_www_authenticate,
 )
+from spack.test.conftest import MockHTTPResponse
 from spack.test.oci.mock_registry import (
     DummyServer,
     DummyServerUrllibHandler,
@@ -40,7 +41,6 @@ from spack.test.oci.mock_registry import (
     InMemoryOCIRegistryWithAuth,
     MiddlewareError,
     MockBearerTokenServer,
-    MockHTTPResponse,
     create_opener,
 )
 
@@ -339,7 +339,7 @@ def test_auth_method_we_cannot_handle_is_error(www_authenticate, error_message):
 # Parametrize over single POST vs POST + PUT.
 @pytest.mark.parametrize("client_single_request", [True, False])
 @pytest.mark.parametrize("server_single_request", [True, False])
-def test_oci_registry_upload(tmpdir, client_single_request, server_single_request):
+def test_oci_registry_upload(tmp_path: pathlib.Path, client_single_request, server_single_request):
     opener = urllib.request.OpenerDirector()
     opener.add_handler(
         DummyServerUrllibHandler().add_server(
@@ -350,11 +350,11 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     opener.add_handler(urllib.request.HTTPErrorProcessor())
 
     # Create a small blob
-    blob = tmpdir.join("blob")
-    blob.write("Hello world!")
+    blob = tmp_path / "blob"
+    blob.write_text("Hello world!")
 
     image = ImageReference.from_string("example.com/image:latest")
-    digest = Digest.from_sha256(hashlib.sha256(blob.read_binary()).hexdigest())
+    digest = Digest.from_sha256(hashlib.sha256(blob.read_bytes()).hexdigest())
 
     # Set small file size larger than the blob iff we're doing single request
     small_file_size = 1024 if client_single_request else 0
@@ -362,7 +362,7 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     # Upload once, should actually upload
     assert upload_blob(
         ref=image,
-        file=blob.strpath,
+        file=str(blob),
         digest=digest,
         small_file_size=small_file_size,
         _urlopen=opener.open,
@@ -371,7 +371,7 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     # Second time should exit as it exists
     assert not upload_blob(
         ref=image,
-        file=blob.strpath,
+        file=str(blob),
         digest=digest,
         small_file_size=small_file_size,
         _urlopen=opener.open,
@@ -380,7 +380,7 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     # Force upload should upload again
     assert upload_blob(
         ref=image,
-        file=blob.strpath,
+        file=str(blob),
         digest=digest,
         force=True,
         small_file_size=small_file_size,
@@ -388,7 +388,7 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     )
 
 
-def test_copy_missing_layers(tmpdir, config):
+def test_copy_missing_layers(tmp_path: pathlib.Path, config):
     """Test copying layers from one registry to another.
     Creates 3 blobs, 1 config and 1 manifest in registry A
     and copies layers to registry B. Then checks that all
@@ -410,23 +410,21 @@ def test_copy_missing_layers(tmpdir, config):
     # TODO: make it a bit easier to create bunch of blobs + config + manifest?
 
     # Create a few blobs and a config file
-    blobs = [tmpdir.join(f"blob{i}") for i in range(3)]
+    blobs = [tmp_path / f"blob{i}" for i in range(3)]
 
     for i, blob in enumerate(blobs):
-        blob.write(f"Blob {i}")
+        blob.write_text(f"Blob {i}")
 
-    digests = [
-        Digest.from_sha256(hashlib.sha256(blob.read_binary()).hexdigest()) for blob in blobs
-    ]
+    digests = [Digest.from_sha256(hashlib.sha256(blob.read_bytes()).hexdigest()) for blob in blobs]
 
     config = default_config(architecture="amd64", os="linux")
-    configfile = tmpdir.join("config.json")
-    configfile.write(json.dumps(config))
-    config_digest = Digest.from_sha256(hashlib.sha256(configfile.read_binary()).hexdigest())
+    configfile = tmp_path / "config.json"
+    configfile.write_text(json.dumps(config))
+    config_digest = Digest.from_sha256(hashlib.sha256(configfile.read_bytes()).hexdigest())
 
     for blob, digest in zip(blobs, digests):
-        upload_blob(src, blob.strpath, digest, _urlopen=urlopen)
-    upload_blob(src, configfile.strpath, config_digest, _urlopen=urlopen)
+        upload_blob(src, str(blob), digest, _urlopen=urlopen)
+    upload_blob(src, str(configfile), config_digest, _urlopen=urlopen)
 
     # Then create a manifest referencing them
     manifest = default_manifest()
@@ -436,14 +434,14 @@ def test_copy_missing_layers(tmpdir, config):
             {
                 "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
                 "digest": str(digest),
-                "size": blob.size(),
+                "size": blob.stat().st_size,
             }
         )
 
     manifest["config"] = {
         "mediaType": "application/vnd.oci.image.config.v1+json",
         "digest": str(config_digest),
-        "size": configfile.size(),
+        "size": configfile.stat().st_size,
     }
 
     upload_manifest(src, manifest, _urlopen=urlopen)
@@ -454,7 +452,7 @@ def test_copy_missing_layers(tmpdir, config):
     # Check that all layers (not config) were copied and identical
     assert len(dst_registry.blobs) == len(blobs)
     for blob, digest in zip(blobs, digests):
-        assert dst_registry.blobs.get(str(digest)) == blob.read_binary()
+        assert dst_registry.blobs.get(str(digest)) == blob.read_bytes()
 
     is_upload = lambda method, path: method == "POST" and path == "/v2/image/blobs/uploads/"
     is_exists = lambda method, path: method == "HEAD" and path.startswith("/v2/image/blobs/")
@@ -474,7 +472,7 @@ def test_copy_missing_layers(tmpdir, config):
 
 
 def test_image_from_mirror():
-    mirror = spack.mirror.Mirror("oci://example.com/image")
+    mirror = spack.mirrors.mirror.Mirror("oci://example.com/image")
     assert image_from_mirror(mirror) == ImageReference.from_string("example.com/image")
 
 
@@ -511,25 +509,25 @@ def test_default_credentials_provider():
 
     mirrors = [
         # OCI mirror with push credentials
-        spack.mirror.Mirror(
+        spack.mirrors.mirror.Mirror(
             {"url": "oci://a.example.com/image", "push": {"access_pair": ["user.a", "pass.a"]}}
         ),
         # Not an OCI mirror
-        spack.mirror.Mirror(
+        spack.mirrors.mirror.Mirror(
             {"url": "https://b.example.com/image", "access_pair": ["user.b", "pass.b"]}
         ),
         # No credentials
-        spack.mirror.Mirror("oci://c.example.com/image"),
+        spack.mirrors.mirror.Mirror("oci://c.example.com/image"),
         # Top-level credentials
-        spack.mirror.Mirror(
+        spack.mirrors.mirror.Mirror(
             {"url": "oci://d.example.com/image", "access_pair": ["user.d", "pass.d"]}
         ),
         # Dockerhub short reference
-        spack.mirror.Mirror(
+        spack.mirrors.mirror.Mirror(
             {"url": "oci://user/image", "access_pair": ["dockerhub_user", "dockerhub_pass"]}
         ),
         # Localhost (not a dockerhub short reference)
-        spack.mirror.Mirror(
+        spack.mirrors.mirror.Mirror(
             {"url": "oci://localhost/image", "access_pair": ["user.localhost", "pass.localhost"]}
         ),
     ]
@@ -550,7 +548,7 @@ def test_default_credentials_provider():
     )
 
 
-def test_manifest_index(tmpdir):
+def test_manifest_index(tmp_path: pathlib.Path):
     """Test obtaining manifest + config from a registry
     that has an index"""
     urlopen = create_opener(InMemoryOCIRegistry("registry.example.com")).open
@@ -561,18 +559,18 @@ def test_manifest_index(tmpdir):
     manifest_descriptors = []
     manifest_and_config = {}
     for arch in ("amd64", "arm64"):
-        file = tmpdir.join(f"config_{arch}.json")
+        file = tmp_path / f"config_{arch}.json"
         config = default_config(architecture=arch, os="linux")
-        file.write(json.dumps(config))
-        config_digest = Digest.from_sha256(hashlib.sha256(file.read_binary()).hexdigest())
-        assert upload_blob(img, file, config_digest, _urlopen=urlopen)
+        file.write_text(json.dumps(config))
+        config_digest = Digest.from_sha256(hashlib.sha256(file.read_bytes()).hexdigest())
+        assert upload_blob(img, str(file), config_digest, _urlopen=urlopen)
         manifest = {
             "schemaVersion": 2,
             "mediaType": "application/vnd.oci.image.manifest.v1+json",
             "config": {
                 "mediaType": "application/vnd.oci.image.config.v1+json",
                 "digest": str(config_digest),
-                "size": file.size(),
+                "size": file.stat().st_size,
             },
             "layers": [],
         }

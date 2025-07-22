@@ -1,13 +1,12 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _mesonpackage:
 
------
+------
 Meson
------
+------
 
 Much like Autotools and CMake, Meson is a build system.  But it is
 meant to be both fast and as user friendly as possible.  GNOME's goal
@@ -81,7 +80,7 @@ Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 At the bare minimum, packages that use the Meson build system need
-``meson`` and ```ninja``` dependencies. Since this is always the case,
+``meson`` and ``ninja`` dependencies. Since this is always the case,
 the ``MesonPackage`` base class already contains:
 
 .. code-block:: python

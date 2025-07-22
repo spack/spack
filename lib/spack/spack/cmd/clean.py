@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,12 +6,11 @@ import argparse
 import os
 import shutil
 
-import llnl.util.filesystem
-import llnl.util.tty as tty
-
 import spack.caches
 import spack.cmd
 import spack.config
+import spack.llnl.util.filesystem
+import spack.llnl.util.tty as tty
 import spack.stage
 import spack.store
 import spack.util.path
@@ -31,7 +29,7 @@ class AllClean(argparse.Action):
         parser.parse_args(["-sdfmp"], namespace=namespace)
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-s", "--stage", action="store_true", help="remove all temporary build stages (default)"
     )
@@ -136,4 +134,4 @@ def clean(parser, args):
         bootstrap_prefix = spack.util.path.canonicalize_path(spack.config.get("bootstrap:root"))
         msg = 'Removing bootstrapped software and configuration in "{0}"'
         tty.msg(msg.format(bootstrap_prefix))
-        llnl.util.filesystem.remove_directory_contents(bootstrap_prefix)
+        spack.llnl.util.filesystem.remove_directory_contents(bootstrap_prefix)

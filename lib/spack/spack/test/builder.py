@@ -1,22 +1,21 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os.path
+import os
+import pathlib
 
 import pytest
 
-from llnl.util.filesystem import touch
-
 import spack.builder
+import spack.concretize
 import spack.paths
 import spack.repo
-import spack.spec
+from spack.llnl.util.filesystem import touch
 
 
 @pytest.fixture()
-def builder_test_repository():
-    builder_test_path = os.path.join(spack.paths.repos_path, "builder.test")
+def builder_test_repository(config):
+    builder_test_path = os.path.join(spack.paths.test_repos_path, "spack_repo", "builder_test")
     with spack.repo.use_repositories(builder_test_path) as mock_repo:
         yield mock_repo
 
@@ -79,7 +78,7 @@ def builder_test_repository():
 @pytest.mark.disable_clean_stage_check
 def test_callbacks_and_installation_procedure(spec_str, expected_values, working_env):
     """Test the correct execution of callbacks and installation procedures for packages."""
-    s = spack.spec.Spec(spec_str).concretized()
+    s = spack.concretize.concretize_one(spec_str)
     builder = spack.builder.create(s.package)
     for phase_fn in builder:
         phase_fn.execute()
@@ -102,7 +101,7 @@ def test_callbacks_and_installation_procedure(spec_str, expected_values, working
     ],
 )
 def test_old_style_compatibility_with_super(spec_str, method_name, expected):
-    s = spack.spec.Spec(spec_str).concretized()
+    s = spack.concretize.concretize_one(spec_str)
     builder = spack.builder.create(s.package)
     value = getattr(builder, method_name)()
     assert value == expected
@@ -113,7 +112,7 @@ def test_old_style_compatibility_with_super(spec_str, method_name, expected):
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 @pytest.mark.disable_clean_stage_check
 def test_build_time_tests_are_executed_from_default_builder():
-    s = spack.spec.Spec("old-style-autotools").concretized()
+    s = spack.concretize.concretize_one("old-style-autotools")
     builder = spack.builder.create(s.package)
     builder.pkg.run_tests = True
     for phase_fn in builder:
@@ -127,7 +126,7 @@ def test_build_time_tests_are_executed_from_default_builder():
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 def test_monkey_patching_wrapped_pkg():
     """Confirm 'run_tests' is accessible through wrappers."""
-    s = spack.spec.Spec("old-style-autotools").concretized()
+    s = spack.concretize.concretize_one("old-style-autotools")
     builder = spack.builder.create(s.package)
     assert s.package.run_tests is False
     assert builder.pkg.run_tests is False
@@ -142,7 +141,7 @@ def test_monkey_patching_wrapped_pkg():
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 def test_monkey_patching_test_log_file():
     """Confirm 'test_log_file' is accessible through wrappers."""
-    s = spack.spec.Spec("old-style-autotools").concretized()
+    s = spack.concretize.concretize_one("old-style-autotools")
     builder = spack.builder.create(s.package)
 
     s.package.tester.test_log_file = "/some/file"
@@ -153,18 +152,18 @@ def test_monkey_patching_test_log_file():
 # Windows context manager's __exit__ fails with ValueError ("I/O operation
 # on closed file").
 @pytest.mark.not_on_windows("Does not run on windows")
-def test_install_time_test_callback(tmpdir, config, mock_packages, mock_stage):
+def test_install_time_test_callback(tmp_path: pathlib.Path, config, mock_packages, mock_stage):
     """Confirm able to run stand-alone test as a post-install callback."""
-    s = spack.spec.Spec("py-test-callback").concretized()
+    s = spack.concretize.concretize_one("py-test-callback")
     builder = spack.builder.create(s.package)
     builder.pkg.run_tests = True
-    s.package.tester.test_log_file = tmpdir.join("install_test.log")
+    s.package.tester.test_log_file = str(tmp_path / "install_test.log")
     touch(s.package.tester.test_log_file)
 
     for phase_fn in builder:
         phase_fn.execute()
 
-    with open(s.package.tester.test_log_file, "r") as f:
+    with open(s.package.tester.test_log_file, "r", encoding="utf-8") as f:
         results = f.read().replace("\n", " ")
         assert "PyTestCallback test" in results
 
@@ -175,12 +174,44 @@ def test_mixins_with_builders(working_env):
     """Tests that run_after and run_before callbacks are accumulated correctly,
     when mixins are used with builders.
     """
-    s = spack.spec.Spec("builder-and-mixins").concretized()
+    s = spack.concretize.concretize_one("builder-and-mixins")
     builder = spack.builder.create(s.package)
 
     # Check that callbacks added by the mixin are in the list
-    assert any(fn.__name__ == "before_install" for _, fn in builder.run_before_callbacks)
-    assert any(fn.__name__ == "after_install" for _, fn in builder.run_after_callbacks)
+    assert any(fn.__name__ == "before_install" for _, fn in builder._run_before_callbacks)
+    assert any(fn.__name__ == "after_install" for _, fn in builder._run_after_callbacks)
 
     # Check that callback from the GenericBuilder are in the list too
-    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder.run_after_callbacks)
+    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder._run_after_callbacks)
+
+
+def test_reading_api_v20_attributes():
+    """Tests that we can read attributes from API v2.0 builders."""
+
+    class TestBuilder(spack.builder.Builder):
+        legacy_methods = ("configure", "install")
+        legacy_attributes = ("foo", "bar")
+        legacy_long_methods = ("baz", "fee")
+
+    methods = spack.builder.package_methods(TestBuilder)
+    assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")
+    long_methods = spack.builder.package_long_methods(TestBuilder)
+    assert long_methods == ("baz", "fee")
+
+
+def test_reading_api_v22_attributes():
+    """Tests that we can read attributes from API v2.2 builders."""
+
+    class TestBuilder(spack.builder.Builder):
+        package_methods = ("configure", "install")
+        package_attributes = ("foo", "bar")
+        package_long_methods = ("baz", "fee")
+
+    methods = spack.builder.package_methods(TestBuilder)
+    assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")
+    long_methods = spack.builder.package_long_methods(TestBuilder)
+    assert long_methods == ("baz", "fee")

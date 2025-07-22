@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,10 +11,11 @@ dependencies.
 import os
 from pathlib import PurePath
 
-import llnl.util.filesystem
+import spack.llnl.util.filesystem
+import spack.util.hash as hash
 
 #: This file lives in $prefix/lib/spack/spack/__file__
-prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
+prefix = str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
 
 #: synonym for prefix
 spack_root = prefix
@@ -31,14 +31,12 @@ sbang_script = os.path.join(bin_path, "sbang")
 
 # spack directory hierarchy
 lib_path = os.path.join(prefix, "lib", "spack")
-external_path = os.path.join(lib_path, "external")
-build_env_path = os.path.join(lib_path, "env")
 module_path = os.path.join(lib_path, "spack")
+vendor_path = os.path.join(module_path, "vendor")
 command_path = os.path.join(module_path, "cmd")
 analyzers_path = os.path.join(module_path, "analyzers")
 platform_path = os.path.join(module_path, "platforms")
 compilers_path = os.path.join(module_path, "compilers")
-build_systems_path = os.path.join(module_path, "build_systems")
 operating_system_path = os.path.join(module_path, "operating_systems")
 test_path = os.path.join(module_path, "test")
 hooks_path = os.path.join(module_path, "hooks")
@@ -58,8 +56,8 @@ var_path = os.path.join(prefix, "var", "spack")
 
 # read-only things in $spack/var/spack
 repos_path = os.path.join(var_path, "repos")
-packages_path = os.path.join(repos_path, "builtin")
-mock_packages_path = os.path.join(repos_path, "builtin.mock")
+test_repos_path = os.path.join(var_path, "test_repos")
+mock_packages_path = os.path.join(test_repos_path, "spack_repo", "builtin_mock")
 
 #
 # Writable things in $spack/var/spack
@@ -74,6 +72,12 @@ gpg_keys_path = os.path.join(var_path, "gpg")
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
 gpg_path = os.path.join(opt_path, "spack", "gpg")
+
+
+#: Not a location itself, but used for when Spack instances
+#: share the same cache base directory for caches that should
+#: not be shared between those instances.
+spack_instance_id = hash.b32_hash(spack_root)[:7]
 
 
 # Below paths are where Spack can write information for the user.
@@ -103,12 +107,17 @@ default_monitor_path = os.path.join(reports_path, "monitor")
 #: git repositories fetched to compare commits to versions
 user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
 
+#: default location where remote package repositories are cloned
+package_repos_path = os.path.join(user_cache_path, "package_repos")
+
 #: bootstrap store for bootstrapping clingo and other tools
 default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
 
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-default_misc_cache_path = os.path.join(user_cache_path, "cache")
+default_misc_cache_path = os.path.join(user_cache_path, spack_instance_id, "cache")
 
+#: concretization cache for Spack concretizations
+default_conc_cache_path = os.path.join(default_misc_cache_path, "concretization")
 
 # Below paths pull configuration from the host environment.
 #

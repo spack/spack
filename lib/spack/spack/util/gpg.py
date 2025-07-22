@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
@@ -9,9 +8,8 @@ import os
 import re
 from typing import List
 
-import llnl.util.filesystem
-
 import spack.error
+import spack.llnl.util.filesystem
 import spack.paths
 import spack.util.executable
 import spack.version
@@ -389,7 +387,7 @@ def _socket_dir(gpgconf):
                 os.mkdir(var_run_user)
                 os.chmod(var_run_user, 0o777)
 
-            user_dir = os.path.join(var_run_user, str(llnl.util.filesystem.getuid()))
+            user_dir = os.path.join(var_run_user, str(spack.llnl.util.filesystem.getuid()))
 
             if not os.path.exists(user_dir):
                 os.mkdir(user_dir)

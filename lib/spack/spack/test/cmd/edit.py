@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,7 +6,6 @@ import os
 
 import spack.repo
 import spack.util.editor
-from spack.build_systems import autotools, cmake
 from spack.main import SpackCommand
 
 edit = SpackCommand("edit")
@@ -30,13 +28,15 @@ def test_edit_packages(monkeypatch, mock_packages: spack.repo.RepoPath):
     assert called
 
 
-def test_edit_files(monkeypatch):
+def test_edit_files(monkeypatch, mock_packages):
     """Test spack edit --build-system autotools cmake"""
     called = False
 
     def editor(*args: str, **kwargs):
         nonlocal called
         called = True
+        from spack_repo.builtin_mock.build_systems import autotools, cmake  # type: ignore
+
         assert os.path.samefile(args[0], autotools.__file__)
         assert os.path.samefile(args[1], cmake.__file__)
 

@@ -1,8 +1,7 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from llnl.util import tty
+import argparse
 
 import spack.cmd
 import spack.config
@@ -10,14 +9,15 @@ import spack.environment as ev
 import spack.store
 from spack.cmd.common import arguments
 from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
+from spack.llnl.util import tty
 
 description = "generate graphs of package dependency relationships"
 section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
-    setup_parser.parser = subparser
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
+    setattr(setup_parser, "parser", subparser)
     subparser.epilog = """
 Outside of an environment, the command concretizes specs and graphs them, unless the
 --installed option is given. In that case specs are matched from the current DB.

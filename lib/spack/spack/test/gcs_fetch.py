@@ -1,13 +1,14 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import pathlib
 
 import spack.fetch_strategy
 import spack.stage
 
 
-def test_gcsfetchstrategy_downloaded(tmp_path):
+def test_gcsfetchstrategy_downloaded(tmp_path: pathlib.Path):
     """Ensure fetch with archive file already downloaded is a noop."""
     archive = tmp_path / "gcs.tar.gz"
 

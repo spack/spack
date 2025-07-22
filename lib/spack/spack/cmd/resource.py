@@ -1,13 +1,12 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.repo
 
 description = "list downloadable resources (tarballs, repos, patches, etc.)"
@@ -15,7 +14,7 @@ section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="resource_command")
 
     list_parser = sp.add_parser("list", help=resource_list.__doc__)

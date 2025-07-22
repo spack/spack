@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,9 +6,8 @@
 
 import pytest
 
-import spack.config
+import spack.concretize
 import spack.platforms
-import spack.spec
 from spack.multimethod import NoSuchMethodError
 
 pytestmark = [
@@ -29,7 +27,7 @@ def pkg_name(request):
 
 
 def test_no_version_match(pkg_name):
-    spec = spack.spec.Spec(pkg_name + "@2.0").concretized()
+    spec = spack.concretize.concretize_one(pkg_name + "@2.0")
     with pytest.raises(NoSuchMethodError):
         spec.package.no_version_2()
 
@@ -54,7 +52,7 @@ def test_no_version_match(pkg_name):
         # Constraints on compilers with a default
         ("%gcc", "has_a_default", "gcc"),
         ("%clang", "has_a_default", "clang"),
-        ("%apple-clang os=elcapitan", "has_a_default", "default"),
+        ("%gcc@9", "has_a_default", "default"),
         # Constraints on dependencies
         ("^zmpi", "different_by_dep", "zmpi"),
         ("^mpich", "different_by_dep", "mpich"),
@@ -69,13 +67,9 @@ def test_no_version_match(pkg_name):
     ],
 )
 def test_multimethod_calls(
-    pkg_name, constraint_str, method_name, expected_result, compiler_factory
+    pkg_name, constraint_str, method_name, expected_result, default_mock_concretization
 ):
-    # Add apple-clang, as it is required by one of the tests
-    with spack.config.override(
-        "compilers", [compiler_factory(spec="apple-clang@9.1.0", operating_system="elcapitan")]
-    ):
-        s = spack.spec.Spec(pkg_name + constraint_str).concretized()
+    s = default_mock_concretization(f"{pkg_name}{constraint_str}")
     msg = f"Method {method_name} from {s} is giving a wrong result"
     assert getattr(s.package, method_name)() == expected_result, msg
 
@@ -84,10 +78,10 @@ def test_target_match(pkg_name):
     platform = spack.platforms.host()
     targets = list(platform.targets.values())
     for target in targets[:-1]:
-        s = spack.spec.Spec(pkg_name + " target=" + target.name).concretized()
+        s = spack.concretize.concretize_one(pkg_name + " target=" + target.name)
         assert s.package.different_by_target() == target.name
 
-    s = spack.spec.Spec(pkg_name + " target=" + targets[-1].name).concretized()
+    s = spack.concretize.concretize_one(pkg_name + " target=" + targets[-1].name)
     if len(targets) == 1:
         assert s.package.different_by_target() == targets[-1].name
     else:
@@ -117,5 +111,5 @@ def test_target_match(pkg_name):
     ],
 )
 def test_multimethod_calls_and_inheritance(spec_str, method_name, expected_result):
-    s = spack.spec.Spec(spec_str).concretized()
+    s = spack.concretize.concretize_one(spec_str)
     assert getattr(s.package, method_name)() == expected_result

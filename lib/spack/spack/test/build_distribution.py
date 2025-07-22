@@ -1,29 +1,28 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import os.path
+import pathlib
+import shutil
 
 import pytest
 
 import spack.binary_distribution as bd
-import spack.mirror
-import spack.spec
+import spack.concretize
+import spack.mirrors.mirror
 from spack.installer import PackageInstaller
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
-def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch, tmp_path):
-    spec = spack.spec.Spec("trivial-install-test-package").concretized()
+def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch, tmp_path: pathlib.Path):
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
     PackageInstaller([spec.package], fake=True).install()
 
     specs = [spec]
 
     # populate cache, everything is new
-    mirror = spack.mirror.Mirror.from_local_path(str(tmp_path))
+    mirror = spack.mirrors.mirror.Mirror.from_local_path(str(tmp_path))
     with bd.make_uploader(mirror) as uploader:
         skipped = uploader.push_or_raise(specs)
         assert not skipped
@@ -39,12 +38,7 @@ def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch, tmp_p
         assert not skipped
 
     # Remove the tarball, which should cause push to push.
-    os.remove(
-        tmp_path
-        / bd.BUILD_CACHE_RELATIVE_PATH
-        / bd.tarball_directory_name(spec)
-        / bd.tarball_name(spec, ".spack")
-    )
+    shutil.rmtree(tmp_path / bd.buildcache_relative_blobs_path())
 
     with bd.make_uploader(mirror) as uploader:
         skipped = uploader.push_or_raise(specs)

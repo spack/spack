@@ -1,19 +1,18 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
 import re
 
 import pytest
 
+import spack.concretize
 import spack.config
 import spack.main
 import spack.modules
 import spack.modules.lmod
 import spack.repo
-import spack.spec
 import spack.store
 from spack.installer import PackageInstaller
 
@@ -24,17 +23,17 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 #: make sure module files are generated for all the tests here
 @pytest.fixture(scope="module", autouse=True)
-def ensure_module_files_are_there(mock_repo_path, mock_store, mock_configuration_scopes):
+def ensure_module_files_are_there(mock_packages_repo, mock_store, mock_configuration_scopes):
     """Generate module files for module tests."""
     module = spack.main.SpackCommand("module")
     with spack.store.use_store(str(mock_store)):
         with spack.config.use_configuration(*mock_configuration_scopes):
-            with spack.repo.use_repositories(mock_repo_path):
+            with spack.repo.use_repositories(mock_packages_repo):
                 module("tcl", "refresh", "-y")
 
 
 def _module_files(module_type, *specs):
-    specs = [spack.spec.Spec(x).concretized() for x in specs]
+    specs = [spack.concretize.concretize_one(x) for x in specs]
     writer_cls = spack.modules.module_types[module_type]
     return [writer_cls(spec, "default").layout.filename for spec in specs]
 
@@ -185,12 +184,15 @@ def test_setdefault_command(mutable_database, mutable_config):
     # Install two different versions of pkg-a
     other_spec, preferred = "pkg-a@1.0", "pkg-a@2.0"
 
-    specs = [spack.spec.Spec(other_spec).concretized(), spack.spec.Spec(preferred).concretized()]
+    specs = [
+        spack.concretize.concretize_one(other_spec),
+        spack.concretize.concretize_one(preferred),
+    ]
     PackageInstaller([s.package for s in specs], explicit=True, fake=True).install()
 
     writers = {
-        preferred: writer_cls(spack.spec.Spec(preferred).concretized(), "default"),
-        other_spec: writer_cls(spack.spec.Spec(other_spec).concretized(), "default"),
+        preferred: writer_cls(specs[1], "default"),
+        other_spec: writer_cls(specs[0], "default"),
     }
 
     # Create two module files for the same software

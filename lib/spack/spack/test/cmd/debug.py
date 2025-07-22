@@ -1,61 +1,78 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import os.path
 import platform
 
-import pytest
-
 import spack
+import spack.cmd.debug
 import spack.platforms
+import spack.repo
 import spack.spec
 from spack.main import SpackCommand
-from spack.util.executable import which
+from spack.test.conftest import _return_none
 
 debug = SpackCommand("debug")
-
-
-@pytest.mark.db
-def test_create_db_tarball(tmpdir, database):
-    with tmpdir.as_cwd():
-        debug("create-db-tarball")
-
-        # get the first non-dotfile to avoid coverage files in the directory
-        files = os.listdir(os.getcwd())
-        tarball_name = next(
-            f for f in files if not f.startswith(".") and not f.startswith("tests")
-        )
-
-        # debug command made an archive
-        assert os.path.exists(tarball_name)
-
-        # print contents of archive
-        tar = which("tar")
-        contents = tar("tzf", tarball_name, output=str)
-
-        # DB file is included
-        assert "index.json" in contents
-
-        # specfiles from all installs are included
-        for spec in database.query():
-            # externals won't have a specfile
-            if spec.external:
-                continue
-
-            spec_suffix = "%s/.spack/spec.json" % spec.dag_hash()
-            assert spec_suffix in contents
 
 
 def test_report():
     out = debug("report")
     host_platform = spack.platforms.host()
-    host_os = host_platform.operating_system("frontend")
-    host_target = host_platform.target("frontend")
+    host_os = host_platform.default_operating_system()
+    host_target = host_platform.default_target()
     architecture = spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
 
-    assert spack.get_version() in out
+    assert spack.spack_version in out
+    assert spack.get_spack_commit() in out
     assert platform.python_version() in out
     assert str(architecture) in out
+
+
+def test_get_builtin_repo_info_local_repo(mock_git_version_info, monkeypatch):
+    """Confirm local git repo descriptor returns expected path."""
+    path = mock_git_version_info[0]
+
+    def _from_config(*args, **kwargs):
+        return {"builtin": spack.repo.LocalRepoDescriptor("builtin", path)}
+
+    monkeypatch.setattr(spack.repo.RepoDescriptors, "from_config", _from_config)
+    assert path in spack.cmd.debug._get_builtin_repo_info()
+
+
+def test_get_builtin_repo_info_unsupported_type(mock_git_version_info, monkeypatch):
+    """Confirm None is return if the 'builtin' repo descriptor's type is unsupported."""
+
+    def _from_config(*args, **kwargs):
+        path = mock_git_version_info[0]
+        return {"builtin": path}
+
+    monkeypatch.setattr(spack.repo.RepoDescriptors, "from_config", _from_config)
+    assert spack.cmd.debug._get_builtin_repo_info() is None
+
+
+def test_get_builtin_repo_info_no_builtin(monkeypatch):
+    """Confirm None is return if there is no 'builtin' repo descriptor."""
+
+    def _from_config(*args, **kwargs):
+        return {"local": "/assumes/no/descriptor/needed"}
+
+    monkeypatch.setattr(spack.repo.RepoDescriptors, "from_config", _from_config)
+    assert spack.cmd.debug._get_builtin_repo_info() is None
+
+
+def test_get_builtin_repo_info_bad_destination(mock_git_version_info, monkeypatch):
+    """Confirm git failure of a repository returns None."""
+
+    def _from_config(*args, **kwargs):
+        path = mock_git_version_info[0]
+        return {"builtin": spack.repo.LocalRepoDescriptor("builtin", f"{path}/missing")}
+
+    monkeypatch.setattr(spack.repo.RepoDescriptors, "from_config", _from_config)
+    assert spack.cmd.debug._get_builtin_repo_info() is None
+
+
+def test_get_spack_repo_info_no_commit(monkeypatch):
+    """Confirm the version is returned if there is no spack commit."""
+
+    monkeypatch.setattr(spack, "get_spack_commit", _return_none)
+    assert spack.cmd.debug._get_spack_repo_info() == spack.spack_version

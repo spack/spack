@@ -1,15 +1,14 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import errno
 import glob
 import os
 
-import llnl.util.tty as tty
-
 import spack.cmd
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.util.editor
@@ -19,7 +18,15 @@ section = "packaging"
 level = "short"
 
 
-def setup_parser(subparser):
+class ComputeBuildSystemPathAction(argparse.Action):
+    """Compute the path to the build system directory. This is done lazily so that we use the
+    correct spack.repo.PATH when the command is run."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, os.path.join(spack.repo.PATH.repos[0].root, "build_systems"))
+
+
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     excl_args = subparser.add_mutually_exclusive_group()
 
     # Various types of Spack files that can be edited
@@ -28,8 +35,8 @@ def setup_parser(subparser):
         "-b",
         "--build-system",
         dest="path",
-        action="store_const",
-        const=spack.paths.build_systems_path,
+        action=ComputeBuildSystemPathAction,
+        nargs=0,
         help="edit the build system with the supplied name",
     )
     excl_args.add_argument(
@@ -76,7 +83,7 @@ def locate_package(name: str, repo: spack.repo.Repo) -> str:
     path = repo.filename_for_package_name(name)
 
     try:
-        with open(path, "r"):
+        with open(path, "r", encoding="utf-8"):
             return path
     except OSError as e:
         if e.errno == errno.ENOENT:
@@ -93,7 +100,7 @@ def locate_file(name: str, path: str) -> str:
 
     # Try to open direct match.
     try:
-        with open(file_path, "r"):
+        with open(file_path, "r", encoding="utf-8"):
             return file_path
     except OSError as e:
         if e.errno != errno.ENOENT:
@@ -132,4 +139,4 @@ def edit(parser, args):
         spack.util.editor.editor(*paths)
     else:
         # By default open the directory where packages live
-        spack.util.editor.editor(spack.paths.packages_path)
+        spack.util.editor.editor(spack.repo.PATH.repos[0].packages_path)

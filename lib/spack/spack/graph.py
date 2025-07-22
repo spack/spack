@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 r"""Functions for graphing DAGs of dependencies.
@@ -40,13 +39,12 @@ import enum
 import sys
 from typing import List, Optional, Set, TextIO, Tuple
 
-import llnl.util.tty.color
-
 import spack.deptypes as dt
-import spack.repo
+import spack.llnl.util.tty.color
 import spack.spec
 import spack.tengine
 import spack.traverse
+from spack.solver.input_analysis import create_graph_analyzer
 
 
 def find(seq, predicate):
@@ -83,7 +81,7 @@ class AsciiGraph:
         self.depflag = dt.ALL
 
         # These are colors in the order they'll be used for edges.
-        # See llnl.util.tty.color for details on color characters.
+        # See spack.llnl.util.tty.color for details on color characters.
         self.colors = "rgbmcyRGBMCY"
 
         # Internal vars are used in the graph() function and are initialized there
@@ -322,15 +320,10 @@ class AsciiGraph:
         if color is None:
             color = out.isatty()
 
-        self._out = llnl.util.tty.color.ColorStream(out, color=color)
+        self._out = spack.llnl.util.tty.color.ColorStream(out, color=color)
 
         # We'll traverse the spec in topological order as we graph it.
-        nodes_in_topological_order = [
-            edge.spec
-            for edge in spack.traverse.traverse_edges_topo(
-                [spec], direction="children", deptype=self.depflag
-            )
-        ]
+        nodes_in_topological_order = list(spec.traverse(order="topo", deptype=self.depflag))
         nodes_in_topological_order.reverse()
 
         # Work on a copy to be nondestructive
@@ -488,7 +481,7 @@ class SimpleDAG(DotGraphBuilder):
     """Simple DOT graph, with nodes colored uniformly and edges without properties"""
 
     def node_entry(self, node):
-        format_option = "{name}{@version}{%compiler}{/hash:7}"
+        format_option = "{name}{@version}{/hash:7}{%compiler}"
         return node.dag_hash(), f'[label="{node.format(format_option)}"]'
 
     def edge_entry(self, edge):
@@ -521,7 +514,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         super().visit(edge)
 
     def node_entry(self, node):
-        node_str = node.format("{name}{@version}{%compiler}{/hash:7}")
+        node_str = node.format("{name}{@version}{/hash:7}{%compiler}")
         options = f'[label="{node_str}", group="build_dependencies", fillcolor="coral"]'
         if node.dag_hash() in self.main_unified_space:
             options = f'[label="{node_str}", group="main_psid"]'
@@ -543,10 +536,11 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
 def _static_edges(specs, depflag):
     for spec in specs:
-        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-        possible = pkg_cls.possible_dependencies(expand_virtuals=True, depflag=depflag)
+        *_, edges = create_graph_analyzer().possible_dependencies(
+            spec.name, expand_virtuals=True, allowed_deps=depflag
+        )
 
-        for parent_name, dependencies in possible.items():
+        for parent_name, dependencies in edges.items():
             for dependency_name in dependencies:
                 yield spack.spec.DependencySpec(
                     spack.spec.Spec(parent_name),

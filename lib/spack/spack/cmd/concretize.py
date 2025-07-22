@@ -1,24 +1,21 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-from llnl.string import plural
+import argparse
 
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.environment as ev
+import spack.llnl.util.tty as tty
+from spack.llnl.string import plural
 
 description = "concretize an environment and write a lockfile"
 section = "environments"
 level = "long"
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        "-f", "--force", action="store_true", help="re-concretize even if already concretized"
-    )
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--test",
         default=None,
@@ -44,7 +41,7 @@ def concretize(parser, args):
         tests = False
 
     with env.write_transaction():
-        concretized_specs = env.concretize(force=args.force, tests=tests)
+        concretized_specs = env.concretize(tests=tests)
         if not args.quiet:
             if concretized_specs:
                 tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}:")

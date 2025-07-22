@@ -1,31 +1,33 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
 import os
+import pathlib
+import re
 
 import pytest
 
-import llnl.util.filesystem as fs
-
+import spack.concretize
 import spack.config
 import spack.database
 import spack.environment as ev
+import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.schema.config
-import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 
 config = spack.main.SpackCommand("config")
 env = spack.main.SpackCommand("env")
 
+pytestmark = pytest.mark.usefixtures("mock_packages")
+
 
 def _create_config(scope=None, data={}, section="packages"):
     scope = scope or spack.config.default_modify_scope()
     cfg_file = spack.config.CONFIG.get_config_filename(scope, section)
-    with open(cfg_file, "w") as f:
+    with open(cfg_file, "w", encoding="utf-8") as f:
         syaml.dump(data, stream=f)
     return cfg_file
 
@@ -39,6 +41,57 @@ def config_yaml_v015(mutable_config):
     return functools.partial(_create_config, data=old_data, section="config")
 
 
+scope_path_re = r"\(([^\)]+)\)"
+
+
+@pytest.mark.parametrize(
+    "path,types",
+    [
+        (False, []),
+        (True, []),
+        (False, ["path"]),
+        (False, ["env"]),
+        (False, ["internal", "include"]),
+    ],
+)
+def test_config_scopes(path, types, mutable_mock_env_path):
+    ev.create("test")
+    scopes_cmd = ["scopes"]
+    if path:
+        scopes_cmd.append("-p")
+    if types:
+        scopes_cmd.extend(["-t", *types])
+    output = config(*scopes_cmd).split()
+    if not types or any(i in ("all", "internal") for i in types):
+        assert "command_line" in output
+        assert "_builtin" in output
+    if types:
+        if not any(i in ("all", "path") for i in types):
+            assert "site" not in output
+        if not any(i in ("all", "env", "include", "path") for i in types):
+            assert not output or all(":" not in x for x in output)
+        if not any(i in ("all", "env", "path") for i in types):
+            assert not output or all(not x.startswith("env:") for x in output)
+        if not any(i in ("all", "internal") for i in types):
+            assert "command_line" not in output
+            assert "_builtin" not in output
+    if path:
+        paths = (x[1] for x in (re.fullmatch(scope_path_re, s) for s in output) if x)
+        assert all(os.sep in x for x in paths)
+
+
+def test_config_scopes_include():
+    scopes_cmd = ["scopes", "-t", "include"]
+    output = config(*scopes_cmd).split()
+    assert not output or all(":" in x for x in output)
+
+
+def test_config_scopes_path_section():
+    output = config("scopes", "-t", "include", "-p", "modules")
+    assert "_builtin" not in output
+    assert "site" not in output
+
+
 def test_get_config_scope(mock_low_high_config):
     assert config("get", "compilers").strip() == "compilers: {}"
 
@@ -50,29 +103,29 @@ def test_get_config_scope_merged(mock_low_high_config):
     fs.mkdirp(low_path)
     fs.mkdirp(high_path)
 
-    with open(os.path.join(low_path, "repos.yaml"), "w") as f:
+    with open(os.path.join(low_path, "repos.yaml"), "w", encoding="utf-8") as f:
         f.write(
             """\
 repos:
-- repo3
+  repo3: repo3
 """
         )
 
-    with open(os.path.join(high_path, "repos.yaml"), "w") as f:
+    with open(os.path.join(high_path, "repos.yaml"), "w", encoding="utf-8") as f:
         f.write(
             """\
 repos:
-- repo1
-- repo2
+  repo1: repo1
+  repo2: repo2
 """
         )
 
     assert (
         config("get", "repos").strip()
         == """repos:
-- repo1
-- repo2
-- repo3"""
+  repo1: repo1
+  repo2: repo2
+  repo3: repo3"""
     )
 
 
@@ -214,7 +267,7 @@ def test_config_add_update_dict(mutable_empty_config):
 
 def test_config_with_c_argument(mutable_empty_config):
     # I don't know how to add a spack argument to a Spack Command, so we test this way
-    config_file = "config:install_root:root:/path/to/config.yaml"
+    config_file = "config:install_tree:root:/path/to/config.yaml"
     parser = spack.main.make_argument_parser()
     args = parser.parse_args(["-c", config_file])
     assert config_file in args.config_vars
@@ -222,7 +275,7 @@ def test_config_with_c_argument(mutable_empty_config):
     # Add the path to the config
     config("add", args.config_vars[0], scope="command_line")
     output = config("get", "config")
-    assert "config:\n  install_root:\n    root: /path/to/config.yaml" in output
+    assert "config:\n  install_tree:\n    root: /path/to/config.yaml" in output
 
 
 def test_config_add_ordered_dict(mutable_empty_config):
@@ -251,14 +304,14 @@ def test_config_add_invalid_fails(mutable_empty_config):
         config("add", "packages:all:True")
 
 
-def test_config_add_from_file(mutable_empty_config, tmpdir):
+def test_config_add_from_file(mutable_empty_config, tmp_path: pathlib.Path):
     contents = """spack:
   config:
     dirty: true
 """
 
-    file = str(tmpdir.join("spack.yaml"))
-    with open(file, "w") as f:
+    file = str(tmp_path / "spack.yaml")
+    with open(file, "w", encoding="utf-8") as f:
         f.write(contents)
     config("add", "-f", file)
     output = config("get", "config")
@@ -271,15 +324,15 @@ def test_config_add_from_file(mutable_empty_config, tmpdir):
     )
 
 
-def test_config_add_from_file_multiple(mutable_empty_config, tmpdir):
+def test_config_add_from_file_multiple(mutable_empty_config, tmp_path: pathlib.Path):
     contents = """spack:
   config:
     dirty: true
     template_dirs: [test1]
 """
 
-    file = str(tmpdir.join("spack.yaml"))
-    with open(file, "w") as f:
+    file = str(tmp_path / "spack.yaml")
+    with open(file, "w", encoding="utf-8") as f:
         f.write(contents)
     config("add", "-f", file)
     output = config("get", "config")
@@ -293,15 +346,15 @@ def test_config_add_from_file_multiple(mutable_empty_config, tmpdir):
     )
 
 
-def test_config_add_override_from_file(mutable_empty_config, tmpdir):
+def test_config_add_override_from_file(mutable_empty_config, tmp_path: pathlib.Path):
     config("--scope", "site", "add", "config:template_dirs:test1")
     contents = """spack:
   config::
     template_dirs: [test2]
 """
 
-    file = str(tmpdir.join("spack.yaml"))
-    with open(file, "w") as f:
+    file = str(tmp_path / "spack.yaml")
+    with open(file, "w", encoding="utf-8") as f:
         f.write(contents)
     config("add", "-f", file)
     output = config("get", "config")
@@ -314,15 +367,15 @@ def test_config_add_override_from_file(mutable_empty_config, tmpdir):
     )
 
 
-def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
+def test_config_add_override_leaf_from_file(mutable_empty_config, tmp_path: pathlib.Path):
     config("--scope", "site", "add", "config:template_dirs:test1")
     contents = """spack:
   config:
     template_dirs:: [test2]
 """
 
-    file = str(tmpdir.join("spack.yaml"))
-    with open(file, "w") as f:
+    file = str(tmp_path / "spack.yaml")
+    with open(file, "w", encoding="utf-8") as f:
         f.write(contents)
     config("add", "-f", file)
     output = config("get", "config")
@@ -335,8 +388,8 @@ def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
     )
 
 
-def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
-    config("add", "packages:all:compiler:[gcc]")
+def test_config_add_update_dict_from_file(mutable_empty_config, tmp_path: pathlib.Path):
+    config("add", "packages:all:require:['%gcc']")
 
     # contents to add to file
     contents = """spack:
@@ -346,8 +399,8 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
 """
 
     # create temp file and add it to config
-    file = str(tmpdir.join("spack.yaml"))
-    with open(file, "w") as f:
+    file = str(tmp_path / "spack.yaml")
+    with open(file, "w", encoding="utf-8") as f:
         f.write(contents)
     config("add", "-f", file)
 
@@ -358,13 +411,13 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     expected = """packages:
   all:
     target: [x86_64]
-    compiler: [gcc]
+    require: ['%gcc']
 """
 
     assert expected == output
 
 
-def test_config_add_invalid_file_fails(tmpdir):
+def test_config_add_invalid_file_fails(tmp_path: pathlib.Path):
     # contents to add to file
     # invalid because version requires a list
     contents = """spack:
@@ -374,8 +427,8 @@ def test_config_add_invalid_file_fails(tmpdir):
 """
 
     # create temp file and add it to config
-    file = str(tmpdir.join("spack.yaml"))
-    with open(file, "w") as f:
+    file = str(tmp_path / "spack.yaml")
+    with open(file, "w", encoding="utf-8") as f:
         f.write(contents)
 
     with pytest.raises((spack.config.ConfigFormatError)):
@@ -464,8 +517,10 @@ def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
     assert expected in output
 
 
-def test_config_add_to_env_preserve_comments(mutable_empty_config, mutable_mock_env_path, tmpdir):
-    filepath = str(tmpdir.join("spack.yaml"))
+def test_config_add_to_env_preserve_comments(
+    mutable_empty_config, mutable_mock_env_path, tmp_path: pathlib.Path
+):
+    filepath = str(tmp_path / "spack.yaml")
     manifest = """# comment
 spack:  # comment
   # comment
@@ -479,9 +534,9 @@ spack:  # comment
       # comment
       compiler: [gcc] # comment
 """
-    with open(filepath, "w") as f:
+    with open(filepath, "w", encoding="utf-8") as f:
         f.write(manifest)
-    env = ev.Environment(str(tmpdir))
+    env = ev.Environment(str(tmp_path))
     with env:
         config("add", "config:dirty:true")
         output = config("get")
@@ -524,7 +579,7 @@ def test_config_update_can_handle_comments(mutable_config):
     # Create an outdated config file with comments
     scope = spack.config.default_modify_scope()
     cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
-    with open(cfg_file, mode="w") as f:
+    with open(cfg_file, mode="w", encoding="utf-8") as f:
         f.write(
             """
 config:
@@ -543,7 +598,7 @@ config:
     assert "root" in data["install_tree"]
 
     # Check the comment is there
-    with open(cfg_file) as f:
+    with open(cfg_file, encoding="utf-8") as f:
         text = "".join(f.readlines())
 
     assert "# system cmake in /usr" in text
@@ -554,7 +609,7 @@ config:
 def test_config_update_works_for_empty_paths(mutable_config):
     scope = spack.config.default_modify_scope()
     cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
-    with open(cfg_file, mode="w") as f:
+    with open(cfg_file, mode="w", encoding="utf-8") as f:
         f.write(
             """
 config:
@@ -584,31 +639,34 @@ def test_config_update_shared_linking(mutable_config):
 
 
 def test_config_prefer_upstream(
-    tmpdir_factory, install_mockery, mock_fetch, mutable_config, gen_mock_layout, monkeypatch
+    tmp_path_factory: pytest.TempPathFactory,
+    install_mockery,
+    mock_fetch,
+    mutable_config,
+    gen_mock_layout,
+    monkeypatch,
 ):
     """Check that when a dependency package is recorded as installed in
     an upstream database that it is not reinstalled.
     """
 
-    mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
-    prepared_db = spack.database.Database(mock_db_root, layout=gen_mock_layout("/a/"))
+    mock_db_root = str(tmp_path_factory.mktemp("mock_db_root"))
+    prepared_db = spack.database.Database(mock_db_root, layout=gen_mock_layout("a"))
 
     for spec in ["hdf5 +mpi", "hdf5 ~mpi", "boost+debug~icu+graph", "dependency-install", "patch"]:
-        dep = spack.spec.Spec(spec)
-        dep.concretize()
+        dep = spack.concretize.concretize_one(spec)
         prepared_db.add(dep)
 
-    downstream_db_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
+    downstream_db_root = str(tmp_path_factory.mktemp("mock_downstream_db_root"))
     db_for_test = spack.database.Database(downstream_db_root, upstream_dbs=[prepared_db])
     monkeypatch.setattr(spack.store.STORE, "db", db_for_test)
 
     output = config("prefer-upstream")
     scope = spack.config.default_modify_scope("packages")
     cfg_file = spack.config.CONFIG.get_config_filename(scope, "packages")
-    packages = syaml.load(open(cfg_file))["packages"]
+    packages = syaml.load(open(cfg_file, encoding="utf-8"))["packages"]
 
     # Make sure only the non-default variants are set.
-    assert packages["all"] == {"compiler": ["gcc@=10.2.1"]}
     assert packages["boost"] == {"variants": "+debug +graph", "version": ["1.63.0"]}
     assert packages["dependency-install"] == {"version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict
@@ -618,8 +676,8 @@ def test_config_prefer_upstream(
     assert "- hdf5" in output
 
 
-def test_environment_config_update(tmpdir, mutable_config, monkeypatch):
-    with open(tmpdir.join("spack.yaml"), "w") as f:
+def test_environment_config_update(tmp_path: pathlib.Path, mutable_config, monkeypatch):
+    with open(tmp_path / "spack.yaml", "w", encoding="utf-8") as f:
         f.write(
             """\
 spack:
@@ -629,13 +687,13 @@ spack:
         )
 
     def update_config(data):
-        data["ccache"] = False
+        data["config"]["ccache"] = False
         return True
 
     monkeypatch.setattr(spack.schema.config, "update", update_config)
 
-    with ev.Environment(str(tmpdir)):
+    with ev.Environment(str(tmp_path)):
         config("update", "-y", "config")
 
-    with ev.Environment(str(tmpdir)) as e:
+    with ev.Environment(str(tmp_path)) as e:
         assert not e.manifest.yaml_content["spack"]["config"]["ccache"]

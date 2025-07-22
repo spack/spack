@@ -1,19 +1,17 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Caches used by Spack to store data"""
 import os
 
-import llnl.util.lang
-from llnl.util.filesystem import mkdirp
-
 import spack.config
 import spack.fetch_strategy
+import spack.llnl.util.lang
 import spack.paths
 import spack.util.file_cache
 import spack.util.path
+from spack.llnl.util.filesystem import mkdirp
 
 
 def misc_cache_location():
@@ -32,7 +30,9 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-MISC_CACHE: spack.util.file_cache.FileCache = llnl.util.lang.Singleton(_misc_cache)  # type: ignore
+MISC_CACHE: spack.util.file_cache.FileCache = spack.llnl.util.lang.Singleton(  # type: ignore
+    _misc_cache
+)
 
 
 def fetch_cache_location():
@@ -69,4 +69,5 @@ class MirrorCache:
 
 
 #: Spack's local cache for downloaded source archives
-FETCH_CACHE: spack.fetch_strategy.FsCache = llnl.util.lang.Singleton(_fetch_cache)  # type: ignore
+FETCH_CACHE: "spack.fetch_strategy.FsCache"
+FETCH_CACHE = spack.llnl.util.lang.Singleton(_fetch_cache)  # type: ignore

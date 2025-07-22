@@ -1,2 +1,2 @@
 repos:
-  - $spack/var/spack/repos/builtin
+  builtin_mock: $spack/var/spack/test_repos/spack_repo/builtin_mock

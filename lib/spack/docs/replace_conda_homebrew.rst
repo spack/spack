@@ -1,72 +1,49 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-=====================================
-Spack for Homebrew/Conda Users
-=====================================
+.. _spack-environments-basic-usage:
 
-Spack is an incredibly powerful package manager, designed for supercomputers
-where users have diverse installation needs. But Spack can also be used to
-handle simple single-user installations on your laptop. Most macOS users are
-already familiar with package managers like Homebrew and Conda, where all
-installed packages are symlinked to a single central location like ``/usr/local``.
-In this section, we will show you how to emulate the behavior of Homebrew/Conda
-using :ref:`environments`!
+==================
+Spack Environments
+==================
 
------
-Setup
------
+Spack is an incredibly powerful package manager, designed for supercomputers where users have diverse installation needs.
+But Spack can also be used to handle simple single-user installations on your laptop.
+Most macOS users are already familiar with package managers like Homebrew and Conda, where all installed packages are symlinked to a single central location like ``/usr/local``.
+In this section, we will show you how to emulate the behavior of Homebrew/Conda using :ref:`Spack environments <environments>`!
 
-First, let's create a new environment. We'll assume that Spack is already set up
-correctly, and that you've already sourced the setup script for your shell.
-To create a new environment, simply run:
+--------------------------
+Creating a New Environment
+--------------------------
+
+First, let's create a new environment.
+We'll assume that Spack is already set up correctly, and that you've already sourced the setup script for your shell.
+To create, and activate, a new environment, simply run:
 
 .. code-block:: console
 
    $ spack env create myenv
 
-Here, *myenv* can be anything you want to name your environment. Next, we can add
-a list of packages we would like to install into our environment. Let's say we
-want a newer version of Bash than the one that comes with macOS, and we want a
-few Python libraries. We can run:
+Here, *myenv* can be anything you want to name your environment.
+Next, we can add a list of packages we would like to install into our environment.
+Let's say we want a newer version of Bash than the one that comes with macOS, and we want a few Python libraries.
+We can run:
 
 .. code-block:: console
 
    $ spack -e myenv add bash@5 python py-numpy py-scipy py-matplotlib
 
 Each package can be listed on a separate line, or combined into a single line like we did above.
-Notice that we're explicitly asking for Bash 5 here. You can use any spec
-you would normally use on the command line with other Spack commands.
-
-Next, we want to manually configure a couple of things:
+Notice that we're explicitly asking for Bash 5 here.
+You can use any spec you would normally use on the command line with other Spack commands.
+If you run the following command:
 
 .. code-block:: console
 
    $ spack -e myenv config edit
 
-.. code-block:: yaml
-
-   # This is a Spack Environment file.
-   #
-   # It describes a set of packages to be installed, along with
-   # configuration settings.
-   spack:
-     # add package specs to the `specs` list
-     specs: [bash@5, python, py-numpy, py-scipy, py-matplotlib]
-     view: true
-
-You can see the packages we added earlier in the ``specs:`` section. If you
-ever want to add more packages, you can either use ``spack add`` or manually
-edit this file.
-
-We also need to change the ``concretizer:unify`` option. By default, Spack
-concretizes each spec *separately*, allowing multiple versions of the same
-package to coexist. Since we want a single consistent environment, we want to
-concretize all of the specs *together*.
-
-Here is what your ``spack.yaml`` looks like with this new setting:
+you'll see how your ``spack.yaml`` looks like:
 
 .. code-block:: yaml
 
@@ -76,79 +53,60 @@ Here is what your ``spack.yaml`` looks like with this new setting:
    # configuration settings.
    spack:
      # add package specs to the `specs` list
-     specs: [bash@5, python, py-numpy, py-scipy, py-matplotlib]
+     specs:
+     - bash@5
+     - python
+     - py-numpy
+     - py-scipy
+     - py-matplotlib
      view: true
      concretizer:
        unify: true
 
-^^^^^^^^^^^^^^^^
-Symlink location
-^^^^^^^^^^^^^^^^
+-------------------------
+Configuring View Location
+-------------------------
 
-Spack symlinks all installations to ``/Users/me/spack/var/spack/environments/myenv/.spack-env/view``,
-which is the default when ``view: true``.
-You can actually change this to any directory you want. For example, Homebrew
-uses ``/usr/local``, while Conda uses ``/Users/me/anaconda``. In order to access
-files in these locations, you need to update ``PATH`` and other environment variables
-to point to them. Activating the Spack environment does this automatically, but
-you can also manually set them in your ``.bashrc``.
+Spack symlinks all installations to ``${SPACK_ROOT}/var/spack/environments/myenv/.spack-env/view``, which is the default when ``view: true``.
+You can actually change this to any directory you want by editing the ``spack.yaml`` manifest file, or by using the following command:
 
-.. warning::
+.. code-block:: console
 
-   There are several reasons why you shouldn't use ``/usr/local``:
+   $ spack -e myenv env view enable <path>
 
-   1. If you are on macOS 10.11+ (El Capitan and newer), Apple makes it hard
-      for you. You may notice permissions issues on ``/usr/local`` due to their
-      `System Integrity Protection <https://support.apple.com/en-us/HT204899>`_.
-      By default, users don't have permissions to install anything in ``/usr/local``,
-      and you can't even change this using ``sudo chown`` or ``sudo chmod``.
-   2. Other package managers like Homebrew will try to install things to the
-      same directory. If you plan on using Homebrew in conjunction with Spack,
-      don't symlink things to ``/usr/local``.
-   3. If you are on a shared workstation, or don't have sudo privileges, you
-      can't do this.
+In order to access files in these locations, you need to update ``PATH`` and other environment variables to point to them.
+Activating the Spack environment does this automatically, once the software is installed:
 
-   If you still want to do this anyway, there are several ways around SIP.
-   You could disable SIP by booting into recovery mode and running
-   ``csrutil disable``, but this is not recommended, as it can open up your OS
-   to security vulnerabilities. Another technique is to run ``spack concretize``
-   and ``spack install`` using ``sudo``. This is also not recommended.
+.. code-block:: console
 
-   The safest way I've found is to create your installation directories using
-   sudo, then change ownership back to the user like so:
+   $ spack env activate -p myenv
 
-   .. code-block:: bash
+For now, let's deactivate the environment, and proceed with installing the software:
 
-      for directory in .spack bin contrib include lib man share
-      do
-          sudo mkdir -p /usr/local/$directory
-          sudo chown $(id -un):$(id -gn) /usr/local/$directory
-      done
+.. code-block:: console
 
-   Depending on the packages you install in your environment, the exact list of
-   directories you need to create may vary. You may also find some packages
-   like Java libraries that install a single file to the installation prefix
-   instead of in a subdirectory. In this case, the action is the same, just replace
-   ``mkdir -p`` with ``touch`` in the for-loop above.
-
-   But again, it's safer just to use the default symlink location.
+   $ spack env deactivate
 
 
-------------
-Installation
-------------
+-----------------------
+Installing the Software
+-----------------------
 
-To actually concretize the environment, run:
+Once the manifest file is properly defined, you may want to update the ``builtin`` package repository using this command:
+
+.. code-block:: console
+
+   $ spack repo update
+
+Then you can proceed concretizing the environment:
 
 .. code-block:: console
 
    $ spack -e myenv concretize
 
-This will tell you which if any packages are already installed, and alert you
-to any conflicting specs.
+This will tell you which packages, if any, are already installed, and alert you to any conflicting specs.
 
-To actually install these packages and symlink them to your ``view:``
-directory, simply run:
+To actually install these packages and symlink them to your ``view:`` directory, simply run:
 
 .. code-block:: console
 
@@ -157,29 +115,32 @@ directory, simply run:
 
 Now, when you type ``which python3``, it should find the one you just installed.
 
-In order to change the default shell to our newer Bash installation, we first
-need to add it to this list of acceptable shells. Run:
+.. admonition:: Add the new shell to the list of valid login shells
+   :class: tip
+   :collapsible:
 
-.. code-block:: console
+   In order to change the default shell to our newer Bash installation, we first need to add it to this list of acceptable shells.
+   Run:
 
-   $ sudo vim /etc/shells
+   .. code-block:: console
 
-and add the absolute path to your bash executable. Then run:
+      $ sudo vim /etc/shells
 
-.. code-block:: console
+   and add the absolute path to your bash executable. Then run:
 
-   $ chsh -s /path/to/bash
+   .. code-block:: console
 
-Now, when you log out and log back in, ``echo $SHELL`` should point to the
-newer version of Bash.
+      $ chsh -s /path/to/bash
 
----------------------------
-Updating Installed Packages
----------------------------
+   Now, when you log out and log back in, ``echo $SHELL`` should point to the newer version of Bash.
 
-Let's say you upgraded to a new version of macOS, or a new version of Python
-was released, and you want to rebuild your entire software stack. To do this,
-simply run the following commands:
+
+-----------------------
+Keeping Up With Updates
+-----------------------
+
+Let's say you upgraded to a new version of macOS, or a new version of Python was released, and you want to rebuild your entire software stack.
+To do this, simply run the following commands:
 
 .. code-block:: console
 
@@ -187,56 +148,38 @@ simply run the following commands:
    $ spack concretize --fresh --force
    $ spack install
 
-The ``--fresh`` flag tells Spack to use the latest version of every package
-where possible instead of trying to optimize for reuse of existing installed
-packages.
+The ``--fresh`` flag tells Spack to use the latest version of every package, where possible, instead of trying to reuse installed packages as much as possible.
 
-The ``--force`` flag in addition tells Spack to overwrite its previous
-concretization decisions, allowing you to choose a new version of Python.
-If any of the new packages like Bash are already installed, ``spack install``
-won't re-install them, it will keep the symlinks in place.
+The ``--force`` flag in addition tells Spack to overwrite its previous concretization decisions, allowing you to choose a new version of Python.
+If any of the new packages like Bash are already installed, ``spack install`` won't re-install them, it will keep the symlinks in place.
 
------------------------------------
-Updating & Cleaning Up Old Packages
------------------------------------
+------------------------
+Cleaning Up Old Packages
+------------------------
 
-If you're looking to mimic the behavior of Homebrew, you may also want to
-clean up out-of-date packages from your environment after an upgrade. To
-upgrade your entire software stack within an environment and clean up old
-package versions, simply run the following commands:
+If we want to clean up old, out-of-date packages from our environment after an upgrade, here's how to upgrade our entire software stack and tidy up the old versions:
 
 .. code-block:: console
 
    $ spack env activate myenv
-   $ spack mark -i --all
    $ spack concretize --fresh --force
    $ spack install
-   $ spack gc
+   $ spack gc --except-any-environment
 
-Running ``spack mark -i --all`` tells Spack to mark all of the existing
-packages within an environment as "implicitly" installed. This tells
-spack's garbage collection system that these packages should be cleaned up.
+The final step, ``spack gc --except-any-environment``, runs Spack's garbage collector and removes any packages that are no longer needed by any managed Spack environment -- which will clean up those old versions that got replaced during the upgrade.
 
-Don't worry however, this will not remove your entire environment.
-Running ``spack install`` will reexamine your spack environment after
-a fresh concretization and will re-mark any packages that should remain
-installed as "explicitly" installed.
+------------------------
+Removing the Environment
+------------------------
 
-**Note:** if you use multiple spack environments you should re-run ``spack install``
-in each of your environments prior to running ``spack gc`` to prevent spack
-from uninstalling any shared packages that are no longer required by the
-environment you just upgraded.
-
---------------
-Uninstallation
---------------
-
-If you decide that Spack isn't right for you, uninstallation is simple.
+If you need to remove ``myenv`` completely, the procedure is simple.
 Just run:
 
 .. code-block:: console
 
    $ spack env activate myenv
    $ spack uninstall --all
+   $ spack env deactivate myenv
+   $ spack env rm myenv
 
-This will uninstall all packages in your environment and remove the symlinks.
+This will uninstall all packages in your environment, remove the symlinks, and finally remove the environment.

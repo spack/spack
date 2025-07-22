@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -47,6 +46,7 @@ import errno
 import getpass
 import glob
 import os
+import pathlib
 import shutil
 import socket
 import stat
@@ -54,13 +54,12 @@ import sys
 import tempfile
 import traceback
 from contextlib import contextmanager
-from multiprocessing import Process, Queue
+from multiprocessing import Barrier, Process, Queue
 
 import pytest
 
-import llnl.util.lock as lk
-import llnl.util.multiproc as mp
-from llnl.util.filesystem import getuid, touch
+import spack.llnl.util.lock as lk
+from spack.llnl.util.filesystem import getuid, touch, working_dir
 
 if sys.platform != "win32":
     import fcntl
@@ -94,28 +93,26 @@ except ImportError:
     pass
 
 
-"""This is a list of filesystem locations to test locks in.  Paths are
-expanded so that %u is replaced with the current username. '~' is also
-legal and will be expanded to the user's home directory.
-
-Tests are skipped for directories that don't exist, so you'll need to
-update this with the locations of NFS, Lustre, and other mounts on your
-system.
-"""
+#: This is a list of filesystem locations to test locks in.  Paths are
+#: expanded so that %u is replaced with the current username. '~' is also
+#: legal and will be expanded to the user's home directory.
+#:
+#: Tests are skipped for directories that don't exist, so you'll need to
+#: update this with the locations of NFS, Lustre, and other mounts on your
+#: system.
 locations = [
     tempfile.gettempdir(),
     os.path.join("/nfs/tmp2/", getpass.getuser()),
     os.path.join("/p/lscratch*/", getpass.getuser()),
 ]
 
-"""This is the longest a failed multiproc test will take.
-Barriers will time out and raise an exception after this interval.
-In MPI mode, barriers don't time out (they hang).  See mpi_multiproc_test.
-"""
+#: This is the longest a failed multiproc test will take.
+#: Barriers will time out and raise an exception after this interval.
+#: In MPI mode, barriers don't time out (they hang).  See mpi_multiproc_test.
 barrier_timeout = 5
 
-"""This is the lock timeout for expected failures.
-This may need to be higher for some filesystems."""
+#: This is the lock timeout for expected failures.
+#: This may need to be higher for some filesystems.
 lock_fail_timeout = 0.1
 
 
@@ -232,7 +229,7 @@ def test_poll_interval_generator():
 
 def local_multiproc_test(*functions, **kwargs):
     """Order some processes using simple barrier synchronization."""
-    b = mp.Barrier(len(functions), timeout=barrier_timeout)
+    b = Barrier(len(functions), timeout=barrier_timeout)
 
     args = (b,) + tuple(kwargs.get("extra_args", ()))
     procs = [Process(target=f, args=args, name=f.__name__) for f in functions]
@@ -287,9 +284,8 @@ def mpi_multiproc_test(*functions):
     comm.Barrier()  # barrier after each MPI test.
 
 
-"""``multiproc_test()`` should be called by tests below.
-``multiproc_test()`` will work for either MPI runs or for local runs.
-"""
+#: ``multiproc_test()`` should be called by tests below.
+#: ``multiproc_test()`` will work for either MPI runs or for local runs.
 multiproc_test = mpi_multiproc_test if mpi else local_multiproc_test
 
 
@@ -649,17 +645,17 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.acquire_read()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file.mode == "r+"
+    assert lock._file.mode == "rb+"
 
     lock.acquire_write()
     assert lock._reads == 1
     assert lock._writes == 1
-    assert lock._file.mode == "r+"
+    assert lock._file.mode == "rb+"
 
     lock.release_write()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file.mode == "r+"
+    assert lock._file.mode == "rb+"
 
     lock.release_read()
     assert lock._reads == 0
@@ -681,7 +677,7 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         lock.acquire_read()
         assert lock._reads == 1
         assert lock._writes == 0
-        assert lock._file.mode == "r"
+        assert lock._file.mode == "rb"
 
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
@@ -1264,17 +1260,17 @@ def test_lock_debug_output(lock_path):
     local_multiproc_test(test_debug.p2, test_debug.p1, extra_args=(q1, q2))
 
 
-def test_lock_with_no_parent_directory(tmpdir):
+def test_lock_with_no_parent_directory(tmp_path: pathlib.Path):
     """Make sure locks work even when their parent directory does not exist."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("foo/bar/baz/lockfile")
         with lk.WriteTransaction(lock):
             pass
 
 
-def test_lock_in_current_directory(tmpdir):
+def test_lock_in_current_directory(tmp_path: pathlib.Path):
     """Make sure locks work even when their parent directory does not exist."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         # test we can create a lock in the current directory
         lock = lk.Lock("lockfile")
         for i in range(10):
@@ -1306,9 +1302,9 @@ def test_lock_str():
     assert "#reads=0, #writes=0" in lockstr
 
 
-def test_downgrade_write_okay(tmpdir):
+def test_downgrade_write_okay(tmp_path: pathlib.Path):
     """Test the lock write-to-read downgrade operation."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("lockfile")
         lock.acquire_write()
         lock.downgrade_write_to_read()
@@ -1317,9 +1313,9 @@ def test_downgrade_write_okay(tmpdir):
         lock.release_read()
 
 
-def test_downgrade_write_fails(tmpdir):
+def test_downgrade_write_fails(tmp_path: pathlib.Path):
     """Test failing the lock write-to-read downgrade operation."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("lockfile")
         lock.acquire_read()
         msg = "Cannot downgrade lock from write to read on file: lockfile"
@@ -1336,13 +1332,13 @@ def test_downgrade_write_fails(tmpdir):
         (errno.ENOENT, "Fake ENOENT error"),
     ],
 )
-def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
+def test_poll_lock_exception(tmp_path: pathlib.Path, monkeypatch, err_num, err_msg):
     """Test poll lock exception handling."""
 
     def _lockf(fd, cmd, len, start, whence):
-        raise IOError(err_num, err_msg)
+        raise OSError(err_num, err_msg)
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lockfile = "lockfile"
         lock = lk.Lock(lockfile)
         lock.acquire_read()
@@ -1352,16 +1348,16 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
         if err_num in [errno.EAGAIN, errno.EACCES]:
             assert not lock._poll_lock(fcntl.LOCK_EX)
         else:
-            with pytest.raises(IOError, match=err_msg):
+            with pytest.raises(OSError, match=err_msg):
                 lock._poll_lock(fcntl.LOCK_EX)
 
         monkeypatch.undo()
         lock.release_read()
 
 
-def test_upgrade_read_okay(tmpdir):
+def test_upgrade_read_okay(tmp_path: pathlib.Path):
     """Test the lock read-to-write upgrade operation."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("lockfile")
         lock.acquire_read()
         lock.upgrade_read_to_write()
@@ -1370,9 +1366,9 @@ def test_upgrade_read_okay(tmpdir):
         lock.release_write()
 
 
-def test_upgrade_read_fails(tmpdir):
+def test_upgrade_read_fails(tmp_path: pathlib.Path):
     """Test failing the lock read-to-write upgrade operation."""
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         lock = lk.Lock("lockfile")
         lock.acquire_write()
         msg = "Cannot upgrade lock from read to write on file: lockfile"

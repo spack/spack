@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for tag index cache files."""
@@ -86,7 +85,7 @@ def test_tag_get_available(tags, expected, mock_packages):
 
 
 def test_tag_get_installed_packages(mock_packages, mock_archive, mock_fetch, install_mockery):
-    install("mpich")
+    install("--fake", "mpich")
 
     for skip in [False, True]:
         all_pkgs = spack.tag.packages_with_tags(None, True, skip)

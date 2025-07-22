@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -220,7 +219,7 @@ _mirrors() {
 _repos() {
     if [[ -z "${SPACK_REPOS:-}" ]]
     then
-        SPACK_REPOS="$(spack repo list | awk '{print $1}')"
+        SPACK_REPOS="$(spack repo list --names)"
     fi
     SPACK_COMPREPLY="$SPACK_REPOS"
 }

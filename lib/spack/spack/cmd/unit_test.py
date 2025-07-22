@@ -1,12 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
 import collections
 import io
-import os.path
+import os
 import re
 import sys
 
@@ -17,18 +16,18 @@ try:
 except ImportError:
     pytest = None  # type: ignore
 
-import llnl.util.filesystem
-import llnl.util.tty.color as color
-from llnl.util.tty.colify import colify
-
+import spack.llnl.util.filesystem
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.paths
+from spack.llnl.util.tty.colify import colify
 
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-H",
         "--pytest-help",
@@ -121,7 +120,9 @@ def do_list(args, extra_args):
     # To list the files we just need to inspect the filesystem,
     # which doesn't need to wait for pytest collection and doesn't
     # require parsing pytest output
-    files = llnl.util.filesystem.find(root=spack.paths.test_path, files="*.py", recursive=True)
+    files = spack.llnl.util.filesystem.find(
+        root=spack.paths.test_path, files="*.py", recursive=True
+    )
     files = [
         os.path.relpath(f, start=spack.paths.spack_root)
         for f in files
@@ -217,7 +218,7 @@ def unit_test(parser, args, unknown_args):
     # Ensure clingo is available before switching to the
     # mock configuration used by unit tests
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_core_dependencies()
+        spack.bootstrap.ensure_clingo_importable_or_raise()
         if pytest is None:
             spack.bootstrap.ensure_environment_dependencies()
             import pytest
@@ -237,6 +238,12 @@ def unit_test(parser, args, unknown_args):
         pytest_root = spack.extensions.load_extension(args.extension)
 
     if args.numprocesses is not None and args.numprocesses > 1:
+        try:
+            import xdist  # noqa: F401
+        except ImportError:
+            tty.error("parallel unit-test requires pytest-xdist module")
+            return 1
+
         pytest_args.extend(
             [
                 "--dist",
@@ -247,7 +254,7 @@ def unit_test(parser, args, unknown_args):
         )
 
     # pytest.ini lives in the root of the spack repository.
-    with llnl.util.filesystem.working_dir(pytest_root):
+    with spack.llnl.util.filesystem.working_dir(pytest_root):
         if args.list:
             do_list(args, pytest_args)
             return

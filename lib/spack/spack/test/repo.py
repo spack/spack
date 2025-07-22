@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -7,15 +6,23 @@ import pathlib
 
 import pytest
 
+import spack
+import spack.environment
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.schema.repos
 import spack.spec
+import spack.util.executable
 import spack.util.file_cache
+import spack.util.lock
+import spack.util.naming
+from spack.test.conftest import RepoBuilder
+from spack.util.naming import valid_module_name
 
 
 @pytest.fixture(params=["packages", "", "foo"])
-def extra_repo(tmp_path_factory, request):
+def extra_repo(tmp_path_factory: pytest.TempPathFactory, request):
     repo_namespace = "extra_test_repo"
     repo_dir = tmp_path_factory.mktemp(repo_namespace)
     cache_dir = tmp_path_factory.mktemp("cache")
@@ -35,25 +42,25 @@ repo:
   subdirectory: '{request.param}'
 """
         )
-    repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+    repo_cache = spack.util.file_cache.FileCache(cache_dir)
     return spack.repo.Repo(str(repo_dir), cache=repo_cache), request.param
 
 
 def test_repo_getpkg(mutable_mock_repo):
     mutable_mock_repo.get_pkg_class("pkg-a")
-    mutable_mock_repo.get_pkg_class("builtin.mock.pkg-a")
+    mutable_mock_repo.get_pkg_class("builtin_mock.pkg-a")
 
 
 def test_repo_multi_getpkg(mutable_mock_repo, extra_repo):
     mutable_mock_repo.put_first(extra_repo[0])
     mutable_mock_repo.get_pkg_class("pkg-a")
-    mutable_mock_repo.get_pkg_class("builtin.mock.pkg-a")
+    mutable_mock_repo.get_pkg_class("builtin_mock.pkg-a")
 
 
 def test_repo_multi_getpkgclass(mutable_mock_repo, extra_repo):
     mutable_mock_repo.put_first(extra_repo[0])
     mutable_mock_repo.get_pkg_class("pkg-a")
-    mutable_mock_repo.get_pkg_class("builtin.mock.pkg-a")
+    mutable_mock_repo.get_pkg_class("builtin_mock.pkg-a")
 
 
 def test_repo_pkg_with_unknown_namespace(mutable_mock_repo):
@@ -63,40 +70,42 @@ def test_repo_pkg_with_unknown_namespace(mutable_mock_repo):
 
 def test_repo_unknown_pkg(mutable_mock_repo):
     with pytest.raises(spack.repo.UnknownPackageError):
-        mutable_mock_repo.get_pkg_class("builtin.mock.nonexistentpackage")
+        mutable_mock_repo.get_pkg_class("builtin_mock.nonexistentpackage")
 
 
-@pytest.mark.maybeslow
-def test_repo_last_mtime():
-    latest_mtime = max(
-        os.path.getmtime(p.module.__file__) for p in spack.repo.PATH.all_package_classes()
-    )
-    assert spack.repo.PATH.last_mtime() == latest_mtime
+def test_repo_last_mtime(mock_packages):
+    mtime_with_package_py = [
+        (os.path.getmtime(p.module.__file__), p.module.__file__)
+        for p in spack.repo.PATH.all_package_classes()
+    ]
+    repo_mtime = spack.repo.PATH.last_mtime()
+    max_mtime, max_file = max(mtime_with_package_py)
+    if max_mtime > repo_mtime:
+        modified_after = "\n    ".join(
+            f"{path} ({mtime})" for mtime, path in mtime_with_package_py if mtime > repo_mtime
+        )
+        assert (
+            max_mtime <= repo_mtime
+        ), f"the following files were modified while running tests:\n    {modified_after}"
+    assert max_mtime == repo_mtime, f"last_mtime incorrect for {max_file}"
 
 
 def test_repo_invisibles(mutable_mock_repo, extra_repo):
-    with open(os.path.join(extra_repo[0].root, extra_repo[1], ".invisible"), "w"):
+    with open(
+        os.path.join(extra_repo[0].root, extra_repo[1], ".invisible"), "w", encoding="utf-8"
+    ):
         pass
     extra_repo[0].all_package_names()
 
 
-@pytest.mark.parametrize("attr_name,exists", [("cmake", True), ("__sphinx_mock__", False)])
-@pytest.mark.regression("20661")
-def test_namespace_hasattr(attr_name, exists, mutable_mock_repo):
-    # Check that we don't fail on 'hasattr' checks because
-    # of a custom __getattr__ implementation
-    nms = spack.repo.SpackNamespace("spack.pkg.builtin.mock")
-    assert hasattr(nms, attr_name) == exists
-
-
 @pytest.mark.regression("24552")
-def test_all_package_names_is_cached_correctly():
+def test_all_package_names_is_cached_correctly(mock_packages):
     assert "mpi" in spack.repo.all_package_names(include_virtuals=True)
     assert "mpi" not in spack.repo.all_package_names(include_virtuals=False)
 
 
 @pytest.mark.regression("29203")
-def test_use_repositories_doesnt_change_class():
+def test_use_repositories_doesnt_change_class(mock_packages):
     """Test that we don't create the same package module and class multiple times
     when swapping repositories.
     """
@@ -107,25 +116,20 @@ def test_use_repositories_doesnt_change_class():
     assert id(zlib_cls_inner) == id(zlib_cls_outer)
 
 
-def test_import_repo_prefixes_as_python_modules(mock_packages):
-    import spack.pkg.builtin.mock
-
-    assert isinstance(spack.pkg, spack.repo.SpackNamespace)
-    assert isinstance(spack.pkg.builtin, spack.repo.SpackNamespace)
-    assert isinstance(spack.pkg.builtin.mock, spack.repo.SpackNamespace)
-
-
 def test_absolute_import_spack_packages_as_python_modules(mock_packages):
-    import spack.pkg.builtin.mock.mpileaks
+    import spack_repo.builtin_mock.packages.mpileaks.package  # type: ignore[import]
 
-    assert hasattr(spack.pkg.builtin.mock, "mpileaks")
-    assert hasattr(spack.pkg.builtin.mock.mpileaks, "Mpileaks")
-    assert isinstance(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.PackageMeta)
-    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.PackageBase)
+    assert hasattr(spack_repo.builtin_mock.packages.mpileaks.package, "Mpileaks")
+    assert isinstance(
+        spack_repo.builtin_mock.packages.mpileaks.package.Mpileaks, spack.package_base.PackageMeta
+    )
+    assert issubclass(
+        spack_repo.builtin_mock.packages.mpileaks.package.Mpileaks, spack.package_base.PackageBase
+    )
 
 
 def test_relative_import_spack_packages_as_python_modules(mock_packages):
-    from spack.pkg.builtin.mock.mpileaks import Mpileaks
+    from spack_repo.builtin_mock.packages.mpileaks.package import Mpileaks
 
     assert isinstance(Mpileaks, spack.package_base.PackageMeta)
     assert issubclass(Mpileaks, spack.package_base.PackageBase)
@@ -137,61 +141,71 @@ def test_get_all_mock_packages(mock_packages):
         mock_packages.get_pkg_class(name)
 
 
-def test_repo_path_handles_package_removal(tmpdir, mock_packages):
-    builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="removal")
-    builder.add_package("pkg-c")
-    with spack.repo.use_repositories(builder.root, override=False) as repos:
+def test_repo_path_handles_package_removal(mock_packages, repo_builder: RepoBuilder):
+    repo_builder.add_package("pkg-c")
+    with spack.repo.use_repositories(repo_builder.root, override=False) as repos:
         r = repos.repo_for_pkg("pkg-c")
-        assert r.namespace == "removal"
+        assert r.namespace == repo_builder.namespace
 
-    builder.remove("pkg-c")
-    with spack.repo.use_repositories(builder.root, override=False) as repos:
+    repo_builder.remove("pkg-c")
+    with spack.repo.use_repositories(repo_builder.root, override=False) as repos:
         r = repos.repo_for_pkg("pkg-c")
-        assert r.namespace == "builtin.mock"
+        assert r.namespace == "builtin_mock"
 
 
-def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_debug, capsys):
+def test_repo_dump_virtuals(
+    tmp_path: pathlib.Path, mutable_mock_repo, mock_packages, ensure_debug, capsys
+):
     # Start with a package-less virtual
     vspec = spack.spec.Spec("something")
-    mutable_mock_repo.dump_provenance(vspec, tmpdir)
+    mutable_mock_repo.dump_provenance(vspec, str(tmp_path))
     captured = capsys.readouterr()[1]
     assert "does not have a package" in captured
 
     # Now with a virtual with a package
     vspec = spack.spec.Spec("externalvirtual")
-    mutable_mock_repo.dump_provenance(vspec, tmpdir)
+    mutable_mock_repo.dump_provenance(vspec, str(tmp_path))
     captured = capsys.readouterr()[1]
     assert "Installing" in captured
-    assert "package.py" in os.listdir(tmpdir), "Expected the virtual's package to be copied"
+    assert "package.py" in os.listdir(str(tmp_path)), "Expected the virtual's package to be copied"
 
 
-@pytest.mark.parametrize(
-    "repo_paths,namespaces",
-    [
-        ([spack.paths.packages_path], ["builtin"]),
-        ([spack.paths.mock_packages_path], ["builtin.mock"]),
-        ([spack.paths.packages_path, spack.paths.mock_packages_path], ["builtin", "builtin.mock"]),
-        ([spack.paths.mock_packages_path, spack.paths.packages_path], ["builtin.mock", "builtin"]),
-    ],
-)
+@pytest.mark.parametrize("repos", [["mock"], ["extra"], ["mock", "extra"], ["extra", "mock"]])
 def test_repository_construction_doesnt_use_globals(
-    nullify_globals, tmp_path, repo_paths, namespaces
+    nullify_globals, tmp_path: pathlib.Path, repos, repo_builder: RepoBuilder
 ):
-    repo_cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
-    repo_path = spack.repo.RepoPath(*repo_paths, cache=repo_cache)
-    assert len(repo_path.repos) == len(namespaces)
-    assert [x.namespace for x in repo_path.repos] == namespaces
+    def _repo_descriptors(repos):
+        descriptors = {}
+        for entry in repos:
+            if entry == "mock":
+                descriptors["builtin_mock"] = spack.repo.LocalRepoDescriptor(
+                    "builtin_mock", spack.paths.mock_packages_path
+                )
+            if entry == "extra":
+                repo_dir = tmp_path / "extra_mock"
+                repo_dir.mkdir()
+                descriptors[repo_builder.namespace] = spack.repo.LocalRepoDescriptor(
+                    repo_builder.namespace, repo_builder.root
+                )
+        return spack.repo.RepoDescriptors(descriptors)
+
+    descriptors = _repo_descriptors(repos)
+
+    repo_cache = spack.util.file_cache.FileCache(tmp_path / "cache")
+    repo_path = spack.repo.RepoPath.from_descriptors(descriptors, cache=repo_cache)
+    assert len(repo_path.repos) == len(descriptors)
+    assert [x.namespace for x in repo_path.repos] == list(descriptors.keys())
 
 
 @pytest.mark.parametrize("method_name", ["dirname_for_package_name", "filename_for_package_name"])
-def test_path_computation_with_names(method_name, mock_repo_path):
+def test_path_computation_with_names(method_name, mock_packages_repo):
     """Tests that repositories can compute the correct paths when using both fully qualified
     names and unqualified names.
     """
-    repo_path = spack.repo.RepoPath(mock_repo_path, cache=None)
+    repo_path = spack.repo.RepoPath(mock_packages_repo)
     method = getattr(repo_path, method_name)
     unqualified = method("mpileaks")
-    qualified = method("builtin.mock.mpileaks")
+    qualified = method("builtin_mock.mpileaks")
     assert qualified == unqualified
 
 
@@ -199,12 +213,12 @@ def test_use_repositories_and_import():
     """Tests that use_repositories changes the import search too"""
     import spack.paths
 
-    repo_dir = pathlib.Path(spack.paths.repos_path)
-    with spack.repo.use_repositories(str(repo_dir / "compiler_runtime.test")):
-        import spack.pkg.compiler_runtime.test.gcc_runtime
+    repo_dir = pathlib.Path(spack.paths.test_repos_path)
+    with spack.repo.use_repositories(str(repo_dir / "spack_repo" / "compiler_runtime_test")):
+        import spack_repo.compiler_runtime_test.packages.gcc_runtime.package  # type: ignore[import]  # noqa: E501
 
-    with spack.repo.use_repositories(str(repo_dir / "builtin.mock")):
-        import spack.pkg.builtin.mock.cmake
+    with spack.repo.use_repositories(str(repo_dir / "spack_repo" / "builtin_mock")):
+        import spack_repo.builtin_mock.packages.cmake.package  # type: ignore[import]  # noqa: F401
 
 
 @pytest.mark.usefixtures("nullify_globals")
@@ -216,19 +230,22 @@ class TestRepo:
     def test_creation(self, mock_test_cache):
         repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert repo.config_file.endswith("repo.yaml")
-        assert repo.namespace == "builtin.mock"
+        assert repo.namespace == "builtin_mock"
 
     @pytest.mark.parametrize(
         "name,expected", [("mpi", True), ("mpich", False), ("mpileaks", False)]
     )
-    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
-    def test_is_virtual(self, repo_cls, name, expected, mock_test_cache):
-        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
+    def test_is_virtual(self, name, expected, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert repo.is_virtual(name) is expected
         assert repo.is_virtual_safe(name) is expected
 
+        repo_path = spack.repo.RepoPath(repo)
+        assert repo_path.is_virtual(name) is expected
+        assert repo_path.is_virtual_safe(name) is expected
+
     @pytest.mark.parametrize(
-        "module_name,expected",
+        "module_name,pkg_name",
         [
             ("dla_future", "dla-future"),
             ("num7zip", "7zip"),
@@ -236,12 +253,19 @@ class TestRepo:
             ("unknown", None),
         ],
     )
-    def test_real_name(self, module_name, expected, mock_test_cache):
+    def test_real_name(self, module_name, pkg_name, mock_test_cache, tmp_path: pathlib.Path):
         """Test that we can correctly compute the 'real' name of a package, from the one
         used to import the Python module.
         """
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
-        assert repo.real_name(module_name) == expected
+        path, _ = spack.repo.create_repo(str(tmp_path), package_api=(1, 0))
+        if pkg_name is not None:
+            pkg_path = pathlib.Path(path) / "packages" / pkg_name / "package.py"
+            pkg_path.parent.mkdir(parents=True)
+            pkg_path.write_text("")
+        repo = spack.repo.Repo(
+            path, cache=spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+        )
+        assert repo.real_name(module_name) == pkg_name
 
     @pytest.mark.parametrize("name", ["mpileaks", "7zip", "dla-future"])
     def test_get(self, name, mock_test_cache):
@@ -261,44 +285,680 @@ class TestRepo:
         "extended,expected",
         [("python", ["py-extension1", "python-venv"]), ("perl", ["perl-extension"])],
     )
-    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
-    def test_extensions(self, repo_cls, extended, expected, mock_test_cache):
-        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
-        provider_names = {x.name for x in repo.extensions_for(extended)}
-        assert provider_names.issuperset(expected)
+    def test_extensions(self, extended, expected, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo_path = spack.repo.RepoPath(repo)
+        for instance in (repo, repo_path):
+            provider_names = {x.name for x in instance.extensions_for(extended)}
+            assert provider_names.issuperset(expected)
 
-    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
-    def test_all_package_names(self, repo_cls, mock_test_cache):
-        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
-        all_names = repo.all_package_names(include_virtuals=True)
-        real_names = repo.all_package_names(include_virtuals=False)
-        assert set(all_names).issuperset(real_names)
-        for name in set(all_names) - set(real_names):
-            assert repo.is_virtual(name)
-            assert repo.is_virtual_safe(name)
+    def test_all_package_names(self, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo_path = spack.repo.RepoPath(repo)
 
-    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
-    def test_packages_with_tags(self, repo_cls, mock_test_cache):
-        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
-        r1 = repo.packages_with_tags("tag1")
-        r2 = repo.packages_with_tags("tag1", "tag2")
-        assert "mpich" in r1 and "mpich" in r2
-        assert "mpich2" in r1 and "mpich2" not in r2
-        assert set(r2).issubset(r1)
+        for instance in (repo, repo_path):
+            all_names = instance.all_package_names(include_virtuals=True)
+            real_names = instance.all_package_names(include_virtuals=False)
+            assert set(all_names).issuperset(real_names)
+            for name in set(all_names) - set(real_names):
+                assert instance.is_virtual(name)
+                assert instance.is_virtual_safe(name)
+
+    def test_packages_with_tags(self, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo_path = spack.repo.RepoPath(repo)
+
+        for instance in (repo, repo_path):
+            r1 = instance.packages_with_tags("tag1")
+            r2 = instance.packages_with_tags("tag1", "tag2")
+            assert "mpich" in r1 and "mpich" in r2
+            assert "mpich2" in r1 and "mpich2" not in r2
+            assert r2.issubset(r1)
 
 
 @pytest.mark.usefixtures("nullify_globals")
 class TestRepoPath:
     def test_creation_from_string(self, mock_test_cache):
-        repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.RepoPath.from_descriptors(
+            spack.repo.RepoDescriptors(
+                {
+                    "builtin_mock": spack.repo.LocalRepoDescriptor(
+                        "builtin_mock", spack.paths.mock_packages_path
+                    )
+                }
+            ),
+            cache=mock_test_cache,
+        )
         assert len(repo.repos) == 1
-        assert repo.repos[0]._finder is repo
-        assert repo.by_namespace["spack.pkg.builtin.mock"] is repo.repos[0]
+        assert repo.by_namespace["builtin_mock"] is repo.repos[0]
 
     def test_get_repo(self, mock_test_cache):
-        repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
-        # builtin.mock is there
-        assert repo.get_repo("builtin.mock") is repo.repos[0]
+        repo = spack.repo.RepoPath.from_descriptors(
+            spack.repo.RepoDescriptors(
+                {
+                    "builtin_mock": spack.repo.LocalRepoDescriptor(
+                        "builtin_mock", spack.paths.mock_packages_path
+                    )
+                }
+            ),
+            cache=mock_test_cache,
+        )
+        # builtin_mock is there
+        assert repo.get_repo("builtin_mock") is repo.repos[0]
         # foo is not there, raise
         with pytest.raises(spack.repo.UnknownNamespaceError):
             repo.get_repo("foo")
+
+
+def test_parse_package_api_version():
+    """Test that we raise an error if a repository has a version that is not supported."""
+    # valid version
+    assert spack.repo._parse_package_api_version(
+        {"api": "v1.2"}, min_api=(1, 0), max_api=(2, 3)
+    ) == (1, 2)
+    # too new and too old
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v2.4 is not supported .* \(must be between v1.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({"api": "v2.4"}, min_api=(1, 0), max_api=(2, 3))
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v0.9 is not supported .* \(must be between v1.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({"api": "v0.9"}, min_api=(1, 0), max_api=(2, 3))
+    # default to v1.0 if not specified
+    assert spack.repo._parse_package_api_version({}, min_api=(1, 0), max_api=(2, 3)) == (1, 0)
+    # if v1.0 support is dropped we should also raise
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v1.0 is not supported .* \(must be between v2.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({}, min_api=(2, 0), max_api=(2, 3))
+    # finally test invalid input
+    with pytest.raises(spack.repo.BadRepoError, match="Invalid Package API version"):
+        spack.repo._parse_package_api_version({"api": "v2"}, min_api=(1, 0), max_api=(3, 3))
+    with pytest.raises(spack.repo.BadRepoError, match="Invalid Package API version"):
+        spack.repo._parse_package_api_version({"api": 2.0}, min_api=(1, 0), max_api=(3, 3))
+
+
+def test_repo_package_api_version(tmp_path: pathlib.Path):
+    """Test that we can specify the API version of a repository."""
+    (tmp_path / "example" / "packages").mkdir(parents=True)
+    (tmp_path / "example" / "repo.yaml").write_text(
+        """\
+repo:
+    namespace: example
+"""
+    )
+    cache = spack.util.file_cache.FileCache(tmp_path / "cache")
+    assert spack.repo.Repo(str(tmp_path / "example"), cache=cache).package_api == (1, 0)
+
+
+def test_mod_to_pkg_name_and_reverse():
+    # In repo v1 the dirname/module name is the package name
+    assert spack.util.naming.pkg_dir_to_pkg_name("zlib_ng", package_api=(1, 0)) == "zlib_ng"
+    assert (
+        spack.util.naming.pkg_dir_to_pkg_name("_3example_4", package_api=(1, 0)) == "_3example_4"
+    )
+    assert spack.util.naming.pkg_name_to_pkg_dir("zlib_ng", package_api=(1, 0)) == "zlib_ng"
+    assert (
+        spack.util.naming.pkg_name_to_pkg_dir("_3example_4", package_api=(1, 0)) == "_3example_4"
+    )
+
+    # In repo v2 there is a 1-1 mapping between module and package names
+    assert spack.util.naming.pkg_dir_to_pkg_name("_3example_4", package_api=(2, 0)) == "3example-4"
+    assert spack.util.naming.pkg_dir_to_pkg_name("zlib_ng", package_api=(2, 0)) == "zlib-ng"
+    assert spack.util.naming.pkg_name_to_pkg_dir("zlib-ng", package_api=(2, 0)) == "zlib_ng"
+    assert spack.util.naming.pkg_name_to_pkg_dir("3example-4", package_api=(2, 0)) == "_3example_4"
+
+    # reserved names need an underscore
+    assert spack.util.naming.pkg_dir_to_pkg_name("_finally", package_api=(2, 0)) == "finally"
+    assert spack.util.naming.pkg_dir_to_pkg_name("_assert", package_api=(2, 0)) == "assert"
+    assert spack.util.naming.pkg_name_to_pkg_dir("finally", package_api=(2, 0)) == "_finally"
+    assert spack.util.naming.pkg_name_to_pkg_dir("assert", package_api=(2, 0)) == "_assert"
+
+    # reserved names are case sensitive, so true/false/none are ok
+    assert spack.util.naming.pkg_dir_to_pkg_name("true", package_api=(2, 0)) == "true"
+    assert spack.util.naming.pkg_dir_to_pkg_name("none", package_api=(2, 0)) == "none"
+    assert spack.util.naming.pkg_name_to_pkg_dir("true", package_api=(2, 0)) == "true"
+    assert spack.util.naming.pkg_name_to_pkg_dir("none", package_api=(2, 0)) == "none"
+
+
+def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
+    # Create a repo with a v2 structure
+    root, _ = spack.repo.create_repo(str(tmp_path), namespace="repo_1", package_api=(2, 0))
+    repo_dir = pathlib.Path(root)
+
+    # Create two invalid module names
+    (repo_dir / "packages" / "zlib-ng").mkdir()
+    (repo_dir / "packages" / "zlib-ng" / "package.py").write_text(
+        """
+from spack.package import PackageBase
+
+class ZlibNg(PackageBase):
+    pass
+"""
+    )
+    (repo_dir / "packages" / "UPPERCASE").mkdir()
+    (repo_dir / "packages" / "UPPERCASE" / "package.py").write_text(
+        """
+from spack.package import PackageBase
+
+class Uppercase(PackageBase):
+    pass
+"""
+    )
+
+    with spack.repo.use_repositories(str(repo_dir)) as repo:
+        assert len(repo.all_package_names()) == 0
+
+    stderr = capsys.readouterr().err
+    assert "cannot be used because `zlib-ng` is not a valid Spack package module name" in stderr
+    assert "cannot be used because `UPPERCASE` is not a valid Spack package module name" in stderr
+
+
+def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path, capsys):
+    # Create a repo with a v2 structure
+    root, _ = spack.repo.create_repo(str(tmp_path), namespace="repo_2", package_api=(2, 0))
+    repo_dir = pathlib.Path(root)
+
+    # Create an invalid module name
+    (repo_dir / "packages" / "_1example_2_test").mkdir()
+    (repo_dir / "packages" / "_1example_2_test" / "package.py").write_text(
+        """
+from spack.package import PackageBase
+
+class _1example2Test(PackageBase):
+    pass
+"""
+    )
+
+    with spack.repo.use_repositories(str(repo_dir)) as repo:
+        assert repo.exists("1example-2-test")
+        pkg_cls = repo.get_pkg_class("1example-2-test")
+        assert pkg_cls.name == "1example-2-test"
+        assert pkg_cls.module.__name__ == "spack_repo.repo_2.packages._1example_2_test.package"
+
+
+def test_valid_module_name_v2():
+    api = (2, 0)
+
+    # no hyphens
+    assert not valid_module_name("zlib-ng", api)
+
+    # cannot start with a number
+    assert not valid_module_name("7zip", api)
+
+    # no consecutive underscores
+    assert not valid_module_name("zlib__ng", api)
+
+    # reserved names
+    assert not valid_module_name("finally", api)
+    assert not valid_module_name("assert", api)
+
+    # cannot contain uppercase
+    assert not valid_module_name("False", api)
+    assert not valid_module_name("zlib_NG", api)
+
+    # reserved names are allowed when preceded by underscore
+    assert valid_module_name("_finally", api)
+    assert valid_module_name("_assert", api)
+
+    # digits are allowed when preceded by underscore
+    assert valid_module_name("_1example_2_test", api)
+
+    # underscore is not allowed unless followed by reserved name or digit
+    assert not valid_module_name("_zlib", api)
+    assert not valid_module_name("_false", api)
+
+
+def test_namespace_is_optional_in_v2(tmp_path: pathlib.Path):
+    """Test that a repo without a namespace is valid in v2."""
+    repo_yaml_dir = tmp_path / "spack_repo" / "foo" / "bar" / "baz"
+    (repo_yaml_dir / "packages").mkdir(parents=True)
+    (repo_yaml_dir / "repo.yaml").write_text(
+        """\
+repo:
+  api: v2.0
+"""
+    )
+
+    cache = spack.util.file_cache.FileCache(tmp_path / "cache")
+    repo = spack.repo.Repo(str(repo_yaml_dir), cache=cache)
+
+    assert repo.namespace == "foo.bar.baz"
+    assert repo.full_namespace == "spack_repo.foo.bar.baz.packages"
+    assert repo.root == str(repo_yaml_dir)
+    assert repo.packages_path == str(repo_yaml_dir / "packages")
+    assert repo.python_path == str(tmp_path)
+    assert repo.package_api == (2, 0)
+
+
+def test_subdir_in_v2():
+    """subdir cannot be . or empty in v2, because otherwise we cannot statically distinguish
+    between namespace and subdir."""
+    with pytest.raises(spack.repo.BadRepoError, match="Use a symlink packages -> . instead"):
+        spack.repo._validate_and_normalize_subdir(subdir="", root="root", package_api=(2, 0))
+
+    with pytest.raises(spack.repo.BadRepoError, match="Use a symlink packages -> . instead"):
+        spack.repo._validate_and_normalize_subdir(subdir=".", root="root", package_api=(2, 0))
+
+    with pytest.raises(spack.repo.BadRepoError, match="Expected a directory name, not a path"):
+        subdir = os.path.join("a", "b")
+        spack.repo._validate_and_normalize_subdir(subdir=subdir, root="root", package_api=(2, 0))
+
+    with pytest.raises(spack.repo.BadRepoError, match="Must be a valid Python module name"):
+        spack.repo._validate_and_normalize_subdir(subdir="123", root="root", package_api=(2, 0))
+
+
+def test_is_package_module():
+    assert spack.repo.is_package_module("spack.pkg.something.something")
+    assert spack.repo.is_package_module("spack_repo.foo.bar.baz.package")
+    assert not spack.repo.is_package_module("spack_repo.builtin.build_systems.cmake")
+    assert not spack.repo.is_package_module("spack.something.else")
+
+
+def test_environment_activation_updates_repo_path(tmp_path: pathlib.Path):
+    """Test that the environment activation updates the repo path correctly."""
+    repo_root, _ = spack.repo.create_repo(str(tmp_path / "foo"), namespace="bar")
+    (tmp_path / "spack.yaml").write_text(
+        """\
+spack:
+    repos:
+        bar: $env/foo/spack_repo/bar
+"""
+    )
+    env = spack.environment.Environment(tmp_path)
+
+    with env:
+        assert any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
+
+    assert not any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
+
+    with env:
+        assert any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
+
+    assert not any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
+
+
+def test_repo_update(tmp_path: pathlib.Path):
+    existing_root, _ = spack.repo.create_repo(str(tmp_path), namespace="foo")
+    nonexisting_root = str(tmp_path / "nonexisting")
+    config = {"repos": [existing_root, nonexisting_root]}
+    assert spack.schema.repos.update(config)
+    assert config["repos"] == {
+        "foo": existing_root
+        # non-existing root is removed for simplicity; would be a warning otherwise.
+    }
+
+
+def test_mock_builtin_repo(mock_packages):
+    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin_mock")
+
+
+def test_parse_config_descriptor_git_1(tmp_path: pathlib.Path):
+    descriptor = spack.repo.parse_config_descriptor(
+        name="name",
+        descriptor={
+            "git": str(tmp_path / "repo.git"),
+            "destination": str(tmp_path / "some/destination"),
+        },
+        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+    )
+
+    assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
+    assert descriptor.name == "name"
+    assert descriptor.repository == str(tmp_path / "repo.git")
+    assert descriptor.destination == str(tmp_path / "some/destination")
+    assert descriptor.relative_paths is None
+
+
+def test_parse_config_descriptor_git_2(tmp_path: pathlib.Path):
+    descriptor = spack.repo.parse_config_descriptor(
+        name="name",
+        descriptor={"git": str(tmp_path / "repo.git"), "paths": ["some/path"]},
+        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+    )
+    assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
+    assert descriptor.relative_paths == ["some/path"]
+
+
+def test_remote_descriptor_no_git(tmp_path: pathlib.Path):
+    """Test that descriptor fails without git."""
+    descriptor = spack.repo.parse_config_descriptor(
+        name="name",
+        descriptor={
+            "git": str(tmp_path / "repo.git"),
+            "destination": str(tmp_path / "some/destination"),
+        },
+        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+    )
+
+    descriptor.initialize(fetch=True, git=None)
+
+    assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
+    assert descriptor.error == "Git executable not found"
+
+
+def test_remote_descriptor_update_no_git(tmp_path: pathlib.Path):
+    """Test that descriptor fails without git."""
+    descriptor = spack.repo.parse_config_descriptor(
+        name="name",
+        descriptor={
+            "git": str(tmp_path / "repo.git"),
+            "destination": str(tmp_path / "some/destination"),
+        },
+        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+    )
+
+    assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
+
+    with pytest.raises(spack.repo.RepoError, match="Git executable not found"):
+        descriptor.update(git=None)
+
+
+def test_parse_config_descriptor_local(tmp_path: pathlib.Path):
+    descriptor = spack.repo.parse_config_descriptor(
+        name="name",
+        descriptor=str(tmp_path / "local_repo"),
+        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+    )
+    assert isinstance(descriptor, spack.repo.LocalRepoDescriptor)
+    assert descriptor.name == "name"
+    assert descriptor.path == str(tmp_path / "local_repo")
+
+
+def test_parse_config_descriptor_no_git(tmp_path: pathlib.Path):
+    """Test that we can parse a descriptor without a git key."""
+    with pytest.raises(RuntimeError, match="Invalid configuration for repository"):
+        spack.repo.parse_config_descriptor(
+            name="name",
+            descriptor={"destination": str(tmp_path / "some/destination"), "paths": ["some/path"]},
+            lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+        )
+
+
+def test_repo_descriptors_construct(tmp_path: pathlib.Path):
+    """Test the RepoDescriptors construct function. Ensure it does not raise when we cannot
+    construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
+    spack-repo-index.yaml file both when newly initialized and when already cloned."""
+
+    lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+
+    # Construct 3 identical descriptors
+    descriptors_1, descriptors_2, descriptors_3 = [
+        {
+            "foo": spack.repo.RemoteRepoDescriptor(
+                name="foo",
+                repository=str(tmp_path / "foo.git"),
+                destination=str(tmp_path / "foo_destination"),
+                branch=None,
+                tag=None,
+                commit=None,
+                relative_paths=None,
+                lock=lock,
+            )
+        }
+        for _ in range(3)
+    ]
+
+    repos_1 = spack.repo.RepoDescriptors(descriptors_1)  # type: ignore
+    repos_2 = spack.repo.RepoDescriptors(descriptors_2)  # type: ignore
+    repos_3 = spack.repo.RepoDescriptors(descriptors_3)  # type: ignore
+
+    class MockGit(spack.util.executable.Executable):
+        def __init__(self):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "ls-remote":
+                return "refs/heads/develop"
+
+            elif action == "rev-parse":
+                return "develop"
+
+            elif action == "config":
+                return "origin"
+
+            elif action == "init":
+                # The git repo needs a .git subdir
+                os.makedirs(os.path.join(".git"))
+
+            elif action == "checkout":
+                # The spack-repo-index.yaml is optional; we test Spack reads from it.
+                with open(os.path.join("spack-repo-index.yaml"), "w", encoding="utf-8") as f:
+                    f.write(
+                        """\
+repo_index:
+  paths:
+  - spack_repo/foo
+"""
+                    )
+
+            return ""
+
+    repo_path_1, errors_1 = repos_1.construct(cache=cache, find_git=MockGit)
+
+    # Verify it cannot construct a Repo instance, and that this does *not* throw, since that would
+    # break Spack very early on. Instead, an error is returned. Also verify that
+    # relative_paths is read from spack-repo-index.yaml.
+    assert len(repo_path_1.repos) == 0
+    assert len(errors_1) == 1
+    assert all("No repo.yaml" in str(err) for err in errors_1.values()), errors_1
+    assert descriptors_1["foo"].relative_paths == ["spack_repo/foo"]
+
+    # Do the same test with another instance: it should *not* clone a second time.
+    repo_path_2, errors_2 = repos_2.construct(cache=cache, find_git=MockGit)
+    assert len(repo_path_2.repos) == 0
+    assert len(errors_2) == 1
+    assert all("No repo.yaml" in str(err) for err in errors_2.values()), errors_2
+    assert descriptors_1["foo"].relative_paths == ["spack_repo/foo"]
+
+    # Finally fill the repo with an actual repo and check that the repo can be constructed.
+    spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
+    repo_path_3, errors_3 = repos_3.construct(cache=cache, find_git=MockGit)
+    assert not errors_3
+    assert len(repo_path_3.repos) == 1
+    assert repo_path_3.repos[0].namespace == "foo"
+
+
+def test_repo_descriptors_update(tmp_path: pathlib.Path):
+    """Test the RepoDescriptors construct function. Ensure it does not raise when we cannot
+    construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
+    spack-repo-index.yaml file both when newly initialized and when already cloned."""
+
+    lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+
+    # Construct 3 identical descriptors
+    descriptors_1, descriptors_2, descriptors_3, descriptors_4 = [
+        {
+            "foo": spack.repo.RemoteRepoDescriptor(
+                name="foo",
+                repository=str(tmp_path / "foo.git"),
+                destination=str(tmp_path / "foo_destination"),
+                branch="develop" if i == 0 else None,
+                tag="v1.0" if i == 1 else None,
+                commit="abc123" if i == 2 else None,
+                relative_paths=None,
+                lock=lock,
+            )
+        }
+        for i in range(4)
+    ]
+
+    repos_1 = spack.repo.RepoDescriptors(descriptors_1)  # type: ignore
+    repos_2 = spack.repo.RepoDescriptors(descriptors_2)  # type: ignore
+    repos_3 = spack.repo.RepoDescriptors(descriptors_3)  # type: ignore
+    repos_4 = spack.repo.RepoDescriptors(descriptors_4)  # type: ignore
+
+    class MockGit(spack.util.executable.Executable):
+        def __init__(self):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "ls-remote":
+                return "refs/heads/develop"
+
+            elif action == "rev-parse":
+                return "develop"
+
+            elif action == "config":
+                return "origin"
+
+            elif action == "init":
+                # The git repo needs a .git subdir
+                os.makedirs(os.path.join(".git"))
+
+            elif action == "checkout":
+                # The spack-repo-index.yaml is optional; we test Spack reads from it.
+                with open(os.path.join("spack-repo-index.yaml"), "w", encoding="utf-8") as f:
+                    f.write(
+                        """\
+repo_index:
+  paths:
+  - spack_repo/foo
+"""
+                    )
+
+            return ""
+
+    spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
+
+    # branch develop
+    _, errors_1 = repos_1.construct(cache=cache, find_git=MockGit)
+    assert not errors_1
+    for descriptor in repos_1.values():
+        descriptor.update(git=MockGit())
+
+    # tag v1.0
+    _, errors_2 = repos_2.construct(cache=cache, find_git=MockGit)
+    assert not errors_2
+    for descriptor in repos_2.values():
+        descriptor.update(git=MockGit())
+
+    # commit abc123
+    _, errors_3 = repos_3.construct(cache=cache, find_git=MockGit)
+    assert not errors_3
+    for descriptor in repos_3.values():
+        descriptor.update(git=MockGit())
+
+    # default branch
+    _, errors_4 = repos_4.construct(cache=cache, find_git=MockGit)
+    assert not errors_4
+    for descriptor in repos_4.values():
+        descriptor.update(git=MockGit())
+
+    # Rerun construction after initialization to test early exit logic
+    _, errors_4 = repos_4.construct(cache=cache, find_git=MockGit)
+    assert not errors_4
+
+
+def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
+    """Test the RepoDescriptors construct function. Ensure it does not raise when we cannot
+    construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
+    spack-repo-index.yaml file both when newly initialized and when already cloned."""
+
+    lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+
+    # Construct 3 identical descriptors
+    descriptors_1 = {
+        "foo": spack.repo.RemoteRepoDescriptor(
+            name="foo",
+            repository=str(tmp_path / "foo.git"),
+            destination=str(tmp_path / "foo_destination"),
+            branch=None,
+            tag=None,
+            commit=None,
+            relative_paths=None,
+            lock=lock,
+        )
+    }
+
+    repos_1 = spack.repo.RepoDescriptors(descriptors_1)  # type: ignore
+
+    class MockGitInvalidRemote(spack.util.executable.Executable):
+        def __init__(self):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "ls-remote":
+                return "bad string"
+
+    class MockGitFailed(spack.util.executable.Executable):
+        def __init__(self):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            raise spack.util.executable.ProcessError("failed")
+
+    spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
+
+    _, errors_1 = repos_1.construct(cache=cache, find_git=MockGitFailed)
+    assert len(errors_1) == 1
+    assert all("Failed to clone repository" in str(err) for err in errors_1.values()), errors_1
+
+    with pytest.raises(spack.repo.RepoError, match="Unable to locate a default branch"):
+        for descriptor in repos_1.values():
+            descriptor.update(git=MockGitInvalidRemote())
+
+
+def test_repo_use_bad_import(config, repo_builder: RepoBuilder):
+    """Demonstrate failure when attempt to get the class for package containing
+    a failing import (e.g., missing repository)."""
+    package_py = pathlib.Path(repo_builder._recipe_filename("importer"))
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(
+        """\
+from spack_repo.missing.packages import base
+from spack.package import *
+
+
+class Importer(PackageBase):
+    homepage = "https://www.bad-importer.com"
+    url = "https://www.bad-importer.com/v1.0.tar.gz"
+
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
+""",
+        encoding="utf-8",
+    )
+
+    with spack.repo.use_repositories(repo_builder.root):
+        with pytest.raises(spack.repo.RepoError, match="cannot load"):
+            spack.repo.PATH.get_pkg_class("importer")
+
+
+def test_repo_use_bad_syntax(config, repo_builder: RepoBuilder):
+    """Demonstrate failure when attempt to get class for package with invalid syntax."""
+    package_py = pathlib.Path(repo_builder._recipe_filename("erroneous"))
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text("class 123: pass", encoding="utf-8")
+
+    with spack.repo.use_repositories(repo_builder.root):
+        with pytest.raises(spack.repo.RepoError):
+            spack.repo.PATH.get_pkg_class("erroneous")
+
+
+def test_unknownpkgerror_match_fails():
+    """Ensure fails with basic message when get_close_matches fails."""
+
+    def _get_close_matches(*args, **kwargs):
+        raise MemoryError("Too many packages to compare")
+
+    # Confirm that the error indicates there were no matches (default).
+    exception = spack.repo.UnknownPackageError("pkg_a", get_close_matches=_get_close_matches)
+    assert "mean one of the following" not in str(exception)
+
+
+def test_unknownpkgerror_str_repo():
+    """Ensure reasonable error message when repo is a string."""
+    assert "not found in repository" in str(spack.repo.UnknownPackageError("pkg_a", "my_repo"))

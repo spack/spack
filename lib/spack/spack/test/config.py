@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,18 +6,18 @@ import collections
 import getpass
 import io
 import os
+import pathlib
 import tempfile
 from datetime import date
 
 import pytest
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, touch, touchp
-
+import spack
 import spack.config
 import spack.directory_layout
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -26,12 +25,15 @@ import spack.repo
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
+import spack.schema.include
 import spack.schema.mirrors
 import spack.schema.repos
 import spack.spec
 import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
+from spack.enums import ConfigScopePriority
+from spack.llnl.util.filesystem import join_path, touch
 
 # sample config data
 config_low = {
@@ -49,29 +51,16 @@ config_merge_list = {"config": {"build_stage": ["patha", "pathb"]}}
 
 config_override_list = {"config": {"build_stage:": ["pathd", "pathe"]}}
 
-config_merge_dict = {"config": {"info": {"a": 3, "b": 4}}}
+config_merge_dict = {"config": {"aliases": {"ls": "find", "dev": "develop"}}}
 
-config_override_dict = {"config": {"info:": {"a": 7, "c": 9}}}
-
-
-@pytest.fixture()
-def write_config_file(tmpdir):
-    """Returns a function that writes a config file."""
-
-    def _write(config, data, scope):
-        config_yaml = tmpdir.join(scope, config + ".yaml")
-        config_yaml.ensure()
-        with config_yaml.open("w") as f:
-            syaml.dump_config(data, f)
-
-    return _write
+config_override_dict = {"config": {"aliases:": {"be": "build-env", "deps": "dependencies"}}}
 
 
 @pytest.fixture()
-def env_yaml(tmpdir):
+def env_yaml(tmp_path: pathlib.Path):
     """Return a sample env.yaml for test purposes"""
-    env_yaml = str(tmpdir.join("env.yaml"))
-    with open(env_yaml, "w") as f:
+    env_yaml = str(tmp_path / "env.yaml")
+    with open(env_yaml, "w", encoding="utf-8") as f:
         f.write(
             """\
 spack:
@@ -82,7 +71,7 @@ spack:
         all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
-        - /x/y/z
+        z: /x/y/z
 """
         )
     return env_yaml
@@ -259,8 +248,8 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
 #
 # Sample repo data and tests
 #
-repos_low = {"repos": ["/some/path"]}
-repos_high = {"repos": ["/some/other/path"]}
+repos_low = {"repos": {"low": "/some/path"}}
+repos_high = {"repos": {"high": "/some/other/path"}}
 
 # Test setting config values via path in filename
 
@@ -273,14 +262,16 @@ def test_add_config_path(mutable_config):
     assert set_value == "/path/to/config.yaml"
 
     # Now a package:all setting
-    path = "packages:all:compiler:[gcc]"
+    path = "packages:all:target:[x86_64]"
     spack.config.add(path)
-    compilers = spack.config.get("packages")["all"]["compiler"]
-    assert "gcc" in compilers
+    targets = spack.config.get("packages")["all"]["target"]
+    assert "x86_64" in targets
 
     # Try quotes to escape brackets
-    path = "config:install_tree:projections:cmake:\
-'{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+    path = (
+        "config:install_tree:projections:cmake:"
+        "'{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+    )
     spack.config.add(path)
     set_value = spack.config.get("config")["install_tree"]["projections"]["cmake"]
     assert set_value == "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
@@ -317,9 +308,9 @@ def test_add_config_path_with_enumerated_type(mutable_config):
         spack.config.add("config:flags:keep_werror:foo")
 
 
-def test_add_config_filename(mock_low_high_config, tmpdir):
-    config_yaml = tmpdir.join("config-filename.yaml")
-    config_yaml.ensure()
+def test_add_config_filename(mock_low_high_config, tmp_path: pathlib.Path):
+    config_yaml = tmp_path / "config-filename.yaml"
+    config_yaml.touch()
     with config_yaml.open("w") as f:
         syaml.dump_config(config_low, f)
 
@@ -336,7 +327,7 @@ def test_write_list_in_memory(mock_low_high_config):
     spack.config.set("repos", repos_high["repos"], scope="high")
 
     config = spack.config.get("repos")
-    assert config == repos_high["repos"] + repos_low["repos"]
+    assert config == {**repos_high["repos"], **repos_low["repos"]}
 
 
 class MockEnv:
@@ -406,7 +397,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
         os.path.join("foo", "$platform", "bar")
     ) == os.path.abspath(os.path.join("foo", "test", "bar"))
 
-    host_target = spack.platforms.host().target("default_target")
+    host_target = spack.platforms.host().default_target()
     host_target_family = str(host_target.family)
     assert spack_path.canonicalize_path(
         os.path.join("foo", "$target_family", "bar")
@@ -638,31 +629,6 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
     }
 
 
-def test_ordereddict_merge_order():
-    """ "Test that source keys come before dest keys in merge_yaml results."""
-    source = syaml.syaml_dict([("k1", "v1"), ("k2", "v2"), ("k3", "v3")])
-
-    dest = syaml.syaml_dict([("k4", "v4"), ("k3", "WRONG"), ("k5", "v5")])
-
-    result = spack.config.merge_yaml(dest, source)
-    assert "WRONG" not in result.values()
-
-    expected_keys = ["k1", "k2", "k3", "k4", "k5"]
-    expected_items = [("k1", "v1"), ("k2", "v2"), ("k3", "v3"), ("k4", "v4"), ("k5", "v5")]
-    assert expected_keys == list(result.keys())
-    assert expected_items == list(result.items())
-
-
-def test_list_merge_order():
-    """ "Test that source lists are prepended to dest."""
-    source = ["a", "b", "c"]
-    dest = ["d", "e", "f"]
-
-    result = spack.config.merge_yaml(dest, source)
-
-    assert ["a", "b", "c", "d", "e", "f"] == result
-
-
 def test_internal_config_update(mock_low_high_config, write_config_file):
     write_config_file("config", config_low, "low")
 
@@ -733,10 +699,7 @@ def test_mark_internal():
 
 
 def test_internal_config_from_data():
-    config = spack.config.Configuration()
-
-    # add an internal config initialized from an inline dict
-    config.push_scope(
+    config = spack.config.create_from(
         spack.config.InternalConfigScope(
             "_builtin", {"config": {"verify_ssl": False, "build_jobs": 6}}
         )
@@ -782,7 +745,7 @@ def test_keys_are_ordered(configuration_dir):
         "./",
     )
 
-    config_scope = spack.config.DirectoryConfigScope("modules", configuration_dir.join("site"))
+    config_scope = spack.config.DirectoryConfigScope("modules", configuration_dir / "site")
 
     data = config_scope.get_section("modules")
 
@@ -803,7 +766,7 @@ def get_config_error(filename, schema, yaml_string):
 
     Fail if there is no ConfigFormatError
     """
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         f.write(yaml_string)
 
     # parse and return error, or fail.
@@ -815,25 +778,26 @@ def get_config_error(filename, schema, yaml_string):
         pytest.fail("ConfigFormatError was not raised!")
 
 
-def test_config_parse_dict_in_list(tmpdir):
-    with tmpdir.as_cwd():
+def test_config_parse_dict_in_list(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
         e = get_config_error(
             "repos.yaml",
             spack.schema.repos.schema,
             """\
 repos:
-- https://foobar.com/foo
-- https://foobar.com/bar
-- error:
-  - abcdef
-- https://foobar.com/baz
+  a: https://foobar.com/foo
+  b: https://foobar.com/bar
+  c:
+    error:
+    - abcdef
+  d: https://foobar.com/baz
 """,
         )
-        assert "repos.yaml:4" in str(e)
+        assert "repos.yaml:2" in str(e)
 
 
-def test_config_parse_str_not_bool(tmpdir):
-    with tmpdir.as_cwd():
+def test_config_parse_str_not_bool(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
         e = get_config_error(
             "config.yaml",
             spack.schema.config.schema,
@@ -847,8 +811,8 @@ config:
         assert "config.yaml:3" in str(e)
 
 
-def test_config_parse_list_in_dict(tmpdir):
-    with tmpdir.as_cwd():
+def test_config_parse_list_in_dict(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
         e = get_config_error(
             "mirrors.yaml",
             spack.schema.mirrors.schema,
@@ -870,73 +834,6 @@ def test_bad_config_section(mock_low_high_config):
 
     with pytest.raises(spack.config.ConfigSectionError):
         spack.config.get("foobar")
-
-
-def test_bad_command_line_scopes(tmp_path, config):
-    cfg = spack.config.Configuration()
-    file_path = tmp_path / "file_instead_of_dir"
-    non_existing_path = tmp_path / "non_existing_dir"
-
-    file_path.write_text("")
-
-    with pytest.raises(spack.error.ConfigError):
-        spack.config._add_command_line_scopes(cfg, [str(file_path)])
-
-    with pytest.raises(spack.error.ConfigError):
-        spack.config._add_command_line_scopes(cfg, [str(non_existing_path)])
-
-
-def test_add_command_line_scopes(tmpdir, mutable_config):
-    config_yaml = str(tmpdir.join("config.yaml"))
-    with open(config_yaml, "w") as f:
-        f.write(
-            """\
-config:
-    verify_ssl: False
-    dirty: False
-"""
-        )
-
-    spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
-    assert mutable_config.get("config:verify_ssl") is False
-    assert mutable_config.get("config:dirty") is False
-
-
-def test_add_command_line_scope_env(tmp_path, mutable_mock_env_path):
-    """Test whether --config-scope <env> works, either by name or path."""
-    managed_env = ev.create("example").manifest_path
-
-    with open(managed_env, "w") as f:
-        f.write(
-            """\
-spack:
-  config:
-    install_tree:
-      root: /tmp/first
-"""
-        )
-
-    with open(tmp_path / "spack.yaml", "w") as f:
-        f.write(
-            """\
-spack:
-  config:
-    install_tree:
-      root: /tmp/second
-"""
-        )
-
-    config = spack.config.Configuration()
-    spack.config._add_command_line_scopes(config, ["example", str(tmp_path)])
-    assert len(config.scopes) == 2
-    assert config.get("config:install_tree:root") == "/tmp/second"
-
-    config = spack.config.Configuration()
-    spack.config._add_command_line_scopes(config, [str(tmp_path), "example"])
-    assert len(config.scopes) == 2
-    assert config.get("config:install_tree:root") == "/tmp/first"
-
-    assert ev.active_environment() is None  # shouldn't cause an environment to be activated
 
 
 def test_nested_override():
@@ -985,9 +882,9 @@ def test_alternate_override(monkeypatch):
         assert data["debug"] is False
 
 
-def test_immutable_scope(tmpdir):
-    config_yaml = str(tmpdir.join("config.yaml"))
-    with open(config_yaml, "w") as f:
+def test_immutable_scope(tmp_path: pathlib.Path):
+    config_yaml = str(tmp_path / "config.yaml")
+    with open(config_yaml, "w", encoding="utf-8") as f:
         f.write(
             """\
 config:
@@ -995,9 +892,10 @@ config:
       root: dummy_tree_value
 """
         )
-    scope = spack.config.DirectoryConfigScope("test", str(tmpdir), writable=False)
+    scope = spack.config.DirectoryConfigScope("test", str(tmp_path), writable=False)
 
     data = scope.get_section("config")
+    assert data is not None
     assert data["config"]["install_tree"] == {"root": "dummy_tree_value"}
 
     with pytest.raises(spack.error.ConfigError):
@@ -1013,23 +911,25 @@ def test_single_file_scope(config, env_yaml):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3", "gcc", "clang"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
         assert spack.config.get("config:checksum") is True
         assert spack.config.get("packages:externalmodule:buildable") is False
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin"]
+        assert spack.config.get("repos") == {
+            "z": "/x/y/z",
+            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
+        }
 
 
-def test_single_file_scope_section_override(tmpdir, config):
+def test_single_file_scope_section_override(tmp_path: pathlib.Path, config):
     """Check that individual config sections can be overridden in an
     environment config. The config here primarily differs in that the
     ``packages`` section is intended to override all other scopes (using the
     "::" syntax).
     """
-    env_yaml = str(tmpdir.join("env.yaml"))
-    with open(env_yaml, "w") as f:
+    env_yaml = str(tmp_path / "env.yaml")
+    with open(env_yaml, "w", encoding="utf-8") as f:
         f.write(
             """\
 spack:
@@ -1037,9 +937,9 @@ spack:
         verify_ssl: False
     packages::
         all:
-            compiler: [ 'gcc@4.5.3' ]
+            target: [ x86_64 ]
     repos:
-        - /x/y/z
+        z: /x/y/z
 """
         )
 
@@ -1050,19 +950,22 @@ spack:
     with spack.config.override(scope):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
-        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:target") == ["x86_64"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
         assert not spack.config.get("packages:externalmodule")
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin"]
+        assert spack.config.get("repos") == {
+            "z": "/x/y/z",
+            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
+        }
 
 
-def test_write_empty_single_file_scope(tmpdir):
+def test_write_empty_single_file_scope(tmp_path: pathlib.Path):
     env_schema = spack.schema.env.schema
-    scope = spack.config.SingleFileScope(
-        "test", str(tmpdir.ensure("config.yaml")), env_schema, yaml_path=["spack"]
-    )
+    config_file = tmp_path / "config.yaml"
+    config_file.touch()
+    scope = spack.config.SingleFileScope("test", str(config_file), env_schema, yaml_path=["spack"])
     scope._write_section("config")
     # confirm we can write empty config
     assert not scope.get_section("config")
@@ -1075,7 +978,7 @@ def check_schema(name, file_contents):
     spack.config.validate(data, name)
 
 
-def test_good_env_yaml(tmpdir):
+def test_good_env_yaml():
     check_schema(
         spack.schema.env.schema,
         """\
@@ -1101,7 +1004,7 @@ spack:
     )
 
 
-def test_bad_env_yaml(tmpdir):
+def test_bad_env_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.env.schema,
@@ -1114,7 +1017,7 @@ spack:
         )
 
 
-def test_bad_config_yaml(tmpdir):
+def test_bad_config_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.config.schema,
@@ -1128,7 +1031,17 @@ config:
         )
 
 
-def test_bad_mirrors_yaml(tmpdir):
+def test_bad_include_yaml():
+    with pytest.raises(spack.config.ConfigFormatError, match="is not of type"):
+        check_schema(
+            spack.schema.include.schema,
+            """\
+include: $HOME/include.yaml
+""",
+        )
+
+
+def test_bad_mirrors_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.mirrors.schema,
@@ -1139,7 +1052,7 @@ mirrors:
         )
 
 
-def test_bad_repos_yaml(tmpdir):
+def test_bad_repos_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.repos.schema,
@@ -1150,7 +1063,7 @@ repos:
         )
 
 
-def test_bad_compilers_yaml(tmpdir):
+def test_bad_compilers_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.compilers.schema,
@@ -1192,9 +1105,9 @@ def test_internal_config_section_override(mock_low_high_config, write_config_fil
 
 def test_internal_config_dict_override(mock_low_high_config, write_config_file):
     write_config_file("config", config_merge_dict, "low")
-    wanted_dict = config_override_dict["config"]["info:"]
+    wanted_dict = config_override_dict["config"]["aliases:"]
     mock_low_high_config.push_scope(spack.config.InternalConfigScope("high", config_override_dict))
-    assert mock_low_high_config.get("config:info") == wanted_dict
+    assert mock_low_high_config.get("config:aliases") == wanted_dict
 
 
 def test_internal_config_list_override(mock_low_high_config, write_config_file):
@@ -1226,10 +1139,10 @@ def test_set_list_override(mock_low_high_config, write_config_file):
 
 def test_set_dict_override(mock_low_high_config, write_config_file):
     write_config_file("config", config_merge_dict, "low")
-    wanted_dict = config_override_dict["config"]["info:"]
-    with spack.config.override("config:info:", wanted_dict):
-        assert wanted_dict == mock_low_high_config.get("config:info")
-    assert config_merge_dict["config"]["info"] == mock_low_high_config.get("config:info")
+    wanted_dict = config_override_dict["config"]["aliases:"]
+    with spack.config.override("config:aliases:", wanted_dict):
+        assert wanted_dict == mock_low_high_config.get("config:aliases")
+    assert config_merge_dict["config"]["aliases"] == mock_low_high_config.get("config:aliases")
 
 
 def test_set_bad_path(config):
@@ -1315,10 +1228,10 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
 
 
 def test_default_install_tree(monkeypatch, default_config):
-    s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
+    s = spack.spec.Spec("nonexistent@x.y.z arch=foo-bar-baz")
     monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
     _, _, projections = spack.store.parse_install_tree(spack.config.get("config"))
-    assert s.format(projections["all"]) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
+    assert s.format(projections["all"]) == "foo-baz/nonexistent-x.y.z-abc123"
 
 
 def test_local_config_can_be_disabled(working_env):
@@ -1355,144 +1268,16 @@ def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_cache_path()
 
 
-github_url = "https://github.com/fake/fake/{0}/develop"
-gitlab_url = "https://gitlab.fake.io/user/repo/-/blob/config/defaults"
-
-
-@pytest.mark.parametrize(
-    "url,isfile",
-    [
-        (github_url.format("tree"), False),
-        ("{0}/README.md".format(github_url.format("blob")), True),
-        ("{0}/etc/fake/defaults/packages.yaml".format(github_url.format("blob")), True),
-        (gitlab_url, False),
-        (None, False),
-    ],
-)
-def test_config_collect_urls(mutable_empty_config, mock_spider_configs, url, isfile):
-    with spack.config.override("config:url_fetch_method", "curl"):
-        urls = spack.config.collect_urls(url)
-        if url:
-            if isfile:
-                expected = 1 if url.endswith(".yaml") else 0
-                assert len(urls) == expected
-            else:
-                # Expect multiple configuration files for a "directory"
-                assert len(urls) > 1
-        else:
-            assert not urls
-
-
-@pytest.mark.parametrize(
-    "url,isfile,fail",
-    [
-        (github_url.format("tree"), False, False),
-        (gitlab_url, False, False),
-        ("{0}/README.md".format(github_url.format("blob")), True, True),
-        ("{0}/compilers.yaml".format(gitlab_url), True, False),
-        (None, False, True),
-    ],
-)
-def test_config_fetch_remote_configs(
-    tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, isfile, fail
-):
-    def _has_content(filename):
-        # The first element of all configuration files for this test happen to
-        # be the basename of the file so this check leverages that feature. If
-        # that changes, then this check will need to change accordingly.
-        element = "{0}:".format(os.path.splitext(os.path.basename(filename))[0])
-        with open(filename, "r") as fd:
-            for line in fd:
-                if element in line:
-                    return True
-        tty.debug("Expected {0} in '{1}'".format(element, filename))
-        return False
-
-    dest_dir = join_path(tmpdir.strpath, "defaults")
-    if fail:
-        msg = "Cannot retrieve configuration"
-        with spack.config.override("config:url_fetch_method", "curl"):
-            with pytest.raises(spack.config.ConfigFileError, match=msg):
-                spack.config.fetch_remote_configs(url, dest_dir)
-    else:
-        with spack.config.override("config:url_fetch_method", "curl"):
-            path = spack.config.fetch_remote_configs(url, dest_dir)
-            assert os.path.exists(path)
-            if isfile:
-                # Ensure correct file is "fetched"
-                assert os.path.basename(path) == os.path.basename(url)
-                # Ensure contents of the file has expected config element
-                assert _has_content(path)
-            else:
-                for filename in os.listdir(path):
-                    assert _has_content(join_path(path, filename))
-
-
-@pytest.fixture(scope="function")
-def mock_collect_urls(mock_config_data, monkeypatch):
-    """Mock the collection of URLs to avoid mocking spider."""
-
-    _, config_files = mock_config_data
-
-    def _collect(base_url):
-        if not base_url:
-            return []
-
-        ext = os.path.splitext(base_url)[1]
-        if ext:
-            return [base_url] if ext == ".yaml" else []
-
-        return [join_path(base_url, f) for f in config_files]
-
-    monkeypatch.setattr(spack.config, "collect_urls", _collect)
-
-    yield
-
-
-@pytest.mark.parametrize(
-    "url,skip",
-    [(github_url.format("tree"), True), ("{0}/compilers.yaml".format(gitlab_url), True)],
-)
-def test_config_fetch_remote_configs_skip(
-    tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, skip
-):
-    """Ensure skip fetching remote config file if it already exists when
-    required and not skipping if replacing it."""
-
-    def check_contents(filename, expected):
-        with open(filename, "r") as fd:
-            lines = fd.readlines()
-            if expected:
-                assert lines[0] == "compilers:"
-            else:
-                assert not lines
-
-    dest_dir = join_path(tmpdir.strpath, "defaults")
-    filename = "compilers.yaml"
-
-    # Create a stage directory with an empty configuration file
-    path = join_path(dest_dir, filename)
-    touchp(path)
-
-    # Do NOT replace the existing cached configuration file if skipping
-    expected = None if skip else "compilers:"
-
-    with spack.config.override("config:url_fetch_method", "curl"):
-        path = spack.config.fetch_remote_configs(url, dest_dir, skip)
-        result_filename = path if path.endswith(".yaml") else join_path(path, filename)
-        check_contents(result_filename, expected)
-
-
-def test_config_file_dir_failure(tmpdir, mutable_empty_config):
+def test_config_file_dir_failure(tmp_path: pathlib.Path, mutable_empty_config):
     with pytest.raises(spack.config.ConfigFileError, match="not a file"):
-        spack.config.read_config_file(tmpdir.strpath)
+        spack.config.read_config_file(str(tmp_path))
 
 
 @pytest.mark.not_on_windows("chmod not supported on Windows")
-def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
+def test_config_file_read_perms_failure(tmp_path: pathlib.Path, mutable_empty_config):
     """Test reading a configuration file without permissions to ensure
     ConfigFileError is raised."""
-    filename = join_path(tmpdir.strpath, "test.yaml")
+    filename = join_path(str(tmp_path), "test.yaml")
     touch(filename)
     os.chmod(filename, 0o200)
 
@@ -1500,11 +1285,11 @@ def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
         spack.config.read_config_file(filename)
 
 
-def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
+def test_config_file_read_invalid_yaml(tmp_path: pathlib.Path, mutable_empty_config):
     """Test reading a configuration file with invalid (unparseable) YAML
     raises a ConfigFileError."""
-    filename = join_path(tmpdir.strpath, "test.yaml")
-    with open(filename, "w") as f:
+    filename = join_path(str(tmp_path), "test.yaml")
+    with open(filename, "w", encoding="utf-8") as f:
         f.write("spack:\nview")
 
     with pytest.raises(spack.config.ConfigFileError, match="parsing YAML"):
@@ -1532,3 +1317,78 @@ def test_config_path_dsl(path, it_should_work, expected_parsed):
     else:
         with pytest.raises(ValueError):
             spack.config.ConfigPath._validate(path)
+
+
+@pytest.mark.regression("48254")
+def test_env_activation_preserves_command_line_scope(mutable_mock_env_path):
+    """Check that the "command_line" scope remains the highest priority scope, when we activate,
+    or deactivate, environments.
+    """
+    expected_cl_scope = spack.config.CONFIG.highest()
+    assert expected_cl_scope.name == "command_line"
+
+    # Creating an environment pushes a new scope
+    ev.create("test")
+    with ev.read("test"):
+        assert spack.config.CONFIG.highest() == expected_cl_scope
+
+        # No active environment pops the scope
+        with ev.no_active_environment():
+            assert spack.config.CONFIG.highest() == expected_cl_scope
+        assert spack.config.CONFIG.highest() == expected_cl_scope
+
+        # Switch the environment to another one
+        ev.create("test-2")
+        with ev.read("test-2"):
+            assert spack.config.CONFIG.highest() == expected_cl_scope
+        assert spack.config.CONFIG.highest() == expected_cl_scope
+
+    assert spack.config.CONFIG.highest() == expected_cl_scope
+
+
+@pytest.mark.regression("48414")
+@pytest.mark.regression("49188")
+def test_env_activation_preserves_config_scopes(mutable_mock_env_path):
+    """Check that the priority of scopes is respected when merging configuration files."""
+    custom_scope = spack.config.InternalConfigScope("custom_scope")
+    spack.config.CONFIG.push_scope(custom_scope, priority=ConfigScopePriority.CUSTOM)
+    expected_scopes_without_env = ["custom_scope", "command_line"]
+    expected_scopes_with_first_env = ["env:test", "custom_scope", "command_line"]
+    expected_scopes_with_second_env = ["env:test-2", "custom_scope", "command_line"]
+
+    def highest_priority_scopes(config, *, nscopes):
+        return list(config.scopes)[-nscopes:]
+
+    assert highest_priority_scopes(spack.config.CONFIG, nscopes=2) == expected_scopes_without_env
+    # Creating an environment pushes a new scope
+    ev.create("test")
+    with ev.read("test"):
+        assert (
+            highest_priority_scopes(spack.config.CONFIG, nscopes=3)
+            == expected_scopes_with_first_env
+        )
+
+        # No active environment pops the scope
+        with ev.no_active_environment():
+            assert (
+                highest_priority_scopes(spack.config.CONFIG, nscopes=2)
+                == expected_scopes_without_env
+            )
+        assert (
+            highest_priority_scopes(spack.config.CONFIG, nscopes=3)
+            == expected_scopes_with_first_env
+        )
+
+        # Switch the environment to another one
+        ev.create("test-2")
+        with ev.read("test-2"):
+            assert (
+                highest_priority_scopes(spack.config.CONFIG, nscopes=3)
+                == expected_scopes_with_second_env
+            )
+        assert (
+            highest_priority_scopes(spack.config.CONFIG, nscopes=3)
+            == expected_scopes_with_first_env
+        )
+
+    assert highest_priority_scopes(spack.config.CONFIG, nscopes=2) == expected_scopes_without_env

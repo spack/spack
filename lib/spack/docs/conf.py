@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,10 +17,10 @@
 # serve to show the default.
 
 import os
-import re
 import subprocess
 import sys
 from glob import glob
+from typing import List
 
 from docutils.statemachine import StringList
 from sphinx.domains.python import PythonDomain
@@ -35,20 +34,25 @@ from sphinx.parsers import RSTParser
 link_name = os.path.abspath("_spack_root")
 if not os.path.exists(link_name):
     os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/_vendoring"))
-sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 os.environ["SPACK_ROOT"] = os.path.abspath("_spack_root")
-os.environ["PATH"] += "%s%s" % (os.pathsep, os.path.abspath("_spack_root/bin"))
+os.environ["SPACK_USER_CONFIG_PATH"] = os.path.abspath(".spack")
+os.environ["PATH"] += os.pathsep + os.path.abspath("_spack_root/bin")
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
 os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
 
-# Generate a command index if an update is needed
+sys.path[0:0] = [
+    os.path.abspath("_spack_root/lib/spack/"),
+    os.path.abspath(".spack/spack-packages/repos"),
+]
+
+subprocess.call(["spack", "list"], stdout=subprocess.DEVNULL)
+
+# Generate a command index if an update is needed -- this also clones the package repository.
 subprocess.call(
     [
         "spack",
@@ -56,8 +60,8 @@ subprocess.call(
         "--format=rst",
         "--header=command_index.in",
         "--update=command_index.rst",
+        *glob("*rst"),
     ]
-    + glob("*rst")
 )
 
 #
@@ -77,11 +81,19 @@ sphinx_apidoc(
     apidoc_args
     + [
         "_spack_root/lib/spack/spack",
-        "_spack_root/lib/spack/spack/test/*.py",
-        "_spack_root/lib/spack/spack/test/cmd/*.py",
+        "_spack_root/lib/spack/spack/vendor",
+        "_spack_root/lib/spack/spack/test",
+        "_spack_root/lib/spack/spack/package.py",
     ]
 )
-sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
+sphinx_apidoc(
+    apidoc_args
+    + [
+        "--implicit-namespaces",
+        ".spack/spack-packages/repos/spack_repo",
+        ".spack/spack-packages/repos/spack_repo/builtin/packages",
+    ]
+)
 
 # Enable todo items
 todo_include_todos = True
@@ -91,10 +103,10 @@ todo_include_todos = True
 # Disable duplicate cross-reference warnings.
 #
 class PatchedPythonDomain(PythonDomain):
-    def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
+    def resolve_xref(self, env, fromdocname, builder, type, target, node, contnode):
         if "refspecific" in node:
             del node["refspecific"]
-        return super().resolve_xref(env, fromdocname, builder, typ, target, node, contnode)
+        return super().resolve_xref(env, fromdocname, builder, type, target, node, contnode)
 
 
 #
@@ -109,7 +121,29 @@ class NoTabExpansionRSTParser(RSTParser):
         super().parse(inputstring, document)
 
 
+def add_package_api_version_line(app, what, name: str, obj, options, lines: List[str]):
+    """Add versionadded directive to package API docstrings"""
+    # We're adding versionadded directive here instead of in spack/package.py because most symbols
+    # are re-exported, and we don't want to modify __doc__ of symbols we don't own.
+    if name.startswith("spack.package."):
+        symbol = name[len("spack.package.") :]
+        for version, symbols in spack.package.api.items():
+            if symbol in symbols:
+                lines.extend(["", f".. versionadded:: {version}"])
+                break
+
+
+def skip_member(app, what, name, obj, skip, options):
+    # Do not skip (Make)Executable.__call__
+    if name == "__call__" and "Executable" in obj.__qualname__:
+        return False
+    return skip
+
+
 def setup(sphinx):
+    # autodoc-process-docstring
+    sphinx.connect("autodoc-process-docstring", add_package_api_version_line)
+    sphinx.connect("autodoc-skip-member", skip_member)
     sphinx.add_domain(PatchedPythonDomain, override=True)
     sphinx.add_source_parser(NoTabExpansionRSTParser, override=True)
 
@@ -128,9 +162,12 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinx_copybutton",
     "sphinx_design",
     "sphinxcontrib.programoutput",
 ]
+
+copybutton_exclude = ".linenos, .gp, .go"
 
 # Set default graphviz options
 graphviz_dot_args = [
@@ -158,7 +195,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Spack"
-copyright = "2013-2023, Lawrence Livermore National Laboratory."
+copyright = "Spack Project Developers"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -166,6 +203,7 @@ copyright = "2013-2023, Lawrence Livermore National Laboratory."
 #
 # The short X.Y version.
 import spack
+import spack.package
 
 version = ".".join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
@@ -190,7 +228,9 @@ gettext_uuid = False
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build", "_spack_root", ".spack-env"]
+exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack"]
+
+autodoc_mock_imports = ["llnl"]
 
 nitpicky = True
 nitpick_ignore = [
@@ -207,23 +247,33 @@ nitpick_ignore = [
     ("py:class", "TextIO"),
     ("py:class", "hashlib._Hash"),
     ("py:class", "concurrent.futures._base.Executor"),
+    ("py:class", "multiprocessing.context.Process"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
-    ("py:class", "spack.build_systems._checks.BaseBuilder"),
+    ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.StandardVersion"),
     ("py:class", "spack.spec.DependencySpec"),
     ("py:class", "spack.spec.ArchSpec"),
     ("py:class", "spack.spec.InstallStatus"),
     ("py:class", "spack.spec.SpecfileReaderBase"),
-    ("py:class", "spack.install_test.Pb"),
     ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
     ("py:class", "spack.traverse.EdgeAndDepth"),
-    ("py:class", "archspec.cpu.microarchitecture.Microarchitecture"),
+    ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.compiler.CompilerCache"),
     # TypeVar that is not handled correctly
-    ("py:class", "llnl.util.lang.T"),
+    ("py:class", "spack.llnl.util.lang.T"),
+    ("py:class", "spack.llnl.util.lang.KT"),
+    ("py:class", "spack.llnl.util.lang.VT"),
+    ("py:class", "spack.llnl.util.lang.K"),
+    ("py:class", "spack.llnl.util.lang.V"),
+    ("py:class", "spack.llnl.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.llnl.util.lang.KT"),
+    ("py:obj", "spack.llnl.util.lang.VT"),
+    ("py:obj", "spack.llnl.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.llnl.util.lang.K"),
+    ("py:obj", "spack.llnl.util.lang.V"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
@@ -402,3 +452,12 @@ texinfo_documents = [
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+
+rst_epilog = f"""
+.. |package_api_version| replace:: v{spack.package_api_version[0]}.{spack.package_api_version[1]}
+.. |min_package_api_version| replace:: v{spack.min_package_api_version[0]}.{spack.min_package_api_version[1]}
+.. |spack_version| replace:: {spack.spack_version}
+"""
+
+html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]

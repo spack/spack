@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -45,7 +44,7 @@ By default, these phases run:
 
 The ``CachedCMakePackage`` class inherits from the ``CMakePackage``
 class, and accepts all of the same options and adds all of the same
-flags to the ``cmake`` command. Similar to the ``CMakePAckage`` class,
+flags to the ``cmake`` command. Similar to the ``CMakePackage`` class,
 you may need to add a few arguments yourself, and the
 ``CachedCMakePackage`` provides the same interface to add those
 flags.
@@ -65,7 +64,7 @@ be done by overriding one of four methods:
 
 Each of these methods returns a list of CMake cache strings. The
 distinction between these methods is merely to provide a
-well-structured and legible cmake cache file -- otherwise, entries
+well-structured and legible CMake cache file -- otherwise, entries
 from each of these methods are handled identically.
 
 Spack also provides convenience methods for generating CMake cache

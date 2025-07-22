@@ -1,15 +1,13 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import textwrap
 from typing import List, Optional, Tuple
 
-import llnl.util.lang
-
 import spack.config
 import spack.extensions
+import spack.llnl.util.lang
 from spack.util.path import canonicalize_path
 
 
@@ -31,7 +29,7 @@ class ContextMeta(type):
                 context_properties.extend(x.context_properties)
             except AttributeError:
                 pass
-        context_properties = list(llnl.util.lang.dedupe(context_properties))
+        context_properties = list(spack.llnl.util.lang.dedupe(context_properties))
 
         # Flush the list
         cls._new_context_properties = []
@@ -66,11 +64,11 @@ class Context(metaclass=ContextMeta):
         return dict(d)
 
 
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def make_environment(dirs: Optional[Tuple[str, ...]] = None):
     """Returns a configured environment for template rendering."""
     # Import at this scope to avoid slowing Spack startup down
-    import jinja2
+    import spack.vendor.jinja2
 
     if dirs is None:
         # Default directories where to search for templates
@@ -79,9 +77,9 @@ def make_environment(dirs: Optional[Tuple[str, ...]] = None):
         dirs = tuple(canonicalize_path(d) for d in itertools.chain(builtins, extensions))
 
     # Loader for the templates
-    loader = jinja2.FileSystemLoader(dirs)
+    loader = spack.vendor.jinja2.FileSystemLoader(dirs)
     # Environment of the template engine
-    env = jinja2.Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
+    env = spack.vendor.jinja2.Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
     # Custom filters
     _set_filters(env)
     return env

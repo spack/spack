@@ -1,14 +1,13 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.reporters.extract
 from spack.install_test import TestStatus
 from spack.reporters import CDash, CDashConfiguration
@@ -133,7 +132,8 @@ def test_reporters_extract_skipped(state):
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 
     assert len(parts) == 1
-    parts[0]["completed"] == expected
+
+    assert parts[0]["completed"] == spack.reporters.extract.completed["skipped"]
 
 
 def test_reporters_skip_new():
@@ -157,7 +157,7 @@ fake::test_skip .. SKIPPED
     assert part["loglines"][0].startswith("SKIPPED:")
 
 
-def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
+def test_reporters_report_for_package_no_stdout(tmp_path: pathlib.Path, monkeypatch, capfd):
     class MockCDash(CDash):
         def upload(*args, **kwargs):
             # Just return (Do NOT try to upload the report to the fake site)
@@ -175,7 +175,26 @@ def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
 
     reporter = MockCDash(configuration=configuration)
     pkg_data = {"name": "fake-package"}
-    reporter.test_report_for_package(tmpdir.strpath, pkg_data, 0)
+    reporter.test_report_for_package(str(tmp_path), pkg_data, 0)
     err = capfd.readouterr()[1]
     assert "Skipping report for" in err
     assert "No generated output" in err
+
+
+def test_cdash_reporter_truncates_build_name_if_too_long():
+    build_name = "a" * 190
+    extra_long_build_name = build_name + "a"
+    configuration = CDashConfiguration(
+        upload_url="https://fake-upload",
+        packages="fake-package",
+        build=extra_long_build_name,
+        site="fake-site",
+        buildstamp=None,
+        track="fake-track",
+    )
+
+    reporter = CDash(configuration=configuration)
+    new_build_name = reporter.report_build_name("fake-package")
+
+    assert new_build_name != extra_long_build_name
+    assert new_build_name == build_name

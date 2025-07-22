@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ Spack Package Signing
 
 The goal of package signing in Spack is to provide data integrity
 assurances around official packages produced by the automated Spack CI
-pipelines. These assurances directly address the security of Spack’s
+pipelines. These assurances directly address the security of Spack's
 software supply chain by explaining why a security-conscious user can
 be reasonably justified in the belief that packages installed via Spack
 have an uninterrupted auditable trail back to change management
@@ -27,18 +26,18 @@ interested users.
 Risks, Impact and Threat Model
 ------------------------------
 
-This document addresses the approach taken to safeguard Spack’s
+This document addresses the approach taken to safeguard Spack's
 reputation with regard to the integrity of the package data produced by
-Spack’s CI pipelines. It does not address issues of data confidentiality
+Spack's CI pipelines. It does not address issues of data confidentiality
 (Spack is intended to be largely open source) or availability (efforts
-are described elsewhere). With that said the main reputational risk can
+are described elsewhere). With that said, the main reputational risk can
 be broadly categorized as a loss of faith in the data integrity due to a
 breach of the private key used to sign packages. Remediation of a
 private key breach would require republishing the public key with a
 revocation certificate, generating a new signing key, an assessment and
 potential rebuild/resigning of all packages since the key was breached,
 and finally direct intervention by every spack user to update their copy
-of Spack’s public keys used for local verification.
+of Spack's public keys used for local verification.
 
 The primary threat model used in mitigating the risks of these stated
 impacts is one of individual error not malicious intent or insider
@@ -81,8 +80,8 @@ pipelines.
    GitLab runners which provide access to the required signing keys within the
    job. Intermediary keys are used to sign packages in each stage of the
    pipeline as they are built and a final job officially signs each package
-   external to any specific packages’ build environment. An intermediate key
-   exists in the AWS infrastructure and for each affiliated instritution that
+   external to any specific package's build environment. An intermediate key
+   exists in the AWS infrastructure and for each affiliated institution that
    maintains protected runners. The runners that execute these pipelines
    exclusively accept jobs from protected branches meaning the intermediate keys
    are never exposed to unreviewed code and the official keys are never exposed
@@ -94,13 +93,13 @@ pipelines.
 Key Architecture
 ----------------
 
-Spack’s CI process uses public-key infrastructure (PKI) based on GNU Privacy
+Spack's CI process uses public-key infrastructure (PKI) based on GNU Privacy
 Guard (gpg) keypairs to sign public releases of spack package metadata, also
 called specs. Two classes of GPG keys are involved in the process to reduce the
 impact of an individual private key compromise, these key classes are the
 *Intermediate CI Key* and *Reputational Key*. Each of these keys has signing
 sub-keys that are used exclusively for signing packages. This can be confusing
-so for the purpose of this explanation we’ll refer to Root and Signing keys.
+so for the purpose of this explanation we will refer to Root and Signing keys.
 Each key has a private and a public component as well as one or more identities
 and zero or more signatures.
 
@@ -112,7 +111,7 @@ The Intermediate key class is used to sign and verify packages between stages
 within a develop or release pipeline. An intermediate key exists for the AWS
 infrastructure as well as each affiliated institution that maintains protected
 runners. These intermediate keys are made available to the GitLab execution
-environment building the package so that the package’s dependencies may be
+environment building the package so that the package's dependencies may be
 verified by the Signing Intermediate CI Public Key and the final package may be
 signed by the Signing Intermediate CI Private Key.
 
@@ -124,17 +123,17 @@ signed by the Signing Intermediate CI Private Key.
 +--------------------------------------------------+------------------------------------------------------+
 |   Signing Intermediate CI Private Key (RSA 4096) |        Signing Intermediate CI Public Key (RSA 4096) |
 +--------------------------------------------------+------------------------------------------------------+
-| Identity: “Intermediate CI Key <maintainers@spack.io>”                                                  |
+| Identity: "Intermediate CI Key <maintainers@spack.io>"                                                  |
 +---------------------------------------------------------------------------------------------------------+
 | Signatures: None                                                                                        |
 +---------------------------------------------------------------------------------------------------------+
 
 
-The *Root intermediate CI Private Key*\ Is stripped out of the GPG key and
-stored offline completely separate from Spack’s infrastructure. This allows the
+The *Root intermediate CI Private Key*\ is stripped out of the GPG key and
+stored offline completely separate from Spack's infrastructure. This allows the
 core development team to append revocation certificates to the GPG key and
 issue new sub-keys for use in the pipeline. It is our expectation that this
-will happen on a semi regular basis. A corollary of this is that *this key
+will happen on a semi-regular basis. A corollary of this is that *this key
 should not be used to verify package integrity outside the internal CI process.*
 
 ----------------
@@ -144,7 +143,7 @@ Reputational Key
 The Reputational Key is the public facing key used to sign complete groups of
 development and release packages. Only one key pair exists in this class of
 keys. In contrast to the Intermediate CI Key the Reputational Key *should* be
-used to verify package integrity. At the end of develop and release pipeline a
+used to verify package integrity. At the end of develop and release pipelines a
 final pipeline job pulls down all signed package metadata built by the pipeline,
 verifies they were signed with an Intermediate CI Key, then strips the
 Intermediate CI Key signature from the package and re-signs them with the
@@ -162,13 +161,13 @@ a build job it cannot accidentally end up in any built package.
 +--------------------------------------------------+------------------------------------------------------+
 | Signing Reputational Private Key (RSA 4096)      |          Signing Reputational Public Key (RSA 4096)  |
 +--------------------------------------------------+------------------------------------------------------+
-| Identity: “Spack Project <maintainers@spack.io>”                                                        |
+| Identity: "Spack Project <maintainers@spack.io>"                                                        |
 +---------------------------------------------------------------------------------------------------------+
 | Signatures: Signed by core development team [#f1]_                                                      |
 +---------------------------------------------------------------------------------------------------------+
 
 The Root Reputational Private Key is stripped out of the GPG key and stored
-offline completely separate from Spack’s infrastructure. This allows the core
+offline completely separate from Spack's infrastructure. This allows the core
 development team to append revocation certificates to the GPG key in the
 unlikely event that the Signing Reputation Private Key is compromised. In
 general it is the expectation that rotating this key will happen infrequently if
@@ -177,92 +176,72 @@ community without needing deep familiarity with GnuPG or Public Key
 Infrastructure.
 
 
-.. _build_cache_format:
+.. _build_cache_signing:
 
-------------------
-Build Cache Format
-------------------
+-------------------
+Build Cache Signing
+-------------------
 
-A binary package consists of a metadata file unambiguously defining the
-built package (and including other details such as how to relocate it)
-and the installation directory of the package stored as a compressed
-archive file. The metadata files can either be unsigned, in which case
-the contents are simply the json-serialized concrete spec plus metadata,
-or they can be signed, in which case the json-serialized concrete spec
-plus metadata is wrapped in a gpg cleartext signature. Built package
-metadata files are named to indicate the operating system and
-architecture for which the package was built as well as the compiler
-used to build it and the packages name and version. For example::
+For an in-depth description of the layout of a binary mirror, see
+the :ref:`documentation<build_cache_layout>` covering binary caches. The
+key takeaway from that discussion that applies here is that the entry point
+to a binary package is its manifest.  The manifest refers unambiguously to the
+spec metadata and compressed archive, which are stored as content-addressed
+blobs.
 
-  linux-ubuntu18.04-haswell-gcc-7.5.0-zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow.spec.json.sig
-
-would contain the concrete spec and binary metadata for a binary package
-of ``zlib@1.2.12``, built for the ``ubuntu`` operating system and ``haswell``
-architecture. The id of the built package exists in the name of the file
-as well (after the package name and version) and in this case begins
-with ``llv2ys``. The id distinguishes a particular built package from all
-other built packages with the same os/arch, compiler, name, and version.
-Below is an example of a signed binary package metadata file. Such a
-file would live in the ``build_cache`` directory of a binary mirror::
+The manifest files can either be signed or unsigned, but are always given
+a name ending with ``.spec.manifest.json`` regardless. The difference between
+signed and unsigned manifests is simply that the signed version is wrapped in
+a gpg cleartext signature, as illustrated below::
 
   -----BEGIN PGP SIGNED MESSAGE-----
   Hash: SHA512
 
   {
-    "spec": {
-      <concrete-spec-contents-omitted>
-    },
-
-    "buildcache_layout_version": 1,
-    "binary_cache_checksum": {
-      "hash_algorithm": "sha256",
-      "hash": "4f1e46452c35a5e61bcacca205bae1bfcd60a83a399af201a29c95b7cc3e1423"
-     }
+    "version": 3,
+    "data": [
+      {
+        "contentLength": 10731083,
+        "mediaType": "application/vnd.spack.install.v2.tar+gzip",
+        "compression": "gzip",
+        "checksumAlgorithm": "sha256",
+        "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
+      },
+      {
+        "contentLength": 1000,
+        "mediaType": "application/vnd.spack.spec.v5+json",
+        "compression": "gzip",
+        "checksumAlgorithm": "sha256",
+        "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
+      }
+    ]
   }
-
   -----BEGIN PGP SIGNATURE-----
-  iQGzBAEBCgAdFiEETZn0sLle8jIrdAPLx/P+voVcifMFAmKAGvwACgkQx/P+voVc
-  ifNoVgv/VrhA+wurVs5GB9PhmMA1m5U/AfXZb4BElDRwpT8ZcTPIv5X8xtv60eyn
-  4EOneGVbZoMThVxgev/NKARorGmhFXRqhWf+jknJZ1dicpqn/qpv34rELKUpgXU+
-  QDQ4d1P64AIdTczXe2GI9ZvhOo6+bPvK7LIsTkBbtWmopkomVxF0LcMuxAVIbA6b
-  887yBvVO0VGlqRnkDW7nXx49r3AG2+wDcoU1f8ep8QtjOcMNaPTPJ0UnjD0VQGW6
-  4ZFaGZWzdo45MY6tF3o5mqM7zJkVobpoW3iUz6J5tjz7H/nMlGgMkUwY9Kxp2PVH
-  qoj6Zip3LWplnl2OZyAY+vflPFdFh12Xpk4FG7Sxm/ux0r+l8tCAPvtw+G38a5P7
-  QEk2JBr8qMGKASmnRlJUkm1vwz0a95IF3S9YDfTAA2vz6HH3PtsNLFhtorfx8eBi
-  Wn5aPJAGEPOawEOvXGGbsH4cDEKPeN0n6cy1k92uPEmBLDVsdnur8q42jk5c2Qyx
-  j3DXty57
-  =3gvm
+
+  iQGzBAEBCgAdFiEEdbwFKBFJCcB24mB0GAEP+tc8mwcFAmf2rr4ACgkQGAEP+tc8
+  mwfefwv+KJs8MsQ5ovFaBdmyx5H/3k4rO4QHBzuSPOB6UaxErA9IyOB31iP6vNTU
+  HzYpxz6F5dJCJWmmNEMN/0+vjhMHEOkqd7M1l5reVcxduTF2yc4tBZUO2gienEHL
+  W0e+SnUznl1yc/aVpChUiahO2zToCsI8HZRNT4tu6iCnE/OpghqjsSdBOZHmSNDD
+  5wuuCxfDUyWI6ZlLclaaB7RdbCUUJf/iqi711J+wubvnDFhc6Ynwm1xai5laJ1bD
+  ev3NrSb2AAroeNFVo4iECA0fZC1OZQYzaRmAEhBXtCideGJ5Zf2Cp9hmCwNK8Hq6
+  bNt94JP9LqC3FCCJJOMsPyOOhMSA5MU44zyyzloRwEQpHHLuFzVdbTHA3dmTc18n
+  HxNLkZoEMYRc8zNr40g0yb2lCbc+P11TtL1E+5NlE34MX15mPewRCiIFTMwhCnE3
+  gFSKtW1MKustZE35/RUwd2mpJRf+mSRVCl1f1RiFjktLjz7vWQq7imIUSam0fPDr
+  XD4aDogm
+  =RrFX
   -----END PGP SIGNATURE-----
 
 If a user has trusted the public key associated with the private key
-used to sign the above spec file, the signature can be verified with
+used to sign the above manifest file, the signature can be verified with
 gpg, as follows::
 
-  $ gpg –verify linux-ubuntu18.04-haswell-gcc-7.5.0-zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow.spec.json.sig
+  $ gpg --verify gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
 
-The metadata (regardless whether signed or unsigned) contains the checksum
-of the ``.spack`` file containing the actual installation. The checksum should
-be compared to a checksum computed locally on the ``.spack`` file to ensure the
-contents have not changed since the binary spec plus metadata were signed. The
-``.spack`` files are actually tarballs containing the compressed archive of the
-install tree.  These files, along with the metadata files, live within the
-``build_cache`` directory of the mirror, and together are organized as follows::
-
-  build_cache/
-    # unsigned metadata (for indexing, contains sha256 of .spack file)
-    <arch>-<compiler>-<name>-<ver>-24zvipcqgg2wyjpvdq2ajy5jnm564hen.spec.json
-    # clearsigned metadata (same as above, but signed)
-    <arch>-<compiler>-<name>-<ver>-24zvipcqgg2wyjpvdq2ajy5jnm564hen.spec.json.sig
-    <arch>/
-      <compiler>/
-        <name>-<ver>/
-          # tar.gz-compressed prefix (may support more compression formats later)
-          <arch>-<compiler>-<name>-<ver>-24zvipcqgg2wyjpvdq2ajy5jnm564hen.spack
-
-Uncompressing and extracting the ``.spack`` file results in the install tree.
-This is in contrast to previous versions of spack, where the ``.spack`` file
-contained a (duplicated) metadata file, a signature file and a nested tarball
-containing the install tree.
+When attempting to install a binary package that has been signed, spack will
+attempt to verify the signature with one of the trusted keys in its keyring,
+and will fail if unable to do so.  While not recommended, it is possible to
+force installation of a signed package without verification by providing the
+``--no-check-signature`` argument to ``spack install ...``.
 
 .. _internal_implementation:
 
@@ -271,7 +250,7 @@ Internal Implementation
 -----------------------
 
 The technical implementation of the pipeline signing process includes components
-defined in Amazon Web Services, the Kubernetes cluster, at affilicated
+defined in Amazon Web Services, the Kubernetes cluster, at affiliated
 institutions, and the GitLab/GitLab Runner deployment. We present the technical
 implementation in two interdependent sections. The first addresses how secrets
 are managed through the lifecycle of a develop or release pipeline. The second
@@ -282,7 +261,7 @@ Secrets Management
 ^^^^^^^^^^^^^^^^^^
 
 As stated above the Root Private Keys (intermediate and reputational)
-are stripped from the GPG keys and stored outside Spack’s
+are stripped from the GPG keys and stored outside Spack's
 infrastructure.
 
 .. warning::
@@ -298,7 +277,7 @@ Multiple intermediate CI signing keys exist, one Intermediate CI Key for jobs
 run in AWS, and one key for each affiliated institution (e.g. University of
 Oregon). Here we describe how the Intermediate CI Key is managed in AWS:
 
-The Intermediate CI Key (including the Signing Intermediate CI Private Key is
+The Intermediate CI Key (including the Signing Intermediate CI Private Key) is
 exported as an ASCII armored file and stored in a Kubernetes secret called
 ``spack-intermediate-ci-signing-key``. For convenience sake, this same secret
 contains an ASCII-armored export of just the *public* components of the
@@ -318,13 +297,13 @@ the following way:
    pipeline namespace and mounts the spack-intermediate-ci-signing-key
    Kubernetes secret into the build container
 3. The Intermediate CI Key, affiliated institutions' public key and the
-   Reputational Public Key are imported into a keyring by the ``spack gpg …``
-   sub-command. This is initiated by the job’s build script which is created by
+   Reputational Public Key are imported into a keyring by the ``spack gpg ...``
+   sub-command. This is initiated by the job's build script which is created by
    the generate job at the beginning of the pipeline.
-4. Assuming the package has dependencies those specs are verified using
+4. Assuming the package has dependencies those spec manifests are verified using
    the keyring.
-5. The package is built and the spec.json is generated
-6. The spec.json is signed by the keyring and uploaded to the mirror’s
+5. The package is built and the spec manifest is generated
+6. The spec manifest is signed by the keyring and uploaded to the mirror's
    build cache.
 
 **Reputational Key**
@@ -333,7 +312,7 @@ the following way:
 Because of the increased impact to end users in the case of a private
 key breach, the Reputational Key is managed separately from the
 Intermediate CI Keys and has additional controls. First, the Reputational
-Key was generated outside of Spack’s infrastructure and has been signed
+Key was generated outside of Spack's infrastructure and has been signed
 by the core development team. The Reputational Key (along with the
 Signing Reputational Private Key) was then ASCII armor exported to a
 file. Unlike the Intermediate CI Key this exported file is not stored as
@@ -356,10 +335,10 @@ sake, this same secret contains an ASCII-armored export of the *public*
 components of the Intermediate CI Keys and the Reputational Key. This allows the
 signing script to verify that packages were built by the pipeline (both on AWS
 or at affiliated institutions), or signed previously as a part of a different
-pipeline. This is is done *before* importing decrypting and importing the
+pipeline. This is done *before* importing decrypting and importing the
 Signing Reputational Private Key material and officially signing the packages.
 
-Procedurally the ``spack-singing-key-encrypted`` secret is used in the
+Procedurally the ``spack-signing-key-encrypted`` secret is used in the
 following way:
 
 1.  The ``spack-package-signing-gitlab-runner`` protected runner picks
@@ -373,28 +352,28 @@ following way:
     a path on disk. Note that this becomes several files on disk, the
     public components of the Intermediate CI Keys, the public components
     of the Reputational CI, and an AWS KMS encrypted file containing the
-    Singing Reputational Private Key.
+    Signing Reputational Private Key.
 4.  In addition to the secret, the runner creates a tmpfs memory mounted
     directory where the GnuPG keyring will be created to verify, and
     then resign the package specs.
-5.  The job script syncs all spec.json.sig files from the build cache to
-    a working directory in the job’s execution environment.
+5.  The job script syncs all spec manifest files from the build cache to
+    a working directory in the job's execution environment.
 6.  The job script then runs the ``sign.sh`` script built into the
-    notary Docker image.
+    Notary Docker image.
 7.  The ``sign.sh`` script imports the public components of the
     Reputational and Intermediate CI Keys and uses them to verify good
-    signatures on the spec.json.sig files. If any signed spec does not
-    verify the job immediately fails.
-8.  Assuming all specs are verified, the ``sign.sh`` script then unpacks
-    the spec json data from the signed file in preparation for being
+    signatures on the spec.manifest.json files. If any signed manifest
+    does not verify, the job immediately fails.
+8.  Assuming all manifests are verified, the ``sign.sh`` script then unpacks
+    the manifest json data from the signed file in preparation for being
     re-signed with the Reputational Key.
 9.  The private components of the Reputational Key are decrypted to
     standard out using ``aws-encryption-cli`` directly into a ``gpg
-    –import …`` statement which imports the key into the
+    --import ...`` statement which imports the key into the
     keyring mounted in-memory.
-10. The private key is then used to sign each of the json specs and the
+10. The private key is then used to sign each of the manifests and the
     keyring is removed from disk.
-11. The re-signed json specs are resynced to the AWS S3 Mirror and the
+11. The re-signed manifests are resynced to the AWS S3 Mirror and the
     public signing of the packages for the develop or release pipeline
     that created them is complete.
 
@@ -423,20 +402,20 @@ registered as specific *protected* runners on the spack/spack project. In
 addition to protected runners there are protected branches on the spack/spack
 project. These are the ``develop`` branch, any release branch (i.e. managed with
 the ``releases/v*`` wildcard) and any tag branch (managed with the ``v*``
-wildcard) Finally Spack’s pipeline generation code reserves certain tags to make
-sure jobs are routed to the correct runners, these tags are ``public``,
+wildcard) Finally, Spack's pipeline generation code reserves certain tags to make
+sure jobs are routed to the correct runners; these tags are ``public``,
 ``protected``, and ``notary``. Understanding how all this works together to
 protect secrets and provide integrity assurances can be a little confusing so
 lets break these down:
 
 -  **Protected Branches**- Protected branches in Spack prevent anyone
    other than Maintainers in GitLab from pushing code. In the case of
-   Spack the only Maintainer level entity pushing code to protected
+   Spack, the only Maintainer level entity pushing code to protected
    branches is Spack bot. Protecting branches also marks them in such a
    way that Protected Runners will only run jobs from those branches
 - **Protected Runners**- Protected Runners only run jobs from protected
    branches. Because protected runners have access to secrets, it's critical
-   that they not run Jobs from untrusted code (i.e. PR branches). If they did it
+   that they not run jobs from untrusted code (i.e. PR branches). If they did, it
    would be possible for a PR branch to tag a job in such a way that a protected
    runner executed that job and mounted secrets into a code execution
    environment that had not been reviewed by Spack maintainers. Note however
@@ -445,9 +424,9 @@ lets break these down:
    because non-protected runners do not have access to those secrets; lack of
    secrets would, however, cause the jobs to fail.
 - **Reserved Tags**- To mitigate the issue of public runners picking up
-   protected jobs Spack uses a small set of “reserved” job tags (Note that these
-   are *job* tags not git tags). These tags are “public”, “private”, and
-   “notary.” The majority of jobs executed in Spack’s GitLab instance are
+   protected jobs Spack uses a small set of "reserved" job tags (Note that these
+   are *job* tags not git tags). These tags are "public", "private", and
+   "notary." The majority of jobs executed in Spack's GitLab instance are
    executed via a ``generate`` job. The generate job code systematically ensures
    that no user defined configuration sets these tags. Instead, the ``generate``
    job sets these tags based on rules related to the branch where this pipeline
@@ -461,7 +440,7 @@ Protected Runners are configured to only run jobs from protected branches. Only
 jobs running in pipelines on protected branches are tagged with ``protected`` or
 ``notary`` tags. This tightly couples jobs on protected branches to protected
 runners that provide access to the secrets required to sign the built packages.
-The secrets are can **only** be accessed via:
+The secrets can **only** be accessed via:
 
 1. Runners under direct control of the core development team.
 2. Runners under direct control of trusted maintainers at affiliated institutions.

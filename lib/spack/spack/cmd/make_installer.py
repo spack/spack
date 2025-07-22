@@ -1,16 +1,15 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import os
 import posixpath
 import sys
 
-from llnl.path import convert_to_posix_path
-
+import spack.concretize
 import spack.paths
 import spack.util.executable
-from spack.spec import Spec
+from spack.llnl.path import convert_to_posix_path
 
 description = "generate Windows installer"
 section = "admin"
@@ -31,13 +30,13 @@ def txt_to_rtf(file_path):
         return str.replace("\n", "\\par")
 
     contents = ""
-    with open(file_path, "r+") as f:
+    with open(file_path, "r+", encoding="utf-8") as f:
         for line in f.readlines():
             contents += line_to_rtf(line)
     return rtf_header.format(contents)
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     spack_source_group = subparser.add_mutually_exclusive_group(required=True)
     spack_source_group.add_argument(
         "-v", "--spack-version", default="", help="download given spack version"
@@ -66,8 +65,7 @@ def make_installer(parser, args):
     """
     if sys.platform == "win32":
         output_dir = args.output_dir
-        cmake_spec = Spec("cmake")
-        cmake_spec.concretize()
+        cmake_spec = spack.concretize.concretize_one("cmake")
         cmake_path = os.path.join(cmake_spec.prefix, "bin", "cmake.exe")
         cpack_path = os.path.join(cmake_spec.prefix, "bin", "cpack.exe")
         spack_source = args.spack_source
@@ -93,7 +91,7 @@ def make_installer(parser, args):
         rtf_spack_license = txt_to_rtf(spack_license)
         spack_license = posixpath.join(source_dir, "LICENSE.rtf")
 
-        with open(spack_license, "w") as rtf_license:
+        with open(spack_license, "w", encoding="utf-8") as rtf_license:
             written = rtf_license.write(rtf_spack_license)
             if written == 0:
                 raise RuntimeError("Failed to generate properly formatted license file")

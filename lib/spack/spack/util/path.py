@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -10,16 +9,17 @@ TODO: this is really part of spack.config. Consolidate it.
 import contextlib
 import getpass
 import os
+import pathlib
 import re
 import subprocess
 import sys
 import tempfile
 from datetime import date
+from typing import Optional
 
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-
+import spack.llnl.util.tty as tty
 import spack.util.spack_yaml as syaml
+from spack.llnl.util.lang import memoized
 
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
 
@@ -30,8 +30,8 @@ def architecture():
     import spack.spec
 
     host_platform = spack.platforms.host()
-    host_os = host_platform.operating_system("default_os")
-    host_target = host_platform.target("default_target")
+    host_os = host_platform.default_operating_system()
+    host_target = host_platform.default_target()
 
     return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
 
@@ -55,6 +55,7 @@ NOMATCH = object()
 # Substitutions to perform
 def replacements():
     # break circular imports
+    import spack
     import spack.environment as ev
     import spack.paths
 
@@ -65,6 +66,7 @@ def replacements():
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
         "user_cache_path": lambda: spack.paths.user_cache_path,
+        "spack_instance_id": lambda: spack.paths.spack_instance_id,
         "architecture": lambda: arch,
         "arch": lambda: arch,
         "platform": lambda: arch.platform,
@@ -160,6 +162,7 @@ def substitute_config_variables(path):
     - $tempdir             Default temporary directory returned by tempfile.gettempdir()
     - $user                The current user's username
     - $user_cache_path     The user cache directory (~/.spack, unless overridden)
+    - $spack_instance_id   Hash that distinguishes Spack instances on the filesystem
     - $architecture        The spack architecture triple for the current system
     - $arch                The spack architecture triple for the current system
     - $platform            The spack platform for the current system
@@ -235,7 +238,7 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path, default_wd=None):
+def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
     """Same as substitute_path_variables, but also take absolute path.
 
     If the string is a yaml object with file annotations, make absolute paths
@@ -243,28 +246,53 @@ def canonicalize_path(path, default_wd=None):
     Otherwise, use ``default_wd`` if specified, otherwise ``os.getcwd()``
 
     Arguments:
-        path (str): path being converted as needed
+        path: path being converted as needed
+        default_wd: optional working directory/root for non-yaml string paths
 
-    Returns:
-        (str): An absolute path with path variable substitution
+    Returns: An absolute path or non-file URL with path variable substitution
     """
+    import urllib.parse
+    import urllib.request
+
     # Get file in which path was written in case we need to make it absolute
     # relative to that path.
     filename = None
     if isinstance(path, syaml.syaml_str):
-        filename = os.path.dirname(path._start_mark.name)
-        assert path._start_mark.name == path._end_mark.name
+        filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
+        assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
 
     path = substitute_path_variables(path)
-    if not os.path.isabs(path):
-        if filename:
-            path = os.path.join(filename, path)
-        else:
-            base = default_wd or os.getcwd()
-            path = os.path.join(base, path)
-            tty.debug("Using working directory %s as base for abspath" % base)
 
-    return os.path.normpath(path)
+    # Ensure properly process a Windows path
+    win_path = pathlib.PureWindowsPath(path)
+    if win_path.drive:
+        # Assume only absolute paths are supported with a Windows drive
+        # (though DOS does allow drive-relative paths).
+        return os.path.normpath(str(win_path))
+
+    # Now process linux-like paths and remote URLs
+    url = urllib.parse.urlparse(path)
+    url_path = urllib.request.url2pathname(url.path)
+    if url.scheme:
+        if url.scheme != "file":
+            # Have a remote URL so simply return it with substitutions
+            return path
+
+        # Drop the URL scheme from the local path
+        path = url_path
+
+    if os.path.isabs(path):
+        return os.path.normpath(path)
+
+    # Have a relative path so prepend the appropriate dir to make it absolute
+    if filename:
+        # Prepend the directory of the syaml path
+        return os.path.normpath(os.path.join(filename, path))
+
+    # Prepend the default, if provided, or current working directory.
+    base = default_wd or os.getcwd()
+    tty.debug(f"Using working directory {base} as base for abspath")
+    return os.path.normpath(os.path.join(base, path))
 
 
 def longest_prefix_re(string, capture=True):
@@ -347,6 +375,7 @@ def filter_padding():
     This is needed because Spack's debug output gets extremely long when we use a
     long padded installation path.
     """
+    # circular import
     import spack.config
 
     padding = spack.config.get("config:install_tree:padded_length", None)

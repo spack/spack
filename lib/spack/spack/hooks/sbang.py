@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,14 +10,14 @@ import stat
 import sys
 import tempfile
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.package_prefs
 import spack.paths
 import spack.spec
 import spack.store
+from spack.util.socket import _getfqdn
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
 #: Different Linux distributions have different limits, but 127 is the
@@ -40,7 +39,7 @@ interpreter_regex = re.compile(b"#![ \t]*?([^ \t\0\n]+)")
 
 
 def sbang_install_path():
-    """Location sbang should be installed within Spack's ``install_tree``."""
+    """Location sbang is installed within the install tree."""
     sbang_root = str(spack.store.STORE.unpadded_root)
     install_path = os.path.join(sbang_root, "bin", "sbang")
     path_length = len(install_path)
@@ -167,7 +166,7 @@ def filter_shebangs_in_directory(directory, filenames=None):
         # Only look at executable, non-symlink files.
         try:
             st = os.lstat(path)
-        except (IOError, OSError):
+        except OSError:
             continue
 
         if stat.S_ISLNK(st.st_mode) or stat.S_ISDIR(st.st_mode) or not st.st_mode & is_exe:
@@ -210,9 +209,7 @@ def install_sbang():
         os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
 
     # copy over the fresh copy of `sbang`
-    sbang_tmp_path = os.path.join(
-        os.path.dirname(sbang_path), ".%s.tmp" % os.path.basename(sbang_path)
-    )
+    sbang_tmp_path = os.path.join(sbang_bin_dir, f".sbang.{_getfqdn()}.{os.getpid()}.tmp")
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 
     # set permissions on `sbang` (including group if set in configuration)

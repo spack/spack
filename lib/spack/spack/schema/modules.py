@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,22 +11,6 @@ from typing import Any, Dict
 
 import spack.schema.environment
 import spack.schema.projections
-
-#: Matches a spec or a multi-valued variant but not another
-#: valid keyword.
-#:
-#: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
-#: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
-spec_regex = (
-    r"(?!hierarchy|core_specs|verbose|hash_length|defaults|filter_hierarchy_specs|hide|"
-    r"include|exclude|projections|naming_scheme|core_compilers|all)(^\w[\w-]*)"
-)
-
-#: Matches a valid name for a module set
-valid_module_set_name = r"^(?!prefix_inspections$)\w[\w-]*$"
-
-#: Matches an anonymous spec, i.e. a spec without a root name
-anonymous_spec_regex = r"^[\^@%+~]"
 
 #: Definitions for parts of module schema
 array_of_strings = {"type": "array", "default": [], "items": {"type": "string"}}
@@ -56,8 +39,8 @@ module_file_configuration = {
         "load": array_of_strings,
         "suffixes": {
             "type": "object",
-            "validate_spec": True,
-            "patternProperties": {r"\w[\w-]*": {"type": "string"}},  # key
+            "additionalKeysAreSpecs": True,
+            "additionalProperties": {"type": "string"},  # key
         },
         "environment": spack.schema.environment.definition,
     },
@@ -65,34 +48,44 @@ module_file_configuration = {
 
 projections_scheme = spack.schema.projections.properties["projections"]
 
-module_type_configuration = {
-    "type": "object",
-    "default": {},
-    "allOf": [
-        {
-            "properties": {
-                "verbose": {"type": "boolean", "default": False},
-                "hash_length": {"type": "integer", "minimum": 0, "default": 7},
-                "include": array_of_strings,
-                "exclude": array_of_strings,
-                "exclude_implicits": {"type": "boolean", "default": False},
-                "defaults": array_of_strings,
-                "hide_implicits": {"type": "boolean", "default": False},
-                "naming_scheme": {"type": "string"},  # Can we be more specific here?
-                "projections": projections_scheme,
-                "all": module_file_configuration,
-            }
-        },
-        {
-            "validate_spec": True,
-            "patternProperties": {
-                spec_regex: module_file_configuration,
-                anonymous_spec_regex: module_file_configuration,
-            },
-        },
-    ],
+common_props = {
+    "verbose": {"type": "boolean", "default": False},
+    "hash_length": {"type": "integer", "minimum": 0, "default": 7},
+    "include": array_of_strings,
+    "exclude": array_of_strings,
+    "exclude_implicits": {"type": "boolean", "default": False},
+    "defaults": array_of_strings,
+    "hide_implicits": {"type": "boolean", "default": False},
+    "naming_scheme": {"type": "string"},
+    "projections": projections_scheme,
+    "all": module_file_configuration,
 }
 
+tcl_configuration = {
+    "type": "object",
+    "default": {},
+    "additionalKeysAreSpecs": True,
+    "properties": {**common_props},
+    "additionalProperties": module_file_configuration,
+}
+
+lmod_configuration = {
+    "type": "object",
+    "default": {},
+    "additionalKeysAreSpecs": True,
+    "properties": {
+        **common_props,
+        "core_compilers": array_of_strings,
+        "hierarchy": array_of_strings,
+        "core_specs": array_of_strings,
+        "filter_hierarchy_specs": {
+            "type": "object",
+            "additionalKeysAreSpecs": True,
+            "additionalProperties": array_of_strings,
+        },
+    },
+    "additionalProperties": module_file_configuration,
+}
 
 module_config_properties = {
     "use_view": {"anyOf": [{"type": "string"}, {"type": "boolean"}]},
@@ -106,31 +99,8 @@ module_config_properties = {
         "default": [],
         "items": {"type": "string", "enum": ["tcl", "lmod"]},
     },
-    "lmod": {
-        "allOf": [
-            # Base configuration
-            module_type_configuration,
-            {
-                "type": "object",
-                "properties": {
-                    "core_compilers": array_of_strings,
-                    "hierarchy": array_of_strings,
-                    "core_specs": array_of_strings,
-                    "filter_hierarchy_specs": {
-                        "type": "object",
-                        "patternProperties": {spec_regex: array_of_strings},
-                    },
-                },
-            },  # Specific lmod extensions
-        ]
-    },
-    "tcl": {
-        "allOf": [
-            # Base configuration
-            module_type_configuration,
-            {},  # Specific tcl extensions
-        ]
-    },
+    "lmod": lmod_configuration,
+    "tcl": tcl_configuration,
     "prefix_inspections": {
         "type": "object",
         "additionalProperties": False,
@@ -146,7 +116,6 @@ module_config_properties = {
 properties: Dict[str, Any] = {
     "modules": {
         "type": "object",
-        "additionalProperties": False,
         "properties": {
             "prefix_inspections": {
                 "type": "object",
@@ -157,13 +126,11 @@ properties: Dict[str, Any] = {
                 },
             }
         },
-        "patternProperties": {
-            valid_module_set_name: {
-                "type": "object",
-                "default": {},
-                "additionalProperties": False,
-                "properties": module_config_properties,
-            }
+        "additionalProperties": {
+            "type": "object",
+            "default": {},
+            "additionalProperties": False,
+            "properties": module_config_properties,
         },
     }
 }

@@ -1,23 +1,23 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 import textwrap
 from itertools import zip_longest
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.tty.colify import colify
-
+import spack.builder
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.spec
 import spack.variant
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify
 from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"
@@ -40,7 +40,7 @@ def padder(str_list, extra=0):
     return pad
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-a", "--all", action="store_true", default=False, help="output all package information"
     )
@@ -49,9 +49,9 @@ def setup_parser(subparser):
         ("--detectable", print_detectable.__doc__),
         ("--maintainers", print_maintainers.__doc__),
         ("--namespace", print_namespace.__doc__),
-        ("--no-dependencies", "do not " + print_dependencies.__doc__),
-        ("--no-variants", "do not " + print_variants.__doc__),
-        ("--no-versions", "do not " + print_versions.__doc__),
+        ("--no-dependencies", f"do not {print_dependencies.__doc__}"),
+        ("--no-variants", f"do not {print_variants.__doc__}"),
+        ("--no-versions", f"do not {print_versions.__doc__}"),
         ("--phases", print_phases.__doc__),
         ("--tags", print_tags.__doc__),
         ("--tests", print_tests.__doc__),
@@ -202,11 +202,13 @@ def print_namespace(pkg, args):
 def print_phases(pkg, args):
     """output installation phases"""
 
-    if hasattr(pkg.builder, "phases") and pkg.builder.phases:
+    builder = spack.builder.create(pkg)
+
+    if hasattr(builder, "phases") and builder.phases:
         color.cprint("")
         color.cprint(section_title("Installation Phases:"))
         phase_str = ""
-        for phase in pkg.builder.phases:
+        for phase in builder.phases:
             phase_str += "    {0}".format(phase)
         color.cprint(phase_str)
 

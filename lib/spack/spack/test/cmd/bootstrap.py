@@ -1,21 +1,21 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os.path
+import os
+import pathlib
 import sys
 
 import pytest
 
-from llnl.path import convert_to_posix_path
-
 import spack.bootstrap
 import spack.bootstrap.core
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.main
-import spack.mirror
+import spack.mirrors.utils
 import spack.spec
+from spack.llnl.path import convert_to_posix_path
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
 
@@ -143,8 +143,10 @@ def test_enable_or_disable_fails_with_more_than_one_method(mutable_config):
 
 
 @pytest.mark.parametrize("use_existing_dir", [True, False])
-def test_add_failures_for_non_existing_files(mutable_config, tmpdir, use_existing_dir):
-    metadata_dir = str(tmpdir) if use_existing_dir else "/foo/doesnotexist"
+def test_add_failures_for_non_existing_files(
+    mutable_config, tmp_path: pathlib.Path, use_existing_dir
+):
+    metadata_dir = str(tmp_path) if use_existing_dir else "/foo/doesnotexist"
     with pytest.raises(RuntimeError, match="does not exist"):
         _bootstrap("add", "mock-mirror", metadata_dir)
 
@@ -177,14 +179,14 @@ def test_remove_and_add_a_source(mutable_config):
 
 @pytest.mark.maybeslow
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
-def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmpdir):
+def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmp_path: pathlib.Path):
     """Test that `spack bootstrap mirror` creates a folder that can be ingested by
     `spack bootstrap add`. Here we don't download data, since that would be an
     expensive operation for a unit test.
     """
-    old_create = spack.mirror.create
-    monkeypatch.setattr(spack.mirror, "create", lambda p, s: old_create(p, []))
-    monkeypatch.setattr(spack.spec.Spec, "concretized", lambda p: p)
+    old_create = spack.mirrors.utils.create
+    monkeypatch.setattr(spack.mirrors.utils, "create", lambda p, s: old_create(p, []))
+    monkeypatch.setattr(spack.concretize, "concretize_one", lambda p: spack.spec.Spec(p))
 
     # Create the mirror in a temporary folder
     compilers = [
@@ -203,10 +205,10 @@ def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmpdir
         }
     ]
     with spack.config.override("compilers", compilers):
-        _bootstrap("mirror", str(tmpdir))
+        _bootstrap("mirror", str(tmp_path))
 
     # Register the mirror
-    metadata_dir = tmpdir.join("metadata", "sources")
+    metadata_dir = tmp_path / "metadata" / "sources"
     _bootstrap("add", "--trust", "test-mirror", str(metadata_dir))
 
     assert _bootstrap.returncode == 0

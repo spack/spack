@@ -1,12 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import platform
 
 import pytest
 
-import archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.operating_systems
@@ -61,8 +60,7 @@ def test_user_input_combination(config, target_str, os_str):
     """Test for all the valid user input combinations that both the target and
     the operating system match.
     """
-    spec_str = "libelf os={} target={}".format(os_str, target_str)
-    spec = Spec(spec_str)
+    spec = Spec(f"libelf os={os_str} target={target_str}")
     assert spec.architecture.os == str(TEST_PLATFORM.operating_system(os_str))
     assert spec.architecture.target == TEST_PLATFORM.target(target_str)
 
@@ -72,8 +70,8 @@ def test_default_os_and_target(default_mock_concretization):
     after concretization.
     """
     spec = default_mock_concretization("libelf")
-    assert spec.architecture.os == str(TEST_PLATFORM.operating_system("default_os"))
-    assert spec.architecture.target == TEST_PLATFORM.target("default_target")
+    assert spec.architecture.os == str(TEST_PLATFORM.default_operating_system())
+    assert spec.architecture.target == TEST_PLATFORM.default_target()
 
 
 def test_operating_system_conversion_to_dict():
@@ -127,12 +125,11 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
 )
 @pytest.mark.usefixtures("mock_packages", "config")
 @pytest.mark.skipif(
-    str(archspec.cpu.host().family) != "x86_64", reason="tests are for x86_64 uarch ranges"
+    str(spack.vendor.archspec.cpu.host().family) != "x86_64",
+    reason="tests are for x86_64 uarch ranges",
 )
 def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
-    spec = Spec(
-        f"pkg-a %gcc@10 foobar=bar target={root_target_range} ^pkg-b target={dep_target_range}"
+    spec = spack.concretize.concretize_one(
+        f"pkg-a foobar=bar target={root_target_range} %gcc@10 ^pkg-b target={dep_target_range}"
     )
-    with spack.concretize.disable_compiler_existence_check():
-        spec.concretize()
     assert spec.target == spec["pkg-b"].target == result

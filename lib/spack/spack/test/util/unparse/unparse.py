@@ -257,7 +257,6 @@ def test_core_lib_files():
                 names.append(os.path.join(test_dir, n))
 
     for filename in names:
-        print("Testing %s" % filename)
         source = read_pyfile(filename)
         check_ast_roundtrip(source)
 

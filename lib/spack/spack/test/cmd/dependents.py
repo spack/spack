@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,9 +6,8 @@ import re
 
 import pytest
 
-from llnl.util.tty.color import color_when
-
 import spack.store
+from spack.llnl.util.tty.color import color_when
 from spack.main import SpackCommand
 
 dependents = SpackCommand("dependents")
@@ -55,7 +53,7 @@ def test_immediate_installed_dependents(mock_packages, database):
         out = dependents("--installed", "libelf")
 
     lines = [li for li in out.strip().split("\n") if not li.startswith("--")]
-    hashes = set([re.split(r"\s+", li)[0] for li in lines])
+    hashes = set([re.split(r"\s+", li)[0] for li in lines if li])
 
     expected = set(
         [spack.store.STORE.db.query_one(s).dag_hash(7) for s in ["dyninst", "libdwarf"]]

@@ -1,17 +1,13 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Implementation details of the ``spack module`` command."""
 
 import collections
-import os.path
+import os
 import shutil
 import sys
-
-from llnl.util import filesystem, tty
-from llnl.util.tty import color
 
 import spack.cmd
 import spack.config
@@ -21,6 +17,8 @@ import spack.modules.common
 import spack.repo
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
+from spack.llnl.util import filesystem, tty
+from spack.llnl.util.tty import color
 
 description = "manipulate module files"
 section = "environment"
@@ -384,8 +382,10 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
         query = " ".join(str(s) for s in args.constraint_specs)
         msg = f"the constraint '{query}' matches multiple packages:\n"
         for s in specs:
-            spec_fmt = "{hash:7} {name}{@version}{%compiler}"
-            spec_fmt += "{compiler_flags}{variants}{arch=architecture}"
+            spec_fmt = (
+                "{hash:7} {name}{@version}{compiler_flags}{variants}"
+                "{arch=architecture} {%compiler}"
+            )
             msg += "\t" + s.cformat(spec_fmt) + "\n"
         tty.die(msg, "In this context exactly *one* match is needed.")
 

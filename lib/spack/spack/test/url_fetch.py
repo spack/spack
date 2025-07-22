@@ -1,28 +1,27 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
 import filecmp
 import os
+import pathlib
 import sys
 import urllib.error
 
 import pytest
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import is_exe, working_dir
-
+import spack.concretize
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
+import spack.llnl.util.tty as tty
 import spack.url
 import spack.util.crypto as crypto
 import spack.util.executable
 import spack.util.web as web_util
 import spack.version
-from spack.spec import Spec
+from spack.llnl.util.filesystem import is_exe, working_dir
 from spack.stage import Stage
 from spack.util.executable import which
 
@@ -78,7 +77,7 @@ def pkg_factory():
 
 
 @pytest.mark.parametrize("method", ["curl", "urllib"])
-def test_urlfetchstrategy_bad_url(tmp_path, mutable_config, method):
+def test_urlfetchstrategy_bad_url(tmp_path: pathlib.Path, mutable_config, method):
     """Ensure fetch with bad URL fails as expected."""
     mutable_config.set("config:url_fetch_method", method)
     fetcher = fs.URLFetchStrategy(url=(tmp_path / "does-not-exist").as_uri())
@@ -98,7 +97,7 @@ def test_urlfetchstrategy_bad_url(tmp_path, mutable_config, method):
         assert isinstance(exception.reason, FileNotFoundError)
 
 
-def test_fetch_options(tmp_path, mock_archive):
+def test_fetch_options(tmp_path: pathlib.Path, mock_archive):
     with spack.config.override("config:url_fetch_method", "curl"):
         fetcher = fs.URLFetchStrategy(
             url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
@@ -107,11 +106,33 @@ def test_fetch_options(tmp_path, mock_archive):
         with Stage(fetcher, path=str(tmp_path)):
             assert fetcher.archive_file is None
             fetcher.fetch()
-            assert filecmp.cmp(fetcher.archive_file, mock_archive.archive_file)
+            archive_file = fetcher.archive_file
+            assert archive_file is not None
+            assert filecmp.cmp(archive_file, mock_archive.archive_file)
+
+
+def test_fetch_curl_options(tmp_path: pathlib.Path, mock_archive, monkeypatch):
+    with spack.config.override("config:url_fetch_method", "curl -k -q"):
+        fetcher = fs.URLFetchStrategy(
+            url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
+        )
+
+        def check_args(*args, **kwargs):
+            # Raise StopIteration to avoid running the rest of the fetch method
+            # args[0] is `which curl`, next two are our config options
+            assert args[1:3] == ("-k", "-q")
+            raise StopIteration
+
+        monkeypatch.setattr(type(fetcher.curl), "__call__", check_args)
+
+        with Stage(fetcher, path=str(tmp_path)):
+            assert fetcher.archive_file is None
+            with pytest.raises(StopIteration):
+                fetcher.fetch()
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_archive_file_errors(tmp_path, mutable_config, mock_archive, _fetch_method):
+def test_archive_file_errors(tmp_path: pathlib.Path, mutable_config, mock_archive, _fetch_method):
     """Ensure FetchStrategy commands may only be used as intended"""
     with spack.config.override("config:url_fetch_method", _fetch_method):
         fetcher = fs.URLFetchStrategy(url=mock_archive.url)
@@ -126,7 +147,9 @@ def test_archive_file_errors(tmp_path, mutable_config, mock_archive, _fetch_meth
             stage.fetch()
             with pytest.raises(fs.NoDigestError):
                 fetcher.check()
-            assert filecmp.cmp(fetcher.archive_file, mock_archive.archive_file)
+            archive_file = fetcher.archive_file
+            assert archive_file is not None
+            assert filecmp.cmp(archive_file, mock_archive.archive_file)
 
 
 files = [(".tar.gz", "z"), (".tgz", "z")]
@@ -168,7 +191,7 @@ def test_fetch(
             assert os.path.exists("configure")
             assert is_exe("configure")
 
-            with open("configure") as f:
+            with open("configure", encoding="utf-8") as f:
                 contents = f.read()
             assert contents.startswith("#!/bin/sh")
             assert "echo Building..." in contents
@@ -193,7 +216,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
     have checksums in the package.
     """
     with spack.config.override("config:url_fetch_method", _fetch_method):
-        s = Spec(spec).concretized()
+        s = spack.concretize.concretize_one(spec)
         fetch_strategy = fs.from_list_url(s.package)
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == url
@@ -219,7 +242,7 @@ def test_new_version_from_list_url(
 ):
     """Test non-specific URLs from the url-list-test package."""
     with spack.config.override("config:url_fetch_method", _fetch_method):
-        s = Spec(f"url-list-test @{requested_version}").concretized()
+        s = spack.concretize.concretize_one(f"url-list-test @{requested_version}")
         fetch_strategy = fs.from_list_url(s.package)
 
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
@@ -233,7 +256,7 @@ def test_new_version_from_list_url(
 
 def test_nosource_from_list_url(mock_packages, config):
     """This test confirms BundlePackages do not have list url."""
-    s = Spec("nosource").concretized()
+    s = spack.concretize.concretize_one("nosource")
     fetch_strategy = fs.from_list_url(s.package)
     assert fetch_strategy is None
 
@@ -251,13 +274,13 @@ def test_unknown_hash(checksum_type):
 
 
 @pytest.mark.skipif(which("curl") is None, reason="Urllib does not have built-in status bar")
-def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
+def test_url_with_status_bar(tmp_path: pathlib.Path, mock_archive, monkeypatch, capfd):
     """Ensure fetch with status bar option succeeds."""
 
     def is_true():
         return True
 
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
 
     monkeypatch.setattr(sys.stdout, "isatty", is_true)
     monkeypatch.setattr(tty, "msg_enabled", is_true)
@@ -272,14 +295,16 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_url_extra_fetch(tmp_path, mutable_config, mock_archive, _fetch_method):
+def test_url_extra_fetch(tmp_path: pathlib.Path, mutable_config, mock_archive, _fetch_method):
     """Ensure a fetch after downloading is effectively a no-op."""
     mutable_config.set("config:url_fetch_method", _fetch_method)
     fetcher = fs.URLFetchStrategy(url=mock_archive.url)
     with Stage(fetcher, path=str(tmp_path)) as stage:
         assert fetcher.archive_file is None
         stage.fetch()
-        assert filecmp.cmp(fetcher.archive_file, mock_archive.archive_file)
+        archive_file = fetcher.archive_file
+        assert archive_file is not None
+        assert filecmp.cmp(archive_file, mock_archive.archive_file)
         fetcher.fetch()
 
 
@@ -316,7 +341,7 @@ def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method
 
 
 @pytest.mark.regression("19673")
-def test_missing_curl(tmp_path, missing_curl, mutable_config, monkeypatch):
+def test_missing_curl(tmp_path: pathlib.Path, missing_curl, mutable_config, monkeypatch):
     """Ensure a fetch involving missing curl package reports the error."""
     mutable_config.set("config:url_fetch_method", "curl")
     fetcher = fs.URLFetchStrategy(url="http://example.com/file.tar.gz")
@@ -355,21 +380,6 @@ def test_url_missing_curl(mutable_config, missing_curl, monkeypatch):
         web_util.url_exists("https://example.com/")
 
 
-def test_url_fetch_text_urllib_bad_returncode(mutable_config, monkeypatch):
-    class response:
-        def getcode(self):
-            return 404
-
-    def _read_from_url(*args, **kwargs):
-        return None, None, response()
-
-    monkeypatch.setattr(web_util, "read_from_url", _read_from_url)
-    mutable_config.set("config:url_fetch_method", "urllib")
-
-    with pytest.raises(spack.error.FetchError, match="failed with error code"):
-        web_util.fetch_url_text("https://example.com/")
-
-
 def test_url_fetch_text_urllib_web_error(mutable_config, monkeypatch):
     def _raise_web_error(*args, **kwargs):
         raise web_util.SpackWebError("bad url")
@@ -377,5 +387,5 @@ def test_url_fetch_text_urllib_web_error(mutable_config, monkeypatch):
     monkeypatch.setattr(web_util, "read_from_url", _raise_web_error)
     mutable_config.set("config:url_fetch_method", "urllib")
 
-    with pytest.raises(spack.error.FetchError, match="fetch failed to verify"):
+    with pytest.raises(spack.error.FetchError, match="fetch failed"):
         web_util.fetch_url_text("https://example.com/")

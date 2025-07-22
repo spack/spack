@@ -1,100 +1,93 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 import platform
 import re
-import sys
-from datetime import datetime
-from glob import glob
-
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
+from typing import Optional
 
 import spack
-import spack.paths
+import spack.config
 import spack.platforms
+import spack.repo
 import spack.spec
-import spack.store
 import spack.util.git
-from spack.util.executable import which
 
 description = "debugging commands for troubleshooting Spack"
 section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="debug_command")
-    sp.add_parser("create-db-tarball", help="create a tarball of Spack's installation metadata")
     sp.add_parser("report", help="print information useful for bug reports")
 
 
-def _debug_tarball_suffix():
-    now = datetime.now()
-    suffix = now.strftime("%Y-%m-%d-%H%M%S")
+def _format_repo_info(source, commit):
+    if source.endswith(".git"):
+        return f"{source[:-4]}/commit/{commit}"
 
-    git = spack.util.git.git()
+    return f"{source} ({commit[:7]})"
+
+
+def _get_builtin_repo_info() -> Optional[str]:
+    """Get the builtin package repository git commit sha."""
+    # Get builtin from config
+    descriptors = spack.repo.RepoDescriptors.from_config(
+        spack.repo.package_repository_lock(), spack.config.CONFIG
+    )
+    if "builtin" not in descriptors:
+        return None
+
+    builtin = descriptors["builtin"]
+
+    source = None
+    if isinstance(builtin, spack.repo.RemoteRepoDescriptor) and builtin.fetched():
+        destination = builtin.destination
+        source = builtin.repository
+    elif isinstance(builtin, spack.repo.LocalRepoDescriptor):
+        destination = builtin.path
+        source = builtin.path
+    else:
+        return None  # no git info
+
+    git = spack.util.git.git(required=False)
     if not git:
-        return "nobranch-nogit-%s" % suffix
+        return None
 
-    with working_dir(spack.paths.prefix):
-        if not os.path.isdir(".git"):
-            return "nobranch.nogit.%s" % suffix
+    rev = git(
+        "-C", destination, "rev-parse", "HEAD", output=str, error=os.devnull, fail_on_error=False
+    )
+    if git.returncode != 0:
+        return None
 
-        # Get symbolic branch name and strip any special chars (mainly '/')
-        symbolic = git("rev-parse", "--abbrev-ref", "--short", "HEAD", output=str).strip()
-        symbolic = re.sub(r"[^\w.-]", "-", symbolic)
-
-        # Get the commit hash too.
-        commit = git("rev-parse", "--short", "HEAD", output=str).strip()
-
-        if symbolic == commit:
-            return "nobranch.%s.%s" % (commit, suffix)
-        else:
-            return "%s.%s.%s" % (symbolic, commit, suffix)
+    match = re.match(r"[a-f\d]{7,}$", rev)
+    return _format_repo_info(source, match.group(0)) if match else None
 
 
-def create_db_tarball(args):
-    tar = which("tar")
-    tarball_name = "spack-db.%s.tar.gz" % _debug_tarball_suffix()
-    tarball_path = os.path.abspath(tarball_name)
+def _get_spack_repo_info() -> str:
+    """Get the spack package repository git info."""
+    commit = spack.get_spack_commit()
+    if not commit:
+        return spack.spack_version
 
-    base = os.path.basename(str(spack.store.STORE.root))
-    transform_args = []
-    # Currently --transform and -s are not supported by Windows native tar
-    if "GNU" in tar("--version", output=str):
-        transform_args = ["--transform", "s/^%s/%s/" % (base, tarball_name)]
-    elif sys.platform != "win32":
-        transform_args = ["-s", "/^%s/%s/" % (base, tarball_name)]
-
-    wd = os.path.dirname(str(spack.store.STORE.root))
-    with working_dir(wd):
-        files = [spack.store.STORE.db._index_path]
-        files += glob("%s/*/*/*/.spack/spec.json" % base)
-        files += glob("%s/*/*/*/.spack/spec.yaml" % base)
-        files = [os.path.relpath(f) for f in files]
-
-        args = ["-czf", tarball_path]
-        args += transform_args
-        args += files
-        tar(*args)
-
-    tty.msg("Created %s" % tarball_name)
+    repo_info = _format_repo_info("https://github.com/spack/spack.git", commit)
+    return f"{spack.spack_version} ({repo_info})"
 
 
 def report(args):
     host_platform = spack.platforms.host()
-    host_os = host_platform.operating_system("frontend")
-    host_target = host_platform.target("frontend")
+    host_os = host_platform.default_operating_system()
+    host_target = host_platform.default_target()
     architecture = spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
-    print("* **Spack:**", spack.get_version())
+    print("* **Spack:**", _get_spack_repo_info())
+    print("* **Builtin repo:**", _get_builtin_repo_info() or "not available")
     print("* **Python:**", platform.python_version())
     print("* **Platform:**", architecture)
 
 
 def debug(parser, args):
-    action = {"create-db-tarball": create_db_tarball, "report": report}
-    action[args.debug_command](args)
+    if args.debug_command == "report":
+        report(args)

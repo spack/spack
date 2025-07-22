@@ -1,19 +1,18 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import urllib.parse
 from collections import defaultdict
 
-import llnl.util.tty.color as color
-from llnl.util import tty
-
 import spack.fetch_strategy as fs
+import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.spec
 import spack.url
 import spack.util.crypto as crypto
+from spack.llnl.util import tty
 from spack.url import (
     UndetectableNameError,
     UndetectableVersionError,
@@ -33,7 +32,7 @@ section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="subcommand")
 
     # Parse

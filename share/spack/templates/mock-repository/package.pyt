@@ -1,3 +1,6 @@
+from ...build_systems.test_build_system import Package
+from spack.package import *
+
 class {{ cls_name }}(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/root-1.0.tar.gz"

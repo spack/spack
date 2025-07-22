@@ -1,14 +1,13 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import io
 import sys
 
-import llnl.util.tty.colify as colify
-
 import spack.cmd
+import spack.llnl.util.tty.colify as colify
 import spack.repo
 
 description = "list packages that provide a particular virtual package"
@@ -16,7 +15,7 @@ section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.epilog = "If called without argument returns the list of all valid virtual packages"
     subparser.add_argument(
         "virtual_package", nargs="*", help="find packages that provide this virtual package"
@@ -42,7 +41,11 @@ def providers(parser, args):
     specs = spack.cmd.parse_specs(args.virtual_package)
 
     # Check prerequisites
-    non_virtual = [str(s) for s in specs if not s.virtual or s.name not in valid_virtuals]
+    non_virtual = [
+        str(s)
+        for s in specs
+        if not spack.repo.PATH.is_virtual(s.name) or s.name not in valid_virtuals
+    ]
     if non_virtual:
         msg = "non-virtual specs cannot be part of the query "
         msg += "[{0}]\n".format(", ".join(non_virtual))

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pytest
@@ -29,8 +28,7 @@ import spack.config
         (["invalid-selfhosted-gitlab-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a stand-alone test method in build-time callbacks
         (["fail-test-audit"], ["PKG-PROPERTIES"]),
-        # This package implements and uses several deprecated stand-alone
-        # test methods
+        # This package implements and uses several deprecated stand-alone test methods
         (["fail-test-audit-deprecated"], ["PKG-DEPRECATED-ATTRIBUTES"]),
         # This package has stand-alone test methods without non-trivial docstrings
         (["fail-test-audit-docstring"], ["PKG-PROPERTIES"]),
@@ -94,6 +92,7 @@ _double_compiler_definition = [
 ]
 
 
+# TODO/RepoSplit: Should this not rely on mock packages post split?
 @pytest.mark.parametrize(
     "config_section,data,failing_check",
     [
@@ -114,7 +113,7 @@ _double_compiler_definition = [
         ),
     ],
 )
-def test_config_audits(config_section, data, failing_check):
+def test_config_audits(config_section, data, failing_check, mock_packages):
     with spack.config.override(config_section, data):
         reports = spack.audit.run_group("configs")
         assert any((check == failing_check) and errors for check, errors in reports)

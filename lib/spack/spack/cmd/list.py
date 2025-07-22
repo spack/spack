@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,13 +10,14 @@ import os
 import re
 import sys
 from html import escape
-
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
+from typing import Type
 
 import spack.deptypes as dt
+import spack.llnl.util.tty as tty
+import spack.package_base
 import spack.repo
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify
 from spack.version import VersionList
 
 description = "list and search available packages"
@@ -34,7 +34,7 @@ def formatter(func):
     return func
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "filter",
         nargs=argparse.REMAINDER,
@@ -140,10 +140,10 @@ def name_only(pkgs, out):
         tty.msg("%d packages" % len(pkgs))
 
 
-def github_url(pkg):
+def github_url(pkg: Type[spack.package_base.PackageBase]) -> str:
     """Link to a package file on github."""
-    url = "https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/{0}/package.py"
-    return url.format(pkg.name)
+    mod_path = pkg.__module__.replace(".", "/")
+    return f"https://github.com/spack/spack/blob/develop/var/spack/{mod_path}.py"
 
 
 def rows_for_ncols(elts, ncols):
@@ -322,7 +322,8 @@ def list(parser, args):
     repos = [spack.repo.PATH]
     if args.repos:
         repos = [spack.repo.PATH.get_repo(name) for name in args.repos]
-    pkgs = set().union(*[set(repo.all_package_names(args.virtuals)) for repo in repos])
+
+    pkgs = {name for repo in repos for name in repo.all_package_names(args.virtuals)}
 
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
@@ -340,7 +341,7 @@ def list(parser, args):
                 return
 
         tty.msg("Updating file: %s" % args.update)
-        with open(args.update, "w") as f:
+        with open(args.update, "w", encoding="utf-8") as f:
             formatter(sorted_packages, f)
 
     elif args.count:

@@ -1,9 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -23,7 +23,7 @@ from spack.util.environment import (
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data")
 
 
-def test_inspect_path(tmpdir):
+def test_inspect_path(tmp_path: pathlib.Path):
     inspections = {
         "bin": ["PATH"],
         "man": ["MANPATH"],
@@ -38,11 +38,11 @@ def test_inspect_path(tmpdir):
         "": ["CMAKE_PREFIX_PATH"],
     }
 
-    tmpdir.mkdir("bin")
-    tmpdir.mkdir("lib")
-    tmpdir.mkdir("include")
+    (tmp_path / "bin").mkdir()
+    (tmp_path / "lib").mkdir()
+    (tmp_path / "include").mkdir()
 
-    env = environment.inspect_path(str(tmpdir), inspections)
+    env = environment.inspect_path(str(tmp_path), inspections)
     names = [item.name for item in env]
     assert "PATH" in names
     assert "LIBRARY_PATH" in names

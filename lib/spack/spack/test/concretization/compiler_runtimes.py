@@ -1,14 +1,15 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
-import archspec.cpu
+import spack.vendor.archspec.cpu
 
+import spack.concretize
 import spack.config
 import spack.paths
 import spack.repo
@@ -17,11 +18,9 @@ import spack.spec
 from spack.environment.environment import ViewDescriptor
 from spack.version import Version
 
-pytestmark = [pytest.mark.usefixtures("enable_runtimes")]
-
 
 def _concretize_with_reuse(*, root_str, reused_str):
-    reused_spec = spack.spec.Spec(reused_str).concretized()
+    reused_spec = spack.concretize.concretize_one(reused_str)
     setup = spack.solver.asp.SpackSolverSetup(tests=False)
     driver = spack.solver.asp.PyclingoDriver()
     result, _, _ = driver.solve(setup, [spack.spec.Spec(f"{root_str}")], reuse=[reused_spec])
@@ -31,21 +30,13 @@ def _concretize_with_reuse(*, root_str, reused_str):
 
 @pytest.fixture
 def runtime_repo(mutable_config):
-    repo = os.path.join(spack.paths.repos_path, "compiler_runtime.test")
+    repo = os.path.join(spack.paths.test_repos_path, "spack_repo", "compiler_runtime_test")
     with spack.repo.use_repositories(repo) as mock_repo:
         yield mock_repo
 
 
-@pytest.fixture
-def enable_runtimes():
-    original = spack.solver.asp.WITH_RUNTIME
-    spack.solver.asp.WITH_RUNTIME = True
-    yield
-    spack.solver.asp.WITH_RUNTIME = original
-
-
 def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo):
-    s = spack.spec.Spec("pkg-a%gcc@10.2.1 ^pkg-b%gcc@9.4.0").concretized()
+    s = spack.concretize.concretize_one("pkg-a%gcc@10.2.1 ^pkg-b%gcc@9.4.0")
     a, b = s["pkg-a"], s["pkg-b"]
 
     # Both a and b should depend on the same gcc-runtime directly
@@ -56,13 +47,13 @@ def test_correct_gcc_runtime_is_injected_as_dependency(runtime_repo):
 
 
 @pytest.mark.regression("41972")
-def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_path):
+def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_path: pathlib.Path):
     """Tests that external nodes don't have runtime dependencies."""
 
     packages_yaml = {"pkg-b": {"externals": [{"spec": "pkg-b@1.0", "prefix": f"{str(tmp_path)}"}]}}
     spack.config.set("packages", packages_yaml)
 
-    s = spack.spec.Spec("pkg-a%gcc@10.2.1").concretized()
+    s = spack.concretize.concretize_one("pkg-a%gcc@10.2.1")
 
     a, b = s["pkg-a"], s["pkg-b"]
 
@@ -92,23 +83,25 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
         # Same as before, but tests that we can reuse from a more generic target
         pytest.param(
             "pkg-a%gcc@9.4.0",
-            "pkg-b%gcc@10.2.1 target=x86_64",
+            "pkg-b target=x86_64 %gcc@10.2.1",
             {"pkg-a": "gcc-runtime@9.4.0", "pkg-b": "gcc-runtime@9.4.0"},
             1,
             marks=pytest.mark.skipif(
-                str(archspec.cpu.host().family) != "x86_64", reason="test data is x86_64 specific"
+                str(spack.vendor.archspec.cpu.host().family) != "x86_64",
+                reason="test data is x86_64 specific",
             ),
         ),
         pytest.param(
             "pkg-a%gcc@10.2.1",
-            "pkg-b%gcc@9.4.0 target=x86_64",
+            "pkg-b target=x86_64 %gcc@9.4.0",
             {
-                "pkg-a": "gcc-runtime@10.2.1 target=x86_64",
+                "pkg-a": "gcc-runtime@10.2.1 target=core2",
                 "pkg-b": "gcc-runtime@9.4.0 target=x86_64",
             },
             2,
             marks=pytest.mark.skipif(
-                str(archspec.cpu.host().family) != "x86_64", reason="test data is x86_64 specific"
+                str(spack.vendor.archspec.cpu.host().family) != "x86_64",
+                reason="test data is x86_64 specific",
             ),
         ),
     ],
@@ -123,7 +116,7 @@ def test_reusing_specs_with_gcc_runtime(root_str, reused_str, expected, nruntime
     root, reused_spec = _concretize_with_reuse(root_str=root_str, reused_str=reused_str)
 
     runtime_a = root.dependencies("gcc-runtime")[0]
-    assert runtime_a.satisfies(expected["pkg-a"])
+    assert runtime_a.satisfies(expected["pkg-a"]), runtime_a.tree()
     runtime_b = root["pkg-b"].dependencies("gcc-runtime")[0]
     assert runtime_b.satisfies(expected["pkg-b"])
 
@@ -140,7 +133,7 @@ def test_reusing_specs_with_gcc_runtime(root_str, reused_str, expected, nruntime
     ],
 )
 def test_views_can_handle_duplicate_runtime_nodes(
-    root_str, reused_str, expected, not_expected, runtime_repo, tmp_path, monkeypatch
+    root_str, reused_str, expected, not_expected, runtime_repo, tmp_path: pathlib.Path, monkeypatch
 ):
     """Tests that an environment is able to select the latest version of a runtime node to be
     linked in a view, in case more than one compatible version is in the DAG.
@@ -159,3 +152,27 @@ def test_views_can_handle_duplicate_runtime_nodes(
 
     for x in not_expected:
         assert all(not node.satisfies(x) for node in candidate_specs)
+
+
+def test_runtimes_can_be_concretized_as_standalone(runtime_repo):
+    """Tests that we can concretize a runtime as a standalone"""
+    gcc_runtime = spack.concretize.concretize_one("gcc-runtime")
+
+    deps = gcc_runtime.dependencies()
+    assert len(deps) == 1
+    gcc = deps[0]
+    assert gcc_runtime.version == gcc.version
+
+
+def test_runtimes_are_not_reused_if_compiler_not_used(runtime_repo):
+    """Tests that, if we can reuse specs with a more recent runtime version than the compiler we
+    asked for, we will not end-up with a DAG using the recent runtime, and the old compiler.
+    """
+    root, reused = _concretize_with_reuse(root_str="pkg-a %gcc@9", reused_str="pkg-a %gcc@10")
+
+    assert "gcc-runtime" in root
+    gcc_runtime, gcc = root["gcc-runtime"], root["gcc"]
+    assert gcc_runtime.satisfies("@9") and not gcc_runtime.satisfies("@10")
+    assert gcc.satisfies("@9") and not gcc.satisfies("@10")
+    # Same gcc used for both languages
+    assert root["c"] == root["cxx"]
