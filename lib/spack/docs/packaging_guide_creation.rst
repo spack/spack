@@ -979,7 +979,7 @@ Commits
   .. hint::
 
      **Avoid using the commit hash as the version.**
-     It is not recommended to use the commit hash as the version itself, since it won't sort properly for version ordering purposes.
+     It is not recommended to use the commit hash as the version itself, since it won't sort properly for :ref:`version ordering <version-comparison>` purposes.
 
 
 .. _git-submodules:
