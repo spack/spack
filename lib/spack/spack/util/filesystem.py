@@ -46,9 +46,11 @@ from typing import (
 
 from spack.vendor.typing_extensions import Literal
 
+import spack.store
 from spack.util import lang, tty
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable, ProcessError, which
+from spack.util.filesystem import edit_in_place_through_temporary_file
 from spack.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 
@@ -3433,6 +3435,7 @@ def relocate_win_rpath(package):
             if not (entry.is_symlink() or entry.is_junction()) and entry.is_dir():
                 dirs_to_relocate.append(entry.path)
     ev.set_path("SPACK_RELOCATE_PATH", dirs_to_relocate)
+    ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.root)
     lib_map = {}
     for lib in glob.glob(os.path.join(package.spec.prefix, "**\\*.lib"), recursive=True):
         if verify_import_lib(lib, package=package):
