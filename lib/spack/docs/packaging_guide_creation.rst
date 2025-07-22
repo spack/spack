@@ -1026,7 +1026,7 @@ Sparse-Checkout
 
   .. note::
 
-     Paths to directories result in all of their contents -- files and subdirectories -- being cloned.
+     Paths to directories result in the cloning of *all* of their contents, including the contents of their subdirectories.
 
   The ``git_sparse_paths`` attribute needs to provide a list of relative paths within the repository.
   If using a property -- a function decorated with ``@property`` -- or an argument that is a callable function, the function needs to return a list of paths.
