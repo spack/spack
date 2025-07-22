@@ -2019,31 +2019,63 @@ This means that language dependencies translate to one or more compiler packages
 
 .. _packaging_conflicts:
 
---------------------------
-Conflicts and requirements
---------------------------
+---------
+Conflicts
+---------
 
-Sometimes packages have known bugs, or limitations, that would prevent them from building e.g. against other dependencies or with certain compilers.
-Spack makes it possible to express such constraints with the ``conflicts`` directive.
+Sometimes packages have known bugs, or limitations, that would prevent them from concretizing or building usable software.
+Spack makes it possible to express such constraints with the ``conflicts`` directive, which optionally takes ``when`` and ``msg`` arguments.
+
+The ``when`` argument is used to specify the spec conditions under which the conflict applies.
+The conditions can include constraints on the compiler, version, variants, architecture, dependencies, etc. that are known to cause problems building usable software.
+
+The ``msg`` argument allows you to provide a custom error message that Spack prints when the spec to be installed matches the constraints provided in ``when``.
 
 Adding the following to a package:
 
 .. code-block:: python
 
     conflicts(
-        "%intel-oneapi-compilers",
+        "%intel-oneapi-compilers@:2024",
          when="@:1.2",
-         msg="known bug with Intel oneAPI compilers"
+         msg="known bug when using Intel oneAPI compilers through v2024"
     )
 
-we express the fact that the current package *cannot be built* with the Intel oneAPI compilers up to version ``1.2``.
+expresses that the current package *cannot be built* with the Intel oneAPI compilers before version ``2025`` when trying to install versions of the package up to version ``1.2``.
 
-The ``when`` argument can be omitted, in which case the conflict will always be active.
+A conflict with the ``when`` argument omitted means the conflict is always active for specs matching the first argument.
+For example,
 
-An optional custom error message can be added via the ``msg=`` parameter, and may be printed by Spack in case the conflict cannot be avoided and leads to a concretization error.
+.. code-block:: python
 
-Sometimes, packages allow only very specific choices and they can't use the rest.
-In those cases the ``requires`` directive can be used:
+   conflicts("+cuda+rocm", msg="Cannot build with both cuda and rocm enabled")
+
+means the package cannot be installed when both variants are enabled.
+
+You can also indicate a conflict based on where the build is being performed.
+For example,
+
+.. code-block:: python
+
+   for os in ["ventura", "monterey", "bigsur"]:
+       conflicts(f"platform=darwin os={os}", msg=f"{os} is not supported")
+
+means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur.
+
+.. _packaging_requires:
+
+------------
+Requirements
+------------
+
+Sometimes packages can be built only with specific option choices.
+In those cases the ``requires`` directive can be used.
+It supports the same ``when`` and ``msg`` arguments as ``conflicts`` (:ref:`packaging_conflicts`).
+It also allows for more complex requirements involving more than a single spec through the ability to specify multiple specs before keyword arguments.
+A ``policy`` keyword argument is used to determine how the multiple specs apply, supporting values that are either ``any_of`` or ``one_of`` (default) with the same semantics described in :ref:`package-requirements`.
+
+Suppose a package can only be built with Apple Clang on Darwin.
+This requirement would be specified as:
 
 .. code-block:: python
 
@@ -2053,22 +2085,26 @@ In those cases the ``requires`` directive can be used:
         msg="builds only with Apple Clang compiler on Darwin"
     )
 
-In the example above, our package can only be built with Apple Clang on Darwin.
-The ``requires`` directive is effectively the opposite of the ``conflicts`` directive, and takes the same optional ``when`` and ``msg`` arguments.
+Similarly, suppose a package only builds for the ``x86_64`` target:
 
-If a package needs to express more complex requirements, involving more than a single spec, that can also be done using the ``requires`` directive.
-To express that a package can be built either with GCC or with Clang we can write:
+.. code-block:: python
+
+    requires("target=x86_64:", msg="package is only available on x86_64")
+
+Or the package must be built with a GCC or Clang that supports C++ 20, which you could ensure by adding the following ``requires`` directive:
 
 .. code-block:: python
 
     requires(
-        "%gcc", "%clang",
+        "%gcc@10:", "%clang@16:",
         policy="one_of"
-        msg="builds only with GCC or Clang"
+        msg="builds only with GCC or Clang that support C++ 20"
     )
 
-When using multiple specs in a ``requires`` directive, it is advised to set the ``policy=`` argument explicitly.
-That argument can take either the value ``any_of`` or the value ``one_of``, and the semantic is the same as for :ref:`package-requirements`.
+.. hint::
+
+   We recommend that the ``policy`` argument be explicitly specified when multiple specs are used with the directive.
+
 
 .. _patching:
 
