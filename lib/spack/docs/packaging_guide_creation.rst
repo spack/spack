@@ -954,7 +954,7 @@ Tags
 
     This download method is **untrusted**, and is **not recommended**.
 
-    If you must use a ``tag``, it is recommended to combine it with the ``commit`` option (see `below <git-commits>`).
+    If you must use a ``tag``, it is recommended to combine it with the ``commit`` option (see :ref:`below <git-commits>`).
 
 
 .. _git-commits:
