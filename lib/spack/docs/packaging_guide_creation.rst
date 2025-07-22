@@ -1088,7 +1088,7 @@ checksum.
            url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f",
        )
 
-Alternatively, you could provide the GitHub ``url`` for one version as a property and Spack will extrapolate the URL for other versions as described in :ref:`Versions and URLs <versions-and-urls>`.
+Alternatively, you could provide the GitHub ``url`` for one version as a property and Spack will extrapolate the URL for other versions as described in :ref:`Versions and URLs <versions-and-fetching>`.
 
 
 .. _hg-fetch:
