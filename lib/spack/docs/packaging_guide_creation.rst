@@ -1022,7 +1022,7 @@ Sparse-Checkout
 
      This leverages a newer feature in git that requires version ``2.25.0`` or greater.
 
-     If ``git_sparse_paths`` is supplied to a git version that is too old then a warning will be issued before using the standard cloning operations.
+     If ``git_sparse_paths`` is supplied to a git version that is too old then a warning will be issued before standard cloning operations are performed.
 
   .. note::
 
