@@ -654,6 +654,9 @@ For that, Spack goes a step further and defines a mixin class that takes care of
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/autoconf/package.py
    :lines: 9-18
 
+
+.. _preferred_versions:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Preferring versions over others
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -669,6 +672,7 @@ In this case, you can mark an older version as preferred using the ``preferred=T
        version("1.2.3", sha256="...", preferred=True)
 
 See the section on :ref:`version ordering <version-comparison>` for more details and exceptions on how the latest version is computed.
+
 
 .. _deprecate:
 
@@ -720,14 +724,15 @@ This gives users a chance to complain about the deprecation in case the old vers
 If you require a deprecated version of a package, simply submit a PR to remove ``deprecated=True`` from the package.
 However, you may be asked to help maintain this version of the package if the current maintainers are unwilling to support this older version.
 
+
 .. _version-comparison:
 
 ^^^^^^^^^^^^^^^^
 Version ordering
 ^^^^^^^^^^^^^^^^
 
-Without version constraints, preferences and deprecations, Spack will always pick *the latest* version as defined in the package.
-What latest means is determined by the version comparison rules defined in Spack, and not the order in which versions are listed in the package file.
+Without :ref:`version constraints <version_constraints>`), :ref:`preferences <preferred_versions>` and :ref:`deprecations <deprecate>`, Spack will always pick *the latest* version as defined in the package.
+What latest means is determined by the version comparison rules defined in Spack, *not* the order in which versions are listed in the package file.
 
 Spack imposes a generic total ordering on the set of versions, independently from the package they are associated with.
 
@@ -777,28 +782,41 @@ The logic behind this sort order is two-fold:
 #. The most-recent development version of a package will usually be newer than any released numeric versions.
    This allows the ``@develop`` version to satisfy dependencies like ``depends_on(abc, when="@x.y.z:")``
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Specifying versions in other directives
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Many Spack directives accept versions speciers, for example
+.. _version_constraints:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Specifying version constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Many Spack directives accept version constraints to restrict the spec to a given version using the ``@=<version>`` syntax, or a range using the ``@<specifier>`` syntax.
+Refer to :ref:`version-specifier` for the complete syntax.
+Version range constraints are useful for :ref:`version_compatibility`.
+
+For example,
 
 .. code-block:: python
 
-   depends_on("python@3")
-   conflicts("foo@1.2.3:", when="@:4.5")
+   depends_on("foo")
+   depends_on("python@=3.10.1")
 
-When specifying versions in Spack using the ``@<specifier>`` syntax, you can use either ranges or specific versions.
-It is generally recommended to use ranges instead of specific versions when packaging to avoid overly constraining dependencies, patches, and conflicts.
+   conflicts("^foo@1.2.3:", when="@:4.5")
 
-For example, ``depends_on("python@3")`` denotes a range of versions, allowing Spack to pick any ``3.x.y`` version for Python, while ``depends_on("python@=3.10.1")`` restricts it to a specific version.
+illustrates a specific version *and* two version range constraints.
 
-Specific ``@=`` versions should only be used in exceptional cases, such as when the package has a versioning scheme that omits the zero in the first patch release: ``3.1``, ``3.1.1``, ``3.1.2``.
-In this example, the specifier ``@=3.1`` is the correct way to select only the ``3.1`` version, whereas ``@3.1`` would match all those versions.
+Specifically, the package depends on ``python`` *at* version ``3.10.1``.
+It also has a conflict with one of its dependencies, package ``foo``, when that
+package is at version ``1.2.3`` *or newer*, triggered for builds of the package at any version *up to and including* version ``4.5``.
 
-Ranges are preferred even if they would only match a single version defined in the package.
-This is because users can define custom versions in ``packages.yaml`` that typically include a custom suffix.
-For example, if the package defines the version ``1.2.3``, the specifier ``@1.2.3`` will also match a user-defined version ``1.2.3-custom``.
+Ranges are **preferred** even if they would only match a single version currently defined in the package.
+Doing so is useful since using ranges can avoid overly constraining dependencies, patches, and conflicts.
+Furthermore, users can define custom versions in :ref:`packages-config` that typically include a custom suffix.
+For example, if the package defines the version ``1.2.3``, we know from :ref:`version-comparison`, the specifier ``@1.2.3`` will also match a user-defined version ``1.2.3-custom``.
+
+.. warning::
+
+   Specific ``@=`` versions should only be used in exceptional cases, such as when the package has a versioning scheme that omits the zero in the first patch release, such as: ``3.1``, ``3.1.1``, ``3.1.2``.
+   In this example, the specifier ``@=3.1`` is the correct way to select only the ``3.1`` version, whereas ``@3.1`` would match all those versions.
 
 
 .. _vcs-fetch:
@@ -1569,6 +1587,8 @@ command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
 relationships between packages.
 
+.. _version_compatibility:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying backward and forward compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2064,7 +2084,7 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
 .. note::
 
    These examples illustrate a few of the types of constraints that can be specified.
-   Conflict and ``when`` specs can constrain the compiler, version, variants, architecture, dependencies, versions and variants of dependencies, etcetera.
+   Conflict and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependencies>`, etcetera.
 
 
 .. _packaging_requires:
@@ -2114,7 +2134,7 @@ Or the package must be built with a GCC or Clang that supports C++ 20, which you
 .. note::
 
    These examples show only a few of the constraints that can be specified.
-   Required and ``when`` specs can constrain the compiler, version, variants, architecture, dependencies, versions and variants of dependencies, etcetera.
+   Required and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependencies>`, etcetera.
 
 
 .. _patching:
