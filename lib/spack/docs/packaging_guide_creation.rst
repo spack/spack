@@ -969,7 +969,7 @@ Commits
 
   It may be useful to provide a saner version for commits like this, e.g., you might use the date as the version, as done in the first example above.
   Or, if you know the commit at which a release was cut, you can use the release version.
-  It is up to the package author to decide which approach makes the most sense.
+  It is up to the package author to decide which of these options makes the most sense.
 
   .. warning::
 
