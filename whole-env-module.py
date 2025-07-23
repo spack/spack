@@ -7,7 +7,7 @@ import spack.environment as ev
 import spack.environment.shell
 import spack.paths
 import spack.user_environment as uenv
-from spack.util.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications, PruneDuplicatePaths, DeprioritizeSystemPaths
 
 
 def main():
@@ -39,14 +39,6 @@ def generate_module(args):
         env_mods.extend(
             uenv.environment_modifications_for_specs(*list(view.get_all_specs()), view=view)
         )
-
-        # Note: you cannot encode PruneDuplicatePaths into a direct lmod action
-        # so instead, I run dedupe on the environment modifications.
-        # This would be incorrect if for example you had an action sequence like
-        # [x, undo(x), x]; you could sidestep that particular issue by reversing
-        # de-duping, and then re-reversing. Not sure if other effects might be
-        # more subtle
-        env_mods.env_modifications = list(dedupe(env_mods.env_modifications))
     else:
         active_env = ev.active_environment()
         if not active_env:
@@ -59,6 +51,21 @@ def generate_module(args):
             raise Exception(f"{active_env.name} does not have a default view")
 
         env_mods.extend(spack.environment.shell.activate(env=active_env, view=view_id))
+
+    not_expressable = [PruneDuplicatePaths, DeprioritizeSystemPaths]
+    filtered_mods = list()
+    for x in env_mods.env_modifications:
+        if any(isinstance(x, ne) for ne in not_expressable):
+            continue
+        filtered_mods.append(x)
+
+    # Note: you cannot encode PruneDuplicatePaths into a direct lmod action
+    # so instead, I run dedupe on the environment modifications.
+    # This would be incorrect if for example you had an action sequence like
+    # [x, undo(x), x]; you could sidestep that particular issue by reversing
+    # de-duping, and then re-reversing. Not sure if other effects might be
+    # more subtle
+    env_mods.env_modifications = list(dedupe(filtered_mods))
 
     context = {"environment_modifications": [(type(x).__name__, x) for x in env_mods]}
 
