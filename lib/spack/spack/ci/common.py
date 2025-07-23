@@ -486,7 +486,7 @@ class SpackCIConfig:
         """
 
         self.ci_config = ci_config
-        self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing"]
+        self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing", "test"]
 
         self.ir = {
             "jobs": {},
@@ -499,7 +499,7 @@ class SpackCIConfig:
 
         for name in self.named_jobs:
             # Skip the special named jobs
-            if name not in ["any", "build"]:
+            if name not in ["any", "build", "test"]:
                 jobs[name] = self.__init_job("")
 
     def __init_job(self, release_spec):
@@ -543,7 +543,7 @@ class SpackCIConfig:
         return jname
 
     def __apply_submapping(self, dest, spec, section):
-        """Apply submapping setion to the IR dict"""
+        """Apply submapping section to the IR dict"""
         matched = False
         only_first = section.get("match_behavior", "first") == "first"
 
@@ -551,11 +551,18 @@ class SpackCIConfig:
             attrs = cfg.InternalConfigScope._process_dict_keyname_overrides(match_attrs)
             for match_string in match_attrs["match"]:
                 if _spec_matches(spec, match_string):
+                    # TODO/TLD: how handle and tie test jobs to build jobs?
                     matched = True
                     if "build-job-remove" in match_attrs:
                         spack.config.remove_yaml(dest, attrs["build-job-remove"])
                     if "build-job" in match_attrs:
                         spack.schema.merge_yaml(dest, attrs["build-job"])
+
+                    if "test-job-remove" in match_attrs:
+                        spack.config.remove_yaml(dest, attrs["test-job-remove"])
+
+                    if "test-job" in match_attrs:
+                        spack.schema.merge_yaml(dest, attrs["test-job"])
                     break
             if matched and only_first:
                 break
@@ -576,6 +583,15 @@ class SpackCIConfig:
 
         # Implicit job defaults
         defaults = [
+            {
+                "test-job": {
+                    "script": [
+                        "cd {env_dir}",
+                        "spack env activate --without-view .",
+                        "spack ci test",
+                    ]
+                }
+            },
             {
                 "build-job": {
                     "script": [
@@ -628,13 +644,13 @@ class SpackCIConfig:
                     if do_merge:
                         dest = copy.copy(spack.schema.merge_yaml(dest, src[merge_job_name]))
 
-                if name == "build":
-                    # Apply attributes to all build jobs
+                if name in ["build", "test"]:
+                    # Apply attributes to all build and test jobs
                     for _, job in jobs.items():
                         if job["spec"]:
                             _apply_section(job["attributes"], section)
                 elif name == "any":
-                    # Apply section attributes too all jobs
+                    # Apply section attributes to all jobs
                     for _, job in jobs.items():
                         _apply_section(job["attributes"], section)
                 else:
