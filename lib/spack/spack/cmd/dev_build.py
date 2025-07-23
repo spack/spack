@@ -6,10 +6,8 @@ import argparse
 import os
 import sys
 
-import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments
-import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.llnl.util.tty as tty
@@ -141,10 +139,10 @@ def dev_build(self, args):
     spec.constrain(f'dev_path="{source_path}"')
     spec.concretize()
 
-        if spec.installed:
-            tty.error("Already installed in %s" % spec.prefix)
-            tty.msg("Uninstall or try adding a version suffix for this dev build.")
-            sys.exit(1)
+    if spec.installed:
+        tty.error("Already installed in %s" % spec.prefix)
+        tty.msg("Uninstall or try adding a version suffix for this dev build.")
+        sys.exit(1)
 
     # disable checksumming if requested
     if args.no_checksum:
