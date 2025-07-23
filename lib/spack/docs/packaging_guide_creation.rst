@@ -803,20 +803,19 @@ For example,
    conflicts("^foo@1.2.3:", when="@:4.5")
 
 illustrates a specific version *and* two version range constraints.
-
 Specifically, the package depends on ``python`` *at* version ``3.10.1``.
-It also has a conflict with one of its dependencies, package ``foo``, when that
-package is at version ``1.2.3`` *or newer*, triggered for builds of the package at any version *up to and including* version ``4.5``.
+It also has a conflict with one of its dependencies, package ``foo``, when that package is *at version ``1.2.3`` or newer*, triggered for builds of the package at *any version up to and including version ``4.5``*.
 
 Ranges are **preferred** even if they would only match a single version currently defined in the package.
-Doing so is useful since using ranges can avoid overly constraining dependencies, patches, and conflicts.
+Using ranges helps avoid overly constraining dependencies, patches, and conflicts.
+
 Furthermore, users can define custom versions in :ref:`packages-config` that typically include a custom suffix.
 For example, if the package defines the version ``1.2.3``, we know from :ref:`version-comparison`, the specifier ``@1.2.3`` will also match a user-defined version ``1.2.3-custom``.
 
 .. warning::
 
    Specific ``@=`` versions should only be used in exceptional cases, such as when the package has a versioning scheme that omits the zero in the first patch release, such as: ``3.1``, ``3.1.1``, ``3.1.2``.
-   In this example, the specifier ``@=3.1`` is the correct way to select only the ``3.1`` version, whereas ``@3.1`` would match all those versions.
+   In this example, the specifier ``@=3.1`` is the correct way to select only the ``3.1`` version, whereas ``@3.1`` would match all of those versions.
 
 
 .. _vcs-fetch:
@@ -1559,6 +1558,8 @@ needs to build and install the ``libelf`` package before it builds
 guaranteed that ``libelf`` has been built and installed successfully,
 so you can rely on it for your libdwarf build.
 
+.. _dependency_specs:
+
 ^^^^^^^^^^^^^^^^
 Dependency specs
 ^^^^^^^^^^^^^^^^
@@ -2057,10 +2058,10 @@ Adding the following to a package:
     conflicts(
         "%intel-oneapi-compilers@:2024",
          when="@:1.2",
-         msg="known bug when using Intel oneAPI compilers through v2024"
+         msg="known bug when using Intel oneAPI compilers through v2024",
     )
 
-expresses that the current package *cannot be built* with Intel oneAPI compilers up through any version ``2024`` when trying to install the package with a version up to ``1.2``.
+expresses that the current package *cannot be built* with Intel oneAPI compilers *up through any version ``2024``* when trying to install the package with a *version up to ``1.2``*.
 
 If the ``when`` argument is omitted, then the conflict is *always triggered* for specs satisfying the conflict spec.
 For example,
@@ -2084,7 +2085,8 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
 .. note::
 
    These examples illustrate a few of the types of constraints that can be specified.
-   Conflict and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependencies>`, etcetera.
+   Conflict and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependency_specs>`, and more.
+   See :ref:`sec-specs` for more information.
 
 
 .. _packaging_requires:
@@ -2134,7 +2136,8 @@ Or the package must be built with a GCC or Clang that supports C++ 20, which you
 .. note::
 
    These examples show only a few of the constraints that can be specified.
-   Required and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependencies>`, etcetera.
+   Required and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependency_specs>`, and more.
+   See :ref:`sec-specs` for more information.
 
 
 .. _patching:
