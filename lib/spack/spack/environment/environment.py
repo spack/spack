@@ -555,7 +555,11 @@ def all_environment_names():
 
     def yaml_paths():
         for root, dirs, files in os.walk(env_root, topdown=True, followlinks=True):
-            dirs[:] = [d for d in dirs if not env_root.samefile(os.path.join(root, d))]
+            dirs[:] = [
+                d
+                for d in dirs
+                if not d.startswith(".") and not env_root.samefile(os.path.join(root, d))
+            ]
             if manifest_name in files:
                 yield os.path.join(root, manifest_name)
 
