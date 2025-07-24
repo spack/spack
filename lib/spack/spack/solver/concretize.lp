@@ -539,6 +539,9 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
      imposed_constraint(ID, "depends_on", A1, A2, A3),
      internal_error("Build deps must land in exactly one duplicate").
 
+:- attr("direct_dependency", ParentNode, node_requirement("virtual_on_incoming_edges", ChildPkg, Virtual)),
+   not attr("virtual_on_edge", ParentNode, node(_, ChildPkg), Virtual).
+
 % If the parent is built, then we have a build_requirement on another node. For concrete nodes,
 % or external nodes, we don't since we are trimming their build dependencies.
 
