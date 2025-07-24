@@ -783,40 +783,6 @@ The logic behind this sort order is two-fold:
    This allows the ``@develop`` version to satisfy dependencies like ``depends_on(abc, when="@x.y.z:")``
 
 
-.. _version_constraints:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Specifying version constraints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Many Spack directives allow limiting versions to support features such as :ref:`version_compatibility`.
-These constraints on package specs are defined using the ``@<specifier>`` syntax (see :ref:`version-specifier` for more information).
-
-For example,
-
-.. code-block:: python
-
-   depends_on("foo")
-   depends_on("python@3")
-
-   conflicts("^foo@1.2.3:", when="@:4.5")
-
-illustrates three forms of a version range constraint.
-First, the package depends on *any* ``python`` with ``3`` as the major version number (e.g., ``3.13.5``).
-Then there is a conflict with the package ``foo`` dependency *at version ``1.2.3`` or newer*, which is triggered for builds of the package at *any version up to and including version ``4.5``*.
-
-While you can constrain the spec to a single version -- using the ``@=<version>`` form of ``specifier`` -- ranges are **preferred** even if they would only match a single version currently defined in the package.
-Using ranges helps avoid overly constraining dependencies, patches, and conflicts.
-They also come in handy when, for example, users define versions in :ref:`packages-config` that include custom suffixes.
-For example, if the package defines the version ``1.2.3``, we know from :ref:`version-comparison`, that a user-defined version ``1.2.3-custom`` will satisfy the version constraint ``@1.2.3``.
-
-.. warning::
-
-   Specific ``@=`` versions should only be used in exceptional cases, such as when the package has a versioning scheme that omits the zero in the first patch release, such as: ``3.1``, ``3.1.1``, ``3.1.2``.
-   In this example, the specifier ``@=3.1`` is the correct way to select only the ``3.1`` version, whereas ``@3.1`` would match all of those versions.
-
-
-
 .. _vcs-fetch:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1234,6 +1200,45 @@ Download caching
 Spack maintains a cache (described :ref:`here <caching>`) which saves files retrieved during package installations to avoid re-downloading in the case that a package is installed with a different specification (but the same version) or reinstalled on account of a change in the hashing scheme.
 In rare cases, it may be necessary to avoid caching for a particular version by adding ``no_cache=True`` as an option to the ``version()`` directive.
 Example situations would be a "snapshot"-like Version Control System (VCS) tag, a VCS branch such as ``v6-16-00-patches``, or a URL specifying a regularly updated snapshot tarball.
+
+
+.. _version_constraints:
+
+------------------------------
+Specifying version constraints
+------------------------------
+
+Many Spack directives allow limiting versions to support features such as :ref:`version_compatibility`.
+These constraints on :ref:`package specs <sec-specs>` are defined using the ``@<specifier>`` syntax.
+(See :ref:`version-specifier` for more information.)
+
+For example, the following:
+
+.. code-block:: python
+
+   depends_on("foo")
+   depends_on("python@3")
+
+   conflicts("^foo@1.2.3:", when="@:4.5")
+
+illustrates, in order, three of four forms of version range constraints: implicit, lower bound and upper bound. The fourth form provides lower *and* upper bounds on the version.
+
+In this example, the implicit range is used to indicate that the package :ref:`depends on <dependencies>` *any* ``python`` *with* ``3`` *as the major version number* (e.g., ``3.13.5``).
+The other two range constraints are shown in the :ref:`conflict <packaging_conflicts>` with the dependency package ``foo``.
+The lower bound *at version* ``1.2.3`` *or newer* is **triggered** for builds of the package at *any version up to and including* ``4.5``.
+For an example of the fourth form, suppose the dependency in this example had been ``python@3.6:3``.
+In this case, the package would depend on *any version of* ``python`` *from* ``3.6`` *on so long as the major version number is* ``3``.
+
+While you can constrain the spec to a single version -- using the ``@=<version>`` form of ``specifier`` -- **ranges are preferred** even if they would only match a single version currently defined in the package.
+Using ranges helps avoid overly constrained dependencies, patches, and conflicts.
+They also come in handy when, for example, users define versions in :ref:`packages-config` that include custom suffixes.
+For example, if the package defines the version ``1.2.3``, we know from :ref:`version-comparison`, that a user-defined version ``1.2.3-custom`` will satisfy the version constraint ``@1.2.3``.
+
+.. warning::
+
+   Specific ``@=`` versions should only be used in **exceptional cases**, such as when the package has a versioning scheme that omits the zero in the first patch release.
+   For example, suppose a package defines versions: ``3.1``, ``3.1.1`` and ``3.1.2``.
+   Then the specifier ``@=3.1`` is the correct way to select only ``3.1``, whereas ``@3.1`` would be satisfied by all three versions.
 
 
 .. _variants:
