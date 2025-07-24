@@ -4,18 +4,11 @@
 
 from typing import Optional
 
-import spack.package_base
-import spack.util.url
+from spack.package import PackageBase, join_url
 
 
-class SourceforgePackage(spack.package_base.PackageBase):
-    """Mixin that takes care of setting url and mirrors for Sourceforge
-    packages."""
-
-    #: Path of the package in a Sourceforge mirror
+class SourceforgePackage(PackageBase):
     sourceforge_mirror_path: Optional[str] = None
-
-    #: List of Sourceforge mirrors used by Spack
     base_mirrors = [
         "https://prdownloads.sourceforge.net/",
         "https://freefr.dl.sourceforge.net/",
@@ -27,14 +20,8 @@ class SourceforgePackage(spack.package_base.PackageBase):
 
     @property
     def urls(self):
-        self._ensure_sourceforge_mirror_path_is_set_or_raise()
-        return [
-            spack.util.url.join(m, self.sourceforge_mirror_path, resolve_href=True)
-            for m in self.base_mirrors
-        ]
-
-    def _ensure_sourceforge_mirror_path_is_set_or_raise(self):
         if self.sourceforge_mirror_path is None:
-            cls_name = type(self).__name__
-            msg = "{0} must define a `sourceforge_mirror_path` attribute" " [none defined]"
-            raise AttributeError(msg.format(cls_name))
+            raise AttributeError(f"{self.__class__.__name__}: `sourceforge_mirror_path` missing")
+        return [
+            join_url(m, self.sourceforge_mirror_path, resolve_href=True) for m in self.base_mirrors
+        ]

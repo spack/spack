@@ -33,7 +33,6 @@ class PythonPackage(PythonExtension):
 class PythonPipBuilder(BuilderWithDefaults):
     phases = ("install",)
     package_methods = ("test_imports",)
-    package_long_methods = ("install_options", "global_options", "config_settings")
     package_attributes = ("archive_files", "build_directory", "install_time_test_callbacks")
     install_time_test_callbacks = ["test_imports"]
 
