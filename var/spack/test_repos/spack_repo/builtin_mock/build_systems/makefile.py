@@ -1,90 +1,40 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import List
-
-import spack.builder
-import spack.llnl.util.filesystem as fs
-import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
-from spack.directives import build_system, conflicts, depends_on
-from spack.multimethod import when
-from spack.package import BuilderWithDefaults, apply_macos_rpath_fixups, execute_install_time_tests
+from spack.package import (
+    BuilderWithDefaults,
+    PackageBase,
+    Prefix,
+    Spec,
+    build_system,
+    depends_on,
+    execute_install_time_tests,
+    register_builder,
+    run_after,
+)
 
 from ._checks import execute_build_time_tests
 
 
-class MakefilePackage(spack.package_base.PackageBase):
-    """Specialized class for packages built using Makefiles."""
-
-    #: This attribute is used in UI queries that need to know the build
-    #: system base class
+class MakefilePackage(PackageBase):
     build_system_class = "MakefilePackage"
-    #: Legacy buildsystem attribute used to deserialize and install old specs
     default_buildsystem = "makefile"
 
     build_system("makefile")
-
-    with when("build_system=makefile"):
-        conflicts("platform=windows")
-        depends_on("gmake", type="build")
+    depends_on("gmake", type="build", when="build_system=makefile")
 
 
-@spack.builder.register_builder("makefile")
+@register_builder("makefile")
 class MakefileBuilder(BuilderWithDefaults):
-    """The Makefile builder encodes the most common way of building software with
-    Makefiles. It has three phases that can be overridden, if need be:
-
-            1. :py:meth:`~.MakefileBuilder.edit`
-            2. :py:meth:`~.MakefileBuilder.build`
-            3. :py:meth:`~.MakefileBuilder.install`
-
-    It is usually necessary to override the :py:meth:`~.MakefileBuilder.edit`
-    phase (which is by default a no-op), while the other two have sensible defaults.
-
-    For a finer tuning you may override:
-
-        +-----------------------------------------------+--------------------+
-        | **Method**                                    | **Purpose**        |
-        +===============================================+====================+
-        | :py:attr:`~.MakefileBuilder.build_targets`    | Specify ``make``   |
-        |                                               | targets for the    |
-        |                                               | build phase        |
-        +-----------------------------------------------+--------------------+
-        | :py:attr:`~.MakefileBuilder.install_targets`  | Specify ``make``   |
-        |                                               | targets for the    |
-        |                                               | install phase      |
-        +-----------------------------------------------+--------------------+
-        | :py:meth:`~.MakefileBuilder.build_directory`  | Directory where the|
-        |                                               | Makefile is located|
-        +-----------------------------------------------+--------------------+
-    """
-
     phases = ("edit", "build", "install")
-
-    #: Names associated with package methods in the old build-system format
     package_methods = ("check", "installcheck")
-
-    #: Names associated with package attributes in the old build-system format
     package_attributes = (
-        "build_targets",
-        "install_targets",
         "build_time_test_callbacks",
         "install_time_test_callbacks",
         "build_directory",
     )
 
-    #: Targets for ``make`` during the :py:meth:`~.MakefileBuilder.build` phase
-    build_targets: List[str] = []
-    #: Targets for ``make`` during the :py:meth:`~.MakefileBuilder.install` phase
-    install_targets = ["install"]
-
-    #: Callback names for build-time test
     build_time_test_callbacks = ["check"]
-
-    #: Callback names for install-time test
     install_time_test_callbacks = ["installcheck"]
 
     @property
@@ -92,42 +42,20 @@ class MakefileBuilder(BuilderWithDefaults):
         """Return the directory containing the main Makefile."""
         return self.pkg.stage.source_path
 
-    def edit(
-        self, pkg: MakefilePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
-        """Edit the Makefile before calling make. The default is a no-op."""
+    def edit(self, pkg: MakefilePackage, spec: Spec, prefix: Prefix) -> None:
         pass
 
-    def build(
-        self, pkg: MakefilePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
-        """Run "make" on the build targets specified by the builder."""
-        with fs.working_dir(self.build_directory):
-            pkg.module.make(*self.build_targets)
+    def build(self, pkg: MakefilePackage, spec: Spec, prefix: Prefix) -> None:
+        pass
 
-    def install(
-        self, pkg: MakefilePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
-        """Run "make" on the install targets specified by the builder."""
-        with fs.working_dir(self.build_directory):
-            pkg.module.make(*self.install_targets)
-
-    spack.phase_callbacks.run_after("build")(execute_build_time_tests)
+    def install(self, pkg: MakefilePackage, spec: Spec, prefix: Prefix) -> None:
+        pass
 
     def check(self) -> None:
-        """Run "make" on the ``test`` and ``check`` targets, if found."""
-        with fs.working_dir(self.build_directory):
-            self.pkg._if_make_target_execute("test")
-            self.pkg._if_make_target_execute("check")
-
-    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+        pass
 
     def installcheck(self) -> None:
-        """Searches the Makefile for an ``installcheck`` target
-        and runs it if found.
-        """
-        with fs.working_dir(self.build_directory):
-            self.pkg._if_make_target_execute("installcheck")
+        pass
 
-    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    spack.phase_callbacks.run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
+    run_after("build")(execute_build_time_tests)
+    run_after("install")(execute_install_time_tests)
