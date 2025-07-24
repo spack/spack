@@ -14,6 +14,22 @@ import spack.spec
 import spack.util.hash
 from spack.util.unparse import unparse
 
+if sys.version_info >= (3, 8):
+
+    def unused_string(node: ast.AST) -> bool:
+        """Criteria for unassigned body strings."""
+        return (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        )
+
+else:
+
+    def unused_string(node: ast.AST) -> bool:
+        """Criteria for unassigned body strings."""
+        return isinstance(node, ast.Expr) and isinstance(node.value, ast.Str)
+
 
 class RemoveDocstrings(ast.NodeTransformer):
     """Transformer that removes docstrings from a Python AST.
@@ -25,10 +41,6 @@ class RemoveDocstrings(ast.NodeTransformer):
     """
 
     def remove_docstring(self, node):
-        def unused_string(node):
-            """Criteria for unassigned body strings."""
-            return isinstance(node, ast.Expr) and isinstance(node.value, ast.Str)
-
         if node.body:
             node.body = [child for child in node.body if not unused_string(child)]
 
