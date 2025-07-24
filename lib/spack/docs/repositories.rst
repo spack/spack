@@ -529,14 +529,11 @@ This allows you to easily extend or subclass package classes from other reposito
 
 .. code-block:: python
 
-   # In your custom repository (e.g., namespace 'mycustom')
-   # in a package file, e.g., mycustom_mpich/package.py
-
-   from spack.package_base import PackageBase # Or other base class
+   # In a package file (e.g. my_custom_mpich/package.py) in your custom repo
    # Import the original Mpich class from the 'builtin' repository
    from spack_repo.builtin.packages.mpich.package import Mpich as BuiltinMpich
 
-   class MycustomMpich(BuiltinMpich):
+   class MyCustomMpich(BuiltinMpich):
        # Override versions, variants, or methods from BuiltinMpich
        version("3.5-custom", sha256="...")
 
