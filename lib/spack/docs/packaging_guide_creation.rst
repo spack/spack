@@ -1208,7 +1208,7 @@ Example situations would be a "snapshot"-like Version Control System (VCS) tag, 
 Specifying version constraints
 ------------------------------
 
-Many Spack directives allow limiting versions to support features such as :ref:`version_compatibility`.
+Many Spack directives allow limiting versions to support features such as :ref:`backward and forward compatibility <version_compatibility>`.
 These constraints on :ref:`package specs <sec-specs>` are defined using the ``@<specifier>`` syntax.
 (See :ref:`version-specifier` for more information.)
 
@@ -1225,7 +1225,7 @@ illustrates, in order, three of four forms of version range constraints: implici
 
 In this example, the implicit range is used to indicate that the package :ref:`depends on <dependencies>` *any* ``python`` *with* ``3`` *as the major version number* (e.g., ``3.13.5``).
 The other two range constraints are shown in the :ref:`conflict <packaging_conflicts>` with the dependency package ``foo``.
-The lower bound *at version* ``1.2.3`` *or newer* is **triggered** for builds of the package at *any version up to and including* ``4.5``.
+The conflict with ``foo`` *at version* ``1.2.3`` *or newer* is **triggered** for builds of the package at *any version up to and including* ``4.5``.
 For an example of the fourth form, suppose the dependency in this example had been ``python@3.6:3``.
 In this case, the package would depend on *any version of* ``python`` *from* ``3.6`` *on so long as the major version number is* ``3``.
 
