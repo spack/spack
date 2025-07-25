@@ -8,6 +8,7 @@ import sys
 
 import spack.cmd
 import spack.cmd.common.arguments
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.llnl.util.tty as tty
@@ -127,7 +128,7 @@ def dev_build(self, args):
             spec = dev_matches[0]
     else:
         if not spec.versions.concrete_range_as_version:
-            version = max(spec.package_class.versions.keys())
+            version = max(spack.repo.PATH.get_pkg_class(spec.fullname).versions.keys())
             spec.versions = spack.version.VersionList([version])
             tty.msg(f"Defaulting to highest version: {spec.name}@{version}")
 
@@ -137,7 +138,7 @@ def dev_build(self, args):
         source_path = os.path.abspath(source_path)
 
     spec.constrain(f'dev_path="{source_path}"')
-    spec.concretize()
+    spec = spack.concretize.concretize_one(spec)
 
     if spec.installed:
         tty.error("Already installed in %s" % spec.prefix)
