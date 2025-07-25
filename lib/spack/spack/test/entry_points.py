@@ -14,21 +14,48 @@ import spack.llnl.util.lang
 
 
 class MockConfigEntryPoint:
-    def __init__(self, tmp_path: pathlib.Path):
+    def __init__(self, tmp_path: pathlib.Path, mode):
         self.dir = tmp_path
-        self.name = "mypackage_config"
+        self.name = f"mypackage_config{mode}"
+        self.mode = mode
 
     def load(self):
-        etc_path = self.dir.joinpath("spack/etc")
+        etc_path = self.dir.joinpath(f"{self.mode}/spack/etc")
         etc_path.mkdir(exist_ok=True, parents=True)
-        f = self.dir / "spack/etc/config.yaml"
+        f = etc_path / "config.yaml"
         with open(f, "w", encoding="utf-8") as fh:
-            fh.write("config:\n  install_tree:\n    root: /spam/opt\n")
+            fh.write(f"config:\n  install_tree:\n    root: /spam/opt{self.mode}\n")
 
-        def ep():
-            return self.dir / "spack/etc"
+        if self.mode == 0:  # pathlib.Path
 
-        return ep
+            def ep():
+                return etc_path
+
+            return ep
+        elif self.mode == 1:  # str
+
+            def ep():
+                return str(etc_path)
+
+            return ep
+        elif self.mode == 2:  # list with exists and not exists
+
+            def ep():
+                return [etc_path, etc_path / "notapath"]
+
+            return ep
+        elif self.mode == 3:  # os PATH list
+
+            def ep():
+                return os.pathsep.join([str(etc_path), str(etc_path)])
+
+            return ep
+        else:  # None test
+
+            def ep():
+                return None
+
+            return ep
 
 
 class MockExtensionsEntryPoint:
@@ -56,7 +83,13 @@ class MockExtensionsEntryPoint:
 def entry_points_factory(tmp_path: pathlib.Path):
     def entry_points(group=None):
         if group == "spack.config":
-            return (MockConfigEntryPoint(tmp_path),)
+            return (
+                MockConfigEntryPoint(tmp_path, 0),
+                MockConfigEntryPoint(tmp_path, 1),
+                MockConfigEntryPoint(tmp_path, 2),
+                MockConfigEntryPoint(tmp_path, 3),
+                MockConfigEntryPoint(tmp_path, -1),
+            )
         elif group == "spack.extensions":
             return (MockExtensionsEntryPoint(tmp_path),)
         return ()
@@ -73,14 +106,22 @@ def mock_get_entry_points(tmp_path: pathlib.Path, reset_extension_paths, monkeyp
 def test_spack_entry_point_config(tmp_path: pathlib.Path, mock_get_entry_points):
     """Test config scope entry point"""
     config_paths = dict(spack.config.config_paths_from_entry_points())
-    config_path = config_paths.get("plugin-mypackage_config")
-    my_config_path = tmp_path / "spack/etc"
-    if config_path is None:
-        raise ValueError("Did not find entry point config in %s" % str(config_paths))
-    else:
-        assert os.path.samefile(config_path, my_config_path)
-    config = spack.config.create()
-    assert config.get("config:install_tree:root", scope="plugin-mypackage_config") == "/spam/opt"
+
+    for config_name in config_paths:
+        if "mypackage_config" not in config_name:
+            # Skip configs not part of the test
+            continue
+
+        mode = config_name.split("-")[1][-1]
+        config_path = config_paths.get(config_name)
+        my_config_path = tmp_path / f"{mode}/spack/etc"
+        if config_path is None:
+            raise ValueError("Did not find entry point config in %s" % str(config_paths))
+        else:
+            print(config_path)
+            assert os.path.samefile(config_path, my_config_path)
+        config = spack.config.create()
+        assert config.get("config:install_tree:root", scope=config_name) == f"/spam/opt{mode}"
 
 
 def test_spack_entry_point_extension(tmp_path: pathlib.Path, mock_get_entry_points):
