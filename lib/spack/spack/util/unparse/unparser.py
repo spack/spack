@@ -823,14 +823,13 @@ class Unparser:
             s = " %s " % operator
             interleave(lambda: self.write(s), increasing_level_dispatch, node.values)
 
-    def visit_Attribute(self, node):
+    def visit_Attribute(self, node: ast.Attribute):
         self.set_precedence(_Precedence.ATOM, node.value)
         self.dispatch(node.value)
         # Special case: 3.__abs__() is a syntax error, so if node.value
         # is an integer literal then we need to either parenthesize
         # it or add an extra space to get 3 .__abs__().
-        num_type = getattr(ast, "Constant", getattr(ast, "Num", None))
-        if isinstance(node.value, num_type) and isinstance(node.value.n, int):
+        if _is_int_literal(node.value):
             self.write(" ")
         self.write(".")
         self.write(node.attr)
@@ -1101,3 +1100,16 @@ class Unparser:
     def visit_ParamSpec(self, node):
         self.write("**")
         self.write(node.name)
+
+
+if sys.version_info >= (3, 8):
+
+    def _is_int_literal(node: ast.AST) -> bool:
+        """Check if a node represents a literal int."""
+        return isinstance(node, ast.Constant) and isinstance(node.value, int)
+
+else:
+
+    def _is_int_literal(node: ast.AST) -> bool:
+        """Check if a node represents a literal int."""
+        return isinstance(node, ast.Num) and isinstance(node.n, int)
