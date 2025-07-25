@@ -24,7 +24,7 @@ def prompt_modifications(prompt, shell, env=os.environ):
         if "TERM" in env and "color" in env["TERM"]:
             if "BASH" in env:
                 bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
-                mods.set("PS1", f"{bash_color_prompt} {env.get('PS1','$ ')}")
+                mods.set("PS1", f"{bash_color_prompt} {env.get('PS1', '$ ')}")
             else:
                 zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
                 mods.set("PS1", f"{zsh_color_prompt} {env.get('PS1', '$ ')}")
