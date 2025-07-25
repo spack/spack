@@ -151,7 +151,7 @@ class ConfigScope:
             if includes:
                 include_paths = [included_path(data) for data in includes["include"]]
                 for path in include_paths:
-                    included_scope = include_path_scope(path, self.name)
+                    included_scope = include_path_scope(path, self)
                     if included_scope:
                         self._included_scopes.append(included_scope)
 
@@ -838,7 +838,7 @@ def included_path(entry: Union[str, dict]) -> IncludePath:
     return IncludePath(path=path, sha256=sha256, when=when, optional=optional)
 
 
-def include_path_scope(include: IncludePath, parent_name: str) -> Optional[ConfigScope]:
+def include_path_scope(include: IncludePath, parent_scope: ConfigScope) -> Optional[ConfigScope]:
     """Instantiate an appropriate configuration scope for the given path.
 
     Args:
@@ -860,15 +860,29 @@ def include_path_scope(include: IncludePath, parent_name: str) -> Optional[Confi
         if not config_path:
             raise ConfigFileError(f"Unable to fetch remote configuration from {include.path}")
 
+        # Try to use the relative path to create the included scope name
+        parent_path = getattr(parent_scope, "path", None)
+        if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
+            included_name = os.path.relpath(config_path, parent_path)
+        else:
+            included_name = config_path
+
+        if sys.platform == "win32":
+            # Clean windows path for use in config name that looks nicer
+            # ie. The path: C:\\some\\path\\to\\a\\file
+            # becomes C/some/path/to/a/file
+            included_name.replace("\\", "/")
+            included_name.replace(":", "")
+
         if os.path.isdir(config_path):
             # directories are treated as regular ConfigScopes
-            config_name = f"{parent_name}:{os.path.basename(config_path)}"
+            config_name = f"{parent_scope.name}:{included_name}"
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(config_name, config_path)
 
         if os.path.exists(config_path):
             # files are assumed to be SingleFileScopes
-            config_name = f"{parent_name}:{config_path}"
+            config_name = f"{parent_scope.name}:{included_name}"
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
 
