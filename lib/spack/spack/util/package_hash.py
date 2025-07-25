@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import ast
-from typing import Optional
+import sys
+from typing import Any, Dict, List, Optional, Tuple
 
 import spack.directives_meta
 import spack.error
@@ -12,6 +13,22 @@ import spack.repo
 import spack.spec
 import spack.util.hash
 from spack.util.unparse import unparse
+
+if sys.version_info >= (3, 8):
+
+    def unused_string(node: ast.AST) -> bool:
+        """Criteria for unassigned body strings."""
+        return (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        )
+
+else:
+
+    def unused_string(node: ast.AST) -> bool:
+        """Criteria for unassigned body strings."""
+        return isinstance(node, ast.Expr) and isinstance(node.value, ast.Str)
 
 
 class RemoveDocstrings(ast.NodeTransformer):
@@ -24,10 +41,6 @@ class RemoveDocstrings(ast.NodeTransformer):
     """
 
     def remove_docstring(self, node):
-        def unused_string(node):
-            """Criteria for unassigned body strings."""
-            return isinstance(node, ast.Expr) and isinstance(node.value, ast.Str)
-
         if node.body:
             node.body = [child for child in node.body if not unused_string(child)]
 
@@ -155,56 +168,67 @@ class RemoveDirectives(ast.NodeTransformer):
         return node
 
 
+def _is_when_decorator(node: ast.Call) -> bool:
+    """Check if the node is a @when decorator."""
+    return isinstance(node.func, ast.Name) and node.func.id == "when" and len(node.args) == 1
+
+
 class TagMultiMethods(ast.NodeVisitor):
     """Tag @when-decorated methods in a package AST."""
 
-    def __init__(self, spec):
+    def __init__(self, spec: spack.spec.Spec) -> None:
         self.spec = spec
         # map from function name to (implementation, condition_list) tuples
-        self.methods = {}
+        self.methods: Dict[str, List[Tuple[ast.FunctionDef, List[Optional[bool]]]]] = {}
 
-    def visit_FunctionDef(self, func):
-        conditions = []
+    if sys.version_info >= (3, 8):
 
-        for dec in func.decorator_list:
-            if isinstance(dec, ast.Call) and dec.func.id == "when":
-                try:
-                    # evaluate spec condition for any when's
-                    cond = dec.args[0].s
+        def _get_when_condition(self, node: ast.expr) -> Optional[Any]:
+            """Extract the first argument of a @when decorator."""
+            return node.value if isinstance(node, ast.Constant) else None
 
-                    # Boolean literals come through like this
-                    if isinstance(cond, bool):
-                        conditions.append(cond)
-                        continue
+    else:
 
-                    # otherwise try to make a spec
-                    try:
-                        cond_spec = spack.spec.Spec(cond)
-                    except Exception:
-                        # Spec parsing failed -- we don't know what this is.
-                        conditions.append(None)
-                    else:
-                        # Check statically whether spec satisfies the condition
-                        conditions.append(self.spec.satisfies(cond_spec))
+        def _get_when_condition(self, node: ast.expr) -> Optional[Any]:
+            """Extract the first argument of a @when decorator."""
+            if isinstance(node, ast.Str):
+                return node.s
+            elif isinstance(node, ast.NameConstant):
+                return node.value
+            return None
 
-                except AttributeError:
-                    # In this case the condition for the 'when' decorator is
-                    # not a string literal (for example it may be a Python
-                    # variable name). We append None because we don't know
-                    # whether the constraint applies or not, and it should be included
-                    # unless some other constraint is False.
-                    conditions.append(None)
+    def _evaluate_decorator(self, dec: ast.AST) -> Optional[bool]:
+        """Evaluates a single decorator node. Returns True/False if it's a statically evaluatable
+        @when decorator, otherwise returns None."""
+        if not isinstance(dec, ast.Call) or not _is_when_decorator(dec):
+            return None
+
+        # Extract <cond> from the @when(<cond>) decorator.
+        cond = self._get_when_condition(dec.args[0])
+
+        # Statically evaluate the condition if possible. If not, return None.
+        if isinstance(cond, str):
+            try:
+                return self.spec.satisfies(cond)
+            except Exception:
+                return None
+        elif isinstance(cond, bool):
+            return cond
+        else:
+            return None
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.AST:
+        conditions = [self._evaluate_decorator(dec) for dec in node.decorator_list]
 
         # anything defined without conditions will overwrite prior definitions
         if not conditions:
-            self.methods[func.name] = []
+            self.methods[node.name] = []
 
         # add all discovered conditions on this node to the node list
-        impl_conditions = self.methods.setdefault(func.name, [])
-        impl_conditions.append((func, conditions))
+        self.methods.setdefault(node.name, []).append((node, conditions))
 
         # don't modify the AST -- return the untouched function node
-        return func
+        return node
 
 
 class ResolveMultiMethods(ast.NodeTransformer):
@@ -283,15 +307,15 @@ class ResolveMultiMethods(ast.NodeTransformer):
         # if nothing was picked, the last definition wins.
         return result
 
-    def visit_FunctionDef(self, func):
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> Optional[ast.FunctionDef]:
         # if the function def wasn't visited on the first traversal there is a problem
-        assert func.name in self.methods, "Inconsistent package traversal!"
+        assert node.name in self.methods, "Inconsistent package traversal!"
 
         # if the function is a multimethod, need to resolve it statically
-        impl_conditions = self.methods[func.name]
+        impl_conditions = self.methods[node.name]
 
         resolutions = self.resolve(impl_conditions)
-        if not any(r is func for r in resolutions):
+        if not any(r is node for r in resolutions):
             # multimethod did not resolve to this function; remove it
             return None
 
@@ -300,12 +324,12 @@ class ResolveMultiMethods(ast.NodeTransformer):
         # dynamcially.  Either way, we include the function.
 
         # strip the when decorators (preserve the rest)
-        func.decorator_list = [
+        node.decorator_list = [
             dec
-            for dec in func.decorator_list
-            if not (isinstance(dec, ast.Call) and dec.func.id == "when")
+            for dec in node.decorator_list
+            if not (isinstance(dec, ast.Call) and _is_when_decorator(dec))
         ]
-        return func
+        return node
 
 
 def canonical_source(
