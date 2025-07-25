@@ -4,9 +4,10 @@
 "Usage: unparse.py <path to source file>"
 import ast
 import sys
-from ast import AST, Constant, FormattedValue, If, JoinedStr, Name, Tuple
+from ast import AST, FormattedValue, If, JoinedStr, Name, Tuple
 from contextlib import contextmanager
 from enum import IntEnum, auto
+from typing import Optional
 
 
 # TODO: if we require Python 3.7, use its `nullcontext()`
@@ -229,10 +230,7 @@ class Unparser(NodeVisitor):
         if not isinstance(node, ast.Expr):
             return None
         node = node.value
-        if isinstance(node, Constant) and isinstance(node.value, str):
-            return node
-        # Python 3.8 changed Str to Constant
-        elif type(node).__name__ == "Str" and node.s:
+        if _is_str_literal(node):
             return node
 
     def get_type_comment(self, node):
@@ -636,13 +634,23 @@ class Unparser(NodeVisitor):
 
     # Python < 3.8. Num, Str, Bytes, NameConstant, Ellipsis replaced with Constant
     # https://github.com/python/cpython/commit/3f22811fef73aec848d961593d95fa877f77ecbf
-    def visit_Bytes(self, node):
-        self.write(repr(node.s))
+    if sys.version_info < (3, 8):
 
-    # Python < 3.8. Num, Str, Bytes, NameConstant, Ellipsis replaced with Constant
-    # https://github.com/python/cpython/commit/3f22811fef73aec848d961593d95fa877f77ecbf
-    def visit_Str(self, node):
-        self._write_constant(node.s)
+        def visit_Num(self, node):
+            repr_n = repr(node.n)
+            self.write(repr_n.replace("inf", _INFSTR))
+
+        def visit_Str(self, node):
+            self._write_constant(node.s)
+
+        def visit_Bytes(self, node):
+            self.write(repr(node.s))
+
+        def visit_NameConstant(self, node):
+            self.write(repr(node.value))
+
+        def visit_Ellipsis(self, node):
+            self.write("...")
 
     def visit_JoinedStr(self, node):
         self.write("f")
@@ -657,10 +665,7 @@ class Unparser(NodeVisitor):
         for value in node.values:
             with self.buffered() as buffer:
                 self._write_fstring_inner(value)
-            # Python 3.8 replaced Str with Constant
-            fstring_parts.append(
-                ("".join(buffer), isinstance(value, Constant) or type(value).__name__ == "Str")
-            )
+            fstring_parts.append(("".join(buffer), _is_str_literal(value)))
 
         new_fstring_parts = []
         quote_types = list(_ALL_QUOTES)
@@ -705,29 +710,21 @@ class Unparser(NodeVisitor):
             # for both the f-string itself, and format_spec
             for value in node.values:
                 self._write_fstring_inner(value, is_format_spec=is_format_spec)
-        # Python 3.8 replaced Str with Constant
-        elif type(node).__name__ == "Str":
-            value = node.s.replace("{", "{{").replace("}", "}}")
-
-            if is_format_spec:
-                value = value.replace("\\", "\\\\")
-                value = value.replace("'", "\\'")
-                value = value.replace('"', '\\"')
-                value = value.replace("\n", "\\n")
-            self.write(value)
-        elif isinstance(node, Constant) and isinstance(node.value, str):
-            value = node.value.replace("{", "{{").replace("}", "}}")
-
-            if is_format_spec:
-                value = value.replace("\\", "\\\\")
-                value = value.replace("'", "\\'")
-                value = value.replace('"', '\\"')
-                value = value.replace("\n", "\\n")
-            self.write(value)
         elif isinstance(node, FormattedValue):
             self.visit_FormattedValue(node)
-        else:
-            raise ValueError(f"Unexpected node inside JoinedStr, {node!r}")
+        else:  # str literal
+            maybe_string = _get_str_literal_value(node)
+            if maybe_string is None:
+                raise ValueError(f"Unexpected node inside JoinedStr, {node!r}")
+
+            value = maybe_string.replace("{", "{{").replace("}", "}}")
+
+            if is_format_spec:
+                value = value.replace("\\", "\\\\")
+                value = value.replace("'", "\\'")
+                value = value.replace('"', '\\"')
+                value = value.replace("\n", "\\n")
+            self.write(value)
 
     def visit_FormattedValue(self, node):
         def unparse_inner(inner):
@@ -763,13 +760,10 @@ class Unparser(NodeVisitor):
         if not self._py_ver_consistent and getattr(node, "kind", None) == "u":
             self.write("u")
         # Python 3.8 replaced Str with Constant
-        value = node.s if type(node).__name__ == "Str" else node.value
+        value = _get_str_literal_value(node)
+        if value is None:
+            raise ValueError(f"Node {node!r} is not a string literal.")
         self._write_str_avoiding_backslashes(value, quote_types=_MULTI_QUOTES)
-
-    # Python < 3.8. Num, Str, Bytes, NameConstant, Ellipsis replaced with Constant
-    # https://github.com/python/cpython/commit/3f22811fef73aec848d961593d95fa877f77ecbf
-    def visit_NameConstant(self, node):
-        self.write(repr(node.value))
 
     def _write_constant(self, value):
         if isinstance(value, (float, complex)):
@@ -797,12 +791,6 @@ class Unparser(NodeVisitor):
             if not self._py_ver_consistent and getattr(node, "kind", None) == "u":
                 self.write("u")
             self._write_constant(node.value)
-
-    # Python < 3.8. Num, Str, Bytes, NameConstant, Ellipsis replaced with Constant
-    # https://github.com/python/cpython/commit/3f22811fef73aec848d961593d95fa877f77ecbf
-    def visit_Num(self, node):
-        repr_n = repr(node.n)
-        self.write(repr_n.replace("inf", _INFSTR))
 
     def visit_List(self, node):
         with self.delimit("[", "]"):
@@ -1056,11 +1044,6 @@ class Unparser(NodeVisitor):
         self.set_precedence(_Precedence.EXPR, node.value)
         self.traverse(node.value)
 
-    # Python < 3.8. Num, Str, Bytes, NameConstant, Ellipsis replaced with Constant
-    # https://github.com/python/cpython/commit/3f22811fef73aec848d961593d95fa877f77ecbf
-    def visit_Ellipsis(self, node):
-        self.write("...")
-
     # Python 3.9 simplified Subscript(Index(value)) to Subscript(value)
     # https://github.com/python/cpython/commit/13d52c268699f199a8e917a0f1dc4c51e5346c42
     def visit_Index(self, node):
@@ -1276,8 +1259,26 @@ if sys.version_info >= (3, 8):
         """Check if a node represents a literal int."""
         return isinstance(node, ast.Constant) and isinstance(node.value, int)
 
+    def _is_str_literal(node: ast.AST) -> bool:
+        """Check if a node represents a literal str."""
+        return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+    def _get_str_literal_value(node: ast.AST) -> Optional[str]:
+        """Get the string value of a literal str node."""
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return node.value
+        return None
+
 else:
 
     def _is_int_literal(node: ast.AST) -> bool:
         """Check if a node represents a literal int."""
         return isinstance(node, ast.Num) and isinstance(node.n, int)
+
+    def _is_str_literal(node: ast.AST) -> bool:
+        """Check if a node represents a literal str."""
+        return isinstance(node, ast.Str)
+
+    def _get_str_literal_value(node: ast.AST) -> Optional[str]:
+        """Get the string value of a literal str node."""
+        return node.s if isinstance(node, ast.Str) else None
