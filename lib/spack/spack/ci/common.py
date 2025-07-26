@@ -98,6 +98,8 @@ def copy_files_to_artifacts(
         else:
             fs.copy(src, artifacts_dir)
     except Exception as err:
+        # TODO: Remove the list of files once determine why test files not copied
+        tty.info(f"Source directory contents: {os.listdir(src)}")
         tty.warn(
             (
                 f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
@@ -251,6 +253,9 @@ class CDashHandler:
 
     def copy_test_results(self, source, dest):
         """Copy test results to artifacts directory."""
+        # TODO/TBD: Do we still get stand-alone test results files?
+        xml_files = glob.glob(fs.join_path(source, "*.xml"))
+        tty.info(f"Are there any (test) XML files in: {xml_files}")
         reports = fs.join_path(source, "*_Test*.xml")
         copy_files_to_artifacts(reports, dest)
 
@@ -335,6 +340,7 @@ class PipelineOptions:
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
+        add_test_jobs: bool = False,
         cdash_handler: Optional["CDashHandler"] = None,
     ):
         """
@@ -354,6 +360,7 @@ class PipelineOptions:
             stack_name: Name of spack stack
             pipeline_type: Type of pipeline running (optional)
             require_signing: Require buildcache to be signed (fail w/out signing key)
+            add_test_jobs: generate standalone test jobs
             cdash_handler: Object for communicating build information with CDash
         """
         self.env = env
@@ -372,6 +379,7 @@ class PipelineOptions:
         self.stack_name = stack_name
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
+        self.add_test_jobs = add_test_jobs
         self.cdash_handler = cdash_handler
         self.forward_variables: List[str] = []
 
@@ -551,7 +559,6 @@ class SpackCIConfig:
             attrs = cfg.InternalConfigScope._process_dict_keyname_overrides(match_attrs)
             for match_string in match_attrs["match"]:
                 if _spec_matches(spec, match_string):
-                    # TODO/TLD: how handle and tie test jobs to build jobs?
                     matched = True
                     if "build-job-remove" in match_attrs:
                         spack.config.remove_yaml(dest, attrs["build-job-remove"])
@@ -573,7 +580,10 @@ class SpackCIConfig:
     def init_pipeline_jobs(self, pipeline: PipelineDag):
         for _, node in pipeline.traverse_nodes():
             dag_hash = node.spec.dag_hash()
-            self.ir["jobs"][dag_hash] = self.__init_job(node.spec)
+            self.ir["jobs"][dag_hash] = {
+                "build": self.__init_job(node.spec),
+                "test": self.__init_job(node.spec),
+            }
 
     # Generate IR from the configs
     def generate_ir(self):
@@ -644,11 +654,13 @@ class SpackCIConfig:
                     if do_merge:
                         dest = copy.copy(spack.schema.merge_yaml(dest, src[merge_job_name]))
 
+                # TODO/TLD: Is this the right thing to do wrt test jobs?
                 if name in ["build", "test"]:
                     # Apply attributes to all build and test jobs
                     for _, job in jobs.items():
                         if job["spec"]:
                             _apply_section(job["attributes"], section)
+                        # TODO/TLD: if name is "test", want 'needs' to "build"
                 elif name == "any":
                     # Apply section attributes to all jobs
                     for _, job in jobs.items():
@@ -672,6 +684,7 @@ class SpackCIConfig:
                         job["attributes"] = self.__apply_submapping(
                             job["attributes"], job["spec"], section
                         )
+                    # TODO/TLD: is this affected???
             elif has_dynmapping:
                 mapping = section["dynamic-mapping"]
 

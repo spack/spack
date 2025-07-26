@@ -206,6 +206,10 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     max_length_needs = 0
     max_needs_job = ""
 
+    # TODO/TLD: RESUME working on this section to add test jobs IFF options.add_test_jobs
+    # TODO/TLD: test_stage is assumed to be okay to be at level+1
+    # TODO/TLD: test job NEEDS the build job
+    # TODO/TLD: test job needs unique name
     if not options.pipeline_type == PipelineType.COPY_ONLY:
         for level, node in pipeline.traverse_nodes(direction="parents"):
             stage_id = level
@@ -213,52 +217,56 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 stages.append([])
             stages[stage_id].append(node.spec)
             stage_name = f"stage-{level}"
+            test_stage_name = f"stage-{level+1}"
 
             if stage_name not in stage_names:
                 stage_names.append(stage_name)
+            if test_stage_name not in stage_names:
+                stage_names.append(test_stage_name)
 
             release_spec = node.spec
             release_spec_dag_hash = release_spec.dag_hash()
 
-            job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
+            build_object = spack_ci_ir["jobs"][release_spec_dag_hash]["build"]["attributes"]
+            test_object = spack_ci_ir["jobs"][release_spec_dag_hash]["test"]["attributes"]
 
-            if not job_object:
+            if not build_object:
                 tty.warn(f"No match found for {release_spec}, skipping it")
                 continue
 
             if options.pipeline_type is not None:
                 # For spack pipelines "public" and "protected" are reserved tags
-                job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
+                build_object["tags"] = _remove_reserved_tags(build_object.get("tags", []))
                 if options.pipeline_type == PipelineType.PROTECTED_BRANCH:
-                    job_object["tags"].extend(["protected"])
+                    build_object["tags"].extend(["protected"])
                 elif options.pipeline_type == PipelineType.PULL_REQUEST:
-                    job_object["tags"].extend(["public"])
+                    build_object["tags"].extend(["public"])
 
-            if "script" not in job_object:
+            if "script" not in build_object:
                 raise AttributeError
 
-            job_object["script"] = unpack_script(job_object["script"], op=main_script_replacements)
+            build_object["script"] = unpack_script(build_object["script"], op=main_script_replacements)
 
-            if "before_script" in job_object:
-                job_object["before_script"] = unpack_script(job_object["before_script"])
+            if "before_script" in build_object:
+                build_object["before_script"] = unpack_script(build_object["before_script"])
 
-            if "after_script" in job_object:
-                job_object["after_script"] = unpack_script(job_object["after_script"])
+            if "after_script" in build_object:
+                build_object["after_script"] = unpack_script(build_object["after_script"])
 
             build_group = options.cdash_handler.build_group if options.cdash_handler else None
             job_name = get_job_name(release_spec, build_group)
 
             dep_nodes = pipeline.get_dependencies(node)
-            job_object["needs"] = [
+            build_object["needs"] = [
                 {"job": get_job_name(dep_node.spec, build_group), "artifacts": False}
                 for dep_node in dep_nodes
             ]
 
-            job_object["needs"].append(
+            build_object["needs"].append(
                 {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"}
             )
 
-            job_vars = job_object["variables"]
+            job_vars = build_object["variables"]
 
             # Let downstream jobs know whether the spec needed rebuilding, regardless
             # whether DAG pruning was enabled or not.
@@ -273,8 +281,8 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 build_stamp = options.cdash_handler.build_stamp
                 job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
 
-            job_object["artifacts"] = spack.schema.merge_yaml(
-                job_object.get("artifacts", {}),
+            build_object["artifacts"] = spack.schema.merge_yaml(
+                build_object.get("artifacts", {}),
                 {
                     "when": "always",
                     "paths": [
@@ -286,21 +294,22 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 },
             )
 
-            job_object["stage"] = stage_name
-            job_object["retry"] = spack.schema.merge_yaml(
-                {"max": 2, "when": JOB_RETRY_CONDITIONS}, job_object.get("retry", {})
+            build_object["stage"] = stage_name
+            build_object["retry"] = spack.schema.merge_yaml(
+                {"max": 2, "when": JOB_RETRY_CONDITIONS}, build_object.get("retry", {})
             )
-            job_object["interruptible"] = True
+            build_object["interruptible"] = True
 
-            length_needs = len(job_object["needs"])
+            length_needs = len(build_object["needs"])
             if length_needs > max_length_needs:
                 max_length_needs = length_needs
                 max_needs_job = job_name
 
-            output_object[job_name] = job_object
+            output_object[job_name] = build_object
             job_id += 1
 
         tty.debug(f"{job_id} build jobs generated in {stage_id} stages")
+        # TLD: Finish here
 
     if job_id > 0:
         tty.debug(f"The max_needs_job is {max_needs_job}, with {max_length_needs} needs")
@@ -378,7 +387,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             output_object["sign-pkgs"] = signing_job
 
         if options.rebuild_index:
-            # Add a final job to regenerate the index
+            # Add a final build-related job to regenerate the index
             stage_names.append("stage-rebuild-index")
             final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
 
