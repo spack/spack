@@ -123,6 +123,8 @@ def compare(
             f"\033[1;31mChanges detected between {previous_python} ({previous_spack}) and "
             f"{current_python} ({current_spack})\033[0m"
         )
+
+    if changes_with_previous:
         exit(1)
 
 

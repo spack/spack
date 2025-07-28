@@ -96,12 +96,10 @@ jobs:
       - name: Checkout Spack (current)
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          fetch-depth: 0
           path: spack-current
       - name: Checkout Spack (previous)
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          fetch-depth: 0
           path: spack-previous
           ref: ${{ github.event.pull_request.base.sha || github.event.before }}
       - name: Checkout Spack Packages
@@ -109,7 +107,6 @@ jobs:
         with:
           repository: spack/spack-packages
           path: spack-packages
-          fetch-depth: 0
       - name: Test package.py canonicalization
         run: spack-current/.github/workflows/bin/canonicalize.py
           --spack $PWD/spack-previous $PWD/spack-current
