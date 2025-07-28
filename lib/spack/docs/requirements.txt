@@ -2,7 +2,7 @@ sphinx==8.2.3
 sphinxcontrib-programoutput==0.18
 sphinx-copybutton==0.5.2
 sphinx_design==0.6.1
-sphinx-rtd-theme==3.0.2
+furo==2025.7.19
 python-levenshtein==0.27.1
 docutils==0.21.2
 pygments==2.19.2
