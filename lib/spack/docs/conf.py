@@ -290,7 +290,8 @@ nitpick_ignore = [
 # output. They are ignored by default.
 # show_authors = False
 sys.path.append("./_pygments")
-pygments_style = "style.SpackStyle"
+pygments_style = "tango"
+pygments_style_dark = "one-dark"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
