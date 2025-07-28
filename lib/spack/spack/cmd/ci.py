@@ -235,9 +235,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # Handle steps of a ci test
     test = subparsers.add_parser(
-        "test",
-        description=deindent(ci_test.__doc__),
-        help=spack.cmd.first_line(ci_test.__doc__),
+        "test", description=deindent(ci_test.__doc__), help=spack.cmd.first_line(ci_test.__doc__)
     )
     test.add_argument(
         "--fail-fast",
@@ -904,9 +902,7 @@ def ci_test(args):
     spack_is_pr_pipeline = spack_pipeline_type == "spack_pull_request"
     spack_is_develop_pipeline = spack_pipeline_type == "spack_protected_branch"
 
-    tty.debug(
-        f"Pipeline type - PR: {spack_is_pr_pipeline}, develop: {spack_is_develop_pipeline}"
-    )
+    tty.debug(f"Pipeline type - PR: {spack_is_pr_pipeline}, develop: {spack_is_develop_pipeline}")
 
     # To provide logs, cdash reports, etc for developer download/perusal,
     # these things have to be put into artifacts.  This means downstream
@@ -959,7 +955,9 @@ def ci_test(args):
             msg = "Package is listed in ci's broken-tests-packages"
             cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
             cdash_handler.copy_test_results(reports_dir, job_test_dir)
-        tty.die(f"Cannot run stand-alone tests for {job_spec} since they are known to be problemmatic")
+        tty.die(
+            f"Cannot run stand-alone tests for {job_spec} since they are known to be problemmatic"
+        )
 
     # Write information about spack into an artifact in the repro dir
     spack_info = spack_ci.get_spack_info()
@@ -971,7 +969,9 @@ def ci_test(args):
 
     matches = bindist.get_mirrors_for_spec(job_spec, index_only=False)
     if not matches:
-        tty.die("Unable to find a hash match for {job_spec_pkg_name} in the mirrors. Cannot run stand-alone tests.")
+        tty.die(
+            "Unable to find a hash match for {job_spec_pkg_name} in the mirrors. Cannot run stand-alone tests."
+        )
 
     tty.msg(f"Found hash match for {job_spec_pkg_name} at: ")
     for match in matches:
@@ -980,7 +980,14 @@ def ci_test(args):
     # Since we have a match, we need to build the package from the cache.
 
     # Start with spack arguments, ensuring only use the build cache.
-    spack_cmd = [SPACK_COMMAND, "--color=always", "--backtrace", "--verbose", "install", "--cache-only"]
+    spack_cmd = [
+        SPACK_COMMAND,
+        "--color=always",
+        "--backtrace",
+        "--verbose",
+        "install",
+        "--cache-only",
+    ]
 
     config = cfg.get("config")
     if not config["verify_ssl"]:
@@ -1035,9 +1042,7 @@ def ci_test(args):
         cfg.add(config_test_path, scope=cfg.default_modify_scope())
 
         # Run the tests, resorting to junit results if not using cdash
-        log_file = (
-            None if cdash_handler else fs.join_path(test_stage, "ci-test-results.xml")
-        )
+        log_file = None if cdash_handler else fs.join_path(test_stage, "ci-test-results.xml")
         test_exit_code = spack_ci.run_standalone_tests(
             cdash=cdash_handler,
             job_spec=job_spec,
@@ -1062,13 +1067,13 @@ def ci_test(args):
         else:
             tty.warn("No recognized test results reporting option")
 
-       test_timer.stop()
-       try:
-           with open("test_timers.json", "w", encoding="utf-8") as timelog:
-               extra_attributes = {"name": ".ci-test"}
-               test_timer.write_json(timelog, extra_attributes=extra_attributes)
-       except Exception as e:
-           tty.debug(str(e))
+    test_timer.stop()
+    try:
+        with open("test_timers.json", "w", encoding="utf-8") as timelog:
+            extra_attributes = {"name": ".ci-test"}
+            test_timer.write_json(timelog, extra_attributes=extra_attributes)
+    except Exception as e:
+        tty.debug(str(e))
 
     return test_exit_code
 

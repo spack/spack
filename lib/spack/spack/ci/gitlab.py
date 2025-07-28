@@ -245,7 +245,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             if "script" not in build_object:
                 raise AttributeError
 
-            build_object["script"] = unpack_script(build_object["script"], op=main_script_replacements)
+            build_object["script"] = unpack_script(
+                build_object["script"], op=main_script_replacements
+            )
 
             if "before_script" in build_object:
                 build_object["before_script"] = unpack_script(build_object["before_script"])
