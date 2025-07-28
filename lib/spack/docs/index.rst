@@ -46,6 +46,7 @@ or refer to the full manual below.
 
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Introduction
 
@@ -56,6 +57,7 @@ or refer to the full manual below.
    windows
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Basic Usage
 
@@ -66,12 +68,14 @@ or refer to the full manual below.
    getting_help
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Advanced Topics
 
    advanced_topics
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Links
 
@@ -80,6 +84,7 @@ or refer to the full manual below.
    Binaries (binaries.spack.io) <https://cache.spack.io>
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Reference
 
@@ -104,6 +109,7 @@ or refer to the full manual below.
    gpu_configuration
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Contributing
 
@@ -116,17 +122,10 @@ or refer to the full manual below.
    developer_guide
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: API Docs
 
    Spack Package API <package_api>
    Spack Builtin Repo <spack_repo>
    Spack API Docs <spack>
-
-==================
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
