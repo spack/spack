@@ -173,7 +173,7 @@ def test_built_spec_cache(install_mockery, tmp_path: pathlib.Path):
     that cache from a buildcache index."""
 
     install_cmd("--fake", "--no-cache", "corge")
-    buildcache_cmd("push", "--update-index", str(tmp_path), "corge")
+    buildcache_cmd("push", "--unsigned", "--update-index", str(tmp_path), "corge")
     mirror_cmd("add", "--type", "binary", "--unsigned", "test-mirror", str(tmp_path))
     buildcache_cmd("list", "-a", "-l")
 
