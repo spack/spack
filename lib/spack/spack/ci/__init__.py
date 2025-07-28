@@ -18,7 +18,7 @@ from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 from urllib.request import Request
 
 import spack
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
@@ -246,12 +246,14 @@ def create_already_built_pruner(check_index_only: bool = True) -> PrunerCallback
     """Return a filter that prunes specs already present on any configured
     mirrors"""
     try:
-        bindist.BINARY_INDEX.update()
-    except bindist.FetchCacheError as e:
+        spack.binary_distribution.BINARY_INDEX.update()
+    except spack.binary_distribution.FetchCacheError as e:
         tty.warn(e)
 
     def rebuild_filter(s: spack.spec.Spec) -> RebuildDecision:
-        spec_locations = bindist.get_mirrors_for_spec(spec=s, index_only=check_index_only)
+        spec_locations = spack.binary_distribution.get_mirrors_for_spec(
+            spec=s, index_only=check_index_only
+        )
 
         if not spec_locations:
             return RebuildDecision(True, "not found anywhere")
@@ -629,13 +631,13 @@ def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: b
         sign_binaries: If True, spack will attempt to sign binary package before pushing.
     """
     tty.debug(f"Pushing to build cache ({'signed' if sign_binaries else 'unsigned'})")
-    signing_key = bindist.select_signing_key() if sign_binaries else None
+    signing_key = spack.binary_distribution.select_signing_key() if sign_binaries else None
     mirror = spack.mirrors.mirror.Mirror.from_url(mirror_url)
     try:
-        with bindist.make_uploader(mirror, signing_key=signing_key) as uploader:
+        with spack.binary_distribution.make_uploader(mirror, signing_key=signing_key) as uploader:
             uploader.push_or_raise([spec])
         return True
-    except bindist.PushToBuildCacheError as e:
+    except spack.binary_distribution.PushToBuildCacheError as e:
         tty.error(f"Problem writing to {mirror_url}: {e}")
         return False
 

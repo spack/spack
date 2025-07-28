@@ -8,7 +8,7 @@ import sys
 import tempfile
 from typing import List, Optional, Tuple
 
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.cmd
 import spack.concretize
 import spack.config
@@ -407,7 +407,9 @@ def push_fn(args):
         unsigned = True
 
     # Select a signing key, or None if unsigned.
-    signing_key = None if unsigned else (args.key or bindist.select_signing_key())
+    signing_key = (
+        None if unsigned else (args.key or spack.binary_distribution.select_signing_key())
+    )
 
     specs = _specs_to_be_packaged(
         roots,
@@ -438,7 +440,7 @@ def push_fn(args):
     if not mirror.push_url.startswith("oci://"):
         check_mirror_for_layout(mirror)
 
-    with bindist.make_uploader(
+    with spack.binary_distribution.make_uploader(
         mirror=mirror,
         force=args.force,
         update_index=args.update_index,
@@ -487,17 +489,19 @@ def install_fn(args):
     if not args.specs:
         tty.die("a spec argument is required to install from a buildcache")
 
-    query = bindist.BinaryCacheQuery(all_architectures=args.otherarch)
+    query = spack.binary_distribution.BinaryCacheQuery(all_architectures=args.otherarch)
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
     for match in matches:
-        bindist.install_single_spec(match, unsigned=args.unsigned, force=args.force)
+        spack.binary_distribution.install_single_spec(
+            match, unsigned=args.unsigned, force=args.force
+        )
 
 
 def list_fn(args):
     """list binary packages available from mirrors"""
     try:
-        specs = bindist.update_cache_and_get_specs()
-    except bindist.FetchCacheError as e:
+        specs = spack.binary_distribution.update_cache_and_get_specs()
+    except spack.binary_distribution.FetchCacheError as e:
         tty.die(e)
 
     if not args.allarch:
@@ -520,7 +524,7 @@ def list_fn(args):
 
 def keys_fn(args):
     """get public keys available on mirrors"""
-    bindist.get_keys(args.install, args.trust, args.force)
+    spack.binary_distribution.get_keys(args.install, args.trust, args.force)
 
 
 def check_fn(args: argparse.Namespace):
@@ -552,7 +556,12 @@ def check_fn(args: argparse.Namespace):
         tty.msg("No mirrors provided, exiting.")
         return
 
-    if bindist.check_specs_against_mirrors(configured_mirrors, specs, args.output_file) == 1:
+    if (
+        spack.binary_distribution.check_specs_against_mirrors(
+            configured_mirrors, specs, args.output_file
+        )
+        == 1
+    ):
         sys.exit(1)
 
 
@@ -568,7 +577,7 @@ def download_fn(args):
     if len(specs) != 1:
         tty.die("a single spec argument is required to download from a buildcache")
 
-    bindist.download_single_spec(specs[0], args.path)
+    spack.binary_distribution.download_single_spec(specs[0], args.path)
 
 
 def save_specfile_fn(args):
@@ -598,7 +607,7 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
     try:
         spec_dict = cache_entry.fetch_metadata()
         cache_entry.fetch_archive()
-    except bindist.BuildcacheEntryError as e:
+    except spack.binary_distribution.BuildcacheEntryError as e:
         tty.warn(f"Failed to retrieve buildcache for copying due to {e}")
         cache_entry.destroy()
         return
@@ -709,7 +718,7 @@ def sync_fn(args):
     for s in specs_to_sync:
         tty.debug("  {0}{1}: {2}".format("* " if s in env.roots() else "  ", s.name, s.dag_hash()))
         cache_class = get_url_buildcache_class(
-            layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+            layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
         src_cache_entry = cache_class(src_mirror_url, s, allow_unsigned=True)
         src_cache_entry.read_manifest()
@@ -734,7 +743,7 @@ def manifest_copy(
 
     for spec_hash, copy_obj in deduped_manifest.items():
         cache_class = get_url_buildcache_class(
-            layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+            layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
         src_cache_entry = cache_class(
             cache_class.get_base_url(copy_obj["src"]), allow_unsigned=True
@@ -759,20 +768,20 @@ def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
         with tempfile.TemporaryDirectory(
             dir=spack.stage.get_stage_root()
         ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
-            bindist._oci_update_index(image_ref, tmpdir, executor)
+            spack.binary_distribution._oci_update_index(image_ref, tmpdir, executor)
         return
 
     # Otherwise, assume a normal mirror.
     url = mirror.push_url
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        bindist._url_generate_package_index(url, tmpdir)
+        spack.binary_distribution._url_generate_package_index(url, tmpdir)
 
     if update_keys:
         try:
             with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-                bindist.generate_key_index(url, tmpdir)
-        except bindist.CannotListKeys as e:
+                spack.binary_distribution.generate_key_index(url, tmpdir)
+        except spack.binary_distribution.CannotListKeys as e:
             # Do not error out if listing keys went wrong. This usually means that the _gpg path
             # does not exist. TODO: distinguish between this and other errors.
             tty.warn(f"did not update the key index: {e}")

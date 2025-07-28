@@ -43,6 +43,8 @@ class RemoveDocstrings(ast.NodeTransformer):
     def remove_docstring(self, node):
         if node.body:
             node.body = [child for child in node.body if not unused_string(child)]
+        if not node.body:
+            node.body = [ast.Pass()]
 
         self.generic_visit(node)
         return node
