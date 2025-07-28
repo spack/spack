@@ -14,12 +14,6 @@ import stat
 import warnings
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-import llnl.util.tty.color as clr
-from llnl.util.link_tree import ConflictingSpecsError
-from llnl.util.symlink import islink, readlink, symlink
-
 import spack
 import spack.concretize
 import spack.config
@@ -27,6 +21,9 @@ import spack.deptypes as dt
 import spack.error
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as clr
 import spack.paths
 import spack.repo
 import spack.schema.env
@@ -41,6 +38,8 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack import traverse
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import islink, readlink, symlink
+from spack.llnl.util.link_tree import ConflictingSpecsError
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.util.path import substitute_path_variables

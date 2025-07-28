@@ -40,14 +40,6 @@ from collections import defaultdict
 from gzip import GzipFile
 from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
-import llnl.util.filesystem as fs
-import llnl.util.lock as lk
-import llnl.util.tty as tty
-from llnl.string import ordinal
-from llnl.util.lang import pretty_seconds
-from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output, preserve_terminal_settings
-
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
 import spack.builder
@@ -56,6 +48,9 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lock as lk
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.package_base
 import spack.package_prefs as prefs
@@ -67,6 +62,10 @@ import spack.store
 import spack.util.executable
 import spack.util.path
 import spack.util.timer as timer
+from spack.llnl.string import ordinal
+from spack.llnl.util.lang import pretty_seconds
+from spack.llnl.util.tty.color import colorize
+from spack.llnl.util.tty.log import log_output, preserve_terminal_settings
 from spack.url_buildcache import BuildcacheEntryError
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
@@ -1304,7 +1303,7 @@ class BuildTask(Task):
         self.record.succeed()
 
         # delete the temporary backup for an overwrite
-        # see llnl.util.filesystem.restore_directory_transaction
+        # see spack.llnl.util.filesystem.restore_directory_transaction
         if self.install_action == InstallAction.OVERWRITE:
             shutil.rmtree(self.tmpdir, ignore_errors=True)
 
@@ -1315,7 +1314,7 @@ class BuildTask(Task):
             raise inner_exception
 
         # restore the overwrite directory from backup
-        # see llnl.util.filesystem.restore_directory_transaction
+        # see spack.llnl.util.filesystem.restore_directory_transaction
         try:
             if os.path.exists(self.pkg.prefix):
                 shutil.rmtree(self.pkg.prefix)

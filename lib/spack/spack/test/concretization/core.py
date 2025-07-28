@@ -7,11 +7,10 @@ import platform
 import sys
 from typing import Any, Dict
 
-import _vendoring.archspec.cpu
-import _vendoring.jinja2
 import pytest
 
-import llnl.util.lang
+import spack.vendor.archspec.cpu
+import spack.vendor.jinja2
 
 import spack.binary_distribution
 import spack.cmd
@@ -22,6 +21,7 @@ import spack.deptypes as dt
 import spack.detection
 import spack.error
 import spack.hash_types as ht
+import spack.llnl.util.lang
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -151,12 +151,12 @@ def current_host(request, monkeypatch):
 
     monkeypatch.setattr(spack.platforms.Test, "default", cpu)
     if not is_preference:
-        target = _vendoring.archspec.cpu.TARGETS[cpu]
-        monkeypatch.setattr(_vendoring.archspec.cpu, "host", lambda: target)
+        target = spack.vendor.archspec.cpu.TARGETS[cpu]
+        monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: target)
         yield target
     else:
-        target = _vendoring.archspec.cpu.TARGETS["sapphirerapids"]
-        monkeypatch.setattr(_vendoring.archspec.cpu, "host", lambda: target)
+        target = spack.vendor.archspec.cpu.TARGETS["sapphirerapids"]
+        monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: target)
         with spack.config.override("packages:all", {"target": [cpu]}):
             yield target
 
@@ -264,7 +264,7 @@ class Changing(Package):
                     del sys.modules[module]
 
                 # Change the recipe
-                t = _vendoring.jinja2.Template(changing_template)
+                t = spack.vendor.jinja2.Template(changing_template)
                 changing_pkg_str = t.render(**context)
                 package_py = packages_dir / "changing" / "package.py"
                 package_py.parent.mkdir(parents=True, exist_ok=True)
@@ -388,7 +388,7 @@ class TestConcretize:
                 "gcc": {"externals": [gcc11_with_flags]},
             },
         )
-        t = _vendoring.archspec.cpu.host().family
+        t = spack.vendor.archspec.cpu.host().family
         client = spack.concretize.concretize_one(
             Spec(
                 f"cmake-client platform=test os=redhat6 target={t} %gcc@11.1.0"
@@ -885,15 +885,15 @@ class TestConcretize:
         s = Spec("mpileaks")
         s = spack.concretize.concretize_one(s)
 
-        assert llnl.util.lang.ObjectWrapper not in s.__class__.__mro__
+        assert spack.llnl.util.lang.ObjectWrapper not in s.__class__.__mro__
 
         # Spec wrapped in a build interface
         build_interface = s["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
+        assert spack.llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
         # Mimics asking the build interface from a build interface
         build_interface = s["mpileaks"]["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
+        assert spack.llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
     @pytest.mark.regression("7705")
     def test_regression_issue_7705(self):
@@ -981,7 +981,7 @@ class TestConcretize:
     def test_adjusting_default_target_based_on_compiler(
         self, spec, compiler_spec, best_achievable, current_host, compiler_factory, mutable_config
     ):
-        best_achievable = _vendoring.archspec.cpu.TARGETS[best_achievable]
+        best_achievable = spack.vendor.archspec.cpu.TARGETS[best_achievable]
         expected = best_achievable if best_achievable < current_host else current_host
         mutable_config.set(
             "packages", {"gcc": {"externals": [compiler_factory(spec=f"{compiler_spec}")]}}
@@ -1602,7 +1602,7 @@ class TestConcretize:
         config = {"externals": [{"spec": spec, "prefix": "/fake/path"}], "buildable": False}
         spack.config.set("packages:sticky-variant", config)
 
-        maybe = llnl.util.lang.nullcontext if allow_gcc else pytest.raises
+        maybe = spack.llnl.util.lang.nullcontext if allow_gcc else pytest.raises
         with maybe(spack.error.SpackError):
             s = spack.concretize.concretize_one("sticky-variant-dependent%gcc")
 
@@ -1635,7 +1635,7 @@ class TestConcretize:
     def test_conditional_values_in_variants(self, spec_str, valid):
         s = Spec(spec_str)
         raises = pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError))
-        with llnl.util.lang.nullcontext() if valid else raises:
+        with spack.llnl.util.lang.nullcontext() if valid else raises:
             s = spack.concretize.concretize_one(s)
 
     def test_conditional_values_in_conditional_variant(self):
@@ -1650,7 +1650,7 @@ class TestConcretize:
         # The test architecture uses core2 as the default target. Check that when
         # we configure Spack for "generic" granularity we concretize for x86_64
         default_target = spack.platforms.test.Test.default
-        generic_target = _vendoring.archspec.cpu.TARGETS[default_target].generic.name
+        generic_target = spack.vendor.archspec.cpu.TARGETS[default_target].generic.name
         s = Spec("python")
         assert spack.concretize.concretize_one(s).satisfies("target=%s" % default_target)
         with spack.config.override("concretizer:targets", {"granularity": "generic"}):
@@ -2019,7 +2019,9 @@ class TestConcretize:
     def test_require_targets_are_allowed(self, mutable_config, mutable_database):
         """Test that users can set target constraints under the require attribute."""
         # Configuration to be added to packages.yaml
-        required_target = _vendoring.archspec.cpu.TARGETS[spack.platforms.test.Test.default].family
+        required_target = spack.vendor.archspec.cpu.TARGETS[
+            spack.platforms.test.Test.default
+        ].family
         external_conf = {"all": {"require": f"target={required_target}"}}
         mutable_config.set("packages", external_conf)
 
@@ -3118,7 +3120,7 @@ def test_spec_unification(unify, mutable_config, mock_packages):
     b_concrete_unrestricted = [s for s in unrestricted if s.name == "pkg-b"][0]
     assert (a_concrete_unrestricted["pkg-b"] == b_concrete_unrestricted) == (unify is not False)
 
-    maybe_fails = pytest.raises if unify is True else llnl.util.lang.nullcontext
+    maybe_fails = pytest.raises if unify is True else spack.llnl.util.lang.nullcontext
     with maybe_fails(spack.solver.asp.UnsatisfiableSpecError):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
 

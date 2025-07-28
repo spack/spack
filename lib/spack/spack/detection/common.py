@@ -20,8 +20,6 @@ import re
 import sys
 from typing import Dict, List, Optional, Set, Tuple, Union
 
-from llnl.util import tty
-
 import spack.config
 import spack.error
 import spack.operating_systems.windows_os as winOs
@@ -30,6 +28,7 @@ import spack.spec
 import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
+from spack.llnl.util import tty
 
 
 def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:

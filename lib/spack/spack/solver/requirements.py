@@ -4,13 +4,12 @@
 import enum
 from typing import List, NamedTuple, Optional, Sequence
 
-from llnl.util import tty
-
 import spack.config
 import spack.error
 import spack.package_base
 import spack.repo
 import spack.spec
+from spack.llnl.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
 

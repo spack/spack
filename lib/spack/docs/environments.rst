@@ -420,12 +420,12 @@ used at install time for each package in the ``repos/`` directory in
 the environment.
 
 The ``--no-add`` option can be used in a concrete environment to tell
-spack to install specs already present in the environment but not to
+Spack to install specs already present in the environment but not to
 add any new root specs to the environment.  For root specs provided
 to ``spack install`` on the command line, ``--no-add`` is the default,
 while for dependency specs, it is optional.  In other
 words, if there is an unambiguous match in the active concrete environment
-for a root spec provided to ``spack install`` on the command line, spack
+for a root spec provided to ``spack install`` on the command line, Spack
 does not require you to specify the ``--no-add`` option to prevent the spec
 from being added again.  At the same time, a spec that already exists in the
 environment, but only as a dependency, will be added to the environment as a
@@ -487,7 +487,7 @@ The supplied location will become the build-directory for that package in all fu
     the user.
     For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds
     while all ``CMake`` packages do.
-    Understanding these nuances is on the software developers and we strongly encourage
+    Understanding these nuances is up to the software developers and we strongly encourage
     developers to only redirect the build directory if they understand their package's
     build-system.
 
@@ -1156,8 +1156,8 @@ view. If no path is specified, the default path is used (``view:
 true``). The argument ``--without-view`` can be used to create an
 environment without any view configured.
 
-The ``spack env view`` command can be used to change the manage views
-of an environment. The subcommand ``spack env view enable`` will add a
+The ``spack env view`` command can be used to manage views of an environment.
+The subcommand ``spack env view enable`` will add a
 view named ``default`` to an environment. It takes an optional
 argument to specify the path for the new default view. The subcommand
 ``spack env view disable`` will remove the view named ``default`` from
@@ -1183,13 +1183,13 @@ function, as shown in the example below:
      ^mpi: "{name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}"
      all: "{name}-{version}/{compiler.name}-{compiler.version}"
 
-Projections also permit environment and spack configuration variable
+Projections also permit environment and Spack configuration variable
 expansions as shown below:
 
 .. code-block:: yaml
 
    projections:
-     all: "{name}-{version}/{compiler.name}-{compiler.version}/$date/$SYSTEM_ENV_VARIBLE"
+     all: "{name}-{version}/{compiler.name}-{compiler.version}/$date/$SYSTEM_ENV_VARIABLE"
 
 where ``$date`` is the Spack configuration variable that will expand with the ``YYYY-MM-DD``
 format and ``$SYSTEM_ENV_VARIABLE`` is an environment variable defined in the shell.

@@ -15,8 +15,7 @@ from collections import namedtuple
 from enum import Enum
 from pathlib import PurePath
 
-import llnl.util.filesystem
-
+import spack.llnl.util.filesystem
 import spack.util.hash as hash
 
 
@@ -96,7 +95,7 @@ def dir_is_occupied(x, except_for=None):
 class SpackPaths:
     def __init__(self, _prefix=None):
         #: This file lives in $prefix/lib/spack/spack/__file__
-        self.prefix = _prefix or str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
+        self.prefix = _prefix or str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
 
         #: synonym for prefix
         self.spack_root = self.prefix
@@ -114,6 +113,7 @@ class SpackPaths:
         self.lib_path = os.path.join(self.prefix, "lib", "spack")
         self.external_path = os.path.join(self.lib_path, "external")
         self.module_path = os.path.join(self.lib_path, "spack")
+        self.vendor_path = os.path.join(self.module_path, "vendor")
         self.command_path = os.path.join(self.module_path, "cmd")
         self.analyzers_path = os.path.join(self.module_path, "analyzers")
         self.platform_path = os.path.join(self.module_path, "platforms")
@@ -308,6 +308,7 @@ sbang_script = locations.sbang_script
 lib_path = locations.lib_path
 external_path = locations.external_path
 module_path = locations.module_path
+vendor_path = locations.vendor_path
 command_path = locations.command_path
 analyzers_path = locations.analyzers_path
 platform_path = locations.platform_path

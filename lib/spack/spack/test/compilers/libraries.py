@@ -7,10 +7,9 @@ import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.compilers.config
 import spack.compilers.libraries
+import spack.llnl.util.filesystem as fs
 import spack.util.executable
 import spack.util.module_cmd
 

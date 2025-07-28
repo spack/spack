@@ -10,15 +10,14 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import llnl.util.filesystem as fs
-from llnl.util.symlink import readlink
-
 import spack.config
 import spack.hash_types as ht
+import spack.llnl.util.filesystem as fs
 import spack.projections
 import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
+from spack.llnl.util.filesystem import readlink
 
 default_projections = {
     "all": "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"

@@ -6,14 +6,13 @@ import argparse
 import os
 import sys
 
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
-
 import spack.cmd
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.executable as exe
 import spack.util.package_hash as ph
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify
 
 description = "query packages associated with particular git revisions"
 section = "developer"

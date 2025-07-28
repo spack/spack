@@ -7,9 +7,8 @@ import errno
 import glob
 import os
 
-import llnl.util.tty as tty
-
 import spack.cmd
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.util.editor

@@ -12,17 +12,13 @@ import re
 import shutil
 import sys
 from collections import Counter, OrderedDict
-from typing import Callable, Iterable, List, Optional, Tuple, Type, TypeVar, Union
-
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-import llnl.util.tty.log
-from llnl.string import plural
-from llnl.util.lang import nullcontext
-from llnl.util.tty.color import colorize
+from typing import Callable, Iterable, List, Optional, Tuple, Type, Union
 
 import spack.config
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.log
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -32,6 +28,9 @@ import spack.util.executable
 import spack.util.path
 import spack.util.spack_json as sjson
 from spack.error import InstallError
+from spack.llnl.string import plural
+from spack.llnl.util.lang import nullcontext
+from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
 from spack.util.prefix import Prefix
 
@@ -49,10 +48,11 @@ spack_install_test_log = "install-time-test-log.txt"
 
 
 ListOrStringType = Union[str, List[str]]
-LogType = Union[llnl.util.tty.log.nixlog, llnl.util.tty.log.winlog]
+LogType = Union[spack.llnl.util.tty.log.nixlog, spack.llnl.util.tty.log.winlog]
 
-Pb = TypeVar("Pb", bound="spack.package_base.PackageBase")
-PackageObjectOrClass = Union[Pb, Type[Pb]]
+PackageObjectOrClass = Union[
+    "spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]
+]
 
 
 class TestStatus(enum.Enum):
@@ -102,7 +102,7 @@ def get_test_stage_dir():
     )
 
 
-def cache_extra_test_sources(pkg: Pb, srcs: ListOrStringType):
+def cache_extra_test_sources(pkg: "spack.package_base.PackageBase", srcs: ListOrStringType):
     """Copy relative source paths to the corresponding install test subdir
 
     This routine is intended as an optional install test setup helper for
@@ -197,12 +197,8 @@ def find_required_file(
     return paths[0] if expected == 1 else paths
 
 
-def install_test_root(pkg: Pb):
-    """The install test root directory.
-
-    Args:
-        pkg: package being tested
-    """
+def install_test_root(pkg: "spack.package_base.PackageBase") -> str:
+    """The install test root directory."""
     return os.path.join(pkg.metadata_dir, "test")
 
 
@@ -250,7 +246,7 @@ def overall_status(current_status: "TestStatus", substatuses: List["TestStatus"]
 class PackageTest:
     """The class that manages stand-alone (post-install) package tests."""
 
-    def __init__(self, pkg: Pb):
+    def __init__(self, pkg: "spack.package_base.PackageBase") -> None:
         """
         Args:
             pkg: package being tested
@@ -287,7 +283,7 @@ class PackageTest:
     def logger(self) -> Optional[LogType]:
         """The current logger or, if none, sets to one."""
         if not self._logger:
-            self._logger = llnl.util.tty.log.log_output(self.test_log_file)
+            self._logger = spack.llnl.util.tty.log.log_output(self.test_log_file)
 
         return self._logger
 
@@ -304,7 +300,7 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with llnl.util.tty.log.log_output(self.test_log_file, verbose) as self._logger:
+        with spack.llnl.util.tty.log.log_output(self.test_log_file, verbose) as self._logger:
             with self.logger.force_echo():  # type: ignore[union-attr]
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
 
@@ -465,8 +461,15 @@ class PackageTest:
 
 
 @contextlib.contextmanager
-def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbose: bool = False):
-    import spack.build_environment  # avoid circular dependency
+def test_part(
+    pkg: "spack.package_base.PackageBase",
+    test_name: str,
+    purpose: str,
+    work_dir: str = ".",
+    verbose: bool = False,
+):
+    # avoid circular dependency
+    from spack.build_environment import get_package_context, write_log_summary
 
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
@@ -523,7 +526,7 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
 
             if exc_type is spack.util.executable.ProcessError or exc_type is TypeError:
                 iostr = io.StringIO()
-                spack.build_environment.write_log_summary(
+                write_log_summary(
                     iostr, "test", tester.test_log_file, last=1
                 )  # type: ignore[assignment]
                 m = iostr.getvalue()
@@ -532,7 +535,7 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
                 # stack instead of from traceback.
                 # The traceback is truncated here, so we can't use it to
                 # traverse the stack.
-                m = "\n".join(spack.build_environment.get_package_context(tb))
+                m = "\n".join(get_package_context(tb) or "")
 
             exc = e  # e is deleted after this block
 
@@ -543,7 +546,7 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
                 tester.add_failure(exc, m)
 
 
-def copy_test_files(pkg: Pb, test_spec: spack.spec.Spec):
+def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec.Spec):
     """Copy the spec's cached and custom test files to the test stage directory.
 
     Args:
@@ -644,7 +647,9 @@ def test_functions(
     return tests
 
 
-def process_test_parts(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool = False):
+def process_test_parts(
+    pkg: "spack.package_base.PackageBase", test_specs: List[spack.spec.Spec], verbose: bool = False
+):
     """Process test parts associated with the package.
 
     Args:
@@ -720,7 +725,7 @@ def process_test_parts(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
             tty.msg("No tests to run")
 
 
-def test_process(pkg: Pb, kwargs):
+def test_process(pkg: "spack.package_base.PackageBase", kwargs):
     verbose = kwargs.get("verbose", True)
     externals = kwargs.get("externals", False)
 

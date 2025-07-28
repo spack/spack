@@ -9,12 +9,11 @@ import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack
 import spack.config
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.paths
 import spack.platforms

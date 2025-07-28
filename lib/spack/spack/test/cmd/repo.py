@@ -9,8 +9,6 @@ from typing import Dict, Optional, Union
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.cmd.repo
 import spack.config
 import spack.environment as ev
@@ -18,6 +16,7 @@ import spack.main
 import spack.repo
 import spack.repo_migrate
 from spack.error import SpackError
+from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
 from spack.util.executable import Executable
 
@@ -263,6 +262,9 @@ class MockDescriptor(spack.repo.RepoDescriptor):
 
     def initialize(self, fetch=True, git=None) -> None:
         self.initialized = True
+
+    def get_commit(self, git: Optional[Executable] = None):
+        pass
 
     def update(self, git: Optional[Executable] = None, remote: Optional[str] = "origin") -> None:
         pass

@@ -13,10 +13,7 @@ from contextlib import contextmanager
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.symlink
-from llnl.util.symlink import _windows_can_symlink, islink, readlink, symlink
-
+import spack.llnl.util.filesystem as fs
 import spack.paths
 
 
@@ -40,9 +37,9 @@ def stage(tmp_path_factory: pytest.TempPathFactory):
         fs.touchp("source/g/i/j/10")
 
         # Create symlinks
-        symlink(os.path.abspath("source/1"), "source/2")
-        symlink("b/2", "source/a/b2")
-        symlink("a/b", "source/f")
+        fs.symlink(os.path.abspath("source/1"), "source/2")
+        fs.symlink("b/2", "source/a/b2")
+        fs.symlink("a/b", "source/f")
 
         # Create destination directory
         fs.mkdirp("dest")
@@ -178,11 +175,11 @@ class TestCopyTree:
             fs.copy_tree("source", "dest", symlinks=True)
 
             assert os.path.exists("dest/2")
-            assert islink("dest/2")
+            assert fs.islink("dest/2")
 
             assert os.path.exists("dest/a/b2")
             with fs.working_dir("dest/a"):
-                assert os.path.exists(readlink("b2"))
+                assert os.path.exists(fs.readlink("b2"))
 
             assert os.path.realpath("dest/f/2") == os.path.abspath("dest/a/b/2")
             assert os.path.realpath("dest/2") == os.path.abspath("dest/1")
@@ -279,10 +276,10 @@ class TestInstallTree:
     def test_allow_broken_symlinks(self, stage):
         """Test installing with a broken symlink."""
         with fs.working_dir(str(stage)):
-            symlink("nonexistant.txt", "source/broken")
+            fs.symlink("nonexistant.txt", "source/broken")
             fs.install_tree("source", "dest", symlinks=True)
             assert os.path.islink("dest/broken")
-            assert not os.path.exists(readlink("dest/broken"))
+            assert not os.path.exists(fs.readlink("dest/broken"))
 
     def test_glob_src(self, stage):
         """Test using a glob as the source."""
@@ -986,8 +983,8 @@ def test_rename_dest_exists(tmp_path: pathlib.Path):
     a = a_dir / "link1"
     b = a_dir / "link2"
     fs.touchp(str(c))
-    symlink(str(c), str(a))
-    symlink(str(c), str(b))
+    fs.symlink(str(c), str(a))
+    fs.symlink(str(c), str(b))
     fs.rename(str(a), str(b))
     assert os.path.exists(b)
     assert not os.path.exists(a)
@@ -1020,8 +1017,8 @@ def test_rename_dest_exists(tmp_path: pathlib.Path):
         f_dir.mkdir()
         link1 = f_dir / "link1"
         link2 = f_dir / "link2"
-        symlink(str(a), str(link1))
-        symlink(str(b), str(link2))
+        fs.symlink(str(a), str(link1))
+        fs.symlink(str(b), str(link2))
         fs.rename(str(link1), str(link2))
         assert os.path.exists(link2)
         assert os.path.realpath(str(link2)) == str(a)
@@ -1187,7 +1184,7 @@ def complex_dir_structure(request, tmp_path_factory: pytest.TempPathFactory):
         l1-s4 -> l2-s3 # a link to a link to a dir
     """
     use_junctions = request.param
-    if sys.platform == "win32" and not use_junctions and not _windows_can_symlink():
+    if sys.platform == "win32" and not use_junctions and not fs._windows_can_symlink():
         pytest.skip("This Windows instance is not configured with symlink support")
     elif sys.platform != "win32" and use_junctions:
         pytest.skip("Junctions are a Windows-only feature")
@@ -1207,7 +1204,7 @@ def complex_dir_structure(request, tmp_path_factory: pytest.TempPathFactory):
     l2_d2.mkdir()
 
     if sys.platform == "win32" and use_junctions:
-        link_fn = llnl.util.symlink._windows_create_junction
+        link_fn = fs._windows_create_junction
     else:
         link_fn = os.symlink
 

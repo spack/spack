@@ -2,9 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.paths
 
 

@@ -13,11 +13,6 @@ from typing import Any, Dict, Optional
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.link_tree
-import llnl.util.tty as tty
-from llnl.util.symlink import readlink
-
 import spack.cmd.env
 import spack.concretize
 import spack.config
@@ -26,6 +21,9 @@ import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.link_tree
+import spack.llnl.util.tty as tty
 import spack.main
 import spack.modules
 import spack.modules.tcl
@@ -42,6 +40,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import readlink
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
@@ -1962,7 +1961,7 @@ def test_env_view_fails_dir_file(
         add("view-file")
         add("view-dir")
         with pytest.raises(
-            llnl.util.link_tree.MergeConflictSummary, match=os.path.join("bin", "x")
+            spack.llnl.util.link_tree.MergeConflictSummary, match=os.path.join("bin", "x")
         ):
             install()
 

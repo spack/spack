@@ -8,8 +8,7 @@ import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-
+import spack.llnl.util.filesystem as fs
 import spack.platforms
 from spack.hooks.absolutify_elf_sonames import SharedLibrariesVisitor, find_and_patch_sonames
 from spack.util.executable import Executable

@@ -6,12 +6,11 @@ import os
 import shutil
 from typing import Optional
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.config
 import spack.environment
 import spack.fetch_strategy
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.stage

@@ -7,8 +7,6 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import getuid, touch
-
 import spack
 import spack.cmd.external
 import spack.config
@@ -16,6 +14,7 @@ import spack.cray_manifest
 import spack.detection
 import spack.detection.path
 import spack.repo
+from spack.llnl.util.filesystem import getuid, touch
 from spack.main import SpackCommand
 from spack.spec import Spec
 

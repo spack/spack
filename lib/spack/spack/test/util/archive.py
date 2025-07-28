@@ -11,10 +11,9 @@ from pathlib import Path, PurePath
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.util.crypto
 import spack.version
+from spack.llnl.util.filesystem import working_dir
 from spack.util.archive import (
     gzip_compressed_tarfile,
     reproducible_tarfile_from_prefix,

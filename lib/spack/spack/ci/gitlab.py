@@ -6,13 +6,12 @@ import os
 import shutil
 from typing import List, Optional
 
-import _vendoring.ruamel.yaml
-
-import llnl.util.tty as tty
+import spack.vendor.ruamel.yaml
 
 import spack
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.config as cfg
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
@@ -239,7 +238,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
             # Let downstream jobs know whether the spec needed rebuilding, regardless
             # whether DAG pruning was enabled or not.
-            already_built = bindist.get_mirrors_for_spec(spec=release_spec, index_only=True)
+            already_built = spack.binary_distribution.get_mirrors_for_spec(
+                spec=release_spec, index_only=True
+            )
             job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
 
             if options.cdash_handler:
@@ -262,7 +263,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             )
 
             job_object["stage"] = stage_name
-            job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
+            job_object["retry"] = spack.schema.merge_yaml(
+                {"max": 2, "when": JOB_RETRY_CONDITIONS}, job_object.get("retry", {})
+            )
             job_object["interruptible"] = True
 
             length_needs = len(job_object["needs"])
@@ -292,8 +295,8 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     )
     maybe_generate_manifest(pipeline, options, manifest_path)
 
-    relative_specs_url = bindist.buildcache_relative_specs_url()
-    relative_keys_url = bindist.buildcache_relative_keys_url()
+    relative_specs_url = spack.binary_distribution.buildcache_relative_specs_url()
+    relative_keys_url = spack.binary_distribution.buildcache_relative_keys_url()
 
     if options.pipeline_type == PipelineType.COPY_ONLY:
         stage_names.append("copy")
@@ -422,4 +425,4 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     syaml.anchorify(sorted_output)
 
     with open(output_file, "w", encoding="utf-8") as f:
-        _vendoring.ruamel.yaml.YAML().dump(sorted_output, f)
+        spack.vendor.ruamel.yaml.YAML().dump(sorted_output, f)

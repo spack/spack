@@ -5,13 +5,12 @@
 import argparse
 import sys
 
-import llnl.util.lang as lang
-import llnl.util.tty as tty
-
 import spack
 import spack.cmd
 import spack.environment as ev
 import spack.hash_types as ht
+import spack.llnl.util.lang as lang
+import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 import spack.traverse

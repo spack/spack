@@ -7,10 +7,9 @@ import pathlib
 import shutil
 from typing import NamedTuple
 
-import _vendoring.jsonschema
 import pytest
 
-from llnl.util.filesystem import mkdirp, working_dir
+import spack.vendor.jsonschema
 
 import spack
 import spack.binary_distribution
@@ -32,6 +31,7 @@ from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
+from spack.llnl.util.filesystem import mkdirp, working_dir
 from spack.schema.database_index import schema as db_idx_schema
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 
@@ -886,7 +886,7 @@ spack:
             )
             index_fetcher = spack.binary_distribution.DefaultIndexFetcher(url_and_version, None)
             result = index_fetcher.conditional_fetch()
-            _vendoring.jsonschema.validate(json.loads(result.data), db_idx_schema)
+            spack.vendor.jsonschema.validate(json.loads(result.data), db_idx_schema)
 
             # Now that index is regenerated, validate "buildcache list" output
             assert "patchelf" in buildcache_cmd("list", output=str)

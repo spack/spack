@@ -17,15 +17,13 @@ from typing import Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
@@ -33,6 +31,7 @@ import spack.util.compression as compression
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 from spack import traverse
+from spack.llnl.util.lang import memoized
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
@@ -180,7 +179,7 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
     for release_spec in specs:
         release_spec_dag_hash = release_spec.dag_hash()
         cache_class = get_url_buildcache_class(
-            layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+            layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
         buildcache_copies[release_spec_dag_hash] = {
             "src": cache_class.get_manifest_url(release_spec, src_prefix),

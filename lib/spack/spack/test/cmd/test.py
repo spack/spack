@@ -8,8 +8,6 @@ import pathlib
 
 import pytest
 
-from llnl.util.filesystem import copy_tree, working_dir
-
 import spack.cmd.common.arguments
 import spack.cmd.test
 import spack.concretize
@@ -17,6 +15,7 @@ import spack.config
 import spack.install_test
 import spack.paths
 from spack.install_test import TestStatus
+from spack.llnl.util.filesystem import copy_tree, working_dir
 from spack.main import SpackCommand
 
 install = SpackCommand("install")

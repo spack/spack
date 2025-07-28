@@ -44,7 +44,7 @@ def url_and_build_system(request, tmp_path: pathlib.Path):
     the correct build-system guess
     """
     tar = spack.util.executable.which("tar", required=True)
-    import llnl.util.filesystem as fs
+    import spack.llnl.util.filesystem as fs
 
     with fs.working_dir(str(tmp_path)):
         filename, system = request.param

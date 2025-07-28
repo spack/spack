@@ -4,7 +4,7 @@
 
 import pathlib
 
-from ctest_log_parser import CTestLogParser
+from spack.util.ctest_log_parser import CTestLogParser
 
 
 def test_log_parser(tmp_path: pathlib.Path):

@@ -8,12 +8,11 @@ import re
 import sys
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-import llnl.util.tty as tty
-from llnl.util.lang import classproperty, memoized
-
 import spack
+import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.util.executable
+from spack.llnl.util.lang import classproperty, memoized
 from spack.package import CompilerError
 
 # Local "type" for type hints

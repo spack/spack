@@ -563,7 +563,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="push create install list keys check download save-specfile sync update-index rebuild-index migrate"
+        SPACK_COMPREPLY="push create install list keys check download prune save-specfile sync update-index rebuild-index migrate"
     fi
 }
 
@@ -618,6 +618,15 @@ _spack_buildcache_check() {
 
 _spack_buildcache_download() {
     SPACK_COMPREPLY="-h --help -s --spec -p --path"
+}
+
+_spack_buildcache_prune() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --dry-run"
+    else
+        _mirrors
+    fi
 }
 
 _spack_buildcache_save_specfile() {

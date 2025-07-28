@@ -23,16 +23,15 @@ import re
 import uuid
 from typing import Any, Callable, Dict, Generator, List, Optional, Union
 
-import llnl.util.lang
-from llnl.util import tty
-
 import spack.config
 import spack.database
 import spack.directory_layout
 import spack.error
+import spack.llnl.util.lang
 import spack.paths
 import spack.spec
 import spack.util.path
+from spack.llnl.util import tty
 
 
 def parse_install_tree(config_dict):
@@ -233,7 +232,7 @@ def _create_global() -> Store:
 
 
 #: Singleton store instance
-STORE: Store = llnl.util.lang.Singleton(_create_global)  # type: ignore
+STORE: Store = spack.llnl.util.lang.Singleton(_create_global)  # type: ignore
 
 
 def reinitialize():
@@ -243,7 +242,7 @@ def reinitialize():
     global STORE
 
     token = STORE
-    STORE = llnl.util.lang.Singleton(_create_global)
+    STORE = spack.llnl.util.lang.Singleton(_create_global)
 
     return token
 

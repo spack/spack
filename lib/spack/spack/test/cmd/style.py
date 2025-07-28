@@ -11,13 +11,12 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import FileFilter, working_dir
-
 import spack.cmd.style
 import spack.main
 import spack.paths
 import spack.repo
 from spack.cmd.style import _run_import_check, changed_files
+from spack.llnl.util.filesystem import FileFilter, working_dir
 from spack.util.executable import which
 
 #: directory with sample style files
@@ -148,7 +147,7 @@ def test_changed_files_all_files(mock_packages):
     assert __file__ in files
 
     # ensure externals are excluded
-    assert not any(f.startswith(spack.paths.external_path) for f in files)
+    assert not any(f.startswith(spack.paths.vendor_path) for f in files)
 
 
 def test_bad_root(tmp_path: pathlib.Path):

@@ -365,8 +365,8 @@ A more advanced example where we explicitly pass libraries and headers to the co
            f"--with-libxml2-include={self.spec['libxml2'].headers.include_flags}",
        ]
 
-The ``libs`` attribute is a :class:`LibraryList <llnl.util.filesystem.LibraryList>` object that can be used to get a list of libraries by path, but also to get the appropriate linker flags.
-Similarly, the ``headers`` attribute is a :class:`HeaderList <llnl.util.filesystem.HeaderList>`, which also has methods to get the relevant include flags.
+The ``libs`` attribute is a :class:`LibraryList <spack.llnl.util.filesystem.LibraryList>` object that can be used to get a list of libraries by path, but also to get the appropriate linker flags.
+Similarly, the ``headers`` attribute is a :class:`HeaderList <spack.llnl.util.filesystem.HeaderList>`, which also has methods to get the relevant include flags.
 
 .. _blas_lapack_scalapack:
 
@@ -634,7 +634,7 @@ This is already part of the boilerplate for packages created with ``spack create
 File filtering functions
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-:py:func:`filter_file(regex, repl, *filenames, **kwargs) <llnl.util.filesystem.filter_file>`
+:py:func:`filter_file(regex, repl, *filenames, **kwargs) <spack.llnl.util.filesystem.filter_file>`
   Works like ``sed`` but with Python regular expression syntax.  Takes
   a regular expression, a replacement, and a set of files.  ``repl``
   can be a raw string or a callable function.  If it is a raw string,
@@ -672,7 +672,7 @@ File filtering functions
         filter_file("CXX='c++'", "CXX='%s'" % self.compiler.cxx,
                     prefix.bin.mpicxx)
 
-:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <llnl.util.filesystem.change_sed_delimiter>`
+:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.llnl.util.filesystem.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install
     into directories with, e.g. "@" in the name, because they use
     hard-coded ``sed`` commands in their build.
@@ -694,14 +694,14 @@ File filtering functions
 File functions
 ^^^^^^^^^^^^^^
 
-:py:func:`ancestor(dir, n=1) <llnl.util.filesystem.ancestor>`
+:py:func:`ancestor(dir, n=1) <spack.llnl.util.filesystem.ancestor>`
   Get the n\ :sup:`th` ancestor of the directory ``dir``.
 
-:py:func:`can_access(path) <llnl.util.filesystem.can_access>`
+:py:func:`can_access(path) <spack.llnl.util.filesystem.can_access>`
   True if we can read and write to the file at ``path``.  Same as
   native Python ``os.access(file_name, os.R_OK|os.W_OK)``.
 
-:py:func:`install(src, dest) <llnl.util.filesystem.install>`
+:py:func:`install(src, dest) <spack.llnl.util.filesystem.install>`
   Install a file to a particular location.  For example, install a
   header into the ``include`` directory under the install ``prefix``:
 
@@ -709,14 +709,14 @@ File functions
 
      install("my-header.h", prefix.include)
 
-:py:func:`join_path(*paths) <llnl.util.filesystem.join_path>`
+:py:func:`join_path(*paths) <spack.llnl.util.filesystem.join_path>`
   An alias for ``os.path.join``. This joins paths using the OS path separator.
 
-:py:func:`mkdirp(*paths) <llnl.util.filesystem.mkdirp>`
+:py:func:`mkdirp(*paths) <spack.llnl.util.filesystem.mkdirp>`
   Create each of the directories in ``paths``, creating any parent
   directories if they do not exist.
 
-:py:func:`working_dir(dirname, kwargs) <llnl.util.filesystem.working_dir>`
+:py:func:`working_dir(dirname, kwargs) <spack.llnl.util.filesystem.working_dir>`
   This is a Python `Context Manager
   <https://docs.python.org/2/library/contextlib.html>`_ that makes it
   easier to work with subdirectories in builds.  You use this with the
@@ -758,7 +758,7 @@ File functions
      The ``create=True`` keyword argument causes the command to create
      the directory if it does not exist.
 
-:py:func:`touch(path) <llnl.util.filesystem.touch>`
+:py:func:`touch(path) <spack.llnl.util.filesystem.touch>`
   Create an empty file at ``path``.
 
 
@@ -1219,15 +1219,15 @@ of MPI builds:
      supply includes/libs/etc.  This is fairly uncommon.
 
   2. Others really want the wrappers and assume you're using an MPI
-     "compiler" – i.e., they have no mechanism to add MPI
+     "compiler" -- i.e., they have no mechanism to add MPI
      includes/libraries/etc.
 
   3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
-     extract ``–I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
+     extract ``-I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
      regular library.
 
 Note that some CMake builds fall into case 2 because they either don't
-know about or don't like CMake's ``FindMPI`` support – they just assume
+know about or don't like CMake's ``FindMPI`` support -- they just assume
 an MPI compiler. Also, some autotools builds fall into case 3 (e.g., `here
 is an autotools version of CMake's FindMPI
 <https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
@@ -1242,7 +1242,7 @@ Packaging Conventions
 As mentioned above, in the ``install()`` method, ``CC``, ``CXX``,
 ``F77``, and ``FC`` point to Spack's wrappers around the chosen compiler.
 Spack's wrappers are not the MPI compiler wrappers, though they do
-automatically add ``–I``, ``–L``, and ``–Wl,-rpath`` args for
+automatically add ``-I``, ``-L``, and ``-Wl,-rpath`` args for
 dependencies in a similar way.  The MPI wrappers are a bit different in
 that they also add ``-l`` arguments for the MPI libraries, and some add
 special ``-D`` arguments to trigger build options in MPI programs.
@@ -1256,7 +1256,7 @@ interrogate them.
 
 For case 2, things are a bit more complicated, as you'll need to tell the
 build to use the MPI compiler wrappers instead of Spack's compiler
-wrappers.  All it takes some lines like this:
+wrappers.  All it takes is some lines like this:
 
 .. code-block:: python
 
@@ -1310,7 +1310,7 @@ Wrapping wrappers
 Spack likes to use its own compiler wrappers to make it easy to add
 ``RPATHs`` to builds, and to try hard to ensure that your builds use the
 right dependencies.  This doesn't play nicely by default with MPI, so we
-have to do a couple tricks.
+have to do a couple of tricks.
 
   1. If we build MPI with Spack's wrappers, mpicc and friends will be
      installed with hard-coded paths to Spack's wrappers, and using them
@@ -1323,7 +1323,7 @@ have to do a couple tricks.
      calling mpicc. Luckily, wrappers in all mainstream MPI
      implementations provide environment variables that allow us to
      dynamically set the compiler to be used by mpicc, mpicxx, etc.
-     Denis pasted some code from this below – Spack's build environment
+     Spack's build environment
      sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and
      ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI. This makes the MPI
      compiler wrappers use the Spack compiler wrappers so that your

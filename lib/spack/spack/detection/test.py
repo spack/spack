@@ -8,11 +8,10 @@ import pathlib
 import tempfile
 from typing import Any, Deque, Dict, Generator, List, NamedTuple, Tuple
 
-from llnl.util import filesystem
-
 import spack.platforms
 import spack.repo
 import spack.spec
+from spack.llnl.util import filesystem
 from spack.util import spack_yaml
 
 from .path import by_path
@@ -85,11 +84,11 @@ class Runner:
             self.tmpdir.cleanup()
 
     def _create_executable_scripts(self, mock_executables: MockExecutables) -> List[pathlib.Path]:
-        import _vendoring.jinja2
+        import spack.vendor.jinja2
 
         relative_paths = mock_executables.executables
         script = mock_executables.script
-        script_template = _vendoring.jinja2.Template("#!/bin/bash\n{{ script }}\n")
+        script_template = spack.vendor.jinja2.Template("#!/bin/bash\n{{ script }}\n")
         result = []
         for mock_exe_path in relative_paths:
             rel_path = pathlib.Path(mock_exe_path)

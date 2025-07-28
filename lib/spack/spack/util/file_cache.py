@@ -9,9 +9,8 @@ import pathlib
 import shutil
 from typing import IO, Dict, Optional, Tuple, Union
 
-from llnl.util.filesystem import rename
-
 from spack.error import SpackError
+from spack.llnl.util.filesystem import rename
 from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
 

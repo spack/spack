@@ -512,7 +512,7 @@ that are already in the Lmod hierarchy.
    that are available for use in this directive are the same understood by the
    :meth:`~spack.spec.Spec.format` method.
 
-   For Lmod and Environment Modules versions prior 4.2, it is important to
+   For Lmod and Environment Modules versions prior to 4.2, it is important to
    express the conflict on both module files conflicting with each other.
 
 

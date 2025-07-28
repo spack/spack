@@ -12,9 +12,8 @@ from http.client import HTTPResponse
 from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
-import llnl.util.tty as tty
-
 import spack.fetch_strategy
+import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.oci.opener

@@ -61,20 +61,14 @@ from typing import (
     overload,
 )
 
-import _vendoring.archspec.cpu
-
-import llnl.util.tty as tty
-from llnl.string import plural
-from llnl.util.filesystem import join_path
-from llnl.util.lang import dedupe, stable_partition
-from llnl.util.symlink import symlink
-from llnl.util.tty.color import cescape, colorize
+import spack.vendor.archspec.cpu
 
 import spack.builder
 import spack.compilers.libraries
 import spack.config
 import spack.deptypes as dt
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.multimethod
 import spack.package_base
 import spack.paths
@@ -89,6 +83,10 @@ from spack import traverse
 from spack.context import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
+from spack.llnl.string import plural
+from spack.llnl.util.filesystem import join_path, symlink
+from spack.llnl.util.lang import dedupe, stable_partition
+from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
@@ -258,7 +256,7 @@ class MakeExecutable(Executable):
             jobs_env: environment variable that will be set to the current level of parallelism
             jobs_env_supports_jobserver: whether the jobs env supports a job server
 
-        For all the other **kwargs, refer to the base class.
+        For all the other ``**kwargs``, refer to :func:`spack.util.executable.Executable.__call__`.
         """
         jobs = get_effective_jobs(
             self.jobs, parallel=parallel, supports_jobserver=self.supports_jobserver
@@ -460,12 +458,12 @@ def optimization_flags(compiler, target):
     # Try to check if the current compiler comes with a version number or
     # has an unexpected suffix. If so, treat it as a compiler with a
     # custom spec.
-    version_number, _ = _vendoring.archspec.cpu.version_components(
+    version_number, _ = spack.vendor.archspec.cpu.version_components(
         compiler.version.dotted_numeric_string
     )
     try:
         result = target.optimization_flags(compiler.name, version_number)
-    except (ValueError, _vendoring.archspec.cpu.UnsupportedMicroarchitecture):
+    except (ValueError, spack.vendor.archspec.cpu.UnsupportedMicroarchitecture):
         result = ""
 
     return result
@@ -729,6 +727,28 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
     """Return immediate or transitive dependencies (depending on the package) that need to be
     rpath'ed. If a package occurs multiple times, the newest version is kept."""
     return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
+
+
+def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
+    """Obtain the ``CMAKE_PREFIX_PATH`` entries for a package, based on the
+    :attr:`~spack.package_base.PackageBase.cmake_prefix_paths` package attribute of direct
+    build/test and transitive link dependencies."""
+    edges = traverse.traverse_topo_edges_generator(
+        traverse.with_artificial_edges([pkg.spec]),
+        visitor=traverse.MixedDepthVisitor(
+            direct=dt.BUILD | dt.TEST, transitive=dt.LINK, key=traverse.by_dag_hash
+        ),
+        key=traverse.by_dag_hash,
+        root=False,
+        all_edges=False,  # cover all nodes, not all edges
+    )
+    ordered_specs = [edge.spec for edge in edges]
+    # Separate out externals so they do not shadow Spack prefixes
+    externals, spack_built = stable_partition((s for s in ordered_specs), lambda x: x.external)
+
+    return filter_system_paths(
+        path for spec in chain(spack_built, externals) for path in spec.package.cmake_prefix_paths
+    )
 
 
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
@@ -1626,11 +1646,12 @@ def write_log_summary(out, log_type, log, last=None):
 
 
 class ModuleChangePropagator:
-    """Wrapper class to accept changes to a package.py Python module, and propagate them in the
-    MRO of the package.
-
-    It is mainly used as a substitute of the ``package.py`` module, when calling the
-    "setup_dependent_package" function during build environment setup.
+    """The function :meth:`spack.package_base.PackageBase.setup_dependent_package` receives
+    an instance of this class for the ``module`` argument. It's used to set global variables in the
+    module of a package, and propagate those globals to the modules of all classes in the
+    inheritance hierarchy of the package. It's reminiscent of
+    :class:`spack.util.environment.EnvironmentModifications`, but sets Python variables instead
+    of environment variables. This class should typically not be instantiated in packages directly.
     """
 
     _PROTECTED_NAMES = ("package", "current_module", "modules_in_mro", "_set_attributes")

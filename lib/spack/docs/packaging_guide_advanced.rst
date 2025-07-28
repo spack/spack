@@ -217,7 +217,7 @@ method must be implemented:
 This method receives as input the path to a single executable and must return
 as output its version as a string; if the user cannot determine the version
 or determines that the executable is not an instance of the package, they can
-return None and the exe will be discarded as a candidate.
+return None and the executable will be discarded as a candidate.
 Implementing the two steps above is mandatory, and gives the package the
 basic ability to detect if a spec is present on the system at a given version.
 

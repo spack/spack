@@ -15,10 +15,7 @@ from collections import OrderedDict
 
 import pytest
 
-from llnl.util import filesystem as fs
-from llnl.util.symlink import readlink, symlink
-
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.cmd.buildcache as buildcache
 import spack.concretize
 import spack.config
@@ -31,6 +28,8 @@ import spack.util.gpg
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
+from spack.llnl.util import filesystem as fs
+from spack.llnl.util.filesystem import readlink, symlink
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import _macho_find_paths, relocate_links, relocate_text
 
@@ -93,7 +92,7 @@ def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_c
         assert "dummy.txt" in files
 
         # Validate the relocation information
-        buildinfo = bindist.read_buildinfo_file(spec.prefix)
+        buildinfo = spack.binary_distribution.read_buildinfo_file(spec.prefix)
         assert buildinfo["relocate_textfiles"] == ["dummy.txt"]
         assert buildinfo["relocate_links"] == ["link_to_dummy.txt"]
 

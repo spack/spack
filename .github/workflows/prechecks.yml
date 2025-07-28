@@ -29,7 +29,14 @@ jobs:
         pip install -r .github/workflows/requirements/style/requirements.txt
     - name: vermin
       run: |
-        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
+        vermin --backport importlib \
+               --backport argparse \
+               --violations \
+               --backport typing \
+               -t=3.6- \
+               -vvv \
+               --exclude-regex lib/spack/spack/vendor \
+               lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
 
   # Run style checks on the files that have been changed
   style:
@@ -48,7 +55,7 @@ jobs:
       run: |
         bin/spack style --base HEAD^1
         bin/spack license verify
-        pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/external lib
+        pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/spack/vendor lib
 
 
   # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8

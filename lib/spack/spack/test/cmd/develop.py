@@ -7,11 +7,10 @@ import shutil
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.spec
 import spack.stage

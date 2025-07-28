@@ -8,11 +8,10 @@ import sys
 
 import pytest
 
-from llnl.util.symlink import _windows_can_symlink
-
 import spack.concretize
 import spack.util.spack_yaml as s_yaml
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import _windows_can_symlink
 from spack.main import SpackCommand
 
 extensions = SpackCommand("extensions")

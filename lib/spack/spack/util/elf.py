@@ -460,8 +460,8 @@ def parse_elf(
     dynamic_section: bool = False,
     only_header: bool = False,
 ) -> ElfFile:
-    """Given a file handle f for an ELF file opened in binary mode, return an ElfFile
-    object that is stores data about rpaths"""
+    """Given a file handle ``f`` for an ELF file opened in binary mode, return an
+    :class:`~spack.util.elf.ElfFile` object with the parsed contents."""
     try:
         return _do_parse_elf(f, interpreter, dynamic_section, only_header)
     except (DeprecationWarning, struct.error):
@@ -520,8 +520,8 @@ def _delete_dynamic_array_entry(
 
 def delete_rpath(path: str) -> None:
     """Modifies a binary to remove the rpath. It zeros out the rpath string and also drops the
-    DT_R(UN)PATH entry from the dynamic section, so it doesn't show up in 'readelf -d file', nor
-    in 'strings file'."""
+    ``DT_RPATH`` / ``DT_RUNPATH`` entry from the dynamic section, so it doesn't show up in
+    ``readelf -d file``, nor in ``strings file``."""
     with open(path, "rb+") as f:
         elf = parse_elf(f, interpreter=False, dynamic_section=True)
 
@@ -690,9 +690,9 @@ def pt_interp(path: str) -> Optional[str]:
     return elf.pt_interp_str.decode("utf-8")
 
 
-def get_elf_compat(path):
-    """Get a triplet (EI_CLASS, EI_DATA, e_machine) from an ELF file, which can be used to see if
-    two ELF files are compatible."""
+def get_elf_compat(path: str) -> Tuple[bool, bool, int]:
+    """Get a triplet (is_64_bit, is_little_endian, e_machine) from an ELF file, which can be used
+    to see if two ELF files are compatible."""
     # On ELF platforms supporting, we try to be a bit smarter when it comes to shared
     # libraries, by dropping those that are not host compatible.
     with open(path, "rb") as f:

@@ -8,8 +8,7 @@ import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-
+import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.util.elf as elf
 import spack.util.executable

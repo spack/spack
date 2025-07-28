@@ -6,9 +6,8 @@ import collections.abc
 import functools
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Type, Union
 
-import llnl.util.lang
-
 import spack.error
+import spack.llnl.util.lang
 import spack.repo
 import spack.spec
 
@@ -48,7 +47,7 @@ class DirectiveMeta(type):
 
         # De-duplicates directives from base classes
         attr_dict["_directives_to_be_executed"] = [
-            x for x in llnl.util.lang.dedupe(attr_dict["_directives_to_be_executed"])
+            x for x in spack.llnl.util.lang.dedupe(attr_dict["_directives_to_be_executed"])
         ]
 
         # Move things to be executed from module scope (where they

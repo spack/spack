@@ -9,11 +9,9 @@ import posixpath
 import sys
 from typing import Dict, Optional, Tuple
 
-import _vendoring.archspec.cpu
 import pytest
 
-from llnl.path import Path, convert_to_platform_path
-from llnl.util.filesystem import HeaderList, LibraryList
+import spack.vendor.archspec.cpu
 
 import spack.build_environment
 import spack.concretize
@@ -26,6 +24,8 @@ import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.context import Context
 from spack.installer import PackageInstaller
+from spack.llnl.path import Path, convert_to_platform_path
+from spack.llnl.util.filesystem import HeaderList, LibraryList
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -727,14 +727,14 @@ def test_rpath_with_duplicate_link_deps():
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
 def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
-    target = _vendoring.archspec.cpu.TARGETS[target_name]
+    target = spack.vendor.archspec.cpu.TARGETS[target_name]
     compiler = spack.spec.parse_with_version_concrete(compiler_spec)
     opt_flags = spack.build_environment.optimization_flags(compiler, target)
     assert opt_flags == expected_flags
 
 
 @pytest.mark.skipif(
-    str(_vendoring.archspec.cpu.host().family) != "x86_64",
+    str(spack.vendor.archspec.cpu.host().family) != "x86_64",
     reason="tests check specific x86_64 uarch flags",
 )
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")

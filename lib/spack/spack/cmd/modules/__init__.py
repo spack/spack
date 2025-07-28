@@ -9,9 +9,6 @@ import os
 import shutil
 import sys
 
-from llnl.util import filesystem, tty
-from llnl.util.tty import color
-
 import spack.cmd
 import spack.config
 import spack.error
@@ -20,6 +17,8 @@ import spack.modules.common
 import spack.repo
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
+from spack.llnl.util import filesystem, tty
+from spack.llnl.util.tty import color
 
 description = "manipulate module files"
 section = "environment"

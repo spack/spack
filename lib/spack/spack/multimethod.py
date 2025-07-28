@@ -25,6 +25,7 @@ so package authors should use their judgement.
 """
 import functools
 from contextlib import contextmanager
+from typing import Union
 
 import spack.directives_meta
 import spack.error
@@ -151,11 +152,94 @@ class SpecMultiMethod:
 
 
 class when:
-    def __init__(self, condition):
+    """This is a multi-purpose class, which can be used
+
+    1. As a context manager to **group directives together** that share the same `when=` argument.
+    2. As a **decorator** for defining multi-methods (multiple methods with the same name are
+       defined, but the version that is called depends on the condition of the package's spec)
+
+    As a **context manager** it groups directives together. It allows you to write::
+
+       with when("+nvptx"):
+           conflicts("@:6", msg="NVPTX only supported from gcc 7")
+           conflicts("languages=ada")
+           conflicts("languages=brig")
+
+    instead of the more repetitive::
+
+       conflicts("@:6", when="+nvptx", msg="NVPTX only supported from gcc 7")
+       conflicts("languages=ada", when="+nvptx")
+       conflicts("languages=brig", when="+nvptx")
+
+    This context manager is composable both with nested ``when`` contexts and with other ``when=``
+    arguments in directives. For example::
+
+       with when("+foo"):
+           with when("+bar"):
+               depends_on("dependency", when="+baz")
+
+    is equilavent to::
+
+       depends_on("dependency", when="+foo +bar +baz")
+
+    As a **decorator**, it allows packages to declare multiple versions of methods like
+    `install()` that depend on the package's spec. For example::
+
+       class SomePackage(Package):
+           ...
+
+           def install(self, spec: Spec, prefix: Prefix):
+               # Do default install
+
+           @when("target=x86_64:")
+           def install(self, spec: Spec, prefix: Prefix):
+               # This will be executed instead of the default install if
+               # the package's target is in the x86_64 family.
+
+           @when("target=aarch64:")
+           def install(self, spec: Spec, prefix: Prefix):
+               # This will be executed if the package's target is in
+               # the aarch64 family
+
+    This allows each package to have a default version of install() AND
+    specialized versions for particular platforms.  The version that is
+    called depends on the architecture of the instantiated package.
+
+    Note that this works for methods other than install, as well.  So,
+    if you only have part of the install that is platform specific, you
+    could do this:
+
+    .. code-block:: python
+
+        class SomePackage(Package):
+            ...
+            # virtual dependence on MPI.
+            # could resolve to mpich, mpich2, OpenMPI
+            depends_on("mpi")
+
+            def setup(self):
+                # do nothing in the default case
+                pass
+
+            @when("^openmpi")
+            def setup(self):
+                # do something special when this is built with OpenMPI for
+                # its MPI implementations.
+
+
+            def install(self, prefix):
+                # Do common install stuff
+                self.setup()
+                # Do more common install stuff
+
+    Note that the default version of decorated methods must *always* come first. Otherwise it will
+    override all of the decorated versions. This is a limitation of the Python language.
+    """
+
+    def __init__(self, condition: Union[str, bool]):
         """Can be used both as a decorator, for multimethods, or as a context
         manager to group ``when=`` arguments together.
 
-        Examples are given in the docstrings below.
 
         Args:
             condition (str): condition to be met
@@ -166,65 +250,6 @@ class when:
             self.spec = spack.spec.Spec(condition)
 
     def __call__(self, method):
-        """This annotation lets packages declare multiple versions of
-        methods like install() that depend on the package's spec.
-
-        For example:
-
-           .. code-block:: python
-
-              class SomePackage(Package):
-                  ...
-
-                  def install(self, prefix):
-                      # Do default install
-
-                  @when('target=x86_64:')
-                  def install(self, prefix):
-                      # This will be executed instead of the default install if
-                      # the package's target is in the x86_64 family.
-
-                  @when('target=ppc64:')
-                  def install(self, prefix):
-                      # This will be executed if the package's target is in
-                      # the ppc64 family
-
-           This allows each package to have a default version of install() AND
-           specialized versions for particular platforms.  The version that is
-           called depends on the architecture of the instantiated package.
-
-           Note that this works for methods other than install, as well.  So,
-           if you only have part of the install that is platform specific, you
-           could do this:
-
-           .. code-block:: python
-
-              class SomePackage(Package):
-                  ...
-                  # virtual dependence on MPI.
-                  # could resolve to mpich, mpich2, OpenMPI
-                  depends_on('mpi')
-
-                  def setup(self):
-                      # do nothing in the default case
-                      pass
-
-                  @when('^openmpi')
-                  def setup(self):
-                      # do something special when this is built with OpenMPI for
-                      # its MPI implementations.
-
-
-                  def install(self, prefix):
-                      # Do common install stuff
-                      self.setup()
-                      # Do more common install stuff
-
-           Note that the default version of decorated methods must
-           *always* come first.  Otherwise it will override all of the
-           platform-specific versions.  There's not much we can do to get
-           around this because of the way decorators work.
-        """
         assert (
             MultiMethodMeta._locals is not None
         ), "cannot use multimethod, missing MultiMethodMeta metaclass?"
@@ -240,26 +265,6 @@ class when:
         return original_method
 
     def __enter__(self):
-        """Inject the constraint spec into the `when=` argument of directives
-        in the context.
-
-        This context manager allows you to write:
-
-            with when('+nvptx'):
-                conflicts('@:6', msg='NVPTX only supported from gcc 7')
-                conflicts('languages=ada')
-                conflicts('languages=brig')
-
-        instead of writing:
-
-             conflicts('@:6', when='+nvptx', msg='NVPTX only supported from gcc 7')
-             conflicts('languages=ada', when='+nvptx')
-             conflicts('languages=brig', when='+nvptx')
-
-        Context managers can be nested (but this is not recommended for readability)
-        and add their constraint to whatever may be already present in the directive
-        `when=` argument.
-        """
         spack.directives_meta.DirectiveMeta.push_to_context(str(self.spec))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -268,6 +273,27 @@ class when:
 
 @contextmanager
 def default_args(**kwargs):
+    """Context manager to override the default arguments of directives.
+
+    Example::
+
+        with default_args(type=("build", "run")):
+            depends_on("py-foo")
+            depends_on("py-bar")
+            depends_on("py-baz")
+
+    Notice that unlike then :func:`when` context manager, this one is *not* composable, as it
+    merely overrides the default argument values for the duration of the context. For example::
+
+        with default_args(when="+foo"):
+            depends_on("pkg-a")
+            depends_on("pkg-b", when="+bar")
+
+    is equivalent to::
+
+        depends_on("pkg-a", when="+foo")
+        depends_on("pkg-b", when="+bar")
+    """
     spack.directives_meta.DirectiveMeta.push_default_args(kwargs)
     yield
     spack.directives_meta.DirectiveMeta.pop_default_args()

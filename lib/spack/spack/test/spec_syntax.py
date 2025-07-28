@@ -9,12 +9,11 @@ import sys
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.binary_distribution
 import spack.cmd
 import spack.concretize
 import spack.config
+import spack.llnl.util.filesystem as fs
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp

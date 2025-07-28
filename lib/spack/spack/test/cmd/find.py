@@ -11,8 +11,6 @@ from textwrap import dedent
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.cmd as cmd
 import spack.cmd.find
 import spack.concretize
@@ -23,6 +21,7 @@ import spack.repo
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
+from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
 from spack.test.utilities import SpackCommandArgs
 from spack.util.pattern import Bunch

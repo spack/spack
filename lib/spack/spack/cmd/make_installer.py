@@ -6,11 +6,10 @@ import os
 import posixpath
 import sys
 
-from llnl.path import convert_to_posix_path
-
 import spack.concretize
 import spack.paths
 import spack.util.executable
+from spack.llnl.path import convert_to_posix_path
 
 description = "generate Windows installer"
 section = "admin"

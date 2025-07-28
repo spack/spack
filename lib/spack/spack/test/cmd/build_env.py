@@ -7,9 +7,8 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.error
+from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
 
 build_env = SpackCommand("build-env")

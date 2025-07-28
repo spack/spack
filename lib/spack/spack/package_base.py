@@ -23,11 +23,7 @@ import time
 import traceback
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
-from _vendoring.typing_extensions import Literal
-
-import llnl.util.filesystem as fsys
-import llnl.util.tty as tty
-from llnl.util.lang import ClassProperty, classproperty, memoized
+from spack.vendor.typing_extensions import Literal
 
 import spack.config
 import spack.dependency
@@ -36,6 +32,8 @@ import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
+import spack.llnl.util.filesystem as fsys
+import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.multimethod
@@ -57,6 +55,7 @@ import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
+from spack.llnl.util.lang import ClassProperty, classproperty, memoized
 from spack.resource import Resource
 from spack.solver.version_order import concretization_version_order
 from spack.util.package_hash import package_hash
@@ -514,7 +513,7 @@ class DisableRedistribute:
 
 
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
-    """This is the superclass for all spack packages.
+    """This is the universal base class for all spack packages.
 
     ***The Package class***
 
@@ -617,6 +616,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     #: Store whether a given Spec source/binary should not be redistributed.
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
+
+    #: Must be defined as a fallback for old specs that don't have the `build_system` variant
+    default_buildsystem: str
+
+    # Use :attr:`default_buildsystem` instead of this attribute, which is deprecated
+    legacy_buildsystem: str
+
+    #: Must be defined in derived classes. Used when reporting the build system to users
+    build_system_class: str
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
@@ -1838,7 +1846,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return b32_hash
 
     @property
-    def cmake_prefix_paths(self):
+    def cmake_prefix_paths(self) -> List[str]:
+        """Return a list of paths to be used in CMake's ``CMAKE_PREFIX_PATH``."""
         return [self.prefix]
 
     def _has_make_target(self, target):

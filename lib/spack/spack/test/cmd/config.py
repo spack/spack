@@ -8,12 +8,11 @@ import re
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.concretize
 import spack.config
 import spack.database
 import spack.environment as ev
+import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.schema.config
 import spack.store

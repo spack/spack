@@ -21,23 +21,11 @@ import xml.etree.ElementTree
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-import _vendoring.archspec.cpu
-import _vendoring.archspec.cpu.microarchitecture
-import _vendoring.archspec.cpu.schema
 import pytest
 
-import llnl.util.lang
-import llnl.util.lock
-import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    copy,
-    copy_tree,
-    join_path,
-    mkdirp,
-    remove_linked_tree,
-    touchp,
-    working_dir,
-)
+import spack.vendor.archspec.cpu
+import spack.vendor.archspec.cpu.microarchitecture
+import spack.vendor.archspec.cpu.schema
 
 import spack.binary_distribution
 import spack.bootstrap.core
@@ -49,6 +37,9 @@ import spack.config
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.lang
+import spack.llnl.util.lock
+import spack.llnl.util.tty as tty
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -73,6 +64,15 @@ import spack.version
 from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import (
+    copy,
+    copy_tree,
+    join_path,
+    mkdirp,
+    remove_linked_tree,
+    touchp,
+    working_dir,
+)
 from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
@@ -400,12 +400,12 @@ def clean_test_environment():
 def _host():
     """Mock archspec host so there is no inconsistency on the Windows platform
     This function cannot be local as it needs to be pickleable"""
-    return _vendoring.archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
+    return spack.vendor.archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
 
 
 @pytest.fixture(scope="function")
 def archspec_host_is_spack_test_host(monkeypatch):
-    monkeypatch.setattr(_vendoring.archspec.cpu, "host", _host)
+    monkeypatch.setattr(spack.vendor.archspec.cpu, "host", _host)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -830,14 +830,14 @@ def mock_uarch_json(tmp_path_factory: pytest.TempPathFactory):
 
 @pytest.fixture(scope="session")
 def mock_uarch_configuration(mock_uarch_json):
-    """Create mock dictionaries for the _vendoring.archspec.cpu."""
+    """Create mock dictionaries for the spack.vendor.archspec.cpu."""
 
     def load_json():
         with open(mock_uarch_json, encoding="utf-8") as f:
             return json.load(f)
 
     targets_json = load_json()
-    targets = _vendoring.archspec.cpu.microarchitecture._known_microarchitectures()
+    targets = spack.vendor.archspec.cpu.microarchitecture._known_microarchitectures()
 
     yield targets_json, targets
 
@@ -846,8 +846,8 @@ def mock_uarch_configuration(mock_uarch_json):
 def mock_targets(mock_uarch_configuration, monkeypatch):
     """Use this fixture to enable mock uarch targets for testing."""
     targets_json, targets = mock_uarch_configuration
-    monkeypatch.setattr(_vendoring.archspec.cpu.schema, "TARGETS_JSON", targets_json)
-    monkeypatch.setattr(_vendoring.archspec.cpu.microarchitecture, "TARGETS", targets)
+    monkeypatch.setattr(spack.vendor.archspec.cpu.schema, "TARGETS_JSON", targets_json)
+    monkeypatch.setattr(spack.vendor.archspec.cpu.microarchitecture, "TARGETS", targets)
 
 
 @pytest.fixture(scope="session")
@@ -877,7 +877,7 @@ def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
     config_template = test_config / "config.yaml"
     config.write_text(config_template.read_text().format(install_tree_root, locks))
 
-    target = str(_vendoring.archspec.cpu.host().family)
+    target = str(spack.vendor.archspec.cpu.host().family)
     compilers = tmp_path / "site" / "packages.yaml"
     compilers_template = test_config / "packages.yaml"
     compilers.write_text(compilers_template.read_text().format(linux_os=linux_os, target=target))
@@ -1960,21 +1960,21 @@ def mock_test_stage(mutable_config, tmp_path: Path):
 
 @pytest.fixture(autouse=True)
 def inode_cache():
-    llnl.util.lock.FILE_TRACKER.purge()
+    spack.llnl.util.lock.FILE_TRACKER.purge()
     yield
     # TODO: it is a bug when the file tracker is non-empty after a test,
     # since it means a lock was not released, or the inode was not purged
     # when acquiring the lock failed. So, we could assert that here, but
     # currently there are too many issues to fix, so look for the more
     # serious issue of having a closed file descriptor in the cache.
-    assert not any(f.fh.closed for f in llnl.util.lock.FILE_TRACKER._descriptors.values())
-    llnl.util.lock.FILE_TRACKER.purge()
+    assert not any(f.fh.closed for f in spack.llnl.util.lock.FILE_TRACKER._descriptors.values())
+    spack.llnl.util.lock.FILE_TRACKER.purge()
 
 
 @pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
-    spack.binary_distribution.BINARY_INDEX = llnl.util.lang.Singleton(
+    spack.binary_distribution.BINARY_INDEX = spack.llnl.util.lang.Singleton(
         spack.binary_distribution.BinaryCacheIndex
     )
 
@@ -2235,7 +2235,7 @@ def compiler_factory():
 @pytest.fixture()
 def host_architecture_str():
     """Returns the broad architecture family (x86_64, aarch64, etc.)"""
-    return str(_vendoring.archspec.cpu.host().family)
+    return str(spack.vendor.archspec.cpu.host().family)
 
 
 def _true(x):

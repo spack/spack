@@ -10,11 +10,7 @@ import sys
 from typing import Dict
 from urllib.parse import urlparse, urlunparse
 
-import llnl.util.filesystem as fs
-import llnl.util.tty.color as clr
-from llnl.util import tty
-
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.ci as spack_ci
 import spack.cmd
 import spack.cmd.buildcache as buildcache
@@ -24,6 +20,8 @@ import spack.environment as ev
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty.color as clr
 import spack.mirrors.mirror
 import spack.package_base
 import spack.repo
@@ -35,6 +33,7 @@ import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
+from spack.llnl.util import tty
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -430,7 +429,11 @@ def ci_rebuild(args):
         fd.write(spack_info.encode("utf8"))
         fd.write(b"\n")
 
-    matches = None if full_rebuild else bindist.get_mirrors_for_spec(job_spec, index_only=False)
+    matches = (
+        None
+        if full_rebuild
+        else spack.binary_distribution.get_mirrors_for_spec(job_spec, index_only=False)
+    )
 
     if matches:
         # Got a hash match on at least one configured mirror.  All

@@ -36,9 +36,7 @@ import sys
 from collections import defaultdict
 from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
-from _vendoring import jsonschema
-
-from llnl.util import filesystem, lang, tty
+from spack.vendor import jsonschema
 
 import spack.error
 import spack.paths
@@ -64,6 +62,7 @@ import spack.schema.upstreams
 import spack.schema.view
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_yaml as syaml
+from spack.llnl.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
 

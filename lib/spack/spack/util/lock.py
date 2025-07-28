@@ -2,14 +2,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Wrapper for ``llnl.util.lock`` allows locking to be enabled/disabled."""
+"""Wrapper for ``spack.llnl.util.lock`` allows locking to be enabled/disabled."""
 import os
 import stat
 import sys
 from typing import Optional, Tuple
 
-from llnl.util.lock import Lock as Llnl_lock
-from llnl.util.lock import (
+import spack.error
+from spack.llnl.util.lock import Lock as Llnl_lock
+from spack.llnl.util.lock import (
     LockError,
     LockTimeoutError,
     LockUpgradeError,
@@ -17,14 +18,12 @@ from llnl.util.lock import (
     WriteTransaction,
 )
 
-import spack.error
-
 
 class Lock(Llnl_lock):
     """Lock that can be disabled.
 
     This overrides the ``_lock()`` and ``_unlock()`` methods from
-    ``llnl.util.lock`` so that all the lock API calls will succeed, but
+    ``spack.llnl.util.lock`` so that all the lock API calls will succeed, but
     the actual locking mechanism can be disabled via ``_enable_locks``.
     """
 

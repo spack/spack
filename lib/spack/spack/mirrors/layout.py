@@ -4,15 +4,13 @@
 import os
 from typing import Optional
 
-import llnl.url
-import llnl.util.symlink
-from llnl.util.filesystem import mkdirp
-
 import spack.fetch_strategy
+import spack.llnl.url
 import spack.oci.image
 import spack.repo
 import spack.spec
 from spack.error import MirrorError
+from spack.llnl.util.filesystem import mkdirp, symlink
 
 
 class MirrorLayout:
@@ -52,7 +50,7 @@ class DefaultLayout(MirrorLayout):
 
         mkdirp(alias_dir)
         tmp = f"{alias}.tmp"
-        llnl.util.symlink.symlink(relative_dst, tmp)
+        symlink(relative_dst, tmp)
 
         try:
             os.rename(tmp, alias)
@@ -82,7 +80,7 @@ def _determine_extension(fetcher):
     if isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
-            ext = llnl.url.determine_url_file_extension(fetcher.url)
+            ext = spack.llnl.url.determine_url_file_extension(fetcher.url)
 
             if ext:
                 # Remove any leading dots

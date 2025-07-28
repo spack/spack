@@ -8,9 +8,8 @@ import re
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, touch
-
 import spack.paths
+from spack.llnl.util.filesystem import mkdirp, touch
 from spack.main import SpackCommand
 
 license = SpackCommand("license")

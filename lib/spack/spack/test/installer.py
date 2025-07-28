@@ -12,10 +12,6 @@ from typing import List, Optional, Union
 import py
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.lock as ulk
-import llnl.util.tty as tty
-
 import spack.binary_distribution
 import spack.concretize
 import spack.database
@@ -23,6 +19,9 @@ import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.installer as inst
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lock as ulk
+import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo

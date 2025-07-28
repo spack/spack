@@ -4,11 +4,10 @@
 
 from typing import Optional, Set
 
-from llnl.util import tty
-
 import spack.config
 import spack.modules
 import spack.spec
+from spack.llnl.util import tty
 
 
 def _for_each_enabled(

@@ -9,14 +9,13 @@ import sys
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.build_environment
 import spack.concretize
 import spack.config
 import spack.database
 import spack.error
 import spack.installer
+import spack.llnl.util.filesystem as fs
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.package_base

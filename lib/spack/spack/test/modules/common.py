@@ -7,8 +7,6 @@ import stat
 
 import pytest
 
-from llnl.util.symlink import readlink
-
 import spack.cmd.modules
 import spack.concretize
 import spack.config
@@ -20,6 +18,7 @@ import spack.package_base
 import spack.package_prefs
 import spack.repo
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import readlink
 from spack.modules.common import UpstreamModuleIndex
 
 pytestmark = [

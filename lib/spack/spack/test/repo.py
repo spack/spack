@@ -13,7 +13,6 @@ import spack.paths
 import spack.repo
 import spack.schema.repos
 import spack.spec
-import spack.test.conftest
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.lock
@@ -911,3 +910,55 @@ def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
     with pytest.raises(spack.repo.RepoError, match="Unable to locate a default branch"):
         for descriptor in repos_1.values():
             descriptor.update(git=MockGitInvalidRemote())
+
+
+def test_repo_use_bad_import(config, repo_builder: RepoBuilder):
+    """Demonstrate failure when attempt to get the class for package containing
+    a failing import (e.g., missing repository)."""
+    package_py = pathlib.Path(repo_builder._recipe_filename("importer"))
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(
+        """\
+from spack_repo.missing.packages import base
+from spack.package import *
+
+
+class Importer(PackageBase):
+    homepage = "https://www.bad-importer.com"
+    url = "https://www.bad-importer.com/v1.0.tar.gz"
+
+    version("1.0", md5="0123456789abcdef0123456789abcdef")
+""",
+        encoding="utf-8",
+    )
+
+    with spack.repo.use_repositories(repo_builder.root):
+        with pytest.raises(spack.repo.RepoError, match="cannot load"):
+            spack.repo.PATH.get_pkg_class("importer")
+
+
+def test_repo_use_bad_syntax(config, repo_builder: RepoBuilder):
+    """Demonstrate failure when attempt to get class for package with invalid syntax."""
+    package_py = pathlib.Path(repo_builder._recipe_filename("erroneous"))
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text("class 123: pass", encoding="utf-8")
+
+    with spack.repo.use_repositories(repo_builder.root):
+        with pytest.raises(spack.repo.RepoError):
+            spack.repo.PATH.get_pkg_class("erroneous")
+
+
+def test_unknownpkgerror_match_fails():
+    """Ensure fails with basic message when get_close_matches fails."""
+
+    def _get_close_matches(*args, **kwargs):
+        raise MemoryError("Too many packages to compare")
+
+    # Confirm that the error indicates there were no matches (default).
+    exception = spack.repo.UnknownPackageError("pkg_a", get_close_matches=_get_close_matches)
+    assert "mean one of the following" not in str(exception)
+
+
+def test_unknownpkgerror_str_repo():
+    """Ensure reasonable error message when repo is a string."""
+    assert "not found in repository" in str(spack.repo.UnknownPackageError("pkg_a", "my_repo"))

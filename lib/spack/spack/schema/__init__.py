@@ -6,8 +6,8 @@ import copy
 import typing
 import warnings
 
-from _vendoring import jsonschema
-from _vendoring.jsonschema import validators
+from spack.vendor import jsonschema
+from spack.vendor.jsonschema import validators
 
 from spack.error import SpecSyntaxError
 

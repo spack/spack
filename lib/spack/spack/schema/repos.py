@@ -68,8 +68,7 @@ def update(data: Dict[str, Any]) -> bool:
     if not isinstance(data["repos"], list):
         return False
 
-    from llnl.util import tty
-
+    from spack.llnl.util import tty
     from spack.repo import from_path
 
     # Convert old format [paths...] to new format {namespace: path, ...}

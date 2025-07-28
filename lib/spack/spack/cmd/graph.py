@@ -3,14 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 
-from llnl.util import tty
-
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.store
 from spack.cmd.common import arguments
 from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
+from spack.llnl.util import tty
 
 description = "generate graphs of package dependency relationships"
 section = "basic"

@@ -8,15 +8,15 @@ from spack.package import Builder, PackageBase, Prefix, Spec, build_system, regi
 
 class Package(PackageBase):
     build_system_class = "Package"
-    legacy_buildsystem = "{{ build_system_name }}"
+    default_buildsystem = "{{ build_system_name }}"
     build_system("{{ build_system_name }}")
 
 
 @register_builder("{{ build_system_name }}")
 class GenericBuilder(Builder):
     phases = ("install",)
-    legacy_methods: Tuple[str, ...] = ()
-    legacy_attributes: Tuple[str, ...] = ()
+    package_methods: Tuple[str, ...] = ()
+    package_attributes: Tuple[str, ...] = ()
 
     def install(self, pkg: Package, spec: Spec, prefix: Prefix) -> None:
         raise NotImplementedError

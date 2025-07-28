@@ -1313,8 +1313,8 @@ def from_string(string: str) -> VersionType:
 
 
 def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
-    """Parses a Version, VersionRange, or VersionList from a string
-    or list of strings.
+    """Returns a :class:`~spack.version.ClosedOpenRange`, :class:`~spack.version.StandardVersion`,
+    :class:`~spack.version.GitVersion`, or :class:`~spack.version.VersionList` from the argument.
     """
     if isinstance(obj, VersionType):
         return obj

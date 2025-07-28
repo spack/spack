@@ -10,10 +10,9 @@ import shutil
 import sys
 from typing import Any, BinaryIO, Callable, Dict, List, Optional
 
-import llnl.url
-from llnl.util import tty
-
+import spack.llnl.url
 from spack.error import SpackError
+from spack.llnl.util import tty
 from spack.util.executable import CommandNotFoundError, which
 
 try:
@@ -47,7 +46,7 @@ def _system_untar(archive_file: str, remove_archive_file: bool = False) -> str:
         archive_file (str): absolute path to the archive to be extracted.
         Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
     """
-    archive_file_no_ext = llnl.url.strip_extension(archive_file)
+    archive_file_no_ext = spack.llnl.url.strip_extension(archive_file)
     outfile = os.path.basename(archive_file_no_ext)
     if archive_file_no_ext == archive_file:
         # the archive file has no extension. Tar on windows cannot untar onto itself
@@ -88,7 +87,9 @@ def _bunzip2(archive_file: str) -> str:
 def _py_bunzip(archive_file: str) -> str:
     """Returns path to decompressed file.
     Decompresses bz2 compressed archives/files via python's bz2 module"""
-    decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "bz2"))
+    decompressed_file = os.path.basename(
+        spack.llnl.url.strip_compression_extension(archive_file, "bz2")
+    )
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     f_bz = bz2.BZ2File(archive_file, mode="rb")
@@ -102,7 +103,9 @@ def _system_bunzip(archive_file: str) -> str:
     """Returns path to decompressed file.
     Decompresses bz2 compressed archives/files via system bzip2 utility"""
     compressed_file_name = os.path.basename(archive_file)
-    decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "bz2"))
+    decompressed_file = os.path.basename(
+        spack.llnl.url.strip_compression_extension(archive_file, "bz2")
+    )
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     copy_path = os.path.join(working_dir, compressed_file_name)
@@ -127,7 +130,9 @@ def _gunzip(archive_file: str) -> str:
 def _py_gunzip(archive_file: str) -> str:
     """Returns path to gunzip'd file. Decompresses `.gz` compressed archvies via python gzip
     module"""
-    decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "gz"))
+    decompressed_file = os.path.basename(
+        spack.llnl.url.strip_compression_extension(archive_file, "gz")
+    )
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     f_in = gzip.open(archive_file, "rb")
@@ -139,7 +144,7 @@ def _py_gunzip(archive_file: str) -> str:
 
 def _system_gunzip(archive_file: str) -> str:
     """Returns path to gunzip'd file. Decompresses `.gz` compressed files via system gzip"""
-    archive_file_no_ext = llnl.url.strip_compression_extension(archive_file)
+    archive_file_no_ext = spack.llnl.url.strip_compression_extension(archive_file)
     if archive_file_no_ext == archive_file:
         # the zip file has no extension. On Unix gunzip cannot unzip onto itself
         archive_file = archive_file + ".gz"
@@ -172,7 +177,7 @@ def _unzip(archive_file: str) -> str:
     unzip = which("unzip", required=True)
     unzip.add_default_arg("-q")
     unzip(archive_file)
-    return os.path.basename(llnl.url.strip_extension(archive_file, extension="zip"))
+    return os.path.basename(spack.llnl.url.strip_extension(archive_file, extension="zip"))
 
 
 def _system_unZ(archive_file: str) -> str:
@@ -219,7 +224,9 @@ def _win_compressed_tarball_handler(decompressor: Callable[[str], str]) -> Calla
 def _py_lzma(archive_file: str) -> str:
     """Returns path to decompressed .xz files. Decompress lzma compressed .xz files via Python
     lzma module."""
-    decompressed_file = os.path.basename(llnl.url.strip_compression_extension(archive_file, "xz"))
+    decompressed_file = os.path.basename(
+        spack.llnl.url.strip_compression_extension(archive_file, "xz")
+    )
     archive_out = os.path.join(os.getcwd(), decompressed_file)
     with open(archive_out, "wb") as ar:
         with lzma.open(archive_file) as lar:
@@ -230,7 +237,9 @@ def _py_lzma(archive_file: str) -> str:
 def _xz(archive_file):
     """Returns path to decompressed xz files. Decompress lzma compressed .xz files via xz command
     line tool."""
-    decompressed_file = os.path.basename(llnl.url.strip_extension(archive_file, extension="xz"))
+    decompressed_file = os.path.basename(
+        spack.llnl.url.strip_extension(archive_file, extension="xz")
+    )
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     compressed_file = os.path.basename(archive_file)
@@ -255,12 +264,12 @@ def _system_7zip(archive_file):
     Args:
         archive_file (str): absolute path of file to be unarchived
     """
-    outfile = os.path.basename(llnl.url.strip_compression_extension(archive_file))
+    outfile = os.path.basename(spack.llnl.url.strip_compression_extension(archive_file))
     _7z = which("7z")
     if not _7z:
         raise CommandNotFoundError(
             "7z unavailable, unable to extract %s files. 7z can be installed via Spack"
-            % llnl.url.extension_from_path(archive_file)
+            % spack.llnl.url.extension_from_path(archive_file)
         )
     _7z.add_default_arg("e")
     _7z(archive_file)
@@ -275,7 +284,7 @@ def decompressor_for(path: str, extension: Optional[str] = None):
     if not extension:
         extension = extension_from_magic_numbers(path, decompress=True)
 
-    if not extension or not llnl.url.allowed_archive(extension):
+    if not extension or not spack.llnl.url.allowed_archive(extension):
         raise CommandNotFoundError(
             f"Cannot extract {path}, unrecognized file extension: '{extension}'"
         )
@@ -325,7 +334,7 @@ def decompressor_for_win(extension: str) -> Callable[[str], Any]:
     operations, tar for tarballs and zip files, and 7zip for Z compressed archives
     and files as Python does not provide support for the UNIX compress algorithm
     """
-    extension = llnl.url.expand_contracted_extension(extension)
+    extension = spack.llnl.url.expand_contracted_extension(extension)
     extension_to_decompressor: Dict[str, Callable[[str], Any]] = {
         # Windows native tar can handle .zip extensions, use standard unzip method
         "zip": _unzip,
@@ -345,7 +354,7 @@ def decompressor_for_win(extension: str) -> Callable[[str], Any]:
 
     # Windows vendors no native decompression tools, attempt to derive Python based decompression
     # strategy. Expand extension from abbreviated ones, i.e. tar.gz from .tgz
-    compression_extension = llnl.url.compression_ext_from_compressed_archive(extension)
+    compression_extension = spack.llnl.url.compression_ext_from_compressed_archive(extension)
     decompressor = (
         _determine_py_decomp_archive_strategy(compression_extension)
         if compression_extension
@@ -531,7 +540,7 @@ def extension_from_magic_numbers_by_stream(
                     "Cannot derive file extension from magic number;"
                     " falling back to original file name."
                 )
-                return llnl.url.extension_from_path(stream.name)
+                return spack.llnl.url.extension_from_path(stream.name)
             ext = f"{uncompressed_ext}.{ext}"
         tty.debug(f"File extension {ext} successfully derived by magic number.")
         return ext
@@ -544,7 +553,7 @@ def _maybe_abbreviate_extension(path: str, extension: str) -> str:
     if not extension.startswith("tar."):
         return extension
     abbr = f"t{extension[4:]}"
-    return abbr if llnl.url.has_extension(path, abbr) else extension
+    return abbr if spack.llnl.url.has_extension(path, abbr) else extension
 
 
 def extension_from_magic_numbers(path: str, decompress: bool = False) -> Optional[str]:
@@ -577,4 +586,4 @@ def extension_from_magic_numbers(path: str, decompress: bool = False) -> Optiona
         return _maybe_abbreviate_extension(path, ext)
 
     # Otherwise, use the extension from the file name.
-    return llnl.url.extension_from_path(path)
+    return spack.llnl.url.extension_from_path(path)

@@ -6,9 +6,8 @@ import re
 
 import pytest
 
-from llnl.util.tty.color import color_when
-
 import spack.store
+from spack.llnl.util.tty.color import color_when
 from spack.main import SpackCommand
 
 dependents = SpackCommand("dependents")

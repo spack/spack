@@ -14,9 +14,6 @@ import time
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.build_environment
 import spack.cmd.common.arguments
 import spack.cmd.install
@@ -26,6 +23,8 @@ import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
 import spack.installer
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.store
 from spack.error import SpackError, SpecSyntaxError

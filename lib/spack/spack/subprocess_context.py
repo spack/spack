@@ -46,6 +46,8 @@ def serialize(pkg) -> io.BytesIO:
 def deserialize(serialized_pkg: io.BytesIO) -> Any:
     pkg = pickle.load(serialized_pkg)
     pkg.spec._package = pkg
+    # ensure overwritten package class attributes get applied
+    spack.repo.PATH.get_pkg_class(pkg.spec.name)
     return pkg
 
 

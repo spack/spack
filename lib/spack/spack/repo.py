@@ -36,16 +36,14 @@ from typing import (
     Union,
 )
 
-import llnl.path
-import llnl.util.filesystem as fs
-import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
-
 import spack
 import spack.caches
 import spack.config
 import spack.error
+import spack.llnl.path
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
 import spack.patch
 import spack.paths
 import spack.provider_index
@@ -59,6 +57,7 @@ import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
+from spack.llnl.util.filesystem import working_dir
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
@@ -575,7 +574,7 @@ class RepoIndex:
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
-            self.packages_path = llnl.path.convert_to_posix_path(self.packages_path)
+            self.packages_path = spack.llnl.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers: Dict[str, Indexer] = {}
@@ -754,11 +753,11 @@ class RepoPath:
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    @llnl.util.lang.memoized
+    @spack.llnl.util.lang.memoized
     def _all_package_names_set(self, include_virtuals) -> Set[str]:
         return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
 
-    @llnl.util.lang.memoized
+    @spack.llnl.util.lang.memoized
     def _all_package_names(self, include_virtuals: bool) -> List[str]:
         """Return all unique package names in all repositories."""
         return sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
@@ -974,9 +973,10 @@ def _parse_package_api_version(
     min_str = ".".join(str(i) for i in min_api)
     max_str = ".".join(str(i) for i in max_api)
     curr_str = ".".join(str(i) for i in package_api)
-    raise BadRepoError(
+    raise BadRepoVersionError(
+        api,
         f"Package API v{curr_str} is not supported by this version of Spack ("
-        f"must be between v{min_str} and v{max_str})"
+        f"must be between v{min_str} and v{max_str})",
     )
 
 
@@ -1394,12 +1394,13 @@ class Repo:
 
         class_name = nm.pkg_name_to_class_name(pkg_name)
 
+        if not self.exists(pkg_name):
+            raise UnknownPackageError(fullname, self)
+
         try:
             if self.python_path:
                 sys.path.insert(0, self.python_path)
             module = importlib.import_module(fullname)
-        except ImportError as e:
-            raise UnknownPackageError(fullname) from e
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
             raise RepoError(msg) from e
@@ -1411,14 +1412,19 @@ class Repo:
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
 
+        def defining_class(myclass, name):
+            return next((c for c in myclass.__mro__ if name in c.__dict__), None)
+
         # Clear any prior changes to class attributes in case the class was loaded from the
         # same repo, but with different overrides
         overridden_attrs = getattr(cls, "overridden_attrs", {})
         attrs_exclusively_from_config = getattr(cls, "attrs_exclusively_from_config", [])
+        defclass_attrs = defining_class(cls, "overridden_attrs")
+        defclass_exclusively_from_config = defining_class(cls, "attrs_exclusively_from_config")
         for key, val in overridden_attrs.items():
-            setattr(cls, key, val)
+            setattr(defclass_attrs, key, val)
         for key in attrs_exclusively_from_config:
-            delattr(cls, key)
+            delattr(defclass_exclusively_from_config, key)
 
         # Keep track of every class attribute that is overridden: if different overrides
         # dictionaries are used on the same physical repo, we make sure to restore the original
@@ -1435,11 +1441,11 @@ class Repo:
         if new_overridden_attrs:
             setattr(cls, "overridden_attrs", dict(new_overridden_attrs))
         elif hasattr(cls, "overridden_attrs"):
-            delattr(cls, "overridden_attrs")
+            delattr(defclass_attrs, "overridden_attrs")
         if new_attrs_exclusively_from_config:
             setattr(cls, "attrs_exclusively_from_config", new_attrs_exclusively_from_config)
         elif hasattr(cls, "attrs_exclusively_from_config"):
-            delattr(cls, "attrs_exclusively_from_config")
+            delattr(defclass_exclusively_from_config, "attrs_exclusively_from_config")
 
         return cls
 
@@ -1468,7 +1474,7 @@ class Repo:
 
     def marshal(self):
         cache = self._cache
-        if isinstance(cache, llnl.util.lang.Singleton):
+        if isinstance(cache, spack.llnl.util.lang.Singleton):
             cache = cache.instance
         return self.root, cache, self.overrides
 
@@ -1658,12 +1664,21 @@ class RemoteRepoDescriptor(RepoDescriptor):
             return self._fetched()
         return False
 
+    def get_commit(self, git: MaybeExecutable = None):
+        git = git or spack.util.git.git(required=True)
+        with self.read_transaction:
+            if not self._fetched():
+                return None
+
+            with fs.working_dir(self.destination):
+                return git("rev-parse", "HEAD", output=str).strip()
+
     def _clone_or_pull(
         self,
         git: spack.util.executable.Executable,
         update: bool = False,
         remote: str = "origin",
-        depth: int = 20,
+        depth: Optional[int] = None,
     ) -> None:
         with self.write_transaction:
             try:
@@ -1674,6 +1689,16 @@ class RemoteRepoDescriptor(RepoDescriptor):
                     if fetched and not update:
                         self.read_index_file()
                         return
+
+                    # If depth is not provided, default to:
+                    # 1. The first time the repo is loaded, download a partial clone.
+                    #     This speeds  up CI/CD and other cases where the user never
+                    #     updates the repository.
+                    # 2. When *updating* an already cloned copy of the repository,
+                    #    perform a full fetch (unshallowing the repo if necessary) to
+                    #    optimize for full history.
+                    if depth is None and not fetched:
+                        depth = 2
 
                     # setup the repository if it does not exist
                     if not fetched:
@@ -1696,7 +1721,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         spack.util.git.pull_checkout_commit(self.commit, git_exe=git)
 
                     elif self.tag:
-                        spack.util.git.pull_checkout_tag(self.tag, remote, depth, git_exe=git)
+                        spack.util.git.pull_checkout_tag(
+                            self.tag, remote, depth=depth, git_exe=git
+                        )
 
                     elif self.branch:
                         # if the branch already exists we should use the
@@ -1959,7 +1986,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(
+PATH: RepoPath = spack.llnl.util.lang.Singleton(
     lambda: create_and_enable(spack.config.CONFIG)
 )  # type: ignore[assignment]
 
@@ -2028,6 +2055,14 @@ class BadRepoError(RepoError):
     """Raised when repo layout is invalid."""
 
 
+class BadRepoVersionError(BadRepoError):
+    """Raised when repo API version is too high or too low for Spack."""
+
+    def __init__(self, api, *args, **kwargs):
+        self.api = api
+        super().__init__(*args, **kwargs)
+
+
 class UnknownEntityError(RepoError):
     """Raised when we encounter a package spack doesn't have."""
 
@@ -2035,15 +2070,22 @@ class UnknownEntityError(RepoError):
 class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
-    def __init__(self, name, repo=None):
+    def __init__(
+        self,
+        name,
+        repo: Optional[Union[Repo, RepoPath, str]] = None,
+        *,
+        get_close_matches=difflib.get_close_matches,
+    ):
         msg = "Attempting to retrieve anonymous package."
         long_msg = None
         if name:
+            msg = f"Package '{name}' not found"
             if repo:
-                msg = "Package '{0}' not found in repository '{1.root}'"
-                msg = msg.format(name, repo)
-            else:
-                msg = "Package '{0}' not found.".format(name)
+                if isinstance(repo, Repo):
+                    msg += f" in repository '{repo.root}'"
+                elif isinstance(repo, str):
+                    msg += f" in repository '{repo}'"
 
             # Special handling for specs that may have been intended as
             # filenames: prompt the user to ask whether they intended to write
@@ -2055,14 +2097,16 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Use 'spack create' to create a new package."
 
                 if not repo:
-                    repo = PATH
+                    repo = PATH.ensure_unwrapped()
 
                 # We need to compare the base package name
                 pkg_name = name.rsplit(".", 1)[-1]
-                try:
-                    similar = difflib.get_close_matches(pkg_name, repo.all_package_names())
-                except Exception:
-                    similar = []
+                similar = []
+                if isinstance(repo, RepoPath):
+                    try:
+                        similar = get_close_matches(pkg_name, repo.all_package_names())
+                    except Exception:
+                        pass
 
                 if 1 <= len(similar) <= 5:
                     long_msg += "\n\nDid you mean one of the following packages?\n  "

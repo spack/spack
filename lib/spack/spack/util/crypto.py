@@ -5,7 +5,7 @@
 import hashlib
 from typing import BinaryIO, Callable, Dict, Optional
 
-import llnl.util.tty as tty
+import spack.llnl.util.tty as tty
 
 HashFactory = Callable[[], "hashlib._Hash"]
 

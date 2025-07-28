@@ -8,14 +8,13 @@ import pathlib
 import sys
 from typing import Iterable, List
 
-import _vendoring.archspec.cpu
-
-from llnl.util import tty
+import spack.vendor.archspec.cpu
 
 import spack.environment
 import spack.spec
 import spack.tengine
 import spack.util.path
+from spack.llnl.util import tty
 
 from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
@@ -51,7 +50,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         """Environment root directory"""
         bootstrap_root_path = root_path()
         python_part = spec_for_current_python().replace("@", "")
-        arch_part = _vendoring.archspec.cpu.host().family
+        arch_part = spack.vendor.archspec.cpu.host().family
         interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
         environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"
         return pathlib.Path(
@@ -112,7 +111,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         context = {
             "python_spec": spec_for_current_python(),
             "python_prefix": sys.exec_prefix,
-            "architecture": _vendoring.archspec.cpu.host().family,
+            "architecture": spack.vendor.archspec.cpu.host().family,
             "environment_path": self.environment_root(),
             "environment_specs": self.spack_dev_requirements(),
             "store_path": store_path(),
