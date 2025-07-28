@@ -26,6 +26,7 @@ from docutils.statemachine import StringList
 from sphinx.domains.python import PythonDomain
 from sphinx.ext.apidoc import main as sphinx_apidoc
 from sphinx.parsers import RSTParser
+from sphinxawesome_theme.postprocess import Icons
 
 # -- Spack customizations -----------------------------------------------------
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -321,6 +322,8 @@ html_logo = "_spack_root/share/spack/logo/spack-logo-text.svg"
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 html_favicon = "_spack_root/share/spack/logo/favicon.ico"
+
+html_permalinks_icon = Icons.permalinks_icon
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
