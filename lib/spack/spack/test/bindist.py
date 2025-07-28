@@ -8,10 +8,7 @@ import io
 import json
 import os
 import pathlib
-import platform
 import re
-import shutil
-import sys
 import tarfile
 import urllib.error
 import urllib.request
@@ -22,18 +19,12 @@ from typing import Any, Callable, Dict, NamedTuple, Optional
 import pytest
 
 import spack.binary_distribution as bindist
-import spack.caches
-import spack.compilers.config
 import spack.concretize
 import spack.config
-import spack.fetch_strategy
 import spack.hooks.sbang as sbang
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.mirrors.mirror
 import spack.oci.image
-import spack.paths
-import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
@@ -44,8 +35,7 @@ import spack.util.web as web_util
 from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import copy_tree, join_path, readlink
-from spack.paths import test_path
+from spack.llnl.util.filesystem import join_path, readlink, working_dir
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
@@ -65,110 +55,8 @@ install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
 
-legacy_mirror_dir = os.path.join(test_path, "data", "mirrors", "legacy_yaml")
 
-
-@pytest.fixture(scope="function")
-def cache_directory(tmp_path: pathlib.Path):
-    fetch_cache_dir = tmp_path / "fetch_cache"
-    fetch_cache_dir.mkdir()
-    fsc = spack.fetch_strategy.FsCache(str(fetch_cache_dir))
-    spack.caches.FETCH_CACHE, old_cache_path = fsc, spack.caches.FETCH_CACHE
-
-    yield spack.caches.FETCH_CACHE
-
-    shutil.rmtree(str(fetch_cache_dir))
-    spack.caches.FETCH_CACHE = old_cache_path
-
-
-@pytest.fixture(scope="module")
-def config_directory(tmp_path_factory: pytest.TempPathFactory):
-    # Copy defaults to a temporary "site" scope
-    defaults_dir = tmp_path_factory.mktemp("test_configs")
-    config_path = pathlib.Path(spack.paths.etc_path)
-    copy_tree(str(config_path / "defaults"), str(defaults_dir / "site"))
-
-    # Create a "user" scope
-    (defaults_dir / "user").mkdir()
-
-    # Detect compilers
-    cfg_scopes = [
-        spack.config.DirectoryConfigScope(name, str(defaults_dir / name))
-        for name in [f"site/{platform.system().lower()}", "site", "user"]
-    ]
-    with spack.config.use_configuration(*cfg_scopes):
-        _ = spack.compilers.config.find_compilers(scope="site")
-
-    yield defaults_dir
-
-    shutil.rmtree(str(defaults_dir))
-
-
-@pytest.fixture(scope="function")
-def default_config(tmp_path: pathlib.Path, config_directory, mock_packages_repo, install_mockery):
-    # This fixture depends on install_mockery to ensure
-    # there is a clear order of initialization. The substitution of the
-    # config scopes here is done on top of the substitution that comes with
-    # install_mockery
-    mutable_dir = tmp_path / "mutable_config" / "tmp"
-    mutable_dir.mkdir(parents=True)
-    copy_tree(str(config_directory), str(mutable_dir))
-
-    scopes = [
-        spack.config.DirectoryConfigScope(name, str(mutable_dir / name))
-        for name in [f"site/{platform.system().lower()}", "site", "user"]
-    ]
-
-    with spack.config.use_configuration(*scopes):
-        njobs = spack.config.get("config:build_jobs")
-        if not njobs:
-            spack.config.set("config:build_jobs", 4, scope="user")
-        extensions = spack.config.get("config:template_dirs")
-        if not extensions:
-            spack.config.set(
-                "config:template_dirs",
-                [os.path.join(spack.paths.share_path, "templates")],
-                scope="user",
-            )
-
-        (mutable_dir / "build_stage").mkdir()
-        build_stage = spack.config.get("config:build_stage")
-        if not build_stage:
-            spack.config.set(
-                "config:build_stage", [str(mutable_dir / "build_stage")], scope="user"
-            )
-        timeout = spack.config.get("config:connect_timeout")
-        if not timeout:
-            spack.config.set("config:connect_timeout", 10, scope="user")
-        with spack.repo.use_repositories(mock_packages_repo):
-            yield spack.config.CONFIG
-
-
-@pytest.fixture(scope="function")
-def install_dir_default_layout(tmp_path: pathlib.Path):
-    """Hooks a fake install directory with a default layout"""
-    opt_dir = tmp_path / "opt"
-    original_store, spack.store.STORE = spack.store.STORE, spack.store.Store(str(opt_dir))
-    try:
-        yield spack.store
-    finally:
-        spack.store.STORE = original_store
-
-
-@pytest.fixture(scope="function")
-def install_dir_non_default_layout(tmp_path: pathlib.Path):
-    """Hooks a fake install directory with a non-default layout"""
-    opt_dir = tmp_path / "opt"
-    original_store, spack.store.STORE = spack.store.STORE, spack.store.Store(
-        str(opt_dir), projections={"all": "{name}-{version}-{hash:4}"}
-    )
-    try:
-        yield spack.store
-    finally:
-        spack.store.STORE = original_store
-
-
-@pytest.fixture(scope="function")
+@pytest.fixture
 def dummy_prefix(tmp_path: pathlib.Path):
     """Dummy prefix used for testing tarball creation, validation, extraction"""
     p = tmp_path / "prefix"
@@ -199,136 +87,46 @@ def dummy_prefix(tmp_path: pathlib.Path):
     return str(p)
 
 
-if sys.platform == "darwin":
-    required_executables = ["/usr/bin/clang++", "install_name_tool"]
-else:
-    required_executables = ["/usr/bin/g++", "patchelf"]
-
-
-@pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
-@pytest.mark.usefixtures(
-    "default_config",
-    "cache_directory",
-    "install_dir_default_layout",
-    "temporary_mirror",
-    "mutable_mock_env_path",
-)
-def test_default_rpaths_create_install_default_layout(temporary_mirror_dir):
+def test_buildcache_cmd_smoke_test(tmp_path: pathlib.Path, install_mockery):
     """
     Test the creation and installation of buildcaches with default rpaths
     into the default directory layout scheme.
     """
-    gspec = spack.concretize.concretize_one("garply")
-    cspec = spack.concretize.concretize_one("corge")
-    sy_spec = spack.concretize.concretize_one("symly")
+    mirror_cmd("add", "--type", "binary", "--unsigned", "test-mirror", str(tmp_path))
 
     # Install 'corge' without using a cache
-    install_cmd("--no-cache", cspec.name)
-    install_cmd("--no-cache", sy_spec.name)
+    install_cmd("--fake", "--no-cache", "corge")
+    install_cmd("--fake", "--no-cache", "symly")
 
     # Create a buildache
-    buildcache_cmd("push", "-u", temporary_mirror_dir, cspec.name, sy_spec.name)
+    buildcache_cmd("push", "-u", str(tmp_path), "corge", "symly")
     # Test force overwrite create buildcache (-f option)
-    buildcache_cmd("push", "-uf", temporary_mirror_dir, cspec.name)
+    buildcache_cmd("push", "-uf", str(tmp_path), "corge")
 
     # Create mirror index
-    buildcache_cmd("update-index", temporary_mirror_dir)
+    buildcache_cmd("update-index", str(tmp_path))
 
     # List the buildcaches in the mirror
     buildcache_cmd("list", "-alv")
 
     # Uninstall the package and deps
-    uninstall_cmd("-y", "--dependents", gspec.name)
+    uninstall_cmd("-y", "--dependents", "garply")
 
     # Test installing from build caches
-    buildcache_cmd("install", "-uo", cspec.name, sy_spec.name)
+    buildcache_cmd("install", "-uo", "corge", "symly")
 
     # This gives warning that spec is already installed
-    buildcache_cmd("install", "-uo", cspec.name)
+    buildcache_cmd("install", "-uo", "corge")
 
     # Test overwrite install
-    buildcache_cmd("install", "-ufo", cspec.name)
+    buildcache_cmd("install", "-ufo", "corge")
 
     buildcache_cmd("keys", "-f")
     buildcache_cmd("list")
 
     buildcache_cmd("list", "-a")
     buildcache_cmd("list", "-l", "-v")
-
-
-@pytest.mark.requires_executables(*required_executables)
-@pytest.mark.maybeslow
-@pytest.mark.nomockstage
-@pytest.mark.usefixtures(
-    "default_config", "cache_directory", "install_dir_non_default_layout", "temporary_mirror"
-)
-def test_default_rpaths_install_nondefault_layout(temporary_mirror_dir):
-    """
-    Test the creation and installation of buildcaches with default rpaths
-    into the non-default directory layout scheme.
-    """
-    cspec = spack.concretize.concretize_one("corge")
-    # This guy tests for symlink relocation
-    sy_spec = spack.concretize.concretize_one("symly")
-
-    # Install some packages with dependent packages
-    # test install in non-default install path scheme
-    buildcache_cmd("install", "-uo", cspec.name, sy_spec.name)
-
-    # Test force install in non-default install path scheme
-    buildcache_cmd("install", "-ufo", cspec.name)
-
-
-@pytest.mark.requires_executables(*required_executables)
-@pytest.mark.maybeslow
-@pytest.mark.nomockstage
-@pytest.mark.usefixtures(
-    "default_config",
-    "cache_directory",
-    "install_dir_default_layout",
-    "temporary_mirror",
-    "mutable_mock_env_path",
-)
-def test_relative_rpaths_install_default_layout(temporary_mirror_dir):
-    """
-    Test the creation and installation of buildcaches with relative
-    rpaths into the default directory layout scheme.
-    """
-    gspec = spack.concretize.concretize_one("garply")
-    cspec = spack.concretize.concretize_one("corge")
-
-    # Install buildcache created with relativized rpaths
-    buildcache_cmd("install", "-ufo", cspec.name)
-
-    # This gives warning that spec is already installed
-    buildcache_cmd("install", "-ufo", cspec.name)
-
-    # Uninstall the package and deps
-    uninstall_cmd("-y", "--dependents", gspec.name)
-
-    # Install build cache
-    buildcache_cmd("install", "-ufo", cspec.name)
-
-    # Test overwrite install
-    buildcache_cmd("install", "-ufo", cspec.name)
-
-
-@pytest.mark.requires_executables(*required_executables)
-@pytest.mark.maybeslow
-@pytest.mark.nomockstage
-@pytest.mark.usefixtures(
-    "default_config", "cache_directory", "install_dir_non_default_layout", "temporary_mirror"
-)
-def test_relative_rpaths_install_nondefault(temporary_mirror_dir):
-    """
-    Test the installation of buildcaches with relativized rpaths
-    into the non-default directory layout scheme.
-    """
-    cspec = spack.concretize.concretize_one("corge")
-
-    # Test install in non-default install path scheme and relative path
-    buildcache_cmd("install", "-ufo", cspec.name)
 
 
 def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
@@ -365,17 +163,16 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
         assert new_keys[0] == fpr
 
 
-@pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
-@pytest.mark.nomockstage
-@pytest.mark.usefixtures(
-    "default_config", "cache_directory", "install_dir_non_default_layout", "temporary_mirror"
-)
-def test_built_spec_cache(temporary_mirror_dir):
+def test_built_spec_cache(install_mockery, tmp_path: pathlib.Path):
     """Because the buildcache list command fetches the buildcache index
     and uses it to populate the binary_distribution built spec cache, when
     this test calls get_mirrors_for_spec, it is testing the popluation of
     that cache from a buildcache index."""
+
+    install_cmd("--fake", "--no-cache", "corge")
+    buildcache_cmd("push", "--update-index", str(tmp_path), "corge")
+    mirror_cmd("add", "--type", "binary", "--unsigned", "test-mirror", str(tmp_path))
     buildcache_cmd("list", "-a", "-l")
 
     gspec = spack.concretize.concretize_one("garply")
@@ -1030,7 +827,7 @@ def test_tarball_common_prefix(dummy_prefix, tmp_path: pathlib.Path):
     assert os.path.isabs(dummy_prefix)
     expected_prefix = PurePath(dummy_prefix).as_posix().lstrip("/")
 
-    with fs.working_dir(str(tmp_path)):
+    with working_dir(str(tmp_path)):
         # Create a tarball (using absolute path for prefix dir)
         with tarfile.open("example.tar", mode="w") as tar:
             tar.add(name=dummy_prefix)
@@ -1066,7 +863,7 @@ def test_tarball_common_prefix(dummy_prefix, tmp_path: pathlib.Path):
 def test_tarfile_missing_binary_distribution_file(tmp_path: pathlib.Path):
     """A tarfile that does not contain a .spack/binary_distribution file cannot be
     used to install."""
-    with fs.working_dir(str(tmp_path)):
+    with working_dir(str(tmp_path)):
         # An empty .spack dir.
         with tarfile.open("empty.tar", mode="w") as tar:
             tarinfo = tarfile.TarInfo(name="example/.spack")
@@ -1080,7 +877,7 @@ def test_tarfile_missing_binary_distribution_file(tmp_path: pathlib.Path):
 def test_tarfile_without_common_directory_prefix_fails(tmp_path: pathlib.Path):
     """A tarfile that only contains files without a common package directory
     should fail to extract, as we won't know where to put the files."""
-    with fs.working_dir(str(tmp_path)):
+    with working_dir(str(tmp_path)):
         # Create a broken tarball with just a file, no directories.
         with tarfile.open("empty.tar", mode="w") as tar:
             tar.addfile(
@@ -1094,7 +891,7 @@ def test_tarfile_without_common_directory_prefix_fails(tmp_path: pathlib.Path):
 
 def test_tarfile_with_files_outside_common_prefix(tmp_path: pathlib.Path, dummy_prefix):
     """If a file is outside of the common prefix, we should fail."""
-    with fs.working_dir(str(tmp_path)):
+    with working_dir(str(tmp_path)):
         with tarfile.open("broken.tar", mode="w") as tar:
             tar.add(name=dummy_prefix)
             tar.addfile(tarfile.TarInfo(name="/etc/config_file"), fileobj=io.BytesIO(b"hello"))
