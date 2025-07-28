@@ -140,7 +140,6 @@ If the ``git`` URL is defined in a lower-precedence configuration (like Spack's 
       destination: ~/spack-packages
 
 **Updating and pinning.**
-
 Repos can be pinned to a git branch, tag, or commit.
 
 .. code-block:: yaml
