@@ -1,6 +1,5 @@
 sphinx==8.2.3
 sphinxcontrib-programoutput==0.18
-sphinx-copybutton==0.5.2
 sphinx_design==0.6.1
 sphinxawesome-theme==5.3.2
 python-levenshtein==0.27.1
