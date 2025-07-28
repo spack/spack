@@ -9,7 +9,7 @@ from typing import List, Optional
 import spack.vendor.ruamel.yaml
 
 import spack
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.config as cfg
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
@@ -238,7 +238,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
             # Let downstream jobs know whether the spec needed rebuilding, regardless
             # whether DAG pruning was enabled or not.
-            already_built = bindist.get_mirrors_for_spec(spec=release_spec, index_only=True)
+            already_built = spack.binary_distribution.get_mirrors_for_spec(
+                spec=release_spec, index_only=True
+            )
             job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
 
             if options.cdash_handler:
@@ -293,8 +295,8 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     )
     maybe_generate_manifest(pipeline, options, manifest_path)
 
-    relative_specs_url = bindist.buildcache_relative_specs_url()
-    relative_keys_url = bindist.buildcache_relative_keys_url()
+    relative_specs_url = spack.binary_distribution.buildcache_relative_specs_url()
+    relative_keys_url = spack.binary_distribution.buildcache_relative_keys_url()
 
     if options.pipeline_type == PipelineType.COPY_ONLY:
         stage_names.append("copy")

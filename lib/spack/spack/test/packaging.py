@@ -15,7 +15,7 @@ from collections import OrderedDict
 
 import pytest
 
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.cmd.buildcache as buildcache
 import spack.concretize
 import spack.config
@@ -92,7 +92,7 @@ def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_c
         assert "dummy.txt" in files
 
         # Validate the relocation information
-        buildinfo = bindist.read_buildinfo_file(spec.prefix)
+        buildinfo = spack.binary_distribution.read_buildinfo_file(spec.prefix)
         assert buildinfo["relocate_textfiles"] == ["dummy.txt"]
         assert buildinfo["relocate_links"] == ["link_to_dummy.txt"]
 

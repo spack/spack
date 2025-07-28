@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, NamedTuple, Optional
 
 import pytest
 
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.concretize
 import spack.config
 import spack.hooks.sbang as sbang
@@ -149,14 +149,16 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
         assert len(keys) == 1
         fpr = keys[0]
 
-        bindist._url_push_keys(mirror, keys=[fpr], tmpdir=str(tmp_path), update_index=True)
+        spack.binary_distribution._url_push_keys(
+            mirror, keys=[fpr], tmpdir=str(tmp_path), update_index=True
+        )
 
     # dir 2: import the key from the mirror, and confirm that its fingerprint
     #        matches the one created above
     with spack.util.gpg.gnupghome_override(gpg_dir2):
         assert len(spack.util.gpg.public_keys()) == 0
 
-        bindist.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
+        spack.binary_distribution.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
 
         new_keys = spack.util.gpg.public_keys()
         assert len(new_keys) == 1
@@ -179,7 +181,7 @@ def test_built_spec_cache(install_mockery, tmp_path: pathlib.Path):
     cspec = spack.concretize.concretize_one("corge")
 
     for s in [gspec, cspec]:
-        results = bindist.get_mirrors_for_spec(s)
+        results = spack.binary_distribution.get_mirrors_for_spec(s)
         assert any([r.spec == s for r in results])
 
 
@@ -207,14 +209,14 @@ def test_spec_needs_rebuild(monkeypatch, tmp_path: pathlib.Path):
     # Put installed package in the buildcache
     buildcache_cmd("push", "-u", str(mirror_dir), s.name)
 
-    rebuild = bindist.needs_rebuild(s, mirror_url)
+    rebuild = spack.binary_distribution.needs_rebuild(s, mirror_url)
 
     assert not rebuild
 
     # Now monkey patch Spec to change the hash on the package
     monkeypatch.setattr(spack.spec.Spec, "dag_hash", fake_dag_hash)
 
-    rebuild = bindist.needs_rebuild(s, mirror_url)
+    rebuild = spack.binary_distribution.needs_rebuild(s, mirror_url)
 
     assert rebuild
 
@@ -245,7 +247,9 @@ def test_generate_index_missing(monkeypatch, tmp_path: pathlib.Path, mutable_con
     # Remove dependency from cache
     libelf_files = glob.glob(
         os.path.join(
-            str(mirror_dir / bindist.buildcache_relative_specs_path()), "libelf", "*libelf*"
+            str(mirror_dir / spack.binary_distribution.buildcache_relative_specs_path()),
+            "libelf",
+            "*libelf*",
         )
     )
     os.remove(*libelf_files)
@@ -265,7 +269,9 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
     """
-    monkeypatch.setattr(bindist, "BINARY_INDEX", bindist.BinaryCacheIndex())
+    monkeypatch.setattr(
+        spack.binary_distribution, "BINARY_INDEX", spack.binary_distribution.BinaryCacheIndex()
+    )
 
     # Create a mirror, configure us to point at it, install a spec, and
     # put it in the mirror
@@ -279,7 +285,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
 
     # Now the test
     buildcache_cmd("list", "-al")
-    bindist.BINARY_INDEX = bindist.BinaryCacheIndex()
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex()
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
 
@@ -297,10 +303,14 @@ def test_generate_key_index_failure(monkeypatch, tmp_path: pathlib.Path):
     monkeypatch.setattr(web_util, "push_to_url", push_to_url)
 
     with pytest.raises(CannotListKeys, match="Encountered problem listing keys"):
-        bindist.generate_key_index("s3://non-existent/fails-listing", str(tmp_path))
+        spack.binary_distribution.generate_key_index(
+            "s3://non-existent/fails-listing", str(tmp_path)
+        )
 
     with pytest.raises(GenerateIndexError, match="problem pushing .* Couldn't upload"):
-        bindist.generate_key_index("s3://non-existent/fails-uploading", str(tmp_path))
+        spack.binary_distribution.generate_key_index(
+            "s3://non-existent/fails-uploading", str(tmp_path)
+        )
 
 
 def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, capfd):
@@ -312,7 +322,7 @@ def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, cap
     test_url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        bindist._url_generate_package_index(test_url, str(tmp_path))
+        spack.binary_distribution._url_generate_package_index(test_url, str(tmp_path))
 
     assert (
         "Warning: Encountered problem listing packages at "
@@ -329,10 +339,10 @@ def test_generate_indices_exception(monkeypatch, tmp_path: pathlib.Path, capfd):
     url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match=f"Encountered problem listing keys at {url}"):
-        bindist.generate_key_index(url, str(tmp_path))
+        spack.binary_distribution.generate_key_index(url, str(tmp_path))
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        bindist._url_generate_package_index(url, str(tmp_path))
+        spack.binary_distribution._url_generate_package_index(url, str(tmp_path))
 
     assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 
@@ -375,11 +385,11 @@ def test_update_sbang(tmp_path: pathlib.Path, temporary_mirror, mock_fetch, inst
 
 def test_FetchCacheError_only_accepts_lists_of_errors():
     with pytest.raises(TypeError, match="list"):
-        bindist.FetchCacheError("error")
+        spack.binary_distribution.FetchCacheError("error")
 
 
 def test_FetchCacheError_pretty_printing_multiple():
-    e = bindist.FetchCacheError([RuntimeError("Oops!"), TypeError("Trouble!")])
+    e = spack.binary_distribution.FetchCacheError([RuntimeError("Oops!"), TypeError("Trouble!")])
     str_e = str(e)
     assert "Multiple errors" in str_e
     assert "Error 1: RuntimeError: Oops!" in str_e
@@ -388,7 +398,7 @@ def test_FetchCacheError_pretty_printing_multiple():
 
 
 def test_FetchCacheError_pretty_printing_single():
-    e = bindist.FetchCacheError([RuntimeError("Oops!")])
+    e = spack.binary_distribution.FetchCacheError([RuntimeError("Oops!")])
     str_e = str(e)
     assert "Multiple errors" not in str_e
     assert "RuntimeError: Oops!" in str_e
@@ -401,7 +411,7 @@ def test_text_relocate_if_needed(
     install_cmd("needs-text-relocation")
     spec = temporary_store.db.query_one("needs-text-relocation")
     tgz_path = tmp_path / "relocatable.tar.gz"
-    bindist.create_tarball(spec, str(tgz_path))
+    spack.binary_distribution.create_tarball(spec, str(tgz_path))
 
     # extract the .spack/binary_distribution file
     with tarfile.open(tgz_path) as tar:
@@ -432,7 +442,7 @@ def test_compression_writer(tmp_path: pathlib.Path):
     with open(compressed_output_path, "rb") as f:
         binary_content = f.read()
 
-    assert bindist.compute_hash(binary_content) == compressed_checksum
+    assert spack.binary_distribution.compute_hash(binary_content) == compressed_checksum
     assert os.stat(compressed_output_path).st_size == compressed_size
     assert binary_content[:2] == b"\x1f\x8b"
     decompressed_content = gzip.decompress(binary_content).decode("utf-8")
@@ -453,7 +463,7 @@ def test_compression_writer(tmp_path: pathlib.Path):
     with open(uncompressed_output_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    assert bindist.compute_hash(content) == uncompressed_checksum
+    assert spack.binary_distribution.compute_hash(content) == uncompressed_checksum
     assert os.stat(uncompressed_output_path).st_size == uncompressed_size
     assert content == text
 
@@ -480,14 +490,14 @@ def test_v2_etag_fetching_304():
             )
         assert False, "Should not fetch {}".format(url)
 
-    fetcher = bindist.EtagIndexFetcherV2(
+    fetcher = spack.binary_distribution.EtagIndexFetcherV2(
         url="https://www.example.com",
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_304,
     )
 
     result = fetcher.conditional_fetch()
-    assert isinstance(result, bindist.FetchIndexResult)
+    assert isinstance(result, spack.binary_distribution.FetchIndexResult)
     assert result.fresh
 
 
@@ -505,18 +515,18 @@ def test_v2_etag_fetching_200():
             )
         assert False, "Should not fetch {}".format(url)
 
-    fetcher = bindist.EtagIndexFetcherV2(
+    fetcher = spack.binary_distribution.EtagIndexFetcherV2(
         url="https://www.example.com",
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_200,
     )
 
     result = fetcher.conditional_fetch()
-    assert isinstance(result, bindist.FetchIndexResult)
+    assert isinstance(result, spack.binary_distribution.FetchIndexResult)
     assert not result.fresh
     assert result.etag == "59bcc3ad6775562f845953cf01624225"
     assert result.data == "Result"  # decoded utf-8.
-    assert result.hash == bindist.compute_hash("Result")
+    assert result.hash == spack.binary_distribution.compute_hash("Result")
 
 
 def test_v2_etag_fetching_404():
@@ -530,19 +540,19 @@ def test_v2_etag_fetching_404():
             fp=None,
         )
 
-    fetcher = bindist.EtagIndexFetcherV2(
+    fetcher = spack.binary_distribution.EtagIndexFetcherV2(
         url="https://www.example.com",
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_404,
     )
 
-    with pytest.raises(bindist.FetchIndexError):
+    with pytest.raises(spack.binary_distribution.FetchIndexError):
         fetcher.conditional_fetch()
 
 
 def test_v2_default_index_fetch_200():
     index_json = '{"Hello": "World"}'
-    index_json_hash = bindist.compute_hash(index_json)
+    index_json_hash = spack.binary_distribution.compute_hash(index_json)
 
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
@@ -564,13 +574,13 @@ def test_v2_default_index_fetch_200():
 
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcherV2(
+    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash="outdated", urlopen=urlopen
     )
 
     result = fetcher.conditional_fetch()
 
-    assert isinstance(result, bindist.FetchIndexResult)
+    assert isinstance(result, spack.binary_distribution.FetchIndexResult)
     assert not result.fresh
     assert result.etag == "59bcc3ad6775562f845953cf01624225"
     assert result.data == index_json
@@ -581,7 +591,7 @@ def test_v2_default_index_dont_fetch_index_json_hash_if_no_local_hash():
     # When we don't have local hash, we should not be fetching the
     # remote index.json.hash file, but only index.json.
     index_json = '{"Hello": "World"}'
-    index_json_hash = bindist.compute_hash(index_json)
+    index_json_hash = spack.binary_distribution.compute_hash(index_json)
 
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
@@ -595,13 +605,13 @@ def test_v2_default_index_dont_fetch_index_json_hash_if_no_local_hash():
 
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcherV2(
+    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash=None, urlopen=urlopen
     )
 
     result = fetcher.conditional_fetch()
 
-    assert isinstance(result, bindist.FetchIndexResult)
+    assert isinstance(result, spack.binary_distribution.FetchIndexResult)
     assert result.data == index_json
     assert result.hash == index_json_hash
     assert result.etag == "59bcc3ad6775562f845953cf01624225"
@@ -610,7 +620,7 @@ def test_v2_default_index_dont_fetch_index_json_hash_if_no_local_hash():
 
 def test_v2_default_index_not_modified():
     index_json = '{"Hello": "World"}'
-    index_json_hash = bindist.compute_hash(index_json)
+    index_json_hash = spack.binary_distribution.compute_hash(index_json)
 
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
@@ -625,7 +635,7 @@ def test_v2_default_index_not_modified():
         # No request to index.json should be made.
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcherV2(
+    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash=index_json_hash, urlopen=urlopen
     )
 
@@ -635,7 +645,7 @@ def test_v2_default_index_not_modified():
 @pytest.mark.parametrize("index_json", [b"\xa9", b"!#%^"])
 def test_v2_default_index_invalid_hash_file(index_json):
     # Test invalid unicode / invalid hash type
-    index_json_hash = bindist.compute_hash(index_json)
+    index_json_hash = spack.binary_distribution.compute_hash(index_json)
 
     def urlopen(request: urllib.request.Request):
         return urllib.response.addinfourl(
@@ -645,7 +655,7 @@ def test_v2_default_index_invalid_hash_file(index_json):
             code=200,
         )
 
-    fetcher = bindist.DefaultIndexFetcherV2(
+    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash=index_json_hash, urlopen=urlopen
     )
 
@@ -655,7 +665,7 @@ def test_v2_default_index_invalid_hash_file(index_json):
 def test_v2_default_index_json_404():
     # Test invalid unicode / invalid hash type
     index_json = '{"Hello": "World"}'
-    index_json_hash = bindist.compute_hash(index_json)
+    index_json_hash = spack.binary_distribution.compute_hash(index_json)
 
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
@@ -678,11 +688,11 @@ def test_v2_default_index_json_404():
 
         assert False, "Unexpected fetch {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcherV2(
+    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash="invalid", urlopen=urlopen
     )
 
-    with pytest.raises(bindist.FetchIndexError, match="Could not fetch index"):
+    with pytest.raises(spack.binary_distribution.FetchIndexError, match="Could not fetch index"):
         fetcher.conditional_fetch()
 
 
@@ -704,7 +714,7 @@ def test_tarball_doesnt_include_buildinfo_twice(tmp_path: Path):
     # Now create a tarball, which should include a new binary_distribution file
     tarball = str(tmp_path / "prefix.tar.gz")
 
-    bindist._do_create_tarball(
+    spack.binary_distribution._do_create_tarball(
         tarfile_path=tarball, prefix=str(p), buildinfo={"metadata": "new"}, prefixes_to_relocate=[]
     )
 
@@ -742,13 +752,13 @@ def test_reproducible_tarball_is_reproducible(tmp_path: Path):
 
     # Create a tarball with a certain mtime of bin/app
     os.utime(app, times=(0, 0))
-    bindist._do_create_tarball(
+    spack.binary_distribution._do_create_tarball(
         tarball_1, prefix=str(p), buildinfo=buildinfo, prefixes_to_relocate=[]
     )
 
     # Do it another time with different mtime of bin/app
     os.utime(app, times=(10, 10))
-    bindist._do_create_tarball(
+    spack.binary_distribution._do_create_tarball(
         tarball_2, prefix=str(p), buildinfo=buildinfo, prefixes_to_relocate=[]
     )
 
@@ -797,7 +807,9 @@ def test_tarball_normalized_permissions(tmp_path: pathlib.Path):
     ) as f:
         f.write("hello world")
 
-    bindist._do_create_tarball(tarball, prefix=str(p), buildinfo={}, prefixes_to_relocate=[])
+    spack.binary_distribution._do_create_tarball(
+        tarball, prefix=str(p), buildinfo={}, prefixes_to_relocate=[]
+    )
 
     expected_prefix = str(p).lstrip("/")
 
@@ -834,12 +846,13 @@ def test_tarball_common_prefix(dummy_prefix, tmp_path: pathlib.Path):
 
         # Open, verify common prefix, and extract it.
         with tarfile.open("example.tar", mode="r") as tar:
-            common_prefix = bindist._ensure_common_prefix(tar)
+            common_prefix = spack.binary_distribution._ensure_common_prefix(tar)
             assert common_prefix == expected_prefix
 
             # Extract into prefix2
             tar.extractall(
-                path="prefix2", members=bindist._tar_strip_component(tar, common_prefix)
+                path="prefix2",
+                members=spack.binary_distribution._tar_strip_component(tar, common_prefix),
             )
 
         # Verify files are all there at the correct level.
@@ -871,7 +884,7 @@ def test_tarfile_missing_binary_distribution_file(tmp_path: pathlib.Path):
             tar.addfile(tarinfo)
 
         with pytest.raises(ValueError, match="missing binary_distribution file"):
-            bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
+            spack.binary_distribution._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
 
 
 def test_tarfile_without_common_directory_prefix_fails(tmp_path: pathlib.Path):
@@ -886,7 +899,7 @@ def test_tarfile_without_common_directory_prefix_fails(tmp_path: pathlib.Path):
             )
 
         with pytest.raises(ValueError, match="Tarball does not contain a common prefix"):
-            bindist._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
+            spack.binary_distribution._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
 
 
 def test_tarfile_with_files_outside_common_prefix(tmp_path: pathlib.Path, dummy_prefix):
@@ -899,7 +912,7 @@ def test_tarfile_with_files_outside_common_prefix(tmp_path: pathlib.Path, dummy_
         with pytest.raises(
             ValueError, match="Tarball contains file /etc/config_file outside of prefix"
         ):
-            bindist._ensure_common_prefix(tarfile.open("broken.tar", mode="r"))
+            spack.binary_distribution._ensure_common_prefix(tarfile.open("broken.tar", mode="r"))
 
 
 def test_tarfile_of_spec_prefix(tmp_path: pathlib.Path):
@@ -924,7 +937,7 @@ def test_tarfile_of_spec_prefix(tmp_path: pathlib.Path):
     file = tmp_path / "example.tar"
 
     with tarfile.open(str(file), mode="w") as tar:
-        bindist.tarfile_of_spec_prefix(tar, str(prefix), prefixes_to_relocate=[])
+        spack.binary_distribution.tarfile_of_spec_prefix(tar, str(prefix), prefixes_to_relocate=[])
 
     expected_prefix = str(prefix).lstrip("/")
 
@@ -977,19 +990,19 @@ def test_get_valid_spec_file(tmp_path: pathlib.Path, layout, expect_success):
         assert expect_success
         assert spec_dict_disk == spec_dict
         assert layout_disk == effective_layout
-    except bindist.InvalidMetadataFile:
+    except spack.binary_distribution.InvalidMetadataFile:
         assert not expect_success
 
 
 def test_get_valid_spec_file_doesnt_exist(tmp_path: pathlib.Path):
-    with pytest.raises(bindist.InvalidMetadataFile, match="No such file"):
+    with pytest.raises(spack.binary_distribution.InvalidMetadataFile, match="No such file"):
         get_valid_spec_file(str(tmp_path / "no-such-file"), max_supported_layout=1)
 
 
 @pytest.mark.parametrize("filename", ["spec.json", "spec.json.sig"])
 def test_get_valid_spec_file_no_json(tmp_path: pathlib.Path, filename):
     tmp_path.joinpath(filename).write_text("not json")
-    with pytest.raises(bindist.InvalidMetadataFile):
+    with pytest.raises(spack.binary_distribution.InvalidMetadataFile):
         get_valid_spec_file(str(tmp_path / filename), max_supported_layout=1)
 
 
@@ -1009,7 +1022,9 @@ def test_url_buildcache_entry_v3(monkeypatch, tmp_path: pathlib.Path):
     # Push libdwarf to buildcache
     buildcache_cmd("push", "-u", str(mirror_dir), s.name)
 
-    cache_class = get_url_buildcache_class(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+    cache_class = get_url_buildcache_class(
+        spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    )
     build_cache = cache_class(mirror_url, s, allow_unsigned=True)
 
     manifest = build_cache.read_manifest()
@@ -1058,7 +1073,9 @@ def test_relative_path_components():
 )
 def test_default_tag(spec: str):
     """Make sure that computed image tags are valid."""
-    assert re.fullmatch(spack.oci.image.tag, bindist._oci_default_tag(spack.spec.Spec(spec)))
+    assert re.fullmatch(
+        spack.oci.image.tag, spack.binary_distribution._oci_default_tag(spack.spec.Spec(spec))
+    )
 
 
 class IndexInformation(NamedTuple):
@@ -1075,11 +1092,11 @@ class IndexInformation(NamedTuple):
 def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
     mirror_root = tmp_path / "mymirror"
     index_json = '{"Hello": "World"}'
-    index_json_hash = bindist.compute_hash(index_json)
+    index_json_hash = spack.binary_distribution.compute_hash(index_json)
     fetched = False
 
     cache_class = get_url_buildcache_class(
-        layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
 
     index_blob_path = os.path.join(
@@ -1094,7 +1111,7 @@ def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
     with open(index_blob_path, "w", encoding="utf-8") as fd:
         fd.write(index_json)
 
-    index_blob_record = bindist.BlobRecord(
+    index_blob_record = spack.binary_distribution.BlobRecord(
         os.stat(index_blob_path).st_size,
         cache_class.BUILDCACHE_INDEX_MEDIATYPE,
         "none",
@@ -1153,16 +1170,16 @@ def test_etag_fetching_304():
             )
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.EtagIndexFetcher(
-        bindist.MirrorURLAndVersion(
-            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    fetcher = spack.binary_distribution.EtagIndexFetcher(
+        spack.binary_distribution.MirrorURLAndVersion(
+            "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_304,
     )
 
     result = fetcher.conditional_fetch()
-    assert isinstance(result, bindist.FetchIndexResult)
+    assert isinstance(result, spack.binary_distribution.FetchIndexResult)
     assert result.fresh
 
 
@@ -1180,16 +1197,16 @@ def test_etag_fetching_200(mock_index):
             )
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.EtagIndexFetcher(
-        bindist.MirrorURLAndVersion(
-            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    fetcher = spack.binary_distribution.EtagIndexFetcher(
+        spack.binary_distribution.MirrorURLAndVersion(
+            "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_200,
     )
 
     result = fetcher.conditional_fetch()
-    assert isinstance(result, bindist.FetchIndexResult)
+    assert isinstance(result, spack.binary_distribution.FetchIndexResult)
     assert not result.fresh
     assert mock_index.fetched_blob()
     assert result.etag == mock_index.manifest_etag
@@ -1208,15 +1225,15 @@ def test_etag_fetching_404():
             fp=None,
         )
 
-    fetcher = bindist.EtagIndexFetcher(
-        bindist.MirrorURLAndVersion(
-            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    fetcher = spack.binary_distribution.EtagIndexFetcher(
+        spack.binary_distribution.MirrorURLAndVersion(
+            "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_404,
     )
 
-    with pytest.raises(bindist.FetchIndexError):
+    with pytest.raises(spack.binary_distribution.FetchIndexError):
         fetcher.conditional_fetch()
 
 
@@ -1234,9 +1251,9 @@ def test_default_index_fetch_200(mock_index):
 
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcher(
-        bindist.MirrorURLAndVersion(
-            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    fetcher = spack.binary_distribution.DefaultIndexFetcher(
+        spack.binary_distribution.MirrorURLAndVersion(
+            "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         local_hash="outdated",
         urlopen=urlopen,
@@ -1244,7 +1261,7 @@ def test_default_index_fetch_200(mock_index):
 
     result = fetcher.conditional_fetch()
 
-    assert isinstance(result, bindist.FetchIndexResult)
+    assert isinstance(result, spack.binary_distribution.FetchIndexResult)
     assert not result.fresh
     assert mock_index.fetched_blob()
     assert result.etag == mock_index.manifest_etag
@@ -1263,15 +1280,15 @@ def test_default_index_404():
             fp=None,
         )
 
-    fetcher = bindist.DefaultIndexFetcher(
-        bindist.MirrorURLAndVersion(
-            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    fetcher = spack.binary_distribution.DefaultIndexFetcher(
+        spack.binary_distribution.MirrorURLAndVersion(
+            "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         local_hash=None,
         urlopen=urlopen,
     )
 
-    with pytest.raises(bindist.FetchIndexError):
+    with pytest.raises(spack.binary_distribution.FetchIndexError):
         fetcher.conditional_fetch()
 
 
@@ -1290,9 +1307,9 @@ def test_default_index_not_modified(mock_index):
         # No other request should be made.
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcher(
-        bindist.MirrorURLAndVersion(
-            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    fetcher = spack.binary_distribution.DefaultIndexFetcher(
+        spack.binary_distribution.MirrorURLAndVersion(
+            "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         local_hash=mock_index.index_hash,
         urlopen=urlopen,

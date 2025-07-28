@@ -8,7 +8,7 @@ import tempfile
 from concurrent.futures import Future, as_completed
 from typing import Callable, Dict, List, Optional, Set, Tuple, cast
 
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.llnl.util.tty as tty
 import spack.stage
 import spack.util.parallel
@@ -40,13 +40,17 @@ def _fetch_manifests(
              callable to read each manifest, and a list of blobs in the mirror.
     """
     manifests, read_fn = get_entries_from_cache(url=mirror.fetch_url, tmpspecsdir=tmpspecsdir)
-    url_to_list = url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path())
+    url_to_list = url_util.join(
+        mirror.fetch_url, spack.binary_distribution.buildcache_relative_blobs_path()
+    )
     tty.debug(f"Listing blobs in {url_to_list}")
     blobs = web_util.list_url(url_to_list, recursive=True) or []
     if not blobs:
         tty.warn(f"Unable to list blobs in {url_to_list}")
     blobs = [
-        url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path(), blob_name)
+        url_util.join(
+            mirror.fetch_url, spack.binary_distribution.buildcache_relative_blobs_path(), blob_name
+        )
         for blob_name in blobs
     ]
     return manifests, read_fn, blobs
