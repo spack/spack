@@ -4596,10 +4596,14 @@ def test_env_view_ignores_different_file_conflicts(
 
 @pytest.mark.regression("51054")
 def test_non_str_repos(installed_environment):
-    with installed_environment(textwrap.dedent(f"""
+    with installed_environment(
+        textwrap.dedent(
+            f"""
         spack:
           repos:
             builtin:
               branch: develop
-    """.strip())) as test:
+    """.strip()
+        )
+    ) as test:
         pass
