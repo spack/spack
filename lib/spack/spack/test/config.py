@@ -1392,3 +1392,27 @@ def test_env_activation_preserves_config_scopes(mutable_mock_env_path):
         )
 
     assert highest_priority_scopes(spack.config.CONFIG, nscopes=2) == expected_scopes_without_env
+
+
+@pytest.mark.regression("51059")
+def test_config_include_similar_name(tmp_path: pathlib.Path):
+    config_a = tmp_path / "a" / "config"
+    config_b = tmp_path / "b" / "config"
+
+    os.makedirs(config_a)
+    with open(config_a / "config.yaml", "w", encoding="utf-8") as fd:
+        syaml.dump_config({"config": {"install_tree": {"root": str(tmp_path)}}}, fd)
+
+    os.makedirs(config_b)
+    with open(config_b / "config.yaml", "w", encoding="utf-8") as fd:
+        syaml.dump_config({"config": {"install_tree": {"padded_length": 64}}}, fd)
+
+    with open(tmp_path / "include.yaml", "w", encoding="utf-8") as fd:
+        syaml.dump_config({"include": [str(config_a), str(config_b)]}, fd)
+
+    config = spack.config.create_from(spack.config.DirectoryConfigScope("test", str(tmp_path)))
+
+    # Ensure all of the scopes are found
+    assert len(config.matching_scopes("^test$")) == 1
+    assert len(config.matching_scopes("^test:a/config$")) == 1
+    assert len(config.matching_scopes("^test:b/config$")) == 1
