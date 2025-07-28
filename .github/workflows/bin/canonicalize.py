@@ -72,9 +72,19 @@ def compare(
     os.makedirs(output_dir, exist_ok=True)
     run_git_command("init", dir=output_dir)
 
-    for i, (spack_dir, python_exe) in enumerate(product(spack_versions, python_versions), start=1):
-        msg = f"Running canonicalization with {python_exe} using Spack {spack_dir}..."
-        print(f"\033[1;97m{msg}\033[0m", flush=True)
+    pairs = list(product(spack_versions, python_versions))
+
+    if len(pairs) < 2:
+        raise ValueError("At least two Python or two Spack versions must be given for comparison.")
+
+    changes_with_previous: List[int] = []
+
+    for i, (spack_dir, python_exe) in enumerate(pairs):
+        print(f"\033[1;97mCanonicalizing with {python_exe} and {spack_dir}...\033[0m", flush=True)
+
+        # Point PYTHONPATH to the given Spack library for the subprocess
+        if not os.path.isdir(spack_dir):
+            raise ValueError(f"Invalid Spack dir: {spack_dir}")
         env = os.environ.copy()
         spack_pythonpath = os.path.join(spack_dir, "lib", "spack")
         if "PYTHONPATH" in env and env["PYTHONPATH"]:
@@ -89,34 +99,34 @@ def compare(
             stderr=sys.stderr,
             env=env,
         )
-        if i == 1:
-            # The first run creates a commit for reference
-            run_git_command("add", ".", dir=output_dir)
-            run_git_command(
-                "commit",
-                "--quiet",
-                "--allow-empty",  # makes this idempotent when running locally
-                "-m",
-                f"Canonicalized with {python_exe}",
-                dir=output_dir,
-            )
-        if i > 1:
-            # Subsequent runs compare against the first version
+        if i > 0:
             try:
                 run_git_command("diff", "--exit-code", "HEAD", dir=output_dir)
             except subprocess.CalledProcessError:
-                print(
-                    f"\033[1;31mCanonicalized files differ between {python_versions[0]} and "
-                    f"{python_exe}. This is a bug in Spack, leading to different package hashes "
-                    "across Python versions. Please file a bug report in spack/spack. You can "
-                    "work around this by simplifying your `package.py` file.\033[0m",
-                    file=sys.stderr,
-                )
-                exit(1)
+                changes_with_previous.append(i)
+
+        # The first run creates a commit for reference
+        run_git_command("add", ".", dir=output_dir)
+        run_git_command(
+            "commit",
+            "--quiet",
+            "--allow-empty",  # makes this idempotent when running locally
+            "-m",
+            f"Canonicalized with {python_exe} and {spack_dir}",
+            dir=output_dir,
+        )
+
+    for i in changes_with_previous:
+        previous_spack, previous_python = pairs[i - 1]
+        current_spack, current_python = pairs[i]
+        print(
+            f"\033[1;31mChanges detected between {previous_python} ({previous_spack}) and "
+            f"{current_python} ({current_spack})\033[0m"
+        )
+        exit(1)
 
 
 if __name__ == "__main__":
-    # when --run is given, this script will run
     parser = argparse.ArgumentParser(description="Canonicalize Spack package files.")
     parser.add_argument("--run", action="store_true", help="Generate canonicalized sources.")
     parser.add_argument("--spack", nargs="+", help="Specify one or more Spack versions.")
@@ -132,7 +142,5 @@ if __name__ == "__main__":
 
     if args.run:
         run(args.input_dir, args.output_dir)
-    elif len(args.python) * len(args.spack) < 2:
-        raise ValueError("At least two Python or two Spack versions must be given for comparison.")
     else:
         compare(args.input_dir, args.output_dir, args.python, args.spack)
