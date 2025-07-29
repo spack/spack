@@ -2193,6 +2193,7 @@ class SpackSolverSetup:
 
             for input_spec in requirement_grp:
                 spec = spack.spec.Spec(input_spec)
+                spec.replace_hash()
                 if not spec.name:
                     spec.name = pkg_name
                 spec.attach_git_version_lookup()
