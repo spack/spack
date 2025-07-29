@@ -4,7 +4,7 @@ sphinx-copybutton==0.5.2
 sphinx_design==0.6.1
 sphinx-rtd-theme==3.0.2
 python-levenshtein==0.27.1
-docutils==0.21.2
+docutils==0.22
 pygments==2.19.2
 urllib3==2.5.0
 pytest==8.4.1
