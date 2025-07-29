@@ -77,6 +77,8 @@ mirror_entry = {
         "fetch": fetch_and_push,
         "push": fetch_and_push,
         "autopush": {"type": "boolean"},
+        "exclude": {"type": "array", "items": {"type": "string"}},
+        "include": {"type": "array", "items": {"type": "string"}},
         **connection,  # type: ignore
     },
     **connection_ext,  # type: ignore

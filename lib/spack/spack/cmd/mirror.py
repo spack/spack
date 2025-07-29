@@ -134,6 +134,24 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         dest="signed",
     )
+    add_parser.add_argument(
+        "--include-file",
+        help="specs which Spack should always try to add to a mirror"
+        " (listed in a file, one per line)",
+    )
+    add_parser.add_argument(
+        "--include-specs",
+        help="specs which Spack should always try to add to a mirror (specified on command line)",
+    )
+    add_parser.add_argument(
+        "--exclude-file",
+        help="specs which Spack should not try to add to a mirror"
+        " (listed in a file, one per line)",
+    )
+    add_parser.add_argument(
+        "--exclude-specs",
+        help="specs which Spack should not try to add to a mirror (specified on command line)",
+    )
     arguments.add_connection_args(add_parser, False)
     # Remove
     remove_parser = sp.add_parser("remove", aliases=["rm"], help=mirror_remove.__doc__)
@@ -222,6 +240,24 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
+    set_parser.add_argument(
+        "--include-file",
+        help="specs which Spack should always try to add to a mirror"
+        " (listed in a file, one per line)",
+    )
+    set_parser.add_argument(
+        "--include-specs",
+        help="specs which Spack should always try to add to a mirror (specified on command line)",
+    )
+    set_parser.add_argument(
+        "--exclude-file",
+        help="specs which Spack should not try to add to a mirror"
+        " (listed in a file, one per line)",
+    )
+    set_parser.add_argument(
+        "--exclude-specs",
+        help="specs which Spack should not try to add to a mirror (specified on command line)",
+    )
     arguments.add_connection_args(set_parser, False)
 
     # List
@@ -299,6 +335,30 @@ def _configure_access_pair(
         return None
 
 
+def _manage_filters(args, mirror) -> bool:
+    include_specs = []
+    if args.include_file:
+        include_specs.extend(specs_from_text_file(args.include_file, concretize=False))
+    if args.include_specs:
+        include_specs.extend(spack.cmd.parse_specs(str(args.include_specs).split()))
+    if include_specs:
+        # round trip specs to assure they are valid
+        mirror.update({"include": [str(s) for s in include_specs]})
+
+    exclude_specs = []
+    if args.exclude_file:
+        exclude_specs.extend(specs_from_text_file(args.exclude_file, concretize=False))
+    if args.exclude_specs:
+        exclude_specs.extend(spack.cmd.parse_specs(str(args.exclude_specs).split()))
+    if exclude_specs:
+        # round trip specs to assure they are valid
+        mirror.update({"exclude": [str(s) for s in exclude_specs]})
+    if include_specs or exclude_specs:
+        return True
+    else:
+        return False
+
+
 def mirror_add(args):
     """add a mirror to Spack"""
     if (
@@ -368,6 +428,9 @@ def mirror_add(args):
         mirror = spack.mirrors.mirror.Mirror(connection, name=args.name)
     else:
         mirror = spack.mirrors.mirror.Mirror(args.url, name=args.name)
+
+    _manage_filters(args, mirror)
+
     spack.mirrors.utils.add(mirror, args.scope)
 
 
@@ -428,6 +491,8 @@ def _configure_mirror(args):
         changes["source"] = "source" in args.type
 
     changed = entry.update(changes, direction)
+    if hasattr(args, "include_file"):
+        changed = changed | _manage_filters(args, entry)
 
     if changed:
         mirrors[args.name] = entry.to_dict()
@@ -470,7 +535,10 @@ def specs_from_text_file(filename, concretize=False):
     with open(filename, "r", encoding="utf-8") as f:
         specs_in_file = f.readlines()
         specs_in_file = [s.strip() for s in specs_in_file]
-    return spack.cmd.parse_specs(" ".join(specs_in_file), concretize=concretize)
+    if concretize:
+        return spack.cmd.parse_specs(" ".join(specs_in_file), concretize=True)
+    else:
+        return spack.cmd.parse_specs(specs_in_file, concretize=False)
 
 
 def concrete_specs_from_user(args):

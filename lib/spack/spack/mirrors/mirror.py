@@ -4,7 +4,7 @@
 import operator
 import os
 import urllib.parse
-from typing import Any, Dict, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import spack.config
 import spack.llnl.util.tty as tty
@@ -97,6 +97,11 @@ class Mirror:
         binary = "b" if self.binary else " "
         print(f"{self.name: <{max_len}} [{source}{binary}] {url}")
 
+    def _process_spec_filters(self, key: str) -> List[str]:
+        if isinstance(self._data, str):
+            return []
+        return self._data.get(key, [])
+
     @property
     def name(self):
         return self._name or "<unnamed>"
@@ -128,6 +133,14 @@ class Mirror:
     def push_url(self):
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("push")
+
+    @property
+    def exclusions(self):
+        return self._process_spec_filters("exclude")
+
+    @property
+    def inclusions(self):
+        return self._process_spec_filters("include")
 
     def ensure_mirror_usable(self, direction: str = "push"):
         access_pair = self._get_value("access_pair", direction)
@@ -190,7 +203,7 @@ class Mirror:
             "endpoint_url",
         ]
         if top_level:
-            keys += ["binary", "source", "signed", "autopush"]
+            keys += ["binary", "source", "signed", "autopush", "exclude", "include"]
         changed = False
         for key in keys:
             if key in new_data and current_data.get(key) != new_data[key]:

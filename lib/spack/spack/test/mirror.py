@@ -16,12 +16,14 @@ import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.patch
+import spack.spec
 import spack.stage
 import spack.util.executable
 import spack.util.spack_json as sjson
 import spack.util.url as url_util
 from spack.cmd.common.arguments import mirror_name_or_url
 from spack.llnl.util.filesystem import resolve_link_target_relative_to_the_link, working_dir
+from spack.mirrors.filter import MirrorSpecFilter
 from spack.spec import Spec
 from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
@@ -341,6 +343,15 @@ def test_update_4():
     assert m.fetch_url == "https://example.com"
 
 
+@pytest.mark.parametrize("filter", ["exclude", "include"])
+def test_update_filters(filter):
+    # Change push url, ensure minimal config
+    m = spack.mirrors.mirror.Mirror("https://example.com")
+    assert m.update({filter: ["foo", "bar"]})
+    assert m.to_dict() == {"url": "https://example.com", filter: ["foo", "bar"]}
+    assert m.fetch_url == "https://example.com"
+
+
 @pytest.mark.parametrize("direction", ["fetch", "push"])
 def test_update_connection_params(direction, monkeypatch):
     """Test whether new connection params expand the mirror config to a dict."""
@@ -433,3 +444,44 @@ def test_mirror_name_or_url_dir_parsing(tmp_path: pathlib.Path):
     with working_dir(curdir):
         assert mirror_name_or_url(".").fetch_url == curdir.as_uri()
         assert mirror_name_or_url("..").fetch_url == tmp_path.as_uri()
+
+
+def test_mirror_parse_exclude_include():
+    mirror_raw = {
+        "url": "https://example.com",
+        "exclude": ["dev_path=*", "+shared"],
+        "include": ["+foo"],
+    }
+    m = spack.mirrors.mirror.Mirror(mirror_raw)
+    assert "dev_path=*" in m.exclusions
+    assert "+foo" in m.inclusions
+
+
+INPUT_SPEC_STRS = ["foo@main", "foo@main dev_path=/tmp", "foo@2.1.3"]
+
+
+@pytest.mark.parametrize(
+    "include,exclude,gold",
+    [
+        ([], [], [0, 1, 2]),
+        (["dev_path=*", "@main"], [], [0, 1, 2]),
+        ([], ["dev_path=*", "@main"], [2]),
+        (["dev_path=*"], ["@main"], [1, 2]),
+    ],
+)
+def test_filter_specs(include, exclude, gold):
+    input_specs = [spack.spec.Spec(s) for s in INPUT_SPEC_STRS]
+    data = {"include": include, "exclude": exclude}
+    m = spack.mirrors.mirror.Mirror(data)
+    filter = MirrorSpecFilter(m)
+
+    filtered, filtrate = filter(input_specs)
+
+    assert filtered is not None
+    assert filtrate is not None
+
+    # lossless
+    assert (set(filtered) | set(filtrate)) == set(input_specs)
+
+    for i in gold:
+        assert input_specs[i] in filtered

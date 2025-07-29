@@ -580,6 +580,39 @@ def test_mirror_add_set_autopush(mutable_config):
     mirror("remove", "example")
 
 
+def test_mirror_add_filters(mutable_config, tmp_path: pathlib.Path):
+    exclude_path = str(tmp_path / "test-exclude.txt")
+    with open(exclude_path, "w", encoding="utf-8") as exclude_file:
+        exclude_file.write(
+            """\
+mpich@3.0.1:3.0.2
+mpich@1.0
+"""
+        )
+    include_path = str(tmp_path / "test-include.txt")
+    with open(include_path, "w", encoding="utf-8") as include_file:
+        include_file.write(
+            """\
+build_type=Debug
+gcc-runtime
+"""
+        )
+    mirror("add", "--exclude-specs", "foo", "example", "http://example.com")
+    assert spack.config.get("mirrors:example") == {"url": "http://example.com", "exclude": ["foo"]}
+    mirror("set", "--include-specs", "+shared", "example")
+    assert spack.config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "exclude": ["foo"],
+        "include": ["+shared"],
+    }
+    mirror("set", "--include-file", include_path, "--exclude-file", exclude_path, "example")
+    assert spack.config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "exclude": ["mpich@3.0.1:3.0.2", "mpich@1.0"],
+        "include": ["build_type=Debug", "gcc-runtime"],
+    }
+
+
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize("mirror_knows_commit", (True, False))

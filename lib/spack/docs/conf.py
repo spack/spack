@@ -228,7 +228,7 @@ gettext_uuid = False
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack"]
+exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack", ".venv"]
 
 autodoc_mock_imports = ["llnl"]
 

@@ -198,6 +198,38 @@ def test_buildcache_autopush(tmp_path: pathlib.Path, install_mockery, mock_fetch
     assert (mirror_autopush_dir / specs_dirs / manifest_file).exists()
 
 
+def test_buildcache_exclude(tmp_path, install_mockery, mock_fetch):
+    """Test buildcache with autopush can exclude"""
+    mirror_dir = tmp_path / "mirror_a"
+
+    mirror(
+        "add",
+        "--autopush",
+        "--exclude-specs",
+        "libelf",
+        "--unsigned",
+        "mirror-autopush",
+        mirror_dir.as_uri(),
+    )
+
+    s = spack.concretize.concretize_one("libdwarf")
+
+    # Install and generate build cache index
+    PackageInstaller([s.package], fake=True, explicit=True).install()
+    found_file = URLBuildcacheEntry.get_manifest_filename(s)
+    missing_file = URLBuildcacheEntry.get_manifest_filename(s["libelf"])
+    found_dirs = os.path.join(
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPEC), s.name
+    )
+    missing_dirs = os.path.join(
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPEC),
+        s["libelf"].name,
+    )
+
+    assert (mirror_dir / found_dirs / found_file).exists()
+    assert not (mirror_dir / missing_dirs / missing_file).exists()
+
+
 def test_buildcache_sync(
     mutable_mock_env_path,
     install_mockery,
