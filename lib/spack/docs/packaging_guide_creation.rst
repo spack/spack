@@ -2065,7 +2065,7 @@ Adding the following to a package:
          msg="known bug when using Intel oneAPI compilers through v2024",
     )
 
-expresses that the current package *cannot be built* with Intel oneAPI compilers *up through any version ``2024``* when trying to install the package with a *version up to ``1.2``*.
+expresses that the current package *cannot be built* with Intel oneAPI compilers *up through any version* ``2024`` *when trying to install the package with a version up to* ``1.2``.
 
 If the ``when`` argument is omitted, then the conflict is *always triggered* for specs satisfying the conflict spec.
 For example,
