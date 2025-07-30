@@ -242,7 +242,7 @@ class T4(Package):
 
     variant("v1", default=True)
 
-    # test_errmsg_requirements_2 stresses these constraints and
+    # test_errmsg_requirements_3 stresses these constraints and
     # generates a bad error message: "t4@:2.0 ^t2+v1"
     depends_on("t2")
     depends_on("t2@:2.0", when="@:2.0")
@@ -452,10 +452,7 @@ packages:
     - spec: "~v1"
       when: "@2.0"
 """
-    len(conf_str)
     update_packages_config(conf_str)
-
-    # Spec("w4@2.0").concretized()
 
     # output = solve("--show=asp", "w4@2.0 ^w2+v1")
     # with open("/Users/scheibel1/Desktop/spack/spack/err-msg-asp/bad-w.txt", "w") as f:
@@ -465,8 +462,27 @@ packages:
 
 
 # Short error message: this reencodes test_errmsg_requirements_2
-# in terms of package `requires`, and demonstrates that the message
-# is still lacking in detail
+# in terms of package `requires`, the error message is improved
 def test_errmsg_requirements_3(concretize_scope, test_repo):
     with expect_failure_and_print():
         concretize_one("t4@:2.0 ^t2+v1")
+
+
+# Simulates a user error: package is specified as external with a version,
+# but a different version was required. Currently the error message is
+# improved WRT develop
+def test_errmsg_requirements_4(concretize_scope, test_repo):
+    conf_str = """\
+packages:
+  t1:
+    buildable: false
+    externals:
+    - spec: "t1@2.1"
+      prefix: /a/path/that/doesnt/need/to/exist/
+    require:
+    - spec: "t1@2.0"
+"""
+    update_packages_config(conf_str)
+
+    with expect_failure_and_print():
+        concretize_one("t1")
