@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the CachedCMakePackage build system in Spack for CMake-based projects.
+
 .. _cachedcmakepackage:
 
 -----------

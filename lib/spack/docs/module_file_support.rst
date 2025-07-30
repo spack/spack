@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to configure and customize module file generation in Spack for Environment Modules and Lmod.
+
 .. _modules:
 
 ======================

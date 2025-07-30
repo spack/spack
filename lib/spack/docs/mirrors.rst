@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to set up and manage mirrors in Spack to provide a local repository of tarballs for offline package fetching.
+
 .. _mirrors:
 
 ======================

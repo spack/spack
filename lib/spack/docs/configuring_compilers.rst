@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to configure compilers in Spack, whether by specifying them as externals, or by installing them with Spack.
+
 .. _compiler-config:
 
 =====================
@@ -289,5 +293,3 @@ Once the compiler is installed, you can start using it without additional config
 .. code-block:: console
 
    $ spack install hdf5~mpi %gcc@14
-
-The same holds true for compilers that are made available from build caches, when reusing them is allowed.

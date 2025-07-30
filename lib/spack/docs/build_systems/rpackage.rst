@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to packaging R libraries and applications with Spack, including support for CRAN, Bioconductor, and GitHub sources.
+
 .. _rpackage:
 
 ------

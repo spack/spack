@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the Racket build system in Spack for installing Racket packages and modules.
+
 .. _racketpackage:
 
 ------

@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to customizing the build process in Spack, covering installation procedures, build systems, and how to control the build with spec objects and environment variables.
+
 .. list-table::
    :widths: 25 25 25 25
    :header-rows: 0

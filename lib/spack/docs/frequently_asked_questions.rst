@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Find answers to common questions about Spack, covering topics like version and variant selection, package preferences, and concretizer behavior.
+
 ==========================
 Frequently Asked Questions
 ==========================

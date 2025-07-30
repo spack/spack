@@ -2,6 +2,9 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to setting up and using Spack on Windows, including installing prerequisites and configuring the environment.
 
 .. _windows_support:
 

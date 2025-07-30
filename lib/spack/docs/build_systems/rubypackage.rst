@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover the Ruby build system in Spack for installing Ruby gems, with support for gemspec, Rakefile, and pre-packaged .gem files.
+
 .. _rubypackage:
 
 ------

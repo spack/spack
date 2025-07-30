@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A comprehensive guide for developers working on Spack itself, covering the directory structure, code organization, and key concepts like specs and packages.
+
 .. _developer_guide:
 
 ===============

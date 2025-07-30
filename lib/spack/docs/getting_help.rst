@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Find out how to get help with Spack, including using the spack help command.
+
 ============
 Getting Help
 ============
