@@ -279,7 +279,8 @@ class T2(Package):
 
     variant("v1", default=True)
 
-    # Note, the error message is improved when a conflict is used
+    # It used to be that swapping `require` for `conflicts` would
+    # improve the error message.
     requires("~v1", when="@:2.0")
     # conflicts("+v1", when="@:2.0")
 
