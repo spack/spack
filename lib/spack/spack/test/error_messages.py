@@ -4,15 +4,18 @@
 
 from contextlib import contextmanager
 
+import os
+import os.path
 import pytest
 
 import spack.config
 import spack.error
 import spack.repo
+import spack.util.file_cache
 import spack.util.spack_yaml as syaml
+from spack.concretize import concretize_one
 from spack.main import SpackCommand
 from spack.spec import Spec
-from spack.test.conftest import create_test_repo
 
 solve = SpackCommand("solve")
 
@@ -321,15 +324,56 @@ all_pkgs = [
 
 
 def _add_import(pkg_def):
-    return "from spack.package import *\n" + pkg_def
+    return """\
+from spack.package import *
+from spack.package import Package
+""" + pkg_def
 
 
 all_pkgs = list((x, _add_import(y)) for (x, y) in all_pkgs)
 
 
+_repo_name_id = 0
+
+
+def create_test_repo(tmp_path, pkg_name_content_tuples):
+    global _repo_name_id
+
+    repo_name = f"testrepo{str(_repo_name_id)}"
+    repo_path = tmp_path / "spack_repo" / repo_name
+    os.makedirs(repo_path)
+    with open(repo_path / "__init__.py", "w"):
+        pass
+    repo_yaml = os.path.join(repo_path, "repo.yaml")
+    with open(str(repo_yaml), "w", encoding="utf-8") as f:
+        f.write(
+            f"""\
+repo:
+  namespace: {repo_name}
+  api: v2.1
+"""
+        )
+
+    _repo_name_id += 1
+
+    packages_dir = repo_path / "packages"
+    os.mkdir(packages_dir)
+    with open(packages_dir / "__init__.py", "w"):
+        pass
+    for pkg_name, pkg_str in pkg_name_content_tuples:
+        pkg_dir = packages_dir / pkg_name
+        os.mkdir(pkg_dir)
+        pkg_file = pkg_dir / "package.py"
+        with open(str(pkg_file), "w", encoding="utf-8") as f:
+            f.write(pkg_str)
+
+    repo_cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+    return spack.repo.Repo(str(repo_path), cache=repo_cache)
+
+
 @pytest.fixture
-def _create_test_repo(tmpdir, mutable_config):
-    yield create_test_repo(tmpdir, all_pkgs)
+def _create_test_repo(tmp_path, mutable_config):
+    yield create_test_repo(tmp_path, all_pkgs)
 
 
 @pytest.fixture
@@ -352,24 +396,24 @@ def expect_failure_and_print():
 
 # Error message is good
 def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
-    Spec("x2").concretized()
-    Spec("x3").concretized()
-    Spec("x4").concretized()
+    concretize_one("x2")
+    concretize_one("x3")
+    concretize_one("x4")
 
     with expect_failure_and_print():
-        Spec("x1").concretized()
+        concretize_one("x1")
 
 
 # Error message is good (has some redundancy though)
 def test_diamond_with_pkg_conflict2(concretize_scope, test_repo):
     with expect_failure_and_print():
-        Spec("y1").concretized()
+        concretize_one("y1")
 
 
 # This error message is not so great
 def test_version_range_null(concretize_scope, test_repo):
     with expect_failure_and_print():
-        Spec("x2@3:4").concretized()
+        concretize_one("x2@3:4")
 
 
 # This error message is hard to follow: neither z2 or z3
@@ -377,12 +421,12 @@ def test_version_range_null(concretize_scope, test_repo):
 # packages, a user would be conducting a tedious manual
 # search
 def test_null_variant_for_requested_version(concretize_scope, test_repo):
-    Spec("z1").concretized()
+    concretize_one("z1")
     # output = solve("--show=asp", "z1@1.1")
     # with open(, "w") as f:
     #    f.write(output)
     with expect_failure_and_print():
-        Spec("z1@1.1").concretized()
+        concretize_one("z1@1.1")
 
 
 # Error message for requirement introduced in the package
@@ -393,7 +437,7 @@ def test_errmsg_requirements_1(concretize_scope, test_repo):
     # with open("/Users/scheibel1/Desktop/spack/spack/err-msg-asp/good-w.txt", "w") as f:
     #    f.write(output)
     with expect_failure_and_print():
-        Spec("w4@:2.0 ^w3@2.1").concretized()
+        concretize_one("w4@:2.0 ^w3@2.1")
 
 
 # This error message is short. Would it be good if I encoded
@@ -415,7 +459,7 @@ packages:
     # with open("/Users/scheibel1/Desktop/spack/spack/err-msg-asp/bad-w.txt", "w") as f:
     #    f.write(output)
     with expect_failure_and_print():
-        Spec("w4@2.0 ^w2+v1").concretized()
+        concretize_one("w4@2.0 ^w2+v1")
 
 
 # Short error message: this reencodes test_errmsg_requirements_2
@@ -423,4 +467,4 @@ packages:
 # is still lacking in detail
 def test_errmsg_requirements_3(concretize_scope, test_repo):
     with expect_failure_and_print():
-        Spec("t4@:2.0 ^t2+v1").concretized()
+        concretize_one("t4@:2.0 ^t2+v1")
