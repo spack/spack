@@ -317,7 +317,11 @@ html_extra_path = ["google5fda5f94b4ffb8de.html"]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_spack_root/share/spack/logo/spack-logo-text.svg"
+html_theme_options = {
+    "sidebar_hide_name": True,
+    "light_logo": "spack-logo-text.svg",
+    "dark_logo": "spack-logo-white-text.svg",
+}
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
