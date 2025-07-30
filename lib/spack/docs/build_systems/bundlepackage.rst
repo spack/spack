@@ -14,9 +14,9 @@ The associated software is specified as dependencies.
 
 If it makes sense, variants, conflicts, and requirements can be added to
 the package. :ref:`Variants <variants>` ensure that common build options
-are consistent across the packages supporting them.  :ref:`Conflicts
-and requirements <packaging_conflicts>` prevent attempts to build with known
-bugs or limitations.
+are consistent across the packages supporting them.
+:ref:`Conflicts <packaging_conflicts>` prevent attempts to build with known bugs and limitations.
+:ref:`Requirements <packaging_requires>` prevent attempts to build without critical options.
 
 For example, if ``MyBundlePackage`` is known to only build on ``linux``,
 it could use the ``require`` directive as follows:
