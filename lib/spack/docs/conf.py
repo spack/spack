@@ -310,6 +310,9 @@ html_theme_options = {"logo_only": True}
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = ["_themes"]
 
+# Google Search Console verification file
+html_extra_path = ["google5fda5f94b4ffb8de.html"]
+
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 # html_title = None
