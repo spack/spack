@@ -601,11 +601,11 @@ def _a_single_value_or_a_combination(single_value, *values):
 
 
 def any_combination_of(*values):
-    """Multi-valued variant that allows any combination of the specified
-    values, and also allows the user to specify 'none' (as a string) to choose
-    none of them.
+    """Multi-valued variant that allows either any combination of the specified values, or none
+     at all (using ``variant=none``). The literal value ``none`` is used as sentinel for the empty
+     set, since in the spec DSL we have to always specify a value for a variant.
 
-    It is up to the package implementation to handle the value `"none"` specially, if at all.
+    It is up to the package implementation to handle the value ``none`` specially, if at all.
 
     Args:
         *values: allowed variant values
