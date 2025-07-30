@@ -463,3 +463,7 @@ rst_epilog = f"""
 
 html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
+html_context = {}
+
+if os.environ.get("READTHEDOCS", "") == "True":
+    html_context["READTHEDOCS"] = True

@@ -7,3 +7,29 @@ div.versionadded {
 .py.property {
   display: block !important;
 }
+
+div.version-switch {
+  text-align: center;
+}
+
+div.version-switch > select {
+  display:inline-block;
+  text-align-last:center;
+  background:none;
+  border:none;
+  border-radius:0.5em;
+  box-shadow:none;
+  color: var(--color-foreground-primary);
+  cursor:pointer;
+  appearance:none;
+  padding: 0.2em;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+}
+
+div.version-switch select:active,
+div.version-switch select:focus,
+div.version-switch select:hover {
+  color: var(--color-foreground-secondary);
+  background: var(--color-background-hover);
+}
