@@ -654,6 +654,9 @@ For that, Spack goes a step further and defines a mixin class that takes care of
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/autoconf/package.py
    :lines: 9-18
 
+
+.. _preferred_versions:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Preferring versions over others
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -669,6 +672,7 @@ In this case, you can mark an older version as preferred using the ``preferred=T
        version("1.2.3", sha256="...", preferred=True)
 
 See the section on :ref:`version ordering <version-comparison>` for more details and exceptions on how the latest version is computed.
+
 
 .. _deprecate:
 
@@ -720,14 +724,15 @@ This gives users a chance to complain about the deprecation in case the old vers
 If you require a deprecated version of a package, simply submit a PR to remove ``deprecated=True`` from the package.
 However, you may be asked to help maintain this version of the package if the current maintainers are unwilling to support this older version.
 
+
 .. _version-comparison:
 
 ^^^^^^^^^^^^^^^^
 Version ordering
 ^^^^^^^^^^^^^^^^
 
-Without version constraints, preferences and deprecations, Spack will always pick *the latest* version as defined in the package.
-What latest means is determined by the version comparison rules defined in Spack, and not the order in which versions are listed in the package file.
+Without :ref:`version constraints <version_constraints>`, :ref:`preferences <preferred_versions>` and :ref:`deprecations <deprecate>`, Spack will always pick *the latest* version as defined in the package.
+What latest means is determined by the version comparison rules defined in Spack, *not* the order in which versions are listed in the package file.
 
 Spack imposes a generic total ordering on the set of versions, independently from the package they are associated with.
 
@@ -776,29 +781,6 @@ The logic behind this sort order is two-fold:
 
 #. The most-recent development version of a package will usually be newer than any released numeric versions.
    This allows the ``@develop`` version to satisfy dependencies like ``depends_on(abc, when="@x.y.z:")``
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Specifying versions in other directives
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Many Spack directives accept versions speciers, for example
-
-.. code-block:: python
-
-   depends_on("python@3")
-   conflicts("foo@1.2.3:", when="@:4.5")
-
-When specifying versions in Spack using the ``@<specifier>`` syntax, you can use either ranges or specific versions.
-It is generally recommended to use ranges instead of specific versions when packaging to avoid overly constraining dependencies, patches, and conflicts.
-
-For example, ``depends_on("python@3")`` denotes a range of versions, allowing Spack to pick any ``3.x.y`` version for Python, while ``depends_on("python@=3.10.1")`` restricts it to a specific version.
-
-Specific ``@=`` versions should only be used in exceptional cases, such as when the package has a versioning scheme that omits the zero in the first patch release: ``3.1``, ``3.1.1``, ``3.1.2``.
-In this example, the specifier ``@=3.1`` is the correct way to select only the ``3.1`` version, whereas ``@3.1`` would match all those versions.
-
-Ranges are preferred even if they would only match a single version defined in the package.
-This is because users can define custom versions in ``packages.yaml`` that typically include a custom suffix.
-For example, if the package defines the version ``1.2.3``, the specifier ``@1.2.3`` will also match a user-defined version ``1.2.3-custom``.
 
 
 .. _vcs-fetch:
@@ -1220,6 +1202,45 @@ In rare cases, it may be necessary to avoid caching for a particular version by 
 Example situations would be a "snapshot"-like Version Control System (VCS) tag, a VCS branch such as ``v6-16-00-patches``, or a URL specifying a regularly updated snapshot tarball.
 
 
+.. _version_constraints:
+
+------------------------------
+Specifying version constraints
+------------------------------
+
+Many Spack directives allow limiting versions to support features such as :ref:`backward and forward compatibility <version_compatibility>`.
+These constraints on :ref:`package specs <sec-specs>` are defined using the ``@<specifier>`` syntax.
+(See :ref:`version-specifier` for more information.)
+
+For example, the following:
+
+.. code-block:: python
+
+   depends_on("foo")
+   depends_on("python@3")
+
+   conflicts("^foo@1.2.3:", when="@:4.5")
+
+illustrates, in order, three of four forms of version range constraints: implicit, lower bound and upper bound. The fourth form provides lower *and* upper bounds on the version.
+
+In this example, the implicit range is used to indicate that the package :ref:`depends on <dependencies>` *any* ``python`` *with* ``3`` *as the major version number* (e.g., ``3.13.5``).
+The other two range constraints are shown in the :ref:`conflict <packaging_conflicts>` with the dependency package ``foo``.
+The conflict with ``foo`` *at version* ``1.2.3`` *or newer* is **triggered** for builds of the package at *any version up to and including* ``4.5``.
+For an example of the fourth form, suppose the dependency in this example had been ``python@3.6:3``.
+In this case, the package would depend on *any version of* ``python`` *from* ``3.6`` *on so long as the major version number is* ``3``.
+
+While you can constrain the spec to a single version -- using the ``@=<version>`` form of ``specifier`` -- **ranges are preferred** even if they would only match a single version currently defined in the package.
+Using ranges helps avoid overly constrained dependencies, patches, and conflicts.
+They also come in handy when, for example, users define versions in :ref:`packages-config` that include custom suffixes.
+For example, if the package defines the version ``1.2.3``, we know from :ref:`version-comparison`, that a user-defined version ``1.2.3-custom`` will satisfy the version constraint ``@1.2.3``.
+
+.. warning::
+
+   Specific ``@=`` versions should only be used in **exceptional cases**, such as when the package has a versioning scheme that omits the zero in the first patch release.
+   For example, suppose a package defines versions: ``3.1``, ``3.1.1`` and ``3.1.2``.
+   Then the specifier ``@=3.1`` is the correct way to select only ``3.1``, whereas ``@3.1`` would be satisfied by all three versions.
+
+
 .. _variants:
 
 --------
@@ -1541,6 +1562,8 @@ needs to build and install the ``libelf`` package before it builds
 guaranteed that ``libelf`` has been built and installed successfully,
 so you can rely on it for your libdwarf build.
 
+.. _dependency_specs:
+
 ^^^^^^^^^^^^^^^^
 Dependency specs
 ^^^^^^^^^^^^^^^^
@@ -1568,6 +1591,8 @@ to different package configurations. Users use the spec syntax on the
 command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
 relationships between packages.
+
+.. _version_compatibility:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying backward and forward compatibility
@@ -2019,56 +2044,105 @@ This means that language dependencies translate to one or more compiler packages
 
 .. _packaging_conflicts:
 
---------------------------
-Conflicts and requirements
---------------------------
+---------
+Conflicts
+---------
 
-Sometimes packages have known bugs, or limitations, that would prevent them from building e.g. against other dependencies or with certain compilers.
-Spack makes it possible to express such constraints with the ``conflicts`` directive.
+Sometimes packages have known bugs, or limitations, that would prevent them from concretizing or building usable software.
+Spack makes it possible to express such constraints with the ``conflicts`` directive, which takes a spec that is known to cause a conflict and optional ``when`` and ``msg`` arguments.
+
+The ``when`` argument is a spec that triggers the conflict.
+
+The ``msg`` argument allows you to provide a custom error message that Spack prints when the spec to be installed satisfies the conflict spec and ``when`` trigger.
 
 Adding the following to a package:
 
 .. code-block:: python
 
     conflicts(
-        "%intel-oneapi-compilers",
+        "%intel-oneapi-compilers@:2024",
          when="@:1.2",
-         msg="known bug with Intel oneAPI compilers"
+         msg="known bug when using Intel oneAPI compilers through v2024",
     )
 
-we express the fact that the current package *cannot be built* with the Intel oneAPI compilers up to version ``1.2``.
+expresses that the current package *cannot be built* with Intel oneAPI compilers *up through any version* ``2024`` *when trying to install the package with a version up to* ``1.2``.
 
-The ``when`` argument can be omitted, in which case the conflict will always be active.
+If the ``when`` argument is omitted, then the conflict is *always triggered* for specs satisfying the conflict spec.
+For example,
 
-An optional custom error message can be added via the ``msg=`` parameter, and may be printed by Spack in case the conflict cannot be avoided and leads to a concretization error.
+.. code-block:: python
 
-Sometimes, packages allow only very specific choices and they can't use the rest.
-In those cases the ``requires`` directive can be used:
+   conflicts("+cuda+rocm", msg="Cannot build with both cuda and rocm enabled")
+
+means the package cannot be installed with both variants enabled.
+
+Similarly, a conflict can be based on where the build is being performed.
+For example,
+
+.. code-block:: python
+
+   for os in ["ventura", "monterey", "bigsur"]:
+       conflicts(f"platform=darwin os={os}", msg=f"{os} is not supported")
+
+means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur.
+
+.. note::
+
+   These examples illustrate a few of the types of constraints that can be specified.
+   Conflict and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependency_specs>`, and more.
+   See :ref:`sec-specs` for more information.
+
+
+.. _packaging_requires:
+
+--------
+Requires
+--------
+
+Sometimes packages can be built only with specific options.
+In those cases the ``requires`` directive can be used.
+It allows for complex conditions involving more than a single spec through the ability to specify multiple required specs before keyword arguments.
+The same optional ``when`` and ``msg`` arguments as ``conflicts`` are supported (see :ref:`packaging_conflicts`).
+The directive also supports a ``policy`` argument for determining how the multiple required specs apply.
+Values for ``policy`` may be either ``any_of`` or ``one_of`` (default) and have the same semantics described for their equivalents in :ref:`package-requirements`.
+
+.. hint::
+
+   We recommend that the ``policy`` argument be explicitly specified when multiple specs are used with the directive.
+
+For example, suppose a package can only be built with Apple Clang on Darwin.
+This requirement would be specified as:
 
 .. code-block:: python
 
     requires(
         "%apple-clang",
         when="platform=darwin",
-        msg="builds only with Apple Clang compiler on Darwin"
+        msg="builds only with Apple Clang compiler on Darwin",
     )
 
-In the example above, our package can only be built with Apple Clang on Darwin.
-The ``requires`` directive is effectively the opposite of the ``conflicts`` directive, and takes the same optional ``when`` and ``msg`` arguments.
+Similarly, suppose a package only builds for the ``x86_64`` target:
 
-If a package needs to express more complex requirements, involving more than a single spec, that can also be done using the ``requires`` directive.
-To express that a package can be built either with GCC or with Clang we can write:
+.. code-block:: python
+
+    requires("target=x86_64:", msg="package is only available on x86_64")
+
+Or the package must be built with a GCC or Clang that supports C++ 20, which you could ensure by adding the following:
 
 .. code-block:: python
 
     requires(
-        "%gcc", "%clang",
-        policy="one_of"
-        msg="builds only with GCC or Clang"
+        "%gcc@10:", "%clang@16:",
+        policy="one_of",
+        msg="builds only with a GCC or Clang that support C++ 20",
     )
 
-When using multiple specs in a ``requires`` directive, it is advised to set the ``policy=`` argument explicitly.
-That argument can take either the value ``any_of`` or the value ``one_of``, and the semantic is the same as for :ref:`package-requirements`.
+.. note::
+
+   These examples show only a few of the constraints that can be specified.
+   Required and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependency_specs>`, and more.
+   See :ref:`sec-specs` for more information.
+
 
 .. _patching:
 
