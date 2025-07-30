@@ -13,6 +13,7 @@ import spack.concretize
 import spack.config
 import spack.error
 import spack.fetch_strategy
+import spack.package_base
 import spack.platforms
 import spack.repo
 from spack.fetch_strategy import GitFetchStrategy
@@ -430,6 +431,32 @@ def test_git_sparse_paths_partial_clone(
 
         # fixture file is in the sparse-path expansion tree
         assert os.path.isfile(t.file)
+
+
+@pytest.mark.regression("50699")
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.require_provenance
+def test_git_sparse_path_have_unique_stages(
+    git,
+    mock_git_repository,
+    git_version,
+    default_mock_concretization,
+    mutable_mock_repo,
+    monkeypatch,
+):
+    """
+    Confirm two packages with different sparse paths have different stages
+    """
+    repo_path = mock_git_repository.path
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
+    )
+    gold_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
+    s_a = spack.concretize.concretize_one(f"git-sparse-a commit={gold_commit}")
+    s_b = spack.concretize.concretize_one(f"git-sparse-b commit={gold_commit}")
+    s_a.package.do_stage()
+    s_b.package.do_stage()
+    assert s_a.package.stage[0].mirror_layout.path != s_b.package.stage[0].mirror_layout.path
 
 
 @pytest.mark.disable_clean_stage_check
