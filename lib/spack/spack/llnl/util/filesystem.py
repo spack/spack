@@ -1961,6 +1961,27 @@ class FileList(collections.abc.Sequence):
             list: A list of base-names
         """
         return list(dedupe(os.path.basename(x) for x in self.files))
+    
+    def _quote_when_required(self, item):
+        """Returns item with proper quoting and escaping of reserved characters"""
+        """Returns args with each arg in double quotes if neccesary
+        Necessity determined by:
+            - path with a space on any platform
+            - path with a reserved character on Windows
+        """
+
+        def quote(arg):
+            return '"'+arg+'"'
+
+        def has_space(arg):
+            return " " in arg
+
+        def has_reserved(arg):
+            if not sys.platform == "win32":
+                return False
+            return True if re.search(r"[ <>^:\"|?*]", arg) else False
+
+        return quote(item) if has_space(item) or has_reserved(item) else item
 
     def __getitem__(self, item):
         cls = type(self)
