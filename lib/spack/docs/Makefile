@@ -8,7 +8,7 @@ PAPER         =
 BUILDDIR      = _build
 
 export PYTHONPATH := ../../spack:$(PYTHONPATH)
-APIDOC_FILES  = spack*.rst llnl*.rst
+APIDOC_FILES  = spack*.rst
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -85,6 +85,7 @@ help:
 clean:
 	-rm -f command_index.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
+	-rm -rf .spack/spack-packages
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

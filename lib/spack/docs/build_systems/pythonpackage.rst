@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to packaging Python libraries with Spack, covering PyPI downloads, dependency management, and build system integration.
+
 .. _pythonpackage:
 
 ------
@@ -140,9 +144,9 @@ wheels or if the PyPI sdist is missing a file needed to build the
 package. If this is the case, please add a comment above the ``url``
 explaining this.
 
-^^^^
+^^^^^^
 PyPI
-^^^^
+^^^^^^
 
 Since PyPI is so commonly used to host Python libraries, the
 ``PythonPackage`` base class has a ``pypi`` attribute that can be
@@ -226,7 +230,7 @@ Look for dependencies under the following keys:
 
 * ``requires-python`` under ``[project]``
 
-  This specifies the version of Python that is required
+  This specifies the version of Python that is required.
 
 * ``dependencies`` under ``[project]``
 
@@ -289,7 +293,7 @@ distutils library, and has almost the exact same API. In addition to
 
   These packages are optional dependencies that enable additional
   functionality. You should add a variant that optionally adds these
-  dependencies. This variant should be False by default.
+  dependencies. This variant should be ``False`` by default.
 
 * ``tests_require``
 
@@ -303,11 +307,11 @@ for more information on how setuptools handles dependency management.
 See `PEP 440 <https://www.python.org/dev/peps/pep-0440/#version-specifiers>`_
 for documentation on version specifiers in setuptools.
 
-""""
+""""""
 flit
-""""
+""""""
 
-There are actually two possible ``build-backend`` for flit, ``flit``
+There are actually two possible build backends for flit, ``flit``
 and ``flit_core``. If you see these in the ``pyproject.toml``, add a
 build dependency to your package. With flit, all dependencies are
 listed directly in the ``pyproject.toml`` file. Older versions of
@@ -326,7 +330,7 @@ older versions of flit may use the following keys:
 
   This section includes keys with lists of optional dependencies
   needed to enable those features. You should add a variant that
-  optionally adds these dependencies. This variant should be False
+  optionally adds these dependencies. This variant should be ``False``
   by default.
 
 See https://flit.pypa.io/en/latest/pyproject_toml.html for
@@ -336,7 +340,7 @@ more information.
 poetry
 """"""
 
-Like flit, poetry also has two possible ``build-backend``, ``poetry``
+Like flit, poetry also has two possible build backends, ``poetry``
 and ``poetry_core``. If you see these in the ``pyproject.toml``, add
 a build dependency to your package. With poetry, all dependencies are
 listed directly in the ``pyproject.toml`` file. Dependencies are
@@ -357,9 +361,9 @@ uses the default ``pyproject.toml`` keys to list dependencies.
 See https://hatch.pypa.io/latest/config/dependency/ for more
 information.
 
-"""""
+""""""
 meson
-"""""
+""""""
 
 If the ``pyproject.toml`` lists ``mesonpy`` as the ``build-backend``,
 it uses the meson build system. Meson uses the default
@@ -368,9 +372,9 @@ it uses the meson build system. Meson uses the default
 See https://meson-python.readthedocs.io/en/latest/tutorials/introduction.html
 for more information.
 
-"""
+""""""
 pdm
-"""
+""""""
 
 If the ``pyproject.toml`` lists ``pdm.pep517.api`` as the ``build-backend``,
 it uses the PDM build system. PDM uses the default ``pyproject.toml``
@@ -592,7 +596,7 @@ automatically detected ``import_modules`` ``["nilearn", "nilearn.surface",
 
         skip_modules = ["nilearn.plotting"]
 
-This will set ``import_modules`` to ``["nilearn", "nilearn.surface"]``
+This will set ``import_modules`` to ``["nilearn", "nilearn.surface"]``.
 
 Import tests can be run during the installation using ``spack install
 --test=root`` or at any time after the installation using
@@ -702,7 +706,7 @@ For example:
 
 These packages are primarily used as Python libraries, not as
 command-line tools. You may see C/C++ packages that have optional
-Python language-bindings, such as:
+Python language bindings, such as:
 
 * antlr
 * cantera
@@ -710,7 +714,7 @@ Python language-bindings, such as:
 * pagmo
 * vtk
 
-Don't prepend these kind of packages with ``py-``. When in doubt,
+Don't prepend these kinds of packages with ``py-``. When in doubt,
 think about how this package will be used. Is it primarily a Python
 library that will be imported in other Python scripts? Or is it a
 command-line tool, or C/C++/Fortran program with optional Python
@@ -766,8 +770,8 @@ and ``pip`` may be a perfectly valid alternative to using Spack. The
 main advantage of Spack over ``pip`` is its ability to compile
 non-Python dependencies. It can also build cythonized versions of a
 package or link to an optimized BLAS/LAPACK library like MKL,
-resulting in calculations that run orders of magnitudes faster.
-Spack does not offer a significant advantage over other python-management
+resulting in calculations that run orders of magnitude faster.
+Spack does not offer a significant advantage over other Python-management
 systems for installing and using tools like flake8 and sphinx.
 But if you need packages with non-Python dependencies like
 numpy and scipy, Spack will be very valuable to you.

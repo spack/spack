@@ -7,6 +7,7 @@
 import base64
 import json
 import re
+import socket
 import time
 import urllib.error
 import urllib.parse
@@ -16,9 +17,8 @@ from http.client import HTTPResponse
 from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple
 from urllib.request import Request
 
-import llnl.util.lang
-
 import spack.config
+import spack.llnl.util.lang
 import spack.mirrors.mirror
 import spack.tokenize
 import spack.util.web
@@ -40,7 +40,7 @@ OpenType = Callable[..., HTTPResponse]
 MaybeOpen = Optional[OpenType]
 
 #: Opener that automatically uses OCI authentication based on mirror config
-urlopen: OpenType = llnl.util.lang.Singleton(_urlopen)
+urlopen: OpenType = spack.llnl.util.lang.Singleton(_urlopen)
 
 
 SP = r" "
@@ -382,6 +382,7 @@ def create_opener():
     """Create an opener that can handle OCI authentication."""
     opener = urllib.request.OpenerDirector()
     for handler in [
+        urllib.request.ProxyHandler(),
         urllib.request.UnknownHandler(),
         urllib.request.HTTPSHandler(context=spack.util.web.ssl_create_default_context()),
         spack.util.web.SpackHTTPDefaultErrorHandler(),
@@ -410,7 +411,7 @@ def default_retry(f, retries: int = 5, sleep=None):
         for i in range(retries):
             try:
                 return f(*args, **kwargs)
-            except (urllib.error.URLError, TimeoutError) as e:
+            except OSError as e:
                 # Retry on internal server errors, and rate limit errors
                 # Potentially this could take into account the Retry-After header
                 # if registries support it
@@ -420,9 +421,10 @@ def default_retry(f, retries: int = 5, sleep=None):
                         and (500 <= e.code < 600 or e.code == 429)
                     )
                     or (
-                        isinstance(e, urllib.error.URLError) and isinstance(e.reason, TimeoutError)
+                        isinstance(e, urllib.error.URLError)
+                        and isinstance(e.reason, socket.timeout)
                     )
-                    or isinstance(e, TimeoutError)
+                    or isinstance(e, socket.timeout)
                 ):
                     # Exponential backoff
                     sleep(2**i)

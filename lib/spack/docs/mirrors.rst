@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to set up and manage mirrors in Spack to provide a local repository of tarballs for offline package fetching.
+
 .. _mirrors:
 
 ======================
@@ -54,7 +58,7 @@ contains tarballs for each package, named after each package.
    In order to make mirror creation reasonably fast, we copy the
    tarball in its original format to the mirror directory, but we do
    not standardize on a particular compression algorithm, because this
-   would potentially require expanding and re-compressing each archive.
+   would potentially require expanding and recompressing each archive.
 
 .. _cmd-spack-mirror:
 
@@ -185,7 +189,7 @@ This is especially useful to create a mirror of an environment concretized on an
 ``spack mirror add``
 --------------------
 
-Once you have a mirror, you need to let spack know about it.  This is
+Once you have a mirror, you need to let Spack know about it.  This is
 relatively simple.  First, figure out the URL for the mirror.  If it's
 a directory, you can use a file URL like this one:
 
@@ -256,13 +260,13 @@ search the topmost mirror first and the bottom-most mirror last.
 Local Default Cache
 -------------------
 
-Spack caches resources that are downloaded as part of installs. The cache is
-a valid spack mirror: it uses the same directory structure and naming scheme
+Spack caches resources that are downloaded as part of installations. The cache is
+a valid Spack mirror: it uses the same directory structure and naming scheme
 as other Spack mirrors (so it can be copied anywhere and referenced with a URL
 like other mirrors). The mirror is maintained locally (within the Spack
 installation directory) at :file:`var/spack/cache/`. It is always enabled (and
 is always searched first when attempting to retrieve files for an installation)
-but can be cleared with :ref:`clean <cmd-spack-clean>`; the cache directory can also
+but can be cleared with ``spack clean --misc-cache``; the cache directory can also
 be deleted manually without issue.
 
 Caching includes retrieved tarball archives and source control repositories, but

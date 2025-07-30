@@ -8,18 +8,17 @@ import re
 import sys
 from typing import Dict, Iterable, List, Optional
 
-import macholib.mach_o
-import macholib.MachO
+import spack.vendor.macholib.mach_o
+import spack.vendor.macholib.MachO
 
-import llnl.util.filesystem as fs
-import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-from llnl.util.symlink import readlink, symlink
-
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
+from spack.llnl.util.filesystem import readlink, symlink
+from spack.llnl.util.lang import memoized
 
 from .relocate_text import BinaryFilePrefixReplacer, PrefixToPrefix, TextFilePrefixReplacer
 
@@ -121,7 +120,7 @@ def _modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
                 new_rpaths.append(new_rpath)
 
     # Deduplicate and flatten
-    args = list(itertools.chain.from_iterable(llnl.util.lang.dedupe(args)))
+    args = list(itertools.chain.from_iterable(spack.llnl.util.lang.dedupe(args)))
     install_name_tool = executable.Executable("install_name_tool")
     if args:
         with fs.edit_in_place_through_temporary_file(cur_path) as temp_path:
@@ -132,7 +131,7 @@ def _macholib_get_paths(cur_path):
     """Get rpaths, dependent libraries, and library id of mach-o objects."""
     headers = []
     try:
-        headers = macholib.MachO.MachO(cur_path).headers
+        headers = spack.vendor.macholib.MachO.MachO(cur_path).headers
     except ValueError:
         pass
     if not headers:
@@ -147,9 +146,9 @@ def _macholib_get_paths(cur_path):
             tty.warn("File is a stub, not a full library: {0}".format(cur_path))
         commands = headers[-1].commands
 
-    LC_ID_DYLIB = macholib.mach_o.LC_ID_DYLIB
-    LC_LOAD_DYLIB = macholib.mach_o.LC_LOAD_DYLIB
-    LC_RPATH = macholib.mach_o.LC_RPATH
+    LC_ID_DYLIB = spack.vendor.macholib.mach_o.LC_ID_DYLIB
+    LC_LOAD_DYLIB = spack.vendor.macholib.mach_o.LC_LOAD_DYLIB
+    LC_RPATH = spack.vendor.macholib.mach_o.LC_RPATH
 
     ident = None
     rpaths = []
@@ -236,22 +235,15 @@ def relocate_elf_binaries(binaries: Iterable[str], prefix_to_prefix: Dict[str, s
             _set_elf_rpaths_and_interpreter(path, rpaths=rpaths, interpreter=interpreter)
 
 
-def _warn_if_link_cant_be_relocated(link: str, target: str):
-    if not os.path.isabs(target):
-        return
-    tty.warn(f'Symbolic link at "{link}" to "{target}" cannot be relocated')
-
-
 def relocate_links(links: Iterable[str], prefix_to_prefix: Dict[str, str]) -> None:
     """Relocate links to a new install prefix."""
     regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
     for link in links:
         old_target = readlink(link)
+        if not os.path.isabs(old_target):
+            continue
         match = regex.match(old_target)
-
-        # No match.
         if match is None:
-            _warn_if_link_cant_be_relocated(link, old_target)
             continue
 
         new_target = prefix_to_prefix[match.group()] + old_target[match.end() :]
@@ -290,21 +282,21 @@ def relocate_text_bin(binaries: Iterable[str], prefix_to_prefix: PrefixToPrefix)
 def is_macho_magic(magic: bytes) -> bool:
     return (
         # In order of popularity: 64-bit mach-o le/be, 32-bit mach-o le/be.
-        magic.startswith(b"\xCF\xFA\xED\xFE")
-        or magic.startswith(b"\xFE\xED\xFA\xCF")
-        or magic.startswith(b"\xCE\xFA\xED\xFE")
-        or magic.startswith(b"\xFE\xED\xFA\xCE")
+        magic.startswith(b"\xcf\xfa\xed\xfe")
+        or magic.startswith(b"\xfe\xed\xfa\xcf")
+        or magic.startswith(b"\xce\xfa\xed\xfe")
+        or magic.startswith(b"\xfe\xed\xfa\xce")
         # universal binaries: 0xcafebabe be (most common?) or 0xbebafeca le (not sure if exists).
         # Here we need to disambiguate mach-o and JVM class files. In mach-o the next 4 bytes are
         # the number of binaries; in JVM class files it's the java version number. We assume there
         # are less than 10 binaries in a universal binary.
-        or (magic.startswith(b"\xCA\xFE\xBA\xBE") and int.from_bytes(magic[4:8], "big") < 10)
-        or (magic.startswith(b"\xBE\xBA\xFE\xCA") and int.from_bytes(magic[4:8], "little") < 10)
+        or (magic.startswith(b"\xca\xfe\xba\xbe") and int.from_bytes(magic[4:8], "big") < 10)
+        or (magic.startswith(b"\xbe\xba\xfe\xca") and int.from_bytes(magic[4:8], "little") < 10)
     )
 
 
 def is_elf_magic(magic: bytes) -> bool:
-    return magic.startswith(b"\x7FELF")
+    return magic.startswith(b"\x7fELF")
 
 
 def is_binary(filename: str) -> bool:
@@ -316,7 +308,7 @@ def is_binary(filename: str) -> bool:
 
 
 # Memoize this due to repeated calls to libraries in the same directory.
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def _exists_dir(dirname):
     return os.path.isdir(dirname)
 
@@ -413,8 +405,8 @@ def fixup_macos_rpaths(spec):
     entries which makes it harder to adjust with ``install_name_tool
     -delete_rpath``.
     """
-    if spec.external or spec.virtual:
-        tty.warn("external or virtual package cannot be fixed up: {0!s}".format(spec))
+    if spec.external or not spec.concrete:
+        tty.warn("external/abstract spec cannot be fixed up: {0!s}".format(spec))
         return False
 
     if "platform=darwin" not in spec:

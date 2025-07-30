@@ -12,9 +12,8 @@ from http.client import HTTPResponse
 from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
-import llnl.util.tty as tty
-
 import spack.fetch_strategy
+import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.oci.opener
@@ -275,7 +274,7 @@ def copy_missing_layers(
         stages.cache_local()
 
         for stage, digest in zip(stages, missing_digests):
-            # No need to check existince again, force=True.
+            # No need to check existence again, force=True.
             upload_blob(
                 dst, file=stage.save_filename, force=True, digest=digest, _urlopen=_urlopen
             )

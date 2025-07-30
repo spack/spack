@@ -5,7 +5,7 @@
 import inspect
 import sys
 
-import llnl.util.tty as tty
+import spack.llnl.util.tty as tty
 
 #: at what level we should write stack traces or short error messages
 #: this is module-scoped because it needs to be set very early
@@ -202,3 +202,20 @@ class MirrorError(SpackError):
 
     def __init__(self, msg, long_msg=None):
         super().__init__(msg, long_msg)
+
+
+class NoChecksumException(SpackError):
+    """
+    Raised if file fails checksum verification.
+    """
+
+    def __init__(self, path, size, contents, algorithm, expected, computed):
+        super().__init__(
+            f"{algorithm} checksum failed for {path}",
+            f"Expected {expected} but got {computed}. "
+            f"File size = {size} bytes. Contents = {contents!r}",
+        )
+
+
+class CompilerError(SpackError):
+    """Raised if something goes wrong when probing or querying a compiler."""

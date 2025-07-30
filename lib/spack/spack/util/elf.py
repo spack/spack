@@ -195,7 +195,10 @@ def parse_program_headers(f: BinaryIO, elf: ElfFile) -> None:
         elf: ELF file parser data
     """
     # Forward to the program header
-    f.seek(elf.elf_hdr.e_phoff)
+    try:
+        f.seek(elf.elf_hdr.e_phoff)
+    except OSError:
+        raise ElfParsingError("Could not seek to program header")
 
     # Here we have to make a mapping from virtual address to offset in the file.
     ph_fmt = elf.byte_order + ("LLQQQQQQ" if elf.is_64_bit else "LLLLLLLL")
@@ -245,7 +248,10 @@ def parse_pt_interp(f: BinaryIO, elf: ElfFile) -> None:
         f: file handle
         elf: ELF file parser data
     """
-    f.seek(elf.pt_interp_p_offset)
+    try:
+        f.seek(elf.pt_interp_p_offset)
+    except OSError:
+        raise ElfParsingError("Could not seek to PT_INTERP entry")
     data = read_exactly(f, elf.pt_interp_p_filesz, "Malformed PT_INTERP entry")
     elf.pt_interp_str = parse_c_string(data)
 
@@ -264,7 +270,10 @@ def find_strtab_size_at_offset(f: BinaryIO, elf: ElfFile, offset: int) -> int:
     """
     section_hdr_fmt = elf.byte_order + ("LLQQQQLLQQ" if elf.is_64_bit else "LLLLLLLLLL")
     section_hdr_size = calcsize(section_hdr_fmt)
-    f.seek(elf.elf_hdr.e_shoff)
+    try:
+        f.seek(elf.elf_hdr.e_shoff)
+    except OSError:
+        raise ElfParsingError("Could not seek to section header table")
     for _ in range(elf.elf_hdr.e_shnum):
         data = read_exactly(f, section_hdr_size, "Malformed section header")
         sh = SectionHeader(*unpack(section_hdr_fmt, data))
@@ -286,7 +295,10 @@ def retrieve_strtab(f: BinaryIO, elf: ElfFile, offset: int) -> bytes:
     Returns: file offset
     """
     size = find_strtab_size_at_offset(f, elf, offset)
-    f.seek(offset)
+    try:
+        f.seek(offset)
+    except OSError:
+        raise ElfParsingError("Could not seek to string table")
     return read_exactly(f, size, "Could not read string table")
 
 
@@ -319,7 +331,10 @@ def parse_pt_dynamic(f: BinaryIO, elf: ElfFile) -> None:
     count_runpath = 0
     count_strtab = 0
 
-    f.seek(elf.pt_dynamic_p_offset)
+    try:
+        f.seek(elf.pt_dynamic_p_offset)
+    except OSError:
+        raise ElfParsingError("Could not seek to PT_DYNAMIC entry")
 
     # In case of broken ELF files, don't read beyond the advertized size.
     for _ in range(elf.pt_dynamic_p_filesz // dynamic_array_size):
@@ -445,8 +460,8 @@ def parse_elf(
     dynamic_section: bool = False,
     only_header: bool = False,
 ) -> ElfFile:
-    """Given a file handle f for an ELF file opened in binary mode, return an ElfFile
-    object that is stores data about rpaths"""
+    """Given a file handle ``f`` for an ELF file opened in binary mode, return an
+    :class:`~spack.util.elf.ElfFile` object with the parsed contents."""
     try:
         return _do_parse_elf(f, interpreter, dynamic_section, only_header)
     except (DeprecationWarning, struct.error):
@@ -478,7 +493,10 @@ def get_interpreter(path: str) -> Optional[str]:
 def _delete_dynamic_array_entry(
     f: BinaryIO, elf: ElfFile, should_delete: Callable[[int, int], bool]
 ) -> None:
-    f.seek(elf.pt_dynamic_p_offset)
+    try:
+        f.seek(elf.pt_dynamic_p_offset)
+    except OSError:
+        raise ElfParsingError("Could not seek to PT_DYNAMIC entry")
     dynamic_array_fmt = elf.byte_order + ("qQ" if elf.is_64_bit else "lL")
     dynamic_array_size = calcsize(dynamic_array_fmt)
     new_offset = elf.pt_dynamic_p_offset  # points to the new dynamic array
@@ -502,8 +520,8 @@ def _delete_dynamic_array_entry(
 
 def delete_rpath(path: str) -> None:
     """Modifies a binary to remove the rpath. It zeros out the rpath string and also drops the
-    DT_R(UN)PATH entry from the dynamic section, so it doesn't show up in 'readelf -d file', nor
-    in 'strings file'."""
+    ``DT_RPATH`` / ``DT_RUNPATH`` entry from the dynamic section, so it doesn't show up in
+    ``readelf -d file``, nor in ``strings file``."""
     with open(path, "rb+") as f:
         elf = parse_elf(f, interpreter=False, dynamic_section=True)
 
@@ -672,9 +690,9 @@ def pt_interp(path: str) -> Optional[str]:
     return elf.pt_interp_str.decode("utf-8")
 
 
-def get_elf_compat(path):
-    """Get a triplet (EI_CLASS, EI_DATA, e_machine) from an ELF file, which can be used to see if
-    two ELF files are compatible."""
+def get_elf_compat(path: str) -> Tuple[bool, bool, int]:
+    """Get a triplet (is_64_bit, is_little_endian, e_machine) from an ELF file, which can be used
+    to see if two ELF files are compatible."""
     # On ELF platforms supporting, we try to be a bit smarter when it comes to shared
     # libraries, by dropping those that are not host compatible.
     with open(path, "rb") as f:

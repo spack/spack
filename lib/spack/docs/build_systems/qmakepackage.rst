@@ -2,11 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the QMake build system in Spack, a script generator for Qt-based projects.
+
 .. _qmakepackage:
 
------
+------
 QMake
------
+------
 
 Much like Autotools and CMake, QMake is a build-script generator
 designed by the developers of Qt. In its simplest form, Spack's

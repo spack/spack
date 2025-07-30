@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
-from llnl.util.tty.color import colorize
+from spack.llnl.util.tty.color import colorize
 
 description = "get help on spack and its commands"
 section = "help"
@@ -54,10 +55,6 @@ spec expression syntax:
       @m{target=target}                 specific <target> processor
       @m{arch=platform-os-target}       shortcut for all three above
 
-    cross-compiling:
-      @m{os=backend} or @m{os=be}           build for compute node (backend)
-      @m{os=frontend} or @m{os=fe}          build for login node (frontend)
-
     dependencies:
       ^dependency [constraints]     specify constraints on dependencies
       ^@K{/hash}                        build with a specific installed
@@ -77,7 +74,7 @@ spec expression syntax:
       boxlib @B{dim=2}                  boxlib built for 2 dimensions
       libdwarf @g{%intel} ^libelf@g{%gcc}
           libdwarf, built with intel compiler, linked to libelf built with gcc
-      mvapich2 @g{%gcc} @B{fabrics=psm,mrail,sock}
+      mvapich2 @B{fabrics=psm,mrail,sock} @g{%gcc}
           mvapich2, built with gcc compiler, with support for multiple fabrics
 """
 
@@ -85,7 +82,7 @@ spec expression syntax:
 guides = {"spec": spec_guide}
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     help_cmd_group = subparser.add_mutually_exclusive_group()
     help_cmd_group.add_argument(
         "help_command", nargs="?", default=None, help="command to get help on"

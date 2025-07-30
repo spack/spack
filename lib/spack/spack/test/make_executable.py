@@ -8,6 +8,7 @@ Tests for Spack's built-in parallel make support.
 This just tests whether the right args are getting passed to make.
 """
 import os
+import pathlib
 
 import pytest
 
@@ -18,14 +19,14 @@ pytestmark = pytest.mark.not_on_windows("MakeExecutable not supported on Windows
 
 
 @pytest.fixture(autouse=True)
-def make_executable(tmp_path, working_env):
+def make_executable(tmp_path: pathlib.Path, working_env):
     make_exe = tmp_path / "make"
     with open(make_exe, "w", encoding="utf-8") as f:
         f.write("#!/bin/sh\n")
         f.write('echo "$@"')
     os.chmod(make_exe, 0o700)
 
-    path_put_first("PATH", [tmp_path])
+    path_put_first("PATH", [str(tmp_path)])
 
 
 def test_make_normal():

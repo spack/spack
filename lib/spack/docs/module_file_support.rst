@@ -2,13 +2,17 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to configure and customize module file generation in Spack for Environment Modules and Lmod.
+
 .. _modules:
 
 ======================
 Modules (modules.yaml)
 ======================
 
-The use of module systems to manage user environment in a controlled way
+The use of module systems to manage user environments in a controlled way
 is a common practice at HPC centers that is sometimes embraced also by
 individual programmers on their development machines. To support this
 common practice Spack integrates with `Environment Modules
@@ -128,7 +132,7 @@ depend on the spec:
 
 .. code-block:: python
 
-   def setup_run_environment(self, env):
+   def setup_run_environment(self, env: EnvironmentModifications) -> None:
        if self.spec.satisfies("+foo"):
            env.set("FOO", "bar")
 
@@ -142,7 +146,7 @@ For example, a simplified version of the ``python`` package could look like this
 
 .. code-block:: python
 
-   def setup_dependent_run_environment(self, env, dependent_spec):
+   def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec) -> None:
        if dependent_spec.package.extends(self.spec):
            env.prepend_path("PYTHONPATH", dependent_spec.prefix.lib.python)
 
@@ -490,7 +494,7 @@ that are already in the Lmod hierarchy.
 
 
 .. note::
-   Tcl and Lua modules also allow for explicit conflicts between modulefiles.
+   Tcl and Lua modules also allow for explicit conflicts between module files.
 
    .. code-block:: yaml
 
@@ -512,8 +516,8 @@ that are already in the Lmod hierarchy.
    that are available for use in this directive are the same understood by the
    :meth:`~spack.spec.Spec.format` method.
 
-   For Lmod and Environment Modules versions prior 4.2, it is important to
-   express the conflict on both modulefiles conflicting with each other.
+   For Lmod and Environment Modules versions prior to 4.2, it is important to
+   express the conflict on both module files conflicting with each other.
 
 
 .. note::
@@ -550,7 +554,7 @@ that are already in the Lmod hierarchy.
 
 .. warning::
   Consistency of Core packages
-   The user is responsible for maintining consistency among core packages, as ``core_specs``
+   The user is responsible for maintaining consistency among core packages, as ``core_specs``
    bypasses the hierarchy that allows Lmod to safely switch between coherent software stacks.
 
 .. warning::

@@ -9,7 +9,7 @@ import shlex
 from collections import namedtuple
 from typing import Optional
 
-import jsonschema
+import spack.vendor.jsonschema
 
 import spack.environment as ev
 import spack.error
@@ -201,7 +201,7 @@ class PathContext(tengine.Context):
         manifest = {"spack": manifest}
 
         # Validate the manifest file
-        jsonschema.validate(manifest, schema=spack.schema.env.schema)
+        spack.vendor.jsonschema.validate(manifest, schema=spack.schema.env.schema)
 
         return syaml.dump(manifest, default_flow_style=False).strip()
 
@@ -243,7 +243,7 @@ class PathContext(tengine.Context):
 
         Returns:
             Enough information to know how to update the cache, install
-            a list opf packages, and clean in the end.
+            a list of packages, and clean in the end.
         """
         if not package_list:
             return package_list

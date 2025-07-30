@@ -2,16 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import copy
 import sys
-
-import llnl.util.lang
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
 
 import spack.cmd as cmd
 import spack.config
 import spack.environment as ev
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.spec
 import spack.store
@@ -24,7 +24,7 @@ section = "basic"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
         "--format",
@@ -49,6 +49,12 @@ def setup_parser(subparser):
 
     subparser.add_argument(
         "-I", "--install-status", action="store_true", help="show install status of packages"
+    )
+
+    subparser.add_argument(
+        "--specfile-format",
+        action="store_true",
+        help="show the specfile format for installed deps ",
     )
 
     subparser.add_argument(
@@ -98,7 +104,7 @@ def setup_parser(subparser):
         "--show-full-compiler",
         action="store_true",
         dest="show_full_compiler",
-        help="show full compiler specs",
+        help="(DEPRECATED) show full compiler specs. Currently it's a no-op",
     )
     implicit_explicit = subparser.add_mutually_exclusive_group()
     implicit_explicit.add_argument(
@@ -206,7 +212,7 @@ def query_arguments(args):
     for attribute in ("start_date", "end_date"):
         date = getattr(args, attribute)
         if date:
-            q_args[attribute] = llnl.util.lang.pretty_string_to_date(date)
+            q_args[attribute] = spack.llnl.util.lang.pretty_string_to_date(date)
 
     return q_args
 
@@ -278,9 +284,9 @@ def display_env(env, args, decorator, results):
             # these enforce details in the root specs to show what the user asked for
             namespaces=True,
             show_flags=True,
-            show_full_compiler=True,
             decorator=root_decorator,
             variants=True,
+            specfile_format=args.specfile_format,
         )
 
     print()
@@ -301,8 +307,8 @@ def display_env(env, args, decorator, results):
             decorator=lambda s, f: color.colorize("@*{%s}" % f),
             namespace=True,
             show_flags=True,
-            show_full_compiler=True,
             variants=True,
+            specfile_format=args.specfile_format,
         )
         print()
 
@@ -392,7 +398,12 @@ def find(parser, args):
             if args.show_concretized:
                 display_results += concretized_but_not_installed
             cmd.display_specs(
-                display_results, args, decorator=decorator, all_headers=True, status_fn=status_fn
+                display_results,
+                args,
+                decorator=decorator,
+                all_headers=True,
+                status_fn=status_fn,
+                specfile_format=args.specfile_format,
             )
 
         # print number of installed packages last (as the list may be long)

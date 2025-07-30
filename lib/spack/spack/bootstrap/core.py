@@ -25,13 +25,9 @@ import copy
 import functools
 import json
 import os
-import os.path
 import sys
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
-
-from llnl.util import tty
-from llnl.util.lang import GroupedExceptionHandler
 
 import spack.binary_distribution
 import spack.concretize
@@ -46,8 +42,11 @@ import spack.user_environment
 import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml
+import spack.util.url
 import spack.version
 from spack.installer import PackageInstaller
+from spack.llnl.util import tty
+from spack.llnl.util.lang import GroupedExceptionHandler
 
 from ._common import (
     QueryInfo,
@@ -97,8 +96,12 @@ class Bootstrapper:
         self.name = conf["name"]
         self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
 
-        # Promote (relative) paths to file urls
-        self.url = spack.mirrors.mirror.Mirror(conf["info"]["url"]).fetch_url
+        # Check for relative paths, and turn them into absolute paths
+        # root is the metadata_dir
+        maybe_url = conf["info"]["url"]
+        if spack.util.url.is_path_instead_of_url(maybe_url) and not os.path.isabs(maybe_url):
+            maybe_url = os.path.join(self.metadata_dir, maybe_url)
+        self.url = spack.mirrors.mirror.Mirror(maybe_url).fetch_url
 
     @property
     def mirror_scope(self) -> spack.config.InternalConfigScope:
@@ -288,7 +291,12 @@ class SourceBootstrapper(Bootstrapper):
 
         # Install the spec that should make the module importable
         with spack.config.override(self.mirror_scope):
-            PackageInstaller([concrete_spec.package], fail_fast=True).install()
+            PackageInstaller(
+                [concrete_spec.package],
+                fail_fast=True,
+                package_use_cache=False,
+                dependencies_use_cache=False,
+            ).install()
 
         if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
             self.last_search = info
@@ -358,6 +366,7 @@ def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] 
     for current_config in bootstrapping_sources():
         if not source_is_enabled(current_config):
             continue
+
         with exception_handler.forward(current_config["name"], Exception):
             if create_bootstrapper(current_config).try_import(module, abstract_spec):
                 return

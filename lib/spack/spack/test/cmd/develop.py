@@ -2,20 +2,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 import shutil
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.spec
 import spack.stage
 import spack.util.git
 import spack.util.path
+from spack.error import SpackError
 from spack.main import SpackCommand
 
 add = SpackCommand("add")
@@ -59,17 +60,17 @@ class TestDevelop:
             develop("--no-clone", "mpich@1.0")
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"))
 
-    def test_develop_no_clone(self, tmpdir):
+    def test_develop_no_clone(self, tmp_path: pathlib.Path):
         env("create", "test")
         with ev.read("test") as e:
-            develop("--no-clone", "-p", str(tmpdir), "mpich@1.0")
-            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), str(tmpdir))
+            develop("--no-clone", "-p", str(tmp_path), "mpich@1.0")
+            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), str(tmp_path))
 
-    def test_develop_no_version(self, tmpdir):
+    def test_develop_no_version(self, tmp_path: pathlib.Path):
         env("create", "test")
         with ev.read("test") as e:
-            develop("--no-clone", "-p", str(tmpdir), "mpich")
-            self.check_develop(e, spack.spec.Spec("mpich@=main"), str(tmpdir))
+            develop("--no-clone", "-p", str(tmp_path), "mpich")
+            self.check_develop(e, spack.spec.Spec("mpich@=main"), str(tmp_path))
 
     def test_develop(self):
         env("create", "test")
@@ -108,12 +109,12 @@ class TestDevelop:
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"))
             assert len(e.dev_specs) == 1
 
-    def test_develop_update_path(self, tmpdir):
+    def test_develop_update_path(self, tmp_path: pathlib.Path):
         env("create", "test")
         with ev.read("test") as e:
             develop("mpich@1.0")
-            develop("-p", str(tmpdir), "mpich@1.0")
-            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), str(tmpdir))
+            develop("-p", str(tmp_path), "mpich@1.0")
+            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), str(tmp_path))
             assert len(e.dev_specs) == 1
 
     def test_develop_update_spec(self):
@@ -159,6 +160,7 @@ class TestDevelop:
             # Create path to allow develop to modify env
             fs.mkdirp(abspath)
             develop("--no-clone", "-p", path, "mpich@1.0")
+            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
 
             # Remove path to ensure develop with no args runs staging code
             os.rmdir(abspath)
@@ -184,7 +186,6 @@ def test_develop_full_git_repo(
     install_mockery,
     mock_packages,
     monkeypatch,
-    tmpdir,
     mutable_config,
     request,
 ):
@@ -218,10 +219,47 @@ def test_develop_full_git_repo(
         assert len(commits) > 1
 
 
-def test_concretize_dev_path_with_at_symbol_in_env(mutable_mock_env_path, tmpdir, mock_packages):
+def test_recursive(mutable_mock_env_path, install_mockery, mock_fetch):
+    env("create", "test")
+
+    with ev.read("test") as e:
+        add("indirect-mpich@1.0")
+        e.concretize()
+        specs = e.all_specs()
+
+        assert len(specs) > 1
+        develop("--recursive", "mpich")
+
+        expected_dev_specs = ["mpich", "direct-mpich", "indirect-mpich"]
+        for spec in expected_dev_specs:
+            assert spec in e.dev_specs
+
+
+def test_develop_fails_with_multiple_concrete_versions(
+    mutable_mock_env_path, install_mockery, mock_fetch
+):
+    env("create", "test")
+
+    with ev.read("test") as e:
+        add("indirect-mpich@1.0")
+        add("indirect-mpich@0.9")
+        e.unify = False
+        e.concretize()
+
+        with pytest.raises(SpackError) as develop_error:
+            develop("indirect-mpich", fail_on_error=True)
+
+        error_str = "has multiple concrete instances in the graph"
+        assert error_str in str(develop_error.value)
+
+
+def test_concretize_dev_path_with_at_symbol_in_env(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages
+):
     spec_like = "develop-test@develop"
 
-    develop_dir = tmpdir.mkdir("build@location")
+    develop_dir = tmp_path / "build@location"
+    develop_dir.mkdir()
     env("create", "test_at_sym")
 
     with ev.read("test_at_sym") as e:
@@ -234,4 +272,4 @@ def test_concretize_dev_path_with_at_symbol_in_env(mutable_mock_env_path, tmpdir
         cspec = result[0]
         assert cspec.satisfies(spec_like), cspec
         assert cspec.is_develop, cspec
-        assert develop_dir in cspec.variants["dev_path"], cspec
+        assert str(develop_dir) in cspec.variants["dev_path"], cspec

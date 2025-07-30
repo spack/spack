@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to create meta-packages known as "bundles" in Spack to group multiple packages together for a single installation.
+
 .. _bundlepackage:
 
 ------
@@ -14,9 +18,9 @@ The associated software is specified as dependencies.
 
 If it makes sense, variants, conflicts, and requirements can be added to
 the package. :ref:`Variants <variants>` ensure that common build options
-are consistent across the packages supporting them.  :ref:`Conflicts
-and requirements <packaging_conflicts>` prevent attempts to build with known
-bugs or limitations.
+are consistent across the packages supporting them.
+:ref:`Conflicts <packaging_conflicts>` prevent attempts to build with known bugs and limitations.
+:ref:`Requirements <packaging_requires>` prevent attempts to build without critical options.
 
 For example, if ``MyBundlePackage`` is known to only build on ``linux``,
 it could use the ``require`` directive as follows:
@@ -27,10 +31,10 @@ it could use the ``require`` directive as follows:
 
 Spack has a number of built-in bundle packages, such as:
 
-* `AmdAocl <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/amd-aocl/package.py>`_
-* `EcpProxyApps <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/ecp-proxy-apps/package.py>`_
-* `Libc <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/libc/package.py>`_
-* `Xsdk <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/xsdk/package.py>`_
+* `AmdAocl <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/amd_aocl/package.py>`_
+* `EcpProxyApps <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/ecp_proxy_apps/package.py>`_
+* `Libc <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/libc/package.py>`_
+* `Xsdk <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/xsdk/package.py>`_
 
 where ``Xsdk`` also inherits from ``CudaPackage`` and ``RocmPackage`` and
 ``Libc`` is a virtual bundle package for the C standard library.
@@ -58,9 +62,9 @@ The ``BundlePackage`` base class does not provide any phases by default
 since the bundle does not represent a build system.
 
 
-^^^
+^^^^^^
 URL
-^^^
+^^^^^^
 
 The ``url`` property does not have meaning since there is no package-specific
 code to fetch.

@@ -1,0 +1,23 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import time
+
+from spack_repo.builtin_mock.build_systems.generic import Package
+
+from spack.llnl.util.filesystem import touch
+from spack.package import *
+
+
+class ParallelPackageC(Package):
+    """Simple dependency package for testing parallel builds"""
+
+    homepage = "http://www.example.com"
+    has_code = False
+
+    version("1.0")
+
+    def install(self, spec, prefix):
+        time.sleep(2)
+        touch(prefix.dummy_file)

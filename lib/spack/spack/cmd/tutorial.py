@@ -2,19 +2,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import argparse
+import os
 import shutil
-
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
 
 import spack
 import spack.cmd
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.util.git
 import spack.util.gpg
 from spack.cmd.common import arguments
+from spack.llnl.util.filesystem import working_dir
 from spack.util.spack_yaml import syaml_dict
 
 description = "set up spack for our tutorial (WARNING: modifies config!)"
@@ -37,7 +37,7 @@ rm_configs = [
 ]
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["yes_to_all"])
 
 

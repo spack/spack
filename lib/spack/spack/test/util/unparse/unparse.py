@@ -257,7 +257,6 @@ def test_core_lib_files():
                 names.append(os.path.join(test_dir, n))
 
     for filename in names:
-        print("Testing %s" % filename)
         source = read_pyfile(filename)
         check_ast_roundtrip(source)
 
@@ -554,3 +553,23 @@ def test_async_with_as():
 )
 def test_match_literal(literal):
     check_ast_roundtrip(literal)
+
+
+def test_subscript_with_tuple():
+    """Test change in visit_Subscript/visit_Index is_non_empty_tuple."""
+    check_ast_roundtrip("a[()]")
+    check_ast_roundtrip("a[b]")
+    check_ast_roundtrip("a[(*b,)]")
+    check_ast_roundtrip("a[(1, 2)]")
+    check_ast_roundtrip("a[(1, *b)]")
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="Not supported < 3.11")
+def test_subscript_without_tuple():
+    """Test change in visit_Subscript/visit_Index is_non_empty_tuple."""
+    check_ast_roundtrip("a[*b]")
+    check_ast_roundtrip("a[1, *b]")
+
+
+def test_attribute_on_int():
+    check_ast_roundtrip("1 .__abs__()")

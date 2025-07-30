@@ -1,27 +1,28 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import copy
 import os
+import pathlib
+import platform
 import sys
+from typing import Any, Dict
 
-import jinja2
 import pytest
 
-import archspec.cpu
-
-import llnl.util.lang
+import spack.vendor.archspec.cpu
+import spack.vendor.jinja2
 
 import spack.binary_distribution
 import spack.cmd
-import spack.compiler
-import spack.compilers
+import spack.compilers.config
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.detection
 import spack.error
 import spack.hash_types as ht
+import spack.llnl.util.lang
+import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.platforms.test
@@ -30,10 +31,13 @@ import spack.solver.asp
 import spack.solver.version_order
 import spack.spec
 import spack.store
+import spack.test.conftest
 import spack.util.file_cache
+import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.installer import PackageInstaller
-from spack.spec import CompilerSpec, Spec
+from spack.spec import Spec
+from spack.test.conftest import RepoBuilder
 from spack.version import Version, VersionList, ver
 
 
@@ -59,9 +63,6 @@ def check_spec(abstract, concrete):
     for flag in concrete.compiler_flags.valid_compiler_flags():
         assert flag in concrete.compiler_flags
 
-    if abstract.compiler and abstract.compiler.concrete:
-        assert abstract.compiler == concrete.compiler
-
     if abstract.architecture and abstract.architecture.concrete:
         assert abstract.architecture == concrete.architecture
 
@@ -82,7 +83,7 @@ def binary_compatibility(monkeypatch, request):
         return
 
     if "mock_packages" not in request.fixturenames:
-        # Only builtin.mock has a mock glibc package
+        # Only builtin_mock has a mock glibc package
         return
 
     if "database" in request.fixturenames or "mutable_database" in request.fixturenames:
@@ -90,7 +91,6 @@ def binary_compatibility(monkeypatch, request):
         return
 
     monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", lambda: True)
-    monkeypatch.setattr(spack.compiler.Compiler, "default_libc", Spec("glibc@=2.28"))
 
 
 @pytest.fixture(
@@ -121,8 +121,10 @@ def binary_compatibility(monkeypatch, request):
         "mpileaks ^mpi@1.2:2",
         # conflict not triggered
         "conflict",
-        "conflict%clang~foo",
+        "conflict~foo%clang",
         "conflict-parent%gcc",
+        # Direct dependency with different deptypes
+        "mpileaks %[deptypes=link] mpich",
     ]
 )
 def spec(request):
@@ -148,14 +150,13 @@ def current_host(request, monkeypatch):
     cpu, _, is_preference = request.param.partition("-")
 
     monkeypatch.setattr(spack.platforms.Test, "default", cpu)
-    monkeypatch.setattr(spack.platforms.Test, "front_end", cpu)
     if not is_preference:
-        target = archspec.cpu.TARGETS[cpu]
-        monkeypatch.setattr(archspec.cpu, "host", lambda: target)
+        target = spack.vendor.archspec.cpu.TARGETS[cpu]
+        monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: target)
         yield target
     else:
-        target = archspec.cpu.TARGETS["sapphirerapids"]
-        monkeypatch.setattr(archspec.cpu, "host", lambda: target)
+        target = spack.vendor.archspec.cpu.TARGETS["sapphirerapids"]
+        monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: target)
         with spack.config.override("packages:all", {"target": [cpu]}):
             yield target
 
@@ -174,19 +175,13 @@ def fuzz_dep_order(request, monkeypatch):
 
 
 @pytest.fixture()
-def repo_with_changing_recipe(tmp_path_factory, mutable_mock_repo):
-    repo_namespace = "changing"
-    repo_dir = tmp_path_factory.mktemp(repo_namespace)
+def repo_with_changing_recipe(tmp_path_factory: pytest.TempPathFactory, mutable_mock_repo):
+    repos_dir: pathlib.Path = tmp_path_factory.mktemp("repos_dir")
+    root, _ = spack.repo.create_repo(str(repos_dir), "changing")
+    packages_dir = pathlib.Path(root, "packages")
 
-    (repo_dir / "repo.yaml").write_text(
-        """
-repo:
-  namespace: changing
-"""
-    )
-
-    packages_dir = repo_dir / "packages"
     root_pkg_str = """
+from spack_repo.builtin_mock.build_systems.generic import Package
 from spack.package import *
 
 class Root(Package):
@@ -194,6 +189,7 @@ class Root(Package):
     url      = "http://www.example.com/root-1.0.tar.gz"
 
     version("1.0", sha256="abcde")
+    depends_on("middle")
     depends_on("changing")
 
     conflicts("^changing~foo")
@@ -202,7 +198,23 @@ class Root(Package):
     package_py.parent.mkdir(parents=True)
     package_py.write_text(root_pkg_str)
 
+    middle_pkg_str = """
+from spack_repo.builtin_mock.build_systems.generic import Package
+from spack.package import *
+
+class Middle(Package):
+    homepage = "http://www.example.com"
+    url      = "http://www.example.com/root-1.0.tar.gz"
+
+    version("1.0", sha256="abcde")
+    depends_on("changing")
+"""
+    package_py = packages_dir / "middle" / "package.py"
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(middle_pkg_str)
+
     changing_template = """
+from spack_repo.builtin_mock.build_systems.generic import Package
 from spack.package import *
 
 class Changing(Package):
@@ -225,7 +237,7 @@ class Changing(Package):
 {% endif %}
 """
 
-    with spack.repo.use_repositories(str(repo_dir), override=False) as repository:
+    with spack.repo.use_repositories(root, override=False) as repos:
 
         class _ChangingPackage:
             default_context = [
@@ -234,40 +246,35 @@ class Changing(Package):
                 ("add_variant", False),
             ]
 
-            def __init__(self, repo_directory):
-                self.repo_dir = repo_directory
+            def __init__(self):
                 cache_dir = tmp_path_factory.mktemp("cache")
                 self.repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
-                self.repo = spack.repo.Repo(str(repo_directory), cache=self.repo_cache)
+                self.repo = spack.repo.Repo(root, cache=self.repo_cache)
 
             def change(self, changes=None):
                 changes = changes or {}
                 context = dict(self.default_context)
                 context.update(changes)
                 # Remove the repo object and delete Python modules
-                repository.remove(self.repo)
+                repos.remove(self.repo)
                 # TODO: this mocks a change in the recipe that should happen in a
                 # TODO: different process space. Leaving this comment as a hint
                 # TODO: in case tests using this fixture start failing.
-                if sys.modules.get("spack.pkg.changing.changing"):
-                    del sys.modules["spack.pkg.changing.changing"]
-                if sys.modules.get("spack.pkg.changing.root"):
-                    del sys.modules["spack.pkg.changing.root"]
-                if sys.modules.get("spack.pkg.changing"):
-                    del sys.modules["spack.pkg.changing"]
+                for module in [x for x in sys.modules if x.startswith("spack_repo.changing")]:
+                    del sys.modules[module]
 
                 # Change the recipe
-                t = jinja2.Template(changing_template)
+                t = spack.vendor.jinja2.Template(changing_template)
                 changing_pkg_str = t.render(**context)
                 package_py = packages_dir / "changing" / "package.py"
                 package_py.parent.mkdir(parents=True, exist_ok=True)
                 package_py.write_text(changing_pkg_str)
 
                 # Re-add the repository
-                self.repo = spack.repo.Repo(str(self.repo_dir), cache=self.repo_cache)
-                repository.put_first(self.repo)
+                self.repo = spack.repo.Repo(root, cache=self.repo_cache)
+                repos.put_first(self.repo)
 
-        _changing_pkg = _ChangingPackage(repo_dir)
+        _changing_pkg = _ChangingPackage()
         _changing_pkg.change(
             {"delete_version": False, "delete_variant": False, "add_variant": False}
         )
@@ -276,15 +283,15 @@ class Changing(Package):
 
 @pytest.fixture()
 def clang12_with_flags(compiler_factory):
-    c = compiler_factory(spec="clang@12.2.0", operating_system="redhat6")
-    c["compiler"]["flags"] = {"cflags": "-O3", "cxxflags": "-O3"}
+    c = compiler_factory(spec="llvm@12.2.0 os=redhat6")
+    c["extra_attributes"]["flags"] = {"cflags": "-O3", "cxxflags": "-O3"}
     return c
 
 
 @pytest.fixture()
 def gcc11_with_flags(compiler_factory):
-    c = compiler_factory(spec="gcc@11.1.0", operating_system="redhat6")
-    c["compiler"]["flags"] = {"cflags": "-O0 -g", "cxxflags": "-O0 -g", "fflags": "-O0 -g"}
+    c = compiler_factory(spec="gcc@11.1.0 os=redhat6")
+    c["extra_attributes"]["flags"] = {"cflags": "-O0 -g", "cxxflags": "-O0 -g", "fflags": "-O0 -g"}
     return c
 
 
@@ -346,16 +353,6 @@ class TestConcretize:
         concrete = check_concretize("mpileaks   ^mpich2@1.3.1:1.4")
         assert concrete["mpich2"].satisfies("mpich2@1.3.1:1.4")
 
-    def test_concretize_enable_disable_compiler_existence_check(self):
-        with spack.concretize.enable_compiler_existence_check():
-            with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-                check_concretize("dttop %gcc@=100.100")
-
-        with spack.concretize.disable_compiler_existence_check():
-            spec = check_concretize("dttop %gcc@=100.100")
-            assert spec.satisfies("%gcc@100.100")
-            assert spec["dtlink3"].satisfies("%gcc@100.100")
-
     def test_concretize_with_provides_when(self):
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.
@@ -374,21 +371,28 @@ class TestConcretize:
         # Note that providers are repo-specific, so we don't misinterpret
         # providers, but vdeps are not namespace-specific, so we can
         # associate vdeps across repos.
-        assert Spec("builtin.mock.multi-provider-mpi@1.10.3") in providers
-        assert Spec("builtin.mock.multi-provider-mpi@1.10.2") in providers
-        assert Spec("builtin.mock.multi-provider-mpi@1.10.1") in providers
-        assert Spec("builtin.mock.multi-provider-mpi@1.10.0") in providers
-        assert Spec("builtin.mock.multi-provider-mpi@1.8.8") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.10.3") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.10.2") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.10.1") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.10.0") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.8.8") in providers
 
     def test_different_compilers_get_different_flags(
         self, mutable_config, clang12_with_flags, gcc11_with_flags
     ):
         """Tests that nodes get the flags of the associated compiler."""
-        mutable_config.set("compilers", [clang12_with_flags, gcc11_with_flags])
+        mutable_config.set(
+            "packages",
+            {
+                "llvm": {"externals": [clang12_with_flags]},
+                "gcc": {"externals": [gcc11_with_flags]},
+            },
+        )
+        t = spack.vendor.archspec.cpu.host().family
         client = spack.concretize.concretize_one(
             Spec(
-                "cmake-client %gcc@11.1.0 platform=test os=fe target=fe"
-                " ^cmake %clang@12.2.0 platform=test os=fe target=fe"
+                f"cmake-client platform=test os=redhat6 target={t} %gcc@11.1.0"
+                f" ^cmake platform=test os=redhat6 target={t} %clang@12.2.0"
             )
         )
         cmake = client["cmake"]
@@ -402,30 +406,13 @@ class TestConcretize:
         """Tests that Spack assembles flags in a consistent way (i.e. with the same ordering),
         for successive concretizations.
         """
-        mutable_config.set("compilers", [gcc11_with_flags])
-        spec_str = "libelf %gcc@11.1.0 os=redhat6"
+        mutable_config.set("packages", {"gcc": {"externals": [gcc11_with_flags]}})
+        spec_str = "libelf os=redhat6 %gcc@11.1.0"
         for _ in range(3):
             s = spack.concretize.concretize_one(spec_str)
             assert all(
                 s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
             )
-
-    def test_compiler_flags_differ_identical_compilers(self, mutable_config, clang12_with_flags):
-        mutable_config.set("compilers", [clang12_with_flags])
-        # Correct arch to use test compiler that has flags
-        spec = Spec("pkg-a %clang@12.2.0 platform=test os=fe target=fe")
-
-        # Get the compiler that matches the spec (
-        compiler = spack.compilers.compiler_for_spec("clang@=12.2.0", spec.architecture)
-
-        # Configure spack to have two identical compilers with different flags
-        default_dict = spack.compilers._to_dict(compiler)
-        different_dict = copy.deepcopy(default_dict)
-        different_dict["compiler"]["flags"] = {"cflags": "-O2"}
-
-        with spack.config.override("compilers", [different_dict]):
-            spec = spack.concretize.concretize_one(spec)
-            assert spec.satisfies("cflags=-O2")
 
     @pytest.mark.parametrize(
         "spec_str,expected,not_expected",
@@ -440,13 +427,6 @@ class TestConcretize:
             # Setting a flag overrides propagation
             (
                 "hypre cflags=='-g' ^openblas cflags='-O3'",
-                ["hypre cflags='-g'", "^openblas cflags='-O3'"],
-                ["^openblas cflags='-g'"],
-            ),
-            # Setting propagation on parent and dependency -> the
-            # dependency propagation flags override
-            (
-                "hypre cflags=='-g' ^openblas cflags=='-O3'",
                 ["hypre cflags='-g'", "^openblas cflags='-O3'"],
                 ["^openblas cflags='-g'"],
             ),
@@ -468,32 +448,42 @@ class TestConcretize:
             assert not root.satisfies(constraint)
 
     def test_mixing_compilers_only_affects_subdag(self):
-        spack.config.set("packages:all:compiler", ["clang", "gcc"])
-        spec = spack.concretize.concretize_one("dt-diamond%gcc ^dt-diamond-bottom%clang")
-        for dep in spec.traverse():
-            assert ("%clang" in dep) == (dep.name == "dt-diamond-bottom")
+        """Tests that, when we mix compilers, the one with lower penalty is used for nodes
+        where the compiler is not forced.
+        """
+        spec = spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
+        # This is intended to traverse the "root" unification set, and check compilers
+        # on the nodes in the set
+        for x in spec.traverse(deptype=("link", "run")):
+            if "c" not in x or not x.name.startswith("dt-diamond"):
+                continue
+            expected_gcc = x.name != "dt-diamond"
+            assert bool(x.dependencies(name="llvm", deptype="build")) is not expected_gcc, x.tree()
+            assert bool(x.dependencies(name="gcc", deptype="build")) is expected_gcc
+            assert x.satisfies("%clang") is not expected_gcc
+            assert x.satisfies("%gcc") is expected_gcc
 
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")
-        for dep in spec.traverse():
-            assert "%clang" in dep
+        for x in spec.traverse(deptype=("link", "run")):
+            if "c" not in x:
+                continue
+            assert x.satisfies("%clang")
 
     def test_architecture_deep_inheritance(self, mock_targets, compiler_factory):
         """Make sure that indirect dependencies receive architecture
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
         """
-        cnl_compiler = compiler_factory(spec="gcc@4.5.0", operating_system="CNL")
-        # CNL compiler has no target attribute, and this is essential to make detection pass
-        del cnl_compiler["compiler"]["target"]
-        with spack.config.override("compilers", [cnl_compiler]):
-            spec_str = "mpileaks %gcc@4.5.0 os=CNL target=nocona ^dyninst os=CNL ^callpath os=CNL"
+        cnl_compiler = compiler_factory(spec="gcc@4.5.0 os=CNL target=nocona")
+        with spack.config.override("packages", {"gcc": {"externals": [cnl_compiler]}}):
+            spec_str = "mpileaks os=CNL target=nocona %gcc@4.5.0 ^dyninst os=CNL ^callpath os=CNL"
             spec = spack.concretize.concretize_one(spec_str)
-            for s in spec.traverse(root=False):
+            for s in spec.traverse(root=False, deptype=("link", "run")):
                 assert s.architecture.target == spec.architecture.target
 
     def test_compiler_flags_from_user_are_grouped(self):
-        spec = Spec('pkg-a%gcc cflags="-O -foo-flag foo-val" platform=test')
+        spec = Spec('pkg-a cflags="-O -foo-flag foo-val" platform=test %gcc')
         spec = spack.concretize.concretize_one(spec)
         cflags = spec.compiler_flags["cflags"]
         assert any(x == "-foo-flag foo-val" for x in cflags)
@@ -720,12 +710,10 @@ class TestConcretize:
         assert spec.satisfies("^second-dependency-foo-bar-fee +fee")
         assert not spec.satisfies("parent-foo-bar +fee")
 
-    def test_no_matching_compiler_specs(self, mock_low_high_config):
-        # only relevant when not building compilers as needed
-        with spack.concretize.enable_compiler_existence_check():
-            s = Spec("pkg-a %gcc@=0.0.0")
-            with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-                s = spack.concretize.concretize_one(s)
+    def test_no_matching_compiler_specs(self):
+        s = Spec("pkg-a %gcc@0.0.0")
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            spack.concretize.concretize_one(s)
 
     def test_no_compilers_for_arch(self):
         s = Spec("pkg-a arch=linux-rhel0-x86_64")
@@ -765,21 +753,59 @@ class TestConcretize:
         assert all(not d.dependencies(name="mpi") for d in spec.traverse())
         assert all(x in spec for x in ("zmpi", "mpi"))
 
-    @pytest.mark.parametrize("compiler_str", ["clang", "gcc", "gcc@10.2.1", "clang@:15.0.0"])
-    def test_compiler_inheritance(self, compiler_str):
-        spec_str = "mpileaks %{0}".format(compiler_str)
+    @pytest.mark.parametrize(
+        "spec_str,expected,not_expected",
+        [
+            # clang (llvm~flang) only provides C, and C++ compilers, while gcc has also fortran
+            #
+            # If we ask mpileaks%clang, then %gcc must be used for fortran, and since
+            # %gcc is preferred to clang in config, it will be used for most nodes
+            (
+                "mpileaks %clang",
+                {"mpileaks": "%clang", "libdwarf": "%gcc", "libelf": "%gcc"},
+                {"libdwarf": "%clang", "libelf": "%clang"},
+            ),
+            (
+                "mpileaks %clang@:15.0.0",
+                {"mpileaks": "%clang", "libdwarf": "%gcc", "libelf": "%gcc"},
+                {"libdwarf": "%clang", "libelf": "%clang"},
+            ),
+            (
+                "mpileaks %gcc",
+                {"mpileaks": "%gcc", "libdwarf": "%gcc", "libelf": "%gcc"},
+                {"mpileaks": "%clang", "libdwarf": "%clang", "libelf": "%clang"},
+            ),
+            (
+                "mpileaks %gcc@10.2.1",
+                {"mpileaks": "%gcc", "libdwarf": "%gcc", "libelf": "%gcc"},
+                {"mpileaks": "%clang", "libdwarf": "%clang", "libelf": "%clang"},
+            ),
+            # dyninst doesn't require fortran, so %clang is propagated
+            (
+                "dyninst %clang",
+                {"dyninst": "%clang", "libdwarf": "%clang", "libelf": "%clang"},
+                {"libdwarf": "%gcc", "libelf": "%gcc"},
+            ),
+        ],
+    )
+    def test_compiler_inheritance(self, spec_str, expected, not_expected):
+        """Spack tries to propagate compilers as much as possible, but prefers using a single
+        toolchain on a node, rather than mixing them.
+        """
         spec = spack.concretize.concretize_one(spec_str)
-        assert spec["libdwarf"].compiler.satisfies(compiler_str)
-        assert spec["libelf"].compiler.satisfies(compiler_str)
+        for name, constraint in expected.items():
+            assert spec[name].satisfies(constraint)
+
+        for name, constraint in not_expected.items():
+            assert not spec[name].satisfies(constraint)
 
     def test_external_package(self):
-        spec = Spec("externaltool%gcc")
-        spec = spack.concretize.concretize_one(spec)
-        assert spec["externaltool"].external_path == os.path.sep + os.path.join(
-            "path", "to", "external_tool"
-        )
-        assert "externalprereq" not in spec
-        assert spec["externaltool"].compiler.satisfies("gcc")
+        """Tests that an external is preferred, if present, and that it does not
+        have dependencies.
+        """
+        spec = spack.concretize.concretize_one("externaltool")
+        assert spec.external_path == os.path.sep + os.path.join("path", "to", "external_tool")
+        assert not spec.dependencies()
 
     def test_nobuild_package(self):
         """Test that a non-buildable package raise an error if no specs
@@ -791,19 +817,17 @@ class TestConcretize:
 
     def test_external_and_virtual(self, mutable_config):
         mutable_config.set("packages:stuff", {"buildable": False})
-        spec = Spec("externaltest")
-        spec = spack.concretize.concretize_one(spec)
+        spec = spack.concretize.concretize_one("externaltest")
         assert spec["externaltool"].external_path == os.path.sep + os.path.join(
             "path", "to", "external_tool"
         )
+        # "stuff" is a virtual provided by externalvirtual
         assert spec["stuff"].external_path == os.path.sep + os.path.join(
-            "path", "to", "external_virtual_gcc"
+            "path", "to", "external_virtual_clang"
         )
-        assert spec["externaltool"].compiler.satisfies("gcc")
-        assert spec["stuff"].compiler.satisfies("gcc")
 
     def test_compiler_child(self):
-        s = Spec("mpileaks%clang target=x86_64 ^dyninst%gcc")
+        s = Spec("mpileaks target=x86_64 %clang ^dyninst%gcc")
         s = spack.concretize.concretize_one(s)
         assert s["mpileaks"].satisfies("%clang")
         assert s["dyninst"].satisfies("%gcc")
@@ -825,7 +849,7 @@ class TestConcretize:
         with pytest.raises(spack.error.SpackError):
             s = spack.concretize.concretize_one(s)
 
-    @pytest.mark.parametrize("spec_str", ["conflict@10.0%clang+foo"])
+    @pytest.mark.parametrize("spec_str", ["unsat-provider@1.0+foo"])
     def test_no_conflict_in_external_specs(self, spec_str):
         # Modify the configuration to have the spec with conflict
         # registered as an external
@@ -861,15 +885,15 @@ class TestConcretize:
         s = Spec("mpileaks")
         s = spack.concretize.concretize_one(s)
 
-        assert llnl.util.lang.ObjectWrapper not in s.__class__.__mro__
+        assert spack.llnl.util.lang.ObjectWrapper not in s.__class__.__mro__
 
         # Spec wrapped in a build interface
         build_interface = s["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
+        assert spack.llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
         # Mimics asking the build interface from a build interface
         build_interface = s["mpileaks"]["mpileaks"]
-        assert llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
+        assert spack.llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
     @pytest.mark.regression("7705")
     def test_regression_issue_7705(self):
@@ -913,7 +937,9 @@ class TestConcretize:
         concrete_specs = spack.concretize._concretize_specs_together(abstract_specs)
 
         # Check there's only one configuration of each package in the DAG
-        names = set(dep.name for spec in concrete_specs for dep in spec.traverse())
+        names = set(
+            dep.name for spec in concrete_specs for dep in spec.traverse(deptype=("link", "run"))
+        )
         for name in names:
             name_specs = set(spec[name] for spec in concrete_specs if name in spec)
             assert len(name_specs) == 1
@@ -934,39 +960,45 @@ class TestConcretize:
             spack.concretize.concretize_one(spec)
 
     @pytest.mark.not_on_windows("Not supported on Windows (yet)")
-    # Include targets to prevent regression on 20537
     @pytest.mark.parametrize(
-        "spec, best_achievable",
+        "spec,compiler_spec,best_achievable",
         [
-            ("mpileaks%gcc@=4.4.7 ^dyninst@=10.2.1 target=x86_64:", "core2"),
-            ("mpileaks%gcc@=4.8 target=x86_64:", "haswell"),
-            ("mpileaks%gcc@=5.3.0 target=x86_64:", "broadwell"),
-            ("mpileaks%apple-clang@=5.1.0 target=x86_64:", "x86_64"),
+            (
+                "mpileaks%gcc@=4.4.7 ^dyninst@=10.2.1 target=x86_64:",
+                "gcc@4.4.7 languages=c,c++,fortran",
+                "core2",
+            ),
+            ("mpileaks target=x86_64: %gcc@=4.8", "gcc@4.8 languages=c,c++,fortran", "haswell"),
+            (
+                "mpileaks target=x86_64: %gcc@=5.3.0",
+                "gcc@5.3.0 languages=c,c++,fortran",
+                "broadwell",
+            ),
         ],
     )
     @pytest.mark.regression("13361", "20537")
+    @pytest.mark.usefixtures("mock_targets")
     def test_adjusting_default_target_based_on_compiler(
-        self, spec, best_achievable, current_host, mock_targets
+        self, spec, compiler_spec, best_achievable, current_host, compiler_factory, mutable_config
     ):
-        best_achievable = archspec.cpu.TARGETS[best_achievable]
+        best_achievable = spack.vendor.archspec.cpu.TARGETS[best_achievable]
         expected = best_achievable if best_achievable < current_host else current_host
-        with spack.concretize.disable_compiler_existence_check():
-            s = spack.concretize.concretize_one(spec)
-            assert str(s.architecture.target) == str(expected)
+        mutable_config.set(
+            "packages", {"gcc": {"externals": [compiler_factory(spec=f"{compiler_spec}")]}}
+        )
+        s = spack.concretize.concretize_one(spec)
+        assert str(s.architecture.target) == str(expected)
 
-    def test_compiler_version_matches_any_entry_in_compilers_yaml(self):
+    @pytest.mark.parametrize(
+        "constraint,expected", [("%gcc@10.2", "@=10.2.1"), ("%gcc@10.2:", "@=10.2.1")]
+    )
+    def test_compiler_version_matches_any_entry_in_packages_yaml(self, constraint, expected):
         # The behavior here has changed since #8735 / #14730. Now %gcc@10.2 is an abstract
         # compiler spec, and it should first find a matching compiler gcc@=10.2.1
-        assert spack.concretize.concretize_one(
-            Spec("mpileaks %gcc@10.2")
-        ).compiler == CompilerSpec("gcc@=10.2.1")
-        assert spack.concretize.concretize_one(
-            Spec("mpileaks %gcc@10.2:")
-        ).compiler == CompilerSpec("gcc@=10.2.1")
-
-        # This compiler does not exist
-        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-            spack.concretize.concretize_one("mpileaks %gcc@=10.2")
+        s = spack.concretize.concretize_one(f"mpileaks {constraint}")
+        gcc_deps = s.dependencies(name="gcc", deptype="build")
+        assert len(gcc_deps) == 1
+        assert gcc_deps[0].satisfies(expected)
 
     def test_concretize_anonymous(self):
         with pytest.raises(spack.error.SpackError):
@@ -986,14 +1018,18 @@ class TestConcretize:
             ("bowtie@1.4.0", "%gcc@10.2.1"),
             # Version with conflicts and no valid gcc select another compiler
             ("bowtie@1.3.0", "%clang@15.0.0"),
-            # If a higher gcc is available still prefer that
-            ("bowtie@1.2.2 os=redhat6", "%gcc@11.1.0"),
+            # If a higher gcc is available, with a worse os, still prefer that,
+            # assuming the two operating systems are compatible
+            ("bowtie@1.2.2 %gcc", "%gcc@11.1.0"),
         ],
     )
     def test_compiler_conflicts_in_package_py(
-        self, spec_str, expected_str, clang12_with_flags, gcc11_with_flags
+        self, spec_str, expected_str, gcc11_with_flags, mutable_config
     ):
-        with spack.config.override("compilers", [clang12_with_flags, gcc11_with_flags]):
+        mutable_config.set(
+            "concretizer:os_compatible", {"debian6": ["redhat6"], "redhat6": ["debian6"]}
+        )
+        with spack.config.override("packages", {"gcc": {"externals": [gcc11_with_flags]}}):
             s = spack.concretize.concretize_one(spec_str)
             assert s.satisfies(expected_str)
 
@@ -1114,26 +1150,6 @@ class TestConcretize:
         for constraint in expected:
             assert s.satisfies(constraint)
 
-    @pytest.mark.regression("4635")
-    @pytest.mark.parametrize(
-        "spec_str,expected",
-        [("cmake", ["%clang"]), ("cmake %gcc", ["%gcc"]), ("cmake %clang", ["%clang"])],
-    )
-    def test_external_package_and_compiler_preferences(self, spec_str, expected, mutable_config):
-        packages_yaml = {
-            "all": {"compiler": ["clang", "gcc"]},
-            "cmake": {
-                "externals": [{"spec": "cmake@3.4.3", "prefix": "/usr"}],
-                "buildable": False,
-            },
-        }
-        mutable_config.set("packages", packages_yaml)
-        s = spack.concretize.concretize_one(spec_str)
-
-        assert s.external
-        for condition in expected:
-            assert s.satisfies(condition)
-
     @pytest.mark.regression("5651")
     def test_package_with_constraint_not_met_by_external(self):
         """Check that if we have an external package A at version X.Y in
@@ -1172,57 +1188,6 @@ class TestConcretize:
         assert s.concrete
         assert not s.satisfies("^variant-on-dependency-condition-b")
 
-    @pytest.mark.regression("8082")
-    @pytest.mark.parametrize(
-        "spec_str,expected", [("cmake %gcc", "%gcc"), ("cmake %clang", "%clang")]
-    )
-    def test_compiler_constraint_with_external_package(self, spec_str, expected):
-        packages_yaml = {
-            "cmake": {"externals": [{"spec": "cmake@3.4.3", "prefix": "/usr"}], "buildable": False}
-        }
-        spack.config.set("packages", packages_yaml)
-
-        s = spack.concretize.concretize_one(spec_str)
-        assert s.external
-        assert s.satisfies(expected)
-
-    @pytest.mark.regression("20976")
-    @pytest.mark.parametrize(
-        "compiler,spec_str,expected,xfailold",
-        [
-            (
-                "gcc",
-                "external-common-python %clang",
-                "%clang ^external-common-openssl%gcc ^external-common-gdbm%clang",
-                False,
-            ),
-            (
-                "clang",
-                "external-common-python",
-                "%clang ^external-common-openssl%clang ^external-common-gdbm%clang",
-                True,
-            ),
-        ],
-    )
-    def test_compiler_in_nonbuildable_external_package(
-        self, compiler, spec_str, expected, xfailold
-    ):
-        """Check that the compiler of a non-buildable external package does not
-        spread to other dependencies, unless no other commpiler is specified."""
-        packages_yaml = {
-            "external-common-openssl": {
-                "externals": [
-                    {"spec": "external-common-openssl@1.1.1i%" + compiler, "prefix": "/usr"}
-                ],
-                "buildable": False,
-            }
-        }
-        spack.config.set("packages", packages_yaml)
-
-        s = spack.concretize.concretize_one(spec_str)
-        assert s.satisfies(expected)
-        assert "external-common-perl" not in [d.name for d in s.dependencies()]
-
     def test_external_that_would_require_a_virtual_dependency(self):
         s = spack.concretize.concretize_one("requires-virtual")
 
@@ -1242,7 +1207,7 @@ class TestConcretize:
     def test_conditional_provides_or_depends_on(self):
         # Check that we can concretize correctly a spec that can either
         # provide a virtual or depend on it based on the value of a variant
-        s = spack.concretize.concretize_one("conditional-provider +disable-v1")
+        s = spack.concretize.concretize_one("v1-consumer ^conditional-provider +disable-v1")
         assert "v1-provider" in s
         assert s["v1"].name == "v1-provider"
         assert s["v2"].name == "conditional-provider"
@@ -1276,20 +1241,6 @@ class TestConcretize:
             node = s[pkg_name]
             assert not node.dependencies(deptype="test"), msg.format(pkg_name)
 
-    @pytest.mark.regression("20019")
-    def test_compiler_match_is_preferred_to_newer_version(self, compiler_factory):
-        # This spec depends on openblas. Openblas has a conflict
-        # that doesn't allow newer versions with gcc@4.4.0. Check
-        # that an old version of openblas is selected, rather than
-        # a different compiler for just that node.
-        with spack.config.override(
-            "compilers", [compiler_factory(spec="gcc@10.1.0", operating_system="redhat6")]
-        ):
-            spec_str = "simple-inheritance+openblas %gcc@10.1.0 os=redhat6"
-            s = spack.concretize.concretize_one(spec_str)
-            assert "openblas@0.2.15" in s
-            assert s["openblas"].satisfies("%gcc@10.1.0")
-
     @pytest.mark.regression("19981")
     def test_target_ranges_in_conflicts(self):
         with pytest.raises(spack.error.SpackError):
@@ -1311,15 +1262,6 @@ class TestConcretize:
         # Check that non-default variant values are forced on the dependency
         d = s["dep-with-variants"]
         assert "+foo+bar+baz" in d
-
-    @pytest.mark.regression("20055")
-    def test_custom_compiler_version(self, mutable_config, compiler_factory, monkeypatch):
-        mutable_config.set(
-            "compilers", [compiler_factory(spec="gcc@10foo", operating_system="redhat6")]
-        )
-        monkeypatch.setattr(spack.compiler.Compiler, "real_version", "10.2.1")
-        s = spack.concretize.concretize_one("pkg-a %gcc@10foo os=redhat6")
-        assert "%gcc@10foo" in s
 
     def test_all_patches_applied(self):
         uuidpatch = (
@@ -1370,7 +1312,7 @@ class TestConcretize:
     )
     @pytest.mark.parametrize("mock_db", [True, False])
     def test_reuse_does_not_overwrite_dev_specs(
-        self, dev_first, spec, mock_db, tmpdir, temporary_store, monkeypatch
+        self, dev_first, spec, mock_db, tmp_path: pathlib.Path, temporary_store, monkeypatch
     ):
         """Test that reuse does not mix dev specs with non-dev specs.
 
@@ -1382,7 +1324,7 @@ class TestConcretize:
         # dev and non-dev specs that are otherwise identical
         spec = Spec(spec)
         dev_spec = spec.copy()
-        dev_spec["dev-build-test-install"].constrain(f"dev_path={tmpdir.strpath}")
+        dev_spec["dev-build-test-install"].constrain(f"dev_path={tmp_path}")
 
         # run the test in both orders
         first_spec = dev_spec if dev_first else spec
@@ -1463,10 +1405,8 @@ class TestConcretize:
         spack.config.set("concretizer:reuse", True)
         spec = spack.concretize.concretize_one("pkg-a cflags=-g cxxflags=-g")
         PackageInstaller([spec.package], fake=True, explicit=True).install()
-
-        testspec = Spec("pkg-a cflags=-g")
-        testspec = spack.concretize.concretize_one(testspec)
-        assert testspec == spec
+        testspec = spack.concretize.concretize_one("pkg-a cflags=-g")
+        assert testspec == spec, testspec.tree()
 
     @pytest.mark.regression("20784")
     def test_concretization_of_test_dependencies(self):
@@ -1523,30 +1463,6 @@ class TestConcretize:
         assert "~bar" in s["external-non-default-variant"]
         assert s["external-non-default-variant"].external
 
-    @pytest.mark.regression("22871")
-    @pytest.mark.parametrize(
-        "spec_str,expected_os",
-        [
-            ("mpileaks", "os=debian6"),
-            # To trigger the bug in 22871 we need to have the same compiler
-            # spec available on both operating systems
-            ("mpileaks%gcc@10.2.1 platform=test os=debian6", "os=debian6"),
-            ("mpileaks%gcc@10.2.1 platform=test os=redhat6", "os=redhat6"),
-        ],
-    )
-    def test_os_selection_when_multiple_choices_are_possible(
-        self, spec_str, expected_os, compiler_factory
-    ):
-        # GCC 10.2.1 is defined both for debian and for redhat
-        with spack.config.override(
-            "compilers", [compiler_factory(spec="gcc@10.2.1", operating_system="redhat6")]
-        ):
-            s = spack.concretize.concretize_one(spec_str)
-            for node in s.traverse():
-                if node.name == "glibc":
-                    continue
-                assert node.satisfies(expected_os)
-
     @pytest.mark.regression("22718")
     @pytest.mark.parametrize(
         "spec_str,expected_compiler",
@@ -1556,6 +1472,8 @@ class TestConcretize:
         s = spack.concretize.concretize_one(spec_str)
 
         for node in s.traverse():
+            if not node.satisfies("^ c"):
+                continue
             assert node.satisfies(expected_compiler)
 
     @pytest.mark.parametrize(
@@ -1684,7 +1602,7 @@ class TestConcretize:
         config = {"externals": [{"spec": spec, "prefix": "/fake/path"}], "buildable": False}
         spack.config.set("packages:sticky-variant", config)
 
-        maybe = llnl.util.lang.nullcontext if allow_gcc else pytest.raises
+        maybe = spack.llnl.util.lang.nullcontext if allow_gcc else pytest.raises
         with maybe(spack.error.SpackError):
             s = spack.concretize.concretize_one("sticky-variant-dependent%gcc")
 
@@ -1717,7 +1635,7 @@ class TestConcretize:
     def test_conditional_values_in_variants(self, spec_str, valid):
         s = Spec(spec_str)
         raises = pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError))
-        with llnl.util.lang.nullcontext() if valid else raises:
+        with spack.llnl.util.lang.nullcontext() if valid else raises:
             s = spack.concretize.concretize_one(s)
 
     def test_conditional_values_in_conditional_variant(self):
@@ -1732,7 +1650,7 @@ class TestConcretize:
         # The test architecture uses core2 as the default target. Check that when
         # we configure Spack for "generic" granularity we concretize for x86_64
         default_target = spack.platforms.test.Test.default
-        generic_target = archspec.cpu.TARGETS[default_target].generic.name
+        generic_target = spack.vendor.archspec.cpu.TARGETS[default_target].generic.name
         s = Spec("python")
         assert spack.concretize.concretize_one(s).satisfies("target=%s" % default_target)
         with spack.config.override("concretizer:targets", {"granularity": "generic"}):
@@ -1795,61 +1713,60 @@ class TestConcretize:
     ):
         with spack.repo.use_repositories(mock_custom_repository, override=False):
             s = spack.concretize.concretize_one("pkg-c")
-            assert s.namespace != "builtin.mock"
+            assert s.namespace != "builtin_mock"
             PackageInstaller([s.package], fake=True, explicit=True).install()
 
         with spack.config.override("concretizer:reuse", True):
             s = spack.concretize.concretize_one("pkg-c")
-        assert s.namespace == "builtin.mock"
+        assert s.namespace == "builtin_mock"
 
     @pytest.mark.regression("45538")
-    def test_reuse_from_other_namespace_no_raise(self, tmpdir, temporary_store, monkeypatch):
-        myrepo = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
-        myrepo.add_package("zlib")
+    def test_reuse_from_other_namespace_no_raise(
+        self, temporary_store, monkeypatch, repo_builder: RepoBuilder
+    ):
+        repo_builder.add_package("zlib")
 
         builtin = spack.concretize.concretize_one("zlib")
         PackageInstaller([builtin.package], fake=True, explicit=True).install()
 
-        with spack.repo.use_repositories(myrepo.root, override=False):
+        with spack.repo.use_repositories(repo_builder.root, override=False):
             with spack.config.override("concretizer:reuse", True):
-                myrepo = spack.concretize.concretize_one("myrepo.zlib")
+                zlib = spack.concretize.concretize_one(f"{repo_builder.namespace}.zlib")
 
-        assert myrepo.namespace == "myrepo"
+        assert zlib.namespace == repo_builder.namespace
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
-        builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
-        builder.add_package("pkg-c")
-        with spack.repo.use_repositories(builder.root, override=False):
+    def test_reuse_with_unknown_package_dont_raise(
+        self, temporary_store, monkeypatch, repo_builder: RepoBuilder
+    ):
+        repo_builder.add_package("pkg-c")
+        with spack.repo.use_repositories(repo_builder.root, override=False):
             s = spack.concretize.concretize_one("pkg-c")
-            assert s.namespace == "myrepo"
+            assert s.namespace == repo_builder.namespace
             PackageInstaller([s.package], fake=True, explicit=True).install()
-
-        del sys.modules["spack.pkg.myrepo.pkg-c"]
-        del sys.modules["spack.pkg.myrepo"]
-        builder.remove("pkg-c")
-        with spack.repo.use_repositories(builder.root, override=False) as repos:
-            # TODO (INJECT CONFIGURATION): unclear why the cache needs to be invalidated explicitly
+        del sys.modules[f"spack_repo.{repo_builder.namespace}.packages.pkg_c"]
+        repo_builder.remove("pkg-c")
+        with spack.repo.use_repositories(repo_builder.root, override=False) as repos:
             repos.repos[0]._pkg_checker.invalidate()
             with spack.config.override("concretizer:reuse", True):
                 s = spack.concretize.concretize_one("pkg-c")
-            assert s.namespace == "builtin.mock"
+            assert s.namespace == "builtin_mock"
 
     @pytest.mark.parametrize(
-        "specs,expected,libc_offset",
+        "specs,checks",
         [
-            (["libelf", "libelf@0.8.10"], 1, 1),
-            (["libdwarf%gcc", "libelf%clang"], 2, 1),
-            (["libdwarf%gcc", "libdwarf%clang"], 3, 1),
-            (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], 4, 1),
-            (["hdf5", "zmpi"], 3, 1),
-            (["hdf5", "mpich"], 2, 1),
-            (["hdf5^zmpi", "mpich"], 4, 1),
-            (["mpi", "zmpi"], 2, 1),
-            (["mpi", "mpich"], 1, 1),
+            (["libelf", "libelf@0.8.10"], {"libelf": 1}),
+            (["libdwarf%gcc", "libelf%clang"], {"libdwarf": 1, "libelf": 1}),
+            (["libdwarf%gcc", "libdwarf%clang"], {"libdwarf": 2, "libelf": 1}),
+            (["libdwarf^libelf@0.8.12", "libdwarf^libelf@0.8.13"], {"libdwarf": 2, "libelf": 2}),
+            (["hdf5", "zmpi"], {"zmpi": 1, "fake": 1}),
+            (["hdf5", "mpich"], {"mpich": 1}),
+            (["hdf5^zmpi", "mpich"], {"mpi": 2, "mpich": 1, "zmpi": 1, "fake": 1}),
+            (["mpi", "zmpi"], {"mpi": 1, "mpich": 0, "zmpi": 1, "fake": 1}),
+            (["mpi", "mpich"], {"mpi": 1, "mpich": 1, "zmpi": 0}),
         ],
     )
-    def test_best_effort_coconcretize(self, specs, expected, libc_offset):
+    def test_best_effort_coconcretize(self, specs, checks):
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
         solver.reuse = False
@@ -1858,10 +1775,9 @@ class TestConcretize:
             for s in result.specs:
                 concrete_specs.update(s.traverse())
 
-        if not spack.solver.asp.using_libc_compatibility():
-            libc_offset = 0
-
-        assert len(concrete_specs) == expected + libc_offset
+        for matching_spec, expected_count in checks.items():
+            matches = [x for x in concrete_specs if x.satisfies(matching_spec)]
+            assert len(matches) == expected_count
 
     @pytest.mark.parametrize(
         "specs,expected_spec,occurances",
@@ -1917,10 +1833,7 @@ class TestConcretize:
         monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
         monkeypatch.setattr(spack.solver.asp.Result, "specs", list())
 
-        with pytest.raises(
-            spack.solver.asp.InternalConcretizerError,
-            match="a subset of input specs could not be solved for",
-        ):
+        with pytest.raises(spack.solver.asp.OutputDoesNotSatisfyInputError):
             list(solver.solve_in_rounds(specs))
 
     def test_coconcretize_reuse_and_virtuals(self):
@@ -1949,14 +1862,12 @@ class TestConcretize:
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
-            with pytest.raises(
-                spack.solver.asp.UnsatisfiableSpecError, match="'dep-with-variants@999'"
-            ):
+            with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="Cannot satisfy"):
                 solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
 
     @pytest.mark.regression("31148")
     def test_version_weight_and_provenance(self):
-        """Test package preferences during coconcretization."""
+        """Test package preferences during concretization."""
         reusable_specs = [
             spack.concretize.concretize_one(spec_str) for spec_str in ("pkg-b@0.9", "pkg-b@1.0")
         ]
@@ -1966,27 +1877,20 @@ class TestConcretize:
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
-            # The result here should have a single spec to build ('pkg-a')
-            # and it should be using pkg-b@1.0 with a version badness of 2
-            # The provenance is:
+            # Version badness should be > 0 only for reused specs. For instance, for pkg-b
+            # the version provenance is:
+            #
             # version_declared("pkg-b","1.0",0,"package_py").
             # version_declared("pkg-b","0.9",1,"package_py").
             # version_declared("pkg-b","1.0",2,"installed").
             # version_declared("pkg-b","0.9",3,"installed").
-            #
-            # Depending on the target, it may also use gnuconfig
+            v_weights = [x for x in result.criteria if x[2] == "version badness (non roots)"][0]
+            reused_weights, built_weights, _ = v_weights
+            assert reused_weights > 2 and built_weights == 0
+
             result_spec = result.specs[0]
-            num_specs = len(list(result_spec.traverse()))
-
-            libc_offset = 1 if spack.solver.asp.using_libc_compatibility() else 0
-            criteria = [
-                (num_specs - 1 - libc_offset, None, "number of packages to build (vs. reuse)"),
-                (2, 0, "version badness (non roots)"),
-            ]
-
-            for criterion in criteria:
-                assert criterion in result.criteria, criterion
             assert result_spec.satisfies("^pkg-b@1.0")
+            assert result_spec["pkg-b"].dag_hash() == reusable_specs[1].dag_hash()
 
     def test_reuse_succeeds_with_config_compatible_os(self):
         root_spec = Spec("pkg-b")
@@ -2017,7 +1921,6 @@ class TestConcretize:
         s = Spec("develop-branch-version@git.%s=develop" % git_ref)
         c = spack.concretize.concretize_one(s)
         assert git_ref in str(c)
-        print(str(c))
         assert s.satisfies("@develop")
         assert s.satisfies("@0.1:")
 
@@ -2030,9 +1933,11 @@ class TestConcretize:
 
     @pytest.mark.regression("31484")
     def test_installed_externals_are_reused(
-        self, mutable_database, repo_with_changing_recipe, tmp_path
+        self, mutable_database, repo_with_changing_recipe, tmp_path: pathlib.Path
     ):
-        """Test that external specs that are in the DB can be reused."""
+        """Tests that external specs that are in the DB can be reused, if they result in a
+        better optimization score.
+        """
         external_conf = {
             "changing": {
                 "buildable": False,
@@ -2042,27 +1947,30 @@ class TestConcretize:
         spack.config.set("packages", external_conf)
 
         # Install the external spec
-        external1 = spack.concretize.concretize_one("changing@1.0")
-        PackageInstaller([external1.package], fake=True, explicit=True).install()
-        assert external1.external
+        middle_pkg = spack.concretize.concretize_one("middle")
+        PackageInstaller([middle_pkg.package], fake=True, explicit=True).install()
+        assert middle_pkg["changing"].external
+        changing_external = middle_pkg["changing"]
 
         # Modify the package.py file
         repo_with_changing_recipe.change({"delete_variant": True})
 
         # Try to concretize the external without reuse and confirm the hash changed
         with spack.config.override("concretizer:reuse", False):
-            external2 = spack.concretize.concretize_one("changing@1.0")
-        assert external2.dag_hash() != external1.dag_hash()
+            root_no_reuse = spack.concretize.concretize_one("root")
+        assert root_no_reuse["changing"].dag_hash() != changing_external.dag_hash()
 
         # ... while with reuse we have the same hash
         with spack.config.override("concretizer:reuse", True):
-            external3 = spack.concretize.concretize_one("changing@1.0")
-        assert external3.dag_hash() == external1.dag_hash()
+            root_with_reuse = spack.concretize.concretize_one("root")
+        assert root_with_reuse["changing"].dag_hash() == changing_external.dag_hash()
 
     @pytest.mark.regression("31484")
-    def test_user_can_select_externals_with_require(self, mutable_database, tmp_path):
+    def test_user_can_select_externals_with_require(
+        self, mutable_database, tmp_path: pathlib.Path
+    ):
         """Test that users have means to select an external even in presence of reusable specs."""
-        external_conf = {
+        external_conf: Dict[str, Any] = {
             "mpi": {"buildable": False},
             "multi-provider-mpi": {
                 "externals": [{"spec": "multi-provider-mpi@2.0.0", "prefix": str(tmp_path)}]
@@ -2108,17 +2016,20 @@ class TestConcretize:
             assert s.satisfies("~debug"), s
 
     @pytest.mark.regression("32471")
-    def test_require_targets_are_allowed(self, mutable_database):
+    def test_require_targets_are_allowed(self, mutable_config, mutable_database):
         """Test that users can set target constraints under the require attribute."""
         # Configuration to be added to packages.yaml
-        external_conf = {"all": {"require": "target=%s" % spack.platforms.test.Test.front_end}}
-        spack.config.set("packages", external_conf)
+        required_target = spack.vendor.archspec.cpu.TARGETS[
+            spack.platforms.test.Test.default
+        ].family
+        external_conf = {"all": {"require": f"target={required_target}"}}
+        mutable_config.set("packages", external_conf)
 
         with spack.config.override("concretizer:reuse", False):
             spec = spack.concretize.concretize_one("mpich")
 
-        for s in spec.traverse():
-            assert s.satisfies("target=%s" % spack.platforms.test.Test.front_end)
+        for s in spec.traverse(deptype=("link", "run")):
+            assert s.satisfies(f"target={required_target}")
 
     def test_external_python_extensions_have_dependency(self):
         """Test that python extensions have access to a python dependency
@@ -2210,7 +2121,7 @@ class TestConcretize:
         prefix = os.path.sep + "fake"
         python_spec = Spec.from_detection("python@=detected", external_path=prefix)
 
-        def find_fake_python(classes, path_hints):
+        def find_fake_python(classes, path_hints, **kwargs):
             return {
                 "python": [Spec.from_detection("python@=detected", external_path=path_hints[0])]
             }
@@ -2285,97 +2196,36 @@ class TestConcretize:
             solver.driver.solve(setup, specs, reuse=[])
 
     @pytest.mark.regression("43141")
-    def test_clear_error_when_unknown_compiler_requested(self, mock_packages):
+    @pytest.mark.parametrize(
+        "spec_str,expected_match",
+        [
+            # A package does not exist
+            ("pkg-a ^foo", "since 'foo' does not exist"),
+            # Request a compiler for a package that doesn't need it
+            ("pkg-c %gcc", "cannot depend on gcc"),
+        ],
+    )
+    def test_errors_on_statically_checked_preconditions(self, spec_str, expected_match):
         """Tests that the solver can report a case where the compiler cannot be set"""
-        with pytest.raises(
-            spack.error.UnsatisfiableSpecError, match="Cannot set the required compiler: pkg-a%foo"
-        ):
-            spack.concretize.concretize_one("pkg-a %foo")
+        with pytest.raises(spack.error.UnsatisfiableSpecError, match=expected_match):
+            spack.concretize.concretize_one(spec_str)
 
     @pytest.mark.regression("36339")
-    def test_compiler_match_constraints_when_selected(self):
+    @pytest.mark.parametrize(
+        "compiler_str,expected",
+        [
+            ("gcc@:9", "@=9.4.0"),
+            ("gcc@:10", "@=10.2.1"),
+            ("gcc@10", "@=10.2.1"),
+            ("gcc@10:", "@=10.2.1"),
+        ],
+    )
+    def test_compiler_match_constraints_when_selected(self, compiler_str, expected):
         """Test that, when multiple compilers with the same name are in the configuration
         we ensure that the selected one matches all the required constraints.
         """
-        compiler_configuration = [
-            {
-                "compiler": {
-                    "spec": "gcc@11.1.0",
-                    "paths": {
-                        "cc": "/usr/bin/gcc",
-                        "cxx": "/usr/bin/g++",
-                        "f77": "/usr/bin/gfortran",
-                        "fc": "/usr/bin/gfortran",
-                    },
-                    "operating_system": "debian6",
-                    "modules": [],
-                }
-            },
-            {
-                "compiler": {
-                    "spec": "gcc@12.1.0",
-                    "paths": {
-                        "cc": "/usr/bin/gcc",
-                        "cxx": "/usr/bin/g++",
-                        "f77": "/usr/bin/gfortran",
-                        "fc": "/usr/bin/gfortran",
-                    },
-                    "operating_system": "debian6",
-                    "modules": [],
-                }
-            },
-        ]
-        spack.config.set("compilers", compiler_configuration)
-        s = spack.concretize.concretize_one("pkg-a %gcc@:11")
-        assert s.compiler.version == ver("=11.1.0"), s
-
-    @pytest.mark.regression("36339")
-    @pytest.mark.not_on_windows("Not supported on Windows")
-    @pytest.mark.enable_compiler_execution
-    def test_compiler_with_custom_non_numeric_version(self, mock_executable):
-        """Test that, when a compiler has a completely made up version, we can use its
-        'real version' to detect targets and don't raise during concretization.
-        """
-        gcc_path = mock_executable("gcc", output="echo 9")
-        compiler_configuration = [
-            {
-                "compiler": {
-                    "spec": "gcc@foo",
-                    "paths": {"cc": str(gcc_path), "cxx": str(gcc_path), "f77": None, "fc": None},
-                    "operating_system": "debian6",
-                    "modules": [],
-                }
-            }
-        ]
-        spack.config.set("compilers", compiler_configuration)
-        s = spack.concretize.concretize_one("pkg-a %gcc@foo")
-        assert s.compiler.version == ver("=foo")
-
-    @pytest.mark.regression("36628")
-    def test_concretization_with_compilers_supporting_target_any(self):
-        """Tests that a compiler with 'target: any' can satisfy any target, and is a viable
-        candidate for concretization.
-        """
-        compiler_configuration = [
-            {
-                "compiler": {
-                    "spec": "gcc@12.1.0",
-                    "paths": {
-                        "cc": "/some/path/gcc",
-                        "cxx": "/some/path/g++",
-                        "f77": None,
-                        "fc": None,
-                    },
-                    "operating_system": "debian6",
-                    "target": "any",
-                    "modules": [],
-                }
-            }
-        ]
-
-        with spack.config.override("compilers", compiler_configuration):
-            s = spack.concretize.concretize_one("pkg-a")
-        assert s.satisfies("%gcc@12.1.0")
+        s = spack.concretize.concretize_one(f"pkg-a %{compiler_str}")
+        assert s["gcc"].satisfies(expected)
 
     @pytest.mark.parametrize("spec_str", ["mpileaks", "mpileaks ^mpich"])
     def test_virtuals_are_annotated_on_edges(self, spec_str):
@@ -2481,10 +2331,10 @@ class TestConcretize:
         "spec_str,expected_namespaces",
         [
             # Single node with fully qualified namespace
-            ("builtin.mock.gmake", {"gmake": "builtin.mock"}),
+            ("builtin_mock.gmake", {"gmake": "builtin_mock"}),
             # Dependency with fully qualified namespace
-            ("hdf5 ^builtin.mock.gmake", {"gmake": "builtin.mock", "hdf5": "duplicates.test"}),
-            ("hdf5 ^gmake", {"gmake": "duplicates.test", "hdf5": "duplicates.test"}),
+            ("hdf5 ^builtin_mock.gmake", {"gmake": "builtin_mock", "hdf5": "duplicates_test"}),
+            ("hdf5 ^gmake", {"gmake": "duplicates_test", "hdf5": "duplicates_test"}),
         ],
     )
     def test_select_lower_priority_package_from_repository_stack(
@@ -2493,8 +2343,10 @@ class TestConcretize:
         """Tests that a user can explicitly select a lower priority, fully qualified dependency
         from cli.
         """
-        # 'builtin.mock" and "duplicates.test" share a 'gmake' package
-        additional_repo = os.path.join(spack.paths.repos_path, "duplicates.test")
+        # 'builtin_mock" and "duplicates_test" share a 'gmake' package
+        additional_repo = os.path.join(
+            spack.paths.test_repos_path, "spack_repo", "duplicates_test"
+        )
         with spack.repo.use_repositories(additional_repo, override=False):
             s = spack.concretize.concretize_one(spec_str)
 
@@ -2504,28 +2356,26 @@ class TestConcretize:
 
     def test_reuse_specs_from_non_available_compilers(self, mutable_config, mutable_database):
         """Tests that we can reuse specs with compilers that are not configured locally."""
-        # All the specs in the mutable DB have been compiled with %gcc@=10.2.1
-        specs = mutable_database.query_local()
-        assert all(s.satisfies("%gcc@=10.2.1") for s in specs)
+        # All the specs in the mutable DB have been compiled with %gcc@10.2.1
+        mpileaks = [s for s in mutable_database.query_local() if s.name == "mpileaks"]
 
-        spack.compilers.remove_compiler_from_config("gcc@=10.2.1")
-        assert not spack.compilers.compilers_for_spec("gcc@=10.2.1")
+        # Remove gcc@10.2.1
+        remover = spack.compilers.config.CompilerRemover(mutable_config)
+        remover.mark_compilers(match="gcc@=10.2.1")
+        remover.flush()
         mutable_config.set("concretizer:reuse", True)
 
         # mpileaks is in the database, it will be reused with gcc@=10.2.1
         root = spack.concretize.concretize_one("mpileaks")
-        for s in root.traverse():
-            assert s.satisfies("%gcc@10.2.1")
+        assert root.satisfies("%gcc@10.2.1")
+        assert any(root.dag_hash() == x.dag_hash() for x in mpileaks)
 
-        # fftw is not in the database, therefore the root will be compiled with gcc@=9.4.0,
-        # while the mpi is reused from the database and is compiled with gcc@=10.2.1
-        root = spack.concretize.concretize_one("fftw")
-        assert root.satisfies("%gcc@=9.4.0")
-        for s in root.traverse(root=False):
-            assert s.satisfies("%gcc@10.2.1")
+        # fftw is not in the database, therefore it will be compiled with gcc@=9.4.0
+        root = spack.concretize.concretize_one("fftw~mpi")
+        assert root.satisfies("%gcc@9.4.0")
 
     @pytest.mark.regression("43406")
-    def test_externals_with_platform_explicitly_set(self, tmp_path):
+    def test_externals_with_platform_explicitly_set(self, tmp_path: pathlib.Path):
         """Tests that users can specify platform=xxx in an external spec"""
         external_conf = {
             "mpich": {
@@ -2538,7 +2388,7 @@ class TestConcretize:
         assert s.external
 
     @pytest.mark.regression("43267")
-    def test_spec_with_build_dep_from_json(self, tmp_path):
+    def test_spec_with_build_dep_from_json(self, tmp_path: pathlib.Path):
         """Tests that we can correctly concretize a spec, when we express its dependency as a
         concrete spec to be read from JSON.
 
@@ -2553,25 +2403,36 @@ class TestConcretize:
 
     @pytest.mark.regression("44040")
     def test_exclude_specs_from_reuse(self, monkeypatch):
-        """Tests that we can exclude a spec from reuse when concretizing, and that the spec
+        r"""Tests that we can exclude a spec from reuse when concretizing, and that the spec
         is not added back to the solve as a dependency of another reusable spec.
 
         The expected spec is:
 
         o callpath@1.0
         |\
-        | |\
-        o | | mpich@3.0.4
-        |/ /
-        | o dyninst@8.2
-        |/|
-        | |\
-        | | o libdwarf@20130729
-        | |/|
-        |/|/
-        | o libelf@0.8.13
-        |/
-        o glibc@2.31
+        o | mpich@3.0.4
+        |\ \
+        | |\ \
+        | | | o dyninst@8.2
+        | |_|/|
+        |/| |/|
+        | |/|/|
+        | | | |\
+        | | | | o libdwarf@20130729
+        | |_|_|/|
+        |/| |_|/|
+        | |/| |/|
+        | | |/|/
+        | | | o libelf@0.8.13
+        | |_|/|
+        |/| |/|
+        | |/|/
+        | o | gcc-runtime@10.5.0
+        |/| |
+        | |/
+        o | glibc@2.31
+         /
+        o gcc@10.5.0
         """
         # Prepare a mock mirror that returns an old version of dyninst
         request_str = "callpath ^mpich"
@@ -2602,7 +2463,7 @@ class TestConcretize:
         ],
     )
     def test_include_specs_from_externals_and_libcs(
-        self, included_externals, mutable_config, tmp_path
+        self, included_externals, mutable_config, tmp_path: pathlib.Path
     ):
         """Tests that when we include specs from externals, we always include libcs."""
         mutable_config.set(
@@ -2633,16 +2494,16 @@ class TestConcretize:
         assert result["deprecated-versions"].satisfies("@1.0.0")
 
     @pytest.mark.regression("44085")
-    def test_can_reuse_concrete_externals_for_dependents(self, mutable_config, tmp_path):
+    def test_can_reuse_concrete_externals_for_dependents(self, mutable_config):
         """Test that external specs that are in the DB can be reused. This means they are
         preferred to concretizing another external from packages.yaml
         """
         packages_yaml = {
-            "externaltool": {"externals": [{"spec": "externaltool@2.0", "prefix": "/fake/path"}]}
+            "externaltool": {"externals": [{"spec": "externaltool@0.9", "prefix": "/fake/path"}]}
         }
         mutable_config.set("packages", packages_yaml)
-        # Concretize with gcc@9 to get a suboptimal spec, since we have gcc@10 available
-        external_spec = spack.concretize.concretize_one("externaltool@2 %gcc@9")
+        # Concretize with v0.9 to get a suboptimal spec, since we have gcc@10 available
+        external_spec = spack.concretize.concretize_one("externaltool@0.9")
         assert external_spec.external
 
         root_specs = [Spec("sombrero")]
@@ -2706,30 +2567,36 @@ class TestConcretize:
         reconstruct the prefix, and other external attributes.
         """
         packages_yaml = {
-            "cmake": {
+            "mpileaks": {
                 "externals": [
-                    {"spec": "cmake@3.23.1 %gcc", "prefix": "/tmp/prefix1"},
-                    {"spec": "cmake@3.23.1 %clang", "prefix": "/tmp/prefix2"},
+                    {"spec": "mpileaks@2.3 +opt", "prefix": "/tmp/prefix1"},
+                    {"spec": "mpileaks@2.3 ~opt", "prefix": "/tmp/prefix2"},
                 ]
             }
         }
         concretizer_yaml = {
-            "reuse": {"roots": True, "from": [{"type": "external", "exclude": ["%gcc"]}]}
+            "reuse": {"roots": True, "from": [{"type": "external", "exclude": ["+opt"]}]}
         }
         mutable_config.set("packages", packages_yaml)
         mutable_config.set("concretizer", concretizer_yaml)
 
-        s = spack.concretize.concretize_one("cmake")
+        s = spack.concretize.concretize_one("mpileaks")
 
         # Check that we got the properties from the right external
         assert s.external
-        assert s.satisfies("%clang")
+        assert s.satisfies("~opt")
         assert s.prefix == "/tmp/prefix2"
+
+    def test_git_based_version_must_exist_to_use_ref(self):
+        # gmake should fail, only has sha256
+        with pytest.raises(spack.error.UnsatisfiableSpecError) as e:
+            spack.concretize.concretize_one(f"gmake commit={'a' * 40}")
+            assert "Cannot use commit variant with" in e.value.message
 
 
 @pytest.fixture()
 def duplicates_test_repository():
-    repository_path = os.path.join(spack.paths.repos_path, "duplicates.test")
+    repository_path = os.path.join(spack.paths.test_repos_path, "spack_repo", "duplicates_test")
     with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
@@ -2886,6 +2753,23 @@ class TestConcretizeSeparately:
         assert any(x.satisfies(hdf5_str) for x in result.specs)
         assert any(x.satisfies(pinned_str) for x in result.specs)
 
+    @pytest.mark.regression("44289")
+    def test_all_extensions_depend_on_same_extendee(self):
+        """Tests that we don't reuse dependencies that bring in a different extendee"""
+        setuptools = spack.concretize.concretize_one("py-setuptools ^python@3.10")
+
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("py-floating ^python@3.11")], reuse=list(setuptools.traverse())
+        )
+        assert len(result.specs) == 1
+
+        floating = result.specs[0]
+        assert all(setuptools.dag_hash() != x.dag_hash() for x in floating.traverse())
+        pythons = [x for x in floating.traverse() if x.name == "python"]
+        assert len(pythons) == 1 and pythons[0].satisfies("@3.11")
+
 
 @pytest.mark.parametrize(
     "v_str,v_opts,checksummed",
@@ -2947,7 +2831,7 @@ class TestConcreteSpecsByHash:
 
 @pytest.fixture()
 def edges_test_repository():
-    repository_path = os.path.join(spack.paths.repos_path, "edges.test")
+    repository_path = os.path.join(spack.paths.test_repos_path, "spack_repo", "edges_test")
     with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
@@ -2994,9 +2878,9 @@ class TestConcretizeEdges:
         assert not s.satisfies("^[virtuals=blas,lapack] openblas")
 
 
-def test_reusable_externals_match(mock_packages, tmpdir):
-    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
-    spec.external_path = tmpdir.strpath
+def test_reusable_externals_match(mock_packages, tmp_path: pathlib.Path):
+    spec = Spec("mpich@4.1~debug build_system=generic arch=linux-ubuntu23.04-zen2 %gcc@13.1.0")
+    spec.external_path = str(tmp_path)
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
     assert spack.solver.asp._is_reusable(
@@ -3004,7 +2888,7 @@ def test_reusable_externals_match(mock_packages, tmpdir):
         {
             "mpich": {
                 "externals": [
-                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                    {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
                 ]
             }
         },
@@ -3012,9 +2896,9 @@ def test_reusable_externals_match(mock_packages, tmpdir):
     )
 
 
-def test_reusable_externals_match_virtual(mock_packages, tmpdir):
-    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
-    spec.external_path = tmpdir.strpath
+def test_reusable_externals_match_virtual(mock_packages, tmp_path: pathlib.Path):
+    spec = Spec("mpich@4.1~debug build_system=generic arch=linux-ubuntu23.04-zen2 %gcc@13.1.0")
+    spec.external_path = str(tmp_path)
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
     assert spack.solver.asp._is_reusable(
@@ -3022,7 +2906,7 @@ def test_reusable_externals_match_virtual(mock_packages, tmpdir):
         {
             "mpi": {
                 "externals": [
-                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                    {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
                 ]
             }
         },
@@ -3030,8 +2914,8 @@ def test_reusable_externals_match_virtual(mock_packages, tmpdir):
     )
 
 
-def test_reusable_externals_different_prefix(mock_packages, tmpdir):
-    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
+def test_reusable_externals_different_prefix(mock_packages, tmp_path: pathlib.Path):
+    spec = Spec("mpich@4.1~debug build_system=generic arch=linux-ubuntu23.04-zen2 %gcc@13.1.0")
     spec.external_path = "/other/path"
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
@@ -3040,7 +2924,7 @@ def test_reusable_externals_different_prefix(mock_packages, tmpdir):
         {
             "mpich": {
                 "externals": [
-                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                    {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
                 ]
             }
         },
@@ -3049,9 +2933,9 @@ def test_reusable_externals_different_prefix(mock_packages, tmpdir):
 
 
 @pytest.mark.parametrize("modules", [None, ["mpich/4.1", "libfabric/1.19"]])
-def test_reusable_externals_different_modules(mock_packages, tmpdir, modules):
-    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
-    spec.external_path = tmpdir.strpath
+def test_reusable_externals_different_modules(mock_packages, tmp_path: pathlib.Path, modules):
+    spec = Spec("mpich@4.1~debug build_system=generic arch=linux-ubuntu23.04-zen2 %gcc@13.1.0")
+    spec.external_path = str(tmp_path)
     spec.external_modules = modules
     spec._mark_concrete()
     assert not spack.solver.asp._is_reusable(
@@ -3059,7 +2943,7 @@ def test_reusable_externals_different_modules(mock_packages, tmpdir, modules):
         {
             "mpich": {
                 "externals": [
-                    {"spec": "mpich@4.1", "prefix": tmpdir.strpath, "modules": ["mpich/4.1"]}
+                    {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
                 ]
             }
         },
@@ -3067,13 +2951,13 @@ def test_reusable_externals_different_modules(mock_packages, tmpdir, modules):
     )
 
 
-def test_reusable_externals_different_spec(mock_packages, tmpdir):
-    spec = Spec("mpich@4.1%gcc@13.1.0~debug build_system=generic arch=linux-ubuntu23.04-zen2")
-    spec.external_path = tmpdir.strpath
+def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path):
+    spec = Spec("mpich@4.1~debug build_system=generic arch=linux-ubuntu23.04-zen2 %gcc@13.1.0")
+    spec.external_path = str(tmp_path)
     spec._mark_concrete()
     assert not spack.solver.asp._is_reusable(
         spec,
-        {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": tmpdir.strpath}]}},
+        {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": str(tmp_path)}]}},
         local=False,
     )
 
@@ -3145,7 +3029,7 @@ def test_filtering_reused_specs(
 @pytest.mark.usefixtures("mutable_database", "mock_store")
 @pytest.mark.parametrize(
     "reuse_yaml,expected_length",
-    [({"from": [{"type": "local"}]}, 17), ({"from": [{"type": "buildcache"}]}, 0)],
+    [({"from": [{"type": "local"}]}, 19), ({"from": [{"type": "buildcache"}]}, 0)],
 )
 @pytest.mark.not_on_windows("Expected length is different on Windows")
 def test_selecting_reused_sources(
@@ -3157,6 +3041,9 @@ def test_selecting_reused_sources(
     selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
     specs = selector.reusable_specs(["mpileaks"])
     assert len(specs) == expected_length
+
+    # Compiler wrapper is not reused, as it might have changed from previous installations
+    assert not [x for x in specs if x.name == "compiler-wrapper"]
 
 
 @pytest.mark.parametrize(
@@ -3233,6 +3120,930 @@ def test_spec_unification(unify, mutable_config, mock_packages):
     b_concrete_unrestricted = [s for s in unrestricted if s.name == "pkg-b"][0]
     assert (a_concrete_unrestricted["pkg-b"] == b_concrete_unrestricted) == (unify is not False)
 
-    maybe_fails = pytest.raises if unify is True else llnl.util.lang.nullcontext
+    maybe_fails = pytest.raises if unify is True else spack.llnl.util.lang.nullcontext
     with maybe_fails(spack.solver.asp.UnsatisfiableSpecError):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "spec_str, error_type",
+    [
+        (f"git-ref-package@main commit={'a' * 40}", None),
+        (f"git-ref-package@main commit={'a' * 39}", AssertionError),
+        (f"git-ref-package@2.1.6 commit={'a' * 40}", spack.error.UnsatisfiableSpecError),
+        (f"git-ref-package@git.2.1.6=2.1.6 commit={'a' * 40}", None),
+        (f"git-ref-package@git.{'a' * 40}=2.1.6 commit={'a' * 40}", None),
+    ],
+)
+def test_spec_containing_commit_variant(spec_str, error_type):
+    spec = spack.spec.Spec(spec_str)
+    if error_type is None:
+        spack.concretize.concretize_one(spec)
+    else:
+        with pytest.raises(error_type):
+            spack.concretize.concretize_one(spec)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        f"git-test-commit@git.main commit={'a' * 40}",
+        f"git-test-commit@git.v1.0 commit={'a' * 40}",
+        "git-test-commit@{sha} commit={sha}",
+        "git-test-commit@{sha} commit=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    ],
+)
+def test_spec_with_commit_interacts_with_lookup(mock_git_version_info, monkeypatch, spec_str):
+    # This test will be short lived. Technically we could do further checks with a Lookup
+    # but skipping impl since we are going to deprecate
+    repo_path, filename, commits = mock_git_version_info
+    file_url = pathlib.Path(repo_path).as_uri()
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
+    spec = spack.spec.Spec(spec_str.format(sha=commits[-1]))
+    spack.concretize.concretize_one(spec)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize("version_str", [f"git.{'a' * 40}=main", "git.2.1.5=main"])
+def test_relationship_git_versions_and_commit_variant(version_str):
+    """
+    Confirm that GitVersions auto assign and populates the commit variant correctly
+    """
+    # This should be a short lived test and can be deleted when we remove GitVersions
+    spec = spack.spec.Spec(f"git-ref-package@{version_str}")
+    spec = spack.concretize.concretize_one(spec)
+    if spec.version.commit_sha:
+        assert spec.version.commit_sha == spec.variants["commit"].value
+    else:
+        assert "commit" not in spec.variants
+
+
+@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+def test_abstract_commit_spec_reuse():
+    commit = "abcd" * 10
+    spec_str_1 = f"git-ref-package@develop commit={commit}"
+    spec_str_2 = f"git-ref-package commit={commit}"
+    spec1 = spack.concretize.concretize_one(spec_str_1)
+    PackageInstaller([spec1.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        spec2 = spack.concretize.concretize_one(spec_str_2)
+        assert spec2.dag_hash() == spec1.dag_hash()
+
+
+@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "installed_commit, incoming_commit, reusable",
+    [("a" * 40, "b" * 40, False), (None, "b" * 40, False), ("a" * 40, None, True)],
+)
+def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusable):
+    # install a non-default variant to test if reuse picks it
+    if installed_commit:
+        spec_str_1 = f"git-ref-package@develop commit={installed_commit} ~opt"
+    else:
+        spec_str_1 = "git-ref-package@develop ~opt"
+
+    if incoming_commit:
+        spec_str_2 = f"git-ref-package@develop commit={incoming_commit}"
+    else:
+        spec_str_2 = "git-ref-package@develop"
+
+    spec1 = spack.concretize.concretize_one(spack.spec.Spec(spec_str_1))
+    PackageInstaller([spec1.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        spec2 = spack.spec.Spec(spec_str_2)
+        spec2 = spack.concretize.concretize_one(spec2)
+        assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
+
+
+def test_concretization_cache_roundtrip(
+    mock_packages, use_concretization_cache, monkeypatch, mutable_config
+):
+    """Tests whether we can write the results of a clingo solve to the cache
+    and load the same spec request from the cache to produce identical specs"""
+    # Force determinism:
+    # Solver setup is normally non-deterministic due to non-determinism in
+    # asp solver setup logic generation. The only other inputs to the cache keys are
+    # the .lp files, which are invariant over the course of this test.
+    # This method forces the same setup to be produced for the same specs
+    # which gives us a guarantee of cache hits, as it removes the only
+    # element of non deterministic solver setup for the same spec
+    # Basically just a quick and dirty memoization
+    solver_setup = spack.solver.asp.SpackSolverSetup.setup
+
+    def _setup(self, specs, *, reuse=None, allow_deprecated=False):
+        if not getattr(_setup, "cache_setup", None):
+            cache_setup = solver_setup(self, specs, reuse=reuse, allow_deprecated=allow_deprecated)
+            setattr(_setup, "cache_setup", cache_setup)
+        return getattr(_setup, "cache_setup")
+
+    # monkeypatch our forced determinism setup method into solver setup
+    monkeypatch.setattr(spack.solver.asp.SpackSolverSetup, "setup", _setup)
+
+    assert spack.config.get("config:concretization_cache:enable")
+
+    # run one standard concretization to populate the cache and the setup method
+    # memoization
+    h = spack.concretize.concretize_one("hdf5")
+
+    # due to our forced determinism above, we should not be observing
+    # cache misses, assert that we're not storing any new cache entries
+    def _ensure_no_store(self, problem: str, result, statistics, test=False):
+        # always throw, we never want to reach this code path
+        assert False, "Concretization cache hit expected"
+
+    # Assert that we're actually hitting the cache
+    cache_fetch = spack.solver.asp.ConcretizationCache.fetch
+
+    def _ensure_cache_hits(self, problem: str):
+        result, statistics = cache_fetch(self, problem)
+        assert result, "Expected successful concretization cache hit"
+        assert statistics, "Expected statistics to be non null on cache hit"
+        return result, statistics
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _ensure_no_store)
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "fetch", _ensure_cache_hits)
+    # ensure subsequent concretizations of the same spec produce the same spec
+    # object
+    for _ in range(5):
+        assert h == spack.concretize.concretize_one("hdf5")
+
+
+@pytest.mark.regression("42679")
+@pytest.mark.parametrize("compiler_str", ["gcc@=9.4.0", "gcc@=9.4.0-foo"])
+def test_selecting_compiler_with_suffix(mutable_config, mock_packages, compiler_str):
+    """Tests that we can select compilers whose versions differ only for a suffix."""
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@9.4.0-foo languages='c,c++'"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    s = spack.concretize.concretize_one(f"libelf %{compiler_str}")
+    assert s["c"].satisfies(compiler_str)
+
+
+def test_duplicate_compiler_in_externals(mutable_config, mock_packages):
+    """Tests that having duplicate compilers in packages.yaml do not raise and error."""
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@9.4.0 languages='c,c++'"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+    - spec: "gcc@9.4.0 languages='c,c++'"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    s = spack.concretize.concretize_one("libelf %gcc@9.4")
+    assert s["c"].satisfies("gcc@9.4.0")
+
+
+def test_compiler_can_depend_on_themselves_to_build(config, mock_packages):
+    """Tests that a compiler can depend on "itself" to bootstrap."""
+    s = spack.concretize.concretize_one("gcc@14 %gcc@9.4.0")
+    assert s.satisfies("gcc@14")
+    assert s.satisfies("^gcc-runtime@9.4.0")
+
+    gcc_used_to_build = s.dependencies(name="gcc", virtuals=("c",))
+    assert len(gcc_used_to_build) == 1 and gcc_used_to_build[0].satisfies("gcc@9.4.0")
+
+
+def test_compiler_attribute_is_tolerated_in_externals(
+    mutable_config, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that we don't error out if an external specifies a compiler, even though externals
+    don't have dependencies.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  cmake:
+    externals:
+    - spec: "cmake@3.27.4 %gcc@14.1.0"
+      prefix: {tmp_path}
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    s = spack.concretize.concretize_one("cmake")
+    assert s.external and s.external_path == str(tmp_path)
+
+
+def test_compiler_can_be_built_with_other_compilers(config, mock_packages):
+    """Tests that a compiler can be built also with another compiler."""
+    s = spack.concretize.concretize_one("llvm@18 +clang %gcc")
+    assert s.satisfies("llvm@18")
+
+    c_compiler = s.dependencies(virtuals=("c",))
+    assert len(c_compiler) == 1 and c_compiler[0].satisfies("gcc@10")
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected",
+    [
+        # Only one compiler is in the DAG, so pick the external associated with it
+        ("dyninst %clang", "clang"),
+        ("dyninst %gcc", "gcc"),
+        # Both compilers are in the DAG, so pick the best external according to other criteria
+        ("dyninst %clang ^libdwarf%gcc", "clang"),
+        ("dyninst %gcc ^libdwarf%clang", "clang"),
+    ],
+)
+def test_compiler_match_for_externals_is_taken_into_account(
+    spec_str, expected, mutable_config, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that compiler annotation for externals are somehow taken into account for a match"""
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  libelf:
+    externals:
+    - spec: "libelf@0.8.12 %gcc"
+      prefix: {tmp_path / 'gcc'}
+    - spec: "libelf@0.8.13 %clang"
+      prefix: {tmp_path / 'clang'}
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    s = spack.concretize.concretize_one(spec_str)
+    libelf = s["libelf"]
+    assert libelf.external and libelf.external_path == str(tmp_path / expected)
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected",
+    [
+        # Only one compiler is in the DAG, so pick the external associated with it
+        ("dyninst %gcc@10", "libelf-gcc10"),
+        ("dyninst %gcc@9", "libelf-gcc9"),
+        # Both compilers are in the DAG, so pick the best external according to other criteria
+        ("dyninst %gcc@10 ^libdwarf%gcc@9", "libelf-gcc9"),
+    ],
+)
+def test_compiler_match_for_externals_with_versions(
+    spec_str, expected, mutable_config, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that version constraints are taken into account for compiler annotations
+    on externals
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  libelf:
+    buildable: false
+    externals:
+    - spec: "libelf@0.8.12 %gcc@10"
+      prefix: {tmp_path / 'libelf-gcc10'}
+    - spec: "libelf@0.8.13 %gcc@9"
+      prefix: {tmp_path / 'libelf-gcc9'}
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    s = spack.concretize.concretize_one(spec_str)
+    libelf = s["libelf"]
+    assert libelf.external and libelf.external_path == str(tmp_path / expected)
+
+
+def test_specifying_compilers_with_virtuals_syntax(default_mock_concretization):
+    """Tests that we can pin compilers to nodes using the %[virtuals=...] syntax"""
+    # clang will be used for both C and C++, since they are provided together
+    mpich = default_mock_concretization("mpich %[virtuals=fortran] gcc %clang")
+
+    assert mpich["fortran"].satisfies("gcc")
+    assert mpich["c"].satisfies("llvm")
+    assert mpich["cxx"].satisfies("llvm")
+
+    # gcc is the default compiler
+    mpileaks = default_mock_concretization(
+        "mpileaks ^libdwarf %gcc ^mpich %[virtuals=fortran] gcc %clang"
+    )
+
+    assert mpileaks["c"].satisfies("gcc")
+
+    libdwarf = mpileaks["libdwarf"]
+    assert libdwarf["c"].satisfies("gcc")
+    assert libdwarf["c"].satisfies("gcc")
+
+    mpich = mpileaks["mpi"]
+    assert mpich["fortran"].satisfies("gcc")
+    assert mpich["c"].satisfies("llvm")
+    assert mpich["cxx"].satisfies("llvm")
+
+
+@pytest.mark.regression("49847")
+@pytest.mark.xfail(sys.platform == "win32", reason="issues with install mockery")
+def test_reuse_when_input_specifies_build_dep(install_mockery, do_not_check_runtimes_on_reuse):
+    """Test that we can reuse a spec when specifying build dependencies in the input"""
+    pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9 %gcc@9"))
+    PackageInstaller([pkgb_old.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        result = spack.concretize.concretize_one("pkg-b %gcc")
+        assert pkgb_old.dag_hash() == result.dag_hash()
+
+        result = spack.concretize.concretize_one("pkg-a ^pkg-b %gcc@9")
+        assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
+        assert result.satisfies("%gcc@9")
+
+        result = spack.concretize.concretize_one("pkg-a %gcc@10 ^pkg-b %gcc@9")
+        assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
+
+
+@pytest.mark.regression("49847")
+def test_reuse_when_requiring_build_dep(
+    install_mockery, do_not_check_runtimes_on_reuse, mutable_config
+):
+    """Test that we can reuse a spec when specifying build dependencies in requirements"""
+    mutable_config.set("packages:all:require", "%gcc")
+    pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9"))
+    PackageInstaller([pkgb_old.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        result = spack.concretize.concretize_one("pkg-b")
+        assert pkgb_old.dag_hash() == result.dag_hash(), result.tree()
+
+
+@pytest.mark.regression("50167")
+def test_input_analysis_and_conditional_requirements(default_mock_concretization):
+    """Tests that input analysis doesn't account for conditional requirement
+    to discard possible dependencies.
+
+    If the requirement is conditional, and impossible to achieve on the current
+    platform, the valid search space is still the complement of the condition that
+    activates the requirement.
+    """
+    libceed = default_mock_concretization("libceed")
+    assert libceed["libxsmm"].satisfies("@main")
+    assert libceed["libxsmm"].satisfies("platform=test")
+
+
+@pytest.mark.parametrize(
+    "compiler_str,expected,not_expected",
+    [
+        # Compiler queries are as specific as the constraint on the external
+        ("gcc@10", ["%gcc", "%gcc@10"], ["%clang", "%gcc@9"]),
+        ("gcc", ["%gcc"], ["%clang", "%gcc@9", "%gcc@10"]),
+    ],
+)
+@pytest.mark.regression("49841")
+def test_installing_external_with_compilers_directly(
+    compiler_str, expected, not_expected, mutable_config, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that version constraints are taken into account for compiler annotations
+    on externals
+    """
+    spec_str = f"libelf@0.8.12 %{compiler_str}"
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  libelf:
+    buildable: false
+    externals:
+    - spec: {spec_str}
+      prefix: {tmp_path / 'libelf'}
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    s = spack.concretize.concretize_one(spec_str)
+
+    assert s.external
+    assert all(s.satisfies(c) for c in expected)
+    assert all(not s.satisfies(c) for c in not_expected)
+
+
+@pytest.mark.regression("49841")
+def test_using_externals_with_compilers(mutable_config, mock_packages, tmp_path: pathlib.Path):
+    """Tests that version constraints are taken into account for compiler annotations
+    on externals, even imposed as transitive deps.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  libelf:
+    buildable: false
+    externals:
+    - spec: libelf@0.8.12 %gcc@10
+      prefix: {tmp_path / 'libelf'}
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    with pytest.raises(spack.error.SpackError):
+        spack.concretize.concretize_one("dyninst%gcc@10.2.1 ^libelf@0.8.12 %gcc@:9")
+
+    s = spack.concretize.concretize_one("dyninst%gcc@10.2.1 ^libelf@0.8.12 %gcc@10:")
+
+    libelf = s["libelf"]
+    assert libelf.external and libelf.satisfies("%gcc")
+
+
+@pytest.mark.regression("50161")
+def test_installed_compiler_and_better_external(
+    install_mockery, do_not_check_runtimes_on_reuse, mutable_config
+):
+    """Tests that we always prefer a higher-priority external compiler, when we have a
+    lower-priority compiler installed, and we try to concretize a spec without specifying
+    the compiler dependency.
+    """
+    pkg_b = spack.concretize.concretize_one(spack.spec.Spec("pkg-b %clang"))
+    PackageInstaller([pkg_b.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", False):
+        pkg_a = spack.concretize.concretize_one("pkg-a")
+        assert pkg_a["c"].satisfies("gcc@10"), pkg_a.tree()
+        assert pkg_a["pkg-b"]["c"].satisfies("gcc@10")
+
+    with spack.config.override("concretizer:reuse", False):
+        mpileaks = spack.concretize.concretize_one("mpileaks")
+        assert mpileaks.satisfies("%gcc@10")
+
+
+@pytest.mark.regression("50006")
+def test_concrete_multi_valued_variants_in_externals(
+    mutable_config, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that concrete multivalued variants in externals cannot be extended with additional
+    values when concretizing.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  gcc:
+    buildable: false
+    externals:
+    - spec: gcc@12.1.0 languages:='c,c++'
+      prefix: {tmp_path / 'gcc-12'}
+      extra_attributes:
+          compilers:
+            c: {tmp_path / 'gcc-12'}/bin/gcc
+            cxx: {tmp_path / 'gcc-12'}/bin/g++
+
+    - spec: gcc@14.1.0 languages:=fortran
+      prefix: {tmp_path / 'gcc-14'}
+      extra_attributes:
+        compilers:
+            fortran: {tmp_path / 'gcc-14'}/bin/gfortran
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        spack.concretize.concretize_one("pkg-b %gcc@14")
+
+    s = spack.concretize.concretize_one("pkg-b %gcc")
+    assert s["c"].satisfies("gcc@12.1.0"), s.tree()
+    assert s["c"].external
+    assert s["c"].satisfies("languages=c,c++") and not s["c"].satisfies("languages=fortran")
+
+
+def test_concrete_multi_valued_in_input_specs(default_mock_concretization):
+    """Tests that we can use := to specify exactly multivalued variants in input specs."""
+    s = default_mock_concretization("gcc languages:=fortran")
+    assert not s.external and s["c"].external
+    assert s.satisfies("languages:=fortran")
+    assert not s.satisfies("languages=c") and not s.satisfies("languages=c++")
+
+
+def test_concrete_multi_valued_variants_in_requirements(mutable_config, mock_packages):
+    """Tests that concrete multivalued variants can be imposed by requirements."""
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  pkg-a:
+    require:
+    - libs:=static
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        spack.concretize.concretize_one("pkg-a libs=shared")
+        spack.concretize.concretize_one("pkg-a libs=shared,static")
+
+    s = spack.concretize.concretize_one("pkg-a")
+    assert s.satisfies("libs:=static")
+    assert not s.satisfies("libs=shared")
+
+
+def test_concrete_multi_valued_variants_in_depends_on(default_mock_concretization):
+    """Tests the use of := in depends_on directives"""
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=c")
+        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=a,c")
+        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=b,c")
+
+    s = default_mock_concretization("gmt-concrete-mv-dependency")
+    assert s.satisfies("^mvdefaults foo:=a,b"), s.tree()
+    assert not s.satisfies("^mvdefaults foo=c")
+
+
+def test_concrete_multi_valued_variants_when_args(default_mock_concretization):
+    """Tests the use of := in conflicts and when= arguments"""
+    # Check conflicts("foo:=a,b", when="@0.9")
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        default_mock_concretization("mvdefaults@0.9 foo:=a,b")
+
+    for c in ("foo:=a", "foo:=a,b,c", "foo:=a,c", "foo:=b,c"):
+        s = default_mock_concretization(f"mvdefaults@0.9 {c}")
+        assert s.satisfies(c)
+
+    # Check depends_on("pkg-b", when="foo:=b,c")
+    s = default_mock_concretization("mvdefaults foo:=b,c")
+    assert s.satisfies("^pkg-b")
+
+    for c in ("foo:=a", "foo:=a,b,c", "foo:=a,b", "foo:=a,c"):
+        s = default_mock_concretization(f"mvdefaults {c}")
+        assert not s.satisfies("^pkg-b")
+
+
+@pytest.mark.usefixtures("mock_packages")
+@pytest.mark.parametrize(
+    "constraint_in_yaml,unsat_request,sat_request",
+    [
+        # Arch parts
+        pytest.param(
+            "target=x86_64",
+            "target=core2",
+            "target=x86_64",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        pytest.param(
+            "target=core2",
+            "target=x86_64",
+            "target=core2",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        ("os=debian6", "os=redhat6", "os=debian6"),
+        ("platform=test", "platform=linux", "platform=test"),
+        # Variants
+        ("~lld", "+lld", "~lld"),
+        ("+lld", "~lld", "+lld"),
+    ],
+)
+def test_spec_parts_on_fresh_compilers(
+    constraint_in_yaml, unsat_request, sat_request, mutable_config, tmp_path: pathlib.Path
+):
+    """Tests that spec parts like targets and variants in `%<package> target=<target> <variants>`
+    are associated with `package` for `%` just as they would be for `^`, when we concretize
+    without reusing.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+    packages:
+      llvm::
+        buildable: false
+        externals:
+        - spec: "llvm+clang@20 {constraint_in_yaml}"
+          prefix: {tmp_path / 'llvm-20'}
+    """
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    # Check the abstract spec is formed correctly
+    abstract_spec = Spec(f"pkg-a %llvm@20 +clang {unsat_request}")
+    assert abstract_spec["llvm"].satisfies(f"@20 +clang {unsat_request}")
+
+    # Check that we can't concretize the spec, since llvm is not buildable
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        spack.concretize.concretize_one(abstract_spec)
+
+    # Check we can instead concretize if we use the correct constraint
+    s = spack.concretize.concretize_one(f"pkg-a %llvm@20 +clang {sat_request}")
+    assert s["c"].external and s["c"].satisfies(f"@20 +clang {sat_request}")
+
+
+@pytest.mark.usefixtures("mock_packages", "mutable_database")
+@pytest.mark.parametrize(
+    "constraint_in_yaml,unsat_request,sat_request",
+    [
+        # Arch parts
+        pytest.param(
+            "target=x86_64",
+            "target=core2",
+            "target=x86_64",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        pytest.param(
+            "target=core2",
+            "target=x86_64",
+            "target=core2",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        ("os=debian6", "os=redhat6", "os=debian6"),
+        ("platform=test", "platform=linux", "platform=test"),
+        # Variants
+        ("~lld", "+lld", "~lld"),
+        ("+lld", "~lld", "+lld"),
+    ],
+)
+def test_spec_parts_on_reused_compilers(
+    constraint_in_yaml, unsat_request, sat_request, mutable_config, tmp_path: pathlib.Path
+):
+    """Tests that requests of the form <package>%<compiler> <requests> are considered for reused
+    specs, even though build dependency are not part of the ASP problem.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+    packages:
+      c:
+        require: llvm
+      cxx:
+        require: llvm
+      llvm::
+        buildable: false
+        externals:
+        - spec: "llvm+clang@20 {constraint_in_yaml}"
+          prefix: {tmp_path / 'llvm-20'}
+      mpileaks:
+        buildable: true
+    """
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    # Install the spec
+    installed_spec = spack.concretize.concretize_one(f"mpileaks %llvm@20 {sat_request}")
+    PackageInstaller([installed_spec.package], fake=True, explicit=True).install()
+
+    # Make mpileaks not buildable
+    mutable_config.set("packages:mpileaks:buildable", False)
+
+    # Check we can't concretize with the unsat request...
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        spack.concretize.concretize_one(f"mpileaks %llvm@20 {unsat_request}")
+
+    # ...but we can with the original constraint
+    with spack.config.override("concretizer:reuse", True):
+        s = spack.concretize.concretize_one(f"mpileaks %llvm@20 {sat_request}")
+
+    assert s.dag_hash() == installed_spec.dag_hash()
+
+
+def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
+    """Tests that we can reuse an installed compiler specifying its hash"""
+    installed_spec = spack.concretize.concretize_one("gcc@14.0")
+    PackageInstaller([installed_spec.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        s = spack.concretize.concretize_one(f"mpileaks %gcc/{installed_spec.dag_hash()}")
+
+    assert s["c"].dag_hash() == installed_spec.dag_hash()
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        # Simple build requirement on gcc, as a provider for c
+        (
+            "mpileaks %gcc",
+            ["%[deptypes=build] gcc"],
+            ["%[deptypes=link] gcc", "%[deptypes=run] gcc"],
+        ),
+        # Require mpich as a direct dependency of mpileaks
+        (
+            "mpileaks %[deptypes=link] mpich",
+            ["%[deptypes=build,link] mpich", "^callpath%[deptypes=build,link] mpich"],
+            ["%[deptypes=run] mpich"],
+        ),
+        (
+            "mpileaks %[deptypes=link] mpich+debug",  # non-default variant
+            ["%[deptypes=build,link] mpich+debug"],
+            ["% mpich~debug"],
+        ),
+        # Require mpich as a direct dependency of two nodes, with compatible constraints
+        (
+            "mpileaks %mpich+debug ^callpath %mpich@3.0.3",  # non-default variant
+            [
+                "%[deptypes=build,link] mpich@3.0.3+debug",
+                "^callpath %[deptypes=build,link] mpich@3.0.3+debug",
+            ],
+            ["%mpich~debug"],
+        ),
+        # Package that has a conditional link dependency on a compiler
+        ("emacs +native", ["%[virtuals=c deptypes=build,link] gcc"], []),
+        ("emacs +native %gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
+        ("emacs +native %[virtuals=c] gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
+        # Package that depends on llvm as a library and also needs C and C++ compilers
+        (
+            "llvm-client",
+            ["%[virtuals=c,cxx deptypes=build] gcc", "%[deptypes=build,link] llvm"],
+            ["%c=llvm"],
+        ),
+        (
+            "llvm-client %c,cxx=gcc",
+            ["%[virtuals=c,cxx deptypes=build] gcc", "%[deptypes=build,link] llvm"],
+            ["%c=llvm"],
+        ),
+        ("llvm-client %c,cxx=llvm", ["%[virtuals=c,cxx deptypes=build,link] llvm"], ["%gcc"]),
+    ],
+)
+def test_specifying_direct_dependencies(
+    spec_str, expected, not_expected, default_mock_concretization
+):
+    """Tests solving % in different scenarios, either for runtime or buildtime dependencies."""
+    concrete_spec = default_mock_concretization(spec_str)
+
+    for c in expected:
+        assert concrete_spec.satisfies(c)
+
+    for c in not_expected:
+        assert not concrete_spec.satisfies(c)
+
+
+@pytest.mark.parametrize(
+    "spec_str,conditional_spec,expected",
+    [
+        # Abstract spec is False, cause the set of possible solutions in the rhs is smaller
+        ("mpich", "%[when=+debug] llvm", (False, True)),
+        # Abstract spec is True, since we know the condition never applies
+        ("mpich~debug", "%[when=+debug] llvm", (True, True)),
+        # In this case we know the condition applies
+        ("mpich+debug", "%[when=+debug] llvm", (False, False)),
+        ("mpich+debug %llvm+clang", "%[when=+debug] llvm", (True, True)),
+        ("mpich+debug", "%[when=+debug] gcc", (False, True)),
+        # Conditional specs on the lhs
+        ("mpich %[when=+debug] gcc", "mpich %gcc", (False, True)),
+        ("mpich %[when=+debug] gcc", "mpich %llvm", (False, False)),
+        ("mpich %[when=+debug] gcc", "mpich %[when=+debug] gcc", (True, True)),
+        ("mpileaks ^[when=+opt] callpath@0.9", "mpileaks ^callpath@1.0", (False, True)),
+        ("mpileaks ^[when=+opt] callpath@1.0", "mpileaks ^callpath@1.0", (False, True)),
+        ("mpileaks ^[when=+opt] callpath@1.0", "mpileaks ^[when=+opt] callpath@1.0", (True, True)),
+        # Conditional specs on both sides
+        (
+            "mpileaks ^[when=+opt] callpath@1.0",
+            "mpileaks ^[when=+opt+debug] callpath@1.0",
+            (True, True),
+        ),
+        (
+            "mpileaks ^[when=+opt+debug] callpath@1.0",
+            "mpileaks ^[when=+opt] callpath@1.0",
+            (False, True),
+        ),
+        (
+            "mpileaks ^[when=+opt] callpath@1.0",
+            "mpileaks ^[when=~debug] callpath@1.0",
+            (False, True),
+        ),
+        # Different conditional specs associated with different nodes in the DAG, where one does
+        # not apply since the condition is not met
+        (
+            "mpileaks %[when='%mpi' virtuals=mpi] zmpi ^libelf %[when='%mpi' virtuals=mpi] mpich",
+            "mpileaks %[virtuals=mpi] zmpi",
+            (False, True),
+        ),
+        (
+            "mpileaks %[when='%mpi' virtuals=mpi] mpich ^libelf %[when='%mpi' virtuals=mpi] zmpi",
+            "mpileaks %[virtuals=mpi] mpich",
+            (False, True),
+        ),
+    ],
+)
+def test_satisfies_conditional_spec(
+    spec_str, conditional_spec, expected, default_mock_concretization
+):
+    """Tests satisfies semantic when testing an abstract spec and its concretized counterpart
+    with a conditional spec.
+    """
+    abstract_spec = Spec(spec_str)
+    concrete_spec = default_mock_concretization(spec_str)
+    expected_abstract, expected_concrete = expected
+
+    assert abstract_spec.satisfies(conditional_spec) is expected_abstract
+    assert concrete_spec.satisfies(conditional_spec) is expected_concrete
+    assert concrete_spec.satisfies(abstract_spec)
+
+
+@pytest.mark.not_on_windows("Tests use linux paths")
+@pytest.mark.regression("51001")
+def test_selecting_externals_with_compilers_as_root(mutable_config, mock_packages):
+    """Tests that we can select externals that have a compiler in their spec, even when
+    they are root.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@9.4.0 languages='c,c++'"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  llvm:
+    buildable: false
+    externals:
+    - spec: "llvm@20 +clang"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  mpich:
+    buildable: false
+    externals:
+    - spec: "mpich@3.4.3 %gcc"
+      prefix: /path/mpich/gcc
+    - spec: "mpich@3.4.3 %clang"
+      prefix: /path/mpich/clang
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    # Select mpich as the root spec
+    s = spack.concretize.concretize_one("mpich %clang")
+    assert s.external
+    assert s.prefix == "/path/mpich/clang"
+
+    s = spack.concretize.concretize_one("mpich %gcc")
+    assert s.external
+    assert s.prefix == "/path/mpich/gcc"
+
+    # Select mpich as a dependency
+    s = spack.concretize.concretize_one("mpileaks ^mpi=mpich %clang")
+    assert s["mpi"].external
+    assert s["mpi"].prefix == "/path/mpich/clang"
+
+    s = spack.concretize.concretize_one("mpileaks ^mpi=mpich %gcc")
+    assert s["mpi"].external
+    assert s["mpi"].prefix == "/path/mpich/gcc"
+
+
+@pytest.mark.not_on_windows("Tests use linux paths")
+@pytest.mark.regression("51001")
+@pytest.mark.parametrize(
+    "external_compiler,spec_str,expected_raising",
+    [
+        # Overspecify the compiler in the input spec. This should raise, because we
+        # don't know if we can satisfy the constraint
+        ("gcc", "mpich %gcc@9", True),
+        pytest.param("gcc@9", "mpich %gcc@9.4", True, marks=pytest.mark.xfail),
+        # This is ok
+        ("gcc@9.4.0", "mpich %gcc@9", False),
+    ],
+)
+def test_selecting_externals_with_compilers_and_versions(
+    external_compiler, spec_str, expected_raising, mutable_config, mock_packages
+):
+    """Tests different scenarios of having a compiler specified with a version constraint, either
+    in the input spec or in the external spec.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@9.4.0 languages='c,c++'"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  mpich:
+    buildable: false
+    externals:
+    - spec: "mpich@3.4.3 %{external_compiler}"
+      prefix: /path/mpich/gcc
+    - spec: "mpich@3.4.3 %clang"
+      prefix: /path/mpich/clang
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    if expected_raising:
+        with pytest.raises(
+            spack.solver.asp.UnsatisfiableSpecError, match="Omit version requirement"
+        ):
+            _ = spack.concretize.concretize_one(spec_str)
+    else:
+        s = spack.concretize.concretize_one(spec_str)
+        assert s.external
+        assert s.prefix == "/path/mpich/gcc"

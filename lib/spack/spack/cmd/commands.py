@@ -11,15 +11,14 @@ import sys
 from argparse import ArgumentParser, Namespace
 from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
-import llnl.util.tty as tty
-from llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
-from llnl.util.tty.colify import colify
-
 import spack.cmd
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.main
 import spack.paths
 import spack.platforms
+from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
+from spack.llnl.util.tty.colify import colify
 from spack.main import section_descriptions
 
 description = "list available spack commands"

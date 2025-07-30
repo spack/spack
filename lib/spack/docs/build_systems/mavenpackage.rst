@@ -2,15 +2,19 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the Maven build system in Spack for building and managing Java-based projects.
+
 .. _mavenpackage:
 
------
+------
 Maven
------
+------
 
 Apache Maven is a general-purpose build system that does not rely
 on Makefiles to build software. It is designed for building and
-managing and Java-based project.
+managing Java-based projects.
 
 ^^^^^^
 Phases

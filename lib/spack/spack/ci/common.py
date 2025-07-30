@@ -1,84 +1,110 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import codecs
 import copy
+import errno
+import glob
+import gzip
 import json
 import os
 import re
-import ssl
+import shutil
 import sys
 import time
 from collections import deque
 from enum import Enum
 from typing import Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
-from urllib.request import HTTPHandler, HTTPSHandler, Request, build_opener
+from urllib.request import Request
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.lang import Singleton, memoized
-
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
+import spack.util.compression as compression
 import spack.util.spack_yaml as syaml
-import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
+from spack.llnl.util.lang import memoized
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
-
-
-def _urlopen():
-    error_handler = web_util.SpackHTTPDefaultErrorHandler()
-
-    # One opener with HTTPS ssl enabled
-    with_ssl = build_opener(
-        HTTPHandler(), HTTPSHandler(context=web_util.ssl_create_default_context()), error_handler
-    )
-
-    # One opener with HTTPS ssl disabled
-    without_ssl = build_opener(
-        HTTPHandler(), HTTPSHandler(context=ssl._create_unverified_context()), error_handler
-    )
-
-    # And dynamically dispatch based on the config:verify_ssl.
-    def dispatch_open(fullurl, data=None, timeout=None, verify_ssl=True):
-        opener = with_ssl if verify_ssl else without_ssl
-        timeout = timeout or cfg.get("config:connect_timeout", 1)
-        return opener.open(fullurl, data, timeout)
-
-    return dispatch_open
-
+from spack.url_buildcache import get_url_buildcache_class
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
-_dyn_mapping_urlopener = Singleton(_urlopen)
+
+# this exists purely for testing purposes
+_urlopen = web_util.urlopen
 
 
-def copy_files_to_artifacts(src, artifacts_dir):
+def copy_gzipped(glob_or_path: str, dest: str) -> None:
+    """Copy all of the files in the source glob/path to the destination.
+
+    Args:
+        glob_or_path: path to file to test
+        dest: destination path to copy to
+    """
+
+    files = glob.glob(glob_or_path)
+    if not files:
+        raise OSError("No such file or directory: '{0}'".format(glob_or_path), errno.ENOENT)
+    if len(files) > 1 and not os.path.isdir(dest):
+        raise ValueError(
+            "'{0}' matches multiple files but '{1}' is not a directory".format(glob_or_path, dest)
+        )
+
+    def is_gzipped(path):
+        with open(path, "rb") as fd:
+            return compression.GZipFileType().matches_magic(fd)
+
+    for src in files:
+        if is_gzipped(src):
+            fs.copy(src, dest)
+        else:
+            # Compress and copy in one step
+            src_name = os.path.basename(src)
+            if os.path.isdir(dest):
+                zipped = os.path.join(dest, f"{src_name}.gz")
+            elif not dest.endswith(".gz"):
+                zipped = f"{dest}.gz"
+            else:
+                zipped = dest
+
+            with open(src, "rb") as fin, gzip.open(zipped, "wb") as fout:
+                shutil.copyfileobj(fin, fout)
+
+
+def copy_files_to_artifacts(
+    src: str, artifacts_dir: str, *, compress_artifacts: bool = False
+) -> None:
     """
     Copy file(s) to the given artifacts directory
 
-    Parameters:
+    Args:
         src (str): the glob-friendly path expression for the file(s) to copy
         artifacts_dir (str): the destination directory
+        compress_artifacts (bool): option to compress copied artifacts using Gzip
     """
     try:
-        fs.copy(src, artifacts_dir)
+
+        if compress_artifacts:
+            copy_gzipped(src, artifacts_dir)
+        else:
+            fs.copy(src, artifacts_dir)
     except Exception as err:
-        msg = (
-            f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
-            f"exception: {str(err)}"
+        tty.warn(
+            (
+                f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
+                f"exception: {str(err)}"
+            )
         )
-        tty.warn(msg)
 
 
 def win_quote(quote_str: str) -> str:
@@ -152,33 +178,13 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
 
     for release_spec in specs:
         release_spec_dag_hash = release_spec.dag_hash()
-        # TODO: This assumes signed version of the spec
-        buildcache_copies[release_spec_dag_hash] = [
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-            },
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-            },
-        ]
+        cache_class = get_url_buildcache_class(
+            layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        )
+        buildcache_copies[release_spec_dag_hash] = {
+            "src": cache_class.get_manifest_url(release_spec, src_prefix),
+            "dest": cache_class.get_manifest_url(release_spec, dest_prefix),
+        }
 
     target_dir = os.path.dirname(output_file)
 
@@ -232,10 +238,8 @@ class CDashHandler:
 
         Returns: (str) given spec's CDash build name."""
         if spec:
-            build_name = (
-                f"{spec.name}@{spec.version}%{spec.compiler} "
-                f"hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
-            )
+            spec_str = spec.format("{name}{@version}{%compiler} hash={hash} arch={architecture}")
+            build_name = f"{spec_str} ({self.build_group})"
             tty.debug(f"Generated CDash build name ({build_name}) from the {spec.name}")
             return build_name
 
@@ -279,65 +283,33 @@ class CDashHandler:
         reports = fs.join_path(source, "*_Test*.xml")
         copy_files_to_artifacts(reports, dest)
 
-    def create_buildgroup(self, opener, headers, url, group_name, group_type):
-        data = {"newbuildgroup": group_name, "project": self.project, "type": group_type}
-
-        enc_data = json.dumps(data).encode("utf-8")
-
-        request = Request(url, data=enc_data, headers=headers)
-
-        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
-        response_code = response.getcode()
-
-        if response_code not in [200, 201]:
-            msg = f"Creating buildgroup failed (response code = {response_code})"
-            tty.warn(msg)
-            return None
-
-        response_text = response.read()
-        response_json = json.loads(response_text)
-        build_group_id = response_json["id"]
-
-        return build_group_id
-
-    def populate_buildgroup(self, job_names):
-        url = f"{self.url}/api/v1/buildgroup.php"
-
+    def create_buildgroup(self):
+        """Create the CDash buildgroup if it does not already exist."""
         headers = {
             "Authorization": f"Bearer {self.auth_token}",
             "Content-Type": "application/json",
         }
-
-        opener = build_opener(HTTPHandler)
-
-        parent_group_id = self.create_buildgroup(opener, headers, url, self.build_group, "Daily")
-        group_id = self.create_buildgroup(
-            opener, headers, url, f"Latest {self.build_group}", "Latest"
-        )
-
-        if not parent_group_id or not group_id:
-            msg = f"Failed to create or retrieve buildgroups for {self.build_group}"
-            tty.warn(msg)
-            return
-
-        data = {
-            "dynamiclist": [
-                {"match": name, "parentgroupid": parent_group_id, "site": self.site}
-                for name in job_names
-            ]
-        }
-
+        data = {"newbuildgroup": self.build_group, "project": self.project, "type": "Daily"}
         enc_data = json.dumps(data).encode("utf-8")
+        request = Request(f"{self.url}/api/v1/buildgroup.php", data=enc_data, headers=headers)
 
-        request = Request(url, data=enc_data, headers=headers)
-        request.get_method = lambda: "PUT"
+        response_text = None
+        group_id = None
 
-        response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
-        response_code = response.getcode()
+        try:
+            response_text = _urlopen(request, timeout=SPACK_CDASH_TIMEOUT).read()
+        except OSError as e:
+            tty.warn(f"Failed to create CDash buildgroup: {e}")
 
-        if response_code != 200:
-            msg = f"Error response code ({response_code}) in populate_buildgroup"
-            tty.warn(msg)
+        if response_text:
+            try:
+                response_json = json.loads(response_text)
+                group_id = response_json["id"]
+            except (json.JSONDecodeError, KeyError) as e:
+                tty.warn(f"Failed to parse CDash response: {e}")
+
+        if not group_id:
+            tty.warn(f"Failed to create or retrieve buildgroup for {self.build_group}")
 
     def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
         """Explicitly report skipping testing of a spec (e.g., it's CI
@@ -387,6 +359,7 @@ class PipelineOptions:
         untouched_pruning_dependent_depth: Optional[int] = None,
         prune_untouched: bool = False,
         prune_up_to_date: bool = True,
+        prune_unaffected: bool = True,
         prune_external: bool = True,
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
@@ -423,6 +396,7 @@ class PipelineOptions:
         self.untouched_pruning_dependent_depth = untouched_pruning_dependent_depth
         self.prune_untouched = prune_untouched
         self.prune_up_to_date = prune_up_to_date
+        self.prune_unaffected = prune_unaffected
         self.prune_external = prune_external
         self.stack_name = stack_name
         self.pipeline_type = pipeline_type
@@ -735,9 +709,6 @@ class SpackCIConfig:
                 for value in header.values():
                     value = os.path.expandvars(value)
 
-                verify_ssl = mapping.get("verify_ssl", spack.config.get("config:verify_ssl", True))
-                timeout = mapping.get("timeout", spack.config.get("config:connect_timeout", 1))
-
                 required = mapping.get("require", [])
                 allowed = mapping.get("allow", [])
                 ignored = mapping.get("ignore", [])
@@ -771,18 +742,14 @@ class SpackCIConfig:
                         endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
                     )
                     try:
-                        response = _dyn_mapping_urlopener(
-                            request, verify_ssl=verify_ssl, timeout=timeout
-                        )
+                        response = _urlopen(request)
+                        config = json.load(response)
                     except Exception as e:
                         # For now just ignore any errors from dynamic mapping and continue
                         # This is still experimental, and failures should not stop CI
                         # from running normally
-                        tty.warn(f"Failed to fetch dynamic mapping for query:\n\t{query}")
-                        tty.warn(f"{e}")
+                        tty.warn(f"Failed to fetch dynamic mapping for query:\n\t{query}: {e}")
                         continue
-
-                    config = json.load(codecs.getreader("utf-8")(response))
 
                     # Strip ignore keys
                     if ignored:

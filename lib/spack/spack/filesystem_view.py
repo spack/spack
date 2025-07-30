@@ -9,29 +9,10 @@ import re
 import shutil
 import stat
 import sys
-from typing import Callable, Dict, Optional
+import tempfile
+from typing import Callable, Dict, List, Optional
 
-from typing_extensions import Literal
-
-from llnl.string import comma_or
-from llnl.util import tty
-from llnl.util.filesystem import (
-    mkdirp,
-    remove_dead_links,
-    remove_empty_directories,
-    visit_directory_tree,
-)
-from llnl.util.lang import index_by, match_predicate
-from llnl.util.link_tree import (
-    ConflictingSpecsError,
-    DestinationMergeVisitor,
-    LinkTree,
-    MergeConflictSummary,
-    SingleMergeConflictError,
-    SourceMergeVisitor,
-)
-from llnl.util.symlink import symlink
-from llnl.util.tty.color import colorize
+from spack.vendor.typing_extensions import Literal
 
 import spack.config
 import spack.directory_layout
@@ -43,6 +24,25 @@ import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
+from spack.llnl.string import comma_or
+from spack.llnl.util import tty
+from spack.llnl.util.filesystem import (
+    mkdirp,
+    remove_dead_links,
+    remove_empty_directories,
+    symlink,
+    visit_directory_tree,
+)
+from spack.llnl.util.lang import index_by, match_predicate
+from spack.llnl.util.link_tree import (
+    ConflictingSpecsError,
+    DestinationMergeVisitor,
+    LinkTree,
+    MergeConflictSummary,
+    SingleMergeConflictError,
+    SourceMergeVisitor,
+)
+from spack.llnl.util.tty.color import colorize
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -77,7 +77,7 @@ def view_copy(
 
     # Order of this dict is somewhat irrelevant
     prefix_to_projection = {
-        s.prefix: view.get_projection_for_spec(s)
+        str(s.prefix): view.get_projection_for_spec(s)
         for s in spec.traverse(root=True, order="breadth")
         if not s.external
     }
@@ -146,9 +146,9 @@ class FilesystemView:
     Governs a filesystem view that is located at certain root-directory.
 
     Packages are linked from their install directories into a common file
-    hierachy.
+    hierarchy.
 
-    In distributed filesystems, loading each installed package seperately
+    In distributed filesystems, loading each installed package separately
     can lead to slow-downs due to too many directories being traversed.
     This can be circumvented by loading all needed modules into a common
     directory structure.
@@ -168,7 +168,7 @@ class FilesystemView:
         Initialize a filesystem view under the given `root` directory with
         corresponding directory `layout`.
 
-        Files are linked by method `link` (llnl.util.symlink by default).
+        Files are linked by method `link` (spack.llnl.util.filesystem.symlink by default).
         """
         self._root = root
         self.layout = layout
@@ -184,7 +184,7 @@ class FilesystemView:
     def link(self, src: str, dst: str, spec: Optional[spack.spec.Spec] = None) -> None:
         self._link(src, dst, self, spec)
 
-    def add_specs(self, *specs, **kwargs):
+    def add_specs(self, *specs: spack.spec.Spec, **kwargs) -> None:
         """
         Add given specs to view.
 
@@ -199,19 +199,19 @@ class FilesystemView:
         """
         raise NotImplementedError
 
-    def add_standalone(self, spec):
+    def add_standalone(self, spec: spack.spec.Spec) -> bool:
         """
         Add (link) a standalone package into this view.
         """
         raise NotImplementedError
 
-    def check_added(self, spec):
+    def check_added(self, spec: spack.spec.Spec) -> bool:
         """
         Check if the given concrete spec is active in this view.
         """
         raise NotImplementedError
 
-    def remove_specs(self, *specs, **kwargs):
+    def remove_specs(self, *specs: spack.spec.Spec, **kwargs) -> None:
         """
         Removes given specs from view.
 
@@ -230,25 +230,25 @@ class FilesystemView:
         """
         raise NotImplementedError
 
-    def remove_standalone(self, spec):
+    def remove_standalone(self, spec: spack.spec.Spec) -> None:
         """
         Remove (unlink) a standalone package from this view.
         """
         raise NotImplementedError
 
-    def get_projection_for_spec(self, spec):
+    def get_projection_for_spec(self, spec: spack.spec.Spec) -> str:
         """
         Get the projection in this view for a spec.
         """
         raise NotImplementedError
 
-    def get_all_specs(self):
+    def get_all_specs(self) -> List[spack.spec.Spec]:
         """
         Get all specs currently active in this view.
         """
         raise NotImplementedError
 
-    def get_spec(self, spec):
+    def get_spec(self, spec: spack.spec.Spec) -> Optional[spack.spec.Spec]:
         """
         Return the actual spec linked in this view (i.e. do not look it up
         in the database by name).
@@ -262,7 +262,7 @@ class FilesystemView:
         """
         raise NotImplementedError
 
-    def print_status(self, *specs, **kwargs):
+    def print_status(self, *specs: spack.spec.Spec, **kwargs) -> None:
         """
         Print a short summary about the given specs, detailing whether..
             * ..they are active in the view.
@@ -427,7 +427,7 @@ class YamlFilesystemView(FilesystemView):
             try:
                 with open(manifest_file, "r", encoding="utf-8") as f:
                     manifest = s_json.load(f)
-            except (OSError, IOError):
+            except OSError:
                 # if we can't load it, assume it doesn't know about the file.
                 manifest = {}
             return test_path in manifest
@@ -642,7 +642,7 @@ class YamlFilesystemView(FilesystemView):
                 specs.sort()
 
                 abbreviated = [
-                    s.cformat("{name}{@version}{%compiler}{compiler_flags}{variants}")
+                    s.cformat("{name}{@version}{compiler_flags}{variants}{%compiler}")
                     for s in specs
                 ]
 
@@ -693,7 +693,7 @@ class SimpleFilesystemView(FilesystemView):
                 raise ConflictingSpecsError(current_spec, conflicting_spec)
             seen[metadata_dir] = current_spec
 
-    def add_specs(self, *specs: spack.spec.Spec) -> None:
+    def add_specs(self, *specs, **kwargs) -> None:
         """Link a root-to-leaf topologically ordered list of specs into the view."""
         assert all((s.concrete for s in specs))
         if len(specs) == 0:
@@ -708,7 +708,10 @@ class SimpleFilesystemView(FilesystemView):
         def skip_list(file):
             return os.path.basename(file) == spack.store.STORE.layout.metadata_dir
 
-        visitor = SourceMergeVisitor(ignore=skip_list)
+        # Determine if the root is on a case-insensitive filesystem
+        normalize_paths = is_folder_on_case_insensitive_filesystem(self._root)
+
+        visitor = SourceMergeVisitor(ignore=skip_list, normalize_paths=normalize_paths)
 
         # Gather all the directories to be made and files to be linked
         for spec in specs:
@@ -827,11 +830,11 @@ class SimpleFilesystemView(FilesystemView):
 #####################
 # utility functions #
 #####################
-def get_spec_from_file(filename):
+def get_spec_from_file(filename) -> Optional[spack.spec.Spec]:
     try:
         with open(filename, "r", encoding="utf-8") as f:
             return spack.spec.Spec.from_yaml(f)
-    except IOError:
+    except OSError:
         return None
 
 
@@ -884,3 +887,8 @@ def get_dependencies(specs):
 
 class ConflictingProjectionsError(SpackError):
     """Raised when a view has a projections file and is given one manually."""
+
+
+def is_folder_on_case_insensitive_filesystem(path: str) -> bool:
+    with tempfile.NamedTemporaryFile(dir=path, prefix=".sentinel") as sentinel:
+        return os.path.exists(os.path.join(path, os.path.basename(sentinel.name).upper()))

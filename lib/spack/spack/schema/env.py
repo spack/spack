@@ -9,9 +9,8 @@
 """
 from typing import Any, Dict
 
-from llnl.util.lang import union_dicts
-
 import spack.schema.merged
+from spack.llnl.util.lang import union_dicts
 
 from .spec_list import spec_list_schema
 
@@ -29,11 +28,7 @@ properties: Dict[str, Any] = {
             # merged configuration scope schemas
             spack.schema.merged.properties,
             # extra environment schema properties
-            {
-                "include": {"type": "array", "default": [], "items": {"type": "string"}},
-                "specs": spec_list_schema,
-                "include_concrete": include_concrete,
-            },
+            {"specs": spec_list_schema, "include_concrete": include_concrete},
         ),
     }
 }

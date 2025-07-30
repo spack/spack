@@ -31,20 +31,20 @@ import contextlib
 import copy
 import datetime
 import inspect
-import os.path
+import os
 import re
 import string
 from typing import List, Optional
 
-import llnl.util.filesystem
-import llnl.util.tty as tty
-from llnl.util.lang import Singleton, dedupe, memoized
+import spack.vendor.jinja2
 
 import spack.build_environment
 import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
+import spack.llnl.util.filesystem
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.projections as proj
 import spack.schema
@@ -58,6 +58,7 @@ import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.context import Context
+from spack.llnl.util.lang import Singleton, dedupe, memoized
 
 
 #: config section for this file
@@ -235,7 +236,7 @@ def generate_module_index(root, modules, overwrite=False):
         entry = {"path": m.layout.filename, "use_name": m.layout.use_name}
         entries[m.spec.dag_hash()] = entry
     index = {"module_index": entries}
-    llnl.util.filesystem.mkdirp(root)
+    spack.llnl.util.filesystem.mkdirp(root)
     with open(index_path, "w", encoding="utf-8") as index_file:
         syaml.dump(index, default_flow_style=False, stream=index_file)
 
@@ -330,22 +331,21 @@ class BaseConfiguration:
     default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
 
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
-        # Module where type(self) is defined
-        m = inspect.getmodule(self)
-        assert m is not None  # make mypy happy
-        self.module = m
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
-        # Dictionary of configuration options that should be applied
-        # to the spec
+        # Dictionary of configuration options that should be applied to the spec
         self.conf = merge_config_rules(self.module.configuration(self.name), self.spec)
+
+    @property
+    def module(self):
+        return inspect.getmodule(self)
 
     @property
     def projections(self):
         """Projection from specs to module names"""
-        # backwards compatiblity for naming_scheme key
+        # backwards compatibility for naming_scheme key
         conf = self.module.configuration(self.name)
         if "naming_scheme" in conf:
             default = {"all": conf["naming_scheme"]}
@@ -566,6 +566,12 @@ class BaseContext(tengine.Context):
         return self.conf.spec
 
     @tengine.context_property
+    def tags(self):
+        if not hasattr(self.spec.package, "tags"):
+            return []
+        return self.spec.package.tags
+
+    @tengine.context_property
     def timestamp(self):
         return datetime.datetime.now()
 
@@ -775,10 +781,6 @@ class BaseModuleFileWriter:
     ) -> None:
         self.spec = spec
 
-        # This class is meant to be derived. Get the module of the
-        # actual writer.
-        self.module = inspect.getmodule(self)
-        assert self.module is not None  # make mypy happy
         m = self.module
 
         # Create the triplet of configuration/layout/context
@@ -815,6 +817,10 @@ class BaseModuleFileWriter:
             msg += "Did you forget to define it in the class?"
             name = type(self).__name__
             raise ModulercHeaderNotDefined(msg.format(name))
+
+    @property
+    def module(self):
+        return inspect.getmodule(self)
 
     def _get_template(self):
         """Gets the template that will be rendered for this spec."""
@@ -863,16 +869,15 @@ class BaseModuleFileWriter:
         # create it
         module_dir = os.path.dirname(self.layout.filename)
         if not os.path.exists(module_dir):
-            llnl.util.filesystem.mkdirp(module_dir)
+            spack.llnl.util.filesystem.mkdirp(module_dir)
 
         # Get the template for the module
         template_name = self._get_template()
-        import jinja2
 
         try:
             env = tengine.make_environment()
             template = env.get_template(template_name)
-        except jinja2.TemplateNotFound:
+        except spack.vendor.jinja2.TemplateNotFound:
             # If the template was not found raise an exception with a little
             # more information
             msg = "template '{0}' was not found for '{1}'"

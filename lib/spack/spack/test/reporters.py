@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.reporters.extract
 from spack.install_test import TestStatus
 from spack.reporters import CDash, CDashConfiguration
@@ -132,7 +132,8 @@ def test_reporters_extract_skipped(state):
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 
     assert len(parts) == 1
-    parts[0]["completed"] == expected
+
+    assert parts[0]["completed"] == spack.reporters.extract.completed["skipped"]
 
 
 def test_reporters_skip_new():
@@ -156,7 +157,7 @@ fake::test_skip .. SKIPPED
     assert part["loglines"][0].startswith("SKIPPED:")
 
 
-def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
+def test_reporters_report_for_package_no_stdout(tmp_path: pathlib.Path, monkeypatch, capfd):
     class MockCDash(CDash):
         def upload(*args, **kwargs):
             # Just return (Do NOT try to upload the report to the fake site)
@@ -174,7 +175,7 @@ def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
 
     reporter = MockCDash(configuration=configuration)
     pkg_data = {"name": "fake-package"}
-    reporter.test_report_for_package(tmpdir.strpath, pkg_data, 0)
+    reporter.test_report_for_package(str(tmp_path), pkg_data, 0)
     err = capfd.readouterr()[1]
     assert "Skipping report for" in err
     assert "No generated output" in err

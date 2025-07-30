@@ -48,7 +48,7 @@
           "23fdd223493f441fa2e5f82d7e02837ecfad831fbfa4c27c175b3e294ed977d1"
         ]
       ],
-      "spec": "gnupg@2.3: %apple-clang platform=darwin target=aarch64"
+      "spec": "gnupg@2.3: platform=darwin target=aarch64 %apple-clang"
     },
     {
       "binaries": [
@@ -98,7 +98,7 @@
           "b9481e122e2cb26f69b70505830d0fcc0d200aadbb6c6572339825f17ad1e52d"
         ]
       ],
-      "spec": "gnupg@2.3: %apple-clang platform=darwin target=x86_64"
+      "spec": "gnupg@2.3: platform=darwin target=x86_64 %apple-clang"
     },
     {
       "binaries": [
@@ -148,7 +148,7 @@
           "228ccb475932f7f40a64e9d87dec045931cc57f71b1dfd4b4c3926107222d96c"
         ]
       ],
-      "spec": "gnupg@2.3: %gcc platform=linux target=aarch64"
+      "spec": "gnupg@2.3: platform=linux target=aarch64 %gcc"
     },
     {
       "binaries": [
@@ -198,7 +198,7 @@
           "98e2bcb4064ec0830d896938bc1fe5264dac611da71ea546b9ca03349b752041"
         ]
       ],
-      "spec": "gnupg@2.3: %gcc platform=linux target=ppc64le"
+      "spec": "gnupg@2.3: platform=linux target=ppc64le %gcc"
     },
     {
       "binaries": [
@@ -248,7 +248,7 @@
           "054fac6eaad7c862ea4661461d847fb069876eb114209416b015748266f7d166"
         ]
       ],
-      "spec": "gnupg@2.3: %gcc platform=linux target=x86_64"
+      "spec": "gnupg@2.3: platform=linux target=x86_64 %gcc"
     }
   ]
 }

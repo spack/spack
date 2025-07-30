@@ -4,6 +4,7 @@
 
 """Test Spack's environment utility functions."""
 import os
+import pathlib
 import sys
 
 import pytest
@@ -113,10 +114,10 @@ def test_path_put_first(prepare_environment_for_tests):
 
 
 @pytest.mark.parametrize("shell", ["pwsh", "bat"] if sys.platform == "win32" else ["bash"])
-def test_dump_environment(prepare_environment_for_tests, shell_as, shell, tmpdir):
+def test_dump_environment(prepare_environment_for_tests, shell_as, shell, tmp_path: pathlib.Path):
     test_paths = "/a:/b/x:/b/c"
     os.environ["TEST_ENV_VAR"] = test_paths
-    dumpfile_path = str(tmpdir.join("envdump.txt"))
+    dumpfile_path = str(tmp_path / "envdump.txt")
     envutil.dump_environment(dumpfile_path)
     with open(dumpfile_path, "r", encoding="utf-8") as dumpfile:
         if shell == "pwsh":
@@ -128,17 +129,21 @@ def test_dump_environment(prepare_environment_for_tests, shell_as, shell, tmpdir
 
 
 def test_reverse_environment_modifications(working_env):
+    prepend_val = os.sep + os.path.join("new", "path", "prepended")
+    append_val = os.sep + os.path.join("new", "path", "appended")
+
     start_env = {
-        "PREPEND_PATH": os.sep + os.path.join("path", "to", "prepend", "to"),
-        "APPEND_PATH": os.sep + os.path.join("path", "to", "append", "to"),
+        "PREPEND_PATH": prepend_val + os.pathsep + os.path.join("path", "to", "prepend", "to"),
+        "APPEND_PATH": os.path.sep
+        + os.path.join("path", "to", "append", "to" + os.pathsep + append_val),
         "UNSET": "var_to_unset",
         "APPEND_FLAGS": "flags to append to",
     }
 
     to_reverse = envutil.EnvironmentModifications()
 
-    to_reverse.prepend_path("PREPEND_PATH", "/new/path/prepended")
-    to_reverse.append_path("APPEND_PATH", "/new/path/appended")
+    to_reverse.prepend_path("PREPEND_PATH", prepend_val)
+    to_reverse.append_path("APPEND_PATH", append_val)
     to_reverse.set_path("SET_PATH", ["/one/set/path", "/two/set/path"])
     to_reverse.set("SET", "a var")
     to_reverse.unset("UNSET")
@@ -149,11 +154,8 @@ def test_reverse_environment_modifications(working_env):
     os.environ.clear()
     os.environ.update(start_env)
 
-    print(os.environ)
     to_reverse.apply_modifications()
-    print(os.environ)
     reversal.apply_modifications()
-    print(os.environ)
 
     start_env.pop("UNSET")
     assert os.environ == start_env

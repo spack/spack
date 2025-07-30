@@ -1,9 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import codecs
 import collections
 import hashlib
-import os.path
+import os
 import platform
 import posixpath
 import re
@@ -13,21 +14,20 @@ import warnings
 import xml.sax.saxutils
 from typing import Dict, Optional
 from urllib.parse import urlencode
-from urllib.request import HTTPSHandler, Request, build_opener
-
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
+from urllib.request import Request
 
 import spack
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.platforms
 import spack.spec
 import spack.tengine
 import spack.util.git
+import spack.util.web as web_util
 from spack.error import SpackError
+from spack.llnl.util.filesystem import working_dir
 from spack.util.crypto import checksum
 from spack.util.log_parse import parse_log_events
-from spack.util.web import ssl_create_default_context
 
 from .base import Reporter
 from .extract import extract_test_parts
@@ -106,7 +106,7 @@ class CDash(Reporter):
         self.site = configuration.site or socket.gethostname()
         self.osname = platform.system()
         self.osrelease = platform.release()
-        self.target = spack.platforms.host().target("default_target")
+        self.target = spack.platforms.host().default_target()
         self.starttime = int(time.time())
         self.endtime = self.starttime
         self.buildstamp = (
@@ -116,7 +116,7 @@ class CDash(Reporter):
         )
         self.buildIds: Dict[str, str] = {}
         self.revision = ""
-        git = spack.util.git.git()
+        git = spack.util.git.git(required=True)
         with working_dir(spack.paths.spack_root):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.get_version())
@@ -176,7 +176,7 @@ class CDash(Reporter):
         # something went wrong pre-cdash "configure" phase b/c we have an exception and only
         # "update" was encounterd.
         # dump the report in the configure line so teams can see what the issue is
-        if len(phases_encountered) == 1 and package["exception"]:
+        if len(phases_encountered) == 1 and package.get("exception"):
             # TODO this mapping is not ideal since these are pre-configure errors
             # we need to determine if a more appropriate cdash phase can be utilized
             # for now we will add a message to the log explaining this
@@ -277,6 +277,8 @@ class CDash(Reporter):
         self.multiple_packages = False
         num_packages = 0
         for spec in specs:
+            spec.summarize()
+
             # Do not generate reports for packages that were installed
             # from the binary cache.
             spec["packages"] = [
@@ -361,6 +363,8 @@ class CDash(Reporter):
         """Generate reports for each package in each spec."""
         tty.debug("Processing test report")
         for spec in specs:
+            spec.summarize()
+
             duration = 0
             if "time" in spec:
                 duration = int(spec["time"])
@@ -433,7 +437,6 @@ class CDash(Reporter):
         # Compute md5 checksum for the contents of this file.
         md5sum = checksum(hashlib.md5, filename, block_size=8192)
 
-        opener = build_opener(HTTPSHandler(context=ssl_create_default_context()))
         with open(filename, "rb") as f:
             params_dict = {
                 "build": self.buildname,
@@ -443,26 +446,21 @@ class CDash(Reporter):
             }
             encoded_params = urlencode(params_dict)
             url = "{0}&{1}".format(self.cdash_upload_url, encoded_params)
-            request = Request(url, data=f)
+            request = Request(url, data=f, method="PUT")
             request.add_header("Content-Type", "text/xml")
             request.add_header("Content-Length", os.path.getsize(filename))
             if self.authtoken:
                 request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
             try:
-                # By default, urllib2 only support GET and POST.
-                # CDash expects this file to be uploaded via PUT.
-                request.get_method = lambda: "PUT"
-                response = opener.open(request, timeout=SPACK_CDASH_TIMEOUT)
+                response = web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
                 if self.current_package_name not in self.buildIds:
-                    resp_value = response.read()
-                    if isinstance(resp_value, bytes):
-                        resp_value = resp_value.decode("utf-8")
+                    resp_value = codecs.getreader("utf-8")(response).read()
                     match = self.buildid_regexp.search(resp_value)
                     if match:
                         buildid = match.group(1)
                         self.buildIds[self.current_package_name] = buildid
             except Exception as e:
-                print("Upload to CDash failed: {0}".format(e))
+                print(f"Upload to CDash failed: {e}")
 
     def finalize_report(self):
         if self.buildIds:

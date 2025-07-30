@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
+import pathlib
 
 import pytest
 
@@ -38,8 +38,8 @@ def test_stage_spec(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def check_stage_path(monkeypatch, tmpdir):
-    expected_path = os.path.join(str(tmpdir), "x")
+def check_stage_path(monkeypatch, tmp_path: pathlib.Path):
+    expected_path = str(tmp_path / "x")
 
     def fake_stage(pkg, mirror_only=False):
         assert pkg.path == expected_path
@@ -105,7 +105,11 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
     e.concretize()
 
     # list all the package names that should be staged
-    expected = set(dep.name for dep in spack.traverse.traverse_nodes(e.concrete_roots()))
+    expected, externals = set(), set()
+    for dep in spack.traverse.traverse_nodes(e.concrete_roots()):
+        expected.add(dep.name)
+        if dep.external:
+            externals.add(dep.name)
 
     # pop the package name from the list instead of actually staging
     def fake_stage(pkg, mirror_only=False):
@@ -116,8 +120,7 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
     with e:
         stage()
 
-    # assert that all were staged
-    assert len(expected) == 0
+    assert expected == externals
 
 
 @pytest.mark.disable_clean_stage_check

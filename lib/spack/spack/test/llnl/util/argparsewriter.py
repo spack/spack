@@ -10,8 +10,7 @@ tested in ``cmd/commands.py``.
 
 import pytest
 
-import llnl.util.argparsewriter as aw
-
+import spack.llnl.util.argparsewriter as aw
 import spack.main
 
 parser = spack.main.make_argument_parser()

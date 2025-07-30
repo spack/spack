@@ -2,11 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pickle
 import stat
 
 import pytest
-
-from llnl.util.symlink import readlink
 
 import spack.cmd.modules
 import spack.concretize
@@ -19,6 +18,7 @@ import spack.package_base
 import spack.package_prefs
 import spack.repo
 from spack.installer import PackageInstaller
+from spack.llnl.util.filesystem import readlink
 from spack.modules.common import UpstreamModuleIndex
 
 pytestmark = [
@@ -223,3 +223,10 @@ def test_check_module_set_name(mutable_config):
 
     with pytest.raises(spack.error.ConfigError, match=msg):
         spack.cmd.modules.check_module_set_name("third")
+
+
+@pytest.mark.parametrize("module_type", ["tcl", "lmod"])
+def test_module_writers_are_pickleable(default_mock_concretization, module_type):
+    s = default_mock_concretization("mpileaks")
+    writer = spack.modules.module_types[module_type](s, "default")
+    assert pickle.loads(pickle.dumps(writer)).spec == s

@@ -27,9 +27,7 @@ def check_spliced_spec_prefixes(spliced_spec):
         text_file_path = os.path.join(node.prefix, node.name)
         with open(text_file_path, "r", encoding="utf-8") as f:
             text = f.read()
-            print(text)
             for modded_spec in node.traverse(root=True, deptype=dt.ALL & ~dt.BUILD):
-                print(modded_spec)
                 assert modded_spec.prefix in text
 
 

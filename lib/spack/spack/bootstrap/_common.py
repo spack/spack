@@ -5,25 +5,23 @@
 import fnmatch
 import glob
 import importlib
-import os.path
+import os
 import re
 import sys
 import sysconfig
 import warnings
 from typing import Optional, Sequence, Union
 
-from typing_extensions import TypedDict
+import spack.vendor.archspec.cpu
+from spack.vendor.typing_extensions import TypedDict
 
-import archspec.cpu
-
-import llnl.util.filesystem as fs
-from llnl.util import tty
-
+import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.spec
 import spack.store
 import spack.util.environment
 import spack.util.executable
+from spack.llnl.util import tty
 
 from .config import spec_for_current_python
 
@@ -138,7 +136,7 @@ def _fix_ext_suffix(candidate_spec: "spack.spec.Spec"):
     }
 
     # If the current architecture is not problematic return
-    generic_target = archspec.cpu.host().family
+    generic_target = spack.vendor.archspec.cpu.host().family
     if str(generic_target) not in _suffix_to_be_checked:
         return
 
@@ -234,16 +232,8 @@ def _root_spec(spec_str: str) -> str:
     # Add a compiler and platform requirement to the root spec.
     platform = str(spack.platforms.host())
 
-    if platform == "darwin":
-        spec_str += " %apple-clang"
-    elif platform == "windows":
-        spec_str += " %msvc"
-    elif platform == "linux":
-        spec_str += " %gcc"
-    elif platform == "freebsd":
-        spec_str += " %clang"
     spec_str += f" platform={platform}"
-    target = archspec.cpu.host().family
+    target = spack.vendor.archspec.cpu.host().family
     spec_str += f" target={target}"
 
     tty.debug(f"[BOOTSTRAP ROOT SPEC] {spec_str}")

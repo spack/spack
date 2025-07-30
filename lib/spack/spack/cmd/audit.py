@@ -1,13 +1,13 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import warnings
 
-import llnl.util.tty as tty
-import llnl.util.tty.colify
-import llnl.util.tty.color as cl
-
 import spack.audit
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.colify
+import spack.llnl.util.tty.color as cl
 import spack.repo
 
 description = "audit configuration files, packages, etc."
@@ -15,7 +15,7 @@ section = "system"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Top level flags, valid for every audit class
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="subcommand")
 
@@ -79,7 +79,7 @@ def externals(parser, args):
     if args.list_externals:
         msg = "@*{The following packages have detection tests:}"
         tty.msg(cl.colorize(msg))
-        llnl.util.tty.colify.colify(spack.audit.packages_with_detection_tests(), indent=2)
+        spack.llnl.util.tty.colify.colify(spack.audit.packages_with_detection_tests(), indent=2)
         return
 
     pkgs = args.name or spack.repo.PATH.all_package_names()

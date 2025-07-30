@@ -1,15 +1,13 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import collections.abc
 import operator
 import os
 import urllib.parse
-from typing import Any, Dict, Optional, Tuple, Union
-
-import llnl.util.tty as tty
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -64,7 +62,7 @@ class Mirror:
     @staticmethod
     def from_url(url: str):
         """Create an anonymous mirror by URL. This method validates the URL."""
-        if not urllib.parse.urlparse(url).scheme in supported_url_schemes:
+        if urllib.parse.urlparse(url).scheme not in supported_url_schemes:
             raise ValueError(
                 f'"{url}" is not a valid mirror URL. '
                 f"Scheme must be one of {supported_url_schemes}."
@@ -361,7 +359,7 @@ class Mirror:
         return self._get_value("endpoint_url", direction)
 
 
-class MirrorCollection(collections.abc.Mapping):
+class MirrorCollection(Mapping[str, Mirror]):
     """A mapping of mirror names to mirrors."""
 
     def __init__(

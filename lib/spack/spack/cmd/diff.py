@@ -3,23 +3,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import argparse
 import sys
-
-import llnl.util.tty as tty
-from llnl.util.tty.color import cprint, get_color_when
 
 import spack.cmd
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.solver.asp as asp
 import spack.util.spack_json as sjson
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.color import cprint, get_color_when
 
 description = "compare two specs"
 section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["specs"])
 
     subparser.add_argument(

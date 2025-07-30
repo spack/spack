@@ -1,21 +1,21 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os.path
+import os
+import pathlib
 
 import pytest
-
-from llnl.util.filesystem import touch
 
 import spack.builder
 import spack.concretize
 import spack.paths
 import spack.repo
+from spack.llnl.util.filesystem import touch
 
 
 @pytest.fixture()
-def builder_test_repository():
-    builder_test_path = os.path.join(spack.paths.repos_path, "builder.test")
+def builder_test_repository(config):
+    builder_test_path = os.path.join(spack.paths.test_repos_path, "spack_repo", "builder_test")
     with spack.repo.use_repositories(builder_test_path) as mock_repo:
         yield mock_repo
 
@@ -152,12 +152,12 @@ def test_monkey_patching_test_log_file():
 # Windows context manager's __exit__ fails with ValueError ("I/O operation
 # on closed file").
 @pytest.mark.not_on_windows("Does not run on windows")
-def test_install_time_test_callback(tmpdir, config, mock_packages, mock_stage):
+def test_install_time_test_callback(tmp_path: pathlib.Path, config, mock_packages, mock_stage):
     """Confirm able to run stand-alone test as a post-install callback."""
     s = spack.concretize.concretize_one("py-test-callback")
     builder = spack.builder.create(s.package)
     builder.pkg.run_tests = True
-    s.package.tester.test_log_file = tmpdir.join("install_test.log")
+    s.package.tester.test_log_file = str(tmp_path / "install_test.log")
     touch(s.package.tester.test_log_file)
 
     for phase_fn in builder:
@@ -178,8 +178,40 @@ def test_mixins_with_builders(working_env):
     builder = spack.builder.create(s.package)
 
     # Check that callbacks added by the mixin are in the list
-    assert any(fn.__name__ == "before_install" for _, fn in builder.run_before_callbacks)
-    assert any(fn.__name__ == "after_install" for _, fn in builder.run_after_callbacks)
+    assert any(fn.__name__ == "before_install" for _, fn in builder._run_before_callbacks)
+    assert any(fn.__name__ == "after_install" for _, fn in builder._run_after_callbacks)
 
     # Check that callback from the GenericBuilder are in the list too
-    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder.run_after_callbacks)
+    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder._run_after_callbacks)
+
+
+def test_reading_api_v20_attributes():
+    """Tests that we can read attributes from API v2.0 builders."""
+
+    class TestBuilder(spack.builder.Builder):
+        legacy_methods = ("configure", "install")
+        legacy_attributes = ("foo", "bar")
+        legacy_long_methods = ("baz", "fee")
+
+    methods = spack.builder.package_methods(TestBuilder)
+    assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")
+    long_methods = spack.builder.package_long_methods(TestBuilder)
+    assert long_methods == ("baz", "fee")
+
+
+def test_reading_api_v22_attributes():
+    """Tests that we can read attributes from API v2.2 builders."""
+
+    class TestBuilder(spack.builder.Builder):
+        package_methods = ("configure", "install")
+        package_attributes = ("foo", "bar")
+        package_long_methods = ("baz", "fee")
+
+    methods = spack.builder.package_methods(TestBuilder)
+    assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")
+    long_methods = spack.builder.package_long_methods(TestBuilder)
+    assert long_methods == ("baz", "fee")

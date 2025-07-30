@@ -3,12 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import shutil
 import sys
 
 import pytest
-
-import llnl.util.filesystem as fs
 
 import spack.build_environment
 import spack.concretize
@@ -16,6 +15,7 @@ import spack.config
 import spack.database
 import spack.error
 import spack.installer
+import spack.llnl.util.filesystem as fs
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.package_base
@@ -198,17 +198,6 @@ def test_installed_dependency_request_conflicts(install_mockery, mock_fetch, mut
         spack.concretize.concretize_one(dependent)
 
 
-def test_install_dependency_symlinks_pkg(install_mockery, mock_fetch, mutable_mock_repo):
-    """Test dependency flattening/symlinks mock package."""
-    spec = spack.concretize.concretize_one("flatten-deps")
-    pkg = spec.package
-    PackageInstaller([pkg], explicit=True).install()
-
-    # Ensure dependency directory exists after the installation.
-    dependency_dir = os.path.join(pkg.prefix, "dependency-install")
-    assert os.path.isdir(dependency_dir)
-
-
 def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
     """Test install times added."""
     spec = spack.concretize.concretize_one("dev-build-test-install-phases")
@@ -228,35 +217,15 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
     assert all(isinstance(x["seconds"], float) for x in times["phases"])
 
 
-def test_flatten_deps(install_mockery, mock_fetch, mutable_mock_repo):
-    """Explicitly test the flattening code for coverage purposes."""
-    # Unfortunately, executing the 'flatten-deps' spec's installation does
-    # not affect code coverage results, so be explicit here.
-    spec = spack.concretize.concretize_one("dependent-install")
-    pkg = spec.package
-    PackageInstaller([pkg], explicit=True).install()
-
-    # Demonstrate that the directory does not appear under the spec
-    # prior to the flatten operation.
-    dependency_name = "dependency-install"
-    assert dependency_name not in os.listdir(pkg.prefix)
-
-    # Flatten the dependencies and ensure the dependency directory is there.
-    spack.package_base.flatten_dependencies(spec, pkg.prefix)
-
-    dependency_dir = os.path.join(pkg.prefix, dependency_name)
-    assert os.path.isdir(dependency_dir)
-
-
 @pytest.fixture()
-def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
+def install_upstream(tmp_path_factory: pytest.TempPathFactory, gen_mock_layout, install_mockery):
     """Provides a function that installs a specified set of specs to an
     upstream database. The function returns a store which points to the
     upstream, as well as the upstream layout (for verifying that dependent
     installs are using the upstream installs).
     """
-    mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
-    upstream_layout = gen_mock_layout("/a/")
+    mock_db_root = str(tmp_path_factory.mktemp("mock_db_root"))
+    upstream_layout = gen_mock_layout("a")
     prepared_db = spack.database.Database(mock_db_root, layout=upstream_layout)
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(
@@ -268,7 +237,7 @@ def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
     def _install_upstream(*specs):
         for spec_str in specs:
             prepared_db.add(spack.concretize.concretize_one(spec_str))
-        downstream_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
+        downstream_root = str(tmp_path_factory.mktemp("mock_downstream_db_root"))
         return downstream_root, upstream_layout
 
     return _install_upstream
@@ -342,13 +311,13 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypa
     PackageInstaller([s.package], explicit=True).install()
 
 
-def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmpdir):
+def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmp_path: pathlib.Path):
     """
     Test that different specs with coinciding install prefixes will fail
     to install.
     """
     projections = {"projections": {"all": "one-prefix-per-package-{name}"}}
-    with spack.store.use_store(str(tmpdir), extra_data=projections):
+    with spack.store.use_store(str(tmp_path), extra_data=projections):
         with spack.config.override("config:checksum", False):
             pkg_a = spack.concretize.concretize_one("libelf@0.8.13").package
             pkg_b = spack.concretize.concretize_one("libelf@0.8.12").package
@@ -489,7 +458,7 @@ def test_log_install_without_build_files(install_mockery):
     spec = spack.concretize.concretize_one("trivial-install-test-package")
 
     # Attempt installing log without the build log file
-    with pytest.raises(IOError, match="No such file or directory"):
+    with pytest.raises(OSError, match="No such file or directory"):
         spack.installer.log(spec.package)
 
 
@@ -586,7 +555,7 @@ def test_empty_install_sanity_check_prefix(
 
 
 def test_install_from_binary_with_missing_patch_succeeds(
-    temporary_store: spack.store.Store, mutable_config, tmp_path, mock_packages
+    temporary_store: spack.store.Store, mutable_config, tmp_path: pathlib.Path, mock_packages
 ):
     """If a patch is missing in the local package repository, but was present when building and
     pushing the package to a binary cache, installation from that binary cache shouldn't error out

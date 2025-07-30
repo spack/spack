@@ -19,8 +19,8 @@ section = "packaging"
 level = "long"
 
 
-def setup_parser(subparser):
-    setup_parser.parser = subparser
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
+    setattr(setup_parser, "parser", subparser)
     subparsers = subparser.add_subparsers(help="GPG sub-commands")
 
     verify = subparsers.add_parser("verify", help=gpg_verify.__doc__)
