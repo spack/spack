@@ -178,8 +178,9 @@ class W4(Package):
     depends_on("w2")
     depends_on("w2@:2.0", when="@:2.0")
 
-    # test_errmsg_requirements stresses these constraints and generates
-    # a good error message: "w4@:2.0 ^w3@2.1"
+    # test_errmsg_requirements_1 stresses these constraints by asking
+    # for "w4@:2.0 ^w3@2.1". The error message "used to be" good and
+    # is now not so good
     depends_on("w3")
     depends_on("w3+v1", when="@2.0") # EX1
     # depends_on("w3~v1", when="@2.0") # EX2
