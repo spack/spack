@@ -2,6 +2,11 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
+.. meta::
+   :description lang=en:
+      Learn about the Lua build system in Spack for packages using rockspec files.
+
 .. _luapackage:
 
 ------

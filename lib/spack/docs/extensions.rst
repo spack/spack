@@ -2,7 +2,9 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-.. extensions:
+.. meta::
+   :description lang=en:
+      Discover how to extend Spack's core functionality by creating custom commands and plugins.
 
 =================
 Custom Extensions

@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to adding tests to Spack packages to ensure correct installation and functionality.
+
 .. list-table::
    :widths: 25 25 25 25
    :header-rows: 0

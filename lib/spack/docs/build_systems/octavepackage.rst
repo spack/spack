@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the Octave build system in Spack for installing Octave packages.
+
 .. _octavepackage:
 
 ------

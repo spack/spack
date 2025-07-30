@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to create, use, and manage build caches in Spack to share pre-built binary packages and speed up installations.
+
 .. _binary_caches:
 
 ============

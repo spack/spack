@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the SCons build system in Spack, a Python-based tool that handles building and linking without relying on Makefiles.
+
 .. _sconspackage:
 
 ------

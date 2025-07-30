@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to use the SourceforgePackage mixin in Spack to automatically generate download URLs for packages hosted on SourceForge.
+
 .. _sourceforgepackage:
 
 -----------

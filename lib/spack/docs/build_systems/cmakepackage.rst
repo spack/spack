@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to package software that uses the CMake build system with Spack, covering common practices and customization options for CMake-based packages.
+
 .. _cmakepackage:
 
 ------

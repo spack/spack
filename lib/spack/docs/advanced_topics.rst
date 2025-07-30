@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Explore advanced topics in Spack, including defining and using toolchains, auditing packages and configuration, and verifying installations.
+
 .. _toolchains:
 
 =============================

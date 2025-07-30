@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to configure compilers in Spack, whether by specifying them as externals, installing them in the Spack store, or making them available through a buildcache.
+
 .. _compiler-config:
 
 =====================

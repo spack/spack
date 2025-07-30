@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      An overview of the Autotools build system in Spack for packages that use GNU Autotools.
+
 .. _autotoolspackage:
 
 ---------

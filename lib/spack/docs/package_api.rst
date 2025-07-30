@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      An overview of the Spack Package API, a stable interface for package authors to interact with the Spack framework.
+
 Spack Package API v2.2
 ======================
 

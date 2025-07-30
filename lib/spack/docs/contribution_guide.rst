@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide for developers and administrators on contributing new packages, features, or bug fixes to Spack, covering Git workflows, pull requests, and continuous integration testing.
+
 .. _contribution-guide:
 
 ==================

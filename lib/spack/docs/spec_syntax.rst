@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A detailed guide to the Spack spec syntax for describing package constraints, including versions, variants, and dependencies.
+
 .. _sec-specs:
 
 ===========

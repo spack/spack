@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the QMake build system in Spack, a script generator for Qt-based projects.
+
 .. _qmakepackage:
 
 ------
