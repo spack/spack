@@ -1056,10 +1056,10 @@ Sparse-Checkout
         return paths
 
     class MyPackage(package):
-        version("1.1.5", git_sparse_paths=sparse_path_func)
-        version("1.2.0", git_sparse_paths=sparse_path_func)
-        version("1.2.5", git_sparse_paths=sparse_path_func)
-        version("1.1.5", git_sparse_paths=sparse_path_func)
+        version("1.1.5", git_sparse_paths=sparse_path_function)
+        version("1.2.0", git_sparse_paths=sparse_path_function)
+        version("1.2.5", git_sparse_paths=sparse_path_function)
+        version("1.1.5", git_sparse_paths=sparse_path_function)
 
   results in the cloning of the files from the top level directory of the repository, the contents of the ``doe`` and ``rae`` relative paths, *and* the ``me/file.cpp`` file. If the package version is greater than ``1.2.0`` then the contents of the ``fae`` relative path will also be cloned.
 
