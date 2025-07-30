@@ -181,7 +181,8 @@ class W4(Package):
     # test_errmsg_requirements_1 stresses these constraints by asking
     # for "w4@:2.0 ^w3@2.1". On develop, the error message was never
     # good; in this PR, the error message "used to be" good and is now
-    # not so good
+    # not so good (see W3 definition for more details: this does not
+    # seem to be an issue with requirements)
     depends_on("w3")
     depends_on("w3+v1", when="@2.0") # EX1
     # depends_on("w3~v1", when="@2.0") # EX2
@@ -198,6 +199,10 @@ class W3(Package):
 
     variant("v1", default=True)
 
+    # conflicts("+v1", when="@2.1")
+    # This requirement is equivalent to prior conflict. If you swap
+    # it in, the error message is still not good (so that points to
+    # an issue with error messages that is not related to requirements)
     requires("~v1", when="@2.1") # EX1
     # requires("+v1", when="@2.1") # EX2
 
