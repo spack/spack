@@ -140,8 +140,9 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
         ["node", dep] in result["intersect"]
         for dep in ("mpileaks", "callpath", "dyninst", "libelf", "libdwarf", "mpich")
     )
+
     assert all(
-        len([diff for diff in result["intersect"] if diff[0] == attr]) == 8
+        len([diff for diff in result["intersect"] if diff[0] == attr]) == 9
         for attr in (
             "version",
             "node_target",
