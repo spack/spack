@@ -293,5 +293,3 @@ Once the compiler is installed, you can start using it without additional config
 .. code-block:: console
 
    $ spack install hdf5~mpi %gcc@14
-
-The same holds true for compilers that are made available from build caches, when reusing them is allowed.
