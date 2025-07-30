@@ -250,27 +250,70 @@ This is the object you need to query to make decisions about how to configure th
 Using ``self.spec.satisfies``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Variants and versions**.
+**Variants**.
+In the previous section of the packaging guide, we've seen :ref:`how to define variants <variants>`.
+As a packager, you are responsible for implementing the logic that translates the selected variant values into configure arguments.
 If you want to pass a flag to the configure script only if the package is built with a specific variant, you can do so like this:
+
+.. code-block:: python
+
+   variant("foo", default=False, description="Enable foo feature")
+
+   def configure_args(self):
+       args = []
+       if self.spec.satisfies("+foo"):
+           args.append("--enable-foo")
+       else:
+           args.append("--disable-foo")
+       return args
+
+For multi-valued variants, you can use the ``key=value`` syntax to test whether a specific value is selected:
+
+.. code-block:: python
+
+   variant("threads", default="none", values=("pthreads", "openmp", "none"), multi=False, ...)
+
+   def configure_args(self):
+       args = []
+       if self.spec.satisfies("threads=pthreads"):
+           args.append("--enable-threads=pthreads")
+       elif self.spec.satisfies("threads=openmp"):
+           args.append("--enable-threads=openmp")
+       elif self.spec.satisfies("threads=none"):
+           args.append("--disable-threads")
+       return args
+
+Even if *multiple* values are selected, you can still use ``key=value`` to test for specific values:
+
+.. code-block:: python
+
+   variant("languages", default="c,c++", values=("c", "c++", "fortran"), multi=True, ...)
+
+   def configure_args(self):
+       args = []
+       if self.spec.satisfies("languages=c"):
+          args.append("--enable-c")
+       if self.spec.satisfies("languages=c++"):
+          args.append("--enable-c++")
+       if self.spec.satisfies("languages=fortran"):
+          args.append("--enable-fortran")
+       return args
+
+Notice that many build systems provide helper functions to make the above code more concise.
+See :ref:`the Autotools docs <autotools_helper_functions>` and :ref:`the CMake docs <cmake_args>`.
+
+**Versions**.
+Similarly, versions are often used to dynamically change the build configuration:
 
 .. code-block:: python
 
    def configure_args(self):
        args = []
-       if self.spec.satisfies("+foo"):  # 'foo' is enabled
-           args.append("--enable-foo")
-       else:
-           args.append("--disable-foo")
-
-       if self.spec.satisfies("@1.2:"):  # version 1.2 or higher
-           args.append("--enable-bar")
-       else:
-           args.append("--disable-bar")
-
+       if self.spec.satisfies("@1.2:"):
+           args.append("--enable-new-feature")
        return args
 
-Notice that many build systems provide helper functions to make the above code more concise.
-See :ref:`the Autotools docs <autotools_helper_functions>` and :ref:`the CMake docs <cmake_args>`.
+This adds a flag only if the package is on version 1.2 or higher.
 
 **Dependencies**.
 You can also use the ``self.spec.satisfies`` method to test whether a dependency is present or not, and whether it is built with a specific variant or version.
