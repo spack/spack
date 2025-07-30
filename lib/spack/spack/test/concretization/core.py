@@ -3851,6 +3851,18 @@ def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
         ("emacs +native", ["%[virtuals=c deptypes=build,link] gcc"], []),
         ("emacs +native %gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
         ("emacs +native %[virtuals=c] gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
+        # Package that depends on llvm as a library and also needs C and C++ compilers
+        (
+            "llvm-client",
+            ["%[virtuals=c,cxx deptypes=build] gcc", "%[deptypes=build,link] llvm"],
+            ["%c=llvm"],
+        ),
+        (
+            "llvm-client %c,cxx=gcc",
+            ["%[virtuals=c,cxx deptypes=build] gcc", "%[deptypes=build,link] llvm"],
+            ["%c=llvm"],
+        ),
+        ("llvm-client %c,cxx=llvm", ["%[virtuals=c,cxx deptypes=build,link] llvm"], ["%gcc"]),
     ],
 )
 def test_specifying_direct_dependencies(
