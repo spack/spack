@@ -12,6 +12,7 @@ import spack.main
 import spack.paths
 import spack.repo
 import spack.util.spack_json as sjson
+import spack.version
 
 install_cmd = spack.main.SpackCommand("install")
 diff_cmd = spack.main.SpackCommand("diff")
@@ -95,6 +96,18 @@ def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
     # ensure that hash diffs are in here the result
     assert ["hash", "mpileaks %s" % specA.dag_hash()] in c["a_not_b"]
     assert ["hash", "mpileaks %s" % specB.dag_hash()] in c["b_not_a"]
+
+
+def test_diff_runtimes(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test that we can install two packages and diff them"""
+
+    specA = spack.concretize.concretize_one("mpileaks")
+    specB = specA.copy()
+    specB["gcc-runtime"].versions = spack.version.VersionList([spack.version.Version("0.0.0")])
+
+    # Specs should be the same as themselves
+    c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
+    assert ["version", "gcc-runtime 0.0.0"] in c["b_not_a"]
 
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
