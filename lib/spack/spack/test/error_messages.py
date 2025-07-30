@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from contextlib import contextmanager
-
 import os
 import os.path
+from contextlib import contextmanager
+
 import pytest
 
 import spack.config
@@ -15,7 +15,6 @@ import spack.util.file_cache
 import spack.util.spack_yaml as syaml
 from spack.concretize import concretize_one
 from spack.main import SpackCommand
-from spack.spec import Spec
 
 solve = SpackCommand("solve")
 
@@ -324,10 +323,13 @@ all_pkgs = [
 
 
 def _add_import(pkg_def):
-    return """\
+    return (
+        """\
 from spack.package import *
 from spack.package import Package
-""" + pkg_def
+"""
+        + pkg_def
+    )
 
 
 all_pkgs = list((x, _add_import(y)) for (x, y) in all_pkgs)
