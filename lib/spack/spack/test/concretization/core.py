@@ -3927,3 +3927,111 @@ def test_satisfies_conditional_spec(
     assert abstract_spec.satisfies(conditional_spec) is expected_abstract
     assert concrete_spec.satisfies(conditional_spec) is expected_concrete
     assert concrete_spec.satisfies(abstract_spec)
+
+
+@pytest.mark.not_on_windows("Tests use linux paths")
+@pytest.mark.regression("51001")
+def test_selecting_externals_with_compilers_as_root(mutable_config, mock_packages):
+    """Tests that we can select externals that have a compiler in their spec, even when
+    they are root.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@9.4.0 languages='c,c++'"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  llvm:
+    buildable: false
+    externals:
+    - spec: "llvm@20 +clang"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  mpich:
+    buildable: false
+    externals:
+    - spec: "mpich@3.4.3 %gcc"
+      prefix: /path/mpich/gcc
+    - spec: "mpich@3.4.3 %clang"
+      prefix: /path/mpich/clang
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    # Select mpich as the root spec
+    s = spack.concretize.concretize_one("mpich %clang")
+    assert s.external
+    assert s.prefix == "/path/mpich/clang"
+
+    s = spack.concretize.concretize_one("mpich %gcc")
+    assert s.external
+    assert s.prefix == "/path/mpich/gcc"
+
+    # Select mpich as a dependency
+    s = spack.concretize.concretize_one("mpileaks ^mpi=mpich %clang")
+    assert s["mpi"].external
+    assert s["mpi"].prefix == "/path/mpich/clang"
+
+    s = spack.concretize.concretize_one("mpileaks ^mpi=mpich %gcc")
+    assert s["mpi"].external
+    assert s["mpi"].prefix == "/path/mpich/gcc"
+
+
+@pytest.mark.not_on_windows("Tests use linux paths")
+@pytest.mark.regression("51001")
+@pytest.mark.parametrize(
+    "external_compiler,spec_str,expected_raising",
+    [
+        # Overspecify the compiler in the input spec. This should raise, because we
+        # don't know if we can satisfy the constraint
+        ("gcc", "mpich %gcc@9", True),
+        pytest.param("gcc@9", "mpich %gcc@9.4", True, marks=pytest.mark.xfail),
+        # This is ok
+        ("gcc@9.4.0", "mpich %gcc@9", False),
+    ],
+)
+def test_selecting_externals_with_compilers_and_versions(
+    external_compiler, spec_str, expected_raising, mutable_config, mock_packages
+):
+    """Tests different scenarios of having a compiler specified with a version constraint, either
+    in the input spec or in the external spec.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@9.4.0 languages='c,c++'"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  mpich:
+    buildable: false
+    externals:
+    - spec: "mpich@3.4.3 %{external_compiler}"
+      prefix: /path/mpich/gcc
+    - spec: "mpich@3.4.3 %clang"
+      prefix: /path/mpich/clang
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    if expected_raising:
+        with pytest.raises(
+            spack.solver.asp.UnsatisfiableSpecError, match="Omit version requirement"
+        ):
+            _ = spack.concretize.concretize_one(spec_str)
+    else:
+        s = spack.concretize.concretize_one(spec_str)
+        assert s.external
+        assert s.prefix == "/path/mpich/gcc"

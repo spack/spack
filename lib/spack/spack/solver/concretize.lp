@@ -1013,6 +1013,10 @@ attr("external_spec_selected", node(ID, Package), LocalIndex) :-
     attr("node", node(ID, Package)),
     not attr("hash", node(ID, Package), _).
 
+% At most a single external can be active for a given node
+:- attr("node", node(ID, Package)),
+   2 { attr("external_spec_selected", node(ID, Package), LocalIndex) }.
+
 % Allow clingo not to impose an external condition. This is needed to allow solving
 % for externals that are indistinguishable besides compiler "metadata" e.g.
 % mpich@4.2 %gcc vs. mpich@4.2 %clang
@@ -1030,6 +1034,17 @@ attr("external_spec_selected", node(ID, Package), LocalIndex) :-
   :- not attr("root", ExternalNode),
      attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
      attr("external_build_requirement", ExternalNode, node_requirement("node_version_satisfies", Compiler, Constraint)).
+
+error(100, "Cannot use an external for {0}, because the {1} compiler is overspecified. Omit version requirement.", ExternalPackage, Compiler) :-
+    external(node(X, ExternalPackage)),
+    not attr("external_build_requirement", node(X, ExternalPackage), node_requirement("node_version_satisfies", Compiler, _)),
+    attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
+    attr("direct_dependency", node(X, ExternalPackage), node_requirement("node_version_satisfies", Compiler, Constraint)).
+
+% If we require a compiler on an external root, be sure it's mentioned in the external spec
+:- external(ExternalNode),
+   not attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
+   attr("direct_dependency", ExternalNode, node_requirement("node",Compiler)).
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
