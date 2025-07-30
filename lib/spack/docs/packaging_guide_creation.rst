@@ -1508,6 +1508,12 @@ The first validator function is :py:func:`~spack.package.any_combination_of`, wh
 This is very similar to ordinary multi-valued variants, but crucially it allows users to pick neither of the two values, using ``staging=none`` (the default).
 In other words, the valid options are either ``staging=none`` to select nothing, or ``staging=dataspaces``, ``staging=flexpath``, and ``staging=dataspaces,flexpath``.
 
+.. note::
+
+   The variant value ``none`` is a value like any other.
+   By convention, it indicates that no value is selected for the variant.
+   Variant values are always strings, so the value ``none`` is not related to the Python :py:data:`None` object.
+
 The second validator function :py:func:`~spack.package.disjoint_sets`, which generalizes this concept further:
 
   .. code-block:: python
