@@ -2088,7 +2088,11 @@ class HeaderList(FileList):
         Returns:
             str: A joined list of include flags
         """
-        return " ".join(["-I" + x for x in self.directories])
+        return " ".join(self.include_flags_list)
+    
+    @property
+    def include_flags_list(self):
+        return ["-I" + x for x in self.directories]
 
     @property
     def macro_definitions(self):
@@ -2263,7 +2267,11 @@ class LibraryList(FileList):
         Returns:
             str: A joined list of search flags
         """
-        return " ".join(["-L" + x for x in self.directories])
+        return " ".join(self.search_flags_list)
+    
+    @property
+    def search_flags_list(self):
+        return ["-L" + x for x in self.directories]
 
     @property
     def link_flags(self):
@@ -2276,7 +2284,11 @@ class LibraryList(FileList):
         Returns:
             str: A joined list of link flags
         """
-        return " ".join(["-l" + name for name in self.names])
+        return " ".join(self.link_flags_list)
+
+    @property
+    def link_flags_list(self):
+        return ["-l" + name for name in self.names]
 
     @property
     def ld_flags(self):
@@ -2290,6 +2302,10 @@ class LibraryList(FileList):
             str: A joined list of search flags and link flags
         """
         return self.search_flags + " " + self.link_flags
+    
+    @property
+    def ld_flags_list(self):
+        return self.search_flags_list + self.link_flags_list
 
 
 def find_system_libraries(libraries, shared=True):
