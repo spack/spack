@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to set up and manage package repositories in Spack, enabling you to maintain custom packages and override built-in ones.
+
 .. _repositories:
 
 =================================

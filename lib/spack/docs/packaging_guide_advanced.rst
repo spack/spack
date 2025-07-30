@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Advanced topics in Spack packaging, covering packages with multiple build systems, making packages discoverable with spack external find, and specifying ABI compatibility.
+
 .. list-table::
    :widths: 25 25 25 25
    :header-rows: 0

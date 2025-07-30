@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      An overview of the key features that distinguish Spack from other package managers, including simple installation, custom configurations, and non-destructive installs.
+
 ================
 Feature Overview
 ================

@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide for developers and administrators on how to package software for Spack, covering the structure of a package, creating and editing packages, and defining dependencies and variants.
+
 .. list-table::
    :widths: 25 25 25 25
    :header-rows: 0

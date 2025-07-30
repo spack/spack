@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Find instructions on how to install the necessary prerequisites for Spack on various operating systems, including Linux and macOS.
+
 .. _verify-spack-prerequisites:
 
 ===================

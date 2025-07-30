@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to configuring Spack to use external GPU support, including ROCm and CUDA installations, as well as the OpenGL API.
+
 ==========================
 Using External GPU Support
 ==========================

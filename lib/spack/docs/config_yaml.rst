@@ -4,6 +4,10 @@
 
 .. _config-yaml:
 
+.. meta::
+   :description lang=en:
+      A detailed guide to the config.yaml file in Spack, which allows you to set core configuration options like installation paths, build parallelism, and trusted sources.
+
 ============================
 Spack Settings (config.yaml)
 ============================

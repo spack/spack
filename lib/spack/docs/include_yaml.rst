@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to use include directives to modularize your Spack YAML configuration files for better organization and reusability.
+
 .. _include-yaml:
 
 ===============================

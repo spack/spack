@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to use the Meson build system in Spack for projects that use Meson for their build process.
+
 .. _mesonpackage:
 
 ------

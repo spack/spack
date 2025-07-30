@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to using the Perl build system in Spack for installing Perl modules.
+
 .. _perlpackage:
 
 ------

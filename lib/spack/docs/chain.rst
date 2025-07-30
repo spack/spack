@@ -2,7 +2,9 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-.. chain:
+.. meta::
+   :description lang=en:
+      Learn how to chain Spack installations by pointing one Spack instance to another to use its installed packages.
 
 =============================================
 Chaining Spack Installations (upstreams.yaml)

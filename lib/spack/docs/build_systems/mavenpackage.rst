@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the Maven build system in Spack for building and managing Java-based projects.
+
 .. _mavenpackage:
 
 ------

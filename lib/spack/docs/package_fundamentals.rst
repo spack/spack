@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn the fundamental Spack commands for managing software packages, including how to find, inspect, install, and remove them.
+
 .. _basic-usage:
 
 ====================

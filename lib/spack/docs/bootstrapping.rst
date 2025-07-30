@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how Spack's bootstrapping feature automatically fetches and installs essential build tools when they are not available on the host system.
+
 .. _bootstrapping:
 
 =============

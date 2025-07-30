@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A beginner's guide to Spack, walking you through the initial setup, basic commands, and core concepts to get you started with managing software.
+
 .. _getting_started:
 
 ===============

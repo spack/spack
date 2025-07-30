@@ -2,6 +2,11 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Understand the Spack package signing process, which ensures data integrity for official packages from automated CI pipelines through cryptographic signing.
+
+
 .. _signing:
 
 =====================

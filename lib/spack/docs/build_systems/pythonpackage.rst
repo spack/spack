@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to packaging Python libraries with Spack, covering PyPI downloads, dependency management, and build system integration.
+
 .. _pythonpackage:
 
 ------
