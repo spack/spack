@@ -75,8 +75,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "-t",
         "--tests",
         action="store_true",
-        default=False,
-        help="run stand-alone tests after the build",
+        default=True,
+        help="run stand-alone test job after the build",
     )
     prune_dag_group = generate.add_mutually_exclusive_group()
     prune_dag_group.add_argument(

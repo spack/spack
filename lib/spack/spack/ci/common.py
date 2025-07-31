@@ -514,6 +514,7 @@ class SpackCIConfig:
         """Initialize job object"""
         job_object = {"spec": release_spec, "attributes": {}}
         if release_spec:
+            job_object["type"] = "build"
             job_vars = job_object["attributes"].setdefault("variables", {})
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec.dag_hash()
             job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
@@ -576,17 +577,14 @@ class SpackCIConfig:
 
         return dest
 
-    # Create jobs for all the pipeline specs
+    # Create build jobs for all the pipeline specs
     def init_pipeline_jobs(self, pipeline: PipelineDag):
         for _, node in pipeline.traverse_nodes():
             dag_hash = node.spec.dag_hash()
-            self.ir["jobs"][dag_hash] = {
-                "build": self.__init_job(node.spec),
-                "test": self.__init_job(node.spec),
-            }
+            self.ir["jobs"][dag_hash] = self.__init_job(node.spec)
 
     # Generate IR from the configs
-    def generate_ir(self):
+    def generate_ir(self, add_test_jobs: bool = True):
         """Generate the IR from the Spack CI configurations."""
 
         jobs = self.ir["jobs"]
@@ -601,7 +599,10 @@ class SpackCIConfig:
                         "spack ci test",
                     ]
                 }
-            },
+            }
+        ] if add_test_jobs else []
+
+        defaults.extend([
             {
                 "build-job": {
                     "script": [
@@ -612,7 +613,7 @@ class SpackCIConfig:
                 }
             },
             {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
-        ]
+        ])
 
         # Job overrides
         overrides = [
@@ -636,6 +637,7 @@ class SpackCIConfig:
 
         pipeline_gen = overrides + self.ci_config.get("pipeline-gen", []) + defaults
 
+        test_jobs = {}
         for section in reversed(pipeline_gen):
             name = self.__is_named(section)
             has_submapping = "submapping" in section
@@ -654,13 +656,21 @@ class SpackCIConfig:
                     if do_merge:
                         dest = copy.copy(spack.schema.merge_yaml(dest, src[merge_job_name]))
 
-                # TODO/TLD: Is this the right thing to do wrt test jobs?
-                if name in ["build", "test"]:
-                    # Apply attributes to all build and test jobs
-                    for _, job in jobs.items():
+                if name == "build":
+                    # Apply attributes to all build jobs
+                    for k, job in jobs.items():
                         if job["spec"]:
+                            if add_test_jobs:
+                                new_job = copy.copy(job)
+                                new_job["type"] = "test"
+                                test_jobs[f"{k}-test"] = new_job
                             _apply_section(job["attributes"], section)
-                        # TODO/TLD: if name is "test", want 'needs' to "build"
+                elif name == "test":
+                    # Apply attributes to all test jobs
+                    print(f"TLD: test section ({section}):")
+                    for k, job in test_jobs.items():
+                        _apply_section(job["attributes"], section)
+                    
                 elif name == "any":
                     # Apply section attributes to all jobs
                     for _, job in jobs.items():
@@ -679,12 +689,13 @@ class SpackCIConfig:
 
             elif has_submapping:
                 # Apply section jobs with specs to match
-                for _, job in jobs.items():
+                #for _, job in jobs.items():
+                all_jobs = {**jobs, **test_jobs}
+                for _, job in all_jobs.items():
                     if job["spec"]:
                         job["attributes"] = self.__apply_submapping(
                             job["attributes"], job["spec"], section
                         )
-                    # TODO/TLD: is this affected???
             elif has_dynmapping:
                 mapping = section["dynamic-mapping"]
 
@@ -732,7 +743,9 @@ class SpackCIConfig:
                     ).format_map(job_vars)
                     return f"spec={quote(query)}"
 
-                for job in jobs.values():
+                #for job in jobs.values():
+                all_jobs = {**jobs, **test_jobs}
+                for _, job in all_jobs.items():
                     if not job["spec"]:
                         continue
 
@@ -781,10 +794,13 @@ class SpackCIConfig:
                             job.get("attributes", {}), clean_config
                         )
 
-        for _, job in jobs.items():
+        #for _, job in jobs.items():
+        all_jobs = {**jobs, **test_jobs}
+        for _, job in all_jobs.items():
             if job["spec"]:
                 job["spec"] = job["spec"].name
 
+        self.ir = all_jobs
         return self.ir
 
 

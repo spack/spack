@@ -5,7 +5,7 @@ import copy
 import os
 import shutil
 import urllib
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import spack.vendor.ruamel.yaml
 
@@ -50,6 +50,8 @@ JOB_RETRY_CONDITIONS = [
 ]
 JOB_NAME_FORMAT = "{name}{@version} {/hash}"
 
+MAX_JOB_NAME_LENGTH = 255
+
 
 def _remove_reserved_tags(tags):
     """Convenience function to strip reserved tags from jobs"""
@@ -71,7 +73,7 @@ def get_job_name(spec: spack.spec.Spec, build_group: Optional[str] = None) -> st
     if build_group:
         job_name = f"{job_name} {build_group}"
 
-    return job_name[:255]
+    return job_name[:MAX_JOB_NAME_LENGTH]
 
 
 def maybe_generate_manifest(pipeline: PipelineDag, options: PipelineOptions, manifest_path):
@@ -92,6 +94,102 @@ def maybe_generate_manifest(pipeline: PipelineDag, options: PipelineOptions, man
         write_pipeline_manifest(
             manifest_specs, buildcache_copy_src_prefix, buildcache_copy_dest_prefix, manifest_path
         )
+
+
+def create_buildcache_sync_job(attributes: Dict, needs: List[Dict], destination_fetch_url: str, relative_keys_url: str) -> Dict:
+    """Create a buildcache sync job configuration.
+
+    Args:
+        attributes: sync job attributes
+        needs: list of jobs required to start the sync job
+        destination_fetch_url: url for the buildcache destination's fetch url
+        relative_keys_url: buildcache's relative keys URL
+
+    Returns: buildcache sync job object
+    """
+
+    sync_job = copy.deepcopy(attributes)
+    sync_job["stage"] = "copy"
+    sync_job["needs"] = needs
+
+    if "variables" not in sync_job:
+        sync_job["variables"] = {}
+
+    sync_job["variables"].update(
+        {
+            "SPACK_COPY_ONLY_DESTINATION": destination_fetch_url,
+            "SPACK_BUILDCACHE_RELATIVE_KEYS_URL": relative_keys_url,
+        }
+    )
+
+    pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+    if "buildcache-source" not in pipeline_mirrors:
+        raise SpackCIError("Copy-only pipelines require a mirror named 'buildcache-source'")
+
+    buildcache_source = pipeline_mirrors["buildcache-source"].fetch_url
+    sync_job["variables"]["SPACK_BUILDCACHE_SOURCE"] = buildcache_source
+    sync_job["dependencies"] = []
+    return sync_job
+
+
+def create_buildcache_signing_job(attributes: Dict, destination_push_url: str, relative_specs_url: str, relative_keys_url: str) -> Dict:
+    """Create the buildcache signing job configuration.
+
+    Args:
+        attributes: signing job attributes
+        destination_push_url: url for the buildcache destination push url
+        relative_keys_url: buildcache's relative specs URL
+        relative_keys_url: buildcache's relative keys URL
+
+    Returns: buildcache signing job configuration
+    """
+    signing_job = attributes
+
+    signing_job["script"] = unpack_script(signing_job["script"])
+
+    signing_job["stage"] = "stage-sign-pkgs"
+    signing_job["when"] = "always"
+    signing_job["retry"] = {"max": 2, "when": ["always"]}
+    signing_job["interruptible"] = True
+
+    if "variables" not in signing_job:
+        signing_job["variables"] = {}
+
+    signing_job["variables"].update(
+        {
+            "SPACK_BUILDCACHE_DESTINATION": destination_push_url,
+            "SPACK_BUILDCACHE_RELATIVE_SPECS_URL": relative_specs_url,
+            "SPACK_BUILDCACHE_RELATIVE_KEYS_URL": relative_keys_url,
+        }
+    )
+    signing_job["dependencies"] = []
+    return signing_job
+
+
+def create_rebuild_index_job(attributes: Dict, destination_push_url: str, service_job_retries: Dict) -> Dict:
+    """Create the rebuild index job configuration.
+
+    Args:
+        attributes: rebuild index job attributes
+        destination_push_url: url for the buildcache destination push url
+        service_job_retries: retry configuration
+
+    Returns: reindex job configuration
+    """
+    reindex_job = attributes
+
+    reindex_job["stage"] = "stage-rebuild-index"
+    target_mirror = destination_push_url
+    reindex_job["script"] = unpack_script(
+        reindex_job["script"],
+        op=lambda cmd: cmd.replace("{index_target_mirror}", target_mirror),
+    )
+
+    reindex_job["when"] = "always"
+    reindex_job["retry"] = service_job_retries
+    reindex_job["interruptible"] = True
+    reindex_job["dependencies"] = []
+    return reindex_job
 
 
 @generator("gitlab")
@@ -121,7 +219,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)
 
-    spack_ci_ir = spack_ci.generate_ir()
+    spack_ci_ir = spack_ci.generate_ir(options.add_test_jobs)
 
     concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
 
@@ -206,112 +304,137 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     max_length_needs = 0
     max_needs_job = ""
 
-    # TODO/TLD: RESUME working on this section to add test jobs IFF options.add_test_jobs
     # TODO/TLD: test_stage is assumed to be okay to be at level+1
     # TODO/TLD: test job NEEDS the build job
     # TODO/TLD: test job needs unique name
+    jobs = spack_ci_ir["jobs"]
     if not options.pipeline_type == PipelineType.COPY_ONLY:
         for level, node in pipeline.traverse_nodes(direction="parents"):
-            stage_id = level
-            if len(stages) == stage_id:
-                stages.append([])
-            stages[stage_id].append(node.spec)
-            stage_name = f"stage-{level}"
-            test_stage_name = f"stage-{level+1}"
-
-            if stage_name not in stage_names:
-                stage_names.append(stage_name)
-            if test_stage_name not in stage_names:
-                stage_names.append(test_stage_name)
-
             release_spec = node.spec
             release_spec_dag_hash = release_spec.dag_hash()
+            print(f"TLD: level {0}, node {node}, hash {release_spec_dag_hash}")
 
-            build_object = spack_ci_ir["jobs"][release_spec_dag_hash]["build"]["attributes"]
-            test_object = spack_ci_ir["jobs"][release_spec_dag_hash]["test"]["attributes"]
+            # TLD/TODO: Resume here with handling each possible type
+            for job in job_types:
+                stage_id = level if job == "build" else level + 1
+                if len(stages) == stage_id:
+                    stages.append([])
 
-            if not build_object:
-                tty.warn(f"No match found for {release_spec}, skipping it")
-                continue
+                stages[stage_id].append(node.spec)
+                stage_name = f"stage-{level}"
 
-            if options.pipeline_type is not None:
-                # For spack pipelines "public" and "protected" are reserved tags
-                build_object["tags"] = _remove_reserved_tags(build_object.get("tags", []))
-                if options.pipeline_type == PipelineType.PROTECTED_BRANCH:
-                    build_object["tags"].extend(["protected"])
-                elif options.pipeline_type == PipelineType.PULL_REQUEST:
-                    build_object["tags"].extend(["public"])
+                if stage_name not in stage_names:
+                    stage_names.append(stage_name)
 
-            if "script" not in build_object:
-                raise AttributeError
+                job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
+                print(f"\nTLD: key {spec_key}: object {job_object}")
 
-            build_object["script"] = unpack_script(
-                build_object["script"], op=main_script_replacements
-            )
+                if not job_object:
+                    tty.warn(f"No {job} match found for {release_spec}, skipping it")
+                    continue
 
-            if "before_script" in build_object:
-                build_object["before_script"] = unpack_script(build_object["before_script"])
+                if options.pipeline_type is not None:
+                    # For spack pipelines "public" and "protected" are reserved tags
+                    job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
+                    if options.pipeline_type == PipelineType.PROTECTED_BRANCH:
+                        job_object["tags"].extend(["protected"])
+                    elif options.pipeline_type == PipelineType.PULL_REQUEST:
+                        job_object["tags"].extend(["public"])
 
-            if "after_script" in build_object:
-                build_object["after_script"] = unpack_script(build_object["after_script"])
+                if "script" not in job_object:
+                    raise AttributeError
 
-            build_group = options.cdash_handler.build_group if options.cdash_handler else None
-            job_name = get_job_name(release_spec, build_group)
+                job_object["script"] = unpack_script(
+                    job_object["script"], op=main_script_replacements
+                )
 
-            dep_nodes = pipeline.get_dependencies(node)
-            build_object["needs"] = [
-                {"job": get_job_name(dep_node.spec, build_group), "artifacts": False}
-                for dep_node in dep_nodes
-            ]
+                if "before_script" in job_object:
+                    job_object["before_script"] = unpack_script(job_object["before_script"])
 
-            build_object["needs"].append(
-                {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"}
-            )
+                if "after_script" in job_object:
+                    job_object["after_script"] = unpack_script(job_object["after_script"])
 
-            job_vars = build_object["variables"]
+                build_group = options.cdash_handler.build_group if options.cdash_handler else None
+                # Grab the (build) job name
+                job_name = get_job_name(release_spec, build_group)
+                print(f"TLD: .. job name = {job_name}")
 
-            # Let downstream jobs know whether the spec needed rebuilding, regardless
-            # whether DAG pruning was enabled or not.
-            already_built = spack.binary_distribution.get_mirrors_for_spec(
-                spec=release_spec, index_only=True
-            )
-            job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
+                if job == "build":
+                    dep_nodes = pipeline.get_dependencies(node)
+                    job_object["needs"] = [
+                        {"job": get_job_name(dep_node.spec, build_group), "artifacts": False}
+                        for dep_node in dep_nodes
+                    ]
 
-            if options.cdash_handler:
-                build_name = options.cdash_handler.build_name(release_spec)
-                job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
-                build_stamp = options.cdash_handler.build_stamp
-                job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
+                    job_object["needs"].append(
+                        {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"}
+                    )
+                elif job == "test":
+                    # Test jobs require the build job
+                    #
+                    # TODO/TBD: Should test jobs require build artifacts?
+                    #
+                    # TODO/TBD: Do we want to allow test jobs to run wo. build?
+                    # TODO/TBD: What affect does having test job optionally
+                    # TODO/TBD:   depend on build mean, for example, if no
+                    # TODO/TBD:   spec to rebuild will test run (against cache?)
+                    job_object["needs"] = [
+                        {"job": job_name, "artifacts": True, "optional": True},
+                        {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"}
+                    ]
 
-            build_object["artifacts"] = spack.schema.merge_yaml(
-                build_object.get("artifacts", {}),
-                {
-                    "when": "always",
-                    "paths": [
-                        rel_job_log_dir,
-                        rel_job_repro_dir,
-                        rel_job_test_dir,
-                        rel_user_artifacts_dir,
-                    ],
-                },
-            )
+                    # Ensure the test job has a unique name (TBD: needed?)
+                    job_name = f"test-{job_name}"[:MAX_JOB_NAME_LENGTH]
 
-            build_object["stage"] = stage_name
-            build_object["retry"] = spack.schema.merge_yaml(
-                {"max": 2, "when": JOB_RETRY_CONDITIONS}, build_object.get("retry", {})
-            )
-            build_object["interruptible"] = True
+                job_vars = job_object["variables"]
 
-            length_needs = len(build_object["needs"])
-            if length_needs > max_length_needs:
-                max_length_needs = length_needs
-                max_needs_job = job_name
+                # Let downstream jobs know whether the spec needed rebuilding,
+                # whether DAG pruning was enabled or not.
+                already_built = bindist.get_mirrors_for_spec(spec=release_spec, index_only=True)
+                job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
 
-            output_object[job_name] = build_object
-            job_id += 1
+                if options.cdash_handler:
+                    build_name = options.cdash_handler.build_name(release_spec)
+                    job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
 
-        tty.debug(f"{job_id} build jobs generated in {stage_id} stages")
-        # TLD: Finish here
+                    build_stamp = options.cdash_handler.build_stamp
+                    job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
+
+                job_object["artifacts"] = spack.schema.merge_yaml(
+                    job_object.get("artifacts", {}),
+                    {
+                        "when": "always",
+                        "paths": [
+                            rel_job_log_dir,
+                            rel_job_repro_dir,
+                            rel_job_test_dir,
+                            rel_user_artifacts_dir,
+                        ],
+                    },
+                )
+
+                job_object["stage"] = stage_name
+                job_object["retry"] = spack.schema.merge_yaml(
+                    {"max": 2, "when": JOB_RETRY_CONDITIONS}, job_object.get("retry", {})
+                )
+                job_object["interruptible"] = True
+
+                length_needs = len(job_object["needs"])
+                if length_needs > max_length_needs:
+                    max_length_needs = length_needs
+                    max_needs_job = job_name
+
+                print(f"TLD: .. {job_name}: {job_object}")
+                output_object[job_name] = job_object
+                job_id += 1
+
+            job_str = "build"
+            stages = stage_id
+            if "test" in job_types:
+                job_str += "and test"
+                stages += 1
+
+            tty.debug(f"{job_id} {job_str} jobs generated in {stages} stages")
 
     if job_id > 0:
         tty.debug(f"The max_needs_job is {max_needs_job}, with {max_length_needs} needs")
@@ -335,28 +458,12 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
     if options.pipeline_type == PipelineType.COPY_ONLY:
         stage_names.append("copy")
-        sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
-        sync_job["stage"] = "copy"
-        sync_job["needs"] = [{"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"}]
-
-        if "variables" not in sync_job:
-            sync_job["variables"] = {}
-
-        sync_job["variables"].update(
-            {
-                "SPACK_COPY_ONLY_DESTINATION": options.buildcache_destination.fetch_url,
-                "SPACK_BUILDCACHE_RELATIVE_KEYS_URL": relative_keys_url,
-            }
+        sync_job = create_buildcache_sync_job(
+            spack_ci_ir["jobs"]["copy"]["attributes"],
+            [{"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"}],
+            options.buildcache_destination.fetch_url,
+            relative_keys_url,
         )
-
-        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
-        if "buildcache-source" not in pipeline_mirrors:
-            raise SpackCIError("Copy-only pipelines require a mirror named 'buildcache-source'")
-
-        buildcache_source = pipeline_mirrors["buildcache-source"].fetch_url
-        sync_job["variables"]["SPACK_BUILDCACHE_SOURCE"] = buildcache_source
-        sync_job["dependencies"] = []
-
         output_object["copy"] = sync_job
         job_id += 1
 
@@ -367,44 +474,22 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         ):
             # External signing: generate a job to check and sign binary pkgs
             stage_names.append("stage-sign-pkgs")
-            signing_job = spack_ci_ir["jobs"]["signing"]["attributes"]
-
-            signing_job["script"] = unpack_script(signing_job["script"])
-
-            signing_job["stage"] = "stage-sign-pkgs"
-            signing_job["when"] = "always"
-            signing_job["retry"] = {"max": 2, "when": ["always"]}
-            signing_job["interruptible"] = True
-            if "variables" not in signing_job:
-                signing_job["variables"] = {}
-            signing_job["variables"].update(
-                {
-                    "SPACK_BUILDCACHE_DESTINATION": options.buildcache_destination.push_url,
-                    "SPACK_BUILDCACHE_RELATIVE_SPECS_URL": relative_specs_url,
-                    "SPACK_BUILDCACHE_RELATIVE_KEYS_URL": relative_keys_url,
-                }
+            signing_job = create_buildcache_signing_job(
+                spack_ci_ir["jobs"]["signing"]["attributes"],
+                options.buildcache_destination.push_url,
+                relative_specs_url,
+                relative_keys_url,
             )
-            signing_job["dependencies"] = []
-
             output_object["sign-pkgs"] = signing_job
 
         if options.rebuild_index:
             # Add a final build-related job to regenerate the index
             stage_names.append("stage-rebuild-index")
-            final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
-
-            final_job["stage"] = "stage-rebuild-index"
-            target_mirror = options.buildcache_destination.push_url
-            final_job["script"] = unpack_script(
-                final_job["script"],
-                op=lambda cmd: cmd.replace("{index_target_mirror}", target_mirror),
+            final_job = create_rebuild_index_job(
+                spack_ci_ir["jobs"]["reindex"]["attributes"],
+                options.buildcache_destination.push_url,
+                service_job_retries,
             )
-
-            final_job["when"] = "always"
-            final_job["retry"] = service_job_retries
-            final_job["interruptible"] = True
-            final_job["dependencies"] = []
-
             output_object["rebuild-index"] = final_job
 
         output_object["stages"] = stage_names
