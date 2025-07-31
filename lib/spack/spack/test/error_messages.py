@@ -352,7 +352,7 @@ def create_test_repo(tmp_path, pkg_name_content_tuples):
     repo_name = f"testrepo{str(_repo_name_id)}"
     repo_path = tmp_path / "spack_repo" / repo_name
     os.makedirs(repo_path)
-    with open(repo_path / "__init__.py", "w"):
+    with open(repo_path / "__init__.py", "w", encoding="utf-8"):
         pass
     repo_yaml = os.path.join(repo_path, "repo.yaml")
     with open(str(repo_yaml), "w", encoding="utf-8") as f:
@@ -368,7 +368,7 @@ repo:
 
     packages_dir = repo_path / "packages"
     os.mkdir(packages_dir)
-    with open(packages_dir / "__init__.py", "w"):
+    with open(packages_dir / "__init__.py", "w", encoding="utf-8"):
         pass
     for pkg_name, pkg_str in pkg_name_content_tuples:
         pkg_dir = packages_dir / pkg_name
