@@ -8,6 +8,7 @@ import pytest
 from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
+import spack.repo
 from spack.externals import ExternalDict, ExternalSpecsParser
 
 pytestmark = pytest.mark.usefixtures("config", "mock_packages")
@@ -79,3 +80,22 @@ def test_external_specs_architecture_completion(
         assert node.architecture.platform == expected_platform
         assert node.architecture.os == expected_os
         assert node.target == expected_target
+
+
+def test_external_specs_parser_with_missing_packages():
+    """Tests the parsing of external specs when some packages are missing"""
+    externals_dict: List[ExternalDict] = [
+        {"spec": "gmake@1.0", "prefix": "/path/to/gmake1"},
+        {"spec": "gmake@2.0", "prefix": "/path/to/gmake2"},
+        {"spec": "gcc@1.0", "prefix": "/path/to/gcc"},
+        # This package does not exist in the builtin_mock repository
+        {"spec": "baz@1.0", "prefix": "/path/to/baz"},
+    ]
+
+    external_specs = ExternalSpecsParser(externals_dict, allow_nonexisting=True).all_specs()
+    assert len(external_specs) == 3
+    assert len([x for x in external_specs if x.satisfies("gmake")]) == 2
+    assert len([x for x in external_specs if x.satisfies("gcc")]) == 1
+
+    with pytest.raises(spack.repo.UnknownPackageError, match="Package 'baz' not found"):
+        ExternalSpecsParser(externals_dict, allow_nonexisting=False)

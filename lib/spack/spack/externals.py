@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Union
 from spack.vendor.typing_extensions import TypedDict
 
 import spack.archspec
+import spack.repo
 import spack.spec
 
 
@@ -55,11 +56,25 @@ class ExternalSpecsParser:
         external_dicts: List[ExternalDict],
         *,
         complete_node: Callable[[spack.spec.Spec], None] = complete_architecture,
+        allow_nonexisting: bool = True,
     ):
+        """Initializes a class to manage and process external specifications.
+
+        Args:
+            external_dicts: list of ExternalDict objects to provide external specifications.
+            complete_node: a callable that completes a node with missing variants, targets, etc.
+                Defaults to `complete_architecture`.
+            allow_nonexisting: whether to allow non-existing packages. Defaults to True.
+
+        Raises:
+            spack.repo.UnknownPackageError: if a package does not exist,
+                and allow_nonexisting is False.
+        """
         self.external_dicts = external_dicts
         self.specs_by_external_id: Dict[str, spack.spec.Spec] = {}
         self.specs_by_name: Dict[str, List[spack.spec.Spec]] = {}
         self.nodes: List[spack.spec.Spec] = []
+        self.allow_nonexisting = allow_nonexisting
         # Fill the data structures above (can be done lazily)
         self.complete_node = complete_node
         self._parse()
@@ -67,6 +82,17 @@ class ExternalSpecsParser:
     def _parse(self) -> None:
         for external_dict in self.external_dicts:
             node = node_from_dict(external_dict)
+            package_exists = spack.repo.PATH.exists(node.name)
+
+            # If we allow non-existing packages, just continue
+            if not package_exists and self.allow_nonexisting:
+                continue
+
+            if not package_exists and not self.allow_nonexisting:
+                raise spack.repo.UnknownPackageError(node.name, repo=spack.repo.PATH)
+
+            if not package_exists:
+                raise ValueError(f"Package '{node.name}' does not exist")
             self.complete_node(node)
             external_id = external_dict.get("external_id")
             if external_id:
