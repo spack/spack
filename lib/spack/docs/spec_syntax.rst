@@ -165,31 +165,27 @@ A version specifier
 comes after a package name and starts with ``@``.
 It can be something abstract that matches multiple known versions or a specific version.
 
-The version specifier usually represents *a range of versions*, but can also be *a specific version*.
+The version specifier usually represents *a range of versions*:
 
-.. tab-set::
+.. code-block::
 
-   .. tab-item:: Range of Versions
+   # All versions between v1.0 and v1.5.
+   # This includes any v1.5.x version
+   @1.0:1.5
 
-      .. code-block::
+   # All versions up to and including v3
+   # This would include v3.4 etc.
+   @:3
 
-         # All versions between v1.0 and v1.5.
-         # This includes any v1.5.x version
-         @1.0:1.5
+   # All versions above and including v4.2
+   @4.2:
 
-         # All versions up to and including v3
-         # This would include v3.4 etc.
-         @:3
+but can also be *a specific version*:
 
-         # All versions above and including v4.2
-         @4.2:
+.. code-block:: text
 
-   .. tab-item:: Exact Version
-
-      .. code-block:: text
-
-         # Exactly version v3.2, will NOT match v3.2.1 etc.
-         @=3.2
+   # Exactly version v3.2, will NOT match v3.2.1 etc.
+   @=3.2
 
 
 As a shorthand, ``@3`` is equivalent to the range ``@3:3`` and includes any version with major version ``3``.
@@ -264,66 +260,70 @@ They are optional, as each package must provide default values for each variant 
 The variants available for a particular package are defined by the package author.
 ``spack info <package>`` will provide information on what build variants are available.
 
-There are different types of variants:
+There are different types of variants.
 
-.. tab-set::
+^^^^^^^^^^^^^^^^
+Boolean Variants
+^^^^^^^^^^^^^^^^
 
-   .. tab-item:: Boolean Variants
+Typically used to enable or disable a feature at compile time.
+For example, a package might have a ``debug`` variant that can be explicitly enabled with:
 
-      Typically used to enable or disable a feature at compile time.
-      For example, a package might have a ``debug`` variant that can be explicitly enabled with:
+.. code-block::
 
-      .. code-block::
+   +debug
 
-         +debug
+and disabled with
 
-      and disabled with
+.. code-block::
 
-      .. code-block::
+   ~debug
 
-         ~debug
+^^^^^^^^^^^^^^^^^^^^^^
+Single-valued Variants
+^^^^^^^^^^^^^^^^^^^^^^
 
-   .. tab-item:: Single-valued Variants
+Often used to set defaults.
+For example, a package might have a ``compression`` variant that determines the default compression algorithm, which users could set to:
 
-      Often used to set defaults.
-      For example, a package might have a ``compression`` variant that determines the default compression algorithm, which users could set to:
+.. code-block::
 
-      .. code-block::
+   compression=gzip
 
-         compression=gzip
+or
 
-      or
+.. code-block::
 
-      .. code-block::
+   compression=zstd
 
-         compression=zstd
+^^^^^^^^^^^^^^^^^^^^^
+Multi-valued Variants
+^^^^^^^^^^^^^^^^^^^^^
 
-   .. tab-item:: Multi-valued Variants
+A package might have a ``fabrics`` variant that determines which network fabrics to support.
+Users could activate multiple values at the same time. For instance:
 
-      A package might have a ``fabrics`` variant that determines which network fabrics to support.
-      Users could activate multiple values at the same time. For instance:
+.. code-block::
 
-      .. code-block::
+   fabrics=verbs,ofi
 
-         fabrics=verbs,ofi
+enables both InfiniBand verbs and OpenFabrics interfaces.
+The values are separated by commas.
 
-      enables both InfiniBand verbs and OpenFabrics interfaces.
-      The values are separated by commas.
+The meaning of ``fabrics=verbs,ofi`` is to enable *at least* the specified fabrics, but other fabrics may be enabled as well.
+If the intent is to enable *only* the specified fabrics, then the:
 
-      The meaning of ``fabrics=verbs,ofi`` is to enable *at least* the specified fabrics, but other fabrics may be enabled as well.
-      If the intent is to enable *only* the specified fabrics, then the:
+.. code-block::
 
-      .. code-block::
+   fabrics:=verbs,ofi
 
-         fabrics:=verbs,ofi
-
-      syntax should be used with the ``:=`` operator.
+syntax should be used with the ``:=`` operator.
 
 .. admonition:: Alternative ways to deactivate Boolean Variants
    :class: note
    :collapsible:
 
-   In certain shells, the ``~`` character is expanded to the home directory.
+   In certain shells, the ``~`` character expands to the home directory.
    To avoid these issues, avoid whitespace between the package name and the variant:
 
    .. code-block:: sh

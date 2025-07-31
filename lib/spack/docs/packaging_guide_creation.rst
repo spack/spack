@@ -1402,22 +1402,24 @@ For example, a package may depend on another package only if a certain variant i
 
 In this case, ``szip`` is modeled as an optional dependency of ``hdf5``, and users can run ``spack install hdf5 +szip`` to enable it.
 
-^^^^^^^^^^^^^^^^^^^^^
-Multi-valued variants
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+Single-valued variants
+^^^^^^^^^^^^^^^^^^^^^^
 
-Boolean variants are most common, but sometimes a package has options that can take more than two values, or are better expressed with string values rather than booleans.
-This is where multi-valued variants come into play.
-Multi-valued variants take a tuple of *possible* values, and can be configured to allow either a *single value* or *multiple values* to be selected at the same time.
-For example:
+Other than boolean variants, Spack supports single- and multi-valued variants that can take one or more *string* values.
+
+To define a *single-valued* variant, simply pass a tuple of possible values to the ``variant`` directive, together with ``multi=False``:
 
   .. code-block:: python
 
     class Blis(Package):
         ...
         variant(
-            "threads", default="none", description="Multithreading support",
-            values=("pthreads", "openmp", "none"), multi=False
+            "threads",
+            default="none",
+            values=("pthreads", "openmp", "none"),
+            multi=False,
+            description="Multithreading support",
         )
 
 This allows users to ``spack install blis threads=openmp``.
@@ -1441,42 +1443,49 @@ This constraint is enforced by the solver, and an error is emitted if a user spe
    In the example above, the value ``threads=none`` is a variant value like any other, and means that *no value is selected*.
    In Spack, all variants have to have a value, so ``none`` was chosen as a *convention* to indicate that no value is selected.
 
-In cases where **multiple values** can be selected at the same time, ``multi`` should be set to ``True``:
+^^^^^^^^^^^^^^^^^^^^^
+Multi-valued variants
+^^^^^^^^^^^^^^^^^^^^^
+
+Like single-valued variants, multi-valued variants take one or more *string* values, but allow users to select multiple values at the same time.
+
+To define a *multi-valued* variant, simply pass ``multi=True`` instead:
 
   .. code-block:: python
 
     class Gcc(AutotoolsPackage):
         ...
         variant(
-            "languages", default="c,c++,fortran",
-            values=("ada", "brig", "c", "c++", "fortran",
-                    "go", "java", "jit", "lto", "objc", "obj-c++"),
+            "languages",
+            default="c,c++,fortran",
+            values=("ada", "brig", "c", "c++", "fortran", "objc"),
             multi=True,
-            description="Compilers and runtime libraries to build"
+            description="Compilers and runtime libraries to build",
         )
 
-This allows users to run ``spack install languages=c,c++,fortran`` where the values are separated by commas.
+This allows users to run ``spack install languages=c,c++`` where the values are separated by commas.
 
 
-"""""""""""""""""""""""""""""""""""""""""""
-Complex validation logic for variant values
-"""""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""
+Advanced validation of multi-valued variants
+""""""""""""""""""""""""""""""""""""""""""""
+
 As noted above, the value ``none`` is a value like any other, which raises the question:
 what if a variant allows multiple values to be selected, *or* none at all?
-Naively, one might think that this can be achieved by simply setting ``multi=True`` and allowing the value ``none``:
+Naively, one might think that this can be achieved by simply creating a multi-valued variant that includes the value ``none``:
 
    .. code-block:: python
 
-      class Adios(AutotoolsPackage):
-         ...
-         variant(
-               "staging",
-               values=("dataspaces", "flexpath", "none"),
-               multi=True,
-               description="Enable dataspaces and/or flexpath staging transports"
-         )
+    class Adios(AutotoolsPackage):
+        ...
+        variant(
+            "staging",
+            values=("dataspaces", "flexpath", "none"),
+            multi=True,
+            description="Enable dataspaces and/or flexpath staging transports",
+        )
 
-but this does not prevent users from selecting ``staging=dataspaces,none``, which is non-sensical.
+but this does not prevent users from selecting the non-sensical option ``staging=dataspaces,none``.
 
 In these cases, more advanced validation logic is required to prevent ``none`` from being selected along with any other value.
 Spack provides two validator functions to help with this, which can be passed to the ``values=`` argument of the ``variant`` directive.
@@ -1490,7 +1499,7 @@ The first validator function is :py:func:`~spack.package.any_combination_of`, wh
         variant(
             "staging",
             values=any_combination_of("flexpath", "dataspaces"),
-            description="Enable dataspaces and/or flexpath staging transports"
+            description="Enable dataspaces and/or flexpath staging transports",
         )
 
 This solves the issue by allowing the user to select either any combination of the values ``flexpath`` and ``dataspaces``, or ``none``.
@@ -1505,21 +1514,20 @@ The second validator function :py:func:`~spack.package.disjoint_sets` generalize
         variant(
             "process_managers",
             description="List of the process managers to activate",
-            values=disjoint_sets(
-                ("auto",), ("slurm",), ("hydra", "gforker", "remshell")
-            ).prohibit_empty_set().with_error(
-                "'slurm' or 'auto' cannot be activated along with "
-                "other process managers"
-            ).with_default("auto").with_non_feature_values("auto"),
+            values=disjoint_sets(("auto",), ("slurm",), ("hydra", "gforker", "remshell"))
+            .prohibit_empty_set()
+            .with_error("'slurm' or 'auto' cannot be activated along with other process managers")
+            .with_default("auto")
+            .with_non_feature_values("auto"),
         )
 
 In this case, examples of valid options are ``process_managers=auto``, ``process_managers=slurm``, and ``process_managers=hydra,remshell``, whereas ``process_managers=slurm,hydra`` is invalid, as it picks values from two different sets.
 
 Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
-"""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Conditional Possible Values
-"""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are cases where a variant may take multiple values, and the list of allowed values
 expands over time. Consider, for instance, the C++ standard with which we might compile
@@ -1531,17 +1539,21 @@ To model a similar situation we can use *conditional possible values* in the var
 .. code-block:: python
 
    variant(
-       "cxxstd", default="98",
+       "cxxstd",
+       default="98",
        values=(
-           "98", "11", "14",
+           "98",
+           "11",
+           "14",
            # C++17 is not supported by Boost < 1.63.0.
            conditional("17", when="@1.63.0:"),
-           # C++20/2a is not support by Boost < 1.73.0
-           conditional("2a", "2b", when="@1.73.0:")
+           # C++20/2a is not supported by Boost < 1.73.0
+           conditional("2a", "2b", when="@1.73.0:"),
        ),
        multi=False,
        description="Use the specified C++ standard when building.",
    )
+
 
 The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the
 ``cxxstd`` variant, while ``17`` requires a version greater or equal to ``1.63.0``
@@ -1552,20 +1564,26 @@ and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
 Conditional Variants
 ^^^^^^^^^^^^^^^^^^^^
 
-The variant directive accepts a ``when`` clause. The variant will only
-be present on specs that otherwise satisfy the spec listed as the
-``when`` clause. For example, the following class has a variant
-``bar`` when it is at version 2.0 or higher.
+As new versions of packages are released, optional features may be added and removed.
+Sometimes, features are only available for a particular platform or architecture.
+
+To reduce the visual clutter in specs, packages can define variants *conditionally* using a ``when`` clause.
+The variant will only be present on specs that satisfy this condition.
+
+For example, the following package defines a variant ``bar`` that exists only when it is at version 2.0 or higher, and a variant ``baz`` that exists only on the Darwin platform:
 
 .. code-block:: python
 
    class Foo(Package):
        ...
-       variant("bar", default=False, when="@2.0:", description="help message")
+       variant("bar", default=False, when="@2.0:", ...)
+       variant("baz", default=True, when="platform=darwin", ...)
 
-The ``when`` clause follows the same syntax and accepts the same
-values as the ``when`` argument of
-:py:func:`spack.package.depends_on`.
+Do note that conditional variants can also be a source of confusion.
+In Spack, the absence of a variant is different from it being disabled.
+For example, a user might run ``spack install foo ~bar``, expecting it to allow version 1.0 (which does not have the ``bar`` feature) and version 2.0 (with the feature disabled).
+However, the constraint ``~bar`` tells Spack that the ``bar`` variant *must exist* and be disabled.
+This forces Spack to select version 2.0 or higher, where the variant is defined.
 
 ^^^^^^^^^^^^^^^
 Sticky Variants
