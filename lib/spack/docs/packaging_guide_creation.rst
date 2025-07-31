@@ -1564,10 +1564,9 @@ and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
 Conditional Variants
 ^^^^^^^^^^^^^^^^^^^^
 
-The variant directive accepts a ``when`` clause. The variant will only
-be present on specs that otherwise satisfy the spec listed as the
-``when`` clause. For example, the following class has a variant
-``bar`` when it is at version 2.0 or higher.
+The variant directive accepts a ``when`` clause.
+The variant will only be present on specs that otherwise satisfy the spec listed as the ``when`` clause.
+For example, the following package defines a variant ``bar`` that exists only when it is at version 2.0 or higher.
 
 .. code-block:: python
 
@@ -1575,9 +1574,6 @@ be present on specs that otherwise satisfy the spec listed as the
        ...
        variant("bar", default=False, when="@2.0:", description="help message")
 
-The ``when`` clause follows the same syntax and accepts the same
-values as the ``when`` argument of
-:py:func:`~spack.package.depends_on`.
 
 ^^^^^^^^^^^^^^^
 Sticky Variants
