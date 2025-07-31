@@ -246,9 +246,9 @@ Spack is unique in that it allows you to write a *single* ``package.py`` for all
 The central object in Spack that encodes the package's configuration is the **concrete spec**, which is available as ``self.spec`` in the package class.
 This is the object you need to query to make decisions about how to configure the build.
 
-^^^^^^^^^^^^^^^^^^^
-Using ``self.spec``
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+Querying ``self.spec``
+^^^^^^^^^^^^^^^^^^^^^^
 
 **Variants**.
 In the previous section of the packaging guide, we've seen :ref:`how to define variants <variants>`.
