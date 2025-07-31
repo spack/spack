@@ -1577,7 +1577,7 @@ be present on specs that otherwise satisfy the spec listed as the
 
 The ``when`` clause follows the same syntax and accepts the same
 values as the ``when`` argument of
-:py:func:`spack.package.depends_on`.
+:py:func:`~spack.package.depends_on`.
 
 ^^^^^^^^^^^^^^^
 Sticky Variants
