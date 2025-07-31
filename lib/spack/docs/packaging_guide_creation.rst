@@ -1370,7 +1370,7 @@ features, which often come at the expense of additional dependencies or
 longer build times. To be flexible enough and support a wide variety of
 use cases, Spack allows you to expose to the end-user the ability to choose
 which features should be activated in a package at the time it is installed.
-The mechanism to be employed is the :py:func:`spack.directives.variant` directive.
+The mechanism to be employed is the :py:func:`~spack.package.variant` directive.
 
 ^^^^^^^^^^^^^^^^
 Boolean variants
@@ -1408,7 +1408,7 @@ that the boolean variant is set to ``True``, while ``~shared`` means it is set
 to ``False``.
 Another common example is the optional activation of an extra dependency
 which requires to use the variant in the ``when`` argument of
-:py:func:`spack.directives.depends_on`:
+:py:func:`~spack.package.depends_on`:
 
   ..  code-block:: python
 
@@ -1424,10 +1424,10 @@ dependency of ``hdf5``.
 Multi-valued variants
 ^^^^^^^^^^^^^^^^^^^^^
 
-If need be, Spack can go beyond Boolean variants and permit an arbitrary
+If need be, Spack can go beyond boolean variants and permit an arbitrary
 number of allowed values. This might be useful when modeling
 options that are tightly related to each other.
-The values in this case are passed to the :py:func:`spack.directives.variant`
+The values in this case are passed to the :py:func:`~spack.package.variant`
 directive as a tuple:
 
   .. code-block:: python
@@ -1490,13 +1490,10 @@ Within a package recipe a multi-valued variant is tested using a ``key=value`` s
 """""""""""""""""""""""""""""""""""""""""""
 Complex validation logic for variant values
 """""""""""""""""""""""""""""""""""""""""""
-To cover complex use cases, the :py:func:`spack.directives.variant` directive
-could accept as the ``values`` argument a full-fledged object which has
-``default`` and other arguments of the directive embedded as attributes.
+Some multi-valued variants require more advanced validation logic, for which Spack provides two validator functions.
+These can be passed to the ``values=`` argument of the ``variant`` directive.
 
-An example, already implemented in Spack's core, is :py:class:`spack.variant.DisjointSetsOfValues`.
-This class is used to implement a few convenience functions, like
-:py:func:`spack.variant.any_combination_of`:
+The first validator function is :py:func:`~spack.package.any_combination_of`, which can be used as follows:
 
   ..  code-block:: python
 
@@ -1508,11 +1505,16 @@ This class is used to implement a few convenience functions, like
             description="Enable dataspaces and/or flexpath staging transports"
         )
 
-that allows any combination of the specified values, and also allows the
-user to specify ``"none"`` (as a string) to choose none of them.
-The objects returned by these functions can be modified at will by chaining
-method calls to change the default value, customize the error message or
-other similar operations:
+This is very similar to ordinary multi-valued variants, but crucially it allows users to pick neither of the two values, using ``staging=none`` (the default).
+In other words, the valid options are either ``staging=none`` to select nothing, or ``staging=dataspaces``, ``staging=flexpath``, and ``staging=dataspaces,flexpath``.
+
+.. note::
+
+   The variant value ``none`` is a value like any other.
+   By convention, it indicates that no value is selected for the variant.
+   Variant values are always strings, so the value ``none`` is not related to the Python :py:data:`None` object.
+
+The second validator function :py:func:`~spack.package.disjoint_sets`, which generalizes this concept further:
 
   .. code-block:: python
 
@@ -1528,6 +1530,10 @@ other similar operations:
                 "other process managers"
             ).with_default("auto").with_non_feature_values("auto"),
         )
+
+In this case, examples of valid options are ``process_managers=auto``, ``process_managers=slurm``, and ``process_managers=hydra,remshell``, whereas ``process_managers=slurm,hydra`` is invalid, as it picks values from two different sets.
+
+Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
 """""""""""""""""""""""""""
 Conditional Possible Values
@@ -1577,7 +1583,7 @@ be present on specs that otherwise satisfy the spec listed as the
 
 The ``when`` clause follows the same syntax and accepts the same
 values as the ``when`` argument of
-:py:func:`spack.directives.depends_on`.
+:py:func:`spack.package.depends_on`.
 
 ^^^^^^^^^^^^^^^
 Sticky Variants
