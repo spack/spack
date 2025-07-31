@@ -14,7 +14,7 @@ class GitSparseB(Package):
 
     # ----------------------------
     # -- mock_git_repository
-    version("main", branch="main")
+    version("main", branch="many_dirs")
     homepage = "http://www.git-fetch-example.com"
 
     submodules = False

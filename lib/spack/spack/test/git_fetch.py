@@ -435,14 +435,8 @@ def test_git_sparse_paths_partial_clone(
 
 @pytest.mark.regression("50699")
 @pytest.mark.disable_clean_stage_check
-@pytest.mark.require_provenance
-def test_git_sparse_path_have_unique_stages(
-    git,
-    mock_git_repository,
-    git_version,
-    default_mock_concretization,
-    mutable_mock_repo,
-    monkeypatch,
+def test_git_sparse_path_have_unique_mirror_projections(
+    git, mock_git_repository, default_mock_concretization, mutable_mock_repo, monkeypatch
 ):
     """
     Confirm two packages with different sparse paths have different stages
@@ -451,7 +445,7 @@ def test_git_sparse_path_have_unique_stages(
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
     )
-    gold_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
+    gold_commit = git("-C", repo_path, "rev-parse", "many_dirs", output=str).strip()
     s_a = spack.concretize.concretize_one(f"git-sparse-a commit={gold_commit}")
     s_b = spack.concretize.concretize_one(f"git-sparse-b commit={gold_commit}")
     s_a.package.do_stage()

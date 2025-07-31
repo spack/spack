@@ -891,6 +891,14 @@ class GitFetchStrategy(VCSFetchStrategy):
     def mirror_id(self):
         if self.commit:
             repo_path = urllib.parse.urlparse(self.url).path
+            if self.git_sparse_paths:
+                sparse_paths = []
+                if callable(self.git_sparse_paths):
+                    sparse_paths.extend(self.git_sparse_paths())
+                else:
+                    sparse_paths.extend(self.git_sparse_paths)
+                path, ext = os.path.splitext(repo_path)
+                repo_path = "{0}_{1}{2}".format(path, "_".join(sparse_paths), ext)
             result = os.path.sep.join(["git", repo_path, self.commit])
             return result
 
