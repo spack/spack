@@ -252,7 +252,7 @@ Using ``self.spec.satisfies``
 
 **Variants**.
 In the previous section of the packaging guide, we've seen :ref:`how to define variants <variants>`.
-As a packager, you are responsible for implementing the logic that translates the selected variant values into configure arguments.
+As a packager, you are responsible for implementing the logic that translates the selected variant values into build instructions the build system can understand.
 If you want to pass a flag to the configure script only if the package is built with a specific variant, you can do so like this:
 
 .. code-block:: python
