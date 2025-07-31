@@ -1564,22 +1564,26 @@ and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
 Conditional Variants
 ^^^^^^^^^^^^^^^^^^^^
 
-The variant directive accepts a ``when`` clause.
-The variant will only be present on specs that otherwise satisfy the spec listed as the ``when`` clause.
-For example, the following package defines a variant ``bar`` that exists only when it is at version 2.0 or higher.
+As new versions of packages are released, optional features may be added and removed.
+Sometimes, features are only available for a particular platform or architecture.
+
+To reduce the visual clutter in specs, packages can define variants *conditionally* using a ``when`` clause.
+The variant will only be present on specs that satisfy this condition.
+
+For example, the following package defines a variant ``bar`` that exists only when it is at version 2.0 or higher, and a variant ``baz`` that exists only on the Darwin platform:
 
 .. code-block:: python
 
    class Foo(Package):
        ...
-       variant("bar", default=False, when="@2.0:", description="help message")
+       variant("bar", default=False, when="@2.0:", ...)
+       variant("baz", default=True, when="platform=darwin", ...)
 
-.. note::
-
-   Conditional variants are a great way to reduce visual clutter, but they can also be a source of confusion: in Spack, the absence of a variant is different from a variant being disabled.
-   For example, a user might run ``spack install foo ~bar``, expecting it to allow version 1.0 (which does not have the ``bar`` feature) or version 2.0 (with the feature disabled).
-   However, the constraint ``~bar`` tells Spack that the ``bar`` variant *must exist* and be disabled.
-   This forces Spack to select version 2.0 or higher, where the variant is defined.
+Do note that conditional variants can also be a source of confusion.
+In Spack, the absence of a variant is different from it being disabled.
+For example, a user might run ``spack install foo ~bar``, expecting it to allow version 1.0 (which does not have the ``bar`` feature) and version 2.0 (with the feature disabled).
+However, the constraint ``~bar`` tells Spack that the ``bar`` variant *must exist* and be disabled.
+This forces Spack to select version 2.0 or higher, where the variant is defined.
 
 ^^^^^^^^^^^^^^^
 Sticky Variants
