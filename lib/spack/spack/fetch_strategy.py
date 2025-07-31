@@ -23,6 +23,7 @@ in order to build it.  They need to define the following methods:
 """
 import copy
 import functools
+import hashlib
 import http.client
 import os
 import re
@@ -898,7 +899,8 @@ class GitFetchStrategy(VCSFetchStrategy):
                     sparse_paths.extend(self.git_sparse_paths())
                 else:
                     sparse_paths.extend(self.git_sparse_paths)
-                sparse_hash = hash(tuple(sparse_paths))
+                sparse_string = "_".join(sparse_paths)
+                sparse_hash = hashlib.sha1(sparse_string.encode("utf-8")).hexdigest()
                 provenance_id = f"{provenance_id}_{sparse_hash}"
             result = os.path.sep.join(["git", repo_path, provenance_id])
             return result
