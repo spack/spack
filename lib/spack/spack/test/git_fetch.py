@@ -438,7 +438,9 @@ def test_git_sparse_path_have_unique_mirror_projections(
     git, mock_git_repository, mutable_mock_repo, monkeypatch
 ):
     """
-    Confirm two packages with different sparse paths have different stages
+    Confirm two packages with different sparse paths but the same git commit
+    have different mirror projections so tarfiles in the mirror are unique
+    and don't get overwritten
     """
     repo_path = mock_git_repository.path
     monkeypatch.setattr(
