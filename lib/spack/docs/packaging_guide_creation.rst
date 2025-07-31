@@ -1402,13 +1402,13 @@ For example, a package may depend on another package only if a certain variant i
 
 In this case, ``szip`` is modeled as an optional dependency of ``hdf5``, and users can run ``spack install hdf5 +szip`` to enable it.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Single- and multi-valued variants
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+Single-valued variants
+^^^^^^^^^^^^^^^^^^^^^^
 
 Other than boolean variants, Spack supports single- and multi-valued variants that can take one or more *string* values.
 
-To define a *single-valued* variant, simply pass ``multi=False`` and a tuple of possible values to the ``variant`` directive:
+To define a *single-valued* variant, simply pass a tuple of possible values to the ``variant`` directive, together with ``multi=False``:
 
   .. code-block:: python
 
@@ -1443,6 +1443,12 @@ This constraint is enforced by the solver, and an error is emitted if a user spe
    In the example above, the value ``threads=none`` is a variant value like any other, and means that *no value is selected*.
    In Spack, all variants have to have a value, so ``none`` was chosen as a *convention* to indicate that no value is selected.
 
+^^^^^^^^^^^^^^^^^^^^^
+Multi-valued variants
+^^^^^^^^^^^^^^^^^^^^^
+
+Like single-valued variants, multi-valued variants take one or more *string* values, but allow users to select multiple values at the same time.
+
 To define a *multi-valued* variant, simply pass ``multi=True`` instead:
 
   .. code-block:: python
@@ -1460,9 +1466,10 @@ To define a *multi-valued* variant, simply pass ``multi=True`` instead:
 This allows users to run ``spack install languages=c,c++`` where the values are separated by commas.
 
 
-"""""""""""""""""""""""""""""""""""""""""""
-Complex validation logic for variant values
-"""""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""
+Advanced validation of multi-valued variants
+""""""""""""""""""""""""""""""""""""""""""""
+
 As noted above, the value ``none`` is a value like any other, which raises the question:
 what if a variant allows multiple values to be selected, *or* none at all?
 Naively, one might think that this can be achieved by simply creating a multi-valued variant that includes the value ``none``:
@@ -1518,9 +1525,9 @@ In this case, examples of valid options are ``process_managers=auto``, ``process
 
 Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
-"""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Conditional Possible Values
-"""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are cases where a variant may take multiple values, and the list of allowed values
 expands over time. Consider, for instance, the C++ standard with which we might compile
