@@ -115,7 +115,29 @@ or refer to the full manual below.
    packaging_guide_build
    packaging_guide_testing
    packaging_guide_advanced
-   build_systems
+   build_systems/autotoolspackage
+   build_systems/bundlepackage
+   build_systems/cachedcmakepackage
+   build_systems/cmakepackage
+   build_systems/cudapackage
+   build_systems/custompackage
+   build_systems/inteloneapipackage
+   build_systems/luapackage
+   build_systems/makefilepackage
+   build_systems/mavenpackage
+   build_systems/mesonpackage
+   build_systems/octavepackage
+   build_systems/perlpackage
+   build_systems/pythonpackage
+   build_systems/qmakepackage
+   build_systems/racketpackage
+   build_systems/rocmpackage
+   build_systems/rpackage
+   build_systems/rubypackage
+   build_systems/sconspackage
+   build_systems/sippackage
+   build_systems/sourceforgepackage
+   build_systems/wafpackage
    contribution_guide
    developer_guide
 
