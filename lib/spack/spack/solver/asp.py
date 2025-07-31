@@ -84,7 +84,7 @@ from .core import (
 )
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementParser, RequirementRule
-from .reuse import SpecFilter
+from .reuse import ReusableSpecsSelector, SpecFilter
 from .runtimes import RuntimePropertyRecorder, _external_config_with_implicit_externals
 from .versions import DeclaredVersion, Provenance, concretization_version_order
 
@@ -4170,119 +4170,6 @@ def _develop_specs_from_env(spec, env):
         spec.variants.setdefault("dev_path", vt.SingleValuedVariant("dev_path", path))
 
     assert spec.satisfies(dev_info["spec"])
-
-
-class ReuseStrategy(enum.Enum):
-    ROOTS = enum.auto()
-    DEPENDENCIES = enum.auto()
-    NONE = enum.auto()
-
-
-class ReusableSpecsSelector:
-    """Selects specs that can be reused during concretization."""
-
-    def __init__(self, configuration: spack.config.Configuration) -> None:
-        self.configuration = configuration
-        self.store = spack.store.create(configuration)
-        self.reuse_strategy = ReuseStrategy.ROOTS
-
-        reuse_yaml = self.configuration.get("concretizer:reuse", False)
-        self.reuse_sources = []
-        if not isinstance(reuse_yaml, typing.Mapping):
-            if reuse_yaml is False:
-                self.reuse_strategy = ReuseStrategy.NONE
-            if reuse_yaml == "dependencies":
-                self.reuse_strategy = ReuseStrategy.DEPENDENCIES
-            self.reuse_sources.extend(
-                [
-                    SpecFilter.from_store(
-                        configuration=self.configuration, include=[], exclude=[]
-                    ),
-                    SpecFilter.from_buildcache(
-                        configuration=self.configuration, include=[], exclude=[]
-                    ),
-                    SpecFilter.from_environment(
-                        configuration=self.configuration,
-                        include=[],
-                        exclude=[],
-                        env=ev.active_environment(),  # includes all concrete includes
-                    ),
-                ]
-            )
-        else:
-            roots = reuse_yaml.get("roots", True)
-            if roots is True:
-                self.reuse_strategy = ReuseStrategy.ROOTS
-            else:
-                self.reuse_strategy = ReuseStrategy.DEPENDENCIES
-            default_include = reuse_yaml.get("include", [])
-            default_exclude = reuse_yaml.get("exclude", [])
-            default_sources = [{"type": "local"}, {"type": "buildcache"}]
-            for source in reuse_yaml.get("from", default_sources):
-                include = source.get("include", default_include)
-                exclude = source.get("exclude", default_exclude)
-                if source["type"] == "environment" and "path" in source:
-                    env_dir = ev.as_env_dir(source["path"])
-                    active_env = ev.active_environment()
-                    if active_env and env_dir in active_env.included_concrete_envs:
-                        # If environment is included as a concrete environment, use the local copy
-                        # of specs in the active environment.
-                        # note: included concrete environments are only updated at concretization
-                        #       time, and reuse needs to matchthe included specs.
-                        self.reuse_sources.append(
-                            SpecFilter.from_environment_included_concrete(
-                                self.configuration,
-                                include=include,
-                                exclude=exclude,
-                                env=active_env,
-                                included_concrete=env_dir,
-                            )
-                        )
-                    else:
-                        # If the environment is not included as a concrete environment, use the
-                        # current specs from its lockfile.
-                        self.reuse_sources.append(
-                            SpecFilter.from_environment(
-                                self.configuration,
-                                include=include,
-                                exclude=exclude,
-                                env=ev.environment_from_name_or_dir(env_dir),
-                            )
-                        )
-                elif source["type"] == "environment":
-                    # reusing from the current environment implicitly reuses from all of the
-                    # included concrete environments
-                    self.reuse_sources.append(
-                        SpecFilter.from_environment(
-                            self.configuration,
-                            include=include,
-                            exclude=exclude,
-                            env=ev.active_environment(),
-                        )
-                    )
-                elif source["type"] == "local":
-                    self.reuse_sources.append(
-                        SpecFilter.from_store(self.configuration, include=include, exclude=exclude)
-                    )
-                elif source["type"] == "buildcache":
-                    self.reuse_sources.append(
-                        SpecFilter.from_buildcache(
-                            self.configuration, include=include, exclude=exclude
-                        )
-                    )
-
-    def reusable_specs(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
-        if self.reuse_strategy == ReuseStrategy.NONE:
-            return []
-
-        result = []
-        for reuse_source in self.reuse_sources:
-            result.extend(reuse_source.selected_specs())
-        # If we only want to reuse dependencies, remove the root specs
-        if self.reuse_strategy == ReuseStrategy.DEPENDENCIES:
-            result = [spec for spec in result if not any(root in spec for root in specs)]
-
-        return result
 
 
 class Solver:
