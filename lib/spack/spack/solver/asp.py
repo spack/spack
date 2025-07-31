@@ -59,7 +59,6 @@ import spack.spec
 import spack.store
 import spack.util.crypto
 import spack.util.hash
-import spack.util.libc
 import spack.util.lock as lk
 import spack.util.module_cmd as md
 import spack.util.path
@@ -89,8 +88,8 @@ from .core import (
 )
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
-from .reuse import ReusableSpecsSelector, SpecFilter
-from .runtimes import RuntimePropertyRecorder, external_config_with_implicit_externals
+from .reuse import ReusableSpecsSelector
+from .runtimes import RuntimePropertyRecorder, external_config_with_implicit_externals, all_libcs
 from .versions import DeclaredVersion, Provenance, concretization_version_order
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
@@ -241,22 +240,6 @@ def remove_facts(
         return list(filter(lambda x: x.args[0] not in to_be_removed, facts))
 
     return _remove
-
-
-def all_libcs() -> Set[spack.spec.Spec]:
-    """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
-    libc determined from the current Python process if dynamically linked."""
-    libcs = set()
-    for c in spack.compilers.config.all_compilers_from(spack.config.CONFIG):
-        candidate = CompilerPropertyDetector(c).default_libc()
-        if candidate is not None:
-            libcs.add(candidate)
-
-    if libcs:
-        return libcs
-
-    libc = spack.util.libc.libc_from_current_python_process()
-    return {libc} if libc else set()
 
 
 def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
@@ -2266,30 +2249,6 @@ class SpackSolverSetup:
     def external_packages(self):
         """Facts on external packages, from packages.yaml and implicit externals."""
         self.gen.h1("External packages")
-        spec_filters = []
-        concretizer_yaml = spack.config.get("concretizer")
-        reuse_yaml = concretizer_yaml.get("reuse")
-        if isinstance(reuse_yaml, typing.Mapping):
-            default_include = reuse_yaml.get("include", [])
-            default_exclude = reuse_yaml.get("exclude", [])
-            for source in reuse_yaml.get("from", []):
-                if source["type"] != "external":
-                    continue
-
-                include = source.get("include", default_include)
-                if include:
-                    # Since libcs are implicit externals, we need to implicitly include them
-                    include = include + self.libcs
-                exclude = source.get("exclude", default_exclude)
-                spec_filters.append(
-                    SpecFilter(
-                        factory=lambda: [],
-                        is_usable=lambda x: True,
-                        include=include,
-                        exclude=exclude,
-                    )
-                )
-
         packages_yaml = external_config_with_implicit_externals(spack.config.CONFIG)
         for pkg_name, data in packages_yaml.items():
             if pkg_name == "all":
@@ -2299,98 +2258,10 @@ class SpackSolverSetup:
             if pkg_name not in self.pkgs:
                 continue
 
-            # Check if the external package is buildable. If it is
-            # not then "external(<pkg>)" is a fact, unless we can
-            # reuse an already installed spec.
             external_buildable = data.get("buildable", True)
-            externals = data.get("externals", [])
-            if not external_buildable or externals:
-                self.gen.h2(f"External package: {pkg_name}")
-
             if not external_buildable:
+                self.gen.h2(f"External package: {pkg_name}")
                 self.gen.fact(fn.buildable_false(pkg_name))
-
-            # Read a list of all the specs for this package
-            candidate_specs = [
-                spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
-            ]
-
-            selected_externals = set()
-            if spec_filters:
-                for current_filter in spec_filters:
-                    current_filter.factory = lambda: candidate_specs
-                    selected_externals.update(current_filter.selected_specs())
-
-            # Emit facts for externals specs. Note that "local_idx" is the index of the spec
-            # in packages:<pkg_name>:externals. This means:
-            #
-            # packages:<pkg_name>:externals[local_idx].spec == spec
-            external_versions = []
-            for local_idx, spec in enumerate(candidate_specs):
-                msg = f"{spec.name} available as external when satisfying {spec}"
-
-                if any(x.satisfies(spec) for x in self.rejected_compilers):
-                    tty.debug(
-                        f"[{__name__}]: not considering {spec} as external, since "
-                        f"it's a non-working compiler"
-                    )
-                    continue
-
-                if spec_filters and spec not in selected_externals:
-                    continue
-
-                if not spec.versions.concrete:
-                    warnings.warn(f"cannot use the external spec {spec}: needs a concrete version")
-                    continue
-
-                def external_requirement(input_spec, requirements):
-                    result = []
-                    for asp_fn in requirements:
-                        if asp_fn.args[0] == "depends_on":
-                            continue
-                        if asp_fn.args[1] != input_spec.name:
-                            continue
-                        result.append(asp_fn)
-                    return result
-
-                def external_imposition(input_spec, requirements):
-                    result = []
-                    for asp_fn in requirements:
-                        if asp_fn.args[0] == "depends_on":
-                            continue
-                        elif asp_fn.args[0] == "direct_dependency":
-                            asp_fn.args = "external_build_requirement", *asp_fn.args[1:]
-                        if asp_fn.args[1] != input_spec.name:
-                            continue
-                        result.append(asp_fn)
-                    result.append(fn.attr("external_conditions_hold", input_spec.name, local_idx))
-                    return result
-
-                try:
-                    context = ConditionContext()
-                    context.transform_required = external_requirement
-                    context.transform_imposed = external_imposition
-                    self.condition(spec, spec, msg=msg, context=context)
-                except (spack.error.SpecError, RuntimeError) as e:
-                    warnings.warn(f"while setting up external spec {spec}: {e}")
-                    continue
-                external_versions.append((spec.version, local_idx))
-                self.possible_versions[spec.name].add(spec.version)
-                self.gen.newline()
-
-            # Order the external versions to prefer more recent versions
-            # even if specs in packages.yaml are not ordered that way
-            external_versions = [
-                (v, idx, external_id)
-                for idx, (v, external_id) in enumerate(sorted(external_versions, reverse=True))
-            ]
-            for version, idx, external_id in external_versions:
-                self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=version, idx=idx, origin=Provenance.EXTERNAL)
-                )
-
-            self.trigger_rules()
-            self.effect_rules()
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
@@ -2598,6 +2469,8 @@ class SpackSolverSetup:
             if package_hash:
                 clauses.append(fn.attr("package_hash", spec.name, package_hash))
             clauses.append(fn.attr("hash", spec.name, spec.dag_hash()))
+            if spec.external:
+                clauses.append(fn.attr("external", spec.name))
 
         edges = spec.edges_from_dependents()
         virtuals = sorted(
@@ -3770,41 +3643,42 @@ class SpecBuilder:
             node_flag.flag_type, node_flag.flag, False, node_flag.flag_group, node_flag.source
         )
 
-    def external_spec_selected(self, node, idx):
-        """This means that the external spec and index idx has been selected for this package."""
-        packages_yaml = external_config_with_implicit_externals(spack.config.CONFIG)
-        spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
-        self._specs[node].external_path = spec_info.get("prefix", None)
-        self._specs[node].external_modules = spack.spec.Spec._format_module_list(
-            spec_info.get("modules", None)
-        )
-        self._specs[node].extra_attributes = spec_info.get("extra_attributes", {})
-
-        # Annotate compiler specs from externals
-        external_spec = spack.spec.Spec(spec_info["spec"])
-        external_spec_deps = external_spec.dependencies()
-        if len(external_spec_deps) > 1:
-            raise InvalidExternalError(
-                f"external spec {spec_info['spec']} cannot have more than one dependency"
-            )
-        elif len(external_spec_deps) == 1:
-            compiler_str = external_spec_deps[0]
-            self._specs[node].annotations.with_compiler(spack.spec.Spec(compiler_str))
-
-        # Packages that are external - but normally depend on python -
-        # get an edge inserted to python as a post-concretization step
-        package = spack.repo.PATH.get_pkg_class(self._specs[node].fullname)(self._specs[node])
-        extendee_spec = package.extendee_spec
-        if (
-            extendee_spec
-            and extendee_spec.name == "python"
-            # More-general criteria like "depends on Python" pulls in things
-            # we don't want to apply this logic to (in particular LLVM, which
-            # is now a common external because that's how we detect Clang)
-            and any([c.__name__ == "PythonExtension" for c in package.__class__.__mro__])
-        ):
-            candidate_python_to_attach = self._specs.get(SpecBuilder.make_node(pkg="python"))
-            _attach_python_to_external(package, extendee_spec=candidate_python_to_attach)
+    # FIXME (externals as concrete): be sure to recover the Python case
+    # def external_spec_selected(self, node, idx):
+    #     """This means that the external spec and index idx has been selected for this package."""
+    #     packages_yaml = external_config_with_implicit_externals(spack.config.CONFIG)
+    #     spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
+    #     self._specs[node].external_path = spec_info.get("prefix", None)
+    #     self._specs[node].external_modules = spack.spec.Spec._format_module_list(
+    #         spec_info.get("modules", None)
+    #     )
+    #     self._specs[node].extra_attributes = spec_info.get("extra_attributes", {})
+    #
+    #     # Annotate compiler specs from externals
+    #     external_spec = spack.spec.Spec(spec_info["spec"])
+    #     external_spec_deps = external_spec.dependencies()
+    #     if len(external_spec_deps) > 1:
+    #         raise InvalidExternalError(
+    #             f"external spec {spec_info['spec']} cannot have more than one dependency"
+    #         )
+    #     elif len(external_spec_deps) == 1:
+    #         compiler_str = external_spec_deps[0]
+    #         self._specs[node].annotations.with_compiler(spack.spec.Spec(compiler_str))
+    #
+    #     # Packages that are external - but normally depend on python -
+    #     # get an edge inserted to python as a post-concretization step
+    #     package = spack.repo.PATH.get_pkg_class(self._specs[node].fullname)(self._specs[node])
+    #     extendee_spec = package.extendee_spec
+    #     if (
+    #         extendee_spec
+    #         and extendee_spec.name == "python"
+    #         # More-general criteria like "depends on Python" pulls in things
+    #         # we don't want to apply this logic to (in particular LLVM, which
+    #         # is now a common external because that's how we detect Clang)
+    #         and any([c.__name__ == "PythonExtension" for c in package.__class__.__mro__])
+    #     ):
+    #         candidate_python_to_attach = self._specs.get(SpecBuilder.make_node(pkg="python"))
+    #         _attach_python_to_external(package, extendee_spec=candidate_python_to_attach)
 
     def depends_on(self, parent_node, dependency_node, type):
         dependency_spec = self._specs[dependency_node]
@@ -3953,7 +3827,6 @@ class SpecBuilder:
             # node attributes are handled next, since they instantiate nodes
             "node": -4,
             # evaluated last, so all nodes are fully constructed
-            "external_spec_selected": 1,
             "virtual_on_edge": 2,
         }
 

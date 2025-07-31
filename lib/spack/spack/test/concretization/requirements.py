@@ -19,6 +19,7 @@ import spack.util.spack_yaml as syaml
 import spack.version
 from spack.installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
+from spack.solver.reuse import SpecFilter
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
 
@@ -1302,7 +1303,12 @@ packages:
 )
 @pytest.mark.regression("49847")
 def test_requirements_on_compilers_and_reuse(
-    concretize_scope, mock_packages, packages_yaml, expected_reuse, expected_contraints
+    concretize_scope,
+    mock_packages,
+    mutable_config,
+    packages_yaml,
+    expected_reuse,
+    expected_contraints,
 ):
     """Tests that we can require compilers with `%` in configuration files, and still get reuse
     of specs (even though reused specs have no build dependency in the ASP encoding).
@@ -1313,11 +1319,14 @@ def test_requirements_on_compilers_and_reuse(
     reused_nodes = list(reused_spec.traverse())
     update_packages_config(packages_yaml)
     root_specs = [Spec(input_spec)]
+    external_specs = SpecFilter.from_packages_yaml(
+        mutable_config, include=[], exclude=[]
+    ).selected_specs()
 
     with spack.config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
-        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reused_nodes)
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reused_nodes + external_specs)
         pkga = result.specs[0]
     is_pkgb_reused = pkga["pkg-b"].dag_hash() == reused_spec.dag_hash()
 

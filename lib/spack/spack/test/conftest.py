@@ -2238,7 +2238,7 @@ def _true(x):
 
 
 def _libc_from_python(self):
-    return spack.spec.Spec("glibc@=2.28")
+    return spack.spec.Spec("glibc@=2.28", external_path="/some/path")
 
 
 @pytest.fixture()

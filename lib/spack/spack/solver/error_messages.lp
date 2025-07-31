@@ -132,59 +132,6 @@ error(0, "'{0}' requires conflicting variant values 'Spec({1}={2})' and 'Spec({1
      condition_holds(Cause2, node(X, TriggerPkg2)),
      Value1 < Value2. % see[1] in concretize.lp
 
-% Externals have to specify external conditions
-error(0, "Attempted to use external for {0} which does not satisfy any configured external spec version", Package, startcauses, ExternalCause, CID)
-  :- external(node(ID, Package)),
-     attr("external_spec_selected", node(ID, Package), Index),
-     imposed_constraint(EID, "external_conditions_hold", Package, Index),
-     pkg_fact(TriggerPkg, condition_effect(ExternalCause, EID)),
-     condition_holds(ExternalCause, node(CID, TriggerPkg)),
-     not external_version(node(ID, Package), _, _).
-
-error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}') is an external constraint for {0} which was not satisfied", Package, Name, A1)
-  :- external(node(ID, Package)),
-     not attr("external_conditions_hold", node(ID, Package), _),
-     imposed_constraint(EID, "external_conditions_hold", Package, _),
-     trigger_and_effect(Package, TID, EID),
-     condition_requirement(TID, Name, A1),
-     not attr(Name, node(_, A1)).
-
-error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2)
-  :- external(node(ID, Package)),
-     not attr("external_conditions_hold", node(ID, Package), _),
-     imposed_constraint(EID, "external_conditions_hold", Package, _),
-     trigger_and_effect(Package, TID, EID),
-     condition_requirement(TID, Name, A1, A2),
-     not attr(Name, node(_, A1), A2).
-
-error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}', '{4}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2, A3)
-  :- external(node(ID, Package)),
-     not attr("external_conditions_hold", node(ID, Package), _),
-     imposed_constraint(EID, "external_conditions_hold", Package, _),
-     trigger_and_effect(Package, TID, EID),
-     condition_requirement(TID, Name, A1, A2, A3),
-     not attr(Name, node(_, A1), A2, A3).
-
-error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        'Spec({0} {1}={2})' is an external constraint for {0} which was not satisfied\n        'Spec({0} {1}={3})' required", Package, Variant, Value, OtherValue, startcauses, OtherValueCause, CID)
-  :- external(node(ID, Package)),
-     not attr("external_conditions_hold", node(ID, Package), _),
-     imposed_constraint(EID, "external_conditions_hold", Package, _),
-     trigger_and_effect(Package, TID, EID),
-     condition_requirement(TID, "variant_value", Package, Variant, Value),
-     not attr("variant_value", node(ID, Package), Variant, Value),
-     attr("variant_value", node(ID, Package), Variant, OtherValue),
-     imposed_constraint(EID2, "variant_set", Package, Variant, OtherValue),
-     pkg_fact(TriggerPkg, condition_effect(OtherValueCause, EID2)),
-     condition_holds(OtherValueCause, node(CID, TriggerPkg)).
-
-error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}', '{4}', '{5}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2, A3, A4)
-  :- external(node(ID, Package)),
-     not attr("external_conditions_hold", node(ID, Package), _),
-     imposed_constraint(EID, "external_conditions_hold", Package, _),
-     trigger_and_effect(Package, TID, EID),
-     condition_requirement(TID, Name, A1, A2, A3, A4),
-     not attr(Name, node(_, A1), A2, A3, A4).
-
 % error message with causes for conflicts
 error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
   :- attr("node", node(ID, Package)),
@@ -194,8 +141,7 @@ error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
      condition_holds(ConstraintID, node(ID2, Package)),
      unification_set(X, node(ID2, Package)),
      unification_set(X, node(ID1, TriggerPackage)),
-     not external(node(ID, Package)),  % ignore conflicts for externals
-     not attr("hash", node(ID, Package), _).  % ignore conflicts for installed packages
+     build(node(ID, Package)).  % ignore conflicts for concrete packages
 
 % variables to show
 #show error/2.
@@ -245,5 +191,4 @@ error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
 #defined build/1.
 #defined node_has_variant/3.
 #defined provider/2.
-#defined external_version/3.
 #defined variant_single_value/2.

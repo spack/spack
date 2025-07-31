@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
 import spack.repo
 import spack.spec
+import spack.util.libc
 import spack.version
 
 from .core import SourceContext, fn, using_libc_compatibility
@@ -143,7 +144,6 @@ class RuntimePropertyRecorder:
                 _, provider, virtual = clause.args
                 clause.args = "virtual_on_edge", node_placeholder, provider, virtual
         body_str = ",\n".join(f"  {x}" for x in body_clauses)
-        body_str += f",\n  not external({node_variable})"
         body_str = body_str.replace(f'"{node_placeholder}"', f"{node_variable}")
         for old, replacement in when_substitutions.items():
             body_str = body_str.replace(old, replacement)
@@ -301,3 +301,19 @@ def external_config_with_implicit_externals(
             entry = {"spec": f"{libc}", "prefix": libc.external_path}
             packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
     return packages_yaml
+
+
+def all_libcs() -> Set[spack.spec.Spec]:
+    """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
+    libc determined from the current Python process if dynamically linked."""
+    libcs = set()
+    for c in spack.compilers.config.all_compilers_from(spack.config.CONFIG):
+        candidate = spack.compilers.libraries.CompilerPropertyDetector(c).default_libc()
+        if candidate is not None:
+            libcs.add(candidate)
+
+    if libcs:
+        return libcs
+
+    libc = spack.util.libc.libc_from_current_python_process()
+    return {libc} if libc else set()
