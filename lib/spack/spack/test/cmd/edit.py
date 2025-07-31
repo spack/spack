@@ -5,6 +5,7 @@
 import os
 import pathlib
 
+import spack.paths
 import spack.repo
 import spack.util.editor
 from spack.main import SpackCommand
