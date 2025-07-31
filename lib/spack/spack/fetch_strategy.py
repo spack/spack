@@ -890,6 +890,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     def mirror_id(self):
         if self.commit:
+            provenance_id = self.commit
             repo_path = urllib.parse.urlparse(self.url).path
             if self.git_sparse_paths:
                 sparse_paths = []
@@ -897,9 +898,9 @@ class GitFetchStrategy(VCSFetchStrategy):
                     sparse_paths.extend(self.git_sparse_paths())
                 else:
                     sparse_paths.extend(self.git_sparse_paths)
-                path, ext = os.path.splitext(repo_path)
-                repo_path = "{0}_{1}{2}".format(path, "_".join(sparse_paths), ext)
-            result = os.path.sep.join(["git", repo_path, self.commit])
+                sparse_hash = hash(tuple(sparse_paths))
+                provenance_id = f"{provenance_id}_{sparse_hash}"
+            result = os.path.sep.join(["git", repo_path, provenance_id])
             return result
 
     def _repo_info(self):
