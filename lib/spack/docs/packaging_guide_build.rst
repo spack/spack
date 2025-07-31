@@ -369,8 +369,8 @@ A more advanced example where we explicitly pass libraries and headers to the co
            f"--with-libxml2-include={self.spec['libxml2'].headers.include_flags}",
        ]
 
-The ``libs`` attribute is a :class:`LibraryList <spack.llnl.util.filesystem.LibraryList>` object that can be used to get a list of libraries by path, but also to get the appropriate linker flags.
-Similarly, the ``headers`` attribute is a :class:`HeaderList <spack.llnl.util.filesystem.HeaderList>`, which also has methods to get the relevant include flags.
+The ``libs`` attribute is a :class:`~spack.package.LibraryList` object that can be used to get a list of libraries by path, but also to get the appropriate linker flags.
+Similarly, the ``headers`` attribute is a :class:`~spack.package.HeaderList`, which also has methods to get the relevant include flags.
 
 .. _blas_lapack_scalapack:
 
@@ -480,12 +480,12 @@ The arguments are:
 ``self``
     This is the package object, which extends ``CMakePackage``.
     For API docs on Package objects, see
-    :py:class:`Package <spack.package_base.PackageBase>`.
+    :py:class:`Package <spack.package.PackageBase>`.
 
 ``spec``
     This is the concrete spec object created by Spack from an abstract spec supplied by the user.
     It describes what should be installed.
-    It will be of type :py:class:`Spec <spack.spec.Spec>`.
+    It will be of type :py:class:`Spec <spack.package.Spec>`.
 
 ``prefix``
     This is where your package should install its files.
@@ -531,7 +531,7 @@ Spack makes some of these executables available as global functions, making it e
 The ``python()`` and ``make()`` functions in this example invoke the ``python3`` and ``make`` executables, respectively.
 Naturally, you may wonder where these variables come from, since they are not imported from anywhere --- your editor may even underline them in red because they are not defined in the package module.
 
-The answer lies in the ``python`` and ``make`` dependencies, which implement the :meth:`~spack.package_base.PackageBase.setup_dependent_package` method in their package classes.
+The answer lies in the ``python`` and ``make`` dependencies, which implement the :meth:`~spack.package.PackageBase.setup_dependent_package` method in their package classes.
 This sets up Python variables that can be used in the package class of dependents.
 
 There is a good reason that it's the *dependency* that sets up these variables, rather than the package itself.
@@ -559,7 +559,7 @@ Not all dependencies set up such variables for dependent packages, in which case
           cython = which("cython", required=True)
           cython("setup.py", "build_ext", "--inplace")
 
-All executables in Spack are instances of :class:`~spack.util.executable.Executable`, see its API docs for more details.
+All executables in Spack are instances of :class:`~spack.package.Executable`, see its API docs for more details.
 
 
 .. _attribute_parallel:
@@ -638,7 +638,7 @@ This is already part of the boilerplate for packages created with ``spack create
 File filtering functions
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-:py:func:`filter_file(regex, repl, *filenames, **kwargs) <spack.llnl.util.filesystem.filter_file>`
+:py:func:`filter_file(regex, repl, *filenames, **kwargs) <spack.package.filter_file>`
   Works like ``sed`` but with Python regular expression syntax.  Takes
   a regular expression, a replacement, and a set of files.  ``repl``
   can be a raw string or a callable function.  If it is a raw string,
@@ -676,7 +676,7 @@ File filtering functions
         filter_file("CXX='c++'", "CXX='%s'" % self.compiler.cxx,
                     prefix.bin.mpicxx)
 
-:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.llnl.util.filesystem.change_sed_delimiter>`
+:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.package.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install
     into directories with, e.g. "@" in the name, because they use
     hard-coded ``sed`` commands in their build.
@@ -698,14 +698,14 @@ File filtering functions
 File functions
 ^^^^^^^^^^^^^^
 
-:py:func:`ancestor(dir, n=1) <spack.llnl.util.filesystem.ancestor>`
+:py:func:`ancestor(dir, n=1) <spack.package.ancestor>`
   Get the n\ :sup:`th` ancestor of the directory ``dir``.
 
-:py:func:`can_access(path) <spack.llnl.util.filesystem.can_access>`
+:py:func:`can_access(path) <spack.package.can_access>`
   True if we can read and write to the file at ``path``.  Same as
   native Python ``os.access(file_name, os.R_OK|os.W_OK)``.
 
-:py:func:`install(src, dest) <spack.llnl.util.filesystem.install>`
+:py:func:`install(src, dest) <spack.package.install>`
   Install a file to a particular location.  For example, install a
   header into the ``include`` directory under the install ``prefix``:
 
@@ -713,14 +713,14 @@ File functions
 
      install("my-header.h", prefix.include)
 
-:py:func:`join_path(*paths) <spack.llnl.util.filesystem.join_path>`
+:py:func:`join_path(*paths) <spack.package.join_path>`
   An alias for ``os.path.join``. This joins paths using the OS path separator.
 
-:py:func:`mkdirp(*paths) <spack.llnl.util.filesystem.mkdirp>`
+:py:func:`mkdirp(*paths) <spack.package.mkdirp>`
   Create each of the directories in ``paths``, creating any parent
   directories if they do not exist.
 
-:py:func:`working_dir(dirname, kwargs) <spack.llnl.util.filesystem.working_dir>`
+:py:func:`working_dir(dirname, kwargs) <spack.package.working_dir>`
   This is a Python `Context Manager
   <https://docs.python.org/2/library/contextlib.html>`_ that makes it
   easier to work with subdirectories in builds.  You use this with the
@@ -762,7 +762,7 @@ File functions
      The ``create=True`` keyword argument causes the command to create
      the directory if it does not exist.
 
-:py:func:`touch(path) <spack.llnl.util.filesystem.touch>`
+:py:func:`touch(path) <spack.package.touch>`
   Create an empty file at ``path``.
 
 
@@ -834,7 +834,7 @@ Prefix objects
 
 You can find the installation directory of package in Spack by using the ``self.prefix`` attribute of the package object.
 In :ref:`overriding-phases`, we saw that the ``install()`` method has a ``prefix`` argument, which is the same as ``self.prefix``.
-This variable behaves like a string, but it is actually an instance of the :py:class:`Prefix <spack.util.prefix.Prefix>` class, which provides some additional functionality to make it easier to work with file paths in Spack.
+This variable behaves like a string, but it is actually an instance of the :py:class:`Prefix <spack.package.Prefix>` class, which provides some additional functionality to make it easier to work with file paths in Spack.
 
 In particular, you can use the ``.`` operator to join paths together, creating nested directory structures:
 
@@ -911,12 +911,12 @@ Package specific environment variables
 Spack provides a few methods to help package authors set environment variables programmatically.
 In total there are four such methods, distinguishing between the build and run environments, and between the package itself and its dependents:
 
-1. :meth:`setup_build_environment(env, spec) <spack.builder.BaseBuilder.setup_build_environment>`
-2. :meth:`setup_dependent_build_environment(env, dependent_spec) <spack.builder.BaseBuilder.setup_dependent_build_environment>`
-3. :meth:`setup_run_environment(env) <spack.package_base.PackageBase.setup_run_environment>`
-4. :meth:`setup_dependent_run_environment(env, dependent_spec) <spack.package_base.PackageBase.setup_dependent_run_environment>`
+1. :meth:`setup_build_environment(env, spec) <spack.package.BaseBuilder.setup_build_environment>`
+2. :meth:`setup_dependent_build_environment(env, dependent_spec) <spack.package.BaseBuilder.setup_dependent_build_environment>`
+3. :meth:`setup_run_environment(env) <spack.package.PackageBase.setup_run_environment>`
+4. :meth:`setup_dependent_run_environment(env, dependent_spec) <spack.package.PackageBase.setup_dependent_run_environment>`
 
-All these methods take an ``env`` argument, which is an instance of the :class:`EnvironmentModifications <spack.util.environment.EnvironmentModifications>` class.
+All these methods take an ``env`` argument, which is an instance of the :class:`EnvironmentModifications <spack.package.EnvironmentModifications>` class.
 
 The ``setup_build_environment`` method is for certain build systems (e.g. ``PythonPackage``) roughly equivalent to the ``configure_args`` or ``cmake_args`` methods.
 It allows you to set environment variables that are needed during the build of the package itself, and can be used to inform the build system about the package's configuration and where to find dependencies:
@@ -960,7 +960,7 @@ Setting package module variables
 
 Apart from modifying environment variables of the dependent package, you can also define Python
 variables to be used by the dependent. This is done by implementing
-:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`. An
+:meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`. An
 example of this can be found in the ``Python`` package:
 
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/python/package.py
@@ -1015,7 +1015,7 @@ However, there are two cases in which you may need to deal with compiler flags i
 2. The build system *needs to be aware* of the user-specified compiler flags to prevent a build failure.
    This is less common, but there are examples of packages that fail to build when ``-O3`` is used for a specific source file.
 
-In these cases, you can implement the :meth:`flag_handler <spack.package_base.PackageBase.flag_handler>` method in your package class.
+In these cases, you can implement the :meth:`flag_handler <spack.package.PackageBase.flag_handler>` method in your package class.
 This method has a curious return type, but once you understand it, it is quite powerful.
 
 Here is a simple example:
