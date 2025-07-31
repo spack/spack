@@ -1461,7 +1461,7 @@ This allows users to run ``spack install languages=c,c++,fortran`` where the val
 """""""""""""""""""""""""""""""""""""""""""
 Complex validation logic for variant values
 """""""""""""""""""""""""""""""""""""""""""
-As noted above, the value ``none`` is a value like any other, which begs the question:
+As noted above, the value ``none`` is a value like any other, which raises the question:
 what if a variant allows multiple values to be selected, *or* none at all?
 Naively, one might think that this can be achieved by simply setting ``multi=True`` and allowing the value ``none``:
 
