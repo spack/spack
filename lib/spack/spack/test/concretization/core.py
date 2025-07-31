@@ -28,7 +28,7 @@ import spack.platforms
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
-import spack.solver.version_order
+import spack.solver.versions
 import spack.spec
 import spack.store
 import spack.test.conftest
@@ -2974,7 +2974,7 @@ def test_concretization_version_order():
     result = [
         v
         for v, _ in sorted(
-            versions, key=spack.solver.version_order.concretization_version_order, reverse=True
+            versions, key=spack.solver.versions.concretization_version_order, reverse=True
         )
     ]
     assert result == [

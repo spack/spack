@@ -57,7 +57,7 @@ from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.llnl.util.lang import ClassProperty, classproperty, memoized
 from spack.resource import Resource
-from spack.solver.version_order import concretization_version_order
+from spack.solver.versions import concretization_version_order
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version

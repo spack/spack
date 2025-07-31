@@ -282,3 +282,20 @@ def extract_args(model, predicate_name):
     return their intermediate representation.
     """
     return [intermediate_repr(sym.arguments) for sym in model if sym.name == predicate_name]
+
+
+class SourceContext:
+    """Tracks context in which a Spec's clause-set is generated (i.e.
+    with ``SpackSolverSetup.spec_clauses``).
+
+    Facts generated for the spec may include this context.
+    """
+
+    def __init__(self, *, source: Optional[str] = None):
+        # This can be "literal" for constraints that come from a user
+        # spec (e.g. from the command line); it can be the output of
+        # `ConstraintOrigin.append_type_suffix`; the default is "none"
+        # (which means it isn't important to keep track of the source
+        # in that case).
+        self.source = "none" if source is None else source
+        self.wrap_node_requirement: Optional[bool] = None
