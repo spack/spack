@@ -442,7 +442,7 @@ def test_git_sparse_path_have_unique_mirror_projections(
     """
     repo_path = mock_git_repository.path
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
     )
     gold_commit = git("-C", repo_path, "rev-parse", "many_dirs", output=str).strip()
     s_a = spack.concretize.concretize_one(f"git-sparse-a commit={gold_commit}")
