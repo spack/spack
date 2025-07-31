@@ -28,6 +28,9 @@ import spack.platforms
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
+import spack.solver.core
+import spack.solver.reuse
+import spack.solver.runtimes
 import spack.solver.versions
 import spack.spec
 import spack.store
@@ -90,6 +93,8 @@ def binary_compatibility(monkeypatch, request):
         # Databases have been created without glibc support
         return
 
+    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", lambda: True)
+    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", lambda: True)
     monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", lambda: True)
 
 
@@ -2437,7 +2442,7 @@ class TestConcretize:
         # Prepare a mock mirror that returns an old version of dyninst
         request_str = "callpath ^mpich"
         reused = spack.concretize.concretize_one(f"{request_str} ^dyninst@8.1.1")
-        monkeypatch.setattr(spack.solver.asp, "_specs_from_mirror", lambda: [reused])
+        monkeypatch.setattr(spack.solver.reuse, "_specs_from_mirror", lambda: [reused])
 
         # Exclude dyninst from reuse, so we expect that the old version is not taken into account
         with spack.config.override(
@@ -2519,7 +2524,7 @@ class TestConcretize:
     def test_cannot_reuse_host_incompatible_libc(self):
         """Test whether reuse concretization correctly fails to reuse a spec with a host
         incompatible libc."""
-        if not spack.solver.asp.using_libc_compatibility():
+        if not spack.solver.core.using_libc_compatibility():
             pytest.skip("This test requires libc nodes")
 
         # We install b@1 ^glibc@2.30, and b@0 ^glibc@2.28. The former is not host compatible, the
@@ -2883,7 +2888,7 @@ def test_reusable_externals_match(mock_packages, tmp_path: pathlib.Path):
     spec.external_path = str(tmp_path)
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
-    assert spack.solver.asp._is_reusable(
+    assert spack.solver.reuse._is_reusable(
         spec,
         {
             "mpich": {
@@ -2901,7 +2906,7 @@ def test_reusable_externals_match_virtual(mock_packages, tmp_path: pathlib.Path)
     spec.external_path = str(tmp_path)
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
-    assert spack.solver.asp._is_reusable(
+    assert spack.solver.reuse._is_reusable(
         spec,
         {
             "mpi": {
@@ -2919,7 +2924,7 @@ def test_reusable_externals_different_prefix(mock_packages, tmp_path: pathlib.Pa
     spec.external_path = "/other/path"
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
-    assert not spack.solver.asp._is_reusable(
+    assert not spack.solver.reuse._is_reusable(
         spec,
         {
             "mpich": {
@@ -2938,7 +2943,7 @@ def test_reusable_externals_different_modules(mock_packages, tmp_path: pathlib.P
     spec.external_path = str(tmp_path)
     spec.external_modules = modules
     spec._mark_concrete()
-    assert not spack.solver.asp._is_reusable(
+    assert not spack.solver.reuse._is_reusable(
         spec,
         {
             "mpich": {
@@ -2955,7 +2960,7 @@ def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path
     spec = Spec("mpich@4.1~debug build_system=generic arch=linux-ubuntu23.04-zen2 %gcc@13.1.0")
     spec.external_path = str(tmp_path)
     spec._mark_concrete()
-    assert not spack.solver.asp._is_reusable(
+    assert not spack.solver.reuse._is_reusable(
         spec,
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": str(tmp_path)}]}},
         local=False,

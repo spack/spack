@@ -1,13 +1,17 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import copy
+import itertools
 from typing import Tuple
 
+import spack.compilers.config
+import spack.compilers.libraries
 import spack.repo
 import spack.spec
 import spack.version
 
-from .core import SourceContext, fn
+from .core import SourceContext, fn, using_libc_compatibility
 from .versions import DeclaredVersion, Provenance
 
 
@@ -251,3 +255,49 @@ class RuntimePropertyRecorder:
 
         self._setup.trigger_rules()
         self._setup.effect_rules()
+
+
+def _normalize_packages_yaml(packages_yaml):
+    normalized_yaml = copy.copy(packages_yaml)
+    for pkg_name in packages_yaml:
+        is_virtual = spack.repo.PATH.is_virtual(pkg_name)
+        if pkg_name == "all" or not is_virtual:
+            continue
+
+        # Remove the virtual entry from the normalized configuration
+        data = normalized_yaml.pop(pkg_name)
+        is_buildable = data.get("buildable", True)
+        if not is_buildable:
+            for provider in spack.repo.PATH.providers_for(pkg_name):
+                entry = normalized_yaml.setdefault(provider.name, {})
+                entry["buildable"] = False
+
+        externals = data.get("externals", [])
+
+        def keyfn(x):
+            return spack.spec.Spec(x["spec"]).name
+
+        for provider, specs in itertools.groupby(externals, key=keyfn):
+            entry = normalized_yaml.setdefault(provider, {})
+            entry.setdefault("externals", []).extend(specs)
+
+    return normalized_yaml
+
+
+def _external_config_with_implicit_externals(configuration):
+    # Read packages.yaml and normalize it so that it will not contain entries referring to
+    # virtual packages.
+    packages_yaml = _normalize_packages_yaml(configuration.get("packages"))
+
+    # Add externals for libc from compilers on Linux
+    if not using_libc_compatibility():
+        return packages_yaml
+
+    seen = set()
+    for compiler in spack.compilers.config.all_compilers_from(configuration):
+        libc = spack.compilers.libraries.CompilerPropertyDetector(compiler).default_libc()
+        if libc and libc not in seen:
+            seen.add(libc)
+            entry = {"spec": f"{libc}", "prefix": libc.external_path}
+            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
+    return packages_yaml

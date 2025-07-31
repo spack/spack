@@ -3,10 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import collections.abc
-import copy
 import enum
 import errno
-import functools
 import hashlib
 import io
 import itertools
@@ -36,7 +34,6 @@ from typing import (
 import spack.vendor.archspec.cpu
 
 import spack
-import spack.binary_distribution
 import spack.compilers.config
 import spack.compilers.flags
 import spack.config
@@ -83,10 +80,12 @@ from .core import (
     fn,
     parse_files,
     parse_term,
+    using_libc_compatibility,
 )
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementParser, RequirementRule
-from .runtimes import RuntimePropertyRecorder
+from .reuse import SpecFilter
+from .runtimes import RuntimePropertyRecorder, _external_config_with_implicit_externals
 from .versions import DeclaredVersion, Provenance, concretization_version_order
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
@@ -265,11 +264,6 @@ def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
         and lhs.external_path == rhs.external_path
         and lhs.version >= rhs.version
     )
-
-
-def using_libc_compatibility() -> bool:
-    """Returns True if we are currently using libc compatibility"""
-    return spack.platforms.host().name == "linux"
 
 
 def c_compiler_runs(compiler) -> bool:
@@ -862,33 +856,6 @@ CONC_CACHE: ConcretizationCache = spack.llnl.util.lang.Singleton(
 )  # type: ignore
 
 
-def _normalize_packages_yaml(packages_yaml):
-    normalized_yaml = copy.copy(packages_yaml)
-    for pkg_name in packages_yaml:
-        is_virtual = spack.repo.PATH.is_virtual(pkg_name)
-        if pkg_name == "all" or not is_virtual:
-            continue
-
-        # Remove the virtual entry from the normalized configuration
-        data = normalized_yaml.pop(pkg_name)
-        is_buildable = data.get("buildable", True)
-        if not is_buildable:
-            for provider in spack.repo.PATH.providers_for(pkg_name):
-                entry = normalized_yaml.setdefault(provider.name, {})
-                entry["buildable"] = False
-
-        externals = data.get("externals", [])
-
-        def keyfn(x):
-            return spack.spec.Spec(x["spec"]).name
-
-        for provider, specs in itertools.groupby(externals, key=keyfn):
-            entry = normalized_yaml.setdefault(provider, {})
-            entry.setdefault("externals", []).extend(specs)
-
-    return normalized_yaml
-
-
 def _is_checksummed_git_version(v):
     return isinstance(v, vn.GitVersion) and v.is_commit
 
@@ -909,25 +876,6 @@ def _spec_with_default_name(spec_str, name):
     if not spec.name:
         spec.name = name
     return spec
-
-
-def _external_config_with_implicit_externals(configuration):
-    # Read packages.yaml and normalize it, so that it will not contain entries referring to
-    # virtual packages.
-    packages_yaml = _normalize_packages_yaml(configuration.get("packages"))
-
-    # Add externals for libc from compilers on Linux
-    if not using_libc_compatibility():
-        return packages_yaml
-
-    seen = set()
-    for compiler in spack.compilers.config.all_compilers_from(configuration):
-        libc = CompilerPropertyDetector(compiler).default_libc()
-        if libc and libc not in seen:
-            seen.add(libc)
-            entry = {"spec": f"{libc}", "prefix": libc.external_path}
-            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
-    return packages_yaml
 
 
 class ErrorHandler:
@@ -4222,178 +4170,6 @@ def _develop_specs_from_env(spec, env):
         spec.variants.setdefault("dev_path", vt.SingleValuedVariant("dev_path", path))
 
     assert spec.satisfies(dev_info["spec"])
-
-
-def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
-    """A spec is reusable if it's not a dev spec, it's imported from the cray manifest, it's not
-    external, or it's external with matching packages.yaml entry. The latter prevents two issues:
-
-    1. Externals in build caches: avoid installing an external on the build machine not
-       available on the target machine
-    2. Local externals: avoid reusing an external if the local config changes. This helps in
-       particular when a user removes an external from packages.yaml, and expects that that
-       takes effect immediately.
-
-    Arguments:
-        spec: the spec to check
-        packages: the packages configuration
-    """
-    if "dev_path" in spec.variants:
-        return False
-
-    if spec.name == "compiler-wrapper":
-        return False
-
-    if not spec.external:
-        return _has_runtime_dependencies(spec)
-
-    # Cray external manifest externals are always reusable
-    if local:
-        _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-        if record and record.origin == "external-db":
-            return True
-
-    try:
-        provided = spack.repo.PATH.get(spec).provided_virtual_names()
-    except spack.repo.RepoError:
-        provided = []
-
-    for name in {spec.name, *provided}:
-        for entry in packages.get(name, {}).get("externals", []):
-            if (
-                spec.satisfies(entry["spec"])
-                and spec.external_path == entry.get("prefix")
-                and spec.external_modules == entry.get("modules")
-            ):
-                return True
-
-    return False
-
-
-def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
-    # TODO (compiler as nodes): this function contains specific names from builtin, and should
-    # be made more general
-    if "gcc" in spec and "gcc-runtime" not in spec:
-        return False
-
-    if "intel-oneapi-compilers" in spec and "intel-oneapi-runtime" not in spec:
-        return False
-
-    return True
-
-
-class SpecFilter:
-    """Given a method to produce a list of specs, this class can filter them according to
-    different criteria.
-    """
-
-    def __init__(
-        self,
-        factory: Callable[[], List[spack.spec.Spec]],
-        is_usable: Callable[[spack.spec.Spec], bool],
-        include: List[str],
-        exclude: List[str],
-    ) -> None:
-        """
-        Args:
-            factory: factory to produce a list of specs
-            is_usable: predicate that takes a spec in input and returns False if the spec
-                should not be considered for this filter, True otherwise.
-            include: if present, a "good" spec must match at least one entry in the list
-            exclude: if present, a "good" spec must not match any entry in the list
-        """
-        self.factory = factory
-        self.is_usable = is_usable
-        self.include = include
-        self.exclude = exclude
-
-    def is_selected(self, s: spack.spec.Spec) -> bool:
-        if not self.is_usable(s):
-            return False
-
-        if self.include and not any(s.satisfies(c) for c in self.include):
-            return False
-
-        if self.exclude and any(s.satisfies(c) for c in self.exclude):
-            return False
-
-        return True
-
-    def selected_specs(self) -> List[spack.spec.Spec]:
-        return [s for s in self.factory() if self.is_selected(s)]
-
-    @staticmethod
-    def from_store(configuration, *, include, exclude) -> "SpecFilter":
-        """Constructs a filter that takes the specs from the current store."""
-        packages = _external_config_with_implicit_externals(configuration)
-        is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
-        factory = functools.partial(_specs_from_store, configuration=configuration)
-        return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
-
-    @staticmethod
-    def from_buildcache(configuration, *, include, exclude) -> "SpecFilter":
-        """Constructs a filter that takes the specs from the configured buildcaches."""
-        packages = _external_config_with_implicit_externals(configuration)
-        is_reusable = functools.partial(_is_reusable, packages=packages, local=False)
-        return SpecFilter(
-            factory=_specs_from_mirror, is_usable=is_reusable, include=include, exclude=exclude
-        )
-
-    @staticmethod
-    def from_environment(configuration, *, include, exclude, env) -> "SpecFilter":
-        packages = _external_config_with_implicit_externals(configuration)
-        is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
-        factory = functools.partial(_specs_from_environment, env=env)
-        return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
-
-    @staticmethod
-    def from_environment_included_concrete(
-        configuration,
-        *,
-        include: List[str],
-        exclude: List[str],
-        env: ev.Environment,
-        included_concrete: str,
-    ) -> "SpecFilter":
-        packages = _external_config_with_implicit_externals(configuration)
-        is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
-        factory = functools.partial(
-            _specs_from_environment_included_concrete, env=env, included_concrete=included_concrete
-        )
-        return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
-
-
-def _specs_from_store(configuration):
-    store = spack.store.create(configuration)
-    with store.db.read_transaction():
-        return store.db.query(installed=True)
-
-
-def _specs_from_mirror():
-    try:
-        return spack.binary_distribution.update_cache_and_get_specs()
-    except (spack.binary_distribution.FetchCacheError, IndexError):
-        # this is raised when no mirrors had indices.
-        # TODO: update mirror configuration so it can indicate that the
-        # TODO: source cache (or any mirror really) doesn't have binaries.
-        return []
-
-
-def _specs_from_environment(env):
-    """Return all concrete specs from the environment. This includes all included concrete"""
-    if env:
-        return [concrete for _, concrete in env.concretized_specs()]
-    else:
-        return []
-
-
-def _specs_from_environment_included_concrete(env, included_concrete):
-    """Return only concrete specs from the environment included from the included_concrete"""
-    if env:
-        assert included_concrete in env.included_concrete_envs
-        return [concrete for concrete in env.included_specs_by_hash[included_concrete].values()]
-    else:
-        return []
 
 
 class ReuseStrategy(enum.Enum):
