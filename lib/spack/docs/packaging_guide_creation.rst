@@ -1415,8 +1415,11 @@ To define a *single-valued* variant, simply pass ``multi=False`` and a tuple of 
     class Blis(Package):
         ...
         variant(
-            "threads", default="none", description="Multithreading support",
-            values=("pthreads", "openmp", "none"), multi=False
+            "threads",
+            default="none",
+            values=("pthreads", "openmp", "none"),
+            multi=False,
+            description="Multithreading support",
         )
 
 This allows users to ``spack install blis threads=openmp``.
@@ -1447,14 +1450,14 @@ To define a *multi-valued* variant, simply pass ``multi=True`` instead:
     class Gcc(AutotoolsPackage):
         ...
         variant(
-            "languages", default="c,c++,fortran",
-            values=("ada", "brig", "c", "c++", "fortran",
-                    "go", "java", "jit", "lto", "objc", "obj-c++"),
+            "languages",
+            default="c,c++,fortran",
+            values=("ada", "brig", "c", "c++", "fortran", "objc"),
             multi=True,
-            description="Compilers and runtime libraries to build"
+            description="Compilers and runtime libraries to build",
         )
 
-This allows users to run ``spack install languages=c,c++,fortran`` where the values are separated by commas.
+This allows users to run ``spack install languages=c,c++`` where the values are separated by commas.
 
 
 """""""""""""""""""""""""""""""""""""""""""
@@ -1466,14 +1469,14 @@ Naively, one might think that this can be achieved by simply creating a multi-va
 
    .. code-block:: python
 
-      class Adios(AutotoolsPackage):
-         ...
-         variant(
-               "staging",
-               values=("dataspaces", "flexpath", "none"),
-               multi=True,
-               description="Enable dataspaces and/or flexpath staging transports"
-         )
+    class Adios(AutotoolsPackage):
+        ...
+        variant(
+            "staging",
+            values=("dataspaces", "flexpath", "none"),
+            multi=True,
+            description="Enable dataspaces and/or flexpath staging transports",
+        )
 
 but this does not prevent users from selecting the non-sensical option ``staging=dataspaces,none``.
 
@@ -1489,7 +1492,7 @@ The first validator function is :py:func:`~spack.package.any_combination_of`, wh
         variant(
             "staging",
             values=any_combination_of("flexpath", "dataspaces"),
-            description="Enable dataspaces and/or flexpath staging transports"
+            description="Enable dataspaces and/or flexpath staging transports",
         )
 
 This solves the issue by allowing the user to select either any combination of the values ``flexpath`` and ``dataspaces``, or ``none``.
@@ -1504,12 +1507,11 @@ The second validator function :py:func:`~spack.package.disjoint_sets` generalize
         variant(
             "process_managers",
             description="List of the process managers to activate",
-            values=disjoint_sets(
-                ("auto",), ("slurm",), ("hydra", "gforker", "remshell")
-            ).prohibit_empty_set().with_error(
-                "'slurm' or 'auto' cannot be activated along with "
-                "other process managers"
-            ).with_default("auto").with_non_feature_values("auto"),
+            values=disjoint_sets(("auto",), ("slurm",), ("hydra", "gforker", "remshell"))
+            .prohibit_empty_set()
+            .with_error("'slurm' or 'auto' cannot be activated along with other process managers")
+            .with_default("auto")
+            .with_non_feature_values("auto"),
         )
 
 In this case, examples of valid options are ``process_managers=auto``, ``process_managers=slurm``, and ``process_managers=hydra,remshell``, whereas ``process_managers=slurm,hydra`` is invalid, as it picks values from two different sets.
@@ -1530,17 +1532,21 @@ To model a similar situation we can use *conditional possible values* in the var
 .. code-block:: python
 
    variant(
-       "cxxstd", default="98",
+       "cxxstd",
+       default="98",
        values=(
-           "98", "11", "14",
+           "98",
+           "11",
+           "14",
            # C++17 is not supported by Boost < 1.63.0.
            conditional("17", when="@1.63.0:"),
            # C++20/2a is not support by Boost < 1.73.0
-           conditional("2a", "2b", when="@1.73.0:")
+           conditional("2a", "2b", when="@1.73.0:"),
        ),
        multi=False,
        description="Use the specified C++ standard when building.",
    )
+
 
 The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the
 ``cxxstd`` variant, while ``17`` requires a version greater or equal to ``1.63.0``
