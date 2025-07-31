@@ -1365,50 +1365,33 @@ For example, if the package defines the version ``1.2.3``, we know from :ref:`ve
 Variants
 --------
 
-Many software packages can be configured to enable optional
-features, which often come at the expense of additional dependencies or
-longer build times. To be flexible enough and support a wide variety of
-use cases, Spack allows you to expose to the end-user the ability to choose
-which features should be activated in a package at the time it is installed.
+Many software packages can be configured to enable optional features, which often come at the expense of additional dependencies or longer build times.
+To be flexible enough and support a wide variety of use cases, Spack allows you to expose to the end-user the ability to choose which features should be activated in a package at the time it is installed.
 The mechanism to be employed is the :py:func:`~spack.package.variant` directive.
 
 ^^^^^^^^^^^^^^^^
 Boolean variants
 ^^^^^^^^^^^^^^^^
 
-In their simplest form, variants are boolean options specified at the package
-level:
+In their simplest form, variants are boolean options specified at the package level:
 
   .. code-block:: python
 
     class Hdf5(AutotoolsPackage):
         ...
-        variant(
-            "shared", default=True, description="Builds a shared version of the library"
-        )
+        variant("shared", default=True, description="Builds a shared version of the library")
 
-with a default value and a description of their meaning / use in the package.
-*Variants can be tested in any context where a spec constraint is expected.*
-In the example above the ``shared`` variant is tied to the build of shared dynamic
-libraries. To pass the right option at configure time we can branch depending on
-its value:
+with a default value and a description of their meaning in the package.
 
-  .. code-block:: python
+With this variant defined, users can now run ``spack install hdf5 +shared`` and ``spack install hdf5 ~shared`` to enable or disable the ``shared`` feature, respectively.
+See also the :ref:`basic-variants` for the spec syntax of variants.
 
-    def configure_args(self):
-        ...
-        if self.spec.satisfies("+shared"):
-            extra_args.append("--enable-shared")
-        else:
-            extra_args.append("--disable-shared")
-            extra_args.append("--enable-static-exec")
+Of course, merely defining a variant in a package does not automatically enable or disable any features in the build system.
+As a packager, you are responsible for translating variants to build system flags or environment variables, to influence the build process.
+We will see this in action in the next part of the packaging guide, where we talk about :ref:`configuring the build with spec objects <spec-objects>`.
 
-As explained in :ref:`basic-variants` the constraint ``+shared`` means
-that the boolean variant is set to ``True``, while ``~shared`` means it is set
-to ``False``.
-Another common example is the optional activation of an extra dependency
-which requires to use the variant in the ``when`` argument of
-:py:func:`~spack.package.depends_on`:
+Other than influencing the build process, variants are often used to specify optional :ref:`dependencies of a package <dependencies>`.
+For example, a package may depend on another package only if a certain variant is enabled:
 
   ..  code-block:: python
 
@@ -1417,18 +1400,16 @@ which requires to use the variant in the ``when`` argument of
         variant("szip", default=False, description="Enable szip support")
         depends_on("szip", when="+szip")
 
-as shown in the snippet above where ``szip`` is modeled to be an optional
-dependency of ``hdf5``.
+In this case, ``szip`` is modeled as an optional dependency of ``hdf5``, and users can run ``spack install hdf5 +szip`` to enable it.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Multi-valued variants
 ^^^^^^^^^^^^^^^^^^^^^
 
-If need be, Spack can go beyond boolean variants and permit an arbitrary
-number of allowed values. This might be useful when modeling
-options that are tightly related to each other.
-The values in this case are passed to the :py:func:`~spack.package.variant`
-directive as a tuple:
+Boolean variants are most common, but sometimes a package has options that can take more than two values, or are better expressed with string values rather than booleans.
+This is where multi-valued variants come into play.
+Multi-valued variants take a tuple of *possible* values, and can be configured to allow either a *single value* or *multiple values* to be selected at the same time.
+For example:
 
   .. code-block:: python
 
@@ -1439,10 +1420,10 @@ directive as a tuple:
             values=("pthreads", "openmp", "none"), multi=False
         )
 
-In the example above the argument ``multi`` is set to ``False`` to indicate
-that only one among all the variant values can be active at any time. This
-constraint is enforced by the parser and an error is emitted if a user
-specifies two or more values at the same time:
+This allows users to ``spack install blis threads=openmp``.
+
+In the example above the argument ``multi=False`` indicates that only a **single value** can be selected at a time.
+This constraint is enforced by the solver, and an error is emitted if a user specifies two or more values at the same time:
 
   .. code-block:: console
 
@@ -1455,18 +1436,12 @@ specifies two or more values at the same time:
     --------------------------------
     ==> Error: multiple values are not allowed for variant "threads"
 
-Another useful note is that *Python's* ``None`` *is not allowed as a default value*
-and therefore it should not be used to denote that no feature was selected.
-Users should instead select another value, like ``"none"``, and handle it explicitly
-within the package recipe if need be:
+.. hint::
 
-  .. code-block:: python
+   In the example above, the value ``threads=none`` is a variant value like any other, and means that *no value is selected*.
+   In Spack, all variants have to have a value, so ``none`` was chosen as a *convention* to indicate that no value is selected.
 
-      if self.spec.variants["threads"].value == "none":
-         options.append("--no-threads")
-
-In cases where multiple values can be selected at the same time ``multi`` should
-be set to ``True``:
+In cases where **multiple values** can be selected at the same time, ``multi`` should be set to ``True``:
 
   .. code-block:: python
 
@@ -1480,18 +1455,31 @@ be set to ``True``:
             description="Compilers and runtime libraries to build"
         )
 
-Within a package recipe a multi-valued variant is tested using a ``key=value`` syntax:
+This allows users to run ``spack install languages=c,c++,fortran`` where the values are separated by commas.
 
-  .. code-block:: python
-
-    if spec.satisfies("languages=jit"):
-        options.append("--enable-jit")
 
 """""""""""""""""""""""""""""""""""""""""""
 Complex validation logic for variant values
 """""""""""""""""""""""""""""""""""""""""""
-Some multi-valued variants require more advanced validation logic, for which Spack provides two validator functions.
-These can be passed to the ``values=`` argument of the ``variant`` directive.
+As noted above, the value ``none`` is a value like any other, which begs the question:
+what if a variant allows multiple values to be selected, *or* none at all?
+Naively, one might think that this can be achieved by simply setting ``multi=True`` and allowing the value ``none``:
+
+   .. code-block:: python
+
+      class Adios(AutotoolsPackage):
+         ...
+         variant(
+               "staging",
+               values=("dataspaces", "flexpath", "none"),
+               multi=True,
+               description="Enable dataspaces and/or flexpath staging transports"
+         )
+
+but this does not prevent users from selecting ``staging=dataspaces,none``, which is non-sensical.
+
+In these cases, more advanced validation logic is required to prevent ``none`` from being selected along with any other value.
+Spack provides two validator functions to help with this, which can be passed to the ``values=`` argument of the ``variant`` directive.
 
 The first validator function is :py:func:`~spack.package.any_combination_of`, which can be used as follows:
 
@@ -1505,16 +1493,10 @@ The first validator function is :py:func:`~spack.package.any_combination_of`, wh
             description="Enable dataspaces and/or flexpath staging transports"
         )
 
-This is very similar to ordinary multi-valued variants, but crucially it allows users to pick neither of the two values, using ``staging=none`` (the default).
-In other words, the valid options are either ``staging=none`` to select nothing, or ``staging=dataspaces``, ``staging=flexpath``, and ``staging=dataspaces,flexpath``.
+This solves the issue by allowing the user to select either any combination of the values ``flexpath`` and ``dataspaces``, or ``none``.
+In other words, users can specify ``staging=none`` to select nothing, or any of ``staging=dataspaces``, ``staging=flexpath``, and ``staging=dataspaces,flexpath``.
 
-.. note::
-
-   The variant value ``none`` is a value like any other.
-   By convention, it indicates that no value is selected for the variant.
-   Variant values are always strings, so the value ``none`` is not related to the Python :py:data:`None` object.
-
-The second validator function :py:func:`~spack.package.disjoint_sets`, which generalizes this concept further:
+The second validator function :py:func:`~spack.package.disjoint_sets` generalizes this idea further:
 
   .. code-block:: python
 
