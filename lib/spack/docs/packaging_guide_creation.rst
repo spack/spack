@@ -1402,14 +1402,13 @@ For example, a package may depend on another package only if a certain variant i
 
 In this case, ``szip`` is modeled as an optional dependency of ``hdf5``, and users can run ``spack install hdf5 +szip`` to enable it.
 
-^^^^^^^^^^^^^^^^^^^^^
-Multi-valued variants
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Single- and multi-valued variants
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Boolean variants are most common, but sometimes a package has options that can take more than two values, or are better expressed with string values rather than booleans.
-This is where multi-valued variants come into play.
-Multi-valued variants take a tuple of *possible* values, and can be configured to allow either a *single value* or *multiple values* to be selected at the same time.
-For example:
+Other than boolean variants, Spack supports single- and multi-valued variants that can take one or more *string* values.
+
+To define a *single-valued* variant, simply pass ``multi=False`` and a tuple of possible values to the ``variant`` directive:
 
   .. code-block:: python
 
@@ -1441,7 +1440,7 @@ This constraint is enforced by the solver, and an error is emitted if a user spe
    In the example above, the value ``threads=none`` is a variant value like any other, and means that *no value is selected*.
    In Spack, all variants have to have a value, so ``none`` was chosen as a *convention* to indicate that no value is selected.
 
-In cases where **multiple values** can be selected at the same time, ``multi`` should be set to ``True``:
+To define a *multi-valued* variant, simply pass ``multi=True`` instead:
 
   .. code-block:: python
 
@@ -1463,7 +1462,7 @@ Complex validation logic for variant values
 """""""""""""""""""""""""""""""""""""""""""
 As noted above, the value ``none`` is a value like any other, which raises the question:
 what if a variant allows multiple values to be selected, *or* none at all?
-Naively, one might think that this can be achieved by simply setting ``multi=True`` and allowing the value ``none``:
+Naively, one might think that this can be achieved by simply creating a multi-valued variant that includes the value ``none``:
 
    .. code-block:: python
 
@@ -1476,7 +1475,7 @@ Naively, one might think that this can be achieved by simply setting ``multi=Tru
                description="Enable dataspaces and/or flexpath staging transports"
          )
 
-but this does not prevent users from selecting ``staging=dataspaces,none``, which is non-sensical.
+but this does not prevent users from selecting the non-sensical option ``staging=dataspaces,none``.
 
 In these cases, more advanced validation logic is required to prevent ``none`` from being selected along with any other value.
 Spack provides two validator functions to help with this, which can be passed to the ``values=`` argument of the ``variant`` directive.
