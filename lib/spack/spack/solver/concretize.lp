@@ -624,9 +624,12 @@ error(100, "External {0} cannot satisfy both {1} and {2}", BuildDependency, Lite
      virtual(Virtual).
 
 attr("virtual_node", VirtualNode)  :- virtual_build_requirement(ParentNode, VirtualNode).
-{ build_requirement(ParentNode, ProviderNode) } :-
+build_requirement(ParentNode, ProviderNode)  :-
   virtual_build_requirement(ParentNode, VirtualNode),
-  provider(ProviderNode, VirtualNode).
+  provider(ProviderNode, VirtualNode),
+  not attr("depends_on", ParentNode, ProviderNode, "link"),
+  not attr("depends_on", ParentNode, ProviderNode, "run"),
+  attr("depends_on", ParentNode, ProviderNode, "build").
 
 % From cli we can have literal expressions like:
 %
