@@ -989,6 +989,11 @@ def _main(argv=None):
             env_format_error = e
 
     def add_environment_scope(priority):
+        if env_format_error:
+            # Allow command to continue without env in case it is `spack config edit`
+            # All other cases will raise in `finish_parse_and_run`
+            spack.environment.environment._active_environment_error = env_format_error
+            return
         # do not call activate here, as it has a lot of expensive function calls to deal
         # with mutation of spack.config.CONFIG -- but we are still building the config.
         env.manifest.prepare_config_scope(priority)

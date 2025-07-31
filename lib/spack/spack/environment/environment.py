@@ -58,6 +58,10 @@ spack_env_view_var = "SPACK_ENV_VIEW"
 #: currently activated environment
 _active_environment: Optional["Environment"] = None
 
+# This is used in spack.main to bypass env failures if the command is `spack config edit`
+# It is used in spack.cmd.config to get the path to a failed env for `spack config edit`
+#: Validation error for a currently activate environment that failed to parse
+_active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
 #: default path where environments are stored in the spack tree
 default_env_path = os.path.join(spack.paths.var_path, "environments")
