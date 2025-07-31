@@ -246,13 +246,13 @@ Spack is unique in that it allows you to write a *single* ``package.py`` for all
 The central object in Spack that encodes the package's configuration is the **concrete spec**, which is available as ``self.spec`` in the package class.
 This is the object you need to query to make decisions about how to configure the build.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Using ``self.spec.satisfies``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+Querying ``self.spec``
+^^^^^^^^^^^^^^^^^^^^^^
 
 **Variants**.
 In the previous section of the packaging guide, we've seen :ref:`how to define variants <variants>`.
-As a packager, you are responsible for implementing the logic that translates the selected variant values into configure arguments.
+As a packager, you are responsible for implementing the logic that translates the selected variant values into build instructions the build system can understand.
 If you want to pass a flag to the configure script only if the package is built with a specific variant, you can do so like this:
 
 .. code-block:: python
@@ -301,6 +301,31 @@ Even if *multiple* values are selected, you can still use ``key=value`` to test 
 
 Notice that many build systems provide helper functions to make the above code more concise.
 See :ref:`the Autotools docs <autotools_helper_functions>` and :ref:`the CMake docs <cmake_args>`.
+
+Other than testing for certain variant values, you can also obtain the variant value directly with ``self.spec.variants["variant_name"].value``.
+This is useful when you want to pass the variant value as a command line argument to the build system.
+The type of this value depends on the variant type:
+
+* For boolean variants this is :data:`True` or :data:`False`.
+* For single-valued variants this is a :class:`str` value.
+* For multi-valued variants it is a tuple of :class:`str` values.
+
+An example of using this is shown below:
+
+.. code-block:: python
+
+   variant(
+       "cxxstd",
+       default="11",
+       values=("11", "14", "17", "20", "23"),
+       multi=False,
+       description="C++ standard",
+   )
+
+   def configure_args(self):
+       return [
+           f"--with-cxxstd={self.spec.variants['cxxstd'].value}"
+       ]
 
 **Versions**.
 Similarly, versions are often used to dynamically change the build configuration:
