@@ -46,10 +46,15 @@ def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
 def complete_architecture(node: spack.spec.Spec) -> None:
     """Completes a node with architecture information."""
     if node.architecture:
+        if not node.architecture.target:
+            node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
         node.architecture.complete_with_defaults()
     else:
         node.constrain(spack.spec.Spec.default_arch())
-    node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
+        node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
+
+    for flag_type in spack.spec.FlagMap.valid_compiler_flags():
+        node.compiler_flags.setdefault(flag_type, [])
 
 
 def extract_dicts_from_configuration(packages_yaml) -> List[ExternalDict]:

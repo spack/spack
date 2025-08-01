@@ -65,7 +65,21 @@ def test_basic_parsing(externals_dict, expected_length, expected_queries):
 
 @pytest.mark.parametrize(
     "externals_dict,expected_triplet",
-    [([{"spec": "gmake@1.0", "prefix": "/path/to/gmake1"}], ("test", "debian6", "aarch64"))],
+    [
+        ([{"spec": "gmake@1.0", "prefix": "/path/to/gmake1"}], ("test", "debian6", "aarch64")),
+        (
+            [{"spec": "gmake@1.0 target=icelake", "prefix": "/path/to/gmake1"}],
+            ("test", "debian6", "icelake"),
+        ),
+        (
+            [{"spec": "gmake@1.0 platform=linux target=icelake", "prefix": "/path/to/gmake1"}],
+            ("linux", "debian6", "icelake"),
+        ),
+        (
+            [{"spec": "gmake@1.0 os=rhel8", "prefix": "/path/to/gmake1"}],
+            ("test", "rhel8", "aarch64"),
+        ),
+    ],
 )
 def test_external_specs_architecture_completion(
     externals_dict: List[ExternalDict], expected_triplet, monkeypatch
