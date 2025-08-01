@@ -9,7 +9,7 @@ from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
 import spack.repo
-from spack.externals import ExternalDict, ExternalSpecsParser
+from spack.externals import ExternalDict, ExternalSpecsParser, DuplicateExternalError
 
 pytestmark = pytest.mark.usefixtures("config", "mock_packages")
 
@@ -55,6 +55,7 @@ def test_basic_parsing(externals_dict, expected_length, expected_queries):
     parser = ExternalSpecsParser(externals_dict)
 
     assert len(parser.all_specs()) == expected_length
+    assert len(parser.specs_by_external_id) == expected_length
     for node in parser.all_specs():
         assert node.concrete
 
@@ -99,3 +100,15 @@ def test_external_specs_parser_with_missing_packages():
 
     with pytest.raises(spack.repo.UnknownPackageError, match="Package 'baz' not found"):
         ExternalSpecsParser(externals_dict, allow_nonexisting=False)
+
+
+def test_externals_with_duplicate_id():
+    """Tests the parsing of external specs when some specs have the same id"""
+    externals_dict: List[ExternalDict] = [
+        {"spec": "gmake@1.0", "prefix": "/path/to/gmake1", "external_id": "gmake"},
+        {"spec": "gmake@2.0", "prefix": "/path/to/gmake2", "external_id": "gmake"},
+        {"spec": "gcc@1.0", "prefix": "/path/to/gcc", "external_id": "gcc"},
+    ]
+
+    with pytest.raises(DuplicateExternalError, match=" Fix your packages.yaml configuration"):
+        ExternalSpecsParser(externals_dict)

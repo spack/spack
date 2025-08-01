@@ -1,13 +1,15 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import Any, Callable, Dict, List, Union
+import uuid
+from typing import Any, Callable, Dict, List, NamedTuple, Union
 
 from spack.vendor.typing_extensions import TypedDict
 
 import spack.archspec
 import spack.repo
 import spack.spec
+from spack.error import SpackError
 
 
 class ExternalDict(TypedDict, total=False):
@@ -50,6 +52,11 @@ def extract_dicts_from_configuration(packages_yaml) -> List[ExternalDict]:
     return result
 
 
+class ExternalSpecAndConfig(NamedTuple):
+    spec: spack.spec.Spec
+    config: ExternalDict
+
+
 class ExternalSpecsParser:
     def __init__(
         self,
@@ -71,7 +78,7 @@ class ExternalSpecsParser:
                 and allow_nonexisting is False.
         """
         self.external_dicts = external_dicts
-        self.specs_by_external_id: Dict[str, spack.spec.Spec] = {}
+        self.specs_by_external_id: Dict[str, ExternalSpecAndConfig] = {}
         self.specs_by_name: Dict[str, List[spack.spec.Spec]] = {}
         self.nodes: List[spack.spec.Spec] = []
         self.allow_nonexisting = allow_nonexisting
@@ -93,10 +100,18 @@ class ExternalSpecsParser:
 
             if not package_exists:
                 raise ValueError(f"Package '{node.name}' does not exist")
+
+            eid = external_dict.setdefault("external_id", str(uuid.uuid4()))
+            if eid in self.specs_by_external_id:
+                other_node = self.specs_by_external_id[eid].spec
+                raise DuplicateExternalError(
+                    f"Specs {node} and {other_node} have the same external id {eid}."
+                    f" Fix your packages.yaml configuration."
+                )
+
             self.complete_node(node)
-            external_id = external_dict.get("external_id")
-            if external_id:
-                self.specs_by_external_id[external_id] = node
+            # Normalize internally so that each node has a unique id
+            self.specs_by_external_id[eid] = ExternalSpecAndConfig(spec=node, config=external_dict)
             self.specs_by_name.setdefault(node.name, []).append(node)
             self.nodes.append(node)
 
@@ -125,3 +140,7 @@ class ExternalSpecsParser:
 def external_spec(config: ExternalDict) -> spack.spec.Spec:
     """Returns an external spec from a dictionary representation."""
     return ExternalSpecsParser([config]).all_specs()[0]
+
+
+class DuplicateExternalError(SpackError):
+    """Raised when a duplicate external is detected."""
