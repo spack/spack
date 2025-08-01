@@ -9,7 +9,7 @@ from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
 import spack.repo
-from spack.externals import ExternalDict, ExternalSpecsParser, DuplicateExternalError
+from spack.externals import DuplicateExternalError, ExternalDict, ExternalSpecsParser
 
 pytestmark = pytest.mark.usefixtures("config", "mock_packages")
 
@@ -112,3 +112,72 @@ def test_externals_with_duplicate_id():
 
     with pytest.raises(DuplicateExternalError, match=" Fix your packages.yaml configuration"):
         ExternalSpecsParser(externals_dict)
+
+
+@pytest.mark.parametrize(
+    "externals_dicts,expected_satisfies",
+    [
+        # o ascent@0.9.2
+        # o adios2@2.7.1
+        # o bzip2@1.0.8
+        (
+            [
+                {
+                    "spec": "ascent@0.9.2+adios2+shared",
+                    "prefix": "/user/path",
+                    "external_id": "ascent",
+                    "dependencies": [{"external_id": "adios2", "deptypes": ["build", "link"]}],
+                },
+                {
+                    "spec": "adios2@2.7.1+shared",
+                    "prefix": "/user/path",
+                    "external_id": "adios2",
+                    "dependencies": [{"external_id": "bzip2", "deptypes": ["build", "link"]}],
+                },
+                {"spec": "bzip2@1.0.8+shared", "prefix": "/user/path", "external_id": "bzip2"},
+            ],
+            {
+                "ascent": ["%[deptypes=build,link] adios2@2.7.1"],
+                "adios2": ["%[deptypes=build,link] bzip2@1.0.8"],
+            },
+        ),
+        # o ascent@0.9.2
+        # |\
+        # | o adios2@2.7.1
+        # |/
+        # o bzip2@1.0.8
+        (
+            [
+                {
+                    "spec": "ascent@0.9.2+adios2+shared",
+                    "prefix": "/user/path",
+                    "external_id": "ascent",
+                    "dependencies": [
+                        {"external_id": "adios2", "deptypes": "link"},
+                        {"external_id": "bzip2", "deptypes": "run"},
+                    ],
+                },
+                {
+                    "spec": "adios2@2.7.1+shared",
+                    "prefix": "/user/path",
+                    "external_id": "adios2",
+                    "dependencies": [{"external_id": "bzip2", "deptypes": ["build", "link"]}],
+                },
+                {"spec": "bzip2@1.0.8+shared", "prefix": "/user/path", "external_id": "bzip2"},
+            ],
+            {
+                "ascent": ["%[deptypes=link] adios2@2.7.1", "%[deptypes=run] bzip2@1.0.8"],
+                "adios2": ["%[deptypes=build,link] bzip2@1.0.8"],
+            },
+        ),
+    ],
+)
+def test_externals_with_dependencies(externals_dicts: List[ExternalDict], expected_satisfies):
+    """Tests constructing externals with dependencies"""
+    parser = ExternalSpecsParser(externals_dicts)
+
+    for query_spec, expected_list in expected_satisfies.items():
+        result = parser.query(query_spec)
+        assert len(result) == 1
+        for expected in expected_list:
+            assert result[0].satisfies(expected)

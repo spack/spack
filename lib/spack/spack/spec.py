@@ -3468,7 +3468,10 @@ class Spec:
                         return False
 
                 if current_node.original_spec_format() < 5 or (
-                    current_node.original_spec_format() >= 5 and current_node.external
+                    # If the current external node has dependencies, it has no annotations
+                    current_node.original_spec_format() >= 5
+                    and current_node.external
+                    and not current_node._dependencies
                 ):
                     compiler_spec = current_node.annotations.compiler_node_attribute
                     if compiler_spec is None:

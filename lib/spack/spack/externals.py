@@ -7,9 +7,16 @@ from typing import Any, Callable, Dict, List, NamedTuple, Union
 from spack.vendor.typing_extensions import TypedDict
 
 import spack.archspec
+import spack.deptypes
 import spack.repo
 import spack.spec
 from spack.error import SpackError
+
+
+class DependencyDict(TypedDict, total=False):
+    external_id: str
+    deptypes: spack.deptypes.DepTypes
+    virtuals: str
 
 
 class ExternalDict(TypedDict, total=False):
@@ -20,6 +27,7 @@ class ExternalDict(TypedDict, total=False):
     modules: List[str]
     extra_attributes: Dict[str, Any]
     external_id: str
+    dependencies: List[DependencyDict]
 
 
 def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
@@ -115,7 +123,30 @@ class ExternalSpecsParser:
             self.specs_by_name.setdefault(node.name, []).append(node)
             self.nodes.append(node)
 
-        # TODO (externals as concrete specs): attach dependencies here
+        # Attach dependencies to externals
+        for eid, entry in self.specs_by_external_id.items():
+            current_node = entry.spec
+            current_dict = entry.config
+
+            for dependency_dict in current_dict.get("dependencies", []):
+                dependency_id = dependency_dict.get("external_id")
+                if not dependency_id:
+                    raise ExternalDependencyError(
+                        f"A dependency for {current_dict['spec']} does not have an external id"
+                    )
+                elif dependency_id not in self.specs_by_external_id:
+                    raise ExternalDependencyError(
+                        f"A dependency for {current_dict['spec']} has an external id "
+                        f"{dependency_id} that is not defined in packages.yaml"
+                    )
+
+                dependency_node = self.specs_by_external_id[dependency_id].spec
+                depflag = spack.deptypes.canonicalize(
+                    dependency_dict.get("deptypes", spack.deptypes.DEFAULT_TYPES)
+                )
+                virtuals = tuple(dependency_dict.get("virtuals", "").split(","))
+
+                current_node._add_dependency(dependency_node, depflag=depflag, virtuals=virtuals)
 
         for node in self.nodes:
             node._finalize_concretization()
@@ -144,3 +175,7 @@ def external_spec(config: ExternalDict) -> spack.spec.Spec:
 
 class DuplicateExternalError(SpackError):
     """Raised when a duplicate external is detected."""
+
+
+class ExternalDependencyError(SpackError):
+    """Raised when a dependency on an external package is specified wrongly."""
