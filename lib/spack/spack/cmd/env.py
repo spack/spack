@@ -575,7 +575,8 @@ def _env_untrack_or_remove(
             f"Really {'remove' if remove else 'untrack'} {environments} {envs}?", default=False
         )
         if not answer:
-            tty.die("Will not remove any environments")
+            tty.msg(f"Will not remove environment(s) {envs}")
+            return
 
     # keep track of the environments we remove for later printing the exit code
     removed_env_names = []
