@@ -2882,6 +2882,8 @@ class Spec:
             return
         self._concrete = value
         self._validate_version()
+        for variant in self.variants.values():
+            variant.concrete = True
 
     def _validate_version(self):
         # Specs that were concretized with just a git sha as version, without associated
