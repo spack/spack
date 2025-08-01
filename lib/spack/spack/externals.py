@@ -92,7 +92,7 @@ class ExternalSpecsParser:
         """
         self.external_dicts = external_dicts
         self.specs_by_external_id: Dict[str, ExternalSpecAndConfig] = {}
-        self.specs_by_name: Dict[str, List[spack.spec.Spec]] = {}
+        self.specs_by_name: Dict[str, List[ExternalSpecAndConfig]] = {}
         self.nodes: List[spack.spec.Spec] = []
         self.allow_nonexisting = allow_nonexisting
         # Fill the data structures above (can be done lazily)
@@ -124,9 +124,53 @@ class ExternalSpecsParser:
 
             self.complete_node(node)
             # Normalize internally so that each node has a unique id
-            self.specs_by_external_id[eid] = ExternalSpecAndConfig(spec=node, config=external_dict)
-            self.specs_by_name.setdefault(node.name, []).append(node)
+            spec_and_config = ExternalSpecAndConfig(spec=node, config=external_dict)
+            self.specs_by_external_id[eid] = spec_and_config
+            self.specs_by_name.setdefault(node.name, []).append(spec_and_config)
             self.nodes.append(node)
+
+        # Guess how to convert old entries like 'mpich %gcc' to a dependency in the dict
+        for eid, entry in self.specs_by_external_id.items():
+            current_node = entry.spec
+            current_dict = entry.config
+            for edge in current_node.edges_to_dependencies():
+                # We don't want to accept foo %[deptypes=build,link] mpich as a spec
+                if edge.depflag != 0:
+                    raise ExternalDependencyError(
+                        f"The external spec {current_dict['spec']} has an invalid dependency"
+                        f" specification. Fix your packages.yaml configuration."
+                    )
+
+                if edge.spec.name not in self.specs_by_name:
+                    raise ExternalDependencyError(
+                        f"The external spec {current_dict['spec']} depends on {edge.spec.name},"
+                        f" but there is no such external spec in packages.yaml."
+                    )
+
+                candidates = [
+                    x
+                    for x in self.specs_by_name[edge.spec.name]
+                    if x.spec.satisfies(edge.spec)
+                    and x.spec.architecture.satisfies(current_node.architecture)
+                ]
+                if not candidates:
+                    raise ExternalDependencyError(
+                        f"The external spec {current_dict['spec']} depends on {edge.spec},"
+                        f" but there is no {edge.spec.name} that satisfies the request "
+                        f"in packages.yaml."
+                    )
+
+                candidates.sort(key=lambda x: x.spec)  # type: ignore
+                selected = candidates[-1]
+                # FIXME (externals as concrete): issue a warning for this case
+                current_dict.setdefault("dependencies", []).append(
+                    {
+                        "external_id": selected.config["external_id"],
+                        "deptypes": "build",
+                        "virtuals": "c",
+                    }
+                )
+            current_node.clear_edges()
 
         # Attach dependencies to externals
         for eid, entry in self.specs_by_external_id.items():
@@ -158,7 +202,8 @@ class ExternalSpecsParser:
 
     def get_specs_for_package(self, package_name: str) -> List[spack.spec.Spec]:
         """Returns the external specs for a given package name."""
-        return self.specs_by_name.get(package_name, [])
+        result = self.specs_by_name.get(package_name, [])
+        return [x.spec for x in result]
 
     def all_specs(self) -> List[spack.spec.Spec]:
         """Returns all the external specs."""
