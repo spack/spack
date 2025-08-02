@@ -180,9 +180,9 @@ administrator to enable ``flock`` for your filesystem.
 If none of those work, you can disable locking in one of two ways:
 
 1. Run Spack with the ``-L`` or ``--disable-locks`` option to disable
-    locks on a call-by-call basis.
+   locks on a call-by-call basis.
 2. Edit :ref:`config.yaml <config-yaml>` and set the ``locks`` option
-    to ``false`` to always disable locking.
+   to ``false`` to always disable locking.
 
 .. warning::
 
