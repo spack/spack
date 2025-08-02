@@ -28,12 +28,12 @@ class Executable:
 
     Example usage:
 
-        .. code-block:: python
+    .. code-block:: python
 
-            ls = Executable("ls")
-            ls.add_default_arg("-l")
-            ls.add_default_env("LC_ALL", "C")
-            output = ls("-a", output=str)  # Run 'ls -l -a' and capture output as string
+        ls = Executable("ls")
+        ls.add_default_arg("-l")
+        ls.add_default_env("LC_ALL", "C")
+        output = ls("-a", output=str)  # Run 'ls -l -a' and capture output as string
     """
 
     def __init__(self, name: Union[str, Path]) -> None:

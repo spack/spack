@@ -62,7 +62,6 @@ This package provides one custom helper method, which is used to build
 standard AMD HIP compiler flags.
 
 **hip_flags**
-
     This built-in static method returns the appropriately formatted
     ``--amdgpu-target`` build option for ``hipcc``.
 

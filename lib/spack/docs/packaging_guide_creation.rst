@@ -1299,14 +1299,14 @@ Extra Resources
 Some packages (most notably compilers) provide optional features if additional resources are expanded within their source tree before building.
 In Spack it is possible to describe such a need with the ``resource`` directive:
 
-  .. code-block:: python
+.. code-block:: python
 
-     resource(
-        name="cargo",
-        git="https://github.com/rust-lang/cargo.git",
-        tag="0.10.0",
-        destination="cargo",
-     )
+   resource(
+      name="cargo",
+      git="https://github.com/rust-lang/cargo.git",
+      tag="0.10.0",
+      destination="cargo",
+   )
 
 The arguments are similar to those of the ``versions`` directive.
 The keyword ``destination`` is relative to the source root of the package and should point to where the resource is to be expanded.
@@ -1375,11 +1375,11 @@ Boolean variants
 
 In their simplest form, variants are boolean options specified at the package level:
 
-  .. code-block:: python
+.. code-block:: python
 
-    class Hdf5(AutotoolsPackage):
-        ...
-        variant("shared", default=True, description="Builds a shared version of the library")
+  class Hdf5(AutotoolsPackage):
+      ...
+      variant("shared", default=True, description="Builds a shared version of the library")
 
 with a default value and a description of their meaning in the package.
 
@@ -1393,12 +1393,12 @@ We will see this in action in the next part of the packaging guide, where we tal
 Other than influencing the build process, variants are often used to specify optional :ref:`dependencies of a package <dependencies>`.
 For example, a package may depend on another package only if a certain variant is enabled:
 
-  ..  code-block:: python
+..  code-block:: python
 
-    class Hdf5(AutotoolsPackage):
-        ...
-        variant("szip", default=False, description="Enable szip support")
-        depends_on("szip", when="+szip")
+  class Hdf5(AutotoolsPackage):
+      ...
+      variant("szip", default=False, description="Enable szip support")
+      depends_on("szip", when="+szip")
 
 In this case, ``szip`` is modeled as an optional dependency of ``hdf5``, and users can run ``spack install hdf5 +szip`` to enable it.
 
@@ -1410,33 +1410,33 @@ Other than boolean variants, Spack supports single- and multi-valued variants th
 
 To define a *single-valued* variant, simply pass a tuple of possible values to the ``variant`` directive, together with ``multi=False``:
 
-  .. code-block:: python
+.. code-block:: python
 
-    class Blis(Package):
-        ...
-        variant(
-            "threads",
-            default="none",
-            values=("pthreads", "openmp", "none"),
-            multi=False,
-            description="Multithreading support",
-        )
+  class Blis(Package):
+      ...
+      variant(
+          "threads",
+          default="none",
+          values=("pthreads", "openmp", "none"),
+          multi=False,
+          description="Multithreading support",
+      )
 
 This allows users to ``spack install blis threads=openmp``.
 
 In the example above the argument ``multi=False`` indicates that only a **single value** can be selected at a time.
 This constraint is enforced by the solver, and an error is emitted if a user specifies two or more values at the same time:
 
-  .. code-block:: console
+.. code-block:: console
 
-    $ spack spec blis threads=openmp,pthreads
-    Input spec
-    --------------------------------
-    blis threads=openmp,pthreads
+  $ spack spec blis threads=openmp,pthreads
+  Input spec
+  --------------------------------
+  blis threads=openmp,pthreads
 
-    Concretized
-    --------------------------------
-    ==> Error: multiple values are not allowed for variant "threads"
+  Concretized
+  --------------------------------
+  ==> Error: multiple values are not allowed for variant "threads"
 
 .. hint::
 
@@ -1451,17 +1451,17 @@ Like single-valued variants, multi-valued variants take one or more *string* val
 
 To define a *multi-valued* variant, simply pass ``multi=True`` instead:
 
-  .. code-block:: python
+.. code-block:: python
 
-    class Gcc(AutotoolsPackage):
-        ...
-        variant(
-            "languages",
-            default="c,c++,fortran",
-            values=("ada", "brig", "c", "c++", "fortran", "objc"),
-            multi=True,
-            description="Compilers and runtime libraries to build",
-        )
+  class Gcc(AutotoolsPackage):
+      ...
+      variant(
+          "languages",
+          default="c,c++,fortran",
+          values=("ada", "brig", "c", "c++", "fortran", "objc"),
+          multi=True,
+          description="Compilers and runtime libraries to build",
+      )
 
 This allows users to run ``spack install languages=c,c++`` where the values are separated by commas.
 
@@ -1474,16 +1474,16 @@ As noted above, the value ``none`` is a value like any other, which raises the q
 what if a variant allows multiple values to be selected, *or* none at all?
 Naively, one might think that this can be achieved by simply creating a multi-valued variant that includes the value ``none``:
 
-   .. code-block:: python
+.. code-block:: python
 
-    class Adios(AutotoolsPackage):
-        ...
-        variant(
-            "staging",
-            values=("dataspaces", "flexpath", "none"),
-            multi=True,
-            description="Enable dataspaces and/or flexpath staging transports",
-        )
+   class Adios(AutotoolsPackage):
+       ...
+       variant(
+           "staging",
+           values=("dataspaces", "flexpath", "none"),
+           multi=True,
+           description="Enable dataspaces and/or flexpath staging transports",
+       )
 
 but this does not prevent users from selecting the non-sensical option ``staging=dataspaces,none``.
 
@@ -1492,34 +1492,34 @@ Spack provides two validator functions to help with this, which can be passed to
 
 The first validator function is :py:func:`~spack.package.any_combination_of`, which can be used as follows:
 
-  ..  code-block:: python
+.. code-block:: python
 
-    class Adios(AutotoolsPackage):
-        ...
-        variant(
-            "staging",
-            values=any_combination_of("flexpath", "dataspaces"),
-            description="Enable dataspaces and/or flexpath staging transports",
-        )
+   class Adios(AutotoolsPackage):
+       ...
+       variant(
+           "staging",
+           values=any_combination_of("flexpath", "dataspaces"),
+           description="Enable dataspaces and/or flexpath staging transports",
+       )
 
 This solves the issue by allowing the user to select either any combination of the values ``flexpath`` and ``dataspaces``, or ``none``.
 In other words, users can specify ``staging=none`` to select nothing, or any of ``staging=dataspaces``, ``staging=flexpath``, and ``staging=dataspaces,flexpath``.
 
 The second validator function :py:func:`~spack.package.disjoint_sets` generalizes this idea further:
 
-  .. code-block:: python
+.. code-block:: python
 
-    class Mvapich2(AutotoolsPackage):
-        ...
-        variant(
-            "process_managers",
-            description="List of the process managers to activate",
-            values=disjoint_sets(("auto",), ("slurm",), ("hydra", "gforker", "remshell"))
-            .prohibit_empty_set()
-            .with_error("'slurm' or 'auto' cannot be activated along with other process managers")
-            .with_default("auto")
-            .with_non_feature_values("auto"),
-        )
+   class Mvapich2(AutotoolsPackage):
+       ...
+       variant(
+           "process_managers",
+           description="List of the process managers to activate",
+           values=disjoint_sets(("auto",), ("slurm",), ("hydra", "gforker", "remshell"))
+           .prohibit_empty_set()
+           .with_error("'slurm' or 'auto' cannot be activated along with other process managers")
+           .with_default("auto")
+           .with_non_feature_values("auto"),
+       )
 
 In this case, examples of valid options are ``process_managers=auto``, ``process_managers=slurm``, and ``process_managers=hydra,remshell``, whereas ``process_managers=slurm,hydra`` is invalid, as it picks values from two different sets.
 
@@ -1837,15 +1837,15 @@ exactly what kind of a dependency you need. For example:
 
 The following dependency types are available:
 
-* **"build"**: the dependency will be added to the ``PATH`` and
+* **build**: the dependency will be added to the ``PATH`` and
   ``PYTHONPATH`` at build-time.
-* **"link"**: the dependency will be added to Spack's compiler
+* **link**: the dependency will be added to Spack's compiler
   wrappers, automatically injecting the appropriate linker flags,
   including ``-I``, ``-L``, and RPATH/RUNPATH handling.
-* **"run"**: the dependency will be added to the ``PATH`` and
+* **run**: the dependency will be added to the ``PATH`` and
   ``PYTHONPATH`` at run-time. This is true for both ``spack load``
   and the module files Spack writes.
-* **"test"**: the dependency will be added to the ``PATH`` and
+* **test**: the dependency will be added to the ``PATH`` and
   ``PYTHONPATH`` at build-time. The only difference between
   "build" and "test" is that test dependencies are only built
   if the user requests unit tests with ``spack install --test``.

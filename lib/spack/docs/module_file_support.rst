@@ -278,10 +278,10 @@ module is loaded by two different modules, it will only be unloaded after the ot
 
 The ``autoload`` key accepts the values:
 
-  * ``none``: no autoloading
-  * ``run``: autoload direct *run* type dependencies
-  * ``direct``: autoload direct *link and run* type dependencies
-  * ``all``: autoload all dependencies
+* ``none``: no autoloading
+* ``run``: autoload direct *run* type dependencies
+* ``direct``: autoload direct *link and run* type dependencies
+* ``all``: autoload all dependencies
 
 In case of ``run`` and ``direct``, a ``module load`` triggers a recursive load.
 
@@ -305,18 +305,18 @@ Environment Modules requires version 4.7 or higher.
    modules. Further, it makes it easier to get readable module names without collisions, see the
    section below on :ref:`modules-projections`.
 
-    .. code-block:: yaml
+   .. code-block:: yaml
   
-        modules:
-          default:
-            tcl:
-              hide_implicits: true
-              all:
-                autoload: direct # or `run`
-            lmod:
-              hide_implicits: true
-              all:
-                autoload: direct # or `run`
+       modules:
+         default:
+           tcl:
+             hide_implicits: true
+             all:
+               autoload: direct # or `run`
+           lmod:
+             hide_implicits: true
+             all:
+               autoload: direct # or `run`
 
 .. _anonymous_specs:
 

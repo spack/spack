@@ -14,12 +14,6 @@ IntelOneapi
 ===========
 
 
-.. contents::
-
-
-oneAPI packages in Spack
-========================
-
 Spack can install and use the Intel oneAPI products. You may either
 use Spack to install the oneAPI tools or use the `Intel
 installers`_. After installation, you may use the tools directly, or

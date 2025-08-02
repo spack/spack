@@ -224,16 +224,16 @@ Secret keys may also be later exported using the ``spack gpg export <location> [
 .. admonition:: Key creation speed
    :class: tip
 
-      The creation of a new GPG key requires generating a lot of random numbers.
-      Depending on the entropy produced on your system, the entire process may take a long time (*even appearing to hang*).
-      Virtual machines and cloud instances are particularly likely to display this behavior.
+   The creation of a new GPG key requires generating a lot of random numbers.
+   Depending on the entropy produced on your system, the entire process may take a long time (*even appearing to hang*).
+   Virtual machines and cloud instances are particularly likely to display this behavior.
 
-      To speed it up, you may install tools like ``rngd``, which is usually available as a package in the host OS.
-      Another alternative is ``haveged``, which can be installed on RHEL/CentOS machines.
+   To speed it up, you may install tools like ``rngd``, which is usually available as a package in the host OS.
+   Another alternative is ``haveged``, which can be installed on RHEL/CentOS machines.
 
-      `This Digital Ocean tutorial
-      <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
-      provides a good overview of sources of randomness.
+   `This Digital Ocean tutorial
+   <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
+   provides a good overview of sources of randomness.
 
 -------------------
 Build Cache Signing

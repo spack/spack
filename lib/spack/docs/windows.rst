@@ -20,15 +20,17 @@ you through the steps needed to install Spack and start running it on a fresh Wi
 Step 1: Install prerequisites
 -----------------------------
 
-To use Spack on Windows, you will need the following packages:
+To use Spack on Windows, you will need the following packages.
 
 Required:
+
 * Microsoft Visual Studio
 * Python
 * Git
 * 7z
 
 Optional:
+
 * Intel Fortran (needed for some packages)
 
 .. note::

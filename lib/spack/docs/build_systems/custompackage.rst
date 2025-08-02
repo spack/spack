@@ -115,9 +115,9 @@ function instead of ``configure``:
 Again, there is a ``bootstrap_args`` function that determines the
 correct bootstrap flags to use.
 
-^^^^^^^^^^^^^^^^^^^^
-run_before/run_after
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``run_before`` / ``run_after``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Occasionally, you may want to run extra steps either before or after
 a given phase. This applies not just to custom build systems, but to
@@ -150,11 +150,11 @@ before or after a particular phase. For example, in ``perl``, we see:
 This extra step automatically installs ``cpanm`` in addition to the
 base Perl installation.
 
-^^^^^^^^^^^^^^^^^^^^^
-on_package_attributes
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
+``on_package_attributes``
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``run_before``/``run_after`` logic discussed above becomes
+The ``run_before`` / ``run_after`` logic discussed above becomes
 particularly powerful when combined with the ``@on_package_attributes``
 decorator. This decorator allows you to conditionally run certain
 functions depending on the attributes of that package. The most

@@ -530,16 +530,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     There are two main parts of a Spack package:
 
-      1. **The package class**.  Classes contain ``directives``, which are special functions, that
-         add metadata (versions, patches, dependencies, and other information) to packages (see
-         ``directives.py``). Directives provide the constraints that are used as input to the
-         concretizer.
+    1. **The package class**.  Classes contain ``directives``, which are special functions, that
+       add metadata (versions, patches, dependencies, and other information) to packages (see
+       ``directives.py``). Directives provide the constraints that are used as input to the
+       concretizer.
 
-      2. **Package instances**. Once instantiated, a package can be passed to the PackageInstaller.
-         It calls methods like ``do_stage()`` on the ``Package`` object, and it uses those to drive
-         user-implemented methods like ``patch()``, ``install()``, and other build steps. To
-         install software, an instantiated package needs a *concrete* spec, which guides the
-         behavior of the various install methods.
+    2. **Package instances**. Once instantiated, a package can be passed to the PackageInstaller.
+       It calls methods like ``do_stage()`` on the ``Package`` object, and it uses those to drive
+       user-implemented methods like ``patch()``, ``install()``, and other build steps. To
+       install software, an instantiated package needs a *concrete* spec, which guides the
+       behavior of the various install methods.
 
     Packages are imported from repos (see ``repo.py``).
 
@@ -969,10 +969,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         This uses the following precedence order:
 
-          1. Find the next lowest or equal version with a URL.
-          2. If no lower URL, return the next *higher* URL.
-          3. If no higher URL, return None.
-
+        1. Find the next lowest or equal version with a URL.
+        2. If no lower URL, return the next *higher* URL.
+        3. If no higher URL, return None.
         """
         version_urls = self.version_urls()
 

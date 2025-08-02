@@ -335,6 +335,7 @@ Suppose your effective (merged) ``repos.yaml`` implies the following order:
 3.  ``builtin`` (Spack's default packages from `spack/spack-packages`)
 
 And the packages are:
+
 +--------------+------------------------------------------------+-----------------------------+
 | Namespace    | Source                                         | Packages                    |
 +==============+================================================+=============================+

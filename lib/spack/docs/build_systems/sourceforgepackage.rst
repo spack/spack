@@ -27,7 +27,6 @@ Methods
 This package provides a method for populating mirror URLs.
 
 **urls**
-
     This method returns a list of possible URLs for package source.
     It is decorated with `property` so its results are treated as
     a package attribute.

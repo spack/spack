@@ -215,13 +215,13 @@ reference provided. Acceptable syntaxes for this are:
 
 .. code-block:: sh
 
-    # commit hashes
-   foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
+   # commit hashes
+   foo@abcdef1234abcdef1234abcdef1234abcdef1234  # 40 character hashes are automatically treated as git commits
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
 
-    # branches and tags
-   foo@git.develop # use the develop branch
-   foo@git.0.19 # use the 0.19 tag
+   # branches and tags
+   foo@git.develop  # use the develop branch
+   foo@git.0.19  # use the 0.19 tag
 
 Spack always needs to associate a Spack version with the git reference,
 which is used for version comparison. This Spack version is heuristically
