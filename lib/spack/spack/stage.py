@@ -487,30 +487,38 @@ class Stage(LockableStagingDir):
             expand = True
             extension = None
 
-        # TODO: move mirror logic out of here and clean it up!
-        # TODO: Or @alalazo may have some ideas about how to use a
-        # TODO: CompositeFetchStrategy here.
+        mirror_fetchers = []
         if not self.default_fetcher_only and self.mirror_layout and self.mirrors:
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            fetchers[:0] = (
-                fs.from_url_scheme(
-                    url_util.join(mirror.fetch_url, *self.mirror_layout.path.split(os.sep)),
-                    checksum=digest,
-                    expand=expand,
-                    extension=extension,
-                )
-                for mirror in self.mirrors
-                if not mirror.fetch_url.startswith("oci://")  # no support for mirrors yet
-            )
+            for mirror in self.mirrors:
+                if mirror.fetch_url.startswith("oci://"):
+                    continue
+                look_at = [self.mirror_layout.path]
+                if mirror.fetch_url.startswith("file://") and hasattr(self.mirror_layout, "alias"):
+                    # Local mirrors might be manually updated by a human,
+                    # so check the human-readable alias
+                    look_at.append(self.mirror_layout.alias)
+                for rel_path in self.mirror_layout:
+                    mirror_fetchers.append(
+                        fs.from_url_scheme(
+                            url_util.join(mirror.fetch_url, *rel_path.split(os.sep)),
+                            checksum=digest,
+                            expand=expand,
+                            extension=extension,
+                        )
+                    )
 
         if not self.default_fetcher_only and self.mirror_layout and self.default_fetcher.cachable:
-            fetchers.insert(
+            mirror_fetchers.insert(
                 0,
                 spack.caches.FETCH_CACHE.fetcher(
                     self.mirror_layout.path, digest, expand=expand, extension=extension
                 ),
             )
+
+        # When mirrors are enabled they have precedence
+        fetchers[:0] = mirror_fetchers
 
         yield from fetchers
 

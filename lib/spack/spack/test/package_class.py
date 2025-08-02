@@ -225,6 +225,22 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     shutil.rmtree(os.path.dirname(source_path))
 
 
+def test_mirror_check_human_readable_format(mock_packages, mutable_config, tmpdir):
+    """The package is responsible for attempting to download
+    a package version from a mirror path that a human could
+    reasonably construct, of the form
+    <package-name>/<package-name>-<package-version>.<archive-extension>"""
+    import spack.config
+
+    s = spack.concretize.concretize_one("pkg-a@2.0")
+    spack.config.add(f'mirrors:{{"test": {tmpdir}}}')
+    human_readable_path = os.path.join(tmpdir, "pkg-a", "pkg-a-2.0.tar.gz")
+    assert any(
+        human_readable_path in getattr(f, "url", "")
+        for f in s.package.stage[0]._generate_fetchers()
+    )
+
+
 def test_cache_extra_sources_fails(install_mockery):
     s = spack.concretize.concretize_one("pkg-a")
 
