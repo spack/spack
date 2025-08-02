@@ -65,7 +65,6 @@ As you can see it's quite simple to gather basic information on packages, before
 
 .. admonition:: Slowdown on the very first command
    :class: warning
-   :collapsible:
 
    The very first command run with Spack will take a while to finish, as Spack has to build a few caches to speed up subsequent command execution.
 

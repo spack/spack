@@ -223,7 +223,6 @@ Secret keys may also be later exported using the ``spack gpg export <location> [
 
 .. admonition:: Key creation speed
    :class: tip
-   :collapsible:
 
       The creation of a new GPG key requires generating a lot of random numbers.
       Depending on the entropy produced on your system, the entire process may take a long time (*even appearing to hang*).

@@ -136,7 +136,6 @@ So in the spec:
 
 .. admonition:: Windows Spec Syntax Caveats
    :class: note
-   :collapsible:
 
    Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells.
    Spack's spec dependency syntax uses the carat (``^``) character; however, this is an escape string in CMD,
@@ -321,7 +320,6 @@ syntax should be used with the ``:=`` operator.
 
 .. admonition:: Alternative ways to deactivate Boolean Variants
    :class: note
-   :collapsible:
 
    In certain shells, the ``~`` character expands to the home directory.
    To avoid these issues, avoid whitespace between the package name and the variant:

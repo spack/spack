@@ -121,7 +121,6 @@ Now, when you type ``which python3``, it should find the one you just installed.
 
 .. admonition:: Add the new shell to the list of valid login shells
    :class: tip
-   :collapsible:
 
    In order to change the default shell to our newer Bash installation, we first need to add it to this list of acceptable shells.
    Run:

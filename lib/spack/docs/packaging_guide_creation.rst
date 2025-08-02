@@ -3185,13 +3185,13 @@ Variant Names
 Spack packages with variants similar to already-existing Spack packages should use the same name for their variants.
 Standard variant names are:
 
-  ======= ======== ========================
-  Name    Default   Description
-  ======= ======== ========================
-  shared   True     Build shared libraries
-  mpi      True     Use MPI
-  python   False    Build Python extension
-  ======= ======== ========================
+======= ======== ========================
+Name    Default   Description
+======= ======== ========================
+shared   True     Build shared libraries
+mpi      True     Use MPI
+python   False    Build Python extension
+======= ======== ========================
 
 If specified in this table, the corresponding default is recommended.
 
