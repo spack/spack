@@ -25,8 +25,8 @@ Why does Spack pick particular versions and variants?
 
 This question comes up in a variety of forms:
 
- 1. Why does Spack seem to ignore my package preferences from ``packages.yaml`` configuration?
- 2. Why does Spack toggle a variant instead of using the default from the ``package.py`` file?
+1. Why does Spack seem to ignore my package preferences from ``packages.yaml`` configuration?
+2. Why does Spack toggle a variant instead of using the default from the ``package.py`` file?
 
 The short answer is that Spack always picks an optimal configuration
 based on a complex set of criteria\ [#f1]_. These criteria are more nuanced

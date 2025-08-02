@@ -1286,17 +1286,17 @@ decision to use MPI wrappers depends on the way the package is written,
 on common practice, and on "what works".  Loosely, there are three types
 of MPI builds:
 
-  1. Some build systems work well without the wrappers and can treat MPI
-     as an external library, where the person doing the build has to
-     supply includes/libs/etc.  This is fairly uncommon.
+1. Some build systems work well without the wrappers and can treat MPI
+   as an external library, where the person doing the build has to
+   supply includes/libs/etc.  This is fairly uncommon.
 
-  2. Others really want the wrappers and assume you're using an MPI
-     "compiler" -- i.e., they have no mechanism to add MPI
-     includes/libraries/etc.
+2. Others really want the wrappers and assume you're using an MPI
+   "compiler" -- i.e., they have no mechanism to add MPI
+   includes/libraries/etc.
 
-  3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
-     extract ``-I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
-     regular library.
+3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
+   extract ``-I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
+   regular library.
 
 Note that some CMake builds fall into case 2 because they either don't
 know about or don't like CMake's ``FindMPI`` support -- they just assume

@@ -97,12 +97,12 @@ the environment.
 
 The ``.spack-env`` subdirectory also contains:
 
-  * ``repo/``: A subdirectory acting as the repo consisting of the Spack
-    packages used in the environment. It allows the environment to build
-    the same, in theory, even on different versions of Spack with different
-    packages!
-  * ``logs/``: A subdirectory containing the build logs for the packages
-    in this environment.
+* ``repo/``: A subdirectory acting as the repo consisting of the Spack
+  packages used in the environment. It allows the environment to build
+  the same, in theory, even on different versions of Spack with different
+  packages!
+* ``logs/``: A subdirectory containing the build logs for the packages
+  in this environment.
 
 Spack Environments can also be created from either the user input, or
 manifest, file or the lockfile. Create an environment from a manifest using:
