@@ -289,8 +289,6 @@ nitpick_ignore = [
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
 # show_authors = False
-sys.path.append("./_pygments")
-pygments_style = "style.SpackStyle"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
