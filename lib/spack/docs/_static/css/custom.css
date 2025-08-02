@@ -34,3 +34,7 @@ div.version-switch select:hover {
   color: var(--color-foreground-secondary);
   background: var(--color-background-hover);
 }
+
+.toc-tree li.scroll-current>.reference {
+  font-weight: normal;
+}
