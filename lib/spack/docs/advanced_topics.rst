@@ -56,7 +56,7 @@ If we had to enforce compilers directly, we would need 3 matrices, since:
 Different toolchains could be used independently or even in the same spec.
 If we had a toolchain named ``gcc_all`` that enforces using ``gcc`` for C, C++ and Fortran, we could write:
 
-.. code-block::
+.. code-block:: spec
 
    spack install hdf5+fortran%llvm_gfortran ^mpich %gcc_all
 

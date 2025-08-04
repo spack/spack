@@ -23,6 +23,10 @@ from glob import glob
 from typing import List
 
 from docutils.statemachine import StringList
+
+# ... other imports at the top of the file
+from pygments.lexer import RegexLexer
+from pygments.token import *
 from sphinx.domains.python import PythonDomain
 from sphinx.ext.apidoc import main as sphinx_apidoc
 from sphinx.parsers import RSTParser
@@ -95,6 +99,59 @@ sphinx_apidoc(
     ]
 )
 
+
+from spack.spec_parser import SpecTokens
+
+
+class SpecLexer(RegexLexer):
+    """A custom lexer for Spack spec strings."""
+
+    name = "Spack spec"
+    aliases = ["spec"]
+    filenames = []
+    tokens = {
+        "root": [
+            # Command line / spack command prefix
+            (r"^(\s*\$?\s*spack\s+(?:[a-zA-Z0-9-]+\s+)?)", Text),
+            # Text from command line output
+            (r"^[A-Z].*$", Text),
+            # -- and ==> prefixes from command line output
+            (r"^[-=]+.*$", Text),
+            # Comment
+            (r"#.*$", Comment.Single),
+            # Probably a command line flag, not a variant.
+            (r"--[a-zA-Z0-9-]+", Text),
+            # Dependency, with optional virtual assignment specifier
+            (SpecTokens.START_EDGE_PROPERTIES.regex, String, "edge_properties"),
+            (SpecTokens.DEPENDENCY.regex, String),
+            # versions
+            (SpecTokens.GIT_VERSION.regex, Keyword.Constant),
+            (SpecTokens.VERSION.regex, Keyword.Constant),
+            (SpecTokens.VERSION_HASH_PAIR.regex, Keyword.Constant),
+            # variants
+            (SpecTokens.PROPAGATED_BOOL_VARIANT.regex, Name.Class),
+            (SpecTokens.BOOL_VARIANT.regex, Name.Class),
+            (SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex, Name.Class),
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Class),
+            # filename
+            (SpecTokens.FILENAME.regex, String),
+            # Package name
+            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex, String),
+            (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, String),
+            # DAG hash
+            (SpecTokens.DAG_HASH.regex, String),
+            # White spaces
+            (SpecTokens.WS.regex, Whitespace),
+            # Unexpected character(s)
+            (r".", Text),
+        ],
+        "edge_properties": [
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Class),
+            (SpecTokens.END_EDGE_PROPERTIES.regex, String, "root"),
+        ],
+    }
+
+
 # Enable todo items
 todo_include_todos = True
 
@@ -146,6 +203,7 @@ def setup(sphinx):
     sphinx.connect("autodoc-skip-member", skip_member)
     sphinx.add_domain(PatchedPythonDomain, override=True)
     sphinx.add_source_parser(NoTabExpansionRSTParser, override=True)
+    sphinx.add_lexer("spec", SpecLexer)
 
 
 # -- General configuration -----------------------------------------------------
