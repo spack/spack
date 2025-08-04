@@ -1710,7 +1710,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
                             ref_match = re.search(r"refs/heads/(\S+)", refs)
                             if not ref_match:
-                                self.error = f"Unable to locate a default branch for {self.repository}"
+                                self.error = (
+                                    f"Unable to locate a default branch for {self.repository}"
+                                )
                                 return
                             self.branch = ref_match.group(1)
 
