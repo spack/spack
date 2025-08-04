@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
+import copy
 import filecmp
 import os
 import pathlib
@@ -266,7 +267,7 @@ def test_patched_dependency(mock_packages, install_mockery, mock_fetch):
 def trigger_bad_patch(pkg):
     if not os.path.isdir(pkg.stage.source_path):
         os.makedirs(pkg.stage.source_path)
-    bad_file = os.path.join(pkg.stage.source_path, ".spack_patch_failed")
+    bad_file = os.path.join(pkg.stage.source_path, f".spack_patch_failed_{pkg.name}")
     touch(bad_file)
     return bad_file
 
@@ -285,6 +286,41 @@ def test_patch_failure_develop_spec_exits_gracefully(
         assert os.path.isfile(bad_patch_indicator)
         pkg.do_patch()
     # success if no exceptions raised
+
+
+@pytest.mark.regression("50699")
+@pytest.mark.disable_clean_stage_check
+def test_patch_from_multi_specs_to_same_source_unique(
+    mock_packages,
+    install_mockery,
+    mock_fetch,
+    tmp_path: pathlib.Path,
+    mock_stage,
+    capsys,
+    monkeypatch,
+):
+    """
+    packages that use git_sparse_path can share a common source dir so we need to
+    guard for patch collisions, fudge the case to enforce the patching the same dir
+    with different package instances
+    """
+
+    monkeypatch.setattr(spack.patch, "apply_patch", lambda *args: None)
+    spec = spack.concretize.concretize_one(f"patch-a-dependency ^libelf dev_path={tmp_path}")
+    libelf = spec["libelf"]
+
+    assert "patches" in list(libelf.variants.keys())
+
+    pkg_a = libelf.package
+    pkg_a.name = "pkg_a"
+    pkg_b = copy.deepcopy(libelf.package)
+    pkg_b.name = "pkg_b"
+
+    pkg_a.do_patch()
+    pkg_b.do_patch()
+    captured = capsys.readouterr()
+    assert "patch failure" not in captured.err
+    assert "Already patched pkg_b" not in captured.out
 
 
 def test_patch_failure_restages(mock_packages, install_mockery, mock_fetch):

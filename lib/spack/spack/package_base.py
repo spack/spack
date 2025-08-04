@@ -1664,9 +1664,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
         archive_dir = self.stage.source_path
-        good_file = os.path.join(archive_dir, ".spack_patched")
-        no_patches_file = os.path.join(archive_dir, ".spack_no_patches")
-        bad_file = os.path.join(archive_dir, ".spack_patch_failed")
+        good_file = os.path.join(archive_dir, f".spack_patched_{self.name}")
+        no_patches_file = os.path.join(archive_dir, f".spack_no_patches_{self.name}")
+        bad_file = os.path.join(archive_dir, f".spack_patch_failed_{self.name}")
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
