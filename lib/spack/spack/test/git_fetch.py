@@ -18,6 +18,7 @@ import spack.platforms
 import spack.repo
 from spack.fetch_strategy import GitFetchStrategy
 from spack.llnl.util.filesystem import mkdirp, touch, working_dir
+from spack.package_base import PackageBase
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.variant import SingleValuedVariant
@@ -328,6 +329,7 @@ def test_gitsubmodules_callable(
     """
 
     def submodules_callback(package):
+        assert isinstance(package, PackageBase)
         name = "third_party/submodule0"
         return [name]
 
@@ -380,6 +382,7 @@ def test_gitsubmodules_falsey(
     """
 
     def submodules_callback(package):
+        assert isinstance(package, PackageBase)
         return False
 
     type_of_test = "tag-branch"
