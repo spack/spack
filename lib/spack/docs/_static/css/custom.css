@@ -38,3 +38,16 @@ div.version-switch select:hover {
 .toc-tree li.scroll-current>.reference {
   font-weight: normal;
 }
+
+.search-results span {
+  background-color: #fff3cd;
+  padding: 0.1rem 0.2rem;
+  border-radius: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) .search-results span {
+    background-color: #664d03;
+    color: #fff3cd;
+  }
+}
