@@ -609,7 +609,9 @@ class Stage(LockableStagingDir):
         spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_layout.path)
 
     def cache_mirror(
-        self, mirror: "spack.caches.MirrorCache", stats: "spack.mirrors.utils.MirrorStats"
+        self,
+        mirror: "spack.caches.MirrorCache",
+        stats: "spack.mirrors.utils.MirrorStatsForOneSpec",
     ) -> None:
         """Perform a fetch if the resource is not already cached
 

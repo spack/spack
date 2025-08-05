@@ -606,14 +606,16 @@ def mirror_create(args):
     # When no directory is provided, the source dir is used
     path = args.directory or spack.caches.fetch_cache_location()
 
+    mirror_specs = _specs_and_action(args)
     workers = args.jobs
     if workers is None:
         if args.all:
-            workers = 16
+            workers = min(
+                16, spack.config.determine_number_of_jobs(parallel=True), len(mirror_specs)
+            )
         else:
             workers = 1
 
-    mirror_specs = _specs_and_action(args)
     create_mirror_for_all_specs(
         mirror_specs,
         path=path,
@@ -639,15 +641,16 @@ def _specs_and_action(args):
 def create_mirror_for_one_spec(candidate, mirror_cache):
     pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
     pkg_obj = pkg_cls(spack.spec.Spec(candidate))
-    mirror_stats = spack.mirrors.utils.MirrorStats()
+    mirror_stats = spack.mirrors.utils.MirrorStatsForOneSpec()
     spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
     return mirror_stats
 
 
 def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, workers):
-    mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
+    mirror_cache = spack.mirrors.utils.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
     )
+    mirror_stats = spack.mirrors.utils.MirrorStatsForAllSpecs()
     with spack.util.parallel.make_concurrent_executor(jobs=workers) as executor:
         # Submit tasks to the process pool
         futures = [

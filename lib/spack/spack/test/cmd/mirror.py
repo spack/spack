@@ -20,7 +20,7 @@ import spack.util.git
 import spack.util.url as url_util
 import spack.version
 from spack.main import SpackCommand, SpackCommandError
-from spack.mirrors.utils import MirrorStats
+from spack.mirrors.utils import MirrorStatsForAllSpecs, MirrorStatsForOneSpec
 
 config = SpackCommand("config")
 mirror = SpackCommand("mirror")
@@ -109,22 +109,27 @@ def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_m
 
 def test_mirror_stats_merge():
     """Test MirrorStats merge functionality"""
-    test_spec1 = spack.spec.Spec("test-package@1.0")
-    test_spec2 = spack.spec.Spec("test-package@2.0")
+    spec1 = "package@1.0"
+    spec2 = "package@2.0"
 
-    stats1 = MirrorStats()
-    stats2 = MirrorStats()
+    s1 = MirrorStatsForOneSpec()
+    s1.current_spec = spec1
+    s1.added("/test/path/1")
+    s1.added("/test/path/2")
+    s1.finalize()
 
-    stats1.current_spec = test_spec1
-    stats1.existing_resources.add("pkg1")
-    stats1.merge(stats2)
-    assert "pkg1" in stats1.existing_resources
+    s2 = MirrorStatsForOneSpec()
+    s2.current_spec = spec2
+    s2.already_existed("/test/path/3")
+    s2.finalize()
 
-    stats1.current_spec = test_spec1
-    stats2.current_spec = test_spec2
-    stats2.existing_resources.add("pkg2")
-    stats1.merge(stats2)
-    assert "pkg2" in stats1.existing_resources
+    all_stats = MirrorStatsForAllSpecs()
+    all_stats.merge(s1)
+    all_stats.merge(s2)
+
+    present, mirrored, errors = all_stats.stats()
+    assert mirrored.count(spec1) == 2
+    assert present.count(spec2) == 1
 
 
 # Test for command line-specified spec in concretized environment

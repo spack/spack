@@ -111,9 +111,9 @@ def create(path, specs, skip_unstable_versions=False):
     # automatically spec-ify anything in the specs array.
     specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
 
-    mirror_cache, mirror_stats = mirror_cache_and_stats(path, skip_unstable_versions)
+    mirror_cache = mirror_cache_and_stats(path, skip_unstable_versions)
+    mirror_stats = MirrorStatsForOneSpec()
     for spec in specs:
-        mirror_stats.next_spec(spec)
         create_mirror_from_package_object(spec.package, mirror_cache, mirror_stats)
 
     return mirror_stats.stats()
@@ -136,8 +136,7 @@ def mirror_cache_and_stats(path, skip_unstable_versions=False):
         except OSError as e:
             raise MirrorError("Cannot create directory '%s':" % path, str(e))
     mirror_cache = spack.caches.MirrorCache(path, skip_unstable_versions=skip_unstable_versions)
-    mirror_stats = MirrorStats()
-    return mirror_cache, mirror_stats
+    return mirror_cache
 
 
 def add(mirror: Mirror, scope=None):
@@ -169,21 +168,16 @@ def remove(name, scope):
     tty.msg("Removed mirror %s." % name)
 
 
-class MirrorStats:
+class MirrorStatsForOneSpec:
     def __init__(self):
         self.present = {}
         self.new = {}
         self.errors = set()
-
         self.current_spec = None
         self.added_resources = set()
         self.existing_resources = set()
 
-    def next_spec(self, spec):
-        self._tally_current_spec()
-        self.current_spec = spec
-
-    def _tally_current_spec(self):
+    def finalize(self):
         if self.current_spec:
             if self.added_resources:
                 self.new[self.current_spec] = len(self.added_resources)
@@ -192,10 +186,6 @@ class MirrorStats:
             self.added_resources = set()
             self.existing_resources = set()
         self.current_spec = None
-
-    def stats(self):
-        self._tally_current_spec()
-        return list(self.present), list(self.new), list(self.errors)
 
     def already_existed(self, resource):
         # If an error occurred after caching a subset of a spec's
@@ -207,20 +197,58 @@ class MirrorStats:
         self.added_resources.add(resource)
 
     def error(self):
-        self.errors.add(self.current_spec)
+        if self.current_spec:
+            self.errors.add(self.current_spec)
 
-    def merge(self, ext_mirror_stat: "MirrorStats"):
+    def stats(self):
+        self.finalize()
+        # Convert dictionaries to lists
+        present_list = []
+        for spec, count in self.present.items():
+            present_list.extend([spec] * count)
+
+        new_list = []
+        for spec, count in self.new.items():
+            new_list.extend([spec] * count)
+
+
+class MirrorStatsForAllSpecs:
+    def __init__(self):
+        self.present = {}
+        self.new = {}
+        self.errors = set()
+
+    def merge(self, ext_mirror_stat: MirrorStatsForOneSpec):
         # For the sake of parallelism we need a way to reduce/merge different
         # MirrorStats objects.
-        self.present.update(ext_mirror_stat.present)
-        self.new.update(ext_mirror_stat.new)
+        ext_mirror_stat.finalize()
+        for spec, count in ext_mirror_stat.present.items():
+            if spec in self.present:
+                self.present[spec] += count
+            else:
+                self.present[spec] = count
+
+        for spec, count in ext_mirror_stat.new.items():
+            if spec in self.new:
+                self.new[spec] += count
+            else:
+                self.new[spec] = count
         self.errors.update(ext_mirror_stat.errors)
-        self.added_resources.update(ext_mirror_stat.added_resources)
-        self.existing_resources.update(ext_mirror_stat.existing_resources)
+
+    def stats(self):
+        # Convert dictionary to list
+        present_list = []
+        new_list = []
+        for spec, count in self.present.items():
+            present_list.extend([spec] * count)
+        for spec, count in self.new.items():
+            new_list.extend([spec] * count)
+
+        return present_list, new_list, list(self.errors)
 
 
 def create_mirror_from_package_object(
-    pkg_obj, mirror_cache: "spack.caches.MirrorCache", mirror_stats: MirrorStats
+    pkg_obj, mirror_cache: "spack.caches.MirrorCache", mirror_stats: MirrorStatsForOneSpec
 ) -> bool:
     """Add a single package object to a mirror.
 
