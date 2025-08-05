@@ -122,32 +122,32 @@ class SpecLexer(RegexLexer):
             # Probably a command line flag, not a variant.
             (r"--[a-zA-Z0-9-]+", Text),
             # Dependency, with optional virtual assignment specifier
-            (SpecTokens.START_EDGE_PROPERTIES.regex, String, "edge_properties"),
-            (SpecTokens.DEPENDENCY.regex, String),
+            (SpecTokens.START_EDGE_PROPERTIES.regex, Name.Variable, "edge_properties"),
+            (SpecTokens.DEPENDENCY.regex, Name.Variable),
             # versions
-            (SpecTokens.GIT_VERSION.regex, Keyword.Constant),
-            (SpecTokens.VERSION.regex, Keyword.Constant),
-            (SpecTokens.VERSION_HASH_PAIR.regex, Keyword.Constant),
+            (SpecTokens.VERSION_HASH_PAIR.regex, Keyword.Pseudo),
+            (SpecTokens.GIT_VERSION.regex, Keyword.Pseudo),
+            (SpecTokens.VERSION.regex, Keyword.Pseudo),
             # variants
-            (SpecTokens.PROPAGATED_BOOL_VARIANT.regex, Name.Class),
-            (SpecTokens.BOOL_VARIANT.regex, Name.Class),
-            (SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex, Name.Class),
-            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Class),
+            (SpecTokens.PROPAGATED_BOOL_VARIANT.regex, Name.Function),
+            (SpecTokens.BOOL_VARIANT.regex, Name.Function),
+            (SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex, Name.Function),
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
             # filename
-            (SpecTokens.FILENAME.regex, String),
+            (SpecTokens.FILENAME.regex, Text),
             # Package name
-            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex, String),
-            (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, String),
+            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex, Name.Class),
+            (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, Name.Class),
             # DAG hash
-            (SpecTokens.DAG_HASH.regex, String),
+            (SpecTokens.DAG_HASH.regex, Text),
             # White spaces
             (SpecTokens.WS.regex, Whitespace),
             # Unexpected character(s)
             (r".", Text),
         ],
         "edge_properties": [
-            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Class),
-            (SpecTokens.END_EDGE_PROPERTIES.regex, String, "root"),
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
+            (SpecTokens.END_EDGE_PROPERTIES.regex, Name.Variable, "root"),
         ],
     }
 
@@ -392,6 +392,8 @@ html_static_path = ["_static"]
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 html_last_updated_fmt = "%b %d, %Y"
+pygments_style = "default"
+pygments_dark_style = "monokai"
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.

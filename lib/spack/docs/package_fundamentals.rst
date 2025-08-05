@@ -775,10 +775,9 @@ between properties for two packages. Let's try it out.
 Because the only difference we see in the ``spack find`` view is the hash, let's use
 ``spack diff`` to look for more detail. We will provide the two hashes:
 
-.. code-block:: console
+.. code-block:: diff
 
     $ spack diff /efzjziy /sl7m27m
-    ==> Warning: This interface is subject to change.
 
     --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
     +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
@@ -791,15 +790,13 @@ The output is colored and written in the style of a git diff. This means that yo
 can copy and paste it into a GitHub markdown as a code block with language "diff"
 and it will render nicely! Here is an example:
 
-.. code-block:: md
+.. code-block:: diff
 
-    ```diff
     --- zlib@1.2.11/efzjziyc3dmb5h5u5azsthgbgog5mj7g
     +++ zlib@1.2.11/sl7m27mzkbejtkrajigj3a3m37ygv4u2
     @@ variant_value @@
     -  zlib optimize False
     +  zlib optimize True
-    ```
 
 Awesome! Now let's read the diff. It tells us that our first zlib was built with ``~optimize``
 (``False``) and the second was built with ``+optimize`` (``True``). You can't see it in the docs
@@ -811,31 +808,29 @@ installation spec. Running ``spack diff A B`` means we'll see which spec attribu
 ``B`` but not on ``A`` (green) and which are on ``A`` but not on ``B`` (red). Here is another
 example with an additional difference type, ``version``:
 
-.. code-block:: console
+.. code-block:: diff
 
-    $ spack diff python@2.7.8 python@3.8.11
-    ==> Warning: This interface is subject to change.
+   $ spack diff python@2.7.8 python@3.8.11
 
-    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
-    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
-    @@ variant_value @@
-    -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
-    +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
-    @@ version @@
-    -  openssl 1.0.2u
-    +  openssl 1.1.1k
-    -  python 2.7.8
-    +  python 3.8.11
+   --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+   +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+   @@ variant_value @@
+   -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
+   +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
+   @@ version @@
+   -  openssl 1.0.2u
+   +  openssl 1.1.1k
+   -  python 2.7.8
+   +  python 3.8.11
 
 Let's say that we were only interested in one kind of attribute above, ``version``.
 We can ask the command to only output this attribute. To do this, you'd add
 the ``--attribute`` for attribute parameter, which defaults to all. Here is how you
 would filter to show just versions:
 
-.. code-block:: console
+.. code-block:: diff
 
     $ spack diff --attribute version python@2.7.8 python@3.8.11
-    ==> Warning: This interface is subject to change.
 
     --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
     +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx

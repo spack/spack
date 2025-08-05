@@ -494,7 +494,7 @@ or can't build binaries for that target at all, it will exit with a meaningful e
 Conversely, if an old compiler is selected for a newer microarchitecture, Spack will optimize for the best match it can find instead
 of failing:
 
-.. code-block:: spec
+.. code-block:: console
 
    $ spack arch
    linux-ubuntu18.04-broadwell
@@ -639,7 +639,7 @@ For example, let's say that you accidentally installed two different
 ``mvapich2`` installations. If you want to uninstall one of them but don't
 know what the difference is, you can run:
 
-.. code-block:: spec
+.. code-block:: console
 
    $ spack find --long mvapich2
    ==> 2 installed packages.
