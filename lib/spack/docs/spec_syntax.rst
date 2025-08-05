@@ -26,7 +26,7 @@ the full syntax of specs.
 
 Here is an example of using a complex spec to install a very specific configuration of ``mpileaks``:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install mpileaks@1.2:1.4 +debug ~qt target=x86_64_v3 %gcc@15.1.0 ^libelf@1.1 %gcc@14.2.0
 
@@ -101,13 +101,13 @@ In general, such a configuration would likely behave unexpectedly at runtime, an
 The purpose of specs is to abstract this full DAG away from Spack users.
 A user who does not care about the DAG at all, can refer to ``mpileaks`` by simply writing:
 
-.. code-block::
+.. code-block:: spec
 
    mpileaks
 
 The spec becomes only slightly more complicated, if that user knows that ``mpileaks`` indirectly uses ``dyninst`` and wants a particular version of ``dyninst``:
 
-.. code-block::
+.. code-block:: spec
 
    mpileaks ^dyninst@8.1
 
@@ -120,7 +120,7 @@ Specifiers are associated with the nearest package name to their left.
 The order of transitive package dependencies doesn't matter when writing a spec.
 For example, these two specs represent exactly the same configuration:
 
-.. code-block:: none
+.. code-block:: spec
 
    mpileaks ^callpath@1.0 ^libelf@0.8.3
    mpileaks ^libelf@0.8.3 ^callpath@1.0
@@ -128,7 +128,7 @@ For example, these two specs represent exactly the same configuration:
 Direct dependencies specified with ``%`` associate with the most recent transitive node, or with the root of the DAG.
 So in the spec:
 
-.. code-block::
+.. code-block:: spec
 
    root %dep1 ^transitive %dep2 %dep3
 
@@ -157,7 +157,7 @@ Version specifier
 
 A version specifier
 
-.. code-block::
+.. code-block:: spec
 
    pkg@<specifier>
 
@@ -166,7 +166,7 @@ It can be something abstract that matches multiple known versions or a specific 
 
 The version specifier usually represents *a range of versions*:
 
-.. code-block::
+.. code-block:: spec
 
    # All versions between v1.0 and v1.5.
    # This includes any v1.5.x version
@@ -181,7 +181,7 @@ The version specifier usually represents *a range of versions*:
 
 but can also be *a specific version*:
 
-.. code-block:: text
+.. code-block:: spec
 
    # Exactly version v3.2, will NOT match v3.2.1 etc.
    @=3.2
@@ -198,7 +198,7 @@ In general, it is preferable to use the range syntax ``@3.2``, because ranges al
 A version specifier can also be a list of ranges and specific versions, separated by commas.
 For example:
 
-.. code-block::
+.. code-block:: spec
 
    @1.0:1.5,=1.7.1
 
@@ -213,7 +213,7 @@ may be specified instead of a numerical version (i.e., branches, tags,
 and commits). Spack will stage and build based off the ``git``
 reference provided. Acceptable syntaxes for this are:
 
-.. code-block:: sh
+.. code-block:: spec
 
    # commit hashes
    foo@abcdef1234abcdef1234abcdef1234abcdef1234  # 40 character hashes are automatically treated as git commits
@@ -239,7 +239,7 @@ In cases where Spack cannot resolve a sensible version from a git ref,
 users can specify the Spack version to use for the git ref. This is done
 by appending ``=`` and the Spack version to the git ref. For example:
 
-.. code-block:: sh
+.. code-block:: spec
 
    foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
@@ -268,13 +268,13 @@ Boolean Variants
 Typically used to enable or disable a feature at compile time.
 For example, a package might have a ``debug`` variant that can be explicitly enabled with:
 
-.. code-block::
+.. code-block:: spec
 
    +debug
 
 and disabled with
 
-.. code-block::
+.. code-block:: spec
 
    ~debug
 
@@ -285,13 +285,13 @@ Single-valued Variants
 Often used to set defaults.
 For example, a package might have a ``compression`` variant that determines the default compression algorithm, which users could set to:
 
-.. code-block::
+.. code-block:: spec
 
    compression=gzip
 
 or
 
-.. code-block::
+.. code-block:: spec
 
    compression=zstd
 
@@ -302,7 +302,7 @@ Multi-valued Variants
 A package might have a ``fabrics`` variant that determines which network fabrics to support.
 Users could activate multiple values at the same time. For instance:
 
-.. code-block::
+.. code-block:: spec
 
    fabrics=verbs,ofi
 
@@ -312,7 +312,7 @@ The values are separated by commas.
 The meaning of ``fabrics=verbs,ofi`` is to enable *at least* the specified fabrics, but other fabrics may be enabled as well.
 If the intent is to enable *only* the specified fabrics, then the:
 
-.. code-block::
+.. code-block:: spec
 
    fabrics:=verbs,ofi
 
@@ -324,14 +324,14 @@ syntax should be used with the ``:=`` operator.
    In certain shells, the ``~`` character expands to the home directory.
    To avoid these issues, avoid whitespace between the package name and the variant:
 
-   .. code-block:: sh
+   .. code-block:: spec
 
       mpileaks ~debug   # shell may try to substitute this!
       mpileaks~debug    # use this instead
 
    Alternatively, you can use the ``-`` character to disable a variant, but be aware that this requires a space between the package name and the variant:
 
-   .. code-block:: sh
+   .. code-block:: spec
 
       mpileaks-debug     # wrong: refers to a package named "mpileaks-debug"
       mpileaks -debug    # right: refers to a package named mpileaks with debug disabled
@@ -348,7 +348,7 @@ Spack allows variants to propagate their value to the package's
 dependencies by using ``++``, ``--``, and ``~~`` for boolean variants.
 For example, for a ``debug`` variant:
 
-.. code-block:: sh
+.. code-block:: spec
 
     mpileaks ++debug   # enabled debug will be propagated to dependencies
     mpileaks +debug    # only mpileaks will have debug enabled
@@ -356,7 +356,7 @@ For example, for a ``debug`` variant:
 To propagate the value of non-boolean variants Spack uses ``name==value``.
 For example, for the ``stackstart`` variant:
 
-.. code-block:: sh
+.. code-block:: spec
 
     mpileaks stackstart==4   # variant will be propagated to dependencies
     mpileaks stackstart=4    # only mpileaks will have this variant value
@@ -442,7 +442,7 @@ This attribute is a triplet of platform, operating system, and processor.
 You can specify the elements either separately by using
 the reserved keywords ``platform``, ``os``, and ``target``:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install libelf platform=linux
    $ spack install libelf os=ubuntu18.04
@@ -469,7 +469,7 @@ A complete list of the microarchitectures known to Spack can be obtained in the 
 When a spec is installed, Spack matches the compiler being used with the microarchitecture being targeted to inject appropriate optimization flags at compile time.
 Giving a command such as the following:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install zlib%gcc@14.2.0 target=icelake
 
@@ -486,7 +486,7 @@ where the flags ``-march=icelake-client -mtune=icelake-client`` are injected by 
 If Spack knows that the requested compiler can't optimize for the current target
 or can't build binaries for that target at all, it will exit with a meaningful error message:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install zlib%gcc@5.5.0 target=icelake
    ==> Error: cannot produce optimized binary for micro-architecture "icelake" with gcc@5.5.0 [supported compiler versions are 8:]
@@ -494,7 +494,7 @@ or can't build binaries for that target at all, it will exit with a meaningful e
 Conversely, if an old compiler is selected for a newer microarchitecture, Spack will optimize for the best match it can find instead
 of failing:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack arch
    linux-ubuntu18.04-broadwell
@@ -574,21 +574,21 @@ Constraining virtual packages
 When installing a package that depends on a virtual package, you can opt to specify the particular provider you want to use, or you can let Spack pick.
 For example, if you just type this:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install mpileaks
 
 Then Spack will pick a provider for you according to site policies.
 If you really want a particular version, say ``mpich``, then you could run this instead:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install mpileaks ^mpich
 
 This forces Spack to use some version of ``mpich`` for its implementation.
 As always, you can be even more specific and require a particular ``mpich`` version:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install mpileaks ^mpich@3
 
@@ -612,7 +612,7 @@ need.
 It is possible to be more explicit and tell Spack which dependency should provide which virtual, using a
 special syntax:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack spec strumpack ^mpi=intel-parallel-studio+mkl ^lapack=openblas
 
@@ -639,7 +639,7 @@ For example, let's say that you accidentally installed two different
 ``mvapich2`` installations. If you want to uninstall one of them but don't
 know what the difference is, you can run:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack find --long mvapich2
    ==> 2 installed packages.
@@ -650,7 +650,7 @@ know what the difference is, you can run:
 
 You can then uninstall the latter installation using:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack uninstall /er3die3
 
@@ -658,7 +658,7 @@ You can then uninstall the latter installation using:
 Or, if you want to build with a specific installation as a dependency,
 you can use:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install trilinos ^/er3die3
 
@@ -677,9 +677,9 @@ Some specs require additional information about the relationship between a packa
 This information lives on the edge between the two, and can be specified by following the dependency sigil with square-brackets.
 Edge attributes are always specified as key-value pairs:
 
-.. code-block::
+.. code-block:: spec
 
-   root ^[<key>=<value>] dep
+   root ^[key=value] dep
 
 In the following sections we'll discuss the edge attributes that are currently allowed in the spec syntax.
 
@@ -690,7 +690,7 @@ Virtuals on edges
 Packages can provide, or depend on, multiple virtual packages.
 Users can select which virtuals to use from which dependency by specifying the ``virtuals`` edge attribute:
 
-.. code-block:: none
+.. code-block:: spec
 
    spack install mpich %[virtuals=c,cxx] clang %[virtuals=fortran] gcc
 
@@ -699,7 +699,7 @@ The command above tells Spack to use ``clang`` to provide the ``c`` and ``cxx`` 
 The special syntax we have seen in :ref:`explicit-binding-virtuals` is a more compact way to specify the ``virtuals`` edge attribute.
 For instance, an equivalent formulation of the command above is:
 
-.. code-block:: none
+.. code-block:: spec
 
    spack install mpich %c,cxx=clang %fortran=gcc
 
@@ -711,7 +711,7 @@ Conditional dependencies
 Conditional dependencies allow dependency constraints to be applied only under certain conditions.
 We can express conditional constraint by specifying the ``when`` edge attribute:
 
-.. code-block:: none
+.. code-block:: spec
 
    spack install hdf5 ^[when=+mpi] mpich@3.1
 

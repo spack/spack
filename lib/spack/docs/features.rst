@@ -22,7 +22,7 @@ Simple package installation
 Installing the default version of a package is simple. This will install
 the latest version of the ``mpileaks`` package and all of its dependencies:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install mpileaks
 
@@ -33,7 +33,7 @@ Custom versions & configurations
 Spack allows installation to be customized.  Users can specify the
 version, compile-time options, and cross-compile platform, all on the command line.
 
-.. code-block:: console
+.. code-block:: spec
 
    # Install a particular version by appending @
    $ spack install hdf5@1.14.6
@@ -61,7 +61,7 @@ Spack allows *dependencies* of a particular installation to be customized extens
 Users can specify both *direct* dependencies of a node, using the ``%`` sigil, or *transitive*
 dependencies, using the ``^`` sigil:
 
-.. code-block:: console
+.. code-block:: spec
 
    # Install hdf5 using gcc@15.1.0 as a compiler (direct dependency of hdf5)
    $ spack install hdf5@1.14.6 %gcc@15.1.0
@@ -71,7 +71,7 @@ dependencies, using the ``^`` sigil:
 
 The expression on the command line can be as simple, or as complicated, as the user needs:
 
-.. code-block:: console
+.. code-block:: spec
 
    # Install hdf5 compiled with gcc@15, linked to mpich compiled with gcc@14
    $ spack install hdf5@1.14.6 %gcc@15 ^mpich %gcc@14
