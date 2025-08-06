@@ -14,6 +14,7 @@ import pytest
 import spack.vendor.archspec.cpu
 import spack.vendor.jinja2
 
+import spack.archspec
 import spack.binary_distribution
 import spack.cmd
 import spack.compilers.config
@@ -158,6 +159,9 @@ def current_host(request, monkeypatch):
     cpu, _, is_preference = request.param.partition("-")
 
     monkeypatch.setattr(spack.platforms.Test, "default", cpu)
+    monkeypatch.setattr(
+        spack.archspec, "HOST_TARGET_FAMILY", spack.vendor.archspec.cpu.TARGETS["x86_64"]
+    )
     if not is_preference:
         target = spack.vendor.archspec.cpu.TARGETS[cpu]
         monkeypatch.setattr(spack.vendor.archspec.cpu, "host", lambda: target)
