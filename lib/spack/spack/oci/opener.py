@@ -367,10 +367,8 @@ def credentials_from_mirrors(
                 continue
 
             url = mirror.get_url(direction)
-            if not url.startswith("oci://"):
-                continue
             try:
-                parsed = ImageReference.from_string(url[6:])
+                parsed = ImageReference.from_url(url)
             except ValueError:
                 continue
             if parsed.domain == domain:
@@ -384,6 +382,7 @@ def create_opener():
     for handler in [
         urllib.request.ProxyHandler(),
         urllib.request.UnknownHandler(),
+        urllib.request.HTTPHandler(),
         urllib.request.HTTPSHandler(context=spack.util.web.ssl_create_default_context()),
         spack.util.web.SpackHTTPDefaultErrorHandler(),
         urllib.request.HTTPRedirectHandler(),

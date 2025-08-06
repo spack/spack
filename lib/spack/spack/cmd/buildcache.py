@@ -17,6 +17,7 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.oci.image
 import spack.oci.oci
 import spack.spec
 import spack.stage
@@ -399,7 +400,7 @@ def push_fn(args):
         unsigned = not (args.key or args.signed)
 
     # For OCI images, we require dependencies to be pushed for now.
-    if mirror.push_url.startswith("oci://") and not unsigned:
+    if spack.oci.image.is_oci_url(mirror.push_url) and not unsigned:
         tty.warn(
             "Code signing is currently not supported for OCI images. "
             "Use --unsigned to silence this warning."
@@ -437,7 +438,7 @@ def push_fn(args):
                 )
 
     # Warn about possible old binary mirror layout
-    if not mirror.push_url.startswith("oci://"):
+    if not spack.oci.image.is_oci_url(mirror.push_url):
         check_mirror_for_layout(mirror)
 
     with spack.binary_distribution.make_uploader(

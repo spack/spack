@@ -338,15 +338,10 @@ will have the same effect as
 OCI / Docker V2 Registries as Build Cache
 -----------------------------------------
 
-Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io,
-GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others
-as build caches. This is a convenient way to share binaries using public
-infrastructure or to cache Spack-built binaries in GitHub Actions and
-GitLab CI.
+Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io, GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others as build caches.
+This is a convenient way to share binaries using public infrastructure or to cache Spack-built binaries in GitHub Actions and GitLab CI.
 
-To get started, configure an OCI mirror using ``oci://`` as the scheme
-and optionally specify variables that hold the username and password (or
-personal access token) for the registry:
+To get started, configure an OCI mirror using ``oci://`` as the scheme and optionally specify variables that hold the username and password (or personal access token) for the registry:
 
 .. code-block:: console
 
@@ -354,8 +349,8 @@ personal access token) for the registry:
                        --oci-password-variable REGISTRY_TOKEN \
                        my_registry oci://example.com/my_image
 
-Spack follows the naming conventions of Docker, with Docker Hub as the default
-registry. To use Docker Hub, you can omit the registry domain:
+Spack follows the naming conventions of Docker, with Docker Hub as the default registry.
+To use Docker Hub, you can omit the registry domain:
 
 .. code-block:: console
 
@@ -370,14 +365,15 @@ From here, you can use the mirror as any other build cache:
     $ spack buildcache push my_registry <specs...>  # push to the registry
     $ spack install <specs...>  # or install from the registry
 
-A unique feature of build caches on top of OCI registries is that it's incredibly
-easy to generate a runnable container image with the binaries installed. This
-is a great way to make applications available to users without requiring them to
-install Spack -- all you need is Docker, Podman, or any other OCI-compatible container
-runtime.
+.. note::
 
-To produce container images, all you need to do is add the ``--base-image`` flag
-when pushing to the build cache:
+   Spack defaults to ``https`` for OCI registries, and does not fall back to ``http`` in case of failure.
+   For local registries which use ``http`` instead of ``https``, you can specify ``oci+http://localhost:5000/my_image``.
+
+A unique feature of build caches on top of OCI registries is that it's incredibly easy to generate a runnable container image with the binaries installed.
+This is a great way to make applications available to users without requiring them to install Spack -- all you need is Docker, Podman, or any other OCI-compatible container runtime.
+
+To produce container images, all you need to do is add the ``--base-image`` flag when pushing to the build cache:
 
 .. code-block:: console
 
@@ -388,10 +384,9 @@ when pushing to the build cache:
     root@e4c2b6f6b3f4:/# ninja --version
     1.11.1
 
-If ``--base-image`` is not specified, distroless images are produced. In practice,
-you won't be able to run these as containers because they don't come with libc and
-other system dependencies. However, they are still compatible with tools like
-``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
+If ``--base-image`` is not specified, distroless images are produced.
+In practice, you won't be able to run these as containers because they don't come with libc and other system dependencies.
+However, they are still compatible with tools like ``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
 
 .. note::
     The Docker ``overlayfs2`` storage driver is limited to 128 layers, above which a
