@@ -1900,6 +1900,57 @@ spack:
     assert "externaltest" in pipeline_doc
 
 
+def test_ci_generate_forward_variables(
+    ci_generate_test,
+    tmp_path: pathlib.Path,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    ci_base_environment,
+):
+    """Ensure the above pipeline generator was correctly registered and
+    is used to generate a pipeline for the stack/config defined here."""
+    bin_mirror_url = tmp_path / "ci-bin-mirror"
+
+    spack_yaml_contents = f"""
+spack:
+  specs:
+    - archive-files
+    - externaltest
+  mirrors:
+    buildcache-destination: {bin_mirror_url}
+  ci:
+    target: gitlab
+    pipeline-gen:
+    - submapping:
+      - match:
+          - archive-files
+        build-job:
+          tags:
+            - donotcare
+          image: donotcare
+"""
+    noforward_vars = ["NO_FORWARD_VAR"]
+    forward_vars = ["TEST_VAR", "ANOTHER_TEST_VAR"]
+    for v in forward_vars + noforward_vars:
+        os.environ[v] = f"{v}_BEEF"
+
+    fwd_arg = " --forward-variable "
+    _, output_file, _ = ci_generate_test(
+        spack_yaml_contents, fwd_arg.strip(), *fwd_arg.join(forward_vars).split()
+    )
+
+    with open(output_file, encoding="utf-8") as fd:
+        pipeline_yaml = syaml.load(fd.read())
+
+    for v in forward_vars:
+        assert v in pipeline_yaml["variables"]
+        assert pipeline_yaml["variables"][v] == f"{v}_BEEF"
+
+    for v in noforward_vars:
+        assert v not in pipeline_yaml["variables"]
+
+
 @pytest.fixture
 def fetch_versions_match(monkeypatch):
     """Fake successful checksums returned from downloaded tarballs."""
