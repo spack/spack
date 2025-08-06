@@ -25,15 +25,15 @@ To install them, follow the instructions below.
 
             .. code-block:: console
 
-               apt update
-               apt install file bzip2 ca-certificates g++ gcc gfortran git gzip lsb-release patch python3 tar unzip xz-utils zstd
+               $ apt update
+               $ apt install file bzip2 ca-certificates g++ gcc gfortran git gzip lsb-release patch python3 tar unzip xz-utils zstd
 
          .. tab-item:: RHEL/AlmaLinux/Rocky Linux
 
             .. code-block:: console
 
-               dnf install epel-release
-               dnf install file bzip2 ca-certificates git gzip patch python3 tar unzip xz zstd gcc gcc-c++ gcc-gfortran
+               $ dnf install epel-release
+               $ dnf install file bzip2 ca-certificates git gzip patch python3 tar unzip xz zstd gcc gcc-c++ gcc-gfortran
 
    .. tab-item:: macOS
 

@@ -53,21 +53,21 @@ Once you have a fork, clone it:
 
 .. code-block:: console
 
-   git clone --depth=100 git@github.com:YOUR-USERNAME/spack-packages.git ~/spack-packages
-   cd ~/spack-packages
-   git remote add --track develop upstream git@github.com:spack/spack-packages.git
+   $ git clone --depth=100 git@github.com:YOUR-USERNAME/spack-packages.git ~/spack-packages
+   $ cd ~/spack-packages
+   $ git remote add --track develop upstream git@github.com:spack/spack-packages.git
 
 Then configure Spack to use your local repository:
 
 .. code-block:: console
 
-   spack repo set --destination ~/spack-packages builtin
+   $ spack repo set --destination ~/spack-packages builtin
 
 Before starting work, it's useful to create a new branch in your local repository.
 
 .. code-block:: console
 
-   git checkout -b add-my-package
+   $ git checkout -b add-my-package
 
 Lastly, verify that Spack is picking up the right repository by checking the location of a known package, like ``zlib``:
 
@@ -718,7 +718,7 @@ This has two effects.
 First, ``spack info`` will no longer advertise that version.
 Second, commands like ``spack install`` that fetch the package will require user approval:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install openssl@1.0.1e
    ==> Warning: openssl@1.0.1e is deprecated and may be removed in a future Spack release.
@@ -1427,7 +1427,7 @@ This allows users to ``spack install blis threads=openmp``.
 In the example above the argument ``multi=False`` indicates that only a **single value** can be selected at a time.
 This constraint is enforced by the solver, and an error is emitted if a user specifies two or more values at the same time:
 
-.. code-block:: console
+.. code-block:: spec
 
   $ spack spec blis threads=openmp,pthreads
   Input spec
@@ -2075,12 +2075,12 @@ To express this constraint in a package, the two virtual dependencies must be li
 
 .. code-block:: python
 
-   provides('blas', 'lapack')
+   provides("blas", "lapack")
 
 This makes it impossible to select ``openblas`` as a provider for one of the two virtual dependencies and not for the other.
 If you try to, Spack will report an error:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack spec netlib-scalapack  ^[virtuals=lapack] openblas ^[virtuals=blas] atlas
    ==> Error: concretization failed for the following reasons:
@@ -2474,25 +2474,29 @@ Inspecting patches
 If you want to better understand the patches that Spack applies to your
 packages, you can do that using ``spack spec``, ``spack find``, and other
 query commands.  Let's look at ``m4``.  If you run ``spack spec m4``, you
-can see the patches that would be applied to ``m4``::
+can see the patches that would be applied to ``m4``:
 
-  $ spack spec m4
-  Input spec
-  --------------------------------
-  m4
+.. code-block:: spec
 
-  Concretized
-  --------------------------------
-  m4@1.4.18%apple-clang@9.0.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
-      ^libsigsegv@2.11%apple-clang@9.0.0 arch=darwin-highsierra-x86_64
+   $ spack spec m4
+   Input spec
+   --------------------------------
+   m4
+ 
+   Concretized
+   --------------------------------
+   m4@1.4.18%apple-clang@9.0.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
+       ^libsigsegv@2.11%apple-clang@9.0.0 arch=darwin-highsierra-x86_64
 
 You can also see patches that have been applied to installed packages
-with ``spack find -v``::
+with ``spack find -v``:
 
-  $ spack find -v m4
-  ==> 1 installed package
-  -- darwin-highsierra-x86_64 / apple-clang@9.0.0 -----------------
-  m4@1.4.18 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv
+.. code-block:: spec
+
+   $ spack find -v m4
+   ==> 1 installed package
+   -- darwin-highsierra-x86_64 / apple-clang@9.0.0 -----------------
+   m4@1.4.18 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv
 
 .. _cmd-spack-resource:
 

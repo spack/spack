@@ -100,7 +100,7 @@ to enable reuse for a single installation, or:
 
 .. code-block:: console
 
-   spack install --fresh <spec>
+   $ spack install --fresh <spec>
 
 to do a fresh install if ``reuse`` is enabled by default.
 

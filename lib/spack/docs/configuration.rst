@@ -125,7 +125,7 @@ line with the ``--config-scope`` argument, or ``-C`` for short.
 For example, the following adds two configuration scopes, named
 ``scopea`` and ``scopeb``, to a ``spack spec`` command:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack -C ~/myscopes/scopea -C ~/myscopes/scopeb spec ncurses
 

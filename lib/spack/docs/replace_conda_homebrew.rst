@@ -34,7 +34,7 @@ Next, we can add a list of packages we would like to install into our environmen
 Let's say we want a newer version of Bash than the one that comes with macOS, and we want a few Python libraries.
 We can run:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack -e myenv add bash@5 python py-numpy py-scipy py-matplotlib
 

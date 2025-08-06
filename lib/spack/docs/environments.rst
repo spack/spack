@@ -256,7 +256,7 @@ environment has been activated. Otherwise it shows all specs in
 the Spack instance. The same rule applies to the ``install`` and
 ``uninstall`` commands.
 
-.. code-block:: console
+.. code-block:: spec
 
   $ spack find
   ==> 0 installed packages
@@ -328,14 +328,14 @@ currently active environment. An error is generated if there isn't an
 active environment. All environment-aware commands can also
 be called using the ``spack -e`` flag to specify the environment.
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack env activate myenv
    $ spack add mpileaks
 
 or
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack -e myenv add python
 
@@ -547,7 +547,7 @@ argument ``--include-concrete`` followed by the name or path of the environment
 you'd like to include. Here is an example of how to create a combined environment
 from the command line.
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack env create myenv
    $ spack -e myenv add python
@@ -582,7 +582,7 @@ If changes were made to the base environment and you want that reflected in the
 included environment you will need to re-concretize both the base environment and the
 included environment for the change to be implemented. For example:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack env create myenv
    $ spack -e myenv add python
@@ -610,7 +610,7 @@ Here we see that ``included_env`` has access to the python package through
 the ``myenv`` environment. But if we were to add another spec to ``myenv``,
 ``included_env`` will not be able to access the new information.
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack -e myenv add perl
    $ spack -e myenv concretize
@@ -1287,13 +1287,13 @@ other targets to depend on the environment installation.
 
 A typical workflow is as follows:
 
-.. code-block:: console
+.. code-block:: spec
 
-   spack env create -d .
-   spack -e . add perl
-   spack -e . concretize
-   spack -e . env depfile -o Makefile
-   make -j64
+   $ spack env create -d .
+   $ spack -e . add perl
+   $ spack -e . concretize
+   $ spack -e . env depfile -o Makefile
+   $ make -j64
 
 This generates a ``Makefile`` from a concretized environment in the
 current working directory, and ``make -j64`` installs the environment,

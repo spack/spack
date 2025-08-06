@@ -51,3 +51,7 @@ div.version-switch select:hover {
     color: #fff3cd;
   }
 }
+
+.highlight .go {
+  color: #333;
+}

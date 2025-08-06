@@ -164,8 +164,8 @@ the Spack terminal, run the following commands:
 
 .. code-block:: console
 
-   spack external find cmake
-   spack external find ninja
+   $ spack external find cmake
+   $ spack external find ninja
 
 The ``spack external find <name>`` will find executables on your system
 with the same name given. The command will store the items found in
@@ -209,9 +209,9 @@ Step 4: Use Spack
 Once the configuration is complete, it is time to give the installation a test.  Install a basic package through the
 Spack console via:
 
-.. code-block:: console
+.. code-block:: spec
 
-   spack install cpuinfo
+   $ spack install cpuinfo
 
 If in the previous step, you did not have CMake or Ninja installed, running the command above should install both packages.
 

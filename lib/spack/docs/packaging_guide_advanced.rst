@@ -64,7 +64,7 @@ Here is a simple example of a package that supports both CMake and Autotools:
 When defining a package like this, Spack automatically makes the ``build_system`` **variant** available, which can be used to pick the desired build system at install time.
 For example
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install example +feature build_system=cmake
 
@@ -72,7 +72,7 @@ makes Spack pick the ``CMakeBuilder`` class and runs ``cmake -DMY_FEATURE:BOOL=O
 
 Similarly
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install example +feature build_system=autotools
 

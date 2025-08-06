@@ -116,7 +116,7 @@ use it during concretization and installation. That means that you can expect
 ``spack install ninja`` to fetch prebuilt packages from the mirror. Let's
 verify by reinstalling ninja:
 
-.. code-block:: console
+.. code-block:: spec
 
     $ spack uninstall ninja
     $ spack install ninja
@@ -214,7 +214,7 @@ You may also create your own key so that you may sign your own packages using
 
 .. code-block:: console
 
-   spack gpg create <name> <email>
+   $ spack gpg create <name> <email>
 
 By default, the key has no expiration, but it may be set with the ``--expires <date>`` flag.
 It is also recommended to add a comment as to the use of the key using the ``--comment <comment>`` flag.
