@@ -58,7 +58,7 @@ If we had a toolchain named ``gcc_all`` that enforces using ``gcc`` for C, C++ a
 
 .. code-block:: spec
 
-   spack install hdf5+fortran%llvm_gfortran ^mpich %gcc_all
+   $ spack install hdf5+fortran%llvm_gfortran ^mpich %gcc_all
 
 to install:
 

@@ -417,7 +417,7 @@ not ``openmpi@3.9%clang``.
 If a custom message is provided, and the requirement is not satisfiable,
 Spack will print the custom error message:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack spec openmpi@3.9%clang
    ==> Error: in this example only 4.1.5 can build with other compilers

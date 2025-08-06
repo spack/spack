@@ -114,7 +114,7 @@ in a Windows CMD prompt.
 
 .. code-block:: console
 
-   git clone https://github.com/spack/spack.git
+   $ git clone https://github.com/spack/spack.git
 
 .. note::
    If you chose to install Spack into a directory on Windows that is set up to require Administrative
@@ -139,7 +139,7 @@ To configure Spack, first run the following command inside the Spack console:
 
 .. code-block:: console
 
-   spack compiler find
+   $ spack compiler find
 
 This creates a ``.staging`` directory in our Spack prefix, along with a ``windows`` subdirectory
 containing a ``packages.yaml`` file. On a fresh Windows installation with the above packages

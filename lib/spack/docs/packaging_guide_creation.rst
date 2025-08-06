@@ -2137,7 +2137,7 @@ For example, suppose the package ``foo`` declares this:
 
 Suppose a user invokes ``spack install`` like this:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install foo ^mpich@1.0
 
