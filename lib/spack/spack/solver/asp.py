@@ -3016,10 +3016,7 @@ class SpackSolverSetup:
         check_packages_exist(specs)
         self.gen = ProblemInstanceBuilder()
 
-        # Compute possible compilers first, so we can record which dependencies they might inject
-        _ = spack.compilers.config.all_compilers(init_config=True)
-
-        # Get compilers from buildcache only if injected through "reuse" specs
+        # Get compilers from buildcaches only if injected through "reuse" specs
         supported_compilers = spack.compilers.config.supported_compilers()
         compilers_from_reuse = {
             x for x in reuse if x.name in supported_compilers and not x.external
@@ -4209,6 +4206,9 @@ class Solver:
     """
 
     def __init__(self):
+        # Compute possible compilers first, so we see them as externals
+        _ = spack.compilers.config.all_compilers(init_config=True)
+
         self._conc_cache = ConcretizationCache()
         self.driver = PyclingoDriver(conc_cache=self._conc_cache)
         self.selector = ReusableSpecsSelector(configuration=spack.config.CONFIG)
