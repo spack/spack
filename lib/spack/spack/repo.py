@@ -731,15 +731,11 @@ class RepoPath:
     @staticmethod
     def from_config(config: spack.config.Configuration) -> "RepoPath":
         """Create a RepoPath from a configuration object."""
-
-        def replace_vars_in_package_attrs(attrs):
-            for a in ("git", "url"):
-                if a in attrs:
-                    attrs[a] = spack.util.path.substitute_path_variables(attrs[a])
-            return attrs
-
         overrides = {
-            pkg_name: replace_vars_in_package_attrs(data["package_attributes"])
+            pkg_name: {
+                k: spack.util.path.substitute_path_variables(v)
+                for k, v in data["package_attributes"].items()
+            }
             for pkg_name, data in config.get_config("packages").items()
             if pkg_name != "all" and "package_attributes" in data
         }
