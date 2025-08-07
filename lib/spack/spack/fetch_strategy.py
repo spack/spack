@@ -1718,9 +1718,9 @@ def for_package_version(pkg, version=None):
     # if it's a commit, we must use a GitFetchStrategy
     commit_sha = pkg.spec.variants.get("commit", None)
     if isinstance(version, spack.version.GitVersion) or commit_sha:
-        if not hasattr(pkg, "git"):
+        if pkg.version_or_package_attr("git", version, default=None) is None:
             raise spack.error.FetchError(
-                f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
+                f"Cannot fetch git version for {pkg.name}. Package nor version has 'git' attribute"
             )
         # Populate the version with comparisons to other commits
         if isinstance(version, spack.version.GitVersion):
