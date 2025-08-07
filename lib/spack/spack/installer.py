@@ -49,10 +49,10 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
+import spack.jobserver
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as lk
 import spack.llnl.util.tty as tty
-import spack.jobserver
 import spack.mirrors.mirror
 import spack.package_base
 import spack.package_prefs as prefs
