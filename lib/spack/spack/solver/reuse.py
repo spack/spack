@@ -8,6 +8,7 @@ from typing import Callable, List, Mapping
 import spack.binary_distribution
 import spack.config
 import spack.environment
+import spack.llnl.path
 import spack.repo
 import spack.spec
 import spack.store
@@ -155,9 +156,12 @@ def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
 
     for name in {spec.name, *provided}:
         for entry in packages.get(name, {}).get("externals", []):
+            expected_prefix = entry.get("prefix")
+            if expected_prefix is not None:
+                expected_prefix = spack.llnl.path.path_to_os_path(expected_prefix)[0]
             if (
                 spec.satisfies(entry["spec"])
-                and spec.external_path == entry.get("prefix")
+                and spec.external_path == expected_prefix
                 and spec.external_modules == entry.get("modules")
             ):
                 return True
