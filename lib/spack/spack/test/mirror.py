@@ -469,13 +469,15 @@ dev_path=*
     mirror_raw = {
         "url": "https://example.com",
         "exclude": str(exclude_file),
-        "include": str(exclude_file.parent / "include.txt"),
+        "include": "include.txt",
     }
+    # TODO figure out why SystemExit doesn't raise until the first assertion
+    # object creation should be where the exception get's raised
+    m = spack.mirrors.mirror.Mirror(mirror_raw)
     with pytest.raises(SystemExit):
-        m = spack.mirrors.mirror.Mirror(mirror_raw)
-    _, err = capfd.readouterr()
+        assert not m.inclusions
     assert "dev_path=*" in m.exclusions
-    assert not m.inclusions
+    _, err = capfd.readouterr()
     # should have a message to users to indicate the file does not exist
     assert "include.txt" in err
 

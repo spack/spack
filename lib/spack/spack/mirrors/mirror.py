@@ -102,11 +102,11 @@ class Mirror:
             return []
         filter_source = self._data.get(key, [])
         if isinstance(filter_source, str):
-            try:
+            if os.path.isfile(filter_source):
                 with open(filter_source, "r", encoding="utf-8") as file:
                     filters = file.read().splitlines()
                 return filters
-            except FileNotFoundError:
+            else:
                 tty.die(
                     f"{filter_source} not a valid file. "
                     "Please ensure file exists or remove from config."
