@@ -587,7 +587,7 @@ def _read_yaml(str_or_file):
         data = syaml.load_config(str_or_file)
     except syaml.SpackYAMLError as e:
         raise SpackEnvironmentConfigError(
-            f"Invalid environment configuration detected: {e.message}"
+            f"Invalid environment configuration detected: {e.message}", e.filename
         )
 
     filename = getattr(str_or_file, "name", None)
@@ -3026,3 +3026,6 @@ class SpackEnvironmentViewError(SpackEnvironmentError):
 
 class SpackEnvironmentConfigError(SpackEnvironmentError):
     """Class for Spack environment-specific configuration errors."""
+    def __init__(self, msg, filename):
+        self.filename = filename
+        super().__init__(msg)

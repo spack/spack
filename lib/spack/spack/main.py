@@ -982,11 +982,13 @@ def _main(argv=None):
     if not args.no_env:
         try:
             env = spack.cmd.find_environment(args)
-        except spack.config.ConfigFormatError as e:
+        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError) as e:
             # print the context but delay this exception so that commands like
             # `spack config edit` can still work with a bad environment.
             e.print_context()
             env_format_error = e
+        except Exception as e:
+            raise
 
     def add_environment_scope(priority):
         if env_format_error:
