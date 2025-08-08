@@ -495,9 +495,11 @@ least two other files stored as content-addressed blobs. These files include a s
 metadata file, as well as the installation directory of the package stored as
 a compressed archive file. Binary package manifest files are named to indicate
 the package name and version, as well as the hash of the concrete spec. For
-example::
+example:
 
-  gcc-runtime-12.3.0-qyu2lvgt3nxh7izxycugdbgf5gsdpkjt.spec.manifest.json
+.. code-block:: text
+
+   gcc-runtime-12.3.0-qyu2lvgt3nxh7izxycugdbgf5gsdpkjt.spec.manifest.json
 
 would contain the manifest for a binary package of ``gcc-runtime@12.3.0``.
 The ID of the built package is defined to be the DAG hash of the concrete spec
@@ -505,27 +507,29 @@ and exists in the name of the file as well. The ID distinguishes a particular
 binary package from all other binary packages with the same package name and
 version. Below is an example binary package manifest file. Such a file would
 live in the versioned spec manifests directory of a binary mirror, for example,
-``v3/manifests/spec/``::
+``v3/manifests/spec/``:
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 10731083,
-        "mediaType": "application/vnd.spack.install.v2.tar+gzip",
-        "compression": "gzip",
-        "checksumAlgorithm": "sha256",
-        "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
-      },
-      {
-        "contentLength": 1000,
-        "mediaType": "application/vnd.spack.spec.v5+json",
-        "compression": "gzip",
-        "checksumAlgorithm": "sha256",
-        "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
-      }
-    ]
-  }
+.. code-block:: json
+
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 10731083,
+         "mediaType": "application/vnd.spack.install.v2.tar+gzip",
+         "compression": "gzip",
+         "checksumAlgorithm": "sha256",
+         "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
+       },
+       {
+         "contentLength": 1000,
+         "mediaType": "application/vnd.spack.spec.v5+json",
+         "compression": "gzip",
+         "checksumAlgorithm": "sha256",
+         "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
+       }
+     ]
+   }
 
 The manifest points to both the compressed tar file as well as the compressed
 spec metadata file and contains the checksum of each. This checksum
@@ -537,33 +541,35 @@ since the binary package was pushed. Spack stores all data files (including comp
 tar files, spec metadata, indices, public keys, etc.) within a ``blobs/<hash-algorithm>/``
 directory, using the first two characters of the checksum as a subdirectory
 to reduce the number of files in a single folder. Here is a depiction of the
-organization of binary mirror contents::
+organization of binary mirror contents:
 
-  mirror_directory/
-    v3/
-      layout.json
-      manifests/
-        spec/
-          gcc-runtime/
-            gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
-          gmake/
-            gmake-4.4.1-lpr4j77rcgkg5536tmiuzwzlcjsiomph.spec.manifest.json
-          compiler-wrapper/
-            compiler-wrapper-1.0-s7ieuyievp57vwhthczhaq2ogowf3ohe.spec.manifest.json
-        index/
-          index.manifest.json
-        key/
-          75BC0528114909C076E2607418010FFAD73C9B07.key.manifest.json
-          keys.manifest.json
-    blobs/
-      sha256/
-        0f/
-          0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210
-        fb/
-          fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041
-        2a/
-          2a21836d206ccf0df780ab0be63fdf76d24501375306a35daa6683c409b7922f
-        ...
+.. code-block:: text
+
+   mirror_directory/
+     v3/
+       layout.json
+       manifests/
+         spec/
+           gcc-runtime/
+             gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
+           gmake/
+             gmake-4.4.1-lpr4j77rcgkg5536tmiuzwzlcjsiomph.spec.manifest.json
+           compiler-wrapper/
+             compiler-wrapper-1.0-s7ieuyievp57vwhthczhaq2ogowf3ohe.spec.manifest.json
+         index/
+           index.manifest.json
+         key/
+           75BC0528114909C076E2607418010FFAD73C9B07.key.manifest.json
+           keys.manifest.json
+     blobs/
+       sha256/
+         0f/
+           0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210
+         fb/
+           fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041
+         2a/
+           2a21836d206ccf0df780ab0be63fdf76d24501375306a35daa6683c409b7922f
+         ...
 
 Files within the ``manifests`` directory are organized into subdirectories by
 the type of entity they represent. Binary package manifests live in the ``spec/``
@@ -583,20 +589,22 @@ the file named with the complete checksum value.
 As mentioned above, every entity in a binary mirror (aka build cache) is stored
 as a content-addressed blob pointed to by a manifest. While an example spec
 manifest (i.e., a manifest for a binary package) is shown above, here is what
-the manifest of a build cache index looks like::
+the manifest of a build cache index looks like:
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 6411,
-        "mediaType": "application/vnd.spack.db.v8+json",
-        "compression": "none",
-        "checksumAlgorithm": "sha256",
-        "checksum": "225a3e9da24d201fdf9d8247d66217f5b3f4d0fc160db1498afd998bfd115234"
-      }
-    ]
-  }
+.. code-block:: json
+
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 6411,
+         "mediaType": "application/vnd.spack.db.v8+json",
+         "compression": "none",
+         "checksumAlgorithm": "sha256",
+         "checksum": "225a3e9da24d201fdf9d8247d66217f5b3f4d0fc160db1498afd998bfd115234"
+       }
+     ]
+   }
 
 Some things to note about this manifest are that it points to a blob that is not
 compressed (``compression: "none"``) and that the ``mediaType`` is one we have
@@ -606,35 +614,39 @@ index manifests. Once that changes, you may start to see these indices stored as
 compressed blobs.
 
 For completeness, here are examples of manifests for the other two types of entities
-you might find in a Spack build cache. First, a public key manifest::
+you might find in a Spack build cache. First, a public key manifest:
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 2472,
-        "mediaType": "application/pgp-keys",
-        "compression": "none",
-        "checksumAlgorithm": "sha256",
-        "checksum": "9fc18374aebc84deb2f27898da77d4d4410e5fb44c60c6238cb57fb36147e5c7"
-      }
-    ]
-  }
+.. code-block:: json
 
-Note the ``mediaType`` of ``application/pgp-keys``. Finally, a public key index manifest::
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 2472,
+         "mediaType": "application/pgp-keys",
+         "compression": "none",
+         "checksumAlgorithm": "sha256",
+         "checksum": "9fc18374aebc84deb2f27898da77d4d4410e5fb44c60c6238cb57fb36147e5c7"
+       }
+     ]
+   }
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 56,
-        "mediaType": "application/vnd.spack.keyindex.v1+json",
-        "compression": "none",
-        "checksumAlgorithm": "sha256",
-        "checksum": "29b3a0eb6064fd588543bc43ac7d42d708a69058dafe4be0859e3200091a9a1c"
-      }
-    ]
-  }
+Note the ``mediaType`` of ``application/pgp-keys``. Finally, a public key index manifest:
+
+.. code-block:: json
+
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 56,
+         "mediaType": "application/vnd.spack.keyindex.v1+json",
+         "compression": "none",
+         "checksumAlgorithm": "sha256",
+         "checksum": "29b3a0eb6064fd588543bc43ac7d42d708a69058dafe4be0859e3200091a9a1c"
+       }
+     ]
+   }
 
 Again, note the ``mediaType`` of ``application/vnd.spack.keyindex.v1+json``. Also, note
 that both the above manifest examples refer to uncompressed blobs; this is for the same
