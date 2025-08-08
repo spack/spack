@@ -19,11 +19,14 @@ import spack.util.path
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.llnl.util.filesystem import working_dir
 from spack.llnl.util.tty import color
 
 description = "manage package source repositories"
 section = "config"
 level = "long"
+
+git = spack.util.git.git(required=True)
 
 
 def setup_parser(subparser: argparse.ArgumentParser):
@@ -169,6 +172,22 @@ def repo_create(args):
     tty.msg("To register it with spack, run this command:", "spack repo add %s" % full_path)
 
 
+def _get_git_info(path):
+    try:
+        with working_dir(path):
+            url = git(
+                "config", "--get", "remote.origin.url", output=str, fail_on_error=False
+            ).strip()
+            if url is not None:
+                root = git("rev-parse", "--show-toplevel", output=str, fail_on_error=False).strip()
+                return url, root
+    except:
+        # Ignore the results and assume there is no git repository
+        pass
+
+    return None, None
+
+
 def _add_repo(
     path_or_repo: str,
     name: Optional[str],
@@ -190,23 +209,33 @@ def _add_repo(
     entry: Union[str, Dict[str, Any]]
     colon_idx = path_or_repo.find(":")
 
+    fetch = False
     if colon_idx > 1 and "/" not in path_or_repo[:colon_idx]:  # git URL
+        fetch = True
         entry = {"git": path_or_repo}
         if len(paths) >= 1:
             entry["paths"] = paths
         if destination:
             entry["destination"] = destination
     else:  # local path
-        if destination:
-            raise SpackError("The 'destination' argument is only valid for git repositories")
-        elif paths:
-            raise SpackError("The --paths flag is only valid for git repositories")
-        entry = spack.util.path.canonicalize_path(path_or_repo)
+        path = spack.util.path.canonicalize_path(path_or_repo)
+
+        # Determine if the path is to an existing git clone or local directory
+        url, root = _get_git_info(path)
+        if url is not None:
+            path_or_repo = path
+            entry = {"git": url, "destination": root}
+        else:
+            if destination:
+                raise SpackError("The 'destination' argument is only valid for git repositories")
+            elif paths:
+                raise SpackError("The --paths flag is only valid for git repositories")
+            entry = path
 
     descriptor = spack.repo.parse_config_descriptor(
         name or "<unnamed>", entry, lock=spack.repo.package_repository_lock()
     )
-    descriptor.initialize(git=spack.util.executable.which("git"))
+    descriptor.initialize(fetch=fetch, git=git)
 
     packages_repos = descriptor.construct(cache=spack.caches.MISC_CACHE)
 
@@ -517,8 +546,6 @@ def repo_update(args: Any) -> int:
 
             updated_entry[active_flag] = args.commit or args.tag or args.branch
             scope_repos[name] = updated_entry
-
-        git = spack.util.git.git(required=True)
 
         previous_commit = descriptor.get_commit(git=git)
         descriptor.update(git=git, remote=args.remote)
