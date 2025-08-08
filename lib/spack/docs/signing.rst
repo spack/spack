@@ -119,7 +119,7 @@ signed by the Signing Intermediate CI Private Key.
 +---------------------------------------------------------------------------------------------------------+
 | **Intermediate CI Key (GPG)**                                                                           |
 +==================================================+======================================================+
-| Root Intermediate CI Private Key (RSA 4096)#     |     Root Intermediate CI Public Key (RSA 4096)       |
+| Root Intermediate CI Private Key (RSA 4096)      |     Root Intermediate CI Public Key (RSA 4096)       |
 +--------------------------------------------------+------------------------------------------------------+
 |   Signing Intermediate CI Private Key (RSA 4096) |        Signing Intermediate CI Public Key (RSA 4096) |
 +--------------------------------------------------+------------------------------------------------------+
@@ -267,8 +267,8 @@ infrastructure.
     - Both Root private keys are protected with strong passwords
     - Who has access to these and how?
 
-**Intermediate CI Key**
------------------------
+Intermediate CI Key
+^^^^^^^^^^^^^^^^^^^
 
 Multiple intermediate CI signing keys exist, one Intermediate CI Key for jobs
 run in AWS, and one key for each affiliated institution (e.g. University of
@@ -303,8 +303,8 @@ the following way:
 6. The spec manifest is signed by the keyring and uploaded to the mirror's
    build cache.
 
-**Reputational Key**
---------------------
+Reputational Key
+^^^^^^^^^^^^^^^^
 
 Because of the increased impact to end users in the case of a private
 key breach, the Reputational Key is managed separately from the
