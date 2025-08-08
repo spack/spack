@@ -26,8 +26,6 @@ description = "manage package source repositories"
 section = "config"
 level = "long"
 
-git = spack.util.git.git(required=True)
-
 
 def setup_parser(subparser: argparse.ArgumentParser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="repo_command")
@@ -173,6 +171,13 @@ def repo_create(args):
 
 
 def _get_git_info(path):
+    git = spack.util.git.git(required=True)
+    if git is None:
+        tty.debug(
+            "Cannot determine if {path} is a git repository. Unable to instantiate a `git` executable."
+        )
+        return None, None
+
     try:
         with working_dir(path):
             url = git(
@@ -181,7 +186,7 @@ def _get_git_info(path):
             if url is not None:
                 root = git("rev-parse", "--show-toplevel", output=str, fail_on_error=False).strip()
                 return url, root
-    except:
+    except Exception:
         # Ignore the results and assume there is no git repository
         pass
 
@@ -235,7 +240,7 @@ def _add_repo(
     descriptor = spack.repo.parse_config_descriptor(
         name or "<unnamed>", entry, lock=spack.repo.package_repository_lock()
     )
-    descriptor.initialize(fetch=fetch, git=git)
+    descriptor.initialize(fetch=fetch, git=spack.util.executable.which("git"))
 
     packages_repos = descriptor.construct(cache=spack.caches.MISC_CACHE)
 
@@ -546,6 +551,8 @@ def repo_update(args: Any) -> int:
 
             updated_entry[active_flag] = args.commit or args.tag or args.branch
             scope_repos[name] = updated_entry
+
+        git = spack.util.git.git(required=True)
 
         previous_commit = descriptor.get_commit(git=git)
         descriptor.update(git=git, remote=args.remote)
