@@ -383,7 +383,7 @@ def create_opener():
         urllib.request.ProxyHandler(),
         urllib.request.UnknownHandler(),
         urllib.request.HTTPHandler(),
-        urllib.request.HTTPSHandler(context=spack.util.web.ssl_create_default_context()),
+        spack.util.web.SpackHTTPSHandler(context=spack.util.web.ssl_create_default_context()),
         spack.util.web.SpackHTTPDefaultErrorHandler(),
         urllib.request.HTTPRedirectHandler(),
         urllib.request.HTTPErrorProcessor(),
