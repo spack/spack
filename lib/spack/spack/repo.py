@@ -57,7 +57,6 @@ import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
-from spack.llnl.util.filesystem import working_dir
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
@@ -209,7 +208,7 @@ class GitExe:
         self.packages_dir = packages_path
 
     def __call__(self, *args, **kwargs) -> str:
-        with working_dir(self.packages_dir):
+        with fs.working_dir(self.packages_dir):
             return self._git_cmd(*args, **kwargs, output=str)
 
 

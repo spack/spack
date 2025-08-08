@@ -320,6 +320,38 @@ def test_add_repo_destination_with_local_path(tmp_path: pathlib.Path):
         )
 
 
+def test_add_repo_local_git_repo_path(monkeypatch):
+    """Test _add_repo succeeds when the local path is in a git repository."""
+    config = make_repo_config()
+    url = "git@github.com:user/repo.git"
+    path = "/some/path"
+    name = "local_git_test"
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        # Verify the entry has the expected git structure
+        assert "git" in entry
+        assert entry["git"] == url
+        return MockDescriptor({path: MockRepo("git_repo")})
+
+    def _git_url_root(*args, **kwargs):
+        return url, path
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+    monkeypatch.setattr(spack.util.git, "git_url_root", _git_url_root)
+
+    key = spack.cmd.repo._add_repo(
+        path, name=name, scope=None, paths=[], destination=None, config=config
+    )
+
+    assert key == name
+    repos = config.get("repos", scope=None)
+    assert name in repos
+    # Check that the git url and root were automatically populated for the
+    # (mock) local git path.
+    assert repos[name]["git"] == url
+    assert repos[name]["destination"] == path
+
+
 def test_add_repo_computed_key_already_exists(tmp_path: pathlib.Path, monkeypatch):
     """Test _add_repo raises error when computed key already exists in config."""
 

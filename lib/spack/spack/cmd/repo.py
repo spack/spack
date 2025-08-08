@@ -19,7 +19,6 @@ import spack.util.path
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
-from spack.llnl.util.filesystem import working_dir
 from spack.llnl.util.tty import color
 
 description = "manage package source repositories"
@@ -170,29 +169,6 @@ def repo_create(args):
     tty.msg("To register it with spack, run this command:", "spack repo add %s" % full_path)
 
 
-def _get_git_info(path):
-    git = spack.util.git.git(required=True)
-    if git is None:
-        tty.debug(
-            "Cannot determine if {path} is a git repository. Unable to instantiate a `git` executable."
-        )
-        return None, None
-
-    try:
-        with working_dir(path):
-            url = git(
-                "config", "--get", "remote.origin.url", output=str, fail_on_error=False
-            ).strip()
-            if url is not None:
-                root = git("rev-parse", "--show-toplevel", output=str, fail_on_error=False).strip()
-                return url, root
-    except Exception:
-        # Ignore the results and assume there is no git repository
-        pass
-
-    return None, None
-
-
 def _add_repo(
     path_or_repo: str,
     name: Optional[str],
@@ -226,7 +202,7 @@ def _add_repo(
         path = spack.util.path.canonicalize_path(path_or_repo)
 
         # Determine if the path is to an existing git clone or local directory
-        url, root = _get_git_info(path)
+        url, root = spack.util.git.git_url_root(path)
         if url is not None:
             path_or_repo = path
             entry = {"git": url, "destination": root}

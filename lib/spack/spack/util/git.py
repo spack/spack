@@ -5,12 +5,14 @@
 
 import os
 import sys
-from typing import List, Optional, overload
+from typing import List, Optional, Tuple, overload
 
 from spack.vendor.typing_extensions import Literal
 
 import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
 import spack.util.executable as exe
+from spack.llnl.util.filesystem import working_dir
 
 
 @spack.llnl.util.lang.memoized
@@ -156,3 +158,39 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
             continue
 
     return None
+
+
+def git_url_root(path: str) -> Tuple[Optional[str], Optional[str]]:
+    """Retrieve the git 'origin' URL and root directory for the path.
+
+    Args:
+      path: presumably a path within a git repository
+
+    Returns: the URL and root directory for a path in a git repository;
+        otherwise, returns None, None
+    """
+    git_exe = git(required=False)
+    if git_exe is None:
+        tty.debug(
+            f"Cannot determine if {path} is within a git repository since "
+            "unable to instantiate a `git` executable so assuming not."
+        )
+        return None, None
+
+    try:
+        with working_dir(path):
+            url = git_exe(
+                "config", "--get", "remote.origin.url", output=str, fail_on_error=False
+            ).strip()
+            if url is not None and url:
+                root = git_exe(
+                    "rev-parse", "--show-toplevel", output=str, fail_on_error=False
+                ).strip()
+                return url, root
+    except Exception as e:
+        tty.debug(
+            f"Cannot determine the git URL and or root for {path}: {e}."
+            " Assuming not within a git repository."
+        )
+
+    return None, None

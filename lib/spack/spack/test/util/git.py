@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import pathlib
 from typing import Optional
 
@@ -11,10 +12,11 @@ import spack.util.git
 from spack.llnl.util.filesystem import working_dir
 
 
-def test_git_not_found(monkeypatch):
-    def _mock_find_git() -> Optional[str]:
-        return None
+def _mock_find_git() -> Optional[str]:
+    return None
 
+
+def test_git_not_found(monkeypatch):
     monkeypatch.setattr(spack.util.git, "_find_git", _mock_find_git)
 
     git = spack.util.git.git(required=False)
@@ -22,6 +24,9 @@ def test_git_not_found(monkeypatch):
 
     with pytest.raises(exe.CommandNotFoundError):
         spack.util.git.git(required=True)
+
+    url, root = spack.util.git.git_url_root("/path/is/irrelevant")
+    assert url is None and root is None
 
 
 def test_modified_files(mock_git_package_changes):
@@ -80,3 +85,21 @@ def test_pull_checkout_branch(git, tmp_path: pathlib.Path, mock_git_version_info
 
         with pytest.raises(exe.ProcessError):
             spack.util.git.pull_checkout_branch("main")
+
+
+def test_not_git_repo(tmp_path: pathlib.Path):
+    url, root = spack.util.git.git_url_root(str(tmp_path))
+    assert url is None and root is None
+
+
+def test_git_url_root(monkeypatch):
+    repo_path = os.path.dirname(os.path.abspath(__file__))
+
+    # Ensure both the url and root have values.
+    url, root = spack.util.git.git_url_root(repo_path)
+    assert url is not None and root is not None
+
+    # Ensure missing git returns no url or root
+    monkeypatch.setattr(spack.util.git, "_find_git", _mock_find_git)
+    url, root = spack.util.git.git_url_root(repo_path)
+    assert url is None and root is None
