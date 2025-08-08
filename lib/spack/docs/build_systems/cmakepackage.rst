@@ -165,13 +165,13 @@ The following default arguments are controlled by Spack:
 
 
 ``CMAKE_INSTALL_PREFIX``
-------------------------
+""""""""""""""""""""""""
 
 Is set to the package's install directory.
 
 
 ``CMAKE_PREFIX_PATH``
----------------------
+"""""""""""""""""""""
 
 CMake finds dependencies through calls to ``find_package()``, ``find_program()``,
 ``find_library()``, ``find_file()``, and ``find_path()``, which use a list of search
@@ -182,7 +182,7 @@ For troubleshooting cases where CMake fails to find a dependency, add the
 ``--debug-find`` flag to ``cmake_args``.
 
 ``CMAKE_BUILD_TYPE``
---------------------
+""""""""""""""""""""
 
 Every CMake-based package accepts a ``-DCMAKE_BUILD_TYPE`` flag to
 dictate which level of optimization to use. In order to ensure
@@ -212,7 +212,7 @@ https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
 
 
 ``CMAKE_INSTALL_RPATH`` and ``CMAKE_INSTALL_RPATH_USE_LINK_PATH=ON``
---------------------------------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 CMake uses different RPATHs during the build and after installation, so that executables
 can locate the libraries they're linked to during the build, and installed executables
