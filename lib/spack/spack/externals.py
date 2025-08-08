@@ -1,7 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 import uuid
+import warnings
 from typing import Any, Callable, Dict, List, NamedTuple, Union
 
 from spack.vendor.typing_extensions import TypedDict
@@ -28,6 +30,7 @@ class ExternalDict(TypedDict, total=False):
     extra_attributes: Dict[str, Any]
     external_id: str
     dependencies: List[DependencyDict]
+    required_target: str
 
 
 def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
@@ -40,6 +43,8 @@ def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
         external_modules=external_dict.get("modules"),
     )
     result.extra_attributes = extra_attributes
+    if "required_target" in external_dict:
+        result.constrain(f"target={external_dict['required_target']}")
     return result
 
 
@@ -60,9 +65,44 @@ def complete_architecture(node: spack.spec.Spec) -> None:
 def extract_dicts_from_configuration(packages_yaml) -> List[ExternalDict]:
     """Extracts external specs from a configuration dictionary."""
     result = []
+    default_required_target = ""
+    if "all" in packages_yaml:
+        default_required_target = _required_target(packages_yaml["all"])
+
     for name, entry in packages_yaml.items():
-        result.extend([current for current in entry.get("externals", [])])
+        pkg_required_target = _required_target(entry) or default_required_target
+        partial_result = [current for current in entry.get("externals", [])]
+        if pkg_required_target:
+            for partial in partial_result:
+                partial["required_target"] = pkg_required_target
+        result.extend(partial_result)
     return result
+
+
+_TARGET_RE = re.compile(r"target=(\S+)")
+
+
+def _required_target(entry) -> str:
+    if "require" not in entry:
+        return ""
+
+    requirements = entry["require"]
+    if not isinstance(requirements, list):
+        requirements = [requirements]
+
+    results = []
+    for requirement in requirements:
+        if not isinstance(requirement, str):
+            continue
+
+        matches = _TARGET_RE.match(requirement)
+        if matches:
+            results.append(matches.group(1))
+
+    if len(results) == 1:
+        return results[0]
+
+    return ""
 
 
 class ExternalSpecAndConfig(NamedTuple):
@@ -101,7 +141,15 @@ class ExternalSpecsParser:
 
     def _parse(self) -> None:
         for external_dict in self.external_dicts:
-            node = node_from_dict(external_dict)
+            try:
+                node = node_from_dict(external_dict)
+            except spack.spec.UnsatisfiableArchitectureSpecError:
+                warnings.warn(
+                    f"cannot constrain external spec {external_dict['spec']}"
+                    f" with target {external_dict['required_target']}"
+                )
+                continue
+
             package_exists = spack.repo.PATH.exists(node.name)
 
             # If we allow non-existing packages, just continue

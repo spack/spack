@@ -11,6 +11,7 @@ import spack.error
 import spack.installer
 import spack.package_base
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.solver.asp
 import spack.spec
@@ -1522,3 +1523,29 @@ packages:
     for node in mpileaks.traverse():
         assert node.satisfies(f"%[when=%c]c={current_preference}")
         assert node.satisfies(f"%[when=%cxx]cxx={current_preference}")
+
+
+def test_external_spec_completion_with_targets_required(
+    concretize_scope, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that we can concretize a spec needing externals, when we require a specific target,
+    without extra configuration.
+    """
+    current_platform = spack.platforms.host()
+    packages_yaml = f"""
+    packages:
+      all:
+        require:
+        - target={current_platform.default}
+      mpich:
+        buildable: false
+        externals:
+        - spec: "mpich@4.3.0"
+          prefix: {tmp_path / "mpich"}
+    """
+    update_packages_config(packages_yaml)
+
+    s = spack.spec.Spec("mpileaks")
+    concrete = spack.concretize.concretize_one(s)
+
+    assert concrete.satisfies(f"target={current_platform.default}")
