@@ -6,13 +6,13 @@ import argparse
 import errno
 import glob
 import os
+from typing import Optional, Union
 
 import spack.cmd
 import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.util.editor
-from typing import Optional, Union
 
 description = "open package files in $EDITOR"
 section = "packaging"
@@ -98,16 +98,17 @@ def locate_build_system(name: str, repo: Optional[spack.repo.Repo]) -> str:
         namespace, name = name.rsplit(".", 1)
 
     # If given a namespace and a repo, they better match
-    # If not given a repo, use the namespace
-    # If repo and no namespace, just use the first one available
     if namespace and repo:
         if repo.namespace != namespace:
             msg = f"{namespace}.{name}: namespace conflicts with repo '{repo.namespace}'"
             msg += " specified from --repo or --namespace argument"
             raise ValueError(msg)
-    elif namespace:
+
+    if namespace:
         repo = spack.repo.PATH.get_repo(namespace)
-    elif not repo:
+
+    # If not given a namespace, use the default
+    if not repo:
         repo = spack.repo.PATH.first_repo()
 
     return locate_file(name, repo.build_systems_path)
