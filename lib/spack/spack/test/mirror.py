@@ -457,7 +457,7 @@ def test_mirror_parse_exin_clude():
     assert "+foo" in m.inclusions
 
 
-def test_mirror_parses_exin_clude_as_file(capsys, tmp_path: pathlib.Path):
+def test_mirror_parses_exin_clude_as_file(capfd, tmp_path: pathlib.Path):
     exclude_file = tmp_path / "filters" / "exclude.txt"
     exclude_file.parent.mkdir(parents=True)
     exclude_file.write_text(
@@ -471,8 +471,9 @@ dev_path=*
         "exclude": str(exclude_file),
         "include": str(exclude_file.parent / "include.txt"),
     }
-    m = spack.mirrors.mirror.Mirror(mirror_raw)
-    _, err = capsys.readouterr()
+    with pytest.raises(SystemExit):
+        m = spack.mirrors.mirror.Mirror(mirror_raw)
+    _, err = capfd.readouterr()
     assert "dev_path=*" in m.exclusions
     assert not m.inclusions
     # should have a message to users to indicate the file does not exist

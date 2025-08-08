@@ -107,10 +107,10 @@ class Mirror:
                     filters = file.read().splitlines()
                 return filters
             except FileNotFoundError:
-                tty.warn(
-                    f"{key}: {filter_source} not a valid file. No mirror filter will be applied"
+                tty.die(
+                    f"{filter_source} not a valid file. "
+                    "Please ensure file exists or remove from config."
                 )
-                return []
         else:
             return filter_source
 
