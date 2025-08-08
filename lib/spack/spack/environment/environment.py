@@ -3026,6 +3026,7 @@ class SpackEnvironmentViewError(SpackEnvironmentError):
 
 class SpackEnvironmentConfigError(SpackEnvironmentError):
     """Class for Spack environment-specific configuration errors."""
+
     def __init__(self, msg, filename):
         self.filename = filename
         super().__init__(msg)

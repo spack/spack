@@ -987,8 +987,6 @@ def _main(argv=None):
             # `spack config edit` can still work with a bad environment.
             e.print_context()
             env_format_error = e
-        except Exception as e:
-            raise
 
     def add_environment_scope(priority):
         if env_format_error:
