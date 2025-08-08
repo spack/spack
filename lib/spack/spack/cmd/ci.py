@@ -144,6 +144,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "should specifiy a name that can safely be used for artifacts within your project "
         "directory.",
     )
+    generate.add_argument(
+        "--forward-variable",
+        action="append",
+        help="Environment variables to forward from the generate environment "
+        "to the generated jobs.",
+    )
     generate.set_defaults(func=ci_generate)
 
     spack.cmd.common.arguments.add_concretizer_args(generate)

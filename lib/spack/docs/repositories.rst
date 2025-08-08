@@ -314,9 +314,9 @@ Packages differing only by namespace will have different hashes:
 
 All Spack commands that take a package :ref:`spec <sec-specs>` also accept a fully qualified spec with a namespace, allowing you to be specific:
 
-.. code-block:: console
+.. code-block:: spec
 
-  spack uninstall llnl.comp.mpich
+  $ spack uninstall llnl.comp.mpich
 
 -------------------------------------
 Search Order and Overriding Packages
@@ -335,15 +335,16 @@ Suppose your effective (merged) ``repos.yaml`` implies the following order:
 3.  ``builtin`` (Spack's default packages from `spack/spack-packages`)
 
 And the packages are:
-  +--------------+------------------------------------------------+-----------------------------+
-  | Namespace    | Source                                         | Packages                    |
-  +==============+================================================+=============================+
-  | ``proto``    | ``~/my_spack_repos/spack_repo/proto_repo``     | ``mpich``                   |
-  +--------------+------------------------------------------------+-----------------------------+
-  | ``llnl``     | ``/usr/local/repos/spack_repo/llnl_repo``      | ``hdf5``                    |
-  +--------------+------------------------------------------------+-----------------------------+
-  | ``builtin``  | `spack/spack-packages` (Git)                   | ``mpich``, ``hdf5``, others |
-  +--------------+------------------------------------------------+-----------------------------+
+
++--------------+------------------------------------------------+-----------------------------+
+| Namespace    | Source                                         | Packages                    |
++==============+================================================+=============================+
+| ``proto``    | ``~/my_spack_repos/spack_repo/proto_repo``     | ``mpich``                   |
++--------------+------------------------------------------------+-----------------------------+
+| ``llnl``     | ``/usr/local/repos/spack_repo/llnl_repo``      | ``hdf5``                    |
++--------------+------------------------------------------------+-----------------------------+
+| ``builtin``  | `spack/spack-packages` (Git)                   | ``mpich``, ``hdf5``, others |
++--------------+------------------------------------------------+-----------------------------+
 
 If ``hdf5`` depends on ``mpich``:
 
@@ -358,7 +359,7 @@ You can force a particular repository's package using a fully qualified name:
 
 To see which repositories will be used for a build *before* installing, use ``spack spec -N``:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack spec -N hdf5
    llnl.hdf5@1.10.0

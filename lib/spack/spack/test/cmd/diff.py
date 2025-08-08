@@ -12,6 +12,7 @@ import spack.main
 import spack.paths
 import spack.repo
 import spack.util.spack_json as sjson
+import spack.version
 
 install_cmd = spack.main.SpackCommand("install")
 diff_cmd = spack.main.SpackCommand("diff")
@@ -97,6 +98,18 @@ def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
     assert ["hash", "mpileaks %s" % specB.dag_hash()] in c["b_not_a"]
 
 
+def test_diff_runtimes(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test that we can install two packages and diff them"""
+
+    specA = spack.concretize.concretize_one("mpileaks")
+    specB = specA.copy()
+    specB["gcc-runtime"].versions = spack.version.VersionList([spack.version.Version("0.0.0")])
+
+    # Specs should be the same as themselves
+    c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
+    assert ["version", "gcc-runtime 0.0.0"] in c["b_not_a"]
+
+
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
     install_cmd("--fake", "mpileaks")
@@ -127,8 +140,9 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
         ["node", dep] in result["intersect"]
         for dep in ("mpileaks", "callpath", "dyninst", "libelf", "libdwarf", "mpich")
     )
+
     assert all(
-        len([diff for diff in result["intersect"] if diff[0] == attr]) == 8
+        len([diff for diff in result["intersect"] if diff[0] == attr]) == 9
         for attr in (
             "version",
             "node_target",

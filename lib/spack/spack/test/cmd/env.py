@@ -4591,3 +4591,15 @@ def test_env_view_ignores_different_file_conflicts(
         prefix_dependent = e.matching_spec("view-ignore-conflict").prefix
     # The dependent's file is linked into the view
     assert readlink(tmp_path / "view" / "bin" / "x") == prefix_dependent.bin.x
+
+
+@pytest.mark.regression("51054")
+def test_non_str_repos(installed_environment):
+    with installed_environment(
+        """\
+spack:
+  repos:
+    builtin:
+      branch: develop"""
+    ):
+        pass

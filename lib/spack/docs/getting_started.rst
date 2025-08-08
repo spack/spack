@@ -49,13 +49,13 @@ List packages you can install
 
 Once Spack is ready you can list all the packages it knows about with the following command:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack list
 
 If you want to get more information on a specific package, for instance ``hdf5``, you can use:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack info hdf5
 
@@ -65,7 +65,6 @@ As you can see it's quite simple to gather basic information on packages, before
 
 .. admonition:: Slowdown on the very first command
    :class: warning
-   :collapsible:
 
    The very first command run with Spack will take a while to finish, as Spack has to build a few caches to speed up subsequent command execution.
 
@@ -97,7 +96,7 @@ If no compilers were found, you need either to:
 
 Once a compiler is available you can proceed installing your first package:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install tcl
 
@@ -172,7 +171,7 @@ This works, but using such a long absolute path is not the most convenient way t
 
 The simplest way to have ``tclsh`` available on the command line is:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack load tcl
 
@@ -184,7 +183,7 @@ The environment of the current shell has now been modified, and you can run:
 
 directly. To undo these modifications, you can:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack unload tcl
 

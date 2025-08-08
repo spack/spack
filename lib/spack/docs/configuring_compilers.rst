@@ -29,7 +29,7 @@ For convenience, Spack will automatically detect compilers as externals the firs
 
 You can see which compilers are available to Spack by running ``spack compiler list``:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack compiler list
    ==> Available compilers
@@ -284,12 +284,12 @@ Build Your Own Compiler
 If you require a specific compiler and version, you can have Spack build it for you.
 For example:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install gcc@14+binutils
 
 Once the compiler is installed, you can start using it without additional configuration:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install hdf5~mpi %gcc@14

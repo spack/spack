@@ -260,8 +260,8 @@ Controls whether Spack embeds ``RPATH`` or ``RUNPATH`` attributes in ELF binarie
 so that they can find their dependencies. This has no effect on macOS.
 Two options are allowed:
 
- 1. ``rpath`` uses ``RPATH`` and forces the ``--disable-new-tags`` flag to be passed to the linker.
- 2. ``runpath`` uses ``RUNPATH`` and forces the ``--enable-new-tags`` flag to be passed to the linker.
+1. ``rpath`` uses ``RPATH`` and forces the ``--disable-new-tags`` flag to be passed to the linker.
+2. ``runpath`` uses ``RUNPATH`` and forces the ``--enable-new-tags`` flag to be passed to the linker.
 
 ``RPATH`` search paths have higher precedence than ``LD_LIBRARY_PATH``,
 and ``ld.so`` will search for libraries in transitive RPATHs of

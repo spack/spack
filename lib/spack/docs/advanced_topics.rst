@@ -56,9 +56,9 @@ If we had to enforce compilers directly, we would need 3 matrices, since:
 Different toolchains could be used independently or even in the same spec.
 If we had a toolchain named ``gcc_all`` that enforces using ``gcc`` for C, C++ and Fortran, we could write:
 
-.. code-block::
+.. code-block:: spec
 
-   spack install hdf5+fortran%llvm_gfortran ^mpich %gcc_all
+   $ spack install hdf5+fortran%llvm_gfortran ^mpich %gcc_all
 
 to install:
 
@@ -179,10 +179,10 @@ administrator to enable ``flock`` for your filesystem.
 
 If none of those work, you can disable locking in one of two ways:
 
-  1. Run Spack with the ``-L`` or ``--disable-locks`` option to disable
-     locks on a call-by-call basis.
-  2. Edit :ref:`config.yaml <config-yaml>` and set the ``locks`` option
-     to ``false`` to always disable locking.
+1. Run Spack with the ``-L`` or ``--disable-locks`` option to disable
+   locks on a call-by-call basis.
+2. Edit :ref:`config.yaml <config-yaml>` and set the ``locks`` option
+   to ``false`` to always disable locking.
 
 .. warning::
 

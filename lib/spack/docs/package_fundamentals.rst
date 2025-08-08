@@ -40,7 +40,7 @@ You can search for available packages on the `packages.spack.io <https://package
 The ``spack list`` command prints out a list of all of the packages Spack
 can install:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack list
 
@@ -52,7 +52,7 @@ A pattern can be used to narrow the list, and the following rules apply:
 
 To search for all packages whose names contain the word ``sql`` you can run the following command:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack list sql
 
@@ -60,7 +60,7 @@ A few options are also provided for more specific searches.
 For instance, it is possible to search the description of packages for a match.
 A way to list all the packages whose names or descriptions contain the word ``quantum`` is the following:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack list -d quantum
 
@@ -75,7 +75,7 @@ To get more information about a particular package from `spack list`, use
 `spack info`.  Just supply the name of a package:
 
 .. command-output:: spack info mpich
-   :language: console
+   :language: spec
 
 Most of the information is self-explanatory.
 The *safe versions* are versions for which Spack knows the checksum.
@@ -94,7 +94,7 @@ To see *more* available versions of a package, run ``spack versions``.
 For example:
 
 .. command-output:: spack versions libelf
-   :language: console
+   :language: spec
 
 There are two sections in the output.  *Safe versions* are versions
 for which Spack has a checksum on file.  It can verify that these
@@ -116,10 +116,12 @@ You can see what packages provide a particular virtual package using ``spack pro
 If you wanted to see what packages provide ``mpi``, you would just run:
 
 .. command-output:: spack providers mpi
+   :language: spec
 
 And if you *only* wanted to see packages that provide MPI-2, you would add a version specifier to the spec:
 
 .. command-output:: spack providers mpi@2
+   :language: spec
 
 Notice that the package versions that provide insufficient MPI versions are now filtered out.
 
@@ -137,7 +139,7 @@ Installing and Uninstalling
 For example, to install the latest version of the ``mpileaks``
 package, you might type this:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install mpileaks
 
@@ -148,7 +150,7 @@ installs it in its own directory under ``$SPACK_ROOT/opt``. You'll see
 a number of messages from Spack, a lot of build output, and a message
 that the package is installed.
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install mpileaks
    ... dependency build output ...
@@ -173,7 +175,7 @@ Building a specific version
 Spack can also build *specific versions* of a package. To do this,
 just add ``@`` after the package name, followed by a version:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install mpich@3.0.4
 
@@ -207,7 +209,7 @@ you update Spack frequently.
 In case you want the latest versions and configurations to be installed instead,
 you can add the ``--fresh`` option:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install --fresh mpich
 
@@ -234,7 +236,7 @@ To uninstall a package, run ``spack uninstall <package>``. This will ask
 the user for confirmation before completely removing the directory
 in which the package was installed.
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack uninstall mpich
 
@@ -244,7 +246,7 @@ uninstalled, Spack will refuse to uninstall it.
 To uninstall a package and every package that depends on it, you may give the
 ``--dependents`` option.
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack uninstall --dependents mpich
 
@@ -253,7 +255,7 @@ confirmation, will uninstall them in the correct order.
 
 A command like
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack uninstall mpich
 
@@ -266,7 +268,7 @@ matching packages.
 
 You may force uninstall a package with the ``--force`` option
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack uninstall --force mpich
 
@@ -329,7 +331,7 @@ can be marked manually as explicitly or implicitly installed by using
 ``spack mark``. This can be used in combination with ``spack gc`` to clean up
 packages that are no longer required.
 
-.. code-block:: console
+.. code-block:: spec
 
   $ spack install m4
   ==> 29005: Installing libsigsegv
@@ -386,7 +388,7 @@ installed before updating Spack. If there is no new version for either of the
 packages, ``spack install`` will simply mark them as explicitly installed, and
 ``spack gc`` will not remove them.
 
-.. code-block:: console
+.. code-block:: spec
 
   $ spack install m4
   ==> 62843: Installing libsigsegv
@@ -481,7 +483,7 @@ of the same package with different specs.
 
 Running ``spack find`` with no arguments lists installed packages:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack find
    ==> 74 installed packages.
@@ -539,7 +541,7 @@ installations of ``libdwarf@20130729`` above. We can look at them
 in more detail using ``spack find --deps`` and by asking only to show
 ``libdwarf`` packages:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack find --deps libdwarf
    ==> 2 installed packages.
@@ -555,7 +557,7 @@ become complicated for packages with many dependencies. If you just
 want to know whether two packages' dependencies differ, you can use
 ``spack find --long``:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack find --long libdwarf
    ==> 2 installed packages.
@@ -569,7 +571,7 @@ are the same, then the packages have the same dependency configuration.
 If you want to know the path where each package is installed, you can
 use ``spack find --paths``:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack find --paths
    ==> 74 installed packages.
@@ -586,7 +588,7 @@ use ``spack find --paths``:
 You can restrict your search to a particular package by supplying its
 name:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack find --paths libelf
    -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
@@ -603,7 +605,7 @@ Spec queries
 package. If you want to find only libelf versions greater than version
 0.8.12, you could say:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack find libelf@0.8.12:
    -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
@@ -612,7 +614,7 @@ package. If you want to find only libelf versions greater than version
 Finding just the versions of libdwarf built with a particular version
 of libelf would look like this:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack find --long libdwarf ^libelf@0.8.12
    ==> 1 installed packages.
@@ -665,7 +667,7 @@ Alternatively, if you want something even more machine readable, you can
 output each spec as JSON records using ``spack find --json``. This will
 output metadata on specs and all dependencies as JSON:
 
-.. code-block:: console
+.. code-block:: spec
 
     $ spack find --json sqlite@3.28.0
     [
@@ -737,14 +739,14 @@ It's often the case that you have two versions of a spec that you need to
 disambiguate. Let's say that we've installed two variants of zlib, one with
 and one without the optimize variant:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install zlib
    $ spack install zlib -optimize
 
 When we do ``spack find``, we see the two versions.
 
-.. code-block:: console
+.. code-block:: spec
 
     $ spack find zlib
     ==> 2 installed packages
@@ -755,7 +757,7 @@ When we do ``spack find``, we see the two versions.
 Let's say we want to uninstall ``zlib``.
 We run the command and quickly encounter a problem because two versions are installed.
 
-.. code-block:: console
+.. code-block:: spec
 
     $ spack uninstall zlib
     ==> Error: zlib matches multiple packages:
@@ -775,10 +777,9 @@ between properties for two packages. Let's try it out.
 Because the only difference we see in the ``spack find`` view is the hash, let's use
 ``spack diff`` to look for more detail. We will provide the two hashes:
 
-.. code-block:: console
+.. code-block:: diff
 
     $ spack diff /efzjziy /sl7m27m
-    ==> Warning: This interface is subject to change.
 
     --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
     +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
@@ -791,15 +792,13 @@ The output is colored and written in the style of a git diff. This means that yo
 can copy and paste it into a GitHub markdown as a code block with language "diff"
 and it will render nicely! Here is an example:
 
-.. code-block:: md
+.. code-block:: diff
 
-    ```diff
     --- zlib@1.2.11/efzjziyc3dmb5h5u5azsthgbgog5mj7g
     +++ zlib@1.2.11/sl7m27mzkbejtkrajigj3a3m37ygv4u2
     @@ variant_value @@
     -  zlib optimize False
     +  zlib optimize True
-    ```
 
 Awesome! Now let's read the diff. It tells us that our first zlib was built with ``~optimize``
 (``False``) and the second was built with ``+optimize`` (``True``). You can't see it in the docs
@@ -811,31 +810,29 @@ installation spec. Running ``spack diff A B`` means we'll see which spec attribu
 ``B`` but not on ``A`` (green) and which are on ``A`` but not on ``B`` (red). Here is another
 example with an additional difference type, ``version``:
 
-.. code-block:: console
+.. code-block:: diff
 
-    $ spack diff python@2.7.8 python@3.8.11
-    ==> Warning: This interface is subject to change.
+   $ spack diff python@2.7.8 python@3.8.11
 
-    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
-    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
-    @@ variant_value @@
-    -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
-    +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
-    @@ version @@
-    -  openssl 1.0.2u
-    +  openssl 1.1.1k
-    -  python 2.7.8
-    +  python 3.8.11
+   --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
+   +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
+   @@ variant_value @@
+   -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
+   +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
+   @@ version @@
+   -  openssl 1.0.2u
+   +  openssl 1.1.1k
+   -  python 2.7.8
+   +  python 3.8.11
 
 Let's say that we were only interested in one kind of attribute above, ``version``.
 We can ask the command to only output this attribute. To do this, you'd add
 the ``--attribute`` for attribute parameter, which defaults to all. Here is how you
 would filter to show just versions:
 
-.. code-block:: console
+.. code-block:: diff
 
     $ spack diff --attribute version python@2.7.8 python@3.8.11
-    ==> Warning: This interface is subject to change.
 
     --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
     +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
@@ -850,7 +847,7 @@ And you can add as many attributes as you'd like with multiple `--attribute` arg
 data as JSON (and possibly pipe into an output file), just add ``--json``:
 
 
-.. code-block:: console
+.. code-block:: spec
 
     $ spack diff --json python@2.7.8 python@3.8.11
 
@@ -884,7 +881,7 @@ If you sourced the appropriate shell script, as shown in :ref:`getting_started`,
 For example, this will add the ``mpich`` package built with ``gcc`` to
 your path:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install mpich %gcc@4.4.7
 
@@ -901,7 +898,7 @@ modules configuration.
 When you no longer want to use a package, you can type unload or
 unuse similarly:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack unload mpich %gcc@4.4.7
 
@@ -913,7 +910,7 @@ Ambiguous specs
 If a spec used with load/unload is ambiguous (i.e., more than one
 installed package matches it), then Spack will warn you:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack load libelf
    ==> Error: libelf matches multiple packages.
@@ -928,7 +925,7 @@ identify one package. For example, above, the key differentiator is
 that one ``libelf`` is built with the Intel compiler, while the other
 used ``gcc``. You could therefore just type:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack load libelf %intel
 
@@ -936,7 +933,7 @@ To identify just the one built with the Intel compiler. If you want to be
 *very* specific, you can load it by its hash. For example, to load the
 first ``libelf`` above, you would run:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack load /qmm4kso
 
@@ -968,7 +965,7 @@ Spack can install a large number of Python packages. Their names are
 typically prefixed with ``py-``. Installing and using them is no
 different from any other package:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install py-numpy
    $ spack load py-numpy
@@ -995,7 +992,7 @@ a Spack environment with ``numpy`` in the current working directory. It also
 puts a filesystem view in ``./view``, which is a more traditional combined
 prefix for all packages in the environment.
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack env create --with-view view --dir .
    $ spack -e . add py-numpy

@@ -373,6 +373,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.prune_unaffected = args.prune_unaffected
     options.prune_external = args.prune_externals
     options.check_index_only = args.index_only
+    options.forward_variables = args.forward_variable or []
 
     ci_config = cfg.get("ci")
 

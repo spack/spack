@@ -33,20 +33,20 @@ If you already have a Spack environment installed on your system, you can
 share the binaries as an OCI-compatible container image. To get started, you
 just have to configure an OCI registry and run ``spack buildcache push``.
 
-.. code-block:: console
+.. code-block:: spec
 
    # Create and install an environment in the current directory
-   spack env create -d .
-   spack -e . add pkg-a pkg-b
-   spack -e . install
+   $ spack env create -d .
+   $ spack -e . add pkg-a pkg-b
+   $ spack -e . install
 
    # Configure the registry
-   spack -e . mirror add --oci-username-variable REGISTRY_USER \
+   $ spack -e . mirror add --oci-username-variable REGISTRY_USER \
                          --oci-password-variable REGISTRY_TOKEN \
                         container-registry oci://example.com/name/image
 
    # Push the image (do set REGISTRY_USER and REGISTRY_TOKEN)
-   spack -e . buildcache push --update-index --base-image ubuntu:22.04 --tag my_env container-registry
+   $ spack -e . buildcache push --update-index --base-image ubuntu:22.04 --tag my_env container-registry
 
 The resulting container image can then be run as follows:
 

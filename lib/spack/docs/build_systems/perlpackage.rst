@@ -223,22 +223,22 @@ which results in the package having the ``use_modules`` property containing:
 If the list is somehow wrong, you can provide the names of the modules
 yourself by overriding ``use_modules`` like so:
 
- .. code-block:: python
+.. code-block:: python
 
-    use_modules = ["bigfloat", "bigrat", "bigint", "bignum"]
+   use_modules = ["bigfloat", "bigrat", "bigint", "bignum"]
 
 If you only want a subset of the automatically detected modules to be
 tested, you could instead define the ``skip_modules`` property on the
 package. So, instead of overriding ``use_modules`` as shown above, you
 could define the following:
 
- .. code-block:: python
+.. code-block:: python
 
-    skip_modules = [
-        "Math::BigFloat::Trace",
-        "Math::BigInt::Trace",
-        "Math::BigRat::Trace",
-    ]
+   skip_modules = [
+       "Math::BigFloat::Trace",
+       "Math::BigInt::Trace",
+       "Math::BigRat::Trace",
+   ]
 
 for the same use tests.
 

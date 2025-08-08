@@ -402,6 +402,7 @@ class PipelineOptions:
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
         self.cdash_handler = cdash_handler
+        self.forward_variables: List[str] = []
 
 
 class PipelineNode:
@@ -542,7 +543,6 @@ class SpackCIConfig:
             job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
             job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
             job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
-
         return job_object
 
     def __is_named(self, section):

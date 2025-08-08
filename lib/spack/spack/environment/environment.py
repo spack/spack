@@ -441,6 +441,9 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
         if not repos_specs:
             return
         for name, entry in list(repos_specs.items()):
+            # only rewrite when we have a path-based repository
+            if not isinstance(entry, str):
+                continue
             repo_path = substitute_path_variables(entry)
             expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
 
