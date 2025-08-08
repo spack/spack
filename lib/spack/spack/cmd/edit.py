@@ -111,6 +111,7 @@ def locate_build_system(name: str, repo: Optional[spack.repo.Repo]) -> str:
     if not repo:
         repo = spack.repo.PATH.first_repo()
 
+    assert repo
     return locate_file(name, repo.build_systems_path)
 
 
