@@ -120,16 +120,6 @@ what it looks like:
 Once this is done, you can tar up the ``spack-mirror-2014-06-24`` directory and
 copy it over to the machine you want it hosted on.
 
-Customization of the mirror contents can be done by selectively excluding
-specs using the ``--exclude-file`` or ``--exclude-specs`` flags with
-``spack mirror create``.  Note that these only apply to source mirrors.
-
-You may additionally add an ``exclude`` or ``include``
-section to the ``mirrors`` configuration section for pushing to binary mirrors.
-These are lists of abstract or concrete specs to configure what gets pushed to your mirror.
-If overlapping inclusion and exclusions are applied then inclusion is preferred.
-
-
 ^^^^^^^^^^^^^^^^^^^
 Custom package sets
 ^^^^^^^^^^^^^^^^^^^
@@ -146,6 +136,18 @@ command:
 
 Will create a mirror for libelf versions greater than or equal to
 0.8.12 and boost versions greater than or equal to 1.44.
+
+Further customization of the mirror contents can be done by selectively excluding
+specs using the ``--exclude-file`` or ``--exclude-specs`` flags with
+``spack mirror create``.
+
+Note that these only apply to source mirrors when using ``spack mirror create``. 
+This is because ``spack mirror create`` only generates source mirrors.
+
+The ``--exclude-file`` and ``--exclude-specs`` flags may also be used with ``spack mirror [create | add]``. These will populate an ``exclude`` section in the mirrors configuration.
+These are lists of abstract or concrete specs to configure what gets pushed to your mirror.
+There are corresponding options, and a corresponding config for ``include``'s.
+If overlapping inclusion and exclusions are applied the inclusion is preferred.
 
 ^^^^^^^^^^^^
 Mirror files

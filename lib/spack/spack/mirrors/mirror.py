@@ -103,7 +103,7 @@ class Mirror:
         filter_source = self._data.get(key, [])
         if isinstance(filter_source, str):
             try:
-                with open(filter_source, "r") as file:
+                with open(filter_source, "r", encoding="utf-8") as file:
                     filters = file.read().splitlines()
                 return filters
             except FileNotFoundError:
