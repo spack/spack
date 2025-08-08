@@ -438,7 +438,7 @@ def test_git_sparse_paths_partial_clone(
 
 @pytest.mark.regression("50699")
 def test_git_sparse_path_have_unique_mirror_projections(
-    git, mock_git_repository, mutable_mock_repo, monkeypatch
+    git, mock_git_repository, mutable_mock_repo, monkeypatch, mutable_config
 ):
     """
     Confirm two packages with different sparse paths but the same git commit
