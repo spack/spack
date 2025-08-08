@@ -6,7 +6,6 @@
    :description lang=en:
       Find answers to common questions about Spack, covering topics like version and variant selection, package preferences, and concretizer behavior.
 
-==========================
 Frequently Asked Questions
 ==========================
 
@@ -19,7 +18,6 @@ contributing to this page.
 
 .. _faq-concretizer-precedence:
 
------------------------------------------------------
 Why does Spack pick particular versions and variants?
 -----------------------------------------------------
 

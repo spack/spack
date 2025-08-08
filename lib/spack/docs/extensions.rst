@@ -6,7 +6,6 @@
    :description lang=en:
       Discover how to extend Spack's core functionality by creating custom commands and plugins.
 
-=================
 Custom Extensions
 =================
 
@@ -47,7 +46,6 @@ The code for this example extension can be obtained by cloning the corresponding
 
    $ git -C /tmp clone https://github.com/spack/spack-scripting.git
 
----------------------------------
 Configure Spack to Use Extensions
 ---------------------------------
 
@@ -113,7 +111,6 @@ The corresponding unit tests can be run giving the appropriate options to ``spac
    (5 durations < 0.005s hidden.  Use -vv to show these durations.)
    =========================================== 5 passed in 5.06s ============================================
 
----------------------------------------
 Registering Extensions via Entry Points
 ---------------------------------------
 

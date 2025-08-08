@@ -8,7 +8,6 @@
 
 .. _compiler-config:
 
-=====================
 Configuring Compilers
 =====================
 
@@ -23,7 +22,6 @@ For convenience, Spack will automatically detect compilers as externals the firs
 
 .. _cmd-spack-compilers:
 
------------------------
 ``spack compiler list``
 -----------------------
 
@@ -55,7 +53,6 @@ More details on how this is done can be found in :ref:`sec-specs`.
 
 .. _cmd-spack-compiler-find:
 
------------------------
 ``spack compiler find``
 -----------------------
 
@@ -100,7 +97,6 @@ This loads the environment module for gcc-4.9.0 to add it to
 
 .. _cmd-spack-compiler-info:
 
------------------------
 ``spack compiler info``
 -----------------------
 
@@ -135,7 +131,6 @@ This shows the details of the compilers that were detected by Spack.
 Notice also that we didn't have to be too specific about the version. We just said ``gcc``, and we got information
 about all the matching compilers.
 
-------------------------------------------
 Manual configuration of external compilers
 ------------------------------------------
 
@@ -241,7 +236,6 @@ This is useful for forcing certain compilers to RPATH their own runtime librarie
 
 .. _compilers-requiring-modules:
 
----------------------------
 Compilers Requiring Modules
 ---------------------------
 
@@ -277,7 +271,6 @@ cleaning the environment before building.  If this interferes with your
 compiler settings, you CAN use ``spack install --dirty`` as a workaround.
 Note that this MAY interfere with package builds.
 
------------------------
 Build Your Own Compiler
 -----------------------
 

@@ -8,7 +8,6 @@
 
 .. _sec-specs:
 
-===========
 Spec Syntax
 ===========
 
@@ -54,7 +53,6 @@ The flexibility the spec syntax offers in specifying the details of a build make
 
 .. _software-model:
 
---------------
 Software Model
 --------------
 
@@ -151,7 +149,6 @@ Below are more details about the specifiers that you can add to specs.
 
 .. _version-specifier:
 
------------------
 Version specifier
 -----------------
 
@@ -204,7 +201,6 @@ For example:
 
 matches any version in the range ``1.0:1.5`` and the specific version ``1.7.1``.
 
-^^^^^^^^^^^^
 Git versions
 ^^^^^^^^^^^^
 
@@ -249,7 +245,6 @@ one version is less than another are discussed in the developer guide.
 
 .. _basic-variants:
 
---------
 Variants
 --------
 
@@ -261,7 +256,6 @@ The variants available for a particular package are defined by the package autho
 
 There are different types of variants.
 
-^^^^^^^^^^^^^^^^
 Boolean Variants
 ^^^^^^^^^^^^^^^^
 
@@ -278,7 +272,6 @@ and disabled with
 
    ~debug
 
-^^^^^^^^^^^^^^^^^^^^^^
 Single-valued Variants
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -295,7 +288,6 @@ or
 
    compression=zstd
 
-^^^^^^^^^^^^^^^^^^^^^
 Multi-valued Variants
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -340,7 +332,6 @@ syntax should be used with the ``:=`` operator.
 
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Variant propagation to dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -364,7 +355,6 @@ For example, for the ``stackstart`` variant:
 Spack also allows variants to be propagated from a package that does
 not have that variant.
 
-^^^^^^^^^^^^^^^^^
 Binary Provenance
 ^^^^^^^^^^^^^^^^^
 
@@ -405,7 +395,6 @@ want with the spec since it is simply a variant. In this case, or in the case of
    the SHAs via user-specs or config i.e. ``commit=<SHA>``.
 
 
---------------
 Compiler Flags
 --------------
 
@@ -433,7 +422,6 @@ in GNU Autotools. If all flags are set, the order is
 
 .. _architecture_specifiers:
 
------------------------
 Architecture specifiers
 -----------------------
 
@@ -457,7 +445,6 @@ target), see :ref:`package-preferences`.
 
 .. _support-for-microarchitectures:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Support for specific microarchitectures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -526,7 +513,6 @@ flags.
 
 .. _sec-virtual-dependencies:
 
---------------------
 Virtual dependencies
 --------------------
 
@@ -567,7 +553,6 @@ A particular version of a package may provide a particular version of a virtual 
 A package can *depend on* a particular version of a virtual package.
 For instance, if an application needs MPI-2 functions, it can depend on ``mpi@2:`` to indicate that it needs some implementation that provides MPI-2 functions.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Constraining virtual packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -601,7 +586,6 @@ provide MPI, Spack will raise an error.
 
 .. _explicit-binding-virtuals:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Explicit binding of virtual dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -623,7 +607,6 @@ Concretizing the spec above produces the following DAG:
 where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former. The ``lapack``
 and ``blas`` dependencies are satisfied by ``openblas``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying Specs by Hash
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -669,7 +652,6 @@ prompt for a more qualified hash.
 
 Note that this will not work to reinstall a dependency uninstalled by ``spack uninstall --force``.
 
---------------------------
 Dependency edge attributes
 --------------------------
 
@@ -683,7 +665,6 @@ Edge attributes are always specified as key-value pairs:
 
 In the following sections we'll discuss the edge attributes that are currently allowed in the spec syntax.
 
-^^^^^^^^^^^^^^^^^
 Virtuals on edges
 ^^^^^^^^^^^^^^^^^
 
@@ -704,7 +685,6 @@ For instance, an equivalent formulation of the command above is:
    $ spack install mpich %c,cxx=clang %fortran=gcc
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

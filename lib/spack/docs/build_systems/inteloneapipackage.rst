@@ -9,7 +9,6 @@
 .. _inteloneapipackage:
 
 
-===========
 IntelOneapi
 ===========
 

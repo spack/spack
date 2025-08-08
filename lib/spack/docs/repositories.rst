@@ -8,7 +8,6 @@
 
 .. _repositories:
 
-=================================
 Package Repositories (repos.yaml)
 =================================
 
@@ -20,7 +19,6 @@ Spack allows you to configure local and remote repositories using either the ``r
 
 This document describes how to set up and manage these package repositories.
 
----------------------------------------------
 Structure of an Individual Package Repository
 ---------------------------------------------
 
@@ -85,7 +83,6 @@ Package names can only contain lowercase characters ``a-z``, digits ``0-9`` and 
    The mapping between package names and directory names is one-to-one.
    Use ``spack list`` to see how Spack resolves the package names from the directory names.
 
---------------------------------------------
 Configuring Repositories with ``repos.yaml``
 --------------------------------------------
 
@@ -230,7 +227,6 @@ By default, Spack is configured to use this as a Git-based repository. The defau
 
 .. _namespaces:
 
-----------
 Namespaces
 ----------
 
@@ -318,7 +314,6 @@ All Spack commands that take a package :ref:`spec <sec-specs>` also accept a ful
 
   $ spack uninstall llnl.comp.mpich
 
--------------------------------------
 Search Order and Overriding Packages
 -------------------------------------
 
@@ -374,7 +369,6 @@ To see which repositories will be used for a build *before* installing, use ``sp
 
 .. _cmd-spack-repo:
 
---------------------------
 The ``spack repo`` Command
 --------------------------
 
@@ -519,7 +513,6 @@ Spack will then use ``/my/custom/path/for/spack-packages`` for the ``builtin`` r
 If the directory doesn't exist, Spack will clone into it.
 If it exists and is a valid Git repository, Spack will use it.
 
---------------------------------
 Repository Namespaces and Python
 --------------------------------
 

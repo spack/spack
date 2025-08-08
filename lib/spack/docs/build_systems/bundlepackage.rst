@@ -8,7 +8,6 @@
 
 .. _bundlepackage:
 
-------
 Bundle
 ------
 
@@ -40,7 +39,6 @@ where ``Xsdk`` also inherits from ``CudaPackage`` and ``RocmPackage`` and
 ``Libc`` is a virtual bundle package for the C standard library.
 
 
-^^^^^^^^
 Creation
 ^^^^^^^^
 
@@ -54,7 +52,6 @@ command to create a bundle package whose class name will be ``Mybundle``:
 
 
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -62,7 +59,6 @@ The ``BundlePackage`` base class does not provide any phases by default
 since the bundle does not represent a build system.
 
 
-^^^^^^
 URL
 ^^^^^^
 
@@ -70,7 +66,6 @@ The ``url`` property does not have meaning since there is no package-specific
 code to fetch.
 
 
-^^^^^^^
 Version
 ^^^^^^^
 

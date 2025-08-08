@@ -8,7 +8,6 @@
 
 .. _sourceforgepackage:
 
------------
 SourceForge
 -----------
 
@@ -20,7 +19,6 @@ Refer to the package source
 (`<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/sourceforge.py>`__) for the current list of mirrors used by Spack.
 
 
-^^^^^^^
 Methods
 ^^^^^^^
 
@@ -36,7 +34,6 @@ This package provides a method for populating mirror URLs.
     for information on how Spack uses the `urls` attribute during
     fetching.
 
-^^^^^^
 Usage
 ^^^^^^
 

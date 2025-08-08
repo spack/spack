@@ -8,7 +8,6 @@
 
 .. _configuration:
 
-===================
 Configuration Files
 ===================
 
@@ -27,7 +26,6 @@ You can also add any of these as inline configuration in the YAML
 manifest file (``spack.yaml``) describing an :ref:`environment
 <environment-configuration>`.
 
------------
 YAML Format
 -----------
 
@@ -56,7 +54,6 @@ corresponding to its name. So, ``config.yaml`` starts with ``config:``,
 
 .. _configuration-scopes:
 
---------------------
 Configuration Scopes
 --------------------
 
@@ -114,7 +111,6 @@ available scope that is not read-only (like `defaults`).
 
 .. _custom-scopes:
 
-^^^^^^^^^^^^^
 Custom scopes
 ^^^^^^^^^^^^^
 
@@ -140,7 +136,6 @@ If multiple scopes are provided:
 #. Each must be preceded with the ``--config-scope`` or ``-C`` flag.
 #. They must be ordered from lowest to highest precedence.
 
-"""""""""""""""""""""""""""""""""""""""""""
 Example: scopes for release and development
 """""""""""""""""""""""""""""""""""""""""""
 
@@ -176,7 +171,6 @@ when you want to build the designated release versions of ``mypackage``,
 ``A``, and ``B``, and you would type ``spack -C ~/myscopes/develop`` when
 you want to build all of these packages at the ``develop`` version.
 
-"""""""""""""""""""""""""""""""
 Example: swapping MPI providers
 """""""""""""""""""""""""""""""
 
@@ -209,7 +203,6 @@ with MPICH. You can create different configuration scopes for use with
 
 .. _plugin-scopes:
 
-^^^^^^^^^^^^^
 Plugin scopes
 ^^^^^^^^^^^^^
 
@@ -248,7 +241,6 @@ The function ``my_package.get_config_path`` (matching the entry point definition
 
 .. _platform-scopes:
 
--------------------------------
 Platform-specific Configuration
 -------------------------------
 
@@ -307,7 +299,6 @@ with the platform name that contains the configuration files.
 
 .. _config-scope-precedence:
 
-----------------
 Scope Precedence
 ----------------
 
@@ -333,7 +324,6 @@ There are also special notations for string concatenation and precedence overrid
 
 See :ref:`config-prepend-append` for more details.
 
-^^^^^^^^^^^
 Simple keys
 ^^^^^^^^^^^
 
@@ -375,7 +365,6 @@ command:
 
 .. _config-prepend-append:
 
-^^^^^^^^^^^^^^^^^^^^
 String Concatenation
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -416,7 +405,6 @@ Similarly, ``+:`` can be used to *prepend* to a path or name:
 
 .. _config-overrides:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Overriding entire sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -442,7 +430,6 @@ Spack will ignore all lower-precedence configuration under the
      install_tree: /some/other/directory
 
 
-^^^^^^^^^^^^^^^^^^^^
 List-valued settings
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -514,7 +501,6 @@ The merged configuration would look like this:
 
 .. _config-file-variables:
 
----------------------
 Config File Variables
 ---------------------
 
@@ -525,7 +511,6 @@ variables. Spack-specific variables and environment variables are both
 indicated by prefixing the variable name with ``$``. User path variables
 are indicated at the start of the path with ``~`` or ``~user``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Spack-specific variables
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -562,7 +547,6 @@ or with braces to distinguish the variable from surrounding characters:
 substituted first, so any environment variables with the same name will
 not be used.
 
-^^^^^^^^^^^^^^^^^^^^^
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -571,7 +555,6 @@ expanded. These are formatted like Spack-specific variables, e.g.,
 ``${varname}``. You can use this to insert environment variables in your
 Spack configuration.
 
-^^^^^^^^^^^^^^^^^^^^^
 User home directories
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -583,7 +566,6 @@ will not expand it.
 
 .. _configuration_environment_variables:
 
--------------------------
 Environment Modifications
 -------------------------
 
@@ -608,7 +590,6 @@ of variable names mapped to the values used for the modification,
 with the exception of ``unset``, which requires just a list of variable names.
 No particular order is ensured for the execution of each of these modifications.
 
-----------------------------
 Seeing Spack's Configuration
 ----------------------------
 
@@ -620,7 +601,6 @@ configuration file: ``spack config get`` and ``spack config blame``.
 
 .. _cmd-spack-config-get:
 
-^^^^^^^^^^^^^^^^^^^^
 ``spack config get``
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -665,7 +645,6 @@ see how your scope will affect Spack's configuration:
 
 .. _cmd-spack-config-blame:
 
-^^^^^^^^^^^^^^^^^^^^^^
 ``spack config blame``
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -705,7 +684,6 @@ options come from the default configuration files that ship with Spack.
 
 .. _local-config-overrides:
 
-------------------------------
 Overriding Local Configuration
 ------------------------------
 

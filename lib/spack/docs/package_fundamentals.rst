@@ -8,7 +8,6 @@
 
 .. _basic-usage:
 
-====================
 Package Fundamentals
 ====================
 
@@ -24,7 +23,6 @@ In this section you'll learn:
 
 .. _basic-list-and-info-packages:
 
---------------------------
 Listing Available Packages
 --------------------------
 
@@ -33,7 +31,6 @@ You can search for available packages on the `packages.spack.io <https://package
 
 .. _cmd-spack-list:
 
-^^^^^^^^^^^^^^
 ``spack list``
 ^^^^^^^^^^^^^^
 
@@ -67,7 +64,6 @@ A way to list all the packages whose names or descriptions contain the word ``qu
 
 .. _cmd-spack-info:
 
-^^^^^^^^^^^^^^
 ``spack info``
 ^^^^^^^^^^^^^^
 
@@ -86,7 +82,6 @@ Spack uses this checksum to verify that the versions are downloaded without erro
 
 .. _cmd-spack-versions:
 
-^^^^^^^^^^^^^^^^^^
 ``spack versions``
 ^^^^^^^^^^^^^^^^^^
 
@@ -108,7 +103,6 @@ able to find remote versions.
 
 .. _cmd-spack-providers:
 
-^^^^^^^^^^^^^^^^^^^
 ``spack providers``
 ^^^^^^^^^^^^^^^^^^^
 
@@ -125,13 +119,11 @@ And if you *only* wanted to see packages that provide MPI-2, you would add a ver
 
 Notice that the package versions that provide insufficient MPI versions are now filtered out.
 
----------------------------
 Installing and Uninstalling
 ---------------------------
 
 .. _cmd-spack-install:
 
-^^^^^^^^^^^^^^^^^
 ``spack install``
 ^^^^^^^^^^^^^^^^^
 
@@ -168,7 +160,6 @@ installed.
 Add the Spack debug option (one or more times) -- ``spack -d install
 mpileaks`` -- to get additional (and even more verbose) output.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a specific version
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -197,7 +188,6 @@ configuration a **spec**. In the commands above, ``mpileaks`` and
 ``mpileaks@3.0.4`` are both valid *specs*. We'll talk more about how
 you can use them to customize an installation in :ref:`sec-specs`.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Reusing installed dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -228,7 +218,6 @@ You can configure Spack to use the ``--fresh`` behavior by default in
 
 .. _cmd-spack-uninstall:
 
-^^^^^^^^^^^^^^^^^^^
 ``spack uninstall``
 ^^^^^^^^^^^^^^^^^^^
 
@@ -279,7 +268,6 @@ remove dependent packages *before* removing their dependencies or to use the
 
 .. _nondownloadable:
 
-^^^^^^^^^^^^^^^^^^
 Garbage collection
 ^^^^^^^^^^^^^^^^^^
 
@@ -321,7 +309,6 @@ All other packages, such as build-only dependencies or orphaned packages, are id
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages
 or :ref:`dependency-types` for a more thorough treatment of dependency types.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Marking packages explicit or implicit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -417,7 +404,6 @@ for all packages that should be kept.
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly
 or implicitly installed packages.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-Downloadable Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -463,7 +449,6 @@ the tarballs in question to it (see :ref:`mirrors`):
        $ spack install galahad
 
 
--------------------------
 Seeing Installed Packages
 -------------------------
 
@@ -472,7 +457,6 @@ but how do you figure out which are already installed?
 
 .. _cmd-spack-find:
 
-^^^^^^^^^^^^^^
 ``spack find``
 ^^^^^^^^^^^^^^
 
@@ -522,7 +506,6 @@ only shows the version of installed packages.
 
 .. _cmd-spack-find-metadata:
 
-""""""""""""""""""""""""""""""""
 Viewing more metadata
 """"""""""""""""""""""""""""""""
 
@@ -596,7 +579,6 @@ name:
        libelf@0.8.12  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.12
        libelf@0.8.13  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.13
 
-""""""""""""""""""""""""""""""""
 Spec queries
 """"""""""""""""""""""""""""""""
 
@@ -628,7 +610,6 @@ with the 'debug' compile-time option enabled.
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
 
 
-""""""""""""""""""""""""""""""""
 Machine-readable output
 """"""""""""""""""""""""""""""""
 
@@ -731,7 +712,6 @@ structured the way you want:
     }
 
 
-^^^^^^^^^^^^^^
 ``spack diff``
 ^^^^^^^^^^^^^^
 
@@ -856,7 +836,6 @@ This data will be much longer because along with the differences for ``A`` vs. `
 ``B`` vs. ``A``, the JSON output also shows the intersection.
 
 
-------------------------
 Using Installed Packages
 ------------------------
 
@@ -872,7 +851,6 @@ Spack has three different ways to solve this problem, which fit different use ca
 
 .. _cmd-spack-load:
 
-^^^^^^^^^^^^^^^^^^^^^^^
 ``spack load / unload``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -903,7 +881,6 @@ unuse similarly:
    $ spack unload mpich %gcc@4.4.7
 
 
-"""""""""""""""
 Ambiguous specs
 """""""""""""""
 
@@ -957,7 +934,6 @@ We'll learn more about Spack's spec syntax in :ref:`a later section <sec-specs>`
 
 .. _extensions:
 
-^^^^^^^^^^^^^^^^^^
 Spack environments
 ^^^^^^^^^^^^^^^^^^
 

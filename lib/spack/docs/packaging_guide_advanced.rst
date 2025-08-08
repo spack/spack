@@ -16,7 +16,6 @@
      - :doc:`3. Testing <packaging_guide_testing>`
      - **4. Advanced**
 
-================================
 Packaging Guide: advanced topics
 ================================
 
@@ -24,7 +23,6 @@ This section of the packaging guide covers a few advanced topics.
 
 .. _multiple_build_systems:
 
-----------------------
 Multiple build systems
 ----------------------
 
@@ -174,7 +172,6 @@ In that case, you can *force* the choice of the build system of the dependency:
 
 .. _make-package-findable:
 
-----------------------------------------------------------
 Making a package discoverable with ``spack external find``
 ----------------------------------------------------------
 
@@ -184,7 +181,6 @@ The simplest way to make a package discoverable with
 1. Define the executables associated with the package.
 2. Implement a method to determine the versions of these executables.
 
-^^^^^^^^^^^^^^^^^
 Minimal detection
 ^^^^^^^^^^^^^^^^^
 
@@ -229,7 +225,6 @@ basic ability to detect if a spec is present on the system at a given version.
    Any executable for which the ``determine_version`` method returns ``None``
    will be discarded and won't appear in later stages of the workflow described below.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Additional functionality
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -237,7 +232,6 @@ Besides the two mandatory steps described above, there are also optional
 methods that can be implemented to either increase the amount of details
 being detected or improve the robustness of the detection logic in a package.
 
-""""""""""""""""""""""""""""""
 Variants and custom attributes
 """"""""""""""""""""""""""""""
 
@@ -294,7 +288,6 @@ instead of just ``gcc``).
    confident that this is the way to go we should document the process.
    See https://github.com/spack/spack/pull/16526#issuecomment-653783204
 
-"""""""""""""""""""""""""""
 Filter matching executables
 """""""""""""""""""""""""""
 
@@ -336,7 +329,6 @@ Another possibility that this method opens is to apply certain
 filtering logic when specific conditions are met (e.g. take some
 decisions on an OS and not on another).
 
-^^^^^^^^^^^^^^^^^^
 Validate detection
 ^^^^^^^^^^^^^^^^^^
 
@@ -382,7 +374,6 @@ or like this:
 
 .. _determine_spec_details:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Custom detection workflow
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -440,7 +431,6 @@ follows:
                "foo-package@{0}".format(version_str)
            )
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Add detection tests to packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -462,7 +452,6 @@ The detection tests can be run with the following command:
 
 Errors that have been detected are reported to screen.
 
-""""""""""""""""""""""""""
 Tests for PATH inspections
 """"""""""""""""""""""""""
 
@@ -525,7 +514,6 @@ package detection and checking that the outcome matches the expected
      - Nested dictionary with string as keys, and regular expressions as leaf values
      - No
 
-"""""""""""""""""""""""""""""""
 Reuse tests from other packages
 """""""""""""""""""""""""""""""
 
@@ -544,7 +532,6 @@ those locally defined in the file.
 
 .. _abi_compatibility:
 
-----------------------------
 Specifying ABI Compatibility
 ----------------------------
 
@@ -577,7 +564,6 @@ The ``match_variants`` keyword can cover all single-value variants.
 
 The concretizer will use ABI compatibility to determine automatic splices when :ref:`automatic splicing<automatic_splicing>` is enabled.
 
------------------
 Customizing Views
 -----------------
 

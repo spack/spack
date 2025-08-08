@@ -6,7 +6,6 @@
    :description lang=en:
       An overview of the key features that distinguish Spack from other package managers, including simple installation, custom configurations, and non-destructive installs.
 
-================
 Feature Overview
 ================
 
@@ -15,7 +14,6 @@ from other `package managers
 <http://en.wikipedia.org/wiki/Package_management_system>`_ and `port
 systems <http://en.wikipedia.org/wiki/Ports_collection>`_.
 
----------------------------
 Simple package installation
 ---------------------------
 
@@ -26,7 +24,6 @@ the latest version of the ``mpileaks`` package and all of its dependencies:
 
    $ spack install mpileaks
 
---------------------------------
 Custom versions & configurations
 --------------------------------
 
@@ -53,7 +50,6 @@ version, compile-time options, and cross-compile platform, all on the command li
 Users can specify as many or as few options as they care about. Spack
 will fill in the unspecified values with sensible defaults.
 
-----------------------
 Customize dependencies
 ----------------------
 
@@ -76,14 +72,12 @@ The expression on the command line can be as simple, or as complicated, as the u
    # Install hdf5 compiled with gcc@15, linked to mpich compiled with gcc@14
    $ spack install hdf5@1.14.6 %gcc@15 ^mpich %gcc@14
 
-------------------------
 Non-destructive installs
 ------------------------
 
 Spack installs every unique package/dependency configuration into its
 own prefix, so new installs will not break existing ones.
 
--------------------------------
 Packages can peacefully coexist
 -------------------------------
 
@@ -92,7 +86,6 @@ dependencies.  When a user links a library or runs a program, it is
 tied to the dependencies it was built with, so there is no need to
 manipulate ``LD_LIBRARY_PATH`` at runtime.
 
--------------------------
 Creating packages is easy
 -------------------------
 

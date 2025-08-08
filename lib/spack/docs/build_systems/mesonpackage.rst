@@ -8,7 +8,6 @@
 
 .. _mesonpackage:
 
-------
 Meson
 ------
 
@@ -16,7 +15,6 @@ Much like Autotools and CMake, Meson is a build system.  But it is
 meant to be both fast and as user friendly as possible.  GNOME's goal
 is to port modules to use the Meson build system.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -49,7 +47,6 @@ in the build file. If a ``test`` target exists and the user runs:
 
 Spack will run ``ninja test`` after the build phase.
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -79,7 +76,6 @@ to the ``project`` function:
 This means that Meson 0.43.0 is the earliest release that will work.
 You should specify this in a ``depends_on`` statement.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -102,7 +98,6 @@ override this in your package:
    depends_on("ninja", type="build")
 
 
-^^^^^^^^^^^^^^^^^^^
 Finding meson flags
 ^^^^^^^^^^^^^^^^^^^
 
@@ -114,7 +109,6 @@ following command in the directory that contains ``meson.build``:
    $ meson setup --help
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to meson
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -133,7 +127,6 @@ Note that the ``MesonPackage`` base class already defines variants for
 ``buildtype``, ``default_library`` and ``strip``, which are mapped to default
 Meson arguments, meaning that you don't have to specify these.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

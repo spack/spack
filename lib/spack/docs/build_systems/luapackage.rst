@@ -9,7 +9,6 @@
 
 .. _luapackage:
 
-------
 Lua
 ------
 
@@ -19,7 +18,6 @@ a source archive or repository that provides a rockspec, which should cover
 most Lua packages. In the case a Lua package builds by Make rather than
 LuaRocks, prefer MakefilePackage.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -41,7 +39,6 @@ By default, these phases run:
 
 Any of these phases can be overridden in your package as necessary.
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -67,7 +64,6 @@ a rockspec and directly downloading source rock files.  It *does not* support
 downloading dependencies listed inside a rockspec, and thus does not support
 directly downloading a rockspec as an archive.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -82,7 +78,6 @@ a ``depends_on("luajit")`` should be used to ensure a LuaJit distribution is
 used instead of the Lua interpreter. Alternately, if only interpreted Lua will
 work, ``depends_on("lua")`` will express that.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to luarocks make
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -101,7 +96,6 @@ One common use of this is to override warnings or flags for newer compilers, as 
     def luarocks_args(self):
         return ["CFLAGS='-Wno-error=implicit-function-declaration'"]
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

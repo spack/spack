@@ -8,7 +8,6 @@
 
 .. _toolchains:
 
-=============================
 Defining and Using Toolchains
 =============================
 
@@ -72,7 +71,6 @@ to install:
 
 .. _audit-packages-and-configuration:
 
-===================================
 Auditing Packages and Configuration
 ===================================
 
@@ -98,7 +96,6 @@ Issues, if found, are reported to stdout:
 
 .. _verify-installations:
 
-=======================
 Verifying Installations
 =======================
 
@@ -106,7 +103,6 @@ The ``spack verify`` command can be used to verify the validity of
 Spack-installed packages any time after installation.
 
 
--------------------------
 ``spack verify manifest``
 -------------------------
 
@@ -137,7 +133,6 @@ check only local packages (as opposed to those used transparently from
 ``upstream`` Spack instances) and the ``-j,--json`` option to output
 machine-readable JSON data for any errors.
 
---------------------------
 ``spack verify libraries``
 --------------------------
 
@@ -153,7 +148,6 @@ This verification can also be enabled as a post-install hook by setting
 ``config:shared_linking:missing_library_policy`` to ``error`` or ``warn``
 in :ref:`config.yaml <config-yaml>`.
 
-=======================
 Filesystem Requirements
 =======================
 

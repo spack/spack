@@ -8,7 +8,6 @@
 
 .. _binary_caches:
 
-============
 Build Caches
 ============
 
@@ -31,7 +30,6 @@ significantly faster.
     caches refer to mirrors that provide prebuilt packages.
 
 
-----------------------
 Creating a Build Cache
 ----------------------
 
@@ -62,7 +60,6 @@ Note that ``ninja`` must be installed locally for this to work.
 
 Once you have a build cache, you can add it as a mirror, as discussed next.
 
----------------------------------------
 Finding or Installing Build Cache Files
 ---------------------------------------
 
@@ -157,27 +154,23 @@ We use ``--install`` and ``--trust`` to say that we are installing keys to our
 keyring and trusting all downloaded keys.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 List of Popular Build Caches
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
 
 
-------------------------------
 Creating and Trusting GPG keys
 ------------------------------
 
 .. _cmd-spack-gpg:
 
-^^^^^^^^^^^^^
 ``spack gpg``
 ^^^^^^^^^^^^^
 
 Spack has support for signing and verifying packages using GPG keys.
 A separate keyring is used for Spack, so any keys available in the user's home directory are not used.
 
-^^^^^^^^^^^^^^^^^^
 ``spack gpg init``
 ^^^^^^^^^^^^^^^^^^
 
@@ -186,7 +179,6 @@ Keys stored in :file:`var/spack/gpg` are the default keys for a Spack installati
 These keys may be imported by running ``spack gpg init``.
 This will import the default keys into the keyring as trusted keys.
 
-^^^^^^^^^^^^^
 Trusting keys
 ^^^^^^^^^^^^^
 
@@ -206,7 +198,6 @@ If you would like to remove keys from your keyring, use instead:
 
 Key IDs can be email addresses, names, or (best) fingerprints.
 
-^^^^^^^^^^^^^
 Creating keys
 ^^^^^^^^^^^^^
 
@@ -235,7 +226,6 @@ Secret keys may also be later exported using the ``spack gpg export <location> [
    <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
    provides a good overview of sources of randomness.
 
--------------------
 Build Cache Signing
 -------------------
 
@@ -271,7 +261,6 @@ Or you can directly edit the ``mirrors.yaml`` configuration file:
 
 See also :ref:`mirrors`.
 
-----------
 Relocation
 ----------
 
@@ -300,7 +289,6 @@ section of the configuration:
 
 .. _binary_caches_oci:
 
----------------------------------
 Automatic Push to a Build Cache
 ---------------------------------
 
@@ -334,7 +322,6 @@ will have the same effect as
 
     Packages are automatically pushed to a build cache only if they are built from source.
 
------------------------------------------
 OCI / Docker V2 Registries as Build Cache
 -----------------------------------------
 
@@ -398,7 +385,6 @@ other system dependencies. However, they are still compatible with tools like
     ``max depth exceeded`` error may be produced when pulling the image. There
     are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_.
 
-------------------------------------
 Spack Build Cache for GitHub Actions
 ------------------------------------
 
@@ -416,11 +402,9 @@ which lets you get started quickly. See the following resources for more informa
 
 .. _cmd-spack-buildcache:
 
---------------------
 ``spack buildcache``
 --------------------
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache push``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -439,7 +423,6 @@ Arguments       Description
 ``-y``          answer yes to all questions about creating unsigned build caches
 ==============  ========================================================================================================================
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache list``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -453,7 +436,6 @@ Arguments       Description
 
 E.g., ``spack buildcache list gcc`` will print only commands to install ``gcc`` package(s).
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache install``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -468,7 +450,6 @@ Arguments       Description
 ``-y``          answer yes to all to don't verify package with gpg questions
 ==============  ==============================================================================================
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache keys``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -483,7 +464,6 @@ Arguments  Description
 
 .. _build_cache_layout:
 
-------------------
 Build Cache Layout
 ------------------
 

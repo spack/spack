@@ -8,7 +8,6 @@
 
 .. _racketpackage:
 
-------
 Racket
 ------
 
@@ -16,7 +15,6 @@ Much like Python, Racket packages and modules have their own special build syste
 To learn more about the specifics of the Racket package system, please refer to the
 `Racket Docs <https://docs.racket-lang.org/pkg/cmdline.html>`_.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -27,7 +25,6 @@ can be overridden, corresponding to the use of:
 
    $ raco pkg install
 
-^^^^^^^
 Caveats
 ^^^^^^^
 

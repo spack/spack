@@ -16,7 +16,6 @@
      - **3. Testing**
      - :doc:`4. Advanced <packaging_guide_advanced>`
 
-======================================
 Packaging Guide: testing installations
 ======================================
 
@@ -25,7 +24,6 @@ In this part of the packaging guide we will cover how to ensure your package bui
 
 .. _checking_an_installation:
 
-------------------------
 Checking an installation
 ------------------------
 
@@ -46,7 +44,6 @@ during and after its installation. The former checks are referred to as
 
 .. _build_time-tests:
 
-^^^^^^^^^^^^^^^^
 Build-time tests
 ^^^^^^^^^^^^^^^^
 
@@ -92,7 +89,6 @@ checks to be performed after one or more installation phases.
 
 .. _sanity-checks:
 
-""""""""""""""""""""
 Adding sanity checks
 """"""""""""""""""""
 
@@ -155,7 +151,6 @@ to have failed.
 
 .. _install_phase-tests:
 
-"""""""""""""""""""""""""""""""
 Adding installation phase tests
 """""""""""""""""""""""""""""""
 
@@ -290,7 +285,6 @@ installed executable. The check is implemented as follows:
                 reframe = Executable(self.prefix.bin.reframe)
                 reframe("-l")
 
-""""""""""""""""""""""""""""""""
 Checking build-time test results
 """"""""""""""""""""""""""""""""
 
@@ -323,7 +317,6 @@ be left in the build stage directory as illustrated below:
 
 .. _cmd-spack-test:
 
-^^^^^^^^^^^^^^^^^
 Stand-alone tests
 ^^^^^^^^^^^^^^^^^
 
@@ -366,7 +359,6 @@ functions to facilitate common processing.
 
 .. _configure-test-stage:
 
-""""""""""""""""""""""""""""""""""""
 Configuring the test stage directory
 """"""""""""""""""""""""""""""""""""
 
@@ -393,7 +385,6 @@ Packages can use the ``self.test_suite.stage`` property to access the path.
 
 .. _adding-standalone-tests:
 
-""""""""""""""""""""""""
 Adding stand-alone tests
 """"""""""""""""""""""""
 
@@ -521,7 +512,6 @@ is illustrated below.
 
 .. _adding-standalone-test-parts:
 
-"""""""""""""""""""""""""""""
 Adding stand-alone test parts
 """""""""""""""""""""""""""""
 
@@ -657,7 +647,6 @@ result of the test method, ``test_series``, is failure.
 
 .. _test-build-tests:
 
-"""""""""""""""""""""""""""""""""""""
 Building and running test executables
 """""""""""""""""""""""""""""""""""""
 
@@ -724,7 +713,6 @@ preventing the use of both.
 
 .. _cache_extra_test_sources:
 
-""""""""""""""""""""""""""""""""""""
 Saving build- and install-time files
 """"""""""""""""""""""""""""""""""""
 
@@ -833,7 +821,6 @@ running each executable, ``foo`` and ``bar``, as independent test parts.
 
 .. _cache_custom_files:
 
-"""""""""""""""""""
 Adding custom files
 """""""""""""""""""
 
@@ -891,7 +878,6 @@ within the appropriate subdirectory of the test stage.
 
 .. _expected_test_output_from_file:
 
-"""""""""""""""""""""""""""""""""""
 Reading expected output from a file
 """""""""""""""""""""""""""""""""""
 
@@ -966,7 +952,6 @@ two files would be referenced as follows:
 
 .. _check_outputs:
 
-""""""""""""""""""""""""""""""""""""
 Comparing expected to actual outputs
 """"""""""""""""""""""""""""""""""""
 
@@ -1007,7 +992,6 @@ Invoking the method is the equivalent of:
 
 .. _accessing-files:
 
-"""""""""""""""""""""""""""""""""""""""""
 Finding package- and test-related files
 """""""""""""""""""""""""""""""""""""""""
 
@@ -1048,7 +1032,6 @@ repository, and installation.
 
 .. _inheriting-tests:
 
-""""""""""""""""""""""""""""
 Inheriting stand-alone tests
 """"""""""""""""""""""""""""
 
@@ -1139,7 +1122,6 @@ for ``openmpi``:
 
 .. _cmd-spack-test-list:
 
-"""""""""""""""""""
 ``spack test list``
 """""""""""""""""""
 
@@ -1156,7 +1138,6 @@ For more information, refer to `spack test list
 
 .. _cmd-spack-test-run:
 
-""""""""""""""""""
 ``spack test run``
 """"""""""""""""""
 
@@ -1184,7 +1165,6 @@ For more information, refer to `spack test run
 
 .. _cmd-spack-test-results:
 
-""""""""""""""""""""""
 ``spack test results``
 """"""""""""""""""""""
 
@@ -1203,7 +1183,6 @@ For more information, refer to `spack test results
 
 .. _cmd-spack-test-find:
 
-"""""""""""""""""""
 ``spack test find``
 """""""""""""""""""
 
@@ -1215,7 +1194,6 @@ For more information, refer to `spack test find
 
 .. _cmd-spack-test-remove:
 
-"""""""""""""""""""""
 ``spack test remove``
 """""""""""""""""""""
 

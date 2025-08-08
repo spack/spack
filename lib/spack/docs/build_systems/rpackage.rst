@@ -8,7 +8,6 @@
 
 .. _rpackage:
 
-------
 R
 ------
 
@@ -18,7 +17,6 @@ The R build system is remarkably uniform and well-tested.
 This makes it one of the easiest build systems to create
 new Spack packages for.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -33,7 +31,6 @@ By default, this phase runs the following command:
    $ R CMD INSTALL --library=/path/to/installation/prefix/rlib/R/library .
 
 
-^^^^^^^^^^^^^^^^^^
 Finding R packages
 ^^^^^^^^^^^^^^^^^^
 
@@ -54,7 +51,6 @@ If you search for "Package source", you will find the download URL for
 the latest release. Use this URL with ``spack create`` to create a new
 package.
 
-^^^^^^^^^^^^
 Package name
 ^^^^^^^^^^^^
 
@@ -75,7 +71,6 @@ instance, there are already packages for both:
 Many popular programs written in C/C++ are later ported to R as a
 separate project.
 
-^^^^^^^^^^^
 Description
 ^^^^^^^^^^^
 
@@ -91,7 +86,6 @@ description. In this case the description is only one line but often the
 description is several lines. Spack makes use of both short and long
 descriptions and convention is to use both when creating an R  package.
 
-^^^^^^^^
 Homepage
 ^^^^^^^^
 
@@ -106,14 +100,12 @@ https://cloud.r-project.org/package=caret as the homepage instead of
 https://cloud.r-project.org/web/packages/caret/index.html. The latter may
 change without notice.
 
-^^^^^^
 URL
 ^^^^^^
 
 As previously mentioned, the download URL for the latest release can be
 found by searching "Package source" on the homepage.
 
-^^^^^^^^
 List URL
 ^^^^^^^^
 
@@ -129,7 +121,6 @@ If you only specify the URL for the latest release, your package will
 no longer be able to fetch that version as soon as a new release comes
 out. To get around this, add the archive directory as a ``list_url``.
 
-^^^^^^^^^^^^^^^^^^^^^
 Bioconductor packages
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -155,7 +146,6 @@ corresponds to the Bioconductor release of the package repository. For this
 reason, Spack Bioconductor R packages use the git repository, with the commit
 of the respective branch used in the ``version()`` attribute of the package.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 cran and bioc attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -190,7 +180,6 @@ is equivalent to:
    git      = "https://git.bioconductor.org/packages/BiocVersion"
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -215,7 +204,6 @@ You should add this to your package like so:
    depends_on("r@3.2.0:", type=("build", "run"))
 
 
-^^^^^^^^^^^^^^
 R dependencies
 ^^^^^^^^^^^^^^
 
@@ -270,14 +258,12 @@ This means that the package can be used as an optional dependency
 for another package. Again, these packages should **NOT** be listed
 as dependencies.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Core, recommended, and non-core packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you look at "Depends", "Imports", and "LinkingTo", you will notice
 3 different types of packages:
 
-"""""""""""""
 Core packages
 """""""""""""
 
@@ -292,7 +278,6 @@ version of R. Thus, they're updated when R is updated.
 You can find a list of these core libraries at:
 https://github.com/wch/r-source/tree/trunk/src/library
 
-""""""""""""""""""""
 Recommended packages
 """"""""""""""""""""
 
@@ -320,7 +305,6 @@ dependencies. Watch out for this.
 You can find a list of these recommended packages at:
 https://github.com/wch/r-source/blob/trunk/share/make/vars.mk
 
-"""""""""""""""""
 Non-core packages
 """""""""""""""""
 
@@ -336,7 +320,6 @@ the dependency:
    depends_on("r-lattice@0.20:", type=("build", "run"))
 
 
-^^^^^^^^^^^^^^^^^^
 Non-R dependencies
 ^^^^^^^^^^^^^^^^^^
 
@@ -350,7 +333,6 @@ If you search for the text "SystemRequirements", you will see:
 This is how non-R dependencies are listed. Make sure to add these
 dependencies. The default dependency type should suffice.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to the installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -384,7 +366,6 @@ like so:
 There is a similar ``configure_vars`` function that can be overridden
 to pass variables to the build.
 
-^^^^^^^^^^^^^^^^^^^^^
 Alternatives to Spack
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -415,7 +396,6 @@ Where Spack really shines is its ability to install non-R dependencies
 and link to them properly, something the R installation mechanism
 cannot handle.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

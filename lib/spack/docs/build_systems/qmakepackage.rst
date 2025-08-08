@@ -8,7 +8,6 @@
 
 .. _qmakepackage:
 
-------
 QMake
 ------
 
@@ -36,7 +35,6 @@ into its components to allow for more fine-grained installation.
 To depend on a specific version, refer to the documentation on
 :ref:`virtual-dependencies`.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -66,7 +64,6 @@ in the Makefile. If a ``check`` target exists and the user runs:
 
 Spack will run ``make check`` after the build phase.
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -84,7 +81,6 @@ One thing to look for is the ``minQtVersion`` function:
 This means that Qt 5.6.0 is the earliest release that will work.
 You should specify this in a ``depends_on`` statement.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -104,7 +100,6 @@ link to the ``qt`` libraries, you can override this in your package:
 
    depends_on("qt@5.6.0:")
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to qmake
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -119,7 +114,6 @@ override the ``qmake_args`` method like so:
 
 This method can be used to pass flags as well as variables.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``*.pro`` file in a sub-directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -132,7 +126,6 @@ sub-directory by adding the following to the package:
    build_directory = "src"
 
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

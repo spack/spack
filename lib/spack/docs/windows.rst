@@ -8,7 +8,6 @@
 
 .. _windows_support:
 
-================
 Spack On Windows
 ================
 
@@ -16,7 +15,6 @@ Windows support for Spack is currently under development. While this work is sti
 it is currently possible to set up Spack and perform a few operations on Windows.  This section will guide
 you through the steps needed to install Spack and start running it on a fresh Windows machine.
 
------------------------------
 Step 1: Install prerequisites
 -----------------------------
 
@@ -37,7 +35,6 @@ Optional:
 
   Currently MSVC is the only compiler tested for C/C++ projects. Intel OneAPI provides Fortran support.
 
-^^^^^^^^^^^^^^^^^^^^^^^
 Microsoft Visual Studio
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -56,7 +53,6 @@ If you already have Visual Studio installed, you can make sure these components 
 rerunning the installer.  Next to your installation, select "Modify" and look at the
 "Installation details" pane on the right.
 
-^^^^^^^^^^^^^
 Intel Fortran
 ^^^^^^^^^^^^^
 
@@ -66,7 +62,6 @@ https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/for
 The executable of choice for Spack will be Intel's Beta Compiler, ifx, which supports the classic
 compiler's (ifort's) frontend and runtime libraries by using LLVM.
 
-^^^^^^
 Python
 ^^^^^^
 
@@ -77,7 +72,6 @@ to your ``PATH`` in this case.
 .. note::
    Spack currently supports Python versions later than 3.2 inclusive.
 
-^^^
 Git
 ^^^
 
@@ -94,14 +88,12 @@ as the project providing Git support on Windows. This is additionally the recomm
 for installing Git on Windows, a link to which can be found above. Spack requires the
 utilities vendored by this project.
 
-^^^^
 7zip
 ^^^^
 
 A tool for extracting ``.xz`` files is required for extracting source tarballs. The latest 7-Zip
 can be located at https://sourceforge.net/projects/sevenzip/.
 
--------------------------------
 Step 2: Install and setup Spack
 -------------------------------
 
@@ -123,7 +115,6 @@ in a Windows CMD prompt.
    ``C:\Program Files``, or administrator-applied administrative restrictions
    on a directory that Spack installs files to such as ``C:\Users``
 
--------------------------------
 Step 3: Run and configure Spack
 -------------------------------
 
@@ -202,7 +193,6 @@ and not tabs, so ensure that this is the case when editing one directly.
    However, Spack will not prevent this, so if choosing to use Spack
    with Cygwin, know that no functionality is guaranteed.
 
------------------
 Step 4: Use Spack
 -----------------
 
@@ -220,7 +210,6 @@ If in the previous step, you did not have CMake or Ninja installed, running the 
    See the Spack spec syntax doc for more information
 
 
---------------
 For developers
 --------------
 

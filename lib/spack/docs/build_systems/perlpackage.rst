@@ -8,14 +8,12 @@
 
 .. _perlpackage:
 
-------
 Perl
 ------
 
 Much like Octave, Perl has its own language-specific
 build system.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -27,7 +25,6 @@ The ``PerlBuilder`` and ``PerlPackage`` base classes come with three phases that
 
 Perl packages have two common modules used for module installation:
 
-"""""""""""""""""""""""
 ``ExtUtils::MakeMaker``
 """""""""""""""""""""""
 
@@ -43,7 +40,6 @@ a ``Makefile.PL`` file, and has the following installation steps:
    $ make install
 
 
-"""""""""""""""""
 ``Module::Build``
 """""""""""""""""
 
@@ -68,7 +64,6 @@ it.
 shouldn't be much work on the package developer's side to get things
 working.
 
-^^^^^^^^^^^^^^^^^^^^^
 Finding Perl packages
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -79,7 +74,6 @@ you should search for "CPAN XML::Parser".
 Some CPAN pages are versioned. Check for a link to the
 "Latest Release" to make sure you have the latest version.
 
-^^^^^^^^^^^^
 Package name
 ^^^^^^^^^^^^
 
@@ -88,7 +82,6 @@ automatically prepend ``perl-`` to the front of the package name. This
 helps to keep Perl modules separate from other packages. The same
 naming scheme is used for other language extensions, like Python and R.
 
-^^^^^^^^^^^
 Description
 ^^^^^^^^^^^
 
@@ -96,7 +89,6 @@ Most CPAN pages have a short description under "NAME" and a longer
 description under "DESCRIPTION". Use whichever you think is more
 useful while still being succinct.
 
-^^^^^^^^
 Homepage
 ^^^^^^^^
 
@@ -105,14 +97,12 @@ for the package. This should be used instead of the current URL, as
 it doesn't contain the version number and will always link to the
 latest release.
 
-^^^^^^
 URL
 ^^^^^^
 
 If you haven't found it already, the download URL is on the right
 side of the page below the permalink. Search for "Download".
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -145,7 +135,6 @@ If your package uses ``Build.PL`` to build, add:
    depends_on("perl-module-build", type="build")
 
 
-^^^^^^^^^^^^^^^^^
 Perl dependencies
 ^^^^^^^^^^^^^^^^^
 
@@ -156,7 +145,6 @@ but all direct dependencies should be added. Don't add dependencies of
 dependencies. These should be added as dependencies to the dependency,
 not to your package.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to configure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -176,7 +164,6 @@ arguments to ``Makefile.PL`` or ``Build.PL`` by overriding
        ]
 
 
-^^^^^^^
 Testing
 ^^^^^^^
 
@@ -242,7 +229,6 @@ could define the following:
 
 for the same use tests.
 
-^^^^^^^^^^^^^^^^^^^^^
 Alternatives to Spack
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -268,7 +254,6 @@ Furthermore, ``cpanm`` is not capable of installing non-Perl dependencies.
 If you need to install to your home directory or need to install a module
 with non-Perl dependencies, Spack is a better option.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

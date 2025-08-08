@@ -8,7 +8,6 @@
 
 .. _environments:
 
-=====================================
 Environments (spack.yaml, spack.lock)
 =====================================
 
@@ -61,14 +60,12 @@ is named ``spack.lock``.
 
 .. _environments-using:
 
-------------------
 Using Environments
 ------------------
 
 Here we follow a typical use case of creating, concretizing,
 installing and loading an environment.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Creating a managed Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -158,7 +155,6 @@ This will create a managed environment under
 can therefore also be used to make a whole group of nested environments
 available.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -213,7 +209,6 @@ environment will remove the view from the user environment.
 
 .. _independent_environments:
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Independent Environments
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -246,7 +241,6 @@ For convenience, Spack can also place an independent environment in a temporary 
    $ spack env activate --temp
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Environment-Aware Commands
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -308,7 +302,6 @@ environment-aware in this way, including ``install``,
 :ref:`environment-configuration` section we will discuss
 environment-aware commands further.
 
-^^^^^^^^^^^^^^^^^^^^^
 Adding Abstract Specs
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -341,7 +334,6 @@ or
 
 .. _environments_concretization:
 
-^^^^^^^^^^^^
 Concretizing
 ^^^^^^^^^^^^
 
@@ -395,7 +387,6 @@ installed specs using the ``-c`` (``--concretized``) flag.
 
 .. _installing-environment:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Installing an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -449,7 +440,6 @@ root spec without the ``--no-add`` option.
 
 .. _develop-specs:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Developing Packages in a Spack Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -507,7 +497,6 @@ The supplied location will become the build-directory for that package in all fu
     developers to only redirect the build directory if they understand their package's
     build-system.
 
-^^^^^^^
 Loading
 ^^^^^^^
 
@@ -526,7 +515,6 @@ file may also be copied out of the environment, renamed, etc.
 
 .. _environment_include_concrete:
 
-------------------------------
 Included Concrete Environments
 ------------------------------
 
@@ -538,7 +526,6 @@ environment. When an included concrete environment is created it will generate
 a ``spack.lock`` file for the newly created environment.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Creating included environments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To create a combined concrete environment, you must have at least one existing
@@ -575,7 +562,6 @@ expression expands to an absolute path.
 Once the ``spack.yaml`` has been updated you must concretize the environment to
 get the concrete specs from the included environments.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Updating an included environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If changes were made to the base environment and you want that reflected in the
@@ -646,7 +632,6 @@ environment will get the updated information from the re-concretized base enviro
 
 .. _environment-configuration:
 
-------------------------
 Configuring Environments
 ------------------------
 
@@ -670,7 +655,6 @@ environment can be specified by ``env:NAME`` (to affect environment
 ``foo``, set ``--scope env:foo``). These commands will automatically
 manipulate configuration inline in the ``spack.yaml`` file.
 
-^^^^^^^^^^^^^^^^^^^^^
 Inline configurations
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -693,7 +677,6 @@ a ``packages.yaml`` file) could contain:
 
 This configuration sets the default mpi provider to be openmpi.
 
-^^^^^^^^^^^^^^^^^^^^^^^
 Included configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -738,7 +721,6 @@ supported. Spack-specific, environment and user path variables can be used.
    update.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Configuration precedence
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -747,7 +729,6 @@ you don't have to change shared configuration files to make small changes
 to an individual environment. Included configurations listed earlier will
 have higher precedence, as the included configs are applied in reverse order.
 
--------------------------------
 Manually Editing the Specs List
 -------------------------------
 
@@ -769,7 +750,6 @@ available from the yaml file.
 
 .. _environments_concretization_config:
 
-^^^^^^^^^^^^^^^^^^^
 Spec concretization
 ^^^^^^^^^^^^^^^^^^^
 An environment can be concretized in three different modes and the behavior active under
@@ -849,7 +829,6 @@ user support groups providing a large software stack for their HPC center.
 
 .. _environment-spec-matrices:
 
-^^^^^^^^^^^^^
 Spec Matrices
 ^^^^^^^^^^^^^
 
@@ -886,7 +865,6 @@ The following two environment manifests are identical:
 Spec matrices can be used to install swaths of software across various
 toolchains.
 
-^^^^^^^^^^^^^^^^^^^^
 Spec List References
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -988,7 +966,6 @@ The valid variables for a ``when`` clause are:
 #. ``hostname``. The hostname of the system (if ``hostname`` is an
    executable in the user's PATH).
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 SpecLists as Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1022,7 +999,6 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
--------------------------------
 Modifying Environment Variables
 -------------------------------
 
@@ -1044,7 +1020,6 @@ configured to set, unset, prepend, or append using ``env_vars`` configuration in
       remove_path:
         PATH_LIST: "path/to/remove"
 
------------------
 Environment Views
 -----------------
 
@@ -1072,7 +1047,6 @@ views for a single environment.
 
 .. _configuring_environment_views:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Minimal view configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1097,7 +1071,6 @@ Another short way to configure a view is to specify just where to put it:
 
 Views can also be disabled by setting ``view: false``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Advanced view configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1184,7 +1157,6 @@ been applied.
 
 .. _view_projections:
 
-""""""""""""""""
 View Projections
 """"""""""""""""
 The default projection into a view is to link every package into the
@@ -1231,7 +1203,6 @@ view. Any entries that appear below the keyword ``all`` in the
 projections configuration file will not be used, as all specs will use
 the projection under ``all`` before reaching those entries.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating environment views
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1276,7 +1247,6 @@ the Spack environment from the user's environment variables.
 .. _env-generate-depfile:
 
 
-------------------------------------------
 Generating Depfiles from Environments
 ------------------------------------------
 
@@ -1314,7 +1284,6 @@ By default the following phony convenience targets are available:
    printed orderly per package install. To get synchronized output with colors,
    use ``make -j<N> SPACK_COLOR=always --output-sync=recurse``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying dependencies on generated ``make`` targets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1365,7 +1334,6 @@ the include is conditional.
    ``<prefix>/env`` as prerequisite, instead of the phony target
    ``<prefix>/all``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a subset of the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1390,7 +1358,6 @@ output (``spack install --verbose``) while its dependencies are installed silent
    # Install the root spec with verbose output.
    $ make -j16 install/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--verbose
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Adding post-install hooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

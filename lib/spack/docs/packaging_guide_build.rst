@@ -16,7 +16,6 @@
      - :doc:`3. Testing <packaging_guide_testing>`
      - :doc:`4. Advanced <packaging_guide_advanced>`
 
-======================================
 Packaging Guide: customizing the build
 ======================================
 
@@ -25,7 +24,6 @@ In the second part, we will cover the installation procedure, build systems, and
 
 .. _installation_procedure:
 
---------------------------------------
 Overview of the installation procedure
 --------------------------------------
 
@@ -71,7 +69,6 @@ In general, the name and order in which the phases will be executed can be obtai
 
 An extensive list of available build systems and phases is provided in :ref:`installation_process`.
 
------------------------------
 Controlling the build process
 -----------------------------
 
@@ -165,7 +162,6 @@ In any of the functions above, you can
 
 .. _installation_process:
 
------------------------
 What are build systems?
 -----------------------
 
@@ -232,7 +228,6 @@ For a complete list of build systems and their specific helper functions and pro
 
 .. _spec-objects:
 
----------------------------------------
 Configuring the build with spec objects
 ---------------------------------------
 
@@ -246,7 +241,6 @@ Spack is unique in that it allows you to write a *single* ``package.py`` for all
 The central object in Spack that encodes the package's configuration is the **concrete spec**, which is available as ``self.spec`` in the package class.
 This is the object you need to query to make decisions about how to configure the build.
 
-^^^^^^^^^^^^^^^^^^^^^^
 Querying ``self.spec``
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -400,7 +394,6 @@ To see what targets are available in your Spack installation, you can use the fo
 
 .. command-output:: spack arch --known-targets
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Referring to a dependency's prefix, libraries, and headers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -489,7 +482,6 @@ In those cases, the build system could use some help, for which we give a few ex
 
 .. _before_after_build_phases:
 
------------------------------
 Before and after build phases
 -----------------------------
 
@@ -521,7 +513,6 @@ The function body should contain the actual instructions you want to run before 
 
 .. _overriding-phases:
 
-------------------------
 Overriding a build phase
 ------------------------
 
@@ -573,7 +564,6 @@ The arguments ``spec`` and ``prefix`` are passed only for convenience, as they a
 
 .. _running_build_executables:
 
--------------------------
 Running build executables
 -------------------------
 
@@ -632,7 +622,6 @@ All executables in Spack are instances of :class:`~spack.package.Executable`, se
 
 .. _attribute_parallel:
 
--------------------------
 Package-level parallelism
 -------------------------
 
@@ -685,7 +674,6 @@ This global variable is an integer that specifies the number of jobs to run in p
 
 .. _python-package-api:
 
---------------------------
 Spack's Python Package API
 --------------------------
 
@@ -702,7 +690,6 @@ This is already part of the boilerplate for packages created with ``spack create
 
 .. _file-filtering:
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 File filtering functions
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -762,7 +749,6 @@ File filtering functions
        change_sed_delimiter("@", ";", "utils/FixMakefile")
        change_sed_delimiter("@", ";", "utils/FixMakefile.sed.default")
 
-^^^^^^^^^^^^^^
 File functions
 ^^^^^^^^^^^^^^
 
@@ -836,7 +822,6 @@ File functions
 
 .. _multimethods:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Multimethods and the ``@when`` decorator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -896,7 +881,6 @@ If no ``@when`` spec matches, the default method (the one without the ``@when`` 
 
 .. _prefix-objects:
 
-^^^^^^^^^^^^^^
 Prefix objects
 ^^^^^^^^^^^^^^
 
@@ -925,7 +909,6 @@ If your file or directory contains dashes or dots, use ``join`` instead:
 
 .. _environment-variables:
 
----------------------
 The build environment
 ---------------------
 
@@ -972,7 +955,6 @@ This requires a section of its own, because there are multiple ways to deal with
 
 .. _setup-environment:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Package specific environment variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1022,7 +1004,6 @@ This means that the former should only be used if the environment variables depe
 
 .. _setting-package-module-variables:
 
---------------------------------
 Setting package module variables
 --------------------------------
 
@@ -1051,7 +1032,6 @@ This allows Python packages to directly use these variables:
 
 .. _compiler_flags:
 
---------------
 Compiler flags
 --------------
 
@@ -1167,7 +1147,6 @@ To ensure that flags are always *passed to the build system*, you can use:
 
 .. _compiler-wrappers:
 
----------------------------
 Compiler wrappers and flags
 ---------------------------
 
@@ -1183,7 +1162,6 @@ The ``compiler-wrapper`` package has several responsibilities:
   2. Flags needed to locate headers and libraries (during the build as well as at runtime)
   3. Target specific flags, like ``-march=x86-64-v3``, translated from the spec's ``target=<target>`` variant.
 
-^^^^^^^^^^^^^^^^^^^^^^
 Automatic search flags
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1219,7 +1197,6 @@ Because the compiler wrapper is set up to automatically include the ``-I<libelf 
 
 .. _handling_rpaths:
 
-----------------------------
 Runtime library search paths
 ----------------------------
 Spack heavily makes use of `RPATHs <http://en.wikipedia.org/wiki/Rpath>`_ on Linux and macOS to make executables directly runnable after installation.
@@ -1237,7 +1214,6 @@ If you use the ``CMakePackage``, Spack automatically sets the ``CMAKE_INSTALL_RP
 For packages that do not fit ``CMakePackage`` but still run ``cmake`` as part of the build, it is recommended to look at :meth:`spack_repo.builtin.build_systems.cmake.CMakeBuilder.std_args` on how to set the install RPATHs correctly.
 
 
----------------------
 MPI support in Spack
 ---------------------
 
@@ -1307,7 +1283,6 @@ is an autotools version of CMake's FindMPI
 Given all of this, we leave the use of the wrappers up to the packager.
 Spack will support all three ways of building MPI packages.
 
-^^^^^^^^^^^^^^^^^^^^^
 Packaging Conventions
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -1352,7 +1327,6 @@ things up so that the MPI compiler wrappers use Spack's compiler wrappers
 when run from within Spack. So using the MPI wrappers should really be as
 simple as the code above.
 
-^^^^^^^^^^^^^^^^^^^^^
 ``spec["mpi"]``
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -1375,7 +1349,6 @@ you're using, spec["mpi"].mpicc gets you the location of the MPI
 compilers. This allows us to have a fairly simple polymorphic interface
 for information about virtual dependencies like MPI.
 
-^^^^^^^^^^^^^^^^^^^^^
 Wrapping wrappers
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -1402,7 +1375,6 @@ have to do a couple of tricks.
      dependencies still get proper RPATHs even if you use the MPI
      wrappers.
 
-^^^^^^^^^^^^^^^^^^^^^
 MPI on Cray machines
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -1424,7 +1396,6 @@ This is because on Cray, ``spec["mpi"].mpicc`` is just ``spack_cc``.
 
 .. _packaging-workflow:
 
--------------------------------
 Packaging workflow and commands
 -------------------------------
 
@@ -1449,7 +1420,6 @@ The location of the build directory is printed in the build output, but you can 
    $ pwd
    /tmp/spack-stage/spack-stage-mypackage-1-2-3-abcdef
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Inspecting the build environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1464,7 +1434,6 @@ The command
 
 is a convenient way to start a subshell with the build environment variables set up.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the stage directory on success
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1486,7 +1455,6 @@ Once done, you could remove all sources and build directories with:
 
    $ spack clean --stage
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the install prefix on failure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1500,7 +1468,6 @@ The ``--keep-prefix`` option allows you to keep the install prefix regardless of
 
    $ spack install --keep-prefix <spec>
 
-^^^^^^^^^^^^^^^^^^^^^
 Understanding the DAG
 ^^^^^^^^^^^^^^^^^^^^^
 

@@ -8,7 +8,6 @@
 
 .. _rocmpackage:
 
-------
 ROCm
 ------
 
@@ -19,7 +18,6 @@ packages targeting AMD GPUs.
 You can find the source for this package (and suggestions for setting up your ``packages.yaml`` file) at
 `<https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/build_systems/rocm.py>`__.
 
-^^^^^^^^
 Variants
 ^^^^^^^^
 
@@ -36,13 +34,11 @@ This package provides the following variants:
   Valid values are the names of the GPUs (e.g., ``gfx701``), which are maintained
   in the ``amdgpu_targets`` property.
 
-^^^^^^^^^^^^
 Dependencies
 ^^^^^^^^^^^^
 
 This package defines basic ROCm dependencies, including ``llvm`` and ``hip``.
 
-^^^^^^^^^
 Conflicts
 ^^^^^^^^^
 
@@ -54,7 +50,6 @@ when ``rocm`` is disabled.
 Refer to `Conflicts <https://spack.readthedocs.io/en/latest/packaging_guide.html?highlight=conflicts#conflicts>`__
 for more information on package conflicts.
 
-^^^^^^^
 Methods
 ^^^^^^^
 
@@ -68,7 +63,6 @@ standard AMD HIP compiler flags.
     This method must be explicitly called when you are creating the
     arguments for your build in order to use the values.
 
-^^^^^^
 Usage
 ^^^^^^
 

@@ -8,7 +8,6 @@
 
 .. _autotoolspackage:
 
----------
 Autotools
 ---------
 
@@ -16,7 +15,6 @@ Autotools is a GNU build system that provides a build-script generator.
 By running the platform-independent ``./configure`` script that comes
 with the package, you can generate a platform-dependent Makefile.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -45,7 +43,6 @@ The other phases run:
 Of course, you may need to add a few arguments to the ``./configure``
 line.
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -81,7 +78,6 @@ the appropriate Makefile when run.
 
    Packages that don't use Autotools aren't likely to have these files.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -137,7 +133,6 @@ check out a commit from the ``master`` branch, you would want to add:
 It is typically redundant to list the ``m4`` macro processor package as a
 dependency, since ``autoconf`` already depends on it.
 
-"""""""""""""""""""""""""""""""
 Using a custom autoreconf phase
 """""""""""""""""""""""""""""""
 
@@ -159,7 +154,6 @@ If the ``package.py`` has build instructions in a separate
       def autoreconf(self, pkg, spec, prefix):
          which("bash")("autogen.sh")
 
-"""""""""""""""""""""""""""""""""""""""
 patching configure or Makefile.in files
 """""""""""""""""""""""""""""""""""""""
 
@@ -171,7 +165,6 @@ create a new patch that directly modifies ``configure``. That way,
 Spack can use the secondary patch and additional build system
 dependencies aren't necessary.
 
-""""""""""""""""""""""""""""
 Old Autotools helper scripts
 """"""""""""""""""""""""""""
 
@@ -222,7 +215,6 @@ make the package depend on ``gnuconfig`` as a build dependency:
            prefix: /usr/share/configure_files/
 
 
-""""""""""""""""
 force_autoreconf
 """"""""""""""""
 
@@ -244,7 +236,6 @@ version, this can be done like so:
    def force_autoreconf(self):
        return self.version == Version("1.2.3")
 
-^^^^^^^^^^^^^^^^^^^^^^^
 Finding configure flags
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -276,7 +267,6 @@ often lists dependencies and the flags needed to locate them. The
 "environment variables" section lists environment variables that the
 build system uses to pass flags to the compiler and linker.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Adding flags to configure
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -327,7 +317,6 @@ are a problem.
 
 .. _autotools_helper_functions:
 
-^^^^^^^^^^^^^^^^
 Helper functions
 ^^^^^^^^^^^^^^^^
 
@@ -338,7 +327,6 @@ couple of helper functions to make your life easier.
 
 .. _autotools_enable_or_disable:
 
-"""""""""""""""""""""
 ``enable_or_disable``
 """""""""""""""""""""
 
@@ -369,7 +357,6 @@ the following configuration options:
 
    --enable-memchecker
 
-"""""""""""""""""""
 ``with_or_without``
 """""""""""""""""""
 
@@ -402,7 +389,6 @@ generate the following configuration options:
 but idiomatic Autotools packages often follow these naming
 conventions.
 
-""""""""""""""""""""
 ``activation_value``
 """"""""""""""""""""
 
@@ -436,7 +422,6 @@ options:
 
    --with-libfabric=</path/to/libfabric>
 
-"""""""""""""""""""""""
 The ``variant`` keyword
 """""""""""""""""""""""
 
@@ -458,7 +443,6 @@ Or when one variant controls multiple flags:
    config_args += self.with_or_without("profiler", variant="debug_tools")
 
 
-""""""""""""""""""""
 Conditional variants
 """"""""""""""""""""
 
@@ -475,7 +459,6 @@ For example:
 will neither add ``--with-profiler`` nor ``--without-profiler`` when the version is
 below ``2.0``.
 
-""""""""""""""""""""
 Activation overrides
 """"""""""""""""""""
 
@@ -503,7 +486,6 @@ alternative dependency name:
 
    --with-openib=</path/to/rdma-core>
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Configure script in a sub-directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -518,7 +500,6 @@ do this like so:
 
    configure_directory = "src"
 
-^^^^^^^^^^^^^^^^^^^^^^
 Building out of source
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -533,7 +514,6 @@ This can be done using the ``build_directory`` variable:
 By default, Spack will build the package in the same directory that
 contains the ``configure`` script.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build and install targets
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -554,7 +534,6 @@ library or build the documentation, you can add these like so:
    build_targets = ["all", "docs"]
    install_targets = ["install", "docs"]
 
-^^^^^^^
 Testing
 ^^^^^^^
 
@@ -565,7 +544,6 @@ of a ``check`` or ``test`` target in the Makefile and run
 ``make check`` for you. After installation, it will check for an
 ``installcheck`` target and run ``make installcheck`` if it finds one.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

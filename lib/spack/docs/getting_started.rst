@@ -8,7 +8,6 @@
 
 .. _getting_started:
 
-===============
 Getting Started
 ===============
 
@@ -43,7 +42,6 @@ This will create a directory called ``spack``. Once you have cloned Spack, we re
 
 Now you're ready to use Spack!
 
------------------------------
 List packages you can install
 -----------------------------
 
@@ -68,7 +66,6 @@ As you can see it's quite simple to gather basic information on packages, before
 
    The very first command run with Spack will take a while to finish, as Spack has to build a few caches to speed up subsequent command execution.
 
------------------------------
 Installing your first package
 -----------------------------
 
@@ -155,7 +152,6 @@ The output of this command should look similar to the following:
 
 Congratulations! You just installed your first package with Spack!
 
------------------------------------
 Use the software you just installed
 -----------------------------------
 
@@ -193,7 +189,6 @@ directly. To undo these modifications, you can:
    :ref:`Spack Environments <spack-environments-basic-usage>` are a better way to install and load a set of packages that are frequently used together.
    The discussion of this topic goes beyond this ``Getting Started`` guide, and we refer to :ref:`environments` for more information.
 
-----------
 Next steps
 ----------
 

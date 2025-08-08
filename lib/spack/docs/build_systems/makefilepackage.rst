@@ -8,7 +8,6 @@
 
 .. _makefilepackage:
 
---------
 Makefile
 --------
 
@@ -17,7 +16,6 @@ Makefiles are simple to write for small projects, but they usually
 require you to edit the Makefile to set platform and compiler-specific
 variables.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -37,7 +35,6 @@ run:
    $ make install
 
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -51,7 +48,6 @@ This file will be named one of the following ways:
 Some Makefiles also *include* other configuration files. Check for an
 ``include`` directive in the Makefile.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -65,7 +61,6 @@ using GNU Make, you should add a dependency on ``gmake``:
    depends_on("gmake", type="build")
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Types of Makefile packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -79,7 +74,6 @@ that this is the case.
 Depending on how the Makefile is designed, there are 4 common strategies
 that can be used to set or override the appropriate variables:
 
-"""""""""""""""""""""
 Environment variables
 """""""""""""""""""""
 
@@ -105,7 +99,6 @@ is a good example of a simple package that does this, while
 `esmf <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/esmf/package.py>`_
 is a good example of a more complex package.
 
-""""""""""""""""""""""
 Command-line arguments
 """"""""""""""""""""""
 
@@ -136,7 +129,6 @@ If you do need access to the spec, you can create a property like so:
 `cloverleaf <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/cloverleaf/package.py>`_
 is a good example of a package that uses this strategy.
 
-"""""""""""""
 Edit Makefile
 """""""""""""
 
@@ -160,7 +152,6 @@ and a ``filter`` method to help with this. For example:
 is a good example of a package that involves editing a Makefile to set
 the appropriate variables.
 
-"""""""""""
 Config file
 """""""""""
 
@@ -221,7 +212,6 @@ them in a list:
 is a good example of a package that uses a list to store
 configuration variables.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Variables to watch out for
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -277,7 +267,6 @@ user-defined variables and may vary from package to package.
   to the proper prefix. Look for variables like ``PREFIX`` or
   ``INSTALL``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Makefiles in a sub-directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -290,7 +279,6 @@ can tell Spack where to locate it like so:
    build_directory = "src"
 
 
-^^^^^^^^^^^^^^^^^^^
 Manual installation
 ^^^^^^^^^^^^^^^^^^^
 
@@ -306,7 +294,6 @@ install the package:
        install_tree("lib", prefix.lib)
 
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

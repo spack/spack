@@ -6,7 +6,6 @@
    :description lang=en:
       Learn how to chain Spack installations by pointing one Spack instance to another to use its installed packages.
 
-=============================================
 Chaining Spack Installations (upstreams.yaml)
 =============================================
 
@@ -57,7 +56,6 @@ Other details about upstream Spack installations:
    includes the upstream functionality (i.e., if its commit is after March
    27, 2019).
 
----------------------------------------
 Using Multiple Upstream Spack Instances
 ---------------------------------------
 
@@ -66,7 +64,6 @@ will search upstream instances in the order that you list them in your
 configuration. If your Spack installation refers to instances X and Y, in that order,
 then instance X must list Y as an upstream in its own ``upstreams.yaml``.
 
------------------------------------
 Using Modules for Upstream Packages
 -----------------------------------
 

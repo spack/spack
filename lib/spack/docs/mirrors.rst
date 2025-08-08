@@ -8,7 +8,6 @@
 
 .. _mirrors:
 
-======================
 Mirrors (mirrors.yaml)
 ======================
 
@@ -62,7 +61,6 @@ contains tarballs for each package, named after each package.
 
 .. _cmd-spack-mirror:
 
-----------------
 ``spack mirror``
 ----------------
 
@@ -79,7 +77,6 @@ control the URL(s) from which Spack downloads its packages.
 
 .. _cmd-spack-mirror-create:
 
------------------------
 ``spack mirror create``
 -----------------------
 
@@ -124,7 +121,6 @@ what it looks like:
 Once this is done, you can tar up the ``spack-mirror-2014-06-24`` directory and
 copy it over to the machine you want it hosted on.
 
-^^^^^^^^^^^^^^^^^^^
 Custom package sets
 ^^^^^^^^^^^^^^^^^^^
 
@@ -141,7 +137,6 @@ command:
 Will create a mirror for libelf versions greater than or equal to
 0.8.12 and boost versions greater than or equal to 1.44.
 
-^^^^^^^^^^^^
 Mirror files
 ^^^^^^^^^^^^
 
@@ -162,7 +157,6 @@ can supply a file with specs in it, one per line:
 This is useful if there is a specific suite of software managed by
 your site.
 
-^^^^^^^^^^^^^^^^^^
 Mirror environment
 ^^^^^^^^^^^^^^^^^^
 
@@ -185,7 +179,6 @@ This is especially useful to create a mirror of an environment concretized on an
 
 .. _cmd-spack-mirror-add:
 
---------------------
 ``spack mirror add``
 --------------------
 
@@ -213,7 +206,6 @@ Each mirror has a name so that you can refer to it again later.
 
 .. _cmd-spack-mirror-list:
 
----------------------
 ``spack mirror list``
 ---------------------
 
@@ -226,7 +218,6 @@ To see all the mirrors Spack knows about, run ``spack mirror list``:
 
 .. _cmd-spack-mirror-remove:
 
------------------------
 ``spack mirror remove``
 -----------------------
 
@@ -238,7 +229,6 @@ To remove a mirror by name, run:
    $ spack mirror list
    ==> No mirrors configured.
 
------------------
 Mirror precedence
 -----------------
 
@@ -256,7 +246,6 @@ search the topmost mirror first and the bottom-most mirror last.
 
 .. _caching:
 
--------------------
 Local Default Cache
 -------------------
 

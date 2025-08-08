@@ -6,7 +6,6 @@
    :description lang=en:
       A guide to configuring Spack to use external GPU support, including ROCm and CUDA installations, as well as the OpenGL API.
 
-==========================
 Using External GPU Support
 ==========================
 
@@ -15,7 +14,6 @@ configuration, Spack will download and install the needed components.
 It may be preferable to use existing system support: the following sections
 help with using a system installation of GPU libraries.
 
------------------------------------
 Using an External ROCm Installation
 -----------------------------------
 
@@ -93,7 +91,6 @@ This includes the following considerations:
 - The ``prefix`` is the same for several components, but note that others
   require listing one of the subdirectories as a prefix.
 
------------------------------------
 Using an External CUDA Installation
 -----------------------------------
 
@@ -115,7 +112,6 @@ where ``/opt/cuda/cuda-11.0.2/lib/`` contains ``libcudart.so``.
 
 
 
------------------------------------
 Using an External OpenGL API
 -----------------------------------
 Depending on whether we have a graphics card or not, we may choose to use OSMesa or GLX to implement the OpenGL API.

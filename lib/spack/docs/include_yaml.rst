@@ -8,7 +8,6 @@
 
 .. _include-yaml:
 
-===============================
 Include Settings (include.yaml)
 ===============================
 

@@ -16,7 +16,6 @@
      - :doc:`3. Testing <packaging_guide_testing>`
      - :doc:`4. Advanced <packaging_guide_advanced>`
 
-===================================
 Packaging Guide: defining a package
 ===================================
 
@@ -41,7 +40,6 @@ Second, it has many powerful features to help make package writing easy.
 .. _setting-up-for-package-development:
 
 
-----------------------------------
 Setting up for package development
 ----------------------------------
 
@@ -78,7 +76,6 @@ Lastly, verify that Spack is picking up the right repository by checking the loc
 
 With this setup, you can conveniently access the package files, and contribute changes back to Spack.
 
-----------------------
 Structure of a package
 ----------------------
 
@@ -131,7 +128,6 @@ The package class is named after the package, and can roughly be divided into tw
 In this part of the packaging guide we will cover the **metadata and directives** in detail.
 In the :doc:`second part <packaging_guide_build>`, we will cover the **build instructions**, including how to write custom build logic for different build systems.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Package Names and the Package Directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -157,7 +153,6 @@ Usually the package name coincides with the directory name on the filesystem: th
    This ensures that every package directory is a valid Python module name.
 
 
-^^^^^^^^^^^^^^^^^^^
 Package class names
 ^^^^^^^^^^^^^^^^^^^
 
@@ -175,7 +170,6 @@ Here are some examples:
 
 In general, you won't have to remember this naming convention because :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
 
------------------------------
 Creating and editing packages
 -----------------------------
 
@@ -186,7 +180,6 @@ It can also help you edit existing packages, so you don't have to navigate to th
 
 .. _controlling-the-editor:
 
-^^^^^^^^^^^^^^^^^^^^^^
 Controlling the editor
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -207,7 +200,6 @@ If Spack finds none of these variables set, it will look for ``vim``, ``vi``, ``
 
 .. _cmd-spack-create:
 
-^^^^^^^^^^^^^^^^^^^^^
 Creating new packages
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -338,7 +330,6 @@ The rest of the tasks you need to do are as follows:
    Specifics will differ depending on the package and its build system.
    :ref:`installation_process` is covered in detail later.
 
-""""""""""""""""""""""""""""""""
 Further package creation options
 """"""""""""""""""""""""""""""""
 
@@ -360,7 +351,6 @@ A complete list of available build system templates can be found by running ``sp
 
 .. _cmd-spack-edit:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Editing existing packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -396,7 +386,6 @@ without specifying a package name, which will open the directory containing all 
 
 Finally, the commands ``spack location --repo`` and ``spack cd --repo`` help you navigate to the root of the package repository.
 
-------------------------
 Source code and versions
 ------------------------
 
@@ -405,7 +394,6 @@ Typically every package version has a corresponding source code archive, which S
 
 .. _versions-and-fetching:
 
-^^^^^^^^^^^^^^^^^
 Versions and URLs
 ^^^^^^^^^^^^^^^^^
 
@@ -516,7 +504,6 @@ With this method, you only need to specify the ``url`` when the URL changes.
 
 .. _checksum-verification:
 
-^^^^^^^^^^^^^^^^^^^^^
 Checksum verification
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -542,13 +529,11 @@ Therefore, Spack requires that all URL downloads have a checksum, and refuses to
 
 .. _cmd-spack-checksum:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Automatically adding new versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``spack checksum`` command can be used to automate the process of adding new versions to a package, assuming the package's download URLs follow a consistent pattern.
 
-""""""""""""""""""
 ``spack checksum``
 """"""""""""""""""
 
@@ -596,7 +581,6 @@ See the documentation on :ref:`attribute_list_url` and :ref:`attribute_list_dept
 
 .. _attribute_list_url:
 
-""""""""""""
 ``list_url``
 """"""""""""
 
@@ -613,7 +597,6 @@ For example, the following package has a ``list_url`` attribute that points to a
 
 .. _attribute_list_depth:
 
-""""""""""""""
 ``list_depth``
 """"""""""""""
 
@@ -641,7 +624,6 @@ By default, Spack only looks at the top-level page available at ``list_url``.
 Note that here, this implies 1 level of subdirectories, as the ``mpich`` website is structured much like a filesystem.
 But ``list_depth`` really refers to link depth when spidering the page.
 
-^^^^^^^^^^^^^^^^^^^^^^^
 Mirrors of the main URL
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -669,7 +651,6 @@ For that, Spack goes a step further and defines a mixin class that takes care of
 
 .. _preferred_versions:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Preferring versions over others
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -688,7 +669,6 @@ See the section on :ref:`version ordering <version-comparison>` for more details
 
 .. _deprecate:
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Deprecating old versions
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -739,7 +719,6 @@ However, you may be asked to help maintain this version of the package if the cu
 
 .. _version-comparison:
 
-^^^^^^^^^^^^^^^^
 Version ordering
 ^^^^^^^^^^^^^^^^
 
@@ -797,7 +776,6 @@ The logic behind this sort order is two-fold:
 
 .. _vcs-fetch:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Fetching from code repositories
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -853,7 +831,6 @@ than the default repo, it can be overridden with a version-specific argument.
 
 .. _git-fetch:
 
-"""""""
 Git
 """""""
 
@@ -1075,7 +1052,6 @@ Sparse-Checkout
 
 .. _github-fetch:
 
-""""""
 GitHub
 """"""
 
@@ -1099,7 +1075,6 @@ Alternatively, you could provide the GitHub ``url`` for one version as a propert
 
 .. _hg-fetch:
 
-"""""""""
 Mercurial
 """""""""
 
@@ -1147,7 +1122,6 @@ Revisions
 
 .. _svn-fetch:
 
-""""""""""
 Subversion
 """"""""""
 
@@ -1198,7 +1172,6 @@ version directive.
 
 .. _cvs-fetch:
 
-"""""""
 CVS
 """""""
 
@@ -1256,7 +1229,6 @@ Fetching a date
 
 CVS has more features, but since CVS is rarely used these days, Spack does not support all of them.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Sources that are not archives
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1292,7 +1264,6 @@ it executable, then runs it with some arguments.
        installer("--prefix=%s" % prefix, "arg1", "arg2", "etc.")
 
 
-^^^^^^^^^^^^^^^
 Extra Resources
 ^^^^^^^^^^^^^^^
 
@@ -1311,7 +1282,6 @@ In Spack it is possible to describe such a need with the ``resource`` directive:
 The arguments are similar to those of the ``versions`` directive.
 The keyword ``destination`` is relative to the source root of the package and should point to where the resource is to be expanded.
 
-^^^^^^^^^^^^^^^^
 Download caching
 ^^^^^^^^^^^^^^^^
 
@@ -1322,7 +1292,6 @@ Example situations would be a "snapshot"-like Version Control System (VCS) tag, 
 
 .. _version_constraints:
 
-------------------------------
 Specifying version constraints
 ------------------------------
 
@@ -1361,7 +1330,6 @@ For example, if the package defines the version ``1.2.3``, we know from :ref:`ve
 
 .. _variants:
 
---------
 Variants
 --------
 
@@ -1369,7 +1337,6 @@ Many software packages can be configured to enable optional features, which ofte
 To be flexible enough and support a wide variety of use cases, Spack allows you to expose to the end-user the ability to choose which features should be activated in a package at the time it is installed.
 The mechanism to be employed is the :py:func:`~spack.package.variant` directive.
 
-^^^^^^^^^^^^^^^^
 Boolean variants
 ^^^^^^^^^^^^^^^^
 
@@ -1402,7 +1369,6 @@ For example, a package may depend on another package only if a certain variant i
 
 In this case, ``szip`` is modeled as an optional dependency of ``hdf5``, and users can run ``spack install hdf5 +szip`` to enable it.
 
-^^^^^^^^^^^^^^^^^^^^^^
 Single-valued variants
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1443,7 +1409,6 @@ This constraint is enforced by the solver, and an error is emitted if a user spe
    In the example above, the value ``threads=none`` is a variant value like any other, and means that *no value is selected*.
    In Spack, all variants have to have a value, so ``none`` was chosen as a *convention* to indicate that no value is selected.
 
-^^^^^^^^^^^^^^^^^^^^^
 Multi-valued variants
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -1466,7 +1431,6 @@ To define a *multi-valued* variant, simply pass ``multi=True`` instead:
 This allows users to run ``spack install languages=c,c++`` where the values are separated by commas.
 
 
-""""""""""""""""""""""""""""""""""""""""""""
 Advanced validation of multi-valued variants
 """"""""""""""""""""""""""""""""""""""""""""
 
@@ -1525,7 +1489,6 @@ In this case, examples of valid options are ``process_managers=auto``, ``process
 
 Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Conditional Possible Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1560,7 +1523,6 @@ The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible val
 and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
 
 
-^^^^^^^^^^^^^^^^^^^^
 Conditional Variants
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -1585,7 +1547,6 @@ For example, a user might run ``spack install foo ~bar``, expecting it to allow 
 However, the constraint ``~bar`` tells Spack that the ``bar`` variant *must exist* and be disabled.
 This forces Spack to select version 2.0 or higher, where the variant is defined.
 
-^^^^^^^^^^^^^^^
 Sticky Variants
 ^^^^^^^^^^^^^^^
 
@@ -1610,7 +1571,6 @@ allowing these options is done on purpose by the user, rather than
 automatically by the solver.
 
 
-^^^^^^^^^^^^^^^^^^^
 Overriding Variants
 ^^^^^^^^^^^^^^^^^^^
 
@@ -1647,7 +1607,6 @@ duplicating the variant definition.
 
 .. _dependencies:
 
-------------
 Dependencies
 ------------
 
@@ -1676,7 +1635,6 @@ Spack makes this relatively easy.  Let's take a look at the
        def install(self, spec, prefix):
            ...
 
-^^^^^^^^^^^^^^^^
 ``depends_on()``
 ^^^^^^^^^^^^^^^^
 
@@ -1688,7 +1646,6 @@ so you can rely on it for your libdwarf build.
 
 .. _dependency_specs:
 
-^^^^^^^^^^^^^^^^
 Dependency specs
 ^^^^^^^^^^^^^^^^
 
@@ -1718,7 +1675,6 @@ relationships between packages.
 
 .. _version_compatibility:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying backward and forward compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1821,7 +1777,6 @@ but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
 .. _dependency-types:
 
-^^^^^^^^^^^^^^^^
 Dependency types
 ^^^^^^^^^^^^^^^^
 
@@ -1875,7 +1830,6 @@ inject the dependency's ``prefix/lib`` directory, but the package needs to
 be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
 a user wants to run the package.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1928,7 +1882,6 @@ are supported on the command line using the same :ref:`syntax <sec-specs>`.
 
 .. _dependency_dependency_patching:
 
-^^^^^^^^^^^^^^^^^^^
 Dependency patching
 ^^^^^^^^^^^^^^^^^^^
 
@@ -2014,7 +1967,6 @@ appear in the package file (or in this case, in the list).
 
 .. _virtual-dependencies:
 
---------------------
 Virtual dependencies
 --------------------
 
@@ -2026,7 +1978,6 @@ MPI has several different implementations (e.g., `MPICH <http://www.mpich.org>`_
 Many package managers handle interfaces like this by requiring many variations of the package recipe for each implementation of MPI, e.g., ``foo``, ``foo-mvapich``, ``foo-mpich``.
 In Spack every package is defined in a single ``package.py`` file, and avoids the combinatorial explosion through *virtual dependencies*.
 
-^^^^^^^^^^^^
 ``provides``
 ^^^^^^^^^^^^
 
@@ -2060,7 +2011,6 @@ If we look inside the package file of an MPI implementation, say MPICH, we'll se
 
 The ``provides("mpi")`` call tells Spack that the ``mpich`` package can be used to satisfy the dependency of any package that ``depends_on("mpi")``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Providing multiple virtuals simultaneously
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2087,7 +2037,6 @@ If you try to, Spack will report an error:
 
       1. Package 'openblas' needs to provide both 'lapack' and 'blas' together, but provides only 'lapack'
 
-^^^^^^^^^^^^^^^^^^^^
 Versioned Interfaces
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -2107,7 +2056,6 @@ This says that ``mpich2`` provides MPI support *up to* version 2, but if a packa
 
 Currently, names and versions are the only spec components supported for virtual packages.
 
-^^^^^^^^^^^^^^^^^
 ``provides when``
 ^^^^^^^^^^^^^^^^^
 
@@ -2145,7 +2093,6 @@ Spack will fail with a constraint violation, because the version of MPICH reques
 
 .. _language-dependencies:
 
-----------------------------------
 Language and compiler dependencies
 ----------------------------------
 
@@ -2168,7 +2115,6 @@ This means that language dependencies translate to one or more compiler packages
 
 .. _packaging_conflicts:
 
----------
 Conflicts
 ---------
 
@@ -2219,7 +2165,6 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
 
 .. _packaging_requires:
 
---------
 Requires
 --------
 
@@ -2270,7 +2215,6 @@ Or the package must be built with a GCC or Clang that supports C++ 20, which you
 
 .. _patching:
 
--------
 Patches
 -------
 
@@ -2280,7 +2224,6 @@ correctly.  Like many other package systems, Spack allows you to store
 patches alongside your package files and apply them to source code
 after it's downloaded.
 
-^^^^^^^^^
 ``patch``
 ^^^^^^^^^
 
@@ -2341,14 +2284,12 @@ checked when patch archives are downloaded.
 
 ``patch`` keyword arguments are described below.
 
-""""""""""""""""""""""""""""""
 ``sha256``, ``archive_sha256``
 """"""""""""""""""""""""""""""
 
 Hashes of downloaded patch and compressed archive, respectively.  Only
 needed for patches fetched from URLs.
 
-""""""""
 ``when``
 """"""""
 
@@ -2357,7 +2298,6 @@ the patch.  If the installed package spec matches this spec, the
 patch will be applied.  In our example above, the patch is applied
 when mvapich is at version ``1.9`` or higher.
 
-"""""""""
 ``level``
 """""""""
 
@@ -2398,7 +2338,6 @@ It's generally easier to just structure your patch file so that it
 applies cleanly with ``-p1``, but if you're using a patch you didn't
 create yourself, ``level`` can be handy.
 
-"""""""""""""""
 ``working_dir``
 """""""""""""""
 
@@ -2428,7 +2367,6 @@ it can only be downloaded in the following form:
 Hence, the patch needs to be applied in the ``src/mpi`` subdirectory, and the
 ``working_dir="src/mpi"`` option would exactly do that.
 
-^^^^^^^^^^^^^^^^^^^^^
 Patch functions
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -2454,7 +2392,6 @@ patch function is only run once.
 
 .. _patch_dependency_patching:
 
-^^^^^^^^^^^^^^^^^^^
 Dependency patching
 ^^^^^^^^^^^^^^^^^^^
 
@@ -2467,7 +2404,6 @@ other versions of that library.  See the `section on depends_on
 
 .. _patch_inspecting_patches:
 
-^^^^^^^^^^^^^^^^^^^
 Inspecting patches
 ^^^^^^^^^^^^^^^^^^^
 
@@ -2538,7 +2474,6 @@ package repository.
 
 .. _packaging_extensions:
 
-----------
 Extensions
 ----------
 
@@ -2592,7 +2527,6 @@ either lua or luajit, but not both:
 Now, a user can install, and activate, the ``lua-lpeg`` package for either
 lua or luajit.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Adding additional constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2619,7 +2553,6 @@ variant(s) are selected.  This may be accomplished with conditional
        extends("python", when="+python")
        ...
 
---------------------------
 Mixins for common metadata
 --------------------------
 
@@ -2668,7 +2601,6 @@ In the example above ``Cp2k`` inherits the variants and conflicts defined by ``C
 
 .. _package_maintainers:
 
------------
 Maintainers
 -----------
 
@@ -2685,7 +2617,6 @@ To add maintainers to a package, simply declare them with the ``maintainers`` di
 
 The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
 
--------------------
 License Information
 -------------------
 
@@ -2743,14 +2674,12 @@ When you have validated a package license, either when doing so explicitly or as
 
 .. _license:
 
---------------------
 Proprietary software
 --------------------
 
 In order to install proprietary software, Spack needs to know a few more details about a package.
 The following class attributes should be defined.
 
-^^^^^^^^^^^^^^^^^^^^
 ``license_required``
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -2759,7 +2688,6 @@ If set to ``True``, this software requires a license.
 If set to ``False``, all of the following attributes will be ignored.
 Defaults to ``False``.
 
-^^^^^^^^^^^^^^^^^^^
 ``license_comment``
 ^^^^^^^^^^^^^^^^^^^
 
@@ -2767,7 +2695,6 @@ String.
 Contains the symbol used by the license manager to denote a comment.
 Defaults to ``#``.
 
-^^^^^^^^^^^^^^^^^
 ``license_files``
 ^^^^^^^^^^^^^^^^^
 
@@ -2777,7 +2704,6 @@ All file paths must be relative to the installation directory.
 More complex packages like Intel may require multiple licenses for individual components.
 Defaults to the empty list.
 
-^^^^^^^^^^^^^^^^
 ``license_vars``
 ^^^^^^^^^^^^^^^^
 
@@ -2785,7 +2711,6 @@ List of strings.
 Environment variables that can be set to tell the software where to look for a license if it is not in the usual location.
 Defaults to the empty list.
 
-^^^^^^^^^^^^^^^
 ``license_url``
 ^^^^^^^^^^^^^^^
 
@@ -2823,7 +2748,6 @@ If you install a different version or variant of the package, Spack will automat
 If the software you are trying to package doesn't rely on license files, Spack will print a warning message, letting the user know that they need to set an environment variable or pointing them to installation documentation.
 
 
--------------------
 Grouping directives
 -------------------
 
@@ -2832,7 +2756,6 @@ Very often, these directives share a common argument, which you becomes repetiti
 
 .. _group_when_spec:
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Grouping with ``when()``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2879,7 +2802,6 @@ Constraints from nested context managers are also combined together, but they ar
 
 .. _default_args:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Grouping with ``default_args()``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2928,7 +2850,6 @@ The above is short for:
 
 .. _custom-attributes:
 
-------------------------------------------------
 ``home``, ``command``, ``headers``, and ``libs``
 ------------------------------------------------
 
@@ -2983,7 +2904,6 @@ The implementation used is the first one found from:
 
 The use of customized attributes is demonstrated in the next example.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Example: Customized attributes for virtual packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -3176,13 +3096,11 @@ the above attribute implementations:
        "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib"
    ]
 
------------------------------
 Style guidelines for packages
 -----------------------------
 
 The following guidelines are provided, in the interests of making Spack packages work in a consistent manner:
 
-^^^^^^^^^^^^^
 Variant Names
 ^^^^^^^^^^^^^
 
@@ -3203,13 +3121,11 @@ The semantics of the `shared` variant are important.
 When a package is built `~shared`, the package guarantees that no shared libraries are built.
 When a package is built `+shared`, the package guarantees that shared libraries are built, but it makes no guarantee about whether static libraries are built.
 
-^^^^^^^^^^^^^^^^^^^
 Version definitions
 ^^^^^^^^^^^^^^^^^^^
 
 Spack packages should list supported versions with the newest first.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Using ``home`` vs ``prefix``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -8,7 +8,6 @@
 
 .. _cudapackage:
 
-------
 Cuda
 ------
 
@@ -18,7 +17,6 @@ Instead its goal is to simplify and unify usage of ``CUDA`` in other packages by
 You can find source for the package at
 `<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/cuda.py>`__.
 
-^^^^^^^^
 Variants
 ^^^^^^^^
 
@@ -43,7 +41,6 @@ This package provides the following variants:
   GPUs and their compute capability versions are listed at
   https://developer.nvidia.com/cuda-gpus.
 
-^^^^^^^^^
 Conflicts
 ^^^^^^^^^
 
@@ -77,7 +74,6 @@ custom message should a user attempt such a build:
         conflicts(f"cuda_arch={value}", when="+cuda",
                   msg=f"CUDA architecture {value} is not supported")
 
-^^^^^^^
 Methods
 ^^^^^^^
 
@@ -92,7 +88,6 @@ standard CUDA compiler flags.
     This method must be explicitly called when you are creating the
     arguments for your build in order to use the values.
 
-^^^^^^
 Usage
 ^^^^^^
 

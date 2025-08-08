@@ -8,7 +8,6 @@
 
 .. _verify-spack-prerequisites:
 
-===================
 Spack Prerequisites
 ===================
 

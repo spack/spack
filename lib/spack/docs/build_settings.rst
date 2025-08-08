@@ -8,7 +8,6 @@
 
 .. _concretizer-options:
 
-==========================================
 Concretization Settings (concretizer.yaml)
 ==========================================
 
@@ -19,7 +18,6 @@ is the following:
 .. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
    :language: yaml
 
---------------------------------
 Reuse Already Installed Packages
 --------------------------------
 
@@ -108,7 +106,6 @@ to do a fresh install if ``reuse`` is enabled by default.
 
    FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
 
-------------------------------------------
 Selection of Target Microarchitectures
 ------------------------------------------
 
@@ -143,7 +140,6 @@ microarchitectures considered during the solve are constrained to be compatible 
 host Spack is currently running on. For instance, if this option is set to ``true``, a
 user cannot concretize for ``target=icelake`` while running on a Haswell node.
 
----------------
 Duplicate Nodes
 ---------------
 
@@ -169,7 +165,6 @@ while `py-numpy` still needs an older version:
 Up to Spack v0.20, ``duplicates:strategy:none`` was the default (and only) behavior. From Spack v0.21, the
 default behavior is ``duplicates:strategy:minimal``.
 
---------
 Splicing
 --------
 
@@ -242,7 +237,6 @@ is optional -- by default, splices will be transitive.
 
 .. _automatic_splicing:
 
-^^^^^^^^^^^^^^^^^^
 Automatic Splicing
 ^^^^^^^^^^^^^^^^^^
 

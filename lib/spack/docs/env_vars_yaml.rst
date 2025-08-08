@@ -8,7 +8,6 @@
 
 .. _env-vars-yaml:
 
-=============================================
 Environment Variable Settings (env_vars.yaml)
 =============================================
 

@@ -8,7 +8,6 @@
 
 .. _cachedcmakepackage:
 
------------
 CachedCMake
 -----------
 
@@ -21,7 +20,6 @@ The documentation for this class assumes that the user is familiar with
 the ``CMakePackage`` class from which it inherits. See the documentation
 for :ref:`CMakePackage <cmakepackage>`.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -53,7 +51,6 @@ you may need to add a few arguments yourself, and the
 ``CachedCMakePackage`` provides the same interface to add those
 flags.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Adding entries to the CMake cache
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -118,7 +115,6 @@ A typical usage of these methods may look something like this:
            entries.append(cmake_cache_string("FOO_BLAS", "baz", "Use baz"))
            entries.append(cmake_cache_path("BAZ_PREFIX", self.spec["baz"].prefix))
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

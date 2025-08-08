@@ -8,7 +8,6 @@
 
 .. _spack-environments-basic-usage:
 
-==================
 Spack Environments
 ==================
 
@@ -17,7 +16,6 @@ But Spack can also be used to handle simple single-user installations on your la
 Most macOS users are already familiar with package managers like Homebrew and Conda, where all installed packages are symlinked to a single central location like ``/usr/local``.
 In this section, we will show you how to emulate the behavior of Homebrew/Conda using :ref:`Spack environments <environments>`!
 
---------------------------
 Creating a New Environment
 --------------------------
 
@@ -67,7 +65,6 @@ you'll see how your ``spack.yaml`` looks like:
      concretizer:
        unify: true
 
--------------------------
 Configuring View Location
 -------------------------
 
@@ -92,7 +89,6 @@ For now, let's deactivate the environment, and proceed with installing the softw
    $ spack env deactivate
 
 
------------------------
 Installing the Software
 -----------------------
 
@@ -138,7 +134,6 @@ Now, when you type ``which python3``, it should find the one you just installed.
    Now, when you log out and log back in, ``echo $SHELL`` should point to the newer version of Bash.
 
 
------------------------
 Keeping Up With Updates
 -----------------------
 
@@ -156,7 +151,6 @@ The ``--fresh`` flag tells Spack to use the latest version of every package, whe
 The ``--force`` flag in addition tells Spack to overwrite its previous concretization decisions, allowing you to choose a new version of Python.
 If any of the new packages like Bash are already installed, ``spack install`` won't re-install them, it will keep the symlinks in place.
 
-------------------------
 Cleaning Up Old Packages
 ------------------------
 
@@ -171,7 +165,6 @@ If we want to clean up old, out-of-date packages from our environment after an u
 
 The final step, ``spack gc --except-any-environment``, runs Spack's garbage collector and removes any packages that are no longer needed by any managed Spack environment -- which will clean up those old versions that got replaced during the upgrade.
 
-------------------------
 Removing the Environment
 ------------------------
 
