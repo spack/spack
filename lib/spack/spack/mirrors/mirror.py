@@ -97,10 +97,22 @@ class Mirror:
         binary = "b" if self.binary else " "
         print(f"{self.name: <{max_len}} [{source}{binary}] {url}")
 
-    def _process_spec_filters(self, key: str) -> List[str]:
+    def _get_spec_filters(self, key: str) -> List[str]:
         if isinstance(self._data, str):
             return []
-        return self._data.get(key, [])
+        filter_source = self._data.get(key, [])
+        if isinstance(filter_source, str):
+            try:
+                with open(filter_source, "r") as file:
+                    filters = file.read().splitlines()
+                return filters
+            except FileNotFoundError:
+                tty.warn(
+                    f"{key}: {filter_source} not a valid file. No mirror filter will be applied"
+                )
+                return []
+        else:
+            return filter_source
 
     @property
     def name(self):
@@ -136,11 +148,11 @@ class Mirror:
 
     @property
     def exclusions(self):
-        return self._process_spec_filters("exclude")
+        return self._get_spec_filters("exclude")
 
     @property
     def inclusions(self):
-        return self._process_spec_filters("include")
+        return self._get_spec_filters("include")
 
     def ensure_mirror_usable(self, direction: str = "push"):
         access_pair = self._get_value("access_pair", direction)

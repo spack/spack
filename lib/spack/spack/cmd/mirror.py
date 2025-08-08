@@ -335,7 +335,7 @@ def _configure_access_pair(
         return None
 
 
-def _manage_filters(args, mirror) -> bool:
+def _collect_mirror_filters(mirror, args) -> bool:
     include_specs = []
     if args.include_file:
         include_specs.extend(specs_from_text_file(args.include_file, concretize=False))
@@ -429,7 +429,7 @@ def mirror_add(args):
     else:
         mirror = spack.mirrors.mirror.Mirror(args.url, name=args.name)
 
-    _manage_filters(args, mirror)
+    _collect_mirror_filters(mirror, args)
 
     spack.mirrors.utils.add(mirror, args.scope)
 
@@ -492,7 +492,7 @@ def _configure_mirror(args):
 
     changed = entry.update(changes, direction)
     if hasattr(args, "include_file"):
-        changed = changed | _manage_filters(args, entry)
+        changed = changed | _collect_mirror_filters(entry, args)
 
     if changed:
         mirrors[args.name] = entry.to_dict()

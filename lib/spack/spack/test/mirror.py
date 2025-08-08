@@ -446,7 +446,7 @@ def test_mirror_name_or_url_dir_parsing(tmp_path: pathlib.Path):
         assert mirror_name_or_url("..").fetch_url == tmp_path.as_uri()
 
 
-def test_mirror_parse_exclude_include():
+def test_mirror_parse_exin_clude():
     mirror_raw = {
         "url": "https://example.com",
         "exclude": ["dev_path=*", "+shared"],
@@ -455,6 +455,28 @@ def test_mirror_parse_exclude_include():
     m = spack.mirrors.mirror.Mirror(mirror_raw)
     assert "dev_path=*" in m.exclusions
     assert "+foo" in m.inclusions
+
+
+def test_mirror_parses_exin_clude_as_file(capsys, tmp_path: pathlib.Path):
+    exclude_file = tmp_path / "filters" / "exclude.txt"
+    exclude_file.parent.mkdir(parents=True)
+    exclude_file.write_text(
+        """\
+dev_path=*
++shared
+"""
+    )
+    mirror_raw = {
+        "url": "https://example.com",
+        "exclude": str(exclude_file),
+        "include": str(exclude_file.parent / "include.txt"),
+    }
+    m = spack.mirrors.mirror.Mirror(mirror_raw)
+    _, err = capsys.readouterr()
+    assert "dev_path=*" in m.exclusions
+    assert not m.inclusions
+    # should have a message to users to indicate the file does not exist
+    assert "include.txt" in err
 
 
 INPUT_SPEC_STRS = ["foo@main", "foo@main dev_path=/tmp", "foo@2.1.3"]
