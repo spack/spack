@@ -12,6 +12,7 @@ import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.util.editor
+from typing import Optional, Union
 
 description = "open package files in $EDITOR"
 section = "packaging"
@@ -76,8 +77,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument("package", nargs="*", default=None, help="package name")
 
 
-def locate_package(name: str, repo: spack.repo.Repo) -> str:
-    path = repo.filename_for_package_name(name)
+def locate_package(name: str, repo: Optional[spack.repo.Repo]) -> str:
+    # if not given a repo, use the full repo path to choose one
+    repo_like: Union[spack.repo.Repo, spack.repo.RepoPath] = repo or spack.repo.PATH
+    path: str = repo_like.filename_for_package_name(name)
 
     try:
         with open(path, "r", encoding="utf-8"):
@@ -86,6 +89,28 @@ def locate_package(name: str, repo: spack.repo.Repo) -> str:
         if e.errno == errno.ENOENT:
             raise spack.repo.UnknownPackageError(name) from e
         tty.die(f"Cannot edit package: {e}")
+
+
+def locate_build_system(name: str, repo: Optional[spack.repo.Repo]) -> str:
+    # If given a fullname for a build system, split it into namespace and name
+    namespace = None
+    if "." in name:
+        namespace, name = name.rsplit(".", 1)
+
+    # If given a namespace and a repo, they better match
+    # If not given a repo, use the namespace
+    # If repo and no namespace, just use the first one available
+    if namespace and repo:
+        if repo.namespace != namespace:
+            msg = f"{namespace}.{name}: namespace conflicts with repo '{repo.namespace}'"
+            msg += " specified from --repo or --namespace argument"
+            raise ValueError(msg)
+    elif namespace:
+        repo = spack.repo.PATH.get_repo(namespace)
+    elif not repo:
+        repo = spack.repo.PATH.first_repo()
+
+    return locate_file(name, repo.build_systems_path)
 
 
 def locate_file(name: str, path: str) -> str:
@@ -118,23 +143,6 @@ def locate_file(name: str, path: str) -> str:
     return files[0]
 
 
-def repo_from_args(args):
-    if args.repo:
-        return spack.repo.from_path(args.repo)
-    elif args.namespace:
-        return spack.repo.PATH.get_repo(args.namespace)
-    elif args.package and not args.path:
-        # for package names, we can take a RepoPath and find which repo they're in
-        return spack.repo.PATH
-    else:
-        # If there's a fullname for a build system, use the first one
-        for name in args.package:
-            if "." in name:
-                return spack.repo.PATH.get_repo(name.rsplit(".", 1)[0])
-        # for build systems or packages_path, just take the first repo
-        return spack.repo.PATH.first_repo()
-
-
 def edit(parser, args):
     names = args.package
 
@@ -144,16 +152,23 @@ def edit(parser, args):
         spack.util.editor.editor(*paths)
         return
 
-    repo = repo_from_args(args)
+    # Cannot set repo = spack.repo.PATH.first_repo() as default because packages and build_systems
+    # can include repo information as part of their fullname
+    repo = None
+    if args.namespace:
+        repo = spack.repo.PATH.get_repo(args.namespace)
+    elif args.repo:
+        repo = spack.repo.from_path(args.repo)
+    # default_repo used when no name provided
+    default_repo = repo or spack.repo.PATH.first_repo()
+
     if args.path == "BUILD_SYSTEM":
-        # Ignore namespaces -- we've already found the repo
-        names = [name.rsplit(".", 1)[-1] for name in names]
-        root = repo.build_systems_path
-        paths = [locate_file(name, root) for name in names] if names else [root]
+        if names:
+            paths = [locate_build_system(n, repo) for n in names]
+        else:
+            paths = [default_repo.build_systems_path]
         spack.util.editor.editor(*paths)
-    elif names:
-        paths = [locate_package(name, repo) for name in names]
-        spack.util.editor.editor(*paths)
-    else:
-        # By default open the directory where packages live
-        spack.util.editor.editor(repo.packages_path)
+        return
+
+    paths = [locate_package(n, repo) for n in names] if names else [default_repo.packages_path]
+    spack.util.editor.editor(*paths)
