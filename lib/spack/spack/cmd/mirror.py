@@ -134,24 +134,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         dest="signed",
     )
-    add_parser.add_argument(
-        "--include-file",
-        help="specs which Spack should always try to add to a mirror"
-        " (listed in a file, one per line)",
-    )
-    add_parser.add_argument(
-        "--include-specs",
-        help="specs which Spack should always try to add to a mirror (specified on command line)",
-    )
-    add_parser.add_argument(
-        "--exclude-file",
-        help="specs which Spack should not try to add to a mirror"
-        " (listed in a file, one per line)",
-    )
-    add_parser.add_argument(
-        "--exclude-specs",
-        help="specs which Spack should not try to add to a mirror (specified on command line)",
-    )
+    arguments.add_filter_args(add_parser)
     arguments.add_connection_args(add_parser, False)
     # Remove
     remove_parser = sp.add_parser("remove", aliases=["rm"], help=mirror_remove.__doc__)
@@ -240,24 +223,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
-    set_parser.add_argument(
-        "--include-file",
-        help="specs which Spack should always try to add to a mirror"
-        " (listed in a file, one per line)",
-    )
-    set_parser.add_argument(
-        "--include-specs",
-        help="specs which Spack should always try to add to a mirror (specified on command line)",
-    )
-    set_parser.add_argument(
-        "--exclude-file",
-        help="specs which Spack should not try to add to a mirror"
-        " (listed in a file, one per line)",
-    )
-    set_parser.add_argument(
-        "--exclude-specs",
-        help="specs which Spack should not try to add to a mirror (specified on command line)",
-    )
+    arguments.add_filter_args(set_parser)
     arguments.add_connection_args(set_parser, False)
 
     # List
@@ -339,18 +305,18 @@ def _collect_mirror_filters(mirror, args) -> bool:
     include_specs = []
     if args.include_file:
         include_specs.extend(specs_from_text_file(args.include_file, concretize=False))
+        mirror.update({"include": args.include_file})
     if args.include_specs:
         include_specs.extend(spack.cmd.parse_specs(str(args.include_specs).split()))
-    if include_specs:
         # round trip specs to assure they are valid
         mirror.update({"include": [str(s) for s in include_specs]})
 
     exclude_specs = []
     if args.exclude_file:
         exclude_specs.extend(specs_from_text_file(args.exclude_file, concretize=False))
+        mirror.update({"exclude": args.exclude_file})
     if args.exclude_specs:
         exclude_specs.extend(spack.cmd.parse_specs(str(args.exclude_specs).split()))
-    if exclude_specs:
         # round trip specs to assure they are valid
         mirror.update({"exclude": [str(s) for s in exclude_specs]})
     if include_specs or exclude_specs:
