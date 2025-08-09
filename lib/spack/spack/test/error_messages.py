@@ -468,6 +468,8 @@ packages:
 # This reencodes test_errmsg_requirements_2
 # in terms of package `requires`, the error message is improved
 def test_errmsg_requirements_3(concretize_scope, test_repo):
+    # t4 has: depends_on("t2@:2.0", when="@:2.0")
+    # t2 has: requires("~v1", when="@:2.0")
     with expect_failure_and_print():
         concretize_one("t4@:2.0 ^t2+v1")
 
