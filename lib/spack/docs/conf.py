@@ -372,6 +372,9 @@ html_last_updated_fmt = "%b %d, %Y"
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
 
+# Base URL for the documentation, used to generate <link rel="canonical"/> for better indexing
+html_baseurl = "https://spack.readthedocs.io/en/latest/"
+
 # Output file base name for HTML help builder.
 htmlhelp_basename = "Spackdoc"
 
