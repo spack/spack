@@ -440,12 +440,10 @@ def test_null_variant_for_requested_version(concretize_scope, test_repo):
 
 
 # Error message for requirement introduced in the package
-# definition seems OK: requirements generate `condition`s, which
-# should be traceable as condition causes in error_messages.lp
+# definition is short
 def test_errmsg_requirements_1(concretize_scope, test_repo):
-    # output = solve("--show=asp", "w4@:2.0 ^w3@2.1")
-    # with open("/Users/scheibel1/Desktop/spack/spack/err-msg-asp/good-w.txt", "w") as f:
-    #    f.write(output)
+    # w4 has: depends_on("w3+v1", when="@2.0")
+    # w3 has: requires("~v1", when="@2.1")
     with expect_failure_and_print():
         concretize_one("w4@:2.0 ^w3@2.1")
 
@@ -462,14 +460,12 @@ packages:
 """
     update_packages_config(conf_str)
 
-    # output = solve("--show=asp", "w4@2.0 ^w2+v1")
-    # with open("/Users/scheibel1/Desktop/spack/spack/err-msg-asp/bad-w.txt", "w") as f:
-    #    f.write(output)
+    # w4 has: depends_on("w2@:2.0", when="@:2.0")
     with expect_failure_and_print():
         concretize_one("w4@2.0 ^w2+v1")
 
 
-# Short error message: this reencodes test_errmsg_requirements_2
+# This reencodes test_errmsg_requirements_2
 # in terms of package `requires`, the error message is improved
 def test_errmsg_requirements_3(concretize_scope, test_repo):
     with expect_failure_and_print():
