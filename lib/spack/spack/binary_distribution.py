@@ -1019,7 +1019,7 @@ class Uploader:
         self._tmpdir.__exit__(*args)
 
     def push_or_raise(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
-        skipped, errors = self.push(specs)
+        skipped, excluded, errors = self.push(specs)
         if errors:
             raise PushToBuildCacheError(
                 f"Failed to push {len(errors)} specs to {self.mirror.push_url}:\n"
@@ -1027,11 +1027,13 @@ class Uploader:
                     f"Failed to push {_format_spec(spec)}: {error}" for spec, error in errors
                 )
             )
-        return skipped
+        return skipped + excluded
 
     def push(
         self, specs: List[spack.spec.Spec]
-    ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
+    ) -> Tuple[
+        List[spack.spec.Spec], List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]
+    ]:
         raise NotImplementedError
 
     def tag(self, tag: str, roots: List[spack.spec.Spec]):
@@ -1053,8 +1055,10 @@ class OCIUploader(Uploader):
 
     def push(
         self, specs: List[spack.spec.Spec]
-    ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
-        skipped, base_images, checksums, upload_errors = _oci_push(
+    ) -> Tuple[
+        List[spack.spec.Spec], List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]
+    ]:
+        skipped, excluded, base_images, checksums, upload_errors = _oci_push(
             target_image=self.target_image,
             base_image=self.base_image,
             installed_specs_with_deps=specs,
@@ -1071,7 +1075,7 @@ class OCIUploader(Uploader):
         if self.update_index and len(skipped) + len(upload_errors) < len(specs):
             _oci_update_index(self.target_image, self.tmpdir, self.executor)
 
-        return skipped, upload_errors
+        return skipped, excluded, upload_errors
 
     def tag(self, tag: str, roots: List[spack.spec.Spec]):
         tagged_image = self.target_image.with_tag(tag)
@@ -1103,7 +1107,9 @@ class URLUploader(Uploader):
 
     def push(
         self, specs: List[spack.spec.Spec]
-    ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
+    ) -> Tuple[
+        List[spack.spec.Spec], List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]
+    ]:
         return _url_push(
             specs,
             out_url=self.url,
@@ -1184,10 +1190,14 @@ def _url_push(
     tmpdir: str,
     executor: concurrent.futures.Executor,
     filter: Optional[MirrorSpecFilter] = None,
-) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
+) -> Tuple[
+    List[spack.spec.Spec], List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]
+]:
     """Pushes to the provided build cache, and returns a list of skipped specs that were already
-    present (when force=False), and a list of errors. Does not raise on error."""
-    skipped: List[spack.spec.Spec] = []
+    present (when force=False), list of specs filtered out of contention and a list of errors.
+    Does not raise on error."""
+    preexisting: List[spack.spec.Spec] = []
+    excluded: List[spack.spec.Spec] = []
     errors: List[Tuple[spack.spec.Spec, BaseException]] = []
 
     exists_futures = [
@@ -1209,18 +1219,18 @@ def _url_push(
             if cache_entries[spec.dag_hash()].exists(
                 [BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL]
             ):
-                skipped.append(spec)
+                preexisting.append(spec)
             else:
                 specs_to_upload.append(spec)
     else:
         specs_to_upload = specs
 
     if not specs_to_upload:
-        return skipped, errors
+        return preexisting, excluded, errors
 
     if filter:
         filtered, filtrate = filter(specs_to_upload)
-        skipped.extend(filtrate)
+        excluded.extend(filtrate)
         specs_to_upload = filtered
 
     total = len(specs_to_upload)
@@ -1254,7 +1264,7 @@ def _url_push(
 
     # don't bother pushing keys / index if all failed to upload
     if not uploaded_any:
-        return skipped, errors
+        return preexisting, excluded, errors
 
     # If the layout.json doesn't yet exist on this mirror, push it
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
@@ -1270,7 +1280,7 @@ def _url_push(
         os.mkdir(index_tmpdir)
         _url_generate_package_index(out_url, index_tmpdir)
 
-    return skipped, errors
+    return preexisting, excluded, errors
 
 
 def _oci_upload_success_msg(spec: spack.spec.Spec, digest: Digest, size: int, elapsed: float):
@@ -1496,6 +1506,7 @@ def _oci_push(
     filter: Optional[MirrorSpecFilter] = None,
 ) -> Tuple[
     List[spack.spec.Spec],
+    List[spack.spec.Spec],
     Dict[str, Tuple[dict, dict]],
     Dict[str, spack.oci.oci.Blob],
     List[Tuple[spack.spec.Spec, BaseException]],
@@ -1508,6 +1519,8 @@ def _oci_push(
 
     # Specs not uploaded because they already exist
     skipped: List[spack.spec.Spec] = []
+    # Specs filtered from upload contention
+    excluded: List[spack.spec.Spec] = []
 
     if not force:
         tty.info("Checking for existing specs in the buildcache")
@@ -1528,11 +1541,11 @@ def _oci_push(
         blobs_to_upload = installed_specs_with_deps
 
     if not blobs_to_upload:
-        return skipped, base_images, checksums, []
+        return skipped, excluded, base_images, checksums, []
 
     if filter:
         filtered, filtrate = filter(blobs_to_upload)
-        skipped.extend(filtrate)
+        excluded.extend(filtrate)
         blobs_to_upload = filtered
 
     if len(blobs_to_upload) != len(installed_specs_with_deps):
@@ -1617,7 +1630,7 @@ def _oci_push(
             manifest_progress.fail()
             errors.append((spec, error))
 
-    return skipped, base_images, checksums, errors
+    return skipped, excluded, base_images, checksums, errors
 
 
 def _oci_config_from_tag(image_ref_and_tag: Tuple[ImageReference, str]) -> Optional[dict]:

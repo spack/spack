@@ -445,7 +445,7 @@ def push_fn(args):
         signing_key=signing_key,
         base_image=args.base_image,
     ) as uploader:
-        skipped, upload_errors = uploader.push(specs=specs)
+        skipped, excluded, upload_errors = uploader.push(specs=specs)
         failed.extend(upload_errors)
         if not upload_errors and args.tag:
             uploader.tag(args.tag, roots)
@@ -463,6 +463,14 @@ def push_fn(args):
                     len(skipped), ", ".join(elide_list([_format_spec(s) for s in skipped], 5))
                 )
             )
+
+    if excluded:
+        tty.info(
+            "The following {} specs were ommitted due from pushing to the buildcache due to filters:\n"
+            "    {}\n".format(
+                len(excluded), ", ".join(elide_list([_format_spec(s) for s in excluded], 5))
+            )
+        )
 
     if failed:
         if len(failed) == 1:
