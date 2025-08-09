@@ -491,6 +491,18 @@ To register package repositories from local paths or a remote Git repositories w
      $ spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
      ==> Added repo to config with name 'myorg.projectx'.
 
+  If the local path falls within a *remote* Git package repository, the url is automatically extracted.
+  For example, suppose the above path is to an existing repository with the structure in :ref:`cmd-spack-repo-create` that was cloned from GitHub using ssh and the url ``git@github.com:myorg/my_spack_projects.git``.
+  The configuration resulting from adding its local path would be:
+
+  .. code-block:: yaml
+
+    # ~/.spack/repos.yaml after the command
+    repos:
+      myorg.projectx:
+        destination:  ~/my_spack_projects
+        git: git@github.com:myorg/my_spack_projects.git
+
 * **For a Git repository:** Provide the Git URL.
 
   .. code-block:: console
