@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import os
 import sys
 
 import spack.cmd
 import spack.cmd.common
 import spack.environment as ev
-import spack.store
+import spack.hooks.cache_shell_script as shell_script
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
 
@@ -75,6 +76,31 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
 
+def _get_environment_modifications(spec, shell) -> str:
+    """Find the environment modifcations for spec
+
+    Args:
+        spec: the spec package
+        shell: user's shell
+    """
+
+    env_mod = uenv.environment_modifications_for_specs(spec)
+    env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+
+    return env_mod.shell_modifications(shell)
+
+
+def _create_load_shell_script(cmds, load_script_location):
+    """Create load shell script
+
+    Args:
+        cmds: the commands to write in script
+        load_script_location: where to write the load shell script
+    """
+    with open(load_script_location, "w", encoding="utf-8") as f:
+        f.write(cmds)
+
+
 def load(parser, args):
     env = ev.active_environment()
 
@@ -97,10 +123,18 @@ def load(parser, args):
         )
         return 1
 
-    with spack.store.STORE.db.read_transaction():
-        env_mod = uenv.environment_modifications_for_specs(*specs)
-        for spec in specs:
-            env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-        cmds = env_mod.shell_modifications(args.shell)
+    shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
 
-        sys.stdout.write(cmds)
+    for spec in specs:
+        commands = ""
+        if spec.external:
+            commands = _get_environment_modifications(spec, shell)
+        else:
+            load_script = shell_script.path_to_load_shell_script(spec, shell)
+
+            if not os.path.isfile(load_script):
+                mods = _get_environment_modifications(spec, shell)
+                _create_load_shell_script(mods, load_script)
+            commands = f"source {load_script}"
+
+        print(f"{commands}")

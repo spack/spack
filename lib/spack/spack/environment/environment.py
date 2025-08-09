@@ -45,6 +45,12 @@ from spack.spec import Spec
 from spack.util.path import substitute_path_variables
 
 from ..enums import ConfigScopePriority
+from .cache_shell_script import (
+    path_to_env_activate_shell_script,
+    update_env_activate_script,
+    write_env_activate_script,
+    write_env_deactivate_script,
+)
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = spack.concretize.SpecPair
@@ -181,7 +187,7 @@ def validate_env_name(name):
     return name
 
 
-def activate(env, use_env_repo=False):
+def activate(env, use_env_repo=False, shell="sh", prompt="", view=""):
     """Activate an environment.
 
     To activate an environment, we add its manifest's configuration scope to the
@@ -191,8 +197,11 @@ def activate(env, use_env_repo=False):
         env (Environment): the environment to activate
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
+        prompt (str): name of environment's prompt
+        view (str): name of environment's view
     """
     global _active_environment
+    # add from import for cache_shell_script
 
     try:
         _active_environment = env
@@ -221,6 +230,15 @@ def activate(env, use_env_repo=False):
             if use_env_repo:
                 new_repo.put_first(env.repo)
             spack.repo.enable_repo(new_repo)
+
+        if shell:
+            env_activate_script = path_to_env_activate_shell_script(env, shell)
+
+            if os.path.isfile(env_activate_script):
+                yaml_update = os.stat(os.path.join(env.path, manifest_name)).st_mtime
+                activation_update = os.stat(env_activate_script).st_mtime
+                if yaml_update > activation_update or prompt or view:
+                    update_env_activate_script(env, shell, prompt, view)
 
         tty.debug(f"Using environment '{env.name}'")
     except Exception:
@@ -400,6 +418,9 @@ def create_in_dir(
                 # locations.
                 _rewrite_relative_dev_paths_on_relocation(env, init_file_dir)
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir)
+
+    write_env_activate_script(env, view=with_view)
+    write_env_deactivate_script(env, view=with_view)
 
     return env
 

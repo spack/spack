@@ -17,18 +17,15 @@ import spack.cmd.common.arguments
 import spack.cmd.modules
 import spack.config
 import spack.environment as ev
+import spack.environment.cache_shell_script as shell_script
 import spack.environment.depfile as depfile
 import spack.environment.environment
-import spack.environment.shell
-import spack.llnl.string as string
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.tengine
 from spack.cmd.common import arguments
 from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
-from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
 section = "environments"
@@ -358,18 +355,20 @@ def env_activate(args):
     env_prompt = "[%s]" % short_name
 
     # We only support one active environment at a time, so deactivate the current one.
-    if ev.active_environment() is None:
-        cmds = ""
-        env_mods = EnvironmentModifications()
-    else:
-        cmds = spack.environment.shell.deactivate_header(shell=args.shell)
-        env_mods = spack.environment.shell.deactivate()
+    if ev.active_environment():
+        # run deactivate script
+        active_env = ev.active_environment()
+        env_deactivate_script = shell_script.path_to_env_deactivate_shell_script(
+            active_env, shell=args.shell
+        )
+
+        print(f"source {env_deactivate_script}")
 
     # Activate new environment
     active_env = ev.Environment(env_path)
 
     # Check if runtime environment variables are requested, and if so, for what view.
-    view: Optional[str] = None
+    view = ""
     if args.with_view:
         view = args.with_view
         if not active_env.has_view(view):
@@ -377,12 +376,13 @@ def env_activate(args):
     elif not args.without_view and active_env.has_view(ev.default_view_name):
         view = ev.default_view_name
 
-    cmds += spack.environment.shell.activate_header(
-        env=active_env, shell=args.shell, prompt=env_prompt if args.prompt else None, view=view
+    env_activate_script = shell_script.path_to_env_activate_shell_script(
+        active_env, shell=args.shell
     )
-    env_mods.extend(spack.environment.shell.activate(env=active_env, view=view))
-    cmds += env_mods.shell_modifications(args.shell)
-    sys.stdout.write(cmds)
+
+    ev.activate(active_env, shell=args.shell, prompt=env_prompt, view=view)
+
+    print(f"source {env_activate_script}")
 
 
 #
@@ -442,10 +442,13 @@ def env_deactivate(args):
     if ev.active_environment() is None:
         tty.die("No environment is currently active.")
 
-    cmds = spack.environment.shell.deactivate_header(args.shell)
-    env_mods = spack.environment.shell.deactivate()
-    cmds += env_mods.shell_modifications(args.shell)
-    sys.stdout.write(cmds)
+    env_deactivate_script = shell_script.path_to_env_deactivate_shell_script(
+        ev.active_environment(), shell=args.shell
+    )
+
+    ev.deactivate()
+
+    print(f"source {env_deactivate_script}")
 
 
 #
@@ -737,6 +740,12 @@ def env_rename(args):
     shutil.rmtree(to_path, ignore_errors=True)
     fs.rename(from_path, to_path)
     tty.msg(f"Successfully renamed environment {args.mv_from} to {args.mv_to}")
+    tty.msg(
+        colorize(
+            "To regenerate activation & deactivation scripts,"
+            " regenerate view with @c{spack env view regenerate}"
+        )
+    )
 
 
 #
@@ -798,6 +807,8 @@ def env_view(args):
 
     if args.action == ViewAction.regenerate:
         env.regenerate_views()
+        shell_script.write_env_activate_script(env, args.view)
+        shell_script.write_env_deactivate_script(env, args.view)
     elif args.action == ViewAction.enable:
         if args.view_path:
             view_path = args.view_path

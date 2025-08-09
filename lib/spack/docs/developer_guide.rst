@@ -425,20 +425,29 @@ These hooks are currently used for cleaning up module files after uninstall.
 Adding a New Hook Type
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Adding a new hook type is very simple! In ``lib/spack/spack/hooks/__init__.py``,
-you can simply create a new ``HookRunner`` that is named to match your new hook.
+Adding a new hook type is very simple!  In ``lib/spack/spack/hooks/__init__.py``
+you can simply add your new hook to the ``HOOK_ORDER`` list.
+.. TODO: This example needs to be changed
 For example, let's say you want to add a new hook called ``post_log_write``
 to trigger after anything is written to a logger. You would add it as follows:
 
 .. code-block:: python
 
+    class _HookRunner:
+      #: Order in which hooks are executed
+      HOOK_ORDER = [
+        "spack.hooks.module_file_generation",
+        "spack.hooks.licensing",
+        "spack.hooks.sbang",
+        "spack.hooks.windows_runtime_linkage",
+        "spack.hooks.post_log_write"  # <- here is my new hook!
+      ]
+
     # pre/post install and run by the install subprocess
-    pre_install = HookRunner('pre_install')
-    post_install = HookRunner('post_install')
-
-    # hooks related to logging
-    post_log_write = HookRunner('post_log_write') # <- here is my new hook!
-
+    pre_install = _HookRunner("pre_install")
+    post_install = _HookRunner("post_install")
+    pre_uninstall = _HookRunner("pre_uninstall")
+    post_uninstall = _HookRunner("post_uninstall")
 
 You then need to decide what arguments your hook would expect. Since this is
 related to logging, let's say that you want a message and level. That means
@@ -448,7 +457,7 @@ use your new hook as follows:
 
 .. code-block:: python
 
-    def post_log_write(message, level):
+    def post_install(message, level):
         """Do something custom with the message and level every time we write
         to the log
         """

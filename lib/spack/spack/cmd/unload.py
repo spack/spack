@@ -4,11 +4,11 @@
 
 import argparse
 import os
-import sys
 
 import spack.cmd
 import spack.cmd.common
 import spack.error
+import spack.hooks.cache_shell_script as shell_script
 import spack.store
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
@@ -65,6 +65,32 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
 
+def _get_environment_modifications(spec, shell) -> str:
+    """Find the environment modifcations for spec
+
+    Args:
+        spec: the spec package
+        shell: user's shell
+    """
+
+    env_mod = uenv.environment_modifications_for_specs(spec)
+    env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+
+    return env_mod.shell_modifications(shell)
+
+
+def _create_unload_shell_script(cmds, unload_script_location):
+    """Creates & writes environment modification for spec's unload shell script
+
+    Args:
+        cmds: the commands to write in script
+        unload_script_location: where to write unload shell script
+    """
+
+    with open(unload_script_location, "w", encoding="utf-8") as f:
+        f.write(cmds)
+
+
 def unload(parser, args):
     """unload spack packages from the user environment"""
     if args.specs and args.all:
@@ -89,9 +115,19 @@ def unload(parser, args):
         )
         return 1
 
-    env_mod = uenv.environment_modifications_for_specs(*specs).reversed()
-    for spec in specs:
-        env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-    cmds = env_mod.shell_modifications(args.shell)
+    shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
 
-    sys.stdout.write(cmds)
+    for spec in specs:
+        commands = ""
+
+        if spec.external:
+            commands = _get_environment_modifications(spec, shell)
+        else:
+            unload_script = shell_script.path_to_unload_shell_script(spec, shell)
+
+            if not os.path.isfile(unload_script):
+                mods = _get_environment_modifications(spec, shell)
+                _create_unload_shell_script(mods, unload_script)
+            commands = f"source {unload_script}"
+
+        print(f"{commands}")

@@ -8,6 +8,7 @@ import io
 import os
 import pathlib
 import shutil
+import sys
 from argparse import Namespace
 from typing import Any, Dict, Optional
 
@@ -17,6 +18,7 @@ import spack.cmd.env
 import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.environment.cache_shell_script as shell_script
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
@@ -125,6 +127,38 @@ def test_env_track_nonexistant_path_fails(capfd):
 
     out, _ = capfd.readouterr()
     assert "doesn't contain an environment" in out
+
+
+@pytest.mark.parametrize(
+    "shell",
+    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+)
+def test_env_create_shell_scripts(shell):
+    """Tests that the activation and deactivation scripts are written when an environment
+    is created"""
+    env("create", "script_test")
+    environ = ev.read("script_test")
+
+    path_to_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell)
+    path_to_deactivate_script = shell_script.path_to_env_deactivate_shell_script(environ, shell)
+
+    assert os.path.isfile(path_to_activate_script)
+    assert os.path.isfile(path_to_deactivate_script)
+
+
+def test_env_sh_shell_script_content():
+    """Tests that SPACK_ENV environment command is in sh's activation script"""
+    shell = "sh"
+    env("create", "script_test")
+    environ = ev.read("script_test")
+
+    path_to_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell)
+
+    with open(path_to_activate_script, "r", encoding="utf-8") as f:
+        out = f.read()
+
+    assert f"_spack_env_set SPACK_ENV {environ.path}" in out
+    assert "alias despacktivate='spack env deactivate';" in out
 
 
 def test_env_track_existing_env_fails(capfd):
@@ -3100,10 +3134,17 @@ def test_stack_view_activate_from_default(
     # Replace the name of the view
     content = content.replace("combinatorial:", "default:")
     with installed_environment(content):
-        shell = env("activate", "--sh", "test")
-        assert "PATH" in shell, shell
-        assert str(view_dir / "bin") in shell
-        assert "FOOBAR=mpileaks" in shell
+        environ = ev.read("test")
+        env("activate", "--sh", "test")
+
+        path_to_activate_script = shell_script.path_to_env_activate_shell_script(environ, "sh")
+
+        with open(path_to_activate_script, "r", encoding="utf-8") as f:
+            shell_output = f.read()
+
+        assert "PATH" in shell_output, shell_output
+        assert str(view_dir / "bin") in shell_output
+        assert "_spack_env_set FOOBAR mpileaks" in shell_output
 
 
 def test_envvar_set_in_activate(tmp_path: pathlib.Path, mock_packages, install_mockery):
@@ -3136,18 +3177,30 @@ spack:
         install("--fake")
 
     test_env = ev.read("test")
-    output = env("activate", "--sh", "test")
+    env("activate", "--sh", "test")
 
-    assert "SPACK_ENVAR_SET_IN_ENV_LOAD=True" in output
-    assert "CONFIG_ENVAR_SET_IN_ENV_LOAD=True" in output
+    path_to_activate_script = shell_script.path_to_env_activate_shell_script(test_env, "sh")
+
+    with open(path_to_activate_script, "r", encoding="utf-8") as f:
+        output = f.read()
+
+    assert "_spack_env_set SPACK_ENVAR_SET_IN_ENV_LOAD True" in output
+    assert "_spack_env_set CONFIG_ENVAR_SET_IN_ENV_LOAD True" in output
 
     with test_env:
         with spack.util.environment.set_env(
             SPACK_ENVAR_SET_IN_ENV_LOAD="True", CONFIG_ENVAR_SET_IN_ENV_LOAD="True"
         ):
-            output = env("deactivate", "--sh")
-            assert "unset SPACK_ENVAR_SET_IN_ENV_LOAD" in output
-            assert "unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in output
+            env("deactivate", "--sh")
+            path_to_deactivate_script = shell_script.path_to_env_deactivate_shell_script(
+                test_env, "sh"
+            )
+
+            with open(path_to_deactivate_script, "r", encoding="utf-8") as f:
+                output = f.read()
+
+            assert "_spack_env_unset SPACK_ENVAR_SET_IN_ENV_LOAD" in output
+            assert "_spack_env_unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in output
 
 
 def test_stack_view_no_activate_without_default(
@@ -3238,13 +3291,25 @@ def test_env_activate_sh_prints_shell_output(mock_stage, mock_fetch, install_moc
     env("create", "test")
 
     out = env("activate", "--sh", "test")
-    assert "export SPACK_ENV=" in out
-    assert "export PS1=" not in out
+
+    environ = ev.environment_from_name_or_dir("test")
+    env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="sh")
+
+    with open(env_activate_script, "r", encoding="utf-8") as f:
+        out = f.read()
+
+    assert "_spack_env_set SPACK_ENV" in out
     assert "alias despacktivate=" in out
 
     out = env("activate", "--sh", "--prompt", "test")
-    assert "export SPACK_ENV=" in out
-    assert "export PS1=" in out
+
+    environ = ev.environment_from_name_or_dir("test")
+    env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="sh")
+
+    with open(env_activate_script, "r", encoding="utf-8") as f:
+        out = f.read()
+
+    assert "_spack_env_set SPACK_ENV" in out
     assert "alias despacktivate=" in out
 
 
@@ -3252,12 +3317,25 @@ def test_env_activate_csh_prints_shell_output(mock_stage, mock_fetch, install_mo
     """Check the shell commands output by ``spack env activate --csh``."""
     env("create", "test")
 
-    out = env("activate", "--csh", "test")
+    env("activate", "--csh", "test")
+
+    environ = ev.environment_from_name_or_dir("test")
+    env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="csh")
+
+    with open(env_activate_script, "r", encoding="utf-8") as f:
+        out = f.read()
+
     assert "setenv SPACK_ENV" in out
     assert "setenv set prompt" not in out
     assert "alias despacktivate" in out
 
     out = env("activate", "--csh", "--prompt", "test")
+
+    environ = ev.environment_from_name_or_dir("test")
+    env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="csh")
+
+    with open(env_activate_script, "r", encoding="utf-8") as f:
+        out = f.read()
     assert "setenv SPACK_ENV" in out
     assert "set prompt=" in out
     assert "alias despacktivate" in out
@@ -3272,11 +3350,18 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     with ev.read("test") as e:
         viewdir = e.default_view.root
 
-    out = env("activate", "--sh", "test")
+    env("activate", "--sh", "test")
+
+    environ = ev.environment_from_name_or_dir("test")
+    env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="sh")
+
+    with open(env_activate_script, "r", encoding="utf-8") as f:
+        out = f.read()
+
     viewdir_bin = os.path.join(viewdir, "bin")
 
     assert (
-        "export PATH={0}".format(viewdir_bin) in out
+        "spack_env_prepend PATH {0}".format(viewdir_bin) in out
         or "export PATH='{0}".format(viewdir_bin) in out
         or 'export PATH="{0}'.format(viewdir_bin) in out
     )
@@ -3299,7 +3384,14 @@ spack:
       root: {nondefaultdir}"""
         )
     env("create", "test", str(env_template))
-    shell = env("activate", "--sh", "--with-view", "nondefault", "test")
+    env("activate", "--sh", "--with-view", "nondefault", "test")
+
+    environ = ev.environment_from_name_or_dir("test")
+    env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="sh")
+
+    with open(env_activate_script, "r", encoding="utf-8") as f:
+        shell = f.read()
+
     assert os.path.join(nondefaultdir, "bin") in shell
 
 
@@ -3745,8 +3837,15 @@ def test_activate_temp(monkeypatch, tmp_path: pathlib.Path):
     temporary directory"""
     env_dir = lambda: str(tmp_path)
     monkeypatch.setattr(spack.cmd.env, "create_temp_env_directory", env_dir)
-    shell = env("activate", "--temp", "--sh")
-    active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+    env("activate", "--temp", "--sh")
+
+    environ = ev.environment_from_name_or_dir(str(tmp_path))
+
+    path_to_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="sh")
+    with open(path_to_activate_script, "r", encoding="utf-8") as f:
+        shell_output = f.read()
+
+    active_env_var = next(line for line in shell_output.splitlines() if ev.spack_env_var in line)
     assert str(tmp_path) in active_env_var
     assert ev.is_env_dir(str(tmp_path))
 
@@ -3761,8 +3860,19 @@ def test_activate_parser_conflicts_with_temp(conflict_arg):
 
 def test_create_and_activate_managed(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
-        shell = env("activate", "--without-view", "--create", "--sh", "foo")
-        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        env("activate", "--without-view", "--create", "--sh", "foo")
+
+        environ = ev.read("foo")
+
+        path_to_activate_script = shell_script.path_to_env_activate_shell_script(
+            environ, shell="sh"
+        )
+        with open(path_to_activate_script, "r", encoding="utf-8") as f:
+            shell_output = f.read()
+
+        active_env_var = next(
+            line for line in shell_output.splitlines() if ev.spack_env_var in line
+        )
         assert str(tmp_path) in active_env_var
         active_ev = ev.active_environment()
         assert active_ev and "foo" == active_ev.name
@@ -3772,8 +3882,19 @@ def test_create_and_activate_managed(tmp_path: pathlib.Path):
 def test_create_and_activate_independent(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
         env_dir = os.path.join(str(tmp_path), "foo")
-        shell = env("activate", "--without-view", "--create", "--sh", env_dir)
-        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        env("activate", "--without-view", "--create", "--sh", env_dir)
+
+        environ = ev.environment_from_name_or_dir(env_dir)
+
+        path_to_activate_script = shell_script.path_to_env_activate_shell_script(
+            environ, shell="sh"
+        )
+        with open(path_to_activate_script, "r", encoding="utf-8") as f:
+            shell_output = f.read()
+
+        active_env_var = next(
+            line for line in shell_output.splitlines() if ev.spack_env_var in line
+        )
         assert str(env_dir) in active_env_var
         assert ev.is_env_dir(env_dir)
         env("deactivate")
