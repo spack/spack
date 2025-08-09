@@ -22,21 +22,23 @@ This document describes how to set up and manage these package repositories.
 Structure of an Individual Package Repository
 ---------------------------------------------
 
-An individual Spack package repository is a directory structured as follows::
+An individual Spack package repository is a directory structured as follows:
 
-  /path/to/repos/                   # the top-level dir is added to the Python search path
-    spack_repo/                     # every package repository is part of the spack_repo Python module
-      myrepo/                       # directory for the 'myrepo' repository (matches namespace)
-        repo.yaml                   # configuration file for this package repository
-        packages/                   # directory containing package directories
-          hdf5/                     # directory for the hdf5 package
-            package.py              # the package recipe file
-          mpich/                    # directory for the mpich package
-            package.py              # the package recipe file
-            mpich-1.9-bugfix.patch  # example patch file
-          trilinos/
-            package.py
-      ...
+.. code-block:: text
+
+   /path/to/repos/                   # the top-level dir is added to the Python search path
+     spack_repo/                     # every package repository is part of the spack_repo Python module
+       myrepo/                       # directory for the 'myrepo' repository (matches namespace)
+         repo.yaml                   # configuration file for this package repository
+         packages/                   # directory containing package directories
+           hdf5/                     # directory for the hdf5 package
+             package.py              # the package recipe file
+           mpich/                    # directory for the mpich package
+             package.py              # the package recipe file
+             mpich-1.9-bugfix.patch  # example patch file
+           trilinos/
+             package.py
+       ...
 
 * ``repo.yaml``.
   This file contains metadata for this specific repository, for example:
@@ -159,26 +161,28 @@ If the repo is pinned to a branch or unpinned, ``spack repo update`` will pull t
 **Git repositories need a package repo index.**
 A single Git repository can contain one or more Spack package repositories. To enable Spack to discover these, the root of the Git repository should contain a ``spack-repo-index.yaml`` file. This file lists the relative paths to package repository roots within the git repo.
 
-For example, assume a Git repository at ``https://example.com/my_org/my_pkgs.git`` has the following structure::
+For example, assume a Git repository at ``https://example.com/my_org/my_pkgs.git`` has the following structure
 
-  my_pkgs.git/
-    spack-repo-index.yaml     # metadata file at the root of the Git repo
-    ...
-    spack_pkgs/
-      spack_repo/
-        my_org/
-          comp_sci_packages/  # package repository for computer science packages
-            repo.yaml
-            packages/
-              hdf5/
-                package.py
-              mpich/
-                package.py
-          physics_packages/   # package repository for physics packages
-            repo.yaml
-            packages/
-              gromacs/
-                package.py
+.. code-block:: text
+
+   my_pkgs.git/
+     spack-repo-index.yaml     # metadata file at the root of the Git repo
+     ...
+     spack_pkgs/
+       spack_repo/
+         my_org/
+           comp_sci_packages/  # package repository for computer science packages
+             repo.yaml
+             packages/
+               hdf5/
+                 package.py
+               mpich/
+                 package.py
+           physics_packages/   # package repository for physics packages
+             repo.yaml
+             packages/
+               gromacs/
+                 package.py
 
 The ``spack-repo-index.yaml`` in the root of ``https://example.com/my_org/my_pkgs.git`` should look like this:
 
@@ -254,21 +258,23 @@ Nested Namespaces for Organizations
 
 As we have already seen in the Git-based package repositories example above, you can create nested namespaces by using periods in the namespace name.
 For example, a repository for packages related to computation at LLNL might have the namespace ``llnl.comp``, while one for physical and life sciences could be ``llnl.pls``.
-On the file system, this requires a directory structure like this::
+On the file system, this requires a directory structure like this:
 
-  /path/to/repos/
-    spack_repo/
-      llnl/
-        comp/
-          repo.yaml  # Contains namespace: llnl.comp
-          packages/
-            mpich/
-              package.py
-        pls/
-          repo.yaml  # Contains namespace: llnl.pls
-          packages/
-            hdf5/
-              package.py
+.. code-block:: text
+
+   /path/to/repos/
+     spack_repo/
+       llnl/
+         comp/
+           repo.yaml  # Contains namespace: llnl.comp
+           packages/
+             mpich/
+               package.py
+         pls/
+           repo.yaml  # Contains namespace: llnl.pls
+           packages/
+             hdf5/
+               package.py
 
 Uniqueness
 ^^^^^^^^^^
@@ -420,14 +426,16 @@ To create the directory structure for a new, empty local repository:
   ==> To register it with spack, run this command:
     spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
 
-This command creates the following structure::
+This command creates the following structure:
 
-  ~/my_spack_projects/
-    spack_repo/
-      myorg/
-        projectx/
-          repo.yaml      # Contains namespace: myorg.projectx
-          packages/      # Empty directory for new package.py files
+.. code-block:: text
+
+   ~/my_spack_projects/
+     spack_repo/
+       myorg/
+         projectx/
+           repo.yaml      # Contains namespace: myorg.projectx
+           packages/      # Empty directory for new package.py files
 
 The ``<target_dir>`` is where the ``spack_repo/<namespace_parts>`` hierarchy will be created.
 The ``<namespace>`` can be simple (e.g., ``myrepo``) or nested (e.g., ``myorg.projectx``), and Spack will create the corresponding directory structure.

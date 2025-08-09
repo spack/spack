@@ -190,11 +190,13 @@ The order of precedence is:
 * ``VISUAL``: standard environment variable for full-screen editors like ``vim`` or ``emacs``;
 * ``EDITOR``: older environment variable for your editor.
 
-You can set any of these to the command you want to run, e.g., in ``bash`` you might run one of these::
+You can set any of these to the command you want to run, e.g., in ``bash`` you might run one of these:
 
-  export VISUAL=vim
-  export EDITOR="emacs -nw"
-  export SPACK_EDITOR=nano
+.. code-block:: console
+
+   $ export VISUAL=vim
+   $ export EDITOR="emacs -nw"
+   $ export SPACK_EDITOR=nano
 
 If Spack finds none of these variables set, it will look for ``vim``, ``vi``, ``emacs``, ``nano``, and ``notepad``, in that order.
 
@@ -424,9 +426,11 @@ Notice how you only have to specify the URL once, in the ``url`` field.
 Spack is smart enough to extrapolate the URL for each version based on the version number and download version ``8.2.0`` of the ``Foo`` package above from ``http://example.com/foo-8.2.0.tar.gz``.
 
 If the URL is particularly complicated or changes based on the release, you can override the default URL generation algorithm by defining your own ``url_for_version()`` function.
-For example, the download URL for OpenMPI contains the ``major.minor`` version in one spot and the ``major.minor.patch`` version in another::
+For example, the download URL for OpenMPI contains the ``major.minor`` version in one spot and the ``major.minor.patch`` version in another:
 
-    https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
+.. code-block:: text
+
+   https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 
 In order to handle this, you can define a ``url_for_version()`` function
 like so:
@@ -2442,12 +2446,14 @@ can have multiple, differently-patched versions of a package installed at
 once.
 
 You can look up a patch by its sha256 hash (or a short version of it)
-using the ``spack resource show`` command::
+using the ``spack resource show`` command
 
-  $ spack resource show 3877ab54
-  3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00
-      path:       .../spack_repo/builtin/packages/m4/gnulib-pgi.patch
-      applies to: builtin.m4
+.. code-block:: console
+
+   $ spack resource show 3877ab54
+   3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00
+       path:       .../spack_repo/builtin/packages/m4/gnulib-pgi.patch
+       applies to: builtin.m4
 
 ``spack resource show`` looks up downloadable resources from package
 files by hash and prints out information about them.  Above, we see that
@@ -2457,16 +2463,18 @@ tells us where to find the patch.
 Things get more interesting if you want to know about dependency
 patches. For example, when ``dealii`` is built with ``boost@1.68.0``, it
 has to patch boost to work correctly.  If you didn't know this, you might
-wonder where the extra boost patches are coming from::
+wonder where the extra boost patches are coming from:
 
-  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep "\^boost"
-      ^boost@1.68.0
-          ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
-  $ spack resource show b37164268
-  b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
-      path:       .../spack_repo/builtin/packages/dealii/boost_1.68.0.patch
-      applies to: builtin.boost
-      patched by: builtin.dealii
+.. code-block:: console
+
+   $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep "\^boost"
+       ^boost@1.68.0
+           ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
+   $ spack resource show b37164268
+   b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
+       path:       .../spack_repo/builtin/packages/dealii/boost_1.68.0.patch
+       applies to: builtin.boost
+       patched by: builtin.dealii
 
 Here you can see that the patch is applied to ``boost`` by ``dealii``,
 and that it lives in ``dealii``'s directory in Spack's ``builtin``

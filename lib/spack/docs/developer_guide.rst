@@ -747,29 +747,31 @@ Release branches
 There are currently two types of Spack releases: :ref:`major releases
 <major-releases>` (``0.21.0``, ``0.22.0``, etc.) and :ref:`patch releases
 <patch-releases>` (``0.22.1``, ``0.22.2``, ``0.22.3``, etc.). Here is a
-diagram of how Spack release branches work::
+diagram of how Spack release branches work:
 
-    o    branch: develop  (latest version, v0.23.0.dev0)
-    |
-    o
-    | o  branch: releases/v0.22, tag: v0.22.1
-    o |
-    | o  tag: v0.22.0
-    o |
-    | o
-    |/
-    o
-    |
-    o
-    | o  branch: releases/v0.21, tag: v0.21.2
-    o |
-    | o  tag: v0.21.1
-    o |
-    | o  tag: v0.21.0
-    o |
-    | o
-    |/
-    o
+.. code-block:: text
+
+   o    branch: develop  (latest version, v0.23.0.dev0)
+   |
+   o
+   | o  branch: releases/v0.22, tag: v0.22.1
+   o |
+   | o  tag: v0.22.0
+   o |
+   | o
+   |/
+   o
+   |
+   o
+   | o  branch: releases/v0.21, tag: v0.21.2
+   o |
+   | o  tag: v0.21.1
+   o |
+   | o  tag: v0.21.0
+   o |
+   | o
+   |/
+   o
 
 The ``develop`` branch has the latest contributions, and nearly all pull
 requests target ``develop``. The ``develop`` branch will report that its

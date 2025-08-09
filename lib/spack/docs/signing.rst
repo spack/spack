@@ -190,50 +190,54 @@ blobs.
 The manifest files can either be signed or unsigned, but are always given
 a name ending with ``.spec.manifest.json`` regardless. The difference between
 signed and unsigned manifests is simply that the signed version is wrapped in
-a gpg cleartext signature, as illustrated below::
+a gpg cleartext signature, as illustrated below:
 
-  -----BEGIN PGP SIGNED MESSAGE-----
-  Hash: SHA512
+.. code-block:: text
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 10731083,
-        "mediaType": "application/vnd.spack.install.v2.tar+gzip",
-        "compression": "gzip",
-        "checksumAlgorithm": "sha256",
-        "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
-      },
-      {
-        "contentLength": 1000,
-        "mediaType": "application/vnd.spack.spec.v5+json",
-        "compression": "gzip",
-        "checksumAlgorithm": "sha256",
-        "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
-      }
-    ]
-  }
-  -----BEGIN PGP SIGNATURE-----
+   -----BEGIN PGP SIGNED MESSAGE-----
+   Hash: SHA512
 
-  iQGzBAEBCgAdFiEEdbwFKBFJCcB24mB0GAEP+tc8mwcFAmf2rr4ACgkQGAEP+tc8
-  mwfefwv+KJs8MsQ5ovFaBdmyx5H/3k4rO4QHBzuSPOB6UaxErA9IyOB31iP6vNTU
-  HzYpxz6F5dJCJWmmNEMN/0+vjhMHEOkqd7M1l5reVcxduTF2yc4tBZUO2gienEHL
-  W0e+SnUznl1yc/aVpChUiahO2zToCsI8HZRNT4tu6iCnE/OpghqjsSdBOZHmSNDD
-  5wuuCxfDUyWI6ZlLclaaB7RdbCUUJf/iqi711J+wubvnDFhc6Ynwm1xai5laJ1bD
-  ev3NrSb2AAroeNFVo4iECA0fZC1OZQYzaRmAEhBXtCideGJ5Zf2Cp9hmCwNK8Hq6
-  bNt94JP9LqC3FCCJJOMsPyOOhMSA5MU44zyyzloRwEQpHHLuFzVdbTHA3dmTc18n
-  HxNLkZoEMYRc8zNr40g0yb2lCbc+P11TtL1E+5NlE34MX15mPewRCiIFTMwhCnE3
-  gFSKtW1MKustZE35/RUwd2mpJRf+mSRVCl1f1RiFjktLjz7vWQq7imIUSam0fPDr
-  XD4aDogm
-  =RrFX
-  -----END PGP SIGNATURE-----
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 10731083,
+         "mediaType": "application/vnd.spack.install.v2.tar+gzip",
+         "compression": "gzip",
+         "checksumAlgorithm": "sha256",
+         "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
+       },
+       {
+         "contentLength": 1000,
+         "mediaType": "application/vnd.spack.spec.v5+json",
+         "compression": "gzip",
+         "checksumAlgorithm": "sha256",
+         "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
+       }
+     ]
+   }
+   -----BEGIN PGP SIGNATURE-----
+
+   iQGzBAEBCgAdFiEEdbwFKBFJCcB24mB0GAEP+tc8mwcFAmf2rr4ACgkQGAEP+tc8
+   mwfefwv+KJs8MsQ5ovFaBdmyx5H/3k4rO4QHBzuSPOB6UaxErA9IyOB31iP6vNTU
+   HzYpxz6F5dJCJWmmNEMN/0+vjhMHEOkqd7M1l5reVcxduTF2yc4tBZUO2gienEHL
+   W0e+SnUznl1yc/aVpChUiahO2zToCsI8HZRNT4tu6iCnE/OpghqjsSdBOZHmSNDD
+   5wuuCxfDUyWI6ZlLclaaB7RdbCUUJf/iqi711J+wubvnDFhc6Ynwm1xai5laJ1bD
+   ev3NrSb2AAroeNFVo4iECA0fZC1OZQYzaRmAEhBXtCideGJ5Zf2Cp9hmCwNK8Hq6
+   bNt94JP9LqC3FCCJJOMsPyOOhMSA5MU44zyyzloRwEQpHHLuFzVdbTHA3dmTc18n
+   HxNLkZoEMYRc8zNr40g0yb2lCbc+P11TtL1E+5NlE34MX15mPewRCiIFTMwhCnE3
+   gFSKtW1MKustZE35/RUwd2mpJRf+mSRVCl1f1RiFjktLjz7vWQq7imIUSam0fPDr
+   XD4aDogm
+   =RrFX
+   -----END PGP SIGNATURE-----
 
 If a user has trusted the public key associated with the private key
 used to sign the above manifest file, the signature can be verified with
-gpg, as follows::
+gpg, as follows:
 
-  $ gpg --verify gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
+.. code-block:: console
+
+   $ gpg --verify gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
 
 When attempting to install a binary package that has been signed, spack will
 attempt to verify the signature with one of the trusted keys in its keyring,

@@ -712,7 +712,9 @@ And one that allows you to move the default cache location:
 * ``SPACK_USER_CACHE_PATH``: Override the default path to use for user data
   (misc_cache, tests, reports, etc.)
 
-With these settings, if you want to isolate Spack in a CI environment, you can do this::
+With these settings, if you want to isolate Spack in a CI environment, you can do this:
 
-  export SPACK_DISABLE_LOCAL_CONFIG=true
-  export SPACK_USER_CACHE_PATH=/tmp/spack
+.. code-block:: console
+
+  $ export SPACK_DISABLE_LOCAL_CONFIG=true
+  $ export SPACK_USER_CACHE_PATH=/tmp/spack

@@ -482,7 +482,7 @@ Defining ``with_or_without_verbs`` overrides the behavior of a
 ``--with-openib`` for older versions of the package and specifying an
 alternative dependency name:
 
-.. code-block::
+.. code-block:: text
 
    --with-openib=</path/to/rdma-core>
 

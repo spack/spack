@@ -63,7 +63,9 @@ to download it from. The vast majority of Python packages are hosted
 on `PyPI <https://pypi.org/>`_, which is
 :ref:`preferred over GitHub <pypi-vs-github>` for downloading
 packages. Search for the package name on PyPI to find the project
-page. The project page is usually located at::
+page. The project page is usually located at:
+
+.. code-block:: text
 
    https://pypi.org/project/<package-name>
 
@@ -74,7 +76,9 @@ hosted on GitHub and see if GitHub has source distributions. The
 project page usually has a "Homepage" and/or "Source code" link for
 this. If the project is closed-source, it may only have wheels
 available. For example, ``py-azureml-sdk`` is closed-source and can
-be downloaded from::
+be downloaded from:
+
+.. code-block:: text
 
    https://pypi.io/packages/py3/a/azureml_sdk/azureml_sdk-1.11.0-py3-none-any.whl
 
@@ -382,7 +386,9 @@ file is simply a zip file, and can be extracted using:
 
 The zip file will not contain a ``setup.py``, but it will contain a
 ``METADATA`` file which contains all the information you need to
-write a ``package.py`` build recipe. Check for lines like::
+write a ``package.py`` build recipe. Check for lines like:
+
+.. code-block:: text
 
    Requires-Python: >=3.5,<4
    Requires-Dist: azureml-core (~=1.11.0)

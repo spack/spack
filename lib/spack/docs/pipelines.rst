@@ -600,30 +600,30 @@ requests ``GET <URL>[:PORT][/PATH]?spec=<pkg_name@pkg_version +variant1+variant2
 
 example request.
 
-.. code-block::
+.. code-block:: text
 
-  https://my-dyn-mapping.spack.io/allocation?spec=zlib-ng@2.1.6 +compat+opt+shared+pic+new_strategies arch=linux-ubuntu20.04-x86_64_v3%gcc@12.0.0
+   https://my-dyn-mapping.spack.io/allocation?spec=zlib-ng@2.1.6 +compat+opt+shared+pic+new_strategies arch=linux-ubuntu20.04-x86_64_v3%gcc@12.0.0
 
 
 With an example response that updates kubernetes request variables, overrides the max retries for gitlab,
 and prepends a note about the modifications made by the my-dyn-mapping.spack.io service.
 
-.. code-block::
+.. code-block:: text
 
-  200 OK
+   200 OK
 
-  {
-    "variables":
-    {
-      "KUBERNETES_CPU_REQUEST": "500m",
-      "KUBERNETES_MEMORY_REQUEST": "2G",
-    },
-    "retry": { "max:": "1"}
-    "script+:":
-    [
-      "echo \"Job modified by my-dyn-mapping.spack.io\""
-    ]
-  }
+   {
+     "variables":
+     {
+       "KUBERNETES_CPU_REQUEST": "500m",
+       "KUBERNETES_MEMORY_REQUEST": "2G",
+     },
+     "retry": { "max:": "1"}
+     "script+:":
+     [
+       "echo \"Job modified by my-dyn-mapping.spack.io\""
+     ]
+   }
 
 
 The ci.yaml configuration section takes the URL endpoint as well as a number of options to configure how responses are handled.

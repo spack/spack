@@ -37,7 +37,7 @@ The default is ``$spack/opt/spack``.
 By default, Spack installs all packages into a unique directory relative to the install
 tree root with the following layout:
 
-.. code-block::
+.. code-block:: text
 
    {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
 
