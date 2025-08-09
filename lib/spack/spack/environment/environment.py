@@ -44,7 +44,11 @@ from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.util.path import substitute_path_variables
 
-from ..enums import ConfigScopePriority
+from .generate_env_scripts import (
+    regenerate_env_scripts,
+    write_env_activate_script,
+    write_env_deactivate_script,
+)
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = spack.concretize.SpecPair
@@ -400,6 +404,10 @@ def create_in_dir(
                 # locations.
                 _rewrite_relative_dev_paths_on_relocation(env, init_file_dir)
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir)
+
+    view = default_view_name if with_view is not False else None
+    write_env_activate_script(env, view=view)
+    write_env_deactivate_script(env, view=view)
 
     return env
 
@@ -1722,7 +1730,8 @@ class Environment:
             return
 
         for view in self.views.values():
-            view.regenerate(self.concrete_roots())
+            view.regenerate(self)
+        regenerate_env_scripts(self)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
@@ -2345,7 +2354,8 @@ class Environment:
         if regenerate:
             self.regenerate_views()
 
-        self.new_specs.clear()
+        for x in self.concretized_roots:
+            x.new = False
 
     def update_lockfile(self) -> None:
         with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:

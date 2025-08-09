@@ -908,12 +908,6 @@ class RepoPath:
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
-    def _have_name(self, pkg_name: str) -> bool:
-        have_name = pkg_name is not None
-        if have_name and not isinstance(pkg_name, str):
-            raise ValueError(f"is_virtual(): expected package name, got {type(pkg_name)}")
-        return have_name
-
     def is_virtual(self, pkg_name: str) -> bool:
         """Return True if the package with this name is virtual, False otherwise.
 

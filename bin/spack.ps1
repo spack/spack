@@ -46,8 +46,11 @@ function Set-SpackEnv {
     # Invoke-Expression can only handle one command at a time
     # so we iterate over the list to invoke the env modification
     # expressions one at a time
+    Write-Output $args
     foreach($envop in $args[0]){
-        Invoke-Expression $envop
+        if(![string]::IsNullOrEmpty($envop)) {
+            Invoke-Expression $envop
+        }
     }
 }
 

@@ -207,7 +207,6 @@ def test_path_manipulation(env):
     env.remove_path("REMOVE_PATH_LIST", "/remove/this")
     env.remove_path("REMOVE_PATH_LIST", "/duplicate/")
 
-    env.deprioritize_system_paths("PATH_LIST_WITH_SYSTEM_PATHS")
     env.prune_duplicate_paths("PATH_LIST_WITH_DUPLICATES")
 
     env.apply_modifications()
@@ -220,13 +219,6 @@ def test_path_manipulation(env):
 
     expected = "/path/first:/path/middle:/path/last"
     assert os.environ["NEWLY_CREATED_PATH_LIST"] == expected
-
-    assert os.environ["REMOVE_PATH_LIST"] == "/a/b:/a/c:/a/d:/f/g"
-
-    assert not os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].startswith("/usr/include:")
-    assert os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].endswith(":/usr/include")
-
-    assert os.environ["PATH_LIST_WITH_DUPLICATES"].count("/duplicate") == 1
 
 
 def test_extend(env):

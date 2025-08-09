@@ -45,9 +45,7 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack bootstrap disable github-actions-v0.6
-          spack bootstrap disable github-actions-v0.5
-          spack external find cmake bison
-          spack -d solve zlib
+          spack solve zlib
           tree ~/.spack/bootstrap/store/
 
   clingo-sources:

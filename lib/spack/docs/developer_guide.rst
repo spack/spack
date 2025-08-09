@@ -402,22 +402,19 @@ make sure to update Spack's `Bash tab completion script
 Writing Hooks
 -------------
 
-A hook is a callback that makes it easy to design functions that run
-for different events. We do this by defining hook types and then
-inserting them at different places in the Spack codebase. Whenever a hook
-type triggers by way of a function call, we find all the hooks of that type
-and run them.
+A hook is a callback that makes it easy to design functions that run for different events.
+We do this by defining hook types and then inserting them at different places in the Spack codebase.
+Whenever a hook type triggers by way of a function call, we find all the hooks of that type and run them.
 
 Spack defines hooks by way of a module in the ``lib/spack/spack/hooks`` directory.
 This module has to be registered in ``lib/spack/spack/hooks/__init__.py`` so that Spack is aware of it.
 This section will cover the basic kind of hooks and how to write them.
 
-^^^^^^^^^^^^^^
-Types of Hooks
-^^^^^^^^^^^^^^
 
-The following hooks are currently implemented to make it easy for you,
-the developer, to add hooks at different stages of a Spack install or similar.
+Available Hook Types
+^^^^^^^^^^^^^^^^^^^^
+
+The following hooks are currently implemented to make it easy for you, the developer, to add hooks at different stages of a Spack install or similar.
 If there is a hook that you would like and it is missing, you can propose to add a new one.
 
 """""""""""""""""""""
@@ -432,9 +429,8 @@ It expects a single argument of a spec.
 ``post_install(spec, explicit=None)``
 """""""""""""""""""""""""""""""""""""
 
-A ``post_install`` hook is run within the install subprocess, directly after the installation finishes,
-but before the build stage is removed and the spec is registered in the database. It expects two
-arguments: the spec and an optional boolean indicating whether this spec is being installed explicitly.
+A ``post_install`` hook is run within the install subprocess, directly after the installation finishes, but before the build stage is removed and the spec is registered in the database.
+It expects two arguments: the spec and an optional boolean indicating whether this spec is being installed explicitly.
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""
 ``pre_uninstall(spec)`` and ``post_uninstall(spec)``
@@ -447,26 +443,24 @@ These hooks are currently used for cleaning up module files after uninstall.
 Adding a New Hook Type
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Adding a new hook type is very simple! In ``lib/spack/spack/hooks/__init__.py``,
-you can simply create a new ``HookRunner`` that is named to match your new hook.
-For example, let's say you want to add a new hook called ``post_log_write``
-to trigger after anything is written to a logger. You would add it as follows:
+Adding a new hook type is very simple!
+In ``lib/spack/spack/hooks/__init__.py``, you can simply create a new ``HookRunner`` that is named to match your new hook.
+For example, let's say you want to add a new hook called ``post_log_write`` to trigger after anything is written to a logger.
+You would add it as follows:
 
 .. code-block:: python
 
     # pre/post install and run by the install subprocess
-    pre_install = HookRunner('pre_install')
-    post_install = HookRunner('post_install')
+    pre_install = HookRunner("pre_install")
+    post_install = HookRunner("post_install")
 
     # hooks related to logging
-    post_log_write = HookRunner('post_log_write') # <- here is my new hook!
+    post_log_write = HookRunner("post_log_write")  # <- here is my new hook!
 
 
-You then need to decide what arguments your hook would expect. Since this is
-related to logging, let's say that you want a message and level. That means
-that when you add a Python file to the ``lib/spack/spack/hooks``
-folder with one or more callbacks intended to be triggered by this hook, you might
-use your new hook as follows:
+You then need to decide what arguments your hook would expect.
+Since this is related to logging, let's say that you want a message and level.
+That means that when you add a Python file to the ``lib/spack/spack/hooks`` folder with one or more callbacks intended to be triggered by this hook, you might use your new hook as follows:
 
 .. code-block:: python
 
@@ -474,7 +468,7 @@ use your new hook as follows:
         """Do something custom with the message and level every time we write
         to the log
         """
-        print('running post_log_write!')
+        print("running post_log_write!")
 
 
 To use the hook, we would call it as follows somewhere in the logic to do logging.
@@ -488,9 +482,7 @@ In this example, we use it outside of a logger that is already defined:
     spack.hooks.post_log_write(message, logger.level)
 
 
-This is not to say that this would be the best way to implement an integration
-with the logger (you would probably want to write a custom logger, or you could
-have the hook defined within the logger), but it serves as an example of writing a hook.
+This is not to say that this would be the best way to implement an integration with the logger (you would probably want to write a custom logger, or you could have the hook defined within the logger), but it serves as an example of writing a hook.
 
 ----------
 Unit tests
@@ -765,6 +757,67 @@ The bottom of the output shows the most time-consuming functions,
 slowest on top. The profiling support is from Python's built-in tool,
 `cProfile
 <https://docs.python.org/3/library/profile.html#module-cProfile>`_.
+=======
+When working on the ASP-based solver in ``lib/spack/spack/solver/``, it is often useful to inspect the raw facts and rules that clingo sees, and to run clingo directly outside of Spack.
+
+Generating ASP facts
+^^^^^^^^^^^^^^^^^^^^
+
+The ``spack solve --show=asp`` flag dumps all ASP facts generated for a given spec to stdout:
+
+.. code-block:: console
+
+   $ spack solve --show=asp zlib-ng > zlib.lp
+
+The resulting file contains both the package facts (versions, variants, dependencies) and the problem-specific facts derived from the user's configuration.
+It can be fed directly to clingo alongside the solver rules.
+
+Running clingo directly
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Once you have the facts file, you can invoke clingo directly.
+This bypasses Spack's Python layer and lets you iterate on ``.lp`` rule files quickly.
+
+On Linux (includes libc compatibility rules):
+
+.. code-block:: console
+
+   $ LP_FILES="lib/spack/spack/solver/concretize.lp \
+               lib/spack/spack/solver/heuristic.lp \
+               lib/spack/spack/solver/display.lp \
+               lib/spack/spack/solver/libc_compatibility.lp \
+               lib/spack/spack/solver/direct_dependency.lp"
+   $ clingo --verbose=3 --stats=2 --quiet=1,0,0 [--project-anonymous] \
+            --configuration=tweety --opt-strategy=usc,one \
+            --heuristic=Domain $LP_FILES zlib.lp
+
+On macOS, replace ``libc_compatibility.lp`` with ``os_compatibility.lp``.
+
+Reading the output
+^^^^^^^^^^^^^^^^^^
+
+``--quiet=1,0,0`` suppresses intermediate models and shows only the optimal answer.
+``--stats=2`` appends a detailed statistics block at the end of the output.
+The most useful fields are:
+
+* **Grounding**: total number of ground rules; a sudden increase usually indicates a rule is producing a combinatorial blowup.
+* **Solve time**: wall-clock time spent in the search phase alone, excluding grounding.
+* **Optimization**: the vector of objective values at each priority level, useful for verifying that the solver is minimizing the right criteria.
+
+``--verbose=3`` prints each rule as it is grounded, which helps identify which rule is responsible for an unexpected grounding explosion.
+Because the output is very large, redirect it to a file and search for the rule body of interest.
+
+If a solve takes a long time to finish, you can interrupt it with ``Ctrl+C``.
+The partial statistics printed on interrupt are still useful for diagnosing the bottleneck.
+
+Running the concretization test suite
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After modifying any solver ``.lp`` file, verify correctness with:
+
+.. code-block:: console
+
+   $ pytest -n 8 lib/spack/spack/test/concretization
 
 .. _releases:
 
