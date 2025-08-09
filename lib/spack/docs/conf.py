@@ -23,12 +23,12 @@ from glob import glob
 from typing import List
 
 from docutils.statemachine import StringList
-
-# ... other imports at the top of the file
+from pygments.formatters.html import HtmlFormatter
 from pygments.lexer import RegexLexer, default
 from pygments.token import *
 from sphinx.domains.python import PythonDomain
 from sphinx.ext.apidoc import main as sphinx_apidoc
+from sphinx.highlighting import PygmentsBridge
 from sphinx.parsers import RSTParser
 
 # -- Spack customizations -----------------------------------------------------
@@ -98,6 +98,25 @@ sphinx_apidoc(
         ".spack/spack-packages/repos/spack_repo/builtin/packages",
     ]
 )
+
+
+class NoWhitespaceHtmlFormatter(HtmlFormatter):
+    """HTML formatter that suppresses redundant span elements for Text.Whitespace tokens."""
+
+    def _get_css_classes(self, ttype):
+        # For Text.Whitespace return an empty string, which avoids <span class="w"> </span>
+        # elements from being generated.
+        return "" if ttype is Text.Whitespace else super()._get_css_classes(ttype)
+
+
+class CustomPygmentsBridge(PygmentsBridge):
+    def get_formatter(self, **options):
+        return NoWhitespaceHtmlFormatter(**options)
+
+
+# Use custom HTML formatter to avoid redundant <span class="w"> </span> elements.
+# See https://github.com/pygments/pygments/issues/1905#issuecomment-3170486995.
+PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
 
 
 from spack.spec_parser import SpecTokens
