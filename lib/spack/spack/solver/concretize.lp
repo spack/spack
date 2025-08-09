@@ -1571,21 +1571,24 @@ error(100, "Compiler mixing is disabled") :-
     attr("virtual_on_edge", PN2, CompilerNode2, "c"),
     attr("depends_on", PN1, PN2, "link"),
     not external(PN2),
-    CompilerNode1 != CompilerNode2.
+    CompilerNode1 != CompilerNode2,
+    compiler_mixing(0).
 
 error(100, "Compiler mixing is disabled") :-
     attr("virtual_on_edge", PN1, CompilerNode1, "cxx"),
     attr("virtual_on_edge", PN2, CompilerNode2, "cxx"),
     attr("depends_on", PN1, PN2, "link"),
     not external(PN2),
-    CompilerNode1 != CompilerNode2.
+    CompilerNode1 != CompilerNode2,
+    compiler_mixing(0).
 
 error(100, "Compiler mixing is disabled") :-
     attr("virtual_on_edge", PN1, CompilerNode1, "fortran"),
     attr("virtual_on_edge", PN2, CompilerNode2, "fortran"),
     attr("depends_on", PN1, PN2, "link"),
     not external(PN2),
-    CompilerNode1 != CompilerNode2.
+    CompilerNode1 != CompilerNode2,
+    compiler_mixing(0).
 
 %-----------------------------------------------------------------------------
 % Runtimes

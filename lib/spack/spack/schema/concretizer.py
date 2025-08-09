@@ -61,6 +61,7 @@ properties: Dict[str, Any] = {
             "unify": {
                 "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["when_possible"]}]
             },
+            "compiler_mixing": {"type": "boolean"},
             "splice": {
                 "type": "object",
                 "additionalProperties": False,
