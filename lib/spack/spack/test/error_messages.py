@@ -438,10 +438,15 @@ def test_null_variant_for_requested_version(concretize_scope, test_repo):
 
 
 # Error message for requirement introduced in the package
-# definition is short
+# definition is bad (not informative)
 def test_errmsg_requirements_1(concretize_scope, test_repo):
     # w4 has: depends_on("w3+v1", when="@2.0")
     # w3 has: requires("~v1", when="@2.1")
+    # NOTE: the error message can be made good by changing
+    # W4 constraint on W3 from
+    # depends_on("w3+v1", when="@2.0")
+    # to
+    # depends_on("w3+v1", when="@:2.0")
     with expect_failure_and_print():
         concretize_one("w4@:2.0 ^w3@2.1")
 
