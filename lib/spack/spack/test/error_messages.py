@@ -461,8 +461,8 @@ packages:
 
     # w4 has: depends_on("w2@:2.0", when="@:2.0")
     with expect_failure_and_print():
-        concretize_one("w4@:2.0 ^w2+v1") # EX 1: good msg
-        #concretize_one("w4@2.0 ^w2+v1") # EX 2: bad msg
+        concretize_one("w4@:2.0 ^w2+v1")  # EX 1: good msg
+        # concretize_one("w4@2.0 ^w2+v1") # EX 2: bad msg
 
 
 # This reencodes test_errmsg_requirements_2
