@@ -21,7 +21,6 @@ import spack.compilers.config
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
-import spack.detection
 import spack.error
 import spack.hash_types as ht
 import spack.llnl.util.lang
@@ -2177,80 +2176,6 @@ class TestConcretize:
             assert s.satisfies(f"target={required_target}")
 
     target = spack.platforms.test.Test.default
-
-    @pytest.mark.parametrize(
-        "python_spec",
-        [
-            "python@configured",
-            "python@configured platform=test",
-            "python@configured os=debian",
-            "python@configured target=%s" % target,
-        ],
-    )
-    @pytest.mark.xfail(reason="FIXME: (externals as concrete)")
-    def test_external_python_extension_find_dependency_from_config(self, python_spec):
-        fake_path = os.path.sep + "fake"
-
-        external_conf = {
-            "py-extension1": {
-                "buildable": False,
-                "externals": [{"spec": "py-extension1@2.0", "prefix": fake_path}],
-            },
-            "python": {"externals": [{"spec": python_spec, "prefix": fake_path}]},
-        }
-        spack.config.set("packages", external_conf)
-
-        spec = spack.concretize.concretize_one("py-extension1")
-
-        assert "python" in spec["py-extension1"]
-        assert spec["python"].prefix == fake_path
-        # The spec is not equal to Spec("python@configured") because it gets a
-        # namespace and an external prefix before marking concrete
-        assert spec["python"].satisfies(python_spec)
-
-    @pytest.mark.xfail(reason="FIXME: (externals as concrete)")
-    def test_external_python_extension_find_dependency_from_detection(self, monkeypatch):
-        """Test that python extensions have access to a python dependency
-
-        when python isn't otherwise in the DAG"""
-        prefix = os.path.sep + "fake"
-        python_spec = Spec.from_detection("python@=detected", external_path=prefix)
-
-        def find_fake_python(classes, path_hints, **kwargs):
-            return {
-                "python": [Spec.from_detection("python@=detected", external_path=path_hints[0])]
-            }
-
-        monkeypatch.setattr(spack.detection, "by_path", find_fake_python)
-        external_conf = {
-            "py-extension1": {
-                "buildable": False,
-                "externals": [{"spec": "py-extension1@2.0", "prefix": "%s" % prefix}],
-            }
-        }
-        spack.config.set("packages", external_conf)
-
-        spec = spack.concretize.concretize_one("py-extension1")
-
-        assert "python" in spec["py-extension1"]
-        assert spec["python"].prefix == prefix
-        assert spec["python"].external
-        assert spec["python"].satisfies(python_spec)
-
-    @pytest.mark.xfail(reason="FIXME: (externals as concrete)")
-    def test_external_python_extension_find_unified_python(self):
-        """Test that python extensions use the same python as other specs in unified env"""
-        external_conf = {
-            "py-extension1": {
-                "buildable": False,
-                "externals": [{"spec": "py-extension1@2.0", "prefix": os.path.sep + "fake"}],
-            }
-        }
-        spack.config.set("packages", external_conf)
-
-        abstract_specs = [Spec(s) for s in ["py-extension1", "python"]]
-        specs = spack.concretize._concretize_specs_together(abstract_specs)
-        assert specs[0]["python"] == specs[1]["python"]
 
     @pytest.mark.regression("36190")
     @pytest.mark.parametrize(
