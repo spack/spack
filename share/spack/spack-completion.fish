@@ -2037,12 +2037,14 @@ complete -c spack -n '__fish_spack_using_command help' -l spec -f -a guide
 complete -c spack -n '__fish_spack_using_command help' -l spec -d 'help on the package specification syntax'
 
 # spack info
-set -g __fish_spack_optspecs_spack_info h/help a/all detectable maintainers namespace no-dependencies no-variants no-versions phases tags tests virtuals variants-by-name
-complete -c spack -n '__fish_spack_using_command_pos 0 info' -f -a '(__fish_spack_packages)'
+set -g __fish_spack_optspecs_spack_info h/help a/all by-name detectable maintainers namespace no-dependencies no-variants no-versions phases tags tests virtuals variants-by-name
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 info' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command info' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command info' -s a -l all -d 'output all package information'
+complete -c spack -n '__fish_spack_using_command info' -l by-name -f -a by_name
+complete -c spack -n '__fish_spack_using_command info' -l by-name -d 'list variants in strict name order; don'"'"'t group by condition'
 complete -c spack -n '__fish_spack_using_command info' -l detectable -f -a detectable
 complete -c spack -n '__fish_spack_using_command info' -l detectable -d 'output information on external detection'
 complete -c spack -n '__fish_spack_using_command info' -l maintainers -f -a maintainers
@@ -2063,8 +2065,7 @@ complete -c spack -n '__fish_spack_using_command info' -l tests -f -a tests
 complete -c spack -n '__fish_spack_using_command info' -l tests -d 'output relevant build-time and stand-alone tests'
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -f -a virtuals
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -d 'output virtual packages'
-complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -f -a variants_by_name
-complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -d 'list variants in strict name order; don'"'"'t group by condition'
+complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -f -a by_name
 
 # spack install
 set -g __fish_spack_optspecs_spack_install h/help only= u/until= p/concurrent-packages= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum v/verbose fake only-concrete add no-add clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all f/force U/fresh reuse fresh-roots deprecated

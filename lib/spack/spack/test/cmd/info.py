@@ -2,11 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-
 import pytest
 
-import spack.cmd.info
 from spack.main import SpackCommand
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
@@ -14,65 +11,33 @@ pytestmark = [pytest.mark.usefixtures("mock_packages")]
 info = SpackCommand("info")
 
 
-@pytest.fixture(scope="module")
-def parser():
-    """Returns the parser for the module command"""
-    prs = argparse.ArgumentParser()
-    spack.cmd.info.setup_parser(prs)
-    return prs
-
-
-@pytest.fixture()
-def print_buffer(monkeypatch):
-    buffer = []
-
-    def _print(*args, **kwargs):
-        buffer.extend(args)
-
-    monkeypatch.setattr(spack.cmd.info.color, "cprint", _print, raising=False)
-    return buffer
-
-
 @pytest.mark.parametrize("extra_args", [[], ["--variants-by-name"]])
 def test_it_just_runs(extra_args):
-    info("vtk-m", *extra_args)
+    info(*extra_args, "vtk-m")
 
 
-def test_info_noversion(print_buffer):
+def test_info_noversion():
     """Check that a mock package with no versions outputs None."""
-    info("noversion")
+    output = info("noversion")
 
-    line_iter = iter(print_buffer)
-    for line in line_iter:
-        if "version" in line:
-            has = [desc in line for desc in ["Preferred", "Safe", "Deprecated"]]
-            if not any(has):
-                continue
-        else:
-            continue
-
-        assert "None" in next(line_iter).strip()
+    assert "Preferred\n    None" not in output
+    assert "Safe\n    None" not in output
+    assert "Deprecated\n    None" not in output
 
 
 @pytest.mark.parametrize(
     "pkg_query,expected", [("zlib", "False"), ("find-externals1", "True (version)")]
 )
-def test_is_externally_detectable(pkg_query, expected, parser, print_buffer):
-    args = parser.parse_args(["--detectable", pkg_query])
-    spack.cmd.info.info(parser, args)
-
-    line_iter = iter(print_buffer)
-    for line in line_iter:
-        if "Externally Detectable" in line:
-            is_externally_detectable = next(line_iter).strip()
-            assert is_externally_detectable == expected
+def test_is_externally_detectable(pkg_query, expected):
+    output = info("--detectable", pkg_query)
+    assert f"Externally Detectable:\n    {expected}" in output
 
 
 @pytest.mark.parametrize(
     "pkg_query", ["vtk-m", "gcc"]  # This should ensure --test's c_names processing loop covered
 )
-@pytest.mark.parametrize("extra_args", [[], ["--variants-by-name"]])
-def test_info_fields(pkg_query, extra_args, parser, print_buffer):
+@pytest.mark.parametrize("extra_args", [[], ["--by-name"]])
+def test_info_fields(pkg_query, extra_args):
     expected_fields = (
         "Description:",
         "Homepage:",
@@ -85,8 +50,29 @@ def test_info_fields(pkg_query, extra_args, parser, print_buffer):
         "Licenses:",
     )
 
-    args = parser.parse_args(["--all", pkg_query] + extra_args)
-    spack.cmd.info.info(parser, args)
+    output = info("--all", *extra_args, pkg_query)
+    assert all(field in output for field in expected_fields)
 
-    for text in expected_fields:
-        assert any(x for x in print_buffer if text in x)
+
+@pytest.mark.parametrize(
+    "by_name,args,in_output,not_in_output",
+    [
+        (True, ["licenses-1 +foo"], ["MIT"], ["Apache-2.0"]),
+        (True, ["licenses-1 ~foo"], ["Apache-2.0"], ["MIT"]),
+        (True, ["bowtie"], ["1.4.0", "1.3.0", "1.2.2", "1.2.0"], []),
+        (True, ["bowtie@1.2:"], ["1.4.0", "1.3.0", "1.2.2", "1.2.0"], []),
+        (True, ["bowtie@1.3:"], ["1.4.0", "1.3.0"], ["1.2.2", "1.2.0"]),
+        (True, ["bowtie@1.2"], ["1.2.2", "1.2.0"], ["1.3.0"]),  # 1.4.0 still shown as preferred
+        (False, ["licenses-1 +foo"], ["MIT"], ["Apache-2.0"]),
+        (False, ["licenses-1 ~foo"], ["Apache-2.0"], ["MIT"]),
+        (False, ["bowtie"], ["1.4.0", "1.3.0", "1.2.2", "1.2.0"], []),
+        (False, ["bowtie@1.2:"], ["1.4.0", "1.3.0", "1.2.2", "1.2.0"], []),
+        (False, ["bowtie@1.3:"], ["1.4.0", "1.3.0"], ["1.2.2", "1.2.0"]),
+        (False, ["bowtie@1.2"], ["1.2.2", "1.2.0"], ["1.3.0"]),  # 1.4.0 still shown as preferred
+    ],
+)
+def test_filtered_info(by_name, args, in_output, not_in_output):
+    by_name_arg = ["--by-name"] if by_name else []
+    output = info(*(by_name_arg + args))
+    assert all(io in output for io in in_output)
+    assert all(nio not in output for nio in not_in_output)

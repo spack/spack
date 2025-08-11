@@ -11,6 +11,7 @@ from argparse import Namespace
 from typing import Any, Callable, Dict, Iterable, Optional, TextIO, TypeVar
 
 import spack.builder
+import spack.cmd
 import spack.dependency
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
@@ -38,7 +39,7 @@ class Formatter:
     """Generic formatter for elements displayed by `spack info`.
 
     Elements have four parts: name, values, when condition, and description. They can
-    be formatted two ways (shown here for variants)::
+    be formatted two ways (shown here for variants):
 
     Grouped by when (default)::
 
@@ -109,7 +110,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--variants-by-name", dest="by_name", action="store_true", help=argparse.SUPPRESS
     )
-    arguments.add_common_arguments(subparser, ["package"])
+    arguments.add_common_arguments(subparser, ["spec"])
 
 
 def section_title(s: str) -> str:
@@ -139,14 +140,14 @@ class DependencyFormatter(Formatter):
 
 def print_dependencies(pkg: PackageBase, args: Namespace) -> None:
     """output build, link, and run package dependencies"""
-    print_definitions("Dependencies", pkg.dependencies, DependencyFormatter(), args.by_name)
+    print_definitions(pkg, "Dependencies", pkg.dependencies, DependencyFormatter(), args.by_name)
 
 
 def print_detectable(pkg: PackageBase, args: Namespace) -> None:
     """output information on external detection"""
 
     color.cprint("")
-    color.cprint(section_title("Externally Detectable: "))
+    color.cprint(section_title("Externally Detectable:"))
 
     # If the package has an 'executables' of 'libraries' field, it
     # can detect an installation
@@ -356,7 +357,7 @@ def max_name_length(when_indexed_dictionary: Dict, formatter: Formatter) -> int:
 
 
 def print_grouped_by_when(
-    header: str, when_indexed_dictionary: Dict, formatter: Formatter
+    pkg: PackageBase, header: str, when_indexed_dictionary: Dict, formatter: Formatter
 ) -> None:
     """Generic method to print metadata grouped by when conditions."""
     if not print_header(header, when_indexed_dictionary, formatter):
@@ -369,6 +370,9 @@ def print_grouped_by_when(
 
     indent = 4
     for when, by_name in sorted(when_indexed_dictionary.items(), key=unconditional_first):
+        if not pkg.spec.intersects(when):
+            continue
+
         start_indent = indent
         values_indent = max_name_len + 4
 
@@ -393,7 +397,9 @@ def print_grouped_by_when(
             )
 
 
-def print_by_name(header: str, when_indexed_dictionary: Dict, formatter: Formatter) -> None:
+def print_by_name(
+    pkg: PackageBase, header: str, when_indexed_dictionary: Dict, formatter: Formatter
+) -> None:
     if not print_header(header, when_indexed_dictionary, formatter):
         return
 
@@ -404,6 +410,9 @@ def print_by_name(header: str, when_indexed_dictionary: Dict, formatter: Formatt
 
     for subkey in spack.package_base._subkeys(when_indexed_dictionary):
         for when, definition in spack.package_base._definitions(when_indexed_dictionary, subkey):
+            if not pkg.spec.intersects(when):
+                continue
+
             _print_definition(
                 formatter.format_name(definition),
                 formatter.format_values(definition),
@@ -417,7 +426,11 @@ def print_by_name(header: str, when_indexed_dictionary: Dict, formatter: Formatt
 
 
 def print_definitions(
-    header: str, when_indexed_dictionary: Dict, formatter: Formatter, by_name: bool
+    pkg: PackageBase,
+    header: str,
+    when_indexed_dictionary: Dict,
+    formatter: Formatter,
+    by_name: bool,
 ) -> None:
     # convert simple dictionaries to dicts of dicts before formatting.
     # subkeys are ignored in formatting, so use stringified numbers.
@@ -429,9 +442,9 @@ def print_definitions(
         }
 
     if by_name:
-        print_by_name(header, when_indexed_dictionary, formatter)
+        print_by_name(pkg, header, when_indexed_dictionary, formatter)
     else:
-        print_grouped_by_when(header, when_indexed_dictionary, formatter)
+        print_grouped_by_when(pkg, header, when_indexed_dictionary, formatter)
 
 
 class VariantFormatter(Formatter):
@@ -458,12 +471,12 @@ class VariantFormatter(Formatter):
 
 def print_variants(pkg: PackageBase, args: Namespace) -> None:
     """output variants"""
-    print_definitions("Variants", pkg.variants, VariantFormatter(), args.by_name)
+    print_definitions(pkg, "Variants", pkg.variants, VariantFormatter(), args.by_name)
 
 
 def print_licenses(pkg: PackageBase, args: Namespace) -> None:
     """Output the licenses of the project."""
-    print_definitions("Licenses", pkg.licenses, Formatter(), args.by_name)
+    print_definitions(pkg, "Licenses", pkg.licenses, Formatter(), args.by_name)
 
 
 def print_versions(pkg: PackageBase, args: Namespace) -> None:
@@ -472,7 +485,9 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
     color.cprint("")
     color.cprint(section_title("Preferred version:  "))
 
-    if not pkg.versions:
+    versions = [v for v in pkg.versions if pkg.spec.versions.intersects(v)]
+
+    if not versions:
         color.cprint(version("    None"))
         color.cprint("")
         color.cprint(section_title("Safe versions:  "))
@@ -481,7 +496,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
         color.cprint(section_title("Deprecated versions:  "))
         color.cprint(version("    None"))
     else:
-        pad = padder(pkg.versions, 4)
+        pad = padder(versions, 4)
 
         preferred = spack.package_base.preferred_version(pkg)
 
@@ -499,7 +514,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
 
         safe = []
         deprecated = []
-        for v in reversed(sorted(pkg.versions)):
+        for v in reversed(sorted(versions)):
             if pkg.has_code:
                 url = get_url(v)
             if pkg.versions[v].get("deprecated", False):
@@ -534,7 +549,11 @@ def print_virtuals(pkg: PackageBase, args: Namespace) -> None:
 
 
 def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
-    spec = spack.spec.Spec(args.package)
+    specs = spack.cmd.parse_specs(args.spec)
+    if len(specs) > 1:
+        tty.die(f"spack info requires exactly one spec. Parsed {len(specs)}")
+
+    spec = specs[0]
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.fullname)
     pkg = pkg_cls(spec)
 
@@ -564,7 +583,7 @@ def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
         (args.all or not args.no_dependencies, print_dependencies),
         (args.all or args.virtuals, print_virtuals),
         (args.all or args.tests, print_tests),
-        (args.all or True, print_licenses),
+        (True, print_licenses),
     ]
     for print_it, func in sections:
         if print_it:
