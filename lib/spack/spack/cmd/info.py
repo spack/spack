@@ -63,7 +63,7 @@ class Formatter:
     """
 
     def format_name(self, element: Any) -> str:
-        return ""
+        return str(element)
 
     def format_values(self, element: Any) -> str:
         return ""
@@ -117,10 +117,6 @@ def section_title(s: str) -> str:
 
 
 def version(s: str) -> str:
-    return spack.spec.VERSION_COLOR + s + plain_format
-
-
-def license(s: str) -> str:
     return spack.spec.VERSION_COLOR + s + plain_format
 
 
@@ -294,6 +290,7 @@ def _print_definition(
     pad = 4  # min padding between name and values
     value_indent = (indent + max_name_len + pad) * " "  # left edge of values
 
+    formatted_name_and_values = f"{indent * ' '}{name_field}"
     if values_field:
         formatted_values = "\n".join(
             textwrap.wrap(
@@ -306,8 +303,10 @@ def _print_definition(
         # trim initial indentation
         formatted_values = formatted_values[indent + name_len + pad :]
 
-        # name [default]   value1, value2, value3, ...
-        out.write(f"{indent * ' '}{name_field}{pad * ' '}{formatted_values}\n")
+        # e.g,. name [default]   value1, value2, value3, ...
+        formatted_name_and_values += f"{pad * ' '}{formatted_values}"
+
+    out.write(f"{formatted_name_and_values}\n")
 
     # when <spec>
     description_indent = indent + 4
@@ -420,6 +419,15 @@ def print_by_name(header: str, when_indexed_dictionary: Dict, formatter: Formatt
 def print_definitions(
     header: str, when_indexed_dictionary: Dict, formatter: Formatter, by_name: bool
 ) -> None:
+    # convert simple dictionaries to dicts of dicts before formatting.
+    # subkeys are ignored in formatting, so use stringified numbers.
+    values = when_indexed_dictionary.values()
+    if when_indexed_dictionary and not isinstance(next(iter(values)), dict):
+        when_indexed_dictionary = {
+            when: {str(i): element}
+            for i, (when, element) in enumerate(when_indexed_dictionary.items())
+        }
+
     if by_name:
         print_by_name(header, when_indexed_dictionary, formatter)
     else:
@@ -451,6 +459,11 @@ class VariantFormatter(Formatter):
 def print_variants(pkg: PackageBase, args: Namespace) -> None:
     """output variants"""
     print_definitions("Variants", pkg.variants, VariantFormatter(), args.by_name)
+
+
+def print_licenses(pkg: PackageBase, args: Namespace) -> None:
+    """Output the licenses of the project."""
+    print_definitions("Licenses", pkg.licenses, Formatter(), args.by_name)
 
 
 def print_versions(pkg: PackageBase, args: Namespace) -> None:
@@ -518,24 +531,6 @@ def print_virtuals(pkg: PackageBase, args: Namespace) -> None:
 
     else:
         color.cprint("    None")
-
-
-def print_licenses(pkg: PackageBase, args: Namespace) -> None:
-    """Output the licenses of the project."""
-
-    color.cprint("")
-    color.cprint(section_title("Licenses: "))
-
-    if len(pkg.licenses) == 0:
-        color.cprint("    None")
-    else:
-        pad = padder(pkg.licenses, 4)
-        for when_spec in pkg.licenses:
-            license_identifier = pkg.licenses[when_spec]
-            line = license("    {0}".format(pad(license_identifier))) + color.cescape(
-                str(when_spec)
-            )
-            color.cprint(line)
 
 
 def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
