@@ -461,9 +461,8 @@ def push_fn(args):
         else:
             tty.info(
                 f"The following {len(skipped)} specs were skipped as they already exist in the"
-                f" buildcache:\n    {", ".join(
-                    elide_list([_format_spec(s) for s in skipped], 5)
-                )}\n"
+                " buildcache:\n"
+                f"    {', '.join(elide_list([_format_spec(s) for s in skipped], 5))}\n"
                 "    Use --force to overwrite them."
             )
 
@@ -471,7 +470,7 @@ def push_fn(args):
         tty.info(
             f"The following {len(excluded)} specs were ommitted due from pushing to the"
             " buildcache due to filters:\n"
-            f"    {", ".join(elide_list([_format_spec(s) for s in excluded], 5))}\n"
+            f"    {', '.join(elide_list([_format_spec(s) for s in excluded], 5))}\n"
         )
 
     if failed:
