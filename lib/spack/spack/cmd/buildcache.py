@@ -460,19 +460,18 @@ def push_fn(args):
             tty.info("All specs are already in the buildcache. Use --force to overwrite them.")
         else:
             tty.info(
-                "The following {} specs were skipped as they already exist in the buildcache:\n"
-                "    {}\n"
-                "    Use --force to overwrite them.".format(
-                    len(skipped), ", ".join(elide_list([_format_spec(s) for s in skipped], 5))
-                )
+                f"The following {len(skipped)} specs were skipped as they already exist in the"
+                f" buildcache:\n    {", ".join(
+                    elide_list([_format_spec(s) for s in skipped], 5)
+                )}\n"
+                "    Use --force to overwrite them."
             )
 
     if excluded:
         tty.info(
-            "The following {} specs were ommitted due from pushing to the buildcache due to filters:\n"
-            "    {}\n".format(
-                len(excluded), ", ".join(elide_list([_format_spec(s) for s in excluded], 5))
-            )
+            f"The following {len(excluded)} specs were ommitted due from pushing to the"
+            " buildcache due to filters:\n"
+            f"    {", ".join(elide_list([_format_spec(s) for s in excluded], 5))}\n"
         )
 
     if failed:
