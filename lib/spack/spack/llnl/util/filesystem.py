@@ -401,11 +401,11 @@ class FileFilter:
 
     Example usage:
 
-        .. code-block:: python
+    .. code-block:: python
 
-            foo_c = FileFilter("foo.c")
-            foo_c.filter(r"#define FOO", "#define BAR")
-            foo_c.filter(r"old_func", "new_func")
+        foo_c = FileFilter("foo.c")
+        foo_c.filter(r"#define FOO", "#define BAR")
+        foo_c.filter(r"old_func", "new_func")
     """
 
     def __init__(self, *filenames):
@@ -1017,11 +1017,11 @@ def working_dir(dirname: str, *, create: bool = False):
 
     Example usage:
 
-        .. code-block:: python
+    .. code-block:: python
 
-            with working_dir("/path/to/dir"):
-                # do something in /path/to/dir
-                pass
+       with working_dir("/path/to/dir"):
+           # do something in /path/to/dir
+           pass
     """
     if create:
         mkdirp(dirname)

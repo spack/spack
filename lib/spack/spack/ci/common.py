@@ -17,7 +17,7 @@ from typing import Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
 
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
@@ -179,7 +179,7 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
     for release_spec in specs:
         release_spec_dag_hash = release_spec.dag_hash()
         cache_class = get_url_buildcache_class(
-            layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+            layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
         buildcache_copies[release_spec_dag_hash] = {
             "src": cache_class.get_manifest_url(release_spec, src_prefix),
@@ -402,6 +402,7 @@ class PipelineOptions:
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
         self.cdash_handler = cdash_handler
+        self.forward_variables: List[str] = []
 
 
 class PipelineNode:
@@ -542,7 +543,6 @@ class SpackCIConfig:
             job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
             job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
             job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
-
         return job_object
 
     def __is_named(self, section):

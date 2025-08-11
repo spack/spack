@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Explore advanced topics in Spack, including defining and using toolchains, auditing packages and configuration, and verifying installations.
+
 .. _toolchains:
 
-=============================
 Defining and Using Toolchains
 =============================
 
@@ -52,9 +55,9 @@ If we had to enforce compilers directly, we would need 3 matrices, since:
 Different toolchains could be used independently or even in the same spec.
 If we had a toolchain named ``gcc_all`` that enforces using ``gcc`` for C, C++ and Fortran, we could write:
 
-.. code-block::
+.. code-block:: spec
 
-   spack install hdf5+fortran%llvm_gfortran ^mpich %gcc_all
+   $ spack install hdf5+fortran%llvm_gfortran ^mpich %gcc_all
 
 to install:
 
@@ -68,7 +71,6 @@ to install:
 
 .. _audit-packages-and-configuration:
 
-===================================
 Auditing Packages and Configuration
 ===================================
 
@@ -94,7 +96,6 @@ Issues, if found, are reported to stdout:
 
 .. _verify-installations:
 
-=======================
 Verifying Installations
 =======================
 
@@ -102,7 +103,6 @@ The ``spack verify`` command can be used to verify the validity of
 Spack-installed packages any time after installation.
 
 
--------------------------
 ``spack verify manifest``
 -------------------------
 
@@ -133,7 +133,6 @@ check only local packages (as opposed to those used transparently from
 ``upstream`` Spack instances) and the ``-j,--json`` option to output
 machine-readable JSON data for any errors.
 
---------------------------
 ``spack verify libraries``
 --------------------------
 
@@ -149,7 +148,6 @@ This verification can also be enabled as a post-install hook by setting
 ``config:shared_linking:missing_library_policy`` to ``error`` or ``warn``
 in :ref:`config.yaml <config-yaml>`.
 
-=======================
 Filesystem Requirements
 =======================
 
@@ -175,10 +173,10 @@ administrator to enable ``flock`` for your filesystem.
 
 If none of those work, you can disable locking in one of two ways:
 
-  1. Run Spack with the ``-L`` or ``--disable-locks`` option to disable
-     locks on a call-by-call basis.
-  2. Edit :ref:`config.yaml <config-yaml>` and set the ``locks`` option
-     to ``false`` to always disable locking.
+1. Run Spack with the ``-L`` or ``--disable-locks`` option to disable
+   locks on a call-by-call basis.
+2. Edit :ref:`config.yaml <config-yaml>` and set the ``locks`` option
+   to ``false`` to always disable locking.
 
 .. warning::
 

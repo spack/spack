@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to using the SIP build system in Spack for creating Python bindings for C and C++ libraries.
+
 .. _sippackage:
 
-------
 SIP
 ------
 
@@ -17,7 +20,6 @@ processes a set of specification files and generates C or C++ code which is
 then compiled to create the bindings extension module. The SIP Python module
 provides support functions to the automatically generated code.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -36,7 +38,6 @@ By default, these phases run:
    $ make install
 
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -45,7 +46,6 @@ For newer packages, this is called ``project.py``, while in older packages,
 it may be called ``configure.py``. This script contains instructions to build
 the project.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -61,7 +61,6 @@ dependencies are automatically added via the base class.
    depends_on("py-sip", type="build")
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to ``sip-build``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -77,7 +76,6 @@ arguments to the configure phase, you can use:
 
 A list of valid options can be found by running ``sip-build --help``.
 
-^^^^^^^
 Testing
 ^^^^^^^
 
@@ -134,7 +132,6 @@ or may require test dependencies like pytest to be installed.
 These tests can be triggered by running ``spack install --test=root``
 or by running ``spack test run`` after the installation has finished.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

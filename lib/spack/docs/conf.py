@@ -23,6 +23,10 @@ from glob import glob
 from typing import List
 
 from docutils.statemachine import StringList
+
+# ... other imports at the top of the file
+from pygments.lexer import RegexLexer, default
+from pygments.token import *
 from sphinx.domains.python import PythonDomain
 from sphinx.ext.apidoc import main as sphinx_apidoc
 from sphinx.parsers import RSTParser
@@ -95,6 +99,77 @@ sphinx_apidoc(
     ]
 )
 
+
+from spack.spec_parser import SpecTokens
+
+
+class SpecLexer(RegexLexer):
+    """A custom lexer for Spack spec strings and spack commands."""
+
+    name = "Spack spec"
+    aliases = ["spec"]
+    filenames = []
+    tokens = {
+        "root": [
+            # Looks for `$ command`, which may need spec highlighting.
+            (r"^\$\s+", Generic.Prompt, "command"),
+            (r"#.*?\n", Comment.Single),
+            # Alternatively, we just get a literal spec string, so we move to spec mode. We just
+            # look ahead here, without consuming the spec string.
+            (r"(?=\S+)", Generic.Prompt, "spec"),
+        ],
+        "command": [
+            # A spack install command is followed by a spec string, which we highlight.
+            (
+                r"spack(?:\s+(?:-[eC]\s+\S+|--?\S+))*\s+(?:install|uninstall|spec|load|unload|find|info|list|versions|providers|mark|diff|add)(?: +(?:--?\S+)?)*",
+                Text,
+                "spec",
+            ),
+            # Comment
+            (r"\s+#.*?\n", Comment.Single, "command_output"),
+            # Escaped newline should leave us in this mode
+            (r".*?\\\n", Text),
+            # Otherwise, it's the end of the command
+            (r".*?\n", Text, "command_output"),
+        ],
+        "command_output": [
+            (r"^\$\s+", Generic.Prompt, "#pop"),  # new command
+            (r"#.*?\n", Comment.Single),  # comments
+            (r".*?\n", Generic.Output),  # command output
+        ],
+        "spec": [
+            # New line terminates the spec string
+            (r"\s*?$", Text, "#pop"),
+            # Dependency, with optional virtual assignment specifier
+            (SpecTokens.START_EDGE_PROPERTIES.regex, Name.Variable, "edge_properties"),
+            (SpecTokens.DEPENDENCY.regex, Name.Variable),
+            # versions
+            (SpecTokens.VERSION_HASH_PAIR.regex, Keyword.Pseudo),
+            (SpecTokens.GIT_VERSION.regex, Keyword.Pseudo),
+            (SpecTokens.VERSION.regex, Keyword.Pseudo),
+            # variants
+            (SpecTokens.PROPAGATED_BOOL_VARIANT.regex, Name.Function),
+            (SpecTokens.BOOL_VARIANT.regex, Name.Function),
+            (SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex, Name.Function),
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
+            # filename
+            (SpecTokens.FILENAME.regex, Text),
+            # Package name
+            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex, Name.Class),
+            (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, Name.Class),
+            # DAG hash
+            (SpecTokens.DAG_HASH.regex, Text),
+            (SpecTokens.WS.regex, Text),
+            # Also stop at unrecognized tokens (without consuming them)
+            default("#pop"),
+        ],
+        "edge_properties": [
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
+            (SpecTokens.END_EDGE_PROPERTIES.regex, Name.Variable, "#pop"),
+        ],
+    }
+
+
 # Enable todo items
 todo_include_todos = True
 
@@ -146,6 +221,7 @@ def setup(sphinx):
     sphinx.connect("autodoc-skip-member", skip_member)
     sphinx.add_domain(PatchedPythonDomain, override=True)
     sphinx.add_source_parser(NoTabExpansionRSTParser, override=True)
+    sphinx.add_lexer("spec", SpecLexer)
 
 
 # -- General configuration -----------------------------------------------------
@@ -289,8 +365,6 @@ nitpick_ignore = [
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
 # show_authors = False
-sys.path.append("./_pygments")
-pygments_style = "style.SpackStyle"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -300,15 +374,13 @@ pygments_style = "style.SpackStyle"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "sphinx_rtd_theme"
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {"logo_only": True}
+html_theme = "furo"
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = ["_themes"]
+
+# Google Search Console verification file
+html_extra_path = ["google5fda5f94b4ffb8de.html"]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -319,7 +391,11 @@ html_theme_options = {"logo_only": True}
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_spack_root/share/spack/logo/spack-logo-white-text.svg"
+html_theme_options = {
+    "sidebar_hide_name": True,
+    "light_logo": "spack-logo-text.svg",
+    "dark_logo": "spack-logo-white-text.svg",
+}
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -334,6 +410,8 @@ html_static_path = ["_static"]
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 html_last_updated_fmt = "%b %d, %Y"
+pygments_style = "default"
+pygments_dark_style = "monokai"
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -359,7 +437,7 @@ html_last_updated_fmt = "%b %d, %Y"
 # html_show_sourcelink = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
-# html_show_sphinx = False
+html_show_sphinx = False
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
 # html_show_copyright = True
@@ -371,6 +449,9 @@ html_last_updated_fmt = "%b %d, %Y"
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
+
+# Base URL for the documentation, used to generate <link rel="canonical"/> for better indexing
+html_baseurl = "https://spack.readthedocs.io/en/latest/"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "Spackdoc"
@@ -461,3 +542,7 @@ rst_epilog = f"""
 
 html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
+html_context = {}
+
+if os.environ.get("READTHEDOCS", "") == "True":
+    html_context["READTHEDOCS"] = True

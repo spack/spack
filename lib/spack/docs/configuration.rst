@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to configure Spack using its flexible YAML-based system. This guide covers the different configuration scopes and provides links to detailed documentation for each configuration file, helping you customize Spack to your specific needs.
+
 .. _configuration:
 
-===================
 Configuration Files
 ===================
 
@@ -23,7 +26,6 @@ You can also add any of these as inline configuration in the YAML
 manifest file (``spack.yaml``) describing an :ref:`environment
 <environment-configuration>`.
 
------------
 YAML Format
 -----------
 
@@ -48,12 +50,10 @@ corresponding to its name. So, ``config.yaml`` starts with ``config:``,
 .. tip::
 
    Validation and autocompletion of Spack config files can be enabled in
-   your editor with the YAML language server. See `spack/schemas
-   <https://github.com/spack/schemas>`_ for more information.
+   your editor using `JSON Schema Store <https://www.schemastore.org/>`_.
 
 .. _configuration-scopes:
 
---------------------
 Configuration Scopes
 --------------------
 
@@ -111,7 +111,6 @@ available scope that is not read-only (like `defaults`).
 
 .. _custom-scopes:
 
-^^^^^^^^^^^^^
 Custom scopes
 ^^^^^^^^^^^^^
 
@@ -122,7 +121,7 @@ line with the ``--config-scope`` argument, or ``-C`` for short.
 For example, the following adds two configuration scopes, named
 ``scopea`` and ``scopeb``, to a ``spack spec`` command:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack -C ~/myscopes/scopea -C ~/myscopes/scopeb spec ncurses
 
@@ -137,7 +136,6 @@ If multiple scopes are provided:
 #. Each must be preceded with the ``--config-scope`` or ``-C`` flag.
 #. They must be ordered from lowest to highest precedence.
 
-"""""""""""""""""""""""""""""""""""""""""""
 Example: scopes for release and development
 """""""""""""""""""""""""""""""""""""""""""
 
@@ -173,7 +171,6 @@ when you want to build the designated release versions of ``mypackage``,
 ``A``, and ``B``, and you would type ``spack -C ~/myscopes/develop`` when
 you want to build all of these packages at the ``develop`` version.
 
-"""""""""""""""""""""""""""""""
 Example: swapping MPI providers
 """""""""""""""""""""""""""""""
 
@@ -206,7 +203,6 @@ with MPICH. You can create different configuration scopes for use with
 
 .. _plugin-scopes:
 
-^^^^^^^^^^^^^
 Plugin scopes
 ^^^^^^^^^^^^^
 
@@ -245,7 +241,6 @@ The function ``my_package.get_config_path`` (matching the entry point definition
 
 .. _platform-scopes:
 
--------------------------------
 Platform-specific Configuration
 -------------------------------
 
@@ -304,7 +299,6 @@ with the platform name that contains the configuration files.
 
 .. _config-scope-precedence:
 
-----------------
 Scope Precedence
 ----------------
 
@@ -330,7 +324,6 @@ There are also special notations for string concatenation and precedence overrid
 
 See :ref:`config-prepend-append` for more details.
 
-^^^^^^^^^^^
 Simple keys
 ^^^^^^^^^^^
 
@@ -372,7 +365,6 @@ command:
 
 .. _config-prepend-append:
 
-^^^^^^^^^^^^^^^^^^^^
 String Concatenation
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -413,7 +405,6 @@ Similarly, ``+:`` can be used to *prepend* to a path or name:
 
 .. _config-overrides:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Overriding entire sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -439,7 +430,6 @@ Spack will ignore all lower-precedence configuration under the
      install_tree: /some/other/directory
 
 
-^^^^^^^^^^^^^^^^^^^^
 List-valued settings
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -511,7 +501,6 @@ The merged configuration would look like this:
 
 .. _config-file-variables:
 
----------------------
 Config File Variables
 ---------------------
 
@@ -522,7 +511,6 @@ variables. Spack-specific variables and environment variables are both
 indicated by prefixing the variable name with ``$``. User path variables
 are indicated at the start of the path with ``~`` or ``~user``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Spack-specific variables
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -559,7 +547,6 @@ or with braces to distinguish the variable from surrounding characters:
 substituted first, so any environment variables with the same name will
 not be used.
 
-^^^^^^^^^^^^^^^^^^^^^
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -568,7 +555,6 @@ expanded. These are formatted like Spack-specific variables, e.g.,
 ``${varname}``. You can use this to insert environment variables in your
 Spack configuration.
 
-^^^^^^^^^^^^^^^^^^^^^
 User home directories
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -580,7 +566,6 @@ will not expand it.
 
 .. _configuration_environment_variables:
 
--------------------------
 Environment Modifications
 -------------------------
 
@@ -605,7 +590,6 @@ of variable names mapped to the values used for the modification,
 with the exception of ``unset``, which requires just a list of variable names.
 No particular order is ensured for the execution of each of these modifications.
 
-----------------------------
 Seeing Spack's Configuration
 ----------------------------
 
@@ -617,7 +601,6 @@ configuration file: ``spack config get`` and ``spack config blame``.
 
 .. _cmd-spack-config-get:
 
-^^^^^^^^^^^^^^^^^^^^
 ``spack config get``
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -662,7 +645,6 @@ see how your scope will affect Spack's configuration:
 
 .. _cmd-spack-config-blame:
 
-^^^^^^^^^^^^^^^^^^^^^^
 ``spack config blame``
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -702,7 +684,6 @@ options come from the default configuration files that ship with Spack.
 
 .. _local-config-overrides:
 
-------------------------------
 Overriding Local Configuration
 ------------------------------
 
@@ -731,7 +712,9 @@ And one that allows you to move the default cache location:
 * ``SPACK_USER_CACHE_PATH``: Override the default path to use for user data
   (misc_cache, tests, reports, etc.)
 
-With these settings, if you want to isolate Spack in a CI environment, you can do this::
+With these settings, if you want to isolate Spack in a CI environment, you can do this:
 
-  export SPACK_DISABLE_LOCAL_CONFIG=true
-  export SPACK_USER_CACHE_PATH=/tmp/spack
+.. code-block:: console
+
+  $ export SPACK_DISABLE_LOCAL_CONFIG=true
+  $ export SPACK_USER_CACHE_PATH=/tmp/spack

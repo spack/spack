@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to use the SourceforgePackage mixin in Spack to automatically generate download URLs for packages hosted on SourceForge.
+
 .. _sourceforgepackage:
 
------------
 SourceForge
 -----------
 
@@ -16,14 +19,12 @@ Refer to the package source
 (`<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/sourceforge.py>`__) for the current list of mirrors used by Spack.
 
 
-^^^^^^^
 Methods
 ^^^^^^^
 
 This package provides a method for populating mirror URLs.
 
 **urls**
-
     This method returns a list of possible URLs for package source.
     It is decorated with `property` so its results are treated as
     a package attribute.
@@ -33,7 +34,6 @@ This package provides a method for populating mirror URLs.
     for information on how Spack uses the `urls` attribute during
     fetching.
 
-^^^^^^
 Usage
 ^^^^^^
 

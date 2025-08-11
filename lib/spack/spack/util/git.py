@@ -146,7 +146,7 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
                 path,
                 try_ref,
                 output=str,
-                error=str,
+                error=os.devnull,
                 extra_env={"GIT_TERMINAL_PROMPT": "0"},
             )
 

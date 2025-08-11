@@ -7,7 +7,7 @@ import pathlib
 
 import pytest
 
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.llnl.util.filesystem as fs
 import spack.util.executable
 import spack.util.gpg
@@ -173,7 +173,7 @@ def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
     # Verification should now succeed again.
     gpg("verify", str(test_path))
 
-    relative_keys_path = bindist.buildcache_relative_keys_path()
+    relative_keys_path = spack.binary_distribution.buildcache_relative_keys_path()
 
     # Publish the keys using a directory path
     test_path = tmp_path / "dir_cache"

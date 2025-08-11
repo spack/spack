@@ -15,7 +15,7 @@ import spack.util.url as url_util
 from spack.error import MirrorError
 
 #: What schemes do we support
-supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci")
+supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:

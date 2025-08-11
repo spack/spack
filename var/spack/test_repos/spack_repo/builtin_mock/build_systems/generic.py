@@ -3,5 +3,4 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import GenericBuilder, Package
 
-_ = Package
-_ = GenericBuilder
+__all__ = ["Package", "GenericBuilder"]

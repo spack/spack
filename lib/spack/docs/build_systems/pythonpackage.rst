@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to packaging Python libraries with Spack, covering PyPI downloads, dependency management, and build system integration.
+
 .. _pythonpackage:
 
-------
 Python
 ------
 
@@ -12,7 +15,6 @@ Python packages and modules have their own special build system. This
 documentation covers everything you'll need to know in order to write
 a Spack build recipe for a Python library.
 
-^^^^^^^^^^^
 Terminology
 ^^^^^^^^^^^
 
@@ -53,7 +55,6 @@ important to understand.
    `meson <https://meson-python.readthedocs.io/>`_, and
    `pdm <https://pdm.fming.dev/latest/>`_.
 
-^^^^^^^^^^^
 Downloading
 ^^^^^^^^^^^
 
@@ -62,7 +63,9 @@ to download it from. The vast majority of Python packages are hosted
 on `PyPI <https://pypi.org/>`_, which is
 :ref:`preferred over GitHub <pypi-vs-github>` for downloading
 packages. Search for the package name on PyPI to find the project
-page. The project page is usually located at::
+page. The project page is usually located at:
+
+.. code-block:: text
 
    https://pypi.org/project/<package-name>
 
@@ -73,7 +76,9 @@ hosted on GitHub and see if GitHub has source distributions. The
 project page usually has a "Homepage" and/or "Source code" link for
 this. If the project is closed-source, it may only have wheels
 available. For example, ``py-azureml-sdk`` is closed-source and can
-be downloaded from::
+be downloaded from:
+
+.. code-block:: text
 
    https://pypi.io/packages/py3/a/azureml_sdk/azureml_sdk-1.11.0-py3-none-any.whl
 
@@ -88,7 +93,6 @@ to create a new package template.
 
 .. _pypi-vs-github:
 
-"""""""""""""""
 PyPI vs. GitHub
 """""""""""""""
 
@@ -140,7 +144,6 @@ wheels or if the PyPI sdist is missing a file needed to build the
 package. If this is the case, please add a comment above the ``url``
 explaining this.
 
-^^^^^^
 PyPI
 ^^^^^^
 
@@ -166,7 +169,6 @@ is equivalent to:
 If a package has a different homepage listed on PyPI, you can
 override it by setting your own ``homepage``.
 
-^^^^^^^^^^^
 Description
 ^^^^^^^^^^^
 
@@ -175,7 +177,6 @@ package. The "Project description" tab may also contain a longer
 description of the package. Either of these can be used to populate
 the package docstring.
 
-^^^^^^^^^^^^
 Dependencies
 ^^^^^^^^^^^^
 
@@ -243,7 +244,6 @@ Look for dependencies under the following keys:
 Some build backends may have additional locations where dependencies
 can be found.
 
-"""""""""
 distutils
 """""""""
 
@@ -259,7 +259,6 @@ you should instead add a build dependency on setuptools. Check for a
 
 .. _setuptools:
 
-""""""""""
 setuptools
 """"""""""
 
@@ -303,7 +302,6 @@ for more information on how setuptools handles dependency management.
 See `PEP 440 <https://www.python.org/dev/peps/pep-0440/#version-specifiers>`_
 for documentation on version specifiers in setuptools.
 
-""""""
 flit
 """"""
 
@@ -332,7 +330,6 @@ older versions of flit may use the following keys:
 See https://flit.pypa.io/en/latest/pyproject_toml.html for
 more information.
 
-""""""
 poetry
 """"""
 
@@ -346,7 +343,6 @@ for specifying the version requirements. Note that ``~=`` works
 differently in poetry than in setuptools and flit for versions that
 start with a zero.
 
-"""""""""
 hatchling
 """""""""
 
@@ -357,7 +353,6 @@ uses the default ``pyproject.toml`` keys to list dependencies.
 See https://hatch.pypa.io/latest/config/dependency/ for more
 information.
 
-""""""
 meson
 """"""
 
@@ -368,7 +363,6 @@ it uses the meson build system. Meson uses the default
 See https://meson-python.readthedocs.io/en/latest/tutorials/introduction.html
 for more information.
 
-""""""
 pdm
 """"""
 
@@ -378,7 +372,6 @@ keys to list dependencies.
 
 See https://pdm.fming.dev/latest/ for more information.
 
-""""""
 wheels
 """"""
 
@@ -393,7 +386,9 @@ file is simply a zip file, and can be extracted using:
 
 The zip file will not contain a ``setup.py``, but it will contain a
 ``METADATA`` file which contains all the information you need to
-write a ``package.py`` build recipe. Check for lines like::
+write a ``package.py`` build recipe. Check for lines like:
+
+.. code-block:: text
 
    Requires-Python: >=3.5,<4
    Requires-Dist: azureml-core (~=1.11.0)
@@ -413,7 +408,6 @@ write a ``package.py`` build recipe. Check for lines like::
 a ``Requires-Dist`` with ``extra == 'foo'`` will list any
 dependencies needed for that feature.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to setup.py
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -422,7 +416,6 @@ packages. However, the installation instructions for a package may
 suggest passing certain flags to the ``setup.py`` call. The
 ``PythonPackage`` class has two techniques for doing this.
 
-"""""""""""""""
 Config settings
 """""""""""""""
 
@@ -450,7 +443,6 @@ the BLAS/LAPACK library you want pkg-config to search for:
    3.6 and older, ``install_options`` should be used instead.
 
 
-""""""""""""""
 Global options
 """"""""""""""
 
@@ -479,7 +471,6 @@ has an optional dependency on ``libyaml`` that can be enabled like so:
    support Python 3.6 and older.
 
 
-"""""""""""""""
 Install options
 """""""""""""""
 
@@ -509,14 +500,12 @@ allows you to specify the directories to search for ``libyaml``:
    support Python 3.6 and older.
 
 
-^^^^^^^
 Testing
 ^^^^^^^
 
 ``PythonPackage`` provides a couple of options for testing packages
 both during and after the installation process.
 
-""""""""""""
 Import tests
 """"""""""""
 
@@ -598,7 +587,6 @@ Import tests can be run during the installation using ``spack install
 --test=root`` or at any time after the installation using
 ``spack test run``.
 
-""""""""""
 Unit tests
 """"""""""
 
@@ -626,7 +614,6 @@ when testing is enabled during the installation (i.e., ``spack install
    Additional information is available on :ref:`install phase tests
    <install_phase-tests>`.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setup file in a sub-directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -640,14 +627,12 @@ provides Python bindings in a ``python`` directory, you can use:
    build_directory = "python"
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 PythonPackage vs. packages that use Python
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are many packages that make use of Python, but packages that depend
 on Python are not necessarily ``PythonPackage``'s.
 
-"""""""""""""""""""""""
 Choosing a build system
 """""""""""""""""""""""
 
@@ -660,7 +645,6 @@ contains one of the following files:
 * ``setup.py``
 * ``setup.cfg``
 
-"""""""""""""""""""""""
 Choosing a package name
 """""""""""""""""""""""
 
@@ -717,7 +701,6 @@ command-line tool, or C/C++/Fortran program with optional Python
 modules? The former should be prepended with ``py-``, while the
 latter should not.
 
-""""""""""""""""""""""""""""""
 ``extends`` vs. ``depends_on``
 """"""""""""""""""""""""""""""
 
@@ -737,7 +720,6 @@ of its own, and merely puts a Python script in the ``bin`` directory,
 then there is no need for ``extends``. If the package installs modules
 in the ``site-packages`` directory, it requires ``extends``.
 
-"""""""""""""""""""""""""""""""""""""
 Executing ``python`` during the build
 """""""""""""""""""""""""""""""""""""
 
@@ -757,7 +739,6 @@ that guarantees build isolation. The ``python`` global always refers to
 the correct Python interpreter, whether the package uses ``extends("python")``
 or ``depends_on("python")``.
 
-^^^^^^^^^^^^^^^^^^^^^
 Alternatives to Spack
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -781,7 +762,6 @@ ability to choose a specific compiler and BLAS/LAPACK or MPI library.
 Spack also has better platform support for supercomputers, and can build
 optimized binaries for your specific microarchitecture.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

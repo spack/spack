@@ -16,6 +16,9 @@
 } 1 :- attr("direct_dependency", PackageNode, node_requirement("node", DirectDependency)),
        concrete(PackageNode).
 
+direct_dependency(ParentNode, ChildNode) :- build_requirement(ParentNode, ChildNode).
+direct_dependency(ParentNode, ChildNode) :- runtime_requirement(ParentNode, ChildNode).
+
 %%%%
 % Build requirement
 %%%%

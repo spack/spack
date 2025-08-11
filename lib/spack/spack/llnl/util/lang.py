@@ -554,7 +554,7 @@ def dedupe(sequence, key=None):
 
     Examples:
 
-        Dedupe a list of integers:
+        Dedupe a list of integers::
 
             [x for x in dedupe([1, 2, 1, 3, 2])] == [1, 2, 3]
 

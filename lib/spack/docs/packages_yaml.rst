@@ -2,10 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to customizing package settings in Spack using the packages.yaml file, including configuring compilers, specifying external packages, package requirements, and permissions.
 
 .. _packages-config:
 
-================================
 Package Settings (packages.yaml)
 ================================
 
@@ -40,7 +42,6 @@ details on how this works, see :ref:`configuration-scopes`.
 
 .. _sec-external-packages:
 
------------------
 External Packages
 -----------------
 
@@ -96,7 +97,6 @@ Each package version and compiler listed in an external should
 have entries in Spack's packages and compiler configuration, even
 though the package and compiler may not ever be built.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Extra attributes for external packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -125,7 +125,6 @@ follows:
 See :ref:`configuration_environment_variables` for more information on
 how to configure environment modifications in Spack config files.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Extra attributes for external compilers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -201,7 +200,6 @@ rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be
 added as well.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Prevent packages from being built from sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -243,7 +241,6 @@ The ``buildable`` does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-buildable virtual packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -302,7 +299,6 @@ unless it matches the requirements under ``packages:mpi:require``. For more info
 
 .. _cmd-spack-external-find:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Automatically Find External Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -337,7 +333,6 @@ Specific limitations include:
 
 .. _package-requirements:
 
---------------------
 Package Requirements
 --------------------
 
@@ -363,7 +358,6 @@ those dependencies optional.
    FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
 
 
-^^^^^^^^^^^^^^^^^^^
 Requirements syntax
 ^^^^^^^^^^^^^^^^^^^
 
@@ -414,7 +408,7 @@ not ``openmpi@3.9%clang``.
 If a custom message is provided, and the requirement is not satisfiable,
 Spack will print the custom error message:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack spec openmpi@3.9%clang
    ==> Error: in this example only 4.1.5 can build with other compilers
@@ -470,7 +464,6 @@ In the example above, that means you could build ``mpich+cuda`` or ``mpich+rocm`
    the optimization criteria. To check the current optimization criteria and their
    priorities you can run ``spack solve zlib``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting default requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -541,7 +534,6 @@ dependencies) to use ``clang``. If enforcing ``build_type=Debug`` is needed also
 on ``cmake``, it must be repeated in the specific ``cmake`` requirements.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting requirements on virtual specs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -572,7 +564,6 @@ you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
 .. _package-strong-preferences:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Conflicts and strong preferences
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -622,7 +613,6 @@ The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are opt
 
 .. _package-preferences:
 
--------------------
 Package Preferences
 -------------------
 
@@ -681,7 +671,6 @@ since the most preferred version 2.2 is prohibited by the version constraint.
 
 .. _package_permissions:
 
--------------------
 Package Permissions
 -------------------
 
@@ -730,7 +719,6 @@ default behavior to go as expected.
 
 .. _assigning-package-attributes:
 
-----------------------------
 Assigning Package Attributes
 ----------------------------
 

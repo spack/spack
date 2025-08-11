@@ -1,12 +1,13 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Low-level wrappers around clingo API."""
+"""Low-level wrappers around clingo API and other basic functionality related to ASP"""
 import importlib
 import pathlib
 from types import ModuleType
 from typing import Any, Callable, NamedTuple, Optional, Tuple, Union
 
+import spack.platforms
 from spack.llnl.util import lang
 
 
@@ -282,3 +283,25 @@ def extract_args(model, predicate_name):
     return their intermediate representation.
     """
     return [intermediate_repr(sym.arguments) for sym in model if sym.name == predicate_name]
+
+
+class SourceContext:
+    """Tracks context in which a Spec's clause-set is generated (i.e.
+    with ``SpackSolverSetup.spec_clauses``).
+
+    Facts generated for the spec may include this context.
+    """
+
+    def __init__(self, *, source: Optional[str] = None):
+        # This can be "literal" for constraints that come from a user
+        # spec (e.g. from the command line); it can be the output of
+        # `ConstraintOrigin.append_type_suffix`; the default is "none"
+        # (which means it isn't important to keep track of the source
+        # in that case).
+        self.source = "none" if source is None else source
+        self.wrap_node_requirement: Optional[bool] = None
+
+
+def using_libc_compatibility() -> bool:
+    """Returns True if we are currently using libc compatibility"""
+    return spack.platforms.host().name == "linux"

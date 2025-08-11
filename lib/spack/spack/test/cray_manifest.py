@@ -23,7 +23,7 @@ import spack.concretize
 import spack.cray_manifest as cray_manifest
 import spack.platforms
 import spack.platforms.test
-import spack.solver.asp
+import spack.solver.reuse
 import spack.spec
 import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
@@ -456,7 +456,7 @@ def test_reusable_externals_cray_manifest(temporary_store, manifest_file):
     spec = temporary_store.db.query_local()[0]
 
     # Reusable if imported locally
-    assert spack.solver.asp._is_reusable(spec, packages={}, local=True)
+    assert spack.solver.reuse._is_reusable(spec, packages={}, local=True)
 
     # If cray manifest entries end up in a build cache somehow, they are not reusable
-    assert not spack.solver.asp._is_reusable(spec, packages={}, local=False)
+    assert not spack.solver.reuse._is_reusable(spec, packages={}, local=False)

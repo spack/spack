@@ -7,7 +7,7 @@ import pathlib
 
 import pytest
 
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.cmd.mirror
 import spack.concretize
 import spack.config
@@ -392,7 +392,7 @@ def test_mirror_destroy(
     install("--fake", "--no-cache", spec_name)
     buildcache("push", "-u", "-f", str(mirror_dir), spec_name)
 
-    blobs_path = bindist.buildcache_relative_blobs_path()
+    blobs_path = spack.binary_distribution.buildcache_relative_blobs_path()
 
     contents = os.listdir(str(mirror_dir))
     assert blobs_path in contents

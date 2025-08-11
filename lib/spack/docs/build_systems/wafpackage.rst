@@ -2,16 +2,18 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Explore the Waf build system in Spack, a Python-based tool for configuring and building software projects without Makefiles.
+
 .. _wafpackage:
 
-------
 Waf
 ------
 
 Like SCons, Waf is a general-purpose build system that does not rely
 on Makefiles to build software.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -50,7 +52,6 @@ All of these functions are empty. The ``configure`` phase
 automatically adds  ``--prefix=/path/to/installation/prefix``, so you
 don't need to add that in the ``configure_args``.
 
-^^^^^^^
 Testing
 ^^^^^^^
 
@@ -67,7 +68,6 @@ run package-specific unit tests.
            pytest()
 
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -81,7 +81,6 @@ the default ``./waf --help`` message. Check this file to find useful
 information about dependencies and the minimum versions that are
 supported.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -97,7 +96,6 @@ the following dependency automatically:
 
 Waf only supports Python 2.5 and up.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to Waf
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -119,7 +117,6 @@ phase, you can use:
 
 A list of valid options can be found by running ``./waf --help``.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

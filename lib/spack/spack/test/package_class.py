@@ -331,8 +331,8 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 
 
 @pytest.mark.require_provenance
-def test_binary_provenance_commit_version(mock_packages):
-    spec = spack.concretize.concretize_one("git-ref-package@stable")
+def test_binary_provenance_commit_version(default_mock_concretization):
+    spec = default_mock_concretization("git-ref-package@stable")
     assert spec.satisfies(f"commit={'c' * 40}")
 
 
