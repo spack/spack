@@ -9,7 +9,13 @@ from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
 import spack.repo
-from spack.externals import DuplicateExternalError, ExternalDict, ExternalSpecsParser
+from spack.externals import (
+    DuplicateExternalError,
+    ExternalDict,
+    ExternalSpecsParser,
+    complete_architecture,
+    complete_variants_and_architecture,
+)
 
 pytestmark = pytest.mark.usefixtures("config", "mock_packages")
 
@@ -248,3 +254,39 @@ def test_externals_without_concrete_version(
     assert len(result) == expected_length
     for c in not_expected:
         assert all(not s.satisfies(c) for s in result)
+
+
+@pytest.mark.parametrize(
+    "externals_dict,completion_fn,expected,not_expected",
+    [
+        (
+            [{"spec": "mpileaks@2.3", "prefix": "/user/path"}],
+            complete_architecture,
+            {"mpileaks": ["platform=test"]},
+            {"mpileaks": ["debug=*", "opt=*", "shared=*", "static=*"]},
+        ),
+        (
+            [{"spec": "mpileaks@2.3", "prefix": "/user/path"}],
+            complete_variants_and_architecture,
+            {"mpileaks": ["platform=test", "~debug", "~opt", "+shared", "+static"]},
+            {"mpileaks": ["+debug", "+opt", "~shared", "~static"]},
+        ),
+    ],
+)
+def test_external_node_completion(
+    externals_dict: List[ExternalDict], completion_fn, expected, not_expected
+):
+    """Tests the completion of external specs with different node completion"""
+    parser = ExternalSpecsParser(externals_dict, complete_node=completion_fn)
+
+    for query_spec, expected_list in expected.items():
+        result = parser.query(query_spec)
+        assert len(result) == 1
+        for expected in expected_list:
+            assert result[0].satisfies(expected)
+
+    for query_spec, expected_list in not_expected.items():
+        result = parser.query(query_spec)
+        assert len(result) == 1
+        for expected in expected_list:
+            assert not result[0].satisfies(expected)

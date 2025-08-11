@@ -111,7 +111,8 @@ CONFIG_DEFAULTS = {
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
         "license_dir": spack.paths.default_license_dir,
-    }
+    },
+    "concretizer": {"externals": {"completion": "default_variants"}},
 }
 
 #: metavar to use for commands that accept scopes

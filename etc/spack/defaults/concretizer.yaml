@@ -95,3 +95,10 @@ concretizer:
   # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.
   concretization_cache:
     enable: true
+
+  # Options to control the behavior of the concretizer with external specs
+  externals:
+    # Either 'architecture_only', to complete external specs with just the architecture of the
+    # current host, or 'default_variants' to complete external specs also with missing variants,
+    # using their default value.
+    completion: default_variants

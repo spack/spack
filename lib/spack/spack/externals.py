@@ -67,6 +67,27 @@ def complete_architecture(node: spack.spec.Spec) -> None:
         node.compiler_flags.setdefault(flag_type, [])
 
 
+def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
+    """Completes a node with variants and architecture information."""
+    complete_architecture(node)
+    pkg_class = spack.repo.PATH.get_pkg_class(node.name)
+    variants_dict = pkg_class.variants.copy()
+
+    progress = True
+    while progress:
+        progress = False
+        current_keys = list(variants_dict.keys())
+        for key in current_keys:
+            if not node.satisfies(key):
+                continue
+            applicable_variants = variants_dict.pop(key)
+            for v in applicable_variants.values():
+                if not node.satisfies(f"{v.name}=*"):
+                    # Cannot use Spec.constrain, because we lose information on the variant type
+                    node.variants[v.name] = v.make_default()
+            progress = True
+
+
 def extract_dicts_from_configuration(packages_yaml) -> List[ExternalDict]:
     """Extracts external specs from a configuration dictionary."""
     result = []
@@ -120,7 +141,7 @@ class ExternalSpecsParser:
         self,
         external_dicts: List[ExternalDict],
         *,
-        complete_node: Callable[[spack.spec.Spec], None] = complete_architecture,
+        complete_node: Callable[[spack.spec.Spec], None] = complete_variants_and_architecture,
         allow_nonexisting: bool = True,
     ):
         """Initializes a class to manage and process external specifications.

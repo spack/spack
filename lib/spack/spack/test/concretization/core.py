@@ -4265,3 +4265,83 @@ def test_concretization_cache_asp_canonicalization(asp_file):
             if line.startswith("-") and not line.startswith("---")
         ]
     )
+
+
+@pytest.mark.parametrize(
+    "node_completion,expected,not_expected",
+    [
+        ("architecture_only", ["+clang", "~flang", "platform=test"], ["lld=*"]),
+        (
+            "default_variants",
+            ["+clang", "~flang", "+lld", "platform=test"],
+            ["~clang", "+flang", "~lld"],
+        ),
+    ],
+)
+def test_external_node_completion_from_config(
+    node_completion, expected, not_expected, mutable_config, mock_packages
+):
+    """Tests the different options for external node completion in the configuration file."""
+    mutable_config.set("concretizer:externals:completion", node_completion)
+
+    s = spack.concretize.concretize_one("llvm")
+
+    assert s.external
+    assert all(s.satisfies(c) for c in expected)
+    assert all(not s.satisfies(c) for c in not_expected)
+
+
+@pytest.mark.parametrize(
+    "spec_str,packages_yaml,expected",
+    [
+        (
+            "mpileaks",
+            """
+packages:
+  mpileaks:
+    externals:
+    - spec: "mpileaks@2.3~debug+opt"
+      prefix: /user/path
+      dependencies:
+      - external_id: callpath_id
+        deptypes: link
+      - external_id: mpich_id
+        deptypes:
+        - "build"
+        - "link"
+        virtuals: "mpi"
+  callpath:
+    externals:
+    - spec: "callpath@1.0"
+      prefix: /user/path
+      external_id: callpath_id
+      dependencies:
+      - external_id: mpich_id
+        deptypes:
+        - "build"
+        - "link"
+        virtuals: "mpi"
+  mpich:
+    externals:
+    - spec: "mpich@3.0.4"
+      prefix: /user/path
+      external_id: mpich_id
+""",
+            [
+                "%mpi=mpich@3.0.4",
+                "^callpath %mpi=mpich@3.0.4",
+                "%[deptypes=link] callpath",
+                "%[deptypes=build,link] mpich",
+            ],
+        )
+    ],
+)
+def test_external_specs_with_dependencies(
+    spec_str, packages_yaml, expected, mutable_config, mock_packages
+):
+    """Tests that we can reconstruct external specs with dependencies."""
+    configuration = syaml.load_config(packages_yaml)
+    mutable_config.set("packages", configuration["packages"])
+    s = spack.concretize.concretize_one(spec_str)
+    assert all(node.external for node in s.traverse())
+    assert all(s.satisfies(c) for c in expected)

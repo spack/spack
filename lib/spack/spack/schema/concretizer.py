@@ -104,6 +104,15 @@ properties: Dict[str, Any] = {
                     "entry_limit": {"type": "integer", "minimum": 0},
                 },
             },
+            "externals": {
+                "type": "object",
+                "properties": {
+                    "completion": {
+                        "type": "string",
+                        "enum": ["architecture_only", "default_variants"],
+                    }
+                },
+            },
         },
     }
 }

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
 import functools
-from typing import Callable, List, Mapping
+from typing import Any, Callable, List, Mapping, Tuple
 
 import spack.binary_distribution
 import spack.config
@@ -12,7 +12,12 @@ import spack.llnl.path
 import spack.repo
 import spack.spec
 import spack.store
-from spack.externals import ExternalSpecsParser, extract_dicts_from_configuration
+from spack.externals import (
+    ExternalSpecsParser,
+    complete_architecture,
+    complete_variants_and_architecture,
+    extract_dicts_from_configuration,
+)
 
 from .runtimes import external_config_with_implicit_externals, all_libcs
 
@@ -99,9 +104,7 @@ class SpecFilter:
 
     @staticmethod
     def from_packages_yaml(configuration, *, include, exclude) -> "SpecFilter":
-        packages_yaml = _external_config_with_implicit_externals(configuration)
-        external_dicts = extract_dicts_from_configuration(packages_yaml)
-        parser = ExternalSpecsParser(external_dicts)
+        parser, packages_yaml = _create_external_parser(configuration)
         is_reusable = functools.partial(_is_reusable, packages=packages_yaml, local=True)
         return SpecFilter(
             parser.all_specs, is_usable=is_reusable, include=include, exclude=exclude
@@ -206,6 +209,21 @@ class ReuseStrategy(enum.Enum):
     ROOTS = enum.auto()
     DEPENDENCIES = enum.auto()
     NONE = enum.auto()
+
+
+def _create_external_parser(
+    configuration: spack.config.Configuration,
+) -> Tuple[ExternalSpecsParser, Any]:
+    packages_yaml = _external_config_with_implicit_externals(configuration)
+    external_dicts = extract_dicts_from_configuration(packages_yaml)
+    result = configuration.get("concretizer:externals:completion")
+    if result == "default_variants":
+        complete_fn = complete_variants_and_architecture
+    elif result == "architecture_only":
+        complete_fn = complete_architecture
+    else:
+        raise ValueError(f"Unknown value for concretizer:externals:completion: {result!r}")
+    return ExternalSpecsParser(external_dicts, complete_node=complete_fn), packages_yaml
 
 
 class ReusableSpecsSelector:
