@@ -36,6 +36,7 @@ import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.variant as vt
 from spack import traverse
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import islink, readlink, symlink
@@ -1441,6 +1442,77 @@ class Environment:
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
+
+    def develop_concretize(self, spec: spack.spec.Spec, path: str):
+        """Mutate concrete specs to include dev_path provenance pointing to path.
+
+        This does not do any other aspect of concretization. It will fail if any existing concrete
+        spec for the same package does not satisfy the given develop spec."""
+        new_concretized_order = []
+        new_specs_by_hash = {}
+
+        for spec_hash in self.concretized_order:
+            concrete_spec = self.specs_by_hash[spec_hash]
+            changed = False
+            for dep in concrete_spec.traverse(root=True):
+                if dep.name == spec.name or spec.name in dep:
+                    dep._mark_root_concrete(False)
+                    dep.clear_caches()
+
+                if dep.name == spec.name:
+                    if not dep.satisfies(spec):
+                        raise Exception  # TODO exception type and message
+                    dep.variants["dev_path"] = vt.VariantValue(
+                        vt.VariantType.SINGLE, "dev_path", (path,)
+                    )
+                    changed = True
+
+            if changed:
+                concrete_spec._finalize_concretization()
+                new_hash = concrete_spec.dag_hash()
+                new_concretized_order.append(new_hash)
+                new_specs_by_hash[new_hash] = concrete_spec
+            else:
+                new_concretized_order.append(spec_hash)
+                new_specs_by_hash[spec_hash] = concrete_spec
+
+            self.concretized_order = new_concretized_order
+            self.specs_by_hash = new_specs_by_hash
+            self.write()
+
+    def undevelop_concretize(self, spec):
+        """Mutate matching concrete specs to remove dev_path provenance.
+
+        This does not do any other aspect of concretization."""
+        new_concretized_order = []
+        new_specs_by_hash = {}
+
+        for spec_hash in self.concretized_order:
+            concrete_spec = self.specs_by_hash[spec_hash]
+            changed = False
+            for dep in concrete_spec.traverse(root=True):
+                if dep.name == spec.name or spec.name in dep:
+                    dep._mark_root_concrete(False)
+                    dep.clear_caches()
+
+                if dep.name == spec.name:
+                    if not dep.satisfies(spec):
+                        raise Exception  # TODO exception type and message
+                    dep.variants.pop("dev_path")
+                    changed = True
+
+            if changed:
+                concrete_spec._finalize_concretization()
+                new_hash = concrete_spec.dag_hash()
+                new_concretized_order.append(new_hash)
+                new_specs_by_hash[new_hash] = concrete_spec
+            else:
+                new_concretized_order.append(spec_hash)
+                new_specs_by_hash[spec_hash] = concrete_spec
+
+            self.concretized_order = new_concretized_order
+            self.specs_by_hash = new_specs_by_hash
+            self.write()
 
     def concretize(
         self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
