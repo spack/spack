@@ -4,7 +4,7 @@
 import re
 import uuid
 import warnings
-from typing import Any, Callable, Dict, List, NamedTuple, Union
+from typing import Any, Callable, Dict, List, NamedTuple, Tuple, Union
 
 from spack.vendor.typing_extensions import TypedDict
 
@@ -42,6 +42,11 @@ def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
         external_path=external_dict.get("prefix"),
         external_modules=external_dict.get("modules"),
     )
+    if not result.versions.concrete:
+        raise ExternalSpecError(
+            f"The external spec '{external_dict['spec']}' doesn't have a concrete version."
+        )
+
     result.extra_attributes = extra_attributes
     if "required_target" in external_dict:
         result.constrain(f"target={external_dict['required_target']}")
@@ -150,6 +155,9 @@ class ExternalSpecsParser:
                     f"during concretization."
                 )
                 continue
+            except ExternalSpecError as e:
+                warnings.warn(f"{e} Fix your packages.yaml configuration.")
+                continue
 
             package_exists = spack.repo.PATH.exists(node.name)
 
@@ -245,7 +253,9 @@ class ExternalSpecsParser:
                 depflag = spack.deptypes.canonicalize(
                     dependency_dict.get("deptypes", spack.deptypes.DEFAULT_TYPES)
                 )
-                virtuals = tuple(dependency_dict.get("virtuals", "").split(","))
+                virtuals: Tuple[str, ...] = ()
+                if "virtuals" in dependency_dict:
+                    virtuals = tuple(dependency_dict["virtuals"].split(","))
 
                 current_node._add_dependency(dependency_node, depflag=depflag, virtuals=virtuals)
 
@@ -280,4 +290,8 @@ class DuplicateExternalError(SpackError):
 
 
 class ExternalDependencyError(SpackError):
+    """Raised when a dependency on an external package is specified wrongly."""
+
+
+class ExternalSpecError(SpackError):
     """Raised when a dependency on an external package is specified wrongly."""

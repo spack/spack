@@ -221,3 +221,30 @@ def test_externals_with_dependencies(externals_dicts: List[ExternalDict], expect
         assert len(result) == 1
         for expected in expected_list:
             assert result[0].satisfies(expected)
+
+
+@pytest.mark.parametrize(
+    "externals_dicts,expected_length,not_expected",
+    [
+        (
+            [{"spec": "mpileaks", "prefix": "/user/path", "external_id": "mpileaks"}],
+            0,
+            ["mpileaks"],
+        ),
+        (
+            [{"spec": "mpileaks@2:", "prefix": "/user/path", "external_id": "mpileaks"}],
+            0,
+            ["mpileaks"],
+        ),
+    ],
+)
+def test_externals_without_concrete_version(
+    externals_dicts: List[ExternalDict], expected_length, not_expected
+):
+    """Tests parsing externals, when some dicts are malformed and don't have a concrete version"""
+    parser = ExternalSpecsParser(externals_dicts)
+    result = parser.all_specs()
+
+    assert len(result) == expected_length
+    for c in not_expected:
+        assert all(not s.satisfies(c) for s in result)
