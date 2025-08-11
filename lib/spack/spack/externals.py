@@ -145,8 +145,9 @@ class ExternalSpecsParser:
                 node = node_from_dict(external_dict)
             except spack.spec.UnsatisfiableArchitectureSpecError:
                 warnings.warn(
-                    f"cannot constrain external spec {external_dict['spec']}"
-                    f" with target {external_dict['required_target']}"
+                    f"cannot constrain external spec '{external_dict['spec']}' with target "
+                    f"'{external_dict['required_target']}'. This spec will not be considered "
+                    f"during concretization."
                 )
                 continue
 
@@ -185,14 +186,14 @@ class ExternalSpecsParser:
                 # We don't want to accept foo %[deptypes=build,link] mpich as a spec
                 if edge.depflag != 0:
                     raise ExternalDependencyError(
-                        f"The external spec {current_dict['spec']} has an invalid dependency"
+                        f"The external spec '{current_dict['spec']}' has an invalid dependency"
                         f" specification. Fix your packages.yaml configuration."
                     )
 
                 if edge.spec.name not in self.specs_by_name:
                     raise ExternalDependencyError(
-                        f"The external spec {current_dict['spec']} depends on {edge.spec.name},"
-                        f" but there is no such external spec in packages.yaml."
+                        f"The external spec '{current_dict['spec']}' depends on "
+                        f"'{edge.spec.name}', but there is no such external spec in packages.yaml."
                     )
 
                 candidates = [
@@ -203,14 +204,17 @@ class ExternalSpecsParser:
                 ]
                 if not candidates:
                     raise ExternalDependencyError(
-                        f"The external spec {current_dict['spec']} depends on {edge.spec},"
-                        f" but there is no {edge.spec.name} that satisfies the request "
+                        f"The external spec '{current_dict['spec']}' depends on '{edge.spec}',"
+                        f" but there is no '{edge.spec.name}' that satisfies the request "
                         f"in packages.yaml."
                     )
 
                 candidates.sort(key=lambda x: x.spec)  # type: ignore
                 selected = candidates[-1]
-                # FIXME (externals as concrete): issue a warning for this case
+                warnings.warn(
+                    f"the external spec '{current_dict['spec']}' has been guessed to depend on "
+                    f"'{selected.config['spec']}'. If this is incorrect, fix your packages.yaml."
+                )
                 current_dict.setdefault("dependencies", []).append(
                     {
                         "external_id": selected.config["external_id"],
