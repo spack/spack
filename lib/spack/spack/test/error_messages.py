@@ -459,6 +459,9 @@ packages:
 """
     update_packages_config(conf_str)
 
+    # NOTE: for the error message to be good, *both* spots have to
+    # be in EX-1-format.
+
     # w4 has: depends_on("w2@:2.0", when="@:2.0")
     with expect_failure_and_print():
         concretize_one("w4@:2.0 ^w2+v1")  # EX 1: good msg
