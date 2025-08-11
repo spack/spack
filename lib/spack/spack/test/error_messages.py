@@ -249,8 +249,6 @@ class T4(Package):
 
     variant("v1", default=True)
 
-    # test_errmsg_requirements_3 stresses these constraints and
-    # generates a bad error message: "t4@:2.0 ^t2+v1"
     depends_on("t2")
     depends_on("t2@:2.0", when="@:2.0")
 
@@ -455,7 +453,7 @@ def test_errmsg_requirements_2(concretize_scope, test_repo):
 packages:
   w2:
     require:
-    - spec: "~v1"
+    - one_of: ["~v1"]
       when: "@2.0"
 """
     update_packages_config(conf_str)
