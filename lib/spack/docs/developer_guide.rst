@@ -64,12 +64,12 @@ or another), then we say it is **abstract**.
 
 Spack's job is to take an *abstract* spec from the user, find a
 *concrete* spec that satisfies the constraints, and hand the task of
-building the software off to the package object. 
+building the software off to the package object.
 
 Packages are managed through Spack's **package repositories**, which allow
 packages to be stored in multiple repositories with different namespaces.
-The built-in packages are hosted in a separate Git repository and 
-automatically managed by Spack, while custom repositories can be added 
+The built-in packages are hosted in a separate Git repository and
+automatically managed by Spack, while custom repositories can be added
 for organization-specific or experimental packages.
 
 The rest of this document describes all the pieces that come together to make that
@@ -128,7 +128,7 @@ parts of Spack live in ``lib/spack``.
 
 .. note::
 
-   **Package Repositories**: Built-in packages are hosted 
+   **Package Repositories**: Built-in packages are hosted
    in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_
    and are automatically cloned to ``~/.spack/package_repos/`` when needed.
    The ``var/spack/test_repos/`` directory is used for unit tests only.
@@ -266,9 +266,9 @@ Understanding this system is important for developing Spack itself.
   The core module for managing package repositories. Contains the ``Repo`` and ``RepoPath``
   classes that handle loading and searching packages from multiple repositories.
 
-Built-in packages are stored in a separate Git repository (`spack/spack-packages 
-<https://github.com/spack/spack-packages>`_) rather than being included directly in 
-the Spack source tree. This repository is automatically cloned to ``~/.spack/package_repos/`` 
+Built-in packages are stored in a separate Git repository (`spack/spack-packages
+<https://github.com/spack/spack-packages>`_) rather than being included directly in
+the Spack source tree. This repository is automatically cloned to ``~/.spack/package_repos/``
 when needed.
 
 Key concepts:
@@ -612,8 +612,8 @@ just like you would with the normal Python command.
 ^^^^^^^^^^^^^^^
 
 ``spack blame`` is a way to quickly see contributors to packages or files
-in Spack's source tree. For built-in packages, this shows contributors to the package 
-files in the separate ``spack/spack-packages`` repository. You should provide a target 
+in Spack's source tree. For built-in packages, this shows contributors to the package
+files in the separate ``spack/spack-packages`` repository. You should provide a target
 package name or file name to the command. Here is an example asking to see contributions
 for the package "python":
 
@@ -813,10 +813,10 @@ We schedule work for **major releases** through `milestones
 <https://github.com/spack/spack/projects>`_, while **patch releases** use `labels
 <https://github.com/spack/spack/labels>`_.
 
-There is only one milestone open at a time. Its name corresponds to the next major version, for
-example ``v0.23``. Important issues and pull requests should be assigned to this milestone by
+There is only one milestone open at a time. Its name corresponds to the next major/minor version, for
+example ``v1.1.0``. Important issues and pull requests should be assigned to this milestone by
 core developers, so that they are not forgotten at the time of release. The milestone is closed
-when the release is made, and a new milestone is created for the next major release.
+when the release is made, and a new milestone is created for the next major/minor release.
 
 Bug reports in GitHub issues are automatically labelled ``bug`` and ``triage``. Spack developers
 assign one of the labels ``impact-low``, ``impact-medium`` or ``impact-high``. This will make the
@@ -834,7 +834,7 @@ Backporting bug fixes
 When a bug is fixed in the ``develop`` branch, it is often necessary to backport the fix to one
 (or more) of the ``releases/vX.Y`` branches. Only the release manager is responsible for doing
 backports, but Spack maintainers are responsible for labelling pull requests (and issues if no bug
-fix is available yet) with ``vX.Y.Z`` labels. The label should correspond to the next patch version
+fix is available yet) with ``vX.Y.Z`` labels. The labels should correspond to the future patch versions
 that the bug fix should be backported to.
 
 Backports are done publicly by the release manager using a pull request named ``Backports vX.Y.Z``.
@@ -844,13 +844,13 @@ Typically there are one or two backport pull requests open at any given time.
 
 .. _major-releases:
 
-Making major releases
+Making major/minor releases
 ^^^^^^^^^^^^^^^^^^^^^
 
-Assuming all required work from the milestone is completed, the steps to make the major release
+Assuming all required work from the milestone is completed, the steps to make the major/minor release
 are:
 
-#. `Create a new milestone <https://github.com/spack/spack/milestones>`_ for the next major
+#. `Create a new milestone <https://github.com/spack/spack/milestones>`_ for the next major/minor
    release.
 
 #. `Create a new label <https://github.com/spack/spack/labels>`_ for the next patch release.
@@ -1000,11 +1000,11 @@ Publishing a release on GitHub
    * Set ``Tag version`` to the name of the tag that will be created.
 
      The name should start with ``v`` and contain *all three*
-     parts of the version (e.g., ``v0.15.0`` or ``v0.15.1``).
+     parts of the version (e.g., ``v1.1.0`` or ``v1.1.1``).
 
-   * Set ``Target`` to the ``releases/vX.Y`` branch (e.g., ``releases/v0.15``).
+   * Set ``Target`` to the ``releases/vX.Y`` branch (e.g., ``releases/v1.0``).
 
-   * Set ``Release title`` to ``vX.Y.Z`` to match the tag (e.g., ``v0.15.1``).
+   * Set ``Release title`` to ``vX.Y.Z`` to match the tag (e.g., ``v1.0.1``).
 
    * Paste the latest release Markdown from your ``CHANGELOG.md`` file as the text.
 
