@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to modify shell environment variables within a Spack environment using the env_vars.yaml file.
+
 .. _env-vars-yaml:
 
-=============================================
 Environment Variable Settings (env_vars.yaml)
 =============================================
 

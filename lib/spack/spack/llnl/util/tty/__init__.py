@@ -11,7 +11,7 @@ import textwrap
 import traceback
 from datetime import datetime
 from sys import platform as _platform
-from typing import Any, NoReturn
+from typing import Any, NoReturn, Tuple
 
 if _platform != "win32":
     import fcntl
@@ -315,29 +315,43 @@ def hline(label=None, **kwargs):
     print(out.getvalue())
 
 
-def terminal_size():
+def terminal_size() -> Tuple[int, int]:
     """Gets the dimensions of the console: (rows, cols)."""
+
+    def get_env_fallback() -> Tuple[int, int]:
+        """Get terminal size from environment variables with defaults."""
+        rows = int(os.environ.get("LINES", 25))
+        cols = int(os.environ.get("COLUMNS", 80))
+        return rows, cols
+
+    def is_valid_size(rows: int, cols: int) -> bool:
+        """Check if terminal dimensions are valid (positive integers)."""
+        return rows > 0 and cols > 0
+
+    # Try dynamic detection on Unix-like systems
     if _platform != "win32":
 
         def ioctl_gwinsz(fd):
             try:
                 rc = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
-            except BaseException:
-                return
-            return rc
+                return rc if is_valid_size(rc[0], rc[1]) else None
+            except (OSError, ValueError):
+                return None
 
+        # Try standard file descriptors first
         rc = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
+
+        # If that fails, try opening the controlling terminal
         if not rc:
             try:
-                fd = os.open(os.ctermid(), os.O_RDONLY)
-                rc = ioctl_gwinsz(fd)
-                os.close(fd)
-            except BaseException:
+                with open(os.ctermid(), "rb") as f:
+                    rc = ioctl_gwinsz(f.fileno())
+            except (OSError, ValueError):
                 pass
-        if not rc:
-            rc = (os.environ.get("LINES", 25), os.environ.get("COLUMNS", 80))
 
-        return int(rc[0]), int(rc[1])
-    else:
-        rc = (os.environ.get("LINES", 25), os.environ.get("COLUMNS", 80))
-        return int(rc[0]), int(rc[1])
+        # Return dynamic size if valid, otherwise fall back to environment
+        if rc:
+            return rc
+
+    # Fallback to environment variables (Windows or failed Unix detection)
+    return get_env_fallback()

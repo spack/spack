@@ -2,16 +2,18 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover the Ruby build system in Spack for installing Ruby gems, with support for gemspec, Rakefile, and pre-packaged .gem files.
+
 .. _rubypackage:
 
-------
 Ruby
 ------
 
 Like Perl, Python, and R, Ruby has its own build system for
 installing Ruby gems.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -56,7 +58,6 @@ For packages that only distribute ``*.gem`` files, these files can be
 downloaded with the ``expand=False`` option in the ``version`` directive.
 The build phase will be automatically skipped.
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -75,7 +76,6 @@ released as ``*.gem`` files. These files can be extracted using:
    $ gem unpack *.gem
 
 
-^^^^^^^^^^^
 Description
 ^^^^^^^^^^^
 
@@ -89,7 +89,6 @@ The ``*.gemspec`` file may contain something like:
 
 Either of these can be used for the description of the Spack package.
 
-^^^^^^^^
 Homepage
 ^^^^^^^^
 
@@ -102,7 +101,6 @@ The ``*.gemspec`` file may contain something like:
 
 This should be used as the official homepage of the Spack package.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -128,7 +126,6 @@ This can be added to the Spack package using:
    depends_on("ruby@2.3.0:", type=("build", "run"))
 
 
-^^^^^^^^^^^^^^^^^
 Ruby dependencies
 ^^^^^^^^^^^^^^^^^
 
@@ -174,7 +171,6 @@ Check for the following clues in the ``*.gemspec`` file:
   These packages are optional dependencies used for development.
   They should not be added as dependencies of the package.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

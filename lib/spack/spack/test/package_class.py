@@ -23,7 +23,6 @@ import spack.package_base
 import spack.spec
 import spack.store
 import spack.subprocess_context
-import spack.util.git
 from spack.error import InstallError
 from spack.package_base import PackageBase
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
@@ -332,8 +331,8 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 
 
 @pytest.mark.require_provenance
-def test_binary_provenance_commit_version(mock_packages):
-    spec = spack.concretize.concretize_one("git-ref-package@stable")
+def test_binary_provenance_commit_version(default_mock_concretization):
+    spec = default_mock_concretization("git-ref-package@stable")
     assert spec.satisfies(f"commit={'c' * 40}")
 
 
@@ -376,7 +375,6 @@ def test_binary_provenance_find_commit_ls_remote(
 def test_binary_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capsys):
     """Fail all attempts to resolve git commits"""
     monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)
-    monkeypatch.setattr(spack.util.git, "get_commit_sha", lambda x, y: None, raising=False)
     spec = spack.concretize.concretize_one("git-ref-package@develop")
     captured = capsys.readouterr()
     assert "commit" not in spec.variants

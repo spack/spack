@@ -2,10 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      An overview of the build systems supported by Spack, with links to detailed documentation for each system.
 
 .. _build-systems:
 
-=============
 Build Systems
 =============
 

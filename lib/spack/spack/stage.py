@@ -21,6 +21,7 @@ import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.utils
+import spack.oci.image
 import spack.resource
 import spack.spec
 import spack.util.crypto
@@ -501,7 +502,7 @@ class Stage(LockableStagingDir):
                     extension=extension,
                 )
                 for mirror in self.mirrors
-                if not mirror.fetch_url.startswith("oci://")  # no support for mirrors yet
+                if not spack.oci.image.is_oci_url(mirror.fetch_url)  # no support for mirrors yet
             )
 
         if not self.default_fetcher_only and self.mirror_layout and self.default_fetcher.cachable:

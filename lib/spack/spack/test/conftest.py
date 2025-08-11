@@ -46,6 +46,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.solver.reuse
 import spack.spec
 import spack.stage
 import spack.store
@@ -2241,7 +2242,7 @@ def _libc_from_python(self):
 
 @pytest.fixture()
 def do_not_check_runtimes_on_reuse(monkeypatch):
-    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", _true)
+    monkeypatch.setattr(spack.solver.reuse, "_has_runtime_dependencies", _true)
 
 
 @pytest.fixture(autouse=True, scope="session")

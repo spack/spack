@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to package software that uses the CMake build system with Spack, covering common practices and customization options for CMake-based packages.
+
 .. _cmakepackage:
 
-------
 CMake
 ------
 
@@ -16,7 +19,6 @@ Unlike Autotools, CMake can generate build scripts for builders other
 than Make: Ninja, Visual Studio, etc. It is therefore cross-platform,
 whereas Autotools is Unix-only.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -42,7 +44,6 @@ A few more flags are passed to ``cmake`` by default, including flags
 for setting the build type and flags for locating dependencies. Of
 course, you may need to add a few arguments yourself.
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -71,7 +72,6 @@ There's also usually a ``cmake`` or ``CMake`` directory containing
 additional macros, find scripts, etc. These may prove useful in
 determining dependency version requirements.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -92,7 +92,6 @@ override this in your package:
    depends_on("cmake@2.8.12:", type="build")
 
 
-^^^^^^^^^^^^^^^^^^^
 Finding cmake flags
 ^^^^^^^^^^^^^^^^^^^
 
@@ -124,7 +123,6 @@ build flags, or check the ``CMakeLists.txt`` yourself.
 
 .. _cmake_args:
 
-^^^^^^^^^^^^^^^^^^^^^
 Adding flags to cmake
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -160,7 +158,6 @@ and CMake simply ignores the empty command line argument. For example, the follo
 will generate ``'cmake' '-DEXAMPLE=ON' ...`` when `@2.0: +example` is met, but will
 result in ``'cmake' '' ...`` when the spec version is below ``2.0``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 CMake arguments provided by Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -168,13 +165,13 @@ The following default arguments are controlled by Spack:
 
 
 ``CMAKE_INSTALL_PREFIX``
-------------------------
+""""""""""""""""""""""""
 
 Is set to the package's install directory.
 
 
 ``CMAKE_PREFIX_PATH``
----------------------
+"""""""""""""""""""""
 
 CMake finds dependencies through calls to ``find_package()``, ``find_program()``,
 ``find_library()``, ``find_file()``, and ``find_path()``, which use a list of search
@@ -185,7 +182,7 @@ For troubleshooting cases where CMake fails to find a dependency, add the
 ``--debug-find`` flag to ``cmake_args``.
 
 ``CMAKE_BUILD_TYPE``
---------------------
+""""""""""""""""""""
 
 Every CMake-based package accepts a ``-DCMAKE_BUILD_TYPE`` flag to
 dictate which level of optimization to use. In order to ensure
@@ -215,7 +212,7 @@ https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
 
 
 ``CMAKE_INSTALL_RPATH`` and ``CMAKE_INSTALL_RPATH_USE_LINK_PATH=ON``
---------------------------------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 CMake uses different RPATHs during the build and after installation, so that executables
 can locate the libraries they're linked to during the build, and installed executables
@@ -240,7 +237,6 @@ used as search paths.
    are not used at runtime.
 
 
-^^^^^^^^^^
 Generators
 ^^^^^^^^^^
 
@@ -276,7 +272,6 @@ generators, but it should be simple to add support for alternative
 generators. For more information on CMake generators, see:
 https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 CMakeLists.txt in a sub-directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -295,7 +290,6 @@ like so:
 Note that this path is relative to the root of the extracted tarball,
 not to the ``build_directory``. It defaults to the current directory.
 
-^^^^^^^^^^^^^^^^^^^^^^
 Building out of source
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -307,7 +301,6 @@ different sub-directory, simply override ``build_directory`` like so:
 
    build_directory = "my-build"
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build and install targets
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -328,7 +321,6 @@ library or build the documentation, you can add these like so:
    build_targets = ["all", "docs"]
    install_targets = ["install", "docs"]
 
-^^^^^^^
 Testing
 ^^^^^^^
 
@@ -338,7 +330,6 @@ Spack will check for the presence of a ``test`` target in the
 Makefile and run ``make test`` for you. If you want to run a
 different test instead, simply override the ``check`` method.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

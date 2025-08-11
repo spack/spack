@@ -2,9 +2,9 @@
 
 <h2>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-white-text.svg" width="250">
-  <source media="(prefers-color-scheme: light)" srcset="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-text.svg" width="250">
-  <img alt="Spack" src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo-text.svg" width="250">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/spack/spack/refs/heads/develop/share/spack/logo/spack-logo-white-text.svg" width="250">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/spack/spack/refs/heads/develop/share/spack/logo/spack-logo-text.svg" width="250">
+  <img alt="Spack" src="https://raw.githubusercontent.com/spack/spack/refs/heads/develop/share/spack/logo/spack-logo-text.svg" width="250">
 </picture>
 
 <br>
@@ -20,13 +20,14 @@
 
 </h2>
 
-**[Getting Started] &nbsp; • &nbsp; [Config] &nbsp; • &nbsp; [Community] &nbsp; • &nbsp; [Contributing] &nbsp; • &nbsp; [Packaging Guide]**
+**[Getting Started] &nbsp; • &nbsp; [Config] &nbsp; • &nbsp; [Community] &nbsp; • &nbsp; [Contributing] &nbsp; • &nbsp; [Packaging Guide] &nbsp; • &nbsp; [Packages]**
 
 [Getting Started]: https://spack.readthedocs.io/en/latest/getting_started.html
 [Config]: https://spack.readthedocs.io/en/latest/configuration.html
 [Community]: #community
 [Contributing]: https://spack.readthedocs.io/en/latest/contribution_guide.html
-[Packaging Guide]: https://spack.readthedocs.io/en/latest/packaging_guide.html
+[Packaging Guide]: https://spack.readthedocs.io/en/latest/packaging_guide_creation.html
+[Packages]: https://github.com/spack/spack-packages
 
 </div>
 
@@ -119,7 +120,7 @@ Contributing to Spack is relatively easy.  Just send us a
 
 Most contributors will want to contribute to Spack's community package
 recipes. To do that, you should visit the
-[spack-packages repository](https://github.com/spack/spack-packages).
+**[spack-packages repository][Packages]**.
 
 If you want to contribute to Spack itself, you can submit a pull request
 to the [spack repository](https://github.com/spack/spack) (this repository).

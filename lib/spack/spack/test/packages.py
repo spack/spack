@@ -13,6 +13,7 @@ import spack.concretize
 import spack.directives
 import spack.error
 import spack.fetch_strategy
+import spack.package
 import spack.package_base
 import spack.repo
 from spack.paths import mock_packages_path
@@ -399,3 +400,10 @@ def test_pkg_name_can_only_be_derived_when_package_module():
 
     with pytest.raises(ValueError, match="Package ExamplePackage is not a known Spack package"):
         ExamplePackage.name
+
+
+def test_spack_package_api_versioning():
+    """Test that the symbols in spack.package.api match the public API."""
+    assert spack.package.__all__ == [
+        symbol for symbols in spack.package.api.values() for symbol in symbols
+    ]

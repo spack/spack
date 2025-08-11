@@ -748,7 +748,7 @@ if test -z "$SPACK_SKIP_MODULES"
             sp_apply_shell_vars $sp_var_expr
         end
 
-        # _sp_module_prefix is set by spack --print-sh-vars
+        # _sp_module_prefix is set by spack --print-shell-vars
         if test "$_sp_module_prefix" != "not_installed"
             set -xg MODULE_PREFIX $_sp_module_prefix
             spack_pathadd PATH "$MODULE_PREFIX/bin"

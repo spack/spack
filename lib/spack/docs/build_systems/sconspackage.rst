@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the SCons build system in Spack, a Python-based tool that handles building and linking without relying on Makefiles.
+
 .. _sconspackage:
 
-------
 SCons
 ------
 
@@ -28,7 +31,6 @@ like:
 Others don't add any subcommands. Some have configuration options that
 can be specified through variables on the command line. Others don't.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -59,7 +61,6 @@ overridden like so:
        scons("check")
 
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -77,7 +78,6 @@ One thing to look for is the ``EnsureSConsVersion`` function:
 This means that SCons 2.3.0 is the earliest release that will work.
 You should specify this in a ``depends_on`` statement.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -98,7 +98,6 @@ this in your package:
    depends_on("scons@2.3.0:", type="build")
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Finding available options
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -226,7 +225,6 @@ use ``scons --help`` to print a list of subcommands:
 You'll notice that cantera provides a ``scons help`` subcommand. Running
 ``scons help`` prints a list of valid command-line variables.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to SCons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -252,7 +250,6 @@ the package build phase. This is done by overriding ``build_args`` like so:
 ``SConsPackage`` also provides an ``install_args`` function that you can
 override to pass additional arguments to ``scons install``.
 
-^^^^^^^^^^^^^^^^^
 Compiler wrappers
 ^^^^^^^^^^^^^^^^^
 
@@ -297,7 +294,6 @@ Note that this may involve passing additional flags to the build to
 locate dependencies, a task normally done by the compiler wrappers.
 serf is an example of a package with this limitation.
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

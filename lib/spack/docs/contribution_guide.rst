@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide for developers and administrators on contributing new packages, features, or bug fixes to Spack, covering Git workflows, pull requests, and continuous integration testing.
+
 .. _contribution-guide:
 
-==================
 Contribution Guide
 ==================
 
@@ -26,7 +29,6 @@ correspond to one feature, bug fix, extension, etc. One can create PRs with
 changes relevant to different ideas; however, reviewing such PRs becomes tedious
 and error-prone. If possible, try to follow the **one-PR-one-package/feature** rule.
 
---------
 Branches
 --------
 
@@ -43,7 +45,6 @@ dependencies. Currently, the maintainers manage these branches by
 cherry-picking from ``develop``. See :ref:`releases` for more
 information.
 
-----------------------
 Continuous Integration
 ----------------------
 
@@ -75,7 +76,6 @@ perform three types of tests:
 
 .. _cmd-spack-unit-test:
 
-^^^^^^^^^^
 Unit Tests
 ^^^^^^^^^^
 
@@ -177,7 +177,6 @@ how to write tests!
    tests and reports coverage statistics back to Codecov. If you want to
    run the unit tests yourself, we suggest you use ``spack unit-test``.
 
-^^^^^^^^^^^^
 Style Tests
 ^^^^^^^^^^^^
 
@@ -253,7 +252,6 @@ to update them.
    makes it much easier to fix errors directly off of the CI output.
 
 
-^^^^^^^^^^^^^^^^^^^
 Documentation Tests
 ^^^^^^^^^^^^^^^^^^^
 
@@ -317,11 +315,9 @@ to ask when you submit your PR.
 
 .. _spack-builders-and-pipelines:
 
-^^^^^^^^^
 GitLab CI
 ^^^^^^^^^
 
-""""""""""""""""""
 Build Cache Stacks
 """"""""""""""""""
 
@@ -439,7 +435,6 @@ An example stack that builds ``zlib``.
     When the images do not match, the build job may fail.
 
 
-"""""""""""""""""""
 Registering Runners
 """""""""""""""""""
 
@@ -523,7 +518,6 @@ GPG Keys
 Runners that may be utilized for ``protected`` CI require the registration of an intermediate signing key that
 can be used to sign packages. For more information on package signing, read :ref:`key_architecture`.
 
---------
 Coverage
 --------
 
@@ -554,7 +548,6 @@ substantial changes to the core, we may request unit tests to increase coverage.
    the latest ``develop``, but again, this is not required.
 
 
--------------
 Git Workflows
 -------------
 
@@ -563,7 +556,6 @@ the ``develop`` branch, and fixes and new features are constantly being merged. 
 how do you keep up-to-date with upstream while maintaining your own local
 differences and contributing PRs to Spack?
 
-^^^^^^^^^
 Branching
 ^^^^^^^^^
 
@@ -621,7 +613,6 @@ other branches:
 This can be done with each new PR you submit. Just make sure to keep this local
 branch up-to-date with the upstream ``develop`` branch too.
 
-^^^^^^^^^^^^^^
 Cherry-Picking
 ^^^^^^^^^^^^^^
 
@@ -672,7 +663,6 @@ procedure by getting hashes of all of them and cherry-picking them to the PR bra
    #. you might forget why you modified certain files.
    #. it could get difficult to isolate this change into a standalone, clean PR.
 
-^^^^^^^^
 Rebasing
 ^^^^^^^^
 
@@ -712,7 +702,6 @@ Once this is done, simply force push your rebased branch to your remote fork:
 
    $ git push --force origin <descriptive_branch_name>
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Rebasing with cherry-pick
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -761,7 +750,6 @@ If everything looks good, delete the backup branch:
 
    $ git branch --delete --force tmp
 
-^^^^^^^^^^^^^^^^^^
 Re-writing History
 ^^^^^^^^^^^^^^^^^^
 

@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to turn Spack environments into container images, either by copying existing installations or by generating recipes for Docker and Singularity.
+
 .. _containers:
 
 ================
@@ -29,20 +33,20 @@ If you already have a Spack environment installed on your system, you can
 share the binaries as an OCI-compatible container image. To get started, you
 just have to configure an OCI registry and run ``spack buildcache push``.
 
-.. code-block:: console
+.. code-block:: spec
 
    # Create and install an environment in the current directory
-   spack env create -d .
-   spack -e . add pkg-a pkg-b
-   spack -e . install
+   $ spack env create -d .
+   $ spack -e . add pkg-a pkg-b
+   $ spack -e . install
 
    # Configure the registry
-   spack -e . mirror add --oci-username-variable REGISTRY_USER \
-                         --oci-password-variable REGISTRY_TOKEN \
-                        container-registry oci://example.com/name/image
+   $ spack -e . mirror add --oci-username-variable REGISTRY_USER \
+                           --oci-password-variable REGISTRY_TOKEN \
+                           container-registry oci://example.com/name/image
 
    # Push the image (do set REGISTRY_USER and REGISTRY_TOKEN)
-   spack -e . buildcache push --update-index --base-image ubuntu:22.04 --tag my_env container-registry
+   $ spack -e . buildcache push --update-index --base-image ubuntu:22.04 --tag my_env container-registry
 
 The resulting container image can then be run as follows:
 
@@ -185,7 +189,7 @@ Docker images with Spack preinstalled and ready to be used are
 built when a release is tagged, or nightly on ``develop``. The images
 are then pushed both to `Docker Hub <https://hub.docker.com/u/spack>`_
 and to `GitHub Container Registry <https://github.com/orgs/spack/packages?repo_name=spack>`_.
-The OS that are currently supported are summarized in the table below:
+The OSes that are currently supported are summarized in the table below:
 
 .. _containers-supported-os:
 
@@ -370,7 +374,7 @@ Use a Bootstrap Stage for Spack
 
 In some cases, users may want to pin the commit SHA that is used for Spack to ensure later
 reproducibility or start from a fork of the official Spack repository to try a bugfix or
-a feature in the early stage of development. This is possible by being just a little more
+a feature in an early stage of development. This is possible by being just a little more
 verbose when specifying information about Spack in the ``spack.yaml`` file:
 
 .. code-block:: yaml
@@ -577,7 +581,7 @@ template, the Spack environment must register the directory containing it and de
 The template extension can override two blocks, named ``build_stage`` and ``final_stage``, similarly to
 the example below:
 
-.. code-block::
+.. code-block:: text
    :emphasize-lines: 3,8
 
    {% extends "container/Dockerfile" %}
@@ -679,7 +683,7 @@ to customize the generation of container recipes:
      - See :ref:`containers-supported-os`
      - Yes, if using constrained selection of base images
    * - ``images:spack``
-     - Version of Spack use in the ``build`` stage
+     - Version of Spack used in the ``build`` stage
      - Valid tags for ``base:image``
      - Yes, if using constrained selection of base images
    * - ``images:spack:url``

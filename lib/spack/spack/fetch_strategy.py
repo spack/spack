@@ -23,6 +23,7 @@ in order to build it.  They need to define the following methods:
 """
 import copy
 import functools
+import hashlib
 import http.client
 import os
 import re
@@ -890,8 +891,18 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     def mirror_id(self):
         if self.commit:
+            provenance_id = self.commit
             repo_path = urllib.parse.urlparse(self.url).path
-            result = os.path.sep.join(["git", repo_path, self.commit])
+            if self.git_sparse_paths:
+                sparse_paths = []
+                if callable(self.git_sparse_paths):
+                    sparse_paths.extend(self.git_sparse_paths())
+                else:
+                    sparse_paths.extend(self.git_sparse_paths)
+                sparse_string = "_".join(sparse_paths)
+                sparse_hash = hashlib.sha1(sparse_string.encode("utf-8")).hexdigest()
+                provenance_id = f"{provenance_id}_{sparse_hash}"
+            result = os.path.sep.join(["git", repo_path, provenance_id])
             return result
 
     def _repo_info(self):

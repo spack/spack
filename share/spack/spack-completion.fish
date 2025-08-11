@@ -956,7 +956,7 @@ complete -c spack -n '__fish_spack_using_command ci' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -d 'show this help message and exit'
 
 # spack ci generate
-set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= prune-dag no-prune-dag prune-unaffected no-prune-unaffected prune-externals no-prune-externals check-index-only artifacts-root= f/force U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= prune-dag no-prune-dag prune-unaffected no-prune-unaffected prune-externals no-prune-externals check-index-only artifacts-root= forward-variable= f/force U/fresh reuse fresh-roots deprecated j/jobs=
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ci generate' -l output-file -r -f -a output_file
@@ -977,6 +977,8 @@ complete -c spack -n '__fish_spack_using_command ci generate' -l check-index-onl
 complete -c spack -n '__fish_spack_using_command ci generate' -l check-index-only -d 'only check spec state from buildcache indices'
 complete -c spack -n '__fish_spack_using_command ci generate' -l artifacts-root -r -f -a artifacts_root
 complete -c spack -n '__fish_spack_using_command ci generate' -l artifacts-root -r -d 'path to the root of the artifacts directory'
+complete -c spack -n '__fish_spack_using_command ci generate' -l forward-variable -r -f -a forward_variable
+complete -c spack -n '__fish_spack_using_command ci generate' -l forward-variable -r -d 'Environment variables to forward from the generate environment to the generated jobs.'
 complete -c spack -n '__fish_spack_using_command ci generate' -s f -l force -f -a concretizer_force
 complete -c spack -n '__fish_spack_using_command ci generate' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command ci generate' -s U -l fresh -f -a concretizer_reuse
