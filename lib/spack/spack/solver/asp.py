@@ -3029,10 +3029,7 @@ class SpackSolverSetup:
         self.possible_compilers = list(candidate_compilers)
         self.possible_compilers.sort()  # type: ignore[call-overload]
 
-        check_cfg = spack.config.get("concretizer:compiler_mixing")
-        if not isinstance(check_cfg, bool):
-            check_cfg = True
-        should_mix = 1 if check_cfg else 0
+        should_mix = 1 if spack.config.get("concretizer:compiler_mixing", True) else 0
         self.gen.fact(fn.compiler_mixing(should_mix))
 
         self.gen.h1("Runtimes")
