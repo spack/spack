@@ -581,7 +581,7 @@ template, the Spack environment must register the directory containing it and de
 The template extension can override two blocks, named ``build_stage`` and ``final_stage``, similarly to
 the example below:
 
-.. code-block::
+.. code-block:: text
    :emphasize-lines: 3,8
 
    {% extends "container/Dockerfile" %}
