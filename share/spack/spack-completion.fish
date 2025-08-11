@@ -1462,7 +1462,7 @@ complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -f -a 
 complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack develop
-set -g __fish_spack_optspecs_spack_develop h/help p/path= b/build-directory= no-clone clone f/force= r/recursive
+set -g __fish_spack_optspecs_spack_develop h/help p/path= b/build-directory= no-clone clone no-concretize concretize f/force= r/recursive
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 develop' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -d 'show this help message and exit'
@@ -1474,6 +1474,10 @@ complete -c spack -n '__fish_spack_using_command develop' -l no-clone -f -a clon
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -d 'do not clone, the package already exists at the source path'
 complete -c spack -n '__fish_spack_using_command develop' -l clone -f -a clone
 complete -c spack -n '__fish_spack_using_command develop' -l clone -d '(default) clone the package unless the path already exists, use ``--force`` to overwrite'
+complete -c spack -n '__fish_spack_using_command develop' -l no-concretize -f -a concretize
+complete -c spack -n '__fish_spack_using_command develop' -l no-concretize -d 'do not mutate concrete specs to have dev_path provenance'
+complete -c spack -n '__fish_spack_using_command develop' -l concretize -f -a concretize
+complete -c spack -n '__fish_spack_using_command develop' -l concretize -d '(default) mutate concrete specs to have dev_path provenance. This does not do other aspects of concretization. It will fail if the dev specs are incompatible with concrete specs in the env.'
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a force
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -a recursive
@@ -3159,10 +3163,14 @@ complete -c spack -n '__fish_spack_using_command tutorial' -s y -l yes-to-all -f
 complete -c spack -n '__fish_spack_using_command tutorial' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack undevelop
-set -g __fish_spack_optspecs_spack_undevelop h/help a/all
+set -g __fish_spack_optspecs_spack_undevelop h/help no-concretize concretize a/all
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 undevelop' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command undevelop' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command undevelop' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command undevelop' -l no-concretize -f -a concretize
+complete -c spack -n '__fish_spack_using_command undevelop' -l no-concretize -d 'do not mutate concrete specs to remove provenance'
+complete -c spack -n '__fish_spack_using_command undevelop' -l concretize -f -a concretize
+complete -c spack -n '__fish_spack_using_command undevelop' -l concretize -d '(default) mutate concrete specs to remove dev_path provenance. This does not do other aspects of concretization.'
 complete -c spack -n '__fish_spack_using_command undevelop' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command undevelop' -s a -l all -d 'remove all specs from (clear) the environment'
 
