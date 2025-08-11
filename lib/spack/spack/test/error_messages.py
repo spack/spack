@@ -461,11 +461,15 @@ packages:
 
     # NOTE: for the error message to be good, *both* spots have to
     # be in EX-1-format.
+    # NOTE: this can also be fixed by updating the W4 package: replace
+    # depends_on("w2@:2.0", when="@:2.0")
+    # with
+    # depends_on("w2@2.0", when="@2.0")
 
     # w4 has: depends_on("w2@:2.0", when="@:2.0")
     with expect_failure_and_print():
         # concretize_one("w4@:2.0 ^w2+v1")  # EX 1: good msg
-        concretize_one("w4@2.0 ^w2+v1") # EX 2: bad msg
+        concretize_one("w4@2.0 ^w2+v1")  # EX 2: bad msg
 
 
 # This reencodes test_errmsg_requirements_2
