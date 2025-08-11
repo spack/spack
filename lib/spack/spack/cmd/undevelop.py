@@ -71,7 +71,7 @@ def undevelop(parser, args):
         _update_config(remove_specs, remove_all)
         if args.concretize:
             for spec in remove_specs:
-                env.undevelop_concretize(spec)
+                env.develop_concretize(spec, path=None)
 
     updated_all_dev_specs = set(spack.config.get("develop"))
     remove_spec_names = set(x.name for x in remove_specs)
