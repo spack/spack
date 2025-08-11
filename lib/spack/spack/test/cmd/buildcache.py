@@ -455,7 +455,7 @@ def test_correct_specs_are_pushed(
 
         def push(self, specs: List[spack.spec.Spec]):
             self.pushed.extend(s.name for s in specs)
-            return [], []  # nothing skipped, nothing errored
+            return [], [], []  # nothing skipped, nothing errored
 
     uploader = DontUpload()
 
