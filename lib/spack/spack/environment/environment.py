@@ -1463,7 +1463,7 @@ class Environment:
                     if not dep.satisfies(spec):
                         raise Exception  # TODO exception type and message
                     if path is None:
-                        dep.variants.pop("dev_path")
+                        dep.variants.pop("dev_path", None)
                     else:
                         dep.variants["dev_path"] = vt.VariantValue(
                             vt.VariantType.SINGLE, "dev_path", (path,)
