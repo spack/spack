@@ -118,6 +118,11 @@ def dev_build(self, args):
 
     env = ev.active_environment()
     if env:
+        if args.source_path:
+            tty.die(
+                "--source-path options was passed by user but the dev_path should be"
+                " configured via `spack develop` for environments."
+            )
         matches = env.all_matching_specs(spec)
         dev_matches = [m for m in matches if m.is_develop]
         if len(dev_matches) > 1:
@@ -126,6 +131,8 @@ def dev_build(self, args):
             tty.die("No matching develop specs found in the active environment")
         else:
             spec = dev_matches[0]
+            source_path = spec.variants.get("dev_path").value
+
     else:
         if not spec.versions.concrete_range_as_version:
             version = max(spack.repo.PATH.get_pkg_class(spec.fullname).versions.keys())
@@ -169,6 +176,4 @@ def dev_build(self, args):
 
     # drop into the build environment of the package?
     if args.shell is not None:
-        run_command_in_subshell(
-            spec, Context.BUILD, [args.shell], prompt=args.prompt, shell=args.shell
-        )
+        run_command_in_subshell(spec, Context.BUILD, [args.shell], shell=args.shell)

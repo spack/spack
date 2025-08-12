@@ -8,7 +8,6 @@ import spack.cmd
 import spack.deptypes as dt
 import spack.error
 import spack.llnl.util.tty as tty
-import spack.prompt
 import spack.spec
 import spack.store
 from spack import build_environment, traverse
@@ -88,12 +87,9 @@ class AreDepsInstalledVisitor:
 
 
 def run_command_in_subshell(
-    spec, context, cmd, prompt=False, dirty=False, cd_arg=None, shell=active_shell_type()
+    spec, context, cmd, dirty=False, cd_arg=None, shell=active_shell_type()
 ):
     mods = build_environment.setup_package(spec.package, dirty, context)
-
-    if prompt:
-        mods.extend(spack.prompt.prompt_modifications(f"{spec.name}-{str(context)}-env", shell))
     mods.apply_modifications()
 
     if cd_arg:
@@ -174,7 +170,7 @@ def emulate_env_utility(cmd_name, context: Context, args):
         )
 
     if cmd:
-        run_command_in_subshell(spec, context, cmd, prompt=args.dive, cd_arg=args.cd)
+        run_command_in_subshell(spec, context, cmd, cd_arg=args.cd)
     else:
         # setup build env if no command to run
         build_environment.setup_package(spec.package, args.dirty, context)
