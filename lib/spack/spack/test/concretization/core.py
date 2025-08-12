@@ -28,7 +28,10 @@ import spack.platforms
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
-import spack.solver.version_order
+import spack.solver.core
+import spack.solver.reuse
+import spack.solver.runtimes
+import spack.solver.versions
 import spack.spec
 import spack.store
 import spack.test.conftest
@@ -90,6 +93,8 @@ def binary_compatibility(monkeypatch, request):
         # Databases have been created without glibc support
         return
 
+    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", lambda: True)
+    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", lambda: True)
     monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", lambda: True)
 
 
@@ -2437,7 +2442,7 @@ class TestConcretize:
         # Prepare a mock mirror that returns an old version of dyninst
         request_str = "callpath ^mpich"
         reused = spack.concretize.concretize_one(f"{request_str} ^dyninst@8.1.1")
-        monkeypatch.setattr(spack.solver.asp, "_specs_from_mirror", lambda: [reused])
+        monkeypatch.setattr(spack.solver.reuse, "_specs_from_mirror", lambda: [reused])
 
         # Exclude dyninst from reuse, so we expect that the old version is not taken into account
         with spack.config.override(
@@ -2519,7 +2524,7 @@ class TestConcretize:
     def test_cannot_reuse_host_incompatible_libc(self):
         """Test whether reuse concretization correctly fails to reuse a spec with a host
         incompatible libc."""
-        if not spack.solver.asp.using_libc_compatibility():
+        if not spack.solver.core.using_libc_compatibility():
             pytest.skip("This test requires libc nodes")
 
         # We install b@1 ^glibc@2.30, and b@0 ^glibc@2.28. The former is not host compatible, the
@@ -2883,7 +2888,7 @@ def test_reusable_externals_match(mock_packages, tmp_path: pathlib.Path):
     spec.external_path = str(tmp_path)
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
-    assert spack.solver.asp._is_reusable(
+    assert spack.solver.reuse._is_reusable(
         spec,
         {
             "mpich": {
@@ -2901,7 +2906,7 @@ def test_reusable_externals_match_virtual(mock_packages, tmp_path: pathlib.Path)
     spec.external_path = str(tmp_path)
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
-    assert spack.solver.asp._is_reusable(
+    assert spack.solver.reuse._is_reusable(
         spec,
         {
             "mpi": {
@@ -2919,7 +2924,7 @@ def test_reusable_externals_different_prefix(mock_packages, tmp_path: pathlib.Pa
     spec.external_path = "/other/path"
     spec.external_modules = ["mpich/4.1"]
     spec._mark_concrete()
-    assert not spack.solver.asp._is_reusable(
+    assert not spack.solver.reuse._is_reusable(
         spec,
         {
             "mpich": {
@@ -2938,7 +2943,7 @@ def test_reusable_externals_different_modules(mock_packages, tmp_path: pathlib.P
     spec.external_path = str(tmp_path)
     spec.external_modules = modules
     spec._mark_concrete()
-    assert not spack.solver.asp._is_reusable(
+    assert not spack.solver.reuse._is_reusable(
         spec,
         {
             "mpich": {
@@ -2955,7 +2960,7 @@ def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path
     spec = Spec("mpich@4.1~debug build_system=generic arch=linux-ubuntu23.04-zen2 %gcc@13.1.0")
     spec.external_path = str(tmp_path)
     spec._mark_concrete()
-    assert not spack.solver.asp._is_reusable(
+    assert not spack.solver.reuse._is_reusable(
         spec,
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": str(tmp_path)}]}},
         local=False,
@@ -2974,7 +2979,7 @@ def test_concretization_version_order():
     result = [
         v
         for v, _ in sorted(
-            versions, key=spack.solver.version_order.concretization_version_order, reverse=True
+            versions, key=spack.solver.versions.concretization_version_order, reverse=True
         )
     ]
     assert result == [
@@ -3851,6 +3856,18 @@ def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
         ("emacs +native", ["%[virtuals=c deptypes=build,link] gcc"], []),
         ("emacs +native %gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
         ("emacs +native %[virtuals=c] gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
+        # Package that depends on llvm as a library and also needs C and C++ compilers
+        (
+            "llvm-client",
+            ["%[virtuals=c,cxx deptypes=build] gcc", "%[deptypes=build,link] llvm"],
+            ["%c=llvm"],
+        ),
+        (
+            "llvm-client %c,cxx=gcc",
+            ["%[virtuals=c,cxx deptypes=build] gcc", "%[deptypes=build,link] llvm"],
+            ["%c=llvm"],
+        ),
+        ("llvm-client %c,cxx=llvm", ["%[virtuals=c,cxx deptypes=build,link] llvm"], ["%gcc"]),
     ],
 )
 def test_specifying_direct_dependencies(
@@ -3927,3 +3944,111 @@ def test_satisfies_conditional_spec(
     assert abstract_spec.satisfies(conditional_spec) is expected_abstract
     assert concrete_spec.satisfies(conditional_spec) is expected_concrete
     assert concrete_spec.satisfies(abstract_spec)
+
+
+@pytest.mark.not_on_windows("Tests use linux paths")
+@pytest.mark.regression("51001")
+def test_selecting_externals_with_compilers_as_root(mutable_config, mock_packages):
+    """Tests that we can select externals that have a compiler in their spec, even when
+    they are root.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@9.4.0 languages='c,c++'"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  llvm:
+    buildable: false
+    externals:
+    - spec: "llvm@20 +clang"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  mpich:
+    buildable: false
+    externals:
+    - spec: "mpich@3.4.3 %gcc"
+      prefix: /path/mpich/gcc
+    - spec: "mpich@3.4.3 %clang"
+      prefix: /path/mpich/clang
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    # Select mpich as the root spec
+    s = spack.concretize.concretize_one("mpich %clang")
+    assert s.external
+    assert s.prefix == "/path/mpich/clang"
+
+    s = spack.concretize.concretize_one("mpich %gcc")
+    assert s.external
+    assert s.prefix == "/path/mpich/gcc"
+
+    # Select mpich as a dependency
+    s = spack.concretize.concretize_one("mpileaks ^mpi=mpich %clang")
+    assert s["mpi"].external
+    assert s["mpi"].prefix == "/path/mpich/clang"
+
+    s = spack.concretize.concretize_one("mpileaks ^mpi=mpich %gcc")
+    assert s["mpi"].external
+    assert s["mpi"].prefix == "/path/mpich/gcc"
+
+
+@pytest.mark.not_on_windows("Tests use linux paths")
+@pytest.mark.regression("51001")
+@pytest.mark.parametrize(
+    "external_compiler,spec_str,expected_raising",
+    [
+        # Overspecify the compiler in the input spec. This should raise, because we
+        # don't know if we can satisfy the constraint
+        ("gcc", "mpich %gcc@9", True),
+        pytest.param("gcc@9", "mpich %gcc@9.4", True, marks=pytest.mark.xfail),
+        # This is ok
+        ("gcc@9.4.0", "mpich %gcc@9", False),
+    ],
+)
+def test_selecting_externals_with_compilers_and_versions(
+    external_compiler, spec_str, expected_raising, mutable_config, mock_packages
+):
+    """Tests different scenarios of having a compiler specified with a version constraint, either
+    in the input spec or in the external spec.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@9.4.0 languages='c,c++'"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  mpich:
+    buildable: false
+    externals:
+    - spec: "mpich@3.4.3 %{external_compiler}"
+      prefix: /path/mpich/gcc
+    - spec: "mpich@3.4.3 %clang"
+      prefix: /path/mpich/clang
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    if expected_raising:
+        with pytest.raises(
+            spack.solver.asp.UnsatisfiableSpecError, match="Omit version requirement"
+        ):
+            _ = spack.concretize.concretize_one(spec_str)
+    else:
+        s = spack.concretize.concretize_one(spec_str)
+        assert s.external
+        assert s.prefix == "/path/mpich/gcc"

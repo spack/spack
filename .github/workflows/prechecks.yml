@@ -85,3 +85,31 @@ jobs:
           spack -d bootstrap now --dev
           spack -d style -t black
           spack unit-test -V
+
+  canonicalization:
+    name: package.py canonicalization
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/spack/all-pythons:2025-07-25
+
+    steps:
+      - name: Checkout Spack (current)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          path: spack-current
+      - name: Checkout Spack (previous)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          path: spack-previous
+          ref: ${{ github.event.pull_request.base.sha || github.event.before }}
+      - name: Checkout Spack Packages
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: spack/spack-packages
+          path: spack-packages
+      - name: Test package.py canonicalization
+        run: spack-current/.github/workflows/bin/canonicalize.py
+          --spack $PWD/spack-previous $PWD/spack-current
+          --python python3.6 python3.7 python3.8 python3.9 python3.10 python3.11 python3.12 python3.13
+          --input-dir spack-packages/repos/spack_repo/builtin/packages/
+          --output-dir canonicalized

@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to create meta-packages known as "bundles" in Spack to group multiple packages together for a single installation.
+
 .. _bundlepackage:
 
-------
 Bundle
 ------
 
@@ -14,9 +17,9 @@ The associated software is specified as dependencies.
 
 If it makes sense, variants, conflicts, and requirements can be added to
 the package. :ref:`Variants <variants>` ensure that common build options
-are consistent across the packages supporting them.  :ref:`Conflicts
-and requirements <packaging_conflicts>` prevent attempts to build with known
-bugs or limitations.
+are consistent across the packages supporting them.
+:ref:`Conflicts <packaging_conflicts>` prevent attempts to build with known bugs and limitations.
+:ref:`Requirements <packaging_requires>` prevent attempts to build without critical options.
 
 For example, if ``MyBundlePackage`` is known to only build on ``linux``,
 it could use the ``require`` directive as follows:
@@ -36,7 +39,6 @@ where ``Xsdk`` also inherits from ``CudaPackage`` and ``RocmPackage`` and
 ``Libc`` is a virtual bundle package for the C standard library.
 
 
-^^^^^^^^
 Creation
 ^^^^^^^^
 
@@ -50,7 +52,6 @@ command to create a bundle package whose class name will be ``Mybundle``:
 
 
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -58,7 +59,6 @@ The ``BundlePackage`` base class does not provide any phases by default
 since the bundle does not represent a build system.
 
 
-^^^^^^
 URL
 ^^^^^^
 
@@ -66,7 +66,6 @@ The ``url`` property does not have meaning since there is no package-specific
 code to fetch.
 
 
-^^^^^^^
 Version
 ^^^^^^^
 

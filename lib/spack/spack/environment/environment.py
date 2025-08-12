@@ -88,9 +88,10 @@ def environment_name(path: Union[str, pathlib.Path]) -> str:
     This is the path for directory environments, and just the name
     for managed environments.
     """
+    env_root = pathlib.Path(env_root_path()).resolve()
     path_str = str(path)
-    if path_str.startswith(env_root_path()):
-        return os.path.basename(path_str)
+    if path_str.startswith(str(env_root)):
+        return str(pathlib.Path(path_str).relative_to(env_root))
     else:
         return path_str
 
@@ -124,8 +125,10 @@ spack:
     )
 
 
+sep_re = re.escape(os.sep)
+
 #: regex for validating environment names
-valid_environment_name_re = r"^\w[\w-]*$"
+valid_environment_name_re = rf"^\w[{sep_re}\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
 lockfile_format_version = 6
@@ -438,6 +441,9 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
         if not repos_specs:
             return
         for name, entry in list(repos_specs.items()):
+            # only rewrite when we have a path-based repository
+            if not isinstance(entry, str):
+                continue
             repo_path = substitute_path_variables(entry)
             expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
 
@@ -548,11 +554,22 @@ def all_environment_names():
     if not os.path.exists(env_root_path()):
         return []
 
-    candidates = sorted(os.listdir(env_root_path()))
+    env_root = pathlib.Path(env_root_path()).resolve()
+
+    def yaml_paths():
+        for root, dirs, files in os.walk(env_root, topdown=True, followlinks=True):
+            dirs[:] = [
+                d
+                for d in dirs
+                if not d.startswith(".") and not env_root.samefile(os.path.join(root, d))
+            ]
+            if manifest_name in files:
+                yield os.path.join(root, manifest_name)
+
     names = []
-    for candidate in candidates:
-        yaml_path = os.path.join(_root(candidate), manifest_name)
-        if valid_env_name(candidate) and os.path.exists(yaml_path):
+    for yaml_path in yaml_paths():
+        candidate = str(pathlib.Path(yaml_path).relative_to(env_root).parent)
+        if valid_env_name(candidate):
             names.append(candidate)
     return names
 

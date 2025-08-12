@@ -48,6 +48,7 @@ jobs:
             - '.github/workflows/ci.yaml'
             core:
             - './!(var/**)/**'
+            - 'var/spack/test_repos/**'
             packages:
             - 'var/**'
       # Some links for easier reference:

@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the Maven build system in Spack for building and managing Java-based projects.
+
 .. _mavenpackage:
 
-------
 Maven
 ------
 
@@ -12,7 +15,6 @@ Apache Maven is a general-purpose build system that does not rely
 on Makefiles to build software. It is designed for building and
 managing Java-based projects.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -29,7 +31,6 @@ By default, these phases run:
    $ install . <prefix>
 
 
-^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
 
@@ -37,7 +38,6 @@ Maven packages can be identified by the presence of a ``pom.xml`` file.
 This file lists dependencies and other metadata about the project.
 There may also be configuration files in the ``.mvn`` directory.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -75,7 +75,6 @@ should add:
    depends_on("maven@3.5.4:", type="build")
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to the build phase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -93,7 +92,6 @@ the build phase. For example:
        ]
 
 
-^^^^^^^^^^^^^^^^^^^^^^
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 

@@ -539,6 +539,9 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
      imposed_constraint(ID, "depends_on", A1, A2, A3),
      internal_error("Build deps must land in exactly one duplicate").
 
+:- attr("direct_dependency", ParentNode, node_requirement("virtual_on_incoming_edges", ChildPkg, Virtual)),
+   not attr("virtual_on_edge", ParentNode, node(_, ChildPkg), Virtual).
+
 % If the parent is built, then we have a build_requirement on another node. For concrete nodes,
 % or external nodes, we don't since we are trimming their build dependencies.
 
@@ -621,9 +624,12 @@ error(100, "External {0} cannot satisfy both {1} and {2}", BuildDependency, Lite
      virtual(Virtual).
 
 attr("virtual_node", VirtualNode)  :- virtual_build_requirement(ParentNode, VirtualNode).
-{ build_requirement(ParentNode, ProviderNode) } :-
+build_requirement(ParentNode, ProviderNode)  :-
   virtual_build_requirement(ParentNode, VirtualNode),
-  provider(ProviderNode, VirtualNode).
+  provider(ProviderNode, VirtualNode),
+  not attr("depends_on", ParentNode, ProviderNode, "link"),
+  not attr("depends_on", ParentNode, ProviderNode, "run"),
+  attr("depends_on", ParentNode, ProviderNode, "build").
 
 % From cli we can have literal expressions like:
 %
@@ -664,7 +670,7 @@ attr("hash", node(X, BuildDependency), BuildHash) :-
 
 1 { attr("provider_set", node(X, BuildDependency), node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1 :-
   attr("direct_dependency", ParentNode, node_requirement("provider_set", BuildDependency, Virtual)),
-  build_requirement(ParentNode, node(X, BuildDependency)).
+  direct_dependency(ParentNode, node(X, BuildDependency)).
 
 % Reconstruct virtual dependencies for reused specs
 attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual)
@@ -1010,6 +1016,10 @@ attr("external_spec_selected", node(ID, Package), LocalIndex) :-
     attr("node", node(ID, Package)),
     not attr("hash", node(ID, Package), _).
 
+% At most a single external can be active for a given node
+:- attr("node", node(ID, Package)),
+   2 { attr("external_spec_selected", node(ID, Package), LocalIndex) }.
+
 % Allow clingo not to impose an external condition. This is needed to allow solving
 % for externals that are indistinguishable besides compiler "metadata" e.g.
 % mpich@4.2 %gcc vs. mpich@4.2 %clang
@@ -1027,6 +1037,17 @@ attr("external_spec_selected", node(ID, Package), LocalIndex) :-
   :- not attr("root", ExternalNode),
      attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
      attr("external_build_requirement", ExternalNode, node_requirement("node_version_satisfies", Compiler, Constraint)).
+
+error(100, "Cannot use an external for {0}, because the {1} compiler is overspecified. Omit version requirement.", ExternalPackage, Compiler) :-
+    external(node(X, ExternalPackage)),
+    not attr("external_build_requirement", node(X, ExternalPackage), node_requirement("node_version_satisfies", Compiler, _)),
+    attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
+    attr("direct_dependency", node(X, ExternalPackage), node_requirement("node_version_satisfies", Compiler, Constraint)).
+
+% If we require a compiler on an external root, be sure it's mentioned in the external spec
+:- external(ExternalNode),
+   not attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
+   attr("direct_dependency", ExternalNode, node_requirement("node",Compiler)).
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.

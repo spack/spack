@@ -7,7 +7,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-===================
+.. meta::
+   :description lang=en:
+      Documentation of Spack, a flexible package manager for high-performance computing, designed to support multiple versions and configurations of software on a wide variety of platforms.
+
 Spack
 ===================
 
@@ -123,7 +126,6 @@ or refer to the full manual below.
    Spack Builtin Repo <spack_repo>
    Spack API Docs <spack>
 
-==================
 Indices and tables
 ==================
 

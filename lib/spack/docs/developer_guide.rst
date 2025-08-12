@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A comprehensive guide for developers working on Spack itself, covering the directory structure, code organization, and key concepts like specs and packages.
+
 .. _developer_guide:
 
-===============
 Developer Guide
 ===============
 
@@ -13,7 +16,6 @@ If you just want to develop packages, see the :doc:`Packaging Guide <packaging_g
 
 It is assumed that you have read the :ref:`basic-usage` and :doc:`packaging guide <packaging_guide_creation>` sections and that you are familiar with the concepts discussed there.
 
---------
 Overview
 --------
 
@@ -73,7 +75,6 @@ for organization-specific or experimental packages.
 The rest of this document describes all the pieces that come together to make that
 happen.
 
--------------------
 Directory Structure
 -------------------
 
@@ -144,14 +145,12 @@ use the thing that is supposed to spare them from the details of big,
 complicated packages. The end result is that Spack works out of the
 box: clone it and add ``bin`` to your ``PATH``, and you are ready to go.
 
---------------
 Code Structure
 --------------
 
 This section gives an overview of the various Python modules in Spack,
 grouped by functionality.
 
-^^^^^^^^^^^^^^^^^^^^^^^
 Package-related modules
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -174,7 +173,6 @@ Package-related modules
   decorator, which allows :ref:`multimethods <multimethods>` in
   packages.
 
-^^^^^^^^^^^^^^^^^^^^
 Spec-related modules
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -204,7 +202,6 @@ Spec-related modules
      but compilers aren't fully integrated with the build process
      yet.
 
-^^^^^^^^^^^^^^^^^
 Build environment
 ^^^^^^^^^^^^^^^^^
 
@@ -220,7 +217,6 @@ Build environment
   Create more implementations of this to change the hierarchy and
   naming scheme in ``$spack_prefix/opt``
 
-^^^^^^^^^^^^^^^^^
 Spack Subcommands
 ^^^^^^^^^^^^^^^^^
 
@@ -228,7 +224,6 @@ Spack Subcommands
   Each module in this package implements a Spack subcommand. See
   :ref:`writing commands <writing-commands>` for details.
 
-^^^^^^^^^^
 Unit tests
 ^^^^^^^^^^
 
@@ -237,7 +232,6 @@ Unit tests
   the test suite in ``__init__.py`` to add more unit tests.
 
 
-^^^^^^^^^^^^^
 Other Modules
 ^^^^^^^^^^^^^
 
@@ -262,7 +256,6 @@ Other Modules
 
 .. _package-repositories:
 
-^^^^^^^^^^^^^^^^^^^^
 Package Repositories
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -289,7 +282,6 @@ See :ref:`repositories` for complete details on configuring and managing package
 
 .. _package_class_structure:
 
---------------------------
 Package class architecture
 --------------------------
 
@@ -325,7 +317,6 @@ and one or more ``*Builder`` classes that encode the installation procedure. A s
 is created just before the software is built, so at a time where Spack knows which build system needs
 to be used for the current installation, and receives a ``package`` object during initialization.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Compatibility with single-class format
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -349,7 +340,6 @@ the adapter role is to "emulate" a method resolution order like the one represen
 
 .. _writing-commands:
 
-----------------
 Writing commands
 ----------------
 
@@ -357,7 +347,6 @@ Adding a new command to Spack is easy. Simply add a ``<name>.py`` file to
 ``lib/spack/spack/cmd/``, where ``<name>`` is the name of the subcommand.
 At a bare minimum, two functions are required in this file:
 
-^^^^^^^^^^^^^^^^^^
 ``setup_parser()``
 ^^^^^^^^^^^^^^^^^^
 
@@ -374,7 +363,6 @@ Many commands take the same arguments and flags. These arguments should
 be defined in ``lib/spack/spack/cmd/common/arguments.py`` so that they do not
 need to be redefined in multiple commands.
 
-^^^^^^^^^^^^
 ``<name>()``
 ^^^^^^^^^^^^
 
@@ -394,7 +382,6 @@ make sure to update Spack's `Bash tab completion script
 <https://github.com/spack/spack/blob/develop/share/spack/spack-completion.bash>`_.
 
 
--------------
 Writing Hooks
 -------------
 
@@ -408,7 +395,6 @@ Spack defines hooks by way of a module in the ``lib/spack/spack/hooks`` director
 This module has to be registered in ``lib/spack/spack/hooks/__init__.py`` so that Spack is aware of it.
 This section will cover the basic kind of hooks and how to write them.
 
-^^^^^^^^^^^^^^
 Types of Hooks
 ^^^^^^^^^^^^^^
 
@@ -416,7 +402,6 @@ The following hooks are currently implemented to make it easy for you,
 the developer, to add hooks at different stages of a Spack install or similar.
 If there is a hook that you would like and it is missing, you can propose to add a new one.
 
-"""""""""""""""""""""
 ``pre_install(spec)``
 """""""""""""""""""""
 
@@ -424,7 +409,6 @@ A ``pre_install`` hook is run within the install subprocess, directly before the
 It expects a single argument of a spec.
 
 
-"""""""""""""""""""""""""""""""""""""
 ``post_install(spec, explicit=None)``
 """""""""""""""""""""""""""""""""""""
 
@@ -432,14 +416,12 @@ A ``post_install`` hook is run within the install subprocess, directly after the
 but before the build stage is removed and the spec is registered in the database. It expects two
 arguments: the spec and an optional boolean indicating whether this spec is being installed explicitly.
 
-""""""""""""""""""""""""""""""""""""""""""""""""""""
 ``pre_uninstall(spec)`` and ``post_uninstall(spec)``
 """"""""""""""""""""""""""""""""""""""""""""""""""""
 
 These hooks are currently used for cleaning up module files after uninstall.
 
 
-^^^^^^^^^^^^^^^^^^^^^^
 Adding a New Hook Type
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -488,15 +470,12 @@ This is not to say that this would be the best way to implement an integration
 with the logger (you would probably want to write a custom logger, or you could
 have the hook defined within the logger), but it serves as an example of writing a hook.
 
-----------
 Unit tests
 ----------
 
-------------
 Unit testing
 ------------
 
----------------------
 Developer environment
 ---------------------
 
@@ -528,19 +507,16 @@ If you want to add custom flags, you should export an additional variable:
 These environment variables will eventually be integrated into Spack so
 they are set from the command line.
 
-------------------
 Developer commands
 ------------------
 
 .. _cmd-spack-doc:
 
-^^^^^^^^^^^^^
 ``spack doc``
 ^^^^^^^^^^^^^
 
 .. _cmd-spack-style:
 
-^^^^^^^^^^^^^^^
 ``spack style``
 ^^^^^^^^^^^^^^^
 
@@ -561,7 +537,6 @@ You do not need any of these Python packages installed on your system for
 the checks to work! Spack will bootstrap install them from packages for
 your use.
 
-^^^^^^^^^^^^^^^^^^^
 ``spack unit-test``
 ^^^^^^^^^^^^^^^^^^^
 
@@ -570,7 +545,6 @@ See the :ref:`contributor guide section <cmd-spack-unit-test>` on
 
 .. _cmd-spack-python:
 
-^^^^^^^^^^^^^^^^
 ``spack python``
 ^^^^^^^^^^^^^^^^
 
@@ -634,7 +608,6 @@ just like you would with the normal Python command.
 .. _cmd-spack-url:
 
 
-^^^^^^^^^^^^^^^
 ``spack blame``
 ^^^^^^^^^^^^^^^
 
@@ -678,7 +651,6 @@ Finally, to get a JSON export of the data, add ``--json``:
     $ spack blame --json python
 
 
-^^^^^^^^^^^^^
 ``spack url``
 ^^^^^^^^^^^^^
 
@@ -694,7 +666,6 @@ The regular expressions in ``parse_name_offset`` and ``parse_version_offset``
 are used to extract the name and version, but they are not perfect. In order
 to debug Spack's URL parsing support, the ``spack url`` command can be used.
 
-"""""""""""""""""""
 ``spack url parse``
 """""""""""""""""""
 
@@ -712,7 +683,6 @@ function.
 This command also accepts a ``--spider`` flag. If provided, Spack searches
 for other versions of the package and prints the matching URLs.
 
-""""""""""""""""""
 ``spack url list``
 """"""""""""""""""
 
@@ -722,7 +692,6 @@ the string that it detected to be the name and version. The
 ``--incorrect-name`` and ``--incorrect-version`` flags can be used to
 print URLs that were not being parsed correctly.
 
-"""""""""""""""""""""
 ``spack url summary``
 """""""""""""""""""""
 
@@ -738,7 +707,6 @@ expressions that parse names and versions. By running this command
 before and after the change, you can make sure that your regular
 expression fixes more packages than it breaks.
 
----------
 Profiling
 ---------
 
@@ -748,7 +716,6 @@ supply ``--profile`` to Spack on the command line, before any subcommands.
 
 .. _spack-p:
 
-^^^^^^^^^^^^^^^^^^^
 ``spack --profile``
 ^^^^^^^^^^^^^^^^^^^
 
@@ -764,7 +731,6 @@ slowest on top. The profiling support is from Python's built-in tool,
 
 .. _releases:
 
---------
 Releases
 --------
 
@@ -775,36 +741,37 @@ least provides some insight into how the Spack project works.
 
 .. _release-branches:
 
-^^^^^^^^^^^^^^^^
 Release branches
 ^^^^^^^^^^^^^^^^
 
 There are currently two types of Spack releases: :ref:`major releases
 <major-releases>` (``0.21.0``, ``0.22.0``, etc.) and :ref:`patch releases
 <patch-releases>` (``0.22.1``, ``0.22.2``, ``0.22.3``, etc.). Here is a
-diagram of how Spack release branches work::
+diagram of how Spack release branches work:
 
-    o    branch: develop  (latest version, v0.23.0.dev0)
-    |
-    o
-    | o  branch: releases/v0.22, tag: v0.22.1
-    o |
-    | o  tag: v0.22.0
-    o |
-    | o
-    |/
-    o
-    |
-    o
-    | o  branch: releases/v0.21, tag: v0.21.2
-    o |
-    | o  tag: v0.21.1
-    o |
-    | o  tag: v0.21.0
-    o |
-    | o
-    |/
-    o
+.. code-block:: text
+
+   o    branch: develop  (latest version, v0.23.0.dev0)
+   |
+   o
+   | o  branch: releases/v0.22, tag: v0.22.1
+   o |
+   | o  tag: v0.22.0
+   o |
+   | o
+   |/
+   o
+   |
+   o
+   | o  branch: releases/v0.21, tag: v0.21.2
+   o |
+   | o  tag: v0.21.1
+   o |
+   | o  tag: v0.21.0
+   o |
+   | o
+   |/
+   o
 
 The ``develop`` branch has the latest contributions, and nearly all pull
 requests target ``develop``. The ``develop`` branch will report that its
@@ -838,7 +805,6 @@ for more details.
    compliant versions.  `See here <https://github.com/spack/spack/pull/25267>`_ for
    details.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Scheduling work for releases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -862,7 +828,6 @@ Spack's milestones are not firm commitments so we move work between releases fre
 need to make a release and some tasks are not yet done, we will simply move them to the next major
 release milestone, rather than delaying the release to complete them.
 
-^^^^^^^^^^^^^^^^^^^^^
 Backporting bug fixes
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -879,7 +844,6 @@ Typically there are one or two backport pull requests open at any given time.
 
 .. _major-releases:
 
-^^^^^^^^^^^^^^^^^^^^^
 Making major releases
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -945,7 +909,6 @@ are:
 
 .. _patch-releases:
 
-^^^^^^^^^^^^^^^^^^^^^
 Making patch releases
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -1025,7 +988,6 @@ release as follows:
 
 .. _publishing-releases:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Publishing a release on GitHub
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1081,7 +1043,6 @@ Publishing a release on GitHub
 
 .. _updating-latest-release:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 Updating `releases/latest`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1116,7 +1077,6 @@ local tags.
 
 .. _announcing-releases:
 
-^^^^^^^^^^^^^^^^^^^^
 Announcing a release
 ^^^^^^^^^^^^^^^^^^^^
 

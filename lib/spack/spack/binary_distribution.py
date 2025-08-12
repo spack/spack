@@ -1121,7 +1121,7 @@ def make_uploader(
     base_image: Optional[str] = None,
 ) -> Uploader:
     """Builder for the appropriate uploader based on the mirror type"""
-    if mirror.push_url.startswith("oci://"):
+    if spack.oci.image.is_oci_url(mirror.push_url):
         return OCIUploader(
             mirror=mirror, force=force, update_index=update_index, base_image=base_image
         )
@@ -1763,10 +1763,8 @@ def download_tarball(
         fetch_url = mirror.fetch_url
 
         # TODO: refactor this to some "nice" place.
-        if fetch_url.startswith("oci://"):
-            ref = spack.oci.image.ImageReference.from_string(fetch_url[len("oci://") :]).with_tag(
-                _oci_default_tag(spec)
-            )
+        if spack.oci.image.is_oci_url(fetch_url):
+            ref = ImageReference.from_url(fetch_url).with_tag(_oci_default_tag(spec))
 
             # Fetch the manifest
             try:
@@ -2283,7 +2281,7 @@ def get_keys(
         for layout_version in SUPPORTED_LAYOUT_VERSIONS:
             fetch_url = mirror.fetch_url
             # TODO: oci:// does not support signing.
-            if fetch_url.startswith("oci://"):
+            if spack.oci.image.is_oci_url(fetch_url):
                 continue
 
             if layout_version == 2:
@@ -2737,12 +2735,7 @@ class EtagIndexFetcherV2(IndexFetcher):
 class OCIIndexFetcher(IndexFetcher):
     def __init__(self, url_and_version: MirrorURLAndVersion, local_hash, urlopen=None) -> None:
         self.local_hash = local_hash
-
-        url = url_and_version.url
-
-        # Remove oci:// prefix
-        assert url.startswith("oci://")
-        self.ref = spack.oci.image.ImageReference.from_string(url[6:])
+        self.ref = spack.oci.image.ImageReference.from_url(url_and_version.url)
         self.urlopen = urlopen or spack.oci.opener.urlopen
 
     def conditional_fetch(self) -> FetchIndexResult:

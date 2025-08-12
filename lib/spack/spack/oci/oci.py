@@ -7,7 +7,6 @@ import json
 import os
 import urllib.error
 import urllib.parse
-import urllib.request
 from http.client import HTTPResponse
 from typing import List, NamedTuple, Tuple
 from urllib.request import Request
@@ -214,10 +213,7 @@ def upload_manifest(
 
 def image_from_mirror(mirror: spack.mirrors.mirror.Mirror) -> ImageReference:
     """Given an OCI based mirror, extract the URL and image name from it"""
-    url = mirror.push_url
-    if not url.startswith("oci://"):
-        raise ValueError(f"Mirror {mirror} is not an OCI mirror")
-    return ImageReference.from_string(url[6:])
+    return ImageReference.from_url(mirror.push_url)
 
 
 def blob_exists(

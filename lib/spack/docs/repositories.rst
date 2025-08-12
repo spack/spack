@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to set up and manage package repositories in Spack, enabling you to maintain custom packages and override built-in ones.
+
 .. _repositories:
 
-=================================
 Package Repositories (repos.yaml)
 =================================
 
@@ -16,25 +19,26 @@ Spack allows you to configure local and remote repositories using either the ``r
 
 This document describes how to set up and manage these package repositories.
 
----------------------------------------------
 Structure of an Individual Package Repository
 ---------------------------------------------
 
-An individual Spack package repository is a directory structured as follows::
+An individual Spack package repository is a directory structured as follows:
 
-  /path/to/repos/                   # the top-level dir is added to the Python search path
-    spack_repo/                     # every package repository is part of the spack_repo Python module
-      myrepo/                       # directory for the 'myrepo' repository (matches namespace)
-        repo.yaml                   # configuration file for this package repository
-        packages/                   # directory containing package directories
-          hdf5/                     # directory for the hdf5 package
-            package.py              # the package recipe file
-          mpich/                    # directory for the mpich package
-            package.py              # the package recipe file
-            mpich-1.9-bugfix.patch  # example patch file
-          trilinos/
-            package.py
-      ...
+.. code-block:: text
+
+   /path/to/repos/                   # the top-level dir is added to the Python search path
+     spack_repo/                     # every package repository is part of the spack_repo Python module
+       myrepo/                       # directory for the 'myrepo' repository (matches namespace)
+         repo.yaml                   # configuration file for this package repository
+         packages/                   # directory containing package directories
+           hdf5/                     # directory for the hdf5 package
+             package.py              # the package recipe file
+           mpich/                    # directory for the mpich package
+             package.py              # the package recipe file
+             mpich-1.9-bugfix.patch  # example patch file
+           trilinos/
+             package.py
+       ...
 
 * ``repo.yaml``.
   This file contains metadata for this specific repository, for example:
@@ -81,7 +85,6 @@ Package names can only contain lowercase characters ``a-z``, digits ``0-9`` and 
    The mapping between package names and directory names is one-to-one.
    Use ``spack list`` to see how Spack resolves the package names from the directory names.
 
---------------------------------------------
 Configuring Repositories with ``repos.yaml``
 --------------------------------------------
 
@@ -140,7 +143,6 @@ If the ``git`` URL is defined in a lower-precedence configuration (like Spack's 
       destination: ~/spack-packages
 
 **Updating and pinning.**
-
 Repos can be pinned to a git branch, tag, or commit.
 
 .. code-block:: yaml
@@ -159,26 +161,28 @@ If the repo is pinned to a branch or unpinned, ``spack repo update`` will pull t
 **Git repositories need a package repo index.**
 A single Git repository can contain one or more Spack package repositories. To enable Spack to discover these, the root of the Git repository should contain a ``spack-repo-index.yaml`` file. This file lists the relative paths to package repository roots within the git repo.
 
-For example, assume a Git repository at ``https://example.com/my_org/my_pkgs.git`` has the following structure::
+For example, assume a Git repository at ``https://example.com/my_org/my_pkgs.git`` has the following structure
 
-  my_pkgs.git/
-    spack-repo-index.yaml     # metadata file at the root of the Git repo
-    ...
-    spack_pkgs/
-      spack_repo/
-        my_org/
-          comp_sci_packages/  # package repository for computer science packages
-            repo.yaml
-            packages/
-              hdf5/
-                package.py
-              mpich/
-                package.py
-          physics_packages/   # package repository for physics packages
-            repo.yaml
-            packages/
-              gromacs/
-                package.py
+.. code-block:: text
+
+   my_pkgs.git/
+     spack-repo-index.yaml     # metadata file at the root of the Git repo
+     ...
+     spack_pkgs/
+       spack_repo/
+         my_org/
+           comp_sci_packages/  # package repository for computer science packages
+             repo.yaml
+             packages/
+               hdf5/
+                 package.py
+               mpich/
+                 package.py
+           physics_packages/   # package repository for physics packages
+             repo.yaml
+             packages/
+               gromacs/
+                 package.py
 
 The ``spack-repo-index.yaml`` in the root of ``https://example.com/my_org/my_pkgs.git`` should look like this:
 
@@ -227,7 +231,6 @@ By default, Spack is configured to use this as a Git-based repository. The defau
 
 .. _namespaces:
 
-----------
 Namespaces
 ----------
 
@@ -255,21 +258,23 @@ Nested Namespaces for Organizations
 
 As we have already seen in the Git-based package repositories example above, you can create nested namespaces by using periods in the namespace name.
 For example, a repository for packages related to computation at LLNL might have the namespace ``llnl.comp``, while one for physical and life sciences could be ``llnl.pls``.
-On the file system, this requires a directory structure like this::
+On the file system, this requires a directory structure like this:
 
-  /path/to/repos/
-    spack_repo/
-      llnl/
-        comp/
-          repo.yaml  # Contains namespace: llnl.comp
-          packages/
-            mpich/
-              package.py
-        pls/
-          repo.yaml  # Contains namespace: llnl.pls
-          packages/
-            hdf5/
-              package.py
+.. code-block:: text
+
+   /path/to/repos/
+     spack_repo/
+       llnl/
+         comp/
+           repo.yaml  # Contains namespace: llnl.comp
+           packages/
+             mpich/
+               package.py
+         pls/
+           repo.yaml  # Contains namespace: llnl.pls
+           packages/
+             hdf5/
+               package.py
 
 Uniqueness
 ^^^^^^^^^^
@@ -311,11 +316,10 @@ Packages differing only by namespace will have different hashes:
 
 All Spack commands that take a package :ref:`spec <sec-specs>` also accept a fully qualified spec with a namespace, allowing you to be specific:
 
-.. code-block:: console
+.. code-block:: spec
 
-  spack uninstall llnl.comp.mpich
+  $ spack uninstall llnl.comp.mpich
 
--------------------------------------
 Search Order and Overriding Packages
 -------------------------------------
 
@@ -327,20 +331,22 @@ This search order allows you to override built-in packages.
 If you have your own ``mpich`` in a repository ``my_custom_repo``, and ``my_custom_repo`` is listed before ``builtin`` in your ``repos.yaml``, Spack will use your version of ``mpich`` by default.
 
 Suppose your effective (merged) ``repos.yaml`` implies the following order:
-1.  ``proto`` (local repo at ``~/my_spack_repos/spack_repo/proto_repo``)
-2.  ``llnl`` (local repo at ``/usr/local/repos/spack_repo/llnl_repo``)
-3.  ``builtin`` (Spack's default packages from `spack/spack-packages`)
+
+1. ``proto`` (local repo at ``~/my_spack_repos/spack_repo/proto_repo``)
+2. ``llnl`` (local repo at ``/usr/local/repos/spack_repo/llnl_repo``)
+3. ``builtin`` (Spack's default packages from ``spack/spack-packages``)
 
 And the packages are:
-  +--------------+------------------------------------------------+-----------------------------+
-  | Namespace    | Source                                         | Packages                    |
-  +==============+================================================+=============================+
-  | ``proto``    | ``~/my_spack_repos/spack_repo/proto_repo``     | ``mpich``                   |
-  +--------------+------------------------------------------------+-----------------------------+
-  | ``llnl``     | ``/usr/local/repos/spack_repo/llnl_repo``      | ``hdf5``                    |
-  +--------------+------------------------------------------------+-----------------------------+
-  | ``builtin``  | `spack/spack-packages` (Git)                   | ``mpich``, ``hdf5``, others |
-  +--------------+------------------------------------------------+-----------------------------+
+
++--------------+------------------------------------------------+-----------------------------+
+| Namespace    | Source                                         | Packages                    |
++==============+================================================+=============================+
+| ``proto``    | ``~/my_spack_repos/spack_repo/proto_repo``     | ``mpich``                   |
++--------------+------------------------------------------------+-----------------------------+
+| ``llnl``     | ``/usr/local/repos/spack_repo/llnl_repo``      | ``hdf5``                    |
++--------------+------------------------------------------------+-----------------------------+
+| ``builtin``  | `spack/spack-packages` (Git)                   | ``mpich``, ``hdf5``, others |
++--------------+------------------------------------------------+-----------------------------+
 
 If ``hdf5`` depends on ``mpich``:
 
@@ -355,7 +361,7 @@ You can force a particular repository's package using a fully qualified name:
 
 To see which repositories will be used for a build *before* installing, use ``spack spec -N``:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack spec -N hdf5
    llnl.hdf5@1.10.0
@@ -370,7 +376,6 @@ To see which repositories will be used for a build *before* installing, use ``sp
 
 .. _cmd-spack-repo:
 
---------------------------
 The ``spack repo`` Command
 --------------------------
 
@@ -422,14 +427,16 @@ To create the directory structure for a new, empty local repository:
   ==> To register it with spack, run this command:
     spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
 
-This command creates the following structure::
+This command creates the following structure:
 
-  ~/my_spack_projects/
-    spack_repo/
-      myorg/
-        projectx/
-          repo.yaml      # Contains namespace: myorg.projectx
-          packages/      # Empty directory for new package.py files
+.. code-block:: text
+
+   ~/my_spack_projects/
+     spack_repo/
+       myorg/
+         projectx/
+           repo.yaml      # Contains namespace: myorg.projectx
+           packages/      # Empty directory for new package.py files
 
 The ``<target_dir>`` is where the ``spack_repo/<namespace_parts>`` hierarchy will be created.
 The ``<namespace>`` can be simple (e.g., ``myrepo``) or nested (e.g., ``myorg.projectx``), and Spack will create the corresponding directory structure.
@@ -515,7 +522,6 @@ Spack will then use ``/my/custom/path/for/spack-packages`` for the ``builtin`` r
 If the directory doesn't exist, Spack will clone into it.
 If it exists and is a valid Git repository, Spack will use it.
 
---------------------------------
 Repository Namespaces and Python
 --------------------------------
 
@@ -529,14 +535,11 @@ This allows you to easily extend or subclass package classes from other reposito
 
 .. code-block:: python
 
-   # In your custom repository (e.g., namespace 'mycustom')
-   # in a package file, e.g., mycustom_mpich/package.py
-
-   from spack.package_base import PackageBase # Or other base class
+   # In a package file (e.g. my_custom_mpich/package.py) in your custom repo
    # Import the original Mpich class from the 'builtin' repository
    from spack_repo.builtin.packages.mpich.package import Mpich as BuiltinMpich
 
-   class MycustomMpich(BuiltinMpich):
+   class MyCustomMpich(BuiltinMpich):
        # Override versions, variants, or methods from BuiltinMpich
        version("3.5-custom", sha256="...")
 

@@ -4136,7 +4136,7 @@ class Spec:
         When formatting specs, key-value pairs are separated from preceding parts of the
         spec by whitespace. To avoid printing extra whitespace when the formatted
         attribute is not set, you can add whitespace to the key *inside* the braces of
-        the format string, e.g.:
+        the format string, e.g.::
 
             { namespace=namespace}
 
@@ -4622,25 +4622,31 @@ class Spec:
 
         For example, suppose we have the following dependency graph:
 
-            T
-            | \
-            Z<-H
+        .. code-block:: text
 
-        Spec T depends on H and Z, and H also depends on Z. Now we want to use
-        a different H, called H'. This function can be used to splice in H' to
-        create a new spec, called T*. If H' was built with Z', then transitive
-        "True" will ensure H' and T* both depend on Z':
+           T
+           | \\
+           Z<-H
 
-            T*
-            | \
-            Z'<-H'
+        Spec ``T`` depends on ``H`` and ``Z``, and ``H`` also depends on ``Z``. Now we want to use
+        a different ``H``, called ``H'``. This function can be used to splice in ``H'`` to
+        create a new spec, called ``T*``. If ``H'`` was built with ``Z'``, then transitive
+        "True" will ensure ``H'`` and ``T*`` both depend on ``Z'``:
 
-        If transitive is "False", then H' and T* will both depend on
-        the original Z, resulting in a new H'*
+        .. code-block:: text
 
-            T*
-            | \
-            Z<-H'*
+           T*
+           | \\
+           Z'<-H'
+
+        If transitive is "False", then ``H'`` and ``T*`` will both depend on
+        the original ``Z``, resulting in a new ``H'*``:
+
+        .. code-block:: text
+
+           T*
+           | \\
+           Z<-H'*
 
         Provenance of the build is tracked through the "build_spec" property
         of the spliced spec and any correspondingly modified dependency specs.

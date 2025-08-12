@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn about the ROCmPackage helper in Spack, which provides standard variants, dependencies, and conflicts for building packages that target AMD GPUs.
+
 .. _rocmpackage:
 
-------
 ROCm
 ------
 
@@ -13,9 +16,8 @@ it provides standard variants, dependencies, and conflicts to facilitate buildin
 packages targeting AMD GPUs.
 
 You can find the source for this package (and suggestions for setting up your ``packages.yaml`` file) at
-`<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/rocm.py>`__.
+`<https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/build_systems/rocm.py>`__.
 
-^^^^^^^^
 Variants
 ^^^^^^^^
 
@@ -32,13 +34,11 @@ This package provides the following variants:
   Valid values are the names of the GPUs (e.g., ``gfx701``), which are maintained
   in the ``amdgpu_targets`` property.
 
-^^^^^^^^^^^^
 Dependencies
 ^^^^^^^^^^^^
 
 This package defines basic ROCm dependencies, including ``llvm`` and ``hip``.
 
-^^^^^^^^^
 Conflicts
 ^^^^^^^^^
 
@@ -50,7 +50,6 @@ when ``rocm`` is disabled.
 Refer to `Conflicts <https://spack.readthedocs.io/en/latest/packaging_guide.html?highlight=conflicts#conflicts>`__
 for more information on package conflicts.
 
-^^^^^^^
 Methods
 ^^^^^^^
 
@@ -58,14 +57,12 @@ This package provides one custom helper method, which is used to build
 standard AMD HIP compiler flags.
 
 **hip_flags**
-
     This built-in static method returns the appropriately formatted
     ``--amdgpu-target`` build option for ``hipcc``.
 
     This method must be explicitly called when you are creating the
     arguments for your build in order to use the values.
 
-^^^^^^
 Usage
 ^^^^^^
 

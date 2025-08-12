@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide to creating custom build systems in Spack for packaging software with its own build scripts or adding support for new build systems.
+
 .. _custompackage:
 
---------------------
 Custom Build Systems
 --------------------
 
@@ -26,7 +29,6 @@ packages as examples. ``perl``'s build system is a hand-written
 ``Configure`` shell script, while ``cmake`` bootstraps itself during
 installation. Both of these packages require custom build systems.
 
-^^^^^^^^^^
 Base class
 ^^^^^^^^^^
 
@@ -42,7 +44,6 @@ If you are creating a new build system base class, you should inherit
 from ``PackageBase``. This is the superclass for all build systems in
 Spack.
 
-^^^^^^
 Phases
 ^^^^^^
 
@@ -68,7 +69,6 @@ If we look at the ``cmake`` example, this tells Spack's ``PackageBase``
 class to run the ``bootstrap``, ``build``, and ``install`` functions
 in that order. It is now up to you to define these methods.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Phase and phase_args functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -111,9 +111,8 @@ function instead of ``configure``:
 Again, there is a ``bootstrap_args`` function that determines the
 correct bootstrap flags to use.
 
-^^^^^^^^^^^^^^^^^^^^
-run_before/run_after
-^^^^^^^^^^^^^^^^^^^^
+``run_before`` / ``run_after``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Occasionally, you may want to run extra steps either before or after
 a given phase. This applies not just to custom build systems, but to
@@ -146,11 +145,10 @@ before or after a particular phase. For example, in ``perl``, we see:
 This extra step automatically installs ``cpanm`` in addition to the
 base Perl installation.
 
-^^^^^^^^^^^^^^^^^^^^^
-on_package_attributes
-^^^^^^^^^^^^^^^^^^^^^
+``on_package_attributes``
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``run_before``/``run_after`` logic discussed above becomes
+The ``run_before`` / ``run_after`` logic discussed above becomes
 particularly powerful when combined with the ``@on_package_attributes``
 decorator. This decorator allows you to conditionally run certain
 functions depending on the attributes of that package. The most
@@ -168,7 +166,6 @@ if and only if this flag is set, we would use the following line:
 
    @on_package_attributes(run_tests=True)
 
-^^^^^^^
 Testing
 ^^^^^^^
 

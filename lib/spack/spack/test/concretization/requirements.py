@@ -8,6 +8,7 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.error
+import spack.installer
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -310,6 +311,27 @@ packages:
     s2 = spack.concretize.concretize_one("x")
     # The requirement forces choosing the eariler version
     assert s2.satisfies("@1.0")
+
+
+def test_require_hash(mock_fetch, install_mockery, concretize_scope, test_repo):
+    """Apply a requirement to use a specific hash.
+
+    Install multiple hashes to ensure non-default concretization"""
+    s1 = spack.concretize.concretize_one("x@1.1")
+    s2 = spack.concretize.concretize_one("x@1.0")
+
+    builder = spack.installer.PackageInstaller([s1.package, s2.package], fake=True)
+    builder.install()
+
+    conf_str = f"""\
+packages:
+  x:
+    require: x/{s2.dag_hash()}
+"""
+    update_packages_config(conf_str)
+
+    test_spec = spack.concretize.concretize_one("x")
+    assert test_spec == s2
 
 
 def test_multiple_packages_requirements_are_respected(concretize_scope, test_repo):

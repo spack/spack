@@ -2,9 +2,12 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover how to create, use, and manage build caches in Spack to share pre-built binary packages and speed up installations.
+
 .. _binary_caches:
 
-============
 Build Caches
 ============
 
@@ -27,7 +30,6 @@ significantly faster.
     caches refer to mirrors that provide prebuilt packages.
 
 
-----------------------
 Creating a Build Cache
 ----------------------
 
@@ -58,7 +60,6 @@ Note that ``ninja`` must be installed locally for this to work.
 
 Once you have a build cache, you can add it as a mirror, as discussed next.
 
----------------------------------------
 Finding or Installing Build Cache Files
 ---------------------------------------
 
@@ -112,7 +113,7 @@ use it during concretization and installation. That means that you can expect
 ``spack install ninja`` to fetch prebuilt packages from the mirror. Let's
 verify by reinstalling ninja:
 
-.. code-block:: console
+.. code-block:: spec
 
     $ spack uninstall ninja
     $ spack install ninja
@@ -153,27 +154,23 @@ We use ``--install`` and ``--trust`` to say that we are installing keys to our
 keyring and trusting all downloaded keys.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 List of Popular Build Caches
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
 
 
-------------------------------
 Creating and Trusting GPG keys
 ------------------------------
 
 .. _cmd-spack-gpg:
 
-^^^^^^^^^^^^^
 ``spack gpg``
 ^^^^^^^^^^^^^
 
 Spack has support for signing and verifying packages using GPG keys.
 A separate keyring is used for Spack, so any keys available in the user's home directory are not used.
 
-^^^^^^^^^^^^^^^^^^
 ``spack gpg init``
 ^^^^^^^^^^^^^^^^^^
 
@@ -182,7 +179,6 @@ Keys stored in :file:`var/spack/gpg` are the default keys for a Spack installati
 These keys may be imported by running ``spack gpg init``.
 This will import the default keys into the keyring as trusted keys.
 
-^^^^^^^^^^^^^
 Trusting keys
 ^^^^^^^^^^^^^
 
@@ -202,7 +198,6 @@ If you would like to remove keys from your keyring, use instead:
 
 Key IDs can be email addresses, names, or (best) fingerprints.
 
-^^^^^^^^^^^^^
 Creating keys
 ^^^^^^^^^^^^^
 
@@ -210,7 +205,7 @@ You may also create your own key so that you may sign your own packages using
 
 .. code-block:: console
 
-   spack gpg create <name> <email>
+   $ spack gpg create <name> <email>
 
 By default, the key has no expiration, but it may be set with the ``--expires <date>`` flag.
 It is also recommended to add a comment as to the use of the key using the ``--comment <comment>`` flag.
@@ -219,20 +214,18 @@ Secret keys may also be later exported using the ``spack gpg export <location> [
 
 .. admonition:: Key creation speed
    :class: tip
-   :collapsible:
 
-      The creation of a new GPG key requires generating a lot of random numbers.
-      Depending on the entropy produced on your system, the entire process may take a long time (*even appearing to hang*).
-      Virtual machines and cloud instances are particularly likely to display this behavior.
+   The creation of a new GPG key requires generating a lot of random numbers.
+   Depending on the entropy produced on your system, the entire process may take a long time (*even appearing to hang*).
+   Virtual machines and cloud instances are particularly likely to display this behavior.
 
-      To speed it up, you may install tools like ``rngd``, which is usually available as a package in the host OS.
-      Another alternative is ``haveged``, which can be installed on RHEL/CentOS machines.
+   To speed it up, you may install tools like ``rngd``, which is usually available as a package in the host OS.
+   Another alternative is ``haveged``, which can be installed on RHEL/CentOS machines.
 
-      `This Digital Ocean tutorial
-      <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
-      provides a good overview of sources of randomness.
+   `This Digital Ocean tutorial
+   <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
+   provides a good overview of sources of randomness.
 
--------------------
 Build Cache Signing
 -------------------
 
@@ -268,7 +261,6 @@ Or you can directly edit the ``mirrors.yaml`` configuration file:
 
 See also :ref:`mirrors`.
 
-----------
 Relocation
 ----------
 
@@ -297,7 +289,6 @@ section of the configuration:
 
 .. _binary_caches_oci:
 
----------------------------------
 Automatic Push to a Build Cache
 ---------------------------------
 
@@ -331,19 +322,13 @@ will have the same effect as
 
     Packages are automatically pushed to a build cache only if they are built from source.
 
------------------------------------------
 OCI / Docker V2 Registries as Build Cache
 -----------------------------------------
 
-Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io,
-GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others
-as build caches. This is a convenient way to share binaries using public
-infrastructure or to cache Spack-built binaries in GitHub Actions and
-GitLab CI.
+Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io, GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others as build caches.
+This is a convenient way to share binaries using public infrastructure or to cache Spack-built binaries in GitHub Actions and GitLab CI.
 
-To get started, configure an OCI mirror using ``oci://`` as the scheme
-and optionally specify variables that hold the username and password (or
-personal access token) for the registry:
+To get started, configure an OCI mirror using ``oci://`` as the scheme and optionally specify variables that hold the username and password (or personal access token) for the registry:
 
 .. code-block:: console
 
@@ -351,8 +336,8 @@ personal access token) for the registry:
                        --oci-password-variable REGISTRY_TOKEN \
                        my_registry oci://example.com/my_image
 
-Spack follows the naming conventions of Docker, with Docker Hub as the default
-registry. To use Docker Hub, you can omit the registry domain:
+Spack follows the naming conventions of Docker, with Docker Hub as the default registry.
+To use Docker Hub, you can omit the registry domain:
 
 .. code-block:: console
 
@@ -367,14 +352,15 @@ From here, you can use the mirror as any other build cache:
     $ spack buildcache push my_registry <specs...>  # push to the registry
     $ spack install <specs...>  # or install from the registry
 
-A unique feature of build caches on top of OCI registries is that it's incredibly
-easy to generate a runnable container image with the binaries installed. This
-is a great way to make applications available to users without requiring them to
-install Spack -- all you need is Docker, Podman, or any other OCI-compatible container
-runtime.
+.. note::
 
-To produce container images, all you need to do is add the ``--base-image`` flag
-when pushing to the build cache:
+   Spack defaults to ``https`` for OCI registries, and does not fall back to ``http`` in case of failure.
+   For local registries which use ``http`` instead of ``https``, you can specify ``oci+http://localhost:5000/my_image``.
+
+A unique feature of build caches on top of OCI registries is that it's incredibly easy to generate a runnable container image with the binaries installed.
+This is a great way to make applications available to users without requiring them to install Spack -- all you need is Docker, Podman, or any other OCI-compatible container runtime.
+
+To produce container images, all you need to do is add the ``--base-image`` flag when pushing to the build cache:
 
 .. code-block:: console
 
@@ -385,17 +371,15 @@ when pushing to the build cache:
     root@e4c2b6f6b3f4:/# ninja --version
     1.11.1
 
-If ``--base-image`` is not specified, distroless images are produced. In practice,
-you won't be able to run these as containers because they don't come with libc and
-other system dependencies. However, they are still compatible with tools like
-``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
+If ``--base-image`` is not specified, distroless images are produced.
+In practice, you won't be able to run these as containers because they don't come with libc and other system dependencies.
+However, they are still compatible with tools like ``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
 
 .. note::
     The Docker ``overlayfs2`` storage driver is limited to 128 layers, above which a
     ``max depth exceeded`` error may be produced when pulling the image. There
     are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_.
 
-------------------------------------
 Spack Build Cache for GitHub Actions
 ------------------------------------
 
@@ -413,11 +397,9 @@ which lets you get started quickly. See the following resources for more informa
 
 .. _cmd-spack-buildcache:
 
---------------------
 ``spack buildcache``
 --------------------
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache push``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -436,7 +418,6 @@ Arguments       Description
 ``-y``          answer yes to all questions about creating unsigned build caches
 ==============  ========================================================================================================================
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache list``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -450,7 +431,6 @@ Arguments       Description
 
 E.g., ``spack buildcache list gcc`` will print only commands to install ``gcc`` package(s).
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache install``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -465,7 +445,6 @@ Arguments       Description
 ``-y``          answer yes to all to don't verify package with gpg questions
 ==============  ==============================================================================================
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache keys``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -480,7 +459,6 @@ Arguments  Description
 
 .. _build_cache_layout:
 
-------------------
 Build Cache Layout
 ------------------
 
@@ -492,9 +470,11 @@ least two other files stored as content-addressed blobs. These files include a s
 metadata file, as well as the installation directory of the package stored as
 a compressed archive file. Binary package manifest files are named to indicate
 the package name and version, as well as the hash of the concrete spec. For
-example::
+example:
 
-  gcc-runtime-12.3.0-qyu2lvgt3nxh7izxycugdbgf5gsdpkjt.spec.manifest.json
+.. code-block:: text
+
+   gcc-runtime-12.3.0-qyu2lvgt3nxh7izxycugdbgf5gsdpkjt.spec.manifest.json
 
 would contain the manifest for a binary package of ``gcc-runtime@12.3.0``.
 The ID of the built package is defined to be the DAG hash of the concrete spec
@@ -502,27 +482,29 @@ and exists in the name of the file as well. The ID distinguishes a particular
 binary package from all other binary packages with the same package name and
 version. Below is an example binary package manifest file. Such a file would
 live in the versioned spec manifests directory of a binary mirror, for example,
-``v3/manifests/spec/``::
+``v3/manifests/spec/``:
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 10731083,
-        "mediaType": "application/vnd.spack.install.v2.tar+gzip",
-        "compression": "gzip",
-        "checksumAlgorithm": "sha256",
-        "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
-      },
-      {
-        "contentLength": 1000,
-        "mediaType": "application/vnd.spack.spec.v5+json",
-        "compression": "gzip",
-        "checksumAlgorithm": "sha256",
-        "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
-      }
-    ]
-  }
+.. code-block:: json
+
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 10731083,
+         "mediaType": "application/vnd.spack.install.v2.tar+gzip",
+         "compression": "gzip",
+         "checksumAlgorithm": "sha256",
+         "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
+       },
+       {
+         "contentLength": 1000,
+         "mediaType": "application/vnd.spack.spec.v5+json",
+         "compression": "gzip",
+         "checksumAlgorithm": "sha256",
+         "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
+       }
+     ]
+   }
 
 The manifest points to both the compressed tar file as well as the compressed
 spec metadata file and contains the checksum of each. This checksum
@@ -534,33 +516,35 @@ since the binary package was pushed. Spack stores all data files (including comp
 tar files, spec metadata, indices, public keys, etc.) within a ``blobs/<hash-algorithm>/``
 directory, using the first two characters of the checksum as a subdirectory
 to reduce the number of files in a single folder. Here is a depiction of the
-organization of binary mirror contents::
+organization of binary mirror contents:
 
-  mirror_directory/
-    v3/
-      layout.json
-      manifests/
-        spec/
-          gcc-runtime/
-            gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
-          gmake/
-            gmake-4.4.1-lpr4j77rcgkg5536tmiuzwzlcjsiomph.spec.manifest.json
-          compiler-wrapper/
-            compiler-wrapper-1.0-s7ieuyievp57vwhthczhaq2ogowf3ohe.spec.manifest.json
-        index/
-          index.manifest.json
-        key/
-          75BC0528114909C076E2607418010FFAD73C9B07.key.manifest.json
-          keys.manifest.json
-    blobs/
-      sha256/
-        0f/
-          0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210
-        fb/
-          fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041
-        2a/
-          2a21836d206ccf0df780ab0be63fdf76d24501375306a35daa6683c409b7922f
-        ...
+.. code-block:: text
+
+   mirror_directory/
+     v3/
+       layout.json
+       manifests/
+         spec/
+           gcc-runtime/
+             gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
+           gmake/
+             gmake-4.4.1-lpr4j77rcgkg5536tmiuzwzlcjsiomph.spec.manifest.json
+           compiler-wrapper/
+             compiler-wrapper-1.0-s7ieuyievp57vwhthczhaq2ogowf3ohe.spec.manifest.json
+         index/
+           index.manifest.json
+         key/
+           75BC0528114909C076E2607418010FFAD73C9B07.key.manifest.json
+           keys.manifest.json
+     blobs/
+       sha256/
+         0f/
+           0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210
+         fb/
+           fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041
+         2a/
+           2a21836d206ccf0df780ab0be63fdf76d24501375306a35daa6683c409b7922f
+         ...
 
 Files within the ``manifests`` directory are organized into subdirectories by
 the type of entity they represent. Binary package manifests live in the ``spec/``
@@ -580,20 +564,22 @@ the file named with the complete checksum value.
 As mentioned above, every entity in a binary mirror (aka build cache) is stored
 as a content-addressed blob pointed to by a manifest. While an example spec
 manifest (i.e., a manifest for a binary package) is shown above, here is what
-the manifest of a build cache index looks like::
+the manifest of a build cache index looks like:
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 6411,
-        "mediaType": "application/vnd.spack.db.v8+json",
-        "compression": "none",
-        "checksumAlgorithm": "sha256",
-        "checksum": "225a3e9da24d201fdf9d8247d66217f5b3f4d0fc160db1498afd998bfd115234"
-      }
-    ]
-  }
+.. code-block:: json
+
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 6411,
+         "mediaType": "application/vnd.spack.db.v8+json",
+         "compression": "none",
+         "checksumAlgorithm": "sha256",
+         "checksum": "225a3e9da24d201fdf9d8247d66217f5b3f4d0fc160db1498afd998bfd115234"
+       }
+     ]
+   }
 
 Some things to note about this manifest are that it points to a blob that is not
 compressed (``compression: "none"``) and that the ``mediaType`` is one we have
@@ -603,35 +589,39 @@ index manifests. Once that changes, you may start to see these indices stored as
 compressed blobs.
 
 For completeness, here are examples of manifests for the other two types of entities
-you might find in a Spack build cache. First, a public key manifest::
+you might find in a Spack build cache. First, a public key manifest:
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 2472,
-        "mediaType": "application/pgp-keys",
-        "compression": "none",
-        "checksumAlgorithm": "sha256",
-        "checksum": "9fc18374aebc84deb2f27898da77d4d4410e5fb44c60c6238cb57fb36147e5c7"
-      }
-    ]
-  }
+.. code-block:: json
 
-Note the ``mediaType`` of ``application/pgp-keys``. Finally, a public key index manifest::
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 2472,
+         "mediaType": "application/pgp-keys",
+         "compression": "none",
+         "checksumAlgorithm": "sha256",
+         "checksum": "9fc18374aebc84deb2f27898da77d4d4410e5fb44c60c6238cb57fb36147e5c7"
+       }
+     ]
+   }
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 56,
-        "mediaType": "application/vnd.spack.keyindex.v1+json",
-        "compression": "none",
-        "checksumAlgorithm": "sha256",
-        "checksum": "29b3a0eb6064fd588543bc43ac7d42d708a69058dafe4be0859e3200091a9a1c"
-      }
-    ]
-  }
+Note the ``mediaType`` of ``application/pgp-keys``. Finally, a public key index manifest:
+
+.. code-block:: json
+
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 56,
+         "mediaType": "application/vnd.spack.keyindex.v1+json",
+         "compression": "none",
+         "checksumAlgorithm": "sha256",
+         "checksum": "29b3a0eb6064fd588543bc43ac7d42d708a69058dafe4be0859e3200091a9a1c"
+       }
+     ]
+   }
 
 Again, note the ``mediaType`` of ``application/vnd.spack.keyindex.v1+json``. Also, note
 that both the above manifest examples refer to uncompressed blobs; this is for the same

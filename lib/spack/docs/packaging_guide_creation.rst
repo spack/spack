@@ -2,6 +2,10 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A guide for developers and administrators on how to package software for Spack, covering the structure of a package, creating and editing packages, and defining dependencies and variants.
+
 .. list-table::
    :widths: 25 25 25 25
    :header-rows: 0
@@ -12,7 +16,6 @@
      - :doc:`3. Testing <packaging_guide_testing>`
      - :doc:`4. Advanced <packaging_guide_advanced>`
 
-===================================
 Packaging Guide: defining a package
 ===================================
 
@@ -37,7 +40,6 @@ Second, it has many powerful features to help make package writing easy.
 .. _setting-up-for-package-development:
 
 
-----------------------------------
 Setting up for package development
 ----------------------------------
 
@@ -49,21 +51,21 @@ Once you have a fork, clone it:
 
 .. code-block:: console
 
-   git clone --depth=100 git@github.com:YOUR-USERNAME/spack-packages.git ~/spack-packages
-   cd ~/spack-packages
-   git remote add --track develop upstream git@github.com:spack/spack-packages.git
+   $ git clone --depth=100 git@github.com:YOUR-USERNAME/spack-packages.git ~/spack-packages
+   $ cd ~/spack-packages
+   $ git remote add --track develop upstream git@github.com:spack/spack-packages.git
 
 Then configure Spack to use your local repository:
 
 .. code-block:: console
 
-   spack repo set --destination ~/spack-packages builtin
+   $ spack repo set --destination ~/spack-packages builtin
 
 Before starting work, it's useful to create a new branch in your local repository.
 
 .. code-block:: console
 
-   git checkout -b add-my-package
+   $ git checkout -b add-my-package
 
 Lastly, verify that Spack is picking up the right repository by checking the location of a known package, like ``zlib``:
 
@@ -74,7 +76,6 @@ Lastly, verify that Spack is picking up the right repository by checking the loc
 
 With this setup, you can conveniently access the package files, and contribute changes back to Spack.
 
-----------------------
 Structure of a package
 ----------------------
 
@@ -127,7 +128,6 @@ The package class is named after the package, and can roughly be divided into tw
 In this part of the packaging guide we will cover the **metadata and directives** in detail.
 In the :doc:`second part <packaging_guide_build>`, we will cover the **build instructions**, including how to write custom build logic for different build systems.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Package Names and the Package Directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -153,7 +153,6 @@ Usually the package name coincides with the directory name on the filesystem: th
    This ensures that every package directory is a valid Python module name.
 
 
-^^^^^^^^^^^^^^^^^^^
 Package class names
 ^^^^^^^^^^^^^^^^^^^
 
@@ -171,7 +170,6 @@ Here are some examples:
 
 In general, you won't have to remember this naming convention because :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
 
------------------------------
 Creating and editing packages
 -----------------------------
 
@@ -182,7 +180,6 @@ It can also help you edit existing packages, so you don't have to navigate to th
 
 .. _controlling-the-editor:
 
-^^^^^^^^^^^^^^^^^^^^^^
 Controlling the editor
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -193,17 +190,18 @@ The order of precedence is:
 * ``VISUAL``: standard environment variable for full-screen editors like ``vim`` or ``emacs``;
 * ``EDITOR``: older environment variable for your editor.
 
-You can set any of these to the command you want to run, e.g., in ``bash`` you might run one of these::
+You can set any of these to the command you want to run, e.g., in ``bash`` you might run one of these:
 
-  export VISUAL=vim
-  export EDITOR="emacs -nw"
-  export SPACK_EDITOR=nano
+.. code-block:: console
+
+   $ export VISUAL=vim
+   $ export EDITOR="emacs -nw"
+   $ export SPACK_EDITOR=nano
 
 If Spack finds none of these variables set, it will look for ``vim``, ``vi``, ``emacs``, ``nano``, and ``notepad``, in that order.
 
 .. _cmd-spack-create:
 
-^^^^^^^^^^^^^^^^^^^^^
 Creating new packages
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -334,7 +332,6 @@ The rest of the tasks you need to do are as follows:
    Specifics will differ depending on the package and its build system.
    :ref:`installation_process` is covered in detail later.
 
-""""""""""""""""""""""""""""""""
 Further package creation options
 """"""""""""""""""""""""""""""""
 
@@ -356,7 +353,6 @@ A complete list of available build system templates can be found by running ``sp
 
 .. _cmd-spack-edit:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
 Editing existing packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -392,7 +388,6 @@ without specifying a package name, which will open the directory containing all 
 
 Finally, the commands ``spack location --repo`` and ``spack cd --repo`` help you navigate to the root of the package repository.
 
-------------------------
 Source code and versions
 ------------------------
 
@@ -401,7 +396,6 @@ Typically every package version has a corresponding source code archive, which S
 
 .. _versions-and-fetching:
 
-^^^^^^^^^^^^^^^^^
 Versions and URLs
 ^^^^^^^^^^^^^^^^^
 
@@ -432,9 +426,11 @@ Notice how you only have to specify the URL once, in the ``url`` field.
 Spack is smart enough to extrapolate the URL for each version based on the version number and download version ``8.2.0`` of the ``Foo`` package above from ``http://example.com/foo-8.2.0.tar.gz``.
 
 If the URL is particularly complicated or changes based on the release, you can override the default URL generation algorithm by defining your own ``url_for_version()`` function.
-For example, the download URL for OpenMPI contains the ``major.minor`` version in one spot and the ``major.minor.patch`` version in another::
+For example, the download URL for OpenMPI contains the ``major.minor`` version in one spot and the ``major.minor.patch`` version in another:
 
-    https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
+.. code-block:: text
+
+   https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 
 In order to handle this, you can define a ``url_for_version()`` function
 like so:
@@ -492,7 +488,7 @@ If a URL cannot be derived systematically, or there is a special URL for one of 
    version(
        "8.2.1",
        sha256="91ee5e9f42ba3d34e414443b36a27b797a56a47aad6bb1e4c1769e69c77ce0ca",
-       url="http://example.com/foo-8.2.1-special-version.tar.gz"
+       url="http://example.com/foo-8.2.1-special-version.tar.gz",
    )
 
 
@@ -510,33 +506,38 @@ Spack will use the nearest URL *before* the requested version.
 This is useful for packages that have an easy to extrapolate URL, but keep changing their URL format every few releases.
 With this method, you only need to specify the ``url`` when the URL changes.
 
-^^^^^^^^^^^^^^^^^^^^^
+.. _checksum-verification:
+
 Checksum verification
 ^^^^^^^^^^^^^^^^^^^^^
 
 In the above example we see that each version is associated with a ``sha256`` checksum.
 Spack uses these checksums to verify that downloaded source code has not been modified, corrupted or compromised.
-This is both a critical security feature and a way to ensure reproducibility of builds.
+Therefore, Spack requires that all URL downloads have a checksum, and refuses to install packages when checksum verification fails.
 
-Spack considers a download *trusted* if its contents can be verified.
-For downloads from URLs, this is done by providing a ``sha256`` checksum for the archive.
-For :ref:`Git downloads <git-fetch>`, which we will cover in more detail later, this is done by specifying a full commit hash.
+.. note::
 
-Spack requires that all URL downloads have a checksum, and refuses to install packages when checksum verification fails.
-While this check can be disabled for development with ``spack install --no-checksum``, it is not recommended.
+   While this requirement can be disabled for development with ``spack install --no-checksum``, it is **not recommended**.
 
-For URL downloads, Spack supports multiple cryptographic hash algorithms, including ``sha256``, ``sha384``, and ``sha512``.
-We currently recommend ``sha256``.
+.. warning::
+
+   **Trusted Downloads.**
+   It is critical from a security and reproducibility standpoint that Spack be able to verify the downloaded source.
+   This is accomplished using a hash.
+
+   For URL downloads, Spack supports multiple cryptographic hash algorithms, including ``sha256`` (recommended), ``sha384`` and ``sha512``.
+   See :ref:`version urls <versions-and-fetching>` for more information.
+
+   For repository downloads, which we will cover in more detail later, this is done by specifying a **full commit hash** (e.g., :ref:`git <git-commits>`, :ref:`hg <hg-revisions>`).
+
 
 .. _cmd-spack-checksum:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Automatically adding new versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``spack checksum`` command can be used to automate the process of adding new versions to a package, assuming the package's download URLs follow a consistent pattern.
 
-""""""""""""""""""
 ``spack checksum``
 """"""""""""""""""
 
@@ -584,7 +585,6 @@ See the documentation on :ref:`attribute_list_url` and :ref:`attribute_list_dept
 
 .. _attribute_list_url:
 
-""""""""""""
 ``list_url``
 """"""""""""
 
@@ -601,7 +601,6 @@ For example, the following package has a ``list_url`` attribute that points to a
 
 .. _attribute_list_depth:
 
-""""""""""""""
 ``list_depth``
 """"""""""""""
 
@@ -629,7 +628,6 @@ By default, Spack only looks at the top-level page available at ``list_url``.
 Note that here, this implies 1 level of subdirectories, as the ``mpich`` website is structured much like a filesystem.
 But ``list_depth`` really refers to link depth when spidering the page.
 
-^^^^^^^^^^^^^^^^^^^^^^^
 Mirrors of the main URL
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -654,7 +652,9 @@ For that, Spack goes a step further and defines a mixin class that takes care of
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/autoconf/package.py
    :lines: 9-18
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _preferred_versions:
+
 Preferring versions over others
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -670,9 +670,9 @@ In this case, you can mark an older version as preferred using the ``preferred=T
 
 See the section on :ref:`version ordering <version-comparison>` for more details and exceptions on how the latest version is computed.
 
+
 .. _deprecate:
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Deprecating old versions
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -702,7 +702,7 @@ This has two effects.
 First, ``spack info`` will no longer advertise that version.
 Second, commands like ``spack install`` that fetch the package will require user approval:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install openssl@1.0.1e
    ==> Warning: openssl@1.0.1e is deprecated and may be removed in a future Spack release.
@@ -720,14 +720,14 @@ This gives users a chance to complain about the deprecation in case the old vers
 If you require a deprecated version of a package, simply submit a PR to remove ``deprecated=True`` from the package.
 However, you may be asked to help maintain this version of the package if the current maintainers are unwilling to support this older version.
 
+
 .. _version-comparison:
 
-^^^^^^^^^^^^^^^^
 Version ordering
 ^^^^^^^^^^^^^^^^
 
-Without version constraints, preferences and deprecations, Spack will always pick *the latest* version as defined in the package.
-What latest means is determined by the version comparison rules defined in Spack, and not the order in which versions are listed in the package file.
+Without :ref:`version constraints <version_constraints>`, :ref:`preferences <preferred_versions>` and :ref:`deprecations <deprecate>`, Spack will always pick *the latest* version as defined in the package.
+What latest means is determined by the version comparison rules defined in Spack, *not* the order in which versions are listed in the package file.
 
 Spack imposes a generic total ordering on the set of versions, independently from the package they are associated with.
 
@@ -777,33 +777,9 @@ The logic behind this sort order is two-fold:
 #. The most-recent development version of a package will usually be newer than any released numeric versions.
    This allows the ``@develop`` version to satisfy dependencies like ``depends_on(abc, when="@x.y.z:")``
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Specifying versions in other directives
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Many Spack directives accept versions speciers, for example
-
-.. code-block:: python
-
-   depends_on("python@3")
-   conflicts("foo@1.2.3:", when="@:4.5")
-
-When specifying versions in Spack using the ``@<specifier>`` syntax, you can use either ranges or specific versions.
-It is generally recommended to use ranges instead of specific versions when packaging to avoid overly constraining dependencies, patches, and conflicts.
-
-For example, ``depends_on("python@3")`` denotes a range of versions, allowing Spack to pick any ``3.x.y`` version for Python, while ``depends_on("python@=3.10.1")`` restricts it to a specific version.
-
-Specific ``@=`` versions should only be used in exceptional cases, such as when the package has a versioning scheme that omits the zero in the first patch release: ``3.1``, ``3.1.1``, ``3.1.2``.
-In this example, the specifier ``@=3.1`` is the correct way to select only the ``3.1`` version, whereas ``@3.1`` would match all those versions.
-
-Ranges are preferred even if they would only match a single version defined in the package.
-This is because users can define custom versions in ``packages.yaml`` that typically include a custom suffix.
-For example, if the package defines the version ``1.2.3``, the specifier ``@1.2.3`` will also match a user-defined version ``1.2.3-custom``.
-
 
 .. _vcs-fetch:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Fetching from code repositories
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -859,17 +835,16 @@ than the default repo, it can be overridden with a version-specific argument.
 
 .. _git-fetch:
 
-"""""""
 Git
 """""""
 
-Git fetching supports the following parameters to ``version``:
+Git fetching supports the following parameters to the ``version`` directive:
 
 * ``git``: URL of the git repository, if different than the class-level ``git``.
-* ``branch``: Name of a branch to fetch.
-* ``tag``: Name of a tag to fetch.
-* ``commit``: SHA hash (or prefix) of a commit to fetch.
-* ``submodules``: Also fetch submodules recursively when checking out this repository.
+* ``branch``: Name of a :ref:`branch <git-branches>` to fetch.
+* ``tag``: Name of a :ref:`tag <git-tags>` to fetch.
+* ``commit``: SHA hash (or prefix) of a :ref:`commit <git-commits>` to fetch.
+* ``submodules``: Also fetch :ref:`submodules <git-submodules>` recursively when checking out this repository.
 * ``submodules_delete``: A list of submodules to forcibly delete from the repository
   after fetching. Useful if a version in the repository has submodules that
   have disappeared/are no longer accessible.
@@ -878,22 +853,33 @@ Git fetching supports the following parameters to ``version``:
   option ``--depth 1`` will be used if the version of git and the specified
   transport protocol support it, and ``--single-branch`` will be used if the
   version of git supports it.
-* ``git_sparse_paths``: Use ``sparse-checkout`` to only clone these relative paths.
-  This feature requires ``git`` to be version ``2.25.0`` or later but is useful for
-  large repositories that have separate portions that can be built independently.
-  If paths provided are directories then all the subdirectories and associated files
-  will also be cloned.
-
-``tag`` and ``branch`` should not be combined in the version parameters. We strongly
-recommend that all ``tag`` entries be paired with ``commit``. Providing the full 
-``commit`` SHA hash allows for Spack to preserve binary provenance for all binaries. 
-This is due to the fact that git tags and branches are mutable references to commits, 
-but git commits are guaranteed to be unique points in the git history.
+* ``git_sparse_paths``: Only clone the provided :ref:`relative paths <git-sparse-checkout>`.
 
 The destination directory for the clone is the standard stage source path.
 
+.. note::
+
+   ``tag`` and ``branch`` should not be combined in the version parameters.
+
+   We strongly recommend that all ``tag`` entries be paired with ``commit``.
+
+
+.. warning::
+
+   **Trusted Downloads.**
+   It is critical from a security and reproducibility standpoint that Spack be able to verify the downloaded source.
+
+   Providing the full ``commit`` SHA hash allows for Spack to preserve binary provenance for all binaries since git commits are guaranteed to be unique points in the git history.
+   Whereas, the mutable nature of branches and tags cannot provide such a guarantee.
+
+   A git download *is trusted* only if the full commit SHA is specified.
+   Therefore, it is *the* recommended way to securely download from a Git repository.
+
+
+.. _git-default-branch:
+
 Default branch
-  To fetch a repository's default branch:
+  A version with only a name results in fetching a repository's default branch:
 
   .. code-block:: python
 
@@ -903,21 +889,41 @@ Default branch
 
          version("develop")
 
-  This download method is untrusted, and is not recommended. Aside from HTTPS,
-  there is no way to verify that the repository has not been compromised, and
-  the commit you get when you install the package likely won't be the same
-  commit that was used when the package was first written. Additionally, the
-  default branch may change. It is best to at least specify a branch name.
+  Aside from use of HTTPS, there is no way to verify that the repository has not been compromised.
+  Furthermore, the commit you get when you install the package likely won't be the same commit that was used when the package was first written.
+  There is also the risk that the default branch may change.
+
+  .. warning::
+
+    This download method is **untrusted**, and is **not recommended**.
+
+    It is better to specify a branch name (see :ref:`below <git-branches>`).
+
+
+.. _git-branches:
 
 Branches
-  To fetch a particular branch, use the ``branch`` parameter:
+  To fetch a particular branch, use the ``branch`` parameter, preferrably with the same name as the version.
+  For example,
 
   .. code-block:: python
 
+     version("main", branch="main")
      version("experimental", branch="experimental")
 
-  This download method is untrusted, and is not recommended for production installations.
-  Branches are moving targets, so the commit you get when you install the package likely won't be the same commit that was used when the package was first written.
+  Branches are moving targets, which means the commit you get when you install the package likely won't be the one used when the package was first written.
+
+  .. note::
+
+     Common branch names are special in terms of how Spack determines the latest version of a package.
+     See "infinity versions" in :ref:`version ordering <version-comparison>` for more information.
+
+  .. warning::
+
+    This download method is **untrusted**, and is **not recommended** for production installations.
+
+
+.. _git-tags:
 
 Tags
   To fetch from a particular tag, use ``tag`` instead:
@@ -926,38 +932,52 @@ Tags
 
      version("1.0.1", tag="v1.0.1")
 
-  This download method is untrusted, and is not recommended.
-  Although tags are generally more stable than branches, Git allows tags to be moved.
+  While tags are generally more stable than branches, Git allows tags to be moved.
   Many developers use tags to denote rolling releases, and may move the tag when a bug is fixed.
-  Instead, it is recommended to combine the ``tag`` and ``commit`` options (see below).
+
+  .. warning::
+
+    This download method is **untrusted**, and is **not recommended**.
+
+    If you must use a ``tag``, it is recommended to combine it with the ``commit`` option (see :ref:`below <git-commits>`).
+
+
+.. _git-commits:
 
 Commits
-  Finally, to fetch a particular commit, use ``commit``:
+  To fetch a particular commit, use the ``commit`` argument:
 
   .. code-block:: python
 
      version("2014-10-08", commit="1e6ef73d93a28240f954513bc4c2ed46178fa32b")
      version("1.0.4", tag="v1.0.4", commit="420136f6f1f26050d95138e27cf8bc905bc5e7f52")   
 
-  This download method *is trusted*, provided that the full commit sha is specified.
-  It is the recommended way to securely download from a Git repository.
-
-  It may be useful to provide a saner version for commits like this, e.g., you might use the date as the version, as done above.
+  It may be useful to provide a saner version for commits like this, e.g., you might use the date as the version, as done in the first example above.
   Or, if you know the commit at which a release was cut, you can use the release version.
-  It's up to the package author to decide what makes the most sense.
-  It is not recommended to use the commit hash as the version itself, since it won't sort properly.
+  It is up to the package author to decide which of these options makes the most sense.
+
+  .. warning::
+
+    A git download is *trusted only if* the **full commit sha** is specified.
+
+
+  .. hint::
+
+     **Avoid using the commit hash as the version.**
+     It is not recommended to use the commit hash as the version itself, since it won't sort properly for :ref:`version ordering <version-comparison>` purposes.
+
+
+.. _git-submodules:
 
 Submodules
-  You can supply ``submodules=True`` to cause Spack to fetch submodules
-  recursively along with the repository at fetch time.
+  You can supply ``submodules=True`` to cause Spack to fetch submodules recursively along with the repository.
 
   .. code-block:: python
 
-     version("1.0.1", tag="v1.0.1", submodules=True)
+     version("1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=True)
 
-  If a package needs more fine-grained control over submodules, define
-  ``submodules`` to be a callable function that takes the package instance as
-  its only argument.  The function should return a list of submodules to be fetched.
+  If a package needs more fine-grained control over submodules, define ``submodules`` to be a callable function that takes the package instance as its only argument.
+  The function needs to return a list of submodules to be fetched.
 
   .. code-block:: python
 
@@ -971,49 +991,71 @@ Submodules
 
 
       class MyPackage(Package):
-          version("0.1.0", submodules=submodules)
+          version("1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=submodules)
 
-  For more information about git submodules see the manpage of git: ``man
-  git-submodule``.
+  For more information about git submodules see the man page of git: ``man git-submodule``.
+
+
+.. _git-sparse-checkout:
 
 Sparse-Checkout
-  You can supply ``git_sparse_paths`` at the package or version level to utilize git's
-  sparse-checkout feature. This will only clone the paths that are specified in the
-  ``git_sparse_paths`` attribute for the package along with the files in the top level directory.
-  This feature allows you to only clone what you need from a large repository.
-  Note that this is a newer feature in git and requires git ``2.25.0`` or greater.
-  If ``git_sparse_paths`` is supplied and the git version is too old
-  then a warning will be issued and that package will use the standard cloning operations instead.
-  ``git_sparse_paths`` should be supplied as a list of paths, a callable function for versions,
-  or a more complex package attribute using the ``@property`` decorator. The return value should be
-  a list for a callable implementation of ``git_sparse_paths``.
+  If you only want to clone a subset of the contents of a git repository, you can supply ``git_sparse_paths`` at the package or version level to utilize git's sparse-checkout feature.
+  The paths can be specified through an attribute, property or callable function.
+  This option is useful for large repositories containing separate features that can be built independently.
+
+  .. note::
+
+     This leverages a newer feature in git that requires version ``2.25.0`` or greater.
+
+     If ``git_sparse_paths`` is supplied to a git version that is too old then a warning will be issued before standard cloning operations are performed.
+
+  .. note::
+
+     Paths to directories result in the cloning of *all* of their contents, including the contents of their subdirectories.
+
+  The ``git_sparse_paths`` attribute needs to provide a list of relative paths within the repository.
+  If using a property -- a function decorated with ``@property`` -- or an argument that is a callable function, the function needs to return a list of paths.
+
+  For example, using the attribute approach:
+
+  .. code-block:: python
+
+    class MyPackage(package):
+        # using an attribute
+        git_sparse_paths = ["doe", "rae"]
+
+        version("1.0.0")
+        version("1.1.0")
+
+  results in the files from the top level directory of the repository and the contents of the ``doe`` and ``rae`` relative paths within the repository to be cloned.
+
+  Alternatively, you can provide the paths to the version directive argument using a callable function whose return value is a list for paths. 
+  For example:
 
   .. code-block:: python
 
     def sparse_path_function(package)
-        """a callable function that can be used in side a version"""
-        # paths can be directories or functions, all subdirectories and files are included
         paths = ["doe", "rae", "me/file.cpp"]
         if package.spec.version >  Version("1.2.0"):
             paths.extend(["fae"])
         return paths
 
     class MyPackage(package):
-        # can also be a package attribute that will be used if not specified in versions
-        git_sparse_paths = ["doe", "rae"]
+        version("1.1.5", git_sparse_paths=sparse_path_function)
+        version("1.2.0", git_sparse_paths=sparse_path_function)
+        version("1.2.5", git_sparse_paths=sparse_path_function)
+        version("1.1.5", git_sparse_paths=sparse_path_function)
 
-        # use the package attribute
-        version("1.0.0")
-        version("1.1.0")
-        # use the function
-        version("1.1.5", git_sparse_paths=sparse_path_func)
-        version("1.2.0", git_sparse_paths=sparse_path_func)
-        version("1.2.5", git_sparse_paths=sparse_path_func)
-        version("1.1.5", git_sparse_paths=sparse_path_func)
+  results in the cloning of the files from the top level directory of the repository, the contents of the ``doe`` and ``rae`` relative paths, *and* the ``me/file.cpp`` file. If the package version is greater than ``1.2.0`` then the contents of the ``fae`` relative path will also be cloned.
+
+  .. note::
+
+     The version directives in the examples above are simplified to emphasize use of this feature.
+     Trusted downloads require a hash, such as a :ref:`sha256 <github-fetch>` or :ref:`commit <git-commits>`.
+
 
 .. _github-fetch:
 
-""""""
 GitHub
 """"""
 
@@ -1026,18 +1068,25 @@ checksum.
 
 .. code-block:: python
 
-       version("1.9.5.1.1", sha256="8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
-               url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f")
+       version(
+           "1.9.5.1.1",
+           sha256="8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
+           url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f",
+       )
+
+Alternatively, you could provide the GitHub ``url`` for one version as a property and Spack will extrapolate the URL for other versions as described in :ref:`Versions and URLs <versions-and-fetching>`.
+
 
 .. _hg-fetch:
 
-"""""""""
 Mercurial
 """""""""
 
 Fetching with Mercurial works much like `Git <git-fetch>`_, but you
 use the ``hg`` parameter.
 The destination directory is still the standard stage source path.
+
+.. _hg-default-branch:
 
 Default branch
   Add the ``hg`` attribute with no ``revision`` passed to ``version``:
@@ -1050,9 +1099,14 @@ Default branch
 
          version("develop")
 
-  This download method is untrusted, and is not recommended. As with
-  Git's default fetching strategy, there is no way to verify the
-  integrity of the download.
+  As with Git's default fetching strategy, there is no way to verify the integrity of the download.
+
+  .. warning::
+
+    This download method is **untrusted**, and is **not recommended**.
+
+
+.. _hg-revisions:
 
 Revisions
   To fetch a particular revision, use the ``revision`` parameter:
@@ -1061,17 +1115,17 @@ Revisions
 
      version("1.0", revision="v1.0")
 
-  Unlike ``git``, which has special parameters for different types of
-  revisions, you can use ``revision`` for branches, tags, and commits
-  when you fetch with Mercurial. Like Git, fetching specific branches
-  or tags is an untrusted download method, and is not recommended.
-  The recommended fetch strategy is to specify a particular commit
-  hash as the revision.
+  Unlike ``git``, which has special parameters for different types of revisions, you can use ``revision`` for branches, tags, and **commits** when you fetch with Mercurial.
+
+  .. warning::
+
+    Like Git, fetching specific branches or tags is an **untrusted** download method, and is **not recommended**.
+
+    The recommended fetch strategy is to specify a particular commit hash as the revision.
 
 
 .. _svn-fetch:
 
-""""""""""
 Subversion
 """"""""""
 
@@ -1089,8 +1143,12 @@ Fetching the head
 
          version("develop")
 
-  This download method is untrusted, and is not recommended for the
-  same reasons as mentioned above.
+  .. warning::
+
+    This download method is **untrusted**, and is **not recommended** for the same reasons as mentioned above.
+
+
+.. _svn-revisions:
 
 Fetching a revision
   To fetch a particular revision, add a ``revision`` argument to the
@@ -1100,21 +1158,24 @@ Fetching a revision
 
      version("develop", revision=128)
 
-  This download method is untrusted, and is not recommended.
-
   Unfortunately, Subversion has no commit hashing scheme like Git and
   Mercurial do, so there is no way to guarantee that the download you
   get is the same as the download used when the package was created.
   Use at your own risk.
+
+  .. warning::
+
+    This download method is **untrusted**, and is **not recommended**.
+
 
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the URL. If you want to
 package multiple branches, simply add a ``svn`` argument to each
 version directive.
 
+
 .. _cvs-fetch:
 
-"""""""
 CVS
 """""""
 
@@ -1123,6 +1184,8 @@ system. It is a predecessor of Subversion.
 
 To fetch with CVS, use the ``cvs``, branch, and ``date`` parameters.
 The destination directory will be the standard stage source path.
+
+.. _cvs-head:
 
 Fetching the head
   Simply add a ``cvs`` parameter to the package:
@@ -1143,7 +1206,12 @@ Fetching the head
   Spack combines both into one string using the ``%module=modulename``
   suffix shown above.
 
-  This download method is untrusted.
+  .. warning::
+
+    This download method is **untrusted**.
+
+
+.. _cvs-date:
 
 Fetching a date
   Versions in CVS are commonly specified by date. To fetch a
@@ -1158,9 +1226,13 @@ Fetching a date
   revision or hash like Subversion, Git, or Mercurial do. This makes
   it impossible to specify an exact commit to check out.
 
+  .. warning::
+
+    This download method is **untrusted**.
+
+
 CVS has more features, but since CVS is rarely used these days, Spack does not support all of them.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Sources that are not archives
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1172,8 +1244,12 @@ executables and other custom archive types), you can add ``expand=False`` to a
 
 .. code-block:: python
 
-   version("8.2.1", sha256="a2bbdb2de53523b8099b37013f251546f3d65dbe7a0774fa41af0a4176992fd4",
-           url="http://example.com/foo-8.2.1-special-version.sh", expand=False)
+   version(
+       "8.2.1",
+       sha256="a2bbdb2de53523b8099b37013f251546f3d65dbe7a0774fa41af0a4176992fd4",
+       url="http://example.com/foo-8.2.1-special-version.sh",
+       expand=False,
+   )
 
 When ``expand`` is set to ``False``, Spack sets the current working
 directory to the directory containing the downloaded archive before it
@@ -1192,26 +1268,24 @@ it executable, then runs it with some arguments.
        installer("--prefix=%s" % prefix, "arg1", "arg2", "etc.")
 
 
-^^^^^^^^^^^^^^^
 Extra Resources
 ^^^^^^^^^^^^^^^
 
 Some packages (most notably compilers) provide optional features if additional resources are expanded within their source tree before building.
 In Spack it is possible to describe such a need with the ``resource`` directive:
 
-  .. code-block:: python
+.. code-block:: python
 
-     resource(
-        name="cargo",
-        git="https://github.com/rust-lang/cargo.git",
-        tag="0.10.0",
-        destination="cargo"
-     )
+   resource(
+      name="cargo",
+      git="https://github.com/rust-lang/cargo.git",
+      tag="0.10.0",
+      destination="cargo",
+   )
 
 The arguments are similar to those of the ``versions`` directive.
 The keyword ``destination`` is relative to the source root of the package and should point to where the resource is to be expanded.
 
-^^^^^^^^^^^^^^^^
 Download caching
 ^^^^^^^^^^^^^^^^
 
@@ -1220,179 +1294,207 @@ In rare cases, it may be necessary to avoid caching for a particular version by 
 Example situations would be a "snapshot"-like Version Control System (VCS) tag, a VCS branch such as ``v6-16-00-patches``, or a URL specifying a regularly updated snapshot tarball.
 
 
+.. _version_constraints:
+
+Specifying version constraints
+------------------------------
+
+Many Spack directives allow limiting versions to support features such as :ref:`backward and forward compatibility <version_compatibility>`.
+These constraints on :ref:`package specs <sec-specs>` are defined using the ``@<specifier>`` syntax.
+(See :ref:`version-specifier` for more information.)
+
+For example, the following:
+
+.. code-block:: python
+
+   depends_on("foo")
+   depends_on("python@3")
+
+   conflicts("^foo@1.2.3:", when="@:4.5")
+
+illustrates, in order, three of four forms of version range constraints: implicit, lower bound and upper bound. The fourth form provides lower *and* upper bounds on the version.
+
+In this example, the implicit range is used to indicate that the package :ref:`depends on <dependencies>` *any* ``python`` *with* ``3`` *as the major version number* (e.g., ``3.13.5``).
+The other two range constraints are shown in the :ref:`conflict <packaging_conflicts>` with the dependency package ``foo``.
+The conflict with ``foo`` *at version* ``1.2.3`` *or newer* is **triggered** for builds of the package at *any version up to and including* ``4.5``.
+For an example of the fourth form, suppose the dependency in this example had been ``python@3.6:3``.
+In this case, the package would depend on *any version of* ``python`` *from* ``3.6`` *on so long as the major version number is* ``3``.
+
+While you can constrain the spec to a single version -- using the ``@=<version>`` form of ``specifier`` -- **ranges are preferred** even if they would only match a single version currently defined in the package.
+Using ranges helps avoid overly constrained dependencies, patches, and conflicts.
+They also come in handy when, for example, users define versions in :ref:`packages-config` that include custom suffixes.
+For example, if the package defines the version ``1.2.3``, we know from :ref:`version-comparison`, that a user-defined version ``1.2.3-custom`` will satisfy the version constraint ``@1.2.3``.
+
+.. warning::
+
+   Specific ``@=`` versions should only be used in **exceptional cases**, such as when the package has a versioning scheme that omits the zero in the first patch release.
+   For example, suppose a package defines versions: ``3.1``, ``3.1.1`` and ``3.1.2``.
+   Then the specifier ``@=3.1`` is the correct way to select only ``3.1``, whereas ``@3.1`` would be satisfied by all three versions.
+
+
 .. _variants:
 
---------
 Variants
 --------
 
-Many software packages can be configured to enable optional
-features, which often come at the expense of additional dependencies or
-longer build times. To be flexible enough and support a wide variety of
-use cases, Spack allows you to expose to the end-user the ability to choose
-which features should be activated in a package at the time it is installed.
-The mechanism to be employed is the :py:func:`spack.directives.variant` directive.
+Many software packages can be configured to enable optional features, which often come at the expense of additional dependencies or longer build times.
+To be flexible enough and support a wide variety of use cases, Spack allows you to expose to the end-user the ability to choose which features should be activated in a package at the time it is installed.
+The mechanism to be employed is the :py:func:`~spack.package.variant` directive.
 
-^^^^^^^^^^^^^^^^
 Boolean variants
 ^^^^^^^^^^^^^^^^
 
-In their simplest form, variants are boolean options specified at the package
-level:
+In their simplest form, variants are boolean options specified at the package level:
 
-  .. code-block:: python
+.. code-block:: python
 
-    class Hdf5(AutotoolsPackage):
-        ...
-        variant(
-            "shared", default=True, description="Builds a shared version of the library"
-        )
+  class Hdf5(AutotoolsPackage):
+      ...
+      variant("shared", default=True, description="Builds a shared version of the library")
 
-with a default value and a description of their meaning / use in the package.
-*Variants can be tested in any context where a spec constraint is expected.*
-In the example above the ``shared`` variant is tied to the build of shared dynamic
-libraries. To pass the right option at configure time we can branch depending on
-its value:
+with a default value and a description of their meaning in the package.
 
-  .. code-block:: python
+With this variant defined, users can now run ``spack install hdf5 +shared`` and ``spack install hdf5 ~shared`` to enable or disable the ``shared`` feature, respectively.
+See also the :ref:`basic-variants` for the spec syntax of variants.
 
-    def configure_args(self):
-        ...
-        if self.spec.satisfies("+shared"):
-            extra_args.append("--enable-shared")
-        else:
-            extra_args.append("--disable-shared")
-            extra_args.append("--enable-static-exec")
+Of course, merely defining a variant in a package does not automatically enable or disable any features in the build system.
+As a packager, you are responsible for translating variants to build system flags or environment variables, to influence the build process.
+We will see this in action in the next part of the packaging guide, where we talk about :ref:`configuring the build with spec objects <spec-objects>`.
 
-As explained in :ref:`basic-variants` the constraint ``+shared`` means
-that the boolean variant is set to ``True``, while ``~shared`` means it is set
-to ``False``.
-Another common example is the optional activation of an extra dependency
-which requires to use the variant in the ``when`` argument of
-:py:func:`spack.directives.depends_on`:
+Other than influencing the build process, variants are often used to specify optional :ref:`dependencies of a package <dependencies>`.
+For example, a package may depend on another package only if a certain variant is enabled:
 
-  ..  code-block:: python
+..  code-block:: python
 
-    class Hdf5(AutotoolsPackage):
-        ...
-        variant("szip", default=False, description="Enable szip support")
-        depends_on("szip", when="+szip")
+  class Hdf5(AutotoolsPackage):
+      ...
+      variant("szip", default=False, description="Enable szip support")
+      depends_on("szip", when="+szip")
 
-as shown in the snippet above where ``szip`` is modeled to be an optional
-dependency of ``hdf5``.
+In this case, ``szip`` is modeled as an optional dependency of ``hdf5``, and users can run ``spack install hdf5 +szip`` to enable it.
 
-^^^^^^^^^^^^^^^^^^^^^
+Single-valued variants
+^^^^^^^^^^^^^^^^^^^^^^
+
+Other than boolean variants, Spack supports single- and multi-valued variants that can take one or more *string* values.
+
+To define a *single-valued* variant, simply pass a tuple of possible values to the ``variant`` directive, together with ``multi=False``:
+
+.. code-block:: python
+
+  class Blis(Package):
+      ...
+      variant(
+          "threads",
+          default="none",
+          values=("pthreads", "openmp", "none"),
+          multi=False,
+          description="Multithreading support",
+      )
+
+This allows users to ``spack install blis threads=openmp``.
+
+In the example above the argument ``multi=False`` indicates that only a **single value** can be selected at a time.
+This constraint is enforced by the solver, and an error is emitted if a user specifies two or more values at the same time:
+
+.. code-block:: spec
+
+  $ spack spec blis threads=openmp,pthreads
+  Input spec
+  --------------------------------
+  blis threads=openmp,pthreads
+
+  Concretized
+  --------------------------------
+  ==> Error: multiple values are not allowed for variant "threads"
+
+.. hint::
+
+   In the example above, the value ``threads=none`` is a variant value like any other, and means that *no value is selected*.
+   In Spack, all variants have to have a value, so ``none`` was chosen as a *convention* to indicate that no value is selected.
+
 Multi-valued variants
 ^^^^^^^^^^^^^^^^^^^^^
 
-If need be, Spack can go beyond Boolean variants and permit an arbitrary
-number of allowed values. This might be useful when modeling
-options that are tightly related to each other.
-The values in this case are passed to the :py:func:`spack.directives.variant`
-directive as a tuple:
+Like single-valued variants, multi-valued variants take one or more *string* values, but allow users to select multiple values at the same time.
 
-  .. code-block:: python
+To define a *multi-valued* variant, simply pass ``multi=True`` instead:
 
-    class Blis(Package):
-        ...
-        variant(
-            "threads", default="none", description="Multithreading support",
-            values=("pthreads", "openmp", "none"), multi=False
-        )
+.. code-block:: python
 
-In the example above the argument ``multi`` is set to ``False`` to indicate
-that only one among all the variant values can be active at any time. This
-constraint is enforced by the parser and an error is emitted if a user
-specifies two or more values at the same time:
+  class Gcc(AutotoolsPackage):
+      ...
+      variant(
+          "languages",
+          default="c,c++,fortran",
+          values=("ada", "brig", "c", "c++", "fortran", "objc"),
+          multi=True,
+          description="Compilers and runtime libraries to build",
+      )
 
-  .. code-block:: console
+This allows users to run ``spack install languages=c,c++`` where the values are separated by commas.
 
-    $ spack spec blis threads=openmp,pthreads
-    Input spec
-    --------------------------------
-    blis threads=openmp,pthreads
 
-    Concretized
-    --------------------------------
-    ==> Error: multiple values are not allowed for variant "threads"
+Advanced validation of multi-valued variants
+""""""""""""""""""""""""""""""""""""""""""""
 
-Another useful note is that *Python's* ``None`` *is not allowed as a default value*
-and therefore it should not be used to denote that no feature was selected.
-Users should instead select another value, like ``"none"``, and handle it explicitly
-within the package recipe if need be:
+As noted above, the value ``none`` is a value like any other, which raises the question:
+what if a variant allows multiple values to be selected, *or* none at all?
+Naively, one might think that this can be achieved by simply creating a multi-valued variant that includes the value ``none``:
 
-  .. code-block:: python
+.. code-block:: python
 
-      if self.spec.variants["threads"].value == "none":
-         options.append("--no-threads")
+   class Adios(AutotoolsPackage):
+       ...
+       variant(
+           "staging",
+           values=("dataspaces", "flexpath", "none"),
+           multi=True,
+           description="Enable dataspaces and/or flexpath staging transports",
+       )
 
-In cases where multiple values can be selected at the same time ``multi`` should
-be set to ``True``:
+but this does not prevent users from selecting the non-sensical option ``staging=dataspaces,none``.
 
-  .. code-block:: python
+In these cases, more advanced validation logic is required to prevent ``none`` from being selected along with any other value.
+Spack provides two validator functions to help with this, which can be passed to the ``values=`` argument of the ``variant`` directive.
 
-    class Gcc(AutotoolsPackage):
-        ...
-        variant(
-            "languages", default="c,c++,fortran",
-            values=("ada", "brig", "c", "c++", "fortran",
-                    "go", "java", "jit", "lto", "objc", "obj-c++"),
-            multi=True,
-            description="Compilers and runtime libraries to build"
-        )
+The first validator function is :py:func:`~spack.package.any_combination_of`, which can be used as follows:
 
-Within a package recipe a multi-valued variant is tested using a ``key=value`` syntax:
+.. code-block:: python
 
-  .. code-block:: python
+   class Adios(AutotoolsPackage):
+       ...
+       variant(
+           "staging",
+           values=any_combination_of("flexpath", "dataspaces"),
+           description="Enable dataspaces and/or flexpath staging transports",
+       )
 
-    if spec.satisfies("languages=jit"):
-        options.append("--enable-jit")
+This solves the issue by allowing the user to select either any combination of the values ``flexpath`` and ``dataspaces``, or ``none``.
+In other words, users can specify ``staging=none`` to select nothing, or any of ``staging=dataspaces``, ``staging=flexpath``, and ``staging=dataspaces,flexpath``.
 
-"""""""""""""""""""""""""""""""""""""""""""
-Complex validation logic for variant values
-"""""""""""""""""""""""""""""""""""""""""""
-To cover complex use cases, the :py:func:`spack.directives.variant` directive
-could accept as the ``values`` argument a full-fledged object which has
-``default`` and other arguments of the directive embedded as attributes.
+The second validator function :py:func:`~spack.package.disjoint_sets` generalizes this idea further:
 
-An example, already implemented in Spack's core, is :py:class:`spack.variant.DisjointSetsOfValues`.
-This class is used to implement a few convenience functions, like
-:py:func:`spack.variant.any_combination_of`:
+.. code-block:: python
 
-  ..  code-block:: python
+   class Mvapich2(AutotoolsPackage):
+       ...
+       variant(
+           "process_managers",
+           description="List of the process managers to activate",
+           values=disjoint_sets(("auto",), ("slurm",), ("hydra", "gforker", "remshell"))
+           .prohibit_empty_set()
+           .with_error("'slurm' or 'auto' cannot be activated along with other process managers")
+           .with_default("auto")
+           .with_non_feature_values("auto"),
+       )
 
-    class Adios(AutotoolsPackage):
-        ...
-        variant(
-            "staging",
-            values=any_combination_of("flexpath", "dataspaces"),
-            description="Enable dataspaces and/or flexpath staging transports"
-        )
+In this case, examples of valid options are ``process_managers=auto``, ``process_managers=slurm``, and ``process_managers=hydra,remshell``, whereas ``process_managers=slurm,hydra`` is invalid, as it picks values from two different sets.
 
-that allows any combination of the specified values, and also allows the
-user to specify ``"none"`` (as a string) to choose none of them.
-The objects returned by these functions can be modified at will by chaining
-method calls to change the default value, customize the error message or
-other similar operations:
+Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
-  .. code-block:: python
-
-    class Mvapich2(AutotoolsPackage):
-        ...
-        variant(
-            "process_managers",
-            description="List of the process managers to activate",
-            values=disjoint_sets(
-                ("auto",), ("slurm",), ("hydra", "gforker", "remshell")
-            ).prohibit_empty_set().with_error(
-                "'slurm' or 'auto' cannot be activated along with "
-                "other process managers"
-            ).with_default("auto").with_non_feature_values("auto"),
-        )
-
-"""""""""""""""""""""""""""
 Conditional Possible Values
-"""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are cases where a variant may take multiple values, and the list of allowed values
 expands over time. Consider, for instance, the C++ standard with which we might compile
@@ -1404,43 +1506,51 @@ To model a similar situation we can use *conditional possible values* in the var
 .. code-block:: python
 
    variant(
-       "cxxstd", default="98",
+       "cxxstd",
+       default="98",
        values=(
-           "98", "11", "14",
+           "98",
+           "11",
+           "14",
            # C++17 is not supported by Boost < 1.63.0.
            conditional("17", when="@1.63.0:"),
-           # C++20/2a is not support by Boost < 1.73.0
-           conditional("2a", "2b", when="@1.73.0:")
+           # C++20/2a is not supported by Boost < 1.73.0
+           conditional("2a", "2b", when="@1.73.0:"),
        ),
        multi=False,
        description="Use the specified C++ standard when building.",
    )
+
 
 The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the
 ``cxxstd`` variant, while ``17`` requires a version greater or equal to ``1.63.0``
 and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
 
 
-^^^^^^^^^^^^^^^^^^^^
 Conditional Variants
 ^^^^^^^^^^^^^^^^^^^^
 
-The variant directive accepts a ``when`` clause. The variant will only
-be present on specs that otherwise satisfy the spec listed as the
-``when`` clause. For example, the following class has a variant
-``bar`` when it is at version 2.0 or higher.
+As new versions of packages are released, optional features may be added and removed.
+Sometimes, features are only available for a particular platform or architecture.
+
+To reduce the visual clutter in specs, packages can define variants *conditionally* using a ``when`` clause.
+The variant will only be present on specs that satisfy this condition.
+
+For example, the following package defines a variant ``bar`` that exists only when it is at version 2.0 or higher, and a variant ``baz`` that exists only on the Darwin platform:
 
 .. code-block:: python
 
    class Foo(Package):
        ...
-       variant("bar", default=False, when="@2.0:", description="help message")
+       variant("bar", default=False, when="@2.0:", ...)
+       variant("baz", default=True, when="platform=darwin", ...)
 
-The ``when`` clause follows the same syntax and accepts the same
-values as the ``when`` argument of
-:py:func:`spack.directives.depends_on`.
+Do note that conditional variants can also be a source of confusion.
+In Spack, the absence of a variant is different from it being disabled.
+For example, a user might run ``spack install foo ~bar``, expecting it to allow version 1.0 (which does not have the ``bar`` feature) and version 2.0 (with the feature disabled).
+However, the constraint ``~bar`` tells Spack that the ``bar`` variant *must exist* and be disabled.
+This forces Spack to select version 2.0 or higher, where the variant is defined.
 
-^^^^^^^^^^^^^^^
 Sticky Variants
 ^^^^^^^^^^^^^^^
 
@@ -1465,7 +1575,6 @@ allowing these options is done on purpose by the user, rather than
 automatically by the solver.
 
 
-^^^^^^^^^^^^^^^^^^^
 Overriding Variants
 ^^^^^^^^^^^^^^^^^^^
 
@@ -1502,7 +1611,6 @@ duplicating the variant definition.
 
 .. _dependencies:
 
-------------
 Dependencies
 ------------
 
@@ -1531,7 +1639,6 @@ Spack makes this relatively easy.  Let's take a look at the
        def install(self, spec, prefix):
            ...
 
-^^^^^^^^^^^^^^^^
 ``depends_on()``
 ^^^^^^^^^^^^^^^^
 
@@ -1541,7 +1648,8 @@ needs to build and install the ``libelf`` package before it builds
 guaranteed that ``libelf`` has been built and installed successfully,
 so you can rely on it for your libdwarf build.
 
-^^^^^^^^^^^^^^^^
+.. _dependency_specs:
+
 Dependency specs
 ^^^^^^^^^^^^^^^^
 
@@ -1569,7 +1677,8 @@ command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
 relationships between packages.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _version_compatibility:
+
 Specifying backward and forward compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1672,7 +1781,6 @@ but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
 .. _dependency-types:
 
-^^^^^^^^^^^^^^^^
 Dependency types
 ^^^^^^^^^^^^^^^^
 
@@ -1688,15 +1796,15 @@ exactly what kind of a dependency you need. For example:
 
 The following dependency types are available:
 
-* **"build"**: the dependency will be added to the ``PATH`` and
+* **build**: the dependency will be added to the ``PATH`` and
   ``PYTHONPATH`` at build-time.
-* **"link"**: the dependency will be added to Spack's compiler
+* **link**: the dependency will be added to Spack's compiler
   wrappers, automatically injecting the appropriate linker flags,
   including ``-I``, ``-L``, and RPATH/RUNPATH handling.
-* **"run"**: the dependency will be added to the ``PATH`` and
+* **run**: the dependency will be added to the ``PATH`` and
   ``PYTHONPATH`` at run-time. This is true for both ``spack load``
   and the module files Spack writes.
-* **"test"**: the dependency will be added to the ``PATH`` and
+* **test**: the dependency will be added to the ``PATH`` and
   ``PYTHONPATH`` at build-time. The only difference between
   "build" and "test" is that test dependencies are only built
   if the user requests unit tests with ``spack install --test``.
@@ -1726,7 +1834,6 @@ inject the dependency's ``prefix/lib`` directory, but the package needs to
 be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
 a user wants to run the package.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1779,7 +1886,6 @@ are supported on the command line using the same :ref:`syntax <sec-specs>`.
 
 .. _dependency_dependency_patching:
 
-^^^^^^^^^^^^^^^^^^^
 Dependency patching
 ^^^^^^^^^^^^^^^^^^^
 
@@ -1865,7 +1971,6 @@ appear in the package file (or in this case, in the list).
 
 .. _virtual-dependencies:
 
---------------------
 Virtual dependencies
 --------------------
 
@@ -1877,7 +1982,6 @@ MPI has several different implementations (e.g., `MPICH <http://www.mpich.org>`_
 Many package managers handle interfaces like this by requiring many variations of the package recipe for each implementation of MPI, e.g., ``foo``, ``foo-mvapich``, ``foo-mpich``.
 In Spack every package is defined in a single ``package.py`` file, and avoids the combinatorial explosion through *virtual dependencies*.
 
-^^^^^^^^^^^^
 ``provides``
 ^^^^^^^^^^^^
 
@@ -1911,7 +2015,6 @@ If we look inside the package file of an MPI implementation, say MPICH, we'll se
 
 The ``provides("mpi")`` call tells Spack that the ``mpich`` package can be used to satisfy the dependency of any package that ``depends_on("mpi")``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Providing multiple virtuals simultaneously
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1926,19 +2029,18 @@ To express this constraint in a package, the two virtual dependencies must be li
 
 .. code-block:: python
 
-   provides('blas', 'lapack')
+   provides("blas", "lapack")
 
 This makes it impossible to select ``openblas`` as a provider for one of the two virtual dependencies and not for the other.
 If you try to, Spack will report an error:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack spec netlib-scalapack  ^[virtuals=lapack] openblas ^[virtuals=blas] atlas
    ==> Error: concretization failed for the following reasons:
 
       1. Package 'openblas' needs to provide both 'lapack' and 'blas' together, but provides only 'lapack'
 
-^^^^^^^^^^^^^^^^^^^^
 Versioned Interfaces
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -1958,7 +2060,6 @@ This says that ``mpich2`` provides MPI support *up to* version 2, but if a packa
 
 Currently, names and versions are the only spec components supported for virtual packages.
 
-^^^^^^^^^^^^^^^^^
 ``provides when``
 ^^^^^^^^^^^^^^^^^
 
@@ -1988,7 +2089,7 @@ For example, suppose the package ``foo`` declares this:
 
 Suppose a user invokes ``spack install`` like this:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install foo ^mpich@1.0
 
@@ -1996,7 +2097,6 @@ Spack will fail with a constraint violation, because the version of MPICH reques
 
 .. _language-dependencies:
 
-----------------------------------
 Language and compiler dependencies
 ----------------------------------
 
@@ -2019,60 +2119,106 @@ This means that language dependencies translate to one or more compiler packages
 
 .. _packaging_conflicts:
 
---------------------------
-Conflicts and requirements
---------------------------
+Conflicts
+---------
 
-Sometimes packages have known bugs, or limitations, that would prevent them from building e.g. against other dependencies or with certain compilers.
-Spack makes it possible to express such constraints with the ``conflicts`` directive.
+Sometimes packages have known bugs, or limitations, that would prevent them from concretizing or building usable software.
+Spack makes it possible to express such constraints with the ``conflicts`` directive, which takes a spec that is known to cause a conflict and optional ``when`` and ``msg`` arguments.
+
+The ``when`` argument is a spec that triggers the conflict.
+
+The ``msg`` argument allows you to provide a custom error message that Spack prints when the spec to be installed satisfies the conflict spec and ``when`` trigger.
 
 Adding the following to a package:
 
 .. code-block:: python
 
     conflicts(
-        "%intel-oneapi-compilers",
+        "%intel-oneapi-compilers@:2024",
          when="@:1.2",
-         msg="known bug with Intel oneAPI compilers"
+         msg="known bug when using Intel oneAPI compilers through v2024",
     )
 
-we express the fact that the current package *cannot be built* with the Intel oneAPI compilers up to version ``1.2``.
+expresses that the current package *cannot be built* with Intel oneAPI compilers *up through any version* ``2024`` *when trying to install the package with a version up to* ``1.2``.
 
-The ``when`` argument can be omitted, in which case the conflict will always be active.
+If the ``when`` argument is omitted, then the conflict is *always triggered* for specs satisfying the conflict spec.
+For example,
 
-An optional custom error message can be added via the ``msg=`` parameter, and may be printed by Spack in case the conflict cannot be avoided and leads to a concretization error.
+.. code-block:: python
 
-Sometimes, packages allow only very specific choices and they can't use the rest.
-In those cases the ``requires`` directive can be used:
+   conflicts("+cuda+rocm", msg="Cannot build with both cuda and rocm enabled")
+
+means the package cannot be installed with both variants enabled.
+
+Similarly, a conflict can be based on where the build is being performed.
+For example,
+
+.. code-block:: python
+
+   for os in ["ventura", "monterey", "bigsur"]:
+       conflicts(f"platform=darwin os={os}", msg=f"{os} is not supported")
+
+means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur.
+
+.. note::
+
+   These examples illustrate a few of the types of constraints that can be specified.
+   Conflict and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependency_specs>`, and more.
+   See :ref:`sec-specs` for more information.
+
+
+.. _packaging_requires:
+
+Requires
+--------
+
+Sometimes packages can be built only with specific options.
+In those cases the ``requires`` directive can be used.
+It allows for complex conditions involving more than a single spec through the ability to specify multiple required specs before keyword arguments.
+The same optional ``when`` and ``msg`` arguments as ``conflicts`` are supported (see :ref:`packaging_conflicts`).
+The directive also supports a ``policy`` argument for determining how the multiple required specs apply.
+Values for ``policy`` may be either ``any_of`` or ``one_of`` (default) and have the same semantics described for their equivalents in :ref:`package-requirements`.
+
+.. hint::
+
+   We recommend that the ``policy`` argument be explicitly specified when multiple specs are used with the directive.
+
+For example, suppose a package can only be built with Apple Clang on Darwin.
+This requirement would be specified as:
 
 .. code-block:: python
 
     requires(
         "%apple-clang",
         when="platform=darwin",
-        msg="builds only with Apple Clang compiler on Darwin"
+        msg="builds only with Apple Clang compiler on Darwin",
     )
 
-In the example above, our package can only be built with Apple Clang on Darwin.
-The ``requires`` directive is effectively the opposite of the ``conflicts`` directive, and takes the same optional ``when`` and ``msg`` arguments.
+Similarly, suppose a package only builds for the ``x86_64`` target:
 
-If a package needs to express more complex requirements, involving more than a single spec, that can also be done using the ``requires`` directive.
-To express that a package can be built either with GCC or with Clang we can write:
+.. code-block:: python
+
+    requires("target=x86_64:", msg="package is only available on x86_64")
+
+Or the package must be built with a GCC or Clang that supports C++ 20, which you could ensure by adding the following:
 
 .. code-block:: python
 
     requires(
-        "%gcc", "%clang",
-        policy="one_of"
-        msg="builds only with GCC or Clang"
+        "%gcc@10:", "%clang@16:",
+        policy="one_of",
+        msg="builds only with a GCC or Clang that support C++ 20",
     )
 
-When using multiple specs in a ``requires`` directive, it is advised to set the ``policy=`` argument explicitly.
-That argument can take either the value ``any_of`` or the value ``one_of``, and the semantic is the same as for :ref:`package-requirements`.
+.. note::
+
+   These examples show only a few of the constraints that can be specified.
+   Required and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependency_specs>`, and more.
+   See :ref:`sec-specs` for more information.
+
 
 .. _patching:
 
--------
 Patches
 -------
 
@@ -2082,7 +2228,6 @@ correctly.  Like many other package systems, Spack allows you to store
 patches alongside your package files and apply them to source code
 after it's downloaded.
 
-^^^^^^^^^
 ``patch``
 ^^^^^^^^^
 
@@ -2143,14 +2288,12 @@ checked when patch archives are downloaded.
 
 ``patch`` keyword arguments are described below.
 
-""""""""""""""""""""""""""""""
 ``sha256``, ``archive_sha256``
 """"""""""""""""""""""""""""""
 
 Hashes of downloaded patch and compressed archive, respectively.  Only
 needed for patches fetched from URLs.
 
-""""""""
 ``when``
 """"""""
 
@@ -2159,7 +2302,6 @@ the patch.  If the installed package spec matches this spec, the
 patch will be applied.  In our example above, the patch is applied
 when mvapich is at version ``1.9`` or higher.
 
-"""""""""
 ``level``
 """""""""
 
@@ -2200,7 +2342,6 @@ It's generally easier to just structure your patch file so that it
 applies cleanly with ``-p1``, but if you're using a patch you didn't
 create yourself, ``level`` can be handy.
 
-"""""""""""""""
 ``working_dir``
 """""""""""""""
 
@@ -2230,7 +2371,6 @@ it can only be downloaded in the following form:
 Hence, the patch needs to be applied in the ``src/mpi`` subdirectory, and the
 ``working_dir="src/mpi"`` option would exactly do that.
 
-^^^^^^^^^^^^^^^^^^^^^
 Patch functions
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -2256,7 +2396,6 @@ patch function is only run once.
 
 .. _patch_dependency_patching:
 
-^^^^^^^^^^^^^^^^^^^
 Dependency patching
 ^^^^^^^^^^^^^^^^^^^
 
@@ -2269,32 +2408,35 @@ other versions of that library.  See the `section on depends_on
 
 .. _patch_inspecting_patches:
 
-^^^^^^^^^^^^^^^^^^^
 Inspecting patches
 ^^^^^^^^^^^^^^^^^^^
 
 If you want to better understand the patches that Spack applies to your
 packages, you can do that using ``spack spec``, ``spack find``, and other
 query commands.  Let's look at ``m4``.  If you run ``spack spec m4``, you
-can see the patches that would be applied to ``m4``::
+can see the patches that would be applied to ``m4``:
 
-  $ spack spec m4
-  Input spec
-  --------------------------------
-  m4
+.. code-block:: spec
 
-  Concretized
-  --------------------------------
-  m4@1.4.18%apple-clang@9.0.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
-      ^libsigsegv@2.11%apple-clang@9.0.0 arch=darwin-highsierra-x86_64
+   $ spack spec m4
+   Input spec
+   --------------------------------
+   m4
+ 
+   Concretized
+   --------------------------------
+   m4@1.4.18%apple-clang@9.0.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
+       ^libsigsegv@2.11%apple-clang@9.0.0 arch=darwin-highsierra-x86_64
 
 You can also see patches that have been applied to installed packages
-with ``spack find -v``::
+with ``spack find -v``:
 
-  $ spack find -v m4
-  ==> 1 installed package
-  -- darwin-highsierra-x86_64 / apple-clang@9.0.0 -----------------
-  m4@1.4.18 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv
+.. code-block:: spec
+
+   $ spack find -v m4
+   ==> 1 installed package
+   -- darwin-highsierra-x86_64 / apple-clang@9.0.0 -----------------
+   m4@1.4.18 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv
 
 .. _cmd-spack-resource:
 
@@ -2304,12 +2446,14 @@ can have multiple, differently-patched versions of a package installed at
 once.
 
 You can look up a patch by its sha256 hash (or a short version of it)
-using the ``spack resource show`` command::
+using the ``spack resource show`` command
 
-  $ spack resource show 3877ab54
-  3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00
-      path:       .../spack_repo/builtin/packages/m4/gnulib-pgi.patch
-      applies to: builtin.m4
+.. code-block:: console
+
+   $ spack resource show 3877ab54
+   3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00
+       path:       .../spack_repo/builtin/packages/m4/gnulib-pgi.patch
+       applies to: builtin.m4
 
 ``spack resource show`` looks up downloadable resources from package
 files by hash and prints out information about them.  Above, we see that
@@ -2319,16 +2463,18 @@ tells us where to find the patch.
 Things get more interesting if you want to know about dependency
 patches. For example, when ``dealii`` is built with ``boost@1.68.0``, it
 has to patch boost to work correctly.  If you didn't know this, you might
-wonder where the extra boost patches are coming from::
+wonder where the extra boost patches are coming from:
 
-  $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep "\^boost"
-      ^boost@1.68.0
-          ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
-  $ spack resource show b37164268
-  b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
-      path:       .../spack_repo/builtin/packages/dealii/boost_1.68.0.patch
-      applies to: builtin.boost
-      patched by: builtin.dealii
+.. code-block:: console
+
+   $ spack spec dealii ^boost@1.68.0 ^hdf5+fortran | grep "\^boost"
+       ^boost@1.68.0
+           ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
+   $ spack resource show b37164268
+   b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
+       path:       .../spack_repo/builtin/packages/dealii/boost_1.68.0.patch
+       applies to: builtin.boost
+       patched by: builtin.dealii
 
 Here you can see that the patch is applied to ``boost`` by ``dealii``,
 and that it lives in ``dealii``'s directory in Spack's ``builtin``
@@ -2336,7 +2482,6 @@ package repository.
 
 .. _packaging_extensions:
 
-----------
 Extensions
 ----------
 
@@ -2390,7 +2535,6 @@ either lua or luajit, but not both:
 Now, a user can install, and activate, the ``lua-lpeg`` package for either
 lua or luajit.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Adding additional constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2417,7 +2561,6 @@ variant(s) are selected.  This may be accomplished with conditional
        extends("python", when="+python")
        ...
 
---------------------------
 Mixins for common metadata
 --------------------------
 
@@ -2466,7 +2609,6 @@ In the example above ``Cp2k`` inherits the variants and conflicts defined by ``C
 
 .. _package_maintainers:
 
------------
 Maintainers
 -----------
 
@@ -2483,7 +2625,6 @@ To add maintainers to a package, simply declare them with the ``maintainers`` di
 
 The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
 
--------------------
 License Information
 -------------------
 
@@ -2541,14 +2682,12 @@ When you have validated a package license, either when doing so explicitly or as
 
 .. _license:
 
---------------------
 Proprietary software
 --------------------
 
 In order to install proprietary software, Spack needs to know a few more details about a package.
 The following class attributes should be defined.
 
-^^^^^^^^^^^^^^^^^^^^
 ``license_required``
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -2557,7 +2696,6 @@ If set to ``True``, this software requires a license.
 If set to ``False``, all of the following attributes will be ignored.
 Defaults to ``False``.
 
-^^^^^^^^^^^^^^^^^^^
 ``license_comment``
 ^^^^^^^^^^^^^^^^^^^
 
@@ -2565,7 +2703,6 @@ String.
 Contains the symbol used by the license manager to denote a comment.
 Defaults to ``#``.
 
-^^^^^^^^^^^^^^^^^
 ``license_files``
 ^^^^^^^^^^^^^^^^^
 
@@ -2575,7 +2712,6 @@ All file paths must be relative to the installation directory.
 More complex packages like Intel may require multiple licenses for individual components.
 Defaults to the empty list.
 
-^^^^^^^^^^^^^^^^
 ``license_vars``
 ^^^^^^^^^^^^^^^^
 
@@ -2583,7 +2719,6 @@ List of strings.
 Environment variables that can be set to tell the software where to look for a license if it is not in the usual location.
 Defaults to the empty list.
 
-^^^^^^^^^^^^^^^
 ``license_url``
 ^^^^^^^^^^^^^^^
 
@@ -2621,7 +2756,6 @@ If you install a different version or variant of the package, Spack will automat
 If the software you are trying to package doesn't rely on license files, Spack will print a warning message, letting the user know that they need to set an environment variable or pointing them to installation documentation.
 
 
--------------------
 Grouping directives
 -------------------
 
@@ -2630,7 +2764,6 @@ Very often, these directives share a common argument, which you becomes repetiti
 
 .. _group_when_spec:
 
-^^^^^^^^^^^^^^^^^^^^^^^^
 Grouping with ``when()``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2677,7 +2810,6 @@ Constraints from nested context managers are also combined together, but they ar
 
 .. _default_args:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Grouping with ``default_args()``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2726,7 +2858,6 @@ The above is short for:
 
 .. _custom-attributes:
 
-------------------------------------------------
 ``home``, ``command``, ``headers``, and ``libs``
 ------------------------------------------------
 
@@ -2781,7 +2912,6 @@ The implementation used is the first one found from:
 
 The use of customized attributes is demonstrated in the next example.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Example: Customized attributes for virtual packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2974,26 +3104,24 @@ the above attribute implementations:
        "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib"
    ]
 
------------------------------
 Style guidelines for packages
 -----------------------------
 
 The following guidelines are provided, in the interests of making Spack packages work in a consistent manner:
 
-^^^^^^^^^^^^^
 Variant Names
 ^^^^^^^^^^^^^
 
 Spack packages with variants similar to already-existing Spack packages should use the same name for their variants.
 Standard variant names are:
 
-  ======= ======== ========================
-  Name    Default   Description
-  ======= ======== ========================
-  shared   True     Build shared libraries
-  mpi      True     Use MPI
-  python   False    Build Python extension
-  ======= ======== ========================
+======= ======== ========================
+Name    Default   Description
+======= ======== ========================
+shared   True     Build shared libraries
+mpi      True     Use MPI
+python   False    Build Python extension
+======= ======== ========================
 
 If specified in this table, the corresponding default is recommended.
 
@@ -3001,13 +3129,11 @@ The semantics of the `shared` variant are important.
 When a package is built `~shared`, the package guarantees that no shared libraries are built.
 When a package is built `+shared`, the package guarantees that shared libraries are built, but it makes no guarantee about whether static libraries are built.
 
-^^^^^^^^^^^^^^^^^^^
 Version definitions
 ^^^^^^^^^^^^^^^^^^^
 
 Spack packages should list supported versions with the newest first.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Using ``home`` vs ``prefix``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

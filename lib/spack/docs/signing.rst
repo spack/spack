@@ -2,9 +2,13 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Understand the Spack package signing process, which ensures data integrity for official packages from automated CI pipelines through cryptographic signing.
+
+
 .. _signing:
 
-=====================
 Spack Package Signing
 =====================
 
@@ -22,7 +26,6 @@ interested users.
 
 .. _risks:
 
-------------------------------
 Risks, Impact and Threat Model
 ------------------------------
 
@@ -51,7 +54,6 @@ leak the key by accident.
 
 .. _overview:
 
------------------
 Pipeline Overview
 -----------------
 
@@ -89,7 +91,6 @@ pipelines.
 
 .. _key_architecture:
 
-----------------
 Key Architecture
 ----------------
 
@@ -103,7 +104,6 @@ so for the purpose of this explanation we will refer to Root and Signing keys.
 Each key has a private and a public component as well as one or more identities
 and zero or more signatures.
 
--------------------
 Intermediate CI Key
 -------------------
 
@@ -119,7 +119,7 @@ signed by the Signing Intermediate CI Private Key.
 +---------------------------------------------------------------------------------------------------------+
 | **Intermediate CI Key (GPG)**                                                                           |
 +==================================================+======================================================+
-| Root Intermediate CI Private Key (RSA 4096)#     |     Root Intermediate CI Public Key (RSA 4096)       |
+| Root Intermediate CI Private Key (RSA 4096)      |     Root Intermediate CI Public Key (RSA 4096)       |
 +--------------------------------------------------+------------------------------------------------------+
 |   Signing Intermediate CI Private Key (RSA 4096) |        Signing Intermediate CI Public Key (RSA 4096) |
 +--------------------------------------------------+------------------------------------------------------+
@@ -136,7 +136,6 @@ issue new sub-keys for use in the pipeline. It is our expectation that this
 will happen on a semi-regular basis. A corollary of this is that *this key
 should not be used to verify package integrity outside the internal CI process.*
 
-----------------
 Reputational Key
 ----------------
 
@@ -178,7 +177,6 @@ Infrastructure.
 
 .. _build_cache_signing:
 
--------------------
 Build Cache Signing
 -------------------
 
@@ -192,50 +190,54 @@ blobs.
 The manifest files can either be signed or unsigned, but are always given
 a name ending with ``.spec.manifest.json`` regardless. The difference between
 signed and unsigned manifests is simply that the signed version is wrapped in
-a gpg cleartext signature, as illustrated below::
+a gpg cleartext signature, as illustrated below:
 
-  -----BEGIN PGP SIGNED MESSAGE-----
-  Hash: SHA512
+.. code-block:: text
 
-  {
-    "version": 3,
-    "data": [
-      {
-        "contentLength": 10731083,
-        "mediaType": "application/vnd.spack.install.v2.tar+gzip",
-        "compression": "gzip",
-        "checksumAlgorithm": "sha256",
-        "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
-      },
-      {
-        "contentLength": 1000,
-        "mediaType": "application/vnd.spack.spec.v5+json",
-        "compression": "gzip",
-        "checksumAlgorithm": "sha256",
-        "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
-      }
-    ]
-  }
-  -----BEGIN PGP SIGNATURE-----
+   -----BEGIN PGP SIGNED MESSAGE-----
+   Hash: SHA512
 
-  iQGzBAEBCgAdFiEEdbwFKBFJCcB24mB0GAEP+tc8mwcFAmf2rr4ACgkQGAEP+tc8
-  mwfefwv+KJs8MsQ5ovFaBdmyx5H/3k4rO4QHBzuSPOB6UaxErA9IyOB31iP6vNTU
-  HzYpxz6F5dJCJWmmNEMN/0+vjhMHEOkqd7M1l5reVcxduTF2yc4tBZUO2gienEHL
-  W0e+SnUznl1yc/aVpChUiahO2zToCsI8HZRNT4tu6iCnE/OpghqjsSdBOZHmSNDD
-  5wuuCxfDUyWI6ZlLclaaB7RdbCUUJf/iqi711J+wubvnDFhc6Ynwm1xai5laJ1bD
-  ev3NrSb2AAroeNFVo4iECA0fZC1OZQYzaRmAEhBXtCideGJ5Zf2Cp9hmCwNK8Hq6
-  bNt94JP9LqC3FCCJJOMsPyOOhMSA5MU44zyyzloRwEQpHHLuFzVdbTHA3dmTc18n
-  HxNLkZoEMYRc8zNr40g0yb2lCbc+P11TtL1E+5NlE34MX15mPewRCiIFTMwhCnE3
-  gFSKtW1MKustZE35/RUwd2mpJRf+mSRVCl1f1RiFjktLjz7vWQq7imIUSam0fPDr
-  XD4aDogm
-  =RrFX
-  -----END PGP SIGNATURE-----
+   {
+     "version": 3,
+     "data": [
+       {
+         "contentLength": 10731083,
+         "mediaType": "application/vnd.spack.install.v2.tar+gzip",
+         "compression": "gzip",
+         "checksumAlgorithm": "sha256",
+         "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
+       },
+       {
+         "contentLength": 1000,
+         "mediaType": "application/vnd.spack.spec.v5+json",
+         "compression": "gzip",
+         "checksumAlgorithm": "sha256",
+         "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
+       }
+     ]
+   }
+   -----BEGIN PGP SIGNATURE-----
+
+   iQGzBAEBCgAdFiEEdbwFKBFJCcB24mB0GAEP+tc8mwcFAmf2rr4ACgkQGAEP+tc8
+   mwfefwv+KJs8MsQ5ovFaBdmyx5H/3k4rO4QHBzuSPOB6UaxErA9IyOB31iP6vNTU
+   HzYpxz6F5dJCJWmmNEMN/0+vjhMHEOkqd7M1l5reVcxduTF2yc4tBZUO2gienEHL
+   W0e+SnUznl1yc/aVpChUiahO2zToCsI8HZRNT4tu6iCnE/OpghqjsSdBOZHmSNDD
+   5wuuCxfDUyWI6ZlLclaaB7RdbCUUJf/iqi711J+wubvnDFhc6Ynwm1xai5laJ1bD
+   ev3NrSb2AAroeNFVo4iECA0fZC1OZQYzaRmAEhBXtCideGJ5Zf2Cp9hmCwNK8Hq6
+   bNt94JP9LqC3FCCJJOMsPyOOhMSA5MU44zyyzloRwEQpHHLuFzVdbTHA3dmTc18n
+   HxNLkZoEMYRc8zNr40g0yb2lCbc+P11TtL1E+5NlE34MX15mPewRCiIFTMwhCnE3
+   gFSKtW1MKustZE35/RUwd2mpJRf+mSRVCl1f1RiFjktLjz7vWQq7imIUSam0fPDr
+   XD4aDogm
+   =RrFX
+   -----END PGP SIGNATURE-----
 
 If a user has trusted the public key associated with the private key
 used to sign the above manifest file, the signature can be verified with
-gpg, as follows::
+gpg, as follows:
 
-  $ gpg --verify gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
+.. code-block:: console
+
+   $ gpg --verify gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
 
 When attempting to install a binary package that has been signed, spack will
 attempt to verify the signature with one of the trusted keys in its keyring,
@@ -245,7 +247,6 @@ force installation of a signed package without verification by providing the
 
 .. _internal_implementation:
 
------------------------
 Internal Implementation
 -----------------------
 
@@ -270,8 +271,8 @@ infrastructure.
     - Both Root private keys are protected with strong passwords
     - Who has access to these and how?
 
-**Intermediate CI Key**
------------------------
+Intermediate CI Key
+^^^^^^^^^^^^^^^^^^^
 
 Multiple intermediate CI signing keys exist, one Intermediate CI Key for jobs
 run in AWS, and one key for each affiliated institution (e.g. University of
@@ -306,8 +307,8 @@ the following way:
 6. The spec manifest is signed by the keyring and uploaded to the mirror's
    build cache.
 
-**Reputational Key**
---------------------
+Reputational Key
+^^^^^^^^^^^^^^^^
 
 Because of the increased impact to end users in the case of a private
 key breach, the Reputational Key is managed separately from the
@@ -402,7 +403,7 @@ registered as specific *protected* runners on the spack/spack project. In
 addition to protected runners there are protected branches on the spack/spack
 project. These are the ``develop`` branch, any release branch (i.e. managed with
 the ``releases/v*`` wildcard) and any tag branch (managed with the ``v*``
-wildcard) Finally, Spack's pipeline generation code reserves certain tags to make
+wildcard). Finally, Spack's pipeline generation code reserves certain tags to make
 sure jobs are routed to the correct runners; these tags are ``public``,
 ``protected``, and ``notary``. Understanding how all this works together to
 protect secrets and provide integrity assurances can be a little confusing so

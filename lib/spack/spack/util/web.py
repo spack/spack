@@ -56,9 +56,33 @@ class DetailedHTTPError(HTTPError):
         return DetailedHTTPError, (self.req, self.code, self.msg, self.hdrs, None)
 
 
+class DetailedURLError(URLError):
+    def __init__(self, req: Request, reason):
+        super().__init__(reason)
+        self.req = req
+
+    def __str__(self):
+        return f"{self.req.get_method()} {self.req.get_full_url()} errored with: {self.reason}"
+
+    def __reduce__(self):
+        return DetailedURLError, (self.req, self.reason)
+
+
 class SpackHTTPDefaultErrorHandler(HTTPDefaultErrorHandler):
     def http_error_default(self, req, fp, code, msg, hdrs):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
+
+
+class SpackHTTPSHandler(HTTPSHandler):
+    """A custom HTTPS handler that shows more detailed error messages on connection failure."""
+
+    def https_open(self, req):
+        try:
+            return super().https_open(req)
+        except HTTPError:
+            raise
+        except URLError as e:
+            raise DetailedURLError(req, e.reason) from e
 
 
 def custom_ssl_certs() -> Optional[Tuple[bool, str]]:
@@ -120,12 +144,12 @@ def _urlopen():
 
     # One opener with HTTPS ssl enabled
     with_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=ssl_create_default_context()), error_handler
+        s3, gcs, SpackHTTPSHandler(context=ssl_create_default_context()), error_handler
     )
 
     # One opener with HTTPS ssl disabled
     without_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()), error_handler
+        s3, gcs, SpackHTTPSHandler(context=ssl._create_unverified_context()), error_handler
     )
 
     # And dynamically dispatch based on the config:verify_ssl.

@@ -1,4 +1,4 @@
-{% extends "!layout.html" %}
+{% extends "!base.html" %}
 
 {%- block extrahead %} 
   <!-- Google tag (gtag.js) -->
@@ -9,4 +9,8 @@
     gtag('js', new Date());
     gtag('config', 'G-S0PQ7WV75K');
   </script>
+  {%- if READTHEDOCS %}
+  <meta name="readthedocs-addons-api-version" content="1">
+  <script src="{{ pathto('_static/js/versions.js', 1) }}"></script>
+  {%- endif %}
 {% endblock %}

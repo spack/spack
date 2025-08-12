@@ -4,7 +4,10 @@
 
 .. _config-yaml:
 
-============================
+.. meta::
+   :description lang=en:
+      A detailed guide to the config.yaml file in Spack, which allows you to set core configuration options like installation paths, build parallelism, and trusted sources.
+
 Spack Settings (config.yaml)
 ============================
 
@@ -18,14 +21,12 @@ see the default settings by looking at
 These settings can be overridden in ``etc/spack/config.yaml`` or
 ``~/.spack/config.yaml``.  See :ref:`configuration-scopes` for details.
 
----------------------
 ``install_tree:root``
 ---------------------
 
 The location where Spack will install packages and their dependencies.
 The default is ``$spack/opt/spack``.
 
----------------
 ``projections``
 ---------------
 
@@ -36,7 +37,7 @@ The default is ``$spack/opt/spack``.
 By default, Spack installs all packages into a unique directory relative to the install
 tree root with the following layout:
 
-.. code-block::
+.. code-block:: text
 
    {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
 
@@ -69,7 +70,6 @@ hash length of 16 characters.
 
 Notice that reducing the hash length increases the likelihood of hash collisions.
 
---------------------
 ``build_stage``
 --------------------
 
@@ -80,7 +80,8 @@ space available in the temporary location than in the home directory. If the
 username is not already in the path, Spack will append the value of ``$user`` to
 the selected ``build_stage`` path.
 
-.. warning:: We highly recommend specifying ``build_stage`` paths that
+.. warning::
+   We highly recommend specifying ``build_stage`` paths that
    distinguish between staging and other activities to ensure
    ``spack clean`` does not inadvertently remove unrelated files.
    Spack prepends ``spack-stage-`` to temporary staging directory names to
@@ -115,7 +116,6 @@ deleted, but you can manually purge them with ``spack clean --stage``.
    The build will fail if there is no writable directory in the ``build_stage``
    list, where any user- and site-specific setting will be searched first.
 
---------------------
 ``source_cache``
 --------------------
 
@@ -125,7 +125,6 @@ by default and can be purged with ``spack clean --downloads``.
 
 .. _Misc Cache:
 
---------------------
 ``misc_cache``
 --------------------
 
@@ -140,7 +139,6 @@ You can do that by changing the value to either:
 * ``~/.spack/$spack_instance_id/cache`` for per-instance caches, or
 * ``~/.spack/$spack_short_version/cache`` for per-spack-version caches.
 
---------------------
 ``verify_ssl``
 --------------------
 
@@ -149,7 +147,6 @@ hosts when making ``ssl`` connections. Set to ``false`` to disable, and
 tools like ``curl`` will use their ``--insecure`` options. Disabling
 this can expose you to attacks. Use at your own risk.
 
---------------------
 ``ssl_certs``
 --------------------
 
@@ -169,7 +166,6 @@ In all cases, the expanded path must be absolute for Spack to use the certificat
 Certificates relative to an environment can be created by prepending the path variable
 with the Spack configuration variable ``$env``.
 
---------------------
 ``checksum``
 --------------------
 
@@ -178,7 +174,6 @@ checksum and will refuse to build packages that it cannot verify. Set
 to ``false`` to disable these checks. Disabling this can expose you to
 attacks. Use at your own risk.
 
---------------------
 ``locks``
 --------------------
 
@@ -189,7 +184,6 @@ of Spack. For file systems that do not support locking, you should set
 this to ``false`` and run one Spack instance at a time; otherwise, we recommend
 enabling locks.
 
---------------------
 ``dirty``
 --------------------
 
@@ -205,7 +199,6 @@ of builds.
 
 .. _build-jobs:
 
---------------
 ``build_jobs``
 --------------
 
@@ -229,7 +222,6 @@ Note that specifying the number of jobs on the command line always takes
 priority, so that ``spack install -j<n>`` always runs ``make -j<n>``, even
 when that exceeds the number of cores available.
 
---------------------
 ``ccache``
 --------------------
 
@@ -248,7 +240,6 @@ them.) Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
 https://github.com/spack/spack/pull/3761#issuecomment-294352232).
 
------------------------
 ``shared_linking:type``
 -----------------------
 
@@ -256,8 +247,8 @@ Controls whether Spack embeds ``RPATH`` or ``RUNPATH`` attributes in ELF binarie
 so that they can find their dependencies. This has no effect on macOS.
 Two options are allowed:
 
- 1. ``rpath`` uses ``RPATH`` and forces the ``--disable-new-tags`` flag to be passed to the linker.
- 2. ``runpath`` uses ``RUNPATH`` and forces the ``--enable-new-tags`` flag to be passed to the linker.
+1. ``rpath`` uses ``RPATH`` and forces the ``--disable-new-tags`` flag to be passed to the linker.
+2. ``runpath`` uses ``RUNPATH`` and forces the ``--enable-new-tags`` flag to be passed to the linker.
 
 ``RPATH`` search paths have higher precedence than ``LD_LIBRARY_PATH``,
 and ``ld.so`` will search for libraries in transitive RPATHs of
@@ -269,7 +260,6 @@ the loading object.
 
 DO NOT MIX the two options within the same install tree.
 
------------------------
 ``shared_linking:bind``
 -----------------------
 
@@ -315,7 +305,6 @@ It is also worth noting that:
       class Example(Package):
          non_bindable_shared_objects = ["libinterface.so"]
 
-----------------------
 ``install_status``
 ----------------------
 
@@ -329,7 +318,6 @@ Spack has finished its work; otherwise, Spack's status information will
 remain in the terminal's title indefinitely. Most terminals should already
 be set up this way and clear Spack's status information.
 
------------
 ``aliases``
 -----------
 
@@ -343,7 +331,6 @@ create a new alias called ``inst`` that will always call ``install -v``:
    aliases:
      inst: install -v
 
--------------------------------
 ``concretization_cache:enable``
 -------------------------------
 
@@ -361,7 +348,6 @@ Cache is cleaned.
 
 When ``false`` or omitted, all concretization requests will be performed from scratch
 
-----------------------------
 ``concretization_cache:url``
 ----------------------------
 
@@ -370,7 +356,6 @@ paths on the local filesystem.
 
 Default location is under the :ref:`Misc Cache` at: ``$misc_cache/concretization``
 
-------------------------------------
 ``concretization_cache:entry_limit``
 ------------------------------------
 
@@ -381,7 +366,6 @@ oldest concretization results are pruned until 10% of the limit has been removed
 Setting this value to 0 disables automatic pruning. It is expected that users will be
 responsible for maintaining this cache.
 
------------------------------------
 ``concretization_cache:size_limit``
 -----------------------------------
 
