@@ -871,8 +871,8 @@ def include_path_scope(include: IncludePath, parent_scope: ConfigScope) -> Optio
             # Clean windows path for use in config name that looks nicer
             # ie. The path: C:\\some\\path\\to\\a\\file
             # becomes C/some/path/to/a/file
-            included_name.replace("\\", "/")
-            included_name.replace(":", "")
+            included_name = included_name.replace("\\", "/")
+            included_name = included_name.replace(":", "")
 
         if os.path.isdir(config_path):
             # directories are treated as regular ConfigScopes
