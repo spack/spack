@@ -3162,4 +3162,3 @@ For most use cases inside a package, its dependency locations can be accessed vi
 Specific packages that should be consumed by dependents via ``.home`` instead of ``.prefix`` should be noted in their respective documentation.
 
 See :ref:`custom-attributes` for more details and an example implementing a custom ``home`` attribute.
-
