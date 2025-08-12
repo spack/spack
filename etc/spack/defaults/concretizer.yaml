@@ -54,17 +54,19 @@ concretizer:
       # Regular packages
       cmake: 2
       gmake: 2
-      python: 2
-      python-venv: 2
       py-cython: 2
       py-flit-core: 2
       py-pip: 2
       py-setuptools: 2
       py-wheel: 2
+      python-venv: 2
+      python: 2
       xcb-proto: 2
       # Compilers
       gcc: 2
+      go: 2
       llvm: 2
+      rust: 2
   # Option to specify compatibility between operating systems for reuse of compilers and packages
   # Specified as a key: [list] where the key is the os that is being targeted, and the list contains the OS's
   # it can reuse. Note this is a directional compatibility so mutual compatibility between two OS's
