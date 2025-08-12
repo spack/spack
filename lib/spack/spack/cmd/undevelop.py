@@ -15,22 +15,22 @@ level = "long"
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
-    concretize_group = subparser.add_mutually_exclusive_group()
-    concretize_group.add_argument(
-        "--no-concretize",
+    apply_group = subparser.add_mutually_exclusive_group()
+    apply_group.add_argument(
+        "--no-apply-changes",
         action="store_false",
-        dest="concretize",
-        help="do not mutate concrete specs to remove provenance",
-    )
-    concretize_group.add_argument(
-        "--concretize",
-        action="store_true",
-        dest="concretize",
-        default=True,
+        dest="apply_changes",
         help=(
-            "(default) mutate concrete specs to remove dev_path provenance."
-            " This does not do other aspects of concretization."
+            "do not mutate concrete specs to remove dev_path provenance."
+            " This requires running `spack concretize -f` later to apply changes to concrete specs"
         ),
+    )
+    apply_group.add_argument(
+        "--apply-changes",
+        action="store_true",
+        dest="apply_changes",
+        default=True,
+        help=("(default) mutate concrete specs to remove dev_path provenance."),
     )
 
     subparser.add_argument(
@@ -69,9 +69,9 @@ def undevelop(parser, args):
     env = spack.cmd.require_active_env(cmd_name="undevelop")
     with env.write_transaction():
         _update_config(remove_specs, remove_all)
-        if args.concretize:
+        if args.apply_changes:
             for spec in remove_specs:
-                env.develop_concretize(spec, path=None)
+                env.apply_develop(spec, path=None)
 
     updated_all_dev_specs = set(spack.config.get("develop"))
     remove_spec_names = set(x.name for x in remove_specs)

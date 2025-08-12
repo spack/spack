@@ -1443,7 +1443,7 @@ class Environment:
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
 
-    def develop_concretize(self, spec: spack.spec.Spec, path: Optional[str] = None):
+    def apply_develop(self, spec: spack.spec.Spec, path: Optional[str] = None):
         """Mutate concrete specs to include dev_path provenance pointing to path.
 
         This does not do any other aspect of concretization. It will fail if any existing concrete

@@ -46,22 +46,25 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         ),
     )
 
-    concretize_group = subparser.add_mutually_exclusive_group()
-    concretize_group.add_argument(
-        "--no-concretize",
+    apply_group = subparser.add_mutually_exclusive_group()
+    apply_group.add_argument(
+        "--no-apply-changes",
         action="store_false",
-        dest="concretize",
-        help="do not mutate concrete specs to have dev_path provenance",
+        dest="apply_changes",
+        help=(
+            "do not mutate concrete specs to have dev_path provenance."
+            " This requires a later `spack concretize --force` command to use develop specs"
+        ),
     )
-    concretize_group.add_argument(
-        "--concretize",
+    apply_group.add_argument(
+        "--apply-changes",
         action="store_true",
-        dest="concretize",
+        dest="apply_changes",
         default=True,
         help=(
             "(default) mutate concrete specs to have dev_path provenance."
             " This does not do other aspects of concretization."
-            " It will fail if the dev specs are incompatible with concrete specs in the env."
+            " It will fail if the develop spec is incompatible with concrete specs in the env."
         ),
     )
 
@@ -164,7 +167,7 @@ def update_env(
     spec: spack.spec.Spec,
     specified_path: Optional[str] = None,
     build_dir: Optional[str] = None,
-    concretize: bool = True,
+    apply_changes: bool = True,
 ):
     """
     Update the spack.yaml file with additions or changes from a develop call
@@ -186,8 +189,8 @@ def update_env(
         _update_config(spec, specified_path)
 
         # If we are automatically mutating the concrete specs for dev provenance, do so
-        if concretize:
-            env.develop_concretize(spec, specified_path)
+        if apply_changes:
+            env.apply_develop(spec, specified_path)
 
 
 def _clone(spec: spack.spec.Spec, abspath: str, force: bool = False):
@@ -260,4 +263,4 @@ def develop(parser, args):
     for spec, abspath in _dev_spec_generator(args, env):
         assure_concrete_spec(env, spec)
         setup_src_code(spec, abspath, clone=args.clone, force=args.force)
-        update_env(env, spec, args.path, args.build_directory, args.concretize)
+        update_env(env, spec, args.path, args.build_directory, args.apply_changes)
