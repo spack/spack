@@ -13,6 +13,7 @@ import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.repo
+import spack.solver.reuse
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
@@ -87,11 +88,17 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="don't show full list of installed specs in an environment",
     )
-    subparser.add_argument(
+    concretized_vs_packages = subparser.add_mutually_exclusive_group()
+    concretized_vs_packages.add_argument(
         "-c",
         "--show-concretized",
         action="store_true",
         help="show concretized specs in an environment",
+    )
+    concretized_vs_packages.add_argument(
+        "--show-configured-externals",
+        action="store_true",
+        help="show externals defined in the 'packages' section of the configuration",
     )
     subparser.add_argument(
         "-f",
@@ -321,8 +328,12 @@ def display_env(env, args, decorator, results):
 
 def _find_query(args, env):
     q_args = query_arguments(args)
-    concretized_but_not_installed = list()
-    if env:
+    concretized_but_not_installed = []
+    if args.show_configured_externals:
+        results = spack.solver.reuse.SpecFilter.from_packages_yaml(
+            spack.config.CONFIG, include=[], exclude=[]
+        ).selected_specs()
+    elif env:
         all_env_specs = env.all_specs()
         if args.constraint:
             init_specs = cmd.parse_specs(args.constraint)
