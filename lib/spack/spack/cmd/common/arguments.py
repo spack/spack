@@ -404,6 +404,19 @@ def concurrent_packages():
 
 
 @arg
+def format():
+    return Args(
+        "--format",
+        action="store",
+        default=None,
+        help=(
+            "output specs with the specified format string\n"
+            "e.g. {name}{@version}{compiler_flags}{variants}{/hash:7}\n"
+        ),
+    )
+
+
+@arg
 def install_status():
     return Args(
         "-I",

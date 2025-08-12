@@ -26,12 +26,9 @@ level = "short"
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     format_group = subparser.add_mutually_exclusive_group()
-    format_group.add_argument(
-        "--format",
-        action="store",
-        default=None,
-        help="output specs with the specified format string",
-    )
+
+    arguments.add_common_arguments(subparser, ["format"])
+
     format_group.add_argument(
         "-H",
         "--hashes",
