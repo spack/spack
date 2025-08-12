@@ -65,7 +65,9 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_pac
         assert mirror_res == expected
 
 
-def test_mirror_cli_parallel_args(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path, monkeypatch):
+def test_mirror_cli_parallel_args(
+    tmp_path, mock_packages, mock_fetch, mutable_mock_env_path, monkeypatch
+):
     """Test the CLI parallel args"""
     mirror_dir = str(tmp_path / "mirror")
     env_name = "test-parallel"
@@ -74,7 +76,9 @@ def test_mirror_cli_parallel_args(tmp_path, mock_packages, mock_fetch, mutable_m
         assert path == mirror_dir
         assert workers == 2
 
-    monkeypatch.setattr(spack.cmd.mirror, "create_mirror_for_all_specs", mock_create_mirror_for_all_specs)
+    monkeypatch.setattr(
+        spack.cmd.mirror, "create_mirror_for_all_specs", mock_create_mirror_for_all_specs
+    )
 
     env("create", env_name)
     with ev.read(env_name):
