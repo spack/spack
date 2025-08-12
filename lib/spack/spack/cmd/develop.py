@@ -179,18 +179,16 @@ def update_env(
         if dev_entry:
             specified_path = dev_entry.get("path", None)
 
-    with env.write_transaction():
-        if build_dir is not None:
-            spack.config.add(
-                f"packages:{spec.name}:package_attributes:build_directory:{build_dir}",
-                env.scope_name,
-            )
-        # add develop spec and update path
-        _update_config(spec, specified_path)
+    if build_dir is not None:
+        spack.config.add(
+            f"packages:{spec.name}:package_attributes:build_directory:{build_dir}", env.scope_name
+        )
+    # add develop spec and update path
+    _update_config(spec, specified_path)
 
-        # If we are automatically mutating the concrete specs for dev provenance, do so
-        if apply_changes:
-            env.apply_develop(spec, _abs_code_path(env, spec, specified_path))
+    # If we are automatically mutating the concrete specs for dev provenance, do so
+    if apply_changes:
+        env.apply_develop(spec, _abs_code_path(env, spec, specified_path))
 
 
 def _clone(spec: spack.spec.Spec, abspath: str, force: bool = False):
@@ -260,7 +258,10 @@ def _dev_spec_generator(args, env):
 def develop(parser, args):
     env = spack.cmd.require_active_env(cmd_name="develop")
 
-    for spec, abspath in _dev_spec_generator(args, env):
-        assure_concrete_spec(env, spec)
-        setup_src_code(spec, abspath, clone=args.clone, force=args.force)
-        update_env(env, spec, args.path, args.build_directory, args.apply_changes)
+    with env.write_transaction():
+        for spec, abspath in _dev_spec_generator(args, env):
+            assure_concrete_spec(env, spec)
+            setup_src_code(spec, abspath, clone=args.clone, force=args.force)
+            update_env(env, spec, args.path, args.build_directory, args.apply_changes)
+        if args.apply_changes:
+            env.write()

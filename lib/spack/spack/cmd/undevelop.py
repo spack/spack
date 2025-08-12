@@ -72,6 +72,7 @@ def undevelop(parser, args):
         if args.apply_changes:
             for spec in remove_specs:
                 env.apply_develop(spec, path=None)
+            env.write()
 
     updated_all_dev_specs = set(spack.config.get("develop"))
     remove_spec_names = set(x.name for x in remove_specs)
