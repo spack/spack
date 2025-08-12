@@ -335,7 +335,7 @@ The rest of the tasks you need to complete are as follows:
 
 #. Change the ``license`` to the correct license.
 
-   The ``license`` is displayed when users run ``spack info`` so that they can learn more about your package.
+   The ``license`` is displayed when users run ``spack info`` so that they can learn more about your package. See :ref:`package_license`.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
@@ -2641,6 +2641,8 @@ To add maintainers to a package, simply declare them with the ``maintainers`` di
    maintainers("user1", "user2")
 
 The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
+
+.. _package_license:
 
 License Information
 -------------------
