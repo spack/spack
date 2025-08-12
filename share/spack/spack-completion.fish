@@ -1834,7 +1834,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status specfile-format d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status specfile-format d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit e/external u/unknown m/missing v/variants loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1876,6 +1876,8 @@ complete -c spack -n '__fish_spack_using_command find' -s x -l explicit -f -a ex
 complete -c spack -n '__fish_spack_using_command find' -s x -l explicit -d 'show only specs that were installed explicitly'
 complete -c spack -n '__fish_spack_using_command find' -s X -l implicit -f -a implicit
 complete -c spack -n '__fish_spack_using_command find' -s X -l implicit -d 'show only specs that were installed as dependencies'
+complete -c spack -n '__fish_spack_using_command find' -s e -l external -f -a external
+complete -c spack -n '__fish_spack_using_command find' -s e -l external -d 'show only specs that are marked as externals'
 complete -c spack -n '__fish_spack_using_command find' -s u -l unknown -f -a unknown
 complete -c spack -n '__fish_spack_using_command find' -s u -l unknown -d 'show only specs Spack does not have a package for'
 complete -c spack -n '__fish_spack_using_command find' -s m -l missing -f -a missing

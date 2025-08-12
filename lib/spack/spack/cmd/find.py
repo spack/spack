@@ -120,6 +120,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="show only specs that were installed as dependencies",
     )
     subparser.add_argument(
+        "-e",
+        "--external",
+        action="store_true",
+        help="show only specs that are marked as externals",
+    )
+    subparser.add_argument(
         "-u",
         "--unknown",
         action="store_true",
@@ -336,6 +342,9 @@ def _find_query(args, env):
                     results.append(spec)
     else:
         results = args.specs(**q_args)
+
+    if args.external:
+        results = [s for s in results if s.external]
 
     # use groups by default except with format.
     if args.groups is None:
