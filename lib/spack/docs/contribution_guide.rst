@@ -442,12 +442,12 @@ Contributing computational resources to Spack's CI build farm is one way to help
 capabilities and offerings of the public Spack build caches. Currently, Spack utilizes Linux runners
 from AWS, Google, and the University of Oregon (UO).
 
-Runners require three key pieces:
+Runners require four key pieces:
+
 * Runner Registration Token
 * Accurate tags
 * OIDC Authentication script
 * GPG keys
-
 
 Minimum GitLab Runner Version: ``16.1.0``
 `Installation instructions <https://docs.gitlab.com/runner/install/>`_

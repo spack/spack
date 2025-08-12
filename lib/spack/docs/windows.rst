@@ -188,7 +188,7 @@ at the start of this section. Also note that YAML files use spaces for indentati
 and not tabs, so ensure that this is the case when editing one directly.
 
 
-.. note:: Cygwin
+.. note::
    The use of Cygwin is not officially supported by Spack and is not tested.
    However, Spack will not prevent this, so if choosing to use Spack
    with Cygwin, know that no functionality is guaranteed.
@@ -205,7 +205,7 @@ Spack console via:
 
 If in the previous step, you did not have CMake or Ninja installed, running the command above should install both packages.
 
-.. note:: Spec Syntax Caveats
+.. note::
    Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells
    See the Spack spec syntax doc for more information
 

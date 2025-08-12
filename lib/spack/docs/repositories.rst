@@ -331,9 +331,10 @@ This search order allows you to override built-in packages.
 If you have your own ``mpich`` in a repository ``my_custom_repo``, and ``my_custom_repo`` is listed before ``builtin`` in your ``repos.yaml``, Spack will use your version of ``mpich`` by default.
 
 Suppose your effective (merged) ``repos.yaml`` implies the following order:
-1.  ``proto`` (local repo at ``~/my_spack_repos/spack_repo/proto_repo``)
-2.  ``llnl`` (local repo at ``/usr/local/repos/spack_repo/llnl_repo``)
-3.  ``builtin`` (Spack's default packages from `spack/spack-packages`)
+
+1. ``proto`` (local repo at ``~/my_spack_repos/spack_repo/proto_repo``)
+2. ``llnl`` (local repo at ``/usr/local/repos/spack_repo/llnl_repo``)
+3. ``builtin`` (Spack's default packages from ``spack/spack-packages``)
 
 And the packages are:
 

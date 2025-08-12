@@ -737,7 +737,7 @@ File filtering functions
     hard-coded ``sed`` commands in their build.
 
     ``change_sed_delimiter`` finds all ``sed`` search/replace commands
-    and changes the delimiter.  e.g., if the file contains commands
+    and changes the delimiter. E.g., if the file contains commands
     that look like ``s///``, you can use this to change them to
     ``s@@@``.
 

@@ -40,7 +40,7 @@ Dependencies
 ^^^^^^^^^^^^
 
 Usually, the homepage of a package will list dependencies, i.e.,
-``Dependencies:	Octave >= 3.6.0 struct >= 1.0.12``. The same information should
+``Dependencies: Octave >= 3.6.0 struct >= 1.0.12``. The same information should
 be available in the ``DESCRIPTION`` file in the root of each archive.
 
 External Documentation

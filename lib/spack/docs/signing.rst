@@ -403,7 +403,7 @@ registered as specific *protected* runners on the spack/spack project. In
 addition to protected runners there are protected branches on the spack/spack
 project. These are the ``develop`` branch, any release branch (i.e. managed with
 the ``releases/v*`` wildcard) and any tag branch (managed with the ``v*``
-wildcard) Finally, Spack's pipeline generation code reserves certain tags to make
+wildcard). Finally, Spack's pipeline generation code reserves certain tags to make
 sure jobs are routed to the correct runners; these tags are ``public``,
 ``protected``, and ``notary``. Understanding how all this works together to
 protect secrets and provide integrity assurances can be a little confusing so

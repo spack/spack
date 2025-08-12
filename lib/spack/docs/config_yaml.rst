@@ -80,7 +80,8 @@ space available in the temporary location than in the home directory. If the
 username is not already in the path, Spack will append the value of ``$user`` to
 the selected ``build_stage`` path.
 
-.. warning:: We highly recommend specifying ``build_stage`` paths that
+.. warning::
+   We highly recommend specifying ``build_stage`` paths that
    distinguish between staging and other activities to ensure
    ``spack clean`` does not inadvertently remove unrelated files.
    Spack prepends ``spack-stage-`` to temporary staging directory names to
