@@ -898,7 +898,7 @@ are:
    Create a pull request targeting the ``develop`` branch, bumping the minor
    version in ``lib/spack/spack/__init__.py`` with a ``dev0`` release segment.
    For instance, when you have just released ``v1.1.0``, set the version
-   to ``(1, 1, 0, 'dev0')`` on ``develop``.
+   to ``(1, 2, 0, 'dev0')`` on ``develop``.
 
 #. Follow the steps in :ref:`publishing-releases`.
 
