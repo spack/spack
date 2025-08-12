@@ -874,9 +874,20 @@ class EnvironmentModifications:
             ]
         )
 
+        before_kwargs = {**kwargs}
+        if sys.platform == "win32":
+            # Windows cannot source os.devnull, but it can echo from it
+            # so we override the "source" action in the method that
+            # extracts the env (environment_after_sourcing_files)
+            if "source_command" not in kwargs:
+                before_kwargs["source_command"] = "echo"
+
         # Compute the environments before and after sourcing
+
+        # First look at the environment after doing nothing to
+        # establish baseline
         before = sanitize(
-            environment_after_sourcing_files(os.devnull, **kwargs),
+            environment_after_sourcing_files(os.devnull, **before_kwargs),
             exclude=exclude,
             include=include,
         )
@@ -916,7 +927,7 @@ class EnvironmentModifications:
         modified_variables.sort()
 
         def return_separator_if_any(*args):
-            separators = ":", ";"
+            separators = [os.pathsep] if sys.platform == "win32" else [":", ";"]
             for separator in separators:
                 for arg in args:
                     if separator in arg:
@@ -1154,7 +1165,7 @@ def environment_after_sourcing_files(
     if sys.platform == "win32":
         shell_cmd = kwargs.get("shell", "cmd.exe")
         shell_options = kwargs.get("shell_options", "/C")
-        suppress_output = kwargs.get("suppress_output", "")
+        suppress_output = kwargs.get("suppress_output", "> nul")
         source_command = kwargs.get("source_command", "")
     else:
         shell_cmd = kwargs.get("shell", "/bin/bash")
@@ -1178,11 +1189,13 @@ def environment_after_sourcing_files(
             [source_file, suppress_output, concatenate_on_success, dump_environment_cmd]
         )
 
+        # Popens argument processing can break command invocations
+        # on Windows, compose to a string to avoid said processing
+        cmd = [shell_cmd, *shell_options_list, source_file_arguments]
+        cmd = " ".join(cmd) if sys.platform == "win32" else cmd
+
         with subprocess.Popen(
-            [shell_cmd, *shell_options_list, source_file_arguments],
-            env=environment,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            cmd, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         ) as shell:
             output, _ = shell.communicate()
 
