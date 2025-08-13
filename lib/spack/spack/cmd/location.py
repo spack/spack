@@ -111,10 +111,9 @@ def _location(parser, args):
 
     if args.repo is not False:
         if args.repo is None:
-            print(spack.repo.PATH.first_repo().root)
-            return
+            return spack.repo.PATH.first_repo().root
         try:
-            print(spack.repo.PATH.get_repo(args.repo).root)
+            return spack.repo.PATH.get_repo(args.repo).root
         except spack.repo.UnknownNamespaceError:
             tty.die(f"no such repository: '{args.repo}'")
         return

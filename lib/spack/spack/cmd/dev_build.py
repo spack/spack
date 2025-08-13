@@ -4,7 +4,6 @@
 
 import argparse
 import os
-import sys
 
 import spack.cmd
 import spack.cmd.common.arguments
@@ -147,10 +146,12 @@ def dev_build(self, args):
     spec.constrain(f'dev_path="{source_path}"')
     spec = spack.concretize.concretize_one(spec)
 
+    overwrite = []
     if spec.installed:
-        tty.error("Already installed in %s" % spec.prefix)
-        tty.msg("Uninstall or try adding a version suffix for this dev build.")
-        sys.exit(1)
+        if spec.package.detect_dev_src_change():
+            overwrite = [spec.dag_hash()]
+        else:
+            tty.msg(f"{spec.name} already installed and no source changes detected.")
 
     # disable checksumming if requested
     if args.no_checksum:
@@ -168,6 +169,7 @@ def dev_build(self, args):
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
+        overwrite=overwrite,
         dirty=args.dirty,
         stop_before=args.before,
         skip_patch=args.skip_patch,
