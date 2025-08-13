@@ -2523,7 +2523,7 @@ In the example above ``Cp2k`` inherits the variants and conflicts defined by ``C
 Maintainers
 -----------
 
-Each package in Spack may have one or more maintainers, i.e. one or more GitHub accounts of people who want to be notified any time the package is modified.
+Each package in Spack may have one or more :ref:`<maintainers>`, i.e. one or more GitHub accounts of people who want to be notified any time the package is modified.
 
 When a pull request is submitted that updates the package, these people will be requested to review the PR.
 This is useful for developers who maintain a Spack package for their own software, as well as users who rely on a piece of software and want to ensure that the package doesn't break.

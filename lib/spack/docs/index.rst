@@ -100,6 +100,7 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    :maxdepth: 2
    :caption: Contributing
 
+   roles_and_responsibilities
    packaging_guide_creation
    packaging_guide_build
    packaging_guide_testing
