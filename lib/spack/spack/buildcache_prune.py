@@ -255,13 +255,13 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
 
     This function reads a file containing package hashes to keep, then deletes
     all other package manifests from the buildcache.
-
     Note that this function does *not* prune the blobs associated with the manifests;
     to do that, `prune_orphan` must be invoked to clean up the now-orphaned blobs.
 
-    :param mirror: The mirror to prune
-    :param keeplist_file: Path to file containing newline-delimited hashes to keep
-    :param dry_run: Whether to perform a dry run without actually deleting
+    Args:
+        mirror (spack.mirrors.mirror.Mirror): Mirror to prune
+        keeplist_file (pathlib.Path): Path to file containing newline-delimited hashes to keep
+        dry_run (bool): Whether to perform a dry run without actually deleting
     """
     tty.info("=== Direct Pruning Phase ===")
     tty.debug(f"Direct pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
