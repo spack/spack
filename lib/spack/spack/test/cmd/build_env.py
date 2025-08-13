@@ -9,6 +9,7 @@ import sys
 
 import pytest
 
+import spack.concretize
 import spack.error
 from spack.cmd.common.env_utility import run_command_in_subshell
 from spack.context import Context
@@ -68,7 +69,7 @@ def test_pickle(tmp_path: pathlib.Path):
 # TODO praram [e] requires an active env
 @pytest.mark.parametrize("cd_key", ["r", "spack-root"])
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
-def test_cd(cd_key, tmpdir, monkeypatch, capfd):
+def test_cd(cd_key, tmp_path, monkeypatch, capfd):
     """test that a subshell will navigate using spack cd before running commands"""
     cmd = "pwd" if sys.platform != "win32" else 'powershell.exe -Command "& {(Get-Location).Path}"'
 
@@ -77,11 +78,12 @@ def test_cd(cd_key, tmpdir, monkeypatch, capfd):
         result = subprocess.check_output(args, universal_newlines=True)
         print(result)
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         monkeypatch.setattr(os, "execvp", mock_execvp)
 
         pwd = os.getcwd()
-        spec = Spec("zlib").concretized()
+
+        spec = spack.concretize.concretize_one(Spec("zlib"))
         run_command_in_subshell(spec, Context.BUILD, cmd, cd_arg=cd_key)
 
         output = capfd.readouterr()
