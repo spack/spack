@@ -694,7 +694,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a list -d
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a keys -d 'get public keys available on mirrors'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a check -d 'check specs against remote binary mirror(s) to see if any need to be rebuilt'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a download -d 'download buildcache entry from a remote mirror to local folder'
-complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a prune -d 'prune stale buildcache entries from the mirror'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a prune -d 'prune buildcache entries from the mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a save-specfile -d 'get full spec for dependencies and write them to files in the specified output directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a sync -d 'sync binaries (and associated metadata) from one mirror to another'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a update-index -d 'update a buildcache index'
@@ -830,10 +830,12 @@ complete -c spack -n '__fish_spack_using_command buildcache download' -s p -l pa
 complete -c spack -n '__fish_spack_using_command buildcache download' -s p -l path -r -d 'path to directory where tarball should be downloaded'
 
 # spack buildcache prune
-set -g __fish_spack_optspecs_spack_buildcache_prune h/help dry-run
+set -g __fish_spack_optspecs_spack_buildcache_prune h/help k/keeplist= dry-run
 
 complete -c spack -n '__fish_spack_using_command buildcache prune' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache prune' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache prune' -s k -l keeplist -r -f -a keeplist
+complete -c spack -n '__fish_spack_using_command buildcache prune' -s k -l keeplist -r -d 'file containing newline-delimited list of package hashes to keep (optional)'
 complete -c spack -n '__fish_spack_using_command buildcache prune' -l dry-run -f -a dry_run
 complete -c spack -n '__fish_spack_using_command buildcache prune' -l dry-run -d 'do not actually delete anything from the buildcache, but log what would be deleted'
 

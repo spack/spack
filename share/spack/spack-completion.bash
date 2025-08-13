@@ -623,7 +623,7 @@ _spack_buildcache_download() {
 _spack_buildcache_prune() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --dry-run"
+        SPACK_COMPREPLY="-h --help -k --keeplist --dry-run"
     else
         _mirrors
     fi
