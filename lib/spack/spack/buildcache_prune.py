@@ -14,6 +14,7 @@ import spack.stage
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.spec import Spec
 from spack.util.executable import which
 
 from .mirrors.mirror import Mirror
@@ -248,12 +249,108 @@ def _prune_orphans(
     return pruned_object_count
 
 
-def prune(mirror: Mirror, dry_run: bool) -> None:
+def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> None:
+    """
+    Execute direct pruning for a given mirror using a keeplist file.
+
+    This function reads a file containing package hashes to keep, then deletes
+    all other package manifests from the buildcache.
+
+    Note that this function does *not* prune the blobs associated with the manifests;
+    to do that, `prune_orphan` must be invoked to clean up the now-orphaned blobs.
+
+    :param mirror: The mirror to prune
+    :param keeplist_file: Path to file containing newline-delimited hashes to keep
+    :param dry_run: Whether to perform a dry run without actually deleting
+    """
+    tty.info("=== Direct Pruning Phase ===")
+    tty.debug(f"Direct pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
+
+    try:
+        keep_hashes = set(
+            line.strip() for line in keeplist_file.read_text().splitlines() if line.strip()
+        )
+    except Exception as e:
+        tty.die(f"Error reading keeplist file {keeplist_file}: {e}")
+
+    if not keep_hashes:
+        tty.die(f"No hashes found in keeplist file: {keeplist_file}")
+
+    tty.info(f"Loaded {len(keep_hashes)} hashes to keep from {keeplist_file}")
+    total_pruned: Optional[int] = None
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
+        manifest_list, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
+
+        # Determine which manifests correspond to specs we want to prune
+        manifests_to_prune: List[str] = []
+        specs_to_prune: List[str] = []
+
+        for manifest in manifest_list:
+            cache_entry: Optional[URLBuildcacheEntry] = None
+            try:
+                cache_entry = cast(URLBuildcacheEntry, read_fn(manifest))
+                spec_dict = cache_entry.fetch_metadata()
+
+                spec = Spec.from_dict(spec_dict)
+                spec_hash = spec.dag_hash()
+                spec_name = spec.name
+
+                if spec_hash not in keep_hashes:
+                    manifests_to_prune.append(manifest)
+                    specs_to_prune.append(f"{spec_name}/{spec_hash[:7]}")
+            except Exception as e:
+                tty.debug(f"Unable to process manifest {manifest} due to: {e}")
+                continue
+            finally:
+                if cache_entry:
+                    cache_entry.destroy()
+
+        if not manifests_to_prune:
+            tty.info("No packages to prune - all packages are in the keeplist")
+            return
+
+        tty.info(f"Found {len(manifests_to_prune)} package(s) to prune")
+
+        if dry_run:
+            for spec_name in specs_to_prune:
+                tty.info(f"  Would prune: {spec_name}")
+            total_pruned = len(manifests_to_prune)
+        else:
+            manifests_to_delete = set(manifests_to_prune)
+
+            # Try AWS CLI deletion first for S3 mirrors
+            if mirror.fetch_url.startswith("s3://"):
+                total_pruned = _delete_manifests_from_cache_aws(
+                    url=mirror.fetch_url,
+                    tmpspecsdir=tmpspecsdir,
+                    urls_to_delete=manifests_to_delete,
+                )
+
+            if total_pruned is None:
+                # Fall back to manual deletion if using a non-S3 mirror and/or
+                # AWS CLI is not available
+                total_pruned = _delete_entries_from_cache_manual(
+                    url=mirror.fetch_url, urls_to_delete=manifests_to_delete
+                )
+
+    if dry_run:
+        tty.info(f"Would have pruned {total_pruned} objects from mirror: {mirror.fetch_url}")
+    else:
+        tty.info(f"Pruned {total_pruned} objects from mirror: {mirror.fetch_url}")
+        if total_pruned > 0:
+            tty.info(
+                "As a consequence of pruning, the buildcache index is now likely out of date."
+            )
+            tty.info("Run `spack buildcache update-index` to update the index for this mirror.")
+
+
+def prune_orphan(mirror: Mirror, dry_run: bool) -> None:
     """
     Execute the pruning process for a given mirror.
 
     Currently, this function only performs the pruning of orphaned manifests and blobs.
     """
+    tty.info("=== Orphan Pruning Phase ===")
     tty.debug(f"Pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
 
     total_pruned = 0
