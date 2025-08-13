@@ -11,7 +11,8 @@ import os
 import pathlib
 
 import pytest
-
+import shutil
+import subprocess
 from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
 
@@ -33,6 +34,10 @@ def test_make_normal():
     make = MakeExecutable("make", jobs=8)
     result = make(output=str)
     print("RESULT:", result)
+    print("PATH:", os.environ["PATH"])
+    print("make resolves to: ", shutil.which("make"))
+    print("make --version output:")
+    print(subprocess.check_output(["make", "version"], text=True))
     assert make(output=str).strip() == "-j8"
     assert make("install", output=str).strip() == "-j8 install"
 
