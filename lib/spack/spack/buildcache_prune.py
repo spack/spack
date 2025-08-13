@@ -259,9 +259,9 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
     to do that, `prune_orphan` must be invoked to clean up the now-orphaned blobs.
 
     Args:
-        mirror (spack.mirrors.mirror.Mirror): Mirror to prune
-        keeplist_file (pathlib.Path): Path to file containing newline-delimited hashes to keep
-        dry_run (bool): Whether to perform a dry run without actually deleting
+        mirror: Mirror to prune
+        keeplist_file: Path to file containing newline-delimited hashes to keep
+        dry_run: Whether to perform a dry run without actually deleting
     """
     tty.info("=== Direct Pruning Phase ===")
     tty.debug(f"Direct pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
