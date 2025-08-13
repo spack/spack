@@ -6,3 +6,4 @@ mypy==1.17.1
 types-six==1.17.0.20250515
 vermin==1.6.0
 pylint==3.3.7
+docutils==0.21.1
