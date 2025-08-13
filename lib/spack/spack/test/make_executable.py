@@ -9,10 +9,11 @@ This just tests whether the right args are getting passed to make.
 """
 import os
 import pathlib
-
-import pytest
 import shutil
 import subprocess
+
+import pytest
+
 from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
 
