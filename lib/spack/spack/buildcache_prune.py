@@ -281,7 +281,11 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
     tty.info(f"Loaded {len(keep_hashes)} hashes to keep from {keeplist_file}")
     total_pruned: Optional[int] = None
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        manifest_list, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
+        try:
+            manifest_list, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
+        except Exception as e:
+            tty.error(f"Error getting entries from buildcache: {e}")
+            return
 
         # Determine which manifests correspond to specs we want to prune
         manifests_to_prune: List[str] = []
@@ -357,7 +361,11 @@ def prune_orphan(mirror: Mirror, dry_run: bool) -> None:
 
     total_pruned = 0
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        manifest_list, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
+        try:
+            manifest_list, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
+        except Exception as e:
+            tty.error(f"Error getting entries from buildcache: {e}")
+            return
         while True:
             # Continue pruning until no more orphaned objects are found
             pruned = _prune_orphans(
