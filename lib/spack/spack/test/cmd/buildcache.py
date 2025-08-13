@@ -891,7 +891,7 @@ def test_buildcache_prune_direct_with_keeplist(
 def test_buildcache_prune_direct_removes_unlisted(
     tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
 ):
-    """Test that direct pruning removes packages not in the keeplist"""
+    """Test that direct pruning removes specs not in the keeplist"""
     mirror_directory = str(tmp_path)
     mirror("add", "--unsigned", "my-mirror", mirror_directory)
 

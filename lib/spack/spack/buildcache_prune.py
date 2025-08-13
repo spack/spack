@@ -253,8 +253,8 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
     """
     Execute direct pruning for a given mirror using a keeplist file.
 
-    This function reads a file containing package hashes to keep, then deletes
-    all other package manifests from the buildcache.
+    This function reads a file containing spec hashes to keep, then deletes
+    all other spec manifests from the buildcache.
     Note that this function does *not* prune the blobs associated with the manifests;
     to do that, `prune_orphan` must be invoked to clean up the now-orphaned blobs.
 
@@ -308,10 +308,10 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
                     cache_entry.destroy()
 
         if not manifests_to_prune:
-            tty.info("No packages to prune - all packages are in the keeplist")
+            tty.info("No specs to prune - all specs are in the keeplist")
             return
 
-        tty.info(f"Found {len(manifests_to_prune)} package(s) to prune")
+        tty.info(f"Found {len(manifests_to_prune)} spec(s) to prune")
 
         if dry_run:
             for spec_name in specs_to_prune:
