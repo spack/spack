@@ -38,7 +38,7 @@ def test_make_normal():
     print("PATH:", os.environ["PATH"])
     print("make resolves to: ", shutil.which("make"))
     print("make --version output:")
-    print(subprocess.check_output(["make", "version"], text=True))
+    print(subprocess.check_output(["make", "version"], universal_newlines=True))
     assert make(output=str).strip() == "-j8"
     assert make("install", output=str).strip() == "-j8 install"
 
