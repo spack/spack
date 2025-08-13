@@ -850,3 +850,87 @@ def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnu
     assert "Found 1 manifest(s) that are missing blobs" in output
 
     cache_entry.destroy()
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_direct_with_keeplist(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
+):
+    """Test direct pruning functionality with a keeplist file"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Install and push multiple packages
+    specs = mutable_database.query_local("libelf", installed=True)
+    spec1 = specs[0]
+
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
+    )
+    manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
+
+    # Push the first spec (package only, no dependencies)
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec1.dag_hash()}")
+
+    # Create a keeplist file that includes only spec1
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text(f"{spec1.dag_hash()}\n")
+
+    # Run direct pruning
+    cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
+    if dry_run:
+        cmd_args.append("--dry-run")
+    output = buildcache(*cmd_args)
+
+    # Since all packages are in the keeplist, nothing should be pruned
+    assert web_util.url_exists(manifest_url)
+    assert "No specs to prune - all specs are in the keeplist" in output
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_direct_removes_unlisted(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
+):
+    """Test that direct pruning removes packages not in the keeplist"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Install and push a package (package only, no dependencies)
+    specs = mutable_database.query_local("libelf", installed=True)
+    spec1 = specs[0]
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec1.dag_hash()}")
+
+    # Create a keeplist file that excludes the pushed package
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text("0" * 32)
+
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
+    )
+    manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
+
+    assert web_util.url_exists(manifest_url)
+
+    # Run direct pruning
+    cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
+    if dry_run:
+        cmd_args.append("--dry-run")
+    buildcache(*cmd_args)
+
+    assert web_util.url_exists(manifest_url) == dry_run
+
+
+def test_buildcache_prune_direct_empty_keeplist_fails(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome
+):
+    """Test that direct pruning fails with an empty keeplist file"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Create empty keeplist file
+    keeplist_file = tmp_path / "empty_keeplist.txt"
+    keeplist_file.write_text("")
+
+    # Should fail with empty keeplist
+    with pytest.raises(spack.main.SpackCommandError):
+        buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
