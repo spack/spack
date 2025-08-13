@@ -108,6 +108,7 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    build_systems
    contribution_guide
    developer_guide
+   package_review_guide
 
 .. toctree::
    :maxdepth: 2
