@@ -266,15 +266,17 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
     tty.info("=== Direct Pruning Phase ===")
     tty.debug(f"Direct pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
 
+    keep_hashes: Optional[Set[str]] = None
     try:
         keep_hashes = set(
             line.strip() for line in keeplist_file.read_text().splitlines() if line.strip()
         )
     except Exception as e:
-        tty.die(f"Error reading keeplist file {keeplist_file}: {e}")
+        tty.error(f"Error reading keeplist file {keeplist_file}: {e}")
 
     if not keep_hashes:
-        tty.die(f"No hashes found in keeplist file: {keeplist_file}")
+        tty.error(f"No hashes found in keeplist file: {keeplist_file}")
+        return
 
     tty.info(f"Loaded {len(keep_hashes)} hashes to keep from {keeplist_file}")
     total_pruned: Optional[int] = None
