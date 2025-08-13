@@ -4345,3 +4345,52 @@ def test_external_specs_with_dependencies(
     s = spack.concretize.concretize_one(spec_str)
     assert all(node.external for node in s.traverse())
     assert all(s.satisfies(c) for c in expected)
+
+
+@pytest.mark.parametrize(
+    "default_target,expected",
+    [
+        # Specific target requested
+        ("x86_64_v3", ["callpath target=x86_64_v3", "^mpich target=x86_64_v3"]),
+        # With ranges, be conservative by default
+        (":x86_64_v3", ["callpath target=x86_64", "^mpich target=x86_64"]),
+        ("x86_64:x86_64_v3", ["callpath target=x86_64", "^mpich target=x86_64"]),
+        ("x86_64:", ["callpath target=x86_64", "^mpich target=x86_64"]),
+    ],
+)
+@pytest.mark.skipif(
+    spack.vendor.archspec.cpu.host().family != "x86_64", reason="test data for x86_64"
+)
+def test_target_requirements(default_target, expected, mutable_config, mock_packages):
+    """Tests different scenarios where targets might be constrained by configuration and are not
+    specified in external specs
+    """
+    configuration = syaml.load_config(
+        f"""
+packages:
+  all:
+    require:
+    - "target={default_target}"
+  callpath:
+    buildable: false
+    externals:
+    - spec: "callpath@1.0"
+      prefix: /user/path
+      external_id: callpath_id
+      dependencies:
+      - external_id: mpich_id
+        deptypes:
+        - "build"
+        - "link"
+        virtuals: "mpi"
+  mpich:
+    externals:
+    - spec: "mpich@3.0.4"
+      prefix: /user/path
+      external_id: mpich_id
+"""
+    )
+    mutable_config.set("packages", configuration["packages"])
+    s = spack.concretize.concretize_one("callpath")
+    assert s.external
+    assert all(s.satisfies(x) for x in expected), s.tree()

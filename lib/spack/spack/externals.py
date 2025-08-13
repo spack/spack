@@ -105,7 +105,7 @@ def extract_dicts_from_configuration(packages_yaml) -> List[ExternalDict]:
     return result
 
 
-_TARGET_RE = re.compile(r"target=(\S+)")
+_TARGET_RE = re.compile(r"target=([^\s:]+)")
 
 
 def _required_target(entry) -> str:
