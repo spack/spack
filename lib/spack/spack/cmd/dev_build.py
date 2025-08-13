@@ -103,7 +103,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     spack.cmd.common.arguments.add_concretizer_args(subparser)
 
 
-def dev_build(self, args):
+def dev_build(parser, args):
     if not args.spec:
         tty.die("spack dev-build requires a package spec argument.")
 
@@ -163,18 +163,19 @@ def dev_build(self, args):
     elif args.test == "root":
         tests = [spec.name for spec in specs]
 
-    PackageInstaller(
-        [spec.package],
-        tests=tests,
-        keep_prefix=args.keep_prefix,
-        install_deps=not args.ignore_deps,
-        verbose=not args.quiet,
-        overwrite=overwrite,
-        dirty=args.dirty,
-        stop_before=args.before,
-        skip_patch=args.skip_patch,
-        stop_at=args.until,
-    ).install()
+    if overwrite or not spec.installed:
+        PackageInstaller(
+            [spec.package],
+            tests=tests,
+            keep_prefix=args.keep_prefix,
+            install_deps=not args.ignore_deps,
+            verbose=not args.quiet,
+            overwrite=overwrite,
+            dirty=args.dirty,
+            stop_before=args.before,
+            skip_patch=args.skip_patch,
+            stop_at=args.until,
+        ).install()
 
     # drop into the build environment of the package?
     if args.shell is not None:
