@@ -2949,7 +2949,7 @@ complete -c spack -n '__fish_spack_using_command solve' -s y -l yaml -d 'print c
 complete -c spack -n '__fish_spack_using_command solve' -s j -l json -f -a format
 complete -c spack -n '__fish_spack_using_command solve' -s j -l json -d 'print concrete spec as JSON'
 complete -c spack -n '__fish_spack_using_command solve' -l format -r -f -a format
-complete -c spack -n '__fish_spack_using_command solve' -l format -r -d 'print concrete spec with the specified format string'
+complete -c spack -n '__fish_spack_using_command solve' -l format -r -d 'output specs with the specified format string'
 complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -f -a 'nodes edges paths'
 complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
 complete -c spack -n '__fish_spack_using_command solve' -s t -l types -f -a types
@@ -2985,7 +2985,7 @@ complete -c spack -n '__fish_spack_using_command spec' -s y -l yaml -d 'print co
 complete -c spack -n '__fish_spack_using_command spec' -s j -l json -f -a format
 complete -c spack -n '__fish_spack_using_command spec' -s j -l json -d 'print concrete spec as JSON'
 complete -c spack -n '__fish_spack_using_command spec' -l format -r -f -a format
-complete -c spack -n '__fish_spack_using_command spec' -l format -r -d 'print concrete spec with the specified format string'
+complete -c spack -n '__fish_spack_using_command spec' -l format -r -d 'output specs with the specified format string'
 complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -f -a 'nodes edges paths'
 complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
 complete -c spack -n '__fish_spack_using_command spec' -s t -l types -f -a types
