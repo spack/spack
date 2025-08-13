@@ -90,10 +90,7 @@ error(1, "Cannot have multiple nodes for {0} in the same unification set {1}", P
   :- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
-unification_set(SetID, ChildNode, ParentNode, Type) :-
-attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
-
-unification_set(SetID, ChildNode):- unification_set(SetID, ChildNode, ParentNode, Type).
+unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
 
 build_only_dependency(ParentNode, node(X, Child)) :-
   attr("depends_on", ParentNode, node(X, Child), "build"),
