@@ -70,13 +70,12 @@
 
 % Namespaces are statically assigned by a package fact if not otherwise set
 error(100, "{0} does not have a namespace", Package) :- attr("node", node(ID, Package)),
-   not attr("namespace", node(ID, Package), _),
-   internal_error("A node must have a namespace").
+   not attr("namespace", node(ID, Package), _).
+
 error(100, "{0} cannot come from both {1} and {2} namespaces", Package, NS1, NS2) :- attr("node", node(ID, Package)),
    attr("namespace", node(ID, Package), NS1),
    attr("namespace", node(ID, Package), NS2),
-   NS1 != NS2,
-   internal_error("A node cannot have two namespaces").
+   NS1 < NS2.
 
 attr("namespace", node(ID, Package), Namespace) :- attr("namespace_set", node(ID, Package), Namespace).
 attr("namespace", node(ID, Package), Namespace)
@@ -86,21 +85,28 @@ attr("namespace", node(ID, Package), Namespace)
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
-:- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName),
-   internal_error("Cannot have multiple unification sets IDs for one set").
+
+error(1, "Cannot have multiple nodes for {0} in the same unification set {1}", PackageName, SetID)
+  :- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
-unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
+unification_set(SetID, ChildNode, ParentNode, Type) :-
+attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
+
+unification_set(SetID, ChildNode):- unification_set(SetID, ChildNode, ParentNode, Type).
+
+build_only_dependency(ParentNode, node(X, Child)) :-
+  attr("depends_on", ParentNode, node(X, Child), "build"),
+  not attr("depends_on", ParentNode, node(X, Child), "link"),
+  not attr("depends_on", ParentNode, node(X, Child), "run").
 
 unification_set(("build", node(X, Child)), node(X, Child))
-  :- attr("depends_on", ParentNode, node(X, Child), Type),
-     Type == "build",
+  :- build_only_dependency(ParentNode, node(X, Child)),
      multiple_unification_sets(Child),
-     unification_set(SetID, ParentNode).
+     unification_set(_, ParentNode).
 
 unification_set("generic_build", node(X, Child))
-  :- attr("depends_on", ParentNode, node(X, Child), Type),
-     Type == "build",
+  :- build_only_dependency(ParentNode, node(X, Child)),
      not multiple_unification_sets(Child),
      unification_set(_, ParentNode).
 
@@ -327,7 +333,7 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(1, "Cannot satisfy '{0}@{1}'", Package, Constraint)
+error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)).
