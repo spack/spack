@@ -28,7 +28,7 @@ CORE Perl Modules
 ~~~~~~~~~~~~~~~~~
 
 In general, modules that are part of the standard installation for all listed Perl versions should *not* be implemented or contributed as Spack packages.
-Details on the exceptions and process for checking Perl modules can be found in the `Perl <https://spack.readthedocs.io/en/latest/build_systems/perlpackage.html>`_ build system documentation.
+Details on the exceptions and process for checking Perl modules can be found in the `Perl <https://spack.readthedocs.io/en/latest/build_systems/perlpackage.html#suitable_perl_modules>`_ build system documentation.
 
 url, url_for_version, or URL Equivalent
 ---------------------------------------
