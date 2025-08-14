@@ -13,6 +13,7 @@ import pytest
 
 import spack.binary_distribution
 import spack.buildcache_migrate as migrate
+import spack.buildcache_prune
 import spack.cmd.buildcache
 import spack.concretize
 import spack.environment as ev

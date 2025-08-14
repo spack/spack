@@ -9,6 +9,7 @@ from concurrent.futures import Future, as_completed
 from typing import Callable, Dict, List, Optional, Set, Tuple, cast
 
 import spack.binary_distribution
+import spack.error
 import spack.llnl.util.tty as tty
 import spack.stage
 import spack.util.parallel
@@ -272,11 +273,10 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
             line.strip() for line in keeplist_file.read_text().splitlines() if line.strip()
         )
     except Exception as e:
-        tty.error(f"Error reading keeplist file {keeplist_file}: {e}")
+        raise BuildcachePruningException(f"Error reading keeplist file {keeplist_file}") from e
 
     if not keep_hashes:
-        tty.error(f"No hashes found in keeplist file: {keeplist_file}")
-        return
+        raise BuildcachePruningException(f"No hashes found in keeplist file: {keeplist_file}")
 
     tty.info(f"Loaded {len(keep_hashes)} hashes to keep from {keeplist_file}")
     total_pruned: Optional[int] = None
@@ -284,8 +284,7 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
         try:
             manifest_list, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
         except Exception as e:
-            tty.error(f"Error getting entries from buildcache: {e}")
-            return
+            raise BuildcachePruningException("Error getting entries from buildcache") from e
 
         # Determine which manifests correspond to specs we want to prune
         manifests_to_prune: List[str] = []
@@ -364,8 +363,7 @@ def prune_orphan(mirror: Mirror, dry_run: bool) -> None:
         try:
             manifest_list, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
         except Exception as e:
-            tty.error(f"Error getting entries from buildcache: {e}")
-            return
+            raise BuildcachePruningException("Error getting entries from buildcache") from e
         while True:
             # Continue pruning until no more orphaned objects are found
             pruned = _prune_orphans(
@@ -396,3 +394,11 @@ def prune_orphan(mirror: Mirror, dry_run: bool) -> None:
                 tty.info(
                     "Run `spack buildcache update-index` to update the index for this mirror."
                 )
+
+
+class BuildcachePruningException(spack.error.SpackError):
+    """
+    Raised when pruning fails irrevocably
+    """
+
+    pass
