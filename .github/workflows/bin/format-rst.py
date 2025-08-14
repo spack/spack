@@ -109,5 +109,5 @@ if __name__ == "__main__":
     for f in sys.argv[1:]:
         modified |= reformat_rst_file(f)
     if modified:
-        subprocess.run(["git", "diff", "--color=always", "--", *sys.argv[1:]])
+        subprocess.run(["git", "--no-pager", "diff", "--color=always", "--", *sys.argv[1:]])
     sys.exit(1 if modified else 0)
