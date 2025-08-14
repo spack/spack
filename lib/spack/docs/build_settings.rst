@@ -11,9 +11,8 @@
 Concretization Settings (concretizer.yaml)
 ==========================================
 
-The ``concretizer.yaml`` configuration file allows users to customize aspects of the
-algorithm used to select the dependencies they install. The default configuration
-is the following:
+The ``concretizer.yaml`` configuration file allows users to customize aspects of the algorithm used to select the dependencies they install.
+The default configuration is the following:
 
 .. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
    :language: yaml
@@ -21,8 +20,8 @@ is the following:
 Reuse Already Installed Packages
 --------------------------------
 
-The ``reuse`` attribute controls how aggressively Spack reuses binary packages during concretization. The
-attribute can be either a single value or an object for more complex configurations.
+The ``reuse`` attribute controls how aggressively Spack reuses binary packages during concretization.
+The attribute can be either a single value or an object for more complex configurations.
 
 In the former case ("single value"), it allows Spack to:
 
@@ -30,8 +29,7 @@ In the former case ("single value"), it allows Spack to:
 2. Reuse installed packages and build caches only for the dependencies of the root specs, when ``dependencies``.
 3. Disregard reusing installed packages and build caches, when ``false``.
 
-In case finer control over which specs are reused is needed, then the value of this attribute can be
-an object with the following keys:
+In case finer control over which specs are reused is needed, then the value of this attribute can be an object with the following keys:
 
 1. ``roots``: if ``true`` root specs are reused, if ``false`` only dependencies of root specs are reused
 2. ``from``: list of sources from which reused specs are taken
@@ -63,11 +61,10 @@ For instance, the following configuration:
          - "%gcc"
          - "%clang"
 
-tells the concretizer to reuse all specs compiled with either ``gcc`` or ``clang`` that are installed
-in the local store. Any spec from remote build caches is disregarded.
+tells the concretizer to reuse all specs compiled with either ``gcc`` or ``clang`` that are installed in the local store.
+Any spec from remote build caches is disregarded.
 
-To reduce the boilerplate in configuration files, default values for the ``include`` and
-``exclude`` options can be pushed up one level:
+To reduce the boilerplate in configuration files, default values for the ``include`` and ``exclude`` options can be pushed up one level:
 
 .. code-block:: yaml
 
@@ -83,12 +80,11 @@ To reduce the boilerplate in configuration files, default values for the ``inclu
          include:
          - "foo %oneapi"
 
-In the example above, we reuse all specs compiled with ``gcc`` from the local store
-and remote build caches, and we also reuse ``foo %oneapi``. Note that the last source of
-specs overrides the default ``include`` attribute.
+In the example above, we reuse all specs compiled with ``gcc`` from the local store and remote build caches, and we also reuse ``foo %oneapi``.
+Note that the last source of specs overrides the default ``include`` attribute.
 
-For one-off concretizations, there are command-line arguments for each of the simple "single value"
-configurations. This means a user can:
+For one-off concretizations, there are command-line arguments for each of the simple "single value" configurations.
+This means a user can:
 
 .. code-block:: console
 
@@ -110,8 +106,7 @@ Selection of Target Microarchitectures
 ------------------------------------------
 
 The options under the ``targets`` attribute control which targets are considered during a solve.
-Currently, the options in this section are only configurable from the ``concretizer.yaml`` file,
-and there are no corresponding command-line arguments to enable them for a single solve.
+Currently, the options in this section are only configurable from the ``concretizer.yaml`` file, and there are no corresponding command-line arguments to enable them for a single solve.
 
 The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.
 If set to:
@@ -122,8 +117,8 @@ If set to:
      targets:
        granularity: microarchitectures
 
-Spack will consider all the microarchitectures known to ``archspec`` to label nodes for
-compatibility. If instead the option is set to:
+Spack will consider all the microarchitectures known to ``archspec`` to label nodes for compatibility.
+If instead the option is set to:
 
 .. code-block:: yaml
 
@@ -131,76 +126,58 @@ compatibility. If instead the option is set to:
      targets:
        granularity: generic
 
-Spack will consider only generic microarchitectures. For instance, when running on a
-Haswell node, Spack will consider ``haswell`` as the best target in the former case and
-``x86_64_v3`` as the best target in the latter case.
+Spack will consider only generic microarchitectures.
+For instance, when running on a Haswell node, Spack will consider ``haswell`` as the best target in the former case and ``x86_64_v3`` as the best target in the latter case.
 
-The ``host_compatible`` option is a Boolean option that determines whether or not the
-microarchitectures considered during the solve are constrained to be compatible with the
-host Spack is currently running on. For instance, if this option is set to ``true``, a
-user cannot concretize for ``target=icelake`` while running on a Haswell node.
+The ``host_compatible`` option is a Boolean option that determines whether or not the microarchitectures considered during the solve are constrained to be compatible with the host Spack is currently running on.
+For instance, if this option is set to ``true``, a user cannot concretize for ``target=icelake`` while running on a Haswell node.
 
 Duplicate Nodes
 ---------------
 
-The ``duplicates`` attribute controls whether the DAG can contain multiple configurations of
-the same package. This is mainly relevant for build dependencies, which may have their version
-pinned by some nodes and thus be required at different versions by different nodes in the same
-DAG.
+The ``duplicates`` attribute controls whether the DAG can contain multiple configurations of the same package.
+This is mainly relevant for build dependencies, which may have their version pinned by some nodes and thus be required at different versions by different nodes in the same DAG.
 
-The ``strategy`` option controls how the solver deals with duplicates. If the value is ``none``,
-then a single configuration per package is allowed in the DAG. This means, for instance, that only
-a single ``cmake`` or a single ``py-setuptools`` version is allowed. The result would be a slightly
-faster concretization at the expense of making a few specs unsolvable.
+The ``strategy`` option controls how the solver deals with duplicates.
+If the value is ``none``, then a single configuration per package is allowed in the DAG.
+This means, for instance, that only a single ``cmake`` or a single ``py-setuptools`` version is allowed.
+The result would be a slightly faster concretization at the expense of making a few specs unsolvable.
 
 If the value is ``minimal``, Spack will allow packages tagged as ``build-tools`` to have duplicates.
-This allows, for instance, to concretize specs whose nodes require different and incompatible ranges
-of some build tool. For instance, in the figure below, the latest `py-shapely` requires a newer `py-setuptools`,
-while `py-numpy` still needs an older version:
+This allows, for instance, to concretize specs whose nodes require different and incompatible ranges of some build tool.
+For instance, in the figure below, the latest `py-shapely` requires a newer `py-setuptools`, while `py-numpy` still needs an older version:
 
 .. figure::  images/shapely_duplicates.svg
    :width: 100%
    :align: center
 
-Up to Spack v0.20, ``duplicates:strategy:none`` was the default (and only) behavior. From Spack v0.21, the
-default behavior is ``duplicates:strategy:minimal``.
+Up to Spack v0.20, ``duplicates:strategy:none`` was the default (and only) behavior.
+From Spack v0.21, the default behavior is ``duplicates:strategy:minimal``.
 
 Splicing
 --------
 
 The ``splice`` key covers configuration attributes for splicing specs in the solver.
 
-"Splicing" is a method for replacing a dependency with another spec
-that provides the same package or virtual. There are two types of
-splices, referring to different behaviors for shared dependencies
-between the root spec and the new spec replacing a dependency:
-"transitive" and "intransitive". A "transitive" splice is one that
-resolves all conflicts by taking the dependency from the new node. An
-"intransitive" splice is one that resolves all conflicts by taking the
-dependency from the original root. From a theory perspective, hybrid
-splices are possible but are not modeled by Spack.
+"Splicing" is a method for replacing a dependency with another spec that provides the same package or virtual.
+There are two types of splices, referring to different behaviors for shared dependencies between the root spec and the new spec replacing a dependency: "transitive" and "intransitive".
+A "transitive" splice is one that resolves all conflicts by taking the dependency from the new node.
+An "intransitive" splice is one that resolves all conflicts by taking the dependency from the original root.
+From a theory perspective, hybrid splices are possible but are not modeled by Spack.
 
-All spliced specs retain a ``build_spec`` attribute that points to the
-original spec before any splice occurred. The ``build_spec`` for a
-non-spliced spec is itself.
+All spliced specs retain a ``build_spec`` attribute that points to the original spec before any splice occurred.
+The ``build_spec`` for a non-spliced spec is itself.
 
 The figure below shows examples of transitive and intransitive splices:
 
 .. figure:: images/splices.png
    :align: center
 
-The concretizer can be configured to explicitly splice particular
-replacements for a target spec. Splicing will allow the user to make
-use of generically built public binary caches while swapping in
-highly optimized local builds for performance-critical components
-and/or components that interact closely with the specific hardware
-details of the system. The most prominent candidate for splicing is
-MPI providers. MPI packages have relatively well-understood ABI
-characteristics, and most High Performance Computing facilities deploy
-highly optimized MPI packages tailored to their particular
-hardware. The following configuration block configures Spack to replace
-whatever MPI provider each spec was concretized to use with the
-particular package of ``mpich`` with the hash that begins ``abcdef``.
+The concretizer can be configured to explicitly splice particular replacements for a target spec.
+Splicing will allow the user to make use of generically built public binary caches while swapping in highly optimized local builds for performance-critical components and/or components that interact closely with the specific hardware details of the system.
+The most prominent candidate for splicing is MPI providers.
+MPI packages have relatively well-understood ABI characteristics, and most High Performance Computing facilities deploy highly optimized MPI packages tailored to their particular hardware.
+The following configuration block configures Spack to replace whatever MPI provider each spec was concretized to use with the particular package of ``mpich`` with the hash that begins ``abcdef``.
 
 .. code-block:: yaml
 
@@ -213,36 +190,26 @@ particular package of ``mpich`` with the hash that begins ``abcdef``.
 
 .. warning::
 
-   When configuring an explicit splice, you as the user take on the
-   responsibility for ensuring ABI compatibility between the specs
-   matched by the target and the replacement you provide. If they are
-   not compatible, Spack will not warn you, and your application will
-   fail to run.
+   When configuring an explicit splice, you as the user take on the responsibility for ensuring ABI compatibility between the specs matched by the target and the replacement you provide.
+   If they are not compatible, Spack will not warn you, and your application will fail to run.
 
-The ``target`` field of an explicit splice can be any abstract
-spec. The ``replacement`` field must be a spec that includes the hash
-of a concrete spec, and the replacement must either be the same
-package as the target, provide the virtual that is the target, or
-provide a virtual that the target provides. The ``transitive`` field
-is optional -- by default, splices will be transitive.
+The ``target`` field of an explicit splice can be any abstract spec.
+The ``replacement`` field must be a spec that includes the hash of a concrete spec, and the replacement must either be the same package as the target, provide the virtual that is the target, or provide a virtual that the target provides.
+The ``transitive`` field is optional -- by default, splices will be transitive.
 
 .. note::
 
-   With explicit splices configured, it is possible for Spack to
-   concretize to a spec that does not satisfy the input. For example,
-   with the configuration above, ``hdf5 ^mvapich2`` will concretize to use
-   ``mpich/abcdef`` instead of ``mvapich2`` as the MPI provider. Spack
-   will warn the user in this case, but will not fail the
-   concretization.
+   With explicit splices configured, it is possible for Spack to concretize to a spec that does not satisfy the input.
+   For example, with the configuration above, ``hdf5 ^mvapich2`` will concretize to use ``mpich/abcdef`` instead of ``mvapich2`` as the MPI provider.
+   Spack will warn the user in this case, but will not fail the concretization.
 
 .. _automatic_splicing:
 
 Automatic Splicing
 ^^^^^^^^^^^^^^^^^^
 
-The Spack solver can be configured to do automatic splicing for
-ABI-compatible packages. Automatic splices are enabled in the concretizer
-configuration section:
+The Spack solver can be configured to do automatic splicing for ABI-compatible packages.
+Automatic splices are enabled in the concretizer configuration section:
 
 .. code-block:: yaml
 
@@ -250,18 +217,12 @@ configuration section:
      splice:
        automatic: True
 
-Packages can include ABI-compatibility information using the
-``can_splice`` directive. See :ref:`the packaging
-guide <abi_compatibility>` for instructions on specifying ABI
-compatibility using the ``can_splice`` directive.
+Packages can include ABI-compatibility information using the ``can_splice`` directive.
+See :ref:`the packaging guide <abi_compatibility>` for instructions on specifying ABI compatibility using the ``can_splice`` directive.
 
 .. note::
 
-   The ``can_splice`` directive is experimental and may be changed in
-   future versions.
+   The ``can_splice`` directive is experimental and may be changed in future versions.
 
-When automatic splicing is enabled, the concretizer will combine any
-number of ABI-compatible specs if possible to reuse installed packages
-and packages available from binary caches. The end result of these
-specs is equivalent to a series of transitive/intransitive splices,
-but the series may be non-obvious.
+When automatic splicing is enabled, the concretizer will combine any number of ABI-compatible specs if possible to reuse installed packages and packages available from binary caches.
+The end result of these specs is equivalent to a series of transitive/intransitive splices, but the series may be non-obvious.

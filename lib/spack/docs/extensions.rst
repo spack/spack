@@ -9,15 +9,10 @@
 Custom Extensions
 =================
 
-*Spack extensions* allow you to extend Spack capabilities by deploying your
-own custom commands or logic in an arbitrary location on your filesystem.
-This might be extremely useful e.g., to develop and maintain a command whose purpose is
-too specific to be considered for reintegration into the mainline or to
-evolve a command through its early stages before starting a discussion to merge
-it upstream.
+*Spack extensions* allow you to extend Spack capabilities by deploying your own custom commands or logic in an arbitrary location on your filesystem.
+This might be extremely useful e.g., to develop and maintain a command whose purpose is too specific to be considered for reintegration into the mainline or to evolve a command through its early stages before starting a discussion to merge it upstream.
 
-From Spack's point of view an extension is any path in your filesystem that
-respects the following naming and layout for files:
+From Spack's point of view an extension is any path in your filesystem that respects the following naming and layout for files:
 
 .. code-block:: console
 
@@ -32,13 +27,12 @@ respects the following naming and layout for files:
   │   └── test_filter.py
   └── templates # Templates that may be needed by the extension
 
-In the example above, the extension is named *scripting*. It adds an additional command
-(``spack filter``) and unit tests to verify its behavior.
+In the example above, the extension is named *scripting*.
+It adds an additional command (``spack filter``) and unit tests to verify its behavior.
 
-The extension can import any core Spack module in its implementation. When loaded by
-the ``spack`` command, the extension itself is imported as a Python package in the
-``spack.extensions`` namespace. In the example above, since the extension is named
-"scripting", the corresponding Python module is ``spack.extensions.scripting``.
+The extension can import any core Spack module in its implementation.
+When loaded by the ``spack`` command, the extension itself is imported as a Python package in the ``spack.extensions`` namespace.
+In the example above, since the extension is named "scripting", the corresponding Python module is ``spack.extensions.scripting``.
 
 The code for this example extension can be obtained by cloning the corresponding git repository:
 
@@ -49,8 +43,8 @@ The code for this example extension can be obtained by cloning the corresponding
 Configure Spack to Use Extensions
 ---------------------------------
 
-To make your current Spack instance aware of extensions you should add their root
-paths to ``config.yaml``. In the case of our example this means ensuring that:
+To make your current Spack instance aware of extensions you should add their root paths to ``config.yaml``.
+In the case of our example this means ensuring that:
 
 .. code-block:: yaml
 
@@ -58,8 +52,8 @@ paths to ``config.yaml``. In the case of our example this means ensuring that:
      extensions:
      - /tmp/spack-scripting
 
-is part of your configuration file. Once this is set up, any command that the extension provides
-will be available from the command line:
+is part of your configuration file.
+Once this is set up, any command that the extension provides will be available from the command line:
 
 .. code-block:: console
 
@@ -117,7 +111,9 @@ Registering Extensions via Entry Points
 .. note::
    Python version >= 3.8 is required to register extensions via entry points.
 
-Spack can be made aware of extensions that are installed as part of a Python package.  To do so, register a function that returns the extension path, or paths, to the ``"spack.extensions"`` entry point.  Consider the Python package ``my_package`` that includes a Spack extension:
+Spack can be made aware of extensions that are installed as part of a Python package.
+To do so, register a function that returns the extension path, or paths, to the ``"spack.extensions"`` entry point.
+Consider the Python package ``my_package`` that includes a Spack extension:
 
 .. code-block:: console
 

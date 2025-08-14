@@ -125,7 +125,8 @@ Now, when you type ``which python3``, it should find the one you just installed.
 
       $ sudo vim /etc/shells
 
-   and add the absolute path to your bash executable. Then run:
+   and add the absolute path to your bash executable.
+   Then run:
 
    .. code-block:: console
 

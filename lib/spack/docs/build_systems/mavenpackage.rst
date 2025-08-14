@@ -11,9 +11,8 @@
 Maven
 ------
 
-Apache Maven is a general-purpose build system that does not rely
-on Makefiles to build software. It is designed for building and
-managing Java-based projects.
+Apache Maven is a general-purpose build system that does not rely on Makefiles to build software.
+It is designed for building and managing Java-based projects.
 
 Phases
 ^^^^^^
@@ -41,9 +40,9 @@ There may also be configuration files in the ``.mvn`` directory.
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Maven requires the ``mvn`` executable to build the project. It also
-requires Java at both build- and run-time. Because of this, the base
-class automatically adds the following dependencies:
+Maven requires the ``mvn`` executable to build the project.
+It also requires Java at both build- and run-time.
+Because of this, the base class automatically adds the following dependencies:
 
 .. code-block:: python
 
@@ -63,11 +62,9 @@ In the ``pom.xml`` file, you may see sections like:
    </requireMavenVersion>
 
 
-This specifies the versions of Java and Maven that are required to
-build the package. See
-https://docs.oracle.com/middleware/1212/core/MAVEN/maven_version.htm#MAVEN402
-for a description of this version range syntax. In this case, you
-should add:
+This specifies the versions of Java and Maven that are required to build the package.
+See https://docs.oracle.com/middleware/1212/core/MAVEN/maven_version.htm#MAVEN402 for a description of this version range syntax.
+In this case, you should add:
 
 .. code-block:: python
 
@@ -78,9 +75,9 @@ should add:
 Passing arguments to the build phase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The default build and install phases should be sufficient to install
-most packages. However, you may want to pass additional flags to
-the build phase. For example:
+The default build and install phases should be sufficient to install most packages.
+However, you may want to pass additional flags to the build phase.
+For example:
 
 .. code-block:: python
 
@@ -95,5 +92,4 @@ the build phase. For example:
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-For more information on the Maven build system, see:
-https://maven.apache.org/index.html
+For more information on the Maven build system, see: https://maven.apache.org/index.html

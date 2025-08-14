@@ -12,16 +12,15 @@ Spec Syntax
 ===========
 
 Spack has a specific syntax to describe package constraints.
-Each constraint is individually referred to as a *spec*. Spack uses specs to:
+Each constraint is individually referred to as a *spec*.
+Spack uses specs to:
 
 1. Refer to a particular build configuration of a package, or
 2. Express requirements, or preferences, on packages via configuration files, or
 3. Query installed packages, or buildcaches
 
-Specs are more than a package name and a version; you can use them to
-specify the compiler, compiler version, architecture, compile options,
-and dependency options for a build. In this section, we'll go over
-the full syntax of specs.
+Specs are more than a package name and a version; you can use them to specify the compiler, compiler version, architecture, compile options, and dependency options for a build.
+In this section, we'll go over the full syntax of specs.
 
 Here is an example of using a complex spec to install a very specific configuration of ``mpileaks``:
 
@@ -136,10 +135,9 @@ So in the spec:
    :class: note
 
    Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells.
-   Spack's spec dependency syntax uses the carat (``^``) character; however, this is an escape string in CMD,
-   so it must be escaped with an additional carat (i.e., ``^^``).
-   CMD also will attempt to interpret strings with ``=`` characters in them. Any spec including this symbol
-   must double-quote the string.
+   Spack's spec dependency syntax uses the carat (``^``) character; however, this is an escape string in CMD, so it must be escaped with an additional carat (i.e., ``^^``).
+   CMD also will attempt to interpret strings with ``=`` characters in them.
+   Any spec including this symbol must double-quote the string.
 
    Note: All of these issues are unique to CMD; they can be avoided by using PowerShell.
 
@@ -204,10 +202,9 @@ matches any version in the range ``1.0:1.5`` and the specific version ``1.7.1``.
 Git versions
 ^^^^^^^^^^^^
 
-For packages with a ``git`` attribute, ``git`` references
-may be specified instead of a numerical version (i.e., branches, tags,
-and commits). Spack will stage and build based off the ``git``
-reference provided. Acceptable syntaxes for this are:
+For packages with a ``git`` attribute, ``git`` references may be specified instead of a numerical version (i.e., branches, tags, and commits).
+Spack will stage and build based off the ``git`` reference provided.
+Acceptable syntaxes for this are:
 
 .. code-block:: spec
 
@@ -219,29 +216,25 @@ reference provided. Acceptable syntaxes for this are:
    foo@git.develop  # use the develop branch
    foo@git.0.19  # use the 0.19 tag
 
-Spack always needs to associate a Spack version with the git reference,
-which is used for version comparison. This Spack version is heuristically
-taken from the closest valid git tag among the ancestors of the git ref.
+Spack always needs to associate a Spack version with the git reference, which is used for version comparison.
+This Spack version is heuristically taken from the closest valid git tag among the ancestors of the git ref.
 
-Once a Spack version is associated with a git ref, it is always printed with
-the git ref. For example, if the commit ``@git.abcdefg`` is tagged
-``0.19``, then the spec will be shown as ``@git.abcdefg=0.19``.
+Once a Spack version is associated with a git ref, it is always printed with the git ref.
+For example, if the commit ``@git.abcdefg`` is tagged ``0.19``, then the spec will be shown as ``@git.abcdefg=0.19``.
 
-If the git ref is not exactly a tag, then the distance to the nearest tag
-is also part of the resolved version. ``@git.abcdefg=0.19.git.8`` means
-that the commit is 8 commits away from the ``0.19`` tag.
+If the git ref is not exactly a tag, then the distance to the nearest tag is also part of the resolved version.
+``@git.abcdefg=0.19.git.8`` means that the commit is 8 commits away from the ``0.19`` tag.
 
-In cases where Spack cannot resolve a sensible version from a git ref,
-users can specify the Spack version to use for the git ref. This is done
-by appending ``=`` and the Spack version to the git ref. For example:
+In cases where Spack cannot resolve a sensible version from a git ref, users can specify the Spack version to use for the git ref.
+This is done by appending ``=`` and the Spack version to the git ref.
+For example:
 
 .. code-block:: spec
 
    foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
 
-Details about how versions are compared and how Spack determines if
-one version is less than another are discussed in the developer guide.
+Details about how versions are compared and how Spack determines if one version is less than another are discussed in the developer guide.
 
 .. _basic-variants:
 
@@ -292,7 +285,8 @@ Multi-valued Variants
 ^^^^^^^^^^^^^^^^^^^^^
 
 A package might have a ``fabrics`` variant that determines which network fabrics to support.
-Users could activate multiple values at the same time. For instance:
+Users could activate multiple values at the same time.
+For instance:
 
 .. code-block:: spec
 
@@ -335,8 +329,7 @@ syntax should be used with the ``:=`` operator.
 Variant propagation to dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack allows variants to propagate their value to the package's
-dependencies by using ``++``, ``--``, and ``~~`` for boolean variants.
+Spack allows variants to propagate their value to the package's dependencies by using ``++``, ``--``, and ``~~`` for boolean variants.
 For example, for a ``debug`` variant:
 
 .. code-block:: spec
@@ -352,72 +345,55 @@ For example, for the ``stackstart`` variant:
     mpileaks stackstart==4   # variant will be propagated to dependencies
     mpileaks stackstart=4    # only mpileaks will have this variant value
 
-Spack also allows variants to be propagated from a package that does
-not have that variant.
+Spack also allows variants to be propagated from a package that does not have that variant.
 
 Binary Provenance
 ^^^^^^^^^^^^^^^^^
 
-Spack versions are paired to attributes that determine the source code Spack
-will use to build. Checksummed assets are preferred but there are a few
-notable exceptions such as git branches and tags i.e ``pkg@develop``.
-These versions do not naturally have source provenance because they refer to a range
-of commits (branches) or can be changed outside the spack packaging infrastructure
-(tags). Without source provenance we cannot have binary provenance.
+Spack versions are paired to attributes that determine the source code Spack will use to build.
+Checksummed assets are preferred but there are a few notable exceptions such as git branches and tags i.e ``pkg@develop``.
+These versions do not naturally have source provenance because they refer to a range of commits (branches) or can be changed outside the spack packaging infrastructure (tags).
+Without source provenance we cannot have binary provenance.
 
-Spack has a reserved variant to allow users to complete source and binary provenance
-for these cases: ``pkg@develop commit=<SHA>``.  The ``commit`` variant must be supplied
-using the full 40 character commit SHA. Using a partial commit SHA or assigning
-the ``commit`` variant to a version that is not using a branch or tag reference will
-lead to an error during concretization.
+Spack has a reserved variant to allow users to complete source and binary provenance for these cases: ``pkg@develop commit=<SHA>``.
+The ``commit`` variant must be supplied using the full 40 character commit SHA.
+Using a partial commit SHA or assigning the ``commit`` variant to a version that is not using a branch or tag reference will lead to an error during concretization.
 
-Spack will attempt to establish binary provenance by looking up commit SHA's for branch
-and tag based versions during concretization. There are 3 sources that it uses. In order, they
-are
+Spack will attempt to establish binary provenance by looking up commit SHA's for branch and tag based versions during concretization.
+There are 3 sources that it uses.
+In order, they are
 
 1. Staged source code (already cached source code for the version needing provenance)
 2. Source mirrors (compressed archives of the source code)
 3. The git url provided in the package definition
 
-If Spack is unable to determine what the commit should be
-during concretization a warning will be issued. Users may also specify which commit SHA they
-want with the spec since it is simply a variant. In this case, or in the case of develop specs
-(see :ref:`develop-specs`), Spack will skip attempts to assign the commit SHA automatically.
+If Spack is unable to determine what the commit should be during concretization a warning will be issued.
+Users may also specify which commit SHA they want with the spec since it is simply a variant.
+In this case, or in the case of develop specs (see :ref:`develop-specs`), Spack will skip attempts to assign the commit SHA automatically.
 
 .. note::
 
-   Users wanting to track the latest commits from the internet should utilize ``spack clean --stage``
-   prior to concretization to clean out old stages that will short-circuit internet queries.
-   Disabling source mirrors or ensuring they don't contain branch/tag based versions will also
-   be necessary.
+   Users wanting to track the latest commits from the internet should utilize ``spack clean --stage`` prior to concretization to clean out old stages that will short-circuit internet queries.
+   Disabling source mirrors or ensuring they don't contain branch/tag based versions will also be necessary.
 
-   Above all else, the most robust way to ensure binaries have their desired commits is to provide
-   the SHAs via user-specs or config i.e. ``commit=<SHA>``.
+   Above all else, the most robust way to ensure binaries have their desired commits is to provide the SHAs via user-specs or config i.e. ``commit=<SHA>``.
 
 
 Compiler Flags
 --------------
 
-Compiler flags are specified using the same syntax as non-boolean variants,
-but fulfill a different purpose. While the function of a variant is set by
-the package, compiler flags are used by the compiler wrappers to inject
-flags into the compile line of the build. Additionally, compiler flags can
-be inherited by dependencies by using ``==``.
-``spack install libdwarf cppflags=="-g"`` will install both libdwarf and
-libelf with the ``-g`` flag injected into their compile line.
+Compiler flags are specified using the same syntax as non-boolean variants, but fulfill a different purpose.
+While the function of a variant is set by the package, compiler flags are used by the compiler wrappers to inject flags into the compile line of the build.
+Additionally, compiler flags can be inherited by dependencies by using ``==``.
+``spack install libdwarf cppflags=="-g"`` will install both libdwarf and libelf with the ``-g`` flag injected into their compile line.
 
-Notice that the value of the compiler flags must be quoted if it
-contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
-``cppflags='-O3'``, and ``cppflags="-O3 -fPIC"`` are acceptable, but
-``cppflags=-O3 -fPIC`` is not. Additionally, if the value of the
-compiler flags is not the last thing on the line, it must be followed
-by a space. The command ``spack install libelf cppflags="-O3"%intel``
-will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
+Notice that the value of the compiler flags must be quoted if it contains any spaces.
+Any of ``cppflags=-O3``, ``cppflags="-O3"``, ``cppflags='-O3'``, and ``cppflags="-O3 -fPIC"`` are acceptable, but ``cppflags=-O3 -fPIC`` is not.
+Additionally, if the value of the compiler flags is not the last thing on the line, it must be followed by a space.
+The command ``spack install libelf cppflags="-O3"%intel`` will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
 
-The six compiler flags are injected in the same order as implicit make commands
-in GNU Autotools. If all flags are set, the order is
-``$cppflags $cflags|$cxxflags $ldflags <command> $ldlibs`` for C and C++, and
-``$fflags $cppflags $ldflags <command> $ldlibs`` for Fortran.
+The six compiler flags are injected in the same order as implicit make commands in GNU Autotools.
+If all flags are set, the order is ``$cppflags $cflags|$cxxflags $ldflags <command> $ldlibs`` for C and C++, and ``$fflags $cppflags $ldflags <command> $ldlibs`` for Fortran.
 
 
 .. _architecture_specifiers:
@@ -427,8 +403,7 @@ Architecture specifiers
 
 Each node in the dependency graph of a spec has an architecture attribute.
 This attribute is a triplet of platform, operating system, and processor.
-You can specify the elements either separately by using
-the reserved keywords ``platform``, ``os``, and ``target``:
+You can specify the elements either separately by using the reserved keywords ``platform``, ``os``, and ``target``:
 
 .. code-block:: spec
 
@@ -436,11 +411,8 @@ the reserved keywords ``platform``, ``os``, and ``target``:
    $ spack install libelf os=ubuntu18.04
    $ spack install libelf target=broadwell
 
-Normally, users don't have to bother specifying the architecture if they
-are installing software for their current host, as in that case the
-values will be detected automatically. If you need fine-grained control
-over which packages use which targets (or over *all* packages' default
-target), see :ref:`package-preferences`.
+Normally, users don't have to bother specifying the architecture if they are installing software for their current host, as in that case the values will be detected automatically.
+If you need fine-grained control over which packages use which targets (or over *all* packages' default target), see :ref:`package-preferences`.
 
 
 .. _support-for-microarchitectures:
@@ -470,16 +442,14 @@ will produce compilation lines similar to:
 
 where the flags ``-march=icelake-client -mtune=icelake-client`` are injected by Spack based on the requested target and compiler.
 
-If Spack knows that the requested compiler can't optimize for the current target
-or can't build binaries for that target at all, it will exit with a meaningful error message:
+If Spack knows that the requested compiler can't optimize for the current target or can't build binaries for that target at all, it will exit with a meaningful error message:
 
 .. code-block:: spec
 
    $ spack install zlib%gcc@5.5.0 target=icelake
    ==> Error: cannot produce optimized binary for micro-architecture "icelake" with gcc@5.5.0 [supported compiler versions are 8:]
 
-Conversely, if an old compiler is selected for a newer microarchitecture, Spack will optimize for the best match it can find instead
-of failing:
+Conversely, if an old compiler is selected for a newer microarchitecture, Spack will optimize for the best match it can find instead of failing:
 
 .. code-block:: spec
 
@@ -504,12 +474,9 @@ of failing:
    --------------------------------
    zlib@1.2.11%gcc@9.0.1+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
 
-In the snippet above, for instance, the microarchitecture was demoted to ``haswell`` when
-compiling with ``gcc@4.8`` because support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
+In the snippet above, for instance, the microarchitecture was demoted to ``haswell`` when compiling with ``gcc@4.8`` because support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
 
-Finally, if Spack has no information to match compiler and target, it will
-proceed with the installation but avoid injecting any microarchitecture-specific
-flags.
+Finally, if Spack has no information to match compiler and target, it will proceed with the installation but avoid injecting any microarchitecture-specific flags.
 
 .. _sec-virtual-dependencies:
 
@@ -577,24 +544,19 @@ As always, you can be even more specific and require a particular ``mpich`` vers
 
    $ spack install mpileaks ^mpich@3
 
-The ``mpileaks`` package in particular only needs MPI-1 commands, so
-any MPI implementation will do. If another package depends on
-``mpi@2`` and you try to give it an insufficient MPI implementation
-(e.g., one that provides only ``mpi@:1``), then Spack will raise an
-error. Likewise, if you try to plug in some package that doesn't
-provide MPI, Spack will raise an error.
+The ``mpileaks`` package in particular only needs MPI-1 commands, so any MPI implementation will do.
+If another package depends on ``mpi@2`` and you try to give it an insufficient MPI implementation (e.g., one that provides only ``mpi@:1``), then Spack will raise an error.
+Likewise, if you try to plug in some package that doesn't provide MPI, Spack will raise an error.
 
 .. _explicit-binding-virtuals:
 
 Explicit binding of virtual dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are packages that provide more than just one virtual dependency. When interacting with them, users
-might want to utilize just a subset of what they could provide and use other providers for virtuals they
-need.
+There are packages that provide more than just one virtual dependency.
+When interacting with them, users might want to utilize just a subset of what they could provide and use other providers for virtuals they need.
 
-It is possible to be more explicit and tell Spack which dependency should provide which virtual, using a
-special syntax:
+It is possible to be more explicit and tell Spack which dependency should provide which virtual, using a special syntax:
 
 .. code-block:: spec
 
@@ -604,23 +566,19 @@ Concretizing the spec above produces the following DAG:
 
 .. figure:: images/strumpack_virtuals.svg
 
-where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former. The ``lapack``
-and ``blas`` dependencies are satisfied by ``openblas``.
+where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former.
+The ``lapack`` and ``blas`` dependencies are satisfied by ``openblas``.
 
 Specifying Specs by Hash
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Complicated specs can become cumbersome to enter on the command line,
-especially when many of the qualifications are necessary to distinguish
-between similar installs. To avoid this, when referencing an existing spec,
-Spack allows you to reference specs by their hash. We previously
-discussed the spec hash that Spack computes. In place of a spec in any
-command, substitute ``/<hash>`` where ``<hash>`` is any amount from
-the beginning of a spec hash.
+Complicated specs can become cumbersome to enter on the command line, especially when many of the qualifications are necessary to distinguish between similar installs.
+To avoid this, when referencing an existing spec, Spack allows you to reference specs by their hash.
+We previously discussed the spec hash that Spack computes.
+In place of a spec in any command, substitute ``/<hash>`` where ``<hash>`` is any amount from the beginning of a spec hash.
 
-For example, let's say that you accidentally installed two different
-``mvapich2`` installations. If you want to uninstall one of them but don't
-know what the difference is, you can run:
+For example, let's say that you accidentally installed two different ``mvapich2`` installations.
+If you want to uninstall one of them but don't know what the difference is, you can run:
 
 .. code-block:: spec
 
@@ -638,17 +596,15 @@ You can then uninstall the latter installation using:
    $ spack uninstall /er3die3
 
 
-Or, if you want to build with a specific installation as a dependency,
-you can use:
+Or, if you want to build with a specific installation as a dependency, you can use:
 
 .. code-block:: spec
 
    $ spack install trilinos ^/er3die3
 
 
-If the given spec hash is sufficiently long as to be unique, Spack will
-replace the reference with the spec to which it refers. Otherwise, it will
-prompt for a more qualified hash.
+If the given spec hash is sufficiently long as to be unique, Spack will replace the reference with the spec to which it refers.
+Otherwise, it will prompt for a more qualified hash.
 
 Note that this will not work to reinstall a dependency uninstalled by ``spack uninstall --force``.
 

@@ -11,14 +11,12 @@
 Ruby
 ------
 
-Like Perl, Python, and R, Ruby has its own build system for
-installing Ruby gems.
+Like Perl, Python, and R, Ruby has its own build system for installing Ruby gems.
 
 Phases
 ^^^^^^
 
-The ``RubyBuilder`` and ``RubyPackage`` base classes provide the following phases that
-can be overridden:
+The ``RubyBuilder`` and ``RubyPackage`` base classes provide the following phases that can be overridden:
 
 #. ``build`` - build everything needed to install
 #. ``install`` - install everything from build directory
@@ -39,8 +37,7 @@ For packages that come with a ``Rakefile`` file, these phases run:
    $ gem install *.gem
 
 
-For packages that come pre-packaged as a ``*.gem`` file, the build
-phase is skipped and the install phase runs:
+For packages that come pre-packaged as a ``*.gem`` file, the build phase is skipped and the install phase runs:
 
 .. code-block:: console
 
@@ -54,22 +51,21 @@ These are all standard ``gem`` commands and can be found by running:
    $ gem help commands
 
 
-For packages that only distribute ``*.gem`` files, these files can be
-downloaded with the ``expand=False`` option in the ``version`` directive.
+For packages that only distribute ``*.gem`` files, these files can be downloaded with the ``expand=False`` option in the ``version`` directive.
 The build phase will be automatically skipped.
 
 Important files
 ^^^^^^^^^^^^^^^
 
-When building from source, Ruby packages can be identified by the
-presence of any of the following files:
+When building from source, Ruby packages can be identified by the presence of any of the following files:
 
 * ``*.gemspec``
 * ``Rakefile``
 * ``setup.rb`` (not yet supported)
 
-However, not all Ruby packages are released as source code. Some are only
-released as ``*.gem`` files. These files can be extracted using:
+However, not all Ruby packages are released as source code.
+Some are only released as ``*.gem`` files.
+These files can be extracted using:
 
 .. code-block:: console
 
@@ -104,8 +100,8 @@ This should be used as the official homepage of the Spack package.
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-All Ruby packages require Ruby at build and run-time. For this reason,
-the base class contains:
+All Ruby packages require Ruby at build and run-time.
+For this reason, the base class contains:
 
 .. code-block:: python
 
@@ -129,32 +125,24 @@ This can be added to the Spack package using:
 Ruby dependencies
 ^^^^^^^^^^^^^^^^^
 
-When you install a package with ``gem``, it reads the ``*.gemspec``
-file in order to determine the dependencies of the package.
-If the dependencies are not yet installed, ``gem`` downloads them
-and installs them for you. This may sound convenient, but Spack
-cannot rely on this behavior for two reasons:
+When you install a package with ``gem``, it reads the ``*.gemspec`` file in order to determine the dependencies of the package.
+If the dependencies are not yet installed, ``gem`` downloads them and installs them for you.
+This may sound convenient, but Spack cannot rely on this behavior for two reasons:
 
 #. Spack needs to be able to install packages on air-gapped networks.
 
-   If there is no internet connection, ``gem`` can't download the
-   package dependencies. By explicitly listing every dependency in
-   the ``package.py``, Spack knows what to download ahead of time.
+   If there is no internet connection, ``gem`` can't download the package dependencies.
+   By explicitly listing every dependency in the ``package.py``, Spack knows what to download ahead of time.
 
 #. Duplicate installations of the same dependency may occur.
 
-   Spack supports *activation* of Ruby extensions, which involves
-   symlinking the package installation prefix to the Ruby installation
-   prefix. If your package is missing a dependency, that dependency
-   will be installed to the installation directory of the same package.
-   If you try to activate the package + dependency, it may cause a
-   problem if that package has already been activated.
+   Spack supports *activation* of Ruby extensions, which involves symlinking the package installation prefix to the Ruby installation prefix.
+   If your package is missing a dependency, that dependency will be installed to the installation directory of the same package.
+   If you try to activate the package + dependency, it may cause a problem if that package has already been activated.
 
 For these reasons, you must always explicitly list all dependencies.
-Although the documentation may list the package's dependencies,
-often the developers assume people will use ``gem`` and won't have to
-worry about it. Always check the ``*.gemspec`` file to find the true
-dependencies.
+Although the documentation may list the package's dependencies, often the developers assume people will use ``gem`` and won't have to worry about it.
+Always check the ``*.gemspec`` file to find the true dependencies.
 
 Check for the following clues in the ``*.gemspec`` file:
 
@@ -174,5 +162,4 @@ Check for the following clues in the ``*.gemspec`` file:
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-For more information on Ruby packaging, see:
-https://guides.rubygems.org/
+For more information on Ruby packaging, see: https://guides.rubygems.org/

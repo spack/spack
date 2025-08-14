@@ -99,64 +99,46 @@ Issues, if found, are reported to stdout:
 Verifying Installations
 =======================
 
-The ``spack verify`` command can be used to verify the validity of
-Spack-installed packages any time after installation.
+The ``spack verify`` command can be used to verify the validity of Spack-installed packages any time after installation.
 
 
 ``spack verify manifest``
 -------------------------
 
-At installation time, Spack creates a manifest of every file in the
-installation prefix. For links, Spack tracks the mode, ownership, and
-destination. For directories, Spack tracks the mode and
-ownership. For files, Spack tracks the mode, ownership, modification
-time, hash, and size. The ``spack verify manifest`` command will check,
-for every file in each package, whether any of those attributes have
-changed. It will also check for newly added files or deleted files from
-the installation prefix. Spack can either check all installed packages
-using the ``-a,--all`` option or accept specs listed on the command line to
-verify.
+At installation time, Spack creates a manifest of every file in the installation prefix.
+For links, Spack tracks the mode, ownership, and destination.
+For directories, Spack tracks the mode and ownership.
+For files, Spack tracks the mode, ownership, modification time, hash, and size.
+The ``spack verify manifest`` command will check, for every file in each package, whether any of those attributes have changed.
+It will also check for newly added files or deleted files from the installation prefix.
+Spack can either check all installed packages using the ``-a,--all`` option or accept specs listed on the command line to verify.
 
-The ``spack verify manifest`` command can also verify for individual files
-that they haven't been altered since installation time. If the given file
-is not in a Spack installation prefix, Spack will report that it is
-not owned by any package. To check individual files instead of specs,
-use the ``-f,--files`` option.
+The ``spack verify manifest`` command can also verify for individual files that they haven't been altered since installation time.
+If the given file is not in a Spack installation prefix, Spack will report that it is not owned by any package.
+To check individual files instead of specs, use the ``-f,--files`` option.
 
-Spack installation manifests are part of the tarball signed by Spack
-for binary package distribution. When installed from a binary package,
-Spack uses the packaged installation manifest instead of creating one
-at install time.
+Spack installation manifests are part of the tarball signed by Spack for binary package distribution.
+When installed from a binary package, Spack uses the packaged installation manifest instead of creating one at install time.
 
-The ``spack verify`` command also accepts the ``-l,--local`` option to
-check only local packages (as opposed to those used transparently from
-``upstream`` Spack instances) and the ``-j,--json`` option to output
-machine-readable JSON data for any errors.
+The ``spack verify`` command also accepts the ``-l,--local`` option to check only local packages (as opposed to those used transparently from ``upstream`` Spack instances) and the ``-j,--json`` option to output machine-readable JSON data for any errors.
 
 ``spack verify libraries``
 --------------------------
 
-The ``spack verify libraries`` command can be used to verify that packages
-do not have accidental system dependencies. This command scans the install
-prefixes of packages for executables and shared libraries, and resolves
-their needed libraries in their RPATHs. When needed libraries cannot be
-located, an error is reported. This typically indicates that a package
-was linked against a system library instead of a library provided by
-a Spack package.
+The ``spack verify libraries`` command can be used to verify that packages do not have accidental system dependencies.
+This command scans the install prefixes of packages for executables and shared libraries, and resolves their needed libraries in their RPATHs.
+When needed libraries cannot be located, an error is reported.
+This typically indicates that a package was linked against a system library instead of a library provided by a Spack package.
 
-This verification can also be enabled as a post-install hook by setting
-``config:shared_linking:missing_library_policy`` to ``error`` or ``warn``
-in :ref:`config.yaml <config-yaml>`.
+This verification can also be enabled as a post-install hook by setting ``config:shared_linking:missing_library_policy`` to ``error`` or ``warn`` in :ref:`config.yaml <config-yaml>`.
 
 Filesystem Requirements
 =======================
 
-By default, Spack needs to be run from a filesystem that supports
-``flock`` locking semantics. Nearly all local filesystems and recent
-versions of NFS support this, but parallel filesystems or NFS volumes may
-be configured without ``flock`` support enabled. You can determine how
-your filesystems are mounted with ``mount``. The output for a Lustre
-filesystem might look like this:
+By default, Spack needs to be run from a filesystem that supports ``flock`` locking semantics.
+Nearly all local filesystems and recent versions of NFS support this, but parallel filesystems or NFS volumes may be configured without ``flock`` support enabled.
+You can determine how your filesystems are mounted with ``mount``.
+The output for a Lustre filesystem might look like this:
 
 .. code-block:: console
 
@@ -166,28 +148,22 @@ filesystem might look like this:
 
 Note the ``flock`` option on both Lustre mounts.
 
-If you do not see this or a similar option for your filesystem, you have
-a few options. First, you can move your Spack installation to a
-filesystem that supports locking. Second, you could ask your system
-administrator to enable ``flock`` for your filesystem.
+If you do not see this or a similar option for your filesystem, you have a few options.
+First, you can move your Spack installation to a filesystem that supports locking.
+Second, you could ask your system administrator to enable ``flock`` for your filesystem.
 
 If none of those work, you can disable locking in one of two ways:
 
-1. Run Spack with the ``-L`` or ``--disable-locks`` option to disable
-   locks on a call-by-call basis.
-2. Edit :ref:`config.yaml <config-yaml>` and set the ``locks`` option
-   to ``false`` to always disable locking.
+1. Run Spack with the ``-L`` or ``--disable-locks`` option to disable locks on a call-by-call basis.
+2. Edit :ref:`config.yaml <config-yaml>` and set the ``locks`` option to ``false`` to always disable locking.
 
 .. warning::
 
-   If you disable locking, concurrent instances of Spack will have no way
-   to avoid stepping on each other. You must ensure that there is only
-   **one** instance of Spack running at a time. Otherwise, Spack may end
-   up with a corrupted database file, or you may not be able to see all
-   installed packages in commands like ``spack find``.
+   If you disable locking, concurrent instances of Spack will have no way to avoid stepping on each other.
+   You must ensure that there is only **one** instance of Spack running at a time.
+   Otherwise, Spack may end up with a corrupted database file, or you may not be able to see all installed packages in commands like ``spack find``.
 
-   If you are unfortunate enough to run into this situation, you may be
-   able to fix it by running ``spack reindex``.
+   If you are unfortunate enough to run into this situation, you may be able to fix it by running ``spack reindex``.
 
 This issue typically manifests with the error below:
 

@@ -9,10 +9,8 @@
 Chaining Spack Installations (upstreams.yaml)
 =============================================
 
-You can point your Spack installation to another Spack installation to use any
-packages that are installed there. To register the other Spack instance,
-you can add it as an entry to ``upstreams.yaml`` at any of the
-:ref:`configuration-scopes`:
+You can point your Spack installation to another Spack installation to use any packages that are installed there.
+To register the other Spack instance, you can add it as an entry to ``upstreams.yaml`` at any of the :ref:`configuration-scopes`:
 
 .. code-block:: yaml
 
@@ -22,60 +20,41 @@ you can add it as an entry to ``upstreams.yaml`` at any of the
     spack-instance-2:
       install_tree: /path/to/another/spack/opt/spack
 
-The ``install_tree`` must point to the ``opt/spack`` directory inside of the
-Spack base directory, or the location of the ``install_tree`` defined
-in :ref:`config.yaml <config-yaml>`.
+The ``install_tree`` must point to the ``opt/spack`` directory inside of the Spack base directory, or the location of the ``install_tree`` defined in :ref:`config.yaml <config-yaml>`.
 
-Once the upstream Spack instance has been added, ``spack find`` will
-automatically check the upstream instance when querying installed packages,
-and new package installations for the local Spack installation will use any
-dependencies that are installed in the upstream instance.
+Once the upstream Spack instance has been added, ``spack find`` will automatically check the upstream instance when querying installed packages, and new package installations for the local Spack installation will use any dependencies that are installed in the upstream instance.
 
-This other instance of Spack has no knowledge of the local Spack instance
-and may not have the same permissions or ownership as the local Spack instance.
+This other instance of Spack has no knowledge of the local Spack instance and may not have the same permissions or ownership as the local Spack instance.
 This has the following consequences:
 
-#. Upstream Spack instances are not locked. Therefore, it is up to users to
-   make sure that the local instance is not using an upstream instance when it
-   is being modified.
+#. Upstream Spack instances are not locked.
+   Therefore, it is up to users to make sure that the local instance is not using an upstream instance when it is being modified.
 
-#. Users should not uninstall packages from the upstream instance. Since the
-   upstream instance does not know about the local instance, it cannot prevent
-   the uninstallation of packages that the local instance depends on.
+#. Users should not uninstall packages from the upstream instance.
+   Since the upstream instance does not know about the local instance, it cannot prevent the uninstallation of packages that the local instance depends on.
 
 Other details about upstream Spack installations:
 
-#. If a package is installed both locally and upstream, the local installation
-   will always be used as a dependency. This can occur if the local Spack
-   installs a package which is not present in the upstream, but later on the
-   upstream Spack instance also installs that package.
+#. If a package is installed both locally and upstream, the local installation will always be used as a dependency.
+   This can occur if the local Spack installs a package which is not present in the upstream, but later on the upstream Spack instance also installs that package.
 
-#. If an upstream Spack instance registers and installs an external package,
-   the local Spack instance will treat this the same as a Spack-installed
-   package. This feature will only work if the upstream Spack instance
-   includes the upstream functionality (i.e., if its commit is after March
-   27, 2019).
+#. If an upstream Spack instance registers and installs an external package, the local Spack instance will treat this the same as a Spack-installed package.
+   This feature will only work if the upstream Spack instance includes the upstream functionality (i.e., if its commit is after March 27, 2019).
 
 Using Multiple Upstream Spack Instances
 ---------------------------------------
 
-A single Spack instance can use multiple upstream Spack installations. Spack
-will search upstream instances in the order that you list them in your
-configuration. If your Spack installation refers to instances X and Y, in that order,
-then instance X must list Y as an upstream in its own ``upstreams.yaml``.
+A single Spack instance can use multiple upstream Spack installations.
+Spack will search upstream instances in the order that you list them in your configuration.
+If your Spack installation refers to instances X and Y, in that order, then instance X must list Y as an upstream in its own ``upstreams.yaml``.
 
 Using Modules for Upstream Packages
 -----------------------------------
 
-The local Spack instance does not generate modules for packages that are
-installed upstream. The local Spack instance can be configured to use the
-modules generated by the upstream Spack instance.
+The local Spack instance does not generate modules for packages that are installed upstream.
+The local Spack instance can be configured to use the modules generated by the upstream Spack instance.
 
-There are two requirements to use the modules created by an upstream Spack
-instance: firstly, the upstream instance must do a ``spack module tcl refresh``,
-which generates an index file that maps installed packages to their modules;
-secondly, the local Spack instance must add a ``modules`` entry to the
-configuration:
+There are two requirements to use the modules created by an upstream Spack instance: firstly, the upstream instance must do a ``spack module tcl refresh``, which generates an index file that maps installed packages to their modules; secondly, the local Spack instance must add a ``modules`` entry to the configuration:
 
 .. code-block:: yaml
 
@@ -85,12 +64,9 @@ configuration:
       modules:
         tcl: /path/to/other/spack/share/spack/modules
 
-Each time new packages are installed in the upstream Spack instance, the
-upstream Spack maintainer should run ``spack module tcl refresh`` (or the
-corresponding command for the type of module that they intend to use).
+Each time new packages are installed in the upstream Spack instance, the upstream Spack maintainer should run ``spack module tcl refresh`` (or the corresponding command for the type of module that they intend to use).
 
 .. note::
 
-   Spack can generate modules that :ref:`automatically load
-   <autoloading-dependencies>` the modules of dependency packages. Spack cannot
-   currently do this for modules in upstream packages.
+   Spack can generate modules that :ref:`automatically load <autoloading-dependencies>` the modules of dependency packages.
+   Spack cannot currently do this for modules in upstream packages.

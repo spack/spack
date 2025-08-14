@@ -538,8 +538,7 @@ The arguments are:
 
 ``self``
     This is the package object, which extends ``CMakePackage``.
-    For API docs on Package objects, see
-    :py:class:`Package <spack.package.PackageBase>`.
+    For API docs on Package objects, see :py:class:`Package <spack.package.PackageBase>`.
 
 ``spec``
     This is the concrete spec object created by Spack from an abstract spec supplied by the user.
@@ -552,9 +551,11 @@ The arguments are:
 
 The function body should contain the actual build instructions, which typically involves:
 
-1. Invoking the build system's commands such as ``make``, ``ninja``, ``python``, et cetera. See :ref:`running_build_executables` for how to do this.
+1. Invoking the build system's commands such as ``make``, ``ninja``, ``python``, et cetera.
+   See :ref:`running_build_executables` for how to do this.
 2. Copying files to the ``prefix`` directory, which is where Spack expects the package to be installed.
-   This can be done using Spack's built-in functions like ``install_tree()`` or ``install()``. See the :ref:`Spack's Python Package API <python-package-api>` for all convenience functions that can be used in the package class.
+   This can be done using Spack's built-in functions like ``install_tree()`` or ``install()``.
+   See the :ref:`Spack's Python Package API <python-package-api>` for all convenience functions that can be used in the package class.
 
 The arguments ``spec`` and ``prefix`` are passed only for convenience, as they always correspond to ``self.spec`` and ``self.spec.prefix`` respectively, as we have already seen in :ref:`the previous section <spec-objects>`.
 
@@ -694,13 +695,11 @@ File filtering functions
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 :py:func:`filter_file(regex, repl, *filenames, **kwargs) <spack.package.filter_file>`
-  Works like ``sed`` but with Python regular expression syntax.  Takes
-  a regular expression, a replacement, and a set of files.  ``repl``
-  can be a raw string or a callable function.  If it is a raw string,
-  it can contain ``\1``, ``\2``, etc. to refer to capture groups in
-  the regular expression.  If it is a callable, it is passed the
-  Python ``MatchObject`` and should return a suitable replacement
-  string for the particular match.
+  Works like ``sed`` but with Python regular expression syntax.
+  Takes a regular expression, a replacement, and a set of files.
+  ``repl`` can be a raw string or a callable function.
+  If it is a raw string, it can contain ``\1``, ``\2``, etc. to refer to capture groups in the regular expression.
+  If it is a callable, it is passed the Python ``MatchObject`` and should return a suitable replacement string for the particular match.
 
   Examples:
 
@@ -720,8 +719,7 @@ File filtering functions
         filter_file(r"#!/usr/bin/perl",
                     "#!/usr/bin/env perl", prefix.bin.bib2xhtml)
 
-  #. Switching the compilers used by ``mpich``'s MPI wrapper scripts from
-     ``cc``, etc. to the compilers used by the Spack build:
+  #. Switching the compilers used by ``mpich``'s MPI wrapper scripts from ``cc``, etc. to the compilers used by the Spack build:
 
      .. code-block:: python
 
@@ -732,14 +730,10 @@ File filtering functions
                     prefix.bin.mpicxx)
 
 :py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.package.change_sed_delimiter>`
-    Some packages, like TAU, have a build system that can't install
-    into directories with, e.g. "@" in the name, because they use
-    hard-coded ``sed`` commands in their build.
+    Some packages, like TAU, have a build system that can't install into directories with, e.g. "@" in the name, because they use hard-coded ``sed`` commands in their build.
 
-    ``change_sed_delimiter`` finds all ``sed`` search/replace commands
-    and changes the delimiter. E.g., if the file contains commands
-    that look like ``s///``, you can use this to change them to
-    ``s@@@``.
+    ``change_sed_delimiter`` finds all ``sed`` search/replace commands and changes the delimiter.
+    E.g., if the file contains commands that look like ``s///``, you can use this to change them to ``s@@@``.
 
     Example of changing ``s///`` to ``s@@@`` in TAU:
 
@@ -756,39 +750,34 @@ File functions
   Get the n\ :sup:`th` ancestor of the directory ``dir``.
 
 :py:func:`can_access(path) <spack.package.can_access>`
-  True if we can read and write to the file at ``path``.  Same as
-  native Python ``os.access(file_name, os.R_OK|os.W_OK)``.
+  True if we can read and write to the file at ``path``.
+  Same as native Python ``os.access(file_name, os.R_OK|os.W_OK)``.
 
 :py:func:`install(src, dest) <spack.package.install>`
-  Install a file to a particular location.  For example, install a
-  header into the ``include`` directory under the install ``prefix``:
+  Install a file to a particular location.
+  For example, install a header into the ``include`` directory under the install ``prefix``:
 
   .. code-block:: python
 
      install("my-header.h", prefix.include)
 
 :py:func:`join_path(*paths) <spack.package.join_path>`
-  An alias for ``os.path.join``. This joins paths using the OS path separator.
+  An alias for ``os.path.join``.
+  This joins paths using the OS path separator.
 
 :py:func:`mkdirp(*paths) <spack.package.mkdirp>`
-  Create each of the directories in ``paths``, creating any parent
-  directories if they do not exist.
+  Create each of the directories in ``paths``, creating any parent directories if they do not exist.
 
 :py:func:`working_dir(dirname, kwargs) <spack.package.working_dir>`
-  This is a Python `Context Manager
-  <https://docs.python.org/2/library/contextlib.html>`_ that makes it
-  easier to work with subdirectories in builds.  You use this with the
-  Python ``with`` statement to change into a working directory, and
-  when the with block is done, you change back to the original
-  directory.  Think of it as a safe ``pushd`` / ``popd`` combination,
-  where ``popd`` is guaranteed to be called at the end, even if
-  exceptions are thrown.
+  This is a Python `Context Manager <https://docs.python.org/2/library/contextlib.html>`_ that makes it easier to work with subdirectories in builds.
+  You use this with the Python ``with`` statement to change into a working directory, and when the with block is done, you change back to the original directory.
+  Think of it as a safe ``pushd`` / ``popd`` combination, where ``popd`` is guaranteed to be called at the end, even if exceptions are thrown.
 
   Example usage:
 
-  #. The ``libdwarf`` build first runs ``configure`` and ``make`` in a
-     subdirectory called ``libdwarf``.  It then implements the
-     installation code itself.  This is natural with ``working_dir``:
+  #. The ``libdwarf`` build first runs ``configure`` and ``make`` in a subdirectory called ``libdwarf``.
+     It then implements the installation code itself.
+     This is natural with ``working_dir``:
 
      .. code-block:: python
 
@@ -797,9 +786,8 @@ File functions
             make()
             install("libdwarf.a",  prefix.lib)
 
-  #. Many CMake builds require that you build "out of source", that
-     is, in a subdirectory.  You can handle creating and ``cd``'ing to
-     the subdirectory like the LLVM package does:
+  #. Many CMake builds require that you build "out of source", that is, in a subdirectory.
+     You can handle creating and ``cd``'ing to the subdirectory like the LLVM package does:
 
      .. code-block:: python
 
@@ -813,8 +801,7 @@ File functions
             make()
             make("install")
 
-     The ``create=True`` keyword argument causes the command to create
-     the directory if it does not exist.
+     The ``create=True`` keyword argument causes the command to create the directory if it does not exist.
 
 :py:func:`touch(path) <spack.package.touch>`
   Create an empty file at ``path``.
@@ -825,8 +812,7 @@ File functions
 Multimethods and the ``@when`` decorator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``@when`` annotation lets packages declare multiple versions of a method that will be called
-depending on the package's spec.
+The ``@when`` annotation lets packages declare multiple versions of a method that will be called depending on the package's spec.
 This can be useful to handle cases where configure options are entirely different depending on the version of the package, or when the package is built for different platforms.
 
 .. code-block:: python
@@ -1007,10 +993,9 @@ This means that the former should only be used if the environment variables depe
 Setting package module variables
 --------------------------------
 
-Apart from modifying environment variables of the dependent package, you can also define Python
-variables to be used by the dependent. This is done by implementing
-:meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`. An
-example of this can be found in the ``Python`` package:
+Apart from modifying environment variables of the dependent package, you can also define Python variables to be used by the dependent.
+This is done by implementing :meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`.
+An example of this can be found in the ``Python`` package:
 
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/python/package.py
    :pyobject: Python.setup_dependent_package
@@ -1026,8 +1011,7 @@ This allows Python packages to directly use these variables:
 
 .. note::
 
-   We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where
-   global variables are coming from when editing a ``package.py`` file.
+   We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where global variables are coming from when editing a ``package.py`` file.
 
 
 .. _compiler_flags:
@@ -1047,7 +1031,8 @@ The main challenge for packagers is to ensure that these flags are combined and 
 
 .. warning::
 
-    A common pitfall when dealing with compiler flags in ``MakefilePackage`` and ``AutotoolsPackage`` is that the user and package author specified flags override the build system defaults. This can inadvertently lead to unoptimized builds.
+    A common pitfall when dealing with compiler flags in ``MakefilePackage`` and ``AutotoolsPackage`` is that the user and package author specified flags override the build system defaults.
+    This can inadvertently lead to unoptimized builds.
     For example, suppose a user requests ``spack install pkg cflags=-Wno-unused`` and the build system defaults to ``CFLAGS=-O2 -g``.
     If the package takes the user request literally and sets ``CFLAGS=-Wextra`` as an environment variable, then the user-specified flags may *override* the build system defaults, and the build would not be optimized: the ``-O2`` flag would be lost.
     Whether environment variables like ``CFLAGS`` lead to this problem depends on the build system, and may differ from package to package.
@@ -1234,19 +1219,14 @@ MPI support in Spack
       currently sets `self.spec.mpicc` in `setup_dependent_package` to the C compiler of the
       dependent, which again is wrong because there are many dependents.
 
-It is common for high-performance computing software/packages to use the
-Message Passing Interface ( ``MPI``).  As a result of concretization, a
-given package can be built using different implementations of MPI such as
-``OpenMPI``, ``MPICH`` or ``IntelMPI``.  That is, when your package
-declares that it ``depends_on("mpi")``, it can be built with any of these
-``mpi`` implementations. In some scenarios, to configure a package, one
-has to provide it with appropriate MPI compiler wrappers such as
-``mpicc``, ``mpic++``.  However, different implementations of ``MPI`` may
-have different names for those wrappers.
+It is common for high-performance computing software/packages to use the Message Passing Interface ( ``MPI``).
+As a result of concretization, a given package can be built using different implementations of MPI such as ``OpenMPI``, ``MPICH`` or ``IntelMPI``.
+That is, when your package declares that it ``depends_on("mpi")``, it can be built with any of these ``mpi`` implementations.
+In some scenarios, to configure a package, one has to provide it with appropriate MPI compiler wrappers such as ``mpicc``, ``mpic++``.
+However, different implementations of ``MPI`` may have different names for those wrappers.
 
-Spack provides an idiomatic way to use MPI compilers in your package.  To
-use MPI wrappers to compile your whole build, do this in your
-``install()`` method:
+Spack provides an idiomatic way to use MPI compilers in your package.
+To use MPI wrappers to compile your whole build, do this in your ``install()`` method:
 
 .. code-block:: python
 
@@ -1255,30 +1235,22 @@ use MPI wrappers to compile your whole build, do this in your
    env["F77"] = spec["mpi"].mpif77
    env["FC"] = spec["mpi"].mpifc
 
-That's all.  A longer explanation of why this works is below.
+That's all.
+A longer explanation of why this works is below.
 
-We don't try to force any particular build method on packagers.  The
-decision to use MPI wrappers depends on the way the package is written,
-on common practice, and on "what works".  Loosely, there are three types
-of MPI builds:
+We don't try to force any particular build method on packagers.
+The decision to use MPI wrappers depends on the way the package is written, on common practice, and on "what works".
+Loosely, there are three types of MPI builds:
 
-1. Some build systems work well without the wrappers and can treat MPI
-   as an external library, where the person doing the build has to
-   supply includes/libs/etc.  This is fairly uncommon.
+1. Some build systems work well without the wrappers and can treat MPI as an external library, where the person doing the build has to supply includes/libs/etc.
+   This is fairly uncommon.
 
-2. Others really want the wrappers and assume you're using an MPI
-   "compiler" -- i.e., they have no mechanism to add MPI
-   includes/libraries/etc.
+2. Others really want the wrappers and assume you're using an MPI "compiler" -- i.e., they have no mechanism to add MPI includes/libraries/etc.
 
-3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
-   extract ``-I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
-   regular library.
+3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to extract ``-I`` / ``-L`` / ``-D`` arguments, then treats MPI like a regular library.
 
-Note that some CMake builds fall into case 2 because they either don't
-know about or don't like CMake's ``FindMPI`` support -- they just assume
-an MPI compiler. Also, some autotools builds fall into case 3 (e.g., `here
-is an autotools version of CMake's FindMPI
-<https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
+Note that some CMake builds fall into case 2 because they either don't know about or don't like CMake's ``FindMPI`` support -- they just assume an MPI compiler.
+Also, some autotools builds fall into case 3 (e.g., `here is an autotools version of CMake's FindMPI <https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
 
 Given all of this, we leave the use of the wrappers up to the packager.
 Spack will support all three ways of building MPI packages.
@@ -1286,24 +1258,16 @@ Spack will support all three ways of building MPI packages.
 Packaging Conventions
 ^^^^^^^^^^^^^^^^^^^^^
 
-As mentioned above, in the ``install()`` method, ``CC``, ``CXX``,
-``F77``, and ``FC`` point to Spack's wrappers around the chosen compiler.
-Spack's wrappers are not the MPI compiler wrappers, though they do
-automatically add ``-I``, ``-L``, and ``-Wl,-rpath`` args for
-dependencies in a similar way.  The MPI wrappers are a bit different in
-that they also add ``-l`` arguments for the MPI libraries, and some add
-special ``-D`` arguments to trigger build options in MPI programs.
+As mentioned above, in the ``install()`` method, ``CC``, ``CXX``, ``F77``, and ``FC`` point to Spack's wrappers around the chosen compiler.
+Spack's wrappers are not the MPI compiler wrappers, though they do automatically add ``-I``, ``-L``, and ``-Wl,-rpath`` args for dependencies in a similar way.
+The MPI wrappers are a bit different in that they also add ``-l`` arguments for the MPI libraries, and some add special ``-D`` arguments to trigger build options in MPI programs.
 
-For case 1 above, you generally don't need to do more than patch your
-Makefile or add configure args as you normally would.
+For case 1 above, you generally don't need to do more than patch your Makefile or add configure args as you normally would.
 
-For case 3, you don't need to do much of anything, as Spack puts the MPI
-compiler wrappers in the PATH, and the build will find them and
-interrogate them.
+For case 3, you don't need to do much of anything, as Spack puts the MPI compiler wrappers in the PATH, and the build will find them and interrogate them.
 
-For case 2, things are a bit more complicated, as you'll need to tell the
-build to use the MPI compiler wrappers instead of Spack's compiler
-wrappers.  All it takes is some lines like this:
+For case 2, things are a bit more complicated, as you'll need to tell the build to use the MPI compiler wrappers instead of Spack's compiler wrappers.
+All it takes is some lines like this:
 
 .. code-block:: python
 
@@ -1312,81 +1276,55 @@ wrappers.  All it takes is some lines like this:
    env["F77"] = spec["mpi"].mpif77
    env["FC"] = spec["mpi"].mpifc
 
-Or, if you pass CC, CXX, etc. directly to your build with, e.g.,
-`--with-cc=<path>`, you'll want to substitute `spec["mpi"].mpicc` in
-there instead, e.g.:
+Or, if you pass CC, CXX, etc. directly to your build with, e.g., `--with-cc=<path>`, you'll want to substitute `spec["mpi"].mpicc` in there instead, e.g.:
 
 .. code-block:: python
 
    configure("--prefix=%s" % prefix,
              "--with-cc=%s" % spec["mpi"].mpicc)
 
-Now, you may think that doing this will lose the includes, library paths,
-and RPATHs that Spack's compiler wrappers get you, but we've actually set
-things up so that the MPI compiler wrappers use Spack's compiler wrappers
-when run from within Spack. So using the MPI wrappers should really be as
-simple as the code above.
+Now, you may think that doing this will lose the includes, library paths, and RPATHs that Spack's compiler wrappers get you, but we've actually set things up so that the MPI compiler wrappers use Spack's compiler wrappers when run from within Spack.
+So using the MPI wrappers should really be as simple as the code above.
 
 ``spec["mpi"]``
 ^^^^^^^^^^^^^^^^^^^^^
 
 Ok, so how does all this work?
 
-If your package has a virtual dependency like ``mpi``, then referring to
-``spec["mpi"]`` within ``install()`` will get you the concrete ``mpi``
-implementation in your dependency DAG.  That is a spec object just like
-the one passed to install, only the MPI implementations all set some
-additional properties on it to help you out.  E.g., in openmpi, you'll
-find this:
+If your package has a virtual dependency like ``mpi``, then referring to ``spec["mpi"]`` within ``install()`` will get you the concrete ``mpi`` implementation in your dependency DAG.
+That is a spec object just like the one passed to install, only the MPI implementations all set some additional properties on it to help you out.
+E.g., in openmpi, you'll find this:
 
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.setup_dependent_package
 
-That code allows the ``openmpi`` package to associate an ``mpicc`` property
-with the ``openmpi`` node in the DAG, so that dependents can access it.
-``mvapich2`` and ``mpich`` do similar things.  So, no matter what MPI
-you're using, spec["mpi"].mpicc gets you the location of the MPI
-compilers. This allows us to have a fairly simple polymorphic interface
-for information about virtual dependencies like MPI.
+That code allows the ``openmpi`` package to associate an ``mpicc`` property with the ``openmpi`` node in the DAG, so that dependents can access it.
+``mvapich2`` and ``mpich`` do similar things.
+So, no matter what MPI you're using, spec["mpi"].mpicc gets you the location of the MPI compilers.
+This allows us to have a fairly simple polymorphic interface for information about virtual dependencies like MPI.
 
 Wrapping wrappers
 ^^^^^^^^^^^^^^^^^^^^^
 
-Spack likes to use its own compiler wrappers to make it easy to add
-``RPATHs`` to builds, and to try hard to ensure that your builds use the
-right dependencies.  This doesn't play nicely by default with MPI, so we
-have to do a couple of tricks.
+Spack likes to use its own compiler wrappers to make it easy to add ``RPATHs`` to builds, and to try hard to ensure that your builds use the right dependencies.
+This doesn't play nicely by default with MPI, so we have to do a couple of tricks.
 
-  1. If we build MPI with Spack's wrappers, mpicc and friends will be
-     installed with hard-coded paths to Spack's wrappers, and using them
-     from outside of Spack will fail because they only work within Spack.
-     To fix this, we patch mpicc and friends to use the regular
-     compilers.  Look at the filter_compilers method in mpich, openmpi,
-     or mvapich2 for details.
+  1. If we build MPI with Spack's wrappers, mpicc and friends will be installed with hard-coded paths to Spack's wrappers, and using them from outside of Spack will fail because they only work within Spack.
+     To fix this, we patch mpicc and friends to use the regular compilers.
+     Look at the filter_compilers method in mpich, openmpi, or mvapich2 for details.
 
-  2. We still want to use the Spack compiler wrappers when Spack is
-     calling mpicc. Luckily, wrappers in all mainstream MPI
-     implementations provide environment variables that allow us to
-     dynamically set the compiler to be used by mpicc, mpicxx, etc.
-     Spack's build environment
-     sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and
-     ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI. This makes the MPI
-     compiler wrappers use the Spack compiler wrappers so that your
-     dependencies still get proper RPATHs even if you use the MPI
-     wrappers.
+  2. We still want to use the Spack compiler wrappers when Spack is calling mpicc.
+     Luckily, wrappers in all mainstream MPI implementations provide environment variables that allow us to dynamically set the compiler to be used by mpicc, mpicxx, etc.
+     Spack's build environment sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI.
+     This makes the MPI compiler wrappers use the Spack compiler wrappers so that your dependencies still get proper RPATHs even if you use the MPI wrappers.
 
 MPI on Cray machines
 ^^^^^^^^^^^^^^^^^^^^^
 
-The Cray programming environment notably uses ITS OWN compiler wrappers,
-which function like MPI wrappers.  On Cray systems, the ``CC``, ``cc``,
-and ``ftn`` wrappers ARE the MPI compiler wrappers, and it's assumed that
-you'll use them for all of your builds.  So on Cray we don't bother with
-``mpicc``, ``mpicxx``, etc., Spack MPI implementations set
-``spec["mpi"].mpicc`` to point to Spack's wrappers, which wrap the Cray
-wrappers, which wrap the regular compilers and include MPI flags.  That
-may seem complicated, but for packagers, that means the same code for
-using MPI wrappers will work, even on a Cray:
+The Cray programming environment notably uses ITS OWN compiler wrappers, which function like MPI wrappers.
+On Cray systems, the ``CC``, ``cc``, and ``ftn`` wrappers ARE the MPI compiler wrappers, and it's assumed that you'll use them for all of your builds.
+So on Cray we don't bother with ``mpicc``, ``mpicxx``, etc., Spack MPI implementations set ``spec["mpi"].mpicc`` to point to Spack's wrappers, which wrap the Cray wrappers, which wrap the regular compilers and include MPI flags.
+That may seem complicated, but for packagers, that means the same code for using MPI wrappers will work, even on a Cray:
 
 .. code-block:: python
 

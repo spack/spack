@@ -175,8 +175,7 @@ In that case, you can *force* the choice of the build system of the dependency:
 Making a package discoverable with ``spack external find``
 ----------------------------------------------------------
 
-The simplest way to make a package discoverable with
-:ref:`spack external find <cmd-spack-external-find>` is to:
+The simplest way to make a package discoverable with :ref:`spack external find <cmd-spack-external-find>` is to:
 
 1. Define the executables associated with the package.
 2. Implement a method to determine the versions of these executables.
@@ -184,8 +183,7 @@ The simplest way to make a package discoverable with
 Minimal detection
 ^^^^^^^^^^^^^^^^^
 
-The first step is fairly simple, as it requires only to
-specify a package-level ``executables`` attribute:
+The first step is fairly simple, as it requires only to specify a package-level ``executables`` attribute:
 
 .. code-block:: python
 
@@ -194,14 +192,11 @@ specify a package-level ``executables`` attribute:
        # would match for example "foo", "foobar", and "bazfoo".
        executables = ["foo"]
 
-This attribute must be a list of strings. Each string is a regular
-expression (e.g. "gcc" would match "gcc", "gcc-8.3", "my-weird-gcc", etc.) to
-determine a set of system executables that might be part of this package. Note
-that to match only executables named "gcc" the regular expression ``"^gcc$"``
-must be used.
+This attribute must be a list of strings.
+Each string is a regular expression (e.g. "gcc" would match "gcc", "gcc-8.3", "my-weird-gcc", etc.) to determine a set of system executables that might be part of this package.
+Note that to match only executables named "gcc" the regular expression ``"^gcc$"`` must be used.
 
-Finally, to determine the version of each executable the ``determine_version``
-method must be implemented:
+Finally, to determine the version of each executable the ``determine_version`` method must be implemented:
 
 .. code-block:: python
 
@@ -214,29 +209,21 @@ method must be implemented:
            exe (str): absolute path to the executable being examined
        """
 
-This method receives as input the path to a single executable and must return
-as output its version as a string; if the user cannot determine the version
-or determines that the executable is not an instance of the package, they can
-return None and the executable will be discarded as a candidate.
-Implementing the two steps above is mandatory, and gives the package the
-basic ability to detect if a spec is present on the system at a given version.
+This method receives as input the path to a single executable and must return as output its version as a string; if the user cannot determine the version or determines that the executable is not an instance of the package, they can return None and the executable will be discarded as a candidate.
+Implementing the two steps above is mandatory, and gives the package the basic ability to detect if a spec is present on the system at a given version.
 
 .. note::
-   Any executable for which the ``determine_version`` method returns ``None``
-   will be discarded and won't appear in later stages of the workflow described below.
+   Any executable for which the ``determine_version`` method returns ``None`` will be discarded and won't appear in later stages of the workflow described below.
 
 Additional functionality
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Besides the two mandatory steps described above, there are also optional
-methods that can be implemented to either increase the amount of details
-being detected or improve the robustness of the detection logic in a package.
+Besides the two mandatory steps described above, there are also optional methods that can be implemented to either increase the amount of details being detected or improve the robustness of the detection logic in a package.
 
 Variants and custom attributes
 """"""""""""""""""""""""""""""
 
-The ``determine_variants`` method can be optionally implemented in a package
-to detect additional details of the spec:
+The ``determine_variants`` method can be optionally implemented in a package to detect additional details of the spec:
 
 .. code-block:: python
 
@@ -253,18 +240,14 @@ to detect additional details of the spec:
                executables, as detected by ``determine_version``
        """
 
-This method takes as input a list of executables that live in the same prefix and
-share the same version string, and returns either:
+This method takes as input a list of executables that live in the same prefix and share the same version string, and returns either:
 
 1. A variant string
 2. A tuple of a variant string and a dictionary of extra attributes
-3. A list of items matching either 1 or 2 (if multiple specs are detected
-   from the set of executables)
+3. A list of items matching either 1 or 2 (if multiple specs are detected from the set of executables)
 
-If extra attributes are returned, they will be recorded in ``packages.yaml``
-and be available for later reuse. As an example, the ``gcc`` package will record
-by default the different compilers found and an entry in ``packages.yaml``
-would look like:
+If extra attributes are returned, they will be recorded in ``packages.yaml`` and be available for later reuse.
+As an example, the ``gcc`` package will record by default the different compilers found and an entry in ``packages.yaml`` would look like:
 
 .. code-block:: yaml
 
@@ -279,9 +262,7 @@ would look like:
              c++: /usr/bin/x86_64-linux-gnu-g++-9
              fortran: /usr/bin/x86_64-linux-gnu-gfortran-9
 
-This allows us, for instance, to keep track of executables that would be named
-differently if built by Spack (e.g. ``x86_64-linux-gnu-gcc-9``
-instead of just ``gcc``).
+This allows us, for instance, to keep track of executables that would be named differently if built by Spack (e.g. ``x86_64-linux-gnu-gcc-9`` instead of just ``gcc``).
 
 .. TODO: we need to gather some more experience on overriding "prefix"
    and other special keywords in extra attributes, but as soon as we are
@@ -291,11 +272,8 @@ instead of just ``gcc``).
 Filter matching executables
 """""""""""""""""""""""""""
 
-Sometimes defining the appropriate regex for the ``executables``
-attribute might prove to be difficult, especially if one has to
-deal with corner cases or exclude "red herrings". To help keep
-the regular expressions as simple as possible, each package can
-optionally implement a ``filter_detected_exes`` method:
+Sometimes defining the appropriate regex for the ``executables`` attribute might prove to be difficult, especially if one has to deal with corner cases or exclude "red herrings".
+To help keep the regular expressions as simple as possible, each package can optionally implement a ``filter_detected_exes`` method:
 
 .. code-block:: python
 
@@ -303,18 +281,13 @@ optionally implement a ``filter_detected_exes`` method:
     def filter_detected_exes(cls, prefix, exes_in_prefix):
         """Return a filtered list of the executables in prefix"""
 
-which takes as input a prefix and a list of matching executables and
-returns a filtered list of said executables.
+which takes as input a prefix and a list of matching executables and returns a filtered list of said executables.
 
-Using this method has the advantage of allowing custom logic for
-filtering, and does not restrict the user to regular expressions
-only.  Consider the case of detecting the GNU C++ compiler. If we
-try to search for executables that match ``g++``, that would have
-the unwanted side effect of selecting also ``clang++`` - which is
-a C++ compiler provided by another package - if present on the system.
-Trying to select executables that contain ``g++`` but not ``clang``
-would be quite complicated to do using regex only. Employing the
-``filter_detected_exes`` method it becomes:
+Using this method has the advantage of allowing custom logic for filtering, and does not restrict the user to regular expressions only.
+Consider the case of detecting the GNU C++ compiler.
+If we try to search for executables that match ``g++``, that would have the unwanted side effect of selecting also ``clang++`` - which is a C++ compiler provided by another package - if present on the system.
+Trying to select executables that contain ``g++`` but not ``clang`` would be quite complicated to do using regex only.
+Employing the ``filter_detected_exes`` method it becomes:
 
 .. code-block:: python
 
@@ -325,15 +298,12 @@ would be quite complicated to do using regex only. Employing the
       def filter_detected_exes(cls, prefix, exes_in_prefix):
          return [x for x in exes_in_prefix if "clang" not in x]
 
-Another possibility that this method opens is to apply certain
-filtering logic when specific conditions are met (e.g. take some
-decisions on an OS and not on another).
+Another possibility that this method opens is to apply certain filtering logic when specific conditions are met (e.g. take some decisions on an OS and not on another).
 
 Validate detection
 ^^^^^^^^^^^^^^^^^^
 
-To increase detection robustness, packagers may also implement a method
-to validate the detected Spec objects:
+To increase detection robustness, packagers may also implement a method to validate the detected Spec objects:
 
 .. code-block:: python
 
@@ -341,15 +311,11 @@ to validate the detected Spec objects:
    def validate_detected_spec(cls, spec, extra_attributes):
        """Validate a detected spec. Raise an exception if validation fails."""
 
-This method receives a detected spec along with its extra attributes and can be
-used to check that certain conditions are met by the spec. Packagers can either
-use assertions or raise an ``InvalidSpecDetected`` exception when the check fails.
-If the conditions are not honored the spec will be discarded and any message
-associated with the assertion or the exception will be logged as the reason for
-discarding it.
+This method receives a detected spec along with its extra attributes and can be used to check that certain conditions are met by the spec.
+Packagers can either use assertions or raise an ``InvalidSpecDetected`` exception when the check fails.
+If the conditions are not honored the spec will be discarded and any message associated with the assertion or the exception will be logged as the reason for discarding it.
 
-As an example, a package that wants to check that the ``compilers`` attribute is
-in the extra attributes can implement this method like this:
+As an example, a package that wants to check that the ``compilers`` attribute is in the extra attributes can implement this method like this:
 
 .. code-block:: python
 
@@ -377,11 +343,7 @@ or like this:
 Custom detection workflow
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the rare case when the mechanisms described so far don't fit the
-detection of a package, the implementation of all the methods above
-can be disregarded and instead a custom ``determine_spec_details``
-method can be implemented directly in the package class (note that
-the definition of the ``executables`` attribute is still required):
+In the rare case when the mechanisms described so far don't fit the detection of a package, the implementation of all the methods above can be disregarded and instead a custom ``determine_spec_details`` method can be implemented directly in the package class (note that the definition of the ``executables`` attribute is still required):
 
 .. code-block:: python
 
@@ -394,15 +356,11 @@ the definition of the ``executables`` attribute is still required):
        # the package. Return one or more Specs for each instance of the
        # package which is thought to be installed in the provided prefix
 
-This method takes as input a set of discovered executables (which match
-those specified by the user) as well as a common prefix shared by all
-of those executables. The function must return one or more :py:class:`spack.package.Spec` associated
-with the executables (it can also return ``None`` to indicate that no
-provided executables are associated with the package).
+This method takes as input a set of discovered executables (which match those specified by the user) as well as a common prefix shared by all of those executables.
+The function must return one or more :py:class:`spack.package.Spec` associated with the executables (it can also return ``None`` to indicate that no provided executables are associated with the package).
 
-As an example, consider a made-up package called ``foo-package`` which
-builds an executable called ``foo``. ``FooPackage`` would appear as
-follows:
+As an example, consider a made-up package called ``foo-package`` which builds an executable called ``foo``.
+``FooPackage`` would appear as follows:
 
 .. code-block:: python
 
@@ -434,15 +392,10 @@ follows:
 Add detection tests to packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To ensure that software is detected correctly for multiple configurations
-and on different systems users can write a ``detection_test.yaml`` file and
-put it in the package directory alongside the ``package.py`` file.
-This YAML file contains enough information for Spack to mock an environment
-and try to check if the detection logic yields the results that are expected.
+To ensure that software is detected correctly for multiple configurations and on different systems users can write a ``detection_test.yaml`` file and put it in the package directory alongside the ``package.py`` file.
+This YAML file contains enough information for Spack to mock an environment and try to check if the detection logic yields the results that are expected.
 
-As a general rule, attributes at the top-level of ``detection_test.yaml``
-represent search mechanisms and they each map to a list of tests that should confirm
-the validity of the package's detection logic.
+As a general rule, attributes at the top-level of ``detection_test.yaml`` represent search mechanisms and they each map to a list of tests that should confirm the validity of the package's detection logic.
 
 The detection tests can be run with the following command:
 
@@ -455,8 +408,7 @@ Errors that have been detected are reported to screen.
 Tests for PATH inspections
 """"""""""""""""""""""""""
 
-Detection tests insisting on ``PATH`` inspections are listed under
-the ``paths`` attribute:
+Detection tests insisting on ``PATH`` inspections are listed under the ``paths`` attribute:
 
 .. code-block:: yaml
 
@@ -474,13 +426,9 @@ the ``paths`` attribute:
      results:
      - spec: 'llvm@3.9.1 +clang~lld~lldb'
 
-If the ``platforms`` attribute is present, tests are run only if the current host
-matches one of the listed platforms.
-Each test is performed by first creating a temporary directory structure as
-specified in the corresponding ``layout`` and by then running
-package detection and checking that the outcome matches the expected
-``results``. The exact details on how to specify both the ``layout`` and the
-``results`` are reported in the table below:
+If the ``platforms`` attribute is present, tests are run only if the current host matches one of the listed platforms.
+Each test is performed by first creating a temporary directory structure as specified in the corresponding ``layout`` and by then running package detection and checking that the outcome matches the expected ``results``.
+The exact details on how to specify both the ``layout`` and the ``results`` are reported in the table below:
 
 .. list-table:: Test based on PATH inspections
    :header-rows: 1
@@ -517,18 +465,16 @@ package detection and checking that the outcome matches the expected
 Reuse tests from other packages
 """""""""""""""""""""""""""""""
 
-When using a custom repository, it is possible to customize a package that already exists in ``builtin``
-and reuse its external tests. To do so, just write a ``detection_test.yaml`` alongside the customized
-``package.py`` with an ``includes`` attribute. For instance the ``detection_test.yaml`` for
-``myrepo.llvm`` might look like:
+When using a custom repository, it is possible to customize a package that already exists in ``builtin`` and reuse its external tests.
+To do so, just write a ``detection_test.yaml`` alongside the customized ``package.py`` with an ``includes`` attribute.
+For instance the ``detection_test.yaml`` for ``myrepo.llvm`` might look like:
 
 .. code-block:: yaml
 
    includes:
    - "builtin.llvm"
 
-This YAML file instructs Spack to run the detection tests defined in ``builtin.llvm`` in addition to
-those locally defined in the file.
+This YAML file instructs Spack to run the detection tests defined in ``builtin.llvm`` in addition to those locally defined in the file.
 
 .. _abi_compatibility:
 
@@ -571,10 +517,8 @@ Customizing Views
 
    This is advanced functionality documented for completeness, and rarely needs customization.
 
-Spack environments manage a view of their packages, which is a single directory
-that merges all installed packages through symlinks, so users can easily access them.
-The methods of ``PackageViewMixin`` can be overridden to customize how packages are added
-to views.
+Spack environments manage a view of their packages, which is a single directory that merges all installed packages through symlinks, so users can easily access them.
+The methods of ``PackageViewMixin`` can be overridden to customize how packages are added to views.
 Sometimes it's impossible to get an application to work just through symlinking its executables, and patching is necessary.
 For example, Python scripts in a ``bin`` directory may have a shebang that points to the Python interpreter in Python's install prefix, but it's more convenient to have the shebang point to the Python interpreter in the view, since that interpreter is aware of the Python packages in the view (the view is a virtual environment).
 As a consequence, Python extension packages (those inheriting from ``PythonPackage``) override ``add_files_to_view`` in order to rewrite shebang lines.

@@ -11,14 +11,15 @@
 Getting Started
 ===============
 
-Getting Spack is easy.  You can clone it from the `GitHub repository
-<https://github.com/spack/spack>`_ using this command:
+Getting Spack is easy.
+You can clone it from the `GitHub repository <https://github.com/spack/spack>`_ using this command:
 
 .. code-block:: console
 
    $ git clone --depth=2 https://github.com/spack/spack.git
 
-This will create a directory called ``spack``. Once you have cloned Spack, we recommend sourcing the appropriate script for your shell:
+This will create a directory called ``spack``.
+Once you have cloned Spack, we recommend sourcing the appropriate script for your shell:
 
 .. tab-set::
 
@@ -150,7 +151,8 @@ The output of this command should look similar to the following:
      Stage: 0.46s.  Autoreconf: 0.00s.  Configure: 9.25s.  Build: 1m 8.71s.  Install: 3.32s.  Post-install: 0.68s.  Total: 1m 22.61s
    [+] /home/spack/.local/spack/opt/linux-icelake/tcl-8.6.12-6vo5hxeqw5plzd6gvzm74wlfz5stnzcv
 
-Congratulations! You just installed your first package with Spack!
+Congratulations!
+You just installed your first package with Spack!
 
 Use the software you just installed
 -----------------------------------
@@ -177,7 +179,8 @@ The environment of the current shell has now been modified, and you can run:
 
    $ tcsh
 
-directly. To undo these modifications, you can:
+directly.
+To undo these modifications, you can:
 
 .. code-block:: spec
 

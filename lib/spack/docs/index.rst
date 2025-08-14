@@ -14,26 +14,17 @@
 Spack
 ===================
 
-Spack is a package management tool designed to support multiple
-versions and configurations of software on a wide variety of platforms
-and environments.  It was designed for large supercomputing centers,
-where many users and application teams share common installations of
-software on clusters with exotic architectures, using libraries that
-do not have a standard ABI.  Spack is non-destructive: installing a
-new version does not break existing installations, so many
-configurations can coexist on the same system.
+Spack is a package management tool designed to support multiple versions and configurations of software on a wide variety of platforms and environments.
+It was designed for large supercomputing centers, where many users and application teams share common installations of software on clusters with exotic architectures, using libraries that do not have a standard ABI.
+Spack is non-destructive: installing a new version does not break existing installations, so many configurations can coexist on the same system.
 
-Most importantly, Spack is *simple*.  It offers a simple *spec* syntax
-so that users can specify versions and configuration options
-concisely.  Spack is also simple for package authors: package files
-are written in pure Python, and specs allow package authors to
-maintain a single file for many different builds of the same package.
+Most importantly, Spack is *simple*.
+It offers a simple *spec* syntax so that users can specify versions and configuration options concisely.
+Spack is also simple for package authors: package files are written in pure Python, and specs allow package authors to maintain a single file for many different builds of the same package.
 
 See the :doc:`features` for examples and highlights.
 
-Get Spack from the `GitHub repository
-<https://github.com/spack/spack>`_ and install your first
-package:
+Get Spack from the `GitHub repository <https://github.com/spack/spack>`_ and install your first package:
 
 .. code-block:: console
 
@@ -44,8 +35,7 @@ package:
 .. note::
    ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
 
-If you're new to Spack and want to start using it, see :doc:`getting_started`,
-or refer to the full manual below.
+If you're new to Spack and want to start using it, see :doc:`getting_started`, or refer to the full manual below.
 
 
 .. toctree::

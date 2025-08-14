@@ -21,8 +21,7 @@ Suitable Modules
 ^^^^^^^^^^^^^^^^
 
 In general, modules that are part of the standard Perl installation should not be added to Spack.
-A possible exception is if the module was not part of the standard installation
-for earlier versions of ``perl`` that are still listed in the package, which you can check by running ``spack info perl``.
+A possible exception is if the module was not part of the standard installation for earlier versions of ``perl`` that are still listed in the package, which you can check by running ``spack info perl``.
 
 How do you know if the module is in the standard Perl installation?
 You check if it is included in the ``CORE`` by entering the following on the command line:

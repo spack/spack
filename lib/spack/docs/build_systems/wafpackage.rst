@@ -11,8 +11,7 @@
 Waf
 ------
 
-Like SCons, Waf is a general-purpose build system that does not rely
-on Makefiles to build software.
+Like SCons, Waf is a general-purpose build system that does not rely on Makefiles to build software.
 
 Phases
 ^^^^^^
@@ -46,19 +45,16 @@ Each phase provides a ``<phase>`` function that runs:
    $ python waf -j<jobs> <phase>
 
 
-where ``<jobs>`` is the number of parallel jobs to build with. Each phase
-also has a ``<phase_args>`` function that can pass arguments to this call.
-All of these functions are empty. The ``configure`` phase
-automatically adds  ``--prefix=/path/to/installation/prefix``, so you
-don't need to add that in the ``configure_args``.
+where ``<jobs>`` is the number of parallel jobs to build with.
+Each phase also has a ``<phase_args>`` function that can pass arguments to this call.
+All of these functions are empty.
+The ``configure`` phase automatically adds  ``--prefix=/path/to/installation/prefix``, so you don't need to add that in the ``configure_args``.
 
 Testing
 ^^^^^^^
 
-``WafPackage`` also provides ``test`` and ``installtest`` methods,
-which are run after the ``build`` and ``install`` phases, respectively.
-By default, these phases do nothing, but you can override them to
-run package-specific unit tests.
+``WafPackage`` also provides ``test`` and ``installtest`` methods, which are run after the ``build`` and ``install`` phases, respectively.
+By default, these phases do nothing, but you can override them to run package-specific unit tests.
 
 .. code-block:: python
 
@@ -71,23 +67,21 @@ run package-specific unit tests.
 Important files
 ^^^^^^^^^^^^^^^
 
-Each Waf package comes with a custom ``waf`` build script, written in
-Python. This script contains instructions to build the project.
+Each Waf package comes with a custom ``waf`` build script, written in Python.
+This script contains instructions to build the project.
 
-The package also comes with a ``wscript`` file. This file is used to
-override the default ``configure``, ``build``, and ``install`` phases
-to customize the Waf project. It also allows developers to override
-the default ``./waf --help`` message. Check this file to find useful
-information about dependencies and the minimum versions that are
-supported.
+The package also comes with a ``wscript`` file.
+This file is used to override the default ``configure``, ``build``, and ``install`` phases to customize the Waf project.
+It also allows developers to override the default ``./waf --help`` message.
+Check this file to find useful information about dependencies and the minimum versions that are supported.
 
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``WafPackage`` does not require ``waf`` to build. ``waf`` is only
-needed to create the ``./waf`` script. Since ``./waf`` is a Python
-script, Python is needed to build the project. ``WafPackage`` adds
-the following dependency automatically:
+``WafPackage`` does not require ``waf`` to build.
+``waf`` is only needed to create the ``./waf`` script.
+Since ``./waf`` is a Python script, Python is needed to build the project.
+``WafPackage`` adds the following dependency automatically:
 
 .. code-block:: python
 
@@ -99,10 +93,8 @@ Waf only supports Python 2.5 and up.
 Passing arguments to Waf
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-As previously mentioned, each phase comes with a ``<phase_args>``
-function that can be used to pass arguments to that particular
-phase. For example, if you need to pass arguments to the build
-phase, you can use:
+As previously mentioned, each phase comes with a ``<phase_args>`` function that can be used to pass arguments to that particular phase.
+For example, if you need to pass arguments to the build phase, you can use:
 
 .. code-block:: python
 
@@ -120,5 +112,4 @@ A list of valid options can be found by running ``./waf --help``.
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-For more information on the Waf build system, see:
-https://waf.io/book/
+For more information on the Waf build system, see: https://waf.io/book/

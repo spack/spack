@@ -11,18 +11,15 @@
 Bundle
 ------
 
-``BundlePackage`` represents a set of packages that are expected to work
-well together, such as a collection of commonly used software libraries.
+``BundlePackage`` represents a set of packages that are expected to work well together, such as a collection of commonly used software libraries.
 The associated software is specified as dependencies.
 
-If it makes sense, variants, conflicts, and requirements can be added to
-the package. :ref:`Variants <variants>` ensure that common build options
-are consistent across the packages supporting them.
+If it makes sense, variants, conflicts, and requirements can be added to the package.
+:ref:`Variants <variants>` ensure that common build options are consistent across the packages supporting them.
 :ref:`Conflicts <packaging_conflicts>` prevent attempts to build with known bugs and limitations.
 :ref:`Requirements <packaging_requires>` prevent attempts to build without critical options.
 
-For example, if ``MyBundlePackage`` is known to only build on ``linux``,
-it could use the ``require`` directive as follows:
+For example, if ``MyBundlePackage`` is known to only build on ``linux``, it could use the ``require`` directive as follows:
 
 .. code-block:: python
 
@@ -35,16 +32,14 @@ Spack has a number of built-in bundle packages, such as:
 * `Libc <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/libc/package.py>`_
 * `Xsdk <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/xsdk/package.py>`_
 
-where ``Xsdk`` also inherits from ``CudaPackage`` and ``RocmPackage`` and
-``Libc`` is a virtual bundle package for the C standard library.
+where ``Xsdk`` also inherits from ``CudaPackage`` and ``RocmPackage`` and ``Libc`` is a virtual bundle package for the C standard library.
 
 
 Creation
 ^^^^^^^^
 
-Be sure to specify the ``bundle`` template if you are using ``spack create``
-to generate a package from the template.  For example, use the following
-command to create a bundle package whose class name will be ``Mybundle``:
+Be sure to specify the ``bundle`` template if you are using ``spack create`` to generate a package from the template.
+For example, use the following command to create a bundle package whose class name will be ``Mybundle``:
 
 .. code-block:: console
 
@@ -55,19 +50,16 @@ command to create a bundle package whose class name will be ``Mybundle``:
 Phases
 ^^^^^^
 
-The ``BundlePackage`` base class does not provide any phases by default
-since the bundle does not represent a build system.
+The ``BundlePackage`` base class does not provide any phases by default since the bundle does not represent a build system.
 
 
 URL
 ^^^^^^
 
-The ``url`` property does not have meaning since there is no package-specific
-code to fetch.
+The ``url`` property does not have meaning since there is no package-specific code to fetch.
 
 
 Version
 ^^^^^^^
 
-At least one ``version`` must be specified in order for the package to
-build.
+At least one ``version`` must be specified in order for the package to build.

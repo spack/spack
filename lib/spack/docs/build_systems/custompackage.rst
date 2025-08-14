@@ -11,47 +11,36 @@
 Custom Build Systems
 --------------------
 
-While the built-in build systems should meet your needs for the
-vast majority of packages, some packages provide custom build scripts.
+While the built-in build systems should meet your needs for the vast majority of packages, some packages provide custom build scripts.
 This guide is intended for the following use cases:
 
 * Packaging software with its own custom build system
 * Adding support for new build systems
 
-If you want to add support for a new build system, a good place to
-start is to look at the definitions of other build systems. This guide
-focuses mostly on how Spack's build systems work.
+If you want to add support for a new build system, a good place to start is to look at the definitions of other build systems.
+This guide focuses mostly on how Spack's build systems work.
 
-In this guide, we will be using the
-`perl <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/perl/package.py>`_ and
-`cmake <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/cmake/package.py>`_
-packages as examples. ``perl``'s build system is a hand-written
-``Configure`` shell script, while ``cmake`` bootstraps itself during
-installation. Both of these packages require custom build systems.
+In this guide, we will be using the `perl <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/perl/package.py>`_ and `cmake <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/cmake/package.py>`_ packages as examples.
+``perl``'s build system is a hand-written ``Configure`` shell script, while ``cmake`` bootstraps itself during installation.
+Both of these packages require custom build systems.
 
 Base class
 ^^^^^^^^^^
 
-If your package does not belong to any of the built-in build
-systems that Spack already supports, you should inherit from the
-``Package`` base class. ``Package`` is a simple base class with a
-single phase: ``install``. If your package is simple, you may be able
-to simply write an ``install`` method that gets the job done. However,
-if your package is more complex and installation involves multiple
-steps, you should add separate phases as mentioned in the next section.
+If your package does not belong to any of the built-in build systems that Spack already supports, you should inherit from the ``Package`` base class.
+``Package`` is a simple base class with a single phase: ``install``.
+If your package is simple, you may be able to simply write an ``install`` method that gets the job done.
+However, if your package is more complex and installation involves multiple steps, you should add separate phases as mentioned in the next section.
 
-If you are creating a new build system base class, you should inherit
-from ``PackageBase``. This is the superclass for all build systems in
-Spack.
+If you are creating a new build system base class, you should inherit from ``PackageBase``.
+This is the superclass for all build systems in Spack.
 
 Phases
 ^^^^^^
 
-The most important concept in Spack's build system support is the idea
-of phases. Each build system defines a set of phases that are necessary
-to install the package. They usually follow some sort of "configure",
-"build", "install" guideline, but any of those phases may be missing
-or combined with another phase.
+The most important concept in Spack's build system support is the idea of phases.
+Each build system defines a set of phases that are necessary to install the package.
+They usually follow some sort of "configure", "build", "install" guideline, but any of those phases may be missing or combined with another phase.
 
 If you look at the ``perl`` package, you'll see:
 
@@ -65,9 +54,8 @@ Similarly, ``cmake`` defines:
 
    phases = ("bootstrap", "build", "install")
 
-If we look at the ``cmake`` example, this tells Spack's ``PackageBase``
-class to run the ``bootstrap``, ``build``, and ``install`` functions
-in that order. It is now up to you to define these methods.
+If we look at the ``cmake`` example, this tells Spack's ``PackageBase`` class to run the ``bootstrap``, ``build``, and ``install`` functions in that order.
+It is now up to you to define these methods.
 
 Phase and phase_args functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,10 +68,8 @@ If we look at ``perl``, we see that it defines a ``configure`` method:
        configure = Executable("./Configure")
        configure(*self.configure_args())
 
-There is also a corresponding ``configure_args`` function that handles
-all of the arguments to pass to ``Configure``, just like in
-``AutotoolsPackage``. Comparatively, the ``build`` and ``install``
-phases are pretty simple:
+There is also a corresponding ``configure_args`` function that handles all of the arguments to pass to ``Configure``, just like in ``AutotoolsPackage``.
+Comparatively, the ``build`` and ``install`` phases are pretty simple:
 
 .. code-block:: python
 
@@ -93,8 +79,7 @@ phases are pretty simple:
    def install(self, spec, prefix):
        make("install")
 
-The ``cmake`` package looks very similar, but with a ``bootstrap``
-function instead of ``configure``:
+The ``cmake`` package looks very similar, but with a ``bootstrap`` function instead of ``configure``:
 
 .. code-block:: python
 
@@ -108,21 +93,18 @@ function instead of ``configure``:
    def install(self, spec, prefix):
        make("install")
 
-Again, there is a ``bootstrap_args`` function that determines the
-correct bootstrap flags to use.
+Again, there is a ``bootstrap_args`` function that determines the correct bootstrap flags to use.
 
 ``run_before`` / ``run_after``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Occasionally, you may want to run extra steps either before or after
-a given phase. This applies not just to custom build systems, but to
-existing build systems as well. You may need to patch a file that is
-generated by configure, or install extra files in addition to what
-``make install`` copies to the installation prefix. This is where
-``@run_before`` and ``@run_after`` come in.
+Occasionally, you may want to run extra steps either before or after a given phase.
+This applies not just to custom build systems, but to existing build systems as well.
+You may need to patch a file that is generated by configure, or install extra files in addition to what ``make install`` copies to the installation prefix.
+This is where ``@run_before`` and ``@run_after`` come in.
 
-These Python decorators allow you to write functions that are called
-before or after a particular phase. For example, in ``perl``, we see:
+These Python decorators allow you to write functions that are called before or after a particular phase.
+For example, in ``perl``, we see:
 
 .. code-block:: python
 
@@ -142,25 +124,19 @@ before or after a particular phase. For example, in ``perl``, we see:
                 maker()
                 maker("install")
 
-This extra step automatically installs ``cpanm`` in addition to the
-base Perl installation.
+This extra step automatically installs ``cpanm`` in addition to the base Perl installation.
 
 ``on_package_attributes``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``run_before`` / ``run_after`` logic discussed above becomes
-particularly powerful when combined with the ``@on_package_attributes``
-decorator. This decorator allows you to conditionally run certain
-functions depending on the attributes of that package. The most
-common example is conditional testing. Many unit tests are prone to
-failure, even when there is nothing wrong with the installation.
-Unfortunately, non-portable unit tests and tests that are
-"supposed to fail" are more common than we would like. Instead of
-always running unit tests on installation, Spack lets users
-conditionally run tests with the ``--test=root`` flag.
+The ``run_before`` / ``run_after`` logic discussed above becomes particularly powerful when combined with the ``@on_package_attributes`` decorator.
+This decorator allows you to conditionally run certain functions depending on the attributes of that package.
+The most common example is conditional testing.
+Many unit tests are prone to failure, even when there is nothing wrong with the installation.
+Unfortunately, non-portable unit tests and tests that are "supposed to fail" are more common than we would like.
+Instead of always running unit tests on installation, Spack lets users conditionally run tests with the ``--test=root`` flag.
 
-If we wanted to define a function that would conditionally run
-if and only if this flag is set, we would use the following line:
+If we wanted to define a function that would conditionally run if and only if this flag is set, we would use the following line:
 
 .. code-block:: python
 
@@ -169,8 +145,7 @@ if and only if this flag is set, we would use the following line:
 Testing
 ^^^^^^^
 
-Let's put everything together and add unit tests to be optionally run
-during the installation of our package.
+Let's put everything together and add unit tests to be optionally run during the installation of our package.
 In the ``perl`` package, we can see:
 
 .. code-block:: python
@@ -186,35 +161,32 @@ In the ``perl`` package, we can see:
         else:
             make("test")
 
-As you can guess, this runs ``make test`` *after* building the package,
-if and only if testing is requested. Again, this is not specific to
-custom build systems, it can be added to existing build systems as well.
+As you can guess, this runs ``make test`` *after* building the package, if and only if testing is requested.
+Again, this is not specific to custom build systems, it can be added to existing build systems as well.
 
 .. warning::
 
-   The order of decorators matters. The following ordering:
+   The order of decorators matters.
+   The following ordering:
 
    .. code-block:: python
 
       @run_after("install")
       @on_package_attributes(run_tests=True)
 
-   works as expected. However, if you reverse the ordering:
+   works as expected.
+   However, if you reverse the ordering:
 
    .. code-block:: python
 
       @on_package_attributes(run_tests=True)
       @run_after("install")
 
-   the tests will always be run regardless of whether or not
-   ``--test=root`` is requested. See https://github.com/spack/spack/issues/3833
-   for more information
+   the tests will always be run regardless of whether or not ``--test=root`` is requested.
+   See https://github.com/spack/spack/issues/3833 for more information
 
-Ideally, every package in Spack will have some sort of test to ensure
-that it was built correctly. It is up to the package authors to make
-sure this happens. If you are adding a package for some software and
-the developers list commands to test the installation, please add these
-tests to your ``package.py``.
+Ideally, every package in Spack will have some sort of test to ensure that it was built correctly.
+It is up to the package authors to make sure this happens.
+If you are adding a package for some software and the developers list commands to test the installation, please add these tests to your ``package.py``.
 
-For more information on other forms of package testing, refer to
-:ref:`Checking an installation <checking_an_installation>`.
+For more information on other forms of package testing, refer to :ref:`Checking an installation <checking_an_installation>`.

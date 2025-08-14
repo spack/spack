@@ -11,14 +11,11 @@
 CachedCMake
 -----------
 
-The CachedCMakePackage base class is used for CMake-based workflows
-that create a CMake cache file prior to running ``cmake``. This is
-useful for packages with arguments longer than the system limit, and
-for reproducibility.
+The CachedCMakePackage base class is used for CMake-based workflows that create a CMake cache file prior to running ``cmake``.
+This is useful for packages with arguments longer than the system limit, and for reproducibility.
 
-The documentation for this class assumes that the user is familiar with
-the ``CMakePackage`` class from which it inherits. See the documentation
-for :ref:`CMakePackage <cmakepackage>`.
+The documentation for this class assumes that the user is familiar with the ``CMakePackage`` class from which it inherits.
+See the documentation for :ref:`CMakePackage <cmakepackage>`.
 
 Phases
 ^^^^^^
@@ -44,44 +41,33 @@ By default, these phases run:
    $ make test  # optional
    $ make install
 
-The ``CachedCMakePackage`` class inherits from the ``CMakePackage``
-class, and accepts all of the same options and adds all of the same
-flags to the ``cmake`` command. Similar to the ``CMakePackage`` class,
-you may need to add a few arguments yourself, and the
-``CachedCMakePackage`` provides the same interface to add those
-flags.
+The ``CachedCMakePackage`` class inherits from the ``CMakePackage`` class, and accepts all of the same options and adds all of the same flags to the ``cmake`` command.
+Similar to the ``CMakePackage`` class, you may need to add a few arguments yourself, and the ``CachedCMakePackage`` provides the same interface to add those flags.
 
 Adding entries to the CMake cache
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In addition to adding flags to the ``cmake`` command, you may need to
-add entries to the CMake cache in the ``initconfig`` phase. This can
-be done by overriding one of four methods:
+In addition to adding flags to the ``cmake`` command, you may need to add entries to the CMake cache in the ``initconfig`` phase.
+This can be done by overriding one of four methods:
 
 #. ``CachedCMakePackage.initconfig_compiler_entries``
 #. ``CachedCMakePackage.initconfig_mpi_entries``
 #. ``CachedCMakePackage.initconfig_hardware_entries``
 #. ``CachedCMakePackage.initconfig_package_entries``
 
-Each of these methods returns a list of CMake cache strings. The
-distinction between these methods is merely to provide a
-well-structured and legible CMake cache file -- otherwise, entries
-from each of these methods are handled identically.
+Each of these methods returns a list of CMake cache strings.
+The distinction between these methods is merely to provide a well-structured and legible CMake cache file -- otherwise, entries from each of these methods are handled identically.
 
-Spack also provides convenience methods for generating CMake cache
-entries. These methods are available at module scope in every Spack
-package. Because CMake parses boolean options, strings, and paths
-differently, there are three such methods:
+Spack also provides convenience methods for generating CMake cache entries.
+These methods are available at module scope in every Spack package.
+Because CMake parses boolean options, strings, and paths differently, there are three such methods:
 
 #. ``cmake_cache_option``
 #. ``cmake_cache_string``
 #. ``cmake_cache_path``
 
-These methods each accept three parameters -- the name of the CMake
-variable associated with the entry, the value of the entry, and an
-optional comment -- and return strings in the appropriate format to be
-returned from any of the ``initconfig*`` methods. Additionally, these
-methods may return comments beginning with the ``#`` character.
+These methods each accept three parameters -- the name of the CMake variable associated with the entry, the value of the entry, and an optional comment -- and return strings in the appropriate format to be returned from any of the ``initconfig*`` methods.
+Additionally, these methods may return comments beginning with the ``#`` character.
 
 A typical usage of these methods may look something like this:
 
@@ -118,5 +104,4 @@ A typical usage of these methods may look something like this:
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-For more information on CMake cache files, see:
-https://cmake.org/cmake/help/latest/manual/cmake.1.html
+For more information on CMake cache files, see: https://cmake.org/cmake/help/latest/manual/cmake.1.html
