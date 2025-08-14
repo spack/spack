@@ -2781,13 +2781,11 @@ class SpackSolverSetup:
 
             for target in supported:
                 best_targets.add(target.name)
-                self.gen.fact(
-                    fn.compiler_supports_target(compiler.name, compiler.version, target.name)
-                )
+                self.gen.fact(fn.target_supported(compiler.name, compiler.version, target.name))
 
             if supported:
                 self.gen.fact(
-                    fn.compiler_supports_target(compiler.name, compiler.version, uarch.family.name)
+                    fn.target_supported(compiler.name, compiler.version, uarch.family.name)
                 )
 
             for target in unsupported:

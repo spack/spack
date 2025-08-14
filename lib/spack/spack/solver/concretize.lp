@@ -1666,7 +1666,7 @@ node_target_compatible(PackageNode, Target)
     target_compatible(Target, MyTarget).
 
 #defined target_satisfies/2.
-compiler(Compiler) :- compiler_supports_target(Compiler, _, _).
+compiler(Compiler) :- target_supported(Compiler, _, _).
 
 % Can't use targets on node if the compiler for the node doesn't support them
 language("c").
@@ -1687,7 +1687,8 @@ error(10, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Targ
      target_not_supported(Compiler, Version, Target),
      build(node(X, Package)).
 
-#defined compiler_supports_target/2.
+#defined target_supported/2.
+#defined target_not_supported/2.
 
 % if a target is set explicitly, respect it
 attr("node_target", PackageNode, Target)
