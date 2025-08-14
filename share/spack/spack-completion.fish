@@ -1808,7 +1808,7 @@ complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l
 complete -c spack -n '__fish_spack_using_command external read-cray-manifest' -l fail-on-error -d 'if a manifest file cannot be parsed, fail and report the full stack trace'
 
 # spack fetch
-set -g __fish_spack_optspecs_spack_fetch h/help n/no-checksum m/missing D/dependencies f/force U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_fetch h/help n/no-checksum m/missing D/dependencies retries= f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 fetch' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command fetch' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command fetch' -s h -l help -d 'show this help message and exit'
@@ -1818,6 +1818,8 @@ complete -c spack -n '__fish_spack_using_command fetch' -s m -l missing -f -a mi
 complete -c spack -n '__fish_spack_using_command fetch' -s m -l missing -d 'fetch only missing (not yet installed) dependencies'
 complete -c spack -n '__fish_spack_using_command fetch' -s D -l dependencies -f -a dependencies
 complete -c spack -n '__fish_spack_using_command fetch' -s D -l dependencies -d 'also fetch all dependencies'
+complete -c spack -n '__fish_spack_using_command fetch' -l retries -r -f -a retries
+complete -c spack -n '__fish_spack_using_command fetch' -l retries -r -d 'retry fetching N times before raising an error'
 complete -c spack -n '__fish_spack_using_command fetch' -s f -l force -f -a concretizer_force
 complete -c spack -n '__fish_spack_using_command fetch' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command fetch' -s U -l fresh -f -a concretizer_reuse
