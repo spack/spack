@@ -170,6 +170,8 @@ Here are some examples:
 
 In general, you won't have to remember this naming convention because :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
 
+.. _creating-and-editing-packages:
+
 Creating and editing packages
 -----------------------------
 
