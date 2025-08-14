@@ -22,7 +22,7 @@ Inappropriate Package
 It is rare that a package would be considered inappropriate for inclusion in the public `Spack package <https://github.com/spack/spack-packages>`_ repository.
 One exception is making packages for standard Perl modules.
 
-Explain to the :ref:`Contributor <package-contributors>` in a comment or your review if the package should be removed from the PR and why.
+Explain to the :ref:`Package Contributor <package-contributors>` in a comment or your review if the package should be removed from the PR and why.
 
 CORE Perl Modules
 ~~~~~~~~~~~~~~~~~
@@ -45,7 +45,8 @@ Reasons for `invalid versions <https://spack.readthedocs.io/en/latest/packaging_
 
 Checking existing version directives with checksums can usually be done manually with the modified package using `spack checksum <https://spack.readthedocs.io/en/latest/command_index.html#spack-checksum>`_.
 
-**Solutions.** Options for resolving the problem that can be suggested for investigation depends on the issues.
+**Solutions.**
+Options for resolving the problem that can be suggested for investigation depends on the issues.
 
 In simpler cases involving ``url`` or ``url_for_version``, invalid versions can sometimes be corrected by ensuring all versions are covered by ``url_for_version``.
 Alternatively, especially for older versions, the version-specific URL can be added as an argument to the ``version`` directive.
@@ -62,9 +63,7 @@ If older versions are no longer available and there is a chance someone has the 
 Maintainers Directive
 ----------------------
 
-If the new package does not have a **maintainers** directive, ask the
-:ref:`Package Contributor <package-contributors>` if he/she/they would be
-willing to add themselves as a `maintainer <https://spack.readthedocs.io/en/latest/packaging_guide.html#maintainers>`_.
+If the new package does not have a `maintainers <https://spack.readthedocs.io/en/latest/packaging_guide.html#maintainers>`_ directive, ask the :ref:`Package Contributor <package-contributors>` if he/she/they would be willing to add themselves.
 
 This request is an optional for existing packages.
 
@@ -75,9 +74,7 @@ This request is an optional for existing packages.
 License Directive
 -----------------
 
-If the new package does not have a **license** directive, ask the
-`Package Contributor <#package-contributors>`__ if he/she/they would be
-willing to check the source repository or homepage for the `license <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#license-information>`_ and add it to the package.
+If the new package does not have a `license <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#license-information>`_  directive, ask the :ref:`Package Contributor <package-contributors>` if he/she/they would be willing to investigate and add it.
 
 This is an optional request for existing packages.
 
@@ -126,7 +123,7 @@ Deprecating Versions
 
 If someone is deprecating versions, it is good to know why.
 Sometimes there are concerns with `versions <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#source-code-and-versions>`_ , especially older ones.
-Suggest the Contributor review the `deprecation guidelines <https://spack.readthedocs.io/en/latest/packaging_guide.html#deprecating-old-versions>`_ before finalizing the changes if they haven't already explained why they made the choice in the PR description or comments.
+Suggest the Package Contributor review the `deprecation guidelines <https://spack.readthedocs.io/en/latest/packaging_guide.html#deprecating-old-versions>`_ before finalizing the changes if they haven't already explained why they made the choice in the PR description or comments.
 
 Variant Directives
 ------------------
@@ -169,7 +166,7 @@ So they only need to be checked in a review when versions are being added or rem
 In some cases, the needed change may be as simple as ensuring the version range and or variant options are accurate.
 In others, one or more of the dependencies needed by new versions may be missing.
 Or there may be dependencies that are no longer relevant as when the versions requiring them are removed.
-Dependencies affected by version directive changes should be confirmed, when possible, and *at least* when the Contributor is not a Maintainer of the package.
+Dependencies affected by version directive changes should be confirmed, when possible, and *at least* when the Package Contributor is not a Maintainer of the package.
 
 For example, it is not uncommon for Python package dependencies to be out of date when new versions are added.
 Check for missing dependencies by following the Python build system `guidelines <https://spack.readthedocs.io/en/latest/build_systems/pythonpackage.html#dependencies>`_.
@@ -181,12 +178,11 @@ Check for missing dependencies by following the Python build system `guidelines 
 Updating Language and Compiler Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-At one point `language and compiler dependencies <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#language-and-compiler-dependencies>`_
-were derived for existing packages.
+At one point `language and compiler dependencies <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#language-and-compiler-dependencies>`_ were derived for existing packages.
 These dependencies are flagged with “# generated” comments.
 Unfortunately, they are not always complete.
 
-If these types of dependencies are being updated, suggest that if the Contributor is confirming them, then the `# generated` comments should be removed from all such dependencies.
+If these types of dependencies are being updated, suggest that if the Package Contributor is confirming them, then the `# generated` comments should be removed from all such dependencies.
 Definitely make sure they do **not** include the comment on any they are adding to the package.
 
 Failed Automated Checks
@@ -200,7 +196,7 @@ Style Failures
 The PR may fail one or more style checks.
 
 If the failure is due to issues raised by the ``black`` style checker *and* the PR is otherwise ready to be merge, you can add a ``@spackbot fix style`` as a comment to see if Spack will fix the errors.
-Otherwise, add a comment to the Contributor that they need to address the style failures.
+Otherwise, add a comment to the Package Contributor that they need to address the style failures.
 
 CI Stack Failures
 ~~~~~~~~~~~~~~~~~

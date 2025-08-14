@@ -13,12 +13,12 @@ Packaging Roles and Responsibilities
 
 There are four roles related to `Spack Package <https://github.com/spack/spack-packages>`_ repository Pull Requests (PRs):
 
-#. :ref:`package contributor <package-contributors>`,
-#. :ref:`package reviewer <package-reviewers>`,
-#. :ref:`maintainer <maintainers>`, and
-#. :ref:`committer <committers>`.
+#. :ref:`package-contributors`,
+#. :ref:`package-reviewers`,
+#. :ref:`package-maintainers`, and
+#. :ref:`committers`.
 
-One person can assume multiple roles (e.g., a package contributor may also be a maintainer; a package reviewer may also be a committer).
+One person can assume multiple roles (e.g., a Package Contributor may also be a Maintainer; a Package Reviewer may also be a Committer).
 This section defines and describes the responsibilities of each role.
 
 .. _package-contributors:
@@ -43,7 +43,7 @@ Anyone can review a PR so we encourage Spack’s community members to review and
 
 Package reviewers are **expected** to assess changes in PRs to the best of their ability and knowledge with special consideration to the information contained in the :ref:`package-review-guide`.
 
-.. _maintainers:
+.. _package-maintainers:
 
 Maintainers (Package Owners)
 ----------------------------
@@ -54,19 +54,19 @@ They are, from a Spack package perspective, `Code Owners <https://docs.github.co
 
 Maintainers are **expected** to:
 
-* review PRs in a timely manner (as described in :ref:`<committers>`) to confirm that the changes made to the package are reasonable;
+* review PRs in a timely manner (as described in :ref:`committers`) to confirm that the changes made to the package are reasonable;
 * confirm that packages successfully build on at least one platform; and
 * attempt to confirm that any updated or included tests pass.
 
 Acceptable forms of confirmation are:
 
-* the :ref:`Contributor <contributors>` explicitly confirms a successful build of the software on at least one platform (ideally in the PR description and includes ``spack debug report`` output);
+* the :ref:`Contributor <package-contributors>` explicitly confirms a successful build of the software on at least one platform (ideally in the PR description and includes ``spack debug report`` output);
 * the software is built successfully by Spack CI by at least one of the CI stacks; and
-* the maintainer is able to successfully build the software (and ideally includes the ``spack debug report`` output in a comment on the PR).
+* the :ref:`Maintainer <package-maintainers>` is able to successfully build the software (and ideally includes the ``spack debug report`` output in a comment on the PR).
 
 .. note::
 
-    If at least one maintainer approves a PR -– and if there are no objections from others -– then the PR can be merged by a :ref:`Committer <committers>`.
+    If at least one maintainer approves a PR -– and if there are no objections from others -– then the PR can be merged by any :ref:`committers`.
 
 .. _committers:
 
@@ -85,7 +85,7 @@ Committers are **expected** to:
 
 .. note::
 
-   If there are no :ref:`<maintainers>` or the maintainers have not commented or reviewed the PR within the allotted time, Committers are expected to conduct the review.
+   If there are no :ref:`package-maintainers` or the maintainers have not commented or reviewed the PR within the allotted time, Committers are expected to conduct the review.
 
 .. tip::
 
