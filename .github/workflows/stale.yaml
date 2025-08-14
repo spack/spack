@@ -17,8 +17,12 @@ jobs:
         with:
           # Issues configuration
           stale-issue-message: |
-            This issue has been automatically marked as stale because it has not had 
-            any activity in the last 6 months. It will be closed if there is no further activity.
+            This issue has been automatically marked as stale because it has not had any activity in the last 6 months.
+            It will be closed in 30 days if there is no further activity.
+            
+            If the issue is waiting for a reply from repo maintainers, feel free to ping them as a reminder.
+            This will also reset the issue's stale state.
+            
             Thank you for your contributions!
           close-issue-message: |
             This issue was closed because it had no activity for 30 days after being marked stale.
@@ -28,8 +32,12 @@ jobs:
 
           # Pull requests configuration
           stale-pr-message: |
-            This pull request has been automatically marked as stale because it has not had 
-            any activity in the last 6 months. It will be closed if there is no further activity.
+            This pull request has been automatically marked as stale because it has not had any activity in the last 6 months. 
+            It will be closed in 30 days if there is no further activity.
+            
+            If the pull request is waiting for a reply from reviewers, feel free to ping them as a reminder.
+            This will also reset the pull request's stale state.
+            
             Thank you for your contributions!
           close-pr-message: |
             This pull request was closed because it had no activity for 30 days after being marked stale.
