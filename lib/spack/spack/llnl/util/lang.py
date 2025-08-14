@@ -144,25 +144,7 @@ def memoized(func):
     """Decorator that caches the results of a function, storing them in
     an attribute of that function.
     """
-    func.cache = {}
-
-    @functools.wraps(func)
-    def _memoized_function(*args, **kwargs):
-        key = stable_args(*args, **kwargs)
-
-        try:
-            return func.cache[key]
-        except KeyError:
-            ret = func(*args, **kwargs)
-            func.cache[key] = ret
-            return ret
-        except TypeError as e:
-            # TypeError is raised when indexing into a dict if the key is unhashable.
-            raise UnhashableArguments(
-                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__)
-            ) from e
-
-    return _memoized_function
+    return functools.lru_cache(maxsize=None)(func)
 
 
 def list_modules(directory, **kwargs):

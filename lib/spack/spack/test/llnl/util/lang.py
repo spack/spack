@@ -252,9 +252,8 @@ def test_memoized(args, kwargs):
         return "return-value"
 
     assert f(*args, **kwargs) == "return-value"
-    key = stable_args(*args, **kwargs)
-    assert list(f.cache.keys()) == [key]
-    assert f.cache[key] == "return-value"
+    assert f(*args, **kwargs) == "return-value"
+    assert f.cache_info().hits == 1
 
 
 @pytest.mark.parametrize("args, kwargs", [(([1],), {}), ((), {"a": [1]})])
@@ -265,12 +264,8 @@ def test_memoized_unhashable(args, kwargs):
     def f(*args, **kwargs):
         return None
 
-    with pytest.raises(spack.llnl.util.lang.UnhashableArguments) as exc_info:
+    with pytest.raises(TypeError, match="unhashable type:"):
         f(*args, **kwargs)
-    exc_msg = str(exc_info.value)
-    key = stable_args(*args, **kwargs)
-    assert str(key) in exc_msg
-    assert "function 'f'" in exc_msg
 
 
 def test_dedupe():
