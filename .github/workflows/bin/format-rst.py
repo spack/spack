@@ -63,7 +63,7 @@ def reformat_rst_file(path: str) -> bool:
     document: nodes.document = publish_doctree(src, settings_overrides=DOCUTILS_SETTING)
     paragraphs = [
         ParagraphInfo(line=p.line, src=p.rawsource)
-        for p in document.traverse(nodes.paragraph)
+        for p in document.findall(nodes.paragraph)
         if p.line is not None and p.rawsource and not _is_node_in_table(p)
     ]
 
