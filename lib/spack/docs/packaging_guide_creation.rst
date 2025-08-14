@@ -100,20 +100,27 @@ The typical structure of a package is as follows:
    class Example(CMakePackage):
        """Example package"""  # package description
 
-       # metadata and directives
+       # Metadata and Directives
        homepage = "https://example.com"
        url = "https://example.com/example/v2.4.0.tar.gz"
 
        maintainers("github_user1", "github_user2")
 
+       license("UNKNOWN", checked_by="github_user1")
+
+       # version directives listed in order with the latest first
        version("2.4.0", sha256="845ccd79ed915fa2dedf3b2abde3fffe7f9f5673cc51be88e47e6432bd1408be")
        version("2.3.0", sha256="cd3274e0abcbc2dfb678d87595e9d3ab1c6954d7921d57a88a23cf4981af46c9")
 
+       # variant directives expose build options
        variant("feature", default=False, description="Enable a specific feature")
+       variant("codec", default=False, description="Build the CODEC executables")
 
+       # dependency directives declare required software
+       depends_on("cxx", type="build")
        depends_on("libfoo", when="+feature")
 
-       # build instructions
+       # Build Instructions
        def cmake_args(self):
            return [
                self.define_from_variant("BUILD_CODEC", "codec"),
@@ -123,7 +130,7 @@ The typical structure of a package is as follows:
 
 The package class is named after the package, and can roughly be divided into two parts:
 
-* **metadata and directives**: attributes and directives that describe the package, such as its homepage, versions, maintainers, dependencies, and variants.
+* **metadata and directives**: attributes and directives that describe the package, such as its homepage, maintainers, license, variants, and dependencies.
   This is the declarative part of the package.
 * **build instructions**: methods that define how to build and install the package, such as `cmake_args()`.
   This is the imperative part of the package.
@@ -286,6 +293,11 @@ Spack automatically creates a directory in the appropriate repository, generates
        # notify when the package is updated.
        # maintainers("github_user1", "github_user2")
 
+       # FIXME: Add the SPDX identifier of the project's license below.
+       # See https://spdx.org/licenses/ for a list. Upon manually verifying
+       # the license, set checked_by to your Github username.
+       license("UNKNOWN", checked_by="github_user1")
+
        version("6.2.1", sha256="eae9326beb4158c386e39a356818031bd28f3124cf915f8c5b1dc4c7a36b4d7c")
 
        # FIXME: Add dependencies if required.
@@ -313,8 +325,8 @@ For most Autotools packages, this is sufficient. If you need to add additional a
 
 In the generated package, the download ``url`` attribute is already set.
 All the things you still need to change are marked with ``FIXME`` labels.
-You can delete the commented instructions between the license and the first import statement after reading them.
-The rest of the tasks you need to do are as follows:
+You can delete the commented instructions between the Spack license and the first import statement after reading them.
+The rest of the tasks you need to complete are as follows:
 
 #. Add a description.
 
@@ -329,6 +341,10 @@ The rest of the tasks you need to do are as follows:
 
    Add a list of GitHub accounts of people who want to be notified any time the package is modified. See :ref:`package_maintainers`.
 
+#. Change the ``license`` to the correct license.
+
+   The ``license`` is displayed when users run ``spack info`` so that they can learn more about your package. See :ref:`package_license`.
+
 #. Add ``depends_on()`` calls for the package's dependencies.
 
    ``depends_on`` tells Spack that other packages need to be built and installed before this one. See :ref:`dependencies`.
@@ -337,6 +353,7 @@ The rest of the tasks you need to do are as follows:
 
    Your new package may require specific flags during ``configure``.
    These can be added via ``configure_args``.
+   If no arguments are needed at this time, change the implementation to ``return []``.
    Specifics will differ depending on the package and its build system.
    :ref:`installation_process` is covered in detail later.
 
@@ -2688,6 +2705,8 @@ To add maintainers to a package, simply declare them with the ``maintainers`` di
    maintainers("user1", "user2")
 
 The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
+
+.. _package_license:
 
 -------------------
 License Information
