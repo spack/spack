@@ -16,7 +16,7 @@ jobs:
       - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639
         with:
           # Issues configuration
-          stale-issue-message: |
+          stale-issue-message: >
             This issue has been automatically marked as stale because it has not had any activity in the last 6 months.
             It will be closed in 30 days if there is no further activity.
             
@@ -32,7 +32,7 @@ jobs:
           exempt-issue-labels: 'pinned,bug'
 
           # Pull requests configuration
-          stale-pr-message: |
+          stale-pr-message: >
             This pull request has been automatically marked as stale because it has not had any activity in the last 6 months. 
             It will be closed in 30 days if there is no further activity.
             
