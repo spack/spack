@@ -2685,7 +2685,7 @@ class SpackSolverSetup:
 
         Results are ordered most to least recent.
         """
-        supported = []
+        supported, unsupported = [], []
 
         for target in targets:
             try:
@@ -2696,11 +2696,11 @@ class SpackSolverSetup:
                     )
                 supported.append(target)
             except spack.vendor.archspec.cpu.UnsupportedMicroarchitecture:
-                continue
+                unsupported.append(target)
             except ValueError:
-                continue
+                unsupported.append(target)
 
-        return sorted(supported, reverse=True)
+        return supported, unsupported
 
     def platform_defaults(self):
         self.gen.h2("Default platform")
@@ -2775,10 +2775,9 @@ class SpackSolverSetup:
         uarch = spack.vendor.archspec.cpu.TARGETS.get(platform.default)
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
-            supported = self._supported_targets(compiler.name, compiler.version, candidate_targets)
-
-            if not supported:
-                continue
+            supported, unsupported = self._supported_targets(
+                compiler.name, compiler.version, candidate_targets
+            )
 
             for target in supported:
                 best_targets.add(target.name)
@@ -2786,9 +2785,16 @@ class SpackSolverSetup:
                     fn.compiler_supports_target(compiler.name, compiler.version, target.name)
                 )
 
-            self.gen.fact(
-                fn.compiler_supports_target(compiler.name, compiler.version, uarch.family.name)
-            )
+            if supported:
+                self.gen.fact(
+                    fn.compiler_supports_target(compiler.name, compiler.version, uarch.family.name)
+                )
+
+            for target in unsupported:
+                self.gen.fact(
+                    fn.target_not_supported(compiler.name, compiler.version, target.name)
+                )
+
             self.gen.newline()
 
         i = 0  # TODO compute per-target offset?
