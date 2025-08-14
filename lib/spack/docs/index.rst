@@ -127,9 +127,8 @@ or refer to the full manual below.
    Spack Builtin Repo <spack_repo>
    Spack API Docs <spack>
 
-==================
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

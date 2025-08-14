@@ -8,7 +8,6 @@
 
 .. _containers:
 
-================
 Container Images
 ================
 
