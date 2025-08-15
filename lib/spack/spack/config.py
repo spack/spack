@@ -851,11 +851,13 @@ def override(
 class OptionalInclude:
     """Base properties for all includes."""
 
+    name: str
     when: str
     optional: bool
     _scopes: List[ConfigScope]
 
     def __init__(self, entry: dict):
+        self.name = entry.get("name", "")
         self.when = entry.get("when", "")
         self.optional = entry.get("optional", False)
         self._scopes = []
@@ -875,29 +877,34 @@ class OptionalInclude:
         Raises:
             ValueError: the required configuration path does not exist
         """
-        # Try to use the relative path to create the included scope name
-        parent_path = getattr(parent_scope, "path", None)
-        if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
-            included_name = os.path.relpath(config_path, parent_path)
-        else:
-            included_name = config_path
+        # use specified name if there is one
+        config_name = self.name
+        if not config_name:
+            # Try to use the relative path to create the included scope name
+            parent_path = getattr(parent_scope, "path", None)
+            if parent_path and str(parent_path) == os.path.commonprefix(
+                [parent_path, config_path]
+            ):
+                included_name = os.path.relpath(config_path, parent_path)
+            else:
+                included_name = config_path
 
-        if sys.platform == "win32":
-            # Clean windows path for use in config name that looks nicer
-            # ie. The path: C:\\some\\path\\to\\a\\file
-            # becomes C/some/path/to/a/file
-            included_name = included_name.replace("\\", "/")
-            included_name = included_name.replace(":", "")
+            if sys.platform == "win32":
+                # Clean windows path for use in config name that looks nicer
+                # ie. The path: C:\\some\\path\\to\\a\\file
+                # becomes C/some/path/to/a/file
+                included_name = included_name.replace("\\", "/")
+                included_name = included_name.replace(":", "")
+
+            config_name = f"{parent_scope.name}:{included_name}"
 
         if os.path.isdir(config_path):
             # directories are treated as regular ConfigScopes
-            config_name = f"{parent_scope.name}:{included_name}"
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(config_name, config_path)
 
         if os.path.exists(config_path):
             # files are assumed to be SingleFileScopes
-            config_name = f"{parent_scope.name}:{included_name}"
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
 
