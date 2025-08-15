@@ -100,8 +100,8 @@ SECTION_SCHEMAS: Dict[str, Any] = {
 _ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
 _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
-#: Path to the default configuration
-CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
+#: Path to the main configuration scope
+CONFIGURATION_DEFAULTS_PATH = ("_defaults", os.path.join(spack.paths.etc_path, "defaults"))
 
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
@@ -467,16 +467,20 @@ class Configuration:
         return next(self.scopes.reversed_values())  # type: ignore
 
     @_config_mutator
-    def push_scope(
+    def push_scope_incremental(
         self, scope: ConfigScope, priority: Optional[int] = None, _depth: int = 0
-    ) -> None:
+    ) -> Generator["Configuration", None, None]:
         """Adds a scope to the Configuration, at a given priority.
+
+        This version of push_scope yields included scopes incrementally, so that their
+        data can be used by higher priority scopes during config initialization.
 
         If a priority is not given, it is assumed to be the current highest priority.
 
         Args:
             scope: scope to be added
             priority: priority of the scope
+
         """
         # TODO: As a follow on to #48784, change this to create a graph of the
         # TODO: includes AND ensure properly sorted such that the order included
@@ -494,9 +498,30 @@ class Configuration:
 
             # record this inclusion so that remove_scope() can use it
             self.push_scope(included_scope, priority=priority, _depth=_depth + 1)
+            yield self
 
         tty.debug(f"[CONFIGURATION: PUSH SCOPE]: {str(scope)}, priority={priority}", level=2)
         self.scopes.add(scope.name, value=scope, priority=priority)
+        yield self
+
+    @_config_mutator
+    def push_scope(
+        self, scope: ConfigScope, priority: Optional[int] = None, _depth: int = 0
+    ) -> None:
+        """Add a scope to the Configuration, at a given priority.
+
+        This version of push_scope yields included scopes incrementally, so that their
+        data can be used by higher priority scopes during config initialization.
+
+        If a priority is not given, it is assumed to be the current highest priority.
+
+        Args:
+            scope: scope to be added
+            priority: priority of the scope
+
+        """
+        for _ in self.push_scope_incremental(scope=scope, priority=priority, _depth=_depth):
+            pass
 
     @_config_mutator
     def remove_scope(self, scope_name: str) -> Optional[ConfigScope]:
@@ -1210,6 +1235,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     cfg = create_from(
         (ConfigScopePriority.BUILTIN, InternalConfigScope("_builtin", CONFIG_DEFAULTS))
     )
+    yield cfg
 
     # Builtin paths to configuration files in Spack
     configuration_paths = [
@@ -1218,28 +1244,11 @@ def create_incremental() -> Generator[Configuration, None, None]:
         CONFIGURATION_DEFAULTS_PATH
     ]
 
-    disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
-
-    # System configuration is per machine.
-    # This is disabled if user asks for no local configuration.
-    if not disable_local_config:
-        configuration_paths.append(("system", spack.paths.system_config_path))
-
-    # Site configuration is per spack instance, for sites or projects
-    # No site-level configs should be checked into spack by default.
-    configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
-
-    # Python package's can register configuration scopes via entry_points
+    # Python packages can register configuration scopes via entry_points
     configuration_paths.extend(config_paths_from_entry_points())
-
-    # User configuration can override both spack defaults and site config
-    # This is disabled if user asks for no local configuration.
-    if not disable_local_config:
-        configuration_paths.append(("user", spack.paths.user_config_path))
 
     # add each scope
     for name, path in configuration_paths:
-        cfg.push_scope(DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES)
         # yield the config incrementally so that each config level's init code can get
         # data from the one below. This can be tricky, but it enables us to have a
         # single unified config system.
@@ -1249,7 +1258,9 @@ def create_incremental() -> Generator[Configuration, None, None]:
         #     config (which uses ssl and other config options) for some of the scopes,
         #     to make the bootstrap issues more explicit, even if allowing config scope
         #     init to reference lower scopes is more flexible.
-        yield cfg
+        yield from cfg.push_scope_incremental(
+            DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
+        )
 
 
 def create() -> Configuration:
