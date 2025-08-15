@@ -25,7 +25,6 @@ installations of packages in a Spack instance.
 
 """
 
-# tester imports
 import copy
 import enum
 import glob
@@ -2472,6 +2471,7 @@ class PackageInstaller:
                 for task in active_tasks:
                     task.terminate()
                 active_tasks.clear()  # they're all done now
+                # Close and cleanup the jobserver
                 jobserver.cleanup()
                 raise
 

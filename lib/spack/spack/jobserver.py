@@ -9,14 +9,10 @@ If a jobserver is enabled, make jobs will be dyamically allocated
 to package builds during the installation process.
 """
 
-# import array
-# import fcntl
 import os
 import shutil
 import sys
 import tempfile
-
-# import termios
 from enum import IntEnum
 from typing import Dict, List, Optional, Tuple, Type
 
@@ -33,6 +29,7 @@ class JobserverType(IntEnum):
 
 
 def package_type(pkg):
+    """Identify the appropriate jobserver type for packages in build."""
     if pkg.spec.satisfies("gmake") and pkg.spec["gmake"].satisfies("@4.4:"):
         return JobserverType.FIFO
     elif pkg.spec.satisfies("ninja") and pkg.spec["ninja"].satisfies("@1.13.0:"):
@@ -58,17 +55,11 @@ class Jobserver:
 
     def enable(self):
         """Enable the specified type of jobserver."""
-        raise NotImplementedError("#TODO")
+        raise NotImplementedError
 
     def cleanup(self):
         """Clean up and close the specified type of jobserver."""
-        raise NotImplementedError("TODO")
-
-
-#  # test if it's reading and writing bytes for fifo
-#  def get_available_bytes(self):
-#      """Gets the number of bytes available for reading from a file descriptor."""
-#      raise NotImplementedError("TODO")
+        raise NotImplementedError
 
 
 class NoopJobserver(Jobserver):
@@ -79,15 +70,12 @@ class NoopJobserver(Jobserver):
         return None
 
 
-#  def get_available_bytes(self, fd):
-#      pass
-
-
 class FifoJobserver(Jobserver):
     """Class for jobserver for builds that use Make version 4.4+ and
     Ninja version 1.13.0+ on non-Windows machines."""
 
     def __init__(self):
+        """Initialize FIFO jobserver attributes to None."""
         self.fifo_directory = None
         self.fifo_read_fd = None
         self.fifo_write_fd = None
@@ -137,13 +125,6 @@ class FifoJobserver(Jobserver):
             shutil.rmtree(self.fifo_directory)
         if "MAKEFLAGS" in os.environ:
             del os.environ["MAKEFLAGS"]
-
-
-#  def get_available_bytes(self):
-#      """Gets the number of bytes available for reading from a file descriptor."""
-#      bytes_available = array.array("i", [0])
-#      fcntl.ioctl(self.fifo_read_fd, termios.FIONREAD, bytes_available)
-#      return bytes_available[0]
 
 
 # Table mapping JobserverType to Jobserver class
