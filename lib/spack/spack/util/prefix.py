@@ -28,8 +28,8 @@ class Prefix(str):
     >>> prefix.join("dashed-directory").bin64
     /usr/dashed-directory/bin64
 
-    Prefix objects behave identically to strings. In fact, they subclass ``str``, so operators like
-    ``+`` are legal::
+    Prefix objects behave identically to strings. In fact, they subclass :class:`str`, so operators
+    like ``+`` are legal::
 
         print("foobar " + prefix)
 

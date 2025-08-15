@@ -648,12 +648,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     transitive_rpaths = True
 
     #: List of shared objects that should be replaced with a different library at
-    #: runtime. Typically includes stub libraries like libcuda.so. When linking
+    #: runtime. Typically includes stub libraries like ``libcuda.so``. When linking
     #: against a library listed here, the dependent will only record its soname
     #: or filename, not its absolute path, so that the dynamic linker will search
     #: for it. Note: accepts both file names and directory names, for example
-    #: ``["libcuda.so", "stubs"]`` will ensure libcuda.so and all libraries in the
-    #: stubs directory are not bound by path."""
+    #: ``["libcuda.so", "stubs"]`` will ensure ``libcuda.so`` and all libraries in the
+    #: ``stubs`` directory are not bound by path.
     non_bindable_shared_objects: List[str] = []
 
     #: List of fnmatch patterns of library file names (specifically DT_NEEDED entries) that are not
@@ -924,10 +924,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Keep ``-Werror`` flags, matches ``config:flags:keep_werror`` to override config.
 
         Valid return values are:
+
         * ``"all"``: keep all ``-Werror`` flags.
         * ``"specific"``: keep only ``-Werror=specific-warning`` flags.
         * ``"none"``: filter out all ``-Werror*`` flags.
-        * ``None``: respect the user's configuration (``"none"`` by default).
+        * :data:`None`: respect the user's configuration (``"none"`` by default).
         """
         if self.spec.satisfies("%nvhpc@:23.3"):
             # Filtering works by replacing -Werror with -Wno-error, but older nvhpc and
@@ -1543,13 +1544,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         spack.store.STORE.layout.remove_install_directory(self.spec)
 
     @property
-    def download_instr(self):
+    def download_instr(self) -> str:
         """
         Defines the default manual download instructions.  Packages can
         override the property to provide more information.
 
         Returns:
-            (str):  default manual download instructions
+            default manual download instructions
         """
         required = (
             f"Manual download is required for {self.spec.name}. " if self.manual_download else ""
@@ -1998,7 +1999,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         self.tester.stand_alone_tests(kwargs, timeout=timeout)
 
-    def unit_test_check(self):
+    def unit_test_check(self) -> bool:
         """Hook for unit tests to assert things about package internals.
 
         Unit tests can override this function to perform checks after
@@ -2007,11 +2008,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         The overridden function may indicate that the install procedure
         should terminate early (before updating the database) by
-        returning ``False`` (or any value such that ``bool(result)`` is
-        ``False``).
+        returning :data:`False` (or any value such that ``bool(result)`` is
+        :data:`False`).
 
         Return:
-            (bool): ``True`` to continue, ``False`` to skip ``install()``
+            :data:`True` to continue, :data:`False` to skip ``install()``
         """
         return True
 
@@ -2279,7 +2280,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Uses ``list_url`` and any other URLs listed in the package file.
 
         Returns:
-            dict: a dictionary mapping versions to URLs
+            a dictionary mapping versions to URLs
         """
         if not self.all_urls:
             return {}

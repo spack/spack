@@ -399,9 +399,7 @@ class FileFilter:
     multiple times to perform search-and-replace operations using Python regular expressions,
     similar to ``sed``.
 
-    Example usage:
-
-    .. code-block:: python
+    Example usage::
 
         foo_c = FileFilter("foo.c")
         foo_c.filter(r"#define FOO", "#define BAR")
@@ -433,7 +431,7 @@ class FileFilter:
         )
 
 
-def change_sed_delimiter(old_delim, new_delim, *filenames):
+def change_sed_delimiter(old_delim: str, new_delim: str, *filenames: str) -> None:
     """Find all sed search/replace commands and change the delimiter.
 
     e.g., if the file contains seds that look like ``'s///'``, you can
@@ -444,8 +442,8 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
     Handling those is left for future work.
 
     Parameters:
-        old_delim (str): The delimiter to search for
-        new_delim (str): The delimiter to replace with
+        old_delim: The delimiter to search for
+        new_delim: The delimiter to replace with
         *filenames: One or more files to search and replace
     """
     assert len(old_delim) == 1
@@ -677,7 +675,7 @@ def copy(src: str, dest: str, _permissions: bool = False) -> None:
     Parameters:
         src: the file(s) to copy
         dest: the destination file or directory
-        _permissions (bool): for internal use only
+        _permissions: for internal use only
 
     Raises:
         OSError: if ``src`` does not match any files or directories
@@ -1015,9 +1013,7 @@ def working_dir(dirname: str, *, create: bool = False):
         dirname: the directory to change to
         create: if :obj:`True`, create the directory if it does not exist
 
-    Example usage:
-
-    .. code-block:: python
+    Example usage::
 
        with working_dir("/path/to/dir"):
            # do something in /path/to/dir
@@ -1606,7 +1602,7 @@ def readonly_file_handler(ignore_errors=False):
 
 
 @system_path_filter
-def remove_linked_tree(path):
+def remove_linked_tree(path: str) -> None:
     """Removes a directory and its contents.
 
     If the directory is a symlink, follows the link and removes the real
@@ -1615,9 +1611,9 @@ def remove_linked_tree(path):
     This method will force-delete files on Windows
 
     Parameters:
-        path (str): Directory to be removed
+        path: Directory to be removed
     """
-    kwargs = {"ignore_errors": True}
+    kwargs: dict = {"ignore_errors": True}
 
     # Windows readonly files cannot be removed by Python
     # directly.
@@ -1704,13 +1700,13 @@ def find_first(root: str, files: Union[Iterable[str], str], bfs_depth: int = 2) 
     until depth bfs_depth, after which depth-first search is used.
 
     Parameters:
-        root (str): The root directory to start searching from
-        files (str or Iterable): File pattern(s) to search for
-        bfs_depth (int): (advanced) parameter that specifies at which
+        root: The root directory to start searching from
+        files: File pattern(s) to search for
+        bfs_depth: (advanced) parameter that specifies at which
             depth to switch to depth-first search.
 
     Returns:
-        str or None: The matching file or None when no file is found.
+        The matching file or :data:`None` when no file is found.
     """
     if isinstance(files, str):
         files = [files]
@@ -1729,7 +1725,7 @@ def find(
     matching file is returned only once at lowest depth in case multiple paths exist due to
     symlinked directories.
 
-    Accepts any glob characters accepted by fnmatch:
+    Accepts any glob characters accepted by :py:func:`fnmatch.fnmatch`:
 
     ==========  ====================================
     Pattern     Meaning
@@ -1924,41 +1920,41 @@ class FileList(collections.abc.Sequence):
     Provides a few convenience methods to manipulate file paths.
     """
 
-    def __init__(self, files):
+    def __init__(self, files: Union[str, Iterable[str]]) -> None:
         if isinstance(files, str):
             files = [files]
 
         self.files = list(dedupe(files))
 
     @property
-    def directories(self):
+    def directories(self) -> List[str]:
         """Stable de-duplication of the directories where the files reside.
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/libc.a'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir1/libc.a"])
         >>> l.directories
-        ['/dir1', '/dir2']
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        ["/dir1", "/dir2"]
+        >>> h = HeaderList(["/dir1/a.h", "/dir1/b.h", "/dir2/c.h"])
         >>> h.directories
-        ['/dir1', '/dir2']
+        ["/dir1", "/dir2"]
 
         Returns:
-            list: A list of directories
+            A list of directories
         """
         return list(dedupe(os.path.dirname(x) for x in self.files if os.path.dirname(x)))
 
     @property
-    def basenames(self):
+    def basenames(self) -> List[str]:
         """Stable de-duplication of the base-names in the list
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir3/liba.a"])
         >>> l.basenames
-        ['liba.a', 'libb.a']
-        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+        ["liba.a", "libb.a"]
+        >>> h = HeaderList(["/dir1/a.h", "/dir2/b.h", "/dir3/a.h"])
         >>> h.basenames
-        ['a.h', 'b.h']
+        ["a.h", "b.h"]
 
         Returns:
-            list: A list of base-names
+            A list of base-names
         """
         return list(dedupe(os.path.basename(x) for x in self.files))
 
@@ -1980,7 +1976,7 @@ class FileList(collections.abc.Sequence):
     def __len__(self):
         return len(self.files)
 
-    def joined(self, separator=" "):
+    def joined(self, separator: str = " ") -> str:
         return separator.join(self.files)
 
     def __repr__(self):
@@ -2010,7 +2006,7 @@ class HeaderList(FileList):
         self._directories = None
 
     @property
-    def directories(self):
+    def directories(self) -> List[str]:
         """Directories to be searched for header files."""
         values = self._directories
         if values is None:
@@ -2041,31 +2037,31 @@ class HeaderList(FileList):
         return values
 
     @property
-    def headers(self):
+    def headers(self) -> List[str]:
         """Stable de-duplication of the headers.
 
         Returns:
-            list: A list of header files
+            A list of header files
         """
         return self.files
 
     @property
-    def names(self):
+    def names(self) -> List[str]:
         """Stable de-duplication of header names in the list without extensions
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+        >>> h = HeaderList(["/dir1/a.h", "/dir2/b.h", "/dir3/a.h"])
         >>> h.names
-        ['a', 'b']
+        ["a", "b"]
 
         Returns:
-            list: A list of files without extensions
+            A list of files without extensions
         """
         names = []
 
         for x in self.basenames:
             name = x
 
-            # Valid extensions include: ['.cuh', '.hpp', '.hh', '.h']
+            # Valid extensions include: [".cuh", ".hpp", ".hh", ".h"]
             for ext in [".cuh", ".hpp", ".hh", ".h"]:
                 i = name.rfind(ext)
                 if i != -1:
@@ -2078,84 +2074,84 @@ class HeaderList(FileList):
         return list(dedupe(names))
 
     @property
-    def include_flags(self):
+    def include_flags(self) -> str:
         """Include flags
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> h = HeaderList(["/dir1/a.h", "/dir1/b.h", "/dir2/c.h"])
         >>> h.include_flags
-        '-I/dir1 -I/dir2'
+        "-I/dir1 -I/dir2"
 
         Returns:
-            str: A joined list of include flags
+            A joined list of include flags
         """
         return " ".join(["-I" + x for x in self.directories])
 
     @property
-    def macro_definitions(self):
+    def macro_definitions(self) -> str:
         """Macro definitions
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-        >>> h.add_macro('-DBOOST_LIB_NAME=boost_regex')
-        >>> h.add_macro('-DBOOST_DYN_LINK')
+        >>> h = HeaderList(["/dir1/a.h", "/dir1/b.h", "/dir2/c.h"])
+        >>> h.add_macro("-DBOOST_LIB_NAME=boost_regex")
+        >>> h.add_macro("-DBOOST_DYN_LINK")
         >>> h.macro_definitions
-        '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'
+        "-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK"
 
         Returns:
-            str: A joined list of macro definitions
+            A joined list of macro definitions
         """
         return " ".join(self._macro_definitions)
 
     @property
-    def cpp_flags(self):
+    def cpp_flags(self) -> str:
         """Include flags + macro definitions
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> h = HeaderList(["/dir1/a.h", "/dir1/b.h", "/dir2/c.h"])
         >>> h.cpp_flags
-        '-I/dir1 -I/dir2'
-        >>> h.add_macro('-DBOOST_DYN_LINK')
+        "-I/dir1 -I/dir2"
+        >>> h.add_macro("-DBOOST_DYN_LINK")
         >>> h.cpp_flags
-        '-I/dir1 -I/dir2 -DBOOST_DYN_LINK'
+        "-I/dir1 -I/dir2 -DBOOST_DYN_LINK"
 
         Returns:
-            str: A joined list of include flags and macro definitions
+            A joined list of include flags and macro definitions
         """
         cpp_flags = self.include_flags
         if self.macro_definitions:
             cpp_flags += " " + self.macro_definitions
         return cpp_flags
 
-    def add_macro(self, macro):
+    def add_macro(self, macro: str) -> None:
         """Add a macro definition
 
         Parameters:
-            macro (str): The macro to add
+            macro: The macro to add
         """
         self._macro_definitions.append(macro)
 
 
-def find_headers(headers, root, recursive=False):
+def find_headers(headers: Union[str, List[str]], root: str, recursive: bool = False) -> HeaderList:
     """Returns an iterable object containing a list of full paths to
     headers if found.
 
-    Accepts any glob characters accepted by fnmatch:
+    Accepts any glob characters accepted by :py:func:`fnmatch.fnmatch`:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches one or more characters
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
-        headers (str or list): Header name(s) to search for
-        root (str): The root directory to start searching from
-        recursive (bool): if False search only root folder,
-            if True descends top-down from the root. Defaults to False.
+        headers: Header name(s) to search for
+        root: The root directory to start searching from
+        recursive: if :data:`False` search only root folder,
+            if :data:`True` descends top-down from the root. Defaults to :data:`False`.
 
     Returns:
-        HeaderList: The headers that have been found
+        The headers that have been found
     """
     if isinstance(headers, str):
         headers = [headers]
@@ -2189,12 +2185,12 @@ def find_headers(headers, root, recursive=False):
 
 
 @system_path_filter
-def find_all_headers(root):
+def find_all_headers(root: str) -> HeaderList:
     """Convenience function that returns the list of all headers found
     in the directory passed as argument.
 
     Args:
-        root (str): directory where to look recursively for header files
+        root: directory where to look recursively for header files
 
     Returns:
         List of all headers found in ``root`` and subdirectories.
@@ -2210,24 +2206,24 @@ class LibraryList(FileList):
     """
 
     @property
-    def libraries(self):
+    def libraries(self) -> List[str]:
         """Stable de-duplication of library files.
 
         Returns:
-            list: A list of library files
+            A list of library files
         """
         return self.files
 
     @property
-    def names(self):
+    def names(self) -> List[str]:
         """Stable de-duplication of library names in the list
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.so'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir3/liba.so"])
         >>> l.names
-        ['a', 'b']
+        ["a", "b"]
 
         Returns:
-            list: A list of library names
+            A list of library names
         """
         names = []
 
@@ -2253,46 +2249,46 @@ class LibraryList(FileList):
         return list(dedupe(names))
 
     @property
-    def search_flags(self):
+    def search_flags(self) -> str:
         """Search flags for the libraries
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir1/liba.so"])
         >>> l.search_flags
-        '-L/dir1 -L/dir2'
+        "-L/dir1 -L/dir2"
 
         Returns:
-            str: A joined list of search flags
+            A joined list of search flags
         """
         return " ".join(["-L" + x for x in self.directories])
 
     @property
-    def link_flags(self):
+    def link_flags(self) -> str:
         """Link flags for the libraries
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir1/liba.so"])
         >>> l.link_flags
-        '-la -lb'
+        "-la -lb"
 
         Returns:
-            str: A joined list of link flags
+            A joined list of link flags
         """
         return " ".join(["-l" + name for name in self.names])
 
     @property
-    def ld_flags(self):
+    def ld_flags(self) -> str:
         """Search flags + link flags
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir1/liba.so"])
         >>> l.ld_flags
-        '-L/dir1 -L/dir2 -la -lb'
+        "-L/dir1 -L/dir2 -la -lb"
 
         Returns:
-            str: A joined list of search flags and link flags
+            A joined list of search flags and link flags
         """
         return self.search_flags + " " + self.link_flags
 
 
-def find_system_libraries(libraries, shared=True):
+def find_system_libraries(libraries: Union[str, List[str]], shared: bool = True) -> LibraryList:
     """Searches the usual system library locations for ``libraries``.
 
     Search order is as follows:
@@ -2304,24 +2300,24 @@ def find_system_libraries(libraries, shared=True):
     5. ``/usr/local/lib64``
     6. ``/usr/local/lib``
 
-    Accepts any glob characters accepted by fnmatch:
+    Accepts any glob characters accepted by :py:func:`fnmatch.fnmatch`:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches one or more characters
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
-        libraries (str or list): Library name(s) to search for
-        shared (bool): if True searches for shared libraries,
-            otherwise for static. Defaults to True.
+        libraries: Library name(s) to search for
+        shared: if :data:`True` searches for shared libraries,
+            otherwise for static. Defaults to :data:`True`.
 
     Returns:
-        LibraryList: The libraries that have been found
+        The libraries that have been found
     """
     if isinstance(libraries, str):
         libraries = [libraries]
@@ -2331,7 +2327,7 @@ def find_system_libraries(libraries, shared=True):
         message = message.format(find_system_libraries.__name__, type(libraries))
         raise TypeError(message)
 
-    libraries_found = []
+    libraries_found = LibraryList([])
     search_locations = [
         "/lib64",
         "/lib",
@@ -2352,37 +2348,42 @@ def find_system_libraries(libraries, shared=True):
 
 
 def find_libraries(
-    libraries, root, shared=True, recursive=False, runtime=True, max_depth: Optional[int] = None
-):
+    libraries: Union[str, List[str]],
+    root: str,
+    shared: bool = True,
+    recursive: bool = False,
+    runtime: bool = True,
+    max_depth: Optional[int] = None,
+) -> LibraryList:
     """Returns an iterable of full paths to libraries found in a root dir.
 
-    Accepts any glob characters accepted by fnmatch:
+    Accepts any glob characters accepted by :py:func:`fnmatch.fnmatch`:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches one or more characters
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
-        libraries (str or list): Library name(s) to search for
-        root (str): The root directory to start searching from
-        shared (bool): if True searches for shared libraries,
-            otherwise for static. Defaults to True.
-        recursive (bool): if False search only root folder,
-            if True descends top-down from the root. Defaults to False.
-        max_depth (int): if set, don't search below this depth. Cannot be set
-            if recursive is False
-        runtime (bool): Windows only option, no-op elsewhere. If true,
-            search for runtime shared libs (.DLL), otherwise, search
-            for .Lib files. If shared is false, this has no meaning.
-            Defaults to True.
+        libraries: Library name(s) to search for
+        root: The root directory to start searching from
+        shared: if :data:`True` searches for shared libraries,
+            otherwise for static. Defaults to :data:`True`.
+        recursive: if :data:`False` search only root folder,
+            if :data:`True` descends top-down from the root. Defaults to :data:`False`.
+        max_depth: if set, don't search below this depth. Cannot be set
+            if recursive is :data:`False`
+        runtime: Windows only option, no-op elsewhere. If :data:`True`,
+            search for runtime shared libs (``.DLL``), otherwise, search
+            for ``.Lib`` files. If ``shared`` is :data:`False`, this has no meaning.
+            Defaults to :data:`True`.
 
     Returns:
-        LibraryList: The libraries that have been found
+        The libraries that have been found
     """
 
     if isinstance(libraries, str):
@@ -2443,29 +2444,31 @@ def find_libraries(
     return LibraryList(found_libs)
 
 
-def find_all_shared_libraries(root, recursive=False, runtime=True):
+def find_all_shared_libraries(
+    root: str, recursive: bool = False, runtime: bool = True
+) -> LibraryList:
     """Convenience function that returns the list of all shared libraries found
     in the directory passed as argument.
 
-    See documentation for `spack.llnl.util.filesystem.find_libraries` for more information
+    See documentation for :py:func:`find_libraries` for more information
     """
     return find_libraries("*", root=root, shared=True, recursive=recursive, runtime=runtime)
 
 
-def find_all_static_libraries(root, recursive=False):
+def find_all_static_libraries(root: str, recursive: bool = False) -> LibraryList:
     """Convenience function that returns the list of all static libraries found
     in the directory passed as argument.
 
-    See documentation for `spack.llnl.util.filesystem.find_libraries` for more information
+    See documentation for :py:func:`find_libraries` for more information
     """
     return find_libraries("*", root=root, shared=False, recursive=recursive)
 
 
-def find_all_libraries(root, recursive=False):
+def find_all_libraries(root: str, recursive: bool = False) -> LibraryList:
     """Convenience function that returns the list of all libraries found
     in the directory passed as argument.
 
-    See documentation for `spack.llnl.util.filesystem.find_libraries` for more information
+    See documentation for :py:func:`find_libraries` for more information
     """
 
     return find_all_shared_libraries(root, recursive=recursive) + find_all_static_libraries(

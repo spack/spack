@@ -363,7 +363,7 @@ def depends_on(
         when: condition when this dependency applies
         type: One or more of ``"build"``, ``"run"``, ``"test"``, or ``"link"`` (either a string or
             tuple). Defaults to ``("build", "link")``.
-        patches: single result of ``patch()`` directive, a
+        patches: single result of :py:func:`patch` directive, a
             ``str`` to be passed to ``patch``, or a list of these
     """
     dep_spec = spack.spec.Spec(spec)
@@ -505,10 +505,10 @@ def can_splice(
             target.
 
         match_variants: A list of variants that must match between target spec and current package,
-            with special value '*' which matches all variants. Example: a ``json`` variant is
+            with special value ``*`` which matches all variants. Example: a ``json`` variant is
             defined on two packages, and they are ABI-compatible whenever they agree on
             the json variant (regardless of whether it is turned on or off). Note that this cannot
-            be applied to multi-valued variants and multi-valued variants will be skipped by '*'.
+            be applied to multi-valued variants and multi-valued variants will be skipped by ``*``.
     """
 
     def _execute_can_splice(pkg: Type[spack.package_base.PackageBase]):
