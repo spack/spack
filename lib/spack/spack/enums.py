@@ -17,7 +17,7 @@ class InstallRecordStatus(enum.Flag):
 class ConfigScopePriority(enum.IntEnum):
     """Priorities of the different kind of config scopes used by Spack"""
 
-    BUILTIN = 0
+    DEFAULTS = 0
     CONFIG_FILES = 1
     ENVIRONMENT = 2
     CUSTOM = 3

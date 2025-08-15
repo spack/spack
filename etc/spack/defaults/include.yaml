@@ -1,22 +1,5 @@
 include:
-  # user configuration scope
-  - name: "user"
-    path: "~/.spack"
-    optional: true
-    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
-
-  # site configuration scope
-  - name: "site"
-    path: "$spack/etc/spack"
-    optional: true
-
-  # system configuration scope
-  - name: "system"
-    path: "/etc/spack"
-    optional: true
-    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
-
-  # defaults platform config
+  # default platform-specific configuration
   - path: "${platform}"
     optional: true
 

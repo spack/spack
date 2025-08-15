@@ -36,7 +36,7 @@ import re
 import sys
 from collections import defaultdict
 from itertools import chain
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
 
 from spack.vendor import jsonschema
 
@@ -101,7 +101,7 @@ _ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
 _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
 #: Path to the main configuration scope
-CONFIGURATION_DEFAULTS_PATH = ("_defaults", os.path.join(spack.paths.etc_path, "defaults"))
+CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
 
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
@@ -170,6 +170,25 @@ class ConfigScope:
                         self._included_scopes.append(included_scope)
 
         return self._included_scopes
+
+    def override_include(self):
+        """Whether the ``include::`` section of this scope should override lower scopes."""
+        include = self.sections.get("include")
+        if not include:
+            return False
+
+        # override if this has an include section and there is an override attribute on
+        # the include key in the dict and it is set to True.
+        return getattr(next(iter(include.keys()), None), "override", False)
+
+    def transitive_includes(self, _names: Optional[Set[str]] = None) -> Set[str]:
+        """Get name of this scope and names of its transitively included scopes."""
+        if _names is None:
+            _names = _set()
+        _names.add(self.name)
+        for scope in self.included_scopes:
+            _names |= scope.transitive_includes(_names=_names)
+        return _names
 
     def get_section_filename(self, section: str) -> str:
         raise NotImplementedError
@@ -685,10 +704,32 @@ class Configuration:
             self.get_config(section, scope=scope), line_info=line_info
         )
 
+    def _filter_overridden(self, scopes: List[ConfigScope]):
+        """Filter out overridden scopes.
+
+        NOTE: this does not yet handle diamonds or nested `include::` in lists. It is
+        sufficient for include::[] in an env, which allows isolation.
+        """
+        # find last override in scopes
+        last_override = next((s for s in reversed(scopes) if s.override_include()), None)
+        if not last_override:
+            return scopes  # no overrides
+
+        keep = last_override.transitive_includes() | _set(
+            s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS)
+        )
+        # return scopes to keep, with order preserved
+        return [s for s in scopes if s.name in keep]
+
     @lang.memoized
     def _get_config_memoized(
         self, section: str, scope: Optional[str], _merged_scope: Optional[str]
     ) -> YamlConfigDict:
+        """Memoized helper for ``get_config()``.
+
+        Note that the memoization cache for this function is cleared whenever
+        any function decorated with ``@_config_mutator`` is called.
+        """
         _validate_section_name(section)
 
         if scope is not None and _merged_scope is not None:
@@ -702,11 +743,16 @@ class Configuration:
         else:
             scopes = list(self.scopes.values())
 
+        # filter any scopes overridden by `include::`
+        scopes = self._filter_overridden(scopes)
+
         merged_section: Dict[str, Any] = syaml.syaml_dict()
         updated_scopes = []
         for config_scope in scopes:
             # read potentially cached data from the scope.
             data = config_scope.get_section(section)
+            if data and section == "include":
+                data["include"] = data.pop("include")  # strip override
 
             # Skip empty configs
             if not isinstance(data, dict) or section not in data:
@@ -1231,18 +1277,18 @@ def create_incremental() -> Generator[Configuration, None, None]:
     it. It is bundled inside a function so that configuration can be
     initialized lazily.
     """
-    # first do the builtin, hardcoded defaults
+    # Default scopes are builtins and the default scope within the Spack instance.
+    # These are versioned with Spack and can be overridden by systems, sites or user scopes.
     cfg = create_from(
-        (ConfigScopePriority.BUILTIN, InternalConfigScope("_builtin", CONFIG_DEFAULTS))
+        (ConfigScopePriority.DEFAULTS, InternalConfigScope("_builtin", CONFIG_DEFAULTS)),
+        (ConfigScopePriority.DEFAULTS, DirectoryConfigScope(*CONFIGURATION_DEFAULTS_PATH)),
     )
     yield cfg
 
-    # Builtin paths to configuration files in Spack
-    configuration_paths = [
-        # Default configuration scope is the lowest-level scope. These are
-        # versioned with Spack and can be overridden by systems, sites or users
-        CONFIGURATION_DEFAULTS_PATH
-    ]
+    # Initial topmost scope is spack (the config scope in the spack instance).
+    # It includes the user, site, and system scopes. Environments and command
+    # line scopes go above this.
+    configuration_paths = [("spack", os.path.join(spack.paths.etc_path))]
 
     # Python packages can register configuration scopes via entry_points
     configuration_paths.extend(config_paths_from_entry_points())
@@ -1358,6 +1404,9 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
 def get(path: str, default: Optional[Any] = None, scope: Optional[str] = None) -> Any:
     """Module-level wrapper for ``Configuration.get()``."""
     return CONFIG.get(path, default, scope)
+
+
+_set = set  #: save this before defining set -- maybe config.set was ill-advised :)
 
 
 def set(path: str, value: Any, scope: Optional[str] = None) -> None:
