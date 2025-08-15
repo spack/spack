@@ -41,24 +41,24 @@ Package Reviewers
 
 Anyone can review a PR so we encourage Spack’s community members to review and comment on those involving software in which they have expertise and/or interest.
 
-Package reviewers are **expected** to assess changes in PRs to the best of their ability and knowledge with special consideration to the information contained in the :ref:`package-review-guide`.
+Package Reviewers are **expected** to assess changes in PRs to the best of their ability and knowledge with special consideration to the information contained in the :ref:`package-review-guide`.
 
 .. _package-maintainers:
 
 Maintainers (Package Owners)
 ----------------------------
 
-Maintainers are individuals (technically GitHub accounts) who appear in a package’s `maintainers <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#maintainers>`_ list.
-These are people who have agreed to receive review assignments in terms of being notified of and given the opportunity to review changes to packages.
+Maintainers are individuals (technically GitHub accounts) who appear in a package’s `Maintainers <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#maintainers>`_ directive.
+These are people who have agreed to be notified of and given the opportunity to review changes to packages.
 They are, from a Spack package perspective, `Code Owners <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners>`_ of the package, whether or not they “own” or work on the software that the package builds.
 
 Maintainers are **expected** to:
 
-* review PRs in a timely manner (as described in :ref:`committers`) to confirm that the changes made to the package are reasonable;
+* review PRs in a timely manner (reported in :ref:`committers`), when available, to confirm that the changes made to the package are reasonable;
 * confirm that packages successfully build on at least one platform; and
 * attempt to confirm that any updated or included tests pass.
 
-Acceptable forms of confirmation are:
+Acceptable forms of confirmation are one or more of:
 
 * the :ref:`Contributor <package-contributors>` explicitly confirms a successful build of the software on at least one platform (ideally in the PR description and includes ``spack debug report`` output);
 * the software is built successfully by Spack CI by at least one of the CI stacks; and
@@ -78,14 +78,14 @@ Committers are vetted individuals who are allowed to merge PRs into the ``develo
 Committers are **expected** to:
 
 * ensure **at least one review** is performed prior to merging (GitHub rules enforce this);
-* encourage **at least one** package maintainer (if any) to comment and/or review the PR;
-* allow package maintainers (if any) *up to* **one week** to comment or provide a review;
+* encourage **at least one** Package Maintainer (if any) to comment and/or review the PR;
+* allow Package Maintainers (if any) **up to one week** to comment or provide a review;
 * determine if the criteria defined in :ref:`package-review-guide` are met; and
 * **merge the reviewed PR** at their discretion.
 
 .. note::
 
-   If there are no :ref:`package-maintainers` or the maintainers have not commented or reviewed the PR within the allotted time, Committers are expected to conduct the review.
+   If there are no :ref:`package-maintainers` or the Maintainers have not commented or reviewed the PR within the allotted time, Committers are expected to conduct the review.
 
 .. tip::
 
