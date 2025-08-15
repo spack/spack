@@ -2472,6 +2472,7 @@ class PackageInstaller:
                 for task in active_tasks:
                     task.terminate()
                 active_tasks.clear()  # they're all done now
+                jobserver.cleanup()
                 raise
 
         # Close and cleanup the jobserver

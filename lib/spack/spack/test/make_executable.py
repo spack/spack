@@ -9,8 +9,6 @@ This just tests whether the right args are getting passed to make.
 """
 import os
 import pathlib
-import shutil
-import subprocess
 
 import pytest
 
@@ -33,12 +31,6 @@ def make_executable(tmp_path: pathlib.Path, working_env):
 
 def test_make_normal():
     make = MakeExecutable("make", jobs=8)
-    result = make(output=str)
-    print("RESULT:", result)
-    print("PATH:", os.environ["PATH"])
-    print("make resolves to: ", shutil.which("make"))
-    print("make --version output:")
-    print(subprocess.check_output(["make", "version"], universal_newlines=True))
     assert make(output=str).strip() == "-j8"
     assert make("install", output=str).strip() == "-j8 install"
 

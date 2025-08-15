@@ -128,14 +128,15 @@ class FifoJobserver(Jobserver):
     # TODO: Implement Windows support.
 
     def cleanup(self) -> None:
-        """Clean up file descriptors and remove the FIFO directory used by them jobserver."""
+        """Clean up file descriptors and remove the FIFO directory used by the jobserver."""
         if self.fifo_read_fd is not None:
             os.close(self.fifo_read_fd)
         if self.fifo_write_fd is not None:
             os.close(self.fifo_write_fd)
         if self.fifo_directory is not None:
             shutil.rmtree(self.fifo_directory)
-
+        if "MAKEFLAGS" in os.environ:
+            del os.environ["MAKEFLAGS"]
 
 #  def get_available_bytes(self):
 #      """Gets the number of bytes available for reading from a file descriptor."""
