@@ -138,6 +138,7 @@ class FifoJobserver(Jobserver):
         if "MAKEFLAGS" in os.environ:
             del os.environ["MAKEFLAGS"]
 
+
 #  def get_available_bytes(self):
 #      """Gets the number of bytes available for reading from a file descriptor."""
 #      bytes_available = array.array("i", [0])
