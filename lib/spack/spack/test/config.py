@@ -1416,3 +1416,20 @@ def test_config_include_similar_name(tmp_path: pathlib.Path):
     assert len(config.matching_scopes("^test$")) == 1
     assert len(config.matching_scopes("^test:a/config$")) == 1
     assert len(config.matching_scopes("^test:b/config$")) == 1
+
+
+def test_config_include_scope(tmp_path: pathlib.Path):
+    config_a = tmp_path / "a" / "config"
+
+    os.makedirs(config_a)
+    with open(config_a / "config.yaml", "w", encoding="utf-8") as fd:
+        syaml.dump_config({"config": {"install_tree": {"root": str(tmp_path)}}}, fd)
+
+    with open(tmp_path / "include.yaml", "w", encoding="utf-8") as fd:
+        syaml.dump_config({"include": [{"path": str(config_a), "scope": "a-scope"}]}, fd)
+
+    config = spack.config.create_from(spack.config.DirectoryConfigScope("test", str(tmp_path)))
+
+    # Ensure all of the scopes are found
+    assert len(config.matching_scopes("test")) == 1
+    assert len(config.matching_scopes("a-scope")) == 1
