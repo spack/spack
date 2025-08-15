@@ -98,7 +98,6 @@ from spack.llnl.util.filesystem import (
     join_path,
     keep_modification_time,
     library_extensions,
-    make_package_test_rpath,
     mkdirp,
     path_contains_subdirectory,
     readlink,
@@ -119,7 +118,7 @@ from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import default_args, when
 from spack.operating_systems.linux_distro import kernel_version
 from spack.operating_systems.mac_os import macos_version
-from spack.package_base import PackageBase, on_package_attributes
+from spack.package_base import PackageBase, make_package_test_rpath, on_package_attributes
 from spack.package_completions import (
     bash_completion_path,
     fish_completion_path,
