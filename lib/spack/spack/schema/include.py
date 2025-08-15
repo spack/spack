@@ -23,6 +23,7 @@ properties: Dict[str, Any] = {
                         "path": {"type": "string"},
                         "sha256": {"type": "string"},
                         "optional": {"type": "boolean"},
+                        "scope": {"type": "string"},
                     },
                     "required": ["path"],
                     "additionalProperties": False,
