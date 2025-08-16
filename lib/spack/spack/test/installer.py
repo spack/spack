@@ -19,6 +19,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.installer as inst
+import spack.jobserver
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as ulk
 import spack.llnl.util.tty as tty
@@ -1378,3 +1379,29 @@ def test_print_install_test_log_failures(
     spack.installer.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert "See test results at" in out
+
+
+def test_install_gmake_ninja_with_fifo(install_mockery):
+    """Confirm that gmake that does support fifo sets up FIFO jobserver"""
+    gmake_spec = spack.concretize.concretize_one("gmake@4.4")
+    gmake_pkg = gmake_spec.package
+    gmake_js_class = spack.jobserver.Jobserver.determine_type([gmake_pkg])
+    assert gmake_js_class == spack.jobserver.FifoJobserver
+
+    ninja_spec = spack.concretize.concretize_one("ninja@1.13.0")
+    ninja_pkg = ninja_spec.package
+    ninja_js_class = spack.jobserver.Jobserver.determine_type([ninja_pkg])
+    assert ninja_js_class == spack.jobserver.FifoJobserver
+
+
+def test_install_gmake_ninja_without_fifo(install_mockery):
+    """Confirm that gmake that doesn't support fifo doesn't set up FIFO jobserver"""
+    gmake_spec = spack.concretize.concretize_one("gmake@3.0")
+    gmake_pkg = gmake_spec.package
+    gmake_js_class = spack.jobserver.Jobserver.determine_type([gmake_pkg])
+    assert gmake_js_class == spack.jobserver.NoopJobserver
+
+    ninja_spec = spack.concretize.concretize_one("ninja@1.10.2")
+    ninja_pkg = ninja_spec.package
+    ninja_js_class = spack.jobserver.Jobserver.determine_type([ninja_pkg])
+    assert ninja_js_class == spack.jobserver.NoopJobserver

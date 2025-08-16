@@ -116,7 +116,7 @@ class FifoJobserver(Jobserver):
     # TODO: Implement Windows support.
 
     def cleanup(self) -> None:
-        """Clean up file descriptors and remove the FIFO directory used by the jobserver."""
+        """Clean up file descriptors and remove the FIFO directory and flags used by jobserver."""
         if self.fifo_read_fd is not None:
             os.close(self.fifo_read_fd)
         if self.fifo_write_fd is not None:
