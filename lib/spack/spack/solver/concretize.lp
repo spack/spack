@@ -1687,8 +1687,8 @@ error(10, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Targ
      target_not_supported(Compiler, Version, Target),
      build(node(X, Package)).
 
-#defined target_supported/2.
-#defined target_not_supported/2.
+#defined target_supported/3.
+#defined target_not_supported/3.
 
 % if a target is set explicitly, respect it
 attr("node_target", PackageNode, Target)
