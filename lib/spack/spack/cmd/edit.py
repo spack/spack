@@ -6,6 +6,7 @@ import argparse
 import errno
 import glob
 import os
+from typing import Optional, Union
 
 import spack.cmd
 import spack.llnl.util.tty as tty
@@ -18,26 +19,19 @@ section = "packaging"
 level = "short"
 
 
-class ComputeBuildSystemPathAction(argparse.Action):
-    """Compute the path to the build system directory. This is done lazily so that we use the
-    correct spack.repo.PATH when the command is run."""
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, os.path.join(spack.repo.PATH.repos[0].root, "build_systems"))
-
-
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     excl_args = subparser.add_mutually_exclusive_group()
 
     # Various types of Spack files that can be edited
     # Edits package files by default
+    # build systems require separate logic to find
     excl_args.add_argument(
         "-b",
         "--build-system",
         dest="path",
-        action=ComputeBuildSystemPathAction,
-        nargs=0,
-        help="edit the build system with the supplied name",
+        action="store_const",
+        const="BUILD_SYSTEM",  # placeholder for path that requires computing late
+        help="edit the build system with the supplied name or fullname",
     )
     excl_args.add_argument(
         "-c",
@@ -72,15 +66,21 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="edit the main spack module with the supplied name",
     )
 
-    # Options for editing packages
-    excl_args.add_argument("-r", "--repo", default=None, help="path to repo to edit package in")
-    excl_args.add_argument("-N", "--namespace", default=None, help="namespace of package to edit")
+    # Options for editing packages and build systems
+    subparser.add_argument(
+        "-r", "--repo", default=None, help="path to repo to edit package or build system in"
+    )
+    subparser.add_argument(
+        "-N", "--namespace", default=None, help="namespace of package or build system to edit"
+    )
 
     subparser.add_argument("package", nargs="*", default=None, help="package name")
 
 
-def locate_package(name: str, repo: spack.repo.Repo) -> str:
-    path = repo.filename_for_package_name(name)
+def locate_package(name: str, repo: Optional[spack.repo.Repo]) -> str:
+    # if not given a repo, use the full repo path to choose one
+    repo_like: Union[spack.repo.Repo, spack.repo.RepoPath] = repo or spack.repo.PATH
+    path: str = repo_like.filename_for_package_name(name)
 
     try:
         with open(path, "r", encoding="utf-8"):
@@ -89,6 +89,30 @@ def locate_package(name: str, repo: spack.repo.Repo) -> str:
         if e.errno == errno.ENOENT:
             raise spack.repo.UnknownPackageError(name) from e
         tty.die(f"Cannot edit package: {e}")
+
+
+def locate_build_system(name: str, repo: Optional[spack.repo.Repo]) -> str:
+    # If given a fullname for a build system, split it into namespace and name
+    namespace = None
+    if "." in name:
+        namespace, name = name.rsplit(".", 1)
+
+    # If given a namespace and a repo, they better match
+    if namespace and repo:
+        if repo.namespace != namespace:
+            msg = f"{namespace}.{name}: namespace conflicts with repo '{repo.namespace}'"
+            msg += " specified from --repo or --namespace argument"
+            raise ValueError(msg)
+
+    if namespace:
+        repo = spack.repo.PATH.get_repo(namespace)
+
+    # If not given a namespace, use the default
+    if not repo:
+        repo = spack.repo.PATH.first_repo()
+
+    assert repo
+    return locate_file(name, repo.build_systems_path)
 
 
 def locate_file(name: str, path: str) -> str:
@@ -124,19 +148,29 @@ def locate_file(name: str, path: str) -> str:
 def edit(parser, args):
     names = args.package
 
-    # If `--command`, `--test`, or `--module` is chosen, edit those instead
-    if args.path:
+    # If `--command`, `--test`, `--docs`, or `--module` is chosen, edit those instead
+    if args.path and args.path != "BUILD_SYSTEM":
         paths = [locate_file(name, args.path) for name in names] if names else [args.path]
         spack.util.editor.editor(*paths)
-    elif names:
-        if args.repo:
-            repo = spack.repo.from_path(args.repo)
-        elif args.namespace:
-            repo = spack.repo.PATH.get_repo(args.namespace)
+        return
+
+    # Cannot set repo = spack.repo.PATH.first_repo() as default because packages and build_systems
+    # can include repo information as part of their fullname
+    repo = None
+    if args.namespace:
+        repo = spack.repo.PATH.get_repo(args.namespace)
+    elif args.repo:
+        repo = spack.repo.from_path(args.repo)
+    # default_repo used when no name provided
+    default_repo = repo or spack.repo.PATH.first_repo()
+
+    if args.path == "BUILD_SYSTEM":
+        if names:
+            paths = [locate_build_system(n, repo) for n in names]
         else:
-            repo = spack.repo.PATH
-        paths = [locate_package(name, repo) for name in names]
+            paths = [default_repo.build_systems_path]
         spack.util.editor.editor(*paths)
-    else:
-        # By default open the directory where packages live
-        spack.util.editor.editor(spack.repo.PATH.repos[0].packages_path)
+        return
+
+    paths = [locate_package(n, repo) for n in names] if names else [default_repo.packages_path]
+    spack.util.editor.editor(*paths)
