@@ -1061,6 +1061,7 @@ class Repo:
             config.get("subdirectory", packages_dir_name), root, self.package_api
         )
         self.packages_path = os.path.join(self.root, self.subdirectory)
+        self.build_systems_path = os.path.join(self.root, "build_systems")
 
         check(
             os.path.isdir(self.packages_path),
