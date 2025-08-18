@@ -1448,39 +1448,41 @@ class Environment:
 
         This does not do any other aspect of concretization. It will fail if any existing concrete
         spec for the same package does not satisfy the given develop spec."""
-        new_concretized_order = []
-        new_specs_by_hash = {}
+        # Find all specs that this develop request applies to
+        modify_specs = []
+        for dep in spack.traverse.traverse_nodes(list(self.specs_by_hash.values())):
+            if dep.name == spec.name:
+                if not dep.satisfies(spec):
+                    raise Exception  # TODO exception type and message
+                modify_specs.append(dep)
 
-        for spec_hash in self.concretized_order:
-            concrete_spec = self.specs_by_hash[spec_hash]
-            changed = False
-            for dep in concrete_spec.traverse(root=True):
-                if dep.name == spec.name or spec.name in dep:
-                    dep._mark_root_concrete(False)
-                    dep.clear_caches()
-
-                if dep.name == spec.name:
-                    if not dep.satisfies(spec):
-                        raise Exception  # TODO exception type and message
-                    if path is None:
-                        dep.variants.pop("dev_path", None)
-                    else:
-                        dep.variants["dev_path"] = vt.VariantValue(
-                            vt.VariantType.SINGLE, "dev_path", (path,)
-                        )
-                    changed = True
-
-            if changed:
-                concrete_spec._finalize_concretization()
-                new_hash = concrete_spec.dag_hash()
-                new_concretized_order.append(new_hash)
-                new_specs_by_hash[new_hash] = concrete_spec
+        # Manipulate dev_path variant on modify_specs
+        for s in modify_specs:
+            if path is None:
+                s.variants.pop("dev_path", None)
             else:
-                new_concretized_order.append(spec_hash)
-                new_specs_by_hash[spec_hash] = concrete_spec
+                s.variants["dev_path"] = vt.VariantValue(
+                    vt.VariantType.SINGLE, "dev_path", (path,)
+                )
 
-            self.concretized_order = new_concretized_order
-            self.specs_by_hash = new_specs_by_hash
+        # Identify roots modified and invalidate all dependent hashes
+        modified_roots = []
+        for parent in spack.traverse.traverse_nodes(modify_specs, direction="parents"):
+            # record whether this parent is a root before we modify the hash
+            if parent.dag_hash() in self.concretized_order:
+                modified_roots.append((parent, parent.dag_hash()))
+            # modify the parent to invalidate hashes
+            parent._mark_root_concrete(False)
+            parent.clear_caches()
+
+        # Compute new hashes and update the env list of specs
+        for root, old_hash in modified_roots:
+            root._finalize_concretization()
+            self.concretized_order[self.concretized_order.index(old_hash)] = root.dag_hash()
+            self.specs_by_hash.pop(old_hash)
+            self.specs_by_hash[root.dag_hash()] = root
+
+        if modified_roots:
             self.write()
 
     def concretize(
