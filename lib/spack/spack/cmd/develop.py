@@ -252,7 +252,8 @@ def _dev_spec_generator(args, env):
                     for s in concrete_specs:
                         for node_spec in s.traverse(direction="parents", root=True):
                             tty.debug(f"Recursive develop for {node_spec.name}")
-                            yield node_spec, _abs_code_path(env, node_spec, args.path)
+                            dev_spec = spack.spec.Spec(node_spec.format("{name}@{versions}"))
+                            yield dev_spec, _abs_code_path(env, node_spec, args.path)
             else:
                 yield spec, _abs_code_path(env, spec, args.path)
 
