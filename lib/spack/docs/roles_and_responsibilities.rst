@@ -58,15 +58,15 @@ Maintainers are **expected** to:
 * confirm that packages successfully build on at least one platform; and
 * attempt to confirm that any updated or included tests pass.
 
-Acceptable forms of confirmation are one or more of:
+Acceptable forms of confirmation are **one or more of**:
 
 * the :ref:`Contributor <package-contributors>` explicitly confirms a successful build of the software on at least one platform (ideally in the PR description and includes ``spack debug report`` output);
 * the software is built successfully by Spack CI by at least one of the CI stacks; and
-* the :ref:`Maintainer <package-maintainers>` is able to successfully build the software (and ideally includes the ``spack debug report`` output in a comment on the PR).
+* the Maintainer is able to successfully build the software (and ideally includes the ``spack debug report`` output in a comment on the PR).
 
 .. note::
 
-    If at least one maintainer approves a PR -– and if there are no objections from others -– then the PR can be merged by any :ref:`committers`.
+    If at least one maintainer approves a PR -– and if there are no objections from others -– then the PR can be merged by any of the :ref:`committers`.
 
 .. _committers:
 
@@ -78,7 +78,7 @@ Committers are vetted individuals who are allowed to merge PRs into the ``develo
 Committers are **expected** to:
 
 * ensure **at least one review** is performed prior to merging (GitHub rules enforce this);
-* encourage **at least one** Package Maintainer (if any) to comment and/or review the PR;
+* encourage **at least one** :ref:`Package Maintainer <package-maintainers>` (if any) to comment and/or review the PR;
 * allow Package Maintainers (if any) **up to one week** to comment or provide a review;
 * determine if the criteria defined in :ref:`package-review-guide` are met; and
 * **merge the reviewed PR** at their discretion.
