@@ -1460,6 +1460,11 @@ class Environment:
         for s in modify_specs:
             if path is None:
                 s.variants.pop("dev_path", None)
+            elif "dev_path" in s.variants:
+                if s.variants["dev_path"] != vt.VariantValue(
+                        vt.VariantType.SINGLE, "dev_path", (path,)
+                ):
+                    raise Exception  # TODO exception type and message
             else:
                 s.variants["dev_path"] = vt.VariantValue(
                     vt.VariantType.SINGLE, "dev_path", (path,)
