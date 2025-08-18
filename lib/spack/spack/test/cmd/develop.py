@@ -125,6 +125,48 @@ class TestDevelop:
             self.check_develop(e, spack.spec.Spec("mpich@=2.0"))
             assert len(e.dev_specs) == 1
 
+    def test_develop_applies_changes(self, monkeypatch):
+        env("create", "test")
+        with ev.read("test") as e:
+            e.add("mpich@1.0")
+            e.concretize()
+            e.write()
+
+            path = "/path"
+
+            def check_path(stage, dest):
+                assert dest == path
+
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", check_path)
+
+            develop("-p", path, "mpich@1.0")
+            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
+
+            # Check modifications actually worked
+            spec = next(e.roots())
+            assert spec.satisfies("dev_path=%s" % path)
+
+    def test_develop_no_apply_changes(self, monkeypatch):
+        env("create", "test")
+        with ev.read("test") as e:
+            e.add("mpich@1.0")
+            e.concretize()
+            e.write()
+
+            path = "/path"
+
+            def check_path(stage, dest):
+                assert dest == path
+
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", check_path)
+
+            develop("-p", path, "--no-apply-changes", "mpich@1.0")
+            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
+
+            # Check modifications actually worked
+            spec = next(e.roots())
+            assert not spec.satisfies("dev_path=%s" % path)
+
     def test_develop_canonicalize_path(self, monkeypatch):
         env("create", "test")
         with ev.read("test") as e:
