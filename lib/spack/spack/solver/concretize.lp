@@ -356,10 +356,9 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      pkg_fact(Package, version_has_commit(Version, Psha)),
      Vsha != Psha.
 
-#defined version_satisfies/3.
+#defined version_satisfies/2.
 #defined deprecated_versions_not_allowed/0.
-#defined deprecated_version/2.
-#defined can_accept_commit/2.
+#defined deprecated_version/1.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints
@@ -708,7 +707,7 @@ attr("uses_virtual", PackageNode, Virtual) :-
    not imposed_constraint(Hash, "node_flag", Package, node_flag(FlagType, Flag, _, _)),
    internal_error("imposed hash without imposing all flag values").
 
-#defined condition/2.
+#defined condition/1.
 #defined subcondition/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
@@ -807,8 +806,6 @@ error(100, "{0} and {1} must depend on the same {2}", ExtensionParent, Extension
      depends_on(ExtensionChild,  node(Y, ExtendeePackage)),
      X != Y.
 
-
-#defined dependency_type/2.
 
 %-----------------------------------------------------------------------------
 % Conflicts
@@ -942,7 +939,7 @@ do_not_impose(EffectID, node(X, Package))
    not virtual_condition_holds(PackageNode, Virtual),
    internal_error("Virtual when provides not respected").
 
-#defined provided_together/4.
+#defined provided_together/3.
 
 %-----------------------------------------------------------------------------
 % Virtual dependency weights
@@ -965,8 +962,6 @@ possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback
 
 % do not warn if generated program contains none of these.
 #defined virtual/1.
-#defined virtual_condition_holds/2.
-#defined external/1.
 #defined buildable_false/1.
 #defined default_provider_preference/3.
 
@@ -1422,9 +1417,8 @@ variant_single_value(PackageNode, Variant)
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
-#defined variant_default_value/3.
 #defined variant_default_value_from_packages_yaml/3.
-#defined variant_default_value_from_package_py/3.
+#defined variant_default_value_from_package_py/2.
 
 %-----------------------------------------------------------------------------
 % Propagation semantics
