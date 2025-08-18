@@ -22,7 +22,7 @@ Spack uses specs to:
 Specs are more than a package name and a version; you can use them to specify the compiler, compiler version, architecture, compile options, and dependency options for a build.
 In this section, we'll go over the full syntax of specs.
 
-Here is an example of using a complex spec to install a very specific configuration of ``mpileaks``:
+Here is an example of using a complex spec to install a very specific configuration of ``mpileaks``: [#windows-shell]_
 
 .. code-block:: spec
 
@@ -130,18 +130,6 @@ So in the spec:
    root %dep1 ^transitive %dep2 %dep3
 
 ``dep1`` is a direct dependency of ``root``, while both ``dep2`` and ``dep3`` are direct dependencies of ``transitive``.
-
-.. admonition:: Windows Spec Syntax Caveats
-   :class: note
-
-   Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells.
-   Spack's spec dependency syntax uses the carat (``^``) character; however, this is an escape string in CMD, so it must be escaped with an additional carat (i.e., ``^^``).
-   CMD also will attempt to interpret strings with ``=`` characters in them.
-   Any spec including this symbol must double-quote the string.
-
-   Note: All of these issues are unique to CMD; they can be avoided by using PowerShell.
-
-   For more context on these caveats, see the related issues: `carat <https://github.com/spack/spack/issues/42833>`_ and `equals <https://github.com/spack/spack/issues/43348>`_.
 
 Below are more details about the specifiers that you can add to specs.
 
@@ -652,3 +640,8 @@ We can express conditional constraint by specifying the ``when`` edge attribute:
    $ spack install hdf5 ^[when=+mpi] mpich@3.1
 
 This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
+
+.. rubric:: Footnotes
+
+.. [#windows-shell] For Windows users we strongly recommend PowerShell instead of CMD.
+                    With PowerShell, it is not necessary to escape the caret ``^`` and equals ``=`` characters on the command line.
