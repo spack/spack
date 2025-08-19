@@ -17,6 +17,7 @@ def filter_compiler_wrappers(
     ignore_absent: bool = True,
     backup: bool = False,
     recursive: bool = False,
+    **kwargs,  # for compatibility with package api v2.0
 ) -> None:
     """Registers a phase callback (e.g. post-install) to look for references to Spack's compiler
     wrappers in the given files and replace them with the underlying compilers.
