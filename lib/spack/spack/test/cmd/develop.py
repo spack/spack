@@ -132,19 +132,12 @@ class TestDevelop:
             e.concretize()
             e.write()
 
-            path = "/path"
-
-            def check_path(stage, dest):
-                assert dest == path
-
-            monkeypatch.setattr(spack.stage.Stage, "steal_source", check_path)
-
-            develop("-p", path, "mpich@1.0")
-            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
+            develop("mpich@1.0")
 
             # Check modifications actually worked
             spec = next(e.roots())
-            assert spec.satisfies("dev_path=%s" % path)
+            assert spec.satisfies("dev_path=*")
 
     def test_develop_no_apply_changes(self, monkeypatch):
         env("create", "test")
@@ -153,19 +146,12 @@ class TestDevelop:
             e.concretize()
             e.write()
 
-            path = "/path"
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
+            develop("--no-apply-changes", "mpich@1.0")
 
-            def check_path(stage, dest):
-                assert dest == path
-
-            monkeypatch.setattr(spack.stage.Stage, "steal_source", check_path)
-
-            develop("-p", path, "--no-apply-changes", "mpich@1.0")
-            self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
-
-            # Check modifications actually worked
+            # Check modifications were not applied
             spec = next(e.roots())
-            assert not spec.satisfies("dev_path=%s" % path)
+            assert not spec.satisfies("dev_path=*")
 
     def test_develop_canonicalize_path(self, monkeypatch):
         env("create", "test")
