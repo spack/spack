@@ -2262,12 +2262,12 @@ Patch functions
 ^^^^^^^^^^^^^^^^^^^^^
 
 In addition to supplying patch files, you can write a custom function to patch a package's source.
-For example, the ``py-pyside`` package contains some custom code for tweaking the way the PySide build handles ``RPATH``:
+For example, the ``py-pyside2`` package contains some custom code for tweaking the way the PySide build handles include files:
 
 .. _pyside-patch:
 
-.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/py_pyside/package.py
-   :pyobject: PyPyside.patch
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/py_pyside2/package.py
+   :pyobject: PyPyside2.patch
    :linenos:
 
 A ``patch`` function, if present, will be run after patch files are applied and before ``install()`` is run.
