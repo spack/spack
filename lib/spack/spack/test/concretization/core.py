@@ -4052,3 +4052,12 @@ packages:
         s = spack.concretize.concretize_one(spec_str)
         assert s.external
         assert s.prefix == "/path/mpich/gcc"
+
+
+@pytest.mark.regression("51146,51067")
+def test_caret_in_input_cannot_set_transitive_build_dependencies(default_mock_concretization):
+    """Tests that a caret in the input spec does not set transitive build dependencies, and errors
+    with an appropriate message.
+    """
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="transitive 'link' or"):
+        _ = default_mock_concretization("multivalue-variant ^gmake")
