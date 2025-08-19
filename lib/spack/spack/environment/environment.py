@@ -1462,7 +1462,7 @@ class Environment:
                 s.variants.pop("dev_path", None)
             elif "dev_path" in s.variants:
                 if s.variants["dev_path"] != vt.VariantValue(
-                        vt.VariantType.SINGLE, "dev_path", (path,)
+                    vt.VariantType.SINGLE, "dev_path", (path,)
                 ):
                     raise Exception  # TODO exception type and message
             else:

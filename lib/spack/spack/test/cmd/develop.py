@@ -292,6 +292,7 @@ def test_recursive(mutable_mock_env_path, install_mockery, mock_fetch):
         for dep in spec.traverse():
             assert dep.satisfies("dev_path=*") == (dep.name in expected_dev_specs)
 
+
 def test_develop_fails_with_multiple_concrete_versions(
     mutable_mock_env_path, install_mockery, mock_fetch
 ):
