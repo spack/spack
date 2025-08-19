@@ -123,9 +123,7 @@ class FifoJobserver(Jobserver):
             os.close(self.fifo_write_fd)
         if self.fifo_directory is not None:
             shutil.rmtree(self.fifo_directory)
-        if "MAKEFLAGS" in os.environ:
-            del os.environ["MAKEFLAGS"]
-
+        os.environ.pop("MAKEFLAGS", None)
 
 # Table mapping JobserverType to Jobserver class
 jobserver_class_table: Dict[JobserverType, Type[Jobserver]] = {
