@@ -373,16 +373,24 @@ Developing Packages in a Spack Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``spack develop`` command allows one to develop Spack packages in an environment.
-It requires a spec containing a concrete version, and will configure Spack to install the package from local source.
-If a version is not provided from the command line interface then Spack will automatically pick the highest version the package has defined.
-This means any infinity versions (``develop``, ``main``, ``stable``) will be preferred in this selection process.
+It will configure Spack to install the package from local source.
 By default, ``spack develop`` will also clone the package to a subdirectory in the environment for the local source.
-This package will have a special variant ``dev_path`` set, and Spack will ensure the package and its dependents are rebuilt any time the environment is installed if the package's local source code has been modified.
-Spack's native implementation to check for modifications is to check if ``mtime`` is newer than the installation.
+These choices can be overridden with the ``--path`` argument, and the ``--no-clone`` argument.
+Relative paths provided to the ``--path`` argument will be resolved relative to the environment directory.
+
+When concretizing an environment with develop specs, all attributes of the spec provided to the ``spack develop`` command will be applied by the concretizer (in addition to any constraints from the packages ``specs`` list).
+If a version is not included in those constraints, Spack will choose the **highest** version of the package.
+This means that any "infinity" versions (``develop``, ``main``, etc.) will be preferred for specs marked with the ``spack develop`` command.
+These packages will have an automatic ``dev_path`` variant added by the concretizer, with a value of the absolute path to the local source Spack is building from.
+Spack will ensure the package and its dependents are rebuild any time the environment is installed if the pacakge's local source code has been modified.
+Spack's native implementation is to check if ``mtime`` is newer than the installation.
 A custom check can be created by overriding the ``detect_dev_src_change`` method in your package class.
 This is particularly useful for projects using custom Spack repos to drive development and want to optimize performance.
 
-Spack ensures that all instances of a developed package in the environment are concretized to match the version (and other constraints) passed as the spec argument to the ``spack develop`` command.
+When ``spack develop`` is run in a concrete environment, Spack will modify the concrete specs in the environment to include any applicable ``dev_path`` variants.
+If the develop spec conflicts with the concrete specs in the environment, Spack will raise an exception and require the ``spack develop --no-apply-changes`` option, followed by a ``spack concretize --force`` to apply the ``dev_path`` variant and constraints from the develop spec.
+
+When ``spack develop`` is run without any arguments, Spack will clone any develop specs in the environment for which the specified path does not exist.
 
 When working deep in the graph it is often desirable to have multiple specs marked as ``develop`` so you don't have to restage and/or do full rebuilds each time you call ``spack install``.
 The ``--recursive`` flag can be used in these scenarios to ensure that all the dependents of the initial spec you provide are also marked as develop specs.
