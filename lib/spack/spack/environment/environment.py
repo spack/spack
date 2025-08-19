@@ -1450,7 +1450,7 @@ class Environment:
         spec for the same package does not satisfy the given develop spec."""
         # Find all specs that this develop request applies to
         modify_specs = []
-        for dep in spack.traverse.traverse_nodes(list(self.specs_by_hash.values())):
+        for dep in traverse.traverse_nodes(list(self.specs_by_hash.values())):
             if dep.name == spec.name:
                 if not dep.satisfies(spec):
                     msg = f"Develop spec '{spec}' conflicts with concrete specs in environment."
@@ -1478,7 +1478,7 @@ class Environment:
 
         # Identify roots modified and invalidate all dependent hashes
         modified_roots = []
-        for parent in spack.traverse.traverse_nodes(modify_specs, direction="parents"):
+        for parent in traverse.traverse_nodes(modify_specs, direction="parents"):
             # record whether this parent is a root before we modify the hash
             if parent.dag_hash() in self.concretized_order:
                 modified_roots.append((parent, parent.dag_hash()))
