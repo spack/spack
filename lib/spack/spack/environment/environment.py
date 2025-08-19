@@ -1453,7 +1453,10 @@ class Environment:
         for dep in spack.traverse.traverse_nodes(list(self.specs_by_hash.values())):
             if dep.name == spec.name:
                 if not dep.satisfies(spec):
-                    raise Exception  # TODO exception type and message
+                    msg = f"Develop spec '{spec}' conflicts with concrete specs in environment."
+                    msg += " Try again with 'spack develop --no-apply-changes'"
+                    msg += " and run 'spack concretize --force' to apply changes."
+                    raise SpackEnvironmentDevelopError(msg)
                 modify_specs.append(dep)
 
         # Manipulate dev_path variant on modify_specs
@@ -1464,7 +1467,10 @@ class Environment:
                 if s.variants["dev_path"] != vt.VariantValue(
                     vt.VariantType.SINGLE, "dev_path", (path,)
                 ):
-                    raise Exception  # TODO exception type and message
+                    msg = f"Spec '{s}' already has 'dev_path={s.variants['dev_path'].value}'."
+                    msg += f" Conflict with provided path {path}. Use 'spack undevelop' or 'spack "
+                    msg += "concretize --force' to remove existing path before adding a new one."
+                    raise SpackEnvironmentDevelopError(msg)
             else:
                 s.variants["dev_path"] = vt.VariantValue(
                     vt.VariantType.SINGLE, "dev_path", (path,)
@@ -3079,3 +3085,7 @@ class SpackEnvironmentConfigError(SpackEnvironmentError):
     def __init__(self, msg, filename):
         self.filename = filename
         super().__init__(msg)
+
+
+class SpackEnvironmentDevelopError(SpackEnvironmentError):
+    """Class for errors in applying develop information to an environment."""
