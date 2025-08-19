@@ -917,7 +917,9 @@ def test_single_file_scope(config, env_yaml):
         assert spack.config.get("packages:externalmodule:buildable") is False
         assert spack.config.get("repos") == {
             "z": "/x/y/z",
-            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
+            "builtin_mock": spack_path.canonicalize_path(
+                "$spack/var/spack/test_repos/spack_repo/builtin_mock"
+            ),
         }
 
 
@@ -956,7 +958,9 @@ spack:
         assert not spack.config.get("packages:externalmodule")
         assert spack.config.get("repos") == {
             "z": "/x/y/z",
-            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
+            "builtin_mock": spack_path.canonicalize_path(
+                "$spack/var/spack/test_repos/spack_repo/builtin_mock"
+            ),
         }
 
 

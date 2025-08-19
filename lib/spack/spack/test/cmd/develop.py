@@ -28,7 +28,7 @@ env = SpackCommand("env")
 @pytest.mark.usefixtures("mutable_mock_env_path", "mock_packages", "mock_fetch", "mutable_config")
 class TestDevelop:
     def check_develop(self, env, spec, path=None, build_dir=None):
-        path = path or spec.name
+        path = spack.util.path.substitute_path_variables(path) if path else spec.name
 
         # check in memory representation
         assert spec.name in env.dev_specs

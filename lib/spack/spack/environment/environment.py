@@ -488,7 +488,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=F
             # only rewrite when we have a path-based repository
             if not isinstance(entry, str):
                 continue
-            repo_path = substitute_path_variables(entry)
+            repo_path = str(entry)  # wipe out mark to not change directory in this case
             expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)

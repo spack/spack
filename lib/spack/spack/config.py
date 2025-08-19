@@ -818,6 +818,8 @@ class Configuration:
         Note that the memoization cache for this function is cleared whenever
         any function decorated with ``@_config_mutator`` is called.
         """
+        from spack.util.path import substitute_path_variables
+
         _validate_section_name(section)
 
         if scope is not None and _merged_scope is not None:
@@ -862,6 +864,23 @@ class Configuration:
                 updated_scopes.append(config_scope)
 
             merged_section = spack.schema.merge_yaml(merged_section, data)
+
+        def substitute_vars(s):
+            if isinstance(s, syaml.syaml_str):
+                ret = syaml.syaml_str(substitute_path_variables(s))
+                syaml.mark(ret, s)
+                return ret
+            elif isinstance(s, str):
+                return substitute_path_variables(s)
+            elif isinstance(s, dict):
+                for k, v in s.items():
+                    s[k] = substitute_vars(v)
+            elif isinstance(s, list):
+                for i, item in enumerate(s):
+                    s[i] = substitute_vars(item)
+            return s
+
+        substitute_vars(merged_section)
 
         self.updated_scopes_by_section[section] = updated_scopes
 

@@ -732,10 +732,7 @@ class RepoPath:
     def from_config(config: spack.config.Configuration) -> "RepoPath":
         """Create a RepoPath from a configuration object."""
         overrides = {
-            pkg_name: {
-                k: spack.util.path.substitute_path_variables(v) if isinstance(v, str) else v
-                for k, v in data["package_attributes"].items()
-            }
+            pkg_name: data["package_attributes"]
             for pkg_name, data in config.get_config("packages").items()
             if pkg_name != "all" and "package_attributes" in data
         }
