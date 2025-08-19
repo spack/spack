@@ -514,15 +514,15 @@ def substitute_version(path: str, new_version) -> str:
 
     .. code-block:: python
 
-       substitute_version('http://www.mr511.de/software/libelf-0.8.13.tar.gz', '2.9.3')
-       >>> 'http://www.mr511.de/software/libelf-2.9.3.tar.gz'
+       substitute_version("http://www.mr511.de/software/libelf-0.8.13.tar.gz", "2.9.3")
+       >>> "http://www.mr511.de/software/libelf-2.9.3.tar.gz"
 
     Complex example:
 
     .. code-block:: python
 
-       substitute_version('https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz', '2.3')
-       >>> 'https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz'
+       substitute_version("https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz", "2.3")
+       >>> "https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz"
     """
     (name, ns, nl, noffs, ver, vs, vl, voffs) = substitution_offsets(path)
 

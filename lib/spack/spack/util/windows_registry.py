@@ -312,7 +312,7 @@ class WindowsRegistryView:
                             all keys meeting stop condition. If false, once stop
                             condition is met, the key that triggered the condition '
                             is returned.
-            recusrive: boolean value, if True perform a recursive search of subkeys
+            recursive: boolean value, if True perform a recursive search of subkeys
         Return:
             the key if stop_condition is triggered, or None if not
         """
@@ -331,13 +331,13 @@ class WindowsRegistryView:
                     queue.extend(key.subkeys)
             return collection if collection else None
 
-    def find_subkey(self, subkey_name, recursive=True):
+    def find_subkey(self, subkey_name: str, recursive: bool = True):
         """Perform a BFS of subkeys until desired key is found
         Returns None or RegistryKey object corresponding to requested key name
 
         Args:
-            subkey_name (str): subkey to be searched for
-            recursive (bool):  perform a recursive search
+            subkey_name: subkey to be searched for
+            recursive:  perform a recursive search
         Return:
             the desired subkey as a RegistryKey object, or none
         """
@@ -345,13 +345,13 @@ class WindowsRegistryView:
             WindowsRegistryView.KeyMatchConditions.name_matcher(subkey_name), recursive=recursive
         )
 
-    def find_matching_subkey(self, subkey_name, recursive=True):
+    def find_matching_subkey(self, subkey_name: str, recursive: bool = True):
         """Perform a BFS of subkeys until a key matching subkey name regex is found
         Returns None or the first RegistryKey object corresponding to requested key name
 
         Args:
-            subkey_name (str): subkey to be searched for
-            recursive (bool):  perform a recursive search
+            subkey_name: subkey to be searched for
+            recursive:  perform a recursive search
         Return:
             the desired subkey as a RegistryKey object, or none
         """
@@ -359,12 +359,12 @@ class WindowsRegistryView:
             WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), recursive=recursive
         )
 
-    def find_subkeys(self, subkey_name, recursive=True):
+    def find_subkeys(self, subkey_name: str, recursive: bool = True):
         """Exactly the same as find_subkey, except this function tries to match
         a regex to multiple keys
 
         Args:
-            subkey_name (str)
+            subkey_name: subkey to be searched for
         Return:
             the desired subkeys as a list of RegistryKey object, or none
         """
@@ -373,14 +373,14 @@ class WindowsRegistryView:
             WindowsRegistryView.KeyMatchConditions.regex_matcher(subkey_name), **kwargs
         )
 
-    def find_value(self, val_name, recursive=True):
+    def find_value(self, val_name: str, recursive: bool = True):
         """
         If non recursive, return RegistryValue object corresponding to name
 
         Args:
-            val_name (str): name of value desired from registry
-            recursive (bool): optional argument, if True, the registry is searched recursively
-                              for the value of name val_name, else only the current key is searched
+            val_name: name of value desired from registry
+            recursive: optional argument, if True, the registry is searched recursively
+                       for the value of name val_name, else only the current key is searched
         Return:
             The desired registry value as a RegistryValue object if it exists, otherwise, None
         """

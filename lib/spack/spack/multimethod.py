@@ -226,7 +226,6 @@ class when:
                 # do something special when this is built with OpenMPI for
                 # its MPI implementations.
 
-
             def install(self, prefix):
                 # Do common install stuff
                 self.setup()

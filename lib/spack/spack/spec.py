@@ -1588,7 +1588,7 @@ class Spec:
     @property
     def is_develop(self):
         """Return whether the Spec represents a user-developed package
-        in a Spack ``Environment`` (i.e. using `spack develop`).
+        in a Spack Environment (i.e. using `spack develop`).
         """
         return bool(self.variants.get("dev_path", False))
 
@@ -1635,7 +1635,7 @@ class Spec:
 
     def edges_from_dependents(
         self,
-        name=None,
+        name: Optional[str] = None,
         depflag: dt.DepFlag = dt.ALL,
         *,
         virtuals: Optional[Union[str, Sequence[str]]] = None,
@@ -1644,7 +1644,7 @@ class Spec:
         to parents.
 
         Args:
-            name (str): filter dependents by package name
+            name: filter dependents by package name
             depflag: allowed dependency types
             virtuals: allowed virtuals
         """
@@ -1654,7 +1654,7 @@ class Spec:
 
     def edges_to_dependencies(
         self,
-        name=None,
+        name: Optional[str] = None,
         depflag: dt.DepFlag = dt.ALL,
         *,
         virtuals: Optional[Union[str, Sequence[str]]] = None,
@@ -1702,7 +1702,7 @@ class Spec:
 
     def dependencies(
         self,
-        name=None,
+        name: Optional[str] = None,
         deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL,
         *,
         virtuals: Optional[Union[str, Sequence[str]]] = None,
@@ -1721,12 +1721,12 @@ class Spec:
         ]
 
     def dependents(
-        self, name=None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
+        self, name: Optional[str] = None, deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL
     ) -> List["Spec"]:
         """Return a list of direct dependents (nodes in the DAG).
 
         Args:
-            name (str): filter dependents by package name
+            name: filter dependents by package name
             deptype: allowed dependency types
         """
         if not isinstance(deptype, dt.DepFlag):
@@ -2249,7 +2249,7 @@ class Spec:
 
     @property
     def cshort_spec(self):
-        """Returns an auto-colorized version of ``self.short_spec``."""
+        """Returns an auto-colorized version of :py:attr:`short_spec`."""
         return self.cformat("{name}{@version}{variants}{ arch=architecture}{/hash:7}")
 
     @property
@@ -2269,11 +2269,11 @@ class Spec:
     def set_prefix(self, value: str) -> None:
         self._prefix = spack.util.prefix.Prefix(spack.llnl.path.convert_to_platform_path(value))
 
-    def spec_hash(self, hash):
+    def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
         """Utility method for computing different types of Spec hashes.
 
         Arguments:
-            hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
+            hash: type of hash to generate.
         """
         # TODO: currently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
@@ -2405,55 +2405,66 @@ class Spec:
 
         self._dup(self.lookup_hash())
 
-    def to_node_dict(self, hash=ht.dag_hash):
+    def to_node_dict(
+        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
+    ) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
 
         ``to_node_dict`` creates the content that is eventually hashed by
         Spack to create identifiers like the DAG hash (see
-        ``dag_hash()``).  Example result of ``to_node_dict`` for the
+        :py:func:`dag_hash()`).  Example result of ``to_node_dict`` for the
         ``sqlite`` package::
 
             {
-                'sqlite': {
-                    'version': '3.28.0',
-                    'arch': {
-                        'platform': 'darwin',
-                        'platform_os': 'mojave',
-                        'target': 'x86_64',
+                "name": "sqlite",
+                "version": "3.46.0",
+                "arch": {"platform": "linux", "platform_os": "ubuntu24.04", "target": "x86_64_v3"},
+                "namespace": "builtin",
+                "parameters": {
+                    "build_system": "autotools",
+                    "column_metadata": True,
+                    "dynamic_extensions": True,
+                    "fts": True,
+                    "functions": False,
+                    "rtree": True,
+                    "cflags": [],
+                    "cppflags": [],
+                    "cxxflags": [],
+                    "fflags": [],
+                    "ldflags": [],
+                    "ldlibs": [],
+                },
+                "package_hash": "umcghjlve5347o3q2odo7vfcso2zhxdzmfdba23nkdhe5jntlhia====",
+                "dependencies": [
+                    {
+                        "name": "compiler-wrapper",
+                        "hash": "c5bxlim3zge4snwrwtd6rzuvq2unek6s",
+                        "parameters": {"deptypes": ("build",), "virtuals": ()},
                     },
-                    'namespace': 'builtin',
-                    'parameters': {
-                        'fts': 'true',
-                        'functions': 'false',
-                        'cflags': [],
-                        'cppflags': [],
-                        'cxxflags': [],
-                        'fflags': [],
-                        'ldflags': [],
-                        'ldlibs': [],
+                    {
+                        "name": "gcc",
+                        "hash": "6dzveld2rtt2dkhklxfnery5wbtb5uus",
+                        "parameters": {"deptypes": ("build",), "virtuals": ("c",)},
                     },
-                    'dependencies': {
-                        'readline': {
-                            'hash': 'zvaa4lhlhilypw5quj3akyd3apbq5gap',
-                            'type': ['build', 'link'],
-                        }
-                    },
-                }
+                    ...
+                ],
+                "annotations": {"original_specfile_version": 5},
             }
+
 
         Note that the dictionary returned does *not* include the hash of
         the *root* of the spec, though it does include hashes for each
         dependency, and (optionally) the package file corresponding to
         each node.
 
-        See ``to_dict()`` for a "complete" spec hash, with hashes for
+        See :py:func:`to_dict()` for a "complete" spec hash, with hashes for
         each node and nodes for each dependency (instead of just their
         hashes).
 
         Arguments:
-            hash (spack.hash_types.SpecHashDescriptor) type of hash to generate.
+            hash: type of hash to generate.
         """
-        d = {"name": self.name}
+        d: Dict[str, Any] = {"name": self.name}
 
         if self.versions:
             d.update(self.versions.to_dict())
@@ -2464,7 +2475,7 @@ class Spec:
         if self.namespace:
             d["namespace"] = self.namespace
 
-        params = dict(sorted(v.yaml_entry() for v in self.variants.values()))
+        params: Dict[str, Any] = dict(sorted(v.yaml_entry() for v in self.variants.values()))
 
         # Only need the string compiler flag for yaml file
         params.update(
@@ -2557,66 +2568,61 @@ class Spec:
 
         return d
 
-    def to_dict(self, hash=ht.dag_hash):
+    def to_dict(
+        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
+    ) -> Dict[str, Any]:
         """Create a dictionary suitable for writing this spec to YAML or JSON.
 
-        This dictionaries like the one that is ultimately written to a
-        ``spec.json`` file in each Spack installation directory.  For
-        example, for sqlite::
+        This dictionary is like the one that is ultimately written to a ``spec.json`` file in each
+        Spack installation directory.  For example, for sqlite::
 
             {
-            "spec": {
-                "_meta": {
-                "version": 2
-                },
-                "nodes": [
-                {
-                    "name": "sqlite",
-                    "version": "3.34.0",
-                    "arch": {
-                    "platform": "darwin",
-                    "platform_os": "catalina",
-                    "target": "x86_64"
-                    },
-                    "compiler": {
-                    "name": "apple-clang",
-                    "version": "11.0.0"
-                    },
-                    "namespace": "builtin",
-                    "parameters": {
-                    "column_metadata": true,
-                    "fts": true,
-                    "functions": false,
-                    "rtree": false,
-                    "cflags": [],
-                    "cppflags": [],
-                    "cxxflags": [],
-                    "fflags": [],
-                    "ldflags": [],
-                    "ldlibs": []
-                    },
-                    "dependencies": [
-                    {
-                        "name": "readline",
-                        "hash": "4f47cggum7p4qmp3xna4hi547o66unva",
-                        "type": [
-                        "build",
-                        "link"
-                        ]
-                    },
-                    {
-                        "name": "zlib",
-                        "hash": "uvgh6p7rhll4kexqnr47bvqxb3t33jtq",
-                        "type": [
-                        "build",
-                        "link"
-                        ]
-                    }
+                "spec": {
+                    "_meta": {"version": 5},
+                    "nodes": [
+                        {
+                            "name": "sqlite",
+                            "version": "3.46.0",
+                            "arch": {
+                                "platform": "linux",
+                                "platform_os": "ubuntu24.04",
+                                "target": "x86_64_v3"
+                            },
+                            "namespace": "builtin",
+                            "parameters": {
+                                "build_system": "autotools",
+                                "column_metadata": True,
+                                "dynamic_extensions": True,
+                                "fts": True,
+                                "functions": False,
+                                "rtree": True,
+                                "cflags": [],
+                                "cppflags": [],
+                                "cxxflags": [],
+                                "fflags": [],
+                                "ldflags": [],
+                                "ldlibs": [],
+                            },
+                            "package_hash": "umcghjlve5347o...xdzmfdba23nkdhe5jntlhia====",
+                            "dependencies": [
+                                {
+                                    "name": "compiler-wrapper",
+                                    "hash": "c5bxlim3zge4snwrwtd6rzuvq2unek6s",
+                                    "parameters": {"deptypes": ("build",), "virtuals": ()},
+                                },
+                                {
+                                    "name": "gcc",
+                                    "hash": "6dzveld2rtt2dkhklxfnery5wbtb5uus",
+                                    "parameters": {"deptypes": ("build",), "virtuals": ("c",)},
+                                },
+                                ...
+                            ],
+                            "annotations": {"original_specfile_version": 5},
+                            "hash": "a2ubvvqnula6zdppckwqrjf3zmsdzpoh",
+                        },
+                        ...
                     ],
-                    "hash": "tve45xfqkfgmzwcyfetze2z6syrg7eaf",
-                },
-                    # ... more node dicts for readline and its dependencies ...
-                ]
+                }
             }
 
         Note that this dictionary starts with the 'spec' key, and what
@@ -2629,15 +2635,8 @@ class Spec:
         spec, but if ``package_hash`` were true there would be an
         additional field on each node called ``package_hash``.
 
-        ``from_dict()`` can be used to read back in a spec that has been
+        :py:func:`from_dict()` can be used to read back in a spec that has been
         converted to a dictionary, serialized, and read back in.
-
-        Arguments:
-            deptype (tuple or str): dependency types to include when
-                traversing the spec.
-            package_hash (bool): whether to include package content
-                hashes in the dictionary.
-
         """
         node_list = []  # Using a list to preserve preorder traversal for hash.
         hash_set = set()
@@ -2658,7 +2657,9 @@ class Spec:
 
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
-    def node_dict_with_hashes(self, hash=ht.dag_hash):
+    def node_dict_with_hashes(
+        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
+    ) -> Dict[str, Any]:
         """Returns a node_dict of this spec with the dag hash added.  If this
         spec is concrete, the full hash is added as well.  If 'build' is in
         the hash_type, the build hash is also added."""
@@ -2718,7 +2719,7 @@ class Spec:
         return new_spec
 
     @staticmethod
-    def from_literal(spec_dict, normal=True):
+    def from_literal(spec_dict: dict, normal: bool = True) -> "Spec":
         """Builds a Spec from a dictionary containing the spec literal.
 
         The dictionary must have a single top level key, representing the root,
@@ -2728,62 +2729,53 @@ class Spec:
         Spec and the dependency types.
 
         Args:
-            spec_dict (dict): the dictionary containing the spec literal
-            normal (bool): if True the same key appearing at different levels
+            spec_dict: the dictionary containing the spec literal
+            normal: if :data:`True` the same key appearing at different levels
                 of the ``spec_dict`` will map to the same object in memory.
 
         Examples:
-            A simple spec ``foo`` with no dependencies:
+            A simple spec ``foo`` with no dependencies::
 
-            .. code-block:: python
+                {"foo": None}
 
-                {'foo': None}
+            A spec ``foo`` with a ``(build, link)`` dependency ``bar``::
 
-            A spec ``foo`` with a ``(build, link)`` dependency ``bar``:
+                {"foo":
+                    {"bar:build,link": None}
+                }
 
-            .. code-block:: python
+            A spec with a diamond dependency and various build types::
 
-                {'foo':
-                    {'bar:build,link': None}}
-
-            A spec with a diamond dependency and various build types:
-
-            .. code-block:: python
-
-                {'dt-diamond': {
-                    'dt-diamond-left:build,link': {
-                        'dt-diamond-bottom:build': None
+                {"dt-diamond": {
+                    "dt-diamond-left:build,link": {
+                        "dt-diamond-bottom:build": None
                     },
-                    'dt-diamond-right:build,link': {
-                        'dt-diamond-bottom:build,link,run': None
+                    "dt-diamond-right:build,link": {
+                        "dt-diamond-bottom:build,link,run": None
                     }
                 }}
 
             The same spec with a double copy of ``dt-diamond-bottom`` and
-            no diamond structure:
+            no diamond structure::
 
-            .. code-block:: python
-
-                {'dt-diamond': {
-                    'dt-diamond-left:build,link': {
-                        'dt-diamond-bottom:build': None
+                Spec.from_literal({"dt-diamond": {
+                    "dt-diamond-left:build,link": {
+                        "dt-diamond-bottom:build": None
                     },
-                    'dt-diamond-right:build,link': {
-                        'dt-diamond-bottom:build,link,run': None
+                    "dt-diamond-right:build,link": {
+                        "dt-diamond-bottom:build,link,run": None
                     }
                 }, normal=False}
 
-            Constructing a spec using a Spec object as key:
+            Constructing a spec using a Spec object as key::
 
-            .. code-block:: python
-
-                mpich = Spec('mpich')
-                libelf = Spec('libelf@1.8.11')
+                mpich = Spec("mpich")
+                libelf = Spec("libelf@1.8.11")
                 expected_normalized = Spec.from_literal({
-                    'mpileaks': {
-                        'callpath': {
-                            'dyninst': {
-                                'libdwarf': {libelf: None},
+                    "mpileaks": {
+                        "callpath": {
+                            "dyninst": {
+                                "libdwarf": {libelf: None},
                                 libelf: None
                             },
                             mpich: None
@@ -2976,11 +2968,8 @@ class Spec:
         return True
 
     @staticmethod
-    def ensure_no_deprecated(root):
-        """Raise if a deprecated spec is in the dag.
-
-        Args:
-            root (Spec): root spec to be analyzed
+    def ensure_no_deprecated(root: "Spec") -> None:
+        """Raise if a deprecated spec is in the dag of the given root spec.
 
         Raises:
             spack.spec.SpecDeprecatedError: if any deprecated spec is found
@@ -3123,11 +3112,8 @@ class Spec:
                 substitute_abstract_variants(spec)
 
     @staticmethod
-    def ensure_valid_variants(spec):
-        """Ensures that the variant attached to a spec are valid.
-
-        Args:
-            spec (Spec): spec to be analyzed
+    def ensure_valid_variants(spec: "Spec") -> None:
+        """Ensures that the variant attached to the given spec are valid.
 
         Raises:
             spack.variant.UnknownVariantError: on the first unknown variant found
@@ -3771,8 +3757,8 @@ class Spec:
         """Make a copy of this spec.
 
         Args:
-            deps: Defaults to True. If boolean, controls
-                whether dependencies are copied (copied if True). If a
+            deps: Defaults to :data:`True`. If boolean, controls
+                whether dependencies are copied (copied if :data:`True`). If a
                 DepTypes or DepFlag is provided, *only* matching dependencies are copied.
             kwargs: additional arguments for internal use (passed to ``_dup``).
 
@@ -3791,7 +3777,7 @@ class Spec:
 
             Only build and run dependencies::
 
-                deps=('build', 'run'):
+                deps=("build", "run"):
 
         """
         clone = Spec.__new__(Spec)
@@ -4084,25 +4070,29 @@ class Spec:
         If the attribute in a format specifier evaluates to ``None``, then the format
         specifier will evaluate to the empty string, ``""``.
 
-        Commonly used attributes of the Spec for format strings include::
+        Commonly used attributes of the Spec for format strings include:
 
-            name
-            version
-            compiler_flags
-            compilers
-            variants
-            architecture
-            architecture.platform
-            architecture.os
-            architecture.target
-            prefix
-            namespace
+        .. code-block:: text
 
-        Some additional special-case properties can be added::
+           name
+           version
+           compiler_flags
+           compilers
+           variants
+           architecture
+           architecture.platform
+           architecture.os
+           architecture.target
+           prefix
+           namespace
 
-            hash[:len]    The DAG hash with optional length argument
-            spack_root    The spack root directory
-            spack_install The spack install directory
+        Some additional special-case properties can be added:
+
+        .. code-block:: text
+
+           hash[:len]    The DAG hash with optional length argument
+           spack_root    The spack root directory
+           spack_install The spack install directory
 
         The ``^`` sigil can be used to access dependencies by name.
         ``s.format({^mpi.name})`` will print the name of the MPI implementation in the
@@ -4110,22 +4100,22 @@ class Spec:
 
         The ``@``, ``%``, and ``/`` sigils can be used to include the sigil with the
         printed string. These sigils may only be used with the appropriate attributes,
-        listed below::
+        listed below:
 
-            @        ``{@version}``, ``{@compiler.version}``
-            %        ``{%compiler}``, ``{%compiler.name}``
-            /        ``{/hash}``, ``{/hash:7}``, etc
+        * ``@``: ``{@version}``, ``{@compiler.version}``
+        * ``%``: ``{%compiler}``, ``{%compiler.name}``
+        * ``/``: ``{/hash}``, ``{/hash:7}``, etc
 
         The ``@`` sigil may also be used for any other property named ``version``.
         Sigils printed with the attribute string are only printed if the attribute
         string is non-empty, and are colored according to the color of the attribute.
 
         Variants listed by name naturally print with their sigil. For example,
-        ``spec.format('{variants.debug}')`` prints either ``+debug`` or ``~debug``
+        ``spec.format("{variants.debug}")`` prints either ``+debug`` or ``~debug``
         depending on the name of the variant. Non-boolean variants print as
         ``name=value``. To print variant names or values independently, use
-        ``spec.format('{variants.<name>.name}')`` or
-        ``spec.format('{variants.<name>.value}')``.
+        ``spec.format("{variants.<name>.name}")`` or
+        ``spec.format("{variants.<name>.value}")``.
 
         There are a few attributes on specs that can be specified as key-value pairs
         that are *not* variants, e.g.: ``os``, ``arch``, ``architecture``, ``target``,
@@ -4136,11 +4126,13 @@ class Spec:
         When formatting specs, key-value pairs are separated from preceding parts of the
         spec by whitespace. To avoid printing extra whitespace when the formatted
         attribute is not set, you can add whitespace to the key *inside* the braces of
-        the format string, e.g.::
+        the format string, e.g.:
 
-            { namespace=namespace}
+        .. code-block:: text
 
-        This evaluates to `` namespace=builtin`` if ``namespace`` is set to ``builtin``,
+           { namespace=namespace}
+
+        This evaluates to ``" namespace=builtin"`` if ``namespace`` is set to ``builtin``,
         and to ``""`` if ``namespace`` is ``None``.
 
         Spec format strings use ``\`` as the escape character. Use ``\{`` and ``\}`` for
@@ -4278,12 +4270,12 @@ class Spec:
 
     @property
     def spack_root(self):
-        """Special field for using ``{spack_root}`` in Spec.format()."""
+        """Special field for using ``{spack_root}`` in :py:func:`format`."""
         return spack.paths.spack_root
 
     @property
     def spack_install(self):
-        """Special field for using ``{spack_install}`` in Spec.format()."""
+        """Special field for using ``{spack_install}`` in :py:func:`format`."""
         return spack.store.STORE.layout.root
 
     def format_path(
@@ -4617,8 +4609,8 @@ class Spec:
 
         Returns: a concrete, spliced version of the current Spec
 
-        When transitive is "True", use the dependencies from "other" to reconcile
-        conflicting dependencies. When transitive is "False", use dependencies from self.
+        When transitive is :data:`True`, use the dependencies from "other" to reconcile
+        conflicting dependencies. When transitive is :data:`False`, use dependencies from self.
 
         For example, suppose we have the following dependency graph:
 
@@ -4630,8 +4622,8 @@ class Spec:
 
         Spec ``T`` depends on ``H`` and ``Z``, and ``H`` also depends on ``Z``. Now we want to use
         a different ``H``, called ``H'``. This function can be used to splice in ``H'`` to
-        create a new spec, called ``T*``. If ``H'`` was built with ``Z'``, then transitive
-        "True" will ensure ``H'`` and ``T*`` both depend on ``Z'``:
+        create a new spec, called ``T*``. If ``H'`` was built with ``Z'``, then ``transitive=True``
+        will ensure ``H'`` and ``T*`` both depend on ``Z'``:
 
         .. code-block:: text
 
@@ -4639,7 +4631,7 @@ class Spec:
            | \\
            Z'<-H'
 
-        If transitive is "False", then ``H'`` and ``T*`` will both depend on
+        If ``transitive=False``, then ``H'`` and ``T*`` will both depend on
         the original ``Z``, resulting in a new ``H'*``:
 
         .. code-block:: text

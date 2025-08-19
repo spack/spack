@@ -717,7 +717,8 @@ class EnvironmentModifications:
         return len(old_mods) != len(new_mods)
 
     def is_unset(self, variable_name: str) -> bool:
-        """Returns True if the last modification to a variable is to unset it, False otherwise."""
+        """Returns :data:`True` if the last modification to a variable is to unset it,
+        :data:`False` otherwise."""
         modifications = self.group_by_name()
         if variable_name not in modifications:
             return False

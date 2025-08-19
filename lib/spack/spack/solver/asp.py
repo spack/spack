@@ -12,6 +12,7 @@ import json
 import os
 import pathlib
 import pprint
+import random
 import re
 import sys
 import typing
@@ -1381,11 +1382,12 @@ class ConditionContext(SourceContext):
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
+    gen: "ProblemInstanceBuilder"
+
     def __init__(self, tests: bool = False):
         self.possible_graph = create_graph_analyzer()
 
         # these are all initialized in setup()
-        self.gen: "ProblemInstanceBuilder" = ProblemInstanceBuilder()
         self.requirement_parser = RequirementParser(spack.config.CONFIG)
         self.possible_virtuals: Set[str] = set()
 
@@ -3009,7 +3011,7 @@ class SpackSolverSetup:
         """
         reuse = reuse or []
         check_packages_exist(specs)
-        self.gen = ProblemInstanceBuilder()
+        self.gen = ProblemInstanceBuilder(randomize="SPACK_SOLVER_RANDOMIZATION" in os.environ)
 
         # Compute possible compilers first, so we can record which dependencies they might inject
         _ = spack.compilers.config.all_compilers(init_config=True)
@@ -3446,10 +3448,14 @@ class ProblemInstanceBuilder:
     >>> problem_instance = builder.value()
 
     The problem instance can be added directly to the "control" structure of clingo.
+
+    Arguments:
+        randomize: whether to randomize the order of facts to the solver. Useful for benchmarking.
     """
 
-    def __init__(self):
-        self.asp_problem = []
+    def __init__(self, randomize: bool = False) -> None:
+        self.randomize = randomize
+        self.asp_problem: List[str] = []
 
     def fact(self, atom: AspFunction) -> None:
         self.asp_problem.append(f"{atom}.\n")
@@ -3458,12 +3464,8 @@ class ProblemInstanceBuilder:
         self.asp_problem.append(rule)
 
     def title(self, header: str, char: str) -> None:
-        self.asp_problem.append("\n")
-        self.asp_problem.append("%" + (char * 76))
-        self.asp_problem.append("\n")
-        self.asp_problem.append(f"% {header}\n")
-        self.asp_problem.append("%" + (char * 76))
-        self.asp_problem.append("\n")
+        sep = char * 76
+        self.asp_problem.append(f"\n%{sep}\n% {header}\n%{sep}\n")
 
     def h1(self, header: str) -> None:
         self.title(header, "=")
@@ -3478,6 +3480,8 @@ class ProblemInstanceBuilder:
         self.asp_problem.append("\n")
 
     def value(self) -> str:
+        if self.randomize:
+            random.shuffle(self.asp_problem)
         return "".join(self.asp_problem)
 
 
