@@ -2249,7 +2249,7 @@ class Spec:
 
     @property
     def cshort_spec(self):
-        """Returns an auto-colorized version of :py:attr:`short_spec`."""
+        """Returns an auto-colorized version of :attr:`short_spec`."""
         return self.cformat("{name}{@version}{variants}{ arch=architecture}{/hash:7}")
 
     @property
@@ -4258,12 +4258,12 @@ class Spec:
 
     @property
     def spack_root(self):
-        """Special field for using ``{spack_root}`` in :py:meth:`format`."""
+        """Special field for using ``{spack_root}`` in :meth:`format`."""
         return spack.paths.spack_root
 
     @property
     def spack_install(self):
-        """Special field for using ``{spack_install}`` in :py:meth:`format`."""
+        """Special field for using ``{spack_install}`` in :meth:`format`."""
         return spack.store.STORE.layout.root
 
     def format_path(
@@ -4272,16 +4272,15 @@ class Spec:
         format_string: str,
         _path_ctor: Optional[Callable[[Any], pathlib.PurePath]] = None,
     ) -> str:
-        """Given a `format_string` that is intended as a path, generate a string
-        like from :py:meth:`format`, but eliminate extra path separators introduced by
-        formatting of Spec properties.
+        """Given a `format_string` that is intended as a path, generate a string like from
+        :meth:`format`, but eliminate extra path separators introduced by formatting of Spec
+        properties.
 
         Path separators explicitly added to the string are preserved, so for example
-        ``{name}/{version}`` would generate a directory based on the Spec's name, and
-        a subdirectory based on its version; this function guarantees though that
-        the resulting string would only have two directories (i.e. that if under
-        normal circumstances that ``str(self.version)`` would contain a path
-        separator, it would not in this case).
+        ``{name}/{version}`` would generate a directory based on the Spec's name, and a
+        subdirectory based on its version; this function guarantees though that the resulting
+        string would only have two directories (i.e. that if under normal circumstances that
+        ``str(self.version)`` would contain a path separator, it would not in this case).
         """
         format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
         if re.search(format_component_with_sep, format_string):
@@ -4588,14 +4587,14 @@ class Spec:
                 break
 
     def splice(self, other: "Spec", transitive: bool = True) -> "Spec":
-        """Returns a new, spliced concrete :py:class:`Spec` with the ``other`` dependency and,
+        """Returns a new, spliced concrete :class:`Spec` with the ``other`` dependency and,
         optionally, its dependencies.
 
         Args:
             other: alternate dependency
             transitive: include other's dependencies
 
-        Returns: a concrete, spliced version of the current :py:class:`Spec`
+        Returns: a concrete, spliced version of the current :class:`Spec`
 
         When transitive is :data:`True`, use the dependencies from ``other`` to reconcile
         conflicting dependencies. When transitive is :data:`False`, use dependencies from self.
@@ -4628,7 +4627,7 @@ class Spec:
            | \\
            Z<-H'*
 
-        Provenance of the build is tracked through the :py:attr:`build_spec` property
+        Provenance of the build is tracked through the :attr:`build_spec` property
         of the spliced spec and any correspondingly modified dependency specs.
         The build specs are set to that of the original spec, so the original
         spec's provenance is preserved unchanged."""

@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple
 from urllib.request import Request
 
 import spack
@@ -41,7 +41,6 @@ from spack import traverse
 from spack.error import SpackError
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
-from spack.version import GitVersion, StandardVersion
 
 from .common import (
     IS_WINDOWS,
@@ -93,19 +92,17 @@ def get_change_revisions(path: str) -> Tuple[Optional[str], Optional[str]]:
         return None, None
 
 
-def get_added_versions(
-    checksums_version_dict: Dict[str, Union[StandardVersion, GitVersion]],
-    path: str,
-    from_ref: str = "HEAD~1",
-    to_ref: str = "HEAD",
-) -> List[Union[StandardVersion, GitVersion]]:
-    """Get a list of the versions added between `from_ref` and `to_ref`.
+def filter_added_checksums(
+    checksums: Iterable[str], path: str, from_ref: str = "HEAD~1", to_ref: str = "HEAD"
+) -> List[str]:
+    """Get a list of the version checksums added between `from_ref` and `to_ref`.
+
     Args:
-       checksums_version_dict (Dict): all package versions keyed by known checksums.
-       path (str): path to the package.py
-       from_ref (str): oldest git ref, defaults to `HEAD~1`
-       to_ref (str): newer git ref, defaults to `HEAD`
-    Returns: list of versions added between refs
+       checksums: an iterable of checksums to look for in the diff
+       path: path to the package.py
+       from_ref: oldest git ref, defaults to `HEAD~1`
+       to_ref: newer git ref, defaults to `HEAD`
+    Returns: list of version checksums added between refs
     """
     git_exe = spack.util.git.git(required=True)
 
@@ -115,13 +112,13 @@ def get_added_versions(
     # Store added and removed versions
     # Removed versions are tracked here to determine when versions are moved in a file
     # and show up as both added and removed in a git diff.
-    added_checksums = set()
-    removed_checksums = set()
+    added_checksums: Set[str] = set()
+    removed_checksums: Set[str] = set()
 
     # Scrape diff for modified versions and prune added versions if they show up
     # as also removed (which means they've actually just moved in the file and
     # we shouldn't need to rechecksum them)
-    for checksum in checksums_version_dict.keys():
+    for checksum in checksums:
         for line in diff_lines:
             if checksum in line:
                 if line.startswith("+"):
@@ -129,7 +126,7 @@ def get_added_versions(
                 if line.startswith("-"):
                     removed_checksums.add(checksum)
 
-    return [checksums_version_dict[c] for c in added_checksums - removed_checksums]
+    return list(added_checksums - removed_checksums)
 
 
 def stack_changed(env_path: str) -> bool:
