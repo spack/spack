@@ -2017,29 +2017,19 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     def inject_flags(cls: Type[Pb], name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
-        """
-        flag_handler that injects all flags through the compiler wrapper.
-        """
+        """See :func:`spack.package.inject_flags`."""
         return flags, None, None
 
     @classmethod
     def env_flags(cls: Type[Pb], name: str, flags: Iterable[str]) -> FLAG_HANDLER_RETURN_TYPE:
-        """
-        flag_handler that adds all flags to canonical environment variables.
-        """
+        """See :func:`spack.package.env_flags`."""
         return None, flags, None
 
     @classmethod
     def build_system_flags(
         cls: Type[Pb], name: str, flags: Iterable[str]
     ) -> FLAG_HANDLER_RETURN_TYPE:
-        """
-        flag_handler that passes flags to the build system arguments.  Any
-        package using `build_system_flags` must also implement
-        `flags_to_build_system_args`, or derive from a class that
-        implements it.  Currently, AutotoolsPackage and CMakePackage
-        implement it.
-        """
+        """See :func:`spack.package.build_system_flags`."""
         return None, None, flags
 
     def setup_run_environment(self, env: spack.util.environment.EnvironmentModifications) -> None:
@@ -2322,11 +2312,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Get the rpath args as a string, with -Wl,-rpath, for each element
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
-
-
-inject_flags = PackageBase.inject_flags
-env_flags = PackageBase.env_flags
-build_system_flags = PackageBase.build_system_flags
 
 
 def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -> bool:

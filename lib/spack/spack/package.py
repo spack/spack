@@ -119,13 +119,7 @@ from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import default_args, when
 from spack.operating_systems.linux_distro import kernel_version
 from spack.operating_systems.mac_os import macos_version
-from spack.package_base import (
-    PackageBase,
-    build_system_flags,
-    env_flags,
-    inject_flags,
-    on_package_attributes,
-)
+from spack.package_base import PackageBase, on_package_attributes
 from spack.package_completions import (
     bash_completion_path,
     fish_completion_path,
@@ -233,6 +227,50 @@ def filter_system_paths(paths: Iterable[str]) -> List[str]:
         "spack.package.filter_system_paths is deprecated", category=SpackAPIWarning, stacklevel=2
     )
     return _filter_system_paths(paths)
+
+
+#: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags
+#: are passed to the build system. This can be used in any package that derives from a build system
+#: class that implements :meth:`spack.package_base.PackageBase.flags_to_build_system_args`.
+#:
+#: See also :func:`env_flags` and :func:`inject_flags`.
+#:
+#: Example::
+#:
+#:     from spack.package import *
+#:
+#:     class MyPackage(CMakePackage):
+#:         flag_handler = build_system_flags
+build_system_flags = PackageBase.build_system_flags
+
+#: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags
+#: are set as canonical environment variables.
+#:
+#: See also :func:`build_system_flags` and :func:`inject_flags`.
+#:
+#: Example::
+#:
+#:     from spack.package import *
+#:
+#:     class MyPackage(MakefilePackage):
+#:         flag_handler = env_flags
+env_flags = PackageBase.env_flags
+
+
+#: This is the default value of :attr:`spack.package_base.PackageBase.flag_handler`, which tells
+#: Spack to inject compiler flags through the compiler wrappers, which means that the build system
+#: will not see them directly. This is typically a good default, but in rare case you may need to
+#: use :func:`env_flags` or :func:`build_system_flags` instead.
+#:
+#: See also :func:`build_system_flags` and :func:`env_flags`.
+#:
+#: Example::
+#:
+#:     from spack.package import *
+#:
+#:     class MyPackage(MakefilePackage):
+#:         flag_handler = inject_flags
+inject_flags = PackageBase.inject_flags
 
 
 api: Dict[str, Tuple[str, ...]] = {
