@@ -1069,6 +1069,7 @@ class classproperty(Generic[ClassPropertyType]):
 
     def __init__(self, callback: Callable[[Any], ClassPropertyType]) -> None:
         self.callback = callback
+        self.__doc__ = callback.__doc__
 
     def __get__(self, instance, owner) -> ClassPropertyType:
         return self.callback(owner)
