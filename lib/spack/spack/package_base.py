@@ -600,6 +600,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Class level dictionary populated by :func:`~spack.directives.depends_on` and
     #: :func:`~spack.directives.extends` directives
     dependencies: Dict[spack.spec.Spec, Dict[str, spack.dependency.Dependency]]
+    #: Class level dictionary populated by :func:`~spack.directives.extends` directives
+    extendees: Dict[str, Tuple[spack.spec.Spec, spack.spec.Spec]]
     #: Class level dictionary populated by :func:`~spack.directives.conflicts` directives
     conflicts: Dict[spack.spec.Spec, List[Tuple[spack.spec.Spec, Optional[str]]]]
     #: Class level dictionary populated by :func:`~spack.directives.requires` directives
