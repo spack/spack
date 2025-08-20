@@ -1502,7 +1502,7 @@ complete -c spack -n '__fish_spack_using_command_pos_remainder 0 edit' -f -a '(_
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -f -a path
-complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -d 'edit the build system with the supplied name'
+complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -d 'edit the build system with the supplied name or fullname'
 complete -c spack -n '__fish_spack_using_command edit' -s c -l command -f -a path
 complete -c spack -n '__fish_spack_using_command edit' -s c -l command -d 'edit the command with the supplied name'
 complete -c spack -n '__fish_spack_using_command edit' -s d -l docs -f -a path
@@ -1512,9 +1512,9 @@ complete -c spack -n '__fish_spack_using_command edit' -s t -l test -d 'edit the
 complete -c spack -n '__fish_spack_using_command edit' -s m -l module -f -a path
 complete -c spack -n '__fish_spack_using_command edit' -s m -l module -d 'edit the main spack module with the supplied name'
 complete -c spack -n '__fish_spack_using_command edit' -s r -l repo -r -f -a repo
-complete -c spack -n '__fish_spack_using_command edit' -s r -l repo -r -d 'path to repo to edit package in'
+complete -c spack -n '__fish_spack_using_command edit' -s r -l repo -r -d 'path to repo to edit package or build system in'
 complete -c spack -n '__fish_spack_using_command edit' -s N -l namespace -r -f -a namespace
-complete -c spack -n '__fish_spack_using_command edit' -s N -l namespace -r -d 'namespace of package to edit'
+complete -c spack -n '__fish_spack_using_command edit' -s N -l namespace -r -d 'namespace of package or build system to edit'
 
 # spack env
 set -g __fish_spack_optspecs_spack_env h/help

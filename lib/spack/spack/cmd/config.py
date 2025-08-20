@@ -219,7 +219,16 @@ def config_edit(args):
     the active environment.
     """
     spack_env = os.environ.get(ev.spack_env_var)
-    if spack_env and not args.scope:
+    env_error = ev.environment._active_environment_error
+
+    if env_error and args.scope:
+        # Cannot use scopes beyond the environment itself with a failed environment
+        raise env_error
+    elif env_error:
+        # The rest of the config system wasn't set up fully, but spack.main was allowed
+        # to progress so the user can open the malformed environment file
+        config_file = env_error.filename
+    elif spack_env and not args.scope:
         # Don't use the scope object for envs, as `config edit` can be called
         # for a malformed environment. Use SPACK_ENV to find spack.yaml.
         config_file = ev.manifest_file(spack_env)

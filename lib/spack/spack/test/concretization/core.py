@@ -4052,3 +4052,45 @@ packages:
         s = spack.concretize.concretize_one(spec_str)
         assert s.external
         assert s.prefix == "/path/mpich/gcc"
+
+
+@pytest.mark.regression("51146,51067")
+def test_caret_in_input_cannot_set_transitive_build_dependencies(default_mock_concretization):
+    """Tests that a caret in the input spec does not set transitive build dependencies, and errors
+    with an appropriate message.
+    """
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="transitive 'link' or"):
+        _ = default_mock_concretization("multivalue-variant ^gmake")
+
+
+@pytest.mark.regression("51167")
+@pytest.mark.require_provenance
+@pytest.mark.xfail(reason="This is a bug in the solver, related to the 'commit=' variant")
+def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypatch):
+    """Tests that an implicit commit variant, obtained from resolving the commit sha of a branch,
+    enters the hash of the spec.
+    """
+
+    first_call = True
+
+    def _mock_resolve(pkg_self) -> None:
+        if first_call:
+            pkg_self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
+                "commit", f"{'b' * 40}"
+            )
+            return
+
+        pkg_self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
+            "commit", f"{'a' * 40}"
+        )
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "resolve_binary_provenance", _mock_resolve)
+
+    before = spack.concretize.concretize_one("git-ref-package@develop")
+    first_call = False
+    after = spack.concretize.concretize_one("git-ref-package@develop")
+
+    assert before.package.needs_commit(before.version)
+    assert before.satisfies(f"commit={'b' * 40}")
+    assert after.satisfies(f"commit={'a' * 40}")
+    assert before.dag_hash() != after.dag_hash()

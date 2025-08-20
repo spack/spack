@@ -131,18 +131,6 @@ So in the spec:
 
 ``dep1`` is a direct dependency of ``root``, while both ``dep2`` and ``dep3`` are direct dependencies of ``transitive``.
 
-.. admonition:: Windows Spec Syntax Caveats
-   :class: note
-
-   Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells.
-   Spack's spec dependency syntax uses the carat (``^``) character; however, this is an escape string in CMD, so it must be escaped with an additional carat (i.e., ``^^``).
-   CMD also will attempt to interpret strings with ``=`` characters in them.
-   Any spec including this symbol must double-quote the string.
-
-   Note: All of these issues are unique to CMD; they can be avoided by using PowerShell.
-
-   For more context on these caveats, see the related issues: `carat <https://github.com/spack/spack/issues/42833>`_ and `equals <https://github.com/spack/spack/issues/43348>`_.
-
 Below are more details about the specifiers that you can add to specs.
 
 .. _version-specifier:
@@ -303,27 +291,6 @@ If the intent is to enable *only* the specified fabrics, then the:
    fabrics:=verbs,ofi
 
 syntax should be used with the ``:=`` operator.
-
-.. admonition:: Alternative ways to deactivate Boolean Variants
-   :class: note
-
-   In certain shells, the ``~`` character expands to the home directory.
-   To avoid these issues, avoid whitespace between the package name and the variant:
-
-   .. code-block:: spec
-
-      mpileaks ~debug   # shell may try to substitute this!
-      mpileaks~debug    # use this instead
-
-   Alternatively, you can use the ``-`` character to disable a variant, but be aware that this requires a space between the package name and the variant:
-
-   .. code-block:: spec
-
-      mpileaks-debug     # wrong: refers to a package named "mpileaks-debug"
-      mpileaks -debug    # right: refers to a package named mpileaks with debug disabled
-
-   As a last resort, ``debug=False`` can also be used to disable a boolean variant.
-
 
 
 Variant propagation to dependencies
@@ -652,3 +619,45 @@ We can express conditional constraint by specifying the ``when`` edge attribute:
    $ spack install hdf5 ^[when=+mpi] mpich@3.1
 
 This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
+
+Specs on the command line
+-------------------------
+
+The characters used in the spec syntax were chosen to work well with most shells.
+However, there are cases where the shell may interpret the spec before Spack gets a chance to parse it, leading to unexpected results.
+Here we document two such cases, and how to avoid them.
+
+Unix shells
+^^^^^^^^^^^
+
+On Unix-like systems, the shell may expand ``~foo`` to the home directory of a user named ``foo``, so Spack won't see it as a :ref:`disabled boolean variant <basic-variants>` ``foo``.
+To work around this without quoting, you can avoid whitespace between the package name and boolean variants:
+
+.. code-block:: spec
+
+   mpileaks ~debug   # shell may expand this to `mpileaks /home/debug`
+   mpileaks~debug    # use this instead
+   
+Alternatively, you can use a hyphen ``-`` character to disable a variant, but be aware that this *requires* a space between the package name and the variant:
+
+.. code-block:: spec
+
+   mpileaks-debug     # wrong: refers to a package named "mpileaks-debug"
+   mpileaks -debug    # right: refers to a package named mpileaks with debug disabled
+
+As a last resort, ``debug=False`` can also be used to disable a boolean variant.
+
+Windows CMD
+^^^^^^^^^^^
+
+In Windows CMD, the caret ``^`` is an escape character, and needs itself escaping.
+Similarly, the equals ``=`` character has special meaning in CMD.
+
+To use the caret and equals characters in a spec, you can quote and escape them like this:
+
+.. code-block:: console
+
+   C:\> spack install mpileaks "^^libelf" "foo=bar"
+
+These issues are not present in PowerShell.
+See GitHub issue `#42833 <https://github.com/spack/spack/issues/42833>`_ and `#43348 <https://github.com/spack/spack/issues/43348>`_ for more details.

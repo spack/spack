@@ -193,6 +193,13 @@ build_dependency_of_literal_node(LiteralNode, node(X, BuildDependency)) :-
 condition_set(node(min_dupe_id, Root), LiteralNode) :- literal_node(Root, LiteralNode).
 condition_set(LiteralNode, BuildNode) :- build_dependency_of_literal_node(LiteralNode, BuildNode).
 
+% Generate a comprehensible error for cases like 'foo ^bar' where 'bar' is a build dependency
+% of a transitive dependency of 'foo'
+error(1, "{0} is not a direct 'build' or 'test' dependency, or transitive 'link' or 'run' dependency of any root", Literal)
+  :- literal_node(RootPackage, node(X, Literal)),
+     not depends_on(node(min_dupe_id, RootPackage), node(X, Literal)),
+     not unification_set("root", node(X, Literal)).
+
 :- build_dependency_of_literal_node(LiteralNode, BuildNode),
    not attr("depends_on", LiteralNode, BuildNode, "build").
 
@@ -309,7 +316,7 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
    version_weight(node(ID, Package), Weight),
    not pkg_fact(Package, version_declared(Version, Weight, "installed")),
    not pkg_fact(Package, version_declared(Version, Weight, "installed_git_version")),
-   not build(node(ID, Package)),
+   concrete(node(ID, Package)),
    internal_error("Build version weight used for reused package").
 
 1 { version_weight(node(ID, Package), Weight) : pkg_fact(Package, version_declared(Version, Weight)) } 1
@@ -372,19 +379,11 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
 % corresponding spec attributes hold.
 
 % A "condition_set(PackageNode, _)" is the set of nodes on which PackageNode can require / impose conditions
-% Currently, for a given node, this is the link-run sub-DAG of PackageNode and its direct build dependencies
-condition_set(PackageNode, PackageNode, direct_link_run) :- attr("node", PackageNode).
-
-condition_set(PackageNode, PackageNode, direct_link_run) :- provider(PackageNode, VirtualNode).
-condition_set(PackageNode, VirtualNode, direct_link_run) :- provider(PackageNode, VirtualNode).
-
-condition_set(PackageNode, DependencyNode, direct_build) :- condition_set(PackageNode, PackageNode, direct_link_run), attr("depends_on", PackageNode, DependencyNode, "build").
-condition_set(PackageNode, DependencyNode, direct_link_run) :- condition_set(PackageNode, PackageNode, direct_link_run), attr("depends_on", PackageNode, DependencyNode, Type), Type != "build".
-
-condition_set(ID, VirtualNode, Type) :- condition_set(ID, PackageNode, Type), provider(PackageNode, VirtualNode).
-
-condition_set(ID, PackageNode) :- condition_set(ID, PackageNode, _).
-
+condition_set(PackageNode, PackageNode) :- attr("node", PackageNode).
+condition_set(PackageNode, PackageNode) :- provider(PackageNode, VirtualNode).
+condition_set(PackageNode, VirtualNode) :- provider(PackageNode, VirtualNode).
+condition_set(PackageNode, DependencyNode) :- condition_set(PackageNode, PackageNode), depends_on(PackageNode, DependencyNode).
+condition_set(ID, VirtualNode) :- condition_set(ID, PackageNode), provider(PackageNode, VirtualNode).
 condition_set(VirtualNode, X) :- provider(PackageNode, VirtualNode), condition_set(PackageNode, X).
 
 condition_packages(ID, A1) :- condition_requirement(ID, _, A1).
@@ -434,18 +433,19 @@ condition_holds(ConditionID, node(X, Package))
   :- pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
      trigger_condition_holds(TriggerID, node(X, Package)).
 
-trigger_and_effect(Package, TriggerID, EffectID)
+trigger_and_effect(Package, ID, TriggerID, EffectID)
   :- pkg_fact(Package, condition_trigger(ID, TriggerID)),
      pkg_fact(Package, condition_effect(ID, EffectID)).
+
+trigger_and_effect(Package, TriggerID, EffectID) :- trigger_and_effect(Package, ID, TriggerID, EffectID).
 
 % condition_holds(ID, node(ID, Package)) implies all imposed_constraints, unless do_not_impose(ID, node(ID, Package))
 % is derived. This allows imposed constraints to be canceled in special cases.
 
 % Effects of direct conditions hold if the trigger holds
 impose(EffectID, node(X, Package))
-  :- pkg_fact(Package, condition_effect(ConditionID, EffectID)),
-     not subcondition(ConditionID, _),
-     trigger_and_effect(Package, TriggerID, EffectID),
+  :- not subcondition(ConditionID, _),
+     trigger_and_effect(Package, ConditionID, TriggerID, EffectID),
      trigger_node(TriggerID, _, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
@@ -453,11 +453,10 @@ impose(EffectID, node(X, Package))
 % Effects of subconditions hold if the trigger holds and the
 % primary condition holds
 impose(EffectID, node(X, Package))
-  :- pkg_fact(Package, condition_effect(SubconditionId, EffectID)),
-     subcondition(SubconditionID, ConditionID),
+  :- subcondition(SubconditionID, ConditionID),
      condition_holds(ConditionID, ConditionNode),
      condition_set(ConditionNode, node(X, Package)),
-     trigger_and_effect(Package, TriggerID, EffectID),
+     trigger_and_effect(Package, SubconditionID, TriggerID, EffectID),
      trigger_node(TriggerID, _, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
@@ -469,8 +468,7 @@ imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, "depends_on", _, A1, _).
 
 imposed_nodes(EffectID, node(NodeID, Package), node(X, A1))
-  :- pkg_fact(Package, condition_trigger(ID, TriggerID)),
-     pkg_fact(Package, condition_effect(ID, EffectID)),
+  :- trigger_and_effect(Package, TriggerID, EffectID),
      imposed_packages(EffectID, A1),
      condition_set(node(NodeID, Package), node(X, A1)),
      trigger_node(TriggerID, _, node(NodeID, Package)),
@@ -674,12 +672,12 @@ attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual)
   :- impose(ID, node(X, A1)),
      depends_on(node(X, A1), node(Y, A2)),
      imposed_constraint(ID, "virtual_on_edge", A1, A2, Virtual),
-     not build(node(X, A1)).
+     concrete(node(X, A1)).
 
 virtual_condition_holds(node(Y, A2), Virtual)
   :- impose(ID, node(X, A1)),
      attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual),
-     not build(node(X, A1)).
+     concrete(node(X, A1)).
 
 % Simplified virtual information for conditionl requirements in
 % conditional dependencies
@@ -1679,8 +1677,8 @@ error(10, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Targ
      target_not_supported(Compiler, Version, Target),
      build(node(X, Package)).
 
-#defined target_supported/2.
-#defined target_not_supported/2.
+#defined target_supported/3.
+#defined target_not_supported/3.
 
 % if a target is set explicitly, respect it
 attr("node_target", PackageNode, Target)
@@ -1803,7 +1801,6 @@ impose(Hash, PackageNode) :- attr("hash", PackageNode, Hash), attr("node", Packa
 % If there is not a hash for a package, we build it.
 build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 
-
 % Minimizing builds is tricky. We want a minimizing criterion
 
 % because we want to reuse what is avaialble, but
@@ -1828,7 +1825,7 @@ treat_node_as_concrete(node(X, Package)) :- attr("node", node(X, Package)), runt
 
 build_priority(PackageNode, 200) :- build(PackageNode), attr("node", PackageNode), not treat_node_as_concrete(PackageNode).
 build_priority(PackageNode, 0)   :- build(PackageNode), attr("node", PackageNode), treat_node_as_concrete(PackageNode).
-build_priority(PackageNode, 0)   :- not build(PackageNode), attr("node", PackageNode).
+build_priority(PackageNode, 0)   :- concrete(PackageNode), attr("node", PackageNode).
 
 % don't assign versions from installed packages unless reuse is enabled
 % NOTE: that "installed" means the declared version was only included because
