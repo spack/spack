@@ -1072,32 +1072,27 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 "is missing a git ref (commit, tag or branch)"
             )
 
-        # get class definition that includes config modifiers
-        pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
-
         # Look for commits in the following places:
         # 1) stage,                (cheap, local, static)
         # 2) mirror archive file,  (cheapish, local, staticish)
         # 3) URL                   (cheap, remote, dynamic)
         # If users pre-stage, or use a mirror they can expect consistent commit resolution
         sha = None
-        fetcher = fs.for_package_version(pkg_class, spec.version)
-        stage = fetcher.stage
+        fetcher = fs.for_package_version(cls(spec), spec.version)
+        with spack.stage.Stage(fetcher) as stage:
+            if stage.expanded:
+                sha = spack.util.git.get_commit_sha(stage.source_path, ref)
 
-        # check
-        if stage.expanded:
-            sha = spack.util.git.get_commit_sha(stage.source_path, ref)
-
-        if not sha:
-            try:
-                stage.fetch(mirror_only=True)
-            except spack.error.FetchError:
-                pass
-            if stage.archive_file:
-                sha = spack.util.archive.retrieve_commit_from_archive(stage.archive_file, ref)
+            if not sha:
+                try:
+                    stage.fetch(mirror_only=True)
+                except spack.error.FetchError:
+                    pass
+                if stage.archive_file:
+                    sha = spack.util.archive.retrieve_commit_from_archive(stage.archive_file, ref)
 
         if not sha:
-            url = pkg_class.version_or_package_attr("git", spec.version)
+            url = cls.version_or_package_attr("git", spec.version)
             sha = spack.util.git.get_commit_sha(url, ref)
 
         if sha:
