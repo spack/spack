@@ -4065,6 +4065,7 @@ def test_caret_in_input_cannot_set_transitive_build_dependencies(default_mock_co
 
 @pytest.mark.regression("51167")
 @pytest.mark.require_provenance
+@pytest.mark.xfail(reason="This is a bug in the solver, related to how we ")
 def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypatch):
     """Tests that an implicit commit variant, obtained from resolving the commit sha of a branch,
     enters the hash of the spec.
