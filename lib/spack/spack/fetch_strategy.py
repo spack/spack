@@ -298,10 +298,13 @@ class URLFetchStrategy(FetchStrategy):
     @_needs_stage
     def _fetch_urllib(self, url, chunk_size=65536):
         save_file = self.stage.save_filename
+        timeout = spack.config.get("config:connect", 0)
+        if self.extra_options:
+            timeout = self.extra_options.get("timeout", timeout)
         downloader = UrllibDownloader(chunk_size=chunk_size)
         try:
             tty.msg(f"Fetching {url}")
-            downloader.download_file(url=url, saved_file=save_file)
+            downloader.download_file(url=url, saved_file=save_file, timeout=timeout)
         except OSError as e:
             # clean up archive on failure.
             if self.archive_file:
@@ -315,13 +318,14 @@ class URLFetchStrategy(FetchStrategy):
         config_args = config_args or []
         save_file = self.stage.save_filename
         cookie, timeout = None, 0
+        timeout = spack.config.get("config:connect", 0)
         if self.extra_options:
             cookie = self.extra_options.get("cookie")
-            timeout = self.extra_options.get("timeout")
+            timeout = self.extra_options.get("timeout", timeout)
 
         downloader = CurlDownloader(cookie=cookie, timeout=timeout, config_args=config_args)
         try:
-            downloader.download_file(url=url, saved_file=save_file)
+            downloader.download_file(url=url, saved_file=save_file, timeout=timeout)
         except spack.error.FetchError as e:
             raise FailedDownloadError(e) from e
 

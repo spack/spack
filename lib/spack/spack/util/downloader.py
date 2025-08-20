@@ -28,12 +28,13 @@ class DownloadInfo(NamedTuple):
 class Downloader:
     """Interface for downloading files."""
 
-    def download_file(self, *, url, saved_file) -> DownloadInfo:
+    def download_file(self, *, url, saved_file, timeout: Optional[int] = None) -> DownloadInfo:
         """Downloads a file from the specified URL and saves it to the given path.
 
         Args:
             url: the URL from which the file should be downloaded.
             saved_file: the local file path where the downloaded file will be saved.
+            timeout: timeout in seconds for the download.
 
         Returns:
             DownloadInfo: An object containing details about the downloaded file,
@@ -49,13 +50,13 @@ class UrllibDownloader(Downloader):
     def __init__(self, *, chunk_size=65536):
         self.chunk_size = chunk_size
 
-    def download_file(self, *, url: str, saved_file: str) -> DownloadInfo:
+    def download_file(self, *, url: str, saved_file: str, timeout: Optional[int] = None) -> DownloadInfo:
         request = urllib.request.Request(url, headers={"User-Agent": SPACK_USER_AGENT})
 
         if os.path.lexists(saved_file):
             os.remove(saved_file)
 
-        response = urlopen(request)
+        response = urlopen(request, timeout=timeout)
         progress = FetchProgress.from_headers(response.headers, enabled=sys.stdout.isatty())
         with open(saved_file, "wb") as f:
             while True:
@@ -100,7 +101,7 @@ class CurlDownloader(Downloader):
             CurlDownloader._curl_exe = require_curl()
         return CurlDownloader._curl_exe
 
-    def download_file(self, *, url: str, saved_file: str) -> DownloadInfo:
+    def download_file(self, *, url: str, saved_file: str, timeout: Optional[int] = None) -> DownloadInfo:
         saved_file_dir = os.path.dirname(saved_file)
         partial_file = saved_file + ".part"
 
