@@ -242,9 +242,8 @@ class URLFetchStrategy(FetchStrategy):
 
     url_attr = "url"
 
-    # these are checksum types. The generic 'checksum' is deprecated for
-    # specific hash names, but we need it for backward compatibility
-    optional_attrs = [*crypto.hashes.keys(), "checksum"]
+    #: Checksum types
+    optional_attrs = [*crypto.hashes.keys()]
 
     def __init__(
         self,
@@ -252,25 +251,29 @@ class URLFetchStrategy(FetchStrategy):
         url: str,
         checksum: Optional[str] = None,
         fetch_options: Optional[FetchOptions] = None,
+        mirrors: Optional[List[str]] = None,
+        expand: bool = True,
+        extension: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
 
-        self.mirrors = kwargs.get("mirrors", [])
-        # digest can be set as the first argument, or from an explicit kwarg by the hash name
+        self.mirrors = mirrors or []
+        # The generic 'checksum' is deprecated for specific hash names,
+        # but we need it for backward compatibility
         self.digest: Optional[str] = checksum
         for h in self.optional_attrs:
             if h in kwargs:
                 self.digest = kwargs[h]
 
-        self.expand_archive: bool = kwargs.get("expand", True)
+        self.expand_archive = expand
 
         self.timeout, self.cookie = default_timeout(), None
         if fetch_options:
             self.timeout = fetch_options.get("timeout", self.timeout)
             self.cookie = fetch_options.get("cookie", None)
 
-        self.extension: Optional[str] = kwargs.get("extension", None)
+        self.extension: Optional[str] = extension
         self._download_info = DownloadInfo(url=url, effective_url=url, path="", headers="")
 
     @property
