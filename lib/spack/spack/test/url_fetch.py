@@ -224,10 +224,10 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == url
         assert fetch_strategy.digest == digest
-        assert fetch_strategy.extra_options == {}
+        assert fetch_strategy.timeout == 10
         s.package.fetch_options = {"timeout": 60}
         fetch_strategy = fs.from_list_url(s.package)
-        assert fetch_strategy.extra_options == {"timeout": 60}
+        assert fetch_strategy.timeout == 60
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
@@ -251,10 +251,10 @@ def test_new_version_from_list_url(
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == tarball
         assert fetch_strategy.digest == digest
-        assert fetch_strategy.extra_options == {}
+        assert fetch_strategy.timeout == 10
         s.package.fetch_options = {"timeout": 60}
         fetch_strategy = fs.from_list_url(s.package)
-        assert fetch_strategy.extra_options == {"timeout": 60}
+        assert fetch_strategy.timeout == 60
 
 
 def test_nosource_from_list_url(mock_packages, config):
@@ -329,7 +329,7 @@ def test_url_extra_fetch(tmp_path: pathlib.Path, mutable_config, mock_archive, _
     ],
 )
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method):
+def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method, config):
     """Tests that candidate urls include mirrors and that they go through
     pattern matching and substitution for versions.
     """
@@ -337,10 +337,10 @@ def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method
         pkg = pkg_factory(url, urls)
         f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
         assert f.candidate_urls == expected
-        assert f.extra_options == {}
+        assert f.timeout == 10
         pkg = pkg_factory(url, urls, fetch_options={"timeout": 60})
         f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
-        assert f.extra_options == {"timeout": 60}
+        assert f.timeout == 60
 
 
 @pytest.mark.regression("19673")

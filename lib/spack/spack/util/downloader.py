@@ -86,15 +86,8 @@ class CurlDownloader(Downloader):
 
     _curl_exe: Optional[Executable] = None
 
-    def __init__(
-        self,
-        *,
-        config_args: Optional[List[str]] = None,
-        cookie: Optional[str] = None,
-        timeout: int = 0,
-    ):
+    def __init__(self, *, config_args: Optional[List[str]] = None, cookie: Optional[str] = None):
         self.cookie = cookie
-        self.timeout = timeout
         self.config_args: List[str] = config_args or []
 
     @property
@@ -108,7 +101,6 @@ class CurlDownloader(Downloader):
     ) -> DownloadInfo:
         saved_file_dir = os.path.dirname(saved_file)
         partial_file = saved_file + ".part"
-
         save_args = [
             "-C",
             "-",  # continue partial downloads

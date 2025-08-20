@@ -34,6 +34,8 @@ import urllib.response
 from pathlib import PurePath
 from typing import List, Optional
 
+from spack.vendor.typing_extensions import TypedDict
+
 import spack.config
 import spack.error
 import spack.llnl.url
@@ -219,6 +221,17 @@ class BundleFetchStrategy(FetchStrategy):
         """BundlePackages don't have a mirror id."""
 
 
+class FetchOptions(TypedDict, total=False):
+    cookie: str
+    timeout: int
+
+
+def default_timeout():
+    if spack.config.CONFIG is None:
+        return 30
+    return spack.config.CONFIG.get("config:connect_timeout", 30)
+
+
 @fetcher
 class URLFetchStrategy(FetchStrategy):
     """URLFetchStrategy pulls source code from a URL for an archive, check the
@@ -233,7 +246,14 @@ class URLFetchStrategy(FetchStrategy):
     # specific hash names, but we need it for backward compatibility
     optional_attrs = [*crypto.hashes.keys(), "checksum"]
 
-    def __init__(self, *, url: str, checksum: Optional[str] = None, **kwargs) -> None:
+    def __init__(
+        self,
+        *,
+        url: str,
+        checksum: Optional[str] = None,
+        fetch_options: Optional[FetchOptions] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
 
         self.mirrors = kwargs.get("mirrors", [])
@@ -244,7 +264,12 @@ class URLFetchStrategy(FetchStrategy):
                 self.digest = kwargs[h]
 
         self.expand_archive: bool = kwargs.get("expand", True)
-        self.extra_options: dict = kwargs.get("fetch_options", {})
+
+        self.timeout, self.cookie = default_timeout(), None
+        if fetch_options:
+            self.timeout = fetch_options.get("timeout", self.timeout)
+            self.cookie = fetch_options.get("cookie", None)
+
         self.extension: Optional[str] = kwargs.get("extension", None)
         self._download_info = DownloadInfo(url=url, effective_url=url, path="", headers="")
 
@@ -302,14 +327,11 @@ class URLFetchStrategy(FetchStrategy):
     @_needs_stage
     def _fetch_urllib(self, url, chunk_size=65536):
         save_file = self.stage.save_filename
-        timeout = spack.config.get("config:connect", 0)
-        if self.extra_options:
-            timeout = self.extra_options.get("timeout", timeout)
         downloader = UrllibDownloader(chunk_size=chunk_size)
         try:
             tty.msg(f"Fetching {url}")
             self._download_info = downloader.download_file(
-                url=url, saved_file=save_file, timeout=timeout
+                url=url, saved_file=save_file, timeout=self.timeout
             )
         except OSError as e:
             # clean up archive on failure.
@@ -323,16 +345,10 @@ class URLFetchStrategy(FetchStrategy):
     def _fetch_curl(self, url, config_args=None):
         config_args = config_args or []
         save_file = self.stage.save_filename
-        cookie, timeout = None, 0
-        timeout = spack.config.get("config:connect", 0)
-        if self.extra_options:
-            cookie = self.extra_options.get("cookie")
-            timeout = self.extra_options.get("timeout", timeout)
-
-        downloader = CurlDownloader(cookie=cookie, timeout=timeout, config_args=config_args)
+        downloader = CurlDownloader(cookie=self.cookie, config_args=config_args)
         try:
             self._download_info = downloader.download_file(
-                url=url, saved_file=save_file, timeout=timeout
+                url=url, saved_file=save_file, timeout=self.timeout
             )
         except spack.error.FetchError as e:
             raise FailedDownloadError(e) from e

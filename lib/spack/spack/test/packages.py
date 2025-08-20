@@ -316,7 +316,8 @@ def test_fetch_options(version_str, digest_end, extra_options):
     fetcher = spack.fetch_strategy.for_package_version(pkg_factory("fetch-options"), version_str)
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.digest == leading_zeros + digest_end
-    assert fetcher.extra_options == extra_options
+    for attr_name, attr_value in extra_options.items():
+        assert getattr(fetcher, attr_name) == attr_value
 
 
 def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):
