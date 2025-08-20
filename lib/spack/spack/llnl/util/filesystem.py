@@ -706,7 +706,7 @@ def copy(src: str, dest: str, _permissions: bool = False) -> None:
 
 
 @system_path_filter
-def install(src: str, dest: str):
+def install(src: str, dest: str) -> None:
     """Install the file(s) ``src`` to the file or directory ``dest``.
 
     Same as :py:func:`copy` with the addition of setting proper
@@ -858,13 +858,13 @@ def install_tree(
 
 
 @system_path_filter
-def is_exe(path):
+def is_exe(path) -> bool:
     """Returns :obj:`True` iff the specified path exists, is a regular file, and has executable
     permissions for the current process."""
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
-def has_shebang(path):
+def has_shebang(path) -> bool:
     """Returns whether a path has a shebang line. Returns False if the file cannot be opened."""
     try:
         with open(path, "rb") as f:
@@ -994,7 +994,7 @@ def longest_existing_parent(path: str) -> Tuple[str, List[str]]:
 
 
 @system_path_filter
-def force_remove(*paths):
+def force_remove(*paths: str) -> None:
     """Remove files without printing errors.  Like ``rm -f``, does NOT
     remove directories."""
     for path in paths:
@@ -1150,7 +1150,7 @@ def touchp(path):
 
 
 @system_path_filter
-def force_symlink(src, dest):
+def force_symlink(src: str, dest: str) -> None:
     """Create a symlink at ``dest`` pointing to ``src``. Similar to ``ln -sf``."""
     try:
         symlink(src, dest)
@@ -1160,7 +1160,7 @@ def force_symlink(src, dest):
 
 
 @system_path_filter
-def join_path(prefix, *args):
+def join_path(prefix, *args) -> str:
     """Alias for :func:`os.path.join`"""
     path = str(prefix)
     for elt in args:
@@ -2893,11 +2893,16 @@ def remove_directory_contents(dir):
 
 @contextmanager
 @system_path_filter
-def keep_modification_time(*filenames):
+def keep_modification_time(*filenames: str) -> Generator[None, None, None]:
     """
     Context manager to keep the modification timestamps of the input files.
     Tolerates and has no effect on non-existent files and files that are
     deleted by the nested code.
+
+    Example::
+
+        with keep_modification_time("file1.txt", "file2.txt"):
+            # do something that modifies file1.txt and file2.txt
 
     Parameters:
         *filenames: one or more files that must have their modification

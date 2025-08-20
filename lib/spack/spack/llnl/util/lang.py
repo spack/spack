@@ -130,6 +130,13 @@ def union_dicts(*dicts):
 def memoized(func):
     """Decorator that caches the results of a function, storing them in
     an attribute of that function.
+
+    Example::
+
+        @memoized
+        def expensive_computation(x):
+            # Some expensive computation
+            return result
     """
     return functools.lru_cache(maxsize=None)(func)
 

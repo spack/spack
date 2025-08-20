@@ -653,7 +653,7 @@ def disjoint_sets(*sets: Tuple[str, ...]) -> DisjointSetsOfValues:
     See also :func:`any_combination_of` and :func:`auto_or_any_combination_of`.
 
     Args:
-        *sets:
+        *sets: sets of allowed values, each set is a tuple of strings
 
     Returns:
         a properly initialized instance of :class:`~spack.variant.DisjointSetsOfValues`

@@ -889,7 +889,9 @@ def license(
 
 
 @directive("requirements")
-def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
+def requires(
+    *requirement_specs: str, policy="one_of", when: Optional[str] = None, msg: Optional[str] = None
+):
     """Declare that a spec must be satisfied for a package.
 
     For instance, a package whose Fortran code can only be compiled with GCC can declare::
@@ -902,9 +904,11 @@ def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
 
     Args:
         requirement_specs: spec expressing the requirement
+        policy: either ``"one_of"`` or ``"any_of"``. If ``"one_of"``, exactly one of the
+            requirements must be satisfied. If ``"any_of"``, at least one of the requirements must
+            be satisfied. Defaults to ``"one_of"``.
         when: optional constraint that triggers the requirement. If None the requirement
             is applied unconditionally.
-
         msg: optional user defined message
     """
 

@@ -636,13 +636,16 @@ class BuilderWithDefaults(Builder):
 def apply_macos_rpath_fixups(builder: Builder):
     """On Darwin, make installed libraries more easily relocatable.
 
-    Some build systems (handrolled, autotools, makefiles) can set their own
-    rpaths that are duplicated by spack's compiler wrapper. This fixup
-    interrogates, and postprocesses if necessary, all libraries installed
-    by the code.
+    Some build systems (handrolled, autotools, makefiles) can set their own rpaths that are
+    duplicated by spack's compiler wrapper. This fixup interrogates, and postprocesses if
+    necessary, all libraries installed by the code.
 
-    It should be added as a @run_after to packaging systems (or individual
-    packages) that do not install relocatable libraries by default.
+    It should be added as a :func:`~spack.phase_callbacks.run_after` to packaging systems (or
+    individual packages) that do not install relocatable libraries by default.
+
+    Example::
+
+        run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
 
     Args:
         builder: builder that installed the package
