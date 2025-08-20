@@ -18,6 +18,7 @@ import spack.fetch_strategy as fs
 import spack.llnl.util.tty as tty
 import spack.url
 import spack.util.crypto as crypto
+import spack.util.downloader
 import spack.util.executable
 import spack.util.web as web_util
 import spack.version
@@ -31,6 +32,8 @@ def missing_curl(monkeypatch):
     def require_curl():
         raise spack.error.FetchError("curl is required but not found")
 
+    monkeypatch.setattr(spack.util.downloader.CurlDownloader, "_curl_exe", None)
+    monkeypatch.setattr(spack.util.downloader, "require_curl", require_curl)
     monkeypatch.setattr(web_util, "require_curl", require_curl)
 
 
@@ -123,7 +126,7 @@ def test_fetch_curl_options(tmp_path: pathlib.Path, mock_archive, monkeypatch):
             assert args[1:3] == ("-k", "-q")
             raise StopIteration
 
-        monkeypatch.setattr(type(fetcher.curl), "__call__", check_args)
+        monkeypatch.setattr(spack.util.web.Executable, "__call__", check_args)
 
         with Stage(fetcher, path=str(tmp_path)):
             assert fetcher.archive_file is None
