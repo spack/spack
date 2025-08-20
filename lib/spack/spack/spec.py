@@ -1353,7 +1353,7 @@ def tree(
         depth: print the depth from the root
         hashes: if True, print the hash of each node
         hashlen: length of the hash to be printed
-        cover: either "nodes" or "edges"
+        cover: either ``"nodes"`` or ``"edges"``
         indent: extra indentation for the tree being printed
         format: format to be used to print each node
         deptypes: dependency types to be represented in the tree
@@ -2410,9 +2410,8 @@ class Spec:
     ) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
 
-        ``to_node_dict`` creates the content that is eventually hashed by
-        Spack to create identifiers like the DAG hash (see
-        :py:func:`dag_hash()`).  Example result of ``to_node_dict`` for the
+        This method creates the content that is eventually hashed by Spack to create identifiers
+        like the DAG hash (see :meth:`dag_hash()`). Example result of this function for the
         ``sqlite`` package::
 
             {
@@ -2452,14 +2451,11 @@ class Spec:
             }
 
 
-        Note that the dictionary returned does *not* include the hash of
-        the *root* of the spec, though it does include hashes for each
-        dependency, and (optionally) the package file corresponding to
-        each node.
+        Note that the dictionary returned does *not* include the hash of the *root* of the spec,
+        though it does include hashes for each dependency and its own package hash.
 
-        See :py:func:`to_dict()` for a "complete" spec hash, with hashes for
-        each node and nodes for each dependency (instead of just their
-        hashes).
+        See :meth:`to_dict()` for a "complete" spec hash, with hashes for each node and nodes for
+        each dependency (instead of just their hashes).
 
         Arguments:
             hash: type of hash to generate.
@@ -2625,18 +2621,11 @@ class Spec:
                 }
             }
 
-        Note that this dictionary starts with the 'spec' key, and what
-        follows is a list starting with the root spec, followed by its
-        dependencies in preorder.  Each node in the list also has a
-        'hash' key that contains the hash of the node *without* the hash
-        field included.
+        Note that this dictionary starts with the ``spec`` key, and what follows is a list starting
+        with the root spec, followed by its dependencies in preorder.
 
-        In the example, the package content hash is not included in the
-        spec, but if ``package_hash`` were true there would be an
-        additional field on each node called ``package_hash``.
-
-        :py:func:`from_dict()` can be used to read back in a spec that has been
-        converted to a dictionary, serialized, and read back in.
+        The method :meth:`from_dict()` can be used to read back in a spec that has been converted
+        to a dictionary, serialized, and read back in.
         """
         node_list = []  # Using a list to preserve preorder traversal for hash.
         hash_set = set()
@@ -2660,9 +2649,8 @@ class Spec:
     def node_dict_with_hashes(
         self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
     ) -> Dict[str, Any]:
-        """Returns a node_dict of this spec with the dag hash added.  If this
-        spec is concrete, the full hash is added as well.  If 'build' is in
-        the hash_type, the build hash is also added."""
+        """Returns a node dict of this spec with the dag hash, and the provided hash (if not
+        the dag hash)."""
         node = self.to_node_dict(hash)
         # All specs have at least a DAG hash
         node[ht.dag_hash.name] = self.dag_hash()
@@ -4270,12 +4258,12 @@ class Spec:
 
     @property
     def spack_root(self):
-        """Special field for using ``{spack_root}`` in :py:func:`format`."""
+        """Special field for using ``{spack_root}`` in :py:meth:`format`."""
         return spack.paths.spack_root
 
     @property
     def spack_install(self):
-        """Special field for using ``{spack_install}`` in :py:func:`format`."""
+        """Special field for using ``{spack_install}`` in :py:meth:`format`."""
         return spack.store.STORE.layout.root
 
     def format_path(
@@ -4285,14 +4273,14 @@ class Spec:
         _path_ctor: Optional[Callable[[Any], pathlib.PurePath]] = None,
     ) -> str:
         """Given a `format_string` that is intended as a path, generate a string
-        like from `Spec.format`, but eliminate extra path separators introduced by
+        like from :py:meth:`format`, but eliminate extra path separators introduced by
         formatting of Spec properties.
 
         Path separators explicitly added to the string are preserved, so for example
-        "{name}/{version}" would generate a directory based on the Spec's name, and
+        ``{name}/{version}`` would generate a directory based on the Spec's name, and
         a subdirectory based on its version; this function guarantees though that
         the resulting string would only have two directories (i.e. that if under
-        normal circumstances that `str(Spec.version)` would contain a path
+        normal circumstances that ``str(self.version)`` would contain a path
         separator, it would not in this case).
         """
         format_component_with_sep = r"\{[^}]*[/\\][^}]*}"
@@ -4399,7 +4387,7 @@ class Spec:
             depth: print the depth from the root
             hashes: if True, print the hash of each node
             hashlen: length of the hash to be printed
-            cover: either "nodes" or "edges"
+            cover: either ``"nodes"`` or ``"edges"``
             indent: extra indentation for the tree being printed
             format: format to be used to print each node
             deptypes: dependency types to be represented in the tree
@@ -4600,16 +4588,16 @@ class Spec:
                 break
 
     def splice(self, other: "Spec", transitive: bool = True) -> "Spec":
-        """Returns a new, spliced concrete Spec with the "other" dependency and,
+        """Returns a new, spliced concrete :py:class:`Spec` with the ``other`` dependency and,
         optionally, its dependencies.
 
         Args:
             other: alternate dependency
             transitive: include other's dependencies
 
-        Returns: a concrete, spliced version of the current Spec
+        Returns: a concrete, spliced version of the current :py:class:`Spec`
 
-        When transitive is :data:`True`, use the dependencies from "other" to reconcile
+        When transitive is :data:`True`, use the dependencies from ``other`` to reconcile
         conflicting dependencies. When transitive is :data:`False`, use dependencies from self.
 
         For example, suppose we have the following dependency graph:
@@ -4640,7 +4628,7 @@ class Spec:
            | \\
            Z<-H'*
 
-        Provenance of the build is tracked through the "build_spec" property
+        Provenance of the build is tracked through the :py:attr:`build_spec` property
         of the spliced spec and any correspondingly modified dependency specs.
         The build specs are set to that of the original spec, so the original
         spec's provenance is preserved unchanged."""

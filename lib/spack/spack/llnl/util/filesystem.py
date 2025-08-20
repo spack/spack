@@ -915,11 +915,11 @@ def mkdirp(
             if not provided
         group: optional group for permissions of final created directory -- use OS
             default if not provided. Only used if world write permissions are not set
-        default_perms: one of 'parents' or 'args'. The default permissions that are set for
-            directories that are not themselves an argument for mkdirp. 'parents' means
+        default_perms: one of ``"parents"`` or ``"args"``. The default permissions that are set for
+            directories that are not themselves an argument for mkdirp. ``"parents"`` means
             intermediate directories get the permissions of their direct parent directory,
-            'args' means intermediate get the same permissions specified in the arguments to
-            mkdirp -- default value is 'args'
+            ``"args"`` means intermediate get the same permissions specified in the arguments to
+            mkdirp -- default value is ``"args"``
     """
     default_perms = default_perms or "args"
     paths = path_to_os_path(*paths)

@@ -569,7 +569,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             value: flags to be appended
-            sep: separator for the flags (default: " ")
+            sep: separator for the flags (default: ``" "``)
         """
         value = _validate_value(name, value)
         item = AppendFlagsEnv(name, value, separator=sep, trace=self._trace())
@@ -590,7 +590,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             value: flags to be removed
-            sep: separator for the flags (default: " ")
+            sep: separator for the flags (default: ``" "``)
         """
         value = _validate_value(name, value)
         item = RemoveFlagsEnv(name, value, separator=sep, trace=self._trace())

@@ -593,34 +593,40 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     compiler = DeprecatedCompiler()
 
-    #
-    # These are default values for instance variables.
-    #
-
-    # Declare versions dictionary as placeholder for values.
-    # This allows analysis tools to correctly interpret the class attributes.
+    #: Class level dictionary populated by :func:`~spack.directives.version` directives
     versions: dict
+    #: Class level dictionary populated by :func:`~spack.directives.resource` directives
     resources: Dict[spack.spec.Spec, List[Resource]]
+    #: Class level dictionary populated by :func:`~spack.directives.depends_on` and
+    #: :func:`~spack.directives.extends` directives
     dependencies: Dict[spack.spec.Spec, Dict[str, spack.dependency.Dependency]]
+    #: Class level dictionary populated by :func:`~spack.directives.conflicts` directives
     conflicts: Dict[spack.spec.Spec, List[Tuple[spack.spec.Spec, Optional[str]]]]
+    #: Class level dictionary populated by :func:`~spack.directives.requires` directives
     requirements: Dict[
         spack.spec.Spec, List[Tuple[Tuple[spack.spec.Spec, ...], str, Optional[str]]]
     ]
+    #: Class level dictionary populated by :func:`~spack.directives.provides` directives
     provided: Dict[spack.spec.Spec, Set[spack.spec.Spec]]
+    #: Class level dictionary populated by :func:`~spack.directives.provides` directives
     provided_together: Dict[spack.spec.Spec, List[Set[str]]]
+    #: Class level dictionary populated by :func:`~spack.directives.patch` directives
     patches: Dict[spack.spec.Spec, List[spack.patch.Patch]]
+    #: Class level dictionary populated by :func:`~spack.directives.variant` directives
     variants: Dict[spack.spec.Spec, Dict[str, spack.variant.Variant]]
     languages: Dict[spack.spec.Spec, Set[str]]
+    #: Class level dictionary populated by :func:`~spack.directives.license` directives
     licenses: Dict[spack.spec.Spec, str]
+    #: Class level dictionary populated by :func:`~spack.directives.can_splice` directives
     splice_specs: Dict[spack.spec.Spec, Tuple[spack.spec.Spec, Union[None, str, List[str]]]]
-
-    #: Store whether a given Spec source/binary should not be redistributed.
+    #: Class level dictionary populated by :func:`~spack.directives.redistribute` directives
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
 
     #: Must be defined as a fallback for old specs that don't have the `build_system` variant
     default_buildsystem: str
 
-    # Use :attr:`default_buildsystem` instead of this attribute, which is deprecated
+    #: Use :attr:`~spack.package_base.PackageBase.default_buildsystem` instead of this attribute,
+    #: which is deprecated
     legacy_buildsystem: str
 
     #: Must be defined in derived classes. Used when reporting the build system to users
@@ -628,24 +634,24 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
-    virtual = False
+    virtual: bool = False
 
     #: Most Spack packages are used to install source or binary code while
     #: those that do not can be used to install a set of other Spack packages.
-    has_code = True
+    has_code: bool = True
 
     #: By default we build in parallel.  Subclasses can override this.
-    parallel = True
+    parallel: bool = True
 
     #: By default do not run tests within package's install()
-    run_tests = False
+    run_tests: bool = False
 
     #: Most packages are NOT extendable. Set to True if you want extensions.
-    extendable = False
+    extendable: bool = False
 
     #: When True, add RPATHs for the entire DAG. When False, add RPATHs only
     #: for immediate dependencies.
-    transitive_rpaths = True
+    transitive_rpaths: bool = True
 
     #: List of shared objects that should be replaced with a different library at
     #: runtime. Typically includes stub libraries like ``libcuda.so``. When linking
@@ -677,7 +683,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Boolean. Set to ``True`` for packages that require a manual download.
     #: This is currently used by package sanity tests and generation of a
     #: more meaningful fetch failure error.
-    manual_download = False
+    manual_download: bool = False
 
     #: Set of additional options used when fetching package versions.
     fetch_options: Dict[str, Any] = {}
@@ -685,29 +691,29 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #
     # Set default licensing information
     #
-    #: Boolean. If set to ``True``, this software requires a license.
+    #: If set to ``True``, this software requires a license.
     #: If set to ``False``, all of the ``license_*`` attributes will
     #: be ignored. Defaults to ``False``.
-    license_required = False
+    license_required: bool = False
 
-    #: String. Contains the symbol used by the license manager to denote
+    #: Contains the symbol used by the license manager to denote
     #: a comment. Defaults to ``#``.
-    license_comment = "#"
+    license_comment: str = "#"
 
-    #: List of strings. These are files that the software searches for when
+    #: These are files that the software searches for when
     #: looking for a license. All file paths must be relative to the
     #: installation directory. More complex packages like Intel may require
     #: multiple licenses for individual components. Defaults to the empty list.
     license_files: List[str] = []
 
-    #: List of strings. Environment variables that can be set to tell the
+    #: Environment variables that can be set to tell the
     #: software where to look for a license if it is not in the usual location.
     #: Defaults to the empty list.
     license_vars: List[str] = []
 
-    #: String. A URL pointing to license setup instructions for the software.
+    #: A URL pointing to license setup instructions for the software.
     #: Defaults to the empty string.
-    license_url = ""
+    license_url: str = ""
 
     #: Verbosity level, preserved across installs.
     _verbose = None
@@ -719,9 +725,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     list_url: ClassProperty[Optional[str]] = None
 
     #: Link depth to which list_url should be searched for new versions
-    list_depth = 0
+    list_depth: int = 0
 
-    #: List of strings which contains GitHub usernames of package maintainers.
+    #: List of GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers: List[str] = []
 
@@ -733,9 +739,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: TestSuite instance used to manage stand-alone tests for 1+ specs.
     test_suite: Optional[Any] = None
 
-    def __init__(self, spec):
+    def __init__(self, spec: spack.spec.Spec) -> None:
         # this determines how the package should be built.
-        self.spec: spack.spec.Spec = spec
+        self.spec = spec
 
         # Allow custom staging paths for packages
         self.path = None
@@ -752,7 +758,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # init internal variables
         self._stage: Optional[stg.StageComposite] = None
-        self._patch_stages = []  # need to track patch stages separately, in order to apply them
+        # need to track patch stages separately, in order to apply them
+        self._patch_stages: List[stg.Stage] = []
         self._fetcher = None
         self._tester: Optional[Any] = None
 
@@ -988,15 +995,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         return last_url
 
-    def url_for_version(self, version):
-        """Returns a URL from which the specified version of this package
-        may be downloaded.
+    def url_for_version(self, version: Union[str, StandardVersion]) -> str:
+        """Returns a URL from which the specified version of this package may be downloaded.
 
-        version: class Version
-            The version for which a URL is sought.
-
-        See Class Version (version.py)
-        """
+        Arguments:
+            version: The version for which a URL is sought."""
         return self._implement_all_urls_for_version(version)[0]
 
     def _update_external_dependencies(
@@ -1159,15 +1162,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         return urls
 
-    def find_valid_url_for_version(self, version):
-        """Returns a URL from which the specified version of this package
-        may be downloaded after testing whether the url is valid. Will try
-        url, urls, and list_url before failing.
+    def find_valid_url_for_version(self, version: StandardVersion) -> Optional[str]:
+        """Returns a URL from which the specified version of this package may be downloaded after
+        testing whether the url is valid. Will try ``url``, ``urls``, and :attr:`list_url`
+        before failing.
 
-        version: class Version
-            The version for which a URL is sought.
-
-        See Class Version (version.py)
+        Arguments:
+            version: The version for which a URL is sought.
         """
         urls = self.all_urls_for_version(version)
 
@@ -1425,10 +1426,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     # TODO: allow more than one active extendee.
     @property
-    def extendee_spec(self):
-        """
-        Spec of the extendee of this package, or None if it is not an extension
-        """
+    def extendee_spec(self) -> Optional[spack.spec.Spec]:
+        """Spec of the extendee of this package, or None if it is not an extension."""
         if not self.extendees:
             return None
 
@@ -1464,7 +1463,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             # If not, then it's an extension if it *could* be an extension
             return bool(self.extendees)
 
-    def extends(self, spec):
+    def extends(self, spec: spack.spec.Spec) -> bool:
         """
         Returns True if this package extends the given spec.
 
@@ -1477,9 +1476,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if spec.name not in self.extendees:
             return False
         s = self.extendee_spec
-        return s and spec.satisfies(s)
+        return s is not None and spec.satisfies(s)
 
-    def provides(self, vpkg_name):
+    def provides(self, vpkg_name: str) -> bool:
         """
         True if this package provides a virtual package with the specified name
         """
@@ -2277,7 +2276,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     ) -> Dict[StandardVersion, str]:
         """Find remote versions of this package.
 
-        Uses ``list_url`` and any other URLs listed in the package file.
+        Uses :attr:`list_url` and any other URLs listed in the package file.
 
         Returns:
             a dictionary mapping versions to URLs

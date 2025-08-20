@@ -249,7 +249,7 @@ class MakeExecutable(Executable):
         jobs_env_supports_jobserver: bool = False,
         **kwargs,
     ) -> Optional[str]:
-        """Runs this "make" executable in a subprocess.
+        """Runs this ``make`` executable in a subprocess.
 
         Args:
             parallel: if False, parallelism is disabled
