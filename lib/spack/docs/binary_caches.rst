@@ -39,8 +39,6 @@ These tarballs and metadata files are then pushed to the provided build cache, w
 
 Here is an example where a build cache is created in a local directory named "spack-cache", to which we push the "ninja" spec:
 
-ninja-1.12.1-vmvycib6vmiofkdqgrblo7zsvp7odwut
-
 .. code-block:: console
 
     $ spack buildcache push ./spack-cache ninja
