@@ -60,19 +60,14 @@ Here's an example of an external configuration:
    packages:
      openmpi:
        externals:
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+       - spec: "openmpi@1.4.3~debug"
          prefix: /opt/openmpi-1.4.3
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+       - spec: "openmpi@1.4.3+debug"
          prefix: /opt/openmpi-1.4.3-debug
-       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.6.5-intel
 
-This example lists three installations of OpenMPI, one built with GCC,
-one built with GCC and debug information, and another built with Intel.
-If Spack is asked to build a package that uses one of these MPIs as a
-dependency, it will use the pre-installed OpenMPI in
-the given directory. Note that the specified path is the top-level
-install prefix, not the ``bin`` subdirectory.
+This example lists two installations of OpenMPI, one with debug information, and one without.
+If Spack is asked to build a package that uses one of these MPIs as a dependency, it will use the pre-installed OpenMPI in the given directory.
+Note that the specified path is the top-level install prefix, not the ``bin`` subdirectory.
 
 ``packages.yaml`` can also be used to specify modules to load instead
 of the installation prefixes.  The following example says that module
@@ -118,7 +113,7 @@ follows:
    packages:
      mpich:
        externals:
-       - spec: mpich@3.3 %clang@12.0.0 +hwloc
+       - spec: mpich@3.3 +hwloc
          prefix: /path/to/mpich
          extra_attributes:
            environment:
@@ -222,12 +217,10 @@ be:
    packages:
      openmpi:
        externals:
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+       - spec: "openmpi@1.4.3~debug"
          prefix: /opt/openmpi-1.4.3
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+       - spec: "openmpi@1.4.3+debug"
          prefix: /opt/openmpi-1.4.3-debug
-       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.6.5-intel
        buildable: False
 
 The addition of the ``buildable`` flag tells Spack that it should never build
@@ -264,12 +257,10 @@ but more conveniently:
        buildable: False
      openmpi:
        externals:
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+       - spec: "openmpi@1.4.3~debug"
          prefix: /opt/openmpi-1.4.3
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+       - spec: "openmpi@1.4.3+debug"
          prefix: /opt/openmpi-1.4.3-debug
-       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.6.5-intel
 
 Spack can then use any of the listed external implementations of MPI
 to satisfy a dependency, and will choose depending on the compiler and
@@ -286,18 +277,15 @@ specs matching only the available externals:
        buildable: False
        require:
        - one_of: [
-           "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64",
-           "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug",
-           "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
+           "openmpi@1.4.3~debug",
+           "openmpi@1.4.3+debug",
          ]
      openmpi:
        externals:
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+       - spec: "openmpi@1.4.3~debug"
          prefix: /opt/openmpi-1.4.3
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+       - spec: "openmpi@1.4.3+debug"
          prefix: /opt/openmpi-1.4.3-debug
-       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.6.5-intel
 
 This configuration prevents any spec using MPI and originating from stores or buildcaches to be reused,
 unless it matches the requirements under ``packages:mpi:require``. For more information on requirements see
