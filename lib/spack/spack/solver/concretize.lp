@@ -356,9 +356,7 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      pkg_fact(Package, version_has_commit(Version, Psha)),
      Vsha != Psha.
 
-#defined version_satisfies/2.
 #defined deprecated_versions_not_allowed/0.
-#defined deprecated_version/1.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints
