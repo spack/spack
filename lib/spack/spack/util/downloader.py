@@ -50,7 +50,9 @@ class UrllibDownloader(Downloader):
     def __init__(self, *, chunk_size=65536):
         self.chunk_size = chunk_size
 
-    def download_file(self, *, url: str, saved_file: str, timeout: Optional[int] = None) -> DownloadInfo:
+    def download_file(
+        self, *, url: str, saved_file: str, timeout: Optional[int] = None
+    ) -> DownloadInfo:
         request = urllib.request.Request(url, headers={"User-Agent": SPACK_USER_AGENT})
 
         if os.path.lexists(saved_file):
@@ -101,7 +103,9 @@ class CurlDownloader(Downloader):
             CurlDownloader._curl_exe = require_curl()
         return CurlDownloader._curl_exe
 
-    def download_file(self, *, url: str, saved_file: str, timeout: Optional[int] = None) -> DownloadInfo:
+    def download_file(
+        self, *, url: str, saved_file: str, timeout: Optional[int] = None
+    ) -> DownloadInfo:
         saved_file_dir = os.path.dirname(saved_file)
         partial_file = saved_file + ".part"
 

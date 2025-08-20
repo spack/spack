@@ -51,7 +51,7 @@ import spack.version.git_ref_lookup
 from spack.llnl.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
-from spack.util.downloader import CurlDownloader, UrllibDownloader
+from spack.util.downloader import CurlDownloader, DownloadInfo, UrllibDownloader
 from spack.util.executable import CommandNotFoundError, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
@@ -236,11 +236,8 @@ class URLFetchStrategy(FetchStrategy):
     def __init__(self, *, url: str, checksum: Optional[str] = None, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        self.url = url
         self.mirrors = kwargs.get("mirrors", [])
-
-        # digest can be set as the first argument, or from an explicit
-        # kwarg by the hash name.
+        # digest can be set as the first argument, or from an explicit kwarg by the hash name
         self.digest: Optional[str] = checksum
         for h in self.optional_attrs:
             if h in kwargs:
@@ -249,8 +246,15 @@ class URLFetchStrategy(FetchStrategy):
         self.expand_archive: bool = kwargs.get("expand", True)
         self.extra_options: dict = kwargs.get("fetch_options", {})
         self.extension: Optional[str] = kwargs.get("extension", None)
-        # FIXME (recover this one)
-        self._effective_url: Optional[str] = None
+        self._download_info = DownloadInfo(url=url, effective_url=url, path="", headers="")
+
+    @property
+    def url(self) -> str:
+        return self._download_info.url
+
+    @property
+    def _effective_url(self) -> str:
+        return self._download_info.effective_url
 
     def source_id(self):
         return self.digest
@@ -304,7 +308,9 @@ class URLFetchStrategy(FetchStrategy):
         downloader = UrllibDownloader(chunk_size=chunk_size)
         try:
             tty.msg(f"Fetching {url}")
-            downloader.download_file(url=url, saved_file=save_file, timeout=timeout)
+            self._download_info = downloader.download_file(
+                url=url, saved_file=save_file, timeout=timeout
+            )
         except OSError as e:
             # clean up archive on failure.
             if self.archive_file:
@@ -325,7 +331,9 @@ class URLFetchStrategy(FetchStrategy):
 
         downloader = CurlDownloader(cookie=cookie, timeout=timeout, config_args=config_args)
         try:
-            downloader.download_file(url=url, saved_file=save_file, timeout=timeout)
+            self._download_info = downloader.download_file(
+                url=url, saved_file=save_file, timeout=timeout
+            )
         except spack.error.FetchError as e:
             raise FailedDownloadError(e) from e
 
