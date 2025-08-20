@@ -1043,12 +1043,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return False
 
     @classmethod
-    def resolve_binary_provenance(cls, spec) -> None:
-        """
-        Method to ensure concrete spec has binary provenance.
-        Base implementation will look up git commits when appropriate.
-        Packages may override this implementation for custom implementations
-        """
+    def _resolve_binary_provenance(cls, spec) -> None:
         # early return cases, don't overwrite user intention
         # commit pre-assigned or develop specs don't need commits changed
         # since this would create un-necessary churn
@@ -1097,6 +1092,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         if sha:
             spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
+
+    def resolve_binary_provenance(self):
+        """
+        Method to ensure concrete spec has binary provenance.
+        Base implementation will look up git commits when appropriate.
+        Packages may override this implementation for custom implementations
+        """
+        self._resolve_binary_provenance(self.spec)
+
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
