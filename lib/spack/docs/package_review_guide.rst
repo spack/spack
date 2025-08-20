@@ -99,7 +99,7 @@ Additions and removals of version directives should generally trigger a review o
 Checksums, commits, tags, and branches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Checksums, commits, and tags.
+**Checksums, commits, and tags**
   Normally these version arguments are automatically validated by GitHub Actions using `spack ci verify-versions <https://spack.readthedocs.io/en/latest/command_index.html#spack-ci-verify-versions>`_.
 
   **Action.**
@@ -115,14 +115,14 @@ Checksums, commits, and tags.
      Exceptions are allowed in rare cases, such as software supplied from reputable vendors.
      When in doubt, ask others with merge privileges for advice.
 
-Tags.
+**Tags**
   If a ``tag`` is provided without a ``commit``, the downloaded software will not be trusted.
 
   **Action.**
   Suggest that the ``commit`` argument be included in the ``version`` directive.
 
-Branches.
-  Confirming branches involves checking that they exist in the repository *and* that the version and branch names are consistent.
+**Branches**
+  Confirming new branch versions involves checking that the branches exist in the repository *and* that the version and branch names are consistent.
 
   **Action.**
   Confirming branch existence, on the other hand, often involves checking the source repository.
@@ -133,7 +133,7 @@ Branches.
   **Action.**
   If there is a name mismatch, especially for the most common branch names (e.g., `develop`, `main`, and `master`), ask why and suggest the arguments be changed such that they match the actual branch name.
 
-Manual downloads.
+**Manual downloads**
   Edge cases, such as manually downloaded software, may be difficult to confirm.
 
   **Action.**
@@ -238,20 +238,22 @@ Existing packages **may** be included in GitLab CI pipelines through inclusion i
 **Action.**
 It is worth checking at least a sampling of the failed job logs, if present, to determine the possible cause and take or suggest an action accordingly.
 
-**CI runners.**
-Sometimes CI runners time out or the pods become unavailable.
+**CI Runner Failures**
+  Sometimes CI runners time out or the pods become unavailable.
 
-**Action.**
-If that is the case, the resolution may be as simple as restarting the pipeline by adding a ``@spackbot run pipeline`` comment.
-Otherwise, the Contributor will need to investigate and resolve the problem.
+  **Action.**
+  If that is the case, the resolution may be as simple as restarting the pipeline by adding a ``@spackbot run pipeline`` comment.
+  Otherwise, the Contributor will need to investigate and resolve the problem.
 
-**Stand-alone tests.**
-Sometimes `stand-alone tests <https://spack.readthedocs.io/en/latest/packaging_guide_testing.html#stand-alone-tests>`_, which are performed after successful builds, could be causing the build job to time out.
-If the tests take too long, the issue could be that the package is running too many and/or long running tests.
-Or the tests may be trying to use resources (e.g., a batch scheduler) that are not available on runners.
-Determination of the problem may require looking at the implementation of the test.
+**Stand-alone Test Failures**
+  Sometimes `stand-alone tests <https://spack.readthedocs.io/en/latest/packaging_guide_testing.html#stand-alone-tests>`_ could be causing the build job to time out.
+  If the tests take too long, the issue could be that the package is running too many and/or long running tests.
+  Or the tests may be trying to use resources (e.g., a batch scheduler) that are not available on runners.
 
-**Action.**
-If tests are to blame, then a `new issue <https://github.com/spack/spack-packages/issues>`_ should be created -- if there is not one already -- to flag the package.
-A pull request should also be created in the ``spack/spack-packages`` repository that adds the package to the ``broken-tests-packages`` list in the `ci configuration <https://spack.readthedocs.io/en/latest/pipelines.html#ci-yaml>`_.
-Then, after the hopefully temporary fix is merged, the PR being reviewed can be rebased to pick up the change.
+  **Action.**
+  If the tests for a package are hanging, at a minimum create a `new issue <https://github.com/spack/spack-packages/issues>`_, if there is not one already, to flag the package.
+
+  **(Temporary) Solution.**
+  Look at the package implementation to see if the tests are using a batch scheduler or there appear to be too many or long running tests.
+  If that is the case, then a pull request should be created in the ``spack/spack-packages`` repository that adds the package to the ``broken-tests-packages`` list in the `ci configuration <https://spack.readthedocs.io/en/latest/pipelines.html#ci-yaml>`_.
+  Once the fix PR is merged, then the affected PR can be rebased to pick up the change.
