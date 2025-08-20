@@ -1042,7 +1042,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         return False
 
-    def resolve_binary_provenance(self) -> None:
+    @classmethod
+    def resolve_binary_provenance(cls, spec) -> None:
         """
         Method to ensure concrete spec has binary provenance.
         Base implementation will look up git commits when appropriate.
@@ -1051,15 +1052,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # early return cases, don't overwrite user intention
         # commit pre-assigned or develop specs don't need commits changed
         # since this would create un-necessary churn
-        if "commit" in self.spec.variants or self.spec.is_develop:
+        if "commit" in spec.variants or spec.is_develop:
             return
 
-        if is_git_version(str(self.spec.version)):
-            ref = self.spec.version.ref
+        if is_git_version(str(spec.version)):
+            ref = spec.version.ref
         else:
-            v_attrs = self.versions.get(self.spec.version, {})
+            v_attrs = cls.versions.get(spec.version, {})
             if "commit" in v_attrs:
-                self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
+                spec.variants["commit"] = spack.variant.SingleValuedVariant(
                     "commit", v_attrs["commit"]
                 )
                 return
@@ -1067,9 +1068,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         if not ref:
             raise VersionError(
-                f"{self.name}'s version {str(self.spec.version)} "
+                f"{spec.name}'s version {str(spec.version)} "
                 "is missing a git ref (commit, tag or branch)"
             )
+
+        # get class definition that includes config modifiers
+        pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
 
         # Look for commits in the following places:
         # 1) stage,                (cheap, local, static)
@@ -1077,23 +1081,27 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # 3) URL                   (cheap, remote, dynamic)
         # If users pre-stage, or use a mirror they can expect consistent commit resolution
         sha = None
-        if self.stage.expanded:
-            sha = spack.util.git.get_commit_sha(self.stage.source_path, ref)
+        fetcher = fs.for_package_version(pkg_class, spec.version)
+        stage = fetcher.stage
+
+        # check
+        if stage.expanded:
+            sha = spack.util.git.get_commit_sha(stage.source_path, ref)
 
         if not sha:
             try:
-                self.do_fetch(mirror_only=True)
+                stage.fetch(mirror_only=True)
             except spack.error.FetchError:
                 pass
-            if self.stage.archive_file:
-                sha = spack.util.archive.retrieve_commit_from_archive(self.stage.archive_file, ref)
+            if stage.archive_file:
+                sha = spack.util.archive.retrieve_commit_from_archive(stage.archive_file, ref)
 
         if not sha:
-            url = self.version_or_package_attr("git", self.spec.version)
+            url = pkg_class.version_or_package_attr("git", spec.version)
             sha = spack.util.git.get_commit_sha(url, ref)
 
         if sha:
-            self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
+            spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and

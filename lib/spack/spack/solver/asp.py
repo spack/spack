@@ -3875,6 +3875,10 @@ class SpecBuilder:
         for s in self._specs.values():
             _develop_specs_from_env(s, ev.active_environment())
 
+        # check for commits must happen after all version adaptations are complete
+        for s in self._specs.values():
+            _specs_with_commits(s)
+
         # mark concrete and assign hashes to all specs in the solve
         for root in roots.values():
             root._finalize_concretization()
@@ -3909,10 +3913,6 @@ class SpecBuilder:
                     spec.version.attach_lookup(
                         spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )
-
-        # check for commits must happen after all version adaptations are complete
-        for s in self._specs.values():
-            _specs_with_commits(s)
 
         specs = self.execute_explicit_splices()
         return specs
@@ -3955,14 +3955,15 @@ class SpecBuilder:
 
 
 def _specs_with_commits(spec):
-    if not spec.package.needs_commit(spec.version):
+    pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
+    if not pkg_class.needs_commit(spec.version):
         return
 
     if isinstance(spec.version, spack.version.GitVersion):
         if "commit" not in spec.variants and spec.version.commit_sha:
             spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
 
-    spec.package.resolve_binary_provenance()
+    pkg_class.resolve_binary_provenance(spec)
 
     if "commit" not in spec.variants:
         tty.warn(
