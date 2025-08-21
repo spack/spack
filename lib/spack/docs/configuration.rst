@@ -101,11 +101,11 @@ Custom scopes
 
 In addition to the ``defaults``, ``system``, ``site``, and ``user`` scopes, you may add configuration scopes directly on the command line with the ``--config-scope`` argument, or ``-C`` for short.
 
-For example, the following adds two configuration scopes, named ``scopea`` and ``scopeb``, to a ``spack spec`` command:
+For example, the following adds two configuration scopes, named ``scope-a`` and ``scope-b``, to a ``spack spec`` command:
 
 .. code-block:: spec
 
-   $ spack -C ~/myscopes/scopea -C ~/myscopes/scopeb spec ncurses
+   $ spack -C ~/myscopes/scope-a -C ~/myscopes/scope-b spec ncurses
 
 Custom scopes come *after* the ``spack`` command and *before* the subcommand, and they specify a single path to a directory containing configuration files.
 You can add the same configuration files to that directory that you can add to any other scope (e.g., ``config.yaml``, ``packages.yaml``, etc.).
@@ -118,7 +118,7 @@ If multiple scopes are provided:
 Example: scopes for release and development
 """""""""""""""""""""""""""""""""""""""""""
 
-Suppose that you need to support simultaneous building of release and development versions of ``mypackage``, where ``mypackage`` depends on ``packagea``, which in turn depends on ``packageb``.
+Suppose that you need to support simultaneous building of release and development versions of ``mypackage``, where ``mypackage`` depends on ``pkg-a``, which in turn depends on ``pkg-b``.
 You could create the following files:
 
 .. code-block:: yaml
@@ -127,9 +127,9 @@ You could create the following files:
    packages:
        mypackage:
            prefer: ["@1.7"]
-       packagea:
+       pkg-a:
            prefer: ["@2.3"]
-       packageb:
+       pkg-b:
            prefer: ["@0.8"]
 
 .. code-block:: yaml
@@ -138,24 +138,24 @@ You could create the following files:
    packages:
        mypackage:
            prefer: ["@develop"]
-       packagea:
+       pkg-a:
            prefer: ["@develop"]
-       packageb:
+       pkg-b:
            prefer: ["@develop"]
 
 You can switch between ``release`` and ``develop`` configurations using configuration arguments.
-You would type ``spack -C ~/myscopes/release`` when you want to build the designated release versions of ``mypackage``, ``packagea``, and ``packageb``, and you would type ``spack -C ~/myscopes/develop`` when you want to build all of these packages at the ``develop`` version.
+You would type ``spack -C ~/myscopes/release`` when you want to build the designated release versions of ``mypackage``, ``pkg-a``, and ``pkg-b``, and you would type ``spack -C ~/myscopes/develop`` when you want to build all of these packages at the ``develop`` version.
 
 Example: swapping MPI providers
 """""""""""""""""""""""""""""""
 
-Suppose that you need to build two software packages, ``packagea`` and ``packageb``.
-``packagea`` is Python 2-based, and ``packageb`` is Python 3-based.
-``packagea`` only builds with OpenMPI, and ``packageb`` only builds with MPICH.
-You can create different configuration scopes for use with ``packagea`` and ``packageb``:
+Suppose that you need to build two software packages, ``pkg-a`` and ``pkg-b``.
+``pkg-a`` is Python 2-based, and ``pkg-b`` is Python 3-based.
+``pkg-a`` only builds with OpenMPI, and ``pkg-b`` only builds with MPICH.
+You can create different configuration scopes for use with ``pkg-a`` and ``pkg-b``:
 
 .. code-block:: yaml
-   :caption: ~/myscopes/packgea/packages.yaml
+   :caption: ~/myscopes/pkg-a/packages.yaml
 
    packages:
        python:
@@ -164,7 +164,7 @@ You can create different configuration scopes for use with ``packagea`` and ``pa
            require: [openmpi]
 
 .. code-block:: yaml
-   :caption: ~/myscopes/packageb/packages.yaml
+   :caption: ~/myscopes/pkg-b/packages.yaml
 
    packages:
        python:
