@@ -43,7 +43,6 @@ import spack.llnl.util
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.oci.opener
-import spack.stage
 import spack.util.archive
 import spack.util.crypto as crypto
 import spack.util.git
@@ -91,19 +90,19 @@ class FetchStrategy:
         # The stage is initialized late so that fetch strategies can be
         # constructed at package construction time.  This is where things
         # will be fetched.
-        self._stage: Optional[spack.stage.Stage] = None
+        self._stage = None
         # Enable or disable caching for this strategy based on
         # 'no_cache' option from version directive.
         self.cache_enabled = not no_cache
         self.package = None
 
     @property
-    def stage(self) -> spack.stage.Stage:
+    def stage(self):
         if self._stage is None:
             raise NoStageError()
         return self._stage
 
-    def set_stage(self, stage: spack.stage.Stage) -> None:
+    def set_stage(self, stage) -> None:
         """Set the stage for this fetch strategy."""
         self._stage = stage
 
