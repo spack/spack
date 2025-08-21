@@ -58,7 +58,7 @@ Alternatively, especially for older versions, the version-specific URL can be ad
 Sometimes the derived URLs of versions on the hosting system can vary.
 This commonly happens with Python packages.
 For example, the case of one or more letters in the package name may change at some point (e.g., `py-sphinx <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/py_sphinx/package.py>`_).
-Also, dashes may be replaced with underscores (e.g., `py-scitkit-build <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/py_scikit_build/package.py>`_).
+Also, dashes may be replaced with underscores (e.g., `py-scikit-build <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/py_scikit_build/package.py>`_).
 In some cases, both changes can occur for the same package.
 As these examples illlustrate, it is sometimes possible to add a ``url_for_version`` method to override the default derived URL to ensure the correct one is returned.
 
