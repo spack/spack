@@ -205,7 +205,7 @@ In this case, check Python package dependencies by following the build system `g
 
     In general, refer to the relevant dependencies section, if any, for the package’s `build system <https://spack.readthedocs.io/en/latest/build_systems.html>`_ for guidance.
 
-Updating Language and Compiler Dependencies
+Updating language and compiler dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When `language and compiler dependencies <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#language-and-compiler-dependencies>`_ were introduced, their ``depends_on`` directives were derived from the source for existing packages.
