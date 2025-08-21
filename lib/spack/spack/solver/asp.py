@@ -3104,6 +3104,13 @@ class SpackSolverSetup:
         self.provider_requirements()
         self.external_packages()
 
+        for pkg_name, d in spack.config.get("packages").items():
+            if pkg_name == "all":
+                continue
+            allow_mixing = d.get("allow_compiler_mixing", False)
+            if allow_mixing:
+                self.gen.fact(fn.allow_mixing(pkg_name))
+
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
         self.define_package_versions_and_validate_preferences(

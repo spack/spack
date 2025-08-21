@@ -1568,12 +1568,13 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
 
 error(100, "Compiler mixing is disabled") :-
     attr("virtual_on_edge", ParentNode, CompilerNode1, Language),
-    attr("virtual_on_edge", ChildNode, CompilerNode2, Language),
-    attr("depends_on", ParentNode, ChildNode, "link"),
+    attr("virtual_on_edge", node(ChildID, ChildName), CompilerNode2, Language),
+    attr("depends_on", ParentNode, node(ChildID, ChildName), "link"),
     language(Language),
-    not external(ChildNode),
+    not external(node(ChildID, ChildName)),
     CompilerNode1 != CompilerNode2,
-    compiler_mixing(0, Language).
+    compiler_mixing(0, Language),
+    not allow_mixing(ChildName).
 
 %-----------------------------------------------------------------------------
 % Runtimes
