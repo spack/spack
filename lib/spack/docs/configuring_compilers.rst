@@ -275,3 +275,8 @@ Once the compiler is installed, you can start using it without additional config
 .. code-block:: spec
 
    $ spack install hdf5~mpi %gcc@14
+
+Mixing Compilers
+----------------
+
+For more options on configuring Spack to mix different compilers for different languages, see :ref:`the toolchains configuration docs <toolchains>`.
