@@ -55,7 +55,8 @@ If the output is:
 
    /Applications/Xcode.app/Contents/Developer
 
-you already have the full Xcode suite installed. If the output is:
+you already have the full Xcode suite installed.
+If the output is:
 
 .. code-block:: none
 
