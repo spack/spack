@@ -32,7 +32,7 @@ import urllib.parse
 import urllib.request
 import urllib.response
 from pathlib import PurePath
-from typing import Callable, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from spack.vendor.typing_extensions import TypedDict
 
@@ -1750,8 +1750,5 @@ class ChecksumError(spack.error.FetchError):
 class NoStageError(spack.error.FetchError):
     """Raised when fetch operations are called before set_stage()."""
 
-    def __init__(self, method: Optional[Callable] = None):
-        msg = "Fetch method called before set_stage()"
-        if method is not None:
-            msg = f"Fetch method {method.__name__} called before set_stage()"
-        super().__init__(msg)
+    def __init__(self):
+        super().__init__("Fetch method called before set_stage()")
