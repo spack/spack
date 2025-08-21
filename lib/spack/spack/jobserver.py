@@ -22,19 +22,21 @@ import spack.config
 class JobserverType(IntEnum):
     """Possible jobserver states"""
 
-    # Do not set up jobserver.
-    NONE = 0
+    # Leave jobserver behavior unchanged.
+    NOOP = 0
     # Set up FIFO implementation of jobserver.
     FIFO = 1
+    # Do not set up jobserver if a package cannot support it.
+    NONE = 2
 
 
 def package_type(pkg):
     """Identify the appropriate jobserver type for packages in build."""
-    if pkg.spec.satisfies("gmake") and pkg.spec["gmake"].satisfies("@4.4:"):
+    if pkg.spec.satisfies("gmake@4.4:") or pkg.spec.satisfies("ninja@1.13.0:"):
         return JobserverType.FIFO
-    elif pkg.spec.satisfies("ninja") and pkg.spec["ninja"].satisfies("@1.13.0:"):
-        return JobserverType.FIFO
-    return JobserverType.NONE
+    elif pkg.spec.satisfies("gmake@:4.3") or pkg.spec.satisfies("ninja@:1.12"):
+        return JobserverType.NONE
+    return JobserverType.NOOP
 
 
 class Jobserver:
@@ -125,8 +127,18 @@ class FifoJobserver(Jobserver):
             shutil.rmtree(self.fifo_directory)
         os.environ.pop("MAKEFLAGS", None)
 
+
+class NoJobserver(Jobserver):
+    def enable(self):
+        return None
+
+    def cleanup(self):
+        return None
+
+
 # Table mapping JobserverType to Jobserver class
 jobserver_class_table: Dict[JobserverType, Type[Jobserver]] = {
-    JobserverType.NONE: NoopJobserver,
+    JobserverType.NOOP: NoopJobserver,
     JobserverType.FIFO: FifoJobserver,
+    JobserverType.NONE: NoJobserver,
 }
