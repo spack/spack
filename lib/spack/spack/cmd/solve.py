@@ -72,7 +72,7 @@ def _process_result(result, show, required_format, kwargs):
         print()
         color.cprint("  @*{Legend:}")
         color.cprint("    @g{Specs to be built}")
-        color.cprint("    @b{Concrete specs}")
+        color.cprint("    @b{Reused specs}")
         color.cprint("    @y{Other criteria}")
         print()
 

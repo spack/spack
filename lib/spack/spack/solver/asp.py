@@ -164,10 +164,15 @@ build_priority_offset = 200
 fixed_priority_offset = 100
 
 
-class OptimizationKind(enum.Enum):
-    BUILD = enum.auto()
-    CONCRETE = enum.auto()
-    OTHER = enum.auto()
+class OptimizationKind:
+    """Enum for the optimization KIND of a criteria.
+
+    It's not using enum.Enum since it must be serializable.
+    """
+
+    BUILD = 0
+    CONCRETE = 1
+    OTHER = 2
 
 
 class OptimizationCriteria(NamedTuple):
