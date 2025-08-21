@@ -1438,7 +1438,9 @@ def test_included_path():
 
     # remote include
     entry = {
-        "git": "https://example.com/windows/configs.git", "tag": "v1.0", "paths": ["config.yaml"]
+        "git": "https://example.com/windows/configs.git",
+        "tag": "v1.0",
+        "paths": ["config.yaml"],
     }
     include = spack.config.included_path(entry)
     assert isinstance(include, spack.config.GitIncludePaths)

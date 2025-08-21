@@ -2662,28 +2662,32 @@ def initialize_environment_dir(
     includes = manifest[TOP_LEVEL_KEY].get("include", [])
     for include in includes:
         included_path = spack.config.included_path(include)
-        path = included_path.path
-        if os.path.isabs(path):
-            continue
+        paths = [included_path.path] if hasattr(included_path, "path") else included_path.paths
 
-        abspath = pathlib.Path(os.path.normpath(environment_dir / path))
-        common_path = pathlib.Path(os.path.commonpath([environment_dir, abspath]))
-        if common_path != environment_dir:
-            tty.debug(f"Will not copy relative include file from outside environment: {path}")
-            continue
-
-        orig_abspath = os.path.normpath(envfile.parent / path)
-        if not os.path.exists(orig_abspath):
-            tty.warn(f"Included file does not exist; will not copy: '{path}'")
-            continue
-
-        if os.path.isfile(orig_abspath):
-            fs.touchp(abspath)
-            shutil.copy(orig_abspath, abspath)
-        else:
-            if os.path.exists(abspath):
-                tty.warn(f"Skipping copying duplicate directories: {path}")
+        for path in paths:
+            if os.path.isabs(path):
                 continue
+
+            abspath = pathlib.Path(os.path.normpath(environment_dir / path))
+            common_path = pathlib.Path(os.path.commonpath([environment_dir, abspath]))
+            if common_path != environment_dir:
+                tty.debug(f"Will not copy relative include file from outside environment: {path}")
+                continue
+
+            orig_abspath = os.path.normpath(envfile.parent / path)
+            if os.path.isfile(orig_abspath):
+                fs.touchp(abspath)
+                shutil.copy(orig_abspath, abspath)
+                continue
+
+            if not os.path.exists(orig_abspath):
+                tty.warn(f"Skipping copy of non-existent include path: '{path}'")
+                continue
+
+            if os.path.exists(abspath):
+                tty.warn(f"Skipping copy of directory over existing path: {path}")
+                continue
+
             shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 

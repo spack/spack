@@ -841,6 +841,7 @@ def override(
 #: as optional.
 class OptionalInclude:
     """Base properties for all includes."""
+
     when: str
     optional: bool
 
@@ -909,7 +910,9 @@ def included_path(entry: Union[str, dict]) -> Union[IncludePath, GitIncludePaths
     return GitIncludePaths(entry)
 
 
-def _single_include_path_scope(include: IncludePath, parent_scope: ConfigScope) -> Optional[ConfigScope]:
+def _single_include_path_scope(
+    include: IncludePath, parent_scope: ConfigScope
+) -> Optional[ConfigScope]:
     """Instantiate an appropriate configuration scope for the given path.
 
     Args:
@@ -964,12 +967,14 @@ def _single_include_path_scope(include: IncludePath, parent_scope: ConfigScope) 
     return None
 
 
-def _git_include_paths_scopes(include: GitIncludePaths, parent_scope: ConfigScope) -> Optional[List[ConfigScope]]:
+def _git_include_paths_scopes(
+    include: GitIncludePaths, parent_scope: ConfigScope
+) -> Optional[List[ConfigScope]]:
     """Instantiate the appropriate configuration scopes for the given git include path(s).
 
     Args:
         include: optional include path
-        parent_scoppe: including scope
+        parent_scope: including scope
 
     Returns: list of configuration scopes
 
@@ -981,46 +986,50 @@ def _git_include_paths_scopes(include: GitIncludePaths, parent_scope: ConfigScop
     # circular dependencies
     import spack.spec
 
-    # TODO/TLD: Change this to process the list in include.paths
-    config_path = rfc_util.local_path(include.path, include.sha256, _include_cache_location)
-    if not config_path:
-        raise ConfigFileError(f"Unable to fetch remote configuration from {include.path}")
+    scopes = []
+    for path in include.paths:
+        # TODO/TLD: Change this to properly handle the fetch to local
+        config_path = rfc_util.local_path(path, include.sha256, _include_cache_location)
+        if not config_path:
+            raise ConfigFileError(f"Unable to fetch remote configuration from {path}")
 
-    # Try to use the relative path to create the included scope name
-    parent_path = getattr(parent_scope, "path", None)
-    if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
-        included_name = os.path.relpath(config_path, parent_path)
-    else:
-        included_name = config_path
+        # Try to use the relative path to create the included scope name
+        parent_path = getattr(parent_scope, "path", None)
+        if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
+            included_name = os.path.relpath(config_path, parent_path)
+        else:
+            included_name = config_path
 
-    if sys.platform == "win32":
-        # Clean windows path for use in config name that looks nicer
-        # ie. The path: C:\\some\\path\\to\\a\\file
-        # becomes C/some/path/to/a/file
-        included_name = included_name.replace("\\", "/")
-        included_name = included_name.replace(":", "")
+        if sys.platform == "win32":
+            # Clean windows path for use in config name that looks nicer
+            # ie. The path: C:\\some\\path\\to\\a\\file
+            # becomes C/some/path/to/a/file
+            included_name = included_name.replace("\\", "/")
+            included_name = included_name.replace(":", "")
 
-    # TODO/TBD: We don't support directory include scopes anymore
-    if os.path.isdir(config_path):
-        # directories are treated as regular ConfigScopes
-        config_name = f"{parent_scope.name}:{included_name}"
-        tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-        return [DirectoryConfigScope(config_name, config_path)]
+        # TODO/TBD: We don't support directory include scopes anymore
+        if os.path.isdir(config_path):
+            # directories are treated as regular ConfigScopes
+            config_name = f"{parent_scope.name}:{included_name}"
+            tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
+            scopes.append(DirectoryConfigScope(config_name, config_path))
 
-    if os.path.exists(config_path):
-        # files are assumed to be SingleFileScopes
-        config_name = f"{parent_scope.name}:{included_name}"
-        tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
-        return [SingleFileScope(config_name, config_path, spack.schema.merged.schema)]
+        if os.path.exists(config_path):
+            # files are assumed to be SingleFileScopes
+            config_name = f"{parent_scope.name}:{included_name}"
+            tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
+            scopes.append(SingleFileScope(config_name, config_path, spack.schema.merged.schema))
 
-    if not include.optional:
-        path = f" at ({config_path})" if config_path != include.path else ""
-        raise ValueError(f"Required path ({include.path}) does not exist{path}")
+        if not include.optional:
+            include_path = f" at ({config_path})" if config_path != path else ""
+            raise ValueError(f"Required path ({path}) does not exist{include_path}")
 
     return []
 
 
-def include_path_scope(include: Union[IncludePath, GitIncludePaths], parent_scope: ConfigScope) -> Optional[ConfigScope]:
+def include_path_scope(
+    include: Union[IncludePath, GitIncludePaths], parent_scope: ConfigScope
+) -> Optional[ConfigScope]:
     """Instantiate an appropriate configuration scopes for the given paths.
 
     Args:
@@ -1039,11 +1048,11 @@ def include_path_scope(include: Union[IncludePath, GitIncludePaths], parent_scop
 
     if (not include.when) or spack.spec.eval_conditional(include.when):
         if isinstance(include, IncludePath):
-            #return [_single_include_path_scope(include, parent_scope)]
+            # return [_single_include_path_scope(include, parent_scope)]
             return _single_include_path_scope(include, parent_scope)
 
         if isinstance(include, GitIncludePaths):
-            #return _git_include_paths_scopes(include, parent_scope)
+            # return _git_include_paths_scopes(include, parent_scope)
             return _git_include_paths_scopes(include, parent_scope)[0]
 
     return None
