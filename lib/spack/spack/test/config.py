@@ -1418,3 +1418,32 @@ def test_deepcopy_as_builtin(env_yaml):
     assert type(packages_copy["all"]) is dict
     assert type(packages_copy["all"]["compiler"]) is list
     assert type(packages_copy["all"]["compiler"][0]) is str
+
+
+def test_included_path():
+    # String include
+    path = "/a/local/include.yaml"
+    include = spack.config.included_path(path)
+    assert isinstance(include, spack.config.IncludePath)
+    assert include.path == path
+    assert not include.when and not include.sha256 and not include.optional
+
+    # local conditional include
+    entry = {"path": "/a/local/include.yaml", "when": "platform=darwin"}
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.IncludePath)
+    assert include.path == entry["path"]
+    assert include.when == entry["when"]
+    assert not include.sha256 and not include.optional
+
+    # remote include
+    entry = {
+        "git": "https://example.com/windows/configs.git", "tag": "v1.0", "paths": ["config.yaml"]
+    }
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.GitIncludePaths)
+    assert include.repo == entry["git"]
+    assert include.tag == entry["tag"]
+    assert include.paths == entry["paths"]
+    assert not include.when and not include.optional
+    assert not include.branch and not include.commit
