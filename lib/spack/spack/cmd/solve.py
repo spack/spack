@@ -58,20 +58,25 @@ def _process_result(result, show, required_format, kwargs):
 
         print()
         maxlen = max(len(s.name) for s in result.criteria)
-        color.cprint("@*{  Priority  Criterion %sValue}" % ((maxlen - 10) * " "))
+        color.cprint("@*{  Priority  Value  Criterion}")
 
         for i, criterion in enumerate(result.criteria, 1):
-            if criterion.kind == asp.OptimizationKind.CONCRETE:
+            value = f"@K{{{criterion.value:>5}}}"
+            grey_out = True
+            if criterion.value > 0:
+                value = f"@*{{{criterion.value:>5}}}"
+                grey_out = False
+
+            if grey_out:
+                lc = "@K"
+            elif criterion.kind == asp.OptimizationKind.CONCRETE:
                 lc = "@b"
             elif criterion.kind == asp.OptimizationKind.BUILD:
                 lc = "@g"
             else:
                 lc = "@y"
 
-            value = f"@K{{{criterion.value:>5}}}"
-            if criterion.value > 0:
-                value = f"@*{{{criterion.value:>5}}}"
-            color.cprint(f"  @K{{{i:<8}}}  {lc}{{{criterion.name:<{maxlen}}}}{value}")
+            color.cprint(f"  @K{{{i:8}}}  {value}  {lc}{{{criterion.name:<{maxlen}}}}")
         print()
         print()
         color.cprint("  @*{Legend:}")
