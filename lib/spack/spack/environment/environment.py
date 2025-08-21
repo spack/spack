@@ -1474,7 +1474,7 @@ class Environment:
         modified_roots = []
         for parent in traverse.traverse_nodes(modify_specs, direction="parents"):
             # record whether this parent is a root before we modify the hash
-            if parent.dag_hash() in self.concretized_order:
+            if parent.dag_hash() in self.specs_by_hash:
                 modified_roots.append((parent, parent.dag_hash()))
             # modify the parent to invalidate hashes
             parent._mark_root_concrete(False)
