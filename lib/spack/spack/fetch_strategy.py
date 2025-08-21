@@ -22,6 +22,7 @@ in order to build it.  They need to define the following methods:
     Archive a source directory, e.g. for creating a mirror.
 """
 import copy
+import enum
 import functools
 import hashlib
 import os
@@ -32,7 +33,7 @@ import urllib.parse
 import urllib.request
 import urllib.response
 from pathlib import PurePath
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from spack.vendor.typing_extensions import TypedDict
 
@@ -53,7 +54,7 @@ import spack.version.git_ref_lookup
 from spack.llnl.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
-from spack.util.downloader import CurlDownloader, DownloadInfo, UrllibDownloader
+from spack.util.downloader import CurlDownloader, Downloader, DownloadInfo, UrllibDownloader
 from spack.util.executable import CommandNotFoundError, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
@@ -226,10 +227,26 @@ class FetchOptions(TypedDict, total=False):
     timeout: int
 
 
-def default_timeout():
+class FetchMethod(enum.Enum):
+    URLLIB = enum.auto()
+    CURL = enum.auto()
+
+
+def default_timeout() -> int:
     if spack.config.CONFIG is None:
         return 30
     return spack.config.CONFIG.get("config:connect_timeout", 30)
+
+
+def default_url_fetch_method() -> Tuple[FetchMethod, List[str]]:
+    if spack.config.CONFIG is None:
+        return FetchMethod.URLLIB, []
+    # Assume configuration has been validated already, so not raising
+    config_str = spack.config.CONFIG.get("config:url_fetch_method", "urllib")
+    if config_str.startswith("curl"):
+        return FetchMethod.CURL, config_str.split()[1:]
+    else:
+        return FetchMethod.URLLIB, []
 
 
 @fetcher
@@ -265,15 +282,15 @@ class URLFetchStrategy(FetchStrategy):
         for h in self.optional_attrs:
             if h in kwargs:
                 self.digest = kwargs[h]
-
+        self.extension: Optional[str] = extension
         self.expand_archive = expand
 
+        self.fetch_method, self.fetch_args = default_url_fetch_method()
         self.timeout, self.cookie = default_timeout(), None
         if fetch_options:
             self.timeout = fetch_options.get("timeout", self.timeout)
             self.cookie = fetch_options.get("cookie", None)
 
-        self.extension: Optional[str] = extension
         self._download_info = DownloadInfo(url=url, effective_url=url, path="", headers="")
 
     @property
@@ -283,6 +300,12 @@ class URLFetchStrategy(FetchStrategy):
     @property
     def _effective_url(self) -> str:
         return self._download_info.effective_url
+
+    def _create_downloader(self) -> Downloader:
+        if self.fetch_method == FetchMethod.CURL:
+            return CurlDownloader(cookie=self.cookie, config_args=self.fetch_args)
+        else:
+            return UrllibDownloader()
 
     def source_id(self):
         return self.digest
@@ -320,40 +343,22 @@ class URLFetchStrategy(FetchStrategy):
                 RuntimeError(f"Missing archive {self.archive_file} after fetching")
             )
 
-    def _fetch_from_url(self, url):
-        fetch_method = spack.config.get("config:url_fetch_method", "urllib")
-        if fetch_method.startswith("curl"):
-            return self._fetch_curl(url, config_args=fetch_method.split()[1:])
-        else:
-            return self._fetch_urllib(url)
-
-    @_needs_stage
-    def _fetch_urllib(self, url, chunk_size=65536):
+    def _fetch_from_url(self, url: str) -> None:
         save_file = self.stage.save_filename
-        downloader = UrllibDownloader(chunk_size=chunk_size)
+        downloader = self._create_downloader()
         try:
             tty.msg(f"Fetching {url}")
             self._download_info = downloader.download_file(
                 url=url, saved_file=save_file, timeout=self.timeout
             )
+        except spack.error.FetchError as e:
+            raise FailedDownloadError(e) from e
         except OSError as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
             if os.path.lexists(save_file):
                 os.remove(save_file)
-            raise FailedDownloadError(e) from e
-
-    @_needs_stage
-    def _fetch_curl(self, url, config_args=None):
-        config_args = config_args or []
-        save_file = self.stage.save_filename
-        downloader = CurlDownloader(cookie=self.cookie, config_args=config_args)
-        try:
-            self._download_info = downloader.download_file(
-                url=url, saved_file=save_file, timeout=self.timeout
-            )
-        except spack.error.FetchError as e:
             raise FailedDownloadError(e) from e
 
     @property  # type: ignore # decorated properties unsupported in mypy
@@ -1326,6 +1331,9 @@ class S3FetchStrategy(URLFetchStrategy):
 
     url_attr = "s3"
 
+    def _create_downloader(self) -> Downloader:
+        return UrllibDownloader()
+
     @_needs_stage
     def fetch(self):
         if not self.url.startswith("s3://"):
@@ -1335,7 +1343,7 @@ class S3FetchStrategy(URLFetchStrategy):
         if self.archive_file:
             tty.debug(f"Already downloaded {self.archive_file}")
             return
-        self._fetch_urllib(self.url)
+        self._fetch_from_url(self.url)
         if not self.archive_file:
             raise FailedDownloadError(
                 RuntimeError(f"Missing archive {self.archive_file} after fetching")
@@ -1348,6 +1356,9 @@ class GCSFetchStrategy(URLFetchStrategy):
 
     url_attr = "gs"
 
+    def _create_downloader(self) -> Downloader:
+        return UrllibDownloader()
+
     @_needs_stage
     def fetch(self):
         if not self.url.startswith("gs"):
@@ -1358,7 +1369,7 @@ class GCSFetchStrategy(URLFetchStrategy):
             tty.debug(f"Already downloaded {self.archive_file}")
             return
 
-        self._fetch_urllib(self.url)
+        self._fetch_from_url(self.url)
 
         if not self.archive_file:
             raise FailedDownloadError(
