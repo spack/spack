@@ -881,6 +881,11 @@ class GitIncludePaths(OptionalInclude):
         self.tag = entry.get("tag", "")
         self.paths = entry.get("paths", [])
 
+        if not self.branch and not self.commit and not self.tag:
+            raise spack.error.ConfigError(
+                "Git include paths require one or more of: branch, commit, tag"
+            )
+
     def __repr__(self):
         if self.branch:
             identifier = f"branch={self.branch}"

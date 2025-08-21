@@ -1436,7 +1436,7 @@ def test_included_path():
     assert include.when == entry["when"]
     assert not include.sha256 and not include.optional
 
-    # remote include
+    # git include
     entry = {
         "git": "https://example.com/windows/configs.git",
         "tag": "v1.0",
@@ -1449,3 +1449,16 @@ def test_included_path():
     assert include.paths == entry["paths"]
     assert not include.when and not include.optional
     assert not include.branch and not include.commit
+
+    # add commit to tag to confirm can have both
+    entry["commit"] = "abcdef12345"
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.GitIncludePaths)
+    assert include.commit == entry["commit"]
+
+
+def test_included_path_bad_git_args():
+    # must have one or more of: branch, tag and commit so fail if missing any
+    entry = {"git": "https://example.com/windows/configs.git", "paths": ["config.yaml"]}
+    with pytest.raises(spack.error.ConfigError, match="require one or more"):
+        spack.config.included_path(entry)
