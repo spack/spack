@@ -3325,14 +3325,22 @@ packages:
     assert s["c"].satisfies("gcc@9.4.0")
 
 
-def test_compiler_can_depend_on_themselves_to_build(config, mock_packages):
+@pytest.mark.parametrize(
+    "spec_str,expected",
+    [
+        ("gcc@14 %gcc@9.4.0", ["gcc@14", "%c,cxx=gcc@9.4.0", "^gcc-runtime@9.4.0"]),
+        # If we don't specify a compiler, we should get the default compiler which is gcc
+        ("gcc@14", ["gcc@14", "%c,cxx=gcc@10", "^gcc-runtime@10"]),
+    ],
+)
+def test_compiler_can_depend_on_themselves_to_build(
+    spec_str, expected, default_mock_concretization
+):
     """Tests that a compiler can depend on "itself" to bootstrap."""
-    s = spack.concretize.concretize_one("gcc@14 %gcc@9.4.0")
-    assert s.satisfies("gcc@14")
-    assert s.satisfies("^gcc-runtime@9.4.0")
-
-    gcc_used_to_build = s.dependencies(name="gcc", virtuals=("c",))
-    assert len(gcc_used_to_build) == 1 and gcc_used_to_build[0].satisfies("gcc@9.4.0")
+    s = default_mock_concretization(spec_str)
+    assert not s.external
+    for c in expected:
+        assert s.satisfies(c)
 
 
 def test_compiler_attribute_is_tolerated_in_externals(

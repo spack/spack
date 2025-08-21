@@ -1885,7 +1885,7 @@ opt_criterion(110, "number of packages to build (vs. reuse)").
 
 opt_criterion(100, "number of nodes from the same package").
 #minimize { 0@100: #true }.
-#minimize { ID@100,Package : attr("node", node(ID, Package)) }.
+#minimize { ID@100,Package : attr("node", node(ID, Package)), not self_build_requirement(_, node(ID, Package)) }.
 #minimize { ID@100,Package : attr("virtual_node", node(ID, Package)) }.
 #defined optimize_for_reuse/0.
 
