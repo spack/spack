@@ -1889,9 +1889,14 @@ class TestConcretize:
             # version_declared("pkg-b","0.9",1,"package_py").
             # version_declared("pkg-b","1.0",2,"installed").
             # version_declared("pkg-b","0.9",3,"installed").
-            v_weights = [x for x in result.criteria if x[2] == "version badness (non roots)"][0]
-            reused_weights, built_weights, _ = v_weights
-            assert reused_weights > 2 and built_weights == 0
+            weights = {}
+            for x in [x for x in result.criteria if x.name == "version badness (non roots)"]:
+                if x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
+                    weights["reused"] = x.value
+                else:
+                    weights["built"] = x.value
+
+            assert weights["reused"] > 2 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")

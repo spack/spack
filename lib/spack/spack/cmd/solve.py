@@ -55,22 +55,25 @@ def _process_result(result, show, required_format, kwargs):
     opt, _, _ = min(result.answers)
     if ("opt" in show) and (not required_format):
         tty.msg("Best of %d considered solutions." % result.nmodels)
-        tty.msg("Optimization Criteria:")
 
-        maxlen = max(len(s[2]) for s in result.criteria)
-        color.cprint("@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " "))
+        print()
+        maxlen = max(len(s.name) for s in result.criteria)
+        color.cprint("@*{  Priority  Criterion %sValue}" % ((maxlen - 10) * " "))
 
-        fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
-        for i, (installed_cost, build_cost, name) in enumerate(result.criteria, 1):
-            color.cprint(
-                fmt
-                % (
-                    i,
-                    name,
-                    "-" if build_cost is None else installed_cost,
-                    installed_cost if build_cost is None else build_cost,
-                )
-            )
+        for i, criterion in enumerate(result.criteria, 1):
+            if criterion.kind == asp.OptimizationKind.CONCRETE:
+                lc = "@b"
+            elif criterion.kind == asp.OptimizationKind.BUILD:
+                lc = "@g"
+            else:
+                lc = "@y"
+            color.cprint(f"  @K{{{i:<8}}}  {lc}{{{criterion.name:<{maxlen}}}}{criterion.value:>5}")
+        print()
+        print()
+        color.cprint("  @*{Legend:}")
+        color.cprint("    @g{Specs to be built}")
+        color.cprint("    @b{Concrete specs}")
+        color.cprint("    @y{Other criteria}")
         print()
 
     # dump the solutions as concretized specs
