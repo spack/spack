@@ -1,45 +1,33 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 740 180" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 180">
 <style>
-text {
-font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
-font-size: 12px;
+text{
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+font-size:12px;
 }
-.m {
-font-family: SFMono-Regular,Menlo,Consolas,Monaco,LiberationMono,LucidaConsole,monospace;
-font-size: 16px;
-}
-.l {
-font-weight: bold;
-text-anchor: middle;
-dominant-baseline: central;
-fill: #fff;
+.l{
+font-weight:700;
+text-anchor:middle;
+dominant-baseline:central;
+fill:#fff;
 }
 </style>
-<text x="10" y="30" fill="#2c3e50" class="m"><tspan fill="#e74c3c" font-weight="bold">mpileaks</tspan><tspan fill="#3498db">@1.2:1.4</tspan><tspan fill="#27ae60"> +debug ~qt</tspan><tspan fill="#f39c12"> target=x86_64_v3</tspan><tspan fill="#9b59b6" font-weight="bold"> %gcc</tspan><tspan fill="#3498db">@15</tspan><tspan fill="#e67e22" font-weight="bold"> ^libelf</tspan><tspan fill="#3498db">@1.1</tspan><tspan fill="#9b59b6" font-weight="bold"> %clang</tspan><tspan fill="#3498db">@20</tspan></text>
-
-<line x1="60" x2="60" y1="50" y2="85" stroke="#e74c3c" stroke-width="2"/>
-<rect x="10" y="85" width="100" height="30" rx="5" fill="#e74c3c"/>
+<text x="10" y="30" fill="#2c3e50" style="font-family:SFMono-Regular,Menlo,Consolas,Monaco,LiberationMono,LucidaConsole,monospace;font-size:16px"><tspan fill="#e74c3c" font-weight="bold">mpileaks</tspan><tspan fill="#3498db">@1.2:1.4</tspan><tspan fill="#27ae60"> +debug ~qt</tspan><tspan fill="#f39c12"> target=x86_64_v3</tspan><tspan fill="#9b59b6" font-weight="bold"> %gcc</tspan><tspan fill="#3498db">@15</tspan><tspan fill="#e67e22" font-weight="bold"> ^libelf</tspan><tspan fill="#3498db">@1.1</tspan><tspan fill="#9b59b6" font-weight="bold"> %clang</tspan><tspan fill="#3498db">@20</tspan></text>
+<path stroke="#e74c3c" stroke-width="2" d="M60 50v35"/>
+<rect width="100" height="30" x="10" y="85" fill="#e74c3c" rx="5"/>
 <text x="60" y="100" class="l">Package name</text>
-
-<line x1="130" x2="130" y1="50" y2="141" stroke="#3498db" stroke-width="2"/>
-<rect x="100" y="130" width="60" height="30" rx="5" fill="#3498db"/>
+<path stroke="#3498db" stroke-width="2" d="M130 50v91"/>
+<rect width="60" height="30" x="100" y="130" fill="#3498db" rx="5"/>
 <text x="130" y="145" class="l">Version</text>
-
-<line x1="230" x2="230" y1="50" y2="100" stroke="#27ae60" stroke-width="2"/>
-<rect x="190" y="85" width="80" height="30" rx="5" fill="#27ae60"/>
+<path stroke="#27ae60" stroke-width="2" d="M230 50v50"/>
+<rect width="80" height="30" x="190" y="85" fill="#27ae60" rx="5"/>
 <text x="230" y="100" class="l">Variants</text>
-
-<line x1="355" x2="355" y1="50" y2="150" stroke="#f39c12" stroke-width="2"/>
-<rect x="305" y="130" width="100" height="30" rx="5" fill="#f39c12"/>
+<path stroke="#f39c12" stroke-width="2" d="M355 50v100"/>
+<rect width="100" height="30" x="305" y="130" fill="#f39c12" rx="5"/>
 <text x="355" y="145" class="l">Architecture</text>
-
-<line x1="470" x2="470" y1="50" y2="100" stroke="#9b59b6" stroke-width="2"/>
-<rect x="404" y="85" width="130" height="30" rx="5" fill="#9b59b6"/>
+<path stroke="#9b59b6" stroke-width="2" d="M470 50v50"/>
+<rect width="130" height="30" x="404" y="85" fill="#9b59b6" rx="5"/>
 <text x="470" y="100" class="l">Direct dependency</text>
-
-<line x1="560" x2="560" y1="50" y2="150" stroke="#e67e22" stroke-width="2"/>
-<rect x="485" y="130" width="150" height="30" rx="5" fill="#e67e22"/>
+<path stroke="#e67e22" stroke-width="2" d="M560 50v100"/>
+<rect width="150" height="30" x="485" y="130" fill="#e67e22" rx="5"/>
 <text x="560" y="145" class="l">Transitive dependency</text>
-
 </svg>
