@@ -382,7 +382,7 @@ When concretizing an environment with develop specs, all attributes of the spec 
 If a version is not included in those constraints, Spack will choose the **highest** version of the package.
 This means that any "infinity" versions (``develop``, ``main``, etc.) will be preferred for specs marked with the ``spack develop`` command.
 These packages will have an automatic ``dev_path`` variant added by the concretizer, with a value of the absolute path to the local source Spack is building from.
-Spack will ensure the package and its dependents are rebuild any time the environment is installed if the pacakge's local source code has been modified.
+Spack will ensure the package and its dependents are rebuild any time the environment is installed if the package's local source code has been modified.
 Spack's native implementation is to check if ``mtime`` is newer than the installation.
 A custom check can be created by overriding the ``detect_dev_src_change`` method in your package class.
 This is particularly useful for projects using custom Spack repos to drive development and want to optimize performance.
