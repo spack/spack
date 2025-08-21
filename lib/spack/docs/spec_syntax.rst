@@ -26,19 +26,20 @@ Here is an example of using a complex spec to install a very specific configurat
 
 .. code-block:: spec
 
-   $ spack install mpileaks@1.2:1.4 +debug ~qt target=x86_64_v3 %gcc@15.1.0 ^libelf@1.1 %gcc@14.2.0
+   $ spack install mpileaks@1.2:1.4 +debug ~qt target=x86_64_v3 %gcc@15 ^libelf@1.1 %clang@20
 
 The figure below helps getting a sense of the various parts that compose this spec:
 
 .. figure:: images/spec_anatomy.svg
+   :alt: Spack spec with annotations
 
-If used to install a package, this will install:
+When installing this, you will get:
 
-* The ``mpileaks`` library at some version between ``1.2`` and ``1.4`` (inclusive),
+* The ``mpileaks`` package at some version between ``1.2`` and ``1.4`` (inclusive),
 * with ``debug`` options enabled, and without ``qt`` support,
-* for an ``x86_64_v3`` architecture,
-* built using ``gcc`` at version ``15.1.0``,
-* depending on ``libelf`` at version ``1.1``, built with ``gcc`` at version ``14.2.0``.
+* optimized for an ``x86_64_v3`` architecture,
+* built using ``gcc`` at version ``15``,
+* depending on ``libelf`` at version ``1.1``, built with ``clang`` at version ``20``.
 
 Most specs will not be as complicated as this one, but this is a good example of what is possible with specs.
 There are a few general rules that we can already infer from this first example:
