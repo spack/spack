@@ -681,7 +681,7 @@ Spack's Python Package API
 Whenever you implement :ref:`overriding phases <overriding-phases>` or :ref:`before and after build phases <before_after_build_phases>`, you typically need to modify files, work with paths and run executables.
 Spack provides a number of convenience functions and classes of its own to make your life even easier, complementing the Python standard library.
 
-All of the functionality in this section is made available by importing the ``spack.package`` module.
+All of the functionality in this section is made available by importing the :mod:`spack.package` module.
 
 .. code-block:: python
 
