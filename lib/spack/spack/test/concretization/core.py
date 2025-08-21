@@ -468,6 +468,11 @@ class TestConcretize:
             assert x.satisfies("%clang") is not expected_gcc
             assert x.satisfies("%gcc") is expected_gcc
 
+    def test_disable_mixing0(self):
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            with pytest.raises(spack.error.UnsatisfiableSpecError):
+                spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
+
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")
         for x in spec.traverse(deptype=("link", "run")):

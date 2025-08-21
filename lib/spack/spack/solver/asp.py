@@ -3030,7 +3030,8 @@ class SpackSolverSetup:
         self.possible_compilers.sort()  # type: ignore[call-overload]
 
         should_mix = 1 if spack.config.get("concretizer:compiler_mixing", True) else 0
-        self.gen.fact(fn.compiler_mixing(should_mix))
+        for lang in ["c", "cxx", "fortran"]:
+            self.gen.fact(fn.compiler_mixing(should_mix, lang))
 
         self.gen.h1("Runtimes")
         injected_dependencies = self.define_runtime_constraints()
