@@ -475,7 +475,9 @@ class TestConcretize:
 
     def test_disable_mixing1(self):
         with spack.config.override("concretizer", {"compiler_mixing": False}):
-            with spack.config.override("packages", {"dt-diamond-bottom": {"allow_compiler_mixing": True}}):
+            with spack.config.override(
+                "packages", {"dt-diamond-bottom": {"allow_compiler_mixing": True}}
+            ):
                 root = spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
                 assert root.satisfies("%clang")
                 assert root["dt-diamond-bottom"].satisfies("%gcc")
