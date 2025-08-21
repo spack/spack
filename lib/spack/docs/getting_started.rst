@@ -19,27 +19,25 @@ You can clone it from the `GitHub repository <https://github.com/spack/spack>`_ 
    $ git clone --depth=2 https://github.com/spack/spack.git
 
 This will create a directory called ``spack``.
-Once you have cloned Spack, we recommend sourcing the appropriate script for your shell:
+Once you have cloned Spack, we recommend sourcing the appropriate script for your shell.
 
-.. tab-set::
+For *bash*, *zsh* and *sh* users:
 
-   .. tab-item:: bash/zsh/sh
+.. code-block:: console
 
-      .. code-block:: console
+   $ . spack/share/spack/setup-env.sh
 
-         $ . spack/share/spack/setup-env.sh
+For *csh* and *tcsh* users:
 
-   .. tab-item:: tcsh/csh
+.. code-block:: console
 
-      .. code-block:: console
+   $ source spack/share/spack/setup-env.csh
 
-         $ source spack/share/spack/setup-env.csh
+For *fish* users:
 
-   .. tab-item:: fish
+.. code-block:: console
 
-      .. code-block:: console
-
-         $ . spack/share/spack/setup-env.fish
+   $ . spack/share/spack/setup-env.fish
 
 Now you're ready to use Spack!
 
@@ -198,16 +196,12 @@ Next steps
 This section helped you get Spack installed and running quickly.
 There are further resources in the documentation that cover both basic and advanced topics in more detail:
 
-.. tab-set::
+Basic Usage
+   1. :ref:`basic-usage`
+   2. :ref:`compiler-config`
+   3. :ref:`spack-environments-basic-usage`
 
-   .. tab-item:: Basic Usage
-
-      1. :ref:`basic-usage`
-      2. :ref:`compiler-config`
-      3. :ref:`spack-environments-basic-usage`
-
-   .. tab-item:: Advanced Topics
-
-      1. :ref:`toolchains`
-      2. :ref:`audit-packages-and-configuration`
-      3. :ref:`verify-installations`
+Advanced Topics
+   1. :ref:`toolchains`
+   2. :ref:`audit-packages-and-configuration`
+   3. :ref:`verify-installations`
