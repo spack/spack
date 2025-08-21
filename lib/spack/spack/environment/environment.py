@@ -1453,10 +1453,11 @@ class Environment:
         for dep in self.all_specs_generator():
             if dep.name == spec.name:
                 if not dep.satisfies(spec):
-                    msg = f"Develop spec '{spec}' conflicts with concrete specs in environment."
-                    msg += " Try again with 'spack develop --no-apply-changes'"
-                    msg += " and run 'spack concretize --force' to apply changes."
-                    raise SpackEnvironmentDevelopError(msg)
+                    raise SpackEnvironmentDevelopError(
+                        f"Develop spec '{spec}' conflicts with concrete specs in environment."
+                        " Try again with 'spack develop --no-apply-changes'"
+                        " and run 'spack concretize --force' to apply changes."
+                    )
                 modify_specs.append(dep)
 
         # Manipulate dev_path variant on modify_specs
