@@ -179,8 +179,8 @@ Consider asking why the variant (or build option) is being removed and suggest m
 
 .. _depends_on_reviews:
 
-Depends_on Directives
----------------------
+``depends_on`` Directives
+-------------------------
 
 `Dependencies <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#dependencies>`_ represent software that must be installed before the package builds or is able to work correctly.
 
