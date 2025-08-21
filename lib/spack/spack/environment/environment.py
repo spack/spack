@@ -1462,17 +1462,10 @@ class Environment:
 
         # Manipulate dev_path variant on modify_specs
         for s in modify_specs:
-            if path is None:
-                s.variants.pop("dev_path", None)
-            elif "dev_path" in s.variants:
-                if s.variants["dev_path"] != vt.VariantValue(
-                    vt.VariantType.SINGLE, "dev_path", (path,)
-                ):
-                    msg = f"Spec '{s}' already has 'dev_path={s.variants['dev_path'].value}'."
-                    msg += f" Conflict with provided path {path}. Use 'spack undevelop' or 'spack "
-                    msg += "concretize --force' to remove existing path before adding a new one."
-                    raise SpackEnvironmentDevelopError(msg)
-            else:
+            # Remove any existing dev_path variant in all cases
+            # If setting a path, add the new variant
+            s.variants.pop("dev_path", None)
+            if path:
                 s.variants["dev_path"] = vt.VariantValue(
                     vt.VariantType.SINGLE, "dev_path", (path,)
                 )

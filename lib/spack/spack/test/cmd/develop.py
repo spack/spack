@@ -150,16 +150,26 @@ class TestDevelop:
             with pytest.raises(ev.SpackEnvironmentDevelopError, match="conflicts with concrete"):
                 develop("mpich@1.1")
 
-    def test_develop_applies_changes_path_conflict(self, monkeypatch):
+    def test_develop_applies_changes_path(self, monkeypatch):
         env("create", "test")
         with ev.read("test") as e:
-            e.add("mpich@1.0 dev_path=foobar")
+            e.add("mpich@1.0")
             e.concretize()
             e.write()
 
+            # canonicalize paths relative to env
+            testpath1 = spack.util.path.canonicalize_path("test/path1", e.path)
+            testpath2 = spack.util.path.canonicalize_path("test/path2", e.path)
+
             monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
-            with pytest.raises(ev.SpackEnvironmentDevelopError, match="Conflict with provided"):
-                develop("mpich")
+            # Testing that second call to develop successfully changes both config and specs
+            for path in (testpath1, testpath2):
+                develop("--path", path, "mpich@1.0")
+
+                # Check modifications actually worked
+                spec = next(e.roots())
+                assert spec.satisfies(f"dev_path={path}")
+                assert spack.config.get("develop:mpich:path") == path
 
     def test_develop_no_apply_changes(self, monkeypatch):
         env("create", "test")
