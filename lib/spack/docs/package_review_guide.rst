@@ -16,7 +16,7 @@ Package reviews are performed with the goals of minimizing build errors and maki
 This section establishes guidelines to help reviewers assess and merge pull requests (PRs) to Spack’s community `package repository <https://github.com/spack/spack-packages>`_.
 It describes the considerations and actions to be taken when reviewing new and updated `Spack packages <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#structure-of-a-package>`_.
 
-Inappropriate Package
+Inappropriate package
 ---------------------
 
 It is rare that a package would be considered inappropriate for inclusion in the public `Spack package <https://github.com/spack/spack-packages>`_ repository.
@@ -27,14 +27,14 @@ Should you find the software is not appropriate, explain to the :ref:`Package Co
 Ask that the package be removed from the PR if it is one of multiple affected files; otherwise suggest the PR be closed.
 In both cases, explain the reason for the request.
 
-CORE Perl Modules
+CORE Perl modules
 ~~~~~~~~~~~~~~~~~
 
 In general, modules that are part of the standard installation for all listed Perl versions (i.e., ``CORE``) should *not* be implemented or contributed as Spack packages.
 Details on the exceptions and process for checking Perl modules can be found in the `Perl <https://spack.readthedocs.io/en/latest/build_systems/perlpackage.html#suitable_perl_modules>`_ build system documentation.
 
-url, url_for_version, or URL Equivalent
----------------------------------------
+``url``, ``url_for_version``, or URL equivalent
+-----------------------------------------------
 
 Changes to URLs may invalidate existing versions, which should be checked when there is a URL-related modification.
 All packages have a URL, though for some `build systems <https://spack.readthedocs.io/en/latest/build_systems.html>`_ it is derived automatically and not visible in the package.
@@ -64,8 +64,8 @@ As these examples illlustrate, it is sometimes possible to add a ``url_for_versi
 
 If older versions are no longer available and there is a chance someone has the package in a build cache, the usual approach is to first suggest `deprecating <https://spack.readthedocs.io/en/latest/packaging_guide.html#deprecating-old-versions>`_ them in the package.
 
-Maintainers Directive
-----------------------
+``maintainers`` directive
+-------------------------
 
 **Action.**
 If the new package does not have a `maintainers <https://spack.readthedocs.io/en/latest/packaging_guide.html#maintainers>`_ directive, ask the :ref:`Package Contributor <package-contributors>` to consider adding themselves.
@@ -76,16 +76,16 @@ This request is optional for existing packages.
 
    Be prepared for them to refuse.
 
-License Directive
------------------
+``license`` directive
+---------------------
 
 **Action.**
 If the new package does not have a `license <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#license-information>`_  directive, ask the :ref:`Package Contributor <package-contributors>` to investigate and add it.
 
 This request is optional for existing packages.
 
-Version Directives
-------------------
+``version`` directives
+----------------------
 
 In general, Spack packages are expected to be built from source code.
 There are a few exceptions (e.g., `BundlePackage <https://spack.readthedocs.io/en/latest/build_systems/bundlepackage.html#bundlepackage>`_).
@@ -139,7 +139,7 @@ Checksums, commits, tags, and branches
   **Action.**
   In these cases it is acceptable to rely on the package's Maintainers, if any.
 
-Deprecating Versions
+Deprecating versions
 ~~~~~~~~~~~~~~~~~~~~
 
 If someone is deprecating versions, it is good to find out why.
@@ -148,12 +148,12 @@ Sometimes there are concerns, such as security or lack of availability.
 **Action.**
 Suggest the Package Contributor review the `deprecation guidelines <https://spack.readthedocs.io/en/latest/packaging_guide.html#deprecating-old-versions>`_ before finalizing the changes if they haven't already explained why they made the choice in the PR description or comments.
 
-Variant Directives
-------------------
+``variant`` directives
+----------------------
 
 `Variants <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#variants>`_ represent build options so any changes involving these directives should be reflected elsewhere in the package.
 
-Adding or Modifying Variants
+Adding or modifying variants
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Action.**
@@ -164,7 +164,7 @@ The most common uses are additions and changes to:
 * configure options; and/or
 * build arguments.
 
-Removing or Disabling Variants
+Removing or disabling variants
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the variant is still relevant to listed version directives, it may be preferable to adjust or add `conditions <https://spack.readthedocs.io/en/latest/packaging_guide.html#conditional-variants>`_.
@@ -179,12 +179,12 @@ Consider asking why the variant (or build option) is being removed and suggest m
 
 .. _depends_on_reviews:
 
-``depends_on`` Directives
+``depends_on`` directives
 -------------------------
 
 `Dependencies <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#dependencies>`_ represent software that must be installed before the package builds or is able to work correctly.
 
-Updating Dependencies
+Updating dependencies
 ~~~~~~~~~~~~~~~~~~~~~
 
 It is important that dependencies reflect the requirements of listed versions.
@@ -216,12 +216,12 @@ Unfortunately, the generated dependencies are not always complete.
 If these dependencies are being updated, ask if the :ref:`Package Contributor <package-contributors>` can confirm all of the generated dependencies and remove the ``# generated`` comments.
 Definitely make sure Contributors do **not** include ``# generated`` on the dependencies they are adding to the package.
 
-Failed Automated Checks
+Failed automated checks
 -----------------------
 
 All PRs are expected to pass **at least the required** automated checks.
 
-Style Failures
+Style failures
 ~~~~~~~~~~~~~~
 
 The PR may fail one or more style checks.
@@ -230,7 +230,7 @@ The PR may fail one or more style checks.
 If the failure is due to issues raised by the ``black`` style checker *and* the PR is otherwise ready to be merged, you can add ``@spackbot fix style`` in a comment to see if Spack will fix the errors.
 Otherwise, inform the Package Contributor that they need to address the style failures.
 
-CI Stack Failures
+CI stack failures
 ~~~~~~~~~~~~~~~~~
 
 Existing packages **may** be included in GitLab CI pipelines through inclusion in one or more `stacks <https://github.com/spack/spack-packages/tree/develop/stacks>`_.
