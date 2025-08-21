@@ -1381,6 +1381,9 @@ def test_print_install_test_log_failures(
     assert "See test results at" in out
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="FIFO jobserver is currently not supported on Windows"
+)
 def test_install_gmake_ninja_with_fifo(install_mockery):
     """Confirm that gmake that does support fifo sets up FIFO jobserver"""
     gmake_spec = spack.concretize.concretize_one("gmake@4.4")
@@ -1395,13 +1398,38 @@ def test_install_gmake_ninja_with_fifo(install_mockery):
 
 
 def test_install_gmake_ninja_without_fifo(install_mockery):
-    """Confirm that gmake that doesn't support fifo doesn't set up FIFO jobserver"""
+    """Confirm that gmake and ninja pkgs that don't support fifo don't set up FIFO jobserver"""
     gmake_spec = spack.concretize.concretize_one("gmake@3.0")
     gmake_pkg = gmake_spec.package
     gmake_js_class = spack.jobserver.Jobserver.determine_type([gmake_pkg])
-    assert gmake_js_class == spack.jobserver.NoopJobserver
+    assert gmake_js_class == spack.jobserver.NoJobserver
 
     ninja_spec = spack.concretize.concretize_one("ninja@1.10.2")
     ninja_pkg = ninja_spec.package
     ninja_js_class = spack.jobserver.Jobserver.determine_type([ninja_pkg])
-    assert ninja_js_class == spack.jobserver.NoopJobserver
+    assert ninja_js_class == spack.jobserver.NoJobserver
+
+
+def test_install_noop_jobserver_package(install_mockery):
+    """Confirm that a package that doesn't use make will return NOOP for jobserver setup"""
+    py_spec = spack.concretize.concretize_one("python")
+    py_pkg = py_spec.package
+    py_js_class = spack.jobserver.Jobserver.determine_type([py_pkg])
+    assert py_js_class == spack.jobserver.NoopJobserver
+
+
+def test_none_jobserver_type_has_priority(install_mockery):
+    """Confirm that NoJobserver takes priority when other jobserver types are present"""
+    # spec that enables fifo
+    fifo_spec = spack.concretize.concretize_one("gmake@4.4")
+    fifo_pkg = fifo_spec.package
+    # spec that disables use of jobserver
+    none_spec = spack.concretize.concretize_one("ninja@1.10.2")
+    none_pkg = none_spec.package
+    # spec that has noop on jobserver setup
+    noop_spec = spack.concretize.concretize_one("python")
+    noop_pkg = noop_spec.package
+
+    packages = [fifo_pkg, none_pkg, noop_pkg]
+    js_class = spack.jobserver.Jobserver.determine_type(packages)
+    assert js_class == spack.jobserver.NoJobserver
