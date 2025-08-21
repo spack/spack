@@ -150,27 +150,26 @@ Example: swapping MPI providers
 """""""""""""""""""""""""""""""
 
 Suppose that you need to build two software packages, ``pkg-a`` and ``pkg-b``.
-``pkg-a`` is Python 2-based, and ``pkg-b`` is Python 3-based.
-``pkg-a`` only builds with OpenMPI, and ``pkg-b`` only builds with MPICH.
+For ``pkg-b`` you want a newer Python version and a different MPI implementation than for ``pkg-a``.
 You can create different configuration scopes for use with ``pkg-a`` and ``pkg-b``:
 
 .. code-block:: yaml
    :caption: ~/myscopes/pkg-a/packages.yaml
 
    packages:
-       python:
-           require: ["@2.7.11"]
-       mpi:
-           require: [openmpi]
+     python:
+       require: ["@3.11"]
+     mpi:
+       require: [openmpi]
 
 .. code-block:: yaml
    :caption: ~/myscopes/pkg-b/packages.yaml
 
    packages:
-       python:
-           require: ["@3.5.2"]
-       mpi:
-           require: [mpich]
+     python:
+       require: ["@3.13"]
+     mpi:
+       require: [mpich]
 
 
 .. _plugin-scopes:
@@ -189,10 +188,10 @@ Consider the Python package ``my_package`` that includes Spack configurations:
 
   my-package/
   ├── src
-  │   ├── my_package
-  │   │   ├── __init__.py
-  │   │   └── spack/
-  │   │   │   └── config.yaml
+  │   ├── my_package
+  │   │   ├── __init__.py
+  │   │   └── spack/
+  │   │   │   └── config.yaml
   └── pyproject.toml
 
 Adding the following to ``my_package``'s ``pyproject.toml`` will make ``my_package``'s ``spack/`` configurations visible to Spack when ``my_package`` is installed:

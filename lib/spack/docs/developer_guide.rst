@@ -474,14 +474,12 @@ Without any arguments, it is similar to a normal interactive Python shell, excep
 .. code-block:: console
 
    $ spack python
-   Spack version 0.10.0
-   Python 2.7.13, Linux x86_64
    >>> from spack.version import Version
-   >>> a = Version('1.2.3')
-   >>> b = Version('1_2_3')
+   >>> a = Version("1.2.3")
+   >>> b = Version("1_2_3")
    >>> a == b
    True
-   >>> c = Version('1.2.3b')
+   >>> c = Version("1.2.3b")
    >>> c > a
    True
    >>>
@@ -491,14 +489,6 @@ If you prefer using an IPython interpreter, given that IPython is installed, you
 .. code-block:: console
 
    $ spack python -i ipython
-   Python 3.8.3 (default, May 19 2020, 18:47:26)
-   Type 'copyright', 'credits' or 'license' for more information
-   IPython 7.17.0 -- An enhanced Interactive Python. Type '?' for help.
-
-
-   Spack version 0.16.0
-   Python 3.8.3, Linux x86_64
-
    In [1]:
 
 

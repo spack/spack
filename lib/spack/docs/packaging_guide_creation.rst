@@ -2400,14 +2400,14 @@ Now, a user can install, and activate, the ``lua-lpeg`` package for either lua o
 Adding additional constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Some packages produce a Python extension, but are only compatible with Python 3, or with Python 2.
+Some packages produce a Python extension, but require a minimum version of Python to work correctly.
 In those cases, a ``depends_on()`` declaration should be made in addition to the ``extends()`` declaration:
 
 .. code-block:: python
 
    class Icebin(Package):
        extends("python", when="+python")
-       depends_on("python@3:", when="+python")
+       depends_on("python@3.12:", when="+python")
 
 Many packages produce Python extensions for *some* variants, but not others: they should extend ``python`` only if the appropriate variant(s) are selected.
 This may be accomplished with conditional ``extends()`` declarations:

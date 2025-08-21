@@ -61,7 +61,7 @@ While you can certainly wait for the results of these tests after submitting a P
    If this is the case, please file an issue.
 
 
-We currently test against Python 2.7 and 3.6-3.10 on both macOS and Linux and perform three types of tests:
+We currently test against Python 3.6 and up on both macOS and Linux and perform three types of tests:
 
 .. _cmd-spack-unit-test:
 
