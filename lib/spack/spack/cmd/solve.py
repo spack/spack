@@ -67,7 +67,11 @@ def _process_result(result, show, required_format, kwargs):
                 lc = "@g"
             else:
                 lc = "@y"
-            color.cprint(f"  @K{{{i:<8}}}  {lc}{{{criterion.name:<{maxlen}}}}{criterion.value:>5}")
+
+            value = f"@K{{{criterion.value:>5}}}"
+            if criterion.value > 0:
+                value = f"@*{{{criterion.value:>5}}}"
+            color.cprint(f"  @K{{{i:<8}}}  {lc}{{{criterion.name:<{maxlen}}}}{value}")
         print()
         print()
         color.cprint("  @*{Legend:}")
