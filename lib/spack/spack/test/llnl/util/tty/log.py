@@ -133,8 +133,8 @@ def test_log_output_with_filter(capfd, tmp_path: pathlib.Path):
     assert capfd.readouterr()[0] == "bar blah\nblah bar\nbar bar\n"
 
 
-def test_log_output_with_filter_and_append(capfd, tmpdir):
-    with tmpdir.as_cwd():
+def test_log_output_with_filter_and_append(capfd, tmp_path: pathlib.Path):
+    with working_dir(str(tmp_path))
         with log.log_output("foo.txt", filter_fn=_log_filter_fn):
             print("foo blah")
             print("blah foo")
