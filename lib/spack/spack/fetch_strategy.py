@@ -296,8 +296,8 @@ class URLFetchStrategy(FetchStrategy):
         return os.path.sep.join(["archive", self.digest[:2], self.digest])
 
     @property
-    def candidate_urls(self):
-        return [self.url] + (self.mirrors or [])
+    def candidate_urls(self) -> List[str]:
+        return [self.url] + self.mirrors
 
     @_needs_stage
     def fetch(self):
