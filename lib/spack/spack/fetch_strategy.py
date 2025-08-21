@@ -33,7 +33,7 @@ import urllib.parse
 import urllib.request
 import urllib.response
 from pathlib import PurePath
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from spack.vendor.typing_extensions import TypedDict
 
@@ -44,6 +44,7 @@ import spack.llnl.util
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.oci.opener
+import spack.stage
 import spack.util.archive
 import spack.util.crypto as crypto
 import spack.util.git
@@ -100,16 +101,25 @@ class FetchStrategy:
     # optional attributes in version() args.
     optional_attrs: List[str] = []
 
-    def __init__(self, **kwargs):
-        # The stage is initialized late, so that fetch strategies can be
+    def __init__(self, *, no_cache: bool = False):
+        # The stage is initialized late so that fetch strategies can be
         # constructed at package construction time.  This is where things
         # will be fetched.
-        self.stage = None
+        self._stage: Optional[spack.stage.Stage] = None
         # Enable or disable caching for this strategy based on
         # 'no_cache' option from version directive.
-        self.cache_enabled = not kwargs.pop("no_cache", False)
-
+        self.cache_enabled = not no_cache
         self.package = None
+
+    @property
+    def stage(self) -> spack.stage.Stage:
+        if self._stage is None:
+            raise NoStageError()
+        return self._stage
+
+    def set_stage(self, stage: spack.stage.Stage) -> None:
+        """Set the stage for this fetch strategy."""
+        self._stage = stage
 
     def set_package(self, package):
         self.package = package
@@ -129,7 +139,7 @@ class FetchStrategy:
         """Expand the downloaded archive into the stage source path."""
 
     def reset(self):
-        """Revert to freshly downloaded state.
+        """Revert to a freshly downloaded state.
 
         For archive files, this may just re-expand the archive.
         """
@@ -271,9 +281,10 @@ class URLFetchStrategy(FetchStrategy):
         mirrors: Optional[List[str]] = None,
         expand: bool = True,
         extension: Optional[str] = None,
+        no_cache: bool = False,
         **kwargs,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__(no_cache=no_cache)
 
         self.mirrors = mirrors or []
         # The generic 'checksum' is deprecated for specific hash names,
@@ -525,11 +536,13 @@ class VCSFetchStrategy(FetchStrategy):
 
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
+    def __init__(self, no_cache: bool = False, **kwargs):
+        super().__init__(no_cache=no_cache)
         # Set a URL based on the type of fetch strategy.
-        self.url = kwargs.get(self.url_attr, None)
+        if self.url_attr is None or self.url_attr not in kwargs:
+            raise ValueError(f"{self.__class__} requires a valid 'url_attr' attribute.")
+
+        self.url = kwargs[self.url_attr]
         if not self.url:
             raise ValueError(f"{self.__class__} requires {self.url_attr} argument.")
 
@@ -1774,5 +1787,8 @@ class ChecksumError(spack.error.FetchError):
 class NoStageError(spack.error.FetchError):
     """Raised when fetch operations are called before set_stage()."""
 
-    def __init__(self, method):
-        super().__init__("Must call FetchStrategy.set_stage() before calling %s" % method.__name__)
+    def __init__(self, method: Optional[Callable] = None):
+        msg = "Fetch method called before set_stage()"
+        if method is not None:
+            msg = f"Fetch method {method.__name__} called before set_stage()"
+        super().__init__(msg)

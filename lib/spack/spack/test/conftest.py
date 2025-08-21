@@ -581,6 +581,9 @@ class MockCacheFetcher:
     def fetch(self):
         raise spack.error.FetchError("Mock cache always fails for tests")
 
+    def set_stage(self, stage):
+        pass
+
     def __str__(self):
         return "[mock fetch cache]"
 
