@@ -23,7 +23,6 @@ in order to build it.  They need to define the following methods:
 """
 import copy
 import enum
-import functools
 import hashlib
 import os
 import re
@@ -60,19 +59,6 @@ from spack.util.executable import CommandNotFoundError, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
-
-
-def _needs_stage(fun):
-    """Many methods on fetch strategies require a stage to be set
-    using set_stage().  This decorator adds a check for self.stage."""
-
-    @functools.wraps(fun)
-    def wrapper(self, *args, **kwargs):
-        if not self.stage:
-            raise NoStageError(fun)
-        return fun(self, *args, **kwargs)
-
-    return wrapper
 
 
 def _ensure_one_stage_entry(stage_path):
@@ -333,7 +319,6 @@ class URLFetchStrategy(FetchStrategy):
     def candidate_urls(self) -> List[str]:
         return [self.url] + self.mirrors
 
-    @_needs_stage
     def fetch(self):
         if self.archive_file:
             tty.debug(f"Already downloaded {self.archive_file}")
@@ -372,8 +357,7 @@ class URLFetchStrategy(FetchStrategy):
                 os.remove(save_file)
             raise FailedDownloadError(e) from e
 
-    @property  # type: ignore # decorated properties unsupported in mypy
-    @_needs_stage
+    @property
     def archive_file(self) -> str:
         """Path to the source archive within this stage directory."""
         return self.stage.archive_file
@@ -382,7 +366,6 @@ class URLFetchStrategy(FetchStrategy):
     def cachable(self):
         return self.cache_enabled and bool(self.digest)
 
-    @_needs_stage
     def expand(self):
         if not self.expand_archive:
             tty.debug(
@@ -427,7 +410,6 @@ class URLFetchStrategy(FetchStrategy):
             self.archive_file, url_util.path_to_file_url(destination), keep_original=True
         )
 
-    @_needs_stage
     def check(self):
         """Check the downloaded archive against a checksum digest.
         No-op if this stage checks code out of a repository."""
@@ -436,7 +418,6 @@ class URLFetchStrategy(FetchStrategy):
 
         verify_checksum(self.archive_file, self.digest, self.url, self._effective_url)
 
-    @_needs_stage
     def reset(self):
         """
         Removes the source path if it exists, then re-expands the archive.
@@ -467,7 +448,6 @@ class URLFetchStrategy(FetchStrategy):
 class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
 
-    @_needs_stage
     def fetch(self):
         path = url_util.file_url_string_to_path(self.url)
 
@@ -502,7 +482,6 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
 
         self._urlopen = kwargs.get("_urlopen", spack.oci.opener.urlopen)
 
-    @_needs_stage
     def fetch(self):
         file = self.stage.save_filename
 
@@ -549,15 +528,12 @@ class VCSFetchStrategy(FetchStrategy):
         for attr in self.optional_attrs:
             setattr(self, attr, kwargs.get(attr, None))
 
-    @_needs_stage
     def check(self):
         tty.debug(f"No checksum needed when fetching with {self.url_attr}")
 
-    @_needs_stage
     def expand(self):
         tty.debug(f"Source fetched with {self.url_attr} is already expanded.")
 
-    @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
         assert spack.llnl.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
@@ -617,7 +593,6 @@ class GoFetchStrategy(VCSFetchStrategy):
             self._go = which("go", required=True)
         return self._go
 
-    @_needs_stage
     def fetch(self):
         tty.debug("Getting go resource: {0}".format(self.url))
 
@@ -633,7 +608,6 @@ class GoFetchStrategy(VCSFetchStrategy):
     def archive(self, destination):
         super().archive(destination, exclude=".git")
 
-    @_needs_stage
     def expand(self):
         tty.debug("Source fetched with %s is already expanded." % self.url_attr)
 
@@ -641,7 +615,6 @@ class GoFetchStrategy(VCSFetchStrategy):
         repo_root = _ensure_one_stage_entry(self.stage.path)
         shutil.move(repo_root, self.stage.source_path)
 
-    @_needs_stage
     def reset(self):
         with working_dir(self.stage.source_path):
             self.go("clean")
@@ -771,7 +744,6 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         return f"{self.url}{args}"
 
-    @_needs_stage
     def fetch(self):
         if self.stage.expanded:
             tty.debug(f"Already fetched {self.stage.source_path}")
@@ -994,7 +966,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                     args.insert(1, "--quiet")
                 git(*args)
 
-    @_needs_stage
     def reset(self):
         with working_dir(self.stage.source_path):
             co_args = ["checkout", "."]
@@ -1087,7 +1058,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
             result += "%date=" + self.date
         return result
 
-    @_needs_stage
     def fetch(self):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
@@ -1123,7 +1093,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
     def archive(self, destination):
         super().archive(destination, exclude="CVS")
 
-    @_needs_stage
     def reset(self):
         self._remove_untracked_files()
         with working_dir(self.stage.source_path):
@@ -1180,7 +1149,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
             result = os.path.sep.join(["svn", repo_path, self.revision])
             return result
 
-    @_needs_stage
     def fetch(self):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
@@ -1216,7 +1184,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
     def archive(self, destination):
         super().archive(destination, exclude=".svn")
 
-    @_needs_stage
     def reset(self):
         self._remove_untracked_files()
         with working_dir(self.stage.source_path):
@@ -1289,7 +1256,6 @@ class HgFetchStrategy(VCSFetchStrategy):
             result = os.path.sep.join(["hg", repo_path, self.revision])
             return result
 
-    @_needs_stage
     def fetch(self):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
@@ -1319,7 +1285,6 @@ class HgFetchStrategy(VCSFetchStrategy):
     def archive(self, destination):
         super().archive(destination, exclude=".hg")
 
-    @_needs_stage
     def reset(self):
         with working_dir(self.stage.path):
             source_path = self.stage.source_path
@@ -1347,7 +1312,6 @@ class S3FetchStrategy(URLFetchStrategy):
     def _create_downloader(self) -> Downloader:
         return UrllibDownloader()
 
-    @_needs_stage
     def fetch(self):
         if not self.url.startswith("s3://"):
             raise spack.error.FetchError(
@@ -1372,7 +1336,6 @@ class GCSFetchStrategy(URLFetchStrategy):
     def _create_downloader(self) -> Downloader:
         return UrllibDownloader()
 
-    @_needs_stage
     def fetch(self):
         if not self.url.startswith("gs"):
             raise spack.error.FetchError(
