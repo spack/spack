@@ -21,6 +21,7 @@ Here is a quick list of them, in case you want to skip directly to specific docs
 * :ref:`modules.yaml <modules>`
 * :ref:`packages.yaml <packages-config>` (including :ref:`compiler configuration <compiler-config>`)
 * :ref:`repos.yaml <repositories>`
+* :ref:`toolchains.yaml <toolchains>`
 
 You can also add any of these as inline configuration in the YAML manifest file (``spack.yaml``) describing an :ref:`environment <environment-configuration>`.
 
