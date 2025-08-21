@@ -1450,7 +1450,7 @@ class Environment:
         spec for the same package does not satisfy the given develop spec."""
         # Find all specs that this develop request applies to
         modify_specs = []
-        for dep in traverse.traverse_nodes(list(self.specs_by_hash.values())):
+        for dep in self.all_specs_generator():
             if dep.name == spec.name:
                 if not dep.satisfies(spec):
                     msg = f"Develop spec '{spec}' conflicts with concrete specs in environment."
