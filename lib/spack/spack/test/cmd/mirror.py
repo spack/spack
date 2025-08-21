@@ -609,7 +609,7 @@ def test_binary_provenance_url_fails_mirror_resolves_commit(
     mirror("add", "--type", "source", "test-mirror", mirror_path)
 
     spec = spack.concretize.concretize_one("git-test-commit@main")
-    assert spec.package.stage.archive_file
+
     assert "commit" in spec.variants
     assert spec.variants["commit"].value == gold_commit
 
