@@ -118,7 +118,7 @@ If multiple scopes are provided:
 Example: scopes for release and development
 """""""""""""""""""""""""""""""""""""""""""
 
-Suppose that you need to support simultaneous building of release and development versions of ``mypackage``, where ``mypackage`` depends on ``A``, which in turn depends on ``B``.
+Suppose that you need to support simultaneous building of release and development versions of ``mypackage``, where ``mypackage`` depends on ``packagea``, which in turn depends on ``packageb``.
 You could create the following files:
 
 .. code-block:: yaml
@@ -126,25 +126,25 @@ You could create the following files:
 
    packages:
        mypackage:
-           version: [1.7]
-       A:
-           version: [2.3]
-       B:
-           version: [0.8]
+           prefer: ["@1.7"]
+       packagea:
+           prefer: ["@2.3"]
+       packageb:
+           prefer: ["@0.8"]
 
 .. code-block:: yaml
    :caption: ~/myscopes/develop/packages.yaml
 
    packages:
        mypackage:
-           version: [develop]
-       A:
-           version: [develop]
-       B:
-           version: [develop]
+           prefer: ["@develop"]
+       packagea:
+           prefer: ["@develop"]
+       packageb:
+           prefer: ["@develop"]
 
 You can switch between ``release`` and ``develop`` configurations using configuration arguments.
-You would type ``spack -C ~/myscopes/release`` when you want to build the designated release versions of ``mypackage``, ``A``, and ``B``, and you would type ``spack -C ~/myscopes/develop`` when you want to build all of these packages at the ``develop`` version.
+You would type ``spack -C ~/myscopes/release`` when you want to build the designated release versions of ``mypackage``, ``packagea``, and ``packageb``, and you would type ``spack -C ~/myscopes/develop`` when you want to build all of these packages at the ``develop`` version.
 
 Example: swapping MPI providers
 """""""""""""""""""""""""""""""
@@ -159,20 +159,18 @@ You can create different configuration scopes for use with ``packagea`` and ``pa
 
    packages:
        python:
-           version: [2.7.11]
-       all:
-           providers:
-               mpi: [openmpi]
+           require: ["@2.7.11"]
+       mpi:
+           require: [openmpi]
 
 .. code-block:: yaml
    :caption: ~/myscopes/packageb/packages.yaml
 
    packages:
        python:
-           version: [3.5.2]
-       all:
-           providers:
-               mpi: [mpich]
+           require: ["@3.5.2"]
+       mpi:
+           require: [mpich]
 
 
 .. _plugin-scopes:
