@@ -21,7 +21,7 @@ Creating a New Environment
 
 First, let's create a new environment.
 We'll assume that Spack is already set up correctly, and that you've already sourced the setup script for your shell.
-To create, and activate, a new environment, simply run:
+To create and activate a new environment, simply run:
 
 .. code-block:: console
 
@@ -36,7 +36,7 @@ We can run:
 
    $ spack -e myenv add bash@5 python py-numpy py-scipy py-matplotlib
 
-Each package can be listed on a separate line, or combined into a single line like we did above.
+Each package can be added individually, or together like we did above.
 Notice that we're explicitly asking for Bash 5 here.
 You can use any spec you would normally use on the command line with other Spack commands.
 If you run the following command:
@@ -45,7 +45,7 @@ If you run the following command:
 
    $ spack -e myenv config edit
 
-you'll see how your ``spack.yaml`` looks like:
+you'll see what your ``spack.yaml`` looks like:
 
 .. code-block:: yaml
 
@@ -69,20 +69,20 @@ Configuring View Location
 -------------------------
 
 Spack symlinks all installations to ``${SPACK_ROOT}/var/spack/environments/myenv/.spack-env/view``, which is the default when ``view: true``.
-You can actually change this to any directory you want by editing the ``spack.yaml`` manifest file, or by using the following command:
+You can change this to any directory you want by editing the ``spack.yaml`` manifest file, or by using the following command:
 
 .. code-block:: console
 
    $ spack -e myenv env view enable <path>
 
 In order to access files in these locations, you need to update ``PATH`` and other environment variables to point to them.
-Activating the Spack environment does this automatically, once the software is installed:
+Activating the Spack environment does this automatically once the software is installed:
 
 .. code-block:: console
 
    $ spack env activate -p myenv
 
-For now, let's deactivate the environment, and proceed with installing the software:
+For now, let's deactivate the environment and proceed with installing the software:
 
 .. code-block:: console
 

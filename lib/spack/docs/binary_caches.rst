@@ -11,8 +11,7 @@
 Build Caches
 ============
 
-Some sites may encourage users to set up their own test environments before carrying out central installations, or some users may prefer to set up these environments on their own motivation.
-To reduce the load of recompiling otherwise identical package specs in different installations, installed packages can be put into build cache tarballs, pushed to your Spack mirror, and then downloaded and installed by others.
+To avoid recompilation of Spack packages, installed packages can be pushed to a build cache, and then downloaded and installed by others.
 
 Whenever a mirror provides prebuilt packages, Spack will take these packages into account during concretization and installation, making ``spack install`` significantly faster.
 
@@ -33,7 +32,7 @@ Build caches are created via:
 
     $ spack buildcache push <path/url/mirror name> <spec>
 
-This command takes the locally installed spec and its dependencies and creates tarballs of their install prefixes.
+This command takes the locally installed spec and its dependencies, and creates tarballs of their install prefixes.
 It also generates metadata files, signed with GPG.
 These tarballs and metadata files are then pushed to the provided build cache, which can be a local directory or a remote URL.
 
@@ -60,7 +59,7 @@ To find or install build cache files, a Spack mirror must be configured with:
     $ spack mirror add <name> <url or path>
 
 
-Both web URLs and local paths on the filesystem can be specified.
+Both URLs and local paths on the filesystem can be specified.
 In the previous example, you might add the directory "spack-cache" and call it ``mymirror``:
 
 
@@ -120,7 +119,7 @@ It worked!
 You've just completed a full example of creating a build cache with a spec of interest, adding it as a mirror, updating its index, listing the contents, and finally, installing from it.
 
 By default, Spack falls back to building from sources when the mirror is not available or when the package is simply not already available.
-To force Spack to only install prebuilt packages, you can use:
+To force Spack to install only prebuilt packages, you can use:
 
 .. code-block:: console
 
@@ -134,7 +133,7 @@ For example, to combine all of the commands above to add the E4S build cache and
     $ spack buildcache keys --install --trust
     $ spack install --use-buildcache only <package>
 
-We use ``--install`` and ``--trust`` to say that we are installing keys to our keyring and trusting all downloaded keys.
+The ``--install`` and ``--trust`` flags install keys to the keyring and trust all downloaded keys.
 
 
 List of Popular Build Caches
@@ -173,13 +172,13 @@ Additional keys may be added to the keyring using:
 
 Once a key is trusted, packages signed by the owner of the key may be installed.
 
-If you would like to remove keys from your keyring, use instead:
+To remove keys from your keyring, use:
 
 .. code-block:: console
 
    $ spack gpg untrust <keyid>
 
-Key IDs can be email addresses, names, or (best) fingerprints.
+Key IDs can be email addresses, names, or (preferably) fingerprints.
 
 Creating keys
 ^^^^^^^^^^^^^
@@ -199,7 +198,7 @@ Secret keys may also be later exported using the ``spack gpg export <location> [
    :class: tip
 
    The creation of a new GPG key requires generating a lot of random numbers.
-   Depending on the entropy produced on your system, the entire process may take a long time (*even appearing to hang*).
+   Depending on the entropy produced on your system, the entire process may take a long time (and may even appear to hang).
    Virtual machines and cloud instances are particularly likely to display this behavior.
 
    To speed it up, you may install tools like ``rngd``, which is usually available as a package in the host OS.
@@ -226,7 +225,7 @@ Alternatively, signing and verification can be enabled or disabled on a per-buil
     $ spack mirror set --signed <name>  # enable signing and verification for an existing mirror
     $ spack mirror set --unsigned <name>  # disable signing and verification for an existing mirror
 
-Or you can directly edit the ``mirrors.yaml`` configuration file:
+Alternatively, you can edit the ``mirrors.yaml`` configuration file directly:
 
 .. code-block:: yaml
 
@@ -240,7 +239,7 @@ See also :ref:`mirrors`.
 Relocation
 ----------
 
-When using build caches across different machines, it is likely that the install root will be different from the one used to build the binaries.
+When using build caches across different machines, it is likely that the install root is different from the one used to build the binaries.
 
 To address this issue, Spack automatically relocates all paths encoded in binaries and scripts to their new location upon installation.
 
@@ -262,7 +261,7 @@ To reduce the likelihood of this happening, it is highly recommended to add padd
 Automatic Push to a Build Cache
 ---------------------------------
 
-Sometimes it is convenient to push packages to a build cache as soon as they are installed.
+Sometimes it is convenient to push packages to a build cache immediately after they are installed.
 Spack can do this by setting the autopush flag when adding a mirror:
 
 .. code-block:: console
@@ -343,7 +342,7 @@ To produce container images, all you need to do is add the ``--base-image`` flag
     root@e4c2b6f6b3f4:/# ninja --version
     1.11.1
 
-If ``--base-image`` is not specified, distroless images are produced.
+If ``--base-image`` is not specified, Spack produces distroless images.
 In practice, you won't be able to run these as containers because they don't come with libc and other system dependencies.
 However, they are still compatible with tools like ``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
 
@@ -431,7 +430,7 @@ Build Cache Layout
 
 This section describes the structure and content of URL-style build caches, as distinguished from OCI-style build caches.
 
-The entry point for a binary package is a manifest JSON file that points to at least two other files stored as content-addressed blobs.
+The entry point for a binary package is a manifest JSON file that references at least two other files stored as content-addressed blobs.
 These files include a spec metadata file, as well as the installation directory of the package stored as a compressed archive file.
 Binary package manifest files are named to indicate the package name and version, as well as the hash of the concrete spec.
 For example:
@@ -468,7 +467,7 @@ Such a file would live in the versioned spec manifests directory of a binary mir
      ]
    }
 
-The manifest points to both the compressed tar file as well as the compressed spec metadata file and contains the checksum of each.
+The manifest references both the compressed tar file as well as the compressed spec metadata file, and contains the checksum of each.
 This checksum is also used as the address of the associated file and, hence, must be known in order to locate the tarball or spec file within the mirror.
 Once the tarball or spec metadata file is downloaded, the checksum should be computed locally and compared to the checksum in the manifest to ensure the contents have not changed since the binary package was pushed.
 Spack stores all data files (including compressed tar files, spec metadata, indices, public keys, etc.) within a ``blobs/<hash-algorithm>/`` directory, using the first two characters of the checksum as a subdirectory to reduce the number of files in a single folder.
@@ -510,7 +509,7 @@ Every manifest contains a ``data`` array, each element of which refers to an ass
 Considering the example spec manifest shown above, the compressed installation archive can be found by picking out the data blob with the appropriate ``mediaType``, which in this case would be ``application/vnd.spack.install.v1.tar+gzip``.
 The associated file is found by looking in the blobs directory under ``blobs/sha256/fb/`` for the file named with the complete checksum value.
 
-As mentioned above, every entity in a binary mirror (aka build cache) is stored as a content-addressed blob pointed to by a manifest.
+As mentioned above, every entity in a build cache is stored as a content-addressed blob pointed to by a manifest.
 While an example spec manifest (i.e., a manifest for a binary package) is shown above, here is what the manifest of a build cache index looks like:
 
 .. code-block:: json

@@ -44,7 +44,7 @@ Now you're ready to use Spack!
 List packages you can install
 -----------------------------
 
-Once Spack is ready you can list all the packages it knows about with the following command:
+Once Spack is ready, you can list all the packages it knows about with the following command:
 
 .. code-block:: spec
 
@@ -58,12 +58,12 @@ If you want to get more information on a specific package, for instance ``hdf5``
 
 This command shows information about ``hdf5``, including a brief description, the versions of the package Spack knows about, and all the options you can activate when installing.
 
-As you can see it's quite simple to gather basic information on packages, before you install them!
+As you can see, it's quite simple to gather basic information on packages before you install them!
 
 .. admonition:: Slowdown on the very first command
    :class: warning
 
-   The very first command run with Spack will take a while to finish, as Spack has to build a few caches to speed up subsequent command execution.
+   The first command you run with Spack may take a while, as Spack builds caches to speed up future commands.
 
 Installing your first package
 -----------------------------
@@ -75,7 +75,7 @@ To search your machine for available compilers, you can run:
 
    $ spack compiler find
 
-The command shows users if any compiler was found, and where its configuration is stored.
+The command shows users whether any compilers were found and where their configuration is stored.
 If the search was successful, you can now list known compilers, and get an output similar to the following:
 
 .. code-block:: console
@@ -85,12 +85,12 @@ If the search was successful, you can now list known compilers, and get an outpu
    -- gcc ubuntu20.04-x86_64 ---------------------------------------
    [e]  gcc@9.4.0  [e]  gcc@8.4.0  [e]  gcc@10.5.0
 
-If no compilers were found, you need either to:
+If no compilers were found, you need to either:
 
 * Install further prerequisites, see :ref:`verify-spack-prerequisites`, and repeat the search above.
 * Register a buildcache that provides a compiler already available as a binary
 
-Once a compiler is available you can proceed installing your first package:
+Once a compiler is available, you can proceed installing your first package:
 
 .. code-block:: spec
 
@@ -171,11 +171,11 @@ The simplest way to have ``tclsh`` available on the command line is:
 
    $ spack load tcl
 
-The environment of the current shell has now been modified, and you can run:
+The environment of the current shell has now been modified, and you can run
 
 .. code-block:: console
 
-   $ tcsh
+   $ tclsh
 
 directly.
 To undo these modifications, you can:

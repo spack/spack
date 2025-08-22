@@ -35,9 +35,9 @@ The condition ``os == "ventura"`` in the ``when`` clause for ``/path/to/os-speci
 The same conditions and variables in `Spec List References <https://spack.readthedocs.io/en/latest/environments.html#spec-list-references>`_ can be used for conditional activation in the ``when`` clauses.
 
 Included files can be specified by path or by their parent directory.
-Paths may be absolute, relative (to the configuration file including the path), or specified as URLs.
-Only the ``file``, ``ftp``, ``http``, and ``https`` protocols (or schemes) are supported.
-Spack-specific, environment and user path variables can be used.
+Paths may be absolute, relative to the including configuration file, or specified as URLs.
+Only the ``file``, ``ftp``, ``http``, and ``https`` schemes are supported.
+Spack-specific, environment, and user path variables can be used.
 (See :ref:`config-file-variables` for more information.)
 
 A ``sha256`` is required for remote file URLs and must be specified as follows:

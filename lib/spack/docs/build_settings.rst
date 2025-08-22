@@ -29,12 +29,12 @@ In the former case ("single value"), it allows Spack to:
 2. Reuse installed packages and build caches only for the dependencies of the root specs, when ``dependencies``.
 3. Disregard reusing installed packages and build caches, when ``false``.
 
-In case finer control over which specs are reused is needed, then the value of this attribute can be an object with the following keys:
+In case finer control over which specs are reused is needed, the value of this attribute can be an object with the following keys:
 
 1. ``roots``: if ``true`` root specs are reused, if ``false`` only dependencies of root specs are reused
 2. ``from``: list of sources from which reused specs are taken
 
-Each source in ``from`` is itself an object:
+Each source in ``from`` is itself an object with the following attributes:
 
 .. list-table:: Attributes for a source or reusable specs
    :header-rows: 1

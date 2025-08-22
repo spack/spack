@@ -157,7 +157,7 @@ In such cases we have to use the ``build_system`` directive to indicate when whi
            default="cmake",
        )
 
-In the example the directive imposes a change from ``Autotools`` to ``CMake`` going from ``v0.63`` to ``v0.64``.
+In the example, the directive imposes a change from ``Autotools`` to ``CMake`` going from ``v0.63`` to ``v0.64``.
 
 We have seen how users can run ``spack install example build_system=cmake`` to pick the desired build system.
 The same can be done in ``depends_on`` statements, which has certain use cases.
@@ -209,7 +209,8 @@ Finally, to determine the version of each executable the ``determine_version`` m
            exe (str): absolute path to the executable being examined
        """
 
-This method receives as input the path to a single executable and must return as output its version as a string; if the user cannot determine the version or determines that the executable is not an instance of the package, they can return None and the executable will be discarded as a candidate.
+This method receives as input the path to a single executable and must return as output its version as a string.
+If the version cannot be determined, or if the executable turns out to be a false positive, the value ``None`` must be returned, which ensures that the executable is discarded as a candidate.
 Implementing the two steps above is mandatory, and gives the package the basic ability to detect if a spec is present on the system at a given version.
 
 .. note::
@@ -286,7 +287,7 @@ which takes as input a prefix and a list of matching executables and returns a f
 Using this method has the advantage of allowing custom logic for filtering, and does not restrict the user to regular expressions only.
 Consider the case of detecting the GNU C++ compiler.
 If we try to search for executables that match ``g++``, that would have the unwanted side effect of selecting also ``clang++`` - which is a C++ compiler provided by another package - if present on the system.
-Trying to select executables that contain ``g++`` but not ``clang`` would be quite complicated to do using regex only.
+Trying to select executables that contain ``g++`` but not ``clang`` would be quite complicated to do using only regular expressions.
 Employing the ``filter_detected_exes`` method it becomes:
 
 .. code-block:: python
@@ -520,5 +521,6 @@ Customizing Views
 Spack environments manage a view of their packages, which is a single directory that merges all installed packages through symlinks, so users can easily access them.
 The methods of ``PackageViewMixin`` can be overridden to customize how packages are added to views.
 Sometimes it's impossible to get an application to work just through symlinking its executables, and patching is necessary.
-For example, Python scripts in a ``bin`` directory may have a shebang that points to the Python interpreter in Python's install prefix, but it's more convenient to have the shebang point to the Python interpreter in the view, since that interpreter is aware of the Python packages in the view (the view is a virtual environment).
-As a consequence, Python extension packages (those inheriting from ``PythonPackage``) override ``add_files_to_view`` in order to rewrite shebang lines.
+For example, Python scripts in a ``bin`` directory may have a shebang that points to the Python interpreter in Python's install prefix and not to the Python interpreter in the view.
+However, it's more convenient to have the shebang point to the Python interpreter in the view, since that interpreter can locate other Python packages in the view without ``PYTHONPATH`` being set.
+Therefore, Python extension packages (those inheriting from ``PythonPackage``) override ``add_files_to_view`` in order to rewrite shebang lines.

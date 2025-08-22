@@ -997,7 +997,7 @@ Any entries that appear below the keyword ``all`` in the projections configurati
 Activating environment views
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``spack env activate <env>`` has two effects:
+The ``spack env activate <env>`` command has two effects:
 
 1. It activates the environment so that further Spack commands such as ``spack install`` will run in the context of the environment.
 2. It activates the view so that environment variables such as ``PATH`` are updated to include the view.

@@ -1300,7 +1300,7 @@ E.g., in openmpi, you'll find this:
 
 That code allows the ``openmpi`` package to associate an ``mpicc`` property with the ``openmpi`` node in the DAG, so that dependents can access it.
 ``mvapich2`` and ``mpich`` do similar things.
-So, no matter what MPI you're using, spec["mpi"].mpicc gets you the location of the MPI compilers.
+So, no matter what MPI you're using, ``spec["mpi"].mpicc`` gets you the location of the MPI compilers.
 This allows us to have a fairly simple polymorphic interface for information about virtual dependencies like MPI.
 
 Wrapping wrappers
@@ -1321,7 +1321,7 @@ This doesn't play nicely by default with MPI, so we have to do a couple of trick
 MPI on Cray machines
 ^^^^^^^^^^^^^^^^^^^^^
 
-The Cray programming environment notably uses ITS OWN compiler wrappers, which function like MPI wrappers.
+The Cray programming environment notably uses its own compiler wrappers, which function like MPI wrappers.
 On Cray systems, the ``CC``, ``cc``, and ``ftn`` wrappers ARE the MPI compiler wrappers, and it's assumed that you'll use them for all of your builds.
 So on Cray we don't bother with ``mpicc``, ``mpicxx``, etc., Spack MPI implementations set ``spec["mpi"].mpicc`` to point to Spack's wrappers, which wrap the Cray wrappers, which wrap the regular compilers and include MPI flags.
 That may seem complicated, but for packagers, that means the same code for using MPI wrappers will work, even on a Cray:
@@ -1398,7 +1398,7 @@ Keeping the install prefix on failure
 
 Conversely, if a build fails but *has* installed some files, you may want to keep the install prefix to diagnose the issue.
 
-By default, ``spack install`` will delete the install directory if anything fails during build.
+By default, ``spack install`` deletes the install directory if anything fails during build.
 
 The ``--keep-prefix`` option allows you to keep the install prefix regardless of the build outcome.
 

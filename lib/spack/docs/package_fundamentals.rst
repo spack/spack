@@ -43,8 +43,8 @@ The ``spack list`` command prints out a list of all of the packages Spack can in
 Packages are listed by name in alphabetical order.
 A pattern can be used to narrow the list, and the following rules apply:
 
-* A pattern with no wildcards (``*`` or ``?``) will be treated as if it started and ended with ``*``
-* All patterns will be treated as case-insensitive
+* A pattern with no wildcards (``*`` or ``?``) is treated as if it starts and ends with ``*``
+* All patterns are case-insensitive
 
 To search for all packages whose names contain the word ``sql`` you can run the following command:
 

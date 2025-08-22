@@ -34,8 +34,8 @@ For **RHEL**, **AlmaLinux**, and **Rocky Linux** users:
 macOS
 -----
 
-On macOS, the Command Line Tools package is required, and a full Xcode suite may be necessary for some packages such as Qt and apple-gl.
-To install Xcode you can use the following command:
+On macOS, the Command Line Tools package is required, and the full Xcode suite may be necessary for some packages, such as Qt and apple-gl.
+To install Xcode, you can use the following command:
 
 .. code-block:: console
 
@@ -64,9 +64,9 @@ If the output is:
 
 you only have the command-line tools installed.
 The full Xcode suite can be installed through the App Store.
-Make sure you launch the Xcode application and accept the license agreement before using Spack.
+Make sure to launch the Xcode application and accept the license agreement before using Spack.
 It may ask you to install additional components.
-Alternatively, the license can be accepted through the command line:
+Alternatively, the Xcode license can be accepted through the command line:
 
 .. code-block:: console
 

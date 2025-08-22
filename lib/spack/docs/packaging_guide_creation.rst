@@ -321,7 +321,7 @@ If you need to add additional arguments to the ``./configure`` call, add them vi
 In the generated package, the download ``url`` attribute is already set.
 All the things you still need to change are marked with ``FIXME`` labels.
 You can delete the commented instructions between the Spack license and the first import statement after reading them.
-The rest of the tasks you need to complete are as follows:
+The remaining tasks to complete are as follows:
 
 #. Add a description.
 
@@ -358,7 +358,7 @@ The rest of the tasks you need to complete are as follows:
 Further package creation options
 """"""""""""""""""""""""""""""""
 
-If you do not have a URL to a tarball, you can still use ``spack create`` to generate the boilerplate for a package.
+If you do not have a tarball URL, you can still use ``spack create`` to generate the boilerplate for a package.
 
 .. code-block:: console
 
@@ -1428,7 +1428,7 @@ To define a *multi-valued* variant, simply pass ``multi=True`` instead:
           description="Compilers and runtime libraries to build",
       )
 
-This allows users to run ``spack install languages=c,c++`` where the values are separated by commas.
+This allows users to run ``spack install languages=c,c++``, where the values are separated by commas.
 
 
 Advanced validation of multi-valued variants
@@ -1448,7 +1448,7 @@ Naively, one might think that this can be achieved by simply creating a multi-va
            description="Enable dataspaces and/or flexpath staging transports",
        )
 
-but this does not prevent users from selecting the non-sensical option ``staging=dataspaces,none``.
+but this does not prevent users from selecting the nonsensical option ``staging=dataspaces,none``.
 
 In these cases, more advanced validation logic is required to prevent ``none`` from being selected along with any other value.
 Spack provides two validator functions to help with this, which can be passed to the ``values=`` argument of the ``variant`` directive.
@@ -1515,7 +1515,7 @@ To model a similar situation we can use *conditional possible values* in the var
    )
 
 
-The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the ``cxxstd`` variant, while ``17`` requires a version greater or equal to ``1.63.0`` and both ``2a`` and ``2b`` require a version greater or equal to ``1.73.0``.
+The snippet above allows ``98``, ``11`` and ``14`` as unconditional possible values for the ``cxxstd`` variant, while ``17`` requires a version greater than or equal to ``1.63.0`` and both ``2a`` and ``2b`` require a version greater than or equal to ``1.73.0``.
 
 
 Conditional Variants
@@ -1702,7 +1702,7 @@ There is short syntax to specify that a package is compatible with say any ``3.x
 
    depends_on("python@3")
 
-The above is equivalent to ``depends_on("python@3:3")``, which means at least Python version 3 and at most any version ``3.x.y``.
+The above is equivalent to ``depends_on("python@3:3")``, which means at least Python version 3 and at most any ``3.x.y`` version.
 
 In very rare cases, you may need to specify an exact version, for example if you need to distinguish between ``3.2`` and ``3.2.1``:
 
@@ -1831,7 +1831,7 @@ Here, the ``special-tool`` package requires a special feature in ``binutils``, s
 This is similar to the `patch directive <patching_>`_, with one small difference.
 Here, ``special-tool`` is responsible for the patch, so it should live in ``special-tool``'s directory in the package repository, not the ``binutils`` directory.
 
-If you need something more sophisticated than this, you can simply nest a ``patch()`` directive inside of ``depends_on``:
+If you need something more sophisticated, you can nest a ``patch()`` directive inside ``depends_on``:
 
 .. code-block:: python
 
@@ -2757,7 +2757,7 @@ Each of these can be customized by implementing the relevant attribute as a ``@p
            # The library provided by Foo is libMyFoo.so
            return find_libraries("libMyFoo", root=self.home, recursive=True)
 
-A package may also provide a custom implementation of each attribute for the virtual packages it provides by implementing the ``<virtual>_<attribute>`` property in the package's class.
+A package may also provide custom implementations of each attribute for the virtual packages it provides, by implementing the ``<virtual>_<attribute>`` property in its package class.
 The implementation used is the first one found from:
 
 #. Specialized virtual: ``Package.<virtual>_<attribute>``
@@ -2781,8 +2781,8 @@ When both are enabled, the installation tree appears as follows:
    baz/include/baz/baz.h
    baz/lib/libFooBaz.so
 
-The install tree shows that ``foo`` is providing the header ``include/foo.h`` and library ``lib64/libFoo.so`` in its install prefix.
-The virtual package ``bar`` is providing ``include/bar/bar.h`` and library ``lib64/libFooBar.so``, also in ``foo``'s install prefix.
+The install tree shows that ``foo`` provides the header ``include/foo.h`` and library ``lib64/libFoo.so`` in its install prefix.
+The virtual package ``bar`` provides the header ``include/bar/bar.h`` and library ``lib64/libFooBar.so``, also in ``foo``'s install prefix.
 The ``baz`` package, however, is provided in the ``baz`` subdirectory of ``foo``'s prefix with the ``include/baz/baz.h`` header and ``lib/libFooBaz.so`` library.
 Such a package could implement the optional attributes as follows:
 
@@ -2973,9 +2973,9 @@ python   False    Build Python extension
 
 If specified in this table, the corresponding default is recommended.
 
-The semantics of the `shared` variant are important.
-When a package is built `~shared`, the package guarantees that no shared libraries are built.
-When a package is built `+shared`, the package guarantees that shared libraries are built, but it makes no guarantee about whether static libraries are built.
+The semantics of the ``shared`` variant are important.
+When a package is built ``~shared``, the package guarantees that no shared libraries are built.
+When a package is built ``+shared``, the package guarantees that shared libraries are built, but it makes no guarantee about whether static libraries are built.
 
 Version definitions
 ^^^^^^^^^^^^^^^^^^^

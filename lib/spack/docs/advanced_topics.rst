@@ -20,8 +20,8 @@ A detailed list of the checks currently implemented for each subcommand can be p
 
 .. command-output:: spack -v audit list
 
-Depending on the use case, users might run the appropriate subcommands to obtain diagnostics.
-Issues, if found, are reported to stdout:
+Depending on the use case, users can run the appropriate subcommands to obtain diagnostics.
+If issues are found, they are reported to stdout:
 
 .. code-block:: console
 
@@ -50,11 +50,11 @@ The ``spack verify manifest`` command will check, for every file in each package
 It will also check for newly added files or deleted files from the installation prefix.
 Spack can either check all installed packages using the ``-a,--all`` option or accept specs listed on the command line to verify.
 
-The ``spack verify manifest`` command can also verify for individual files that they haven't been altered since installation time.
+The ``spack verify manifest`` command can also verify that individual files haven't been altered since installation time.
 If the given file is not in a Spack installation prefix, Spack will report that it is not owned by any package.
 To check individual files instead of specs, use the ``-f,--files`` option.
 
-Spack installation manifests are part of the tarball signed by Spack for binary package distribution.
+Spack installation manifests are included in the tarball signed by Spack for binary package distribution.
 When installed from a binary package, Spack uses the packaged installation manifest instead of creating one at install time.
 
 The ``spack verify`` command also accepts the ``-l,--local`` option to check only local packages (as opposed to those used transparently from ``upstream`` Spack instances) and the ``-j,--json`` option to output machine-readable JSON data for any errors.
@@ -98,7 +98,7 @@ If none of those work, you can disable locking in one of two ways:
 
    If you disable locking, concurrent instances of Spack will have no way to avoid stepping on each other.
    You must ensure that there is only **one** instance of Spack running at a time.
-   Otherwise, Spack may end up with a corrupted database file, or you may not be able to see all installed packages in commands like ``spack find``.
+   Otherwise, Spack may end up with a corrupted database, or you may not be able to see all installed packages when running commands like ``spack find``.
 
    If you are unfortunate enough to run into this situation, you may be able to fix it by running ``spack reindex``.
 
@@ -110,7 +110,7 @@ This issue typically manifests with the error below:
    Traceback (most recent call last):
    File "./spack", line 176, in <module>
      main()
-   File "./spack", line 154,' in main
+   File "./spack", line 154, in main
      return_val = command(parser, args)
    File "./spack/lib/spack/spack/cmd/find.py", line 170, in find
      specs = set(spack.installed_db.query(\**q_args))

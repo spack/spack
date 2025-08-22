@@ -12,7 +12,7 @@ Toolchains (toolchains.yaml)
 =============================
 
 Toolchains let you group a set of compiler constraints under a single, user-defined name.
-This allows you to reference a complex set of compiler choices for C, C++, Fortran, with a simple spec like ``%my_toolchain``.
+This allows you to reference a complex set of compiler choices for C, C++, and Fortran, with a simple spec like ``%my_toolchain``.
 They are defined under the ``toolchains`` section of the configuration.
 
 .. seealso::
@@ -39,7 +39,7 @@ As an example, the following configuration file defines a toolchain named ``llvm
 
 The ``when`` clause in each entry determines if that line's ``spec`` is applied.
 In this example, it means that ``llvm`` is used as a compiler for the C and C++ languages, and ``gcc`` for Fortran, *whenever the package uses those languages*.
-The spec ``cflags=-O3`` is *always* required, because there is no ``when`` clause for that spec.
+The spec ``cflags=-O3`` is *always* applied, because there is no ``when`` clause for that spec.
 
 The toolchain can be referenced using
 
@@ -66,7 +66,7 @@ The conditional nature of toolchains is important, because it helps you avoid tw
 
 2. Secondly, when you specify ``my-package %c,cxx,fortran=gcc`` to be more explicit, your spec might be **overconstrained**.
    You not only require ``gcc`` for all languages, but *also* that ``my-package`` uses *all* these languages.
-   This will cause a concretization error if ``my-package`` was written in C and C++, but not Fortran.
+   This will cause a concretization error if ``my-package`` is written in C and C++, but not Fortran.
 
 Combining toolchains
 --------------------
@@ -158,7 +158,7 @@ Toolchains can be used to simplify the construction of a list of specs for Spack
        - [kokkos, hdf5~cxx+fortran, py-scipy]
        - ["%llvm_gfortran"]
 
-Note that in this case we can use a single matrix, and the user doesn't need to know exactly which package requires which language.
+Note that in this case, we can use a single matrix, and the user doesn't need to know exactly which package requires which language.
 Without toolchains, it would be difficult to enforce compilers directly, because:
 
 * ``kokkos`` depends on C and C++, but not Fortran

@@ -28,7 +28,7 @@ Here is an example of using a complex spec to install a very specific configurat
 
    $ spack install mpileaks@1.2:1.4 +debug ~qt target=x86_64_v3 %gcc@15 ^libelf@1.1 %clang@20
 
-The figure below helps getting a sense of the various parts that compose this spec:
+The figure below helps you get a sense of the various parts that compose this spec:
 
 .. figure:: images/spec_anatomy.svg
    :alt: Spack spec with annotations
@@ -115,7 +115,7 @@ You can put all the same modifiers on dependency specs that you would put on the
 That is, you can specify their versions, variants, and architectures just like any other spec.
 Specifiers are associated with the nearest package name to their left.
 
-The order of transitive package dependencies doesn't matter when writing a spec.
+The order of transitive dependencies does not matter when writing a spec.
 For example, these two specs represent exactly the same configuration:
 
 .. code-block:: spec
@@ -410,14 +410,14 @@ will produce compilation lines similar to:
 
 where the flags ``-march=icelake-client -mtune=icelake-client`` are injected by Spack based on the requested target and compiler.
 
-If Spack knows that the requested compiler can't optimize for the current target or can't build binaries for that target at all, it will exit with a meaningful error message:
+If Spack determines that the requested compiler cannot optimize for the requested target or cannot build binaries for that target at all, it will exit with a meaningful error message:
 
 .. code-block:: spec
 
    $ spack install zlib%gcc@5.5.0 target=icelake
    ==> Error: cannot produce optimized binary for micro-architecture "icelake" with gcc@5.5.0 [supported compiler versions are 8:]
 
-Conversely, if an old compiler is selected for a newer microarchitecture, Spack will optimize for the best match it can find instead of failing:
+Conversely, if an older compiler is selected for a newer microarchitecture, Spack will optimize for the best match instead of failing:
 
 .. code-block:: spec
 
@@ -444,7 +444,7 @@ Conversely, if an old compiler is selected for a newer microarchitecture, Spack 
 
 In the snippet above, for instance, the microarchitecture was demoted to ``haswell`` when compiling with ``gcc@4.8`` because support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
 
-Finally, if Spack has no information to match compiler and target, it will proceed with the installation but avoid injecting any microarchitecture-specific flags.
+Finally, if Spack has no information to match the compiler and target, it will proceed with the installation but avoid injecting any microarchitecture-specific flags.
 
 .. _sec-virtual-dependencies:
 
@@ -613,7 +613,7 @@ Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Conditional dependencies allow dependency constraints to be applied only under certain conditions.
-We can express conditional constraint by specifying the ``when`` edge attribute:
+We can express conditional constraints by specifying the ``when`` edge attribute:
 
 .. code-block:: spec
 
