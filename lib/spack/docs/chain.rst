@@ -24,7 +24,7 @@ The ``install_tree`` must point to the ``opt/spack`` directory inside of the Spa
 
 Once the upstream Spack instance has been added, ``spack find`` will automatically check the upstream instance when querying installed packages, and new package installations for the local Spack installation will use any dependencies that are installed in the upstream instance.
 
-This other instance of Spack has no knowledge of the local Spack instance and may not have the same permissions or ownership as the local Spack instance.
+The upstream Spack instance has no knowledge of the local Spack instance and may not have the same permissions or ownership as the local Spack instance.
 This has the following consequences:
 
 #. Upstream Spack instances are not locked.

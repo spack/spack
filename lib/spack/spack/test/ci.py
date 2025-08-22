@@ -32,7 +32,7 @@ def repro_dir(tmp_path: pathlib.Path):
         yield result
 
 
-def test_get_added_versions_new_checksum(mock_git_package_changes):
+def test_filter_added_checksums_new_checksum(mock_git_package_changes):
     repo, filename, commits = mock_git_package_changes
 
     checksum_versions = {
@@ -43,14 +43,12 @@ def test_get_added_versions_new_checksum(mock_git_package_changes):
     }
 
     with fs.working_dir(repo.packages_path):
-        added_versions = ci.get_added_versions(
-            checksum_versions, filename, from_ref=commits[-1], to_ref=commits[-2]
-        )
-        assert len(added_versions) == 1
-        assert added_versions[0] == Version("2.1.5")
+        assert ci.filter_added_checksums(
+            checksum_versions.keys(), filename, from_ref=commits[-1], to_ref=commits[-2]
+        ) == ["3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04"]
 
 
-def test_get_added_versions_new_commit(mock_git_package_changes):
+def test_filter_added_checksums_new_commit(mock_git_package_changes):
     repo, filename, commits = mock_git_package_changes
 
     checksum_versions = {
@@ -62,11 +60,9 @@ def test_get_added_versions_new_commit(mock_git_package_changes):
     }
 
     with fs.working_dir(repo.packages_path):
-        added_versions = ci.get_added_versions(
+        assert ci.filter_added_checksums(
             checksum_versions, filename, from_ref=commits[-2], to_ref=commits[-3]
-        )
-        assert len(added_versions) == 1
-        assert added_versions[0] == Version("2.1.6")
+        ) == ["74253725f884e2424a0dd8ae3f69896d5377f325"]
 
 
 def test_pipeline_dag(config, repo_builder: RepoBuilder):

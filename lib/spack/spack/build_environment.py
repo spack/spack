@@ -165,7 +165,9 @@ def jobserver_enabled():
     return "MAKEFLAGS" in os.environ and "--jobserver" in os.environ["MAKEFLAGS"]
 
 
-def get_effective_jobs(jobs, parallel=True, supports_jobserver=False):
+def get_effective_jobs(
+    jobs, parallel: bool = True, supports_jobserver: bool = False
+) -> Optional[int]:
     """Return the number of jobs, or None if supports_jobserver and a jobserver is detected."""
     if not parallel or jobs <= 1 or env_flag(SPACK_NO_PARALLEL_MAKE):
         return 1
@@ -249,7 +251,7 @@ class MakeExecutable(Executable):
         jobs_env_supports_jobserver: bool = False,
         **kwargs,
     ) -> Optional[str]:
-        """Runs this "make" executable in a subprocess.
+        """Runs this ``make`` executable in a subprocess.
 
         Args:
             parallel: if False, parallelism is disabled

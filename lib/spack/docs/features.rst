@@ -25,7 +25,7 @@ Custom versions & configurations
 --------------------------------
 
 Spack allows installation to be customized.
-Users can specify the version, compile-time options, and cross-compile platform, all on the command line.
+Users can specify the version, compile-time options, and target architecture, all on the command line.
 
 .. code-block:: spec
 
@@ -41,7 +41,7 @@ Users can specify the version, compile-time options, and cross-compile platform,
    # Add compiler flags using the conventional names
    $ spack install hdf5@1.14.6 cflags="-O3 -floop-block"
 
-   # Cross-compile for a different micro-architecture with target=
+   # Target a specific micro-architecture
    $ spack install hdf5@1.14.6 target=icelake
 
 Users can specify as many or as few options as they care about.
@@ -51,7 +51,7 @@ Customize dependencies
 ----------------------
 
 Spack allows *dependencies* of a particular installation to be customized extensively.
-Users can specify both *direct* dependencies of a node, using the ``%`` sigil, or *transitive* dependencies, using the ``^`` sigil:
+Users can specify both *direct* dependencies of a package, using the ``%`` sigil, or *transitive* dependencies, using the ``^`` sigil:
 
 .. code-block:: spec
 
@@ -61,7 +61,7 @@ Users can specify both *direct* dependencies of a node, using the ``%`` sigil, o
    # Install hdf5 using hwloc with CUDA enabled (transitive dependency)
    $ spack install hdf5@1.14.6 ^hwloc+cuda
 
-The expression on the command line can be as simple, or as complicated, as the user needs:
+The expression on the command line can be as simple or as complicated as the user needs:
 
 .. code-block:: spec
 

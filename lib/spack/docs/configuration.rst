@@ -21,6 +21,7 @@ Here is a quick list of them, in case you want to skip directly to specific docs
 * :ref:`modules.yaml <modules>`
 * :ref:`packages.yaml <packages-config>` (including :ref:`compiler configuration <compiler-config>`)
 * :ref:`repos.yaml <repositories>`
+* :ref:`toolchains.yaml <toolchains>`
 
 You can also add any of these as inline configuration in the YAML manifest file (``spack.yaml``) describing an :ref:`environment <environment-configuration>`.
 
@@ -100,11 +101,11 @@ Custom scopes
 
 In addition to the ``defaults``, ``system``, ``site``, and ``user`` scopes, you may add configuration scopes directly on the command line with the ``--config-scope`` argument, or ``-C`` for short.
 
-For example, the following adds two configuration scopes, named ``scopea`` and ``scopeb``, to a ``spack spec`` command:
+For example, the following adds two configuration scopes, named ``scope-a`` and ``scope-b``, to a ``spack spec`` command:
 
 .. code-block:: spec
 
-   $ spack -C ~/myscopes/scopea -C ~/myscopes/scopeb spec ncurses
+   $ spack -C ~/myscopes/scope-a -C ~/myscopes/scope-b spec ncurses
 
 Custom scopes come *after* the ``spack`` command and *before* the subcommand, and they specify a single path to a directory containing configuration files.
 You can add the same configuration files to that directory that you can add to any other scope (e.g., ``config.yaml``, ``packages.yaml``, etc.).
@@ -117,7 +118,7 @@ If multiple scopes are provided:
 Example: scopes for release and development
 """""""""""""""""""""""""""""""""""""""""""
 
-Suppose that you need to support simultaneous building of release and development versions of ``mypackage``, where ``mypackage`` depends on ``A``, which in turn depends on ``B``.
+Suppose that you need to support simultaneous building of release and development versions of ``mypackage``, where ``mypackage`` depends on ``pkg-a``, which in turn depends on ``pkg-b``.
 You could create the following files:
 
 .. code-block:: yaml
@@ -125,53 +126,50 @@ You could create the following files:
 
    packages:
        mypackage:
-           version: [1.7]
-       A:
-           version: [2.3]
-       B:
-           version: [0.8]
+           prefer: ["@1.7"]
+       pkg-a:
+           prefer: ["@2.3"]
+       pkg-b:
+           prefer: ["@0.8"]
 
 .. code-block:: yaml
    :caption: ~/myscopes/develop/packages.yaml
 
    packages:
        mypackage:
-           version: [develop]
-       A:
-           version: [develop]
-       B:
-           version: [develop]
+           prefer: ["@develop"]
+       pkg-a:
+           prefer: ["@develop"]
+       pkg-b:
+           prefer: ["@develop"]
 
 You can switch between ``release`` and ``develop`` configurations using configuration arguments.
-You would type ``spack -C ~/myscopes/release`` when you want to build the designated release versions of ``mypackage``, ``A``, and ``B``, and you would type ``spack -C ~/myscopes/develop`` when you want to build all of these packages at the ``develop`` version.
+You would type ``spack -C ~/myscopes/release`` when you want to build the designated release versions of ``mypackage``, ``pkg-a``, and ``pkg-b``, and you would type ``spack -C ~/myscopes/develop`` when you want to build all of these packages at the ``develop`` version.
 
 Example: swapping MPI providers
 """""""""""""""""""""""""""""""
 
-Suppose that you need to build two software packages, ``packagea`` and ``packageb``.
-``packagea`` is Python 2-based, and ``packageb`` is Python 3-based.
-``packagea`` only builds with OpenMPI, and ``packageb`` only builds with MPICH.
-You can create different configuration scopes for use with ``packagea`` and ``packageb``:
+Suppose that you need to build two software packages, ``pkg-a`` and ``pkg-b``.
+For ``pkg-b`` you want a newer Python version and a different MPI implementation than for ``pkg-a``.
+You can create different configuration scopes for use with ``pkg-a`` and ``pkg-b``:
 
 .. code-block:: yaml
-   :caption: ~/myscopes/packgea/packages.yaml
+   :caption: ~/myscopes/pkg-a/packages.yaml
 
    packages:
-       python:
-           version: [2.7.11]
-       all:
-           providers:
-               mpi: [openmpi]
+     python:
+       require: ["@3.11"]
+     mpi:
+       require: [openmpi]
 
 .. code-block:: yaml
-   :caption: ~/myscopes/packageb/packages.yaml
+   :caption: ~/myscopes/pkg-b/packages.yaml
 
    packages:
-       python:
-           version: [3.5.2]
-       all:
-           providers:
-               mpi: [mpich]
+     python:
+       require: ["@3.13"]
+     mpi:
+       require: [mpich]
 
 
 .. _plugin-scopes:
@@ -190,10 +188,10 @@ Consider the Python package ``my_package`` that includes Spack configurations:
 
   my-package/
   ├── src
-  │   ├── my_package
-  │   │   ├── __init__.py
-  │   │   └── spack/
-  │   │   │   └── config.yaml
+  │   ├── my_package
+  │   │   ├── __init__.py
+  │   │   └── spack/
+  │   │   │   └── config.yaml
   └── pyproject.toml
 
 Adding the following to ``my_package``'s ``pyproject.toml`` will make ``my_package``'s ``spack/`` configurations visible to Spack when ``my_package`` is installed:
@@ -227,7 +225,7 @@ Platform-specific Configuration
 There is often a need for platform-specific configuration settings.
 For example, on most platforms, GCC is the preferred compiler.
 However, on macOS (darwin), Clang often works for more packages, and is set as the default compiler.
-This configuration is set in ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is included as by ``$(prefix)/etc/spack/defaults/include.yaml``.
+This configuration is set in ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is included by ``$(prefix)/etc/spack/defaults/include.yaml``.
 Since it is an included configuration of the ``defaults`` scope, settings in the ``defaults`` scope will take precedence.
 You can override the values by specifying settings in ``system``, ``site``, ``user``, or ``custom``, where scope precedence is:
 

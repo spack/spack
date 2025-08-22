@@ -223,22 +223,23 @@ DO NOT MIX the two options within the same install tree.
 This is an *experimental option* that controls whether Spack embeds absolute paths to needed shared libraries in ELF executables and shared libraries on Linux.
 Setting this option to ``true`` has two advantages:
 
-1. **Improved startup time**: when running an executable, the dynamic loader does not have to perform a search for needed libraries, they are loaded directly.
-2. **Reliability**: libraries loaded at runtime are those that were linked to.
+1. **Improved startup time**: when running an executable, the dynamic loader does not have to search for needed libraries.
+   They are loaded directly.
+2. **Reliability**: libraries loaded at runtime are those that were linked during the build.
    This minimizes the risk of accidentally picking up system libraries.
 
 In the current implementation, Spack sets the soname (shared object name) of libraries to their install path upon installation.
 This has two implications:
 
 1. Binding does not apply to libraries installed *before* the option was enabled.
-2. Toggling the option off does *not* prevent binding of libraries installed when the option was still enabled.
+2. Disabling the option does *not* prevent binding of libraries installed when the option was still enabled.
 
 It is also worth noting that:
 
 1. Applications relying on ``dlopen(3)`` will continue to work, even when they open a library by name.
    This is because RPATHs are retained in binaries also when ``bind`` is enabled.
 2. ``LD_PRELOAD`` continues to work for the typical use case of overriding symbols, such as preloading a library with a more efficient ``malloc``.
-   However, the preloaded library will be loaded *additionally to*, instead of *in place of* another library with the same name --- this can be problematic in very rare cases where libraries rely on a particular ``init`` or ``fini`` order.
+   However, the preloaded library will be loaded *in addition to*, rather than *in place of*, another library with the same name -- which can be problematic in rare cases where libraries rely on a particular ``init`` or ``fini`` order.
 
 .. note::
 

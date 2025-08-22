@@ -30,7 +30,7 @@ These criteria are more nuanced than always choosing the latest versions or defa
 
     As a rule of thumb: requirements + constraints > strong preferences > reuse > preferences > defaults.
 
-The following set of criteria (from lowest to highest precedence) explain common cases where concretization output may seem surprising at first.
+The following set of criteria (from lowest to highest precedence) explains common cases where concretization output may seem surprising at first.
 
 1. :ref:`Package preferences <package-preferences>` configured in ``packages.yaml`` override variant defaults from ``package.py`` files, and influence the optimal ordering of versions.
    Preferences are specified as follows:

@@ -585,8 +585,8 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         return _disjoint_set_validator
 
 
-def _a_single_value_or_a_combination(single_value, *values):
-    error = "the value '" + single_value + "' is mutually exclusive with any of the other values"
+def _a_single_value_or_a_combination(single_value: str, *values: str) -> DisjointSetsOfValues:
+    error = f"the value '{single_value}' is mutually exclusive with any of the other values"
     return (
         DisjointSetsOfValues((single_value,), values)
         .with_default(single_value)
@@ -600,12 +600,14 @@ def _a_single_value_or_a_combination(single_value, *values):
 # TODO: a common namespace (like 'multi') in the future.
 
 
-def any_combination_of(*values):
+def any_combination_of(*values: str) -> DisjointSetsOfValues:
     """Multi-valued variant that allows either any combination of the specified values, or none
      at all (using ``variant=none``). The literal value ``none`` is used as sentinel for the empty
      set, since in the spec DSL we have to always specify a value for a variant.
 
     It is up to the package implementation to handle the value ``none`` specially, if at all.
+
+    See also :func:`auto_or_any_combination_of` and :func:`disjoint_sets`.
 
     Args:
         *values: allowed variant values
@@ -620,9 +622,11 @@ def any_combination_of(*values):
     return _a_single_value_or_a_combination("none", *values)
 
 
-def auto_or_any_combination_of(*values):
-    """Multi-valued variant that allows any combination of a set of values
-    (but not the empty set) or `"auto"`.
+def auto_or_any_combination_of(*values: str) -> DisjointSetsOfValues:
+    """Multi-valued variant that allows any combination of a set of values (but not the empty set)
+    or ``auto``.
+
+    See also :func:`any_combination_of` and :func:`disjoint_sets`.
 
     Args:
         *values: allowed variant values
@@ -640,18 +644,16 @@ def auto_or_any_combination_of(*values):
     return _a_single_value_or_a_combination("auto", *values)
 
 
-#: Multi-valued variant that allows any combination picking
-#: from one of multiple disjoint sets
-def disjoint_sets(*sets):
-    """Multi-valued variant that allows any combination picking from one
-    of multiple disjoint sets of values, and also allows the user to specify
-    'none' (as a string) to choose none of them.
+def disjoint_sets(*sets: Tuple[str, ...]) -> DisjointSetsOfValues:
+    """Multi-valued variant that allows any combination picking from one of multiple disjoint sets
+    of values, and also allows the user to specify ``none`` to choose none of them.
 
-    It is up to the package implementation to handle the value 'none'
-    specially, if at all.
+    It is up to the package implementation to handle the value ``none`` specially, if at all.
+
+    See also :func:`any_combination_of` and :func:`auto_or_any_combination_of`.
 
     Args:
-        *sets:
+        *sets: sets of allowed values, each set is a tuple of strings
 
     Returns:
         a properly initialized instance of :class:`~spack.variant.DisjointSetsOfValues`

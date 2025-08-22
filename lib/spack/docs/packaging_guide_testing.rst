@@ -31,9 +31,9 @@ A package that *appears* to install successfully does not mean it is actually in
 There are a number of possible points of failure so Spack provides features for checking the software along the way.
 
 Failures can occur during and after the installation process.
-The build may start but the software may not end up fully installed.
-The installed software may not work at all or as expected.
-The software may work after being installed but, due to changes on the system, may stop working days, weeks, or months after being installed.
+The build may start, but the software may not end up fully installed.
+The installed software may not work at all, or may not work as expected.
+The software may work after being installed, but due to changes on the system, may stop working days, weeks, or months after being installed.
 
 This section describes Spack's support for checks that can be performed during and after its installation.
 The former checks are referred to as ``build-time tests`` and the latter as ``stand-alone (or smoke) tests``.
@@ -206,7 +206,7 @@ The second decorator tells Spack to only run the checks when the ``--test`` opti
    You also want to be sure the package supports the phase you use in the ``run_after`` directive.
    For example, ``PackageBase`` only supports the ``install`` phase while the ``AutotoolsPackage`` and ``MakefilePackage`` support both ``install`` and ``build`` phases.
 
-Assuming both ``build`` and ``install`` phases are available to you, you could add additional checks to be performed after each of those phases based on the skeleton provided below.
+Assuming both ``build`` and ``install`` phases are available, you can add additional checks to be performed after each of those phases based on the skeleton provided below.
 
 .. code-block:: python
 
@@ -436,7 +436,7 @@ Adding stand-alone test parts
 """""""""""""""""""""""""""""
 
 Sometimes dependencies between steps of a test lend themselves to being broken into parts.
-Tracking the pass/fail status of each part may aid debugging.
+Tracking the pass/fail status of each part can aid debugging.
 Spack provides a ``test_part`` context manager for use within test methods.
 
 Each test part is independently run, tracked, and reported.
@@ -487,15 +487,15 @@ We can accomplish this goal by implementing a stand-alone test method consisting
            """run setup, perform, and report"""
 
            with test_part(self, "test_series_setup", purpose="setup operation"):
-                exe = which(self.prefix.bin.setup))
+                exe = which(self.prefix.bin.setup)
                 exe()
 
            with test_part(self, "test_series_run", purpose="perform operation"):
-                exe = which(self.prefix.bin.run))
+                exe = which(self.prefix.bin.run)
                 exe()
 
            with test_part(self, "test_series_report", purpose="generate report"):
-                exe = which(self.prefix.bin.report))
+                exe = which(self.prefix.bin.report)
                 exe()
 
 The result is ``test_series`` runs the following executable in order: ``setup``, ``run``, and ``report``.
@@ -516,7 +516,7 @@ Consequently, the implementation could be simplified with a for-loop as follows:
                ("report", "generate report")
            ]:
                with test_part(self, f"test_series_{exe}", purpose=reason):
-                   exe = which(self.prefix.bin.join(exe))
+                   exe = which(self.prefix.bin.join(exe)
                    exe()
 
 In both cases, since we're using a context manager, each test part in ``test_series`` will execute regardless of the status of the other test parts.

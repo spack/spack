@@ -28,7 +28,7 @@ At a high level, the ``packages.yaml`` file is structured like this:
      all:
        # settings that apply to all packages.
 
-So you can either set build preferences specifically for *one* package, or you can specify that certain settings should apply to *all* packages.
+You can either set build preferences specifically for *one* package, or you can specify that certain settings should apply to *all* packages.
 The types of settings you can customize are described in detail below.
 
 Spack's build defaults are in the default ``etc/spack/defaults/packages.yaml`` file.
@@ -41,7 +41,7 @@ External Packages
 -----------------
 
 Spack can be configured to use externally-installed packages rather than building its own packages.
-This may be desirable if machines ship with system packages, such as a customized MPI that should be used instead of Spack building its own MPI.
+This may be desirable if machines ship with system packages, such as a customized MPI, which should be used instead of Spack building its own MPI.
 
 External packages are configured through the ``packages.yaml`` file.
 Here's an example of an external configuration:
@@ -76,7 +76,6 @@ To specify externals, add an ``externals:`` attribute under the package name, wh
 Each external should specify a ``spec:`` string that should be as well-defined as reasonably possible.
 If a package lacks a spec component, such as missing a compiler or package version, then Spack will guess the missing component based on its most-favored packages, and it may guess incorrectly.
 
-Each package version and compiler listed in an external should have entries in Spack's packages and compiler configuration, even though the package and compiler may not ever be built.
 
 Extra attributes for external packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -190,7 +189,7 @@ The addition of the ``buildable`` flag tells Spack that it should never build it
 
 If an external module is specified as not buildable, then Spack will load the external module into the build environment which can be used for linking.
 
-The ``buildable`` does not need to be paired with external packages.
+The ``buildable`` attribute does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be buggy or otherwise undesirable.
 
 Non-buildable virtual packages
@@ -212,7 +211,7 @@ Spack can be configured with every MPI provider not buildable individually, but 
        - spec: "openmpi@1.4.3+debug"
          prefix: /opt/openmpi-1.4.3-debug
 
-Spack can then use any of the listed external implementations of MPI to satisfy a dependency, and will choose depending on the compiler and architecture.
+Spack can then use any of the listed external implementations of MPI to satisfy a dependency, and will choose among them depending on the compiler and architecture.
 
 In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers (available via stores or buildcaches) are not desirable, Spack can be configured to require specs matching only the available externals:
 

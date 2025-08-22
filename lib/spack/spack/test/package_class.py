@@ -273,7 +273,7 @@ def test_package_license():
 
 
 class BaseTestPackage(PackageBase):
-    extendees = None  # currently a required attribute for is_extension()
+    extendees = {}  # currently a required attribute for is_extension()
 
 
 def test_package_version_fails():

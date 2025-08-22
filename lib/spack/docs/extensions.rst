@@ -9,20 +9,21 @@
 Custom Extensions
 =================
 
-*Spack extensions* allow you to extend Spack capabilities by deploying your own custom commands or logic in an arbitrary location on your filesystem.
-This might be extremely useful e.g., to develop and maintain a command whose purpose is too specific to be considered for reintegration into the mainline or to evolve a command through its early stages before starting a discussion to merge it upstream.
+*Spack extensions* allow you to add custom subcommands to the ``spack`` command.
+This is extremely useful when developing and maintaining a command whose purpose is too specific to be included in the Spack codebase.
+It's also useful for evolving a command through its early stages before starting a discussion to merge it upstream.
 
-From Spack's point of view an extension is any path in your filesystem that respects the following naming and layout for files:
+From Spack's point of view, an extension is any path in your filesystem that respects the following naming and layout for files:
 
 .. code-block:: console
 
   spack-scripting/ # The top level directory must match the format 'spack-{extension_name}'
   ├── pytest.ini # Optional file if the extension ships its own tests
   ├── scripting # Folder that may contain modules that are needed for the extension commands
-  │   ├── cmd # Folder containing extension commands
-  │   │   └── filter.py # A new command that will be available
-  │   └── functions.py # Module with internal details
-  └── tests # Tests for this extension
+  │   ├── cmd # Folder containing extension commands
+  │   │   └── filter.py # A new command that will be available
+  │   └── functions.py # Module with internal details
+  ├── tests # Tests for this extension
   │   ├── conftest.py
   │   └── test_filter.py
   └── templates # Templates that may be needed by the extension
@@ -44,7 +45,7 @@ Configure Spack to Use Extensions
 ---------------------------------
 
 To make your current Spack instance aware of extensions you should add their root paths to ``config.yaml``.
-In the case of our example this means ensuring that:
+In the case of our example, this means ensuring that:
 
 .. code-block:: yaml
 

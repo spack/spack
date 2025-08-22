@@ -130,6 +130,13 @@ def union_dicts(*dicts):
 def memoized(func):
     """Decorator that caches the results of a function, storing them in
     an attribute of that function.
+
+    Example::
+
+        @memoized
+        def expensive_computation(x):
+            # Some expensive computation
+            return result
     """
     return functools.lru_cache(maxsize=None)(func)
 
@@ -1069,6 +1076,7 @@ class classproperty(Generic[ClassPropertyType]):
 
     def __init__(self, callback: Callable[[Any], ClassPropertyType]) -> None:
         self.callback = callback
+        self.__doc__ = callback.__doc__
 
     def __get__(self, instance, owner) -> ClassPropertyType:
         return self.callback(owner)

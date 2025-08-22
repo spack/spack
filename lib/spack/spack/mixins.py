@@ -35,7 +35,8 @@ def filter_compiler_wrappers(
 
     Args:
         *files: files to be filtered relative to the search root (install prefix by default).
-        after: specifies after which phase the files should be filtered (defaults to "install")
+        after: specifies after which phase the files should be filtered (defaults to
+            ``"install"``).
         relative_root: path relative to install prefix where to start searching for the files to be
             filtered. If not set the install prefix will be used as the search root. It is *highly
             recommended* to set this, as searching recursively from the installation prefix can be

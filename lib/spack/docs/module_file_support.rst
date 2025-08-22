@@ -433,7 +433,7 @@ When specifying module names by projection for Lmod modules, we recommend NOT in
                 - 'intel/14.0.1'
 
    will create module files that will conflict with ``intel/14.0.1`` and with the base directory of the same module, effectively preventing the possibility to load two or more versions of the same software at the same time.
-   The tokens that are available for use in this directive are the same understood by the :meth:`~spack.spec.Spec.format` method.
+   The tokens that are available for use in this directive are those understood by the :meth:`~spack.spec.Spec.format` method.
 
    For Lmod and Environment Modules versions prior to 4.2, it is important to express the conflict on both module files conflicting with each other.
 
@@ -441,7 +441,7 @@ When specifying module names by projection for Lmod modules, we recommend NOT in
 .. note::
    Lmod hierarchical module files
      When ``lmod`` is activated Spack will generate a set of hierarchical lua module files that are understood by Lmod.
-     The hierarchy will always contain the two layers ``Core`` / ``Compiler`` but can be further extended to any of the virtual dependencies present in Spack.
+     The hierarchy always contains the ``Core`` and ``Compiler`` layers, but can be extended to include any virtual packages present in Spack.
      A case that could be useful in practice is for instance:
 
      .. code-block:: yaml
@@ -622,7 +622,7 @@ If instead what you need is just to delete a few module files, then the right su
 Using Spack modules in shell scripts
 ------------------------------------
 
-The easiest To enable additional Spack commands for loading and unloading module files, and to add the correct path to ``MODULEPATH``, you need to source the appropriate setup file.
+To enable additional Spack commands for loading and unloading module files, and to add the correct path to ``MODULEPATH``, you need to source the appropriate setup file.
 Assuming Spack is installed in ``$SPACK_ROOT``, run the appropriate command for your shell:
 
 .. code-block:: console
@@ -669,7 +669,7 @@ Module Commands for Shell Scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Although Spack is flexible, the ``module`` command is much faster.
-This could become an issue when emitting a series of ``spack load`` commands inside a shell script.
+This can become an issue when emitting a series of ``spack load`` commands inside a shell script.
 By adding the ``--dependencies`` flag, ``spack module tcl loads`` may also be used to generate code that can be cut-and-pasted into a shell script.
 For example:
 

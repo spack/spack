@@ -107,7 +107,7 @@ where ``/opt/cuda/cuda-11.0.2/lib/`` contains ``libcudart.so``.
 
 
 Using an External OpenGL API
------------------------------------
+----------------------------
 Depending on whether we have a graphics card or not, we may choose to use OSMesa or GLX to implement the OpenGL API.
 
 If a graphics card is unavailable, OSMesa is recommended and can typically be built with Spack.
@@ -117,14 +117,14 @@ Here's how to do it:
 
 .. code-block:: yaml
 
-  packages:
-    libglx:
-      require: [opengl]
-    opengl:
-      buildable: false
-      externals:
-      - prefix: /usr/
-        spec: opengl@4.6
+   packages:
+     libglx:
+       require: [opengl]
+     opengl:
+       buildable: false
+       externals:
+       - prefix: /usr/
+         spec: opengl@4.6
 
 Note that the prefix has to be the root of both the libraries and the headers (e.g., ``/usr``), not the path to the ``lib`` directory.
 To know which spec for OpenGL is available, use ``cd /usr/include/GL && grep -Ri gl_version``.
