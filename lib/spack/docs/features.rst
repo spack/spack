@@ -79,10 +79,22 @@ Packages can peacefully coexist
 Spack avoids library misconfiguration by using ``RPATH`` to link dependencies.
 When a user links a library or runs a program, it is tied to the dependencies it was built with, so there is no need to manipulate ``LD_LIBRARY_PATH`` at runtime.
 
-Creating packages is easy
--------------------------
+Unprivileged user installs
+--------------------------
 
-To create a new package, all Spack needs is a URL for the source archive.
+Spack does not require administrator privileges to install packages.
+You can install software in any directory you choose, making it easy to manage packages in your home directory or shared project locations without needing sudo access.
+
+From source and binary
+----------------------
+
+Spack's core strength is creating highly customized, optimized software builds from source code.
+While it's primarily a from-source package manager, it also supports fast binary installations through build caches.
+
+Contributing is easy
+--------------------
+
+To contribute a new package, all Spack needs is a URL for the source archive.
 The ``spack create`` command will create a boilerplate package file, and the package authors can fill in specific build steps in pure Python.
 
 For example, this command:
@@ -125,4 +137,17 @@ It doesn't take much Python coding to get from there to a working package:
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/libelf/package.py
    :lines: 5-
 
-Spack also provides wrapper functions around common commands like ``configure``, ``make``, and ``cmake`` to make writing packages simple.
+
+Understanding Spack's scope
+---------------------------
+
+Spack is a package manager designed for performance and customization of software.
+To clarify its role and prevent common misconceptions, it's helpful to understand what falls outside of its current scope:
+
+1. Spack is a user-space tool, not an operating system.
+   It runs on top of your existing OS (like Linux, macOS, or Windows) and complements the system's native package manager (like ``yum`` or ``apt``), but does not replace it.
+   Spack relies on the host system for essentials like the C runtime libraries.
+
+2. Spack performs native builds, not cross-compilation.
+   It builds software for the same processor architecture it is running on.
+   Support for cross-compilation (e.g., building for an ARM processor on an x86 machine) is a planned future capability but is not yet implemented.
