@@ -13,11 +13,49 @@ Package Review Guide
 
 Package reviews are performed with the goals of minimizing build errors and making packages as **uniform and stable** as possible.
 
-This section establishes guidelines to help reviewers assess and merge pull requests (PRs) to Spack’s community `package repository <https://github.com/spack/spack-packages>`_.
+This section establishes guidelines to help assess Spack community `package repository <https://github.com/spack/spack-packages>`_ pull requests (PRs).
 It describes the considerations and actions to be taken when reviewing new and updated `Spack packages <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#structure-of-a-package>`_.
+In some cases, there are possible solutions to common issues.
 
-Inappropriate package
+How to use this guide
 ---------------------
+
+Whether you are a :ref:`Package Reviewer <package-reviewers>`, :ref:`Maintainer <package-maintainers>`, or :ref:`Committer <committers>`, this guide highlights relevant aspects to consider when reviewing package pull requests.
+While this guide provides information on what to look for, the changes themselves should drive the actual review.
+
+Reviewing a new package?
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the pull request includes a new package, then focus on answering the following questions:
+
+* Should the :ref:`package <suitable_package>` be added to the repository?
+* Does the package :ref:`structure <review_structure>` conform to conventions?
+* Are the directives and their options correct?
+* Do all :ref:`automated checks <review_automated_checks>` pass?
+  If not, are there easy-to-resolve CI and/or test issues?
+* Is there :ref:`confirmation <review_build_success>` that every version builds successfully on at least one platform?
+
+Refer to the relevant sections below for more guidance.
+
+Reviewing changes to an existing package?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the pull request includes changes to an existing package, then focus on answering the following questions:
+
+* Are there any changes to the package :ref:`structure <review_structure>` and, if so, do they conform to conventions?
+* If there are new or updated directives, then are they and their options correct?
+* If there are changes to the ``url`` or its equivalent, are the older versions still correct?
+* If there are changes to the ``git`` or equivalent URL, do older branches exist in the new location?
+* Do all :ref:`automated checks <review_automated_checks>` pass?
+  If not, are there easy-to-resolve CI and/or test issues?
+* Is there :ref:`confirmation <review_build_success>` that every new version builds successfully on at least one platform?
+
+Refer to the relevant sections below for more guidance.
+
+.. _suitable_package:
+
+Package suitability
+-------------------
 
 It is rare that a package would be considered inappropriate for inclusion in the public `Spack package <https://github.com/spack/spack-packages>`_ repository.
 One exception is making packages for standard Perl modules.
@@ -32,6 +70,8 @@ CORE Perl modules
 
 In general, modules that are part of the standard installation for all listed Perl versions (i.e., ``CORE``) should *not* be implemented or contributed as Spack packages.
 Details on the exceptions and process for checking Perl modules can be found in the `Perl <https://spack.readthedocs.io/en/latest/build_systems/perlpackage.html#suitable_perl_modules>`_ build system documentation.
+
+.. _review_structure:
 
 Package structure
 -----------------
@@ -84,6 +124,14 @@ As these examples illlustrate, it is sometimes possible to add a ``url_for_versi
 
 If older versions are no longer available and there is a chance someone has the package in a build cache, the usual approach is to first suggest `deprecating <https://spack.readthedocs.io/en/latest/packaging_guide.html#deprecating-old-versions>`_ them in the package.
 
+``git``, ``hg``, ``svn``, or ``cvs``
+------------------------------------
+
+If the :ref:`repository-specific URL <vcs-fetch>` for fetching branches or the version control system (VCS) equivalent changes, there is a risk that the listed versions are no longer accessible.
+
+**Action.**
+You may need to check the new source repository to confirm the presence of all of the listed versions.
+
 .. _maintainers_reviews:
 
 ``maintainers`` directive
@@ -126,12 +174,12 @@ The goal of reviewing version directives is to confirm that versions are listed 
 ``version`` directive order
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version directives should be listed in descending order, from newest to oldest.
-If branch versions are provided, they should be listed first.
+`Spack convention <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#versions-and-urls>`_ holds that version directives should be listed in descending order, from newest to oldest.
+If branch versions are provided, then they should be listed first.
 
 **Action.**
 When versions are being added, check the ordering of the directives.
-If any of the directives do not match the `Spack convention <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#versions-and-urls>`_, then request that the directives be re-ordered.
+Request that the directives be  re-ordered if any of the directives do not conform to the convention.
 
 Checksums, commits, tags, and branches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -255,6 +303,8 @@ Unfortunately, the generated dependencies are not always complete.
 If these dependencies are being updated, ask if the :ref:`Package Contributor <package-contributors>` can confirm all of the generated dependencies and remove the ``# generated`` comments.
 Definitely make sure Contributors do **not** include ``# generated`` on the dependencies they are adding to the package.
 
+.. _review_automated_checks:
+
 Failed automated checks
 -----------------------
 
@@ -296,3 +346,21 @@ It is worth checking at least a sampling of the failed job logs, if present, to 
   Look at the package implementation to see if the tests are using a batch scheduler or there appear to be too many or long running tests.
   If that is the case, then a pull request should be created in the ``spack/spack-packages`` repository that adds the package to the ``broken-tests-packages`` list in the `ci configuration <https://spack.readthedocs.io/en/latest/pipelines.html#ci-yaml>`_.
   Once the fix PR is merged, then the affected PR can be rebased to pick up the change.
+
+.. _review_build_success:
+
+Successful builds
+-----------------
+
+Is there evidence that the package builds successfully on at least one platform?
+For a new package, we would ideally have confirmation for every version; whereas, we would want confirmation of only the affected versions for changes to an existing package.
+
+Acceptable forms of confirmation are **one or more of**:
+
+* the :ref:`Contributor <package-contributors>` or another reviewer explicitly confirms a successful build of each new version of the software on at least one platform;
+* the software is built successfully by Spack CI by at least one of the CI stacks; and
+* at least one :ref:`Maintainer <package-maintainers>` confirms they are able to successfully build the software.
+
+.. note::
+
+   When builds are confirmed by individuals, we would prefer the output of ``spack debug report`` be included in either the PR description or a comment.

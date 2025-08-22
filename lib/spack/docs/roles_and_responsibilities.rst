@@ -28,11 +28,11 @@ Package Contributors
 
 Contributors submit changes to packages through PRs `Spack Package <https://github.com/spack/spack-packages>`_ repository Pull Requests (PRs).
 
-They are **expected** to test their changes on **at least one platform** outside of Spack’s Continuous Integration (CI) checks.
+As a Contributor, you are **expected** to test your changes on **at least one platform** outside of Spack’s Continuous Integration (CI) checks.
 
 .. note::
 
-   Including the output from ``spack debug report`` from the platform the software was installed from would be a quick way to help track information related to successful builds.
+   We also ask that you include the output from ``spack debug report`` from the platform you used to facilitate PR reviews.
 
 .. _package-reviewers:
 
@@ -41,7 +41,7 @@ Package Reviewers
 
 Anyone can review a PR so we encourage Spack’s community members to review and comment on those involving software in which they have expertise and/or interest.
 
-Package Reviewers are **expected** to assess changes in PRs to the best of their ability and knowledge with special consideration to the information contained in the :ref:`package-review-guide`.
+As a Package Reviewer, you are **expected** to assess changes in PRs to the best of your ability and knowledge with special consideration to the information contained in the :ref:`package-review-guide`.
 
 .. _package-maintainers:
 
@@ -52,21 +52,17 @@ Maintainers are individuals (technically GitHub accounts) who appear in a packag
 These are people who have agreed to be notified of and given the opportunity to review changes to packages.
 They are, from a Spack package perspective, `Code Owners <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners>`_ of the package, whether or not they “own” or work on the software that the package builds.
 
-Maintainers are **expected** to:
+As a Maintainer, you are **expected**, when available, to:
 
-* review PRs in a timely manner (reported in :ref:`committers`), when available, to confirm that the changes made to the package are reasonable;
+* review PRs in a timely manner (reported in :ref:`committers`) to confirm that the changes made to the package are reasonable;
 * confirm that packages successfully build on at least one platform; and
 * attempt to confirm that any updated or included tests pass.
 
-Acceptable forms of confirmation are **one or more of**:
-
-* the :ref:`Contributor <package-contributors>` explicitly confirms a successful build of the software on at least one platform (ideally in the PR description and includes ``spack debug report`` output);
-* the software is built successfully by Spack CI by at least one of the CI stacks; and
-* the Maintainer is able to successfully build the software (and ideally includes the ``spack debug report`` output in a comment on the PR).
+See :ref:`review_build_success` for acceptable forms of confirmation of build success.
 
 .. note::
 
-    If at least one maintainer approves a PR -– and if there are no objections from others -– then the PR can be merged by any of the :ref:`committers`.
+   If at least one maintainer approves a PR -– and there are no objections from others -– then the PR can be merged by any of the :ref:`committers`.
 
 .. _committers:
 
@@ -75,7 +71,7 @@ Committers
 
 Committers are vetted individuals who are allowed to merge PRs into the ``develop`` branch.
 
-Committers are **expected** to:
+As a Committer, you are **expected** to:
 
 * ensure **at least one review** is performed prior to merging (GitHub rules enforce this);
 * encourage **at least one** :ref:`Package Maintainer <package-maintainers>` (if any) to comment and/or review the PR;
@@ -85,7 +81,7 @@ Committers are **expected** to:
 
 .. note::
 
-   If there are no :ref:`package-maintainers` or the Maintainers have not commented or reviewed the PR within the allotted time, Committers are expected to conduct the review.
+   If there are no :ref:`package-maintainers` or the Maintainers have not commented or reviewed the PR within the allotted time, you will need to conduct the review.
 
 .. tip::
 
