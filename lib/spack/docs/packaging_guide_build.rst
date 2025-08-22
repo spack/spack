@@ -1298,7 +1298,7 @@ E.g., in openmpi, you'll find this:
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.setup_dependent_package
 
-That code allows the ``openmpi`` package to associate an ``mpicc`` property with the ``openmpi`` node in the DAG, so that dependents can access it.
+That code allows the ``openmpi`` package to associate an ``mpicc`` property with the ``openmpi`` spec in the DAG, so that dependents can access it.
 ``mvapich2`` and ``mpich`` do similar things.
 So, no matter what MPI you're using, spec["mpi"].mpicc gets you the location of the MPI compilers.
 This allows us to have a fairly simple polymorphic interface for information about virtual dependencies like MPI.

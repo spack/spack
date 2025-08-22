@@ -127,10 +127,10 @@ If instead the option is set to:
        granularity: generic
 
 Spack will consider only generic microarchitectures.
-For instance, when running on a Haswell node, Spack will consider ``haswell`` as the best target in the former case and ``x86_64_v3`` as the best target in the latter case.
+For instance, when running on a Haswell machine, Spack will consider ``haswell`` as the best target in the former case and ``x86_64_v3`` as the best target in the latter case.
 
 The ``host_compatible`` option is a Boolean option that determines whether or not the microarchitectures considered during the solve are constrained to be compatible with the host Spack is currently running on.
-For instance, if this option is set to ``true``, a user cannot concretize for ``target=icelake`` while running on a Haswell node.
+For instance, if this option is set to ``true``, a user cannot concretize for ``target=icelake`` while running on a Haswell machine.
 
 Duplicate Nodes
 ---------------

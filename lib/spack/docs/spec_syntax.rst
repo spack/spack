@@ -123,7 +123,7 @@ For example, these two specs represent exactly the same configuration:
    mpileaks ^callpath@1.0 ^libelf@0.8.3
    mpileaks ^libelf@0.8.3 ^callpath@1.0
 
-Direct dependencies specified with ``%`` associate with the most recent transitive node, or with the root of the DAG.
+Direct dependencies specified with ``%`` apply either to the most recent transitive dependency (``^``), or, if none, to the root package in the spec.
 So in the spec:
 
 .. code-block:: spec

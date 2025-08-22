@@ -51,7 +51,7 @@ Customize dependencies
 ----------------------
 
 Spack allows *dependencies* of a particular installation to be customized extensively.
-Users can specify both *direct* dependencies of a node, using the ``%`` sigil, or *transitive* dependencies, using the ``^`` sigil:
+Users can specify both *direct* dependencies of a package, using the ``%`` sigil, or *transitive* dependencies, using the ``^`` sigil:
 
 .. code-block:: spec
 
