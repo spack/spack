@@ -193,8 +193,8 @@ Git versions
 
 .. note::
    Users wanting to just match specific commits for branch or tag based versions should assign the ``commit`` variant (``commit=<40 char sha>``).
-   Spack reserves this variant specifically to track binary provenance of git based versions. Spack will attempt to compute
-   this value for you automatically during concretization and raise a warning if it is unable to assign the commit.
+   Spack reserves this variant specifically to track binary provenance of git based versions.
+   Spack will attempt to compute this value for you automatically during concretization and raise a warning if it is unable to assign the commit.
    Further details can be found in :ref:`git_version_binary_provenance`.
 
 
