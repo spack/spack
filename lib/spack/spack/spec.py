@@ -4134,11 +4134,7 @@ class Spec:
 
         return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
-    def cformat(
-        self,
-        format_string: str = DEFAULT_FORMAT,
-        **kwargs,  # unused, but kept for backward compatibility
-    ) -> str:
+    def cformat(self, format_string: str = DEFAULT_FORMAT) -> str:
         """Same as :meth:`format`, but color defaults to auto instead of False."""
         return self.format(format_string, color=None)
 

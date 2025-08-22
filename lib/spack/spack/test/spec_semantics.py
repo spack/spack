@@ -2343,5 +2343,4 @@ def test_edge_equality_accounts_for_when_condition():
 
 def test_long_spec():
     """Test that long_spec preserves dependency types and has correct ordering."""
-    s = Spec("foo %m %l ^k %n %j")
-    assert s.long_spec == "foo %l %m ^k %j %n"
+    assert Spec("foo %m %l ^k %n %j").long_spec == "foo %l %m ^k %j %n"
