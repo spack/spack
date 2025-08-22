@@ -1621,8 +1621,6 @@ class Environment:
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
-        import spack.bootstrap
-
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
