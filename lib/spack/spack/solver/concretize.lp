@@ -1580,8 +1580,8 @@ ghost_compiler_link(node(ChildID, ChildName), Language, CompilerNode) :-
     not allow_mixing(ChildName).
 
 error(100, "Compiler mixing is disabled") :-
-    ghost_compiler_link(node(ChildID, ChildName), Language, CompilerNode1),
-    ghost_compiler_link(node(ChildID, ChildName), Language, CompilerNode2),
+    ghost_compiler_link(Node, Language, CompilerNode1),
+    ghost_compiler_link(Node, Language, CompilerNode2),
     CompilerNode1 != CompilerNode2.
 
 %-----------------------------------------------------------------------------
