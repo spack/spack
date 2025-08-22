@@ -104,8 +104,8 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    packaging_guide_build
    packaging_guide_testing
    packaging_guide_advanced
-   roles_and_responsibilities
    build_systems
+   roles_and_responsibilities
    contribution_guide
    developer_guide
    package_review_guide
