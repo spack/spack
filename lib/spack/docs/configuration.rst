@@ -225,7 +225,7 @@ Platform-specific Configuration
 There is often a need for platform-specific configuration settings.
 For example, on most platforms, GCC is the preferred compiler.
 However, on macOS (darwin), Clang often works for more packages, and is set as the default compiler.
-This configuration is set in ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is included as by ``$(prefix)/etc/spack/defaults/include.yaml``.
+This configuration is set in ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is included by ``$(prefix)/etc/spack/defaults/include.yaml``.
 Since it is an included configuration of the ``defaults`` scope, settings in the ``defaults`` scope will take precedence.
 You can override the values by specifying settings in ``system``, ``site``, ``user``, or ``custom``, where scope precedence is:
 
