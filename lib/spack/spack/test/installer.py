@@ -1485,8 +1485,8 @@ def test_fifo_jobserver_enable_and_cleanup(tmp_path, monkeypatch):
     assert "MAKEFLAGS" in env
     assert env["MAKEFLAGS"].startswith("--jobserver-auth=fifo:")
     assert env["MAKEFLAGS"].endswith("-j 3")
-    
-    # cleanup FIFO jobserver 
+
+    # cleanup FIFO jobserver
     js.cleanup()
     assert not os.path.exists(fifo_path), "FIFO should be cleaned up"
     assert "MAKEFLAGS" not in env or env["MAKEFLAGS"] == "", "MAKEFLAGS should be cleaned up"
