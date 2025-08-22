@@ -1068,26 +1068,22 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             )
 
         # Look for commits in the following places:
-        # 1) stage,                (cheap, local, static)
-        # 2) mirror archive file,  (cheapish, local, staticish)
-        # 3) URL                   (cheap, remote, dynamic)
-        # If users pre-stage, or use a mirror they can expect consistent commit resolution
+        # 1) mirror archive file,  (cheapish, local, staticish)
+        # 2) URL                   (cheap, remote, dynamic)
+        # If users pre-stage (_LOCAL_CACHE), or use a mirror they can expect consistent commit resolution
         sha = None
 
         # construct a package instance to get fetch/staging together
         pkg_instance = cls(spec)
-        if pkg_instance.stage.expanded:
-            sha = spack.util.git.get_commit_sha(pkg_instance.stage.source_path, ref)
 
-        if not sha:
-            try:
-                pkg_instance.do_fetch(mirror_only=True)
-            except spack.error.FetchError:
-                pass
-            if pkg_instance.stage.archive_file:
-                sha = spack.util.archive.retrieve_commit_from_archive(
-                    pkg_instance.stage.archive_file, ref
-                )
+        try:
+            pkg_instance.do_fetch(mirror_only=True)
+        except spack.error.FetchError:
+            pass
+        if pkg_instance.stage.archive_file:
+            sha = spack.util.archive.retrieve_commit_from_archive(
+                pkg_instance.stage.archive_file, ref
+            )
 
         if not sha:
             url = cls.version_or_package_attr("git", spec.version)
