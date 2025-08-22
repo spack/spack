@@ -1566,11 +1566,12 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
     attr("virtual_on_edge", PackageNode, CompilerNode2, "cxx"),
     CompilerNode1 != CompilerNode2.
 
-ghost_compiler_link(Node, Language, CompilerNode) :-
-    attr("node", Node),
-    attr("virtual_on_edge", Node, CompilerNode, Language),
+ghost_compiler_link(node(NodeID, NodeName), Language, CompilerNode) :-
+    attr("node", node(NodeID, NodeName)),
+    attr("virtual_on_edge", node(NodeID, NodeName), CompilerNode, Language),
     compiler_mixing(0, Language),
-    language(Language).
+    language(Language),
+    not allow_mixing(NodeName).
 
 ghost_compiler_link(node(ChildID, ChildName), Language, CompilerNode) :-
     attr("depends_on", ParentNode, node(ChildID, ChildName), "link"),
