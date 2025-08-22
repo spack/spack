@@ -33,6 +33,26 @@ CORE Perl modules
 In general, modules that are part of the standard installation for all listed Perl versions (i.e., ``CORE``) should *not* be implemented or contributed as Spack packages.
 Details on the exceptions and process for checking Perl modules can be found in the `Perl <https://spack.readthedocs.io/en/latest/build_systems/perlpackage.html#suitable_perl_modules>`_ build system documentation.
 
+Package structure
+-----------------
+
+The `convention <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#structure-of-a-package>`_ for structuring Spack packages has metadata, or at least key properties, listed first followed by directives then methods:
+
+* :ref:`maintainers_reviews`;
+* :ref:`license_reviews`;
+* :ref:`version_reviews`;
+* :ref:`variant_reviews`;
+* :ref:`depends_on_reviews`;
+* :ref:`packaging_conflicts` and :ref:`packaging_requires` directives; then
+* methods.
+
+`Groupings <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#grouping-directives>`_ using ``with`` context managers can affect the order of dependency, conflict, and requires directives to some degree.
+However, they do cut down on visual clutter and make packages more readable.
+
+**Action.**
+If you see clear deviations from the convention, request that they be addressed.
+When in doubt, ask others with merge privileges for advice.
+
 ``url``, ``url_for_version``, or URL equivalent
 -----------------------------------------------
 
@@ -64,6 +84,8 @@ As these examples illlustrate, it is sometimes possible to add a ``url_for_versi
 
 If older versions are no longer available and there is a chance someone has the package in a build cache, the usual approach is to first suggest `deprecating <https://spack.readthedocs.io/en/latest/packaging_guide.html#deprecating-old-versions>`_ them in the package.
 
+.. _maintainers_reviews:
+
 ``maintainers`` directive
 -------------------------
 
@@ -76,6 +98,8 @@ This request is optional for existing packages.
 
    Be prepared for them to refuse.
 
+.. _license_reviews:
+
 ``license`` directive
 ---------------------
 
@@ -84,6 +108,8 @@ If the new package does not have a `license <https://spack.readthedocs.io/en/lat
 
 This request is optional for existing packages.
 
+.. _version_reviews:
+
 ``version`` directives
 ----------------------
 
@@ -91,10 +117,21 @@ In general, Spack packages are expected to be built from source code.
 There are a few exceptions (e.g., `BundlePackage <https://spack.readthedocs.io/en/latest/build_systems/bundlepackage.html#bundlepackage>`_).
 Typically every package will have at least one `version directive <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#source-code-and-versions>`_.
 
+The goal of reviewing version directives is to confirm that versions are listed in the proper order **and** that the arguments for new and updated versions are correct.
+
+.. note::
+
+   Additions and removals of version directives should generally trigger a review of :ref:`dependencies <depends_on_reviews>`.
+
+``version`` directive order
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Version directives should be listed in descending order, from newest to oldest.
+If branch versions are provided, they should be listed first.
+
 **Action.**
-The goal of reviewing this information is to confirm the existence and correctness of updated and new versions **and** that the versions are listed in descending order from newest to oldest.
-The process for correctness checking depends on the arguments and nature of the software's downloads (see below).
-Additions and removals of version directives should generally trigger a review of :ref:`dependencies <depends_on_reviews>`.
+When versions are being added, check the ordering of the directives.
+If any of the directives do not match the `Spack convention <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#versions-and-urls>`_, then request that the directives be re-ordered.
 
 Checksums, commits, tags, and branches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -147,6 +184,8 @@ Sometimes there are concerns, such as security or lack of availability.
 
 **Action.**
 Suggest the Package Contributor review the `deprecation guidelines <https://spack.readthedocs.io/en/latest/packaging_guide.html#deprecating-old-versions>`_ before finalizing the changes if they haven't already explained why they made the choice in the PR description or comments.
+
+.. _variant_reviews:
 
 ``variant`` directives
 ----------------------
