@@ -2145,8 +2145,9 @@ class Spec:
         self,
         format_string: str = DEFAULT_FORMAT,
         include: Optional[Callable[[DependencySpec], bool]] = None,
-        deptypes=True,
-        _force_direct=False,
+        deptypes: bool = True,
+        color: Optional[bool] = False,
+        _force_direct: bool = False,
     ):
         """Helper for formatting dependencies on specs.
 
@@ -2154,6 +2155,7 @@ class Spec:
             format_string: format string to use for each dependency
             include: predicate to select which dependencies to include
             deptypes: whether to format deptypes
+            color: colorize if True, don't colorize if False, auto-colorize if None
             _force_direct: if True, print all dependencies as direct dependencies
                 (to be removed when we have this metadata on concrete edges)
         """
@@ -2168,9 +2170,9 @@ class Spec:
             )
 
         # helper for direct and transitive loops below
-        def format_edge(edge, sigil, dep_spec=None):
+        def format_edge(edge: DependencySpec, sigil: str, dep_spec: Optional[Spec] = None) -> str:
             dep_spec = dep_spec or edge.spec
-            dep_format = dep_spec.format(format_string)
+            dep_format = dep_spec.format(format_string, color=color)
 
             edge_attributes = (
                 self._format_edge_attributes(edge, deptypes=deptypes, virtuals=False)
@@ -2233,23 +2235,35 @@ class Spec:
             _force_direct=True,
         )
 
+    def _long_spec(self, color: Optional[bool] = False) -> str:
+        """Helper for long_spec and clong_spec."""
+        if self.concrete:
+            return self.tree(format=DISPLAY_FORMAT, color=color)
+        return f"{self.format(color=color)} {self._format_dependencies(color=color)}".strip()
+
+    def _short_spec(self, color: Optional[bool] = False) -> str:
+        """Helper for short_spec and cshort_spec."""
+        return self.format("{name}{@version}{variants}{ arch=architecture}{/hash:7}", color=color)
+
     @property
     def long_spec(self):
-        """Returns a string of the spec with the dependencies completely enumerated."""
-        if self.concrete:
-            return self.tree(format=DISPLAY_FORMAT)
-        return f"{self.format()} {self._format_dependencies()}".strip()
+        """Long string of the spec, including dependencies."""
+        return self._long_spec(color=False)
+
+    @property
+    def clong_spec(self):
+        """Returns an auto-colorized version of :attr:`long_spec`."""
+        return self._long_spec(color=None)
 
     @property
     def short_spec(self):
-        """Returns a version of the spec with the dependencies hashed
-        instead of completely enumerated."""
-        return self.format("{name}{@version}{variants}{ arch=architecture}{/hash:7}")
+        """Short string of the spec, with hash and without dependencies."""
+        return self._short_spec(color=False)
 
     @property
     def cshort_spec(self):
         """Returns an auto-colorized version of :attr:`short_spec`."""
-        return self.cformat("{name}{@version}{variants}{ arch=architecture}{/hash:7}")
+        return self._short_spec(color=None)
 
     @property
     def prefix(self) -> spack.util.prefix.Prefix:
@@ -4307,26 +4321,27 @@ class Spec:
         ]
         return str(path_ctor(*output_path_components))
 
-    def __str__(self):
+    def _str(self, color: Optional[bool] = False) -> str:
+        """String representation of this spec.
+        Args:
+            color: colorize if True, don't colorize if False, auto-colorize if None
+        """
         if self._concrete:
-            return self.format("{name}{@version}{/hash}")
+            return self.format("{name}{@version}{/hash}", color=color)
 
         if not self._dependencies:
-            return self.format()
+            return self.format(color=color)
 
-        return self.long_spec
+        return self._long_spec(color=color)
+
+    def __str__(self) -> str:
+        """String representation of this spec."""
+        return self._str(color=False)
 
     @property
-    def colored_str(self):
-        root_str = [self.cformat()]
-        sorted_dependencies = sorted(
-            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
-        )
-        sorted_dependencies = [
-            d.cformat("{edge_attributes} " + DISPLAY_FORMAT) for d in sorted_dependencies
-        ]
-        spec_str = " ^".join(root_str + sorted_dependencies)
-        return spec_str.strip()
+    def colored_str(self) -> str:
+        """Auto-colorized string representation of this spec."""
+        return self._str(color=None)
 
     def install_status(self) -> InstallStatus:
         """Helper for tree to print DB install status."""

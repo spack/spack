@@ -2339,3 +2339,9 @@ def test_edge_equality_accounts_for_when_condition():
     edge1 = DependencySpec(parent, child, depflag=0, virtuals=(), when=Spec("%c"))
     edge2 = DependencySpec(parent, child, depflag=0, virtuals=())
     assert edge1 != edge2
+
+
+def test_long_spec():
+    """Test that long_spec preserves dependency types and has correct ordering."""
+    s = Spec("foo %m %l ^k %n %j")
+    assert s.long_spec == "foo %l %m ^k %j %n"
