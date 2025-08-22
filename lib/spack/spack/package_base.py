@@ -1084,7 +1084,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # 1) mirror archive file,  (cheapish, local, staticish)
         # 2) URL                   (cheap, remote, dynamic)
         #
-        # If users pre-stage (_LOCAL_CACHE), or use a mirror they can expect 
+        # If users pre-stage (_LOCAL_CACHE), or use a mirror they can expect
         # consistent commit resolution
         sha = None
 
