@@ -1566,7 +1566,7 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
     attr("virtual_on_edge", PackageNode, CompilerNode2, "cxx"),
     CompilerNode1 != CompilerNode2.
 
-% If x->y->z, x->fortran, z->fortran, we want to unite x/z compilers
+% If w->y->z, w->fortran, z->fortran, we want to unite w/z compilers
 ghost_compiler_link(node(NodeID, NodeName), Language, CompilerNode) :-
     attr("node", node(NodeID, NodeName)),
     attr("virtual_on_edge", node(NodeID, NodeName), CompilerNode, Language),
@@ -1580,7 +1580,7 @@ ghost_compiler_link(node(ChildID, ChildName), Language, CompilerNode) :-
     compiler_mixing(0, Language),
     not allow_mixing(ChildName).
 
-% If x->y, x->z, y->fortran and z->fortran, we want to unite y/z compilers
+% If w->y, w->x, x->fortran and y->fortran, we want to unite x/y compilers
 ghost_compiler_link(node(ParentID, ParentName), Language, CompilerNode) :-
     attr("depends_on", node(ParentID, ParentName), ChildNode, "link"),
     ghost_compiler_link(ChildNode, Language, CompilerNode),
