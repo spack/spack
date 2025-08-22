@@ -1568,7 +1568,7 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
 
 ghost_compiler_link(Node, Language, CompilerNode) :-
     attr("node", Node),
-    attr("virtual_on_edge", ParentNode, CompilerNode, Language),
+    attr("virtual_on_edge", Node, CompilerNode, Language),
     compiler_mixing(0, Language),
     language(Language).
 
