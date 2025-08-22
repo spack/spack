@@ -2,11 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import glob
 import os
 import pathlib
 import shutil
 import sys
+import tempfile
 from typing import List, Optional, Union
 
 import py
@@ -14,6 +16,7 @@ import pytest
 
 import spack.binary_distribution
 import spack.concretize
+import spack.config
 import spack.database
 import spack.deptypes as dt
 import spack.error
@@ -31,6 +34,7 @@ import spack.store
 import spack.test.conftest
 import spack.util.lock as lk
 from spack.installer import PackageInstaller
+from spack.jobserver import FifoJobserver
 from spack.main import SpackCommand
 from spack.test.conftest import RepoBuilder
 
@@ -1385,12 +1389,14 @@ def test_print_install_test_log_failures(
     sys.platform == "win32", reason="FIFO jobserver is currently not supported on Windows"
 )
 def test_install_gmake_ninja_with_fifo(install_mockery):
-    """Confirm that gmake that does support fifo sets up FIFO jobserver"""
+    """Confirm that gmake/ninja packages that support fifo set up FIFO jobserver"""
+    # gmake 4.4 introduced FIFO jobserver support, should resolve to FifoJobserver
     gmake_spec = spack.concretize.concretize_one("gmake@4.4")
     gmake_pkg = gmake_spec.package
     gmake_js_class = spack.jobserver.Jobserver.determine_type([gmake_pkg])
     assert gmake_js_class == spack.jobserver.FifoJobserver
 
+    # ninja 1.13.0 supports FIFO jobserver, should resolve to FifoJobserver
     ninja_spec = spack.concretize.concretize_one("ninja@1.13.0")
     ninja_pkg = ninja_spec.package
     ninja_js_class = spack.jobserver.Jobserver.determine_type([ninja_pkg])
@@ -1398,38 +1404,94 @@ def test_install_gmake_ninja_with_fifo(install_mockery):
 
 
 def test_install_gmake_ninja_without_fifo(install_mockery):
-    """Confirm that gmake and ninja pkgs that don't support fifo don't set up FIFO jobserver"""
+    """Confirm that gmake/ninja packages that don't support fifo disable the jobserver"""
+    # gmake version that predates FIFO jobserver support, should be disabled
     gmake_spec = spack.concretize.concretize_one("gmake@3.0")
     gmake_pkg = gmake_spec.package
+    old_gmake_state = spack.jobserver.package_type(gmake_pkg)
+    assert old_gmake_state == spack.jobserver.JobserverType.DISABLE
     gmake_js_class = spack.jobserver.Jobserver.determine_type([gmake_pkg])
-    assert gmake_js_class == spack.jobserver.NoJobserver
+    assert gmake_js_class == spack.jobserver.NoopJobserver
 
+    # ninja version that predates FIFO jobserver support, should be disabled
     ninja_spec = spack.concretize.concretize_one("ninja@1.10.2")
     ninja_pkg = ninja_spec.package
+    old_ninja_state = spack.jobserver.package_type(ninja_pkg)
+    assert old_ninja_state == spack.jobserver.JobserverType.DISABLE
     ninja_js_class = spack.jobserver.Jobserver.determine_type([ninja_pkg])
-    assert ninja_js_class == spack.jobserver.NoJobserver
+    assert ninja_js_class == spack.jobserver.NoopJobserver
 
 
-def test_install_noop_jobserver_package(install_mockery):
+def test_install_none_noop_jobserver_package(install_mockery):
     """Confirm that a package that doesn't use make will return NOOP for jobserver setup"""
+    # python doesn't use make, should leave jobserver behavior unchanged
     py_spec = spack.concretize.concretize_one("python")
     py_pkg = py_spec.package
+    py_state = spack.jobserver.package_type(py_pkg)
+    assert py_state == spack.jobserver.JobserverType.NONE
     py_js_class = spack.jobserver.Jobserver.determine_type([py_pkg])
     assert py_js_class == spack.jobserver.NoopJobserver
 
 
-def test_none_jobserver_type_has_priority(install_mockery):
-    """Confirm that NoJobserver takes priority when other jobserver types are present"""
+def test_disable_jobserver_type_takes_priority(install_mockery):
+    """Confirm that DISABLE state takes priority when other jobserver types are present"""
     # spec that enables fifo
     fifo_spec = spack.concretize.concretize_one("gmake@4.4")
     fifo_pkg = fifo_spec.package
-    # spec that disables use of jobserver
-    none_spec = spack.concretize.concretize_one("ninja@1.10.2")
-    none_pkg = none_spec.package
-    # spec that has noop on jobserver setup
+    # spec that disables use of fifo-supported jobserver
+    disable_spec = spack.concretize.concretize_one("ninja@1.10.2")
+    disable_pkg = disable_spec.package
+    # spec that doesn't change jobserver setup
     noop_spec = spack.concretize.concretize_one("python")
     noop_pkg = noop_spec.package
 
-    packages = [fifo_pkg, none_pkg, noop_pkg]
+    packages = [fifo_pkg, disable_pkg, noop_pkg]
     js_class = spack.jobserver.Jobserver.determine_type(packages)
-    assert js_class == spack.jobserver.NoJobserver
+    assert js_class == spack.jobserver.NoopJobserver
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="FIFO jobserver is not currently supported on Windows in Spack"
+)
+def test_fifo_jobserver_enable_and_cleanup(tmp_path, monkeypatch):
+    """Ensure FIFO jobserver enable and cleanup correctly modify the environment."""
+    # directory for FIFO
+    fifo_dir = tmp_path / "jobserver_fifo"
+    fifo_dir.mkdir()
+
+    # mock functions
+    def fake_mkdtemp(prefix):
+        return str(fifo_dir)
+
+    def fake_determine_number_of_jobs(parallel=True):
+        return 3
+
+    # patch tempfile and number of build jobs
+    monkeypatch.setattr(tempfile, "mkdtemp", fake_mkdtemp)
+    monkeypatch.setattr(spack.config, "determine_number_of_jobs", fake_determine_number_of_jobs)
+
+    # isolate the environment
+    env = {}
+    monkeypatch.setattr(os, "environ", env)
+
+    # instantiate FIFO jobserver
+    js = FifoJobserver()
+    fifo_dir_created, write_fd = js.enable()
+
+    fifo_path = fifo_dir / "jobserver"
+    assert fifo_dir_created == str(fifo_dir)
+    assert os.path.exists(fifo_path), "FIFO file should exist"
+    assert write_fd > 0
+    assert "MAKEFLAGS" in env
+    assert env["MAKEFLAGS"].startswith("--jobserver-auth=fifo:")
+    assert env["MAKEFLAGS"].endswith("-j 3")
+    
+    # cleanup FIFO jobserver 
+    js.cleanup()
+    assert not os.path.exists(fifo_path), "FIFO should be cleaned up"
+    assert "MAKEFLAGS" not in env or env["MAKEFLAGS"] == "", "MAKEFLAGS should be cleaned up"
+    try:
+        os.close(write_fd)
+        assert False, "write_fd should be closed by cleanup"
+    except OSError as e:
+        assert e.errno == errno.EBADF, "write_fd should be closed and raise EBADF"
