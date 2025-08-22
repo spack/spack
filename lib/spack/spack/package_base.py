@@ -1070,7 +1070,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Look for commits in the following places:
         # 1) mirror archive file,  (cheapish, local, staticish)
         # 2) URL                   (cheap, remote, dynamic)
-        # If users pre-stage (_LOCAL_CACHE), or use a mirror they can expect consistent commit resolution
+        #
+        # If users pre-stage (_LOCAL_CACHE), or use a mirror they can expect 
+        # consistent commit resolution
         sha = None
 
         # construct a package instance to get fetch/staging together
