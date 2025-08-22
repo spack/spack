@@ -25,7 +25,7 @@ Custom versions & configurations
 --------------------------------
 
 Spack allows installation to be customized.
-Users can specify the version, compile-time options, and cross-compile platform, all on the command line.
+Users can specify the version, compile-time options, and target architecture, all on the command line.
 
 .. code-block:: spec
 
@@ -41,7 +41,7 @@ Users can specify the version, compile-time options, and cross-compile platform,
    # Add compiler flags using the conventional names
    $ spack install hdf5@1.14.6 cflags="-O3 -floop-block"
 
-   # Cross-compile for a different micro-architecture with target=
+   # Target a specific micro-architecture
    $ spack install hdf5@1.14.6 target=icelake
 
 Users can specify as many or as few options as they care about.

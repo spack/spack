@@ -163,7 +163,7 @@ To do this, just add ``@`` after the package name, followed by a version:
 Any number of versions of the same package can be installed at once without interfering with each other.
 This is useful for multi-user sites, as installing a version that one user needs will not disrupt existing installations for other users.
 
-In addition to different versions, Spack can customize the compiler, compile-time options (variants), compiler flags, and platform (for cross-compiles) of an installation.
+In addition to different versions, Spack can customize the compiler, compile-time options (variants), compiler flags, and target architecture of an installation.
 Spack is unique in that it can also configure the *dependencies* a package is built with.
 For example, two configurations of the same version of a package, one built with boost 1.39.0, and the other version built with version 1.43.0, can coexist.
 

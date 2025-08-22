@@ -44,8 +44,7 @@ line is a spec for a particular installation of the mpileaks package.
    if it comes immediately after the compiler name.  Otherwise it will be
    associated with the current package spec.
 
-6. The architecture to build with.  This is needed on machines where
-   cross-compilation is required
+6. The architecture to build with.
 """
 import collections
 import collections.abc
