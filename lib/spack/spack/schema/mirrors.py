@@ -16,6 +16,7 @@ connection = {
         "description": "URL pointing to the mirror directory, can be local filesystem "
         "(file://) or remote server (http://, https://, s3://, oci://)",
     },
+    "view": {"type": "string"},
     "access_pair": {
         "type": "object",
         "description": "Authentication credentials for accessing private mirrors with ID and "

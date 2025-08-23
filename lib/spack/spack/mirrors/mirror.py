@@ -129,6 +129,16 @@ class Mirror:
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("push")
 
+    @property
+    def fetch_view(self):
+        """Get the valid, canonicalized fetch URL"""
+        return self.get_view("fetch")
+
+    @property
+    def push_view(self):
+        """Get the valid, canonicalized fetch URL"""
+        return self.get_view("push")
+
     def ensure_mirror_usable(self, direction: str = "push"):
         access_pair = self._get_value("access_pair", direction)
         access_token_variable = self._get_value("access_token_variable", direction)
@@ -157,6 +167,15 @@ class Mirror:
             msg = f"invalid {direction} configuration for mirror {self.name}: "
             msg += "\n    ".join(errors)
             raise MirrorError(msg)
+
+    def supported_version(self, binary_layout_version: int):
+        """Determine if the mirrors configuration is supported by a binary mirror layout version"""
+        # Only check the fetch configuration, the push configuration is whatever the latest
+        # mirror version is which should support all configurable features.
+        if binary_layout_version == 2:
+            return self.get_view("fetch") is not None
+
+        return True
 
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
         # Only allow one to exist in the config
@@ -303,6 +322,9 @@ class Mirror:
             raise ValueError(f"Mirror {self.name} has no URL configured")
 
         return _url_or_path_to_url(url)
+
+    def get_view(self, direction: str):
+        return self._get_value("view", direction)
 
     def get_credentials(self, direction: str) -> Dict[str, Any]:
         """Get the mirror credentials from the mirror config

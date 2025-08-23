@@ -28,6 +28,7 @@ import spack.oci.image
 import spack.spec
 import spack.stage
 import spack.store
+import spack.url_buildcache
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
@@ -1362,3 +1363,41 @@ def test_get_entries_from_cache_nested_mirrors(monkeypatch, tmp_path: pathlib.Pa
     # Expected specs in nested mirror
     #   - zlib
     assert len(spec_manifests_nested) == 1
+
+
+def test_url_and_version():
+    url_and_version = spack.binary_distribution.MirrorURLAndVersion("https://dummy.io/__v3", 3)
+    as_str = str(url_and_version)
+    from_str = spack.binary_distribution.MirrorURLAndVersion.from_string(as_str)
+
+    # Verify values
+    assert url_and_version.url == "https://dummy.io/__v3"
+    assert url_and_version.version == 3
+    assert url_and_version.view is None
+
+    # Verify round trip
+    assert url_and_version == from_str
+    assert as_str == str(from_str)
+
+    with pytest.raises(spack.url_buildcache.MirrorURLAndVersionError, match="Malformed string"):
+        spack.binary_distribution.MirrorURLAndVersion.from_string("https://dummy.io/__v3@@4")
+
+
+def test_url_and_version_with_view():
+    url_and_version = spack.binary_distribution.MirrorURLAndVersion(
+        "https://dummy.io/__v3__@aview", 3, "aview"
+    )
+    as_str = str(url_and_version)
+    from_str = spack.binary_distribution.MirrorURLAndVersion.from_string(as_str)
+
+    # Verify round trip
+    assert url_and_version.url == "https://dummy.io/__v3__@aview"
+    assert url_and_version.version == 3
+    assert url_and_version.view == "aview"
+    assert url_and_version == from_str
+    assert as_str == str(from_str)
+
+    with pytest.raises(spack.url_buildcache.MirrorURLAndVersionError, match="Malformed string"):
+        spack.binary_distribution.MirrorURLAndVersion.from_string(
+            "https://dummy.io/__v3%asdf__@aview"
+        )

@@ -4,6 +4,7 @@
 import argparse
 import glob
 import json
+import re
 import sys
 import tempfile
 from typing import List, Optional, Tuple
@@ -25,6 +26,7 @@ import spack.store
 import spack.util.parallel
 import spack.util.web as web_util
 from spack import traverse
+from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.llnl.string import plural
@@ -294,7 +296,35 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="if provided, key index will be updated as well as package index",
     )
-    update_index.set_defaults(func=update_index_fn)
+    update_view = subparsers.add_parser(
+        "update-view", aliases=["create-view"], help=update_view_fn.__doc__
+    )
+    update_view.add_argument(
+        "mirror", type=arguments.mirror_name_or_url, help="destination mirror name, path, or URL"
+    )
+    update_view.add_argument(
+        "sources",
+        nargs=argparse.REMAINDER,
+        help="one or more of the specified source type to use for generating the view index",
+    )
+    update_view.add_argument(
+        "--name", "-n", action="store", help="Name of the view index to update"
+    )
+    update_view.add_argument(
+        "--append",
+        "-a",
+        action="store_true",
+        help="Append the listed specs to the current view index if it already exists. "
+        "This operation does not guarentee atomic write and should be run with care.",
+    )
+    update_view.add_argument(
+        "--force",
+        "-f",
+        action="store_true",
+        help="If an view index already exists, overwrite it and "
+        "suppress warnings (this is the default for non-view indices)",
+    )
+    update_view.set_defaults(func=update_view_fn)
 
     # Migrate a buildcache from layout_version 2 to version 3
     migrate = subparsers.add_parser("migrate", help=migrate_fn.__doc__)
@@ -802,6 +832,102 @@ def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
 def update_index_fn(args):
     """update a buildcache index"""
     return update_index(args.mirror, update_keys=args.keys)
+
+
+def read_concrete_hashes(source: str) -> List[str]:
+    """Read all of the concrete hashes from a given source"""
+
+    if re.match(r"^/[^ ]{32}$", source):
+        return [source[1:]]
+    else:
+        # This could be a lock file or a spec file
+        try:
+            with open(source, "r", encoding="utf-8") as fd:
+                data = json.loads(fd.read())
+
+            if "spec" in data:
+                # This is a spec file, return the hashes of all of the nodes
+                tty.debug(f"Reading {source} as specfile")
+                return [n["hash"] for n in data["spec"]["nodes"]]
+            elif "concrete_specs" in data:
+                # This is a lock file
+                tty.debug(f"Reading {source} as lockfile")
+                return [h for h in data["concrete_specs"]]
+            else:
+                raise spack.error.SpackError(f"Recognized fields not found: {data}")
+
+        except Exception as e:
+            raise spack.error.SpackError(
+                f"Could not determine spec source type of {source}"
+            ) from e
+
+
+def update_view_fn(args):
+    """update a buildcache view index"""
+    mirror = args.mirror
+    # OCI images do not support views.
+    try:
+        spack.oci.oci.image_from_mirror(mirror)
+        raise spack.error.SpackError("OCI build caches do not support index views")
+    except ValueError:
+        pass
+
+    if args.append:
+        tty.warn(
+            "Appending to a view index does not guarantee idempotent write when contending "
+            "with multiple writers. This feature is meant to be used by a single process."
+        )
+
+    # Otherwise, assume a normal mirror.
+    url = mirror.push_url
+
+    name = args.name or mirror.push_view
+
+    assert name
+
+    url_and_version = spack.binary_distribution.MirrorURLAndVersion(
+        url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, name
+    )
+
+    # Check if the index already exists, if it does make sure there is a copy in the
+    # local cache.
+    index_exists = True
+    try:
+        BINARY_INDEX._fetch_and_cache_index(url_and_version)
+    except spack.binary_distribution.FetchIndexError:
+        index_exists = False
+
+    if index_exists and (not args.force and not args.append):
+        raise spack.error.SpackError(
+            "Index already exists. To overwrite or update pass --force or --append respectively"
+        )
+
+    hashes = []
+    if args.sources:
+        for source in args.sources:
+            hashes.extend(read_concrete_hashes(source))
+    else:
+        # Get hashes in the current active environment
+        env = spack.cmd.require_active_env(cmd_name="buildcache update-view")
+        hashes = env.all_hashes()
+
+    if not hashes:
+        tty.warn("No specs found for view, creating an empty index")
+
+    filter_fn = lambda x: x in hashes
+
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        # Initialize a database
+        db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
+        db._write()
+
+        if args.append:
+            # Load the current state of the view index from the cache into the database
+            cache_index = BINARY_INDEX._local_index_cache[str(url_and_version)]
+            cache_key = cache_index["index_path"]
+            db._read_from_file(BINARY_INDEX._index_file_cache.cache_path(cache_key))
+
+        spack.binary_distribution._url_generate_package_index(url, tmpdir, db, name, filter_fn)
 
 
 def migrate_fn(args):
