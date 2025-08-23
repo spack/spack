@@ -919,7 +919,7 @@ The ``default`` view descriptor name is special: when you ``spack env activate``
 View descriptors must contain the root of the view, and optionally projections, ``select`` and ``exclude`` lists and link information via ``link`` and ``link_type``.
 
 As a more advanced example, in the following manifest file snippet we define a view named ``mpis``, rooted at ``/path/to/view`` in which all projections use the package name, version, and compiler name to determine the path for a given package.
-This view selects all packages that depend on MPI, and excludes those built with the GCC compiler at version 18.5.
+This view selects all packages that depend on MPI, and excludes those built with the GCC compiler at version 8.5.
 The root specs with their (transitive) link and run type dependencies will be put in the view due to the  ``link: all`` option, and the files in the view will be symlinks to the Spack install directories.
 
 .. code-block:: yaml
@@ -930,7 +930,7 @@ The root specs with their (transitive) link and run type dependencies will be pu
        mpis:
          root: /path/to/view
          select: [^mpi]
-         exclude: ['%gcc@18.5']
+         exclude: ["%gcc@8.5"]
          projections:
            all: '{name}/{version}-{compiler.name}'
          link: all

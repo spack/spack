@@ -754,7 +754,7 @@ Here is how you would filter to show just versions:
     -  python 2.7.8
     +  python 3.8.11
 
-And you can add as many attributes as you'd like with multiple `--attribute` arguments (for lots of attributes, you can use ``-a`` for short).
+And you can add as many attributes as you'd like with multiple ``--attribute`` arguments (for lots of attributes, you can use ``-a`` for short).
 Finally, if you want to view the data as JSON (and possibly pipe into an output file), just add ``--json``:
 
 

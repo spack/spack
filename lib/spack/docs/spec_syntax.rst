@@ -398,7 +398,7 @@ Giving a command such as the following:
 
 .. code-block:: spec
 
-   $ spack install zlib%gcc@14.2.0 target=icelake
+   $ spack install zlib target=icelake %gcc@14
 
 will produce compilation lines similar to:
 
@@ -414,7 +414,7 @@ If Spack determines that the requested compiler cannot optimize for the requeste
 
 .. code-block:: spec
 
-   $ spack install zlib%gcc@5.5.0 target=icelake
+   $ spack install zlib target=icelake %gcc@5
    ==> Error: cannot produce optimized binary for micro-architecture "icelake" with gcc@5.5.0 [supported compiler versions are 8:]
 
 Conversely, if an older compiler is selected for a newer microarchitecture, Spack will optimize for the best match instead of failing:

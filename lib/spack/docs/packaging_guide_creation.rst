@@ -2851,7 +2851,7 @@ The resulting spec objects for its dependencies shows the result of the above at
    # The core headers and libraries of the foo package
 
    >>> spec["foo"]
-   foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
+   foo@1.0/ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6
    >>> spec["foo"].prefix
    "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
 
@@ -2885,7 +2885,7 @@ The resulting spec objects for its dependencies shows the result of the above at
 
    # bar resolves to the foo package
    >>> spec["bar"]
-   foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
+   foo@1.0/ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6
    >>> spec["bar"].prefix
    "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
 
@@ -2920,7 +2920,7 @@ The resulting spec objects for its dependencies shows the result of the above at
 
    # baz resolves to the foo package
    >>> spec["baz"]
-   foo@1.0%gcc@11.3.1+bar+baz arch=linux-fedora35-haswell
+   foo@1.0/ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6
    >>> spec["baz"].prefix
    "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6"
 

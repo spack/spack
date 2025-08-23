@@ -713,7 +713,7 @@ Avoid double-installing CUDA by adding, e.g.:
    packages:
      cuda:
        externals:
-       - spec: "cuda@9.0.176%gcc@5.4.0 arch=linux-ubuntu16-x86_64"
+       - spec: "cuda@9.0.176 arch=linux-ubuntu16-x86_64 %gcc@5.4.0"
          prefix: /usr/local/cuda
        buildable: False
 
