@@ -258,7 +258,7 @@ def test_update_completion_arg(shell, tmp_path: pathlib.Path, monkeypatch):
 # Note: this test is never expected to be supported on Windows
 @pytest.mark.not_on_windows("Shell completion script generator fails on windows")
 @pytest.mark.parametrize("shell", ["bash", "fish"])
-def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
+def test_updated_completion_scripts(no_cached_repo, shell, tmp_path: pathlib.Path):
     """Make sure our shell tab completion scripts remain up-to-date."""
 
     width = 72

@@ -930,6 +930,10 @@ def create_incremental() -> Generator[Configuration, None, None]:
         (ConfigScopePriority.BUILTIN, InternalConfigScope("_builtin", CONFIG_DEFAULTS))
     )
 
+    # Must yield the _builtin configuration here in order to avoid recursive
+    # initialization with includes in defaults scope
+    yield cfg
+
     # Builtin paths to configuration files in Spack
     configuration_paths = [
         # Default configuration scope is the lowest-level scope. These are

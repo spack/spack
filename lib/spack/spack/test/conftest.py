@@ -382,6 +382,19 @@ def clean_user_environment():
         os.environ[ev.spack_env_var] = spack_env_value
 
 
+os.environ["SPACK_CACHE_REPO"] = "ON"
+
+
+@pytest.fixture
+def no_cached_repo():
+    cache_repo_state = os.environ.get("SPACK_CACHE_REPO")
+    if cache_repo_state:
+        os.environ.pop("SPACK_CACHE_REPO")
+    yield
+    if cache_repo_state:
+        os.environ["SPACK_CACHE_REPO"] = cache_repo_state
+
+
 #
 # Make sure global state of active env does not leak between tests.
 #

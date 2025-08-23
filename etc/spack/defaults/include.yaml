@@ -1,4 +1,6 @@
 include:
   - path: "${platform}"
     optional: true
+  - when: '"SPACK_CACHE_REPO" in env'
+    path: cache_repo
   - path: base
