@@ -21,34 +21,40 @@ How to use this guide
 ---------------------
 
 Whether you are a :ref:`Package Reviewer <package-reviewers>`, :ref:`Maintainer <package-maintainers>`, or :ref:`Committer <committers>`, this guide highlights relevant aspects to consider when reviewing package pull requests.
-While this guide provides information on what to look for, the changes themselves should drive the actual review.
+If you are a ref:`Package Contributor <package-contributors>` (or simply ``Contributor``), you may also find the information and solutions useful in your work.
+While we provide information on what to look for, the changes themselves should drive the actual review process.
 
-Reviewing a new package?
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. note::
+
+   :ref:`Confirmation of successful package builds <build_success_reviews>` of **all** affected versions can reduce the amount of effort needed to review a PR.
+   However, packaging conventions and the combinatorial nature of versions and directives mean each change should still be checked.
+
+Reviewing a new package
+~~~~~~~~~~~~~~~~~~~~~~~
 
 If the pull request includes a new package, then focus on answering the following questions:
 
 * Should the :ref:`package <suitable_package>` be added to the repository?
-* Does the package :ref:`structure <review_structure>` conform to conventions?
+* Does the package :ref:`structure <structure_reviews>` conform to conventions?
 * Are the directives and their options correct?
-* Do all :ref:`automated checks <review_automated_checks>` pass?
-  If not, are there easy-to-resolve CI and/or test issues?
-* Is there :ref:`confirmation <review_build_success>` that every version builds successfully on at least one platform?
+* Do all :ref:`automated checks <automated_checks_reviews>` pass?
+  If not, are there easy-to-resolve CI and/or test issues that can be addressed or does the submitter need to investigate the failures?
+* Is there :ref:`confirmation <build_success_reviews>` that every version builds successfully on at least one platform?
 
 Refer to the relevant sections below for more guidance.
 
-Reviewing changes to an existing package?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Reviewing changes to an existing package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the pull request includes changes to an existing package, then focus on answering the following questions:
 
-* Are there any changes to the package :ref:`structure <review_structure>` and, if so, do they conform to conventions?
+* Are there any changes to the package :ref:`structure <structure_reviews>` and, if so, do they conform to conventions?
 * If there are new or updated directives, then are they and their options correct?
-* If there are changes to the ``url`` or its equivalent, are the older versions still correct?
-* If there are changes to the ``git`` or equivalent URL, do older branches exist in the new location?
-* Do all :ref:`automated checks <review_automated_checks>` pass?
-  If not, are there easy-to-resolve CI and/or test issues?
-* Is there :ref:`confirmation <review_build_success>` that every new version builds successfully on at least one platform?
+* If there are changes to the :ref:`url or its equivalent <url_equivalent_reviews>`, are the older versions still correct?
+* If there are changes to the :ref:`git or equivalent URL <vcs_url_reviews>`, do older branches exist in the new location?
+* Do all :ref:`automated checks <automated_checks_reviews>` pass?
+  If not, are there easy-to-resolve CI and/or test issues that can be addressed or does the submitter need to investigate the failures?
+* Is there :ref:`confirmation <build_success_reviews>` that every new version builds successfully on at least one platform?
 
 Refer to the relevant sections below for more guidance.
 
@@ -61,23 +67,24 @@ It is rare that a package would be considered inappropriate for inclusion in the
 One exception is making packages for standard Perl modules.
 
 **Action.**
-Should you find the software is not appropriate, explain to the :ref:`Package Contributor <package-contributors>` in a comment or your review.
-Ask that the package be removed from the PR if it is one of multiple affected files; otherwise suggest the PR be closed.
-In both cases, explain the reason for the request.
+Should you find the software is not appropriate, ask that the package be removed from the PR if it is one of multiple affected files or suggest the PR be closed.
+In either case, explain the reason for the request.
 
 CORE Perl modules
 ~~~~~~~~~~~~~~~~~
 
-In general, modules that are part of the standard installation for all listed Perl versions (i.e., ``CORE``) should *not* be implemented or contributed as Spack packages.
-Details on the exceptions and process for checking Perl modules can be found in the `Perl <https://spack.readthedocs.io/en/latest/build_systems/perlpackage.html#suitable_perl_modules>`_ build system documentation.
+In general, modules that are part of the standard installation for all listed Perl versions (i.e., ``CORE``) should **not be implemented or contributed**.
+Details on the exceptions and process for checking Perl modules can be found in the :ref:`Perl build system <suitable_perl_modules>` documentation.
 
-.. _review_structure:
+.. _structure_reviews:
 
 Package structure
 -----------------
 
-The `convention <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#structure-of-a-package>`_ for structuring Spack packages has metadata, or at least key properties, listed first followed by directives then methods:
+The `convention <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#structure-of-a-package>`_ for structuring Spack packages has metadata (key properties) listed first followed by directives then methods:
 
+* :ref:`url_equivalent_reviews`;
+* :ref:`vcs_url_reviews`;
 * :ref:`maintainers_reviews`;
 * :ref:`license_reviews`;
 * :ref:`version_reviews`;
@@ -93,13 +100,15 @@ However, they do cut down on visual clutter and make packages more readable.
 If you see clear deviations from the convention, request that they be addressed.
 When in doubt, ask others with merge privileges for advice.
 
+.. _url_equivalent_reviews:
+
 ``url``, ``url_for_version``, or URL equivalent
 -----------------------------------------------
 
 Changes to URLs may invalidate existing versions, which should be checked when there is a URL-related modification.
-All packages have a URL, though for some `build systems <https://spack.readthedocs.io/en/latest/build_systems.html>`_ it is derived automatically and not visible in the package.
+All packages have a URL, though for some :ref:`build-systems` it is derived automatically and not visible in the package.
 
-Reasons `versions <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#versions-and-urls>`_ may become invalid include:
+Reasons :ref:`versions <versions-and-fetching>` may become invalid include:
 
 * the new URL does not support Spack version extrapolation;
 * the addition of or changes to ``url_for_version`` involve checks of the ``spec``'s version instead of the ``version`` argument or the (usually older) versions are not covered;
@@ -122,7 +131,9 @@ Also, dashes may be replaced with underscores (e.g., `py-scikit-build <https://g
 In some cases, both changes can occur for the same package.
 As these examples illlustrate, it is sometimes possible to add a ``url_for_version`` method to override the default derived URL to ensure the correct one is returned.
 
-If older versions are no longer available and there is a chance someone has the package in a build cache, the usual approach is to first suggest `deprecating <https://spack.readthedocs.io/en/latest/packaging_guide.html#deprecating-old-versions>`_ them in the package.
+If older versions are no longer available and there is a chance someone has the package in a build cache, the usual approach is to first suggest :ref:`deprecating <deprecate>` them in the package.
+
+.. _vcs_url_reviews:
 
 ``git``, ``hg``, ``svn``, or ``cvs``
 ------------------------------------
@@ -138,11 +149,11 @@ You may need to check the new source repository to confirm the presence of all o
 -------------------------
 
 **Action.**
-If the new package does not have a `maintainers <https://spack.readthedocs.io/en/latest/packaging_guide.html#maintainers>`_ directive, ask the :ref:`Package Contributor <package-contributors>` to consider adding themselves.
+If the new package does not have a :ref:`maintainers <maintainers>` directive, ask the Contributor to add one.
 
-This request is optional for existing packages.
+.. note::
 
-.. tip::
+   This request is optional for existing packages.
 
    Be prepared for them to refuse.
 
@@ -152,9 +163,13 @@ This request is optional for existing packages.
 ---------------------
 
 **Action.**
-If the new package does not have a `license <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#license-information>`_  directive, ask the :ref:`Package Contributor <package-contributors>` to investigate and add it.
+If the new package does not have a :ref:`license <package_license>` directive, ask the Contributor to investigate and add it.
 
-This request is optional for existing packages.
+.. note::
+
+   This request is optional for existing packages.
+
+   Be prepared for them to refuse.
 
 .. _version_reviews:
 
@@ -162,10 +177,10 @@ This request is optional for existing packages.
 ----------------------
 
 In general, Spack packages are expected to be built from source code.
-There are a few exceptions (e.g., `BundlePackage <https://spack.readthedocs.io/en/latest/build_systems/bundlepackage.html#bundlepackage>`_).
-Typically every package will have at least one `version directive <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#source-code-and-versions>`_.
+There are a few exceptions (e.g., :ref:`BundlePackage <bundlepackage>`).
+Typically every package will have at least one :ref:`version <versions-and-fetching>` directive.
 
-The goal of reviewing version directives is to confirm that versions are listed in the proper order **and** that the arguments for new and updated versions are correct.
+The goals of reviewing version directives are to confirm that versions are listed in the proper order **and** that the arguments for new and updated versions are correct.
 
 .. note::
 
@@ -174,12 +189,16 @@ The goal of reviewing version directives is to confirm that versions are listed 
 ``version`` directive order
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`Spack convention <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#versions-and-urls>`_ holds that version directives should be listed in descending order, from newest to oldest.
-If branch versions are provided, then they should be listed first.
+By :ref:`convention <versions-and-fetching>` version directives should be listed in descending order, from newest to oldest.
+If branch versions are included, then they should be listed first.
 
 **Action.**
 When versions are being added, check the ordering of the directives.
 Request that the directives be  re-ordered if any of the directives do not conform to the convention.
+
+.. note::
+
+   Edge cases, such as manually downloaded software, may be difficult to confirm.
 
 Checksums, commits, tags, and branches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,7 +214,7 @@ Checksums, commits, tags, and branches
 
      From a security and reproducibility standpoint, it is important that Spack be able to verify downloaded source.
      This is accomplished using a hash (e.g., checksum or commit).
-     See `checksum verification <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#checksum-verification>`_ for more information.
+     See :ref:`checksum verification <checksum-verification>` for more information.
 
      Exceptions are allowed in rare cases, such as software supplied from reputable vendors.
      When in doubt, ask others with merge privileges for advice.
@@ -208,21 +227,21 @@ Checksums, commits, tags, and branches
 
 **Branches**
   Confirming new branch versions involves checking that the branches exist in the repository *and* that the version and branch names are consistent.
+  Let's take each in turn.
 
   **Action.**
-  Confirming branch existence, on the other hand, often involves checking the source repository.
+  Confirming branch existence often involves checking the source repository though is not necessary if there is confirmation that the branch was built successfully from the package.
 
   In general, the version and branch names should match.
-  When they do not, it is sometimes the result of people not being aware of how Spack handles `version ordering <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#version-comparison>`_.
+  When they do not, it is sometimes the result of people not being aware of how Spack handles :ref:`version-comparison`.
 
   **Action.**
-  If there is a name mismatch, especially for the most common branch names (e.g., `develop`, `main`, and `master`), ask why and suggest the arguments be changed such that they match the actual branch name.
+  If there is a name mismatch, especially for the most common branch names (e.g., ``develop``, ``main``, and ``master``), ask why and suggest the arguments be changed such that they match the actual branch name.
 
 **Manual downloads**
-  Edge cases, such as manually downloaded software, may be difficult to confirm.
 
   **Action.**
-  In these cases it is acceptable to rely on the package's Maintainers, if any.
+  Since these can be difficult to confirm, it is acceptable to rely on the package's Maintainers, if any.
 
 Deprecating versions
 ~~~~~~~~~~~~~~~~~~~~
@@ -231,14 +250,14 @@ If someone is deprecating versions, it is good to find out why.
 Sometimes there are concerns, such as security or lack of availability.
 
 **Action.**
-Suggest the Package Contributor review the `deprecation guidelines <https://spack.readthedocs.io/en/latest/packaging_guide.html#deprecating-old-versions>`_ before finalizing the changes if they haven't already explained why they made the choice in the PR description or comments.
+Suggest the Contributor review the :ref:`deprecation guidelines <deprecate>` before finalizing the changes if they haven't already explained why they made the choice in the PR description or comments.
 
 .. _variant_reviews:
 
 ``variant`` directives
 ----------------------
 
-`Variants <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#variants>`_ represent build options so any changes involving these directives should be reflected elsewhere in the package.
+:ref:`Variants <variants>` represent build options so any changes involving these directives should be reflected elsewhere in the package.
 
 Adding or modifying variants
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -247,7 +266,7 @@ Adding or modifying variants
 Confirm that new or modified variants are actually used in the package.
 The most common uses are additions and changes to:
 
-* dependencies;
+* :ref:`dependencies <depends_on_reviews>`;
 * configure options; and/or
 * build arguments.
 
@@ -262,14 +281,14 @@ Consider asking why the variant (or build option) is being removed and suggest m
 .. warning::
 
     If the default value of a variant is changed in the PR, then there is a risk that other packages relying on that value will no longer build as others expect.
-    This may be something worth noting in the review.
+    This may be worth noting in the review.
 
 .. _depends_on_reviews:
 
 ``depends_on`` directives
 -------------------------
 
-`Dependencies <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#dependencies>`_ represent software that must be installed before the package builds or is able to work correctly.
+:ref:`Dependencies <dependencies>` represent software that must be installed before the package builds or is able to work correctly.
 
 Updating dependencies
 ~~~~~~~~~~~~~~~~~~~~~
@@ -278,7 +297,7 @@ It is important that dependencies reflect the requirements of listed versions.
 They only need to be checked in a review when versions are being added or removed or the dependencies are being changed.
 
 **Action.**
-Dependencies affected by such changes should be confirmed, when possible, and *at least* when the :ref:`Package Contributor <package-contributors>` is not a :ref:`Maintainer <package-maintainers>` of the package.
+Dependencies affected by such changes should be confirmed, when possible, and *at least* when the Contributor is not a Maintainer of the package.
 
 **Solutions.**
 In some cases, the needed change may be as simple as ensuring the version range and or variant options in the dependency are accurate.
@@ -290,20 +309,20 @@ In this case, check Python package dependencies by following the build system `g
 
 .. tip::
 
-    In general, refer to the relevant dependencies section, if any, for the package’s `build system <https://spack.readthedocs.io/en/latest/build_systems.html>`_ for guidance.
+    In general, refer to the relevant dependencies section, if any, for the package’s :ref:`build-systems` for guidance.
 
 Updating language and compiler dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When `language and compiler dependencies <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#language-and-compiler-dependencies>`_ were introduced, their ``depends_on`` directives were derived from the source for existing packages.
-These dependencies are flagged with ``# generated`` comments.
-Unfortunately, the generated dependencies are not always complete.
+When :ref:`language and compiler dependencies <language-dependencies>` were introduced, their ``depends_on`` directives were derived from the source for existing packages.
+These dependencies are flagged with ``# generated`` comments when they have not been confirmed.
+Unfortunately, the generated dependencies are not always complete or necessarily required.
 
 **Action.**
-If these dependencies are being updated, ask if the :ref:`Package Contributor <package-contributors>` can confirm all of the generated dependencies and remove the ``# generated`` comments.
+If these dependencies are being updated, ask that the ``# generated`` comments be removed if the Contributor can confirm they are relevant.
 Definitely make sure Contributors do **not** include ``# generated`` on the dependencies they are adding to the package.
 
-.. _review_automated_checks:
+.. _automated_checks_reviews:
 
 Failed automated checks
 -----------------------
@@ -317,7 +336,7 @@ The PR may fail one or more style checks.
 
 **Action.**
 If the failure is due to issues raised by the ``black`` style checker *and* the PR is otherwise ready to be merged, you can add ``@spackbot fix style`` in a comment to see if Spack will fix the errors.
-Otherwise, inform the Package Contributor that they need to address the style failures.
+Otherwise, inform the Contributor that the style failures need to be addressed.
 
 CI stack failures
 ~~~~~~~~~~~~~~~~~
@@ -325,7 +344,7 @@ CI stack failures
 Existing packages **may** be included in GitLab CI pipelines through inclusion in one or more `stacks <https://github.com/spack/spack-packages/tree/develop/stacks>`_.
 
 **Action.**
-It is worth checking at least a sampling of the failed job logs, if present, to determine the possible cause and take or suggest an action accordingly.
+It is worth checking **at least a sampling** of the failed job logs, if present, to determine the possible cause and take or suggest an action accordingly.
 
 **CI Runner Failures**
   Sometimes CI runners time out or the pods become unavailable.
@@ -335,19 +354,19 @@ It is worth checking at least a sampling of the failed job logs, if present, to 
   Otherwise, the Contributor will need to investigate and resolve the problem.
 
 **Stand-alone Test Failures**
-  Sometimes `stand-alone tests <https://spack.readthedocs.io/en/latest/packaging_guide_testing.html#stand-alone-tests>`_ could be causing the build job to time out.
+  Sometimes :ref:`stand-alone tests <cmd-spack-test>` could be causing the build job to time out.
   If the tests take too long, the issue could be that the package is running too many and/or long running tests.
   Or the tests may be trying to use resources (e.g., a batch scheduler) that are not available on runners.
 
   **Action.**
-  If the tests for a package are hanging, at a minimum create a `new issue <https://github.com/spack/spack-packages/issues>`_, if there is not one already, to flag the package.
+  If the tests for a package are hanging, at a minimum create a `new issue <https://github.com/spack/spack-packages/issues>`_ if there is not one already, to flag the package.
 
   **(Temporary) Solution.**
   Look at the package implementation to see if the tests are using a batch scheduler or there appear to be too many or long running tests.
   If that is the case, then a pull request should be created in the ``spack/spack-packages`` repository that adds the package to the ``broken-tests-packages`` list in the `ci configuration <https://spack.readthedocs.io/en/latest/pipelines.html#ci-yaml>`_.
   Once the fix PR is merged, then the affected PR can be rebased to pick up the change.
 
-.. _review_build_success:
+.. _build_success_reviews:
 
 Successful builds
 -----------------
@@ -357,9 +376,12 @@ For a new package, we would ideally have confirmation for every version; whereas
 
 Acceptable forms of confirmation are **one or more of**:
 
-* the :ref:`Contributor <package-contributors>` or another reviewer explicitly confirms a successful build of each new version of the software on at least one platform;
-* the software is built successfully by Spack CI by at least one of the CI stacks; and
-* at least one :ref:`Maintainer <package-maintainers>` confirms they are able to successfully build the software.
+* the Contributor or another reviewer explicitly confirms that a successful build of **each new version on at least one platform**;
+* the software is built successfully by Spack CI by **at least one of the CI stacks**; and
+* **at least one Maintainer** explicitly confirms they are able to successfully build the software.
+
+Individuals are expected to update the PR description or add a comment to explicitly confirm the builds.
+You may need to check the CI stacks and/or outputs to confirm that there is a stack that builds the new version.
 
 .. note::
 

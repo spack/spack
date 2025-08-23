@@ -48,7 +48,7 @@ As a Package Reviewer, you are **expected** to assess changes in PRs to the best
 Maintainers (Package Owners)
 ----------------------------
 
-Maintainers are individuals (technically GitHub accounts) who appear in a package’s `Maintainers <https://spack.readthedocs.io/en/latest/packaging_guide_creation.html#maintainers>`_ directive.
+Maintainers are individuals (technically GitHub accounts) who appear in a package’s :ref:`maintainers` directive.
 These are people who have agreed to be notified of and given the opportunity to review changes to packages.
 They are, from a Spack package perspective, `Code Owners <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners>`_ of the package, whether or not they “own” or work on the software that the package builds.
 
@@ -58,7 +58,7 @@ As a Maintainer, you are **expected**, when available, to:
 * confirm that packages successfully build on at least one platform; and
 * attempt to confirm that any updated or included tests pass.
 
-See :ref:`review_build_success` for acceptable forms of confirmation of build success.
+See :ref:`build_success_reviews` for acceptable forms of build success confirmation.
 
 .. note::
 
