@@ -707,7 +707,7 @@ The following two environment manifests are identical:
      specs:
        - matrix:
            - [zlib, libelf, libdwarf]
-           - ['%gcc@7.1.0', '%gcc@4.9.3']
+           - ["%gcc@7.1.0", "%gcc@4.9.3"]
          exclude:
            - libdwarf%gcc@4.9.3
        - cmake
@@ -735,7 +735,7 @@ As an example, the following two manifest files are identical.
    spack:
      definitions:
        - first: [libelf, libdwarf]
-       - compilers: ['%gcc', '%intel']
+       - compilers: ["%gcc", "%intel"]
        - second:
            - $first
            - matrix:
@@ -766,15 +766,15 @@ Additionally, the ``-l`` option to the ``spack add`` command allows one to add t
 The ``when`` directive can be used to conditionally add specs to a named list.
 The ``when`` directive takes a string of Python code referring to a restricted set of variables, and evaluates to a boolean.
 The specs listed are appended to the named list if the ``when`` string evaluates to ``True``.
-In the following snippet, the named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on ``x86_64`` systems and ``['%gcc', '%clang']`` on all other systems.
+In the following snippet, the named list ``compilers`` is ``["%gcc", "%clang", "%intel"]`` on ``x86_64`` systems and ``["%gcc", "%clang"]`` on all other systems.
 
 .. code-block:: yaml
 
    spack:
      definitions:
-       - compilers: ['%gcc', '%clang']
-       - when: arch.satisfies('target=x86_64:')
-         compilers: ['%intel']
+       - compilers: ["%gcc", "%clang"]
+       - when: arch.satisfies("target=x86_64:")
+         compilers: ["%intel"]
 
 .. note::
 
@@ -932,7 +932,7 @@ The root specs with their (transitive) link and run type dependencies will be pu
          select: [^mpi]
          exclude: ["%gcc@8.5"]
          projections:
-           all: '{name}/{version}-{compiler.name}'
+           all: "{name}/{version}-{compiler.name}"
          link: all
          link_type: symlink
 

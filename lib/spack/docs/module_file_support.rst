@@ -288,21 +288,21 @@ For instance, in the snippet below:
          all:
            environment:
              set:
-               BAR: 'bar'
+               BAR: "bar"
          # This anonymous spec selects any package that
          # depends on mpi. The double colon at the
          # end clears the set of rules that matched so far.
          ^mpi::
            environment:
              prepend_path:
-               PATH: '{^mpi.prefix}/bin'
+               PATH: "{^mpi.prefix}/bin"
              set:
-               BAR: 'baz'
+               BAR: "baz"
          # Selects any zlib package
          zlib:
            environment:
              prepend_path:
-               LD_LIBRARY_PATH: 'foo'
+               LD_LIBRARY_PATH: "foo"
          # Selects zlib compiled with gcc@4.8
          zlib%gcc@4.8:
            environment:
@@ -344,8 +344,8 @@ If you write a configuration file like:
    modules:
      default:
        tcl:
-         include: ['gcc', 'llvm']  # include will have precedence over exclude
-         exclude: ['%gcc@4.4.7']   # Assuming gcc@4.4.7 is the system compiler
+         include: ["gcc", "llvm"]  # include will have precedence over exclude
+         exclude: ["%gcc@4.4.7"]   # Assuming gcc@4.4.7 is the system compiler
 
 you will prevent the generation of module files for any package that is compiled with ``gcc@4.4.7``, with the only exception of any ``gcc`` or any ``llvm`` installation.
 
@@ -390,8 +390,8 @@ For instance, the following config options,
        tcl:
          all:
            suffixes:
-             ^python@3: 'python{^python.version.up_to_2}'
-             ^openblas: 'openblas'
+             ^python@3: "python{^python.version.up_to_2}"
+             ^openblas: "openblas"
 
 will add a ``python3.12`` to module names of packages compiled with Python 3.12, and similarly for all specs depending on ``python@3``.
 This is useful to know which version of Python a set of Python extensions is associated with.
@@ -406,8 +406,8 @@ This uses the projections format covered in :ref:`view_projections`.
     default:
       tcl:
         projections:
-          all: '{name}/{version}-{compiler.name}-{compiler.version}-module'
-          ^mpi: '{name}/{version}-{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}-module'
+          all: "{name}/{version}-{compiler.name}-{compiler.version}-module"
+          ^mpi: "{name}/{version}-{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}-module"
 
 will create module files that are nested in directories by package name, contain the version and compiler name and version, and have the word ``module`` before the hash for all specs that do not depend on mpi, and will have the same information plus the MPI implementation name and version for all packages that depend on mpi.
 
@@ -426,11 +426,11 @@ When specifying module names by projection for Lmod modules, we recommend NOT in
             - tcl
           tcl:
             projections:
-              all: '{name}/{version}-{compiler.name}-{compiler.version}'
+              all: "{name}/{version}-{compiler.name}-{compiler.version}"
             all:
               conflict:
-                - '{name}'
-                - 'intel/14.0.1'
+                - "{name}"
+                - "intel/14.0.1"
 
    will create module files that will conflict with ``intel/14.0.1`` and with the base directory of the same module, effectively preventing the possibility to load two or more versions of the same software at the same time.
    The tokens that are available for use in this directive are those understood by the :meth:`~spack.spec.Spec.format` method.
@@ -452,12 +452,12 @@ When specifying module names by projection for Lmod modules, we recommend NOT in
              - lmod
            lmod:
              core_compilers:
-               - 'gcc@4.8'
+               - "gcc@4.8"
              core_specs:
-               - 'python'
+               - "python"
              hierarchy:
-               - 'mpi'
-               - 'lapack'
+               - "mpi"
+               - "lapack"
 
      that will generate a hierarchy in which the ``lapack`` and ``mpi`` layer can be switched independently.
      This allows a site to build the same libraries or applications against different implementations of ``mpi`` and ``lapack``, and let Lmod switch safely from one to the other.
@@ -532,7 +532,7 @@ If the ``use_view`` value is set in the config, then the prefix inspections for 
        my_view:
          projections:
            root: /path/to/my/view
-           all:  '{name}-{hash}'
+           all:  "{name}-{hash}"
 
 The ``spack`` key is relevant to :ref:`environment <environments>` configuration, and the view key is discussed in detail in the section on :ref:`Configuring environment views <configuring_environment_views>`.
 With this configuration the generated module for package ``foo`` would set ``PATH`` to include ``/path/to/my/view/foo-<hash>/bin`` instead of ``/spack/prefix/foo/bin``.
@@ -553,7 +553,7 @@ If you want to prevent modifications to some environment variables, you can do s
          all:
            filter:
              # Exclude changes to any of these variables
-             exclude_env_vars: ['CPATH', 'LIBRARY_PATH']
+             exclude_env_vars: ["CPATH", "LIBRARY_PATH"]
 
 The configuration above will generate module files that will not contain modifications to either ``CPATH`` or ``LIBRARY_PATH``.
 

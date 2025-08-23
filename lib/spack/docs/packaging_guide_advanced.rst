@@ -425,7 +425,7 @@ Detection tests insisting on ``PATH`` inspections are listed under the ``paths``
          echo "InstalledDir: /usr/bin"
      platforms: ["linux", "darwin"]
      results:
-     - spec: 'llvm@3.9.1 +clang~lld~lldb'
+     - spec: "llvm@3.9.1 +clang~lld~lldb"
 
 If the ``platforms`` attribute is present, tests are run only if the current host matches one of the listed platforms.
 Each test is performed by first creating a temporary directory structure as specified in the corresponding ``layout`` and by then running package detection and checking that the outcome matches the expected ``results``.

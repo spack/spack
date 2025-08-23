@@ -30,19 +30,19 @@ Users can specify the version, compile-time options, and target architecture, al
 .. code-block:: spec
 
    # Install a particular version by appending @
-   $ spack install hdf5@1.14.6
+   $ spack install hdf5@1.14
 
    # Add special compile-time options by name
-   $ spack install hdf5@1.14.6 api=v110
+   $ spack install hdf5@1.14 api=v110
 
    # Add special boolean compile-time options with +
-   $ spack install hdf5@1.14.6 +hl
+   $ spack install hdf5@1.14 +hl
 
    # Add compiler flags using the conventional names
-   $ spack install hdf5@1.14.6 cflags="-O3 -floop-block"
+   $ spack install hdf5@1.14 cflags="-O3 -floop-block"
 
    # Target a specific micro-architecture
-   $ spack install hdf5@1.14.6 target=icelake
+   $ spack install hdf5@1.14 target=icelake
 
 Users can specify as many or as few options as they care about.
 Spack will fill in the unspecified values with sensible defaults.
@@ -55,18 +55,18 @@ Users can specify both *direct* dependencies of a package, using the ``%`` sigil
 
 .. code-block:: spec
 
-   # Install hdf5 using gcc@15.1.0 as a compiler (direct dependency of hdf5)
-   $ spack install hdf5@1.14.6 %gcc@15.1.0
+   # Install hdf5 using gcc@15 as a compiler (direct dependency of hdf5)
+   $ spack install hdf5@1.14 %gcc@15
 
    # Install hdf5 using hwloc with CUDA enabled (transitive dependency)
-   $ spack install hdf5@1.14.6 ^hwloc+cuda
+   $ spack install hdf5@1.14 ^hwloc+cuda
 
 The expression on the command line can be as simple or as complicated as the user needs:
 
 .. code-block:: spec
 
    # Install hdf5 compiled with gcc@15, linked to mpich compiled with gcc@14
-   $ spack install hdf5@1.14.6 %gcc@15 ^mpich %gcc@14
+   $ spack install hdf5@1.14 %gcc@15 ^mpich %gcc@14
 
 Non-destructive installs
 ------------------------

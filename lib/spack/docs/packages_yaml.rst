@@ -379,7 +379,7 @@ You can also set default requirements for all packages under ``all`` like this:
 
    packages:
      all:
-       require: '%[when=%c]c=clang %[when=%cxx]cxx=clang'
+       require: "%[when=%c]c=clang %[when=%cxx]cxx=clang"
 
 which means every spec will be required to use ``clang`` as the compiler for C and C++ code.
 
@@ -419,12 +419,12 @@ For example, with a configuration like this:
    packages:
      all:
        require:
-       - 'build_type=Debug'
-       - '%[when=%c]c=clang %[when=%cxx]cxx=clang'
+       - "build_type=Debug"
+       - "%[when=%c]c=clang %[when=%cxx]cxx=clang"
      cmake:
        require:
-       - 'build_type=Debug'
-       - '%c,cxx=gcc'
+       - "build_type=Debug"
+       - "%c,cxx=gcc"
 
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake`` dependencies) to use ``clang``.
 If enforcing ``build_type=Debug`` is needed also on ``cmake``, it must be repeated in the specific ``cmake`` requirements.
@@ -440,7 +440,7 @@ This can be useful for fixing which virtual provider you want to use:
 
    packages:
      mpi:
-       require: 'mvapich2 %c,cxx,fortran=gcc'
+       require: "mvapich2 %c,cxx,fortran=gcc"
 
 With the configuration above the only allowed ``mpi`` provider is ``mvapich2`` built with ``gcc``/``g++``/``gfortran``.
 
@@ -451,9 +451,9 @@ For instance with a configuration like:
 
    packages:
      mpi:
-       require: 'mvapich2 %c,cxx,fortran=gcc'
+       require: "mvapich2 %c,cxx,fortran=gcc"
      mvapich2:
-       require: '~cuda'
+       require: "~cuda"
 
 you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
@@ -469,9 +469,9 @@ If the semantic of requirements is too strong, you can also express "strong pref
    packages:
      all:
        prefer:
-       - '%c,cxx=clang'
+       - "%c,cxx=clang"
        conflict:
-       - '+shared'
+       - "+shared"
 
 The ``prefer`` and ``conflict`` sections can be used whenever a ``require`` section is allowed.
 The argument is always a list of constraints, and each constraint can be either a simple string, or a more complex object:
@@ -481,9 +481,9 @@ The argument is always a list of constraints, and each constraint can be either 
    packages:
      all:
        conflict:
-       - spec: '%c,cxx=clang'
-         when: 'target=x86_64_v3'
-         message: 'reason why clang cannot be used'
+       - spec: "%c,cxx=clang"
+         when: "target=x86_64_v3"
+         message: "reason why clang cannot be used"
 
 The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are optional.
 
@@ -498,7 +498,7 @@ The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are opt
       packages:
         all:
           require:
-          - one_of: ['%clang', '@:']
+          - one_of: ["%clang", "@:"]
 
    Since only one of the requirements must hold, and ``@:`` is always true, the rule above is equivalent to a conflict.
    For "strong preferences" the same construction works, with the ``any_of`` policy instead of the ``one_of`` policy.

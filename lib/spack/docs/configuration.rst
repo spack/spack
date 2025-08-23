@@ -514,12 +514,12 @@ Every time these modifications are allowed, they are specified as a dictionary, 
 
    environment:
      set:
-       LICENSE_FILE: '/path/to/license'
+       LICENSE_FILE: "/path/to/license"
      unset:
      - CPATH
      - LIBRARY_PATH
      append_path:
-       PATH: '/new/bin/dir'
+       PATH: "/new/bin/dir"
 
 The possible actions that are permitted are ``set``, ``unset``, ``append_path``, ``prepend_path``, and finally ``remove_path``.
 They all require a dictionary of variable names mapped to the values used for the modification, with the exception of ``unset``, which requires just a list of variable names.

@@ -107,7 +107,7 @@ And here's the Spack environment built by the pipeline represented as a ``spack.
        - zlib
        - bzip2 ~debug
      - compiler:
-       - '%gcc'
+       - "%gcc"
 
      specs:
      - matrix:
@@ -337,10 +337,10 @@ Following is an example of this section added to a ``spack.yaml``:
      ci:
        pipeline-gen:
        - noop-job:
-           tags: ['custom', 'tag']
+           tags: ["custom", "tag"]
            image:
-             name: 'some.image.registry/custom-image:latest'
-             entrypoint: ['/bin/bash']
+             name: "some.image.registry/custom-image:latest"
+             entrypoint: ["/bin/bash"]
            script::
              - echo "Custom message in a custom script"
 
@@ -520,18 +520,18 @@ Here's an example of what bootstrapping some compilers might look like:
    spack:
      definitions:
      - compiler-pkgs:
-       - 'llvm+clang@6.0.1 os=centos7'
-       - 'gcc@6.5.0 os=centos7'
-       - 'llvm+clang@6.0.1 os=ubuntu18.04'
-       - 'gcc@6.5.0 os=ubuntu18.04'
+       - "llvm+clang@6.0.1 os=centos7"
+       - "gcc@6.5.0 os=centos7"
+       - "llvm+clang@6.0.1 os=ubuntu18.04"
+       - "gcc@6.5.0 os=ubuntu18.04"
      - pkgs:
        - readline@7.0
      - compilers:
-       - '%gcc@5.5.0'
-       - '%gcc@6.5.0'
-       - '%gcc@7.3.0'
-       - '%clang@6.0.0'
-       - '%clang@6.0.1'
+       - "%gcc@5.5.0"
+       - "%gcc@6.5.0"
+       - "%gcc@7.3.0"
+       - "%clang@6.0.0"
+       - "%clang@6.0.1"
      - oses:
        - os=ubuntu18.04
        - os=centos7
@@ -541,8 +541,8 @@ Here's an example of what bootstrapping some compilers might look like:
        - [$compilers]
        - [$oses]
        exclude:
-         - '%gcc@7.3.0 os=centos7'
-         - '%gcc@5.5.0 os=ubuntu18.04'
+         - "%gcc@7.3.0 os=centos7"
+         - "%gcc@5.5.0 os=ubuntu18.04"
      ci:
        bootstrap:
          - name: compiler-pkgs
