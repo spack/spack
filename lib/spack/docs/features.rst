@@ -147,7 +147,7 @@ To clarify its role and prevent common misconceptions, it's helpful to understan
 1. Spack is a user-space tool, not an operating system.
    It runs on top of your existing OS (like Linux, macOS, or Windows) and complements the system's native package manager (like ``yum`` or ``apt``), but does not replace it.
    Spack relies on the host system for essentials like the C runtime libraries.
-   Building a software stack with a custom `libc` is a planned future capability but is not yet implemented
+   Building a software stack with a custom `libc` is a planned future capability but is not yet implemented.
 
 2. Spack performs native builds, not cross-compilation.
    It builds software for the same processor architecture it is running on.
