@@ -614,6 +614,11 @@ You can use this in conjunction with the ``-C`` / ``--config-scope`` argument to
 
    $ spack -C /path/to/my/scope config get packages
 
+If you want to see the fully merged configuration with variables expanded, you can use the `--expand-vars` flag:
+
+.. code-block:: console
+
+   $ spack config get --expand-vars
 
 .. _cmd-spack-config-blame:
 

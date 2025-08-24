@@ -52,6 +52,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         help="show configuration as seen by this environment spec group (requires active env)",
     )
+    get_parser.add_argument(
+        "--expand-vars", action="store_true", default=False, help="expand variables in the output"
+    )
 
     blame_parser = sp.add_parser(
         "blame", help="print configuration annotated with source file:line"
@@ -68,6 +71,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         metavar="group",
         default=None,
         help="show configuration as seen by this environment spec group (requires active env)",
+    )
+    blame_parser.add_argument(
+        "--expand-vars", action="store_true", default=False, help="expand variables in the output"
     )
 
     edit_parser = sp.add_parser("edit", help="edit configuration file")
@@ -213,13 +219,15 @@ def _print_configuration_helper(args, *, blame: bool) -> None:
     yaml = blame or not args.json
 
     if args.section is not None:
-        spack.config.CONFIG.print_section(args.section, yaml=yaml, blame=blame, scope=args.scope)
+        spack.config.CONFIG.print_section(
+            args.section, yaml=yaml, blame=blame, scope=args.scope, expand_vars=args.expand_vars
+        )
         return
 
-    print_flattened_configuration(blame=blame, yaml=yaml)
+    print_flattened_configuration(blame=blame, yaml=yaml, expand_vars=args.expand_vars)
 
 
-def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
+def print_flattened_configuration(*, blame: bool, yaml: bool, expand_vars: bool) -> None:
     """Prints to stdout a flattened version of the configuration.
 
     Args:
@@ -235,7 +243,7 @@ def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
         flattened[spack.schema.env.TOP_LEVEL_KEY] = syaml.syaml_dict()
 
     for config_section in spack.config.SECTION_SCHEMAS:
-        current = spack.config.get(config_section)
+        current = spack.config.get(config_section, expand_vars=expand_vars)
         flattened[spack.schema.env.TOP_LEVEL_KEY][config_section] = current
     if blame or yaml:
         syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)

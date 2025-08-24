@@ -731,7 +731,11 @@ class Configuration:
         scope._write_section(section)
 
     def get_config(
-        self, section: str, scope: Optional[str] = None, _merged_scope: Optional[str] = None
+        self,
+        section: str,
+        scope: Optional[str] = None,
+        _merged_scope: Optional[str] = None,
+        expand_vars: bool = True,
     ) -> YamlConfigDict:
         """Get configuration settings for a section.
 
@@ -757,7 +761,9 @@ class Configuration:
            }
 
         """
-        return self._get_config_memoized(section, scope=scope, _merged_scope=_merged_scope)
+        return self._get_config_memoized(
+            section, scope=scope, _merged_scope=_merged_scope, expand_vars=expand_vars
+        )
 
     def deepcopy_as_builtin(
         self, section: str, scope: Optional[str] = None, *, line_info: bool = False
@@ -811,7 +817,7 @@ class Configuration:
 
     @lang.memoized
     def _get_config_memoized(
-        self, section: str, scope: Optional[str], _merged_scope: Optional[str]
+        self, section: str, scope: Optional[str], _merged_scope: Optional[str], expand_vars: bool
     ) -> YamlConfigDict:
         """Memoized helper for ``get_config()``.
 
@@ -871,7 +877,8 @@ class Configuration:
                 syaml.mark(ret, s)
                 return ret
             elif isinstance(s, str):
-                return substitute_path_variables(s)
+                ret = substitute_path_variables(s)
+                return ret
             elif isinstance(s, dict):
                 for k, v in s.items():
                     s[k] = substitute_vars(v)
@@ -880,7 +887,8 @@ class Configuration:
                     s[i] = substitute_vars(item)
             return s
 
-        substitute_vars(merged_section)
+        if expand_vars:
+            substitute_vars(merged_section)
 
         self.updated_scopes_by_section[section] = updated_scopes
 
@@ -894,7 +902,13 @@ class Configuration:
             ret = syaml.syaml_dict(ret)
         return ret
 
-    def get(self, path: str, default: Optional[Any] = None, scope: Optional[str] = None) -> Any:
+    def get(
+        self,
+        path: str,
+        default: Optional[Any] = None,
+        scope: Optional[str] = None,
+        expand_vars: bool = True,
+    ) -> Any:
         """Get a config section or a single value from one.
 
         Accepts a path syntax that allows us to grab nested config map
@@ -911,7 +925,7 @@ class Configuration:
         parts = process_config_path(path)
         section = parts.pop(0)
 
-        value = self.get_config(section, scope=scope)
+        value = self.get_config(section, scope=scope, expand_vars=expand_vars)
 
         while parts:
             key = parts.pop(0)
@@ -969,7 +983,7 @@ class Configuration:
         yield from self.scopes.values()
 
     def print_section(
-        self, section: str, yaml: bool = True, blame: bool = False, *, scope: Optional[str] = None
+        self, section: str, yaml: bool = True, blame: bool = False, *, scope: Optional[str] = None, expand_vars: bool = True
     ) -> None:
         """Print a configuration to stdout.
 
@@ -978,10 +992,11 @@ class Configuration:
             yaml: If True, output in YAML format, otherwise JSON (ignored when blame is True).
             blame: Whether to include source locations for each entry.
             scope: The configuration scope to use.
+            expand_vars: Whether to expand variables.
         """
         try:
             data = syaml.syaml_dict()
-            data[section] = self.get_config(section, scope=scope)
+            data[section] = self.get_config(section, scope=scope, expand_vars=expand_vars)
             if yaml or blame:
                 syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
             else:
@@ -1665,9 +1680,11 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
     CONFIG.set(path, new, scope)
 
 
-def get(path: str, default: Optional[Any] = None, scope: Optional[str] = None) -> Any:
+def get(
+    path: str, default: Optional[Any] = None, scope: Optional[str] = None, expand_vars: bool = True
+) -> Any:
     """Module-level wrapper for ``Configuration.get()``."""
-    return CONFIG.get(path, default, scope)
+    return CONFIG.get(path, default, scope, expand_vars=expand_vars)
 
 
 _set = set  #: save this before defining set -- maybe config.set was ill-advised :)
