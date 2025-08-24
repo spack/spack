@@ -296,6 +296,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="if provided, key index will be updated as well as package index",
     )
+    update_index.set_defaults(func=update_index_fn)
     update_view = subparsers.add_parser(
         "update-view", aliases=["create-view"], help=update_view_fn.__doc__
     )
@@ -894,7 +895,7 @@ def update_view_fn(args):
     index_exists = True
     try:
         BINARY_INDEX._fetch_and_cache_index(url_and_version)
-    except spack.binary_distribution.FetchIndexError:
+    except spack.binary_distribution.BuildcacheIndexNotExists:
         index_exists = False
 
     if index_exists and (not args.force and not args.append):

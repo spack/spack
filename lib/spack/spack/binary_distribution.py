@@ -372,6 +372,7 @@ class BinaryCacheIndex:
                         all_methods_failed = False
                 else:
                     # May need to fetch the index and update the local caches
+                    needs_regen = False
                     try:
                         needs_regen = self._fetch_and_cache_index(
                             urlAndVersion, cache_entry=cache_entry
@@ -379,9 +380,12 @@ class BinaryCacheIndex:
                         self._last_fetch_times[urlAndVersion] = (now, True)
                         all_methods_failed = False
                     except FetchIndexError as e:
-                        needs_regen = False
                         fetch_errors.append(e)
                         self._last_fetch_times[urlAndVersion] = (now, False)
+                    except BuildcacheIndexNotExists:
+                        self._last_fetch_times[urlAndVersion] = (now, False)
+                        all_methods_failed = False
+
                     # The need to regenerate implies a need to clear as well.
                     spec_cache_clear_needed |= needs_regen
                     spec_cache_regenerate_needed |= needs_regen
@@ -413,14 +417,18 @@ class BinaryCacheIndex:
                 continue
 
             # Need to fetch the index and update the local caches
+            needs_regen = False
             try:
                 needs_regen = self._fetch_and_cache_index(urlAndVersion)
                 self._last_fetch_times[urlAndVersion] = (now, True)
                 all_methods_failed = False
             except FetchIndexError as e:
                 fetch_errors.append(e)
-                needs_regen = False
                 self._last_fetch_times[urlAndVersion] = (now, False)
+            except BuildcacheIndexNotExists:
+                self._last_fetch_times[urlAndVersion] = (now, False)
+                all_methods_failed = False
+
             # Generally speaking, a new mirror wouldn't imply the need to
             # clear the spec cache, so leave it as is.
             if needs_regen:
@@ -464,8 +472,9 @@ class BinaryCacheIndex:
 
         if scheme != "oci":
             cache_class = get_url_buildcache_class(layout_version=layout_version)
-            if not web_util.url_exists(cache_class.get_index_url(mirror_url, mirror_view)):
-                raise FetchIndexError("Index not found in cache")
+            index_url = cache_class.get_index_url(mirror_url, mirror_view)
+            if not web_util.url_exists(index_url):
+                raise BuildcacheIndexNotExists(f"Index not found in cache {index_url}")
 
         fetcher: IndexFetcher = get_index_fetcher(scheme, url_and_version, cache_entry)
         result = fetcher.conditional_fetch()
@@ -2541,6 +2550,10 @@ class FetchIndexError(Exception):
 
 class BuildcacheIndexError(spack.error.SpackError):
     """Raised when a buildcache cannot be read for any reason"""
+
+
+class BuildcacheIndexNotExists(Exception):
+    """Buildcache does not contain an index"""
 
 
 FetchIndexResult = collections.namedtuple("FetchIndexResult", "etag hash data fresh")
