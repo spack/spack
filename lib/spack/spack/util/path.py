@@ -195,11 +195,17 @@ def substitute_config_variables(path):
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
+HOME_PREFIX = re.compile(rf"^~(?:[A-Za-z0-9_.-]+)?{re.escape(os.path.sep)}")
+
+
 def substitute_path_variables(path):
     """Substitute config vars, expand environment vars, expand user home."""
     path = substitute_config_variables(path)
     path = os.path.expandvars(path)
-    path = os.path.expanduser(path)
+    # ignore cases where ~ and ~user aren't used with a path separator
+    # this is to prevent ~variant strings from being expanded
+    if HOME_PREFIX.match(path):
+        path = os.path.expanduser(path)
     return path
 
 
