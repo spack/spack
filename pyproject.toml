@@ -1,8 +1,11 @@
 [project]
-name = "spack"
-description = "The spack package manager"
-requires-python = ">=3.6"
-dependencies = ["clingo", "setuptools"]
+name="spack"
+description="The spack package manager"
+requires-python=">=3.6.2"
+dependencies=[
+  "clingo",
+  "setuptools",
+]
 dynamic = ["version"]
 
 [project.scripts]
