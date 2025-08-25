@@ -2131,131 +2131,6 @@ class Spec:
             visited=visited,
         )
 
-    def _format_edge_attributes(self, dep: DependencySpec, deptypes=True, virtuals=True):
-        deptypes_str = (
-            f"deptypes={','.join(dt.flag_to_tuple(dep.depflag))}"
-            if deptypes and dep.depflag
-            else ""
-        )
-        when_str = f"when='{(dep.when)}'" if dep.when != Spec() else ""
-        virtuals_str = f"virtuals={','.join(dep.virtuals)}" if virtuals and dep.virtuals else ""
-
-        attrs = " ".join(s for s in (when_str, deptypes_str, virtuals_str) if s)
-        if attrs:
-            attrs = f"[{attrs}] "
-
-        return attrs
-
-    def _format_dependencies(
-        self,
-        format_string: str = DEFAULT_FORMAT,
-        include: Optional[Callable[[DependencySpec], bool]] = None,
-        deptypes=True,
-        _force_direct=False,
-    ):
-        """Helper for formatting dependencies on specs.
-
-        Arguments:
-            format_string: format string to use for each dependency
-            include: predicate to select which dependencies to include
-            deptypes: whether to format deptypes
-            _force_direct: if True, print all dependencies as direct dependencies
-                (to be removed when we have this metadata on concrete edges)
-        """
-        include = include or (lambda dep: True)
-        parts = []
-        if self.concrete:
-            direct = self.edges_to_dependencies()
-            transitive: List[DependencySpec] = []
-        else:
-            direct, transitive = lang.stable_partition(
-                self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
-            )
-
-        # helper for direct and transitive loops below
-        def format_edge(edge, sigil, dep_spec=None):
-            dep_spec = dep_spec or edge.spec
-            dep_format = dep_spec.format(format_string)
-
-            edge_attributes = (
-                self._format_edge_attributes(edge, deptypes=deptypes, virtuals=False)
-                if edge.depflag or edge.when != Spec()
-                else ""
-            )
-            virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals else ""
-            star = _anonymous_star(edge, dep_format)
-
-            return f"{sigil}{edge_attributes}{star}{virtuals}{dep_format}"
-
-        # direct dependencies
-        for edge in sorted(direct, key=lambda x: x.spec.name):
-            if not include(edge):
-                continue
-
-            # replace legacy compiler names
-            old_name = edge.spec.name
-            new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(old_name)
-            try:
-                # this is ugly but copies can be expensive
-                if new_name:
-                    edge.spec.name = new_name
-                parts.append(format_edge(edge, "%", edge.spec))
-            finally:
-                edge.spec.name = old_name
-
-        if self.concrete:
-            # Concrete specs should go no further, as the complexity
-            # below is O(paths)
-            return " ".join(parts).strip()
-
-        # transitive dependencies (with any direct dependencies)
-        for edge in sorted(transitive, key=lambda x: x.spec.name):
-            if not include(edge):
-                continue
-            sigil = "%" if _force_direct else "^"  # hack til direct deps represented better
-            parts.append(format_edge(edge, sigil, edge.spec))
-
-            # also recursively add any direct dependencies of transitive dependencies
-            if edge.spec._dependencies:
-                parts.append(
-                    edge.spec._format_dependencies(
-                        format_string=format_string,
-                        include=include,
-                        deptypes=deptypes,
-                        _force_direct=_force_direct,
-                    )
-                )
-
-        return " ".join(parts).strip()
-
-    @property
-    def compilers(self):
-        # TODO: get rid of the space here and make formatting smarter
-        return " " + self._format_dependencies(
-            "{name}{@version}",
-            include=lambda dep: any(lang in dep.virtuals for lang in ("c", "cxx", "fortran")),
-            deptypes=False,
-            _force_direct=True,
-        )
-
-    @property
-    def long_spec(self):
-        """Returns a string of the spec with the dependencies completely enumerated."""
-        if self.concrete:
-            return self.tree(format=DISPLAY_FORMAT)
-        return f"{self.format()} {self._format_dependencies()}".strip()
-
-    @property
-    def short_spec(self):
-        """Returns a version of the spec with the dependencies hashed
-        instead of completely enumerated."""
-        return self.format("{name}{@version}{variants}{ arch=architecture}{/hash:7}")
-
-    @property
-    def cshort_spec(self):
-        """Returns an auto-colorized version of ``self.short_spec``."""
-        return self.cformat("{name}{@version}{variants}{ arch=architecture}{/hash:7}")
-
     @property
     def prefix(self) -> spack.util.prefix.Prefix:
         if not self._concrete:
@@ -4140,6 +4015,16 @@ class Spec:
     def namespace_if_anonymous(self):
         return self.namespace if not self.name else None
 
+    @property
+    def spack_root(self):
+        """Special field for using ``{spack_root}`` in :meth:`format`."""
+        return spack.paths.spack_root
+
+    @property
+    def spack_install(self):
+        """Special field for using ``{spack_install}`` in :meth:`format`."""
+        return spack.store.STORE.layout.root
+
     def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out attributes of a spec according to a format string.
 
@@ -4336,21 +4221,9 @@ class Spec:
 
         return SPEC_FORMAT_RE.sub(format_attribute, format_string).strip()
 
-    def cformat(self, *args, **kwargs):
-        """Same as format, but color defaults to auto instead of False."""
-        kwargs = kwargs.copy()
-        kwargs.setdefault("color", None)
-        return self.format(*args, **kwargs)
-
-    @property
-    def spack_root(self):
-        """Special field for using ``{spack_root}`` in Spec.format()."""
-        return spack.paths.spack_root
-
-    @property
-    def spack_install(self):
-        """Special field for using ``{spack_install}`` in Spec.format()."""
-        return spack.store.STORE.layout.root
+    def cformat(self, format_string: str = DEFAULT_FORMAT) -> str:
+        """Same as :meth:`format`, but color defaults to auto instead of False."""
+        return self.format(format_string, color=None)
 
     def format_path(
         # self, format_string: str, _path_ctor: Optional[pathlib.PurePath] = None
@@ -4395,26 +4268,166 @@ class Spec:
         ]
         return str(path_ctor(*output_path_components))
 
-    def __str__(self):
-        if self._concrete:
-            return self.format("{name}{@version}{/hash}")
+    def _format_edge_attributes(self, dep: DependencySpec, deptypes=True, virtuals=True):
+        deptypes_str = (
+            f"deptypes={','.join(dt.flag_to_tuple(dep.depflag))}"
+            if deptypes and dep.depflag
+            else ""
+        )
+        when_str = f"when='{(dep.when)}'" if dep.when != Spec() else ""
+        virtuals_str = f"virtuals={','.join(dep.virtuals)}" if virtuals and dep.virtuals else ""
 
-        if not self._dependencies:
-            return self.format()
+        attrs = " ".join(s for s in (when_str, deptypes_str, virtuals_str) if s)
+        if attrs:
+            attrs = f"[{attrs}] "
 
-        return self.long_spec
+        return attrs
+
+    def _format_dependencies(
+        self,
+        format_string: str = DEFAULT_FORMAT,
+        include: Optional[Callable[[DependencySpec], bool]] = None,
+        deptypes: bool = True,
+        color: Optional[bool] = False,
+        _force_direct: bool = False,
+    ):
+        """Helper for formatting dependencies on specs.
+
+        Arguments:
+            format_string: format string to use for each dependency
+            include: predicate to select which dependencies to include
+            deptypes: whether to format deptypes
+            color: colorize if True, don't colorize if False, auto-colorize if None
+            _force_direct: if True, print all dependencies as direct dependencies
+                (to be removed when we have this metadata on concrete edges)
+        """
+        include = include or (lambda dep: True)
+        parts = []
+        if self.concrete:
+            direct = self.edges_to_dependencies()
+            transitive: List[DependencySpec] = []
+        else:
+            direct, transitive = lang.stable_partition(
+                self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
+            )
+
+        # helper for direct and transitive loops below
+        def format_edge(edge: DependencySpec, sigil: str, dep_spec: Optional[Spec] = None) -> str:
+            dep_spec = dep_spec or edge.spec
+            dep_format = dep_spec.format(format_string, color=color)
+
+            edge_attributes = (
+                self._format_edge_attributes(edge, deptypes=deptypes, virtuals=False)
+                if edge.depflag or edge.when != Spec()
+                else ""
+            )
+            virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals else ""
+            star = _anonymous_star(edge, dep_format)
+
+            return f"{sigil}{edge_attributes}{star}{virtuals}{dep_format}"
+
+        # direct dependencies
+        for edge in sorted(direct, key=lambda x: x.spec.name):
+            if not include(edge):
+                continue
+
+            # replace legacy compiler names
+            old_name = edge.spec.name
+            new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(old_name)
+            try:
+                # this is ugly but copies can be expensive
+                if new_name:
+                    edge.spec.name = new_name
+                parts.append(format_edge(edge, "%", edge.spec))
+            finally:
+                edge.spec.name = old_name
+
+        if self.concrete:
+            # Concrete specs should go no further, as the complexity
+            # below is O(paths)
+            return " ".join(parts).strip()
+
+        # transitive dependencies (with any direct dependencies)
+        for edge in sorted(transitive, key=lambda x: x.spec.name):
+            if not include(edge):
+                continue
+            sigil = "%" if _force_direct else "^"  # hack til direct deps represented better
+            parts.append(format_edge(edge, sigil, edge.spec))
+
+            # also recursively add any direct dependencies of transitive dependencies
+            if edge.spec._dependencies:
+                parts.append(
+                    edge.spec._format_dependencies(
+                        format_string=format_string,
+                        include=include,
+                        deptypes=deptypes,
+                        _force_direct=_force_direct,
+                    )
+                )
+
+        return " ".join(parts).strip()
+
+    def _long_spec(self, color: Optional[bool] = False) -> str:
+        """Helper for :attr:`long_spec` and :attr:`clong_spec`."""
+        if self.concrete:
+            return self.tree(format=DISPLAY_FORMAT, color=color)
+        return f"{self.format(color=color)} {self._format_dependencies(color=color)}".strip()
+
+    def _short_spec(self, color: Optional[bool] = False) -> str:
+        """Helper for :attr:`short_spec` and :attr:`cshort_spec`."""
+        return self.format("{name}{@version}{variants}{ arch=architecture}{/hash:7}", color=color)
 
     @property
-    def colored_str(self):
-        root_str = [self.cformat()]
-        sorted_dependencies = sorted(
-            self.traverse(root=False), key=lambda x: (x.name, x.abstract_hash)
+    def compilers(self):
+        # TODO: get rid of the space here and make formatting smarter
+        return " " + self._format_dependencies(
+            "{name}{@version}",
+            include=lambda dep: any(lang in dep.virtuals for lang in ("c", "cxx", "fortran")),
+            deptypes=False,
+            _force_direct=True,
         )
-        sorted_dependencies = [
-            d.cformat("{edge_attributes} " + DISPLAY_FORMAT) for d in sorted_dependencies
-        ]
-        spec_str = " ^".join(root_str + sorted_dependencies)
-        return spec_str.strip()
+
+    @property
+    def long_spec(self):
+        """Long string of the spec, including dependencies."""
+        return self._long_spec(color=False)
+
+    @property
+    def clong_spec(self):
+        """Returns an auto-colorized version of :attr:`long_spec`."""
+        return self._long_spec(color=None)
+
+    @property
+    def short_spec(self):
+        """Short string of the spec, with hash and without dependencies."""
+        return self._short_spec(color=False)
+
+    @property
+    def cshort_spec(self):
+        """Returns an auto-colorized version of :attr:`short_spec`."""
+        return self._short_spec(color=None)
+
+    @property
+    def colored_str(self) -> str:
+        """Auto-colorized string representation of this spec."""
+        return self._str(color=None)
+
+    def _str(self, color: Optional[bool] = False) -> str:
+        """String representation of this spec.
+        Args:
+            color: colorize if True, don't colorize if False, auto-colorize if None
+        """
+        if self._concrete:
+            return self.format("{name}{@version}{/hash}", color=color)
+
+        if not self._dependencies:
+            return self.format(color=color)
+
+        return self._long_spec(color=color)
+
+    def __str__(self) -> str:
+        """String representation of this spec."""
+        return self._str(color=False)
 
     def install_status(self) -> InstallStatus:
         """Helper for tree to print DB install status."""
