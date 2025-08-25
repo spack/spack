@@ -233,7 +233,7 @@ jobs:
       run:
         shell:
           powershell Invoke-Expression -Command "./share/spack/qa/windows_test_setup.ps1"; {0}
-    runs-on: windows-latest
+    runs-on: windows-2025
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:

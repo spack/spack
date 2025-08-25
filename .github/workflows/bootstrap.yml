@@ -169,7 +169,7 @@ jobs:
 
   windows:
     if: github.repository == 'spack/spack'
-    runs-on: "windows-latest"
+    runs-on: "windows-2025"
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
