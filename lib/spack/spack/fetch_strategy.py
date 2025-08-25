@@ -102,7 +102,8 @@ class FetchStrategy:
             raise NoStageError()
         return self._stage
 
-    def set_stage(self, stage) -> None:
+    @stage.setter
+    def stage(self, stage) -> None:
         """Set the stage for this fetch strategy."""
         self._stage = stage
 

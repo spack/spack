@@ -37,7 +37,7 @@ class Downloader:
             timeout: timeout in seconds for the download.
 
         Returns:
-            DownloadInfo: An object containing details about the downloaded file,
+            An object containing details about the downloaded file,
             including the original URL, effective URL after redirects, saved path,
             and response headers.
         """

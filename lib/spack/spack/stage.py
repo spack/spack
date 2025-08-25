@@ -399,7 +399,7 @@ class Stage(LockableStagingDir):
             self.fetcher = url_or_fetch_strategy
         else:
             raise ValueError("Can't construct Stage without url or fetch strategy")
-        self.fetcher.set_stage(self)
+        self.fetcher.stage = self
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
@@ -531,7 +531,7 @@ class Stage(LockableStagingDir):
         errors: List[str] = []
         for fetcher in self._generate_fetchers(mirror_only):
             try:
-                fetcher.set_stage(self)
+                fetcher.stage = self
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
