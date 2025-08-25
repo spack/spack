@@ -1309,14 +1309,14 @@ Wrapping wrappers
 Spack likes to use its own compiler wrappers to make it easy to add ``RPATHs`` to builds, and to try hard to ensure that your builds use the right dependencies.
 This doesn't play nicely by default with MPI, so we have to do a couple of tricks.
 
-  1. If we build MPI with Spack's wrappers, mpicc and friends will be installed with hard-coded paths to Spack's wrappers, and using them from outside of Spack will fail because they only work within Spack.
-     To fix this, we patch mpicc and friends to use the regular compilers.
-     Look at the filter_compilers method in mpich, openmpi, or mvapich2 for details.
+1. If we build MPI with Spack's wrappers, mpicc and friends will be installed with hard-coded paths to Spack's wrappers, and using them from outside of Spack will fail because they only work within Spack.
+   To fix this, we patch mpicc and friends to use the regular compilers.
+   Look at the filter_compilers method in mpich, openmpi, or mvapich2 for details.
 
-  2. We still want to use the Spack compiler wrappers when Spack is calling mpicc.
-     Luckily, wrappers in all mainstream MPI implementations provide environment variables that allow us to dynamically set the compiler to be used by mpicc, mpicxx, etc.
-     Spack's build environment sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI.
-     This makes the MPI compiler wrappers use the Spack compiler wrappers so that your dependencies still get proper RPATHs even if you use the MPI wrappers.
+2. We still want to use the Spack compiler wrappers when Spack is calling mpicc.
+   Luckily, wrappers in all mainstream MPI implementations provide environment variables that allow us to dynamically set the compiler to be used by mpicc, mpicxx, etc.
+   Spack's build environment sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI.
+   This makes the MPI compiler wrappers use the Spack compiler wrappers so that your dependencies still get proper RPATHs even if you use the MPI wrappers.
 
 MPI on Cray machines
 ^^^^^^^^^^^^^^^^^^^^^

@@ -42,11 +42,11 @@ By default, Spack installs all packages into a unique directory relative to the 
 In very rare cases, it may be necessary to reduce the length of this path.
 For example, very old versions of the Intel compiler are known to segfault when input paths are too long:
 
-     .. code-block:: console
+.. code-block:: console
 
-       : internal error: ** The compiler has encountered an unexpected problem.
-       ** Segmentation violation signal raised. **
-       Access violation or stack overflow. Please contact Intel Support for assistance.
+   : internal error: ** The compiler has encountered an unexpected problem.
+   ** Segmentation violation signal raised. **
+   Access violation or stack overflow. Please contact Intel Support for assistance.
 
 Another case is Python and R packages with many runtime dependencies, which can result in very large ``PYTHONPATH`` and ``R_LIBS`` environment variables.
 This can cause the ``execve`` system call to fail with ``E2BIG``, preventing processes from starting.
@@ -54,13 +54,13 @@ This can cause the ``execve`` system call to fail with ``E2BIG``, preventing pro
 For this reason, Spack allows users to modify the installation layout through custom projections.
 For example:
 
-     .. code-block:: yaml
+.. code-block:: yaml
 
-       config:
-         install_tree:
-           root: $spack/opt/spack
-           projections:
-             all: "{name}/{version}/{hash:16}"
+   config:
+     install_tree:
+       root: $spack/opt/spack
+       projections:
+         all: "{name}/{version}/{hash:16}"
 
 would install packages into subdirectories using only the package name, version, and a hash length of 16 characters.
 
