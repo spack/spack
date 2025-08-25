@@ -267,13 +267,12 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
     tty.info("=== Direct Pruning Phase ===")
     tty.debug(f"Direct pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
 
-    keep_hashes: Optional[Set[str]] = None
-    try:
-        keep_hashes = set(
-            line.strip() for line in keeplist_file.read_text().splitlines() if line.strip()
-        )
-    except Exception as e:
-        raise BuildcachePruningException(f"Error reading keeplist file {keeplist_file}") from e
+    keep_hashes: Set[str] = set()
+    for line in keeplist_file.read_text().splitlines():
+        keep_hash = line.strip()
+        if len(keep_hash) != 32:
+            raise MalformedKeepListException(f"Found malformed hash in keeplist: {keep_hash}")
+        keep_hashes.add(keep_hash)
 
     if not keep_hashes:
         raise BuildcachePruningException(f"No hashes found in keeplist file: {keeplist_file}")
@@ -399,6 +398,15 @@ def prune_orphan(mirror: Mirror, dry_run: bool) -> None:
 class BuildcachePruningException(spack.error.SpackError):
     """
     Raised when pruning fails irrevocably
+    """
+
+    pass
+
+
+class MalformedKeepListException(BuildcachePruningException):
+    """
+    Raised when the keeplist passed to the direct pruner
+    is invalid or malformed in some way
     """
 
     pass

@@ -933,5 +933,24 @@ def test_buildcache_prune_direct_empty_keeplist_fails(
     keeplist_file.write_text("")
 
     # Should fail with empty keeplist
-    with pytest.raises(spack.main.SpackCommandError):
+    with pytest.raises(spack.buildcache_prune.BuildcachePruningException):
         buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_with_invalid_keep_hash(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run: bool
+):
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Create a keeplist file that includes an invalid hash
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text("this_is_an_invalid_hash")
+
+    cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
+    if dry_run:
+        cmd_args.append("--dry-run")
+
+    with pytest.raises(spack.buildcache_prune.BuildcachePruningException):
+        buildcache(*cmd_args)
