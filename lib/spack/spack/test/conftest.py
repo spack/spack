@@ -37,6 +37,7 @@ import spack.config
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
+import spack.fetch_strategy
 import spack.llnl.util.lang
 import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
@@ -63,7 +64,7 @@ import spack.util.url as url_util
 import spack.util.web
 import spack.version
 from spack.enums import ConfigScopePriority
-from spack.fetch_strategy import URLFetchStrategy
+from spack.fetch_strategy import FetchMethod, URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import (
     copy,
@@ -2172,6 +2173,14 @@ def shell_as(shell):
             os.environ["SPACK_SHELL"] = _shell
 
 
+def _default_timeout() -> int:
+    return 30
+
+
+def _default_url_fetch_method() -> Tuple[FetchMethod, List[str]]:
+    return FetchMethod.URLLIB, []
+
+
 @pytest.fixture()
 def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
@@ -2180,6 +2189,10 @@ def nullify_globals(request, monkeypatch):
     monkeypatch.setattr(spack.caches, "FETCH_CACHE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)
+    monkeypatch.setattr(spack.fetch_strategy, "default_timeout", _default_timeout)
+    monkeypatch.setattr(
+        spack.fetch_strategy, "default_url_fetch_method", _default_url_fetch_method
+    )
 
 
 def pytest_runtest_setup(item):

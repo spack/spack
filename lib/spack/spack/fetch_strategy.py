@@ -229,14 +229,10 @@ class FetchMethod(enum.Enum):
 
 
 def default_timeout() -> int:
-    if spack.config.CONFIG is None:
-        return 30
     return spack.config.CONFIG.get("config:connect_timeout", 30)
 
 
 def default_url_fetch_method() -> Tuple[FetchMethod, List[str]]:
-    if spack.config.CONFIG is None:
-        return FetchMethod.URLLIB, []
     # Assume configuration has been validated already, so not raising
     config_str = spack.config.CONFIG.get("config:url_fetch_method", "urllib")
     if config_str.startswith("curl"):
