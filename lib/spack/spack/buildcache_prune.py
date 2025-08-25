@@ -4,8 +4,10 @@
 
 import os
 import pathlib
+import re
 import tempfile
 from concurrent.futures import Future, as_completed
+from fnmatch import fnmatch
 from typing import Callable, Dict, List, Optional, Set, Tuple, cast
 
 import spack.binary_distribution
@@ -15,12 +17,12 @@ import spack.stage
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.spec import Spec
 from spack.util.executable import which
 
 from .mirrors.mirror import Mirror
 from .url_buildcache import (
     CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+    BuildcacheComponent,
     URLBuildcacheEntry,
     get_entries_from_cache,
     get_url_buildcache_class,
@@ -290,24 +292,35 @@ def prune_direct(mirror: Mirror, keeplist_file: pathlib.Path, dry_run: bool) -> 
         specs_to_prune: List[str] = []
 
         for manifest in manifest_list:
-            cache_entry: Optional[URLBuildcacheEntry] = None
-            try:
-                cache_entry = cast(URLBuildcacheEntry, read_fn(manifest))
-                spec_dict = cache_entry.fetch_metadata()
-
-                spec = Spec.from_dict(spec_dict)
-                spec_hash = spec.dag_hash()
-                spec_name = spec.name
-
-                if spec_hash not in keep_hashes:
-                    manifests_to_prune.append(manifest)
-                    specs_to_prune.append(f"{spec_name}/{spec_hash[:7]}")
-            except Exception as e:
-                tty.debug(f"Unable to process manifest {manifest} due to: {e}")
+            if not fnmatch(
+                manifest,
+                URLBuildcacheEntry.get_buildcache_component_include_pattern(
+                    BuildcacheComponent.SPEC
+                ),
+            ):
+                tty.info(f"Found a non-spec manifest at {manifest}, skipping...")
                 continue
-            finally:
-                if cache_entry:
-                    cache_entry.destroy()
+
+            # Attempt to regex match the manifest name in order to extract the name, version,
+            # and hash for the spec.
+            regex_match = re.match(r"([^ ]+)-([^_ ]+)-([^-_\. ]+)", manifest)
+
+            if regex_match is None:
+                # This should never happen, unless the buildcache is somehow corrupted
+                # and/or there is a bug.
+                raise BuildcachePruningException(
+                    "Unable to extract spec name, version, and hash from "
+                    f'the manifest named "{manifest}"'
+                )
+
+            spec_name, spec_version, spec_hash = regex_match.groups()
+
+            # Chop off any prefix/parent file path to get just the name
+            spec_name = pathlib.Path(spec_name).name
+
+            if spec_hash not in keep_hashes:
+                manifests_to_prune.append(manifest)
+                specs_to_prune.append(f"{spec_name}/{spec_hash[:7]}")
 
         if not manifests_to_prune:
             tty.info("No specs to prune - all specs are in the keeplist")
