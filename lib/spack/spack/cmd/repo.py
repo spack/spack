@@ -202,10 +202,10 @@ def _add_repo(
         path = spack.util.path.canonicalize_path(path_or_repo)
 
         # Determine if the path is to an existing git clone or local directory
-        url, root = spack.util.git.git_url_root(path)
-        if url is not None:
+        result = spack.util.git.git_url_root(path)
+        if result is not None:
             path_or_repo = path
-            entry = {"git": url, "destination": root}
+            entry = {"git": result[0], "destination": result[1]}
         else:
             if destination:
                 raise SpackError("The 'destination' argument is only valid for git repositories")

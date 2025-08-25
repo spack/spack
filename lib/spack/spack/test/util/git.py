@@ -25,9 +25,6 @@ def test_git_not_found(monkeypatch):
     with pytest.raises(exe.CommandNotFoundError):
         spack.util.git.git(required=True)
 
-    url, root = spack.util.git.git_url_root("/path/is/irrelevant")
-    assert url is None and root is None
-
 
 def test_modified_files(mock_git_package_changes):
     repo, filename, commits = mock_git_package_changes
@@ -88,18 +85,33 @@ def test_pull_checkout_branch(git, tmp_path: pathlib.Path, mock_git_version_info
 
 
 def test_not_git_repo(tmp_path: pathlib.Path):
-    url, root = spack.util.git.git_url_root(str(tmp_path))
-    assert url is None and root is None
+    result = spack.util.git.git_url_root(str(tmp_path))
+    assert result is None
 
 
-def test_git_url_root(monkeypatch):
-    repo_path = os.path.dirname(os.path.abspath(__file__))
-
+def test_git_url_root(tmp_path: pathlib.Path):
     # Ensure both the url and root have values.
-    url, root = spack.util.git.git_url_root(repo_path)
-    assert url is not None and root is not None
+    def _git(*args, **kwargs):
+        if "config" in args:
+            return "https://mock.com/mock.git"
 
-    # Ensure missing git returns no url or root
+        if "rev-parse" in args:
+            return str(tmp_path)
+
+        return None
+
+    result = spack.util.git.git_url_root(str(tmp_path), _git)
+    assert result is not None
+    assert result[0] is not None and result[1] is not None
+
+
+def test_git_url_root_missing_git(
+    monkeypatch, tmp_path: pathlib.Path, capfd: pytest.CaptureFixture
+):
     monkeypatch.setattr(spack.util.git, "_find_git", _mock_find_git)
-    url, root = spack.util.git.git_url_root(repo_path)
-    assert url is None and root is None
+
+    result = spack.util.git.git_url_root(str(tmp_path))
+    assert result is None
+
+    captured = capfd.readouterr()
+    assert "spack requires 'git'" in captured.err

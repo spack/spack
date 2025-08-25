@@ -160,37 +160,29 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
     return None
 
 
-def git_url_root(path: str) -> Tuple[Optional[str], Optional[str]]:
+def git_url_root(path: str, git_exe: Optional[exe.Executable] = None) -> Optional[Tuple[str, str]]:
     """Retrieve the git 'origin' URL and root directory for the path.
 
     Args:
       path: presumably a path within a git repository
+      git_exe: instance of 'git' to use
 
     Returns: the URL and root directory for a path in a git repository;
-        otherwise, returns None, None
+        otherwise, returns None
     """
-    git_exe = git(required=False)
-    if git_exe is None:
-        tty.debug(
-            f"Cannot determine if {path} is within a git repository since "
-            "unable to instantiate a `git` executable so assuming not."
-        )
-        return None, None
-
     try:
+        git_exe = git_exe or git(required=True)
+
         with working_dir(path):
             url = git_exe(
                 "config", "--get", "remote.origin.url", output=str, fail_on_error=False
             ).strip()
-            if url is not None and url:
+            if url:
                 root = git_exe(
                     "rev-parse", "--show-toplevel", output=str, fail_on_error=False
                 ).strip()
                 return url, root
     except Exception as e:
-        tty.debug(
-            f"Cannot determine the git URL and or root for {path}: {e}."
-            " Assuming not within a git repository."
-        )
+        tty.error(f"Cannot determine the git URL or root for {path}: {e}")
 
-    return None, None
+    return None
