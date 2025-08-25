@@ -2,18 +2,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import http.client
-import os
-import re
+import subprocess
 import sys
 import time
 import urllib.request
 import warnings
-from typing import Callable, List, Mapping, NamedTuple, Optional
+from typing import Callable, List, NamedTuple, Optional, Tuple
 
 import spack.llnl.util.filesystem as fs
 
-from .executable import Executable
-from .web import SPACK_USER_AGENT, base_curl_fetch_args, check_curl_code, require_curl, urlopen
+from .executable import which_string
+from .web import SPACK_USER_AGENT, base_curl_fetch_args, check_curl_code, urlopen
 
 
 class DownloadInfo(NamedTuple):
@@ -22,13 +21,16 @@ class DownloadInfo(NamedTuple):
     url: str
     effective_url: str
     path: str
-    headers: str
+    headers: http.client.HTTPMessage
 
 
 class Downloader:
     """Interface for downloading files."""
 
-    def download_file(self, *, url, saved_file, timeout: Optional[int] = None) -> DownloadInfo:
+    def __init__(self, *, chunk_size=65536):
+        self.chunk_size = chunk_size
+
+    def download_file(self, *, url: str, saved_file: str, timeout: int = 0) -> DownloadInfo:
         """Downloads a file from the specified URL and saves it to the given path.
 
         Args:
@@ -41,97 +43,146 @@ class Downloader:
             including the original URL, effective URL after redirects, saved path,
             and response headers.
         """
-        raise NotImplementedError
+        # Sometimes we're redirected to an arbitrary broken mirror, leading to spurious download
+        # failures. In that case it's helpful for users to know which URL was actually fetched.
+        headers, effective_url = self._get_headers_and_effective_url(url, timeout=timeout)
+        partial_file = saved_file + ".part"
 
-
-class UrllibDownloader(Downloader):
-    """Downloader that uses urllib."""
-
-    def __init__(self, *, chunk_size=65536):
-        self.chunk_size = chunk_size
-
-    def download_file(
-        self, *, url: str, saved_file: str, timeout: Optional[int] = None
-    ) -> DownloadInfo:
-        request = urllib.request.Request(url, headers={"User-Agent": SPACK_USER_AGENT})
-
-        if os.path.lexists(saved_file):
-            os.remove(saved_file)
-
-        response = urlopen(request, timeout=timeout)
-        progress = FetchProgress.from_headers(response.headers, enabled=sys.stdout.isatty())
-        with open(saved_file, "wb") as f:
+        progress = FetchProgress.from_headers(headers, enabled=sys.stdout.isatty())
+        self._start_body_read()
+        with open(partial_file, "wb") as f:
             while True:
-                chunk = response.read(self.chunk_size)
+                chunk = self._read_body_chunk(size=self.chunk_size)
                 if not chunk:
                     break
                 f.write(chunk)
                 progress.advance(len(chunk))
         progress.print(final=True)
+        self._finalize_body_read()
 
-        # Sometimes we're redirected to an arbitrary broken mirror, leading to spurious download
-        # failures. In that case it's helpful for users to know which URL was actually fetched.
-        effective_url = url
-        if isinstance(response, http.client.HTTPResponse):
-            effective_url = response.geturl()
+        fs.rename(partial_file, saved_file)
         download_info = DownloadInfo(
-            url=url, effective_url=effective_url, path=saved_file, headers=str(response.headers)
+            url=url, effective_url=effective_url, path=saved_file, headers=headers
         )
         _check_headers(download_info)
         return download_info
+
+    def _get_headers_and_effective_url(
+        self, url: str, *, timeout: int
+    ) -> Tuple[http.client.HTTPMessage, str]:
+        """Returns headers and effective URL for a given URL."""
+        raise NotImplementedError
+
+    def _read_body_chunk(self, size: int) -> bytes:
+        """Reads a chunk of the response body."""
+        raise NotImplementedError
+
+    def _finalize_body_read(self) -> None:
+        """Finalizes reading the response body."""
+        pass
+
+    def _start_body_read(self) -> None:
+        """Starts reading the response body."""
+        pass
+
+
+class UrllibDownloader(Downloader):
+    """Downloader that uses urllib."""
+
+    response: Optional[http.client.HTTPResponse] = None
+
+    def _get_headers_and_effective_url(
+        self, url: str, *, timeout: int
+    ) -> Tuple[http.client.HTTPMessage, str]:
+        request = urllib.request.Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+        self.response = urlopen(request, timeout=timeout)
+        effective_url = url
+        if isinstance(self.response, http.client.HTTPResponse):
+            effective_url = self.response.geturl()
+        return self.response.headers, effective_url
+
+    def _read_body_chunk(self, size: int) -> bytes:
+        assert self.response is not None, "response not set before calling _read_body_chunk"
+        return self.response.read(size)
 
 
 class CurlDownloader(Downloader):
     """Downloader that uses curl."""
 
-    _curl_exe: Optional[Executable] = None
+    _curl_exe: Optional[str] = None
+    _url: str = ""
+    _timeout: int = 0
+    _body_process: Optional[subprocess.Popen] = None
 
-    def __init__(self, *, config_args: Optional[List[str]] = None, cookie: Optional[str] = None):
+    def __init__(
+        self,
+        *,
+        config_args: Optional[List[str]] = None,
+        cookie: Optional[str] = None,
+        chunk_size: int = 65536,
+    ):
+        super().__init__(chunk_size=chunk_size)
         self.cookie = cookie
         self.config_args: List[str] = config_args or []
 
+    def _get_headers_and_effective_url(
+        self, url: str, *, timeout: int
+    ) -> Tuple[http.client.HTTPMessage, str]:
+        self._url, self._timeout = url, timeout
+
+        base_args = base_curl_fetch_args(
+            self._url, self._timeout, headers=False, status_bar=False, user_agent=SPACK_USER_AGENT
+        )
+        header_args = ["-I", "-w", "\nurl_effective: %{url_effective}\n"]
+        header_cmd = [self.curl] + self.config_args + base_args + self._cookie_args + header_args
+
+        header_process = subprocess.run(
+            header_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False
+        )
+        if header_process.returncode != 0:
+            check_curl_code(header_process.returncode)
+        headers_raw = header_process.stdout.decode("utf-8")
+
+        headers = http.client.HTTPMessage()
+        for line in headers_raw.splitlines():
+            if ": " in line:
+                key, value = line.split(": ", 1)
+                headers[key.strip()] = value.strip()
+
+        effective_url = headers.get("url_effective", url)
+        return headers, effective_url
+
+    def _start_body_read(self) -> None:
+        base_args = base_curl_fetch_args(
+            self._url, self._timeout, headers=False, status_bar=False, user_agent=SPACK_USER_AGENT
+        )
+        body_cmd = [self.curl] + self.config_args + ["-C", "-"] + base_args + self._cookie_args
+        self._body_process = subprocess.Popen(body_cmd, stdout=subprocess.PIPE)
+
+    def _read_body_chunk(self, size: int) -> bytes:
+        assert self._body_process is not None, "body process was not started"
+        assert self._body_process.stdout is not None, "stdout of curl process is None"
+        return self._body_process.stdout.read(size)
+
+    def _finalize_body_read(self) -> None:
+        assert self._body_process is not None, "body process was not started"
+        self._body_process.wait()
+        check_curl_code(self._body_process.returncode)
+        # Reset to uninitialized state
+        self._timeout, self._url, self._body_process = 0, "", None
+
     @property
-    def curl(self) -> Executable:
+    def curl(self) -> str:
         if CurlDownloader._curl_exe is None:
-            CurlDownloader._curl_exe = require_curl()
+            CurlDownloader._curl_exe = which_string("curl", required=True)
         return CurlDownloader._curl_exe
 
-    def download_file(
-        self, *, url: str, saved_file: str, timeout: Optional[int] = None
-    ) -> DownloadInfo:
-        saved_file_dir = os.path.dirname(saved_file)
-        partial_file = saved_file + ".part"
-        save_args = [
-            "-C",
-            "-",  # continue partial downloads
-            "-o",
-            partial_file,
-        ]  # use a .part file
-
-        timeout = 0
-        cookie_args = []
+    @property
+    def _cookie_args(self) -> List[str]:
+        """Arguments to pass to curl to use a cookie."""
         if self.cookie:
-            cookie_args.append("-j")  # junk cookies
-            cookie_args.append("-b")  # specify cookie
-            cookie_args.append(self.cookie)
-
-        base_args = base_curl_fetch_args(url, timeout)
-        curl_args = self.config_args + save_args + base_args + cookie_args
-
-        # Run curl but grab the mime type from the http headers
-        curl = self.curl
-        with fs.working_dir(saved_file_dir):
-            headers = curl(*curl_args, output=str, fail_on_error=False)
-
-        if curl.returncode != 0:
-            if os.path.lexists(partial_file):
-                os.remove(partial_file)
-            check_curl_code(curl.returncode)
-
-        download_info = DownloadInfo(url=url, effective_url=url, path=saved_file, headers=headers)
-        _check_headers(download_info)
-        fs.rename(partial_file, saved_file)
-        return download_info
+            return ["-j", "-b", self.cookie]
+        return []
 
 
 class FetchProgress:
@@ -169,7 +220,7 @@ class FetchProgress:
     @classmethod
     def from_headers(
         cls,
-        headers: Mapping[str, str],
+        headers: http.client.HTTPMessage,
         enabled: bool = True,
         get_time: Callable[[], float] = time.time,
     ) -> "FetchProgress":
@@ -222,9 +273,7 @@ def _check_headers(download_info: DownloadInfo) -> None:
     # Check if we somehow got an HTML file rather than the archive we
     # asked for.  We only look at the last content type, to handle
     # redirects properly.
-    content_types = re.findall(
-        r"Content-Type:[^\r\n]+", download_info.headers, flags=re.IGNORECASE
-    )
+    content_types = download_info.headers.get("Content-Type")
     if content_types and "text/html" in content_types[-1]:
         msg = (
             f"The contents of {download_info.path or 'the archive'} fetched from "

@@ -15,26 +15,23 @@ import spack.concretize
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
-import spack.llnl.util.tty as tty
 import spack.url
 import spack.util.crypto as crypto
 import spack.util.downloader
-import spack.util.executable
 import spack.util.web as web_util
 import spack.version
 from spack.llnl.util.filesystem import is_exe, working_dir
 from spack.stage import Stage
-from spack.util.executable import which
 
 
 @pytest.fixture
 def missing_curl(monkeypatch):
-    def require_curl():
+    def _mock_call(*args, **kwargs):
         raise spack.error.FetchError("curl is required but not found")
 
     monkeypatch.setattr(spack.util.downloader.CurlDownloader, "_curl_exe", None)
-    monkeypatch.setattr(spack.util.downloader, "require_curl", require_curl)
-    monkeypatch.setattr(web_util, "require_curl", require_curl)
+    monkeypatch.setattr(spack.util.downloader, "which_string", _mock_call)
+    monkeypatch.setattr(web_util, "require_curl", _mock_call)
 
 
 @pytest.fixture(params=list(crypto.hashes.keys()))
@@ -119,19 +116,9 @@ def test_fetch_curl_options(tmp_path: pathlib.Path, mock_archive, monkeypatch):
         fetcher = fs.URLFetchStrategy(
             url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
         )
-
-        def check_args(*args, **kwargs):
-            # Raise StopIteration to avoid running the rest of the fetch method
-            # args[0] is `which curl`, next two are our config options
-            assert args[1:3] == ("-k", "-q")
-            raise StopIteration
-
-        monkeypatch.setattr(spack.util.web.Executable, "__call__", check_args)
-
-        with Stage(fetcher, path=str(tmp_path)):
-            assert fetcher.archive_file is None
-            with pytest.raises(StopIteration):
-                fetcher.fetch()
+        assert fetcher.fetch_args == ["-k", "-q"]
+        assert fetcher.timeout == 10
+        assert fetcher.cookie == "True"
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
@@ -274,27 +261,6 @@ def test_hash_detection(checksum_type):
 def test_unknown_hash(checksum_type):
     with pytest.raises(ValueError):
         crypto.Checker("a")
-
-
-@pytest.mark.skipif(which("curl") is None, reason="Urllib does not have built-in status bar")
-def test_url_with_status_bar(tmp_path: pathlib.Path, mock_archive, monkeypatch, capfd):
-    """Ensure fetch with status bar option succeeds."""
-
-    def is_true():
-        return True
-
-    testpath = str(tmp_path)
-
-    monkeypatch.setattr(sys.stdout, "isatty", is_true)
-    monkeypatch.setattr(tty, "msg_enabled", is_true)
-    with spack.config.override("config:url_fetch_method", "curl"):
-        fetcher = fs.URLFetchStrategy(url=mock_archive.url)
-        with Stage(fetcher, path=testpath) as stage:
-            assert fetcher.archive_file is None
-            stage.fetch()
-
-        status = capfd.readouterr()[1]
-        assert "##### 100" in status
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])

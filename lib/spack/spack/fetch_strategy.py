@@ -24,6 +24,7 @@ in order to build it.  They need to define the following methods:
 import copy
 import enum
 import hashlib
+import http.client
 import os
 import re
 import shutil
@@ -284,7 +285,9 @@ class URLFetchStrategy(FetchStrategy):
             self.timeout = fetch_options.get("timeout", self.timeout)
             self.cookie = fetch_options.get("cookie", None)
 
-        self._download_info = DownloadInfo(url=url, effective_url=url, path="", headers="")
+        self._download_info = DownloadInfo(
+            url=url, effective_url=url, path="", headers=http.client.HTTPMessage()
+        )
 
     @property
     def url(self) -> str:

@@ -297,7 +297,14 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         raise NotImplementedError(f"Unrecognized URL scheme: {remote_url.scheme}")
 
 
-def base_curl_fetch_args(url, timeout=0):
+def base_curl_fetch_args(
+    url: str,
+    timeout: int = 0,
+    *,
+    headers: bool = True,
+    status_bar: bool = True,
+    user_agent: str = "",
+) -> List[str]:
     """Return the basic fetch arguments typically used in calls to curl.
 
     The arguments include those for ensuring behaviors such as failing on
@@ -311,23 +318,23 @@ def base_curl_fetch_args(url, timeout=0):
     * config:verify_ssl (str): Perform SSL verification
 
     Arguments:
-        url (str): URL whose contents will be fetched
-        timeout (int): Connection timeout, which is only used if higher than
-            config:connect_timeout
+        url: URL whose contents will be fetched
+        timeout: connection timeout, which is only used if higher than
+            config:connect_timeout\
+        headers: if True, include headers in output (default: True)
+        status_bar: if True, show curl status bar when using a tty (default: True)
 
     Returns (list): list of argument strings
     """
-    curl_args = [
-        "-f",  # fail on >400 errors
-        "-D",
-        "-",  # "-D -" prints out HTML headers
-        "-L",  # resolve 3xx redirects
-        url,
-    ]
+    curl_args = ["-f", "-L", url]  # fail on >400 errors  # resolve 3xx redirects
+
+    if headers:
+        curl_args.extend(["-D", "-"])  # "-D -" prints out HTML headers
+
     if not spack.config.get("config:verify_ssl"):
         curl_args.append("-k")
 
-    if sys.stdout.isatty() and tty.msg_enabled():
+    if status_bar and sys.stdout.isatty() and tty.msg_enabled():
         curl_args.append("-#")  # status bar when using a tty
     else:
         curl_args.append("-sS")  # show errors if fail
@@ -337,6 +344,9 @@ def base_curl_fetch_args(url, timeout=0):
         connect_timeout = max(int(connect_timeout), int(timeout))
     if connect_timeout > 0:
         curl_args.extend(["--connect-timeout", str(connect_timeout)])
+
+    if user_agent:
+        curl_args.extend(["--user-agent", user_agent])
 
     return curl_args
 
