@@ -277,6 +277,24 @@ def extend_flag_list(flag_list, new_flags):
         flag_list.append(flag)
 
 
+def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.CompilerFlag]:
+    """Reorder a list of flags to ensure that the order matches that of the flag group."""
+    assert flag_list, "expected a non-empty list of flags"
+    assert len({x.flag_group for x in flag_list}) == 1, "expected a single group of flags"
+    assert len({x.source for x in flag_list}) == 1, "expected a single source for the flags"
+    flag_group = flag_list[0].flag_group
+    flag_source = flag_list[0].source
+    flag_propagate = flag_list[0].propagate
+    return [
+        spack.spec.CompilerFlag(
+            flag, propagate=flag_propagate, flag_group=flag_group, source=flag_source
+        )
+        for flag, propagate in spack.compilers.flags.tokenize_flags(
+            flag_group, propagate=flag_propagate
+        )
+    ]
+
+
 def check_packages_exist(specs):
     """Ensure all packages mentioned in specs exist."""
     repo = spack.repo.PATH
@@ -3683,14 +3701,23 @@ class SpecBuilder:
         e.g. for ``y cflags="-z -a"`` ``-z`` and ``-a`` should never have any intervening
         flags inserted, and should always appear in that order.
         """
-        cmd_specs = {s.name: s for spec in self._command_line_specs for s in spec.traverse()}
-
         for node, spec in self._specs.items():
             # if bootstrapping, compiler is not in config and has no flags
             flagmap_from_compiler = {
                 flag_type: [x for x in values if x.source == "compiler"]
                 for flag_type, values in spec.compiler_flags.items()
             }
+
+            flagmap_from_cli = {}
+            for flag_type, values in spec.compiler_flags.items():
+                if not values:
+                    continue
+
+                flags = [x for x in values if x.source == "literal"]
+                if not flags:
+                    continue
+
+                flagmap_from_cli[flag_type] = _reorder_flags(flags)
 
             for flag_type in spec.compiler_flags.valid_compiler_flags():
                 ordered_flags = []
@@ -3754,9 +3781,8 @@ class SpecBuilder:
                     extend_flag_list(ordered_flags, as_compiler_flags)
 
                 # 3. Now put cmd-line flags last
-                if node.pkg in cmd_specs:
-                    cmd_flags = cmd_specs[node.pkg].compiler_flags.get(flag_type, [])
-                    extend_flag_list(ordered_flags, cmd_flags)
+                if flag_type in flagmap_from_cli:
+                    extend_flag_list(ordered_flags, flagmap_from_cli[flag_type])
 
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
                 msg = f"{set(compiler_flags)} does not equal {set(ordered_flags)}"
