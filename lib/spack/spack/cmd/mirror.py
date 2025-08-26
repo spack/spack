@@ -606,7 +606,7 @@ def mirror_create(args):
     # When no directory is provided, the source dir is used
     path = args.directory or spack.caches.fetch_cache_location()
 
-    mirror_specs = _specs_and_action(args)
+    mirror_specs = _specs_to_mirror(args)
     workers = args.jobs
     if workers is None:
         if args.all:
@@ -624,7 +624,7 @@ def mirror_create(args):
     )
 
 
-def _specs_and_action(args):
+def _specs_to_mirror(args):
     include_fn = IncludeFilter(args)
 
     if args.all and not ev.active_environment():
@@ -641,7 +641,7 @@ def _specs_and_action(args):
 def create_mirror_for_one_spec(candidate, mirror_cache):
     pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
     pkg_obj = pkg_cls(spack.spec.Spec(candidate))
-    mirror_stats = spack.mirrors.utils.MirrorStatsForOneSpec()
+    mirror_stats = spack.mirrors.utils.MirrorStatsForOneSpec(candidate)
     spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
     return mirror_stats
 

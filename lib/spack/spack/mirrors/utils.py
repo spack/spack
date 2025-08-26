@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import traceback
+from collections import Counter
 
 import spack.caches
 import spack.config
@@ -112,11 +113,13 @@ def create(path, specs, skip_unstable_versions=False):
     specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
 
     mirror_cache = mirror_cache_and_stats(path, skip_unstable_versions)
-    mirror_stats = MirrorStatsForOneSpec()
+    mirror_all_stats = MirrorStatsForAllSpecs()
     for spec in specs:
+        mirror_stats = MirrorStatsForOneSpec(spec)
         create_mirror_from_package_object(spec.package, mirror_cache, mirror_stats)
+        mirror_all_stats.merge(mirror_stats)
 
-    return mirror_stats.stats()
+    return mirror_all_stats.stats()
 
 
 def mirror_cache_and_stats(path, skip_unstable_versions=False):
@@ -169,23 +172,22 @@ def remove(name, scope):
 
 
 class MirrorStatsForOneSpec:
-    def __init__(self):
+    def __init__(self, spec):
         self.present = {}
         self.new = {}
         self.errors = set()
-        self.current_spec = None
+        self.spec = spec
         self.added_resources = set()
         self.existing_resources = set()
 
     def finalize(self):
-        if self.current_spec:
+        if self.spec:
             if self.added_resources:
-                self.new[self.current_spec] = len(self.added_resources)
+                self.new[self.spec] = len(self.added_resources)
             if self.existing_resources:
-                self.present[self.current_spec] = len(self.existing_resources)
+                self.present[self.spec] = len(self.existing_resources)
             self.added_resources = set()
             self.existing_resources = set()
-        self.current_spec = None
 
     def already_existed(self, resource):
         # If an error occurred after caching a subset of a spec's
@@ -223,16 +225,13 @@ class MirrorStatsForAllSpecs:
         # MirrorStats objects.
         ext_mirror_stat.finalize()
         for spec, count in ext_mirror_stat.present.items():
-            if spec in self.present:
-                self.present[spec] += count
-            else:
-                self.present[spec] = count
+            self.present.setdefault(spec, 0)
+            self.present[spec] += count
 
         for spec, count in ext_mirror_stat.new.items():
-            if spec in self.new:
-                self.new[spec] += count
-            else:
-                self.new[spec] = count
+            self.new.setdefault(spec, 0)
+            self.new[spec] += count
+
         self.errors.update(ext_mirror_stat.errors)
 
     def stats(self):

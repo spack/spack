@@ -121,14 +121,12 @@ def test_mirror_stats_merge():
     spec1 = "package@1.0"
     spec2 = "package@2.0"
 
-    s1 = MirrorStatsForOneSpec()
-    s1.current_spec = spec1
+    s1 = MirrorStatsForOneSpec(spec1)
     s1.added("/test/path/1")
     s1.added("/test/path/2")
     s1.finalize()
 
-    s2 = MirrorStatsForOneSpec()
-    s2.current_spec = spec2
+    s2 = MirrorStatsForOneSpec(spec2)
     s2.already_existed("/test/path/3")
     s2.finalize()
 
@@ -217,7 +215,7 @@ def test_exclude_specs(mock_packages, config):
         specs=["mpich"], versions_per_spec="all", exclude_specs="mpich@3.0.1:3.0.2 mpich@1.0"
     )
 
-    mirror_specs = spack.cmd.mirror._specs_and_action(args)
+    mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
     expected_include = set(
         spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
     )
@@ -234,7 +232,7 @@ def test_exclude_specs_public_mirror(mock_packages, config):
         private=False,
     )
 
-    mirror_specs = spack.cmd.mirror._specs_and_action(args)
+    mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
     assert not any(s.name == "no-redistribute" for s in mirror_specs)
     assert any(s.name == "no-redistribute-dependent" for s in mirror_specs)
 
@@ -251,7 +249,7 @@ mpich@1.0
 
     args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=str(exclude_path))
 
-    mirror_specs = spack.cmd.mirror._specs_and_action(args)
+    mirror_specs = spack.cmd.mirror(args)
     expected_include = set(
         spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
     )
@@ -463,7 +461,7 @@ class TestMirrorCreate:
     @pytest.mark.regression("31736", "31985")
     def test_all_specs_with_all_versions_dont_concretize(self):
         args = MockMirrorArgs(all=True, exclude_file=None, exclude_specs=None)
-        mirror_specs = spack.cmd.mirror._specs_and_action(args)
+        mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
         assert all(not s.concrete for s in mirror_specs)
 
     @pytest.mark.parametrize(
@@ -521,7 +519,7 @@ class TestMirrorCreate:
         ],
     )
     def test_exclude_specs_from_user(self, cli_args, not_expected, config):
-        mirror_specs = spack.cmd.mirror._specs_and_action(MockMirrorArgs(**cli_args))
+        mirror_specs = spack.cmd.mirror._specs_to_mirror(MockMirrorArgs(**cli_args))
         assert not any(s.satisfies(y) for s in mirror_specs for y in not_expected)
 
     @pytest.mark.parametrize("abstract_specs", [("bowtie", "callpath")])
