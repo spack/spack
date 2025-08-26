@@ -46,8 +46,7 @@ For example, if your package requires ``cuda_arch`` to be specified when ``cuda`
 
 .. code-block:: python
 
-    conflicts("cuda_arch=none", when="+cuda",
-              msg="CUDA architecture is required")
+    conflicts("cuda_arch=none", when="+cuda", msg="CUDA architecture is required")
 
 Similarly, if your software does not support all versions of the property, you could add ``conflicts`` to your package for those versions.
 For example, suppose your software does not work with CUDA compute capability versions prior to SM 5.0 (``50``).
@@ -55,14 +54,11 @@ You can add the following code to display a custom message should a user attempt
 
 .. code-block:: python
 
-    unsupported_cuda_archs = [
-        "10", "11", "12", "13",
-        "20", "21",
-        "30", "32", "35", "37"
-    ]
+    unsupported_cuda_archs = ["10", "11", "12", "13", "20", "21", "30", "32", "35", "37"]
     for value in unsupported_cuda_archs:
-        conflicts(f"cuda_arch={value}", when="+cuda",
-                  msg=f"CUDA architecture {value} is not supported")
+        conflicts(
+            f"cuda_arch={value}", when="+cuda", msg=f"CUDA architecture {value} is not supported"
+        )
 
 Methods
 ^^^^^^^

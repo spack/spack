@@ -123,7 +123,9 @@ For example, a simplified version of the ``python`` package could look like this
 
 .. code-block:: python
 
-   def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec) -> None:
+   def setup_dependent_run_environment(
+       self, env: EnvironmentModifications, dependent_spec: Spec
+   ) -> None:
        if dependent_spec.package.extends(self.spec):
            env.prepend_path("PYTHONPATH", dependent_spec.prefix.lib.python)
 

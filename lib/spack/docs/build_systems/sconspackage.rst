@@ -220,8 +220,8 @@ This is done by overriding ``build_args`` like so:
 
    def build_args(self, spec, prefix):
        args = [
-         f"PREFIX={prefix}",
-         f"ZLIB={spec['zlib'].prefix}",
+           f"PREFIX={prefix}",
+           f"ZLIB={spec['zlib'].prefix}",
        ]
 
        if spec.satisfies("+debug"):

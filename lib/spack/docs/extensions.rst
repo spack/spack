@@ -138,6 +138,7 @@ The function ``my_package.get_extension_path`` in ``my_package/__init__.py`` mig
 
    import importlib.resources
 
+
    def get_extension_path():
        dirname = importlib.resources.files("my_package").joinpath("spack-scripting")
        if dirname.exists():

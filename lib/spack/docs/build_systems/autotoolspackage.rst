@@ -110,7 +110,7 @@ Most stable releases will come with a ``configure`` script, but if you check out
 
    depends_on("autoconf", type="build", when="@master")
    depends_on("automake", type="build", when="@master")
-   depends_on("libtool",  type="build", when="@master")
+   depends_on("libtool", type="build", when="@master")
 
 It is typically redundant to list the ``m4`` macro processor package as a dependency, since ``autoconf`` already depends on it.
 
@@ -130,8 +130,8 @@ If the ``package.py`` has build instructions in a separate :ref:`builder class <
 .. code-block:: python
 
    class AutotoolsBuilder(AutotoolsBuilder):
-      def autoreconf(self, pkg, spec, prefix):
-         which("bash")("autogen.sh")
+       def autoreconf(self, pkg, spec, prefix):
+           which("bash")("autogen.sh")
 
 patching configure or Makefile.in files
 """""""""""""""""""""""""""""""""""""""
@@ -164,9 +164,10 @@ To enable it conditionally on different architectures, define a property and mak
 
    depends_on("gnuconfig", when="@1.0:")
 
+
    @property
    def patch_config_files(self):
-      return self.spec.satisfies("@1.0:")
+       return self.spec.satisfies("@1.0:")
 
 .. note::
 
@@ -290,9 +291,10 @@ This is typically used to enable or disable some feature within the package.
    variant(
        "memchecker",
        default=False,
-       description="Memchecker support for debugging [degrades performance]"
+       description="Memchecker support for debugging [degrades performance]",
    )
    ...
+
 
    def configure_args(self):
        args = []
@@ -341,16 +343,14 @@ Autotools parameters that require an option can still be automatically generated
 .. code-block:: python
 
    variant(
-      "fabrics",
+       "fabrics",
        values=disjoint_sets(
            ("auto",), ("psm", "psm2", "verbs", "mxm", "ucx", "libfabric")
        ).with_non_feature_values("auto", "none"),
-       description="List of fabrics that are enabled; "
-       "'auto' lets openmpi determine",
+       description="List of fabrics that are enabled; 'auto' lets openmpi determine",
    )
    if not spec.satisfies("fabrics=auto"):
-       config_args.extend(self.with_or_without("fabrics",
-           activation_value="prefix"))
+       config_args.extend(self.with_or_without("fabrics", activation_value="prefix"))
 
 ``activation_value`` accepts a callable that generates the configure parameter value given the variant value; but the special value ``prefix`` tells Spack to automatically use the dependency's installation prefix, which is the most common use for such parameters.
 In this example, specifying the variant ``fabrics=libfabric`` will generate the following configuration options:

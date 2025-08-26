@@ -125,10 +125,10 @@ For example:
    def edit(self, spec, prefix):
        makefile = FileFilter("Makefile")
 
-       makefile.filter(r"^\s*CC\s*=.*",  f"CC = {spack_cc}")
+       makefile.filter(r"^\s*CC\s*=.*", f"CC = {spack_cc}")
        makefile.filter(r"^\s*CXX\s*=.*", f"CXX = {spack_cxx}")
        makefile.filter(r"^\s*F77\s*=.*", f"F77 = {spack_f77}")
-       makefile.filter(r"^\s*FC\s*=.*",  f"FC = {spack_fc}")
+       makefile.filter(r"^\s*FC\s*=.*", f"FC = {spack_fc}")
 
 
 `stream <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/stream/package.py>`_ is a good example of a package that involves editing a Makefile to set the appropriate variables.

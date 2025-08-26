@@ -1077,12 +1077,12 @@ def inspect_path(
 
         # Set up the dictionary containing the inspection
         inspections = {
-            'include': ['CPATH'],
-            'lib64': ['MY_LIB64_PATH']
+            "include": ["CPATH"],
+            "lib64": ["MY_LIB64_PATH"]
         }
 
         # Get back the list of command needed to modify the environment
-        env = inspect_path('/usr', inspections)
+        env = inspect_path("/usr", inspections)
 
         # Eventually execute the commands
         env.apply_modifications()

@@ -557,6 +557,7 @@ This allows you to easily extend or subclass package classes from other reposito
    # Import the original Mpich class from the 'builtin' repository
    from spack_repo.builtin.packages.mpich.package import Mpich as BuiltinMpich
 
+
    class MyCustomMpich(BuiltinMpich):
        # Override versions, variants, or methods from BuiltinMpich
        version("3.5-custom", sha256="...")
@@ -568,7 +569,7 @@ This allows you to easily extend or subclass package classes from other reposito
            if "+custom_feature" in spec:
                # Do custom things
                pass
-           super().install(spec, prefix) # Call parent install method
+           super().install(spec, prefix)  # Call parent install method
 
 Spack manages Python's ``sys.path`` at runtime to make these imports discoverable across all registered repositories.
 This capability is powerful for creating derivative packages or slightly modifying existing ones without copying entire package files.

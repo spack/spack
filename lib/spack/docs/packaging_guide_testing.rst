@@ -98,8 +98,15 @@ For example, the sanity checks for the ``reframe`` package below specify that ei
 
        # sanity check
        sanity_check_is_file = [join_path("bin", "reframe")]
-       sanity_check_is_dir  = ["bin", "config", "docs", "reframe", "tutorials",
-                               "unittests", "cscs-checks"]
+       sanity_check_is_dir = [
+           "bin", 
+           "config", 
+           "docs", 
+           "reframe", 
+           "tutorials",
+           "unittests",
+           "cscs-checks",
+       ]
 
 When you run ``spack install`` with tests enabled, Spack will ensure that a successfully installed package has the required files and/or directories.
 
@@ -216,14 +223,14 @@ Assuming both ``build`` and ``install`` phases are available, you can add additi
        @run_after("build")
        @on_package_attributes(run_tests=True)
        def check_build(self):
-            # Add your custom post-build phase tests
-            pass
+           # Add your custom post-build phase tests
+           pass
 
        @run_after("install")
        @on_package_attributes(run_tests=True)
        def check_install(self):
-            # Add your custom post-install phase tests
-            pass
+           # Add your custom post-install phase tests
+           pass
 
 .. note::
 
@@ -241,9 +248,9 @@ The check is implemented as follows:
        @run_after("install")
        @on_package_attributes(run_tests=True)
        def check_list(self):
-            with working_dir(self.stage.source_path):
-                reframe = Executable(self.prefix.bin.reframe)
-                reframe("-l")
+           with working_dir(self.stage.source_path):
+               reframe = Executable(self.prefix.bin.reframe)
+               reframe("-l")
 
 Checking build-time test results
 """"""""""""""""""""""""""""""""
@@ -453,7 +460,7 @@ The signature for ``test_part`` is:
 
 .. code-block:: python
 
-   def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
+   def test_part(pkg, test_name, purpose, work_dir=".", verbose=False): ...
 
 where each argument has the following meaning:
 
@@ -487,16 +494,16 @@ We can accomplish this goal by implementing a stand-alone test method consisting
            """run setup, perform, and report"""
 
            with test_part(self, "test_series_setup", purpose="setup operation"):
-                exe = which(self.prefix.bin.setup)
-                exe()
+               exe = which(self.prefix.bin.setup)
+               exe()
 
            with test_part(self, "test_series_run", purpose="perform operation"):
-                exe = which(self.prefix.bin.run)
-                exe()
+               exe = which(self.prefix.bin.run)
+               exe()
 
            with test_part(self, "test_series_report", purpose="generate report"):
-                exe = which(self.prefix.bin.report)
-                exe()
+               exe = which(self.prefix.bin.report)
+               exe()
 
 The result is ``test_series`` runs the following executable in order: ``setup``, ``run``, and ``report``.
 In this case no options are passed to any of the executables and no outputs from running them are checked.
@@ -513,10 +520,10 @@ Consequently, the implementation could be simplified with a for-loop as follows:
            for exe, reason in [
                ("setup", "setup operation"),
                ("run", "perform operation"),
-               ("report", "generate report")
+               ("report", "generate report"),
            ]:
                with test_part(self, f"test_series_{exe}", purpose=reason):
-                   exe = which(self.prefix.bin.join(exe)
+                   exe = which(self.prefix.bin.join(exe))
                    exe()
 
 In both cases, since we're using a context manager, each test part in ``test_series`` will execute regardless of the status of the other test parts.
@@ -590,12 +597,7 @@ The example below, which ignores how ``cxx-example.cpp`` is acquired, illustrate
            exe = "cxx-example"
            ...
            cxx = which(os.environ["CXX"])
-           cxx(
-               f"-L{self.prefix.lib}",
-               f"-I{self.prefix.include}",
-               f"{exe}.cpp",
-               "-o", exe
-           )
+           cxx(f"-L{self.prefix.lib}", f"-I{self.prefix.include}", f"{exe}.cpp", "-o", exe)
            cxx_example = which(exe)
            cxx_example()
 
@@ -614,7 +616,7 @@ The signature for ``cache_extra_test_sources`` is:
 
 .. code-block:: python
 
-   def cache_extra_test_sources(pkg, srcs):
+   def cache_extra_test_sources(pkg, srcs): ...
 
 where each argument has the following meaning:
 
@@ -659,11 +661,7 @@ This package method reuses the contents of the ``examples`` subdirectory, which 
                make()
 
                for program in ["foo", "bar"]:
-                   with test_part(
-                       self,
-                       f"test_example_{program}",
-                       purpose=f"ensure {program} runs"
-                   ):
+                   with test_part(self, f"test_example_{program}", purpose=f"ensure {program} runs"):
                        exe = Executable(program)
                        exe()
 
@@ -720,12 +718,7 @@ It also assumes the program simply needs to be compiled and linked against the i
 
            with working_dir(src_dir):
                cc = which(os.environ["CC"])
-               cc(
-                   f"-L{self.prefix.lib}",
-                   f"-I{self.prefix.include}",
-                   f"{exe}.cpp",
-                   "-o", exe
-               )
+               cc(f"-L{self.prefix.lib}", f"-I{self.prefix.include}", f"{exe}.cpp", "-o", exe)
 
                custom_example = Executable(exe)
                custom_example()
@@ -744,7 +737,7 @@ The signature for ``get_escaped_text_output`` is:
 
 .. code-block:: python
 
-   def get_escaped_text_output(filename):
+   def get_escaped_text_output(filename): ...
 
 where ``filename`` is the path to the file containing the expected output.
 
@@ -756,6 +749,7 @@ The example below shows how to reference both the custom database (``packages.db
 
    import re
 
+
    class Sqlite(AutotoolsPackage):
        ...
 
@@ -763,12 +757,10 @@ The example below shows how to reference both the custom database (``packages.db
            """check example table dump"""
            test_data_dir = self.test_suite.current_test_data_dir
            db_filename = test_data_dir.join("packages.db")
-           ..
+           ...
            expected = get_escaped_text_output(test_data_dir.join("dump.out"))
            sqlite3 = which(self.prefix.bin.sqlite3)
-           out = sqlite3(
-               db_filename, ".dump", output=str.split, error=str.split
-           )
+           out = sqlite3(db_filename, ".dump", output=str.split, error=str.split)
            for exp in expected:
                assert re.search(exp, out), f"Expected '{exp}' in output"
 
@@ -780,7 +772,7 @@ If the files were instead cached from installing the software, the paths to the 
            """check example table dump"""
            test_cache_dir = self.test_suite.current_test_cache_dir
            db_filename = test_cache_dir.join("packages.db")
-           ..
+           ...
            expected = get_escaped_text_output(test_cache_dir.join("dump.out"))
            ...
 
@@ -791,10 +783,8 @@ Alternatively, if both files had been installed by the software into the ``share
        def test_example(self):
            """check example table dump"""
            db_filename = self.prefix.share.tests.join("packages.db")
-           ..
-           expected = get_escaped_text_output(
-               self.prefix.share.tests.join("dump.out")
-           )
+           ...
+           expected = get_escaped_text_output(self.prefix.share.tests.join("dump.out"))
            ...
 
 .. _check_outputs:
@@ -808,7 +798,7 @@ The signature for ``check_outputs`` is:
 
 .. code-block:: python
 
-   def check_outputs(expected, actual):
+   def check_outputs(expected, actual): ...
 
 where each argument has the expected type and meaning:
 

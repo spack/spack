@@ -82,11 +82,7 @@ For example:
 .. code-block:: python
 
    def build_args(self):
-       return [
-           "-Pdist,native",
-           "-Dtar",
-           "-Dmaven.javadoc.skip=true"
-       ]
+       return ["-Pdist,native", "-Dtar", "-Dmaven.javadoc.skip=true"]
 
 
 External documentation

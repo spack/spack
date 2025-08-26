@@ -94,6 +94,7 @@ The typical structure of a package is as follows:
    # import Package API
    from spack.package import *
 
+
    class Example(CMakePackage):
        """Example package"""  # package description
 
@@ -658,10 +659,7 @@ Spack supports listing mirrors of the main URL in a package by defining the ``ur
 
   class Foo(Package):
 
-    urls = [
-        "http://example.com/foo-1.0.tar.gz",
-        "http://mirror.com/foo-1.0.tar.gz"
-    ]
+      urls = ["http://example.com/foo-1.0.tar.gz", "http://mirror.com/foo-1.0.tar.gz"]
 
 instead of just a single ``url``.
 This attribute is a list of possible URLs that will be tried in order when fetching packages.
@@ -820,14 +818,14 @@ For example:
    class Trilinos(CMakePackage):
 
        homepage = "https://trilinos.org/"
-       url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
-       git      = "https://github.com/trilinos/Trilinos.git"
+       url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
+       git = "https://github.com/trilinos/Trilinos.git"
 
        version("develop", branch="develop")
-       version("master",  branch="master")
+       version("master", branch="master")
        version("12.12.1", sha256="87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7")
        version("12.10.1", sha256="0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f")
-       version("12.8.1",  sha256="a3a5e715f0cc574a73c3f9bebb6bc24f32ffd5b67b387244c2c909da779a1478")
+       version("12.8.1", sha256="a3a5e715f0cc574a73c3f9bebb6bc24f32ffd5b67b387244c2c909da779a1478")
 
 If a package contains both a ``url`` and ``git`` class-level attribute, Spack decides which to use based on the arguments to the ``version()`` directive.
 Versions containing a specific branch, tag, commit or revision are assumed to be for VCS download methods, while versions containing a checksum are assumed to be for URL download methods.
@@ -1003,8 +1001,8 @@ Submodules
          return submodules
 
 
-      class MyPackage(Package):
-          version("1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=submodules)
+     class MyPackage(Package):
+         version("1.1.0", commit="907d5f40d653a73955387067799913397807adf3", submodules=submodules)
 
   For more information about git submodules see the man page of git: ``man git-submodule``.
 
@@ -1047,17 +1045,18 @@ Sparse-Checkout
 
   .. code-block:: python
 
-    def sparse_path_function(package)
-        paths = ["doe", "rae", "me/file.cpp"]
-        if package.spec.version >  Version("1.2.0"):
-            paths.extend(["fae"])
-        return paths
+     def sparse_path_function(package):
+         paths = ["doe", "rae", "me/file.cpp"]
+         if package.spec.version > Version("1.2.0"):
+             paths.extend(["fae"])
+         return paths
 
-    class MyPackage(package):
-        version("1.1.5", git_sparse_paths=sparse_path_function)
-        version("1.2.0", git_sparse_paths=sparse_path_function)
-        version("1.2.5", git_sparse_paths=sparse_path_function)
-        version("1.1.5", git_sparse_paths=sparse_path_function)
+
+     class MyPackage(Package):
+         version("1.1.5", git_sparse_paths=sparse_path_function)
+         version("1.2.0", git_sparse_paths=sparse_path_function)
+         version("1.2.5", git_sparse_paths=sparse_path_function)
+         version("1.1.5", git_sparse_paths=sparse_path_function)
 
   results in the cloning of the files from the top level directory of the repository, the contents of the ``doe`` and ``rae`` relative paths, *and* the ``me/file.cpp`` file.
   If the package version is greater than ``1.2.0`` then the contents of the ``fae`` relative path will also be cloned.
@@ -1272,10 +1271,10 @@ In Spack it is possible to describe such a need with the ``resource`` directive:
 .. code-block:: python
 
    resource(
-      name="cargo",
-      git="https://github.com/rust-lang/cargo.git",
-      tag="0.10.0",
-      destination="cargo",
+       name="cargo",
+       git="https://github.com/rust-lang/cargo.git",
+       tag="0.10.0",
+       destination="cargo",
    )
 
 The arguments are similar to those of the ``versions`` directive.
@@ -1839,10 +1838,11 @@ If you need something more sophisticated, you can nest a ``patch()`` directive i
         ...
         depends_on(
             "binutils",
-            patches=patch("special-binutils-feature.patch",
-                          level=3,
-                          when="@:1.3"),   # condition on binutils
-            when="@2.0:")                  # condition on special-tool
+            patches=patch(
+                "special-binutils-feature.patch", level=3, when="@:1.3"  # condition on binutils
+            ),
+            when="@2.0:",  # condition on special-tool
+        )
         ...
 
 Note that there are two optional ``when`` conditions here -- one on the ``patch`` directive and the other on ``depends_on``.
@@ -1860,10 +1860,14 @@ Finally, if you need *multiple* patches on a dependency, you can provide a list 
             patches=[
                 "binutils-bugfix1.patch",
                 "binutils-bugfix2.patch",
-                patch("https://example.com/special-binutils-feature.patch",
-                      sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
-                      when="@:1.3")],
-            when="@2.0:")
+                patch(
+                    "https://example.com/special-binutils-feature.patch",
+                    sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
+                    when="@:1.3",
+                ),
+            ],
+            when="@2.0:",
+        )
         ...
 
 As with ``patch`` directives, patches are applied in the order they appear in the package file (or in this case, in the list).
@@ -2043,8 +2047,8 @@ Adding the following to a package:
 
     conflicts(
         "%intel-oneapi-compilers@:2024",
-         when="@:1.2",
-         msg="known bug when using Intel oneAPI compilers through v2024",
+        when="@:1.2",
+        msg="known bug when using Intel oneAPI compilers through v2024",
     )
 
 expresses that the current package *cannot be built* with Intel oneAPI compilers *up through any version* ``2024`` *when trying to install the package with a version up to* ``1.2``.
@@ -2113,7 +2117,8 @@ Or the package must be built with a GCC or Clang that supports C++ 20, which you
 .. code-block:: python
 
     requires(
-        "%gcc@10:", "%clang@16:",
+        "%gcc@10:",
+        "%clang@16:",
         policy="one_of",
         msg="builds only with a GCC or Clang that support C++ 20",
     )
@@ -2161,8 +2166,10 @@ If you supply a URL instead of a filename, you need to supply a ``sha256`` check
 
 .. code-block:: python
 
-   patch("http://www.nwchem-sw.org/images/Tddft_mxvec20.patch",
-         sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866")
+   patch(
+       "http://www.nwchem-sw.org/images/Tddft_mxvec20.patch",
+       sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
+   )
 
 Spack includes the hashes of patches in its versioning information, so that the same package with different patches applied will have different hash identifiers.
 To ensure that the hashing scheme is consistent, you must use a ``sha256`` checksum for the patch.
@@ -2179,9 +2186,11 @@ Both the archive and patch checksum are checked when patch archives are download
 
 .. code-block:: python
 
-   patch("http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz",
-         sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
-         archive_sha256="4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e")
+   patch(
+       "http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz",
+       sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
+       archive_sha256="4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e",
+   )
 
 ``patch`` keyword arguments are described below.
 

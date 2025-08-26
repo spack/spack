@@ -430,8 +430,10 @@ class BaseBuilder(metaclass=BuilderMeta):
            def setup_build_environment(self, env: EnvironmentModifications) -> None:
                env.set("MY_ENV_VAR", "my_value")
 
+
        class CMakeBuilder(cmake.CMakeBuilder, AnyBuilder):
            pass
+
 
        class AutotoolsBuilder(autotools.AutotoolsBuilder, AnyBuilder):
            pass

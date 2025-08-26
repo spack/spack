@@ -250,7 +250,7 @@ It is also worth noting that:
    .. code-block:: python
 
       class Example(Package):
-         non_bindable_shared_objects = ["libinterface.so"]
+          non_bindable_shared_objects = ["libinterface.so"]
 
 ``install_status``
 ----------------------

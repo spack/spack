@@ -361,11 +361,11 @@ You would add it as follows:
 .. code-block:: python
 
     # pre/post install and run by the install subprocess
-    pre_install = HookRunner('pre_install')
-    post_install = HookRunner('post_install')
+    pre_install = HookRunner("pre_install")
+    post_install = HookRunner("post_install")
 
     # hooks related to logging
-    post_log_write = HookRunner('post_log_write') # <- here is my new hook!
+    post_log_write = HookRunner("post_log_write")  # <- here is my new hook!
 
 
 You then need to decide what arguments your hook would expect.
@@ -378,7 +378,7 @@ That means that when you add a Python file to the ``lib/spack/spack/hooks`` fold
         """Do something custom with the message and level every time we write
         to the log
         """
-        print('running post_log_write!')
+        print("running post_log_write!")
 
 
 To use the hook, we would call it as follows somewhere in the logic to do logging.

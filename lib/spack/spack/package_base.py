@@ -565,12 +565,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     .. code-block:: python
 
-       p = Package()             # Done for you by spack
+       p = Package()  # Done for you by spack
 
-       p.do_fetch()              # downloads tarball from a URL (or VCS)
-       p.do_stage()              # expands tarball in a temp directory
-       p.do_patch()              # applies patches to expanded source
-       p.do_uninstall()          # removes install directory
+       p.do_fetch()  # downloads tarball from a URL (or VCS)
+       p.do_stage()  # expands tarball in a temp directory
+       p.do_patch()  # applies patches to expanded source
+       p.do_uninstall()  # removes install directory
 
     although packages that do not have code have nothing to fetch so omit
     ``p.do_fetch()``.
@@ -579,9 +579,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     .. code-block:: python
 
-       p.do_clean()              # removes the stage directory entirely
-       p.do_restage()            # removes the build directory and
-                                 # re-expands the archive.
+       p.do_clean()  # removes the stage directory entirely
+       p.do_restage()  # removes the build directory and re-expands the archive.
 
     The convention used here is that a ``do_*`` function is intended to be
     called internally by Spack commands (in ``spack.cmd``).  These aren't for

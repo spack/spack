@@ -135,7 +135,7 @@ is equivalent to:
 .. code-block:: python
 
    homepage = "https://cloud.r-project.org/package=caret"
-   url      = "https://cloud.r-project.org/src/contrib/caret_6.0-86.tar.gz"
+   url = "https://cloud.r-project.org/src/contrib/caret_6.0-86.tar.gz"
    list_url = "https://cloud.r-project.org/src/contrib/Archive/caret"
 
 Likewise, the following ``bioc`` attribute:
@@ -149,7 +149,7 @@ is equivalent to:
 .. code-block:: python
 
    homepage = "https://bioconductor.org/packages/BiocVersion/"
-   git      = "https://git.bioconductor.org/packages/BiocVersion"
+   git = "https://git.bioconductor.org/packages/BiocVersion"
 
 
 Build system dependencies

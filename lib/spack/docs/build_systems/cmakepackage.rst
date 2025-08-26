@@ -121,7 +121,7 @@ The following example defines values for the flags ``WHATEVER``, ``ENABLE_BROKEN
            "-DWHATEVER:STRING=somevalue",
            self.define("ENABLE_BROKEN_FEATURE", False),
            self.define_from_variant("DETECT_HDF5", "hdf5"),
-           self.define_from_variant("THREADS"), # True if +threads
+           self.define_from_variant("THREADS"),  # True if +threads
        ]
 
        return args
@@ -134,8 +134,9 @@ For example, the following
 
    variant("example", default=True, when="@2.0:")
 
+
    def cmake_args(self):
-      return [self.define_from_variant("EXAMPLE", "example")]
+       return [self.define_from_variant("EXAMPLE", "example")]
 
 will generate ``'cmake' '-DEXAMPLE=ON' ...`` when `@2.0: +example` is met, but will result in ``'cmake' '' ...`` when the spec version is below ``2.0``.
 
@@ -167,9 +168,12 @@ In order to ensure uniformity across packages, the ``CMakePackage`` base class a
 
 .. code-block:: python
 
-   variant("build_type", default="RelWithDebInfo",
-           description="CMake build type",
-           values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"))
+   variant(
+       "build_type",
+       default="RelWithDebInfo",
+       description="CMake build type",
+       values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
+   )
 
 However, not every CMake package accepts all four of these options.
 Grep the ``CMakeLists.txt`` file to see if the default values are missing or replaced.
@@ -177,9 +181,12 @@ For example, the `dealii <https://github.com/spack/spack-packages/blob/develop/r
 
 .. code-block:: python
 
-   variant("build_type", default="DebugRelease",
-           description="The build type to build",
-           values=("Debug", "Release", "DebugRelease"))
+   variant(
+       "build_type",
+       default="DebugRelease",
+       description="The build type to build",
+       values=("Debug", "Release", "DebugRelease"),
+   )
 
 For more information on ``CMAKE_BUILD_TYPE``, see: https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
 

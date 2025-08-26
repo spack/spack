@@ -123,7 +123,7 @@ For example, the following:
 .. code-block:: python
 
    homepage = "https://pypi.org/project/setuptools/"
-   url      = "https://pypi.org/packages/source/s/setuptools/setuptools-49.2.0.zip"
+   url = "https://pypi.org/packages/source/s/setuptools/setuptools-49.2.0.zip"
    list_url = "https://pypi.org/simple/setuptools/"
 
 
@@ -350,6 +350,7 @@ For example, ``py-scipy`` package allows you to specify the name of the BLAS/LAP
 
    depends_on("py-pip@22.1:", type="build")
 
+
    def config_settings(self, spec, prefix):
        return {
            "blas": spec["blas"].libs.names[0],
@@ -399,10 +400,12 @@ For example, the ``py-pyyaml`` package allows you to specify the directories to 
    def install_options(self, spec, prefix):
        options = []
        if spec.satisfies("+libyaml"):
-           options.extend([
-               spec["libyaml"].libs.search_flags,
-               spec["libyaml"].headers.include_flags,
-           ])
+           options.extend(
+               [
+                   spec["libyaml"].libs.search_flags,
+                   spec["libyaml"].headers.include_flags,
+               ]
+           )
        return options
 
 

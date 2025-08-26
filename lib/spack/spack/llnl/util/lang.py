@@ -298,12 +298,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
         class Widget:
             def _cmp_key(self):
-                return (
-                    self.a,
-                    self.b,
-                    (self.c, self.d),
-                    self.e
-                )
+                return (self.a, self.b, (self.c, self.d), self.e)
 
             def __eq__(self, other):
                 return self._cmp_key() == other._cmp_key()
@@ -359,9 +354,11 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
             def _cmp_iter(self):
                 yield a
                 yield b
+
                 def cd_fun():
                     yield c
                     yield d
+
                 yield cd_fun
                 yield e
 

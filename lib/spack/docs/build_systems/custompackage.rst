@@ -76,6 +76,7 @@ Comparatively, the ``build`` and ``install`` phases are pretty simple:
    def build(self, spec, prefix):
        make()
 
+
    def install(self, spec, prefix):
        make("install")
 
@@ -87,8 +88,10 @@ The ``cmake`` package looks very similar, but with a ``bootstrap`` function inst
        bootstrap = Executable("./bootstrap")
        bootstrap(*self.bootstrap_args())
 
+
    def build(self, spec, prefix):
        make()
+
 
    def install(self, spec, prefix):
        make("install")
@@ -110,19 +113,19 @@ For example, in ``perl``, we see:
 
    @run_after("install")
    def install_cpanm(self):
-        spec = self.spec
-        maker = make
-        cpan_dir = join_path("cpanm", "cpanm")
-        if sys.platform == "win32":
-            maker = nmake
-            cpan_dir = join_path(self.stage.source_path, cpan_dir)
-            cpan_dir = windows_sfn(cpan_dir)
-        if "+cpanm" in spec:
-            with working_dir(cpan_dir):
-                perl = spec["perl"].command
-                perl("Makefile.PL")
-                maker()
-                maker("install")
+       spec = self.spec
+       maker = make
+       cpan_dir = join_path("cpanm", "cpanm")
+       if sys.platform == "win32":
+           maker = nmake
+           cpan_dir = join_path(self.stage.source_path, cpan_dir)
+           cpan_dir = windows_sfn(cpan_dir)
+       if "+cpanm" in spec:
+           with working_dir(cpan_dir):
+               perl = spec["perl"].command
+               perl("Makefile.PL")
+               maker()
+               maker("install")
 
 This extra step automatically installs ``cpanm`` in addition to the base Perl installation.
 
@@ -153,13 +156,13 @@ In the ``perl`` package, we can see:
    @run_after("build")
    @on_package_attributes(run_tests=True)
    def build_test(self):
-        if sys.platform == "win32":
-            win32_dir = os.path.join(self.stage.source_path, "win32")
-            win32_dir = windows_sfn(win32_dir)
-            with working_dir(win32_dir):
-                nmake("test", ignore_quotes=True)
-        else:
-            make("test")
+       if sys.platform == "win32":
+           win32_dir = os.path.join(self.stage.source_path, "win32")
+           win32_dir = windows_sfn(win32_dir)
+           with working_dir(win32_dir):
+               nmake("test", ignore_quotes=True)
+       else:
+           make("test")
 
 As you can guess, this runs ``make test`` *after* building the package, if and only if testing is requested.
 Again, this is not specific to custom build systems, it can be added to existing build systems as well.

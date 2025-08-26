@@ -45,15 +45,16 @@ Here is a simple example of a package that supports both CMake and Autotools:
    from spack.package import *
    from spack_repo.builtin.build_systems import cmake, autotools
 
+
    class Example(cmake.CMakePackage, autotools.AutotoolsPackage):
        variant("my_feature", default=True)
        build_system("cmake", "autotools", default="cmake")
 
+
    class CMakeBuilder(cmake.CMakeBuilder):
        def cmake_args(self):
-           return [
-               self.define_from_variant("MY_FEATURE", "my_feature")
-           ]
+           return [self.define_from_variant("MY_FEATURE", "my_feature")]
+
 
    class AutotoolsBuilder(autotools.AutotoolsBuilder):
        def configure_args(self):
@@ -90,6 +91,7 @@ The directives such as ``depends_on``, ``variant``, ``patch`` go into the packag
       from spack.package import *
       from spack_repo.builtin.build_systems import autotools
 
+
       class Example(autotools.AutotoolsPackage):
           def install(self, spec: Spec, prefix: str) -> None:
               # ...existing code...
@@ -102,8 +104,10 @@ The directives such as ``depends_on``, ``variant``, ``patch`` go into the packag
       from spack.package import *
       from spack_repo.builtin.build_systems import autotools, cmake
 
+
       class Example(autotools.AutotoolsPackage, cmake.CMakePackage):
           build_system("autotools", "cmake", default="cmake")
+
 
       class AutotoolsBuilder(autotools.AutotoolsBuilder):
           def install(self, pkg: Example, spec: Spec, prefix: str) -> None:
@@ -120,6 +124,7 @@ An effective way to handle this is to use a ``with when("build_system=...")`` bl
 
    from spack.package import *
    from spack_repo.builtin.build_systems import cmake, autotools
+
 
    class Example(cmake.CMakePackage, autotools.AutotoolsPackage):
 
@@ -148,6 +153,7 @@ In such cases we have to use the ``build_system`` directive to indicate when whi
 
    from spack.package import *
    from spack_repo.builtin.build_systems import cmake, autotools
+
 
    class Example(cmake.CMakePackage, autotools.AutotoolsPackage):
 
@@ -293,11 +299,11 @@ Employing the ``filter_detected_exes`` method it becomes:
 .. code-block:: python
 
    class Gcc(Package):
-      executables = ["g++"]
+       executables = ["g++"]
 
-      @classmethod
-      def filter_detected_exes(cls, prefix, exes_in_prefix):
-         return [x for x in exes_in_prefix if "clang" not in x]
+       @classmethod
+       def filter_detected_exes(cls, prefix, exes_in_prefix):
+           return [x for x in exes_in_prefix if "clang" not in x]
 
 Another possibility that this method opens is to apply certain filtering logic when specific conditions are met (e.g. take some decisions on an OS and not on another).
 
@@ -323,8 +329,7 @@ As an example, a package that wants to check that the ``compilers`` attribute is
    @classmethod
    def validate_detected_spec(cls, spec, extra_attributes):
        """Check that "compilers" is in the extra attributes."""
-       msg = ("the extra attribute 'compilers' must be set for "
-              "the detected spec '{0}'".format(spec))
+       msg = "the extra attribute 'compilers' must be set for the detected spec '{0}'".format(spec)
        assert "compilers" in extra_attributes, msg
 
 or like this:
@@ -335,8 +340,9 @@ or like this:
    def validate_detected_spec(cls, spec, extra_attributes):
        """Check that "compilers" is in the extra attributes."""
        if "compilers" not in extra_attributes:
-           msg = ("the extra attribute 'compilers' must be set for "
-                  "the detected spec '{0}'".format(spec))
+           msg = "the extra attribute 'compilers' must be set for the detected spec '{0}'".format(
+               spec
+           )
            raise InvalidSpecDetected(msg)
 
 .. _determine_spec_details:
@@ -377,8 +383,7 @@ As an example, consider a made-up package called ``foo-package`` which builds an
 
        @classmethod
        def determine_spec_details(cls, prefix, exes_in_prefix):
-           candidates = list(x for x in exes_in_prefix
-                             if os.path.basename(x) == "foo")
+           candidates = [x for x in exes_in_prefix if os.path.basename(x) == "foo"]
            if not candidates:
                return
            # This implementation is lazy and only checks the first candidate
@@ -386,9 +391,7 @@ As an example, consider a made-up package called ``foo-package`` which builds an
            exe = Executable(exe_path)
            output = exe("--version", output=str, error=str)
            version_str = ...  # parse output for version string
-           return Spec.from_detection(
-               "foo-package@{0}".format(version_str)
-           )
+           return Spec.from_detection("foo-package@{0}".format(version_str))
 
 Add detection tests to packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -506,8 +509,11 @@ The ``match_variants`` keyword can cover all single-value variants.
 
 .. code-block:: python
 
-   can_splice("foo@1.1", when="@1.2", match_variants=["bar"])  # any value for bar as long as they're the same
-   can_splice("foo@1.2", when="@1.3", match_variants="*")  # any variant values if all single-value variants match
+   # any value for bar as long as they're the same
+   can_splice("foo@1.1", when="@1.2", match_variants=["bar"])
+
+   # any variant values if all single-value variants match
+   can_splice("foo@1.2", when="@1.3", match_variants="*")
 
 The concretizer will use ABI compatibility to determine automatic splices when :ref:`automatic splicing<automatic_splicing>` is enabled.
 

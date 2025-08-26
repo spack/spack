@@ -207,6 +207,7 @@ The function ``my_package.get_config_path`` (matching the entry point definition
 
    import importlib.resources
 
+
    def get_config_path():
        dirname = importlib.resources.files("my_package").joinpath("spack")
        if dirname.exists():
