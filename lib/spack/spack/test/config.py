@@ -1457,8 +1457,8 @@ def test_included_path():
     assert include.commit == entry["commit"]
 
 
-def test_included_path_bad_git_args():
+def test_included_path_git_missing_arg():
     # must have one or more of: branch, tag and commit so fail if missing any
     entry = {"git": "https://example.com/windows/configs.git", "paths": ["config.yaml"]}
-    with pytest.raises(spack.error.ConfigError, match="require one or more"):
+    with pytest.raises(spack.error.ConfigError, match="specify one or more"):
         spack.config.included_path(entry)

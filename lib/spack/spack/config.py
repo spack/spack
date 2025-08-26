@@ -60,6 +60,7 @@ import spack.schema.repos
 import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
+import spack.util.executable
 import spack.util.git
 import spack.util.hash
 import spack.util.remote_file_cache as rfc_util
@@ -934,7 +935,7 @@ class IncludePath(OptionalInclude):
 
     def __repr__(self):
         return (
-            f"IncludePath({self.path}, sha256={self.sha56}, "
+            f"IncludePath({self.path}, sha256={self.sha256}, "
             f"when={self.when}, optional={self.optional})"
         )
 
@@ -953,9 +954,11 @@ class IncludePath(OptionalInclude):
                 but does not exist; configuration stage directory argument is missing
         """
         if not self.satisfied:
+            tty.debug(f"Include condition '{self.when}' is not satisfied")
             return None
 
         if self._scopes is not None:
+            tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
         config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location)
@@ -989,7 +992,12 @@ class GitIncludePaths(OptionalInclude):
 
         if not self.branch and not self.commit and not self.tag:
             raise spack.error.ConfigError(
-                "Git include paths require one or more of: branch, commit, tag"
+                "Git include paths must specify one or more of: branch, commit, tag"
+            )
+
+        if not self.paths:
+            raise spack.error.ConfigError(
+                "Git include paths must include one or more relative paths"
             )
 
     def __repr__(self):
@@ -1003,27 +1011,47 @@ class GitIncludePaths(OptionalInclude):
             f"{identifier}, when={self.when}, optional={self.optional})"
         )
 
-    def _clone(self) -> None:
+    def _clone(self) -> Optional[str]:
         """Clone the repository."""
-        dir_name = spack.util.hash.b32_hash(self.repo)[-7:]
-        destination = os.path.join(_include_cache_location, dir_name)
-        try:
-            with fs.working_dir(destination, create=True):
-                if self.fetched:
-                    return
+        if self.fetched:
+            tty.debug(f"Repository already cloned to {self.destination}")
+            return self.destination
 
-                spack.util.git.init_git_repo(self.repo)
+        dir_name = spack.util.hash.b32_hash(self.repo)[-7:]
+        destination = os.path.join(_include_cache_location(), dir_name)
+        with filesystem.working_dir(destination, create=True):
+            if not os.path.exists(".git"):
+                try:
+                    spack.util.git.init_git_repo(self.repo)
+                except spack.util.executable.ProcessError as e:
+                    raise spack.error.ConfigError(
+                        f"Unable to initialize repository '{self.repo}' under {destination}: {e}"
+                    )
+
+            try:
                 if self.commit:
                     spack.util.git.pull_checkout_commit(self.commit)
                 elif self.tag:
-                    spack.util.git.pull_checkout_tag(self.tag, depth=2)
+                    spack.util.git.pull_checkout_tag(self.tag)
                 elif self.branch:
-                    spack.util.git.pull_checkout_branch(self.branch, depth=2)
+                    # if the branch already exists we should use the
+                    # previously configured remote
+                    try:
+                        git = spack.util.git.git(required=True)
+                        output = git("config", f"branch.{self.branch}.remote", output=str)
+                        remote = output.strip()
+                    except spack.util.executable.ProcessError:
+                        remote = "origin"
+                    spack.util.git.pull_checkout_branch(self.branch, remote=remote)
+                else:
+                    raise spack.error.ConfigError(f"Unsupported options in {self}")
 
+            except spack.util.executable.ProcessError as e:
+                raise spack.error.ConfigError(f"Unable to check out {self} in {destination}: {e}")
+
+            # only set the destination on successful clone/checkout
             self.destination = destination
-        except spack.util.executable.ProcessError:
-            self.error = f"Failed to clone repository {self.repo}"
-            return
+            return self.destination
 
     @property
     def fetched(self):
@@ -1044,20 +1072,25 @@ class GitIncludePaths(OptionalInclude):
                 but does not exist; configuration stage directory argument is missing
         """
         if not self.satisfied:
+            tty.debug(f"Include conditions '{self.when}' are not satisfied")
             return None
 
         if self._scopes is not None:
+            tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
+        destination = self._clone()
+        if destination is None:
+            raise ConfigFileError(f"Unable to cache the include: {self}")
+
         scopes: List[ConfigScope] = []
-        for path in self.paths:
-            config_path = self._clone()
-            if config_path is not None:
-                raise ConfigFileError(f"Unable to fetch remote configuration from {path}")
+        for relative_path in self.paths:
+            config_path = os.path.join(destination, relative_path)
             scope = self._scope(config_path, parent_scope)
             if scope is not None:
                 scopes.append(scope)
 
+        # cache the scopes if successfully able to process all of them
         if scopes:
             self._scopes = scopes
         return self._scopes
