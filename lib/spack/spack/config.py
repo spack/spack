@@ -151,18 +151,21 @@ class ConfigScope:
             includes = self.get_section("include")
             if includes:
                 include_paths = [included_path(data) for data in includes["include"]]
-                for path in include_paths:
-                    included_scope = include_path_scope(path, self)
-                    if not included_scope:
+                for include in include_paths:
+                    included_scopes = include.scopes(self)
+                    if not included_scopes:
                         continue
 
                     # Do not include duplicate scopes
-                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
-                        tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
-                        continue
+                    for included_scope in included_scopes:
+                        if any(
+                            [included_scope.name == scope.name for scope in self._included_scopes]
+                        ):
+                            tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                            continue
 
-                    if included_scope not in self._included_scopes:
-                        self._included_scopes.append(included_scope)
+                        if included_scope not in self._included_scopes:
+                            self._included_scopes.append(included_scope)
 
         return self._included_scopes
 
@@ -849,6 +852,70 @@ class OptionalInclude:
         self.when = entry.get("when", "")
         self.optional = entry.get("optional", False)
 
+    def _scope(self, config_path: str, parent_scope: ConfigScope) -> Optional[ConfigScope]:
+        """Instantiate a configuration scope for the configuration path.
+
+        Args:
+            config_path: configuration path
+            parent_scope: including scope
+
+        Returns: configuration scopes
+
+        Raises:
+            ValueError: the required configuration path does not exist
+        """
+        # Try to use the relative path to create the included scope name
+        parent_path = getattr(parent_scope, "path", None)
+        if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
+            included_name = os.path.relpath(config_path, parent_path)
+        else:
+            included_name = config_path
+
+        if sys.platform == "win32":
+            # Clean windows path for use in config name that looks nicer
+            # ie. The path: C:\\some\\path\\to\\a\\file
+            # becomes C/some/path/to/a/file
+            included_name = included_name.replace("\\", "/")
+            included_name = included_name.replace(":", "")
+
+        if os.path.isdir(config_path):
+            # directories are treated as regular ConfigScopes
+            config_name = f"{parent_scope.name}:{included_name}"
+            tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
+            return DirectoryConfigScope(config_name, config_path)
+
+        if os.path.exists(config_path):
+            # files are assumed to be SingleFileScopes
+            config_name = f"{parent_scope.name}:{included_name}"
+            tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
+            return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
+
+        if not self.optional:
+            raise ValueError(f"Required path ({config_path}) does not exist")
+
+        return None
+
+    @property
+    def satisfied(self):
+        # circular dependencies
+        import spack.spec
+
+        return (not self.when) or spack.spec.eval_conditional(self.when)
+
+    def scopes(self, parent_scope: ConfigScope) -> Optional[List[ConfigScope]]:
+        """Instantiate configuration scopes.
+
+        Args:
+            parent_scope: including scope
+
+        Returns: configuration scopes IF the when condition is satisfied;
+            otherwise, ``None``.
+
+        Raises:
+            ValueError: the required configuration path does not exist
+        """
+        raise NotImplementedError("must be implemented in derived classes")
+
 
 class IncludePath(OptionalInclude):
     path: str
@@ -864,6 +931,29 @@ class IncludePath(OptionalInclude):
             f"IncludePath({self.path}, sha256={self.sha56}, "
             f"when={self.when}, optional={self.optional})"
         )
+
+    def scopes(self, parent_scope: ConfigScope) -> Optional[List[ConfigScope]]:
+        """Instantiate a configuration scope for the included path.
+
+        Args:
+            parent_scope: including scope
+
+        Returns: configuration scopes IF the when condition is satisfied;
+            otherwise, ``None``.
+
+        Raises:
+            ConfigFileError: unable to access remote configuration file
+            ValueError: included path has an unsupported URL scheme, is required
+                but does not exist; configuration stage directory argument is missing
+        """
+        if not self.satisfied:
+            return None
+
+        config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location)
+        if not config_path:
+            raise ConfigFileError(f"Unable to fetch remote configuration from {self.path}")
+
+        return [self._scope(config_path, parent_scope)]
 
 
 class GitIncludePaths(OptionalInclude):
@@ -897,6 +987,33 @@ class GitIncludePaths(OptionalInclude):
             f"{identifier}, when={self.when}, optional={self.optional})"
         )
 
+    def scopes(self, parent_scope: ConfigScope) -> Optional[List[ConfigScope]]:
+        """Instantiate configuration scopes for the included paths.
+
+        Args:
+            parent_scope: including scope
+
+        Returns: configuration scopes IF the when condition is satisfied;
+            otherwise, ``None``.
+
+        Raises:
+            ConfigFileError: unable to access remote configuration file(s)
+            ValueError: included path has an unsupported URL scheme, is required
+                but does not exist; configuration stage directory argument is missing
+        """
+        if not self.satisfied:
+            return None
+
+        scopes = []
+        for path in include.paths:
+            # TODO: Change this to fetch as is done for Git repositories
+            config_path = None
+            if not config_path:
+                raise ConfigFileError(f"Unable to fetch remote configuration from {path}")
+            scopes.append(self._scope(config_path, parent_scope))
+
+        return scopes
+
 
 def included_path(entry: Union[str, dict]) -> Union[IncludePath, GitIncludePaths]:
     """Convert the included paths entry into the appropriate optional include.
@@ -913,154 +1030,6 @@ def included_path(entry: Union[str, dict]) -> Union[IncludePath, GitIncludePaths
         return IncludePath(entry)
 
     return GitIncludePaths(entry)
-
-
-def _single_include_path_scope(
-    include: IncludePath, parent_scope: ConfigScope
-) -> Optional[ConfigScope]:
-    """Instantiate an appropriate configuration scope for the given path.
-
-    Args:
-        include: optional include path
-        parent_scope: including scope
-
-    Returns: configuration scope
-
-    Raises:
-        ValueError: included path has an unsupported URL scheme, is required
-            but does not exist; configuration stage directory argument is missing
-        ConfigFileError: unable to access remote configuration file(s)
-    """
-    # circular dependencies
-    import spack.spec
-
-    config_path = rfc_util.local_path(include.path, include.sha256, _include_cache_location)
-    if not config_path:
-        raise ConfigFileError(f"Unable to fetch remote configuration from {include.path}")
-
-    # Try to use the relative path to create the included scope name
-    parent_path = getattr(parent_scope, "path", None)
-    if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
-        included_name = os.path.relpath(config_path, parent_path)
-    else:
-        included_name = config_path
-
-    if sys.platform == "win32":
-        # Clean windows path for use in config name that looks nicer
-        # ie. The path: C:\\some\\path\\to\\a\\file
-        # becomes C/some/path/to/a/file
-        included_name = included_name.replace("\\", "/")
-        included_name = included_name.replace(":", "")
-
-    # TODO/TBD: We don't support directory include scopes anymore
-    if os.path.isdir(config_path):
-        # directories are treated as regular ConfigScopes
-        config_name = f"{parent_scope.name}:{included_name}"
-        tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-        return DirectoryConfigScope(config_name, config_path)
-
-    if os.path.exists(config_path):
-        # files are assumed to be SingleFileScopes
-        config_name = f"{parent_scope.name}:{included_name}"
-        tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
-        return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
-
-    if not include.optional:
-        path = f" at ({config_path})" if config_path != include.path else ""
-        raise ValueError(f"Required path ({include.path}) does not exist{path}")
-
-    return None
-
-
-def _git_include_paths_scopes(
-    include: GitIncludePaths, parent_scope: ConfigScope
-) -> Optional[List[ConfigScope]]:
-    """Instantiate the appropriate configuration scopes for the given git include path(s).
-
-    Args:
-        include: optional include path
-        parent_scope: including scope
-
-    Returns: list of configuration scopes
-
-    Raises:
-        ValueError: included path has an unsupported URL scheme, is required
-            but does not exist; configuration stage directory argument is missing
-        ConfigFileError: unable to access remote configuration file(s)
-    """
-    # circular dependencies
-    import spack.spec
-
-    scopes = []
-    for path in include.paths:
-        # TODO/TLD: Change this to properly handle the fetch to local
-        config_path = rfc_util.local_path(path, include.sha256, _include_cache_location)
-        if not config_path:
-            raise ConfigFileError(f"Unable to fetch remote configuration from {path}")
-
-        # Try to use the relative path to create the included scope name
-        parent_path = getattr(parent_scope, "path", None)
-        if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
-            included_name = os.path.relpath(config_path, parent_path)
-        else:
-            included_name = config_path
-
-        if sys.platform == "win32":
-            # Clean windows path for use in config name that looks nicer
-            # ie. The path: C:\\some\\path\\to\\a\\file
-            # becomes C/some/path/to/a/file
-            included_name = included_name.replace("\\", "/")
-            included_name = included_name.replace(":", "")
-
-        # TODO/TBD: We don't support directory include scopes anymore
-        if os.path.isdir(config_path):
-            # directories are treated as regular ConfigScopes
-            config_name = f"{parent_scope.name}:{included_name}"
-            tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-            scopes.append(DirectoryConfigScope(config_name, config_path))
-
-        if os.path.exists(config_path):
-            # files are assumed to be SingleFileScopes
-            config_name = f"{parent_scope.name}:{included_name}"
-            tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
-            scopes.append(SingleFileScope(config_name, config_path, spack.schema.merged.schema))
-
-        if not include.optional:
-            include_path = f" at ({config_path})" if config_path != path else ""
-            raise ValueError(f"Required path ({path}) does not exist{include_path}")
-
-    return []
-
-
-def include_path_scope(
-    include: Union[IncludePath, GitIncludePaths], parent_scope: ConfigScope
-) -> Optional[ConfigScope]:
-    """Instantiate an appropriate configuration scopes for the given paths.
-
-    Args:
-        include: optional include path(s)
-        parent_scope: including scope
-
-    Returns: configuration scopes
-
-    Raises:
-        ValueError: included path has an unsupported URL scheme, is required
-            but does not exist; configuration stage directory argument is missing
-        ConfigFileError: unable to access remote configuration file(s)
-    """
-    # circular dependencies
-    import spack.spec
-
-    if (not include.when) or spack.spec.eval_conditional(include.when):
-        if isinstance(include, IncludePath):
-            # return [_single_include_path_scope(include, parent_scope)]
-            return _single_include_path_scope(include, parent_scope)
-
-        if isinstance(include, GitIncludePaths):
-            # return _git_include_paths_scopes(include, parent_scope)
-            return _git_include_paths_scopes(include, parent_scope)[0]
-
-    return None
 
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:
