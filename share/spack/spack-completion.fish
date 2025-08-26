@@ -2654,7 +2654,7 @@ complete -c spack -n '__fish_spack_using_command patch' -l deprecated -d 'allow 
 
 # spack pkg
 set -g __fish_spack_optspecs_spack_pkg h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a add -d 'add a package to the git stage with `git add`'
+complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a add -d 'add a package to the git stage with ``git add``'
 complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a list -d 'list packages associated with a particular spack git revision'
 complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a diff -d 'compare packages available in two different git revisions'
 complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a added -d 'show packages added since a commit'
