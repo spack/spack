@@ -253,9 +253,9 @@ def get_all_package_diffs(type: str, repo: "Repo", rev1="HEAD^1", rev2="HEAD") -
 
     Arguments:
 
-        type: String containing one or more of 'A', 'R', 'C'
-        rev1: Revision to compare against, default is 'HEAD^'
-        rev2: Revision to compare to rev1, default is 'HEAD'
+        type: String containing one or more of ``A``, ``R``, ``C``.
+        rev1: Revision to compare against, default is ``"HEAD^"``
+        rev2: Revision to compare to rev1, default is ``"HEAD"``
     """
     lower_type = type.lower()
     if not re.match("^[arc]*$", lower_type):
@@ -357,7 +357,7 @@ class SpackNamespace(types.ModuleType):
 
 class FastPackageChecker(Mapping[str, os.stat_result]):
     """Cache that maps package names to the stats obtained on the
-    'package.py' files associated with them.
+    ``package.py`` files associated with them.
 
     For each repository a cache is maintained at class level, and shared among
     all instances referring to it. Update of the global cache is done lazily
@@ -1018,7 +1018,7 @@ class Repo:
         An optional subdirectory name where packages are placed
 
     ``api``:
-        A string of the form vX.Y that indicates the Package API version. The default is "v1.0".
+        A string of the form vX.Y that indicates the Package API version. The default is ``v1.0``.
         For the repo to be compatible with the current version of Spack, the version must be
         greater than or equal to :py:data:`spack.min_package_api_version` and less than or equal to
         :py:data:`spack.package_api_version`.
@@ -1493,8 +1493,8 @@ def partition_package_name(pkg_name: str) -> Tuple[str, str]:
     If the package name is unqualified, the namespace is an empty string.
 
     Args:
-        pkg_name: a package name, either unqualified like "llvl", or
-            fully-qualified, like "builtin.llvm"
+        pkg_name: a package name, either unqualified like ``llvm``, or
+            fully-qualified, like ``builtin.llvm``
     """
     namespace, _, pkg_name = pkg_name.rpartition(".")
     return namespace, pkg_name
@@ -1922,7 +1922,7 @@ def parse_config_descriptor(
     Args:
         name: the name of the repository, used for error messages
         descriptor: the configuration for the repository, which can be a string (local path),
-            or a dictionary with 'git' key containing git URL and other options.
+            or a dictionary with ``git`` key containing git URL and other options.
 
     Returns:
         A RepoDescriptor instance, either LocalRepoDescriptor or RemoteRepoDescriptor.

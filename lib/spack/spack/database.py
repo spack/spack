@@ -1710,7 +1710,7 @@ class Database:
 
             hashes: list of hashes used to restrict the search
 
-            install_tree: query 'all' (default), 'local', 'upstream', or upstream path
+            install_tree: query ``"all"`` (default), ``"local"``, ``"upstream"``, or upstream path
 
             origin: origin of the spec
         """

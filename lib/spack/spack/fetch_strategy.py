@@ -1381,7 +1381,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
         version("torus", hg="https://jay.grs.rwth-aachen.de/hg/lwm2", branch="torus")
 
-    You can use the optional 'revision' attribute to check out a
+    You can use the optional ``revision`` attribute to check out a
     branch, tag, or particular revision in hg.  To prevent
     non-reproducible builds, using a moving target like a branch is
     discouraged.

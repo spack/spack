@@ -20,7 +20,7 @@ import spack.util.environment
 from spack.error import SpackError
 from spack.util.prefix import Prefix
 
-#: Builder classes, as registered by the "builder" decorator
+#: Builder classes, as registered by the ``builder`` decorator
 BUILDER_CLS: Dict[str, Type["Builder"]] = {}
 
 #: Map id(pkg) to a builder, to avoid creating multiple
@@ -509,7 +509,7 @@ class Builder(BaseBuilder, collections.abc.Sequence):
     """A builder is a class that, given a package object (i.e. associated with concrete spec),
     knows how to install it.
 
-    The builder behaves like a sequence, and when iterated over return the "phases" of the
+    The builder behaves like a sequence, and when iterated over return the ``phases`` of the
     installation in the correct order.
     """
 
@@ -741,7 +741,7 @@ class GenericBuilder(BuilderWithDefaults):
                pass
     """
 
-    #: A generic package has only the "install" phase
+    #: A generic package has only the ``install`` phase
     phases = ("install",)
 
     #: Names associated with package methods in the old build-system format

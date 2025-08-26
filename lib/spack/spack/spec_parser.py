@@ -49,11 +49,11 @@ compiler flags, require a space before the name.
 There is one context-sensitive part: ids in versions may contain '.', while
 other ids may not.
 
-There is one ambiguity: since '-' is allowed in an id, you need to put
-whitespace space before -variant for it to be tokenized properly.  You can
-either use whitespace, or you can just use ~variant since it means the same
-thing.  Spack uses ~variant in directory names and in the canonical form of
-specs to avoid ambiguity.  Both are provided because ~ can cause shell
+There is one ambiguity: since ``-`` is allowed in an id, you need to put
+whitespace space before ``-variant`` for it to be tokenized properly.  You can
+either use whitespace, or you can just use ``~variant`` since it means the same
+thing.  Spack uses ``~variant`` in directory names and in the canonical form of
+specs to avoid ambiguity.  Both are provided because ``~`` can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import json
@@ -76,12 +76,12 @@ from spack.llnl.util.tty import color
 from spack.tokenize import Token, TokenBase, Tokenizer
 
 #: Valid name for specs and variants. Here we are not using
-#: the previous "w[\w.-]*" since that would match most
+#: the previous ``w[\w.-]*`` since that would match most
 #: characters that can be part of a word in any language
 IDENTIFIER = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9\-]*)"
 DOTTED_IDENTIFIER = rf"(?:{IDENTIFIER}(?:\.{IDENTIFIER})+)"
 GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
-#: Git refs include branch names, and can contain "." and "/"
+#: Git refs include branch names, and can contain ``.`` and ``/``
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 
@@ -112,8 +112,8 @@ VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VER
 
 SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 
-#: A filename starts either with a "." or a "/" or a "{name}/, or on Windows, a drive letter
-#: followed by a colon and "\" or "." or {name}\
+#: A filename starts either with a ``.`` or a ``/`` or a ``{name}/``, or on Windows, a drive letter
+#: followed by a colon and ``\`` or ``.`` or ``{name}\``
 WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?:\.json|\.yaml)"
 UNIX_FILENAME = r"(?:\.|\/|[a-zA-Z0-9-_]*\/)(?:[a-zA-Z0-9-_\.\/]*)(?:\.json|\.yaml)"
 FILENAME = WINDOWS_FILENAME if sys.platform == "win32" else UNIX_FILENAME

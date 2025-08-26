@@ -158,7 +158,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         """Format help on sections for a particular verbosity level.
 
         Args:
-            level (str): 'short' or 'long' (more commands shown for long)
+            level (str): ``"short"`` or ``"long"`` (more commands shown for long)
         """
         if level not in levels:
             raise ValueError("level must be one of: %s" % levels)
@@ -746,7 +746,7 @@ def print_setup_info(*info):
 
     Args:
         info (list): list of things to print: comma-separated list
-            of 'csh', 'sh', or 'modules'
+            of ``"csh"``, ``"sh"``, or ``"modules"``
 
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
@@ -802,10 +802,10 @@ def print_setup_info(*info):
 
 def restore_macos_dyld_vars():
     """
-    Spack mutates DYLD_* variables in ``spack load`` and ``spack env activate``.
+    Spack mutates ``DYLD_*`` variables in ``spack load`` and ``spack env activate``.
     Unlike Linux, macOS SIP clears these variables in new processes, meaning
-    that os.environ["DYLD_*"] in our Python process is not the same as the user's
-    shell. Therefore, we store the user's DYLD_* variables in SPACK_DYLD_* and
+    that ``os.environ["DYLD_*"]`` in our Python process is not the same as the user's
+    shell. Therefore, we store the user's ``DYLD_*`` variables in ``SPACK_DYLD_*`` and
     restore them here.
     """
     if not sys.platform == "darwin":

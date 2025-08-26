@@ -690,11 +690,11 @@ class Configuration:
         Accepts a path syntax that allows us to grab nested config map
         entries.  Getting the 'config' section would look like::
 
-            spack.config.get('config')
+            spack.config.get("config")
 
         and the ``dirty`` section in the ``config`` scope would be::
 
-            spack.config.get('config:dirty')
+            spack.config.get("config:dirty")
 
         We use ``:`` as the separator, like YAML objects.
         """
@@ -1446,13 +1446,13 @@ class ConfigPath:
 
 
 def process_config_path(path: str) -> List[str]:
-    """Process a path argument to config.set() that may contain overrides ('::' or
-    trailing ':')
+    """Process a path argument to config.set() that may contain overrides (``::`` or
+    trailing ``:``)
 
     Colons will be treated as static strings if inside of quotes,
     e.g. ``this:is:a:path:'value:with:colon'`` will yield:
 
-    .. code-block::
+    .. code-block:: text
 
        [this, is, a, path, value:with:colon]
 
@@ -1465,10 +1465,10 @@ def process_config_path(path: str) -> List[str]:
     This function does not know whether the final element of the path is a
     key or value, so:
 
-    * It must strip the quotes, in case it is a key (so we look for "key" and
-      not '"key"'))
+    * It must strip the quotes, in case it is a key (so we look for ``key`` and
+      not ``"key"``)
     * It must indicate somehow that the quotes were stripped, in case it is a
-      value (so that we don't process '"{}"' as a YAML dict)
+      value (so that we don't process ``"{}"`` as a YAML dict)
 
     Therefore, all elements with quotes are stripped, and then also converted
     to ``syaml_str`` (if treating the final element as a value, the caller

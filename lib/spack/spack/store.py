@@ -41,7 +41,7 @@ def parse_install_tree(config_dict):
 
     Arguments:
         config_dict (dict): dictionary of config values, as returned from
-            spack.config.get('config')
+            ``spack.config.get("config")``
 
     Returns:
         (tuple): triple of the install tree root, the unpadded install tree
@@ -331,7 +331,7 @@ def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
 
     Args:
         filename: YAML or JSON file from which to read the query.
-        **kwargs: keyword arguments forwarded to "find"
+        **kwargs: keyword arguments forwarded to :func:`find`
     """
     query = [spack.spec.Spec.from_specfile(filename)]
     return find(query, **kwargs)
@@ -350,7 +350,7 @@ def use_store(
 
     Args:
         path: path to the store.
-        extra_data: extra configuration under "config:install_tree" to be
+        extra_data: extra configuration under ``config:install_tree`` to be
             taken into account.
 
     Yields:

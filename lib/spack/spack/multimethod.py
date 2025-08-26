@@ -67,15 +67,16 @@ class SpecMultiMethod:
     decorator (see docs below) creates SpecMultiMethods and
     registers method versions with them.
 
-    To register a method, you can do something like this:
+    To register a method, you can do something like this::
+
         mm = SpecMultiMethod()
         mm.register("^chaos_5_x86_64_ib", some_method)
 
     The object registered needs to be a Spec or some string that
     will parse to be a valid spec.
 
-    When the mm is actually called, it selects a version of the
-    method to call based on the sys_type of the object it is
+    When the ``mm`` is actually called, it selects a version of the
+    method to call based on the ``sys_type`` of the object it is
     called on.
 
     See the docs for decorators below for more details.

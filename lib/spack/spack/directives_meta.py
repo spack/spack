@@ -131,7 +131,7 @@ class DirectiveMeta(type):
            a package from within a directive, while the package is still
            being defined.
 
-        2. It automatically adds a dictionary called "versions" to the
+        2. It automatically adds a dictionary called ``versions`` to the
            package so that you can refer to pkg.versions.
 
         The ``(dicts="versions")`` part ensures that ALL packages in Spack

@@ -1192,15 +1192,15 @@ def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
 
 
 class StageError(spack.error.SpackError):
-    """ "Superclass for all errors encountered during staging."""
+    """Superclass for all errors encountered during staging."""
 
 
 class StagePathError(StageError):
-    """ "Error encountered with stage path."""
+    """Error encountered with stage path."""
 
 
 class RestageError(StageError):
-    """ "Error encountered during restaging."""
+    """Error encountered during restaging."""
 
 
 class VersionFetchError(StageError):

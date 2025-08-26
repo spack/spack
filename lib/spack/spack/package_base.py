@@ -741,7 +741,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     maintainers: List[str] = []
 
     #: Set to ``True`` to indicate the stand-alone test requires a compiler.
-    #: It is used to ensure a compiler and build dependencies like 'cmake'
+    #: It is used to ensure a compiler and build dependencies like ``cmake``
     #: are available to build a custom test code.
     test_requires_compiler: bool = False
 

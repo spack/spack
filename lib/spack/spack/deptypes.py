@@ -139,9 +139,9 @@ def flag_to_string(x: DepFlag) -> DepType:
 def flag_to_chars(depflag: DepFlag) -> str:
     """Create a string representing deptypes for many dependencies.
 
-    The string will be some subset of 'blrt', like 'bl ', 'b t', or
-    ' lr ' where each letter in 'blrt' stands for 'build', 'link',
-    'run', and 'test' (the dependency types).
+    The string will be some subset of ``blrt``, like ``bl ``, ``b t``, or
+    `` lr `` where each letter in ``blrt`` stands for ``build``, ``link``,
+    ``run``, and ``test`` (the dependency types).
 
     For a single dependency, this just indicates that the dependency has
     the indicated deptypes. For a list of dependnecies, this shows
