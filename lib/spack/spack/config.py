@@ -847,10 +847,12 @@ class OptionalInclude:
 
     when: str
     optional: bool
+    _scopes: Optional[List[ConfigScope]]
 
     def __init__(self, entry: dict):
         self.when = entry.get("when", "")
         self.optional = entry.get("optional", False)
+        self._scopes = None
 
     def _scope(self, config_path: str, parent_scope: ConfigScope) -> Optional[ConfigScope]:
         """Instantiate a configuration scope for the configuration path.
@@ -920,11 +922,13 @@ class OptionalInclude:
 class IncludePath(OptionalInclude):
     path: str
     sha256: str
+    destination: Optional[str]
 
     def __init__(self, entry: dict):
         super().__init__(entry)
         self.path = entry.get("path", "")
         self.sha256 = entry.get("sha256", "")
+        self.destination = None
 
     def __repr__(self):
         return (
@@ -949,11 +953,16 @@ class IncludePath(OptionalInclude):
         if not self.satisfied:
             return None
 
+        if self._scopes:
+            return self._scopes
+
         config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location)
         if not config_path:
             raise ConfigFileError(f"Unable to fetch remote configuration from {self.path}")
 
-        return [self._scope(config_path, parent_scope)]
+        self.destination = config_path
+        self._scopes = [self._scope(self.destination, parent_scope)]
+        return self._scopes
 
 
 class GitIncludePaths(OptionalInclude):
@@ -962,6 +971,7 @@ class GitIncludePaths(OptionalInclude):
     commit: str
     tag: str
     paths: List[str]
+    destination: Optional[str]
 
     def __init__(self, entry: dict):
         super().__init__(entry)
@@ -970,6 +980,7 @@ class GitIncludePaths(OptionalInclude):
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
         self.paths = entry.get("paths", [])
+        self.destination = None
 
         if not self.branch and not self.commit and not self.tag:
             raise spack.error.ConfigError(
@@ -1004,6 +1015,9 @@ class GitIncludePaths(OptionalInclude):
         if not self.satisfied:
             return None
 
+        if self._scopes:
+            return self._scopes
+
         scopes = []
         for path in include.paths:
             # TODO: Change this to fetch as is done for Git repositories
@@ -1012,7 +1026,9 @@ class GitIncludePaths(OptionalInclude):
                 raise ConfigFileError(f"Unable to fetch remote configuration from {path}")
             scopes.append(self._scope(config_path, parent_scope))
 
-        return scopes
+        if scopes:
+            self._scopes = scopes
+        return self._scopes
 
 
 def included_path(entry: Union[str, dict]) -> Union[IncludePath, GitIncludePaths]:
