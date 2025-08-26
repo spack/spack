@@ -7,10 +7,12 @@ import sys
 import time
 import urllib.request
 import warnings
+from http import HTTPStatus
 from typing import Callable, List, NamedTuple, Optional, Tuple
 
 import spack.llnl.util.filesystem as fs
 
+from ..error import FetchError
 from .executable import which_string
 from .web import SPACK_USER_AGENT, base_curl_fetch_args, check_curl_code, urlopen
 
@@ -45,20 +47,21 @@ class Downloader:
         """
         # Sometimes we're redirected to an arbitrary broken mirror, leading to spurious download
         # failures. In that case it's helpful for users to know which URL was actually fetched.
-        headers, effective_url = self._get_headers_and_effective_url(url, timeout=timeout)
-        partial_file = saved_file + ".part"
+        try:
+            headers, effective_url = self._get_headers_and_effective_url(url, timeout=timeout)
+            partial_file = saved_file + ".part"
 
-        progress = FetchProgress.from_headers(headers, enabled=sys.stdout.isatty())
-        self._start_body_read()
-        with open(partial_file, "wb") as f:
-            while True:
-                chunk = self._read_body_chunk(size=self.chunk_size)
-                if not chunk:
-                    break
-                f.write(chunk)
-                progress.advance(len(chunk))
-        progress.print(final=True)
-        self._finalize_body_read()
+            progress = FetchProgress.from_headers(headers, enabled=sys.stdout.isatty())
+            with open(partial_file, "wb") as f:
+                while True:
+                    chunk = self._read_body_chunk(size=self.chunk_size)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    progress.advance(len(chunk))
+            progress.print(final=True)
+        finally:
+            self._finalize()
 
         fs.rename(partial_file, saved_file)
         download_info = DownloadInfo(
@@ -77,12 +80,8 @@ class Downloader:
         """Reads a chunk of the response body."""
         raise NotImplementedError
 
-    def _finalize_body_read(self) -> None:
+    def _finalize(self) -> None:
         """Finalizes reading the response body."""
-        pass
-
-    def _start_body_read(self) -> None:
-        """Starts reading the response body."""
         pass
 
 
@@ -112,7 +111,7 @@ class CurlDownloader(Downloader):
     _curl_exe: Optional[str] = None
     _url: str = ""
     _timeout: int = 0
-    _body_process: Optional[subprocess.Popen] = None
+    _curl_process: Optional[subprocess.Popen] = None
 
     def __init__(
         self,
@@ -124,58 +123,69 @@ class CurlDownloader(Downloader):
         super().__init__(chunk_size=chunk_size)
         self.cookie = cookie
         self.config_args: List[str] = config_args or []
+        if CurlDownloader._curl_exe is None:
+            CurlDownloader._curl_exe = which_string("curl", required=True)
+        self.curl = CurlDownloader._curl_exe
 
     def _get_headers_and_effective_url(
         self, url: str, *, timeout: int
     ) -> Tuple[http.client.HTTPMessage, str]:
         self._url, self._timeout = url, timeout
 
-        base_args = base_curl_fetch_args(
-            self._url, self._timeout, headers=False, status_bar=False, user_agent=SPACK_USER_AGENT
+        curl_args = (
+            base_curl_fetch_args(
+                self._url,
+                self._timeout,
+                headers=False,
+                status_bar=False,
+                user_agent=SPACK_USER_AGENT,
+            )
+            + ["-D", "/dev/stderr"]  # Redirect header to stderr
+            + self._cookie_args
+            + self.config_args
         )
-        header_args = ["-I", "-w", "\nurl_effective: %{url_effective}\n"]
-        header_cmd = [self.curl] + self.config_args + base_args + self._cookie_args + header_args
 
-        header_process = subprocess.run(
-            header_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False
+        curl_cmd = [self.curl] + curl_args
+        self._curl_process = subprocess.Popen(
+            curl_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        if header_process.returncode != 0:
-            check_curl_code(header_process.returncode)
-        headers_raw = header_process.stdout.decode("utf-8")
+        headers_parts = []
+        assert self._curl_process.stderr is not None, "stderr of curl process is None"
+        while True:
+            line = self._curl_process.stderr.readline().decode("utf-8")
+            if line.strip() == "":
+                break
+            headers_parts.append(line)
 
         headers = http.client.HTTPMessage()
-        for line in headers_raw.splitlines():
+        try:
+            http_status = headers_parts[0].split()[1]
+            int(http_status)
+        except (IndexError, ValueError):
+            raise FetchError(f"Failed to fetch {self._url}: cannot parse HTTP status code")
+
+        if http_status.startswith("4") or http_status.startswith("5"):
+            status = HTTPStatus(int(http_status))
+            raise FetchError(f"Failed to fetch {self._url}: {status.value} {status.phrase}")
+
+        for line in headers_parts:
             if ": " in line:
                 key, value = line.split(": ", 1)
                 headers[key.strip()] = value.strip()
 
-        effective_url = headers.get("url_effective", url)
-        return headers, effective_url
-
-    def _start_body_read(self) -> None:
-        base_args = base_curl_fetch_args(
-            self._url, self._timeout, headers=False, status_bar=False, user_agent=SPACK_USER_AGENT
-        )
-        body_cmd = [self.curl] + self.config_args + ["-C", "-"] + base_args + self._cookie_args
-        self._body_process = subprocess.Popen(body_cmd, stdout=subprocess.PIPE)
+        return headers, self._url
 
     def _read_body_chunk(self, size: int) -> bytes:
-        assert self._body_process is not None, "body process was not started"
-        assert self._body_process.stdout is not None, "stdout of curl process is None"
-        return self._body_process.stdout.read(size)
+        assert self._curl_process is not None, "body process was not started"
+        assert self._curl_process.stdout is not None, "stdout of curl process is None"
+        return self._curl_process.stdout.read(size)
 
-    def _finalize_body_read(self) -> None:
-        assert self._body_process is not None, "body process was not started"
-        self._body_process.wait()
-        check_curl_code(self._body_process.returncode)
+    def _finalize(self) -> None:
+        assert self._curl_process is not None, "body process was not started"
+        self._curl_process.wait()
+        check_curl_code(self._curl_process.returncode)
         # Reset to uninitialized state
-        self._timeout, self._url, self._body_process = 0, "", None
-
-    @property
-    def curl(self) -> str:
-        if CurlDownloader._curl_exe is None:
-            CurlDownloader._curl_exe = which_string("curl", required=True)
-        return CurlDownloader._curl_exe
+        self._timeout, self._url, self._curl_process = 0, "", None
 
     @property
     def _cookie_args(self) -> List[str]:
