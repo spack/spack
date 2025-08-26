@@ -947,6 +947,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # This is disabled if user asks for no local configuration.
     if not disable_local_config:
         configuration_paths.append(("system", spack.paths.system_config_path))
+        print("SYST_PATH" + spack.paths.system_config_path)
 
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
@@ -959,6 +960,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # This is disabled if user asks for no local configuration.
     if not disable_local_config:
         configuration_paths.append(("user", spack.paths.user_config_path))
+        print("USER_PATH" + spack.paths.user_config_path)
 
     # add each scope
     for name, path in configuration_paths:

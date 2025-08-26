@@ -81,6 +81,14 @@ from spack.util.remote_file_cache import raw_github_gitlab_url
 mirror_cmd = SpackCommand("mirror")
 
 
+@pytest.fixture(scope="function", autouse=True)
+def assert_mock_paths():
+    # Sanity check for the overrides in mock_config_scopes
+    assert os.path.basename(spack.paths.system_config_path) == "sys_conf"
+    assert os.path.basename(spack.paths.user_config_path) == "user_conf"
+    assert os.path.basename(spack.paths.user_cache_path) == "user_cache"
+
+
 def _recursive_chmod(path: Path, mode: int):
     """Recursively change permissions of a directory and all its contents."""
     path.chmod(mode)
@@ -380,19 +388,6 @@ def clean_user_environment():
         yield
     if spack_env_value:
         os.environ[ev.spack_env_var] = spack_env_value
-
-
-os.environ["SPACK_CACHE_REPO"] = "ON"
-
-
-@pytest.fixture
-def no_cached_repo():
-    cache_repo_state = os.environ.get("SPACK_CACHE_REPO")
-    if cache_repo_state:
-        os.environ.pop("SPACK_CACHE_REPO")
-    yield
-    if cache_repo_state:
-        os.environ["SPACK_CACHE_REPO"] = cache_repo_state
 
 
 #
@@ -2401,3 +2396,46 @@ def config_two_gccs(mutable_config):
             },
         ],
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _0_mock_global_configuration_scopes():
+    with tempfile.TemporaryDirectory() as tmp:
+        print(f"Mocking config scopes: {tmp}", file=sys.stderr)
+        mock_path = {}
+        mock_path["system_config_path"] = f"{tmp}/sys_conf"
+        mock_path["user_config_path"] = f"{tmp}/user_conf"
+        mock_path["user_cache_path"] = f"{tmp}/user_cache"
+
+        for var in mock_path:
+            os.makedirs(mock_path[var])
+            setattr(spack.paths, var, mock_path[var])
+
+        config_path = os.path.join(mock_path["user_config_path"], "config.yaml")
+        with open(config_path, "w", encoding="utf-8") as fd:
+            fd.write(
+                f"""
+config:
+  install_tree:
+    root: {tmp}/install
+  misc_cache: $$user_cache_path/cache
+  source_cache: $$user_cache_path/source
+  environments_root: {tmp}/envs"
+"""
+            )
+
+        bootstrap_path = os.path.join(mock_path["user_config_path"], "bootstrap.yaml")
+        with open(bootstrap_path, "w", encoding="utf-8") as fd:
+            fd.write(
+                f"""
+bootstrap:
+    root: {mock_path['user_cache_path']}/bootstrap
+"""
+            )
+
+        os.environ["SPACK_SYSTEM_CONFIG_PATH"] = mock_path["system_config_path"]
+        os.environ["SPACK_USER_CACHE_PATH"] = mock_path["user_cache_path"]
+        os.environ["SPACK_USER_CONFIG_PATH"] = mock_path["user_config_path"]
+
+        spack.config.CONFIG = [_ for _ in spack.config.create_incremental()][-1]
+        yield

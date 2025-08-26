@@ -245,12 +245,7 @@ def unit_test(parser, args, unknown_args):
             return 1
 
         pytest_args.extend(
-            [
-                "--dist",
-                "loadfile",
-                "--tx",
-                f"{args.numprocesses}*popen//python=spack-tmpconfig spack python",
-            ]
+            ["--dist", "loadfile", "--tx", f"{args.numprocesses}*popen//python=spack python"]
         )
 
     # pytest.ini lives in the root of the spack repository.
