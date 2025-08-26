@@ -66,13 +66,13 @@ def pkg_name_to_class_name(pkg_name: str):
     """Convert a Spack package name to a class name, based on
     `PEP-8 <http://legacy.python.org/dev/peps/pep-0008/>`_:
 
-       * Module and package names use lowercase_with_underscores.
-       * Class names use the CapWords convention.
+    * Module and package names use lowercase_with_underscores.
+    * Class names use the CapWords convention.
 
     Not all package names are valid Python identifiers:
 
-       * They can contain '-', but cannot start with '-'.
-       * They can start with numbers, e.g. "3proxy".
+    * They can contain '-', but cannot start with '-'.
+    * They can start with numbers, e.g. "3proxy".
 
     This function converts from the package name to the class convention by removing _ and - and
     converting surrounding lowercase text to CapWords.  If package name starts with a number, the

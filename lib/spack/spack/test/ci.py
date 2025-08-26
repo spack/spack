@@ -216,7 +216,7 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
 
     monkeypatch.setattr(ci, "urlopen", _urlopen_OK)
 
-    ci.download_and_extract_artifacts(url, working_dir)
+    ci.download_and_extract_artifacts(url, str(working_dir))
 
     found_zip = fs.find(working_dir, "artifacts.zip")
     assert len(found_zip) == 0
@@ -230,7 +230,7 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
     monkeypatch.setattr(ci, "urlopen", _urlopen_500)
 
     with pytest.raises(spack.error.SpackError):
-        ci.download_and_extract_artifacts(url, working_dir)
+        ci.download_and_extract_artifacts(url, str(working_dir))
 
 
 def test_ci_copy_stage_logs_to_artifacts_fail(

@@ -326,8 +326,8 @@ class BinaryCacheIndex:
 
                     [
                         {
-                            "spec": <concrete-spec>,
-                            "mirror_url": <mirror-root-url>
+                            "spec": "<concrete-spec>",
+                            "mirror_url": "<mirror-root-url>"
                         }
                     ]
         """

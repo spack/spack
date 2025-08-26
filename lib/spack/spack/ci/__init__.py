@@ -701,17 +701,15 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     )
 
 
-def download_and_extract_artifacts(url, work_dir) -> str:
+def download_and_extract_artifacts(url: str, work_dir: str) -> str:
     """Look for gitlab artifacts.zip at the given url, and attempt to download
-        and extract the contents into the given work_dir
+    and extract the contents into the given work_dir
 
     Arguments:
-
-        url (str): Complete url to artifacts.zip file
-        work_dir (str): Path to destination where artifacts should be extracted
+        url: Complete url to artifacts.zip file
+        work_dir: Path to destination where artifacts should be extracted
 
     Output:
-
         Artifacts root path relative to the archive root
     """
     tty.msg(f"Fetching artifacts from: {url}")

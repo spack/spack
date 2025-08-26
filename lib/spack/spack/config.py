@@ -8,10 +8,10 @@ multiple scopes with different levels of precedence.  See the
 documentation on :ref:`configuration-scopes` for details on how Spack's
 configuration system behaves.  The scopes are:
 
-  #. ``default``
-  #. ``system``
-  #. ``site``
-  #. ``user``
+#. ``default``
+#. ``system``
+#. ``site``
+#. ``user``
 
 Important functions in this module are:
 
@@ -1292,7 +1292,7 @@ def remove_yaml(dest, source):
     """UnMerges source from dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
-    case dest was None to begin with, e.g.:
+    case dest was None to begin with, e.g.::
 
        dest = remove_yaml(dest, source)
 
@@ -1450,15 +1450,17 @@ def process_config_path(path: str) -> List[str]:
     trailing ':')
 
     Colons will be treated as static strings if inside of quotes,
-    e.g. `this:is:a:path:'value:with:colon'` will yield:
+    e.g. ``this:is:a:path:'value:with:colon'`` will yield:
 
-        [this, is, a, path, value:with:colon]
+    .. code-block::
+
+       [this, is, a, path, value:with:colon]
 
     The path may consist only of keys (e.g. for a `get`) or may end in a value.
     Keys are always strings: if a user encloses a key in quotes, the quotes
     should be removed. Values with quotes should be treated as strings,
     but without quotes, may be parsed as a different yaml object (e.g.
-    '{}' is a dict, but '"{}"' is a string).
+    ``'{}'`` is a dict, but ``'"{}"'`` is a string).
 
     This function does not know whether the final element of the path is a
     key or value, so:

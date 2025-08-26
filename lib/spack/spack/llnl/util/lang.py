@@ -370,10 +370,10 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
     ``_cmp_fast_eq`` should return:
 
-        * ``True`` if ``self`` is equal to ``other``,
-        * ``False`` if ``self`` is not equal to ``other``, and
-        * ``None`` if it's not known whether they are equal, and the full
-          comparison should be done.
+    * ``True`` if ``self`` is equal to ``other``,
+    * ``False`` if ``self`` is not equal to ``other``, and
+    * ``None`` if it's not known whether they are equal, and the full
+      comparison should be done.
 
     ``lazy_lexicographic_ordering`` uses ``_cmp_fast_eq`` to short-circuit
     the comparison if the answer can be determined quickly. If you do not
@@ -381,16 +381,16 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
     Some things to note:
 
-      * If a class already has ``__eq__``, ``__ne__``, ``__lt__``,
-        ``__le__``, ``__gt__``, ``__ge__``, or ``__hash__`` defined, this
-        decorator will overwrite them.
+    * If a class already has ``__eq__``, ``__ne__``, ``__lt__``,
+      ``__le__``, ``__gt__``, ``__ge__``, or ``__hash__`` defined, this
+      decorator will overwrite them.
 
-      * If ``set_hash`` is ``False``, this will not overwrite
-        ``__hash__``.
+    * If ``set_hash`` is ``False``, this will not overwrite
+      ``__hash__``.
 
-      * This class uses Python 2 None-comparison semantics. If you yield
-        None and it is compared to a non-None type, None will always be
-        less than the other object.
+    * This class uses Python 2 None-comparison semantics. If you yield
+      None and it is compared to a non-None type, None will always be
+      less than the other object.
 
     Raises:
         TypeError: If the class does not have a ``_cmp_iter`` method
@@ -978,12 +978,12 @@ class Const:
 class TypedMutableSequence(collections.abc.MutableSequence):
     """Base class that behaves like a list, just with a different type.
 
-    Client code can inherit from this base class:
+    Client code can inherit from this base class::
 
         class Foo(TypedMutableSequence):
             pass
 
-    and later perform checks based on types:
+    and later perform checks based on types::
 
         if isinstance(l, Foo):
             # do something

@@ -15,27 +15,24 @@ Spack environments have existed since Spack ``v0.12.0``, and there have been dif
 The high-level format of a Spack lockfile hasn't changed much between versions, but the
 contents have.  Lockfiles are JSON-formatted and their top-level sections are:
 
-  1. ``_meta`` (object): this contains details about the file format, including:
-      * ``file-type``: always ``"spack-lockfile"``
-      * ``lockfile-version``: an integer representing the lockfile format version
-      * ``specfile-version``: an integer representing the spec format version (since
-        ``v0.17``)
-
-  2. ``spack`` (object): optional, this identifies information about Spack
-      used to concretize the environment:
-      * ``type``: required, identifies form Spack version took (e.g., ``git``, ``release``)
-      * ``commit``: the commit if the version is from git
-      * ``version``: the Spack version
-
-  3. ``roots`` (list): an ordered list of records representing the roots of the Spack
-      environment. Each has two fields:
-      * ``hash``: a Spack spec hash uniquely identifying the concrete root spec
-      * ``spec``: a string representation of the abstract spec that was concretized
-
-  4. ``concrete_specs``: a dictionary containing the specs in the environment.
-  5. ``include_concrete`` (dictionary): an optional dictionary that includes the roots
-     and concrete specs from the included environments, keyed by the path to that
-     environment
+1. ``_meta`` (object): this contains details about the file format, including:
+    * ``file-type``: always ``"spack-lockfile"``
+    * ``lockfile-version``: an integer representing the lockfile format version
+    * ``specfile-version``: an integer representing the spec format version (since
+      ``v0.17``)
+2. ``spack`` (object): optional, this identifies information about Spack
+    used to concretize the environment:
+    * ``type``: required, identifies form Spack version took (e.g., ``git``, ``release``)
+    * ``commit``: the commit if the version is from git
+    * ``version``: the Spack version
+3. ``roots`` (list): an ordered list of records representing the roots of the Spack
+    environment. Each has two fields:
+    * ``hash``: a Spack spec hash uniquely identifying the concrete root spec
+    * ``spec``: a string representation of the abstract spec that was concretized
+4. ``concrete_specs``: a dictionary containing the specs in the environment.
+5. ``include_concrete`` (dictionary): an optional dictionary that includes the roots
+   and concrete specs from the included environments, keyed by the path to that
+   environment
 
 Compatibility
 -------------

@@ -1538,11 +1538,11 @@ class ChildError(InstallError):
 
     The long_message of a ChildError displays one of two things:
 
-      1. If the original error was a ProcessError, indicating a command
-         died during the build, we'll show context from the build log.
+    1. If the original error was a ProcessError, indicating a command
+       died during the build, we'll show context from the build log.
 
-      2. If the original error was any other type of error, we'll show
-         context from the Python code.
+    2. If the original error was any other type of error, we'll show
+       context from the Python code.
 
     SpackError handles displaying the special traceback if we're in debug
     mode with spack -d.

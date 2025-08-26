@@ -490,7 +490,7 @@ version.joined       123
 In addition, these version properties can be combined with ``up_to()``.
 For example:
 
-.. code-block:: python
+.. code-block:: pycon
 
    >>> version = Version("1.2.3")
    >>> version.up_to(2).dashed
@@ -2846,7 +2846,7 @@ Now consider another package, ``foo-app``, depending on all three:
 
 The resulting spec objects for its dependencies shows the result of the above attribute implementations:
 
-.. code-block:: python
+.. code-block:: pycon
 
    # The core headers and libraries of the foo package
 
@@ -2879,7 +2879,7 @@ The resulting spec objects for its dependencies shows the result of the above at
    >>> spec["foo"].libs.directories
    ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64"]
 
-.. code-block:: python
+.. code-block:: pycon
 
    # The virtual bar package in the same prefix as foo
 
@@ -2914,7 +2914,7 @@ The resulting spec objects for its dependencies shows the result of the above at
    >>> spec["bar"].libs.directories
    ["/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/lib64"]
 
-.. code-block:: python
+.. code-block:: pycon
 
    # The virtual baz package in a subdirectory of foo's prefix
 

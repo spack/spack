@@ -84,7 +84,7 @@ def is_package_module(fullname: str) -> bool:
 def namespace_from_fullname(fullname: str) -> str:
     """Return the repository namespace only for the full module name.
 
-    For instance:
+    For instance::
 
         namespace_from_fullname("spack.pkg.builtin.hdf5") == "builtin"
         namespace_from_fullname("spack_repo.x.y.z.packages.pkg_name.package") == "x.y.z"

@@ -10,7 +10,9 @@ from there.
 
 **Example:** when spack is given the following URL:
 
-    https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz
+.. code-block::
+
+   https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz
 
 It can figure out that the package name is ``hdf``, and that it is at version
 ``4.2.12``. This is useful for making the creation of packages simple: a user
@@ -18,7 +20,9 @@ just supplies a URL and skeleton code is generated automatically.
 
 Spack can also figure out that it can most likely download 4.2.6 at this URL:
 
-    https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.6/src/hdf-4.2.6.tar.gz
+.. code-block::
+
+   https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.6/src/hdf-4.2.6.tar.gz
 
 This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
@@ -512,17 +516,17 @@ def substitute_version(path: str, new_version) -> str:
 
     Simple example:
 
-    .. code-block:: python
+    .. code-block:: pycon
 
-       substitute_version("http://www.mr511.de/software/libelf-0.8.13.tar.gz", "2.9.3")
-       >>> "http://www.mr511.de/software/libelf-2.9.3.tar.gz"
+       >>> substitute_version("http://www.mr511.de/software/libelf-0.8.13.tar.gz", "2.9.3")
+       "http://www.mr511.de/software/libelf-2.9.3.tar.gz"
 
     Complex example:
 
-    .. code-block:: python
+    .. code-block:: pycon
 
-       substitute_version("https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz", "2.3")
-       >>> "https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz"
+       >>> substitute_version("https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz", "2.3")
+       "https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz"
     """
     (name, ns, nl, noffs, ver, vs, vl, voffs) = substitution_offsets(path)
 

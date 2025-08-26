@@ -6,9 +6,8 @@
 
 An install tree, or "build store" consists of two parts:
 
-  1. A package database that tracks what is installed.
-  2. A directory layout that determines how the installations
-     are laid out.
+1. A package database that tracks what is installed.
+2. A directory layout that determines how the installations are laid out.
 
 The store contains all the install prefixes for packages installed by
 Spack.  The simplest store could just contain prefixes named by DAG hash,

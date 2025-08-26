@@ -425,9 +425,8 @@ Just because a package successfully built does not mean that it built correctly.
 The most reliable test of whether or not the package was correctly installed is to attempt to import all of the modules that get installed.
 To get a list of modules, run the following command in the source directory:
 
-.. code-block:: console
+.. code-block:: pycon
 
-   $ python
    >>> import setuptools
    >>> setuptools.find_packages()
    ['numpy', 'numpy._build_utils', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc', 'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma', 'numpy.matrixlib', 'numpy.polynomial', 'numpy.random', 'numpy.testing', 'numpy.core.code_generators', 'numpy.distutils.command', 'numpy.distutils.fcompiler']

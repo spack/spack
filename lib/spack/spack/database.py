@@ -5,12 +5,11 @@
 
 The database serves two purposes:
 
-  1. It implements a cache on top of a potentially very large Spack
-     directory hierarchy, speeding up many operations that would
-     otherwise require filesystem access.
-
-  2. It will allow us to track external installations as well as lost
-     packages and their dependencies.
+1. It implements a cache on top of a potentially very large Spack
+   directory hierarchy, speeding up many operations that would
+   otherwise require filesystem access.
+2. It will allow us to track external installations as well as lost
+   packages and their dependencies.
 
 Prior to the implementation of this store, a directory layout served
 as the authoritative database of packages in Spack.  This module
@@ -178,8 +177,8 @@ class InstallRecord:
     install path, AND whether or not it is installed.  We need the
     installed flag in case a user either:
 
-        a) blew away a directory, or
-        b) used spack uninstall -f to get rid of it
+    1. blew away a directory, or
+    2. used spack uninstall -f to get rid of it
 
     If, in either case, the package was removed but others still
     depend on it, we still need to track its spec, so we don't

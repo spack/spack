@@ -424,17 +424,17 @@ class BaseBuilder(metaclass=BuilderMeta):
        class AnyBuilder(BaseBuilder):
            @run_after("install")
            def fixup_install(self):
-                # do something after the package is installed
-                pass
+               # do something after the package is installed
+               pass
 
            def setup_build_environment(self, env: EnvironmentModifications) -> None:
-                env.set("MY_ENV_VAR", "my_value")
+               env.set("MY_ENV_VAR", "my_value")
 
-        class CMakeBuilder(cmake.CMakeBuilder, AnyBuilder):
-            pass
+       class CMakeBuilder(cmake.CMakeBuilder, AnyBuilder):
+           pass
 
-        class AutotoolsBuilder(autotools.AutotoolsBuilder, AnyBuilder):
-            pass
+       class AutotoolsBuilder(autotools.AutotoolsBuilder, AnyBuilder):
+           pass
     """
 
     def __init__(self, pkg: spack.package_base.PackageBase) -> None:

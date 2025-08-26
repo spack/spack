@@ -5,7 +5,7 @@
 """This package contains directives that can be used within a package.
 
 Directives are functions that can be called inside a package
-definition to modify the package, for example:
+definition to modify the package, for example::
 
     class OpenMpi(Package):
         depends_on("hwloc")
@@ -16,18 +16,18 @@ definition to modify the package, for example:
 
 The available directives are:
 
-  * ``build_system``
-  * ``conflicts``
-  * ``depends_on``
-  * ``extends``
-  * ``license``
-  * ``patch``
-  * ``provides``
-  * ``resource``
-  * ``variant``
-  * ``version``
-  * ``requires``
-  * ``redistribute``
+* ``build_system``
+* ``conflicts``
+* ``depends_on``
+* ``extends``
+* ``license``
+* ``patch``
+* ``provides``
+* ``resource``
+* ``variant``
+* ``version``
+* ``requires``
+* ``redistribute``
 
 """
 import collections

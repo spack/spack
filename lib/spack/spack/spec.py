@@ -25,7 +25,7 @@ line is a spec for a particular installation of the mpileaks package.
    version, like "1.2", or it can be a range of versions, e.g. "1.2:1.4".
    If multiple specific versions or multiple ranges are acceptable, they
    can be separated by commas, e.g. if a package will only build with
-   versions 1.0, 1.2-1.4, and 1.6-1.8 of mvapich, you could say:
+   versions 1.0, 1.2-1.4, and 1.6-1.8 of mvapich, you could say::
 
        depends_on("mvapich@1.0,1.2:1.4,1.6:1.8")
 

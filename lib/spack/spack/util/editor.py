@@ -64,9 +64,9 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
 
     This will try to execute the following, in order:
 
-      1. $VISUAL <args>    # the "visual" editor (per POSIX)
-      2. $EDITOR <args>    # the regular editor (per POSIX)
-      3. some default editor (see ``_default_editors``) with <args>
+    1. $VISUAL <args>    # the "visual" editor (per POSIX)
+    2. $EDITOR <args>    # the regular editor (per POSIX)
+    3. some default editor (see ``_default_editors``) with <args>
 
     If an environment variable isn't defined, it is skipped.  If it
     points to something that can't be executed, we'll print a

@@ -223,8 +223,8 @@ class when:
 
             @when("^openmpi")
             def setup(self):
-                # do something special when this is built with OpenMPI for
-                # its MPI implementations.
+                # do something special when this is built with OpenMPI for its MPI implementations.
+                pass
 
             def install(self, prefix):
                 # Do common install stuff

@@ -356,9 +356,9 @@ def refresh(module_type, specs, args):
 #: Dictionary populated with the list of sub-commands.
 #: Each sub-command must be callable and accept 3 arguments:
 #:
-#:   - module_type: the type of module it refers to
-#:   - specs : the list of specs to be processed
-#:   - args : namespace containing the parsed command line arguments
+#: - module_type: the type of module it refers to
+#: - specs : the list of specs to be processed
+#: - args : namespace containing the parsed command line arguments
 callbacks = {"refresh": refresh, "rm": rm, "find": find, "loads": loads}
 
 

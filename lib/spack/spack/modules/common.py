@@ -6,22 +6,19 @@ of the information that module systems need.
 
 This information maps **a single spec** to:
 
-  * a unique module filename
-  * the module file content
+* a unique module filename
+* the module file content
 
 and is divided among four classes:
 
-  * a configuration class that provides a convenient interface to query
-    details about the configuration for the spec under consideration.
-
-  * a layout class that provides the information associated with module
-    file names and directories
-
-  * a context class that provides the dictionary used by the template engine
-    to generate the module file
-
-  * a writer that collects and uses the information above to either write
-    or remove the module file
+* a configuration class that provides a convenient interface to query
+  details about the configuration for the spec under consideration.
+* a layout class that provides the information associated with module
+  file names and directories
+* a context class that provides the dictionary used by the template engine
+  to generate the module file
+* a writer that collects and uses the information above to either write
+  or remove the module file
 
 Each of the four classes needs to be sub-classed when implementing a new
 module type.

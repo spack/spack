@@ -1073,19 +1073,19 @@ def inspect_path(
     ``/usr/include`` and ``/usr/lib64``. If found we want to prepend
     ``/usr/include`` to ``CPATH`` and ``/usr/lib64`` to ``MY_LIB64_PATH``.
 
-        .. code-block:: python
+    .. code-block:: python
 
-            # Set up the dictionary containing the inspection
-            inspections = {
-                'include': ['CPATH'],
-                'lib64': ['MY_LIB64_PATH']
-            }
+        # Set up the dictionary containing the inspection
+        inspections = {
+            'include': ['CPATH'],
+            'lib64': ['MY_LIB64_PATH']
+        }
 
-            # Get back the list of command needed to modify the environment
-            env = inspect_path('/usr', inspections)
+        # Get back the list of command needed to modify the environment
+        env = inspect_path('/usr', inspections)
 
-            # Eventually execute the commands
-            env.apply_modifications()
+        # Eventually execute the commands
+        env.apply_modifications()
     """
     if exclude is None:
         exclude = lambda x: False

@@ -170,7 +170,7 @@ class URLBuildcacheEntry:
     To help with downloading, this class manages two spack.spec.Stage objects
     internally, which must be destroyed when finished.  Specifically, if you
     call either of the following methods on an instance, you must eventually also
-    call destroy():
+    call destroy()::
 
         fetch_metadata()
         fetch_archive()

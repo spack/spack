@@ -59,7 +59,9 @@
 This is a python port of the regular expressions CTest uses to parse log
 files here:
 
-    https://github.com/Kitware/CMake/blob/master/Source/CTest/cmCTestBuildHandler.cxx
+.. code-block::
+
+   https://github.com/Kitware/CMake/blob/master/Source/CTest/cmCTestBuildHandler.cxx
 
 This file takes the regexes verbatim from there and adds some parsing
 algorithms that duplicate the way CTest scrapes log files.  To keep this
