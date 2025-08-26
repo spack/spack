@@ -506,66 +506,6 @@ Here is an example configuration pointing to ``my-dyn-mapping.spack.io/allocatio
       require: []
 
 
-Bootstrapping
-^^^^^^^^^^^^^
-
-
-The ``bootstrap`` section allows you to specify lists of specs from your ``definitions`` that should be staged ahead of the environment's ``specs``.
-At the moment, the only viable use-case for bootstrapping is to install compilers.
-
-Here's an example of what bootstrapping some compilers might look like:
-
-.. code-block:: yaml
-
-   spack:
-     definitions:
-     - compiler-pkgs:
-       - "llvm+clang@6.0.1 os=centos7"
-       - "gcc@6.5.0 os=centos7"
-       - "llvm+clang@6.0.1 os=ubuntu18.04"
-       - "gcc@6.5.0 os=ubuntu18.04"
-     - pkgs:
-       - readline@7.0
-     - compilers:
-       - "%gcc@5.5.0"
-       - "%gcc@6.5.0"
-       - "%gcc@7.3.0"
-       - "%clang@6.0.0"
-       - "%clang@6.0.1"
-     - oses:
-       - os=ubuntu18.04
-       - os=centos7
-     specs:
-     - matrix:
-       - [$pkgs]
-       - [$compilers]
-       - [$oses]
-       exclude:
-         - "%gcc@7.3.0 os=centos7"
-         - "%gcc@5.5.0 os=ubuntu18.04"
-     ci:
-       bootstrap:
-         - name: compiler-pkgs
-           compiler-agnostic: true
-       pipeline-gen:
-         # similar to the example higher up in this description
-         ...
-
-The example above adds a list to the ``definitions`` called ``compiler-pkgs`` (you can add any number of these), which lists compiler packages that should be staged ahead of the full matrix of release specs (in this example, only readline).
-Then within the ``ci`` section, note the addition of a ``bootstrap`` section, which can contain a list of items, each referring to a list in the ``definitions`` section.
-These items can either be a dictionary or a string.
-If you supply a dictionary, it must have a name key whose value must match one of the lists in definitions and it can have a ``compiler-agnostic`` key whose value is a boolean.
-If you supply a string, then it needs to match one of the lists provided in ``definitions``.
-You can think of the bootstrap list as an ordered list of pipeline "phases" that will be staged before your actual release specs.
-While this introduces another layer of bottleneck in the pipeline (all jobs in all stages of one phase must complete before any jobs in the next phase can begin), it also means you are guaranteed your bootstrapped compilers will be available when you need them.
-
-The ``compiler-agnostic`` key can be provided with each item in the bootstrap list.
-It tells the ``spack ci generate`` command that any jobs staged from that particular list should have the compiler removed from the spec, so that any compiler available on the runner where the job is run can be used to build the package.
-
-When including a bootstrapping phase as in the example above, the result is that the bootstrapped compiler packages will be pushed to the binary mirror (and the local artifacts mirror) before the actual release specs are built.
-
-Since bootstrapping compilers is optional, those items can be left out of the environment/stack file, and in that case no bootstrapping will be done (only the specs will be staged for building) and the runners will be expected to already have all needed compilers installed and configured for Spack to use.
-
 Broken Specs URL
 ^^^^^^^^^^^^^^^^
 
