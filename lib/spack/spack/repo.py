@@ -291,7 +291,7 @@ def get_all_package_diffs(type: str, repo: "Repo", rev1="HEAD^1", rev2="HEAD") -
 
 
 def add_package_to_git_stage(packages: List[str], repo: "Repo") -> None:
-    """add a package to the git stage with `git add`"""
+    """add a package to the git stage with ``git add``"""
     git = GitExe(repo.packages_path)
 
     for pkg_name in packages:
@@ -1007,17 +1007,17 @@ def _validate_and_normalize_subdir(subdir: Any, root: str, package_api: Tuple[in
 class Repo:
     """Class representing a package repository in the filesystem.
 
-    Each package repository must have a top-level configuration file called `repo.yaml`.
+    Each package repository must have a top-level configuration file called ``repo.yaml``.
 
     It contains the following keys:
 
-    `namespace`:
+    ``namespace``:
         A Python namespace where the repository's packages should live.
 
-    `subdirectory`:
+    ``subdirectory``:
         An optional subdirectory name where packages are placed
 
-    `api`:
+    ``api``:
         A string of the form vX.Y that indicates the Package API version. The default is "v1.0".
         For the repo to be compatible with the current version of Spack, the version must be
         greater than or equal to :py:data:`spack.min_package_api_version` and less than or equal to

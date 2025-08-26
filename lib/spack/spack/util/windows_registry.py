@@ -293,7 +293,7 @@ class WindowsRegistryView:
         """Returns all subkeys regex matching subkey name
 
         Note: this method obtains only direct subkeys of the given key and does not
-        desced to transtitve subkeys. For this behavior, see `find_matching_subkeys`"""
+        descend to transitive subkeys. For this behavior, see ``find_matching_subkeys``"""
         self._regex_match_subkeys(subkey_name)
 
     def get_values(self):

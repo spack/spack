@@ -627,7 +627,7 @@ def chgrp(path, group, follow_symlinks=True):
 @system_path_filter(arg_slice=slice(1))
 def chmod_x(entry, perms):
     """Implements chmod, treating all executable bits as set using the chmod
-    utility's `+X` option.
+    utility's ``+X`` option.
     """
     mode = os.stat(entry).st_mode
     if os.path.isfile(entry):

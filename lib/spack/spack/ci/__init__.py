@@ -95,13 +95,13 @@ def get_change_revisions(path: str) -> Tuple[Optional[str], Optional[str]]:
 def filter_added_checksums(
     checksums: Iterable[str], path: str, from_ref: str = "HEAD~1", to_ref: str = "HEAD"
 ) -> List[str]:
-    """Get a list of the version checksums added between `from_ref` and `to_ref`.
+    """Get a list of the version checksums added between ``from_ref`` and ```to_ref``.
 
     Args:
        checksums: an iterable of checksums to look for in the diff
        path: path to the package.py
-       from_ref: oldest git ref, defaults to `HEAD~1`
-       to_ref: newer git ref, defaults to `HEAD`
+       from_ref: oldest git ref, defaults to ``HEAD~1``
+       to_ref: newer git ref, defaults to ``HEAD``
     Returns: list of version checksums added between refs
     """
     git_exe = spack.util.git.git(required=True)
@@ -132,7 +132,7 @@ def filter_added_checksums(
 def stack_changed(env_path: str) -> bool:
     """Given an environment manifest path, return whether or not the stack was changed.
     Returns True iff the environment manifest changed between the provided revisions (or
-    additionally if the `.gitlab-ci.yml` file itself changed)."""
+    additionally if the ``.gitlab-ci.yml`` file itself changed)."""
     # git returns posix paths always, normalize input to be compatible with that
     env_path = spack.llnl.path.convert_to_posix_path(os.path.dirname(env_path))
 

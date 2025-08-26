@@ -384,7 +384,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 
     * config:url_fetch_method (str): fetch method to use (e.g., 'curl')
 
-    If the method is `curl`, it also uses the following configuration
+    If the method is ``curl``, it also uses the following configuration
     options:
 
     * config:connect_timeout (int): connection time out
@@ -444,9 +444,9 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 def url_exists(url, curl=None):
     """Determines whether url exists.
 
-    A scheme-specific process is used for Google Storage (`gs`) and Amazon
-    Simple Storage Service (`s3`) URLs; otherwise, the configured fetch
-    method defined by `config:url_fetch_method` is used.
+    A scheme-specific process is used for Google Storage (``gs``) and Amazon
+    Simple Storage Service (``s3``) URLs; otherwise, the configured fetch
+    method defined by ``config:url_fetch_method`` is used.
 
     Arguments:
         url (str): URL whose existence is being checked

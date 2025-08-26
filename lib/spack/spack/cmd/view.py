@@ -9,12 +9,12 @@ Spack-installed package file hierarchies.  The union is formed from:
 
 - specs resolved from the package names given by the user (the seeds)
 
-- all dependencies of the seeds unless user specifies `--no-dependencies`
+- all dependencies of the seeds unless user specifies ``--no-dependencies``
 
 - less any specs with names matching the regular expressions given by
-  `--exclude`
+  ``--exclude``
 
-The `view` can be built and tore down via a number of methods (the "actions"):
+The ``view`` can be built and tore down via a number of methods (the "actions"):
 
 - symlink :: a file system view which is a directory hierarchy that is
   the union of the hierarchies of the installed packages in the DAG
@@ -25,7 +25,7 @@ The `view` can be built and tore down via a number of methods (the "actions"):
 - statlink :: a view producing a status report of a symlink or
   hardlink view.
 
-The file system view concept is imspired by Nix, implemented by
+The file system view concept is inspired by Nix, implemented by
 brett.viren@gmail.com ca 2016.
 
 All operations on views are performed via proxy objects such as

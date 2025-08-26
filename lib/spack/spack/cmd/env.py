@@ -35,7 +35,7 @@ section = "environments"
 level = "short"
 
 
-#: List of subcommands of `spack env`
+#: List of subcommands of ``spack env``
 subcommands: List[Tuple[str, ...]] = [
     ("activate",),
     ("deactivate",),

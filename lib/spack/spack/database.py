@@ -442,7 +442,7 @@ class FailureTracker:
     def clear(self, spec: "spack.spec.Spec", force: bool = False) -> None:
         """Removes any persistent and cached failure tracking for the spec.
 
-        see `mark()`.
+        see :meth:`mark`.
 
         Args:
             spec: the spec whose failure indicators are being removed
@@ -648,11 +648,11 @@ class Database:
             self.database_directory.mkdir(parents=True, exist_ok=True)
 
     def write_transaction(self):
-        """Get a write lock context manager for use in a `with` block."""
+        """Get a write lock context manager for use in a ``with`` block."""
         return self._write_transaction_impl(self.lock, acquire=self._read, release=self._write)
 
     def read_transaction(self):
-        """Get a read lock context manager for use in a `with` block."""
+        """Get a read lock context manager for use in a ``with`` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
 
     def _write_to_file(self, stream):

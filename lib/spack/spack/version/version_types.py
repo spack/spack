@@ -386,7 +386,7 @@ class StandardVersion(ConcreteVersion):
         return other.intersection(self)
 
     def isdevelop(self) -> bool:
-        """Triggers on the special case of the `@develop-like` version."""
+        """Triggers on the special case of the ``@develop-like`` version."""
         return any(
             isinstance(p, VersionStrComponent) and isinstance(p.data, int) for p in self.version[0]
         )

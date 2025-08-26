@@ -517,8 +517,8 @@ class Configuration:
         """
         List of all scopes whose names match the provided regular expression.
 
-        For example, matching_scopes(r'^command') will return all scopes
-        whose names begin with `command`.
+        For example, ``matching_scopes(r'^command')`` will return all scopes
+        whose names begin with ``command``.
         """
         return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
 
@@ -1302,7 +1302,7 @@ def remove_yaml(dest, source):
     appear as keys in ``dest``.
 
     Config file authors can optionally end any attribute in a dict
-    with `::` instead of `:`, and the key will remove the entire section
+    with ``::`` instead of ``:``, and the key will remove the entire section
     from ``dest``
     """
 
@@ -1456,7 +1456,7 @@ def process_config_path(path: str) -> List[str]:
 
        [this, is, a, path, value:with:colon]
 
-    The path may consist only of keys (e.g. for a `get`) or may end in a value.
+    The path may consist only of keys (e.g. for a ``get``) or may end in a value.
     Keys are always strings: if a user encloses a key in quotes, the quotes
     should be removed. Values with quotes should be treated as strings,
     but without quotes, may be parsed as a different yaml object (e.g.

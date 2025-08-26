@@ -473,12 +473,12 @@ def optimization_flags(compiler, target):
 
 def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper (which have the prefix
-    `SPACK_`) and also add the compiler wrappers to PATH.
+    ``SPACK_``) and also add the compiler wrappers to PATH.
 
     This determines the injected -L/-I/-rpath options; each of these specifies a search order and
     this function computes these options in a manner that is intended to match the DAG traversal
-    order in `SetupContext`. TODO: this is not the case yet, we're using post order, SetupContext
-    is using topo order."""
+    order in ``SetupContext``. TODO: this is not the case yet, we're using post order,
+    ``SetupContext`` is using topo order."""
     # Set compiler flags injected from the spec
     set_wrapper_environment_variables_for_flags(pkg, env)
 
@@ -1249,7 +1249,7 @@ class BuildProcess:
     """Class used to manage builds launched by Spack.
 
     Each build is launched in its own child process, and the main Spack process
-    tracks each child with a ``BuildProcess`` object. `BuildProcess`` is used to:
+    tracks each child with a ``BuildProcess`` object. ``BuildProcess`` is used to:
     - Start and monitor an active child process.
     - Clean up its processes and resources when the child process completes.
     - Kill the child process if needed.

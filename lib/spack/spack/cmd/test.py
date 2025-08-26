@@ -409,7 +409,7 @@ def test_remove(args):
     if no test suite is listed, remove results for all suites.
 
     removed tests can no longer be accessed for results or status, and will not
-    appear in `spack test list` results
+    appear in ``spack test list`` results
     """
     if args.names:
         test_suites = []

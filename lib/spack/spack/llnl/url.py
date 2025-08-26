@@ -40,8 +40,8 @@ def find_list_urls(url: str) -> Set[str]:
     LuaRocks   https://luarocks.org/modules/<repo>/<name>
     =========  =======================================================
 
-    Note: this function is called by `spack versions`, `spack checksum`,
-    and `spack create`, but not by `spack fetch` or `spack install`.
+    Note: this function is called by ``spack versions``, ``spack checksum``,
+    and ``spack create``, but not by ``spack fetch`` or ``spack install``.
 
     Parameters:
         url (str): The download URL for the package

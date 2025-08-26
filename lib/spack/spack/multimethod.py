@@ -154,7 +154,8 @@ class SpecMultiMethod:
 class when:
     """This is a multi-purpose class, which can be used
 
-    1. As a context manager to **group directives together** that share the same `when=` argument.
+    1. As a context manager to **group directives together** that share the same ``when=``
+       argument.
     2. As a **decorator** for defining multi-methods (multiple methods with the same name are
        defined, but the version that is called depends on the condition of the package's spec)
 
@@ -183,7 +184,7 @@ class when:
        depends_on("dependency", when="+foo +bar +baz")
 
     As a **decorator**, it allows packages to declare multiple versions of methods like
-    `install()` that depend on the package's spec. For example::
+    ``install()`` that depend on the package's spec. For example::
 
        class SomePackage(Package):
            ...
@@ -201,7 +202,7 @@ class when:
                # This will be executed if the package's target is in
                # the aarch64 family
 
-    This allows each package to have a default version of install() AND
+    This allows each package to have a default version of ``install()`` AND
     specialized versions for particular platforms.  The version that is
     called depends on the architecture of the instantiated package.
 

@@ -1336,7 +1336,7 @@ class ConditionIdContext(SourceContext):
 
 class ConditionContext(SourceContext):
     """Tracks context in which a condition (i.e. ``SpackSolverSetup.condition``)
-    is generated (e.g. for a `depends_on`).
+    is generated (e.g. for a ``depends_on``).
 
     This may modify the required/imposed specs generated as relevant
     for the context.
@@ -1825,7 +1825,7 @@ class SpackSolverSetup:
                 (required if imposed_spec is anonymous, ignored if not)
             msg: description of the condition
             context: if provided, indicates how to modify the clause-sets for the required/imposed
-                specs based on the type of constraint they are generated for (e.g. `depends_on`)
+                specs based on the type of constraint they are generated for (e.g. ``depends_on``)
         Returns:
             int: id of the condition created by this function
         """
@@ -2315,7 +2315,7 @@ class SpackSolverSetup:
         required_from: Optional[str] = None,
         context: Optional[SourceContext] = None,
     ) -> List[AspFunction]:
-        """Wrap a call to `_spec_clauses()` into a try/except block with better error handling.
+        """Wrap a call to ``_spec_clauses()`` into a try/except block with better error handling.
 
         Arguments are as for ``_spec_clauses()`` except ``required_from``.
 
@@ -2363,7 +2363,7 @@ class SpackSolverSetup:
             include_runtimes: generate full dependency clauses from runtime libraries that
                 are ommitted from the solve.
             context: tracks what constraint this clause set is generated for (e.g. a
-                `depends_on` constraint in a package.py file)
+                ``depends_on`` constraint in a package.py file)
 
         Normally, if called with ``transitive=True``, ``spec_clauses()`` just generates
         hashes for the dependency requirements of concrete specs. If ``expand_hashes``
@@ -3672,7 +3672,7 @@ class SpecBuilder:
 
         1. Flags applied in compiler definitions should come first
         2. Flags applied by dependents are ordered topologically (with a
-           dependency on `traverse` to resolve the partial order into a
+           dependency on ``traverse`` to resolve the partial order into a
            stable total order)
         3. Flags from requirements are then applied (requirements always
            come from the package and never a parent)
@@ -3680,7 +3680,7 @@ class SpecBuilder:
 
         Additionally, for each source (requirements, compiler, command line, and
         dependents), flags from that source should retain their order and grouping:
-        e.g. for `y cflags="-z -a"` "-z" and "-a" should never have any intervening
+        e.g. for ``y cflags="-z -a"`` ``-z`` and ``-a`` should never have any intervening
         flags inserted, and should always appear in that order.
         """
         cmd_specs = {s.name: s for spec in self._command_line_specs for s in spec.traverse()}

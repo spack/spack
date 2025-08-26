@@ -19,10 +19,10 @@ line is a spec for a particular installation of the mpileaks package.
 
 0. The package to install
 
-1. A dependency of the package, prefixed by ^
+1. A dependency of the package, prefixed by ``^``
 
 2. A version descriptor for the package.  This can either be a specific
-   version, like "1.2", or it can be a range of versions, e.g. "1.2:1.4".
+   version, like ``1.2``, or it can be a range of versions, e.g. ``1.2:1.4``.
    If multiple specific versions or multiple ranges are acceptable, they
    can be separated by commas, e.g. if a package will only build with
    versions 1.0, 1.2-1.4, and 1.6-1.8 of mvapich, you could say::
@@ -31,16 +31,16 @@ line is a spec for a particular installation of the mpileaks package.
 
 3. A compile-time variant of the package.  If you need openmpi to be
    built in debug mode for your package to work, you can require it by
-   adding +debug to the openmpi spec when you depend on it.  If you do
-   NOT want the debug option to be enabled, then replace this with -debug.
+   adding ``+debug`` to the openmpi spec when you depend on it.  If you do
+   NOT want the debug option to be enabled, then replace this with ``-debug``.
    If you would like for the variant to be propagated through all your
-   package's dependencies use "++" for enabling and "--" or "~~" for disabling.
+   package's dependencies use ``++`` for enabling and ``--`` or ``~~`` for disabling.
 
 4. The name of the compiler to build with.
 
 5. The versions of the compiler to build with.  Note that the identifier
-   for a compiler version is the same '@' that is used for a package version.
-   A version list denoted by '@' is associated with the compiler only if
+   for a compiler version is the same ``@`` that is used for a package version.
+   A version list denoted by ``@`` is associated with the compiler only if
    if it comes immediately after the compiler name.  Otherwise it will be
    associated with the current package spec.
 
@@ -653,8 +653,8 @@ class CompilerSpec:
 
     @property
     def display_str(self):
-        """Equivalent to {compiler.name}{@compiler.version} for Specs, without extra
-        @= for readability."""
+        """Equivalent to ``{compiler.name}{@compiler.version}`` for Specs, without extra
+        ``@=`` for readability."""
         if self.versions != vn.any_version:
             return self.spec.format("{name}{@version}")
         return self.spec.format("{name}")
@@ -1188,10 +1188,10 @@ class ForwardQueryToPackage:
         The order of call is:
 
         1. if the query was through the name of a virtual package try to
-            search for the attribute `{virtual_name}_{attribute_name}`
+            search for the attribute ``{virtual_name}_{attribute_name}``
             in Package
 
-        2. try to search for attribute `{attribute_name}` in Package
+        2. try to search for attribute ``{attribute_name}`` in Package
 
         3. try to call the default handler
 
@@ -1587,7 +1587,7 @@ class Spec:
     @property
     def is_develop(self):
         """Return whether the Spec represents a user-developed package
-        in a Spack Environment (i.e. using `spack develop`).
+        in a Spack Environment (i.e. using ``spack develop``).
         """
         return bool(self.variants.get("dev_path", False))
 
@@ -1972,7 +1972,7 @@ class Spec:
         """A spec is concrete if it describes a single build of a package.
 
         More formally, a spec is concrete if concretize() has been called
-        on it and it has been marked `_concrete`.
+        on it and it has been marked ``_concrete``.
 
         Concrete specs either can be or have been built. All constraints
         have been resolved, optional dependencies have been added or
@@ -2895,23 +2895,23 @@ class Spec:
     def _finalize_concretization(self):
         """Assign hashes to this spec, and mark it concrete.
 
-        There are special semantics to consider for `package_hash`, because we can't
+        There are special semantics to consider for ``package_hash``, because we can't
         call it on *already* concrete specs, but we need to assign it *at concretization
         time* to just-concretized specs. So, the concretizer must assign the package
         hash *before* marking their specs concrete (so that we know which specs were
         already concrete before this latest concretization).
 
-        `dag_hash` is also tricky, since it cannot compute `package_hash()` lazily.
-        Because `package_hash` needs to be assigned *at concretization time*,
-        `to_node_dict()` can't just assume that it can compute `package_hash` itself
-        -- it needs to either see or not see a `_package_hash` attribute.
+        ``dag_hash`` is also tricky, since it cannot compute ``package_hash()`` lazily.
+        Because ``package_hash`` needs to be assigned *at concretization time*,
+        ``to_node_dict()`` can't just assume that it can compute ``package_hash`` itself
+        -- it needs to either see or not see a ``_package_hash`` attribute.
 
-        Rules of thumb for `package_hash`:
-          1. Old-style concrete specs from *before* `dag_hash` included `package_hash`
-             will not have a `_package_hash` attribute at all.
-          2. New-style concrete specs will have a `_package_hash` assigned at
+        Rules of thumb for ``package_hash``:
+          1. Old-style concrete specs from *before* ``dag_hash`` included ``package_hash``
+             will not have a ``_package_hash`` attribute at all.
+          2. New-style concrete specs will have a ``_package_hash`` assigned at
              concretization time.
-          3. Abstract specs will not have a `_package_hash` attribute at all.
+          3. Abstract specs will not have a ``_package_hash`` attribute at all.
 
         """
         for spec in self.traverse():
@@ -4144,7 +4144,7 @@ class Spec:
         format_string: str,
         _path_ctor: Optional[Callable[[Any], pathlib.PurePath]] = None,
     ) -> str:
-        """Given a `format_string` that is intended as a path, generate a string like from
+        """Given a ``format_string`` that is intended as a path, generate a string like from
         :meth:`format`, but eliminate extra path separators introduced by formatting of Spec
         properties.
 
@@ -4453,9 +4453,9 @@ class Spec:
 
     def trim(self, dep_name):
         """
-        Remove any package that is or provides `dep_name` transitively
+        Remove any package that is or provides ``dep_name`` transitively
         from this tree. This can also remove other dependencies if
-        they are only present because of `dep_name`.
+        they are only present because of ``dep_name``.
         """
         for spec in list(self.traverse()):
             new_dependencies = _EdgeMap()  # A new _EdgeMap
@@ -4925,7 +4925,7 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
 
 
 def substitute_abstract_variants(spec: Spec):
-    """Uses the information in `spec.package` to turn any variant that needs
+    """Uses the information in ``spec.package`` to turn any variant that needs
     it into a SingleValuedVariant or BoolValuedVariant.
 
     This method is best effort. All variants that can be substituted will be

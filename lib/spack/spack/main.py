@@ -802,7 +802,7 @@ def print_setup_info(*info):
 
 def restore_macos_dyld_vars():
     """
-    Spack mutates DYLD_* variables in `spack load` and `spack env activate`.
+    Spack mutates DYLD_* variables in ``spack load`` and ``spack env activate``.
     Unlike Linux, macOS SIP clears these variables in new processes, meaning
     that os.environ["DYLD_*"] in our Python process is not the same as the user's
     shell. Therefore, we store the user's DYLD_* variables in SPACK_DYLD_* and

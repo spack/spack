@@ -159,7 +159,7 @@ class FetchStrategy:
         the information available to them in the Spack package.
 
         The returned value is added to the content which determines the full
-        hash for a package using `str()`.
+        hash for a package using :class:`str`.
         """
         raise NotImplementedError
 
@@ -726,7 +726,7 @@ class VCSFetchStrategy(FetchStrategy):
 
 @fetcher
 class GoFetchStrategy(VCSFetchStrategy):
-    """Fetch strategy that employs the `go get` infrastructure.
+    """Fetch strategy that employs the ``go get`` infrastructure.
 
     Use like this in a package::
 

@@ -108,7 +108,7 @@ class WindowsRPath:
 
         This method should be overridden by packages that produce
         binaries/libraries/python extension modules/etc that are installed into
-        directories outside a package's `bin`, `lib`, and `lib64` directories,
+        directories outside a package's ``bin``, ``lib``, and ``lib64`` directories,
         but still require linking against one of the packages dependencies, or
         other components of the package itself. No-op otherwise.
 
@@ -632,7 +632,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Class level dictionary populated by :func:`~spack.directives.redistribute` directives
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
 
-    #: Must be defined as a fallback for old specs that don't have the `build_system` variant
+    #: Must be defined as a fallback for old specs that don't have the ``build_system`` variant
     default_buildsystem: str
 
     #: Use :attr:`~spack.package_base.PackageBase.default_buildsystem` instead of this attribute,

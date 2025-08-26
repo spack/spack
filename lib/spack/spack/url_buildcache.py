@@ -1090,7 +1090,7 @@ def _entries_from_cache_aws_cli(
         A tuple where the first item is a list of local file paths pointing
         to the manifests that should be read from the mirror, and the
         second item is a function taking a url or file path and returning
-        a `URLBuildcacheEntry` for that manifest.
+        a :class:`URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
     file_list = None
@@ -1146,7 +1146,7 @@ def _entries_from_cache_fallback(
         A tuple where the first item is a list of absolute file paths or
         urls pointing to the manifests that should be read from the mirror,
         and the second item is a function taking a url or file path of a manifest and
-        returning a `URLBuildcacheEntry` for that manifest.
+        returning a :class:`URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
     file_list = None
@@ -1189,7 +1189,7 @@ def get_entries_from_cache(
         A tuple where the first item is a list of absolute file paths or
         urls pointing to the manifests that should be read from the mirror,
         and the second item is a function taking a url or file path and
-        returning a `URLBuildcacheEntry` for that manifest.
+        returning a :class:`URLBuildcacheEntry` for that manifest.
     """
     callbacks: List[Callable] = []
     if url.startswith("s3://"):
