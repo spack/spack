@@ -77,7 +77,6 @@ This is in combination with the following compiler definition:
          compilers:
            c: /opt/rocm-5.3.0/bin/amdclang
            cxx: /opt/rocm-5.3.0/bin/amdclang++
-           fortran: null
 
 This includes the following considerations:
 

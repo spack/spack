@@ -443,7 +443,7 @@ Note that you may use Spack config variables such as ``$spack`` or environment v
    spack:
      specs: []
      concretizer:
-         unify: true
+       unify: true
      include_concrete:
      - /absolute/path/to/environment1
      - $spack/../path/to/environment2
@@ -604,11 +604,11 @@ The list of abstract/root specs in the environment is maintained in the ``spack.
 .. code-block:: yaml
 
    spack:
-       specs:
-         - ncview
-         - netcdf
-         - nco
-         - py-sphinx
+     specs:
+     - ncview
+     - netcdf
+     - nco
+     - py-sphinx
 
 Appending to this list in the yaml is identical to using the ``spack add`` command from the command line.
 However, there is more power available from the yaml file.
@@ -624,11 +624,11 @@ The *default* mode is to unify all specs:
 .. code-block:: yaml
 
    spack:
-       specs:
-         - hdf5+mpi
-         - zlib@1.2.8
-       concretizer:
-         unify: true
+     specs:
+     - hdf5+mpi
+     - zlib@1.2.8
+     concretizer:
+       unify: true
 
 This means that any package in the environment corresponds to a single concrete spec.
 In the above example, when ``hdf5`` depends down the line of ``zlib``, it is required to take ``zlib@1.2.8`` instead of a newer version.
@@ -643,12 +643,12 @@ Instead of requiring reuse of dependencies across different root specs, it is on
 .. code-block:: yaml
 
    spack:
-       specs:
-         - hdf5~mpi
-         - hdf5+mpi
-         - zlib@1.2.8
-       concretizer:
-         unify: when_possible
+     specs:
+     - hdf5~mpi
+     - hdf5+mpi
+     - zlib@1.2.8
+     concretizer:
+       unify: when_possible
 
 This means that both ``hdf5`` installations will use ``zlib@1.2.8`` as a dependency even if newer versions of that library are available.
 
@@ -657,12 +657,12 @@ The third mode of operation is to concretize root specs entirely independently b
 .. code-block:: yaml
 
    spack:
-       specs:
-         - hdf5~mpi
-         - hdf5+mpi
-         - zlib@1.2.8
-       concretizer:
-         unify: false
+     specs:
+     - hdf5~mpi
+     - hdf5+mpi
+     - zlib@1.2.8
+     concretizer:
+       unify: false
 
 In this example ``hdf5`` is concretized separately, and does not consider ``zlib@1.2.8`` as a constraint or preference.
 Instead, it will take the latest possible version.
@@ -696,21 +696,23 @@ The following two environment manifests are identical:
 
    spack:
      specs:
-       - zlib %gcc@7.1.0
-       - zlib %gcc@4.9.3
-       - libelf %gcc@7.1.0
-       - libelf %gcc@4.9.3
-       - libdwarf %gcc@7.1.0
-       - cmake
+     - zlib %gcc@7.1.0
+     - zlib %gcc@4.9.3
+     - libelf %gcc@7.1.0
+     - libelf %gcc@4.9.3
+     - libdwarf %gcc@7.1.0
+     - cmake
+
+.. code-block:: yaml
 
    spack:
      specs:
-       - matrix:
-           - [zlib, libelf, libdwarf]
-           - ["%gcc@7.1.0", "%gcc@4.9.3"]
-         exclude:
-           - libdwarf%gcc@4.9.3
-       - cmake
+     - matrix:
+       - [zlib, libelf, libdwarf]
+       - ["%gcc@7.1.0", "%gcc@4.9.3"]
+       exclude:
+       - libdwarf%gcc@4.9.3
+     - cmake
 
 Spec matrices can be used to install swaths of software across various toolchains.
 
@@ -734,24 +736,26 @@ As an example, the following two manifest files are identical.
 
    spack:
      definitions:
-       - first: [libelf, libdwarf]
-       - compilers: ["%gcc", "%intel"]
-       - second:
-           - $first
-           - matrix:
-               - [zlib]
-               - [$compilers]
+     - first: [libelf, libdwarf]
+     - compilers: ["%gcc", "%intel"]
+     - second:
+       - $first
+       - matrix:
+         - [zlib]
+         - [$compilers]
      specs:
-       - $second
-       - cmake
+     - $second
+     - cmake
+
+.. code-block:: yaml
 
    spack:
      specs:
-       - libelf
-       - libdwarf
-       - zlib%gcc
-       - zlib%intel
-       - cmake
+     - libelf
+     - libdwarf
+     - zlib%gcc
+     - zlib%intel
+     - cmake
 
 .. note::
 
@@ -772,9 +776,9 @@ In the following snippet, the named list ``compilers`` is ``["%gcc", "%clang", "
 
    spack:
      definitions:
-       - compilers: ["%gcc", "%clang"]
-       - when: arch.satisfies("target=x86_64:")
-         compilers: ["%intel"]
+     - compilers: ["%gcc", "%clang"]
+     - when: arch.satisfies("target=x86_64:")
+       compilers: ["%intel"]
 
 .. note::
 

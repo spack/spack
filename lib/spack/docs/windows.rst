@@ -151,12 +151,12 @@ Therefore, your ``packages.yaml`` file will look something like this, possibly w
        externals:
        - spec: cmake@3.19
          prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake'
-       buildable: False
+       buildable: false
      ninja:
        externals:
        - spec: ninja@1.8.2
          prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
-       buildable: False
+       buildable: false
 
 You can also use a separate installation of CMake if you have one and prefer to use it.
 If you don't have a path to Ninja analogous to the above, then you can obtain it by running the Visual Studio Installer and following the instructions at the start of this section.

@@ -425,14 +425,14 @@ When specifying module names by projection for Lmod modules, we recommend NOT in
       modules:
         default:
           enable:
-            - tcl
+          - tcl
           tcl:
             projections:
               all: "{name}/{version}-{compiler.name}-{compiler.version}"
             all:
               conflict:
-                - "{name}"
-                - "intel/14.0.1"
+              - "{name}"
+              - "intel/14.0.1"
 
    will create module files that will conflict with ``intel/14.0.1`` and with the base directory of the same module, effectively preventing the possibility to load two or more versions of the same software at the same time.
    The tokens that are available for use in this directive are those understood by the :meth:`~spack.spec.Spec.format` method.
@@ -451,15 +451,15 @@ When specifying module names by projection for Lmod modules, we recommend NOT in
        modules:
          default:
            enable:
-             - lmod
+           - lmod
            lmod:
              core_compilers:
-               - "gcc@4.8"
+             - "gcc@4.8"
              core_specs:
-               - "python"
+             - "python"
              hierarchy:
-               - "mpi"
-               - "lapack"
+             - "mpi"
+             - "lapack"
 
      that will generate a hierarchy in which the ``lapack`` and ``mpi`` layer can be switched independently.
      This allows a site to build the same libraries or applications against different implementations of ``mpi`` and ``lapack``, and let Lmod switch safely from one to the other.
@@ -490,11 +490,11 @@ This allows users to make general overrides to the default inspections and custo
   modules:
     prefix_inspections:
       ./bin:
-        - PATH
+      - PATH
       ./man:
-        - MANPATH
+      - MANPATH
       ./:
-        - CMAKE_PREFIX_PATH
+      - CMAKE_PREFIX_PATH
 
 Prefix inspections are only applied if the relative path inside the installation prefix exists.
 In this case, for a Spack package ``foo`` installed to ``/spack/prefix/foo``, if ``foo`` installs executables to ``bin`` but no manpages in ``man``, the generated module file for ``foo`` would update ``PATH`` to contain ``/spack/prefix/foo/bin`` and ``CMAKE_PREFIX_PATH`` to contain ``/spack/prefix/foo``, but would not update ``MANPATH``.
@@ -529,12 +529,12 @@ If the ``use_view`` value is set in the config, then the prefix inspections for 
          use_view: my_view
        prefix_inspections:
          ./bin:
-           - PATH
+         - PATH
      view:
        my_view:
          projections:
            root: /path/to/my/view
-           all:  "{name}-{hash}"
+           all: "{name}-{hash}"
 
 The ``spack`` key is relevant to :ref:`environment <environments>` configuration, and the view key is discussed in detail in the section on :ref:`Configuring environment views <configuring_environment_views>`.
 With this configuration the generated module for package ``foo`` would set ``PATH`` to include ``/path/to/my/view/foo-<hash>/bin`` instead of ``/spack/prefix/foo/bin``.

@@ -38,8 +38,8 @@ Here is an example ``config.yaml`` file:
    config:
      install_tree: $spack/opt/spack
      build_stage:
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 Each Spack configuration file is nested under a top-level section corresponding to its name.
 So, ``config.yaml`` starts with ``config:``, ``mirrors.yaml`` starts with ``mirrors:``, etc.
@@ -125,23 +125,23 @@ You could create the following files:
    :caption: ~/myscopes/release/packages.yaml
 
    packages:
-       mypackage:
-           prefer: ["@1.7"]
-       pkg-a:
-           prefer: ["@2.3"]
-       pkg-b:
-           prefer: ["@0.8"]
+     mypackage:
+       prefer: ["@1.7"]
+     pkg-a:
+       prefer: ["@2.3"]
+     pkg-b:
+       prefer: ["@0.8"]
 
 .. code-block:: yaml
    :caption: ~/myscopes/develop/packages.yaml
 
    packages:
-       mypackage:
-           prefer: ["@develop"]
-       pkg-a:
-           prefer: ["@develop"]
-       pkg-b:
-           prefer: ["@develop"]
+     mypackage:
+       prefer: ["@develop"]
+     pkg-a:
+       prefer: ["@develop"]
+     pkg-b:
+       prefer: ["@develop"]
 
 You can switch between ``release`` and ``develop`` configurations using configuration arguments.
 You would type ``spack -C ~/myscopes/release`` when you want to build the designated release versions of ``mypackage``, ``pkg-a``, and ``pkg-b``, and you would type ``spack -C ~/myscopes/develop`` when you want to build all of these packages at the ``develop`` version.
@@ -292,8 +292,8 @@ If your configurations look like this:
    config:
      install_tree: $spack/opt/spack
      build_stage:
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 .. code-block:: yaml
@@ -313,8 +313,8 @@ You can see the final, combined configuration with the ``spack config get <confi
    config:
      install_tree: /some/other/directory
      build_stage:
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 .. _config-prepend-append:
@@ -342,8 +342,8 @@ Spack will then append to the lower-precedence configuration under the ``install
    config:
      install_tree: /some/other/directory/my/custom/suffix
      build_stage:
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 Similarly, ``+:`` can be used to *prepend* to a path or name:
@@ -392,8 +392,8 @@ The ``build_stage`` setting's value is an ordered list of directories:
    :caption: $(prefix)/etc/spack/defaults/config.yaml
 
    build_stage:
-     - $tempdir/$user/spack-stage
-     - ~/.spack/stage
+   - $tempdir/$user/spack-stage
+   - ~/.spack/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage`` paths:
@@ -402,8 +402,8 @@ Suppose the user configuration adds its *own* list of ``build_stage`` paths:
    :caption: ~/.spack/config.yaml
 
    build_stage:
-     - /lustre-scratch/$user/spack
-     - ~/mystage
+   - /lustre-scratch/$user/spack
+   - ~/mystage
 
 
 Spack will first look at the paths in the defaults ``config.yaml``, then the paths in the user's ``~/.spack/config.yaml``.
@@ -417,10 +417,10 @@ The list in the higher-precedence scope is *prepended* to the defaults.
    config:
      install_tree: /some/other/directory
      build_stage:
-       - /lustre-scratch/$user/spack
-       - ~/mystage
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - /lustre-scratch/$user/spack
+     - ~/mystage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can *completely* override the lower-precedence scope using ``::``.
@@ -431,8 +431,8 @@ So if the user config looked like this:
    :caption: ~/.spack/config.yaml
 
    build_stage::
-     - /lustre-scratch/$user/spack
-     - ~/mystage
+   - /lustre-scratch/$user/spack
+   - ~/mystage
 
 
 The merged configuration would look like this:

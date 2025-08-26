@@ -205,7 +205,7 @@ For example:
              set:
                MKL_ROOT: "/path/to/mkl/root"
              unset: # A list of environment variables to unset
-               - CC
+             - CC
              prepend_path: # Similar for append|remove_path
                LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 

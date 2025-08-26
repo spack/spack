@@ -384,7 +384,7 @@ A ``spack.yaml`` like the following:
      - fftw precision=float
      packages:
        cuda:
-         buildable: False
+         buildable: false
          externals:
          - spec: cuda%gcc
            prefix: /usr/local/cuda
@@ -715,7 +715,7 @@ Avoid double-installing CUDA by adding, e.g.:
        externals:
        - spec: "cuda@9.0.176 arch=linux-ubuntu16-x86_64 %gcc@5.4.0"
          prefix: /usr/local/cuda
-       buildable: False
+       buildable: false
 
 to your ``spack.yaml``.
 

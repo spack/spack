@@ -215,7 +215,7 @@ Automatic splices are enabled in the concretizer configuration section:
 
    concretizer:
      splice:
-       automatic: True
+       automatic: true
 
 Packages can include ABI-compatibility information using the ``can_splice`` directive.
 See :ref:`the packaging guide <abi_compatibility>` for instructions on specifying ABI compatibility using the ``can_splice`` directive.

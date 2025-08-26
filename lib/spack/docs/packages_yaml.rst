@@ -142,9 +142,9 @@ Other fields accepted by compilers under ``extra_attributes`` are ``flags``, ``e
              prepend_path:
                PATH: /usr/unusual_path_for_ld/bin
            implicit_rpaths:
-             - /usr/lib/gcc
+           - /usr/lib/gcc
            extra_rpaths:
-             - /usr/lib/unusual_gcc_path
+           - /usr/lib/unusual_gcc_path
 
 The ``flags`` attribute specifies compiler flags to apply to every spec that depends on this compiler.
 The accepted flag types are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
@@ -178,7 +178,7 @@ The previous example could be modified to be:
          prefix: /opt/openmpi-1.4.3
        - spec: "openmpi@1.4.3+debug"
          prefix: /opt/openmpi-1.4.3-debug
-       buildable: False
+       buildable: false
 
 The addition of the ``buildable`` flag tells Spack that it should never build its own version of OpenMPI from sources, and it will instead always rely on a pre-built OpenMPI.
 
@@ -203,7 +203,7 @@ Spack can be configured with every MPI provider not buildable individually, but 
 
    packages:
      mpi:
-       buildable: False
+       buildable: false
      openmpi:
        externals:
        - spec: "openmpi@1.4.3~debug"
@@ -219,12 +219,11 @@ In cases where the concretizer is configured to reuse specs, and other ``mpi`` p
 
    packages:
      mpi:
-       buildable: False
+       buildable: false
        require:
-       - one_of: [
-           "openmpi@1.4.3~debug",
-           "openmpi@1.4.3+debug",
-         ]
+       - one_of:
+         - "openmpi@1.4.3~debug"
+         - "openmpi@1.4.3+debug"
      openmpi:
        externals:
        - spec: "openmpi@1.4.3~debug"
