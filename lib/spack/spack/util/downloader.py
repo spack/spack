@@ -140,7 +140,7 @@ class CurlDownloader(Downloader):
                 status_bar=False,
                 user_agent=SPACK_USER_AGENT,
             )
-            + ["-D", "/dev/stderr"]  # Redirect header to stderr
+            + self._redirect_header_args
             + self._cookie_args
             + self.config_args
         )
@@ -193,6 +193,13 @@ class CurlDownloader(Downloader):
         if self.cookie:
             return ["-j", "-b", self.cookie]
         return []
+
+    @property
+    def _redirect_header_args(self) -> List[str]:
+        """Redirect headers to stderr."""
+        if sys.platform == "win32":
+            return ["-D", "CON"]
+        return ["-D", "/dev/stderr"]
 
 
 class FetchProgress:
