@@ -5,6 +5,7 @@ import http.client
 import subprocess
 import sys
 import time
+import urllib.parse
 import urllib.request
 import warnings
 from http import HTTPStatus
@@ -158,15 +159,17 @@ class CurlDownloader(Downloader):
             headers_parts.append(line)
 
         headers = http.client.HTTPMessage()
-        try:
-            http_status = headers_parts[0].split()[1]
-            int(http_status)
-        except (IndexError, ValueError):
-            raise FetchError(f"Failed to fetch {self._url}: cannot parse HTTP status code")
+        scheme = urllib.parse.urlparse(self._url).scheme
+        if scheme in ("https", "http"):
+            try:
+                http_status = headers_parts[0].split()[1]
+                int(http_status)
+            except (IndexError, ValueError):
+                raise FetchError(f"Failed to fetch {self._url}: cannot parse HTTP status code")
 
-        if http_status.startswith("4") or http_status.startswith("5"):
-            status = HTTPStatus(int(http_status))
-            raise FetchError(f"Failed to fetch {self._url}: {status.value} {status.phrase}")
+            if http_status.startswith("4") or http_status.startswith("5"):
+                status = HTTPStatus(int(http_status))
+                raise FetchError(f"Failed to fetch {self._url}: {status.value} {status.phrase}")
 
         for line in headers_parts:
             if ": " in line:
