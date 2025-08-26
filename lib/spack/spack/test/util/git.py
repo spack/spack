@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 import pathlib
 from typing import Optional
 
@@ -90,17 +89,24 @@ def test_not_git_repo(tmp_path: pathlib.Path):
 
 
 def test_git_url_root(tmp_path: pathlib.Path):
-    # Ensure both the url and root have values.
-    def _git(*args, **kwargs):
-        if "config" in args:
-            return "https://mock.com/mock.git"
+    # Confirm both the url and root have values.
 
-        if "rev-parse" in args:
-            return str(tmp_path)
+    class MockGit(spack.util.executable.Executable):
+        def __init__(self):
+            pass
 
-        return None
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
 
-    result = spack.util.git.git_url_root(str(tmp_path), _git)
+            if action == "config":
+                return "https://mock.com/mock.git"
+
+            if action == "rev-parse":
+                return str(tmp_path)
+
+            return ""
+
+    result = spack.util.git.git_url_root(str(tmp_path), MockGit())
     assert result is not None
     assert result[0] is not None and result[1] is not None
 
