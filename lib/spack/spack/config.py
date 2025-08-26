@@ -34,7 +34,7 @@ import os.path
 import re
 import sys
 from collections import defaultdict
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 from spack.vendor import jsonschema
 
@@ -60,6 +60,8 @@ import spack.schema.repos
 import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
+import spack.util.git
+import spack.util.hash
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -953,7 +955,7 @@ class IncludePath(OptionalInclude):
         if not self.satisfied:
             return None
 
-        if self._scopes:
+        if self._scopes is not None:
             return self._scopes
 
         config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location)
@@ -961,7 +963,10 @@ class IncludePath(OptionalInclude):
             raise ConfigFileError(f"Unable to fetch remote configuration from {self.path}")
 
         self.destination = config_path
-        self._scopes = [self._scope(self.destination, parent_scope)]
+
+        scope = self._scope(self.destination, parent_scope)
+        if scope is not None:
+            self._scopes = [scope]
         return self._scopes
 
 
@@ -998,6 +1003,32 @@ class GitIncludePaths(OptionalInclude):
             f"{identifier}, when={self.when}, optional={self.optional})"
         )
 
+    def _clone(self) -> None:
+        """Clone the repository."""
+        dir_name = spack.util.hash.b32_hash(self.repo)[-7:]
+        destination = os.path.join(_include_cache_location, dir_name)
+        try:
+            with fs.working_dir(destination, create=True):
+                if self.fetched:
+                    return
+
+                spack.util.git.init_git_repo(self.repo)
+                if self.commit:
+                    spack.util.git.pull_checkout_commit(self.commit)
+                elif self.tag:
+                    spack.util.git.pull_checkout_tag(self.tag, depth=2)
+                elif self.branch:
+                    spack.util.git.pull_checkout_branch(self.branch, depth=2)
+
+            self.destination = destination
+        except spack.util.executable.ProcessError:
+            self.error = f"Failed to clone repository {self.repo}"
+            return
+
+    @property
+    def fetched(self):
+        return self.destination is not None and os.path.join(self.destination, ".git")
+
     def scopes(self, parent_scope: ConfigScope) -> Optional[List[ConfigScope]]:
         """Instantiate configuration scopes for the included paths.
 
@@ -1015,16 +1046,17 @@ class GitIncludePaths(OptionalInclude):
         if not self.satisfied:
             return None
 
-        if self._scopes:
+        if self._scopes is not None:
             return self._scopes
 
-        scopes = []
-        for path in include.paths:
-            # TODO: Change this to fetch as is done for Git repositories
-            config_path = None
-            if not config_path:
+        scopes: List[ConfigScope] = []
+        for path in self.paths:
+            config_path = self._clone()
+            if config_path is not None:
                 raise ConfigFileError(f"Unable to fetch remote configuration from {path}")
-            scopes.append(self._scope(config_path, parent_scope))
+            scope = self._scope(config_path, parent_scope)
+            if scope is not None:
+                scopes.append(scope)
 
         if scopes:
             self._scopes = scopes
