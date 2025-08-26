@@ -64,33 +64,31 @@ For example, you can add it to your :ref:`CMakePackage <cmakepackage>`-based pac
 .. code-block:: python
    :emphasize-lines: 1,3-7,14-25
 
-    class MyRocmPackage(CMakePackage, ROCmPackage):
-        ...
-        # Ensure +rocm and amdgpu_targets are passed to dependencies
-        depends_on("mydeppackage", when="+rocm")
-        for val in ROCmPackage.amdgpu_targets:
-            depends_on(f"mydeppackage amdgpu_target={val}",
-                       when=f"amdgpu_target={val}")
-        ...
+   class MyRocmPackage(CMakePackage, ROCmPackage):
+       ...
+       # Ensure +rocm and amdgpu_targets are passed to dependencies
+       depends_on("mydeppackage", when="+rocm")
+       for val in ROCmPackage.amdgpu_targets:
+           depends_on(f"mydeppackage amdgpu_target={val}", when=f"amdgpu_target={val}")
+       ...
 
-        def cmake_args(self):
-            spec = self.spec
-            args = []
-            ...
-            if spec.satisfies("+rocm"):
-                # Set up the HIP macros needed by the build
-                args.extend([
-                    "-DENABLE_HIP=ON",
-                    f"-DHIP_ROOT_DIR={spec['hip'].prefix}"])
-                rocm_archs = spec.variants["amdgpu_target"].value
-                if "none" not in rocm_archs:
-                    args.append(f"-DHIP_HIPCC_FLAGS=--amdgpu-target={','.join(rocm_archs)}")
-            else:
-                # Ensure build with HIP is disabled
-                args.append("-DENABLE_HIP=OFF")
-            ...
-            return args
-        ...
+       def cmake_args(self):
+           spec = self.spec
+           args = []
+           ...
+           if spec.satisfies("+rocm"):
+               # Set up the HIP macros needed by the build
+               args.extend(["-DENABLE_HIP=ON", f"-DHIP_ROOT_DIR={spec['hip'].prefix}"])
+               rocm_archs = spec.variants["amdgpu_target"].value
+               if "none" not in rocm_archs:
+                   args.append(f"-DHIP_HIPCC_FLAGS=--amdgpu-target={','.join(rocm_archs)}")
+           else:
+               # Ensure build with HIP is disabled
+               args.append("-DENABLE_HIP=OFF")
+           ...
+           return args
+
+       ...
 
 assuming only the ``ENABLE_HIP``, ``HIP_ROOT_DIR``, and ``HIP_HIPCC_FLAGS`` macros are required to be set and the only dependency needing ROCm options is ``mydeppackage``.
 You will need to customize the flags as needed for your build.

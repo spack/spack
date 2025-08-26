@@ -618,7 +618,7 @@ For example, the following package has a ``list_url`` attribute that points to a
 
    class Example(Package):
        homepage = "http://www.example.com"
-       url      = "http://www.example.com/libexample-1.2.3.tar.gz"
+       url = "http://www.example.com/libexample-1.2.3.tar.gz"
        list_url = "http://www.example.com/downloads/all-versions.html"
 
 .. _attribute_list_depth:
@@ -640,9 +640,9 @@ So, we need to add a ``list_url`` *and* a ``list_depth`` attribute:
    :linenos:
 
    class Mpich(Package):
-       homepage   = "http://www.mpich.org"
-       url        = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
-       list_url   = "http://www.mpich.org/static/downloads/"
+       homepage = "http://www.mpich.org"
+       url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+       list_url = "http://www.mpich.org/static/downloads/"
        list_depth = 1
 
 By default, Spack only looks at the top-level page available at ``list_url``.
@@ -1600,7 +1600,7 @@ Let's take a look at the ``libdwarf`` package to see how it's done:
 
    class Libdwarf(Package):
        homepage = "http://www.prevanders.net/dwarf.html"
-       url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
+       url = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
        list_url = homepage
 
        version("20130729", sha256="092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6")
@@ -1608,8 +1608,7 @@ Let's take a look at the ``libdwarf`` package to see how it's done:
 
        depends_on("libelf")
 
-       def install(self, spec, prefix):
-           ...
+       def install(self, spec, prefix): ...
 
 ``depends_on()``
 ^^^^^^^^^^^^^^^^
@@ -2761,6 +2760,7 @@ Each of these can be customized by implementing the relevant attribute as a ``@p
 
    class Foo(Package):
        ...
+
        @property
        def libs(self):
            # The library provided by Foo is libMyFoo.so
@@ -2805,7 +2805,7 @@ Such a package could implement the optional attributes as follows:
        ...
        provides("bar", when="+bar")
        provides("baz", when="+baz")
-       ....
+       ...
 
        # Just the foo headers
        @property

@@ -80,24 +80,25 @@ For example, you can add it to your :ref:`CMakePackage <cmakepackage>`-based pac
 .. code-block:: python
    :emphasize-lines: 1,7-16
 
-    class MyCudaPackage(CMakePackage, CudaPackage):
-        ...
-        def cmake_args(self):
-            spec = self.spec
-            args = []
-            ...
-            if spec.satisfies("+cuda"):
-                # Set up the CUDA macros needed by the build
-                args.append("-DWITH_CUDA=ON")
-                cuda_arch_list = spec.variants["cuda_arch"].value
-                cuda_arch = cuda_arch_list[0]
-                if cuda_arch != "none":
-                    args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch}")
-            else:
-                # Ensure build with CUDA is disabled
-                args.append("-DWITH_CUDA=OFF")
-            ...
-            return args
+   class MyCudaPackage(CMakePackage, CudaPackage):
+       ...
+
+       def cmake_args(self):
+           spec = self.spec
+           args = []
+           ...
+           if spec.satisfies("+cuda"):
+               # Set up the CUDA macros needed by the build
+               args.append("-DWITH_CUDA=ON")
+               cuda_arch_list = spec.variants["cuda_arch"].value
+               cuda_arch = cuda_arch_list[0]
+               if cuda_arch != "none":
+                   args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch}")
+           else:
+               # Ensure build with CUDA is disabled
+               args.append("-DWITH_CUDA=OFF")
+           ...
+           return args
 
 assuming only the ``WITH_CUDA`` and ``CUDA_FLAGS`` flags are required.
 You will need to customize options as needed for your build.

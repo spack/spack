@@ -35,9 +35,9 @@ This helper package can be added to your package by adding it as a base class of
 .. code-block:: python
    :emphasize-lines: 1,3
 
-    class MyPackage(AutotoolsPackage, SourceforgePackage):
-        ...
-        sourceforge_mirror_path = "my-package/mypackage.1.0.0.tar.gz"
-        ...
+   class MyPackage(AutotoolsPackage, SourceforgePackage):
+       ...
+       sourceforge_mirror_path = "my-package/mypackage.1.0.0.tar.gz"
+       ...
 
 Over 40 packages are using ``SourceforgePackage`` this mix-in as of July 2022 so there are multiple packages to choose from if you want to see a real example.

@@ -362,6 +362,7 @@ In the rare case when the mechanisms described so far don't fit the detection of
        # return None or [] if none of the exes represent an instance of
        # the package. Return one or more Specs for each instance of the
        # package which is thought to be installed in the provided prefix
+       ...
 
 This method takes as input a set of discovered executables (which match those specified by the user) as well as a common prefix shared by all of those executables.
 The function must return one or more :py:class:`spack.package.Spec` associated with the executables (it can also return ``None`` to indicate that no provided executables are associated with the package).

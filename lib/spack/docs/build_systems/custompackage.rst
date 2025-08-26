@@ -139,11 +139,12 @@ Many unit tests are prone to failure, even when there is nothing wrong with the 
 Unfortunately, non-portable unit tests and tests that are "supposed to fail" are more common than we would like.
 Instead of always running unit tests on installation, Spack lets users conditionally run tests with the ``--test=root`` flag.
 
-If we wanted to define a function that would conditionally run if and only if this flag is set, we would use the following line:
+If we wanted to define a function that would conditionally run if and only if this flag is set, we would use the following:
 
 .. code-block:: python
 
    @on_package_attributes(run_tests=True)
+   def my_test_function(self): ...
 
 Testing
 ^^^^^^^
@@ -176,6 +177,7 @@ Again, this is not specific to custom build systems, it can be added to existing
 
       @run_after("install")
       @on_package_attributes(run_tests=True)
+      def my_test_function(self): ...
 
    works as expected.
    However, if you reverse the ordering:
@@ -184,6 +186,7 @@ Again, this is not specific to custom build systems, it can be added to existing
 
       @on_package_attributes(run_tests=True)
       @run_after("install")
+      def my_test_function(self): ...
 
    the tests will always be run regardless of whether or not ``--test=root`` is requested.
    See https://github.com/spack/spack/issues/3833 for more information

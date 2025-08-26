@@ -649,6 +649,7 @@ For example:
 
    class ExamplePackage(MakefilePackage):
        """Example package that does not build in parallel."""
+
        parallel = False
 
 This ensures that any ``make`` or ``ninja`` invocation will *not* set the ``-j <njobs>`` option, and the build will run sequentially.
