@@ -134,7 +134,7 @@ SOURCEFORGE_RE = re.compile(r"(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$")
 
 
 def split_url_on_sourceforge_suffix(url: str) -> Tuple[str, ...]:
-    """If the input is a sourceforge URL, returns base URL and "/download" suffix. Otherwise,
+    """If the input is a sourceforge URL, returns base URL and ``/download`` suffix. Otherwise,
     returns the input URL and an empty string.
     """
     match = SOURCEFORGE_RE.search(url)
@@ -371,7 +371,7 @@ def strip_version_suffixes(path_or_url: str) -> str:
 def expand_contracted_extension(extension: str) -> str:
     """Returns the expanded version of a known contracted extension.
 
-    This function maps extensions like ".tgz" to ".tar.gz". On unknown extensions,
+    This function maps extensions like ``.tgz`` to ``.tar.gz``. On unknown extensions,
     return the input unmodified.
     """
     extension = extension.strip(".")
@@ -408,7 +408,7 @@ def compression_ext_from_compressed_archive(extension: str) -> Optional[str]:
 
 def strip_compression_extension(path_or_url: str, ext: Optional[str] = None) -> str:
     """Strips the compression extension from the input, and returns it. For instance,
-    "foo.tgz" becomes "foo.tar".
+    ``"foo.tgz"`` becomes ``"foo.tar"``.
 
     If no extension is given, try a default list of extensions.
 

@@ -71,12 +71,12 @@ def pkg_name_to_class_name(pkg_name: str):
 
     Not all package names are valid Python identifiers:
 
-    * They can contain '-', but cannot start with '-'.
-    * They can start with numbers, e.g. "3proxy".
+    * They can contain ``-``, but cannot start with ``-``.
+    * They can start with numbers, e.g. ``3proxy``.
 
-    This function converts from the package name to the class convention by removing _ and - and
-    converting surrounding lowercase text to CapWords.  If package name starts with a number, the
-    class name returned will be prepended with '_' to make a valid Python identifier.
+    This function converts from the package name to the class convention by removing ``_`` and
+    ``-``, and converting surrounding lowercase text to CapWords. If package name starts with a
+    number, the class name returned will be prepended with ``_`` to make a valid Python identifier.
     """
     class_name = re.sub(r"[-_]+", "-", pkg_name)
     class_name = string.capwords(class_name, "-")

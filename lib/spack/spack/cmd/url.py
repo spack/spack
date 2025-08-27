@@ -550,7 +550,7 @@ def remove_prefix(pkg_name):
 
 
 def remove_separators(version):
-    """Remove separator characters ('.', '_', and '-') from a version.
+    """Remove separator characters (``.``, ``_``, and ``-``) from a version.
 
     A version like 1.2.3 may be displayed as 1_2_3 in the URL.
     Make sure 1.2.3, 1-2-3, 1_2_3, and 123 are considered equal.

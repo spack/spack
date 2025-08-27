@@ -410,6 +410,7 @@ class StandardVersion(ConcreteVersion):
         """The dotted representation of the version.
 
         Example:
+
         >>> version = Version('1-2-3b')
         >>> version.dotted
         Version('1.2.3b')
@@ -424,9 +425,10 @@ class StandardVersion(ConcreteVersion):
         """The underscored representation of the version.
 
         Example:
-        >>> version = Version('1.2.3b')
+
+        >>> version = Version("1.2.3b")
         >>> version.underscored
-        Version('1_2_3b')
+        Version("1_2_3b")
 
         Returns:
             Version: The version with separator characters replaced by
@@ -439,9 +441,10 @@ class StandardVersion(ConcreteVersion):
         """The dashed representation of the version.
 
         Example:
-        >>> version = Version('1.2.3b')
+
+        >>> version = Version("1.2.3b")
         >>> version.dashed
-        Version('1-2-3b')
+        Version("1-2-3b")
 
         Returns:
             Version: The version with separator characters replaced by dashes
@@ -453,9 +456,10 @@ class StandardVersion(ConcreteVersion):
         """The joined representation of the version.
 
         Example:
-        >>> version = Version('1.2.3b')
+
+        >>> version = Version("1.2.3b")
         >>> version.joined
-        Version('123b')
+        Version("123b")
 
         Returns:
             Version: The version with separator characters removed
@@ -468,21 +472,22 @@ class StandardVersion(ConcreteVersion):
         """The version up to the specified component.
 
         Examples:
-        >>> version = Version('1.23-4b')
+
+        >>> version = Version("1.23-4b")
         >>> version.up_to(1)
-        Version('1')
+        Version("1")
         >>> version.up_to(2)
-        Version('1.23')
+        Version("1.23")
         >>> version.up_to(3)
-        Version('1.23-4')
+        Version("1.23-4")
         >>> version.up_to(4)
-        Version('1.23-4b')
+        Version("1.23-4b")
         >>> version.up_to(-1)
-        Version('1.23-4')
+        Version("1.23-4")
         >>> version.up_to(-2)
-        Version('1.23')
+        Version("1.23")
         >>> version.up_to(-3)
-        Version('1')
+        Version("1")
 
         Returns:
             Version: The first index components of the version
@@ -517,7 +522,7 @@ class GitVersion(ConcreteVersion):
 
     There are two distinct categories of git versions:
 
-    1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
+    1) GitVersions instantiated with an associated reference version (e.g. ``git.foo=1.2``)
     2) GitVersions requiring commit lookups
 
     Git ref versions that are not paired with a known version are handled separately from

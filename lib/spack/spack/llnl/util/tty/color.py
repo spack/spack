@@ -6,57 +6,57 @@
 This file implements an expression syntax, similar to ``printf``, for adding
 ANSI colors to text.
 
-See ``colorize()``, ``cwrite()``, and ``cprint()`` for routines that can
+See :func:`colorize`, :func:`cwrite`, and :func:`cprint` for routines that can
 generate colored output.
 
-``colorize`` will take a string and replace all color expressions with
+:func:`colorize` will take a string and replace all color expressions with
 ANSI control codes.  If the ``isatty`` keyword arg is set to False, then
 the color expressions will be converted to null strings, and the
 returned string will have no color.
 
-``cwrite`` and ``cprint`` are equivalent to ``write()`` and ``print()``
+:func:`cwrite` and :func:`cprint` are equivalent to ``write()`` and ``print()``
 calls in python, but they colorize their output.  If the ``stream`` argument is
 not supplied, they write to ``sys.stdout``.
 
 Here are some example color expressions:
 
-==========  ============================================================
-Expression  Meaning
-==========  ============================================================
-@r          Turn on red coloring
-@R          Turn on bright red coloring
-@*{foo}     Bold foo, but don't change text color
-@_{bar}     Underline bar, but don't change text color
-@*b         Turn on bold, blue text
-@_B         Turn on bright blue text with an underline
-@.          Revert to plain formatting
-@*g{green}  Print out 'green' in bold, green text, then reset to plain.
-@*ggreen@.  Print out 'green' in bold, green text, then reset to plain.
-==========  ============================================================
+==============  ============================================================
+Expression      Meaning
+==============  ============================================================
+``@r``          Turn on red coloring
+``@R``          Turn on bright red coloring
+``@*{foo}``     Bold foo, but don't change text color
+``@_{bar}``     Underline bar, but don't change text color
+``@*b``         Turn on bold, blue text
+``@_B``         Turn on bright blue text with an underline
+``@.``          Revert to plain formatting
+``@*g{green}``  Print out 'green' in bold, green text, then reset to plain.
+``@*ggreen@.``  Print out 'green' in bold, green text, then reset to plain.
+==============  ============================================================
 
 The syntax consists of:
 
-==========  =================================================
-color-expr  '@' [style] color-code '{' text '}' | '@.' | '@@'
-style       '*' | '_'
-color-code  [krgybmcwKRGYBMCW]
-text        .*
-==========  =================================================
+==========  =====================================================
+color-expr  ``'@' [style] color-code '{' text '}' | '@.' | '@@'``
+style       ``'*' | '_'``
+color-code  ``[krgybmcwKRGYBMCW]``
+text        ``.*``
+==========  =====================================================
 
-'@' indicates the start of a color expression.  It can be followed
-by an optional * or _ that indicates whether the font should be bold or
-underlined.  If * or _ is not provided, the text will be plain.  Then
-an optional color code is supplied.  This can be [krgybmcw] or [KRGYBMCW],
-where the letters map to  black(k), red(r), green(g), yellow(y), blue(b),
-magenta(m), cyan(c), and white(w).  Lowercase letters denote normal ANSI
+``@`` indicates the start of a color expression.  It can be followed
+by an optional ``*`` or ``_`` that indicates whether the font should be bold or
+underlined.  If ``*`` or ``_`` is not provided, the text will be plain.  Then
+an optional color code is supplied.  This can be ``[krgybmcw]`` or ``[KRGYBMCW]``,
+where the letters map to  ``black(k)``, ``red(r)``, ``green(g)``, ``yellow(y)``, ``blue(b)``,
+``magenta(m)``, ``cyan(c)``, and ``white(w)``.  Lowercase letters denote normal ANSI
 colors and capital letters denote bright ANSI colors.
 
-Finally, the color expression can be followed by text enclosed in {}.  If
+Finally, the color expression can be followed by text enclosed in ``{}``.  If
 braces are present, only the text in braces is colored.  If the braces are
 NOT present, then just the control codes to enable the color will be output.
-The console can be reset later to plain text with '@.'.
+The console can be reset later to plain text with ``@.``.
 
-To output an @, use '@@'.  To output a } inside braces, use '}}'.
+To output an ``@``, use ``@@``.  To output a ``}`` inside braces, use ``}}``.
 """
 import os
 import re
@@ -191,9 +191,9 @@ def get_color_when():
 def set_color_when(when):
     """Set when color should be applied.  Options are:
 
-    * True or 'always': always print color
-    * False or 'never': never print color
-    * None or 'auto': only print color if sys.stdout is a tty.
+    * True or ``"always"``: always print color
+    * False or ``"never"``: never print color
+    * None or ``"auto"``: only print color if sys.stdout is a tty.
     """
     global _force_color
     _force_color = _color_when_value(when)

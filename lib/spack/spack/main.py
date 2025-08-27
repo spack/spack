@@ -883,7 +883,7 @@ def add_command_line_scopes(
     command_line_scopes: List[Any],  # str or _ENV but mypy can't type sentinels
     add_environment: Callable[[ConfigScopePriority], None],
 ) -> None:
-    """Add additional scopes from the --config-scope argument, either envs or dirs.
+    """Add additional scopes from the ``--config-scope`` argument, either envs or dirs.
 
     Args:
         cfg: configuration instance

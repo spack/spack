@@ -14,7 +14,7 @@ The syntax looks like this:
     $ spack install mpileaks ^openmpi @1.2:1.4 +debug %intel @12.1 target=zen
                     0        1        2        3      4      5     6
 
-The first part of this is the command, 'spack install'.  The rest of the
+The first part of this is the command, ``spack install``.  The rest of the
 line is a spec for a particular installation of the mpileaks package.
 
 0. The package to install

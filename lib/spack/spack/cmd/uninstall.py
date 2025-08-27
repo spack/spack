@@ -209,7 +209,7 @@ def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Envi
     """Returns unordered uninstall_list and remove_list: these may overlap (some things
     may be both uninstalled and removed from the current environment).
 
-    It is assumed we are in an environment if --remove is specified (this
+    It is assumed we are in an environment if ``--remove`` is specified (this
     method raises an exception otherwise)."""
     if args.remove and not env:
         raise ValueError("Can only use --remove when in an environment")

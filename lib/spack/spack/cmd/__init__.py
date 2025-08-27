@@ -740,7 +740,7 @@ def group_arguments(
         max_group_size: max number of elements in any group (default 500)
         prefix_length: length of any additional arguments (including spaces) to be passed before
             the groups from args; default is 0 characters
-        max_group_length: max length of characters that if a group of args is joined by " "
+        max_group_length: max length of characters that if a group of args is joined by ``" "``
             On unix, ths defaults to SC_ARG_MAX from sysconf. On Windows the default is
             the max usable for CreateProcess (32,768 chars)
 

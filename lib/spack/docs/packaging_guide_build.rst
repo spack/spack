@@ -1285,7 +1285,7 @@ All it takes is some lines like this:
    env["F77"] = spec["mpi"].mpif77
    env["FC"] = spec["mpi"].mpifc
 
-Or, if you pass CC, CXX, etc. directly to your build with, e.g., `--with-cc=<path>`, you'll want to substitute `spec["mpi"].mpicc` in there instead, e.g.:
+Or, if you pass CC, CXX, etc. directly to your build with, e.g., ``--with-cc=<path>``, you'll want to substitute ``spec["mpi"].mpicc`` in there instead, e.g.:
 
 .. code-block:: python
 

@@ -1275,16 +1275,16 @@ def traverse_tree(
 
     When called on dest, this yields::
 
-        ('root',         'dest')
-        ('root/a',       'dest/a')
-        ('root/a/file1', 'dest/a/file1')
-        ('root/a/file2', 'dest/a/file2')
-        ('root/b',       'dest/b')
-        ('root/b/file3', 'dest/b/file3')
+        ("root",         "dest")
+        ("root/a",       "dest/a")
+        ("root/a/file1", "dest/a/file1")
+        ("root/a/file2", "dest/a/file2")
+        ("root/b",       "dest/b")
+        ("root/b/file3", "dest/b/file3")
 
     Keyword Arguments:
         order (str): Whether to do pre- or post-order traversal. Accepted
-            values are 'pre' and 'post'
+            values are ``"pre"`` and ``"post"``
         ignore (typing.Callable): function indicating which files to ignore. This will also
             ignore symlinks if they point to an ignored file (regardless of whether the symlink
             is explicitly ignored); note this only supports one layer of indirection (i.e. if

@@ -43,10 +43,10 @@ Here is the EBNF grammar for a spec::
     vid           = [a-zA-Z0-9_][a-zA-Z_0-9-.]*
     id            = [a-zA-Z0-9_][a-zA-Z_0-9-]*
 
-Identifiers using the <name>=<value> command, such as architectures and
+Identifiers using the ``<name>=<value>`` command, such as architectures and
 compiler flags, require a space before the name.
 
-There is one context-sensitive part: ids in versions may contain '.', while
+There is one context-sensitive part: ids in versions may contain ``.``, while
 other ids may not.
 
 There is one ambiguity: since ``-`` is allowed in an id, you need to put

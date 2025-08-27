@@ -1663,10 +1663,10 @@ class Environment:
         """Updates the path of the default view.
 
         If the argument passed as input is False the default view is deleted, if present. The
-        manifest will have an entry "view: false".
+        manifest will have an entry ``view: false``.
 
         If the argument passed as input is True a default view is created, if not already present.
-        The manifest will have an entry "view: true". If a default view is already declared, it
+        The manifest will have an entry ``view: true``. If a default view is already declared, it
         will be left untouched.
 
         If the argument passed as input is a path a default view pointing to that path is created,

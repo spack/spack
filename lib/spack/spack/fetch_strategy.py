@@ -17,7 +17,7 @@ in order to build it.  They need to define the following methods:
 * reset()
     Restore original state of downloaded code.  Used by clean commands.
     This may just remove the expanded source and re-expand an archive,
-    or it may run something like git reset --hard.
+    or it may run something like git reset ``--hard``.
 * archive()
     Archive a source directory, e.g. for creating a mirror.
 """

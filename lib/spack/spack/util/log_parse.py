@@ -64,7 +64,7 @@ def make_log_context(log_events, width=None):
         str: context from the build log with errors highlighted
 
     Parses the log file for lines containing errors, and prints them out
-    with line numbers and context.  Errors are highlighted with '>>' and
+    with line numbers and context.  Errors are highlighted with ``>>`` and
     with red highlighting (if color is enabled).
 
     Events are sorted by line number before they are displayed.

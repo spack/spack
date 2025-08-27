@@ -882,7 +882,7 @@ def uniq(sequence):
 
 def elide_list(line_list: List[str], max_num: int = 10) -> List[str]:
     """Takes a long list and limits it to a smaller number of elements,
-    replacing intervening elements with '...'.  For example::
+    replacing intervening elements with ``"..."``.  For example::
 
         elide_list(["1", "2", "3", "4", "5", "6"], 4)
 
