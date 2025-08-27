@@ -1056,7 +1056,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return False
 
     @classmethod
-    def _resolve_binary_provenance(cls, spec) -> None:
+    def _resolve_git_provenance(cls, spec) -> None:
         # early return cases, don't overwrite user intention
         # commit pre-assigned or develop specs don't need commits changed
         # since this would create un-necessary churn
@@ -1089,7 +1089,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         sha = None
 
         # construct a package instance to get fetch/staging together
-        pkg_instance = cls(spec)
+        pkg_instance = cls(spec.copy())
 
         try:
             pkg_instance.do_fetch(mirror_only=True)
@@ -1113,7 +1113,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Base implementation will look up git commits when appropriate.
         Packages may override this implementation for custom implementations
         """
-        self._resolve_binary_provenance(self.spec)
+        self._resolve_git_provenance(self.spec)
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
