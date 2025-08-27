@@ -78,7 +78,7 @@ The `branch`, `commit`, or `tag` to be checked out is required.
 A list of relative paths in which to find the configuration files is also required.
 Inclusion of the repository (and its paths) can be optional or conditional.
 
-For example, suppose we want to only include the configuration and packages files from the `spack/spack-configs <https://github.com/spack/spack-configs>`_ repository, specifically those from ``USC``.
+For example, suppose we only want to include the ``config.yaml`` and ``packages.yaml`` files from the `spack/spack-configs <https://github.com/spack/spack-configs>`_ repository's ``USC/config`` directory when using the ``centos7`` operating system.
 We would then configure the ``include.yaml`` file as follows:
 
 .. code-block:: yaml
@@ -86,8 +86,9 @@ We would then configure the ``include.yaml`` file as follows:
    include:
    - git: https://github.com/spack/spack-configs
      branch: main
+     when: os == "centos7"
      paths:
      - USC/config/config.yaml
      - USC/config/packages.yaml
 
-This would result in the ``main`` branch of the repository being cloned and the settings in the files integrated into Spack's configuration.
+If the condition is satisfied, then the ``main`` branch of the repository will be cloned and the settings for the two files integrated into Spack's configuration.
