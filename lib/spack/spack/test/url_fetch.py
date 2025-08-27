@@ -29,7 +29,7 @@ def missing_curl(monkeypatch):
     def _mock_call(*args, **kwargs):
         raise spack.error.FetchError("curl is required but not found")
 
-    monkeypatch.setattr(spack.util.downloader.CurlDownloader, "_curl_exe", None)
+    monkeypatch.setattr(spack.util.downloader.CurlStreamReader, "_curl_exe", None)
     monkeypatch.setattr(spack.util.downloader, "which_string", _mock_call)
     monkeypatch.setattr(web_util, "require_curl", _mock_call)
 

@@ -24,7 +24,6 @@ in order to build it.  They need to define the following methods:
 import copy
 import enum
 import hashlib
-import http.client
 import os
 import re
 import shutil
@@ -54,7 +53,13 @@ import spack.version.git_ref_lookup
 from spack.llnl.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
-from spack.util.downloader import CurlDownloader, Downloader, DownloadInfo, UrllibDownloader
+from spack.util.downloader import (
+    UrlReaderFactory,
+    create_download_info,
+    curl_stream_reader,
+    download_file,
+    urllib_stream_reader,
+)
 from spack.util.executable import CommandNotFoundError, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
@@ -284,24 +289,21 @@ class URLFetchStrategy(FetchStrategy):
         if fetch_options:
             self.timeout = fetch_options.get("timeout", self.timeout)
             self.cookie = fetch_options.get("cookie", None)
-
-        self._download_info = DownloadInfo(
-            url=url, effective_url=url, path="", headers=http.client.HTTPMessage()
-        )
+        self._download_info = create_download_info(url=url)
 
     @property
     def url(self) -> str:
-        return self._download_info.url
+        return self._download_info.request.url
 
     @property
     def _effective_url(self) -> str:
-        return self._download_info.effective_url
+        return self._download_info.request.effective_url
 
-    def _create_downloader(self) -> Downloader:
+    def _url_reader_factory(self) -> UrlReaderFactory:
         if self.fetch_method == FetchMethod.CURL:
-            return CurlDownloader(cookie=self.cookie, config_args=self.fetch_args)
+            return curl_stream_reader(cookie=self.cookie, config_args=self.fetch_args)
         else:
-            return UrllibDownloader()
+            return urllib_stream_reader()
 
     def source_id(self):
         return self.digest
@@ -340,11 +342,13 @@ class URLFetchStrategy(FetchStrategy):
 
     def _fetch_from_url(self, url: str) -> None:
         save_file = self.stage.save_filename
-        downloader = self._create_downloader()
         try:
             tty.msg(f"Fetching {url}")
-            self._download_info = downloader.download_file(
-                url=url, saved_file=save_file, timeout=self.timeout
+            self._download_info = download_file(
+                url=url,
+                destination=save_file,
+                timeout=self.timeout,
+                url_reader=self._url_reader_factory(),
             )
         except spack.error.FetchError as e:
             raise FailedDownloadError(e) from e
@@ -1308,8 +1312,8 @@ class S3FetchStrategy(URLFetchStrategy):
 
     url_attr = "s3"
 
-    def _create_downloader(self) -> Downloader:
-        return UrllibDownloader()
+    def _url_reader_factory(self) -> UrlReaderFactory:
+        return urllib_stream_reader()
 
     def fetch(self):
         if not self.url.startswith("s3://"):
@@ -1332,8 +1336,8 @@ class GCSFetchStrategy(URLFetchStrategy):
 
     url_attr = "gs"
 
-    def _create_downloader(self) -> Downloader:
-        return UrllibDownloader()
+    def _url_reader_factory(self) -> UrlReaderFactory:
+        return urllib_stream_reader()
 
     def fetch(self):
         if not self.url.startswith("gs"):
