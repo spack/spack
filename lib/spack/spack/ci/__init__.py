@@ -95,7 +95,7 @@ def get_change_revisions(path: str) -> Tuple[Optional[str], Optional[str]]:
 def filter_added_checksums(
     checksums: Iterable[str], path: str, from_ref: str = "HEAD~1", to_ref: str = "HEAD"
 ) -> List[str]:
-    """Get a list of the version checksums added between ``from_ref`` and ```to_ref``.
+    """Get a list of the version checksums added between ``from_ref`` and ``to_ref``.
 
     Args:
        checksums: an iterable of checksums to look for in the diff
