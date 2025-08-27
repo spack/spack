@@ -46,9 +46,9 @@ An individual Spack package repository is a directory structured as follows:
 
   .. code-block:: yaml
 
-    repo:
-      namespace: myrepo
-      api: v2.0
+     repo:
+       namespace: myrepo
+       api: v2.0
 
   It defines primarily:
 
@@ -114,8 +114,8 @@ Spack can clone and use repositories directly from Git URLs:
 
 .. code-block:: yaml
 
-  repos:
-    my_remote_repo: https://github.com/myorg/spack-custom-pkgs.git
+   repos:
+     my_remote_repo: https://github.com/myorg/spack-custom-pkgs.git
 
 Automatic Cloning
 """""""""""""""""
@@ -247,9 +247,9 @@ The default configuration in ``$spack/etc/spack/defaults/repos.yaml`` looks some
 
 .. code-block:: yaml
 
-  repos:
-    builtin:
-      git: https://github.com/spack/spack-packages.git
+   repos:
+     builtin:
+       git: https://github.com/spack/spack-packages.git
 
 .. _namespaces:
 
@@ -260,11 +260,11 @@ Every repository in Spack has an associated **namespace** defined in the ``names
 For example, the built-in repository (from ``spack/spack-packages``) has its namespace defined as ``builtin``:
 
 .. code-block:: yaml
+   :caption: ``repo.yaml`` of ``spack/spack-packages``
 
-  # In spack/spack-packages repository's repo.yaml
-  repo:
-    namespace: builtin
-    api: v2.0 # Or newer
+   repo:
+     namespace: builtin
+     api: v2.0 # Or newer
 
 Spack records the repository namespace of each installed package.
 For example, if you install the ``mpich`` package from the ``builtin`` repo, Spack records its fully qualified name as ``builtin.mpich``.
@@ -318,19 +318,19 @@ If you've installed both, ``spack find`` alone might be ambiguous:
 
 .. code-block:: console
 
-  $ spack find
-  ==> 2 installed packages.
-  -- linux-rhel6-x86_64 / gcc@4.4.7 -------------
-  mpich@3.2  mpich@3.2
+   $ spack find
+   ==> 2 installed packages.
+   -- linux-rhel6-x86_64 / gcc@4.4.7 -------------
+   mpich@3.2  mpich@3.2
 
 Using ``spack find -N`` displays packages with their namespaces:
 
 .. code-block:: console
 
-  $ spack find -N
-  ==> 2 installed packages.
-  -- linux-rhel6-x86_64 / gcc@4.4.7 -------------
-  builtin.mpich@3.2  llnl.comp.mpich@3.2
+   $ spack find -N
+   ==> 2 installed packages.
+   -- linux-rhel6-x86_64 / gcc@4.4.7 -------------
+   builtin.mpich@3.2  llnl.comp.mpich@3.2
 
 Now you can distinguish them.
 Packages differing only by namespace will have different hashes:
@@ -418,11 +418,11 @@ This command shows all repositories Spack currently knows about, including their
 
 .. code-block:: console
 
-  $ spack repo list
-  [+] my_local           v2.0    /path/to/spack_repo/my_local_packages
-  [+] comp_sci_packages  v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/comp_sci_packages
-  [+] physics_packages   v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/physics_packages  # From the same git repo
-  [+] builtin            v2.0    ~/.spack/package_repos/<hash 2>/repos/spack_repo/builtin
+   $ spack repo list
+   [+] my_local           v2.0    /path/to/spack_repo/my_local_packages
+   [+] comp_sci_packages  v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/comp_sci_packages
+   [+] physics_packages   v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/physics_packages  # From the same git repo
+   [+] builtin            v2.0    ~/.spack/package_repos/<hash 2>/repos/spack_repo/builtin
 
 Spack shows a green ``[+]`` next to each repository that is available for use.
 It shows a red ``[-]`` to indicate that package repositories cannot be used due to an error (e.g., unsupported API version, missing ``repo.yaml``, etc.).
@@ -450,10 +450,10 @@ To create the directory structure for a new, empty local repository:
 
 .. code-block:: console
 
-  $ spack repo create ~/my_spack_projects myorg.projectx
-  ==> Created repo with namespace 'myorg.projectx'.
-  ==> To register it with spack, run this command:
-    spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
+   $ spack repo create ~/my_spack_projects myorg.projectx
+   ==> Created repo with namespace 'myorg.projectx'.
+   ==> To register it with spack, run this command:
+     spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
 
 This command creates the following structure:
 
@@ -508,15 +508,15 @@ By configuration name (e.g., ``projectx`` from the add example):
 
 .. code-block:: console
 
-  $ spack repo remove projectx
-  ==> Removed repository 'projectx'.
+   $ spack repo remove projectx
+   ==> Removed repository 'projectx'.
 
 By path (for a local repo):
 
 .. code-block:: console
 
-  $ spack repo remove ~/my_spack_projects/spack_repo/myorg/projectx
-  ==> Removed repository '/home/user/my_spack_projects/spack_repo/myorg/projectx'.
+   $ spack repo remove ~/my_spack_projects/spack_repo/myorg/projectx
+   ==> Removed repository '/home/user/my_spack_projects/spack_repo/myorg/projectx'.
 
 This command removes the corresponding entry from your ``repos.yaml`` configuration.
 It does *not* delete the local repository files or any cloned Git repositories.
@@ -531,18 +531,18 @@ The ``<config_name>`` is the key used in your ``repos.yaml`` file for that Git r
 
 .. code-block:: console
 
-  $ spack repo set --destination /my/custom/path/for/spack-packages builtin
-  ==> Updated repo 'builtin'
+   $ spack repo set --destination /my/custom/path/for/spack-packages builtin
+   ==> Updated repo 'builtin'
 
 This updates your user-level ``repos.yaml``, adding or modifying the ``destination:`` key for the specified repository configuration name.
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml`` after ``spack repo set``
 
-  # ~/.spack/repos.yaml after the command
-  repos:
-    builtin:
-      destination: /my/custom/path/for/spack-packages
-      # The 'git:' URL is typically inherited from Spack's default configuration for 'builtin'
+   repos:
+     builtin:
+       destination: /my/custom/path/for/spack-packages
+       # The 'git:' URL is typically inherited from Spack's default configuration for 'builtin'
 
 Spack will then use ``/my/custom/path/for/spack-packages`` for the ``builtin`` repository.
 If the directory doesn't exist, Spack will clone into it.
