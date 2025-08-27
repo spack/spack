@@ -57,8 +57,8 @@ class UrlStreamReader:
     def __enter__(self) -> "UrlStreamReader":
         raise NotImplementedError
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
-        raise NotImplementedError
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
     def read(self, size: int) -> bytes:
         """Reads and returns a chunk of the response body."""
@@ -75,17 +75,10 @@ class UrllibStreamReader(UrlStreamReader):
     def __enter__(self) -> UrlStreamReader:
         request = urllib.request.Request(self.url, headers={"User-Agent": SPACK_USER_AGENT})
         self._response = urlopen(request, timeout=self.timeout)
-        self._progress = FetchProgress.from_headers(
-            self._response.headers, enabled=sys.stdout.isatty()
-        )
         return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._progress.print(final=True)
 
     def read(self, size: int) -> bytes:
         chunk = self._response.read(size)
-        self._progress.advance(len(chunk))
         return chunk
 
     def request_info(self) -> RequestInfo:
@@ -137,8 +130,8 @@ class CurlStreamReader(UrlStreamReader):
         )
         headers_parts = []
 
+        assert self._curl_process.stderr is not None, "curl process stderr is None"
         while True:
-            assert self._curl_process.stderr is not None, "curl process stderr is None"
             line = self._curl_process.stderr.readline().decode("utf-8")
             if line.strip() == "":
                 break
@@ -163,19 +156,14 @@ class CurlStreamReader(UrlStreamReader):
                 headers[key.strip()] = value.strip()
 
         self._headers = headers
-        self._progress = FetchProgress.from_headers(self._headers, enabled=sys.stdout.isatty())
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._progress.print(final=True)
         self._curl_process.wait()
         check_curl_code(self._curl_process.returncode)
 
     def read(self, size: int) -> bytes:
-        assert self._curl_process.stdout is not None, "curl process stdout is None"
-        chunk = self._curl_process.stdout.read(size)
-        self._progress.advance(len(chunk))
-        return chunk
+        return self._curl_process.stdout.read(size)  # type: ignore
 
     def request_info(self) -> RequestInfo:
         return RequestInfo(url=self.url, effective_url=self.url, headers=self._headers)
@@ -307,15 +295,18 @@ def download_file(
     if url_reader is None:
         url_reader = urllib_stream_reader()
 
-    with url_reader(url, timeout) as s:
-        partial_file = destination + ".part"
-        with open(partial_file, "wb") as f:
-            while True:
-                chunk = s.read(size=chunk_size)
-                if not chunk:
-                    break
-                f.write(chunk)
+    partial_file = destination + ".part"
+    with url_reader(url, timeout) as s, open(partial_file, "wb") as f:
         request_info = s.request_info()
+        progress = FetchProgress.from_headers(request_info.headers, enabled=sys.stdout.isatty())
+        while True:
+            chunk = s.read(size=chunk_size)
+            if not chunk:
+                break
+            f.write(chunk)
+            progress.advance(len(chunk))
+        progress.print(final=True)
+
     fs.rename(partial_file, destination)
     return DownloadInfo(request=request_info, path=destination)
 
