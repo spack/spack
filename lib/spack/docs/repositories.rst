@@ -100,10 +100,10 @@ Local Repositories (Path-based)
 You can point Spack to a repository on your local filesystem:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
 
-  # Example: ~/.spack/repos.yaml
-  repos:
-    my_local_packages: /path/to/my_repository_root
+   repos:
+     my_local_packages: /path/to/my_repository_root
 
 Here, ``/path/to/my_repository_root`` should be the directory containing that repository's ``repo.yaml`` and ``packages/`` subdirectory.
 
@@ -117,7 +117,9 @@ Spack can clone and use repositories directly from Git URLs:
   repos:
     my_remote_repo: https://github.com/myorg/spack-custom-pkgs.git
 
-**Automatic Cloning.**
+Automatic Cloning
+"""""""""""""""""
+
 When Spack first encounters a Git-based repository configuration, it automatically clones it.
 By default, these repositories are cloned into a subdirectory within ``~/.spack/package_repos/``, named with a hash of the repository URL.
 
@@ -125,7 +127,9 @@ To change directories to the package repository, you can use ``spack cd --repo [
 To find where a repository is cloned, you can use ``spack location --repo [name]`` or ``spack repo list``.
 The ``name`` argument is optional; if omitted, Spack will use the first package repository in configuration order.
 
-**Customizing Clone Location.**
+Customizing Clone Location
+""""""""""""""""""""""""""
+
 The default clone location (``~/.spack/package_repos/<hashed_name>``) might not be convenient for package maintainers who want to make changes to packages.
 You can specify a custom local directory for Spack to clone a Git repository into, or to use if the repository is already cloned there.
 This is done using the ``destination`` key in ``repos.yaml`` or via the ``spack repo set --destination`` command (see :ref:`cmd-spack-repo-set-destination`).
@@ -133,29 +137,31 @@ This is done using the ``destination`` key in ``repos.yaml`` or via the ``spack 
 For example, to use ``~/custom_packages_clone`` for ``my_remote_repo``:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
 
-  # ~/.spack/repos.yaml
-  repos:
-    my_remote_repo:
-      git: https://github.com/myorg/spack-custom-pkgs.git
-      destination: ~/custom_packages_clone
+   repos:
+     my_remote_repo:
+       git: https://github.com/myorg/spack-custom-pkgs.git
+       destination: ~/custom_packages_clone
 
 If the ``git`` URL is defined in a lower-precedence configuration (like Spack's defaults for ``builtin``), you only need to specify the ``destination`` in your user-level ``repos.yaml``.
 Spack can make the configuration changes for you using ``spack repo set --destination ~/spack-packages builtin``, or you can directly edit your ``repos.yaml`` file:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
 
-  # ~/.spack/repos.yaml
-  repos:
-    builtin:
-      destination: ~/spack-packages
+   repos:
+     builtin:
+       destination: ~/spack-packages
 
-**Updating and pinning.**
+Updating and pinning
+""""""""""""""""""""
+
 Repos can be pinned to a git branch, tag, or commit.
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
 
-   # ~/.spack/repos.yaml
    repos:
      builtin:
        branch: releases/v2025.07
@@ -166,7 +172,9 @@ The ``spack repo update`` command will update the repo on disk to match the curr
 If the repo is pinned to a commit or tag, it will ensure the repo on disk reflects that commit or tag.
 If the repo is pinned to a branch or unpinned, ``spack repo update`` will pull the most recent state of the branch (the default branch if unpinned).
 
-**Git repositories need a package repo index.**
+Git repositories need a package repo index
+""""""""""""""""""""""""""""""""""""""""""
+
 A single Git repository can contain one or more Spack package repositories.
 To enable Spack to discover these, the root of the Git repository should contain a ``spack-repo-index.yaml`` file.
 This file lists the relative paths to package repository roots within the git repo.
@@ -197,20 +205,20 @@ For example, assume a Git repository at ``https://example.com/my_org/my_pkgs.git
 The ``spack-repo-index.yaml`` in the root of ``https://example.com/my_org/my_pkgs.git`` should look like this:
 
 .. code-block:: yaml
+   :caption: ``my_pkgs.git/spack-repo-index.yaml``
 
-  # my_pkgs.git/spack-repo-index.yaml
-  repo_index:
-    paths:
-    - spack_pkgs/spack_repo/my_org/comp_sci_packages
-    - spack_pkgs/spack_repo/my_org/physics_packages
+   repo_index:
+     paths:
+     - spack_pkgs/spack_repo/my_org/comp_sci_packages
+     - spack_pkgs/spack_repo/my_org/physics_packages
 
 If ``my_pkgs.git`` is configured in ``repos.yaml`` as follows:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
 
-  # ~/.spack/repos.yaml
-  repos:
-    example_mono_repo: https://example.com/my_org/my_pkgs.git
+   repos:
+     example_mono_repo: https://example.com/my_org/my_pkgs.git
 
 Spack will clone ``my_pkgs.git`` and look for ``spack-repo-index.yaml``.
 It will then register two separate repositories based on the paths found (e.g., ``<clone_dir>/spack_pkgs/spack_repo/my_org/comp_sci_packages`` and ``<clone_dir>/spack_pkgs/spack_repo/my_org/physics_packages``), each with its own namespace defined in its respective ``repo.yaml`` file.
@@ -220,8 +228,8 @@ If you want only one of the package repositories from a Git mono-repo, you can o
 For example, if you only want the computer science packages:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
 
-   # ~/.spack/repos.yaml
    repos:
      example_mono_repo:
        git: https://example.com/my_org/my_pkgs.git
