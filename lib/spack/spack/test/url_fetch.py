@@ -17,7 +17,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.url
 import spack.util.crypto as crypto
-import spack.util.downloader
+import spack.util.download
 import spack.util.web as web_util
 import spack.version
 from spack.llnl.util.filesystem import is_exe, working_dir
@@ -29,8 +29,8 @@ def missing_curl(monkeypatch):
     def _mock_call(*args, **kwargs):
         raise spack.error.FetchError("curl is required but not found")
 
-    monkeypatch.setattr(spack.util.downloader.CurlStreamReader, "_curl_exe", None)
-    monkeypatch.setattr(spack.util.downloader, "which_string", _mock_call)
+    monkeypatch.setattr(spack.util.download.CurlStreamReader, "_curl_exe", None)
+    monkeypatch.setattr(spack.util.download, "which_string", _mock_call)
     monkeypatch.setattr(web_util, "require_curl", _mock_call)
 
 

@@ -53,7 +53,7 @@ import spack.version.git_ref_lookup
 from spack.llnl.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
-from spack.util.downloader import (
+from spack.util.download import (
     UrlReaderFactory,
     create_download_info,
     curl_stream_reader,
