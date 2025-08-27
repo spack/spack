@@ -16,7 +16,7 @@ Spack allows you to include configuration files through ``include.yaml``.
 Using the ``include:`` heading results in pulling in external configuration information to be used by any Spack command.
 Paths to configuration files may reside on the local file system, be a URL to a remote file, or be paths associated with a ``git`` repository.
 
-Included configuration files are required *unless* they are explicitly optional or the entry's condition evaluates to ``false``.
+Included configuration files are required *unless* they are explicitly optional or the entry's condition evaluates to ``False``.
 Optional includes are specified with the ``optional`` clause and conditional ones with the ``when`` clause.
 
 .. hint::
