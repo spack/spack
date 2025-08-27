@@ -173,9 +173,9 @@ def remove(name, scope):
 
 class MirrorStatsForOneSpec:
     def __init__(self, spec):
-        self.present = {}
-        self.new = {}
-        self.errors = set()
+        self.present = Counter()
+        self.new = Counter()
+        self.errors = Counter()
         self.spec = spec
         self.added_resources = set()
         self.existing_resources = set()
@@ -199,51 +199,40 @@ class MirrorStatsForOneSpec:
         self.added_resources.add(resource)
 
     def error(self):
-        if self.current_spec:
-            self.errors.add(self.current_spec)
+        if self.spec:
+            self.errors.add(self.spec)
 
     def stats(self):
         self.finalize()
         # Convert dictionaries to lists
-        present_list = []
-        for spec, count in self.present.items():
-            present_list.extend([spec] * count)
+        present_list = list(self.present.elements())
+        new_list = list(self.new.elements())
+        errors_list = list(self.errors.elements())
 
-        new_list = []
-        for spec, count in self.new.items():
-            new_list.extend([spec] * count)
+        return present_list, new_list, errors_list
 
 
 class MirrorStatsForAllSpecs:
     def __init__(self):
-        self.present = {}
-        self.new = {}
-        self.errors = set()
+        self.present = Counter()
+        self.new = Counter()
+        self.errors = Counter()
 
     def merge(self, ext_mirror_stat: MirrorStatsForOneSpec):
         # For the sake of parallelism we need a way to reduce/merge different
         # MirrorStats objects.
         ext_mirror_stat.finalize()
-        for spec, count in ext_mirror_stat.present.items():
-            self.present.setdefault(spec, 0)
-            self.present[spec] += count
-
-        for spec, count in ext_mirror_stat.new.items():
-            self.new.setdefault(spec, 0)
-            self.new[spec] += count
-
+        self.present.update(ext_mirror_stat.present)
+        self.new.update(ext_mirror_stat.new)
         self.errors.update(ext_mirror_stat.errors)
 
     def stats(self):
         # Convert dictionary to list
-        present_list = []
-        new_list = []
-        for spec, count in self.present.items():
-            present_list.extend([spec] * count)
-        for spec, count in self.new.items():
-            new_list.extend([spec] * count)
+        present_list = list(self.present.elements())
+        new_list = list(self.new.elements())
+        errors_list = list(self.errors.elements())
 
-        return present_list, new_list, list(self.errors)
+        return present_list, new_list, errors_list
 
 
 def create_mirror_from_package_object(

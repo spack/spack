@@ -249,7 +249,7 @@ mpich@1.0
 
     args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=str(exclude_path))
 
-    mirror_specs = spack.cmd.mirror(args)
+    mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
     expected_include = set(
         spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
     )
