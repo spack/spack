@@ -200,16 +200,7 @@ class MirrorStatsForOneSpec:
 
     def error(self):
         if self.spec:
-            self.errors.add(self.spec)
-
-    def stats(self):
-        self.finalize()
-        # Convert dictionaries to lists
-        present_list = list(self.present.elements())
-        new_list = list(self.new.elements())
-        errors_list = list(self.errors.elements())
-
-        return present_list, new_list, errors_list
+            self.errors[self.spec] += 1
 
 
 class MirrorStatsForAllSpecs:
