@@ -577,7 +577,7 @@ This includes ``repro.json``, copies of all of the files in ``concrete_environme
 The ``repro.json`` file is not versioned and is only designed to work with the version that Spack CI was run with.
 An example of what a ``repro.json`` may look like is here.
 
-.. code:: json
+.. code-block:: json
 
   {
     "job_name": "adios2@2.9.2 /feaevuj %gcc@11.4.0 arch=linux-ubuntu20.04-x86_64_v3 E4S ROCm External",

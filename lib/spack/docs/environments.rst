@@ -1068,7 +1068,7 @@ This comes up when you want to install an environment that provides executables 
 
 The example below shows how to accomplish this: the ``env`` target specifies the generated ``spack/env`` target as a prerequisite, meaning that the environment gets installed and is available for use in the ``env`` target.
 
-.. code:: Makefile
+.. code-block:: Makefile
 
    SPACK ?= spack
 
@@ -1143,7 +1143,7 @@ They are respectively the spec hash (excluding leading ``/``), and a human-reada
 Finally, we have an entry point target ``push`` that will update the buildcache index once every package is pushed.
 Note how this target uses the generated ``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
 
-.. code:: Makefile
+.. code-block:: Makefile
 
    SPACK ?= spack
    BUILDCACHE_DIR = $(CURDIR)/tarballs
