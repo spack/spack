@@ -5,7 +5,7 @@
 """
 This module encapsulates make jobserver functionality.
 
-If a jobserver is enabled, make jobs will be dyamically allocated
+If a jobserver is enabled, make and/or ninja jobs will be dyamically allocated
 to package builds during the installation process.
 """
 
@@ -17,6 +17,7 @@ from enum import IntEnum
 from typing import Dict, List, Optional, Tuple, Type
 
 import spack.config
+import spack.llnl.util.tty as tty
 
 
 class JobserverType(IntEnum):
@@ -30,7 +31,7 @@ class JobserverType(IntEnum):
     DISABLE = 2
 
 
-def package_type(pkg):
+def package_type(pkg) -> JobserverType:
     """Identify the appropriate jobserver type for packages in build."""
     if pkg.spec.satisfies("gmake@4.4:") or pkg.spec.satisfies("ninja@1.13.0:"):
         return JobserverType.FIFO
@@ -52,23 +53,31 @@ class Jobserver:
             return NoopJobserver
         js_types = [package_type(pkg) for pkg in packages]
         js_type = max(js_types)
+        if js_type == JobserverType.DISABLE:
+            tty.debug(
+                "FIFO-based jobserver has been disabled, the version of the build tool being used "
+                "(pre-gmake@4.4 or pre-ninja@1.13.0) does not support it."
+            )
         js_class = jobserver_class_table[js_type]
         return js_class
 
-    def enable(self):
+    def enable(self) -> Optional[Tuple[Optional[str], Optional[int]]]:
         """Enable the specified type of jobserver."""
         raise NotImplementedError
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up and close the specified type of jobserver."""
         raise NotImplementedError
 
 
 class NoopJobserver(Jobserver):
-    def enable(self):
+    """Class for jobserver builds that either does not change the functionality of
+    how the jobserver is set up OR disables FIFO functionality of the jobserver."""
+
+    def enable(self) -> None:
         return None
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         return None
 
 
@@ -78,9 +87,10 @@ class FifoJobserver(Jobserver):
 
     def __init__(self):
         """Initialize FIFO jobserver attributes to None."""
-        self.fifo_directory = None
-        self.fifo_read_fd = None
-        self.fifo_write_fd = None
+        self.fifo_directory: Optional[str] = None
+        self.fifo_path: Optional[str] = None
+        self.fifo_read_fd: Optional[int] = None
+        self.fifo_write_fd: Optional[int] = None
 
     def enable(self) -> Tuple[Optional[str], Optional[int]]:
         """Setup and enable FIFO implementation of make jobserver."""
@@ -93,24 +103,28 @@ class FifoJobserver(Jobserver):
         if sys.platform != "win32":
             # create a named FIFO pipe for make jobserver
             self.fifo_directory = tempfile.mkdtemp(prefix="jobserver_fifo")
-            fifo_path = os.path.join(self.fifo_directory, "jobserver")
+            self.fifo_path = os.path.join(self.fifo_directory, "jobserver")
 
             # create the FIFO
-            os.mkfifo(fifo_path)
+            os.mkfifo(self.fifo_path)
 
             # determine number of tokens for FIFO by -j value
-            num_jobs = spack.config.determine_number_of_jobs(parallel=True)
-            js_tokens = b"+" * num_jobs
+            self.num_jobs = spack.config.determine_number_of_jobs(parallel=True)
+            js_tokens = b"+" * self.num_jobs
 
             # open the FIFO for both reading and writing
-            self.fifo_read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
-            self.fifo_write_fd = os.open(fifo_path, os.O_WRONLY | os.O_NONBLOCK)
+            self.fifo_read_fd = os.open(self.fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+            self.fifo_write_fd = os.open(self.fifo_path, os.O_WRONLY | os.O_NONBLOCK)
 
             # initialize FIFO with job tokens
             os.write(self.fifo_write_fd, js_tokens)
 
             # set MAKEFLAGS environment variable for make jobserver
-            os.environ["MAKEFLAGS"] = f"--jobserver-auth=fifo:{fifo_path} -j {num_jobs}"
+            os.environ["MAKEFLAGS"] = f"--jobserver-auth=fifo:{self.fifo_path} -j {self.num_jobs}"
+
+            tty.debug(
+                f"Initialized FIFO-based jobserver at {self.fifo_path} with {self.num_jobs} jobs."
+            )
 
             return self.fifo_directory, self.fifo_write_fd
         return None, None
