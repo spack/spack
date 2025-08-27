@@ -20,9 +20,11 @@ jobs:
             This issue has been automatically marked as stale because it has not had any activity in the last 6 months.
             It will be closed in 30 days if there is no further activity.
             
+            
             If the issue is waiting for a reply from maintainers, feel free to ping them as a reminder.
             If it is waiting and has no comments yet, feel free to ping `@spack/spack-releasers` or simply leave a comment saying this should not be marked stale.
             This will also reset the issue's stale state.
+            
             
             Thank you for your contributions!
           close-issue-message: >
@@ -37,9 +39,11 @@ jobs:
             This pull request has been automatically marked as stale because it has not had any activity in the last 6 months. 
             It will be closed in 30 days if there is no further activity.
             
+            
             If the pull request is waiting for a reply from reviewers, feel free to ping them as a reminder.
             If it is waiting and has no assigned reviewer, feel free to ping `@spack/spack-releasers` or simply leave a comment saying this should not be marked stale.
             This will reset the pull request's stale state.
+            
             
             To get more eyes on your pull request, you can post a link in the #pull-requests channel of the Spack Slack.
             
