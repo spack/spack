@@ -14,7 +14,7 @@ Cuda
 Different from other packages, ``CudaPackage`` does not represent a build system.
 Instead its goal is to simplify and unify usage of ``CUDA`` in other packages by providing a `mixin-class <https://en.wikipedia.org/wiki/Mixin>`_.
 
-You can find source for the package at `<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/cuda.py>`__.
+You can find source for the package at `<https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/build_systems/cuda.py>`__.
 
 Variants
 ^^^^^^^^
@@ -31,8 +31,8 @@ This package provides the following variants:
   This variant supports the optional specification of one or more architectures.
   Valid values are maintained in the ``cuda_arch_values`` property and are the numeric character equivalent of the compute capability version (e.g., '10' for version 1.0).
   Each provided value affects associated ``CUDA`` dependencies and compiler conflicts.
-  
-  The variant builds both PTX code for the _virtual_ architecture (e.g. ``compute_10``) and binary code for the _real_ architecture (e.g. ``sm_10``).
+
+  The variant builds both PTX code for the *virtual* architecture (e.g. ``compute_10``) and binary code for the *real* architecture (e.g. ``sm_10``).
 
   GPUs and their compute capability versions are listed at https://developer.nvidia.com/cuda-gpus.
 

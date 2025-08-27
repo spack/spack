@@ -448,7 +448,7 @@ The most straightforward way to add new versions to your package is to add a lin
 Notice how you only have to specify the URL once, in the ``url`` field.
 Spack is smart enough to extrapolate the URL for each version based on the version number and download version ``8.2.0`` of the ``Foo`` package above from ``http://example.com/foo-8.2.0.tar.gz``.
 
-If the URL is particularly complicated or changes based on the release, you can override the default URL generation algorithm by defining your own ``url_for_version()`` function.
+If the URL is particularly complicated or changes based on the release, you can override the default URL generation algorithm by defining your own :py:meth:`~spack.package.PackageBase.url_for_version` function.
 For example, the download URL for OpenMPI contains the ``major.minor`` version in one spot and the ``major.minor.patch`` version in another:
 
 .. code-block:: text
@@ -460,7 +460,17 @@ In order to handle this, you can define a ``url_for_version()`` function like so
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.url_for_version
 
-With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.1.1`` from http://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2 but download OpenMPI ``1.10.7`` from http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.7.tar.bz2.
+With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.1.1`` from
+
+.. code-block:: text
+
+   http://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
+
+but download OpenMPI ``1.10.7`` from
+
+.. code-block:: text
+
+   http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.7.tar.bz2
 
 You'll notice that OpenMPI's ``url_for_version()`` function makes use of a special ``Version`` function called ``up_to()``.
 When you call ``version.up_to(2)`` on a version like ``1.10.0``, it returns ``1.10``.
@@ -650,6 +660,8 @@ By default, Spack only looks at the top-level page available at ``list_url``.
 Note that here, this implies 1 level of subdirectories, as the ``mpich`` website is structured much like a filesystem.
 But ``list_depth`` really refers to link depth when spidering the page.
 
+.. _mirrors-of-the-main-url:
+
 Mirrors of the main URL
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -803,7 +815,7 @@ Fetching from code repositories
 
 For some packages, source code is provided in a Version Control System (VCS) repository rather than in a tarball.
 Spack can fetch packages from VCS repositories.
-Currently, Spack supports fetching with `Git <git-fetch_>`_, `Mercurial (hg) <hg-fetch_>`_, `Subversion (svn) <svn-fetch_>`_, and `CVS (cvs) <cvs-fetch_>`_.
+Currently, Spack supports fetching with :ref:`Git <git-fetch>`, :ref:`Mercurial (hg) <hg-fetch>`, :ref:`Subversion (svn) <svn-fetch>`, and :ref:`CVS (cvs) <cvs-fetch>`.
 In all cases, the destination is the standard stage source path.
 
 To fetch a package from a source repository, Spack needs to know which VCS to use and where to download from.
@@ -1093,7 +1105,7 @@ Alternatively, you could provide the GitHub ``url`` for one version as a propert
 Mercurial
 """""""""
 
-Fetching with Mercurial works much like `Git <git-fetch>`_, but you use the ``hg`` parameter.
+Fetching with Mercurial works much like :ref:`Git <git-fetch>`, but you use the ``hg`` parameter.
 The destination directory is still the standard stage source path.
 
 .. _hg-default-branch:

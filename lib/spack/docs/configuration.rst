@@ -30,7 +30,7 @@ YAML Format
 
 Spack configuration files are written in YAML.
 We chose YAML because it's human-readable but also versatile in that it supports dictionaries, lists, and nested sections.
-For more details on the format, see `yaml.org <http://yaml.org>`_ and `libyaml <http://pyyaml.org/wiki/LibYAML>`_.
+For more details on the format, see `yaml.org <https://yaml.org>`_.
 Here is an example ``config.yaml`` file:
 
 .. code-block:: yaml

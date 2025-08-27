@@ -1150,9 +1150,9 @@ class GitFetchStrategy(VCSFetchStrategy):
             self.git(*clean_args)
 
     def protocol_supports_shallow_clone(self):
-        """Shallow clone operations (--depth #) are not supported by the basic
+        """Shallow clone operations (``--depth #``) are not supported by the basic
         HTTP protocol or by no-protocol file specifications.
-        Use (e.g.) https:// or file:// instead."""
+        Use (e.g.) ``https://`` or ``file://`` instead."""
         return not (self.url.startswith("http://") or self.url.startswith("/"))
 
     def __str__(self):

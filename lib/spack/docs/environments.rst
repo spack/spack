@@ -716,6 +716,8 @@ The following two environment manifests are identical:
 
 Spec matrices can be used to install swaths of software across various toolchains.
 
+.. _spec-list-references:
+
 Spec List References
 ^^^^^^^^^^^^^^^^^^^^
 

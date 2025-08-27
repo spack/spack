@@ -43,7 +43,7 @@ Conflicts are used to prevent builds with known bugs or issues.
 This package already requires that the ``amdgpu_target`` always be specified for ROCm builds.
 It also defines a conflict that prevents builds with an ``amdgpu_target`` when ``rocm`` is disabled.
 
-Refer to `Conflicts <https://spack.readthedocs.io/en/latest/packaging_guide.html?highlight=conflicts#conflicts>`__ for more information on package conflicts.
+Refer to :ref:`packaging_conflicts` for more information on package conflicts.
 
 Methods
 ^^^^^^^

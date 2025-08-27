@@ -26,7 +26,7 @@ The ``view`` can be built and tore down via a number of methods (the "actions"):
   hardlink view.
 
 The file system view concept is inspired by Nix, implemented by
-brett.viren@gmail.com ca 2016.
+Brett Viren ca 2016.
 
 All operations on views are performed via proxy objects such as
 YamlFilesystemView.

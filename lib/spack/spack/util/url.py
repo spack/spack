@@ -27,7 +27,7 @@ def validate_scheme(scheme):
 def local_file_path(url):
     """Get a local file path from a url.
 
-    If url is a file:// URL, return the absolute path to the local
+    If url is a ``file://`` URL, return the absolute path to the local
     file or directory referenced by it.  Otherwise, return None.
     """
     if isinstance(url, str):

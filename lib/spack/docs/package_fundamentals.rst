@@ -624,7 +624,7 @@ This will output metadata on specs and all dependencies as JSON:
      ...
     ]
 
-You can use this with tools like `jq <https://stedolan.github.io/jq/>`_ to quickly create JSON records structured the way you want:
+You can use this with tools like `jq <https://jqlang.org/>`_ to quickly create JSON records structured the way you want:
 
 .. code-block:: console
 

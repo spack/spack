@@ -214,7 +214,7 @@ These are potentially needed to verify dependent packages which may have been fo
 Procedurally the ``spack-intermediate-ci-signing-key`` secret is used in the following way:
 
 1. A ``large-arm-prot`` or ``large-x86-prot`` protected runner picks up a job tagged ``protected`` from a protected GitLab branch.
-   (See `Protected Runners and Reserved Tags <#_8bawjmgykv0b>`__).
+   (See :ref:`protected_runners`).
 2. Based on its configuration, the runner creates a job Pod in the pipeline namespace and mounts the spack-intermediate-ci-signing-key Kubernetes secret into the build container
 3. The Intermediate CI Key, affiliated institutions' public key and the Reputational Public Key are imported into a keyring by the ``spack gpg ...`` sub-command.
    This is initiated by the job's build script which is created by the generate job at the beginning of the pipeline.
@@ -241,7 +241,7 @@ This is done *before* importing decrypting and importing the Signing Reputationa
 
 Procedurally the ``spack-signing-key-encrypted`` secret is used in the following way:
 
-1.  The ``spack-package-signing-gitlab-runner`` protected runner picks up a job tagged ``notary`` from a protected GitLab branch (See `Protected Runners and Reserved Tags <#_8bawjmgykv0b>`__).
+1.  The ``spack-package-signing-gitlab-runner`` protected runner picks up a job tagged ``notary`` from a protected GitLab branch (See :ref:`protected_runners`).
 2.  Based on its configuration, the runner creates a job pod in the pipeline namespace.
     The job is run in a stripped down purpose-built image ``ghcr.io/spack/notary:latest`` Docker image.
     The runner is configured to only allow running jobs with this image.

@@ -32,7 +32,7 @@ The first entry, ``/path/to/a/required/config.yaml``, indicates that the include
 Use of ``optional: true`` for ``/path/to/$os/$target/config`` means the path is only included if it exists.
 The condition ``os == "ventura"`` in the ``when`` clause for ``/path/to/os-specific/config-dir`` means the path is only included when the operating system (``os``) is ``ventura``.
 
-The same conditions and variables in `Spec List References <https://spack.readthedocs.io/en/latest/environments.html#spec-list-references>`_ can be used for conditional activation in the ``when`` clauses.
+The same conditions and variables in :ref:`Spec List References <spec-list-references>` can be used for conditional activation in the ``when`` clauses.
 
 Included files can be specified by path or by their parent directory.
 Paths may be absolute, relative to the including configuration file, or specified as URLs.
