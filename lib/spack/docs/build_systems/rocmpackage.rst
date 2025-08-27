@@ -62,7 +62,7 @@ This helper package can be added to your package by adding it as a base class of
 For example, you can add it to your :ref:`CMakePackage <cmakepackage>`-based package as follows:
 
 .. code-block:: python
-   :emphasize-lines: 1,3-7,14-25
+   :emphasize-lines: 1,3-6,13-21
 
    class MyRocmPackage(CMakePackage, ROCmPackage):
        ...

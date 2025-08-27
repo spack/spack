@@ -645,7 +645,7 @@ If a package does not build properly in parallel, you can simply define ``parall
 For example:
 
 .. code-block:: python
-   :emphasize-lines: 3
+   :emphasize-lines: 4
 
    class ExamplePackage(MakefilePackage):
        """Example package that does not build in parallel."""
