@@ -1462,3 +1462,7 @@ def test_included_path_git_missing_arg():
     entry = {"git": "https://example.com/windows/configs.git", "paths": ["config.yaml"]}
     with pytest.raises(spack.error.ConfigError, match="specify one or more"):
         spack.config.included_path(entry)
+
+def test_included_optional_include_scopes():
+    with pytest.raises(NotImplementedError):
+        spack.config.OptionalInclude({}).scopes(spack.config.ConfigScope("fail"))
