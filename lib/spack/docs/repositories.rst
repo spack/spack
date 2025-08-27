@@ -101,6 +101,7 @@ You can point Spack to a repository on your local filesystem:
 
 .. code-block:: yaml
    :caption: ``~/.spack/repos.yaml``
+   :name: code-example-local-repo
 
    repos:
      my_local_packages: /path/to/my_repository_root
@@ -138,6 +139,7 @@ For example, to use ``~/custom_packages_clone`` for ``my_remote_repo``:
 
 .. code-block:: yaml
    :caption: ``~/.spack/repos.yaml``
+   :name: code-example-location
 
    repos:
      my_remote_repo:
@@ -149,6 +151,7 @@ Spack can make the configuration changes for you using ``spack repo set --destin
 
 .. code-block:: yaml
    :caption: ``~/.spack/repos.yaml``
+   :name: code-example-builtin
 
    repos:
      builtin:
@@ -161,6 +164,7 @@ Repos can be pinned to a git branch, tag, or commit.
 
 .. code-block:: yaml
    :caption: ``~/.spack/repos.yaml``
+   :name: code-example-branch
 
    repos:
      builtin:
@@ -206,6 +210,7 @@ The ``spack-repo-index.yaml`` in the root of ``https://example.com/my_org/my_pkg
 
 .. code-block:: yaml
    :caption: ``my_pkgs.git/spack-repo-index.yaml``
+   :name: code-example-repo-index
 
    repo_index:
      paths:
@@ -216,6 +221,7 @@ If ``my_pkgs.git`` is configured in ``repos.yaml`` as follows:
 
 .. code-block:: yaml
    :caption: ``~/.spack/repos.yaml``
+   :name: code-example-git-repo
 
    repos:
      example_mono_repo: https://example.com/my_org/my_pkgs.git
@@ -229,6 +235,7 @@ For example, if you only want the computer science packages:
 
 .. code-block:: yaml
    :caption: ``~/.spack/repos.yaml``
+   :name: code-example-specific-repo
 
    repos:
      example_mono_repo:
@@ -261,6 +268,7 @@ For example, the built-in repository (from ``spack/spack-packages``) has its nam
 
 .. code-block:: yaml
    :caption: ``repo.yaml`` of ``spack/spack-packages``
+   :name: code-example-repo-yaml
 
    repo:
      namespace: builtin
@@ -538,6 +546,7 @@ This updates your user-level ``repos.yaml``, adding or modifying the ``destinati
 
 .. code-block:: yaml
    :caption: ``~/.spack/repos.yaml`` after ``spack repo set``
+   :name: code-example-specific-destination
 
    repos:
      builtin:
