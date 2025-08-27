@@ -8,6 +8,7 @@ whitespace. It exits with a non-zero status if any files were modified."""
 
 import difflib
 import io
+import json
 import os
 import re
 import subprocess
@@ -89,11 +90,11 @@ def _is_node_in_table(node: nodes.Node) -> bool:
 
 
 def _format_code_blocks(document: nodes.document, path: str) -> None:
-    """Try to parse and format Python/YAML code blocks. This does *not* update the sources, but
-    merely warns. That's because not all code examples are meant to be valid Python/YAML."""
+    """Try to parse and format Python, YAML, and JSON code blocks. This does *not* update the
+    sources, but merely warns. That's because not all code examples are meant to be valid."""
     for code_block in document.findall(nodes.literal_block):
         language = code_block.attributes.get("language", "")
-        if language not in ("python", "yaml"):
+        if language not in ("python", "yaml", "json"):
             continue
         original = code_block.astext()
         line = code_block.line if code_block.line else 0
@@ -101,13 +102,15 @@ def _format_code_blocks(document: nodes.document, path: str) -> None:
         try:
             if language == "python":
                 formatted = black.format_str(original, mode=black.FileMode(line_length=99))
-            elif language == "yaml":  # YAML
+            elif language == "yaml":
                 yaml = YAML(pure=True)
                 yaml.width = 10000  # do not wrap lines
                 yaml.preserve_quotes = True  # do not force particular quotes
                 buf = io.BytesIO()
                 yaml.dump(yaml.load(original), buf)
                 formatted = buf.getvalue().decode("utf-8")
+            elif language == "json":
+                formatted = json.dumps(json.loads(original), indent=2)
             else:
                 assert False
         except Exception as e:
