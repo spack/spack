@@ -6,14 +6,19 @@
 """This script formats reStructuredText files to ensure one sentence per line and no trailing
 whitespace. It exits with a non-zero status if any files were modified."""
 
+import difflib
+import io
 import os
 import re
 import subprocess
 import sys
 from typing import List
 
+import black
 from docutils import nodes
 from docutils.core import publish_doctree
+from docutils.parsers.rst import Directive, directives
+from ruamel.yaml import YAML
 
 END_OF_SENTENCE = re.compile(
     r"""
@@ -31,6 +36,34 @@ END_OF_SENTENCE = re.compile(
     re.VERBOSE,
 )
 DOCUTILS_SETTING = {"report_level": 5, "raw_enabled": False, "file_insertion_enabled": False}
+
+
+class SphinxCodeBlock(Directive):
+    """Defines a code-block directive with the options Sphinx supports."""
+
+    has_content = True
+    optional_arguments = 1  # language
+    required_arguments = 0
+    option_spec = {
+        "force": directives.unchanged,
+        "linenos": directives.unchanged,
+        "dedent": directives.unchanged,
+        "lineno-start": directives.unchanged,
+        "emphasize-lines": directives.unchanged,
+        "caption": directives.unchanged,
+        "class": directives.unchanged,
+        "name": directives.unchanged,
+    }
+
+    def run(self) -> List[nodes.Node]:
+        # Produce a literal block with block.attributes["language"] set.
+        language = self.arguments[0] if self.arguments else "python"
+        literal = nodes.literal_block("\n".join(self.content), "\n".join(self.content))
+        literal["language"] = language
+        return [literal]
+
+
+directives.register_directive("code-block", SphinxCodeBlock)
 
 
 class ParagraphInfo:
@@ -55,12 +88,51 @@ def _is_node_in_table(node: nodes.Node) -> bool:
     return False
 
 
-def reformat_rst_file(path: str) -> bool:
-    with open(path, "r", encoding="utf-8") as f:
-        src = f.read()
+def _format_code_blocks(document: nodes.document, path: str) -> None:
+    """Try to parse and format Python/YAML code blocks. This does *not* update the sources, but
+    merely warns. That's because not all code examples are meant to be valid Python/YAML."""
+    for code_block in document.findall(nodes.literal_block):
+        language = code_block.attributes.get("language", "")
+        if language not in ("python", "yaml"):
+            continue
+        original = code_block.astext()
+        line = code_block.line if code_block.line else 0
 
-    src_lines = src.splitlines()
-    document: nodes.document = publish_doctree(src, settings_overrides=DOCUTILS_SETTING)
+        try:
+            if language == "python":
+                formatted = black.format_str(original, mode=black.FileMode(line_length=99))
+            elif language == "yaml":  # YAML
+                yaml = YAML(pure=True)
+                yaml.width = 10000  # do not wrap lines
+                yaml.preserve_quotes = True  # do not force particular quotes
+                buf = io.BytesIO()
+                yaml.dump(yaml.load(original), buf)
+                formatted = buf.getvalue().decode("utf-8")
+            else:
+                assert False
+        except Exception as e:
+            print(
+                f"{path}:{line}: formatting failed: {e}: {original!r}", flush=True, file=sys.stderr
+            )
+            continue
+        if formatted == original:
+            continue
+        diff = "\n".join(
+            difflib.unified_diff(
+                original.splitlines(),
+                formatted.splitlines(),
+                lineterm="",
+                fromfile=f"{path}:{line} (original)",
+                tofile=f"{path}:{line} (suggested, NOT required)",
+            )
+        )
+        if diff:
+            print(diff, flush=True, file=sys.stderr)
+
+
+def _format_paragraphs(document: nodes.document, path: str, src_lines: List[str]) -> bool:
+    """Format paragraphs in the document. Returns True if ``src_lines`` was modified."""
+
     paragraphs = [
         ParagraphInfo(line=p.line, src=p.rawsource)
         for p in document.findall(nodes.paragraph)
@@ -93,7 +165,20 @@ def reformat_rst_file(path: str) -> bool:
             modified = True
             src_lines[p.lineno - 1 : p.end_lineno] = new_paragraph_lines
 
-    if not modified:
+    return modified
+
+
+def reformat_rst_file(path: str) -> bool:
+    """Reformat a reStructuredText file "in-place". Returns True if modified, False otherwise."""
+    with open(path, "r", encoding="utf-8") as f:
+        src = f.read()
+
+    src_lines = src.splitlines()
+    document: nodes.document = publish_doctree(src, settings_overrides=DOCUTILS_SETTING)
+
+    _format_code_blocks(document, path)
+
+    if not _format_paragraphs(document, path, src_lines):
         return False
 
     with open(f"{path}.tmp", "w", encoding="utf-8") as f:
@@ -104,10 +189,14 @@ def reformat_rst_file(path: str) -> bool:
     return True
 
 
-if __name__ == "__main__":
+def main(*files: str) -> None:
     modified = False
-    for f in sys.argv[1:]:
+    for f in files:
         modified |= reformat_rst_file(f)
     if modified:
-        subprocess.run(["git", "--no-pager", "diff", "--color=always", "--", *sys.argv[1:]])
+        subprocess.run(["git", "--no-pager", "diff", "--color=always", "--", *files])
     sys.exit(1 if modified else 0)
+
+
+if __name__ == "__main__":
+    main(*sys.argv[1:])
