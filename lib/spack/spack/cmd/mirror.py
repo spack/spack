@@ -643,6 +643,7 @@ def create_mirror_for_one_spec(candidate, mirror_cache):
     pkg_obj = pkg_cls(spack.spec.Spec(candidate))
     mirror_stats = spack.mirrors.utils.MirrorStatsForOneSpec(candidate)
     spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
+    mirror_stats.finalize()
     return mirror_stats
 
 

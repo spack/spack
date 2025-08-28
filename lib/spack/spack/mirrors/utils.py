@@ -212,7 +212,6 @@ class MirrorStatsForAllSpecs:
     def merge(self, ext_mirror_stat: MirrorStatsForOneSpec):
         # For the sake of parallelism we need a way to reduce/merge different
         # MirrorStats objects.
-        ext_mirror_stat.finalize()
         self.present.update(ext_mirror_stat.present)
         self.new.update(ext_mirror_stat.new)
         self.errors.update(ext_mirror_stat.errors)
