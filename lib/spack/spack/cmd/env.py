@@ -1083,8 +1083,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         subsubparser = sp.add_parser(
             name,
             aliases=aliases,
-            description=setup_parser_cmd.__doc__,
-            help=spack.cmd.first_line(setup_parser_cmd.__doc__),
+            description=spack.cmd.doc_dedented(setup_parser_cmd),
+            help=spack.cmd.doc_first_line(setup_parser_cmd),
         )
         setup_parser_cmd(subsubparser)
 

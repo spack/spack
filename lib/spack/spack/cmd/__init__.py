@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+import textwrap
 from collections import Counter
 from typing import Generator, List, Optional, Sequence, Union
 
@@ -701,9 +702,23 @@ def find_environment(args):
     raise ev.SpackEnvironmentError("no environment in %s" % env)
 
 
-def first_line(docstring):
+def doc_first_line(function: object) -> Optional[str]:
     """Return the first line of the docstring."""
-    return docstring.split("\n")[0]
+    return function.__doc__.split("\n", 1)[0] if function.__doc__ else None
+
+
+if sys.version_info >= (3, 13):
+    # indent of __doc__ is automatically removed in 3.13+
+    # see https://github.com/python/cpython/commit/2566b74b26bcce24199427acea392aed644f4b17
+    def doc_dedented(function: object) -> Optional[str]:
+        """Return the docstring with leading indentation removed."""
+        return function.__doc__
+
+else:
+
+    def doc_dedented(function: object) -> Optional[str]:
+        """Return the docstring with leading indentation removed."""
+        return textwrap.dedent(function.__doc__) if function.__doc__ else None
 
 
 def converted_arg_length(arg: str):
