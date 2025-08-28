@@ -331,7 +331,7 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 
 
 @pytest.mark.require_provenance
-def test_binary_provenance_commit_version(default_mock_concretization):
+def test_git_provenance_commit_version(default_mock_concretization):
     spec = default_mock_concretization("git-ref-package@stable")
     assert spec.satisfies(f"commit={'c' * 40}")
 
@@ -340,7 +340,7 @@ def test_binary_provenance_commit_version(default_mock_concretization):
 @pytest.mark.parametrize("pre_stage", (True, False))
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
-def test_binary_provenance_find_commit_ls_remote(
+def test_git_provenance_find_commit_ls_remote(
     git, mock_git_repository, mock_packages, config, monkeypatch, version, pre_stage
 ):
     repo_path = mock_git_repository.path
@@ -372,7 +372,7 @@ def test_binary_provenance_find_commit_ls_remote(
 
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
-def test_binary_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capsys):
+def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capsys):
     """Fail all attempts to resolve git commits"""
     monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)
     spec = spack.concretize.concretize_one("git-ref-package@develop")

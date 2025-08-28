@@ -3955,7 +3955,7 @@ def _specs_with_commits(spec):
         if "commit" not in spec.variants and spec.version.commit_sha:
             spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
 
-    pkg_class._resolve_binary_provenance(spec)
+    pkg_class._resolve_git_provenance(spec)
 
     if "commit" not in spec.variants:
         tty.warn(

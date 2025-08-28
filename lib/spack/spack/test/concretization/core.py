@@ -4092,9 +4092,7 @@ def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypat
 
         spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'a' * 40}")
 
-    monkeypatch.setattr(
-        spack.package_base.PackageBase, "_resolve_binary_provenance", _mock_resolve
-    )
+    monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _mock_resolve)
 
     before = spack.concretize.concretize_one("git-ref-package@develop")
     first_call = False
