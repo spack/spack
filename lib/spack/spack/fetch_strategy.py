@@ -54,6 +54,7 @@ from spack.llnl.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
 from spack.util.download import (
+    CurlStreamReader,
     UrlReaderFactory,
     create_download_info,
     curl_stream_reader,
@@ -286,9 +287,14 @@ class URLFetchStrategy(FetchStrategy):
 
         self.fetch_method, self.fetch_args = default_url_fetch_method()
         self.timeout, self.cookie = default_timeout(), None
-        if fetch_options:
-            self.timeout = fetch_options.get("timeout", self.timeout)
-            self.cookie = fetch_options.get("cookie", None)
+
+        # Fetch options are overridden per "resource" being fetched
+        if fetch_options and "timeout" in fetch_options:
+            self.timeout = fetch_options["timeout"]
+
+        if fetch_options and "cookie" in fetch_options and self.fetch_method == FetchMethod.CURL:
+            self.fetch_args.extend(CurlStreamReader.cookie_args(fetch_options["cookie"]))
+
         self._download_info = create_download_info(url=url)
 
     @property
@@ -301,7 +307,7 @@ class URLFetchStrategy(FetchStrategy):
 
     def _url_reader_factory(self) -> UrlReaderFactory:
         if self.fetch_method == FetchMethod.CURL:
-            return curl_stream_reader(cookie=self.cookie, config_args=self.fetch_args)
+            return curl_stream_reader(config_args=self.fetch_args)
         else:
             return urllib_stream_reader()
 

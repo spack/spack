@@ -303,21 +303,16 @@ def test_bundle_patch_directive(mock_directive_bundle, clear_directive_functions
 
 @pytest.mark.usefixtures("mock_packages", "config")
 @pytest.mark.parametrize(
-    "version_str,digest_end,extra_options",
-    [
-        ("1.0", "10", {"timeout": 42, "cookie": "foobar"}),
-        ("1.1", "11", {"timeout": 65}),
-        ("1.2", "12", {"cookie": "baz"}),
-    ],
+    "version_str,digest_end,expected_timeout",
+    [("1.0", "10", 42), ("1.1", "11", 65), ("1.2", "12", 10)],
 )
-def test_fetch_options(version_str, digest_end, extra_options):
+def test_fetch_options(version_str, digest_end, expected_timeout):
     """Test fetch options inference."""
     leading_zeros = "000000000000000000000000000000"
     fetcher = spack.fetch_strategy.for_package_version(pkg_factory("fetch-options"), version_str)
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.digest == leading_zeros + digest_end
-    for attr_name, attr_value in extra_options.items():
-        assert getattr(fetcher, attr_name) == attr_value
+    assert fetcher.timeout == expected_timeout
 
 
 def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):

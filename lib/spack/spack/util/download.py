@@ -95,16 +95,8 @@ class CurlStreamReader(UrlStreamReader):
 
     _curl_exe: Optional[str] = None
 
-    def __init__(
-        self,
-        *,
-        url: str,
-        timeout: int,
-        config_args: Optional[List[str]] = None,
-        cookie: Optional[str] = None,
-    ):
+    def __init__(self, *, url: str, timeout: int, config_args: Optional[List[str]] = None):
         super().__init__(url=url, timeout=timeout)
-        self._cookie = cookie
         self._config_args: List[str] = config_args or []
         if CurlStreamReader._curl_exe is None:
             CurlStreamReader._curl_exe = which_string("curl", required=True)
@@ -120,7 +112,6 @@ class CurlStreamReader(UrlStreamReader):
                 user_agent=SPACK_USER_AGENT,
             )
             + self._redirect_header_args
-            + self._cookie_args
             + self._config_args
         )
         curl_cmd = [self._curl] + curl_args
@@ -168,12 +159,13 @@ class CurlStreamReader(UrlStreamReader):
     def request_info(self) -> RequestInfo:
         return RequestInfo(url=self.url, effective_url=self.url, headers=self._headers)
 
-    @property
-    def _cookie_args(self) -> List[str]:
-        """Arguments to pass to curl to use a cookie."""
-        if self._cookie:
-            return ["-j", "-b", self._cookie]
-        return []
+    @staticmethod
+    def cookie_args(cookie) -> List[str]:
+        """Returns the arguments to pass to curl to use a cookie.
+
+        This can be used as a helper function to generate the arguments for the constructor.
+        """
+        return ["-j", "-b", cookie]
 
     @property
     def _redirect_header_args(self) -> List[str]:
@@ -311,13 +303,11 @@ def download_file(
     return DownloadInfo(request=request_info, path=destination)
 
 
-def curl_stream_reader(
-    *, config_args: Optional[List[str]] = None, cookie: Optional[str] = None
-) -> UrlReaderFactory:
+def curl_stream_reader(*, config_args: Optional[List[str]] = None) -> UrlReaderFactory:
     """Returns a context manager that reads from a URL using curl."""
 
     def _factory(url: str, timeout: int) -> UrlStreamReader:
-        return CurlStreamReader(url=url, timeout=timeout, config_args=config_args, cookie=cookie)
+        return CurlStreamReader(url=url, timeout=timeout, config_args=config_args)
 
     return _factory
 

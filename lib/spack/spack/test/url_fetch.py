@@ -111,14 +111,30 @@ def test_fetch_options(tmp_path: pathlib.Path, mock_archive):
             assert filecmp.cmp(archive_file, mock_archive.archive_file)
 
 
-def test_fetch_curl_options(tmp_path: pathlib.Path, mock_archive, monkeypatch):
-    with spack.config.override("config:url_fetch_method", "curl -k -q"):
-        fetcher = fs.URLFetchStrategy(
-            url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
-        )
-        assert fetcher.fetch_args == ["-k", "-q"]
-        assert fetcher.timeout == 10
-        assert fetcher.cookie == "True"
+@pytest.mark.parametrize(
+    "method,options,expected_args,expected_timeout",
+    [
+        ("curl -k -q", {"cookie": "True", "timeout": 10}, ["-k", "-q", "-j", "-b", "True"], 10),
+        ("curl", {"cookie": "True"}, ["-j", "-b", "True"], 10),
+        ("curl -k", {"timeout": 15}, ["-k"], 15),
+        # This is the builtin default
+        ("curl", {}, [], 10),
+    ],
+)
+def test_fetch_curl_options(
+    method,
+    options: spack.fetch_strategy.FetchOptions,
+    expected_args,
+    expected_timeout,
+    tmp_path: pathlib.Path,
+    mock_archive,
+    config,
+    monkeypatch,
+):
+    with spack.config.override("config:url_fetch_method", method):
+        fetcher = fs.URLFetchStrategy(url=mock_archive.url, fetch_options=options)
+        assert fetcher.fetch_args == expected_args
+        assert fetcher.timeout == expected_timeout
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
