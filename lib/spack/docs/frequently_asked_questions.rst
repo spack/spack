@@ -4,7 +4,7 @@
 
 .. meta::
    :description lang=en:
-      Find answers to common questions about Spack, covering topics like version and variant selection, package preferences, and concretizer behavior.
+      Answers to common Spack questions, including version and variant selection, package preferences, compiler configuration, and concretizer behavior, with practical YAML and command-line examples.
 
 Frequently Asked Questions
 ==========================
