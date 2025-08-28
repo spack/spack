@@ -180,10 +180,10 @@ class CurlStreamReader(UrlStreamReader):
                 f"Failed to fetch {self.url}: {status} {HTTPStatus(int(status)).phrase}"
             )
 
-        header = http.client.parse_headers(self._stream)
-        if self._stream.peek(len(b"HTTP/")).startswith(b"HTTP/"):
+        elif 300 <= status < 400:
             finished = False
 
+        header = http.client.parse_headers(self._stream)
         return header, finished
 
 
