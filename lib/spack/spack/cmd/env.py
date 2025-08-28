@@ -58,7 +58,8 @@ subcommands: List[Tuple[str, ...]] = [
 # env create
 #
 def env_create_setup_parser(subparser):
-    """create a new environment
+    """\
+    create a new environment
 
     create a new environment or, optionally, copy an existing environment
 
@@ -639,7 +640,8 @@ def env_untrack(args):
 # env remove
 #
 def env_remove_setup_parser(subparser):
-    """remove managed environment(s)
+    """\
+    remove managed environment(s)
 
     remove existing environment(s) managed by Spack
 
@@ -669,7 +671,8 @@ def env_remove(args):
 # env rename
 #
 def env_rename_setup_parser(subparser):
-    """rename an existing environment
+    """\
+    rename an existing environment
 
     rename a managed environment or move an independent/directory environment
 
@@ -779,7 +782,8 @@ class ViewAction:
 # env view
 #
 def env_view_setup_parser(subparser):
-    """manage the environment's view
+    """\
+    manage the environment's view
 
     provide the path when enabling a view with a non-default path
     """
@@ -874,7 +878,8 @@ def env_loads(args):
 
 
 def env_update_setup_parser(subparser):
-    """update the environment manifest to the latest schema format
+    """\
+    update the environment manifest to the latest schema format
 
     update the environment to the latest schema format, which may not be
     readable by older versions of spack
@@ -919,7 +924,8 @@ def env_update(args):
 
 
 def env_revert_setup_parser(subparser):
-    """restore the environment manifest to its previous format
+    """\
+    restore the environment manifest to its previous format
 
     revert the environment's manifest to the schema format from its last
     'spack env update'
@@ -966,7 +972,8 @@ def env_revert(args):
 
 
 def env_depfile_setup_parser(subparser):
-    """generate a depfile to exploit parallel builds across specs
+    """\
+    generate a depfile to exploit parallel builds across specs
 
     requires the active environment to be concrete
     """

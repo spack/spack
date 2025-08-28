@@ -1549,7 +1549,8 @@ def test_ci_help(subcmd, capsys):
 
 def test_docstring_utils():
     def example_function():
-        """this is the first line
+        """\
+        this is the first line
 
         this is not the first line
         """

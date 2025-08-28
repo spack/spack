@@ -238,7 +238,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def ci_generate(args):
-    """generate jobs file from a CI-aware spack file
+    """\
+    generate jobs file from a CI-aware spack file
 
     if you want to report the results on CDash, you will need to set the SPACK_CDASH_AUTH_TOKEN
     before invoking this command. the value must be the CDash authorization token needed to create
@@ -249,7 +250,8 @@ def ci_generate(args):
 
 
 def ci_reindex(args):
-    """rebuild the buildcache index for the remote mirror
+    """\
+    rebuild the buildcache index for the remote mirror
 
     use the active, gitlab-enabled environment to rebuild the buildcache index for the associated
     mirror
@@ -269,7 +271,8 @@ def ci_reindex(args):
 
 
 def ci_rebuild(args):
-    """rebuild a spec if it is not on the remote mirror
+    """\
+    rebuild a spec if it is not on the remote mirror
 
     check a single spec against the remote mirror, and rebuild it from source if the mirror does
     not contain the hash
@@ -651,7 +654,8 @@ If this project does not have public pipelines, you will need to first:
 
 
 def ci_reproduce(args):
-    """generate instructions for reproducing the spec rebuild job
+    """\
+    generate instructions for reproducing the spec rebuild job
 
     artifacts of the provided gitlab pipeline rebuild job's URL will be used to derive
     instructions for reproducing the build locally
@@ -811,7 +815,8 @@ def validate_git_versions(
 
 
 def ci_verify_versions(args):
-    """validate version checksum & commits between git refs
+    """\
+    validate version checksum & commits between git refs
     This command takes a from_ref and to_ref arguments and
     then parses the git diff between the two to determine which packages
     have been modified verifies the new checksums inside of them.

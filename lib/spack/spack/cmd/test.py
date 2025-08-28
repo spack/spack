@@ -147,7 +147,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def test_run(args):
-    """run tests for the specified installed packages
+    """\
+    run tests for the specified installed packages
 
     if no specs are listed, run tests for all packages in the current
     environment or all installed packages if there is no active environment
@@ -253,7 +254,8 @@ def test_list(args):
 
 
 def test_find(args):  # TODO: merge with status (noargs)
-    """find tests that are running or have available results
+    """\
+    find tests that are running or have available results
 
     displays aliases for tests that have them, otherwise test suite content hashes
     """
@@ -404,7 +406,8 @@ def test_results(args):
 
 
 def test_remove(args):
-    """remove results from Spack test suite(s) (default all)
+    """\
+    remove results from Spack test suite(s) (default all)
 
     if no test suite is listed, remove results for all suites.
 

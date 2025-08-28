@@ -704,7 +704,7 @@ def find_environment(args):
 
 def doc_first_line(function: object) -> Optional[str]:
     """Return the first line of the docstring."""
-    return function.__doc__.split("\n", 1)[0] if function.__doc__ else None
+    return function.__doc__.split("\n", 1)[0].strip() if function.__doc__ else None
 
 
 if sys.version_info >= (3, 13):
