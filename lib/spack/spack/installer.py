@@ -2427,8 +2427,7 @@ class PackageInstaller:
 
         # Determine which type of jobserver to set up and then enable it
         packages = [task.pkg for _, task in self.build_pq]
-        jobserver_class = spack.jobserver.Jobserver.determine_type(packages)
-        jobserver = jobserver_class()
+        jobserver = spack.jobserver.Jobserver.determine_type(packages)
         jobserver.enable()
 
         # Only enable the terminal status line when we're in a tty without debug info

@@ -46,7 +46,7 @@ class Jobserver:
     @staticmethod
     def determine_type(
         packages: List["spack.package_base.PackageBase"],
-    ) -> Type["spack.jobserver.Jobserver"]:
+    ) -> "spack.jobserver.Jobserver":
         """Determine the type of jobserver to be used based on the packages
         required for the build."""
         if not packages:
@@ -59,7 +59,7 @@ class Jobserver:
                 "(pre-gmake@4.4 or pre-ninja@1.13.0) does not support it."
             )
         js_class = jobserver_class_table[js_type]
-        return js_class
+        return js_class()
 
     def enable(self) -> Optional[Tuple[Optional[str], Optional[int]]]:
         """Enable the specified type of jobserver."""
