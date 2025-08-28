@@ -54,9 +54,17 @@ sys.path[0:0] = [
     os.path.abspath(".spack/spack-packages/repos"),
 ]
 
-subprocess.call(["spack", "list"], stdout=subprocess.DEVNULL)
+# Init the package repo with all git history, so "Last updated on" is accurate.
+subprocess.call(["spack", "repo", "update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+if os.path.exists(".spack/spack-packages/.git/shallow"):
+    subprocess.call(
+        ["git", "fetch", "--unshallow"],
+        cwd=".spack/spack-packages",
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
-# Generate a command index if an update is needed -- this also clones the package repository.
+# Generate a command index if an update is needed
 subprocess.call(
     [
         "spack",
@@ -264,6 +272,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
     "sphinxcontrib.programoutput",
+    "sphinx_last_updated_by_git",
 ]
 
 copybutton_exclude = ".linenos, .gp, .go"

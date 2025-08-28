@@ -6,6 +6,9 @@ build:
     - graphviz
   tools:
     python: "3.11"
+  jobs:
+    post_checkout:
+      - git fetch --unshallow || true  # get accurate "Last updated on" info
 
 sphinx:
   configuration: lib/spack/docs/conf.py
