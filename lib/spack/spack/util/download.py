@@ -120,20 +120,18 @@ class CurlStreamReader(UrlStreamReader):
         )
         curl_cmd = [self._curl] + curl_args
         self._curl_process = subprocess.Popen(
-            curl_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            curl_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
         )
 
         self._scheme = urllib.parse.urlparse(self.url).scheme
         assert self._curl_process.stdout is not None, "curl process stderr is None"
         self._stream = io.BufferedReader(self._curl_process.stdout)  # type: ignore[type-var]
 
-        # curl echoes intermediate redirect responses, so we might get multiple headers
-        headers = []
-        while True:
+        # curl echoes intermediate redirect responses, so we might get multiple responses
+        headers, finished = [], False
+        while not finished:
             header, finished = self._get_next_header()
             headers.append(header)
-            if finished:
-                break
 
         if not headers:
             raise FetchError(f"Failed to fetch {self.url}: no headers returned")
@@ -181,8 +179,8 @@ class CurlStreamReader(UrlStreamReader):
                 f"Failed to fetch {self.url}: cannot parse HTTP status code from {status_line}"
             )
 
+        header = http.client.parse_headers(self._stream)
         if 400 <= status < 600:
-            header = http.client.parse_headers(self._stream)
             raise DetailedHTTPError(
                 urllib.request.Request(self.url),
                 status,
@@ -194,7 +192,6 @@ class CurlStreamReader(UrlStreamReader):
         elif 300 <= status < 400:
             finished = False
 
-        header = http.client.parse_headers(self._stream)
         return header, finished
 
 
