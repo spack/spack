@@ -122,7 +122,8 @@ Suppose that you need to support simultaneous building of release and developmen
 You could create the following files:
 
 .. code-block:: yaml
-   :caption: ~/myscopes/release/packages.yaml
+   :caption: ``~/myscopes/release/packages.yaml``
+   :name: code-example-release-packages-yaml
 
    packages:
      mypackage:
@@ -133,7 +134,8 @@ You could create the following files:
        prefer: ["@0.8"]
 
 .. code-block:: yaml
-   :caption: ~/myscopes/develop/packages.yaml
+   :caption: ``~/myscopes/develop/packages.yaml``
+   :name: code-example-develop-packages-yaml
 
    packages:
      mypackage:
@@ -154,7 +156,8 @@ For ``pkg-b`` you want a newer Python version and a different MPI implementation
 You can create different configuration scopes for use with ``pkg-a`` and ``pkg-b``:
 
 .. code-block:: yaml
-   :caption: ~/myscopes/pkg-a/packages.yaml
+   :caption: ``~/myscopes/pkg-a/packages.yaml``
+   :name: code-example-pkg-a-packages-yaml
 
    packages:
      python:
@@ -163,7 +166,8 @@ You can create different configuration scopes for use with ``pkg-a`` and ``pkg-b
        require: [openmpi]
 
 .. code-block:: yaml
-   :caption: ~/myscopes/pkg-b/packages.yaml
+   :caption: ``~/myscopes/pkg-b/packages.yaml``
+   :name: code-example-pkg-b-packages-yaml
 
    packages:
      python:
@@ -287,7 +291,8 @@ Let's look at an example of overriding a single key in a Spack configuration fil
 If your configurations look like this:
 
 .. code-block:: yaml
-   :caption: $(prefix)/etc/spack/defaults/config.yaml
+   :caption: ``$(prefix)/etc/spack/defaults/config.yaml``
+   :name: code-example-defaults-config-yaml
 
    config:
      install_tree: $spack/opt/spack
@@ -297,7 +302,8 @@ If your configurations look like this:
 
 
 .. code-block:: yaml
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-user-config-yaml
 
    config:
      install_tree: /some/other/directory
@@ -329,7 +335,8 @@ For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-append-install-tree
 
    config:
      install_tree-: /my/custom/suffix/
@@ -350,7 +357,8 @@ Similarly, ``+:`` can be used to *prepend* to a path or name:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-prepend-install-tree
 
    config:
      install_tree+: /my/custom/suffix/
@@ -368,7 +376,8 @@ For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-override-config-section
 
    config::
      install_tree: /some/other/directory
@@ -389,21 +398,25 @@ Let's revisit the ``config.yaml`` example one more time.
 The ``build_stage`` setting's value is an ordered list of directories:
 
 .. code-block:: yaml
-   :caption: $(prefix)/etc/spack/defaults/config.yaml
+   :caption: ``$(prefix)/etc/spack/defaults/config.yaml``
+   :name: code-example-defaults-build-stage
 
-   build_stage:
-   - $tempdir/$user/spack-stage
-   - ~/.spack/stage
+   config:
+     build_stage:
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage`` paths:
 
 .. code-block:: yaml
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-user-build-stage
 
-   build_stage:
-   - /lustre-scratch/$user/spack
-   - ~/mystage
+   config:
+     build_stage:
+     - /lustre-scratch/$user/spack
+     - ~/mystage
 
 
 Spack will first look at the paths in the defaults ``config.yaml``, then the paths in the user's ``~/.spack/config.yaml``.
@@ -428,11 +441,13 @@ So if the user config looked like this:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-override-build-stage
 
-   build_stage::
-   - /lustre-scratch/$user/spack
-   - ~/mystage
+   config:
+     build_stage::
+     - /lustre-scratch/$user/spack
+     - ~/mystage
 
 
 The merged configuration would look like this:
