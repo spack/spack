@@ -18,7 +18,13 @@ from spack.llnl.util import tty
 
 from ..error import FetchError
 from .executable import which_string
-from .web import SPACK_USER_AGENT, base_curl_fetch_args, check_curl_code, urlopen
+from .web import (
+    SPACK_USER_AGENT,
+    DetailedHTTPError,
+    base_curl_fetch_args,
+    check_curl_code,
+    urlopen,
+)
 
 
 class RequestInfo(NamedTuple):
@@ -176,8 +182,13 @@ class CurlStreamReader(UrlStreamReader):
             )
 
         if 400 <= status < 600:
-            raise FetchError(
-                f"Failed to fetch {self.url}: {status} {HTTPStatus(int(status)).phrase}"
+            header = http.client.parse_headers(self._stream)
+            raise DetailedHTTPError(
+                urllib.request.Request(self.url),
+                status,
+                HTTPStatus(int(status)).phrase,
+                header,
+                None,
             )
 
         elif 300 <= status < 400:
