@@ -428,6 +428,7 @@ For example, with a configuration like this:
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake`` dependencies) to use ``clang``.
 If enforcing ``build_type=Debug`` is needed also on ``cmake``, it must be repeated in the specific ``cmake`` requirements.
 
+.. _setting-requirements-on-virtual-specs:
 
 Setting requirements on virtual specs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

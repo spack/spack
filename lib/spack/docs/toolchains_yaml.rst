@@ -25,7 +25,7 @@ Basic usage
 As an example, the following configuration file defines a toolchain named ``llvm_gfortran``:
 
 .. code-block:: yaml
-   :caption: ~/.spack/toolchains.yaml
+   :caption: ``~/.spack/toolchains.yaml``
 
    toolchains:
      llvm_gfortran:
@@ -57,6 +57,8 @@ Toolchains are useful for three reasons:
    Toolchains are used at the level of a single spec.
 
 
+.. _pitfalls-without-toolchains:
+
 Pitfalls without toolchains
 ---------------------------
 
@@ -75,7 +77,7 @@ Different toolchains can be used independently or even in the same spec.
 Consider the following configuration:
 
 .. code-block:: yaml
-   :caption: ~/.spack/toolchains.yaml
+   :caption: ``~/.spack/toolchains.yaml``
 
    toolchains:
      llvm_gfortran:
@@ -115,7 +117,7 @@ A common use case is to define a toolchain that also picks a specific MPI implem
 In the following example, we define a toolchain that uses ``openmpi@5`` as an MPI provider, and ``llvm@19`` as the compiler for C and C++:
 
 .. code-block:: yaml
-   :caption: ~/.spack/toolchains.yaml
+   :caption: ``~/.spack/toolchains.yaml``
 
    toolchains:
      clang_openmpi:

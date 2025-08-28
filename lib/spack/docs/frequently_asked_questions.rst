@@ -75,7 +75,90 @@ The following set of criteria (from lowest to highest precedence) explains commo
 
 Requirements and constraints restrict the set of possible solutions, while reuse behavior and preferences influence what an optimal solution looks like.
 
+How do I specify or require a compiler?
+---------------------------------------
+
+When specifying compilers, you have two main options: either you specify compilers globally for all packages in configuration files, or you specify them on the level of :doc:`individual specs <spec_syntax>`.
+
+Specific compiler for all packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want to use a specific compiler for all packages, it's best to use :ref:`requirements in packages.yaml config <setting-requirements-on-virtual-specs>`.
+The following example requires GCC 15 for all languages ``c``, ``cxx``, and ``fortran``:
+
+.. code-block:: yaml
+   :caption: Recommended: *require* a specific compiler
+   :name: code-example-require-compiler-per-language
+
+   packages:
+     c:
+       require:
+       - gcc@15
+     cxx:
+       require:
+       - gcc@15
+     fortran:
+       require:
+       - gcc@15
+
+Alternatively, you can use :ref:`strong preferences <package-strong-preferences>` instead of hard requirements, which are more forgiving when certain packages conflict with the requested compiler:
+
+.. code-block:: yaml
+   :caption: Alternative: *prefer* a specific compiler
+   :name: code-example-prefer-compiler
+
+   packages:
+     c:
+       prefer:
+       - gcc@15
+     cxx:
+       prefer:
+       - gcc@15
+     fortran:
+       prefer:
+       - gcc@15
+
+In Spack, the languages ``c``, ``cxx`` and ``fortran`` are :ref:`virtual packages <language-dependencies>`, on which packages depend if they need a compiler for that language.
+Compiler packages provide these language virtuals.
+When you specify these requirements or strong preferences, Spack determines whether the package depends on the language virtuals, and if so, it applies the requested compiler spec.
+
+What is **not recommended** is to define ``%gcc`` as a required dependency of all packages:
+
+.. code-block:: yaml
+   :caption: Incorrect: requiring a dependency on a compiler for all packages
+   :name: code-example-typical-mistake-require-compiler
+
+   packages:
+     all:
+       require:
+       - "%gcc@15"
+
+This is *incorrect*, because some packages do not need a compiler at all (e.g. pure Python packages).
+
+Specific compiler for individual specs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If different parts of your software stack need to be built with different compilers, it's best to specify compilers as dependencies of the relevant specs (whether on the command line or in Spack environment).
+
+.. code-block:: spec
+   :caption: Example of specifying different compilers for different specs
+   :name: console-example-different-compilers
+
+   $ spack install foo %gcc@15 ^bar %intel-oneapi-compilers
+
+What this means is that ``foo`` will depend on GCC 15, while ``bar`` will depend on ``intel-oneapi-compilers``.
+
+You can also be more specific about what compiler to use for a particular language:
+
+.. code-block:: spec
+   :caption: Example of specifying different compilers for different languages
+   :name: console-example-different-languages
+
+   $ spack install foo %c,cxx=gcc@15 %fortran=intel-oneapi-compilers
+
+These input specs can be simplified using :doc:`toolchains_yaml`.
+See also :ref:`pitfalls-without-toolchains` for common mistakes to avoid.
 
 .. rubric:: Footnotes
 
-.. [#f1] The exact list of criteria can be retrieved with the ``spack solve`` command
+.. [#f1] The exact list of criteria can be retrieved with the :ref:`spack-solve` command.
