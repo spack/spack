@@ -142,7 +142,12 @@ class CurlStreamReader(UrlStreamReader):
         return self._stream.read(size)  # type: ignore
 
     def request_info(self) -> RequestInfo:
-        return RequestInfo(url=self.url, effective_url=self.url, headers=self._headers[-1])
+        effective_url = self.url
+        for h in reversed(self._headers):
+            if "location" in h:
+                effective_url = h["location"]
+                break
+        return RequestInfo(url=self.url, effective_url=effective_url, headers=self._headers[-1])
 
     @staticmethod
     def cookie_args(cookie) -> List[str]:
