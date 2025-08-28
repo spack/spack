@@ -37,7 +37,7 @@ For more details on how this works, see :ref:`configuration-scopes`.
 
 .. _sec-external-packages:
 
-External Packages
+External packages
 -----------------
 
 Spack can be configured to use externally-installed packages rather than building its own packages.
@@ -77,88 +77,29 @@ Each external should specify a ``spec:`` string that should be as well-defined a
 If a package lacks a spec component, such as missing a compiler or package version, then Spack will guess the missing component based on its most-favored packages, and it may guess incorrectly.
 
 
-Extra attributes for external packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _cmd-spack-external-find:
 
-Sometimes external packages require additional attributes to be used effectively.
-This information can be defined on a per-package basis and stored in the ``extra_attributes`` section of the external package configuration.
-In addition to per-package information, this section can be used to define environment modifications to be performed whenever the package is used.
-For example, if an external package is built without ``rpath`` support, it may require ``LD_LIBRARY_PATH`` settings to find its dependencies.
-This could be configured as follows:
+Automatically find external packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: yaml
-
-   packages:
-     mpich:
-       externals:
-       - spec: mpich@3.3 +hwloc
-         prefix: /path/to/mpich
-         extra_attributes:
-           environment:
-             prepend_path:
-               LD_LIBRARY_PATH: /path/to/hwloc/lib64
-
-See :ref:`configuration_environment_variables` for more information on how to configure environment modifications in Spack config files.
-
-Extra attributes for external compilers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-External package configuration allows several extra attributes for configuring compilers.
-The ``compilers`` extra attribute field is required to clarify which paths within the compiler prefix are used for which languages:
+You can run the :ref:`spack external find <spack-external-find>` command to search for system-provided packages and add them to ``packages.yaml``.
+After running this command your ``packages.yaml`` may include new entries:
 
 .. code-block:: yaml
 
    packages:
-     gcc:
+     cmake:
        externals:
-       - spec: gcc@10.5.0 languages='c,c++,fortran'
+       - spec: cmake@3.17.2
          prefix: /usr
-         extra_attributes:
-           compilers:
-             c: /usr/bin/gcc-10
-             cxx: /usr/bin/g++-10
-             fortran: /usr/bin/gfortran-10
 
-Other fields accepted by compilers under ``extra_attributes`` are ``flags``, ``environment``, ``extra_rpaths``, and ``implicit_rpaths``.
+Generally this is useful for detecting a small set of commonly-used packages; for now this is generally limited to finding build-only dependencies.
+Specific limitations include:
 
-.. code-block:: yaml
-
-   packages:
-     gcc:
-       externals:
-       - spec: gcc@10.5.0 languages='c,c++,fortran'
-         prefix: /usr
-         extra_attributes:
-           compilers:
-             c: /usr/bin/gcc-10
-             cxx: /usr/bin/g++-10
-             fortran: /usr/bin/gfortran-10
-           flags:
-             cflags: -O3
-             fflags: -g -O2
-           environment:
-             set:
-               GCC_ROOT: /usr
-             prepend_path:
-               PATH: /usr/unusual_path_for_ld/bin
-           implicit_rpaths:
-           - /usr/lib/gcc
-           extra_rpaths:
-           - /usr/lib/unusual_gcc_path
-
-The ``flags`` attribute specifies compiler flags to apply to every spec that depends on this compiler.
-The accepted flag types are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
-In the example above, every spec compiled with this compiler will pass the flags ``-g -O2`` to ``/usr/bin/gfortran-10`` and will pass the flag ``-O3`` to ``/usr/bin/gcc-10``.
-
-The ``environment`` attribute specifies user environment modifications to apply before every time the compiler is invoked.
-The available operations are ``set``, ``unset``, ``prepend_path``, ``append_path``, and ``remove_path``.
-In the example above, Spack will set ``GCC_ROOT=/usr`` and set ``PATH=/usr/unusual_path_for_ld/bin:$PATH`` before handing control to the build system that will use this compiler.
-
-The ``extra_rpaths`` and ``implicit_rpaths`` fields specify additional paths to pass as rpaths to the linker when using this compiler.
-The ``implicit_rpaths`` field is filled in automatically by Spack when detecting compilers, and the ``extra_rpaths`` field is available for users to configure necessary rpaths that have not been detected by Spack.
-In addition, paths from ``extra_rpaths`` are added as library search paths for the linker.
-In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be added as well.
-
+* Packages are not discoverable by default: For a package to be discoverable with ``spack external find``, it needs to add special logic.
+  See :ref:`here <make-package-findable>` for more details.
+* The logic does not search through module files, it can only detect packages with executables defined in ``PATH``; you can help Spack locate externals which use module files by loading any associated modules for packages that you want Spack to know about before running ``spack external find``.
+* Spack does not overwrite existing entries in the package configuration: If there is an external defined for a spec at any configuration scope, then Spack will not add a new external entry (``spack config blame packages`` can help locate all external entries).
 
 Prevent packages from being built from sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -234,29 +175,96 @@ In cases where the concretizer is configured to reuse specs, and other ``mpi`` p
 This configuration prevents any spec using MPI and originating from stores or buildcaches to be reused, unless it matches the requirements under ``packages:mpi:require``.
 For more information on requirements see :ref:`package-requirements`.
 
-.. _cmd-spack-external-find:
 
-Automatically Find External Packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _extra-attributes-for-externals:
 
-You can run the :ref:`spack external find <spack-external-find>` command to search for system-provided packages and add them to ``packages.yaml``.
-After running this command your ``packages.yaml`` may include new entries:
+Extra attributes for external packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes external packages require additional attributes to be used effectively.
+This information can be defined on a per-package basis and stored in the ``extra_attributes`` section of the external package configuration.
+In addition to per-package information, this section can be used to define environment modifications to be performed whenever the package is used.
+For example, if an external package is built without ``rpath`` support, it may require ``LD_LIBRARY_PATH`` settings to find its dependencies.
+This could be configured as follows:
 
 .. code-block:: yaml
 
    packages:
-     cmake:
+     mpich:
        externals:
-       - spec: cmake@3.17.2
+       - spec: mpich@3.3 +hwloc
+         prefix: /path/to/mpich
+         extra_attributes:
+           environment:
+             prepend_path:
+               LD_LIBRARY_PATH: /path/to/hwloc/lib64
+
+See :ref:`configuration_environment_variables` for more information on how to configure environment modifications in Spack config files.
+
+Configuring system compilers as external packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In Spack, compilers are treated as packages like any other.
+This means that you can also configure system compilers as external packages and use them in Spack.
+
+Spack automatically detects system compilers and configures them in ``packages.yaml`` for you.
+You can also run :ref:`spack-compiler-find` to find and configure new system compilers.
+
+When configuring compilers as external packages, you need to configure a few :ref:`extra attributes <extra-attributes-for-externals>` for them to work properly.
+The ``compilers`` extra attribute field is required to clarify which paths within the compiler prefix are used for which languages:
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@10.5.0 languages='c,c++,fortran'
          prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc-10
+             cxx: /usr/bin/g++-10
+             fortran: /usr/bin/gfortran-10
 
-Generally this is useful for detecting a small set of commonly-used packages; for now this is generally limited to finding build-only dependencies.
-Specific limitations include:
+Other fields accepted by compilers under ``extra_attributes`` are ``flags``, ``environment``, ``extra_rpaths``, and ``implicit_rpaths``.
 
-* Packages are not discoverable by default: For a package to be discoverable with ``spack external find``, it needs to add special logic.
-  See :ref:`here <make-package-findable>` for more details.
-* The logic does not search through module files, it can only detect packages with executables defined in ``PATH``; you can help Spack locate externals which use module files by loading any associated modules for packages that you want Spack to know about before running ``spack external find``.
-* Spack does not overwrite existing entries in the package configuration: If there is an external defined for a spec at any configuration scope, then Spack will not add a new external entry (``spack config blame packages`` can help locate all external entries).
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@10.5.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc-10
+             cxx: /usr/bin/g++-10
+             fortran: /usr/bin/gfortran-10
+           flags:
+             cflags: -O3
+             fflags: -g -O2
+           environment:
+             set:
+               GCC_ROOT: /usr
+             prepend_path:
+               PATH: /usr/unusual_path_for_ld/bin
+           implicit_rpaths:
+           - /usr/lib/gcc
+           extra_rpaths:
+           - /usr/lib/unusual_gcc_path
+
+The ``flags`` attribute specifies compiler flags to apply to every spec that depends on this compiler.
+The accepted flag types are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
+In the example above, every spec compiled with this compiler will pass the flags ``-g -O2`` to ``/usr/bin/gfortran-10`` and will pass the flag ``-O3`` to ``/usr/bin/gcc-10``.
+
+The ``environment`` attribute specifies user environment modifications to apply before every time the compiler is invoked.
+The available operations are ``set``, ``unset``, ``prepend_path``, ``append_path``, and ``remove_path``.
+In the example above, Spack will set ``GCC_ROOT=/usr`` and set ``PATH=/usr/unusual_path_for_ld/bin:$PATH`` before handing control to the build system that will use this compiler.
+
+The ``extra_rpaths`` and ``implicit_rpaths`` fields specify additional paths to pass as rpaths to the linker when using this compiler.
+The ``implicit_rpaths`` field is filled in automatically by Spack when detecting compilers, and the ``extra_rpaths`` field is available for users to configure necessary rpaths that have not been detected by Spack.
+In addition, paths from ``extra_rpaths`` are added as library search paths for the linker.
+In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be added as well.
 
 .. _package-requirements:
 
@@ -564,15 +572,15 @@ The ``read`` and ``write`` attributes take one of ``user``, ``group``, and ``wor
 
 .. code-block:: yaml
 
-  packages:
-    all:
-      permissions:
-        write: group
-        group: spack
-    my_app:
-      permissions:
-        read: group
-        group: my_team
+   packages:
+     all:
+       permissions:
+         write: group
+         group: spack
+     my_app:
+       permissions:
+         read: group
+         group: my_team
 
 The permissions settings describe the broadest level of access to installations of the specified packages.
 The execute permissions of the file are set to the same level as read permissions for those files that are executable.
@@ -595,13 +603,13 @@ You can assign class-level attributes in the configuration:
 
 .. code-block:: yaml
 
-  packages:
-    mpileaks:
-      package_attributes:
-        # Override existing attributes
-        url: http://www.somewhereelse.com/mpileaks-1.0.tar.gz
-        # ... or add new ones
-        x: 1
+   packages:
+     mpileaks:
+       package_attributes:
+         # Override existing attributes
+         url: http://www.somewhereelse.com/mpileaks-1.0.tar.gz
+         # ... or add new ones
+         x: 1
 
 Attributes set this way will be accessible to any method executed in the package.py file (e.g. the ``install()`` method).
 Values for these attributes may be any value parseable by yaml.
