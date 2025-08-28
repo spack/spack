@@ -31,6 +31,7 @@ import copy
 import functools
 import os
 import os.path
+import pathlib
 import re
 import sys
 from collections import defaultdict
@@ -936,7 +937,7 @@ class IncludePath(OptionalInclude):
     def __repr__(self):
         return (
             f"IncludePath({self.path}, sha256={self.sha256}, "
-            f"when={self.when}, optional={self.optional})"
+            f"when='{self.when}', optional={self.optional})"
         )
 
     def scopes(self, parent_scope: ConfigScope) -> Optional[List[ConfigScope]]:
@@ -954,7 +955,7 @@ class IncludePath(OptionalInclude):
                 but does not exist; configuration stage directory argument is missing
         """
         if not self.satisfied:
-            tty.debug(f"Include condition '{self.when}' is not satisfied")
+            tty.debug(f"Include condition is not satisfied in {self}")
             return None
 
         if self._scopes is not None:
@@ -962,14 +963,14 @@ class IncludePath(OptionalInclude):
             return self._scopes
 
         config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location)
-        if not config_path:
-            raise ConfigFileError(f"Unable to fetch remote configuration from {self.path}")
+        assert config_path
 
         self.destination = config_path
 
         scope = self._scope(self.destination, parent_scope)
         if scope is not None:
             self._scopes = [scope]
+
         return self._scopes
 
 
@@ -992,12 +993,12 @@ class GitIncludePaths(OptionalInclude):
 
         if not self.branch and not self.commit and not self.tag:
             raise spack.error.ConfigError(
-                "Git include paths must specify one or more of: branch, commit, tag"
+                "Git include paths ({self}) must specify one or more of: branch, commit, tag"
             )
 
         if not self.paths:
             raise spack.error.ConfigError(
-                "Git include paths must include one or more relative paths"
+                "Git include paths ({self}) must include one or more relative paths"
             )
 
     def __repr__(self):
@@ -1008,24 +1009,27 @@ class GitIncludePaths(OptionalInclude):
 
         return (
             f"GitIncludePaths({self.repo}, paths={self.paths}, "
-            f"{identifier}, when={self.when}, optional={self.optional})"
+            f"{identifier}, when='{self.when}', optional={self.optional})"
         )
+
+    def _destination(self):
+        dir_name = spack.util.hash.b32_hash(self.repo)[-7:]
+        return os.path.join(_include_cache_location(), dir_name)
 
     def _clone(self) -> Optional[str]:
         """Clone the repository."""
         if self.fetched:
-            tty.debug(f"Repository already cloned to {self.destination}")
+            tty.debug(f"Repository ({self.repo}) already cloned to {self.destination}")
             return self.destination
 
-        dir_name = spack.util.hash.b32_hash(self.repo)[-7:]
-        destination = os.path.join(_include_cache_location(), dir_name)
+        destination = self._destination()
         with filesystem.working_dir(destination, create=True):
             if not os.path.exists(".git"):
                 try:
                     spack.util.git.init_git_repo(self.repo)
                 except spack.util.executable.ProcessError as e:
                     raise spack.error.ConfigError(
-                        f"Unable to initialize repository '{self.repo}' under {destination}: {e}"
+                        f"Unable to initialize repository ({self.repo}) under {destination}: {e}"
                     )
 
             try:
@@ -1044,10 +1048,12 @@ class GitIncludePaths(OptionalInclude):
                         remote = "origin"
                     spack.util.git.pull_checkout_branch(self.branch, remote=remote)
                 else:
-                    raise spack.error.ConfigError(f"Unsupported options in {self}")
+                    raise spack.error.ConfigError(f"Missing or unsupported options in {self}")
 
             except spack.util.executable.ProcessError as e:
-                raise spack.error.ConfigError(f"Unable to check out {self} in {destination}: {e}")
+                raise spack.error.ConfigError(
+                    f"Unable to check out repository ({self}) in {destination}: {e}"
+                )
 
             # only set the destination on successful clone/checkout
             self.destination = destination
@@ -1072,7 +1078,7 @@ class GitIncludePaths(OptionalInclude):
                 but does not exist; configuration stage directory argument is missing
         """
         if not self.satisfied:
-            tty.debug(f"Include conditions '{self.when}' are not satisfied")
+            tty.debug(f"Include condition is not satisfied in {self}")
             return None
 
         if self._scopes is not None:
@@ -1081,7 +1087,7 @@ class GitIncludePaths(OptionalInclude):
 
         destination = self._clone()
         if destination is None:
-            raise ConfigFileError(f"Unable to cache the include: {self}")
+            raise spack.error.ConfigError(f"Unable to cache the include: {self}")
 
         scopes: List[ConfigScope] = []
         for relative_path in self.paths:
@@ -1096,7 +1102,7 @@ class GitIncludePaths(OptionalInclude):
         return self._scopes
 
 
-def included_path(entry: Union[str, dict]) -> Union[IncludePath, GitIncludePaths]:
+def included_path(entry: Union[str, pathlib.Path, dict]) -> Union[IncludePath, GitIncludePaths]:
     """Convert the included paths entry into the appropriate optional include.
 
     Args:
@@ -1104,8 +1110,8 @@ def included_path(entry: Union[str, dict]) -> Union[IncludePath, GitIncludePaths
 
     Returns: converted entry, where an empty ``when`` means the path is not conditionally included
     """
-    if isinstance(entry, str):
-        return IncludePath({"path": entry})
+    if isinstance(entry, (str, pathlib.Path)):
+        return IncludePath({"path": str(entry)})
 
     if entry.get("path", ""):
         return IncludePath(entry)

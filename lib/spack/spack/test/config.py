@@ -1420,49 +1420,108 @@ def test_deepcopy_as_builtin(env_yaml):
     assert type(packages_copy["all"]["compiler"][0]) is str
 
 
-def test_included_path():
-    # String include
-    path = "/a/local/include.yaml"
+def test_included_optional_include_scopes():
+    with pytest.raises(NotImplementedError):
+        spack.config.OptionalInclude({}).scopes(spack.config.ConfigScope("fail"))
+
+
+def test_included_path_string(
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capsys
+):
+    path = tmp_path / "local" / "config.yaml"
+    path.parent.mkdir()
     include = spack.config.included_path(path)
     assert isinstance(include, spack.config.IncludePath)
-    assert include.path == path
-    assert not include.when and not include.sha256 and not include.optional
+    assert include.path == str(path)
+    assert not include.optional
+    assert include.satisfied
 
-    # local conditional include
-    entry = {"path": "/a/local/include.yaml", "when": "platform=darwin"}
+    parent_scope = mock_low_high_config.scopes["low"]
+
+    # Trigger failure when required path does not exist
+    with pytest.raises(ValueError, match="does not exist"):
+        include.scopes(parent_scope)
+
+    # First successful pass builds the scope
+    path.touch()
+    scopes = include.scopes(parent_scope)
+    assert scopes and len(scopes) == 1
+    assert isinstance(scopes[0], spack.config.SingleFileScope)
+
+    # Second pass uses the scopes previously built
+    assert include._scopes is not None
+    scopes = include.scopes(parent_scope)
+    captured = capsys.readouterr()[1]
+    assert "Using existing scopes" in captured
+
+
+def test_included_path_conditional_bad_when(
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, capsys
+):
+    path = tmp_path / "local"
+    path.mkdir()
+    entry = {"path": str(path), "when": 'platform == "nosuchplatform"', "optional": True}
     include = spack.config.included_path(entry)
     assert isinstance(include, spack.config.IncludePath)
     assert include.path == entry["path"]
     assert include.when == entry["when"]
-    assert not include.sha256 and not include.optional
+    assert include.optional
+    assert not include.satisfied
 
-    # git include
+    scopes = include.scopes(mock_low_high_config.scopes["low"])
+    captured = capsys.readouterr()[1]
+    assert "condition is not satisfied" in captured
+    assert scopes is None
+
+
+def test_included_path_conditional_success(tmp_path: pathlib.Path, mock_low_high_config):
+    path = tmp_path / "local"
+    path.mkdir()
+    entry = {"path": str(path), "when": 'platform == "test"', "optional": True}
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.IncludePath)
+    assert include.path == entry["path"]
+    assert include.when == entry["when"]
+    assert include.optional
+    assert include.satisfied
+
+    scopes = include.scopes(mock_low_high_config.scopes["low"])
+    assert scopes and len(scopes) == 1
+    assert isinstance(scopes[0], spack.config.DirectoryConfigScope)
+
+
+def test_included_path_git_missing_args():
+    # must have one or more of: branch, tag and commit so fail if missing any
+    entry = {"git": "https://example.com/windows/configs.git", "paths": ["config.yaml"]}
+    with pytest.raises(spack.error.ConfigError, match="specify one or more"):
+        spack.config.included_path(entry)
+
+    # must have one or more paths
+    entry["tag"] = "v1.0"
+    entry["paths"] = []
+    with pytest.raises(spack.error.ConfigError, match="must include one or more"):
+        spack.config.included_path(entry)
+
+
+def test_included_path_git_unsat(
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capsys
+):
+    paths = ["config.yaml", "packages.yaml"]
     entry = {
         "git": "https://example.com/windows/configs.git",
         "tag": "v1.0",
-        "paths": ["config.yaml"],
+        "paths": paths,
+        "when": 'platform == "nosuchplatform"',
     }
     include = spack.config.included_path(entry)
     assert isinstance(include, spack.config.GitIncludePaths)
     assert include.repo == entry["git"]
     assert include.tag == entry["tag"]
     assert include.paths == entry["paths"]
-    assert not include.when and not include.optional
-    assert not include.branch and not include.commit
+    assert include.when == entry["when"]
+    assert not include.optional and not include.satisfied
 
-    # add commit to tag to confirm can have both
-    entry["commit"] = "abcdef12345"
-    include = spack.config.included_path(entry)
-    assert isinstance(include, spack.config.GitIncludePaths)
-    assert include.commit == entry["commit"]
-
-
-def test_included_path_git_missing_arg():
-    # must have one or more of: branch, tag and commit so fail if missing any
-    entry = {"git": "https://example.com/windows/configs.git", "paths": ["config.yaml"]}
-    with pytest.raises(spack.error.ConfigError, match="specify one or more"):
-        spack.config.included_path(entry)
-
-def test_included_optional_include_scopes():
-    with pytest.raises(NotImplementedError):
-        spack.config.OptionalInclude({}).scopes(spack.config.ConfigScope("fail"))
+    scopes = include.scopes(mock_low_high_config.scopes["low"])
+    captured = capsys.readouterr()[1]
+    assert "condition is not satisfied" in captured
+    assert scopes is None
