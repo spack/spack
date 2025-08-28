@@ -377,7 +377,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dev-build -d 'dev
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a develop -d 'add a spec to an environment'"'"'s dev-build information'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a diff -d 'compare two specs'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a docs -d 'open spack documentation in a web browser'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a edit -d 'open package files in $EDITOR'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a edit -d 'open package files in ``$EDITOR``'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a env -d 'manage virtual environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a extensions -d 'list extensions for package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a external -d 'manage external packages in Spack configuration'
@@ -430,7 +430,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a view -d 'project 
 complete -c spack -n '__fish_spack_using_command ' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ' -s H -l all-help -f -a help
-complete -c spack -n '__fish_spack_using_command ' -s H -l all-help -d 'show help for all commands (same as spack help --all)'
+complete -c spack -n '__fish_spack_using_command ' -s H -l all-help -d 'show help for all commands (same as ``spack help --all``)'
 complete -c spack -n '__fish_spack_using_command ' -l color -r -f -a 'always never auto'
 complete -c spack -n '__fish_spack_using_command ' -l color -r -d 'when to colorize output (default: auto)'
 complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -f -a config_vars
@@ -1052,7 +1052,7 @@ complete -c spack -n '__fish_spack_using_command clean' -s p -l python-cache -d 
 complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -f -a bootstrap
 complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -d 'remove software and configuration needed to bootstrap Spack'
 complete -c spack -n '__fish_spack_using_command clean' -s a -l all -f -a all
-complete -c spack -n '__fish_spack_using_command clean' -s a -l all -d 'equivalent to -sdfmp (does not include --bootstrap)'
+complete -c spack -n '__fish_spack_using_command clean' -s a -l all -d 'equivalent to ``-sdfmp`` (does not include ``--bootstrap``)'
 
 # spack commands
 set -g __fish_spack_optspecs_spack_commands h/help update-completion a/aliases format= header= update=
@@ -1471,7 +1471,7 @@ complete -c spack -n '__fish_spack_using_command develop' -s b -l build-director
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -f -a clone
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -d 'do not clone, the package already exists at the source path'
 complete -c spack -n '__fish_spack_using_command develop' -l clone -f -a clone
-complete -c spack -n '__fish_spack_using_command develop' -l clone -d '(default) clone the package unless the path already exists, use --force to overwrite'
+complete -c spack -n '__fish_spack_using_command develop' -l clone -d '(default) clone the package unless the path already exists, use ``--force`` to overwrite'
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a force
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -a recursive
@@ -1837,7 +1837,7 @@ complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show thi
 complete -c spack -n '__fish_spack_using_command find' -l format -r -f -a format
 complete -c spack -n '__fish_spack_using_command find' -l format -r -d 'output specs with the specified format string'
 complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -f -a format
-complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -d 'same as '"'"'--format {/hash}'"'"'; use with xargs or $()'
+complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -d 'same as ``--format {/hash}``; use with ``xargs`` or ``$()``'
 complete -c spack -n '__fish_spack_using_command find' -l json -f -a json
 complete -c spack -n '__fish_spack_using_command find' -l json -d 'output specs as machine-readable json records'
 complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -f -a install_status
@@ -2014,7 +2014,7 @@ complete -c spack -n '__fish_spack_using_command graph' -s a -l ascii -d 'draw g
 complete -c spack -n '__fish_spack_using_command graph' -s d -l dot -f -a dot
 complete -c spack -n '__fish_spack_using_command graph' -s d -l dot -d 'generate graph in dot format and print to stdout'
 complete -c spack -n '__fish_spack_using_command graph' -s s -l static -f -a static
-complete -c spack -n '__fish_spack_using_command graph' -s s -l static -d 'graph static (possible) deps, don'"'"'t concretize (implies --dot)'
+complete -c spack -n '__fish_spack_using_command graph' -s s -l static -d 'graph static (possible) deps, don'"'"'t concretize (implies ``--dot``)'
 complete -c spack -n '__fish_spack_using_command graph' -s c -l color -f -a color
 complete -c spack -n '__fish_spack_using_command graph' -s c -l color -d 'use different colors for different dependency types'
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -f -a installed
@@ -2200,7 +2200,7 @@ complete -c spack -n '__fish_spack_using_command load' -l pwsh -d 'print pwsh co
 complete -c spack -n '__fish_spack_using_command load' -l first -f -a load_first
 complete -c spack -n '__fish_spack_using_command load' -l first -d 'load the first match if multiple packages match the spec'
 complete -c spack -n '__fish_spack_using_command load' -l list -f -a list
-complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as `spack find --loaded`'
+complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as ``spack find --loaded``'
 
 # spack location
 set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= first
@@ -2357,7 +2357,7 @@ complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -d 'sh
 complete -c spack -n '__fish_spack_using_command mirror add' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command mirror add' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command mirror add' -l type -r -f -a 'binary source'
-complete -c spack -n '__fish_spack_using_command mirror add' -l type -r -d 'specify the mirror type: for both binary and source use `--type binary --type source` (default)'
+complete -c spack -n '__fish_spack_using_command mirror add' -l type -r -d 'specify the mirror type: for both binary and source use ``--type binary --type source`` (default)'
 complete -c spack -n '__fish_spack_using_command mirror add' -l autopush -f -a autopush
 complete -c spack -n '__fish_spack_using_command mirror add' -l autopush -d 'set mirror to push automatically after installation'
 complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -f -a signed
@@ -2451,7 +2451,7 @@ complete -c spack -n '__fish_spack_using_command mirror set' -l push -d 'modify 
 complete -c spack -n '__fish_spack_using_command mirror set' -l fetch -f -a fetch
 complete -c spack -n '__fish_spack_using_command mirror set' -l fetch -d 'modify just the fetch connection details'
 complete -c spack -n '__fish_spack_using_command mirror set' -l type -r -f -a 'binary source'
-complete -c spack -n '__fish_spack_using_command mirror set' -l type -r -d 'specify the mirror type: for both binary and source use `--type binary --type source`'
+complete -c spack -n '__fish_spack_using_command mirror set' -l type -r -d 'specify the mirror type: for both binary and source use ``--type binary --type source``'
 complete -c spack -n '__fish_spack_using_command mirror set' -l url -r -f -a url
 complete -c spack -n '__fish_spack_using_command mirror set' -l url -r -d 'url of mirror directory from '"'"'spack mirror create'"'"''
 complete -c spack -n '__fish_spack_using_command mirror set' -l autopush -f -a autopush
@@ -3047,7 +3047,7 @@ complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -d 'spec
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -f -a skip
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -d 'specify tools to skip (choose from import, isort, black, flake8, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -l spec-strings -f -a spec_strings
-complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: must be used only on specs from spack v0.X.'
+complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style ``--spec-strings $(git ls-files)``. Note: must be used only on specs from spack v0.X.'
 
 # spack tags
 set -g __fish_spack_optspecs_spack_tags h/help i/installed a/all
