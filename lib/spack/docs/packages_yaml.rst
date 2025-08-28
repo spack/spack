@@ -212,7 +212,7 @@ This means that you can also configure system compilers as external packages and
 Spack automatically detects system compilers and configures them in ``packages.yaml`` for you.
 You can also run :ref:`spack-compiler-find` to find and configure new system compilers.
 
-When configuring compilers as external packages, you need to configure a few :ref:`extra attributes <extra-attributes-for-externals>` for them to work properly.
+When configuring compilers as external packages, you need to set a few :ref:`extra attributes <extra-attributes-for-externals>` for them to work properly.
 The ``compilers`` extra attribute field is required to clarify which paths within the compiler prefix are used for which languages:
 
 .. code-block:: yaml
