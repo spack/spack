@@ -75,36 +75,24 @@ The following set of criteria (from lowest to highest precedence) explains commo
 
 Requirements and constraints restrict the set of possible solutions, while reuse behavior and preferences influence what an optimal solution looks like.
 
-How do I specify or require a compiler?
----------------------------------------
+How do I use a specific compiler?
+---------------------------------
 
-When specifying compilers, you have two main options: either you specify compilers globally for all packages in configuration files, or you specify them on the level of :doc:`individual specs <spec_syntax>`.
+When you have multiple compilers available in :ref:`spack-compiler-list`, and want to build your packages with a specific one, you have the following options:
+
+1. Specify your compiler preferences globally for all packages in configuration files.
+2. Specify them on the level of individual specs, like ``pkg %gcc@15`` or ``pkg %c,cxx=gcc@15``.
+
+We'll explore both options in more detail.
 
 Specific compiler for all packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you want to use a specific compiler for all packages, it's best to use :ref:`requirements in packages.yaml config <setting-requirements-on-virtual-specs>`.
-The following example requires GCC 15 for all languages ``c``, ``cxx``, and ``fortran``:
+If you want to use a specific compiler for all packages, it's best to use :ref:`strong preferences in packages.yaml config <setting-requirements-on-virtual-specs>`.
+The following example prefers GCC 15 for all languages ``c``, ``cxx``, and ``fortran``:
 
 .. code-block:: yaml
-   :caption: Recommended: *require* a specific compiler
-   :name: code-example-require-compiler-per-language
-
-   packages:
-     c:
-       require:
-       - gcc@15
-     cxx:
-       require:
-       - gcc@15
-     fortran:
-       require:
-       - gcc@15
-
-Alternatively, you can use :ref:`strong preferences <package-strong-preferences>` instead of hard requirements, which are more forgiving when certain packages conflict with the requested compiler:
-
-.. code-block:: yaml
-   :caption: Alternative: *prefer* a specific compiler
+   :caption: Recommended: *prefer* a specific compiler
    :name: code-example-prefer-compiler
 
    packages:
@@ -118,9 +106,12 @@ Alternatively, you can use :ref:`strong preferences <package-strong-preferences>
        prefer:
        - gcc@15
 
+You can also replace ``prefer:`` with ``require:`` if you want Spack to produce an error if the preferred compiler cannot be used.
+See also :ref:`the previous FAQ entry <faq-concretizer-precedence>`.
+
 In Spack, the languages ``c``, ``cxx`` and ``fortran`` are :ref:`virtual packages <language-dependencies>`, on which packages depend if they need a compiler for that language.
 Compiler packages provide these language virtuals.
-When you specify these requirements or strong preferences, Spack determines whether the package depends on the language virtuals, and if so, it applies the requested compiler spec.
+When you specify these strong preferences, Spack determines whether the package depends on any of the language virtuals, and if so, it applies the associated compiler spec when possible.
 
 What is **not recommended** is to define ``%gcc`` as a required dependency of all packages:
 
@@ -138,7 +129,7 @@ This is *incorrect*, because some packages do not need a compiler at all (e.g. p
 Specific compiler for individual specs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If different parts of your software stack need to be built with different compilers, it's best to specify compilers as dependencies of the relevant specs (whether on the command line or in Spack environment).
+If different parts of your software stack need to be built with different compilers, it's best to specify compilers as dependencies of the relevant specs (whether on the command line or in Spack environments).
 
 .. code-block:: spec
    :caption: Example of specifying different compilers for different specs

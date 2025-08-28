@@ -201,6 +201,8 @@ This could be configured as follows:
 
 See :ref:`configuration_environment_variables` for more information on how to configure environment modifications in Spack config files.
 
+.. _configuring-system-compilers-as-external-packages:
+
 Configuring system compilers as external packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
