@@ -1410,16 +1410,6 @@ def stable_target(fetcher):
     return False
 
 
-def from_url(url: str) -> URLFetchStrategy:
-    """Given a URL, find an appropriate fetch strategy for it.
-    Currently just gives you a URLFetchStrategy that uses curl.
-
-    TODO: make this return appropriate fetch strategies for other
-          types of URLs.
-    """
-    return URLFetchStrategy(url=url)
-
-
 def from_kwargs(**kwargs):
     """Construct an appropriate FetchStrategy from the given keyword arguments.
 
