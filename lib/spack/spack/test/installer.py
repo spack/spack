@@ -1394,13 +1394,13 @@ def test_install_gmake_ninja_with_fifo(install_mockery):
     gmake_spec = spack.concretize.concretize_one("gmake@4.4")
     gmake_pkg = gmake_spec.package
     gmake_js_class = spack.jobserver.Jobserver.determine_type([gmake_pkg])
-    assert gmake_js_class == spack.jobserver.FifoJobserver
+    assert isinstance(gmake_js_class, spack.jobserver.FifoJobserver)
 
     # ninja 1.13.0 supports FIFO jobserver, should resolve to FifoJobserver
     ninja_spec = spack.concretize.concretize_one("ninja@1.13.0")
     ninja_pkg = ninja_spec.package
     ninja_js_class = spack.jobserver.Jobserver.determine_type([ninja_pkg])
-    assert ninja_js_class == spack.jobserver.FifoJobserver
+    assert isinstance(ninja_js_class, spack.jobserver.FifoJobserver)
 
 
 def test_install_gmake_ninja_without_fifo(install_mockery):
@@ -1411,7 +1411,7 @@ def test_install_gmake_ninja_without_fifo(install_mockery):
     old_gmake_state = spack.jobserver.package_type(gmake_pkg)
     assert old_gmake_state == spack.jobserver.JobserverType.DISABLE
     gmake_js_class = spack.jobserver.Jobserver.determine_type([gmake_pkg])
-    assert gmake_js_class == spack.jobserver.NoopJobserver
+    assert isinstance(gmake_js_class, spack.jobserver.NoopJobserver)
 
     # ninja version that predates FIFO jobserver support, should be disabled
     ninja_spec = spack.concretize.concretize_one("ninja@1.10.2")
@@ -1419,7 +1419,7 @@ def test_install_gmake_ninja_without_fifo(install_mockery):
     old_ninja_state = spack.jobserver.package_type(ninja_pkg)
     assert old_ninja_state == spack.jobserver.JobserverType.DISABLE
     ninja_js_class = spack.jobserver.Jobserver.determine_type([ninja_pkg])
-    assert ninja_js_class == spack.jobserver.NoopJobserver
+    assert isinstance(ninja_js_class, spack.jobserver.NoopJobserver)
 
 
 def test_install_none_noop_jobserver_package(install_mockery):
@@ -1430,7 +1430,7 @@ def test_install_none_noop_jobserver_package(install_mockery):
     py_state = spack.jobserver.package_type(py_pkg)
     assert py_state == spack.jobserver.JobserverType.NONE
     py_js_class = spack.jobserver.Jobserver.determine_type([py_pkg])
-    assert py_js_class == spack.jobserver.NoopJobserver
+    assert isinstance(py_js_class, spack.jobserver.NoopJobserver)
 
 
 def test_disable_jobserver_type_takes_priority(install_mockery):
@@ -1447,7 +1447,7 @@ def test_disable_jobserver_type_takes_priority(install_mockery):
 
     packages = [fifo_pkg, disable_pkg, noop_pkg]
     js_class = spack.jobserver.Jobserver.determine_type(packages)
-    assert js_class == spack.jobserver.NoopJobserver
+    assert isinstance(js_class, spack.jobserver.NoopJobserver)
 
 
 @pytest.mark.skipif(
