@@ -14,6 +14,7 @@ from http import HTTPStatus
 from typing import Callable, List, NamedTuple, Optional
 
 import spack.llnl.util.filesystem as fs
+from spack.llnl.util import tty
 
 from ..error import FetchError
 from .executable import which_string
@@ -321,6 +322,7 @@ def download_file(
     partial_file = destination + ".part"
     with url_reader as s, open(partial_file, "wb") as f:
         request_info = s.request_info()
+        tty.msg(f"Fetching {url}")
         progress = FetchProgress.from_headers(request_info.headers, enabled=sys.stdout.isatty())
         while True:
             chunk = s.read(size=chunk_size)

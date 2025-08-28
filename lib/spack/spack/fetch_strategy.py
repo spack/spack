@@ -344,7 +344,7 @@ class URLFetchStrategy(FetchStrategy):
     def _fetch_from_url(self, url: str) -> None:
         save_file = self.stage.save_filename
         try:
-            tty.msg(f"Fetching {url}")
+            tty.debug(f"[{__name__}] Attempting to get {url}")
             self._download_info = download_file(
                 url=url,
                 destination=save_file,
