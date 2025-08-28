@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
 import http.client
+import io
 import subprocess
 import sys
 import time
@@ -106,13 +107,8 @@ class CurlStreamReader(UrlStreamReader):
     def __enter__(self) -> UrlStreamReader:
         curl_args = (
             base_curl_fetch_args(
-                self.url,
-                self.timeout,
-                headers=False,
-                status_bar=False,
-                user_agent=SPACK_USER_AGENT,
+                self.url, self.timeout, status_bar=False, user_agent=SPACK_USER_AGENT
             )
-            + self._redirect_header_args
             + self._config_args
         )
         curl_cmd = [self._curl] + curl_args
@@ -120,32 +116,20 @@ class CurlStreamReader(UrlStreamReader):
         self._curl_process = subprocess.Popen(
             curl_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        headers_parts = []
 
-        assert self._curl_process.stderr is not None, "curl process stderr is None"
+        self._scheme = urllib.parse.urlparse(self.url).scheme
+        assert self._curl_process.stdout is not None, "curl process stderr is None"
+        self._stream = io.BufferedReader(self._curl_process.stdout)  # type: ignore[type-var]
+
+        headers = []
         while True:
-            line = self._curl_process.stderr.readline().decode("utf-8")
-            if line.strip() == "":
+            header, finished = self._get_next_header()
+            headers.append(header)
+            if finished:
                 break
-            headers_parts.append(line)
 
-        headers = http.client.HTTPMessage()
-        scheme = urllib.parse.urlparse(self.url).scheme
-        if scheme in ("https", "http"):
-            try:
-                http_status = headers_parts[0].split()[1]
-                int(http_status)
-            except (IndexError, ValueError):
-                raise FetchError(f"Failed to fetch {self.url}: cannot parse HTTP status code")
-
-            if http_status.startswith("4") or http_status.startswith("5"):
-                status = HTTPStatus(int(http_status))
-                raise FetchError(f"Failed to fetch {self.url}: {status.value} {status.phrase}")
-
-        for line in headers_parts:
-            if ": " in line:
-                key, value = line.split(": ", 1)
-                headers[key.strip()] = value.strip()
+        if not headers:
+            raise FetchError(f"Failed to fetch {self.url}: no headers returned")
 
         self._headers = headers
         return self
@@ -155,10 +139,10 @@ class CurlStreamReader(UrlStreamReader):
         check_curl_code(self._curl_process.returncode)
 
     def read(self, size: int) -> bytes:
-        return self._curl_process.stdout.read(size)  # type: ignore
+        return self._stream.read(size)  # type: ignore
 
     def request_info(self) -> RequestInfo:
-        return RequestInfo(url=self.url, effective_url=self.url, headers=self._headers)
+        return RequestInfo(url=self.url, effective_url=self.url, headers=self._headers[-1])
 
     @staticmethod
     def cookie_args(cookie) -> List[str]:
@@ -168,12 +152,34 @@ class CurlStreamReader(UrlStreamReader):
         """
         return ["-j", "-b", cookie]
 
-    @property
-    def _redirect_header_args(self) -> List[str]:
-        """Redirect headers to stderr."""
-        if sys.platform == "win32":
-            return ["-D", "CON"]
-        return ["-D", "/dev/stderr"]
+    def _get_next_header(self):
+        """Returns the next header from the stream."""
+
+        # This should work for file://
+        if self._scheme not in ("https", "http"):
+            return http.client.parse_headers(self._stream), True
+
+        finished = True
+        status_line = self._stream.readline().decode("iso-8859-1")
+        if not status_line.startswith("HTTP/"):
+            raise FetchError(f"Failed to fetch {self.url}: unexpected status line: {status_line}")
+        try:
+            status = int(status_line.split()[1])
+        except ValueError:
+            raise FetchError(
+                f"Failed to fetch {self.url}: cannot parse HTTP status code from {status_line}"
+            )
+
+        if 400 <= status < 600:
+            raise FetchError(
+                f"Failed to fetch {self.url}: {status} {HTTPStatus(int(status)).phrase}"
+            )
+
+        header = http.client.parse_headers(self._stream)
+        if self._stream.peek(len(b"HTTP/")).startswith(b"HTTP/"):
+            finished = False
+
+        return header, finished
 
 
 class FetchProgress:
