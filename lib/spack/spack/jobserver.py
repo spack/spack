@@ -50,7 +50,7 @@ class Jobserver:
         """Determine the type of jobserver to be used based on the packages
         required for the build."""
         if not packages:
-            return NoopJobserver
+            return NoopJobserver()
         js_types = [package_type(pkg) for pkg in packages]
         js_type = max(js_types)
         if js_type == JobserverType.DISABLE:
