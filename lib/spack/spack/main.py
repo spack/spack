@@ -364,7 +364,7 @@ def make_argument_parser(**kwargs):
         action="store_const",
         const="long",
         default=None,
-        help="show help for all commands (same as spack help --all)",
+        help="show help for all commands (same as ``spack help --all``)",
     )
     parser.add_argument(
         "--color",

@@ -205,7 +205,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--spec-strings",
         action="store_true",
         help="upgrade spec strings in Python, JSON and YAML files for compatibility with Spack "
-        "v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: must be "
+        "v1.0 and v0.x. Example: spack style ``--spec-strings $(git ls-files)``. Note: must be "
         "used only on specs from spack v0.X.",
     )
 

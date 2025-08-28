@@ -90,7 +90,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     scopes_parser.add_argument(
         "section",
-        help="tailor scope path information to the specified section (implies -p|--paths)"
+        help="tailor scope path information to the specified section (implies ``--paths``)"
         "\n\noptions: %(choices)s",
         metavar="section",
         nargs="?",

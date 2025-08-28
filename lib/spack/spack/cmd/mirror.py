@@ -109,7 +109,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         choices=("binary", "source"),
         help=(
             "specify the mirror type: for both binary "
-            "and source use `--type binary --type source` (default)"
+            "and source use ``--type binary --type source`` (default)"
         ),
     )
     add_parser.add_argument(
@@ -180,7 +180,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         choices=("binary", "source"),
         help=(
             "specify the mirror type: for both binary "
-            "and source use `--type binary --type source`"
+            "and source use ``--type binary --type source``"
         ),
     )
     set_parser.add_argument("--url", help="url of mirror directory from 'spack mirror create'")
