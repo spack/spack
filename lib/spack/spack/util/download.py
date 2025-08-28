@@ -128,15 +128,12 @@ class CurlStreamReader(UrlStreamReader):
         self._stream = io.BufferedReader(self._curl_process.stdout)  # type: ignore[type-var]
 
         # curl echoes intermediate redirect responses, so we might get multiple responses
-        headers, finished = [], False
+        finished, effective_url = False, self.url
         while not finished:
-            header, finished = self._get_next_header()
-            headers.append(header)
+            self._headers, finished = self._get_next_headers()
+            effective_url = self._headers.get("location", effective_url)
 
-        if not headers:
-            raise FetchError(f"Failed to fetch {self.url}: no headers returned")
-
-        self._headers = headers
+        self.effective_url = effective_url
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -147,12 +144,7 @@ class CurlStreamReader(UrlStreamReader):
         return self._stream.read(size)  # type: ignore
 
     def request_info(self) -> RequestInfo:
-        effective_url = self.url
-        for h in reversed(self._headers):
-            if "location" in h:
-                effective_url = h["location"]
-                break
-        return RequestInfo(url=self.url, effective_url=effective_url, headers=self._headers[-1])
+        return RequestInfo(url=self.url, effective_url=self.effective_url, headers=self._headers)
 
     @staticmethod
     def cookie_args(cookie) -> List[str]:
@@ -162,8 +154,8 @@ class CurlStreamReader(UrlStreamReader):
         """
         return ["-j", "-b", cookie]
 
-    def _get_next_header(self):
-        """Returns the next header from the stream."""
+    def _get_next_headers(self):
+        """Returns the next headers from the stream."""
 
         if self._scheme not in ("http", "https"):
             return http.client.HTTPMessage(), True
@@ -179,20 +171,20 @@ class CurlStreamReader(UrlStreamReader):
                 f"Failed to fetch {self.url}: cannot parse HTTP status code from {status_line}"
             )
 
-        header = http.client.parse_headers(self._stream)
+        headers = http.client.parse_headers(self._stream)
         if 400 <= status < 600:
             raise DetailedHTTPError(
                 urllib.request.Request(self.url),
                 status,
                 HTTPStatus(int(status)).phrase,
-                header,
+                headers,
                 None,
             )
 
         elif 300 <= status < 400:
             finished = False
 
-        return header, finished
+        return headers, finished
 
 
 class FetchProgress:
