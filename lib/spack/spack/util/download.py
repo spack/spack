@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import enum
 import http.client
 import subprocess
 import sys
@@ -259,7 +260,23 @@ class FetchProgress:
             )
 
 
-UrlReaderFactory = Callable[[str, int], UrlStreamReader]
+class DownloadMethod(enum.Enum):
+    URLLIB = enum.auto()
+    CURL = enum.auto()
+
+
+class DownloadOptions(NamedTuple):
+    """Options for downloading a file."""
+
+    method: DownloadMethod = DownloadMethod.URLLIB
+    extra_args: List[str] = []
+
+
+def create_download_options(
+    method: DownloadMethod, *, extra_ars: Optional[List[str]] = None
+) -> DownloadOptions:
+    """Create a DownloadOptions object from a method and extra arguments."""
+    return DownloadOptions(method=method, extra_args=extra_ars or [])
 
 
 def download_file(
@@ -268,7 +285,7 @@ def download_file(
     destination: str,
     timeout: int = 0,
     chunk_size: int = 65536,
-    url_reader: Optional[UrlReaderFactory] = None,
+    options: DownloadOptions = create_download_options(DownloadMethod.URLLIB),
 ) -> DownloadInfo:
     """Downloads a file from the specified URL and saves it to the given path.
 
@@ -277,18 +294,22 @@ def download_file(
         destination: the local file path where the downloaded file will be saved.
         timeout: timeout in seconds for the download.
         chunk_size: size of chunks to read and write during the download.
-        url_reader: factory for UrlStreamReader objects. If None, a reader based on urllib is used.
+        options: options for the download of the file, including the method.
+            The default is to use urllib.
 
     Returns:
         An object containing details about the downloaded file,
         including the original URL, effective URL after redirects, saved path,
         and response headers.
     """
-    if url_reader is None:
-        url_reader = urllib_stream_reader()
+    url_reader: UrlStreamReader
+    if options.method == DownloadMethod.URLLIB:
+        url_reader = UrllibStreamReader(url=url, timeout=timeout)
+    elif options.method == DownloadMethod.CURL:
+        url_reader = CurlStreamReader(url=url, timeout=timeout, config_args=options.extra_args)
 
     partial_file = destination + ".part"
-    with url_reader(url, timeout) as s, open(partial_file, "wb") as f:
+    with url_reader as s, open(partial_file, "wb") as f:
         request_info = s.request_info()
         progress = FetchProgress.from_headers(request_info.headers, enabled=sys.stdout.isatty())
         while True:
@@ -301,24 +322,6 @@ def download_file(
 
     fs.rename(partial_file, destination)
     return DownloadInfo(request=request_info, path=destination)
-
-
-def curl_stream_reader(*, config_args: Optional[List[str]] = None) -> UrlReaderFactory:
-    """Returns a context manager that reads from a URL using curl."""
-
-    def _factory(url: str, timeout: int) -> UrlStreamReader:
-        return CurlStreamReader(url=url, timeout=timeout, config_args=config_args)
-
-    return _factory
-
-
-def urllib_stream_reader() -> UrlReaderFactory:
-    """Returns a context manager that reads from a URL using urllib."""
-
-    def _factory(url: str, timeout: int) -> UrlStreamReader:
-        return UrllibStreamReader(url=url, timeout=timeout)
-
-    return _factory
 
 
 def _check_headers(download_info: DownloadInfo) -> None:

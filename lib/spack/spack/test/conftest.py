@@ -64,7 +64,7 @@ import spack.util.url as url_util
 import spack.util.web
 import spack.version
 from spack.enums import ConfigScopePriority
-from spack.fetch_strategy import FetchMethod, URLFetchStrategy
+from spack.fetch_strategy import DownloadMethod, URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import (
     copy,
@@ -2177,8 +2177,8 @@ def _default_timeout() -> int:
     return 30
 
 
-def _default_url_fetch_method() -> Tuple[FetchMethod, List[str]]:
-    return FetchMethod.URLLIB, []
+def _default_url_fetch_method() -> Tuple[DownloadMethod, List[str]]:
+    return DownloadMethod.URLLIB, []
 
 
 @pytest.fixture()
