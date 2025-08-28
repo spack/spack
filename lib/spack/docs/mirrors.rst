@@ -146,7 +146,7 @@ Mirror environment
 To create a mirror of all packages required by a concrete environment, activate the environment and call ``spack mirror create -a``.
 This is especially useful to create a mirror of an environment concretized on another machine.
 
-Optionally specify -j <thread count> to control the number of threads used to create a full mirror (default 16). 
+Optionally specify -j <thread count> to control the number of threads used to create a full mirror (default 16).
 
 .. code-block:: console
 
