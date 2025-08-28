@@ -112,7 +112,6 @@ class CurlStreamReader(UrlStreamReader):
             + self._config_args
         )
         curl_cmd = [self._curl] + curl_args
-
         self._curl_process = subprocess.Popen(
             curl_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -121,6 +120,7 @@ class CurlStreamReader(UrlStreamReader):
         assert self._curl_process.stdout is not None, "curl process stderr is None"
         self._stream = io.BufferedReader(self._curl_process.stdout)  # type: ignore[type-var]
 
+        # curl echoes intermediate redirect responses, so we might get multiple headers
         headers = []
         while True:
             header, finished = self._get_next_header()
@@ -160,9 +160,8 @@ class CurlStreamReader(UrlStreamReader):
     def _get_next_header(self):
         """Returns the next header from the stream."""
 
-        # This should work for file://
-        if self._scheme not in ("https", "http"):
-            return http.client.parse_headers(self._stream), True
+        if self._scheme not in ("http", "https"):
+            return http.client.HTTPMessage(), True
 
         finished = True
         status_line = self._stream.readline().decode("iso-8859-1")

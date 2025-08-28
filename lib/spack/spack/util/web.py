@@ -320,13 +320,12 @@ def base_curl_fetch_args(
 
     Returns (list): list of argument strings
     """
-    curl_args = [
-        "-f",  # fail on >400 errors
-        "-D",
-        "-",  # "-D -" prints out HTML headers
-        "-L",  # resolve 3xx redirects
-        url,
-    ]
+    scheme = urllib.parse.urlparse(url).scheme
+    curl_args = ["-f", "-L", url]  # fail on >400 errors  # resolve 3xx redirects
+
+    # Avoid getting unstructured output for FTP
+    if scheme in ("http", "https"):
+        curl_args.extend(["-D", "-"])
 
     if not spack.config.get("config:verify_ssl"):
         curl_args.append("-k")
