@@ -96,6 +96,10 @@ GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVer
 
 TransformFunction = Callable[[spack.spec.Spec, List[AspFunction]], List[AspFunction]]
 
+#: strip comments and whitespace from ASP code
+_STRIP_COMMENTS_RE = re.compile(r"\%[^\n]*\n")
+_STRIP_NEWLINES_RE = re.compile(r"\s*\n\s*")
+
 
 class OutputConfiguration(NamedTuple):
     """Data class that contains configuration on what a clingo solve should output."""
@@ -2906,7 +2910,7 @@ class SpackSolverSetup:
         """Define what version_satisfies(...) means in ASP logic."""
 
         for pkg_name, versions in sorted(self.possible_versions.items()):
-            for v in versions:
+            for v in sorted(versions):
                 if v in self.git_commit_versions[pkg_name]:
                     sha = self.git_commit_versions[pkg_name].get(v)
                     if sha:
@@ -3004,8 +3008,8 @@ class SpackSolverSetup:
         variant definitions.
 
         """
-        # Tell the concretizer about possible values from specs seen in spec_clauses().
-        # We might want to order these facts by pkg and name if we are debugging.
+        # for determinism, sort by variant ids, not variant def ids (which are object ids)
+        def_info = []
         for pkg_name, variant_def_id, value in sorted(self.variant_values_from_specs):
             try:
                 vid = self.variant_ids_by_def_id[variant_def_id]
@@ -3014,7 +3018,10 @@ class SpackSolverSetup:
                     f"[{__name__}] cannot retrieve id of the {value} variant from {pkg_name}"
                 )
                 continue
+            def_info.append((pkg_name, vid, value))
 
+        # Tell the concretizer about possible values from specs seen in spec_clauses().
+        for pkg_name, vid, value in sorted(def_info):
             self.gen.fact(fn.pkg_fact(pkg_name, fn.variant_possible_value(vid, value)))
 
     def register_concrete_spec(self, spec, possible):
@@ -3564,6 +3571,24 @@ class ProblemInstanceBuilder:
 
     def newline(self):
         self.asp_problem.append("")
+
+    def problem(self, strip: bool = False) -> List[str]:
+        """Return the ASP problem as a list of rules.
+
+        Arguments:
+            strip: strip comments and empty lines.
+        """
+        if not strip:
+            return self.asp_problem
+
+        def strip_statement(stmt: str) -> str:
+            lines = [line for line in stmt.split("\n") if not line.startswith("%")]
+            return "".join(line.strip() for line in lines if line)
+
+        stripped = [strip_statement(stmt) for stmt in self.asp_problem]
+        stripped = [s for s in stripped if s]
+
+        return stripped
 
     def value(self, randomize: bool = False) -> str:
         """Return the ASP problem as a string that can be loaded directly by clingo.
