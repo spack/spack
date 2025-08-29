@@ -53,11 +53,11 @@ from spack.llnl.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
 from spack.util.download import (
-    CurlStreamReader,
     DownloadMethod,
     DownloadOptions,
     create_download_info,
     create_download_options,
+    curl_cookie_args,
     download_file,
 )
 from spack.util.executable import CommandNotFoundError, which
@@ -291,7 +291,7 @@ class URLFetchStrategy(FetchStrategy):
             and "cookie" in fetch_options
             and self.fetch_method == DownloadMethod.CURL
         ):
-            self.fetch_args.extend(CurlStreamReader.cookie_args(fetch_options["cookie"]))
+            self.fetch_args.extend(curl_cookie_args(fetch_options["cookie"]))
 
         self._download_info = create_download_info(url=url)
 
@@ -304,7 +304,7 @@ class URLFetchStrategy(FetchStrategy):
         return self._download_info.effective_url
 
     def _download_options(self) -> DownloadOptions:
-        return create_download_options(self.fetch_method, extra_ars=self.fetch_args)
+        return create_download_options(self.fetch_method, extra_args=self.fetch_args)
 
     def source_id(self):
         return self.digest

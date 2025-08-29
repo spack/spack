@@ -1,6 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import abc
+import contextlib
 import enum
 import http.client
 import io
@@ -12,7 +14,9 @@ import urllib.request
 import warnings
 from http import HTTPStatus
 from http.client import HTTPMessage
-from typing import Callable, List, NamedTuple, Optional, Tuple
+from typing import Any, Callable, Generator, List, NamedTuple, Optional, Tuple
+
+from spack.vendor.typing_extensions import Protocol
 
 import spack.llnl.util.filesystem as fs
 from spack.llnl.util import tty
@@ -53,142 +57,127 @@ def create_download_info(
     )
 
 
-class UrlStreamReader:
-    """Context manager that reads from an URL stream."""
+class UrlStream(Protocol):
+    """A stream of bytes from a URL."""
 
-    def __init__(self, *, url: str, timeout: int):
-        self.url = url
-        self.timeout = timeout
+    #: URL of the initial request.
+    url: str
 
-    def __enter__(self) -> "UrlStreamReader":
-        raise NotImplementedError
+    #: Header of the final response.
+    headers: HTTPMessage
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
+    @abc.abstractmethod
     def read(self, size: int) -> bytes:
-        """Reads and returns a chunk of the response body."""
+        """Reads and returns a chunk of the final response body."""
         raise NotImplementedError
 
-    def headers(self) -> HTTPMessage:
-        """Returns the headers of the response. If the protocol is not HTTP, the object is empty"""
-        raise NotImplementedError
-
+    @abc.abstractmethod
     def geturl(self) -> str:
         """Returns the effective URL of the request"""
         raise NotImplementedError
 
 
-class UrllibStreamReader(UrlStreamReader):
-    """Streams a file from a URL using urllib."""
-
-    def __enter__(self) -> UrlStreamReader:
-        request = urllib.request.Request(self.url, headers={"User-Agent": SPACK_USER_AGENT})
-        self._response = urlopen(request, timeout=self.timeout)
-        return self
+class UrllibStream(UrlStream):
+    def __init__(self, *, url: str, response):
+        # We cannot return a raw response because we need the original url in some place
+        # and HTTPResponse.url is the same as geturl()
+        self.url = url
+        self.headers = response.headers
+        self._response = response
 
     def read(self, size: int) -> bytes:
-        chunk = self._response.read(size)
-        return chunk
-
-    def headers(self) -> HTTPMessage:
-        return self._response.headers
+        return self._response.read(size)
 
     def geturl(self) -> str:
-        if isinstance(self._response, http.client.HTTPResponse):
-            return self._response.geturl()
-        return self.url
+        return self._response.geturl()
 
 
-class CurlStreamReader(UrlStreamReader):
+@contextlib.contextmanager
+def urllib_stream(url: str, timeout: int) -> Generator[UrlStream, Any, None]:
+    request = urllib.request.Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    with urlopen(request, timeout=timeout) as response:
+        yield UrllibStream(url=url, response=response)
+
+
+class CurlStream(UrlStream):
     """Streams a file from a URL using curl."""
 
-    _curl_exe: Optional[str] = None
-
-    def __init__(self, *, url: str, timeout: int, config_args: Optional[List[str]] = None):
-        super().__init__(url=url, timeout=timeout)
-        self._config_args: List[str] = config_args or []
-        if CurlStreamReader._curl_exe is None:
-            CurlStreamReader._curl_exe = which_string("curl", required=True)
-        self._curl = CurlStreamReader._curl_exe
-
-    def __enter__(self) -> UrlStreamReader:
-        curl_args = (
-            base_curl_fetch_args(
-                self.url, self.timeout, status_bar=False, user_agent=SPACK_USER_AGENT
-            )
-            + self._config_args
-        )
-        curl_cmd = [self._curl] + curl_args
-        self._curl_process = subprocess.Popen(
-            curl_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-
-        self._scheme = urllib.parse.urlparse(self.url).scheme
-        assert self._curl_process.stdout is not None, "curl process stderr is None"
-        self._stream = io.BufferedReader(self._curl_process.stdout)  # type: ignore[type-var]
-
-        # curl echoes intermediate redirect responses, so we might get multiple responses
-        finished, effective_url = False, self.url
-        while not finished:
-            self._headers, finished = self._get_next_headers()
-            effective_url = self._headers.get("location", effective_url)
-
-        self.effective_url = effective_url
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._curl_process.wait()
-        check_curl_code(self._curl_process.returncode)
+    def __init__(self, *, url: str, headers: HTTPMessage, effective_url: str, stream):
+        self.url = url
+        self.headers = headers
+        self._effective_url = effective_url
+        self._stream = stream
 
     def read(self, size: int) -> bytes:
-        return self._stream.read(size)  # type: ignore
-
-    def headers(self) -> HTTPMessage:
-        return self._headers
+        return self._stream.read(size)
 
     def geturl(self) -> str:
-        return self.effective_url
+        return self._effective_url
 
-    @staticmethod
-    def cookie_args(cookie) -> List[str]:
-        """Returns the arguments to pass to curl to use a cookie.
 
-        This can be used as a helper function to generate the arguments for the constructor.
-        """
-        return ["-j", "-b", cookie]
+def curl_cookie_args(cookie) -> List[str]:
+    """Returns the arguments to pass to curl to use a cookie.
 
-    def _get_next_headers(self) -> Tuple[http.client.HTTPMessage, bool]:
-        """Returns the next headers from the stream."""
+    This can be used as a helper function to generate the arguments for the constructor.
+    """
+    return ["-j", "-b", cookie]
 
-        if self._scheme not in ("http", "https"):
-            return http.client.HTTPMessage(), True
 
-        finished = True
-        status_line = self._stream.readline().decode("iso-8859-1")
-        if not status_line.startswith("HTTP/"):
-            raise FetchError(f"Failed to fetch {self.url}: unexpected status line: {status_line}")
-        try:
-            status = int(status_line.split()[1])
-        except ValueError:
-            raise FetchError(
-                f"Failed to fetch {self.url}: cannot parse HTTP status code from {status_line}"
-            )
+@contextlib.contextmanager
+def curl_stream(
+    *, url: str, timeout: int, config_args: Optional[List[str]] = None
+) -> Generator[UrlStream, Any, None]:
+    config_args = config_args or []
+    curl_exe = which_string("curl", required=True)
+    curl_args = (
+        base_curl_fetch_args(url, timeout, status_bar=False, user_agent=SPACK_USER_AGENT)
+        + config_args
+    )
+    curl_cmd = [curl_exe] + curl_args
+    with subprocess.Popen(
+        curl_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+    ) as curl_process:
+        scheme = urllib.parse.urlparse(url).scheme
+        assert curl_process.stdout is not None, "curl process stdout is None"
+        stream = io.BufferedReader(curl_process.stdout)  # type: ignore[type-var]
 
-        headers = http.client.parse_headers(self._stream)
-        if 400 <= status < 600:
-            raise DetailedHTTPError(
-                urllib.request.Request(self.url),
-                status,
-                HTTPStatus(int(status)).phrase,
-                headers,
-                None,
-            )
-
-        elif 300 <= status < 400:
+        effective_url = url
+        if scheme not in ("http", "https"):
+            headers = HTTPMessage()
+        else:
+            # curl echoes intermediate redirect responses, so we might get multiple responses
             finished = False
+            while not finished:
+                headers, finished = _get_next_http_headers(url=url, stream=stream)
+                effective_url = headers.get("location", effective_url)
+        yield CurlStream(url=url, headers=headers, effective_url=effective_url, stream=stream)
+    check_curl_code(curl_process.returncode)
 
-        return headers, finished
+
+def _get_next_http_headers(url, stream) -> Tuple[http.client.HTTPMessage, bool]:
+    """Returns the next headers from the stream."""
+
+    finished = True
+    status_line = stream.readline().decode("iso-8859-1")
+    if not status_line.startswith("HTTP/"):
+        raise FetchError(f"Failed to fetch {url}: unexpected status line: {status_line}")
+    try:
+        status = int(status_line.split()[1])
+    except ValueError:
+        raise FetchError(
+            f"Failed to fetch {url}: cannot parse HTTP status code from {status_line}"
+        )
+
+    headers = http.client.parse_headers(stream)
+    if 400 <= status < 600:
+        raise DetailedHTTPError(
+            urllib.request.Request(url), status, HTTPStatus(int(status)).phrase, headers, None
+        )
+
+    elif 300 <= status < 400:
+        finished = False
+
+    return headers, finished
 
 
 class FetchProgress:
@@ -288,10 +277,10 @@ class DownloadOptions(NamedTuple):
 
 
 def create_download_options(
-    method: DownloadMethod, *, extra_ars: Optional[List[str]] = None
+    method: DownloadMethod, *, extra_args: Optional[List[str]] = None
 ) -> DownloadOptions:
     """Create a DownloadOptions object from a method and extra arguments."""
-    return DownloadOptions(method=method, extra_args=extra_ars or [])
+    return DownloadOptions(method=method, extra_args=extra_args or [])
 
 
 def download_file(
@@ -317,18 +306,17 @@ def download_file(
         including the original URL, effective URL after redirects, saved path,
         and response headers.
     """
-    url_reader: UrlStreamReader
     if options.method == DownloadMethod.URLLIB:
-        url_reader = UrllibStreamReader(url=url, timeout=timeout)
+        url_reader = urllib_stream(url=url, timeout=timeout)
     elif options.method == DownloadMethod.CURL:
-        url_reader = CurlStreamReader(url=url, timeout=timeout, config_args=options.extra_args)
+        url_reader = curl_stream(url=url, timeout=timeout, config_args=options.extra_args)
 
     partial_file = destination + ".part"
     with url_reader as s, open(partial_file, "wb") as f:
         tty.msg(f"Fetching {url}")
-        progress = FetchProgress.from_headers(s.headers(), enabled=sys.stdout.isatty())
+        progress = FetchProgress.from_headers(s.headers, enabled=sys.stdout.isatty())
         while True:
-            chunk = s.read(size=chunk_size)
+            chunk = s.read(chunk_size)
             if not chunk:
                 break
             f.write(chunk)
@@ -337,7 +325,7 @@ def download_file(
 
     fs.rename(partial_file, destination)
     return create_download_info(
-        url=s.url, effective_url=s.geturl(), headers=s.headers(), path=destination
+        url=s.url, effective_url=s.geturl(), headers=s.headers, path=destination
     )
 
 
@@ -346,7 +334,7 @@ def _check_headers(download_info: DownloadInfo) -> None:
     # asked for.  We only look at the last content type, to handle
     # redirects properly.
     content_types = download_info.headers.get("Content-Type")
-    if content_types and "text/html" in content_types[-1]:
+    if content_types and "text/html" in content_types:
         msg = (
             f"The contents of {download_info.path or 'the archive'} fetched from "
             f"{download_info.url} looks like HTML. This can indicate a broken URL, "
