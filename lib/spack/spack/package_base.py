@@ -1804,9 +1804,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Create a hash based on the artifacts and patches used to build this package.
 
         This includes:
-            * source artifacts (tarballs, repositories) used to build;
-            * content hashes (``sha256``'s) of all patches applied by Spack; and
-            * canonicalized contents the ``package.py`` recipe used to build.
+
+        * source artifacts (tarballs, repositories) used to build;
+        * content hashes (``sha256``'s) of all patches applied by Spack; and
+        * canonicalized contents the ``package.py`` recipe used to build.
 
         This hash is only included in Spack's DAG hash for concrete specs, but if it
         happens to be called on a package with an abstract spec, only applicable (i.e.,

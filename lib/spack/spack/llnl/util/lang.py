@@ -107,7 +107,7 @@ def attr_setdefault(obj, name, value):
     return getattr(obj, name)
 
 
-def union_dicts(*dicts):
+def union_dicts(*dicts: Mapping[Any, Any]) -> Dict[Any, Any]:
     """Use update() to combine all dicts into one.
 
     This builds a new dictionary, into which we ``update()`` each element
@@ -115,13 +115,12 @@ def union_dicts(*dicts):
     items from earlier dictionaries.
 
     Args:
-        dicts (list): list of dictionaries
+        dicts: list of dictionaries
 
-    Return: (dict): a merged dictionary containing combined keys and
-        values from ``dicts``.
+    Returns: a merged dictionary containing combined keys and values from ``dicts``.
 
     """
-    result = {}
+    result: Dict[Any, Any] = {}
     for d in dicts:
         result.update(d)
     return result
@@ -541,17 +540,15 @@ def dedupe(sequence, key=None):
             seen.add(x_key)
 
 
-def pretty_date(time, now=None):
+def pretty_date(time: Union[datetime, int], now: Optional[datetime] = None) -> str:
     """Convert a datetime or timestamp to a pretty, relative date.
 
     Args:
-        time (datetime.datetime or int): date to print prettily
-        now (datetime.datetime): datetime for 'now', i.e. the date the pretty date
-            is relative to (default is datetime.now())
+        time: date to print prettily
+        now: the date the pretty date is relative to (default is ``datetime.now()``)
 
     Returns:
-        (str): pretty string like 'an hour ago', 'Yesterday',
-            '3 months ago', 'just now', etc.
+        pretty string like "an hour ago", "Yesterday", "3 months ago", "just now", etc.
 
     Adapted from https://stackoverflow.com/questions/1551382.
 
@@ -576,51 +573,49 @@ def pretty_date(time, now=None):
         if second_diff < 10:
             return "just now"
         if second_diff < 60:
-            return str(second_diff) + " seconds ago"
+            return f"{second_diff} seconds ago"
         if second_diff < 120:
             return "a minute ago"
         if second_diff < 3600:
-            return str(second_diff // 60) + " minutes ago"
+            return f"{second_diff // 60} minutes ago"
         if second_diff < 7200:
             return "an hour ago"
         if second_diff < 86400:
-            return str(second_diff // 3600) + " hours ago"
+            return f"{second_diff // 3600} hours ago"
     if day_diff == 1:
         return "yesterday"
     if day_diff < 7:
-        return str(day_diff) + " days ago"
+        return f"{day_diff} days ago"
     if day_diff < 28:
         weeks = day_diff // 7
         if weeks == 1:
             return "a week ago"
         else:
-            return str(day_diff // 7) + " weeks ago"
+            return f"{day_diff // 7} weeks ago"
     if day_diff < 365:
         months = day_diff // 30
         if months == 1:
             return "a month ago"
         elif months == 12:
             months -= 1
-        return str(months) + " months ago"
+        return f"{months} months ago"
 
-    diff = day_diff // 365
-    if diff == 1:
+    year_diff = day_diff // 365
+    if year_diff == 1:
         return "a year ago"
-    else:
-        return str(diff) + " years ago"
+    return f"{year_diff} years ago"
 
 
-def pretty_string_to_date(date_str, now=None):
+def pretty_string_to_date(date_str: str, now: Optional[datetime] = None) -> datetime:
     """Parses a string representing a date and returns a datetime object.
 
     Args:
-        date_str (str): string representing a date. This string might be
+        date_str: string representing a date. This string might be
             in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``,
             ``YYYY-MM-DD HH:MM``, ``YYYY-MM-DD HH:MM:SS``)
             or be a *pretty date* (like ``yesterday`` or ``two months ago``)
 
-    Returns:
-        (datetime.datetime): datetime object corresponding to ``date_str``
+    Returns: datetime object corresponding to ``date_str``
     """
 
     pattern = {}
@@ -667,8 +662,7 @@ def pretty_string_to_date(date_str, now=None):
         if bool(regexp.match(date_str)):
             return parser(date_str)
 
-    msg = 'date "{0}" does not match any valid format'.format(date_str)
-    raise ValueError(msg)
+    raise ValueError(f'date "{date_str}" does not match any valid format')
 
 
 def pretty_seconds_formatter(seconds):

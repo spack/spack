@@ -6,19 +6,23 @@
 Fetch strategies are used to download source code into a staging area
 in order to build it.  They need to define the following methods:
 
-* fetch()
+``fetch()``
     This should attempt to download/check out source from somewhere.
-* check()
+
+``check()``
     Apply a checksum to the downloaded source code, e.g. for an archive.
     May not do anything if the fetch method was safe to begin with.
-* expand()
+
+``expand()``
     Expand (e.g., an archive) downloaded file to source, with the
     standard stage source path as the destination directory.
-* reset()
+
+``reset()``
     Restore original state of downloaded code.  Used by clean commands.
     This may just remove the expanded source and re-expand an archive,
     or it may run something like git reset ``--hard``.
-* archive()
+
+``archive()``
     Archive a source directory, e.g. for creating a mirror.
 """
 import copy
@@ -30,17 +34,14 @@ import re
 import shutil
 import sys
 import time
-import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.response
 from pathlib import PurePath
-from typing import Callable, List, Mapping, Optional
+from typing import Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
 import spack.llnl.url
-import spack.llnl.util
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.oci.opener
@@ -57,7 +58,7 @@ from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
-all_strategies = []
+all_strategies: List[Type["FetchStrategy"]] = []
 
 
 def _needs_stage(fun):
@@ -1162,16 +1163,17 @@ class GitFetchStrategy(VCSFetchStrategy):
 @fetcher
 class CvsFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a CVS repository.
-       Use like this in a package::
+    Use like this in a package::
 
-           version("name",
-                   cvs=":pserver:anonymous@www.example.com:/cvsroot%module=modulename")
+        version("name", cvs=":pserver:anonymous@www.example.com:/cvsroot%module=modulename")
 
-       Optionally, you can provide a branch and/or a date for the URL::
+    Optionally, you can provide a branch and/or a date for the URL::
 
-           version("name",
-                   cvs=":pserver:anonymous@www.example.com:/cvsroot%module=modulename",
-                   branch="branchname", date="date")
+        version(
+            "name",
+            cvs=":pserver:anonymous@www.example.com:/cvsroot%module=modulename",
+            branch="branchname", date="date"
+        )
 
     Repositories are checked out into the standard stage source path directory.
     """
@@ -1279,13 +1281,13 @@ class CvsFetchStrategy(VCSFetchStrategy):
 @fetcher
 class SvnFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a subversion repository.
-       Use like this in a package::
+    Use like this in a package::
 
-           version("name", svn="http://www.example.com/svn/trunk")
+        version("name", svn="http://www.example.com/svn/trunk")
 
-       Optionally, you can provide a revision for the URL::
+    Optionally, you can provide a revision for the URL::
 
-           version("name", svn="http://www.example.com/svn/trunk", revision="1641")
+        version("name", svn="http://www.example.com/svn/trunk", revision="1641")
 
     Repositories are checked out into the standard stage source path directory.
     """
@@ -1584,22 +1586,21 @@ def from_url(url: str) -> URLFetchStrategy:
     """Given a URL, find an appropriate fetch strategy for it.
     Currently just gives you a URLFetchStrategy that uses curl.
 
-    TODO: make this return appropriate fetch strategies for other
-          types of URLs.
+    TODO: make this return appropriate fetch strategies for other types of URLs.
     """
     return URLFetchStrategy(url=url)
 
 
-def from_kwargs(**kwargs):
+def from_kwargs(**kwargs) -> FetchStrategy:
     """Construct an appropriate FetchStrategy from the given keyword arguments.
 
     Args:
-        **kwargs: dictionary of keyword arguments, e.g. from a
-            ``version()`` directive in a package.
+        **kwargs: dictionary of keyword arguments, e.g. from a ``version()`` directive in a
+            package.
 
     Returns:
-        typing.Callable: The fetch strategy that matches the args, based
-            on attribute names (e.g., ``git``, ``hg``, etc.)
+        The fetch strategy that matches the args, based on attribute names (e.g., ``git``, ``hg``,
+        etc.)
 
     Raises:
         spack.error.FetchError: If no ``fetch_strategy`` matches the args.

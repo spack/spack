@@ -1231,9 +1231,12 @@ def compression_writer(output_path: str, compression: str, checksum_algo: str):
     options for ``compression`` are ``"gzip"`` or ``"none"``, ``checksum_algo`` is used to pick
     the checksum algorithm used by the :class:`~spack.util.archive.ChecksumWriter`.
 
-    Yields a tuple containing:
-        io.IOBase: writer that can compress (or not) as it writes
-        ChecksumWriter: provides checksum and length of written data
+    Yields:
+        A tuple containing
+
+        * An :class:`io.BufferedIOBase` writer that can compress (or not) as it writes
+        * A :class:`~spack.util.archive.ChecksumWriter` that provides checksum and length of
+          written data
     """
     with open(output_path, "wb") as writer, ChecksumWriter(
         fileobj=writer, algorithm=hash_fun_for_algo(checksum_algo)

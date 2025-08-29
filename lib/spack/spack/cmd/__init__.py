@@ -658,20 +658,20 @@ def require_active_env(cmd_name):
     )
 
 
-def find_environment(args):
+def find_environment(args: argparse.Namespace) -> Optional[ev.Environment]:
     """Find active environment from args or environment variable.
 
     Check for an environment in this order:
-        1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
-        2. via a path in the spack.environment.spack_env_var environment variable.
+
+    1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
+    2. via a path in the spack.environment.spack_env_var environment variable.
 
     If an environment is found, read it in.  If not, return None.
 
     Arguments:
-        args (argparse.Namespace): argparse namespace with command arguments
+        args: argparse namespace with command arguments
 
-    Returns:
-        (spack.environment.Environment): a found environment, or ``None``
+    Returns: a found environment, or ``None``
     """
 
     # treat env as a name

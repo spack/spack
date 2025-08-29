@@ -174,7 +174,7 @@ def checksum(parser, args):
         sys.exit(0)
 
     # convert dict into package.py version statements
-    version_lines = get_version_lines(version_hashes, url_dict)
+    version_lines = get_version_lines(version_hashes)
     print()
     print(version_lines)
     print()

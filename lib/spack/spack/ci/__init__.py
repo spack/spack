@@ -558,17 +558,14 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         tty.warn("Unable to populate buildgroup without CDash credentials")
 
 
-def import_signing_key(base64_signing_key):
-    """Given Base64-encoded gpg key, decode and import it to use for
-        signing packages.
+def import_signing_key(base64_signing_key: str) -> None:
+    """Given Base64-encoded gpg key, decode and import it to use for signing packages.
 
     Arguments:
-        base64_signing_key (str): A gpg key including the secret key,
-            armor-exported and base64 encoded, so it can be stored in a
-            gitlab CI variable.  For an example of how to generate such
-            a key, see:
-
-        https://github.com/spack/spack-infrastructure/blob/main/gitlab-docker/files/gen-key
+        base64_signing_key:
+            A gpg key including the secret key, armor-exported and base64 encoded, so it can be
+            stored in a gitlab CI variable. For an example of how to generate such a key, see
+            https://github.com/spack/spack-infrastructure/blob/main/gitlab-docker/files/gen-key.
     """
     if not base64_signing_key:
         tty.warn("No key found for signing/verifying packages")
@@ -583,9 +580,7 @@ def import_signing_key(base64_signing_key):
     tty.debug("spack gpg list:")
     tty.debug(list_output)
 
-    decoded_key = base64.b64decode(base64_signing_key)
-    if isinstance(decoded_key, bytes):
-        decoded_key = decoded_key.decode("utf8")
+    decoded_key = base64.b64decode(base64_signing_key).decode("utf-8")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         sign_key_path = os.path.join(tmpdir, "signing_key")
@@ -709,7 +704,7 @@ def download_and_extract_artifacts(url: str, work_dir: str) -> str:
         url: Complete url to artifacts.zip file
         work_dir: Path to destination where artifacts should be extracted
 
-    Output:
+    Returns:
         Artifacts root path relative to the archive root
     """
     tty.msg(f"Fetching artifacts from: {url}")
@@ -764,23 +759,27 @@ def get_spack_info():
     return f"no git repo, use spack {spack.spack_version}"
 
 
-def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
-    """Look in the local spack clone to find the checkout_commit, and if
-        provided, the merge_commit given as arguments.  If those commits can
-        be found locally, then clone spack and attempt to recreate a merge
-        commit with the same parent commits as tested in gitlab.  This looks
-        something like 1) git clone repo && cd repo 2) git checkout
-        <checkout_commit> 3) git merge <merge_commit>.  If there is no
-        merge_commit provided, then skip step (3).
+def setup_spack_repro_version(
+    repro_dir: str, checkout_commit: str, merge_commit: Optional[str] = None
+) -> bool:
+    """Look in the local spack clone to find the checkout_commit, and if provided, the
+    merge_commit given as arguments. If those commits can be found locally, then clone spack and
+    attempt to recreate a merge commit with the same parent commits as tested in gitlab. This looks
+    something like
+
+    1. ``git clone repo && cd repo``
+    2. ``git checkout <checkout_commit>``
+    3. ``git merge <merge_commit>``
+
+    If there is no merge_commit provided, then skip step (3).
 
     Arguments:
 
-        repro_dir (str): Location where spack should be cloned
-        checkout_commit (str): SHA of PR branch commit
-        merge_commit (str): SHA of target branch parent
+        repro_dir: Location where spack should be cloned
+        checkout_commit: SHA of PR branch commit
+        merge_commit: SHA of target branch parent
 
-    Returns: True if git repo state was successfully recreated, or False
-        otherwise.
+    Returns: True iff the git repo state was successfully recreated
     """
     # figure out the path to the spack git version being used for the
     # reproduction

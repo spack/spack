@@ -460,12 +460,11 @@ class Indexer(metaclass=abc.ABCMeta):
     def _create(self):
         """Create an empty index and return it."""
 
-    def needs_update(self, pkg):
+    def needs_update(self, pkg) -> bool:
         """Whether an update is needed when the package file hasn't changed.
 
         Returns:
-            (bool): ``True`` if this package needs its index
-                updated, ``False`` otherwise.
+            ``True`` iff this package needs its index updated.
 
         We already automatically update indexes when package files
         change, but other files (like patches) may change underneath the
@@ -1011,13 +1010,13 @@ class Repo:
 
     It contains the following keys:
 
-    ``namespace``:
+    ``namespace``
         A Python namespace where the repository's packages should live.
 
-    ``subdirectory``:
+    ``subdirectory``
         An optional subdirectory name where packages are placed
 
-    ``api``:
+    ``api``
         A string of the form vX.Y that indicates the Package API version. The default is ``v1.0``.
         For the repo to be compatible with the current version of Spack, the version must be
         greater than or equal to :py:data:`spack.min_package_api_version` and less than or equal to
@@ -1151,9 +1150,10 @@ class Repo:
         package names and Python module names, so there is no guessing.
 
         For Packge API v1.x we support the following one-to-many mappings:
-            num3proxy -> 3proxy
-            foo_bar -> foo_bar, foo-bar
-            foo_bar_baz -> foo_bar_baz, foo-bar-baz, foo_bar-baz, foo-bar_baz
+
+        * ``num3proxy`` -> ``3proxy``
+        * ``foo_bar`` -> ``foo_bar``, ``foo-bar``
+        * ``foo_bar_baz`` -> ``foo_bar_baz``, ``foo-bar-baz``, ``foo_bar-baz``, ``foo-bar_baz``
         """
         if self.package_api >= (2, 0):
             if nm.pkg_dir_to_pkg_name(import_name, package_api=self.package_api) in self:

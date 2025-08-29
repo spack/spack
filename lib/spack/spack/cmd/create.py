@@ -6,7 +6,7 @@ import os
 import re
 import sys
 import urllib.parse
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import spack.llnl.util.tty as tty
 import spack.repo
@@ -909,23 +909,22 @@ def get_name(name, url):
     return result
 
 
-def get_url(url):
+def get_url(url: Optional[str]) -> str:
     """Get the URL to use.
 
     Use a default URL if none is provided.
 
     Args:
-        url (str): ``url`` argument to ``spack create``
+        url: ``url`` argument to ``spack create``
 
-    Returns:
-        str: The URL of the package
+    Returns: The URL of the package
     """
 
     # Use the user-supplied URL or a default URL if none is present.
     return url or "https://www.example.com/example-1.2.3.tar.gz"
 
 
-def get_versions(args, name):
+def get_versions(args: argparse.Namespace, name: str) -> Tuple[str, BuildSystemAndLanguageGuesser]:
     """Returns a list of versions and hashes for a package.
 
     Also returns a BuildSystemAndLanguageGuesser object.
@@ -933,11 +932,10 @@ def get_versions(args, name):
     Returns default values if no URL is provided.
 
     Args:
-        args (argparse.Namespace): The arguments given to ``spack create``
-        name (str): The name of the package
+        args: The arguments given to ``spack create``
+        name: The name of the package
 
-    Returns:
-        tuple: versions and hashes, and a BuildSystemAndLanguageGuesser object
+    Returns: Tuple of versions and hashes, and a BuildSystemAndLanguageGuesser object
     """
 
     # Default version with hash
@@ -984,7 +982,7 @@ def get_versions(args, name):
             url_dict, name, first_stage_function=guesser, keep_stage=args.keep_stage
         )
 
-        versions = get_version_lines(version_hashes, url_dict)
+        versions = get_version_lines(version_hashes)
     else:
         versions = unhashed_versions
 
@@ -1028,17 +1026,16 @@ def get_build_system(
     return selected_template
 
 
-def get_repository(args, name):
+def get_repository(args: argparse.Namespace, name: str) -> spack.repo.Repo:
     """Returns a Repo object that will allow us to determine the path where
     the new package file should be created.
 
     Args:
-        args (argparse.Namespace): The arguments given to ``spack create``
-        name (str): The name of the package to create
+        args: The arguments given to ``spack create``
+        name: The name of the package to create
 
     Returns:
-        spack.repo.Repo: A Repo object capable of determining the path to the
-            package file
+        A Repo object capable of determining the path to the package file
     """
     spec = Spec(name)
     # Figure out namespace for spec
@@ -1061,7 +1058,9 @@ def get_repository(args, name):
         if spec.namespace:
             repo = spack.repo.PATH.get_repo(spec.namespace)
         else:
-            repo = spack.repo.PATH.first_repo()
+            _repo = spack.repo.PATH.first_repo()
+            assert _repo is not None, "No package repository found"
+            repo = _repo
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:

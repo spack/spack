@@ -825,8 +825,7 @@ def included_path(entry: Union[str, dict]) -> IncludePath:
     Args:
         entry: include configuration entry
 
-    Returns: converted entry, where an empty ``when`` means the path is
-        not conditionally included
+    Returns: converted entry, where an empty ``when`` means the path is not conditionally included
     """
     if isinstance(entry, str):
         return IncludePath(path=entry, sha256="", when="", optional=False)

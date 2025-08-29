@@ -276,18 +276,20 @@ def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
     """Look at subvalues and, if present, extract virtual and a push a substitute token.
 
     This handles things like:
-        * ^c=gcc
-        * ^c,cxx=gcc
-        * %[when=+bar] c=gcc
-        * %[when=+bar] c,cxx=gcc
+
+    * ``^c=gcc``
+    * ``^c,cxx=gcc``
+    * ``%[when=+bar] c=gcc``
+    * ``%[when=+bar] c,cxx=gcc``
 
     Virtual assignment can happen anywhere a dependency node can appear. It is
-    shorthand for %[virtuals=c,cxx] gcc.
+    shorthand for ``%[virtuals=c,cxx] gcc``.
 
-    The virtuals=substitute key value pair appears in the subvalues of DEPENDENCY
-    and END_EDGE_PROPERTIES tokens. We extract the virutals and create a token from
-    the substitute, which is then pushed back on the parser stream so that the head
-    of the stream can be parsed like a regular node.
+    The ``virtuals=substitute`` key value pair appears in the subvalues of
+    :attr:`~spack.spec_parser.SpecTokens.DEPENDENCY` and
+    :attr:`~spack.spec_parser.SpecTokens.END_EDGE_PROPERTIES` tokens. We extract the virtuals and
+    create a token from the substitute, which is then pushed back on the parser stream so that the
+    head of the stream can be parsed like a regular node.
 
     Returns:
         the virtuals assigned, or None if there aren't any
@@ -343,7 +345,7 @@ class SpecParser:
             initial_spec: object where to parse the spec. If None a new one
                 will be created.
 
-        Return
+        Return:
             The spec that was parsed
         """
         if not self.ctx.next_token:
@@ -487,7 +489,7 @@ class SpecNodeParser:
             initial_spec: object to be constructed
             root: True if we're parsing a root, False if dependency after ^ or %
 
-        Return
+        Return:
             The object passed as argument
         """
         parser_warnings: List[str] = []
@@ -607,7 +609,7 @@ class FileParser:
         Args:
             initial_spec: object where to parse the spec
 
-        Return
+        Return:
             The initial_spec passed as argument, once constructed
         """
         file = pathlib.Path(self.ctx.current_token.value)
@@ -730,9 +732,10 @@ def strip_quotes_and_unescape(string: str) -> str:
 def quote_if_needed(value: str) -> str:
     """Add quotes around the value if it requires quotes.
 
-    This will add quotes around the value unless it matches ``NO_QUOTES_NEEDED``.
+    This will add quotes around the value unless it matches :data:`NO_QUOTES_NEEDED`.
 
     This adds:
+
     * single quotes by default
     * double quotes around any value that contains single quotes
 

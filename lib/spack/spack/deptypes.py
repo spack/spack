@@ -51,12 +51,15 @@ def compatible(flag1: DepFlag, flag2: DepFlag) -> bool:
     non-build dependency. This separates our two process spaces, build time and run time.
 
     These dependency combinations are allowed:
-        single dep on name: [b], [l], [r], [bl], [br], [blr]
-        two deps on name: [b, l], [b, r], [b, lr]
+
+    * single dep on name: ``[b]``, ``[l]``, ``[r]``, ``[bl]``, ``[br]``, ``[blr]``
+    * two deps on name: ``[b, l]``, ``[b, r]``, ``[b, lr]``
 
     but none of these make any sense:
-        two build deps: [b, b], [b, br], [b, bl], [b, blr]
-        any two deps that both have an l or an r, i.e. [l, l], [r, r], [l, r], [bl, l], [bl, r]"""
+
+    * two build deps: ``[b, b]``, ``[b, br]``, ``[b, bl]``, ``[b, blr]``
+    * any two deps that both have an ``l`` or an ``r``, i.e. ``[l, l]``, ``[r, r]``, ``[l, r]``,
+      ``[bl, l]``, ``[bl, r]``"""
     # Cannot have overlapping build types to two different dependencies
     if flag1 & flag2:
         return False

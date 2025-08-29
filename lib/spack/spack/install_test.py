@@ -89,13 +89,12 @@ def get_escaped_text_output(filename: str) -> List[str]:
     return [re.escape(ln) for ln in expected.split("\n")]
 
 
-def get_test_stage_dir():
+def get_test_stage_dir() -> str:
     """Retrieves the ``config:test_stage`` path to the configured test stage
     root directory
 
     Returns:
-        str: absolute path to the configured test stage root or, if none,
-            the default test stage path
+        absolute path to the configured test stage root or, if none, the default test stage path
     """
     return spack.util.path.canonicalize_path(
         spack.config.get("config:test_stage", spack.paths.default_test_path)

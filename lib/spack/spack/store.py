@@ -20,7 +20,7 @@ import os
 import pathlib
 import re
 import uuid
-from typing import Any, Callable, Dict, Generator, List, Optional, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import spack.config
 import spack.database
@@ -36,17 +36,16 @@ from spack.llnl.util import tty
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
 
 
-def parse_install_tree(config_dict):
+def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     """Parse config settings and return values relevant to the store object.
 
     Arguments:
-        config_dict (dict): dictionary of config values, as returned from
-            ``spack.config.get("config")``
+        config_dict: dictionary of config values, as returned from ``spack.config.get("config")``
 
     Returns:
-        (tuple): triple of the install tree root, the unpadded install tree
-            root (before padding was applied), and the projections for the
-            install tree
+        triple of the install tree root, the unpadded install tree
+        root (before padding was applied), and the projections for the
+        install tree
 
     Encapsulate backwards compatibility capabilities for install_tree
     and deprecated values that are now parsed as part of install_tree.
@@ -67,7 +66,7 @@ def parse_install_tree(config_dict):
 
     install_tree = config_dict.get("install_tree", {})
 
-    padded_length = False
+    padded_length: Union[bool, int] = False
     if isinstance(install_tree, str):
         tty.warn("Using deprecated format for configuring install_tree")
         unpadded_root = install_tree

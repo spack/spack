@@ -4,8 +4,10 @@
 
 import argparse
 import sys
+from typing import List, Union
 
 import spack.cmd
+import spack.spec
 import spack.store
 from spack.cmd.common import arguments
 from spack.llnl.util import tty
@@ -51,16 +53,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
 
-def find_matching_specs(specs, allow_multiple_matches=False):
-    """Returns a list of specs matching the not necessarily
-       concretized specs given from cli
+def find_matching_specs(
+    specs: List[Union[str, spack.spec.Spec]], allow_multiple_matches: bool = False
+) -> List[spack.spec.Spec]:
+    """Returns a list of specs matching the not necessarily concretized specs given from cli
 
     Args:
-        specs (list): list of specs to be matched against installed packages
-        allow_multiple_matches (bool): if True multiple matches are admitted
-
-    Return:
-        list of specs
+        specs: list of specs to be matched against installed packages
+        allow_multiple_matches: if True multiple matches are admitted
     """
     # List of specs that match expressions given via command line
     specs_from_cli = []

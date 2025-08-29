@@ -194,11 +194,12 @@ Secrets Management
 
 As stated above the Root Private Keys (intermediate and reputational) are stripped from the GPG keys and stored outside Spack's infrastructure.
 
-.. warning::
-  **TODO**
-    - Explanation here about where and how access is handled for these keys.
-    - Both Root private keys are protected with strong passwords
-    - Who has access to these and how?
+.. .. admonition:: TODO
+..    :class: warning
+
+..    - Explanation here about where and how access is handled for these keys.
+..    - Both Root private keys are protected with strong passwords
+..    - Who has access to these and how?
 
 Intermediate CI Key
 ^^^^^^^^^^^^^^^^^^^
@@ -276,24 +277,27 @@ These are the ``develop`` branch, any release branch (i.e. managed with the ``re
 Finally, Spack's pipeline generation code reserves certain tags to make sure jobs are routed to the correct runners; these tags are ``public``, ``protected``, and ``notary``.
 Understanding how all this works together to protect secrets and provide integrity assurances can be a little confusing so lets break these down:
 
--  **Protected Branches**- Protected branches in Spack prevent anyone other than Maintainers in GitLab from pushing code.
-   In the case of Spack, the only Maintainer level entity pushing code to protected branches is Spack bot.
-   Protecting branches also marks them in such a way that Protected Runners will only run jobs from those branches
-- **Protected Runners**- Protected Runners only run jobs from protected
-   branches.
-   Because protected runners have access to secrets, it's critical that they not run jobs from untrusted code (i.e. PR branches).
-   If they did, it would be possible for a PR branch to tag a job in such a way that a protected runner executed that job and mounted secrets into a code execution environment that had not been reviewed by Spack maintainers.
-   Note however that in the absence of tagging used to route jobs, public runners *could* run jobs from protected branches.
-   No secrets would be at risk of being breached because non-protected runners do not have access to those secrets; lack of secrets would, however, cause the jobs to fail.
-- **Reserved Tags**- To mitigate the issue of public runners picking up
-   protected jobs Spack uses a small set of "reserved" job tags (Note that these are *job* tags not git tags).
-   These tags are "public", "private", and "notary."
-   The majority of jobs executed in Spack's GitLab instance are executed via a ``generate`` job.
-   The generate job code systematically ensures that no user defined configuration sets these tags.
-   Instead, the ``generate`` job sets these tags based on rules related to the branch where this pipeline originated.
-   If the job is a part of a pipeline on a PR branch it sets the ``public`` tag.
-   If the job is part of a pipeline on a protected branch it sets the ``protected`` tag.
-   Finally if the job is the package signing job and it is running on a pipeline that is part of a protected branch then it sets the ``notary`` tag.
+Protected Branches
+  Protected branches in Spack prevent anyone other than Maintainers in GitLab from pushing code.
+  In the case of Spack, the only Maintainer level entity pushing code to protected branches is Spack bot.
+  Protecting branches also marks them in such a way that Protected Runners will only run jobs from those branches
+
+Protected Runners
+  Protected Runners only run jobs from protected branches.
+  Because protected runners have access to secrets, it's critical that they not run jobs from untrusted code (i.e. PR branches).
+  If they did, it would be possible for a PR branch to tag a job in such a way that a protected runner executed that job and mounted secrets into a code execution environment that had not been reviewed by Spack maintainers.
+  Note however that in the absence of tagging used to route jobs, public runners *could* run jobs from protected branches.
+  No secrets would be at risk of being breached because non-protected runners do not have access to those secrets; lack of secrets would, however, cause the jobs to fail.
+
+Reserved Tags
+  To mitigate the issue of public runners picking up protected jobs Spack uses a small set of "reserved" job tags (Note that these are *job* tags not git tags).
+  These tags are "public", "private", and "notary."
+  The majority of jobs executed in Spack's GitLab instance are executed via a ``generate`` job.
+  The generate job code systematically ensures that no user defined configuration sets these tags.
+  Instead, the ``generate`` job sets these tags based on rules related to the branch where this pipeline originated.
+  If the job is a part of a pipeline on a PR branch it sets the ``public`` tag.
+  If the job is part of a pipeline on a protected branch it sets the ``protected`` tag.
+  Finally if the job is the package signing job and it is running on a pipeline that is part of a protected branch then it sets the ``notary`` tag.
 
 Protected Runners are configured to only run jobs from protected branches.
 Only jobs running in pipelines on protected branches are tagged with ``protected`` or ``notary`` tags.

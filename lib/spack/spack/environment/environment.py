@@ -1295,12 +1295,12 @@ class Environment:
         """Remove this environment from Spack entirely."""
         shutil.rmtree(self.path)
 
-    def add(self, user_spec, list_name=user_speclist_name):
+    def add(self, user_spec, list_name=user_speclist_name) -> bool:
         """Add a single user_spec (non-concretized) to the Environment
 
         Returns:
-            (bool): True if the spec was added, False if it was already
-                present and did not need to be added
+            True if the spec was added, False if it was already present and did not need to be
+            added
 
         """
         spec = Spec(user_spec)
@@ -1319,7 +1319,7 @@ class Environment:
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list
         if not existing:
-            list_to_change.add(str(spec))
+            list_to_change.add(spec)
             if list_name == user_speclist_name:
                 self.manifest.add_user_spec(str(user_spec))
             else:

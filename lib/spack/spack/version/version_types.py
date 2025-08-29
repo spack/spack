@@ -431,8 +431,7 @@ class StandardVersion(ConcreteVersion):
         Version("1_2_3b")
 
         Returns:
-            Version: The version with separator characters replaced by
-                underscores
+            Version: The version with separator characters replaced by underscores
         """
         return type(self).from_string(self.string.replace(".", "_").replace("-", "_"))
 

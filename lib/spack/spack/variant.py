@@ -602,8 +602,8 @@ def _a_single_value_or_a_combination(single_value: str, *values: str) -> Disjoin
 
 def any_combination_of(*values: str) -> DisjointSetsOfValues:
     """Multi-valued variant that allows either any combination of the specified values, or none
-     at all (using ``variant=none``). The literal value ``none`` is used as sentinel for the empty
-     set, since in the spec DSL we have to always specify a value for a variant.
+    at all (using ``variant=none``). The literal value ``none`` is used as sentinel for the empty
+    set, since in the spec DSL we have to always specify a value for a variant.
 
     It is up to the package implementation to handle the value ``none`` specially, if at all.
 

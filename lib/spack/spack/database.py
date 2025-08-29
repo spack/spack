@@ -724,10 +724,9 @@ class Database:
         """Get a spec for hash, and whether it's installed upstream.
 
         Return:
-            (tuple): (bool, optional InstallRecord): bool tells us whether
-                the record is from an upstream. Its InstallRecord is also
-                returned if available (the record must be checked to know
-                whether the hash is installed).
+            Tuple of bool and optional InstallRecord. The bool tells us whether the record is from
+            an upstream. Its InstallRecord is also returned if available (the record must be
+            checked to know whether the hash is installed).
 
         If the record is available locally, this function will always have
         a preference for returning that, even if it is not installed locally
@@ -744,12 +743,11 @@ class Database:
                 return True, db._data[hash_key]
         return False, None
 
-    def query_local_by_spec_hash(self, hash_key):
+    def query_local_by_spec_hash(self, hash_key: str) -> Optional[InstallRecord]:
         """Get a spec by hash in the local database
 
         Return:
-            (InstallRecord or None): InstallRecord when installed
-                locally, otherwise None."""
+            InstallRecord when installed locally, otherwise None."""
         with self.read_transaction():
             return self._data.get(hash_key, None)
 

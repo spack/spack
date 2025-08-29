@@ -32,7 +32,7 @@ import io
 import os
 import pathlib
 import re
-from typing import Any, Dict, Optional, Sequence, Union
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import spack.error
 import spack.llnl.url
@@ -48,7 +48,7 @@ from spack.llnl.util.tty.color import cescape, colorize
 #
 
 
-def strip_name_suffixes(path, version):
+def strip_name_suffixes(path: str, version: Union[str, spack.version.StandardVersion]) -> str:
     """Most tarballs contain a package name followed by a version number.
     However, some also contain extraneous information in-between the name
     and version:
@@ -67,8 +67,8 @@ def strip_name_suffixes(path, version):
     * ``jpeg``
 
     Args:
-        path (str): The filename or URL for the package
-        version (str): The version detected for this URL
+        path: The filename or URL for the package
+        version: The version detected for this URL
 
     Returns:
         str: The ``path`` with any extraneous suffixes removed
@@ -120,19 +120,20 @@ def strip_name_suffixes(path, version):
     return path
 
 
-def parse_version_offset(path):
+def parse_version_offset(path: str) -> Tuple[str, int, int, int, str]:
     """Try to extract a version string from a filename or URL.
 
     Args:
         path (str): The filename or URL for the package
 
     Returns:
-        tuple: A tuple containing:
-            version of the package,
-            first index of version,
-            length of version string,
-            the index of the matching regex,
-            the matching regex
+        A tuple containing
+
+        * version of the package
+        * first index of version
+        * length of version string
+        * the index of the matching regex
+        * the matching regex
 
     Raises:
         UndetectableVersionError: If the URL does not match any regexes
@@ -304,20 +305,23 @@ def parse_version(path: str) -> spack.version.StandardVersion:
     return spack.version.StandardVersion.from_string(version)
 
 
-def parse_name_offset(path, v=None):
+def parse_name_offset(
+    path: str, v: Optional[Union[str, spack.version.StandardVersion]] = None
+) -> Tuple[str, int, int, int, str]:
     """Try to determine the name of a package from its filename or URL.
 
     Args:
-        path (str): The filename or URL for the package
-        v (str): The version of the package
+        path: The filename or URL for the package
+        v: The version of the package
 
     Returns:
-        tuple: A tuple containing:
-            name of the package,
-            first index of name,
-            length of name,
-            the index of the matching regex,
-            the matching regex
+        A tuple containing
+
+        * name of the package
+        * first index of name
+        * length of name
+        * the index of the matching regex
+        * the matching regex
 
     Raises:
         UndetectableNameError: If the URL does not match any regexes
@@ -433,12 +437,12 @@ def parse_name(path, ver=None):
     return name
 
 
-def parse_name_and_version(path):
+def parse_name_and_version(path: str) -> Tuple[str, spack.version.StandardVersion]:
     """Try to determine the name of a package and extract its version
     from its filename or URL.
 
     Args:
-        path (str): The filename or URL for the package
+        path: The filename or URL for the package
 
     Returns:
         tuple: a tuple containing the package (name, version)
@@ -545,11 +549,11 @@ def color_url(path, **kwargs):
     """Color the parts of the url according to Spack's parsing.
 
     Colors are:
-       | Cyan: The version found by :func:`parse_version_offset`.
-       | Red:  The name found by :func:`parse_name_offset`.
 
-       | Green:   Instances of version string from :func:`substitute_version`.
-       | Magenta: Instances of the name (protected from substitution).
+    * Cyan: The version found by :func:`parse_version_offset`.
+    * Red: The name found by :func:`parse_name_offset`.
+    * Green: Instances of version string from :func:`substitute_version`.
+    * Magenta: Instances of the name (protected from substitution).
 
     Args:
         path (str): The filename or URL for the package

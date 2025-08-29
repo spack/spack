@@ -11,7 +11,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, Generator, Iterable, List, Optional, Set
+from typing import Callable, Dict, Generator, Iterable, List, Optional, Set, Union
 
 import spack.caches
 import spack.config
@@ -419,9 +419,9 @@ class Stage(LockableStagingDir):
         self.default_fetcher_only = False
 
     @property
-    def expected_archive_files(self):
+    def expected_archive_files(self) -> List[str]:
         """Possible archive file paths."""
-        fnames = []
+        fnames: List[str] = []
         expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             expanded = self.default_fetcher.expand_archive
@@ -448,7 +448,7 @@ class Stage(LockableStagingDir):
             return possible_filenames[0]
 
     @property
-    def archive_file(self):
+    def archive_file(self) -> Optional[str]:
         """Path to the source archive within this stage directory."""
         for path in self.expected_archive_files:
             if os.path.exists(path):
@@ -1093,7 +1093,7 @@ def get_checksums_for_versions(
     url_by_version: Dict[StandardVersion, str],
     package_name: str,
     *,
-    first_stage_function: Optional[Callable[[Stage, str], None]] = None,
+    first_stage_function: Optional[Callable[[str, str], None]] = None,
     keep_stage: bool = False,
     concurrency: Optional[int] = None,
     fetch_options: Optional[Dict[str, str]] = None,
@@ -1108,8 +1108,8 @@ def get_checksums_for_versions(
     Args:
         url_by_version: URL keyed by version
         package_name: name of the package
-        first_stage_function: function that takes a Stage and a URL; this is run on the stage
-            of the first URL downloaded
+        first_stage_function: function that takes an archive file and a URL; this is run on the
+            stage of the first URL downloaded
         keep_stage: whether to keep staging area when command completes
         batch: whether to ask user how many versions to fetch (false) or fetch all versions (true)
         fetch_options: options used for the fetcher (such as timeout or cookies)
@@ -1121,7 +1121,8 @@ def get_checksums_for_versions(
     versions = sorted(url_by_version.keys(), reverse=True)
     search_arguments = [(url_by_version[v], v) for v in versions]
 
-    version_hashes, errors = {}, []
+    version_hashes: Dict[StandardVersion, str] = {}
+    errors: List[str] = []
 
     # Don't spawn 16 processes when we need to fetch 2 urls
     if concurrency is not None:
@@ -1134,25 +1135,24 @@ def get_checksums_for_versions(
     # can move this function call *after* having distributed the work to executors.
     if first_stage_function is not None:
         (url, version), search_arguments = search_arguments[0], search_arguments[1:]
-        checksum, error = _fetch_and_checksum(url, fetch_options, keep_stage, first_stage_function)
-        if error is not None:
-            errors.append(error)
-
-        if checksum is not None:
-            version_hashes[version] = checksum
+        result = _fetch_and_checksum(url, fetch_options, keep_stage, first_stage_function)
+        if isinstance(result, Exception):
+            errors.append(str(result))
+        else:
+            version_hashes[version] = result
 
     with spack.util.parallel.make_concurrent_executor(concurrency, require_fork=False) as executor:
-        results = []
-        for url, version in search_arguments:
-            future = executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage)
-            results.append((version, future))
+        results = [
+            (version, executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage))
+            for url, version in search_arguments
+        ]
 
         for version, future in results:
-            checksum, error = future.result()
-            if error is not None:
-                errors.append(error)
-                continue
-            version_hashes[version] = checksum
+            result = future.result()
+            if isinstance(result, Exception):
+                errors.append(str(result))
+            else:
+                version_hashes[version] = result
 
         for msg in errors:
             tty.debug(msg)
@@ -1166,13 +1166,14 @@ def get_checksums_for_versions(
     return version_hashes
 
 
-def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
+def _fetch_and_checksum(
+    url: str,
+    options: Optional[dict],
+    keep_stage: bool,
+    action_fn: Optional[Callable[[str, str], None]] = None,
+) -> Union[str, Exception]:
     try:
-        url_or_fs = url
-        if options:
-            url_or_fs = fs.URLFetchStrategy(url=url, fetch_options=options)
-
-        with Stage(url_or_fs, keep=keep_stage) as stage:
+        with Stage(fs.URLFetchStrategy(url=url, fetch_options=options), keep=keep_stage) as stage:
             # Fetch the archive
             stage.fetch()
             archive = stage.archive_file
@@ -1184,11 +1185,9 @@ def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
 
             # Checksum the archive and add it to the list
             checksum = spack.util.crypto.checksum(hashlib.sha256, archive)
-        return checksum, None
-    except fs.FailedDownloadError:
-        return None, f"[WORKER] Failed to fetch {url}"
+        return checksum
     except Exception as e:
-        return None, f"[WORKER] Something failed on {url}, skipping.  ({e})"
+        return Exception(f"[WORKER] Failed to fetch {url}: {e}")
 
 
 class StageError(spack.error.SpackError):

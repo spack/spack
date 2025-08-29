@@ -4,6 +4,7 @@
 
 import io
 import sys
+from typing import Optional, TextIO, Union
 
 import spack.llnl.util.tty as tty
 from spack.llnl.util.tty.color import cescape, colorize
@@ -12,29 +13,33 @@ from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser
 __all__ = ["parse_log_events", "make_log_context"]
 
 
-def parse_log_events(stream, context=6, jobs=None, profile=False):
+def parse_log_events(
+    stream: Union[str, TextIO], context: int = 6, jobs: Optional[int] = None, profile: bool = False
+):
     """Extract interesting events from a log file as a list of LogEvent.
 
     Args:
-        stream (str or typing.IO): build log name or file object
-        context (int): lines of context to extract around each log event
-        jobs (int): number of jobs to parse with; default ncpus
-        profile (bool): print out profile information for parsing
+        stream: build log name or file object
+        context: lines of context to extract around each log event
+        jobs: number of jobs to parse with; default ncpus
+        profile: print out profile information for parsing
 
     Returns:
-        (tuple): two lists containig ``BuildError`` and
-            ``BuildWarning`` objects.
+        two lists containing :class:`~spack.util.ctest_log_parser.BuildError` and
+        :class:`~spack.util.ctest_log_parser.BuildWarning` objects.
 
-    This is a wrapper around ``ctest_log_parser.CTestLogParser`` that
+    This is a wrapper around :class:`~spack.util.ctest_log_parser.CTestLogParser` that
     lazily constructs a single ``CTestLogParser`` object.  This ensures
     that all the regex compilation is only done once.
     """
-    if parse_log_events.ctest_parser is None:
-        parse_log_events.ctest_parser = CTestLogParser(profile=profile)
+    parser = getattr(parse_log_events, "ctest_parser", None)
+    if parser is None:
+        parser = CTestLogParser(profile=profile)
+        setattr(parse_log_events, "ctest_parser", parser)
 
-    result = parse_log_events.ctest_parser.parse(stream, context, jobs)
+    result = parser.parse(stream, context, jobs)
     if profile:
-        parse_log_events.ctest_parser.print_timings()
+        parser.print_timings()
     return result
 
 

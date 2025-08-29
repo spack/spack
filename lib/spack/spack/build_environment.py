@@ -1517,7 +1517,7 @@ def get_package_context(traceback, context=3):
 
 class ChildError(InstallError):
     """Special exception class for wrapping exceptions from child processes
-       in Spack's build environment.
+    in Spack's build environment.
 
     The main features of a ChildError are:
 

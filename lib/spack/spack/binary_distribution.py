@@ -266,7 +266,8 @@ class BinaryCacheIndex:
             spec_list = [
                 s
                 for s in db.query_local(installed=InstallRecordStatus.ANY)
-                if s.external or db.query_local_by_spec_hash(s.dag_hash()).in_buildcache
+                # todo, make it easer to get install records associated with specs
+                if s.external or db._data[s.dag_hash()].in_buildcache
             ]
 
             for indexed_spec in spec_list:
@@ -320,16 +321,14 @@ class BinaryCacheIndex:
 
         Returns:
             An list of objects containing the found specs and mirror url where
-                each can be found, e.g.:
+            each can be found, e.g.::
 
-                .. code-block:: python
-
-                    [
-                        {
-                            "spec": "<concrete-spec>",
-                            "mirror_url": "<mirror-root-url>"
-                        }
-                    ]
+                [
+                    {
+                        "spec": "<concrete-spec>",
+                        "mirror_url": "<mirror-root-url>"
+                    }
+                ]
         """
         return self.find_by_hash(spec.dag_hash(), mirrors_to_check=mirrors_to_check)
 
@@ -2223,7 +2222,7 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
 
     Return:
         A list of objects, each containing a ``mirror_url`` and ``spec`` key
-            indicating all mirrors where the spec can be found.
+        indicating all mirrors where the spec can be found.
     """
     if spec is None:
         return []
@@ -2254,7 +2253,7 @@ def update_cache_and_get_specs():
     local index cache (essentially a no-op if it has been done already and
     nothing has changed on the configured mirrors.)
 
-    Throws:
+    Raises:
         FetchCacheError
     """
     BINARY_INDEX.update()

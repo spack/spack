@@ -64,8 +64,8 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
 
     This will try to execute the following, in order:
 
-    1. $VISUAL <args>    # the "visual" editor (per POSIX)
-    2. $EDITOR <args>    # the regular editor (per POSIX)
+    1. ``$VISUAL <args>``: the "visual" editor (per POSIX)
+    2. ``$EDITOR <args>``: the regular editor (per POSIX)
     3. some default editor (see ``_default_editors``) with <args>
 
     If an environment variable isn't defined, it is skipped.  If it
@@ -76,7 +76,6 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
     Arguments:
         args: args to pass to editor
 
-    Optional Arguments:
         exec_fn: invoke this function to run; use ``spack.util.editor.executable`` if you
             want something that returns, instead of the default ``os.execv()``.
     """
