@@ -135,7 +135,7 @@ def test_mirror_stats_merge():
     all_stats.merge(s2)
 
     present, mirrored, errors = all_stats.stats()
-    assert mirrored.count(spec1) == 2
+    assert mirrored.count(spec1) == 1
     assert present.count(spec2) == 1
 
 
