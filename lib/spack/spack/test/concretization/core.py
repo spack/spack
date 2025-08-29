@@ -2018,7 +2018,7 @@ class TestConcretize:
         mutable_config.set("packages", packages_yaml["packages"])
 
         setup = spack.solver.asp.SpackSolverSetup()
-        asp_problem = setup.setup([Spec("mpileaks")], reuse=[], allow_deprecated=False)
+        asp_problem = setup.setup([Spec("mpileaks")], reuse=[], allow_deprecated=False).asp_problem
 
         assert all(x in asp_problem for x in expected)
 

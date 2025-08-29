@@ -1064,12 +1064,14 @@ class PyclingoDriver:
 
         timer.start("setup")
         output_is_set = output.out is not None
-        asp_problem = setup.setup(
+        problem_builder = setup.setup(
             specs,
             reuse=reuse,
             allow_deprecated=allow_deprecated,
             _use_unsat_cores=not output_is_set,
         )
+
+        asp_problem = problem_builder.value(randomize="SPACK_SOLVER_RANDOMIZATION" in os.environ)
         if output_is_set:
             output.out.write(asp_problem)
         if output.setup_only:
@@ -3017,7 +3019,7 @@ class SpackSolverSetup:
         reuse: Optional[List[spack.spec.Spec]] = None,
         allow_deprecated: bool = False,
         _use_unsat_cores: bool = True,
-    ) -> str:
+    ) -> "ProblemInstanceBuilder":
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -3029,10 +3031,13 @@ class SpackSolverSetup:
             reuse: list of concrete specs that can be reused
             allow_deprecated: if True adds deprecated versions into the solve
             _use_unsat_cores: if True, use unsat cores for internal errors
+
+        Return:
+            A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
         """
         reuse = reuse or []
         check_packages_exist(specs)
-        self.gen = ProblemInstanceBuilder(randomize="SPACK_SOLVER_RANDOMIZATION" in os.environ)
+        self.gen = ProblemInstanceBuilder()
 
         # Compute possible compilers first, so we can record which dependencies they might inject
         _ = spack.compilers.config.all_compilers(init_config=True)
@@ -3180,7 +3185,7 @@ class SpackSolverSetup:
         self.gen.h1("Internal errors")
         self.internal_errors(_use_unsat_cores=_use_unsat_cores)
 
-        return self.gen.value()
+        return self.gen
 
     def internal_errors(self, *, _use_unsat_cores: bool):
         parent_dir = os.path.dirname(__file__)
@@ -3471,12 +3476,9 @@ class ProblemInstanceBuilder:
 
     The problem instance can be added directly to the "control" structure of clingo.
 
-    Arguments:
-        randomize: whether to randomize the order of facts to the solver. Useful for benchmarking.
     """
 
-    def __init__(self, randomize: bool = False) -> None:
-        self.randomize = randomize
+    def __init__(self) -> None:
         self.asp_problem: List[str] = []
 
     def fact(self, atom: AspFunction) -> None:
@@ -3501,10 +3503,17 @@ class ProblemInstanceBuilder:
     def newline(self):
         self.asp_problem.append("\n")
 
-    def value(self) -> str:
-        if self.randomize:
-            random.shuffle(self.asp_problem)
-        return "".join(self.asp_problem)
+    def value(self, randomize: bool = False) -> str:
+        """Return the ASP problem as a string that can be loaded directly by clingo.
+
+        Arguments:
+            randomize: whether to randomize the order of facts to the solver.
+                Useful for understanding performance variation when benchmarking.
+        """
+        value = self.asp_problem
+        if randomize:
+            value = random.sample(value, len(value))  # create a shuffled copy
+        return "".join(value)
 
 
 def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
