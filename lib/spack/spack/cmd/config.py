@@ -17,6 +17,7 @@ import spack.schema
 import spack.schema.env
 import spack.spec
 import spack.store
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.cmd.common import arguments
 from spack.llnl.util.tty.colify import colify_table
@@ -43,6 +44,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         metavar="section",
         choices=spack.config.SECTION_SCHEMAS,
     )
+    get_parser.add_argument("--json", action="store_true", help="output configuration as JSON")
 
     blame_parser = sp.add_parser(
         "blame", help="print configuration annotated with source file:line"
@@ -170,14 +172,16 @@ def print_configuration(args, *, blame: bool) -> None:
     if args.scope and args.section is None:
         tty.die(f"the argument --scope={args.scope} requires specifying a section.")
 
+    yaml = blame or not args.json
+
     if args.section is not None:
-        spack.config.CONFIG.print_section(args.section, blame=blame, scope=args.scope)
+        spack.config.CONFIG.print_section(args.section, yaml=yaml, blame=blame, scope=args.scope)
         return
 
-    print_flattened_configuration(blame=blame)
+    print_flattened_configuration(blame=blame, yaml=yaml)
 
 
-def print_flattened_configuration(*, blame: bool) -> None:
+def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
     """Prints to stdout a flattened version of the configuration.
 
     Args:
@@ -195,7 +199,11 @@ def print_flattened_configuration(*, blame: bool) -> None:
     for config_section in spack.config.SECTION_SCHEMAS:
         current = spack.config.get(config_section)
         flattened[spack.schema.env.TOP_LEVEL_KEY][config_section] = current
-    syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)
+    if blame or yaml:
+        syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)
+    else:
+        sjson.dump(flattened, sys.stdout)
+        sys.stdout.write("\n")
 
 
 def config_get(args):

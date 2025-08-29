@@ -1227,10 +1227,12 @@ complete -c spack -n '__fish_spack_using_command config' -l scope -r -f -a '_bui
 complete -c spack -n '__fish_spack_using_command config' -l scope -r -d 'configuration scope to read/modify'
 
 # spack config get
-set -g __fish_spack_optspecs_spack_config_get h/help
+set -g __fish_spack_optspecs_spack_config_get h/help json
 complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command config get' -l json -f -a json
+complete -c spack -n '__fish_spack_using_command config get' -l json -d 'output configuration as JSON'
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame h/help
