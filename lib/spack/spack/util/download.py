@@ -314,6 +314,9 @@ def download_file(
     partial_file = destination + ".part"
     with url_reader as s, open(partial_file, "wb") as f:
         tty.msg(f"Fetching {url}")
+        _check_headers(
+            url=s.url, effective_url=s.geturl(), headers=s.headers, destination=destination
+        )
         progress = FetchProgress.from_headers(s.headers, enabled=sys.stdout.isatty())
         while True:
             chunk = s.read(chunk_size)
@@ -322,26 +325,26 @@ def download_file(
             f.write(chunk)
             progress.advance(len(chunk))
         progress.print(final=True)
-
     fs.rename(partial_file, destination)
     return create_download_info(
         url=s.url, effective_url=s.geturl(), headers=s.headers, path=destination
     )
 
 
-def _check_headers(download_info: DownloadInfo) -> None:
+def _check_headers(
+    *, url: str, effective_url: str = "", headers: http.client.HTTPMessage, destination: str = ""
+) -> None:
     # Check if we somehow got an HTML file rather than the archive we
     # asked for.  We only look at the last content type, to handle
     # redirects properly.
-    content_types = download_info.headers.get("Content-Type")
+    content_types = headers.get("Content-Type")
     if content_types and "text/html" in content_types:
         msg = (
-            f"The contents of {download_info.path or 'the archive'} fetched from "
-            f"{download_info.url} looks like HTML. This can indicate a broken URL, "
-            f"or an internet gateway issue."
+            f"The contents of {destination or 'the archive'} fetched from {url} looks like HTML. "
+            f"This can indicate a broken URL, or an internet gateway issue."
         )
-        if download_info.effective_url != download_info.url:
-            msg += f" The URL redirected to {download_info.effective_url}."
+        if effective_url != url:
+            msg += f" The URL redirected to {effective_url}."
         warnings.warn(msg)
 
 
