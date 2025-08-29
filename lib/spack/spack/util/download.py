@@ -134,13 +134,10 @@ def curl_stream(
         + config_args
     )
     curl_cmd = [curl_exe] + curl_args
-    with subprocess.Popen(
-        curl_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-    ) as curl_process:
+    with _start_curl_process(curl_cmd) as curl_process:
         scheme = urllib.parse.urlparse(url).scheme
         assert curl_process.stdout is not None, "curl process stdout is None"
         stream = io.BufferedReader(curl_process.stdout)  # type: ignore[type-var]
-
         effective_url = url
         if scheme not in ("http", "https"):
             headers = HTTPMessage()
@@ -152,6 +149,14 @@ def curl_stream(
                 effective_url = headers.get("location", effective_url)
         yield CurlStream(url=url, headers=headers, effective_url=effective_url, stream=stream)
     check_curl_code(curl_process.returncode)
+
+
+@contextlib.contextmanager
+def _start_curl_process(curl_cmd):
+    with subprocess.Popen(
+        curl_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+    ) as curl_process:
+        yield curl_process
 
 
 def _get_next_http_headers(url, stream) -> Tuple[http.client.HTTPMessage, bool]:
