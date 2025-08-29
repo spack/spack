@@ -55,7 +55,6 @@ from spack.util.compression import decompressor_for
 from spack.util.download import (
     DownloadMethod,
     DownloadOptions,
-    create_download_info,
     create_download_options,
     curl_cookie_args,
     download_file,
@@ -293,15 +292,8 @@ class URLFetchStrategy(FetchStrategy):
         ):
             self.fetch_args.extend(curl_cookie_args(fetch_options["cookie"]))
 
-        self._download_info = create_download_info(url=url)
-
-    @property
-    def url(self) -> str:
-        return self._download_info.url
-
-    @property
-    def _effective_url(self) -> str:
-        return self._download_info.effective_url
+        self.url = url
+        self._effective_url = url
 
     def _download_options(self) -> DownloadOptions:
         return create_download_options(self.fetch_method, extra_args=self.fetch_args)
@@ -345,11 +337,14 @@ class URLFetchStrategy(FetchStrategy):
         save_file = self.stage.save_filename
         try:
             tty.debug(f"[{__name__}] Attempting to get {url}")
-            self._download_info = download_file(
-                url=url,
-                destination=save_file,
-                timeout=self.timeout,
-                options=self._download_options(),
+            self._effective_url, self.url = (
+                download_file(
+                    url=url,
+                    destination=save_file,
+                    timeout=self.timeout,
+                    options=self._download_options(),
+                ),
+                url,
             )
         except spack.error.FetchError as e:
             raise FailedDownloadError(e) from e

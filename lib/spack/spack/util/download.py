@@ -32,31 +32,6 @@ from .web import (
 )
 
 
-class DownloadInfo(NamedTuple):
-    """Information about a download."""
-
-    url: str
-    effective_url: str
-    headers: http.client.HTTPMessage
-    path: str
-
-
-def create_download_info(
-    *,
-    url: str,
-    effective_url: str = "",
-    headers: Optional[http.client.HTTPMessage] = None,
-    path: str = "",
-) -> DownloadInfo:
-    """Create a DownloadInfo object from a RequestInfo object."""
-    return DownloadInfo(
-        url=url,
-        effective_url=effective_url,
-        headers=headers or http.client.HTTPMessage(),
-        path=path,
-    )
-
-
 class UrlStream(Protocol):
     """A stream of bytes from a URL."""
 
@@ -128,13 +103,10 @@ def curl_stream(
     *, url: str, timeout: int, config_args: Optional[List[str]] = None
 ) -> Generator[UrlStream, Any, None]:
     config_args = config_args or []
-    curl_exe = which_string("curl", required=True)
-    curl_args = (
-        base_curl_fetch_args(url, timeout, status_bar=False, user_agent=SPACK_USER_AGENT)
-        + config_args
-    )
-    curl_cmd = [curl_exe] + curl_args
-    with _start_curl_process(curl_cmd) as curl_process:
+    cmd = [which_string("curl", required=True)]
+    cmd.extend(base_curl_fetch_args(url, timeout, status_bar=False, user_agent=SPACK_USER_AGENT))
+    cmd.extend(config_args)
+    with _start_curl_process(cmd) as curl_process:
         scheme = urllib.parse.urlparse(url).scheme
         assert curl_process.stdout is not None, "curl process stdout is None"
         stream = io.BufferedReader(curl_process.stdout)  # type: ignore[type-var]
@@ -295,7 +267,7 @@ def download_file(
     timeout: int = 0,
     chunk_size: int = 65536,
     options: DownloadOptions = create_download_options(DownloadMethod.URLLIB),
-) -> DownloadInfo:
+) -> str:
     """Downloads a file from the specified URL and saves it to the given path.
 
     Args:
@@ -307,9 +279,7 @@ def download_file(
             The default is to use urllib.
 
     Returns:
-        An object containing details about the downloaded file,
-        including the original URL, effective URL after redirects, saved path,
-        and response headers.
+        The effective URL of the request.
     """
     if options.method == DownloadMethod.URLLIB:
         url_reader = urllib_stream(url=url, timeout=timeout)
@@ -331,9 +301,7 @@ def download_file(
             progress.advance(len(chunk))
         progress.print(final=True)
     fs.rename(partial_file, destination)
-    return create_download_info(
-        url=s.url, effective_url=s.geturl(), headers=s.headers, path=destination
-    )
+    return s.geturl()
 
 
 def _check_headers(
