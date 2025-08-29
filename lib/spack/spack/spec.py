@@ -164,13 +164,17 @@ HASH_COLOR = "@K"  #: color for highlighting package hashes
 #:     Spec(Spec("string").format()) == Spec("string)"
 DEFAULT_FORMAT = (
     "{name}{@versions}{compiler_flags}"
-    "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
+    "{variants}{ namespace=namespace_if_anonymous}"
+    "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
+    "{/abstract_hash}"
 )
 
 #: Display format, which eliminates extra `@=` in the output, for readability.
 DISPLAY_FORMAT = (
     "{name}{@version}{compiler_flags}"
-    "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
+    "{variants}{ namespace=namespace_if_anonymous}"
+    "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
+    "{/abstract_hash}"
     "{compilers}"
 )
 
@@ -4287,7 +4291,12 @@ class Spec:
 
     def _short_spec(self, color: Optional[bool] = False) -> str:
         """Helper for :attr:`short_spec` and :attr:`cshort_spec`."""
-        return self.format("{name}{@version}{variants}{ arch=architecture}{/hash:7}", color=color)
+        return self.format(
+            "{name}{@version}{variants}"
+            "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
+            "{/hash:7}",
+            color=color,
+        )
 
     @property
     def compilers(self):
@@ -5534,7 +5543,11 @@ class UnconstrainableDependencySpecError(spack.error.SpecError):
 
 class AmbiguousHashError(spack.error.SpecError):
     def __init__(self, msg, *specs):
-        spec_fmt = "{namespace}.{name}{@version}{variants}{ arch=architecture}{/hash:7}"
+        spec_fmt = (
+            "{namespace}.{name}{@version}{variants}"
+            "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
+            "{/hash:7}"
+        )
         specs_str = "\n  " + "\n  ".join(spec.format(spec_fmt) for spec in specs)
         super().__init__(msg + specs_str)
 
