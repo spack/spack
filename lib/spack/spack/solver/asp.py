@@ -3201,9 +3201,9 @@ class SpackSolverSetup:
                                 symbol = AspFunction(name)(arg.string)
                                 if _use_unsat_cores:
                                     self.assumptions.append((parse_term(str(symbol)), True))
-                                    self.gen.asp_problem.append(f"{{ {symbol} }}.\n")
+                                    self.gen.asp_problem.append(f"{{{symbol}}}.")
                                 else:
-                                    self.gen.asp_problem.append(f"{symbol}.\n")
+                                    self.gen.asp_problem.append(f"{symbol}.")
 
         path = os.path.join(parent_dir, "concretize.lp")
         parse_files([path], visit)
@@ -3482,14 +3482,17 @@ class ProblemInstanceBuilder:
         self.asp_problem: List[str] = []
 
     def fact(self, atom: AspFunction) -> None:
-        self.asp_problem.append(f"{atom}.\n")
+        self.asp_problem.append(f"{atom}.")
 
     def append(self, rule: str) -> None:
         self.asp_problem.append(rule)
 
     def title(self, header: str, char: str) -> None:
         sep = char * 76
-        self.asp_problem.append(f"\n%{sep}\n% {header}\n%{sep}\n")
+        self.newline()
+        self.asp_problem.append(f"%{sep}")
+        self.asp_problem.append(f"% {header}")
+        self.asp_problem.append(f"%{sep}")
 
     def h1(self, header: str) -> None:
         self.title(header, "=")
@@ -3498,10 +3501,10 @@ class ProblemInstanceBuilder:
         self.title(header, "-")
 
     def h3(self, header: str):
-        self.asp_problem.append(f"% {header}\n")
+        self.asp_problem.append(f"% {header}")
 
     def newline(self):
-        self.asp_problem.append("\n")
+        self.asp_problem.append("")
 
     def value(self, randomize: bool = False) -> str:
         """Return the ASP problem as a string that can be loaded directly by clingo.
@@ -3513,7 +3516,7 @@ class ProblemInstanceBuilder:
         value = self.asp_problem
         if randomize:
             value = random.sample(value, len(value))  # create a shuffled copy
-        return "".join(value)
+        return "\n".join(value)
 
 
 def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:

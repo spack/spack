@@ -90,13 +90,13 @@ class RuntimePropertyRecorder:
             f"% {description}\n"
             f'1 {{ attr("depends_on", {node_variable}, node(0..X-1, "{runtime_pkg}"), "{type}") :'
             f' max_dupes("{runtime_pkg}", X)}} 1:-\n'
-            f"{body_str}.\n\n"
+            f"{body_str}."
         )
         if is_virtual:
             main_rule = (
                 f"% {description}\n"
                 f'attr("dependency_holds", {node_variable}, "{runtime_pkg}", "{type}") :-\n'
-                f"{body_str}.\n\n"
+                f"{body_str}."
             )
 
         self.rules.append(main_rule)
@@ -114,7 +114,7 @@ class RuntimePropertyRecorder:
                     f"  provider(ProviderNode, {runtime_node}),\n"
                 )
 
-            rule = f"{head_str} :-\n" f"{depends_on_constraint}" f"{body_str}.\n\n"
+            rule = f"{head_str} :-\n" f"{depends_on_constraint}" f"{body_str}."
             self.rules.append(rule)
 
         self.reset()
@@ -198,7 +198,7 @@ class RuntimePropertyRecorder:
                 )
                 args = f'"{constraint_spec.name}", "{constraint_spec.versions}"'
                 head_str = f"propagate({node_variable}, node_version_satisfies({args}))"
-                rule = f"{head_str} :-\n{body_str}.\n\n"
+                rule = f"{head_str} :-\n{body_str}."
                 self.rules.append(rule)
 
         self.reset()
@@ -225,7 +225,7 @@ class RuntimePropertyRecorder:
             if clause.args[0] == "node":
                 continue
             head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
-            rule = f"{head_str} :-\n{body_str}.\n\n"
+            rule = f"{head_str} :-\n{body_str}."
             self.rules.append(rule)
 
         self.reset()
@@ -246,7 +246,7 @@ class RuntimePropertyRecorder:
         self._setup.gen.newline()
         for rule in self.rules:
             self._setup.gen.append(rule)
-        self._setup.gen.newline()
+            self._setup.gen.newline()
 
         self._setup.gen.h2("Runtimes: requirements")
         for imposed_spec, when_spec in sorted(self.runtime_conditions):
