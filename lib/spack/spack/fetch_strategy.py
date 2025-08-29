@@ -297,11 +297,11 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def url(self) -> str:
-        return self._download_info.request.url
+        return self._download_info.url
 
     @property
     def _effective_url(self) -> str:
-        return self._download_info.request.effective_url
+        return self._download_info.effective_url
 
     def _download_options(self) -> DownloadOptions:
         return create_download_options(self.fetch_method, extra_ars=self.fetch_args)

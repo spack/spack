@@ -11,7 +11,8 @@ import urllib.parse
 import urllib.request
 import warnings
 from http import HTTPStatus
-from typing import Callable, List, NamedTuple, Optional
+from http.client import HTTPMessage
+from typing import Callable, List, NamedTuple, Optional, Tuple
 
 import spack.llnl.util.filesystem as fs
 from spack.llnl.util import tty
@@ -27,18 +28,12 @@ from .web import (
 )
 
 
-class RequestInfo(NamedTuple):
-    """Information about a GET request."""
+class DownloadInfo(NamedTuple):
+    """Information about a download."""
 
     url: str
     effective_url: str
     headers: http.client.HTTPMessage
-
-
-class DownloadInfo(NamedTuple):
-    """Information about a download."""
-
-    request: RequestInfo
     path: str
 
 
@@ -50,10 +45,12 @@ def create_download_info(
     path: str = "",
 ) -> DownloadInfo:
     """Create a DownloadInfo object from a RequestInfo object."""
-    request = RequestInfo(
-        url=url, effective_url=effective_url, headers=headers or http.client.HTTPMessage()
+    return DownloadInfo(
+        url=url,
+        effective_url=effective_url,
+        headers=headers or http.client.HTTPMessage(),
+        path=path,
     )
-    return DownloadInfo(request=request, path=path)
 
 
 class UrlStreamReader:
@@ -73,8 +70,12 @@ class UrlStreamReader:
         """Reads and returns a chunk of the response body."""
         raise NotImplementedError
 
-    def request_info(self) -> RequestInfo:
-        """Returns information about the current request."""
+    def headers(self) -> HTTPMessage:
+        """Returns the headers of the response. If the protocol is not HTTP, the object is empty"""
+        raise NotImplementedError
+
+    def geturl(self) -> str:
+        """Returns the effective URL of the request"""
         raise NotImplementedError
 
 
@@ -90,13 +91,13 @@ class UrllibStreamReader(UrlStreamReader):
         chunk = self._response.read(size)
         return chunk
 
-    def request_info(self) -> RequestInfo:
-        effective_url = self.url
+    def headers(self) -> HTTPMessage:
+        return self._response.headers
+
+    def geturl(self) -> str:
         if isinstance(self._response, http.client.HTTPResponse):
-            effective_url = self._response.geturl()
-        return RequestInfo(
-            url=self.url, effective_url=effective_url, headers=self._response.headers
-        )
+            return self._response.geturl()
+        return self.url
 
 
 class CurlStreamReader(UrlStreamReader):
@@ -143,8 +144,11 @@ class CurlStreamReader(UrlStreamReader):
     def read(self, size: int) -> bytes:
         return self._stream.read(size)  # type: ignore
 
-    def request_info(self) -> RequestInfo:
-        return RequestInfo(url=self.url, effective_url=self.effective_url, headers=self._headers)
+    def headers(self) -> HTTPMessage:
+        return self._headers
+
+    def geturl(self) -> str:
+        return self.effective_url
 
     @staticmethod
     def cookie_args(cookie) -> List[str]:
@@ -154,7 +158,7 @@ class CurlStreamReader(UrlStreamReader):
         """
         return ["-j", "-b", cookie]
 
-    def _get_next_headers(self):
+    def _get_next_headers(self) -> Tuple[http.client.HTTPMessage, bool]:
         """Returns the next headers from the stream."""
 
         if self._scheme not in ("http", "https"):
@@ -321,9 +325,8 @@ def download_file(
 
     partial_file = destination + ".part"
     with url_reader as s, open(partial_file, "wb") as f:
-        request_info = s.request_info()
         tty.msg(f"Fetching {url}")
-        progress = FetchProgress.from_headers(request_info.headers, enabled=sys.stdout.isatty())
+        progress = FetchProgress.from_headers(s.headers(), enabled=sys.stdout.isatty())
         while True:
             chunk = s.read(size=chunk_size)
             if not chunk:
@@ -333,23 +336,24 @@ def download_file(
         progress.print(final=True)
 
     fs.rename(partial_file, destination)
-    return DownloadInfo(request=request_info, path=destination)
+    return create_download_info(
+        url=s.url, effective_url=s.geturl(), headers=s.headers(), path=destination
+    )
 
 
 def _check_headers(download_info: DownloadInfo) -> None:
     # Check if we somehow got an HTML file rather than the archive we
     # asked for.  We only look at the last content type, to handle
     # redirects properly.
-    request = download_info.request
-    content_types = request.headers.get("Content-Type")
+    content_types = download_info.headers.get("Content-Type")
     if content_types and "text/html" in content_types[-1]:
         msg = (
             f"The contents of {download_info.path or 'the archive'} fetched from "
-            f"{request.url} looks like HTML. This can indicate a broken URL, "
+            f"{download_info.url} looks like HTML. This can indicate a broken URL, "
             f"or an internet gateway issue."
         )
-        if request.effective_url != request.url:
-            msg += f" The URL redirected to {request.effective_url}."
+        if download_info.effective_url != download_info.url:
+            msg += f" The URL redirected to {download_info.effective_url}."
         warnings.warn(msg)
 
 
