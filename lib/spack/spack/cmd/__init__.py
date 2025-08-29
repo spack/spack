@@ -330,7 +330,11 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{ arch=architecture} {%compiler.name}{@compiler.version}"
+    format_string = (
+        "{name}{@version}"
+        "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
+        "{%compiler.name}{@compiler.version}"
+    )
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs

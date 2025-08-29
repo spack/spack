@@ -384,7 +384,9 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
         for s in specs:
             spec_fmt = (
                 "{hash:7} {name}{@version}{compiler_flags}{variants}"
-                "{arch=architecture} {%compiler}"
+                "{ platform=architecture.platform}{ os=architecture.os}"
+                "{ target=architecture.target}"
+                "{%compiler}"
             )
             msg += "\t" + s.cformat(spec_fmt) + "\n"
         tty.die(msg, "In this context exactly *one* match is needed.")
