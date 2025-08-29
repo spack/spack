@@ -2321,6 +2321,9 @@ For example, the ``py-pyside2`` package contains some custom code for tweaking t
 
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/py_pyside2/package.py
    :pyobject: PyPyside2.patch
+.. 
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/py_pyside/package.py
+   :pyobject: PyPyside.patch
    :linenos:
 
 A ``patch`` function, if present, will be run after patch files are applied and before ``install()`` is run.
