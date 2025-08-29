@@ -1404,7 +1404,7 @@ We will see this in action in the next part of the packaging guide, where we tal
 Other than influencing the build process, variants are often used to specify optional :ref:`dependencies of a package <dependencies>`.
 For example, a package may depend on another package only if a certain variant is enabled:
 
-..  code-block:: python
+.. code-block:: python
 
   class Hdf5(AutotoolsPackage):
       ...
