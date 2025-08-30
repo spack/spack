@@ -6,7 +6,7 @@ on:
   workflow_call:
   schedule:
     # nightly at 2:16 AM
-    - cron: '16 2 * * *'
+    - cron: "16 2 * * *"
 
 concurrency:
   group: bootstrap-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
@@ -46,7 +46,6 @@ jobs:
           source share/spack/setup-env.sh
           spack bootstrap disable github-actions-v0.6
           spack bootstrap disable github-actions-v0.5
-          spack external find cmake bison
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
@@ -55,12 +54,11 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ['macos-13', 'macos-14', "ubuntu-latest"]
+        runner: ["macos-13", "macos-14", "ubuntu-latest"]
     steps:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}
-        run: |
-          brew install cmake bison tree
+        run: brew install bison tree
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -73,7 +71,7 @@ jobs:
           source share/spack/setup-env.sh
           spack bootstrap disable github-actions-v0.6
           spack bootstrap disable github-actions-v0.5
-          spack external find --not-buildable cmake bison
+          export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
           spack -d solve zlib
           tree $HOME/.spack/bootstrap/store/
 
@@ -82,7 +80,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: [ 'macos-13', 'macos-14', "ubuntu-latest" ]
+        runner: ["macos-13", "macos-14", "ubuntu-latest"]
     steps:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}
@@ -110,7 +108,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ['macos-13', 'macos-14', "ubuntu-latest"]
+        runner: ["macos-13", "macos-14", "ubuntu-latest"]
     steps:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}
@@ -166,7 +164,6 @@ jobs:
           spack -d gpg list
           tree $HOME/.spack/bootstrap/store/
 
-
   windows:
     if: github.repository == 'spack/spack'
     runs-on: "windows-latest"
@@ -187,7 +184,6 @@ jobs:
           ./share/spack/setup-env.ps1
           spack bootstrap disable github-actions-v0.6
           spack bootstrap disable github-actions-v0.5
-          spack external find --not-buildable cmake bison
           spack -d solve zlib
           ./share/spack/qa/validate_last_exit.ps1
           tree $env:userprofile/.spack/bootstrap/store/
