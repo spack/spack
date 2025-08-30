@@ -273,6 +273,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinxcontrib.programoutput",
     "sphinx_last_updated_by_git",
+    "sphinx_sitemap",
 ]
 
 copybutton_exclude = ".linenos, .gp, .go"
@@ -487,6 +488,11 @@ html_baseurl = "https://spack.readthedocs.io/en/latest/"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "Spackdoc"
+
+# Sitemap settings
+sitemap_show_lastmod = True
+sitemap_url_scheme = "{link}"
+sitemap_excludes = ["search.html", "_modules/*"]
 
 # -- Options for LaTeX output --------------------------------------------------
 

@@ -2,6 +2,7 @@ sphinx==8.2.3
 sphinxcontrib-programoutput==0.18
 sphinx-copybutton==0.5.2
 sphinx-last-updated-by-git==0.3.8
+sphinx-sitemap==2.8.0
 # fork of furo with a few changes that are not merged upstream
 git+https://github.com/haampie/furo.git@c1d161cb9e04b481ec3331db981aacfa132ecaa6#egg=furo
 python-levenshtein==0.27.1
