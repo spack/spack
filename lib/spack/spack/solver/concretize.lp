@@ -1566,6 +1566,10 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
     attr("virtual_on_edge", PackageNode, CompilerNode2, "cxx"),
     CompilerNode1 != CompilerNode2.
 
+% If compiler mixing is off for a language, each package that uses a
+% compiler within the root unification set "registers" that compiler
+% (and the root set is prohibited from having >= 2 compilers for that
+% language).
 unification_set_compiler("root", CompilerNode, Language) :-
     attr("node", node(NodeID, NodeName)),
     attr("virtual_on_edge", node(NodeID, NodeName), CompilerNode, Language),
