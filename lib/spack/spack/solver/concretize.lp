@@ -1566,31 +1566,17 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
     attr("virtual_on_edge", PackageNode, CompilerNode2, "cxx"),
     CompilerNode1 != CompilerNode2.
 
-% If w->y->z, w->fortran, z->fortran, we want to unite w/z compilers
-ghost_compiler_link(node(NodeID, NodeName), Language, CompilerNode) :-
+unification_set_compiler("root", CompilerNode, Language) :-
     attr("node", node(NodeID, NodeName)),
     attr("virtual_on_edge", node(NodeID, NodeName), CompilerNode, Language),
     compiler_mixing(0, Language),
     language(Language),
-    not allow_mixing(NodeName).
-ghost_compiler_link(node(ChildID, ChildName), Language, CompilerNode) :-
-    attr("depends_on", ParentNode, node(ChildID, ChildName), "link"),
-    ghost_compiler_link(ParentNode, Language, CompilerNode),
-    not external(node(ChildID, ChildName)),
-    compiler_mixing(0, Language),
-    not allow_mixing(ChildName).
-
-% If w->y, w->x, x->fortran and y->fortran, we want to unite x/y compilers
-ghost_compiler_link(node(ParentID, ParentName), Language, CompilerNode) :-
-    attr("depends_on", node(ParentID, ParentName), ChildNode, "link"),
-    ghost_compiler_link(ChildNode, Language, CompilerNode),
-    not external(node(ParentID, ParentName)),
-    compiler_mixing(0, Language),
-    not allow_mixing(ParentName).
+    not allow_mixing(NodeName),
+    unification_set("root", node(NodeID, NodeName)).
 
 error(100, "Compiler mixing is disabled") :-
-    ghost_compiler_link(Node, Language, CompilerNode1),
-    ghost_compiler_link(Node, Language, CompilerNode2),
+    unification_set_compiler(X, CompilerNode1, Language),
+    unification_set_compiler(X, CompilerNode2, Language),
     CompilerNode1 != CompilerNode2.
 
 %-----------------------------------------------------------------------------
