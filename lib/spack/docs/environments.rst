@@ -51,6 +51,8 @@ Using Environments
 
 Here we follow a typical use case of creating, concretizing, installing and loading an environment.
 
+.. _cmd-spack-env-create:
+
 Creating a managed Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -120,6 +122,9 @@ The name of an environment can be a nested path to help organize environments vi
 
 This will create a managed environment under ``$environments_root/projectA/configA/myenv``.
 Changing ``environment_root`` can therefore also be used to make a whole group of nested environments available.
+
+.. _cmd-spack-env-activate:
+.. _cmd-spack-env-deactivate:
 
 Activating an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -254,6 +259,8 @@ All explicitly installed packages will be listed as roots of the environment.
 All of the Spack commands that act on the list of installed specs are environment-aware in this way, including ``install``, ``uninstall``, ``find``, ``extensions``, etc.
 In the :ref:`environment-configuration` section we will discuss environment-aware commands further.
 
+.. _cmd-spack-add:
+
 Adding Abstract Specs
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -281,7 +288,7 @@ or
 
    $ spack -e myenv add python
 
-.. _environments_concretization:
+.. _cmd-spack-concretize:
 
 Concretizing
 ^^^^^^^^^^^^
@@ -349,7 +356,7 @@ Otherwise, ``spack install`` will concretize the environment before installing t
       [myenv]$ spack install & spack install & spack install & spack install
 
    Another option is to generate a ``Makefile`` and run ``make -j<N>`` to control the number of parallel install processes.
-   See :ref:`env-generate-depfile` for details.
+   See :ref:`cmd-spack-env-depfile` for details.
 
 
 As it installs, ``spack install`` creates symbolic links in the ``logs/`` directory in the environment, allowing for easy inspection of build logs related to that environment.
@@ -360,7 +367,7 @@ For root specs provided to ``spack install`` on the command line, ``--no-add`` i
 In other words, if there is an unambiguous match in the active concrete environment for a root spec provided to ``spack install`` on the command line, Spack does not require you to specify the ``--no-add`` option to prevent the spec from being added again.
 At the same time, a spec that already exists in the environment, but only as a dependency, will be added to the environment as a root spec without the ``--no-add`` option.
 
-.. _develop-specs:
+.. _cmd-spack-develop:
 
 Developing Packages in a Spack Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -906,6 +913,8 @@ Another short way to configure a view is to specify just where to put it:
 
 Views can also be disabled by setting ``view: false``.
 
+.. _cmd-spack-env-view:
+
 Advanced view configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1030,7 +1039,7 @@ For this reason, it is not recommended to use non-default projections with the d
 The ``spack env deactivate`` command will remove the active view of the Spack environment from the user's environment variables.
 
 
-.. _env-generate-depfile:
+.. _cmd-spack-env-depfile:
 
 
 Generating Depfiles from Environments

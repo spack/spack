@@ -203,5 +203,5 @@ Basic Usage
 
 Advanced Topics
    1. :ref:`toolchains`
-   2. :ref:`audit-packages-and-configuration`
-   3. :ref:`verify-installations`
+   2. :ref:`cmd-spack-audit`
+   3. :ref:`cmd-spack-verify`

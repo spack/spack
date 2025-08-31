@@ -7,6 +7,9 @@
       Learn how Spack's bootstrapping feature automatically fetches and installs essential build tools when they are not available on the host system.
 
 .. _bootstrapping:
+.. _cmd-spack-bootstrap:
+.. _cmd-spack-bootstrap-status:
+.. _cmd-spack-bootstrap-now:
 
 Bootstrapping
 =============
@@ -64,6 +67,8 @@ Users can also bootstrap all Spack's dependencies in a single command, which is 
    ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.15.0/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spack
    ==> Installing "patchelf@0.15.0%gcc@10.2.1 ldflags="-static-libstdc++ -static-libgcc"  arch=linux-centos7-x86_64" from a buildcache
 
+.. _cmd-spack-bootstrap-root:
+
 The Bootstrapping Store
 -----------------------
 
@@ -101,6 +106,11 @@ If needed, you can remove all the software in the current bootstrapping store wi
    % spack -b find
    ==> Showing internal bootstrap store at "/Users/spack/.spack/bootstrap/store"
    ==> 0 installed packages
+
+.. _cmd-spack-bootstrap-list:
+.. _cmd-spack-bootstrap-disable:
+.. _cmd-spack-bootstrap-enable:
+.. _cmd-spack-bootstrap-reset:
 
 Enabling and Disabling Bootstrapping Methods
 --------------------------------------------
@@ -141,6 +151,9 @@ You can also reset the bootstrapping configuration to Spack's defaults:
    ==> Bootstrapping configuration is being reset to Spack's defaults. Current configuration will be lost.
    Do you want to continue? [Y/n]
    %
+
+.. _cmd-spack-bootstrap-mirror:
+.. _cmd-spack-bootstrap-add:
 
 Creating a Mirror for Air-Gapped Systems
 ----------------------------------------

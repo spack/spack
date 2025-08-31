@@ -84,6 +84,8 @@ Since recipes need a little more boilerplate than:
 Spack provides a command to generate customizable recipes for container images.
 Customizations include minimizing the size of the image, installing packages in the base image using the system package manager, and setting up a proper entrypoint to run the image.
 
+.. _cmd-spack-containerize:
+
 A Quick Introduction
 ~~~~~~~~~~~~~~~~~~~~
 

@@ -237,7 +237,7 @@ but you risk breaking other installed packages.
 In general, it is safer to remove dependent packages *before* removing their dependencies or to use the ``--dependents`` option.
 
 
-.. _nondownloadable:
+.. _cmd-spack-gc:
 
 Garbage collection
 ^^^^^^^^^^^^^^^^^^
@@ -277,6 +277,8 @@ It keeps only the packages that were explicitly installed by a user, along with 
 All other packages, such as build-only dependencies or orphaned packages, are identified as "garbage" and removed.
 
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages or :ref:`dependency-types` for a more thorough treatment of dependency types.
+
+.. _cmd-spack-mark:
 
 Marking packages explicit or implicit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -362,6 +364,8 @@ If there is no new version for either of the packages, ``spack install`` will si
 When using this workflow for installations that contain more packages, care must be taken to either only mark selected packages or issue ``spack install`` for all packages that should be kept.
 
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly or implicitly installed packages.
+
+.. _nondownloadable:
 
 Non-Downloadable Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -645,6 +649,7 @@ You can use this with tools like `jq <https://jqlang.org/>`_ to quickly create J
       "hash": "zvaa4lhlhilypw5quj3akyd3apbq5gap"
     }
 
+.. _cmd-spack-diff:
 
 ``spack diff``
 ^^^^^^^^^^^^^^
@@ -782,6 +787,7 @@ Spack has three different ways to solve this problem, which fit different use ca
 
 
 .. _cmd-spack-load:
+.. _cmd-spack-unload:
 
 ``spack load / unload``
 ^^^^^^^^^^^^^^^^^^^^^^^

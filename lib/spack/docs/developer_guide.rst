@@ -512,8 +512,7 @@ or a file:
 just like you would with the normal Python command.
 
 
-.. _cmd-spack-url:
-
+.. _cmd-spack-blame:
 
 ``spack blame``
 ^^^^^^^^^^^^^^^
@@ -556,6 +555,8 @@ Finally, to get a JSON export of the data, add ``--json``:
     $ spack blame --json python
 
 
+.. _cmd-spack-url:
+
 ``spack url``
 ^^^^^^^^^^^^^
 
@@ -567,6 +568,9 @@ By determining the version from the URL, Spack can replace it with other version
 
 The regular expressions in ``parse_name_offset`` and ``parse_version_offset`` are used to extract the name and version, but they are not perfect.
 In order to debug Spack's URL parsing support, the ``spack url`` command can be used.
+
+
+.. _cmd-spack-url-parse:
 
 ``spack url parse``
 """""""""""""""""""
@@ -582,12 +586,18 @@ This particular package may require a ``list_url`` or ``url_for_version`` functi
 This command also accepts a ``--spider`` flag.
 If provided, Spack searches for other versions of the package and prints the matching URLs.
 
+
+.. _cmd-spack-url-list:
+
 ``spack url list``
 """"""""""""""""""
 
 This command lists every URL in every package in Spack.
 If given the ``--color`` and ``--extrapolation`` flags, it also colors the part of the string that it detected to be the name and version.
 The ``--incorrect-name`` and ``--incorrect-version`` flags can be used to print URLs that were not being parsed correctly.
+
+
+.. _cmd-spack-url-summary:
 
 ``spack url summary``
 """""""""""""""""""""

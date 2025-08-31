@@ -637,7 +637,7 @@ In order, they are
 
 If Spack is unable to determine what the commit should be during concretization a warning will be issued.
 Users may also specify which commit SHA they want with the spec since it is simply a variant.
-In this case, or in the case of develop specs (see :ref:`develop-specs`), Spack will skip attempts to assign the commit SHA automatically.
+In this case, or in the case of develop specs (see :ref:`cmd-spack-develop`), Spack will skip attempts to assign the commit SHA automatically.
 
 .. note::
 

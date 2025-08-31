@@ -6,7 +6,7 @@
    :description lang=en:
       Explore advanced topics in Spack, including auditing packages and configuration, and verifying installations.
 
-.. _audit-packages-and-configuration:
+.. _cmd-spack-audit:
 
 Auditing Packages and Configuration
 ===================================
@@ -31,7 +31,7 @@ If issues are found, they are reported to stdout:
        the variant 'adios' does not exist
        in spack_repo/builtin/packages/lammps/package.py
 
-.. _verify-installations:
+.. _cmd-spack-verify:
 
 Verifying Installations
 =======================

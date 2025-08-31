@@ -1414,6 +1414,8 @@ The ``--keep-prefix`` option allows you to keep the install prefix regardless of
 
    $ spack install --keep-prefix <spec>
 
+.. _cmd-spack-graph:
+
 Understanding the DAG
 ^^^^^^^^^^^^^^^^^^^^^
 

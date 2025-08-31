@@ -359,6 +359,7 @@ If you need fine-grained control over which packages use which targets (or over 
 
 
 .. _support-for-microarchitectures:
+.. _cmd-spack-arch:
 
 Support for specific microarchitectures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
