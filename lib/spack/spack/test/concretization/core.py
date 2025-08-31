@@ -6,7 +6,6 @@ import pathlib
 import platform
 import sys
 from typing import Any, Dict
-from spack.vendor.ruamel import yaml
 
 import pytest
 
@@ -485,23 +484,14 @@ class TestConcretize:
                 assert root["dt-diamond-left"].satisfies("%clang")
 
     def test_disable_mixing2(self):
-        toolchain_cfg_txt = """\
-toolchains:
-  use_llvm:
-  - spec: "^cxx=llvm"
-    when: "^cxx"
-"""
-        toolchain_cfg = yaml.safe_load(toolchain_cfg_txt)
-        #import pdb; pdb.set_trace()
         with spack.config.override("concretizer", {"compiler_mixing": False}):
             # Concretization will succeed, but cxx choice won't be applied
             # root = spack.concretize.concretize_one("dt-diamond %[when='%cxx'] cxx=clang")
             # Concretization will fail (this says dt-diamond must depend on
             # clang for cxx, but it doesn't depend on cxx)
             # root = spack.concretize.concretize_one("dt-diamond %[virtuals=cxx] clang")
-            with spack.config.override("toolchains", toolchain_cfg["toolchains"]):
-                root = spack.concretize.concretize_one("dt-diamond %use_llvm")
-                assert root["dt-diamond-left"].satisfies("%cxx=clang")
+            root = spack.concretize.concretize_one("dt-diamond ^[virtuals=fortran] llvm")
+            assert root["dt-diamond-left"].satisfies("%cxx=clang")
 
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")
