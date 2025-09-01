@@ -3,6 +3,5 @@
 .spack-env
 _build
 _spack_root
-command_index.rst
 spack*.rst
 spack.lock

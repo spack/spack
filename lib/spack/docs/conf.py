@@ -64,18 +64,6 @@ if os.path.exists(".spack/spack-packages/.git/shallow"):
         stderr=subprocess.DEVNULL,
     )
 
-# Generate a command index if an update is needed
-subprocess.call(
-    [
-        "spack",
-        "commands",
-        "--format=rst",
-        "--header=command_index.in",
-        "--update=command_index.rst",
-        *glob("*rst"),
-    ]
-)
-
 #
 # Run sphinx-apidoc
 #

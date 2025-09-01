@@ -5,6 +5,7 @@
 import filecmp
 import os
 import pathlib
+import shlex
 import shutil
 import textwrap
 
@@ -286,3 +287,26 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
     commands("--aliases", "--format", shell, "--header", header, "--update", new_script)
 
     assert filecmp.cmp(old_script, new_script), msg
+
+
+@pytest.mark.not_on_windows("Command index generation fails on windows")
+def test_updated_command_index_rst(tmp_path: pathlib.Path):
+    """Make sure our command index RST remains up-to-date."""
+    header = os.path.join(spack.paths.lib_path, "docs", "command_index.in")
+    current_rst = os.path.join(spack.paths.lib_path, "docs", "command_index.rst")
+
+    # if neither of these files exist, we skip the test
+    if not os.path.exists(header) or not os.path.exists(current_rst):
+        pytest.skip("Skipping test because required files do not exist.")
+
+    new_rst = str(tmp_path / "command_index.rst")
+    args = ("--format", "rst", "--header", header, "--update")
+    commands(*args, new_rst)
+    shell_instr = " ".join(map(shlex.quote, ("spack", "commands", *args, current_rst)))
+
+    assert filecmp.cmp(current_rst, new_rst), (
+        "It looks like Spack's command-line interface has been modified. "
+        "Please update the command index documentation by running:"
+        f"\n\n    {shell_instr}\n\n"
+        "and adding the changed file to your pull request."
+    )

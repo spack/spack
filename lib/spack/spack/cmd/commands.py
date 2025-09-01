@@ -734,6 +734,7 @@ def rst(args: Namespace, out: IO) -> None:
         args: Command-line arguments.
         out: File object to write to.
     """
+    os.environ["COLUMNS"] = "120"  # Set consistent terminal width for reproducible output
     # create a parser with all commands
     parser = spack.main.make_argument_parser()
     spack.main.add_all_commands(parser)
