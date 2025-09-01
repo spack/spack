@@ -2999,7 +2999,7 @@ class Spec:
             )
 
     def constrain(self, other, deps=True) -> bool:
-        """Intersect self with other in-place. Return True if self changed, False otherwise.
+        """Constrains self with other, and returns True if self changed, False otherwise.
 
         Args:
             other: constraint to be added to self
@@ -3009,6 +3009,35 @@ class Spec:
              spack.error.UnsatisfiableSpecError: when self cannot be constrained
         """
         return self._constrain(other, deps=deps, resolve_virtuals=True)
+
+    def _constrain_symbolically(self, other, deps=True) -> bool:
+        """Constrains self with other, and returns True if self changed, False otherwise.
+
+        This function has no notion of virtuals, so it does not need a repository.
+
+        Args:
+            other: constraint to be added to self
+            deps: if False, constrain only the root node, otherwise constrain dependencies as well
+
+        Raises:
+             spack.error.UnsatisfiableSpecError: when self cannot be constrained
+
+        Examples:
+            >>> from spack.spec import Spec, UnsatisfiableDependencySpecError
+            >>> s = Spec("hdf5 ^mpi@4")
+            >>> t = Spec("hdf5 ^mpi=openmpi")
+            >>> try:
+            ...     s.constrain(t)
+            ... except UnsatisfiableDependencySpecError as e:
+            ...     print(e)
+            ...
+            hdf5 ^mpi=openmpi does not satisfy hdf5 ^mpi@4
+            >>> s._constrain_symbolically(t)
+            True
+            >>> s
+            hdf5 ^mpi@4 ^mpi=openmpi
+        """
+        return self._constrain(other, deps=deps, resolve_virtuals=False)
 
     def _constrain(self, other, deps=True, *, resolve_virtuals: bool):
         # If we are trying to constrain a concrete spec, either the spec

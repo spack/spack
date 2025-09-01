@@ -2344,9 +2344,9 @@ def test_long_spec():
         (["^foo", "%bar %foo"], "%bar%foo"),
     ],
 )
-def test_constrain_without_resolving_virtuals(constraints, expected):
-    """Tests the semantics of constraining a spec, when we don't resolve virtuals."""
+def test_constrain_symbolically(constraints, expected):
+    """Tests the semantics of constraining a spec when we don't resolve virtuals."""
     merged = Spec()
     for c in constraints:
-        merged._constrain(c, resolve_virtuals=False)
+        merged._constrain_symbolically(c)
     assert merged == Spec(expected)
