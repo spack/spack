@@ -210,18 +210,17 @@ def color_when(value):
 
 def _escape(s: str, color: bool, enclose: bool, zsh: bool) -> str:
     """Returns a TTY escape sequence for a color"""
-    if color:
-        if zsh:
-            result = rf"\e[0;{s}m"
-        else:
-            result = f"\033[{s}m"
-
-        if enclose:
-            result = rf"\[{result}\]"
-
-        return result
-    else:
+    if not color:
         return ""
+    elif zsh:
+        return f"\033[0;{s}m"
+
+    result = f"\033[{s}m"
+
+    if enclose:
+        result = rf"\[{result}\]"
+
+    return result
 
 
 def colorize(
