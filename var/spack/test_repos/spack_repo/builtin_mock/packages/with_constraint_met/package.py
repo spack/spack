@@ -24,3 +24,12 @@ class WithConstraintMet(Package):
 
     with when("@0.14: ^pkg-b@:4.0"):
         depends_on("pkg-c", when="@:15 ^pkg-b@3.8:")
+
+    # Direct dependency in a "when" context manager
+    with when("%pkg-b"):
+        depends_on("pkg-e")
+
+    # More complex dependency with nested contexts
+    with when("%pkg-c"):
+        with when("@2 %pkg-b@:4.0"):
+            depends_on("pkg-e", when="%c=gcc")

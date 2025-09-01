@@ -5011,7 +5011,7 @@ def merge_abstract_anonymous_specs(*abstract_specs: Spec):
             edge = next(iter(current_spec_constraint.edges_to_dependencies(name)))
 
             merged_spec._add_dependency(
-                edge.spec.copy(), depflag=edge.depflag, virtuals=edge.virtuals
+                edge.spec.copy(), depflag=edge.depflag, virtuals=edge.virtuals, direct=edge.direct
             )
 
     return merged_spec
