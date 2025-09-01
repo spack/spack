@@ -5,7 +5,6 @@ import abc
 import contextlib
 import enum
 import http.client
-import io
 import subprocess
 import sys
 import time
@@ -109,7 +108,7 @@ def curl_stream(
     with _start_curl_process(cmd) as curl_process:
         scheme = urllib.parse.urlparse(url).scheme
         assert curl_process.stdout is not None, "curl process stdout is None"
-        stream = io.BufferedReader(curl_process.stdout)  # type: ignore[type-var]
+        stream = curl_process.stdout
         effective_url = url
         if scheme not in ("http", "https"):
             headers = HTTPMessage()
@@ -117,8 +116,9 @@ def curl_stream(
             # curl echoes intermediate redirect responses, so we might get multiple responses
             finished = False
             while not finished:
-                headers, finished = _get_next_http_headers(url=url, stream=stream)
-                effective_url = headers.get("location", effective_url)
+                headers, effective_url, finished = _next_http_headers(
+                    url=effective_url, stream=stream
+                )
         yield CurlStream(url=url, headers=headers, effective_url=effective_url, stream=stream)
     check_curl_code(curl_process.returncode)
 
@@ -131,7 +131,7 @@ def _start_curl_process(curl_cmd):
         yield curl_process
 
 
-def _get_next_http_headers(url, stream) -> Tuple[http.client.HTTPMessage, bool]:
+def _next_http_headers(url, stream) -> Tuple[http.client.HTTPMessage, str, bool]:
     """Returns the next headers from the stream."""
 
     finished = True
@@ -148,13 +148,14 @@ def _get_next_http_headers(url, stream) -> Tuple[http.client.HTTPMessage, bool]:
     headers = http.client.parse_headers(stream)
     if 400 <= status < 600:
         raise DetailedHTTPError(
-            urllib.request.Request(url), status, HTTPStatus(int(status)).phrase, headers, None
+            urllib.request.Request(url), status, HTTPStatus(status).phrase, headers, None
         )
 
     elif 300 <= status < 400:
         finished = False
 
-    return headers, finished
+    effective_url = headers.get("location", url)
+    return headers, effective_url, finished
 
 
 class FetchProgress:
@@ -310,8 +311,7 @@ def _check_headers(
     # Check if we somehow got an HTML file rather than the archive we
     # asked for.  We only look at the last content type, to handle
     # redirects properly.
-    content_types = headers.get("Content-Type")
-    if content_types and "text/html" in content_types:
+    if "text/html" in headers.get("Content-Type", ""):
         msg = (
             f"The contents of {destination or 'the archive'} fetched from {url} looks like HTML. "
             f"This can indicate a broken URL, or an internet gateway issue."
