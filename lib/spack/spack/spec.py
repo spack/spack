@@ -2998,29 +2998,30 @@ class Spec:
                 f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
             )
 
-    def constrain(self, other, deps=True, resolve_virtuals: bool = True):
+    def constrain(self, other, deps=True) -> bool:
         """Intersect self with other in-place. Return True if self changed, False otherwise.
 
         Args:
             other: constraint to be added to self
             deps: if False, constrain only the root node, otherwise constrain dependencies as well
-            resolve_virtuals: if True, resolve virtuals in self and other. This requires a
-                repository to be available.
 
         Raises:
              spack.error.UnsatisfiableSpecError: when self cannot be constrained
         """
+        return self._constrain(other, deps=deps, resolve_virtuals=True)
+
+    def _constrain(self, other, deps=True, *, resolve_virtuals: bool):
         # If we are trying to constrain a concrete spec, either the spec
         # already satisfies the constraint (and the method returns False)
         # or it raises an exception
         if self.concrete:
-            if self.satisfies(other, resolve_virtuals=resolve_virtuals):
+            if self._satisfies(other, resolve_virtuals=resolve_virtuals):
                 return False
             else:
                 raise spack.error.UnsatisfiableSpecError(self, other, "constrain a concrete spec")
 
         other = self._autospec(other)
-        if other.concrete and other.satisfies(self, resolve_virtuals=resolve_virtuals):
+        if other.concrete and other._satisfies(self, resolve_virtuals=resolve_virtuals):
             self._dup(other)
             return True
 
@@ -3135,9 +3136,7 @@ class Spec:
             return spec_like
         return Spec(spec_like)
 
-    def intersects(
-        self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
-    ) -> bool:
+    def intersects(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if there exists at least one concrete spec that matches both
         self and other, otherwise False.
 
@@ -3147,19 +3146,22 @@ class Spec:
         Args:
             other: spec to be checked for compatibility
             deps: if True check compatibility of dependency nodes too, if False only check root
-            resolve_virtuals: if True, resolve virtuals in self and other. This requires a
-                repository to be available.
         """
+        return self._intersects(other=other, deps=deps, resolve_virtuals=True)
+
+    def _intersects(
+        self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
+    ) -> bool:
         other = self._autospec(other)
 
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
 
         elif self.concrete:
-            return self.satisfies(other, resolve_virtuals=resolve_virtuals)
+            return self._satisfies(other, resolve_virtuals=resolve_virtuals)
 
         elif other.concrete:
-            return other.satisfies(self, resolve_virtuals=resolve_virtuals)
+            return other._satisfies(self, resolve_virtuals=resolve_virtuals)
 
         # From here we know both self and other are not concrete
         self_hash = self.abstract_hash
@@ -3242,7 +3244,7 @@ class Spec:
         common_dependencies = {x.name for x in self.dependencies()}
         common_dependencies &= {x.name for x in other.dependencies()}
         for name in common_dependencies:
-            if not self[name].intersects(
+            if not self[name]._intersects(
                 other[name], deps=True, resolve_virtuals=resolve_virtuals
             ):
                 return False
@@ -3279,7 +3281,16 @@ class Spec:
 
         return True
 
-    def satisfies(
+    def satisfies(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
+        """Return True if all concrete specs matching self also match other, otherwise False.
+
+        Args:
+            other: spec to be satisfied
+            deps: if True, descend to dependencies, otherwise only check root node
+        """
+        return self._satisfies(other=other, deps=deps, resolve_virtuals=True)
+
+    def _satisfies(
         self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
     ) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
@@ -3370,13 +3381,15 @@ class Spec:
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # The condition cannot be applied in any case, skip the edge
             test_root = rhs_edge.parent.name in (None, self.name)
-            if test_root and not self.intersects(rhs_edge.when, resolve_virtuals=resolve_virtuals):
+            if test_root and not self._intersects(
+                rhs_edge.when, resolve_virtuals=resolve_virtuals
+            ):
                 continue
 
             if (
                 not test_root
                 and rhs_edge.parent.name in self
-                and not self[rhs_edge.parent.name].intersects(
+                and not self[rhs_edge.parent.name]._intersects(
                     rhs_edge.when, resolve_virtuals=resolve_virtuals
                 )
             ):
@@ -3414,7 +3427,7 @@ class Spec:
                     mock_nodes_from_old_specfiles.add(compiler_spec)
                     # This checks that the single node compiler spec satisfies the request
                     # of a direct dependency. The check is not perfect, but based on heuristic.
-                    if not compiler_spec.satisfies(
+                    if not compiler_spec._satisfies(
                         rhs_edge.spec, resolve_virtuals=resolve_virtuals
                     ):
                         return False
@@ -3434,12 +3447,12 @@ class Spec:
                         lhs_edge.spec
                         for lhs_edge in candidate_edges
                         if ((lhs_edge.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
-                        and rhs_edge.when.satisfies(
+                        and rhs_edge.when._satisfies(
                             lhs_edge.when, resolve_virtuals=resolve_virtuals
                         )
                     ]
                     if not candidates or not any(
-                        x.satisfies(rhs_edge.spec, resolve_virtuals=resolve_virtuals)
+                        x._satisfies(rhs_edge.spec, resolve_virtuals=resolve_virtuals)
                         for x in candidates
                     ):
                         return False
@@ -3479,7 +3492,7 @@ class Spec:
                 candidate_edges = [
                     lhs_edge
                     for lhs_edge in lhs_edges[current_dependency_name]
-                    if rhs_edge.when.satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
+                    if rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
                 ]
 
             if not candidate_edges:
@@ -3491,7 +3504,7 @@ class Spec:
                     return False
 
             for lhs_edge in candidate_edges:
-                if lhs_edge.spec.satisfies(
+                if lhs_edge.spec._satisfies(
                     rhs_edge.spec, deps=False, resolve_virtuals=resolve_virtuals
                 ):
                     break

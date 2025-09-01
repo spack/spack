@@ -187,7 +187,7 @@ class DirectiveMeta(type):
 
                     when_spec = spack.spec.Spec()
                     for current in when_constraints:
-                        when_spec.constrain(current, deps=True, resolve_virtuals=False)
+                        when_spec._constrain(current, deps=True, resolve_virtuals=False)
                     kwargs["when"] = when_spec
 
                 # If any of the arguments are executors returned by a
