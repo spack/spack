@@ -208,3 +208,7 @@ def test_direct_dependencies_from_when_context_are_retained(mock_packages):
     assert spack.spec.Spec("%pkg-b") in pkg_cls.dependencies
     # Direct dependency in a "when" nested context manager
     assert spack.spec.Spec("@2 %c=gcc %pkg-c %pkg-b@:4.0") in pkg_cls.dependencies
+    # Nested ^foo followed by %foo
+    assert spack.spec.Spec("%pkg-c") in pkg_cls.dependencies
+    # Nested ^foo followed by ^foo %gcc
+    assert spack.spec.Spec("^pkg-c %gcc") in pkg_cls.dependencies

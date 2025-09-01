@@ -184,8 +184,10 @@ class DirectiveMeta(type):
                     ]
                     if kwargs.get("when"):
                         when_constraints.append(spack.spec.Spec(kwargs["when"]))
-                    when_spec = spack.spec.merge_abstract_anonymous_specs(*when_constraints)
 
+                    when_spec = spack.spec.Spec()
+                    for current in when_constraints:
+                        when_spec.constrain(current, deps=True, resolve_virtuals=False)
                     kwargs["when"] = when_spec
 
                 # If any of the arguments are executors returned by a

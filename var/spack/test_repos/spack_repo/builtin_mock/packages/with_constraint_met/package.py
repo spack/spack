@@ -33,3 +33,13 @@ class WithConstraintMet(Package):
     with when("%pkg-c"):
         with when("@2 %pkg-b@:4.0"):
             depends_on("pkg-e", when="%c=gcc")
+
+    # Nested ^pkg-c followed by %pkg-c
+    with when("^pkg-c"):
+        with when("%pkg-c"):
+            depends_on("pkg-e")
+
+    # Nested ^pkg-c followed by %pkg-c
+    with when("^pkg-c"):
+        with when("^pkg-c %gcc"):
+            depends_on("pkg-e")
