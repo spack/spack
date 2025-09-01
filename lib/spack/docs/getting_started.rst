@@ -187,7 +187,7 @@ To undo these modifications, you can:
 .. admonition:: Environments and views
    :class: tip
 
-   :ref:`Spack Environments <spack-environments-basic-usage>` are a better way to install and load a set of packages that are frequently used together.
+   :doc:`Spack Environments <environments_basics>` are a better way to install and load a set of packages that are frequently used together.
    The discussion of this topic goes beyond this ``Getting Started`` guide, and we refer to :ref:`environments` for more information.
 
 Next steps
@@ -199,7 +199,7 @@ There are further resources in the documentation that cover both basic and advan
 Basic Usage
    1. :ref:`basic-usage`
    2. :ref:`compiler-config`
-   3. :ref:`spack-environments-basic-usage`
+   3. :doc:`environments_basics`
 
 Advanced Topics
    1. :ref:`toolchains`

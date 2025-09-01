@@ -6,8 +6,6 @@
    :description lang=en:
       Learn how to use Spack environments to manage reproducible software stacks on a local machine.
 
-.. _spack-environments-basic-usage:
-
 Spack Environments
 ==================
 
