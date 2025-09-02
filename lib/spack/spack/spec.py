@@ -230,6 +230,8 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
 
+    ANY_TARGET = _make_microarchitecture("*")
+
     @staticmethod
     def default_arch():
         """Return the default architecture"""
@@ -403,6 +405,11 @@ class ArchSpec:
         for attribute in ("platform", "os"):
             other_attribute = getattr(other, attribute)
             self_attribute = getattr(self, attribute)
+
+            # platform=* or os=*
+            if self_attribute and other_attribute == "*":
+                return True
+
             if other_attribute and self_attribute != other_attribute:
                 return False
 
@@ -441,6 +448,10 @@ class ArchSpec:
         # other_target is there and strict=True
         if self.target is None:
             return False
+
+        # self.target is not None, and other is target=*
+        if other.target == ArchSpec.ANY_TARGET:
+            return True
 
         return bool(self._target_intersection(other))
 
