@@ -3150,28 +3150,59 @@ class Spec:
                 f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
             )
 
-    def constrain(self, other, deps=True):
-        """Intersect self with other in-place. Return True if self changed, False otherwise.
+    def constrain(self, other, deps=True) -> bool:
+        """Constrains self with other, and returns True if self changed, False otherwise.
 
         Args:
             other: constraint to be added to self
-            deps: if False, constrain only the root node, otherwise constrain dependencies
-                as well.
+            deps: if False, constrain only the root node, otherwise constrain dependencies as well
 
         Raises:
              spack.error.UnsatisfiableSpecError: when self cannot be constrained
         """
+        return self._constrain(other, deps=deps, resolve_virtuals=True)
+
+    def _constrain_symbolically(self, other, deps=True) -> bool:
+        """Constrains self with other, and returns True if self changed, False otherwise.
+
+        This function has no notion of virtuals, so it does not need a repository.
+
+        Args:
+            other: constraint to be added to self
+            deps: if False, constrain only the root node, otherwise constrain dependencies as well
+
+        Raises:
+            spack.error.UnsatisfiableSpecError: when self cannot be constrained
+
+        Examples:
+            >>> from spack.spec import Spec, UnsatisfiableDependencySpecError
+            >>> s = Spec("hdf5 ^mpi@4")
+            >>> t = Spec("hdf5 ^mpi=openmpi")
+            >>> try:
+            ...     s.constrain(t)
+            ... except UnsatisfiableDependencySpecError as e:
+            ...     print(e)
+            ...
+            hdf5 ^mpi=openmpi does not satisfy hdf5 ^mpi@4
+            >>> s._constrain_symbolically(t)
+            True
+            >>> s
+            hdf5 ^mpi@4 ^mpi=openmpi
+        """
+        return self._constrain(other, deps=deps, resolve_virtuals=False)
+
+    def _constrain(self, other, deps=True, *, resolve_virtuals: bool):
         # If we are trying to constrain a concrete spec, either the spec
         # already satisfies the constraint (and the method returns False)
         # or it raises an exception
         if self.concrete:
-            if self.satisfies(other):
+            if self._satisfies(other, resolve_virtuals=resolve_virtuals):
                 return False
             else:
                 raise spack.error.UnsatisfiableSpecError(self, other, "constrain a concrete spec")
 
         other = self._autospec(other)
-        if other.concrete and other.satisfies(self):
+        if other.concrete and other._satisfies(self, resolve_virtuals=resolve_virtuals):
             self._dup(other)
             return True
 
@@ -3229,14 +3260,14 @@ class Spec:
             changed = True
 
         if deps:
-            changed |= self._constrain_dependencies(other)
+            changed |= self._constrain_dependencies(other, resolve_virtuals=resolve_virtuals)
 
         if other.concrete and not self.concrete and other.satisfies(self):
             self._finalize_concretization()
 
         return changed
 
-    def _constrain_dependencies(self, other: "Spec") -> bool:
+    def _constrain_dependencies(self, other: "Spec", resolve_virtuals: bool = True) -> bool:
         """Apply constraints of other spec's dependencies to this spec."""
         if not other._dependencies:
             return False
@@ -3244,7 +3275,7 @@ class Spec:
         # TODO: might want more detail than this, e.g. specific deps
         # in violation. if this becomes a priority get rid of this
         # check and be more specific about what's wrong.
-        if not other._intersects_dependencies(self):
+        if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals):
             raise UnsatisfiableDependencySpecError(other, self)
 
         if any(not d.name for d in other.traverse(root=False)):
@@ -3259,6 +3290,7 @@ class Spec:
                 existing[0].spec.constrain(edge.spec)
                 existing[0].update_deptypes(edge.depflag)
                 existing[0].update_virtuals(edge.virtuals)
+                existing[0].direct |= edge.direct
             else:
                 self.add_dependency_edge(
                     edge.spec,
@@ -3269,23 +3301,11 @@ class Spec:
                 )
         return self != reference_spec
 
-    def common_dependencies(self, other):
-        """Return names of dependencies that self and other have in common."""
-        common = set(s.name for s in self.traverse(root=False))
-        common.intersection_update(s.name for s in other.traverse(root=False))
-        return common
-
     def constrained(self, other, deps=True):
         """Return a constrained copy without modifying this spec."""
         clone = self.copy(deps=deps)
         clone.constrain(other, deps)
         return clone
-
-    def direct_dep_difference(self, other):
-        """Returns dependencies in self that are not in other."""
-        mine = set(dname for dname in self._dependencies)
-        mine.difference_update(dname for dname in other._dependencies)
-        return mine
 
     def _autospec(self, spec_like):
         """
@@ -3308,16 +3328,21 @@ class Spec:
             other: spec to be checked for compatibility
             deps: if True check compatibility of dependency nodes too, if False only check root
         """
+        return self._intersects(other=other, deps=deps, resolve_virtuals=True)
+
+    def _intersects(
+        self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
+    ) -> bool:
         other = self._autospec(other)
 
         if other.concrete and self.concrete:
             return self.dag_hash() == other.dag_hash()
 
         elif self.concrete:
-            return self.satisfies(other)
+            return self._satisfies(other, resolve_virtuals=resolve_virtuals)
 
         elif other.concrete:
-            return other.satisfies(self)
+            return other._satisfies(self, resolve_virtuals=resolve_virtuals)
 
         # From here we know both self and other are not concrete
         self_hash = self.abstract_hash
@@ -3332,6 +3357,9 @@ class Spec:
 
         # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
+            if not resolve_virtuals:
+                return False
+
             self_virtual = spack.repo.PATH.is_virtual(self.name)
             other_virtual = spack.repo.PATH.is_virtual(other.name)
             if self_virtual and other_virtual:
@@ -3384,11 +3412,11 @@ class Spec:
 
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
-            return self._intersects_dependencies(other)
+            return self._intersects_dependencies(other, resolve_virtuals=resolve_virtuals)
 
         return True
 
-    def _intersects_dependencies(self, other):
+    def _intersects_dependencies(self, other, resolve_virtuals: bool = True):
         if not other._dependencies or not self._dependencies:
             # one spec *could* eventually satisfy the other
             return True
@@ -3397,8 +3425,13 @@ class Spec:
         common_dependencies = {x.name for x in self.dependencies()}
         common_dependencies &= {x.name for x in other.dependencies()}
         for name in common_dependencies:
-            if not self[name].intersects(other[name], deps=True):
+            if not self[name]._intersects(
+                other[name], deps=True, resolve_virtuals=resolve_virtuals
+            ):
                 return False
+
+        if not resolve_virtuals:
+            return True
 
         # For virtual dependencies, we need to dig a little deeper.
         self_index = spack.provider_index.ProviderIndex(
@@ -3434,7 +3467,20 @@ class Spec:
 
         Args:
             other: spec to be satisfied
-            deps: if True descend to dependencies, otherwise only check root node
+            deps: if True, descend to dependencies, otherwise only check root node
+        """
+        return self._satisfies(other=other, deps=deps, resolve_virtuals=True)
+
+    def _satisfies(
+        self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
+    ) -> bool:
+        """Return True if all concrete specs matching self also match other, otherwise False.
+
+        Args:
+            other: spec to be satisfied
+            deps: if True, descend to dependencies, otherwise only check root node
+            resolve_virtuals: if True, resolve virtuals in self and other. This requires a
+                repository to be available.
         """
         other = self._autospec(other)
 
@@ -3452,7 +3498,7 @@ class Spec:
                 return False
 
         # If the names are different, we need to consider virtuals
-        if self.name != other.name and self.name and other.name:
+        if self.name != other.name and self.name and other.name and resolve_virtuals:
             # A concrete provider can satisfy a virtual dependency.
             if not spack.repo.PATH.is_virtual(self.name) and spack.repo.PATH.is_virtual(
                 other.name
@@ -3516,19 +3562,22 @@ class Spec:
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # The condition cannot be applied in any case, skip the edge
             test_root = rhs_edge.parent.name in (None, self.name)
-            if test_root and not self.intersects(rhs_edge.when):
+            if test_root and not self._intersects(
+                rhs_edge.when, resolve_virtuals=resolve_virtuals
+            ):
                 continue
 
             if (
                 not test_root
                 and rhs_edge.parent.name in self
-                and not self[rhs_edge.parent.name].intersects(rhs_edge.when)
+                and not self[rhs_edge.parent.name]._intersects(
+                    rhs_edge.when, resolve_virtuals=resolve_virtuals
+                )
             ):
                 continue
 
             # If we are checking for ^mpi we need to verify if there is any edge
-            is_virtual_node = spack.repo.PATH.is_virtual(rhs_edge.spec.name)
-            if is_virtual_node:
+            if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name):
                 # Don't mutate objects in memory that may be referred elsewhere
                 rhs_edge = rhs_edge.copy()
                 rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
@@ -3559,11 +3608,17 @@ class Spec:
                     mock_nodes_from_old_specfiles.add(compiler_spec)
                     # This checks that the single node compiler spec satisfies the request
                     # of a direct dependency. The check is not perfect, but based on heuristic.
-                    if not compiler_spec.satisfies(rhs_edge.spec):
+                    if not compiler_spec._satisfies(
+                        rhs_edge.spec, resolve_virtuals=resolve_virtuals
+                    ):
                         return False
 
                 else:
-                    name = rhs_edge.spec.name if not is_virtual_node else None
+                    name = (
+                        None
+                        if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name)
+                        else rhs_edge.spec.name
+                    )
                     candidate_edges = current_node.edges_to_dependencies(
                         name=name, virtuals=rhs_edge.virtuals or None
                     )
@@ -3573,9 +3628,14 @@ class Spec:
                         lhs_edge.spec
                         for lhs_edge in candidate_edges
                         if ((lhs_edge.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
-                        and rhs_edge.when.satisfies(lhs_edge.when)
+                        and rhs_edge.when._satisfies(
+                            lhs_edge.when, resolve_virtuals=resolve_virtuals
+                        )
                     ]
-                    if not candidates or not any(x.satisfies(rhs_edge.spec) for x in candidates):
+                    if not candidates or not any(
+                        x._satisfies(rhs_edge.spec, resolve_virtuals=resolve_virtuals)
+                        for x in candidates
+                    ):
                         return False
 
                 continue
@@ -3613,7 +3673,7 @@ class Spec:
                 candidate_edges = [
                     lhs_edge
                     for lhs_edge in lhs_edges[current_dependency_name]
-                    if rhs_edge.when.satisfies(lhs_edge.when)
+                    if rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
                 ]
 
             if not candidate_edges:
@@ -3625,7 +3685,9 @@ class Spec:
                     return False
 
             for lhs_edge in candidate_edges:
-                if lhs_edge.spec.satisfies(rhs_edge.spec, deps=False):
+                if lhs_edge.spec._satisfies(
+                    rhs_edge.spec, deps=False, resolve_virtuals=resolve_virtuals
+                ):
                     break
             else:
                 return False
@@ -4989,35 +5051,6 @@ def parse_with_version_concrete(spec_like: Union[str, Spec]):
     if interpreted_version:
         s.versions = vn.VersionList([interpreted_version])
     return s
-
-
-def merge_abstract_anonymous_specs(*abstract_specs: Spec):
-    """Merge the abstracts specs passed as input and return the result.
-
-    The root specs must be anonymous, and it's duty of the caller to ensure that.
-
-    This function merge the abstract specs based on package names. In particular
-    it doesn't try to resolve virtual dependencies.
-
-    Args:
-        *abstract_specs: abstract specs to be merged
-    """
-    merged_spec = Spec()
-    for current_spec_constraint in abstract_specs:
-        merged_spec.constrain(current_spec_constraint, deps=False)
-
-        for name in merged_spec.common_dependencies(current_spec_constraint):
-            merged_spec[name].constrain(current_spec_constraint[name], deps=False)
-
-        # Update with additional constraints from other spec
-        for name in current_spec_constraint.direct_dep_difference(merged_spec):
-            edge = next(iter(current_spec_constraint.edges_to_dependencies(name)))
-
-            merged_spec._add_dependency(
-                edge.spec.copy(), depflag=edge.depflag, virtuals=edge.virtuals
-            )
-
-    return merged_spec
 
 
 def reconstruct_virtuals_on_edges(spec: Spec) -> None:
