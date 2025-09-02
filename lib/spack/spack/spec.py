@@ -3020,7 +3020,7 @@ class Spec:
             deps: if False, constrain only the root node, otherwise constrain dependencies as well
 
         Raises:
-             spack.error.UnsatisfiableSpecError: when self cannot be constrained
+            spack.error.UnsatisfiableSpecError: when self cannot be constrained
 
         Examples:
             >>> from spack.spec import Spec, UnsatisfiableDependencySpecError
