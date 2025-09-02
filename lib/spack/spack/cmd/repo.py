@@ -202,10 +202,11 @@ def _add_repo(
         path = spack.util.path.canonicalize_path(path_or_repo)
 
         # Determine if the path is to an existing git clone or local directory
+        # and whether the repository index file exists.
         result = spack.util.git.git_url_root(path)
         if result is not None:
+            entry = spack.repo.local_repo_entry(path, result)
             path_or_repo = path
-            entry = {"git": result[0], "destination": result[1]}
         else:
             if destination:
                 raise SpackError("The 'destination' argument is only valid for git repositories")
@@ -238,7 +239,11 @@ def _add_repo(
     elif len(usable_repos) == 1:
         key = next(iter(usable_repos.values())).namespace
     else:
-        raise SpackError("Multiple package repositories found, please specify a name with --name.")
+        raise SpackError(
+            f"{path_or_repo} contains multiple package repositories. "
+            "Registering them together requires a unique repository name. "
+            "Try again with the --name option."
+        )
 
     if key in existing:
         raise SpackError(f"A repository with the name '{key}' already exists.")

@@ -66,6 +66,69 @@ _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 SPACK_REPO_INDEX_FILE_NAME = "spack-repo-index.yaml"
 
 
+def repo_index_path(destination: str) -> str:
+    return os.path.join(destination, SPACK_REPO_INDEX_FILE_NAME)
+
+
+def read_repo_index_file(destination: str) -> Dict[str, Any]:
+    """Read and validate the repository index file rooted at destination
+
+    Args:
+        destination: root directory that should contain the index file
+
+    Returns: dictionary of validated repository index contents
+
+    Raises:
+        AssertionError: file does not contain properly formatted index data
+    """
+    repo_index_file = repo_index_path(destination)
+    assert os.path.exists(repo_index_file), f"Required {repo_index_file} is missing"
+
+    with open(repo_index_file, encoding="utf-8") as f:
+        index_data = syaml.load(f)
+
+    assert "repo_index" in index_data, f"{repo_index_file}: missing 'repo_index' key"
+    repo_index = index_data["repo_index"]
+    assert isinstance(repo_index, dict), f"{repo_index_file}: 'repo_index' must be a dictionary"
+
+    assert "paths" in repo_index, f"{repo_index_file}: missing 'paths' key in 'repo_index'"
+    sub_paths = repo_index["paths"]
+    assert isinstance(
+        sub_paths, list
+    ), f"{repo_index_file}: 'paths' under 'repo_index' must be a list"
+
+    # validate that the entries are relative paths
+    if not all(isinstance(p, str) and p[0] != os.sep for p in sub_paths):
+        raise AssertionError(
+            f"{repo_index_file}: invalid repo index file format: "
+            "expected a list of relative paths."
+        )
+
+    return repo_index
+
+
+def local_repo_entry(path: str, result: Tuple[str, str]) -> Dict[str, Any]:
+    git, destination = result
+
+    try:
+        repo_index = read_repo_index_file(destination)
+
+        entry: Dict[str, Any] = {"destination": destination, "git": git}
+
+        paths: List[str] = []
+        for rel_path in repo_index["paths"]:
+            if path.endswith(rel_path):
+                paths.append(rel_path)
+
+        if paths:
+            entry["paths"] = paths
+
+    except (OSError, syaml.SpackYAMLError, AssertionError) as e:
+        raise spack.error.SpackError(str(e))
+
+    return entry
+
+
 def package_repository_lock() -> spack.util.lock.Lock:
     """Lock for process safety when cloning remote package repositories"""
     return spack.util.lock.Lock(
@@ -1776,26 +1839,13 @@ class RemoteRepoDescriptor(RepoDescriptor):
         if self.relative_paths is not None:
             return
 
-        repo_index_file = os.path.join(self.destination, SPACK_REPO_INDEX_FILE_NAME)
         try:
-            with open(repo_index_file, encoding="utf-8") as f:
-                index_data = syaml.load(f)
-            assert "repo_index" in index_data, "missing 'repo_index' key"
-            repo_index = index_data["repo_index"]
-            assert isinstance(repo_index, dict), "'repo_index' must be a dictionary"
-            assert "paths" in repo_index, "missing 'paths' key in 'repo_index'"
-            sub_paths = repo_index["paths"]
-            assert isinstance(sub_paths, list), "'paths' under 'repo_index' must be a list"
+            repo_index = read_repo_index_file(self.destination)
         except (OSError, syaml.SpackYAMLError, AssertionError) as e:
-            self.error = f"failed to read {repo_index_file}: {e}"
+            self.error = f"failed to read {repo_index_path(self.destination)}: {e}"
             return
 
-        # validate that this is a list of relative paths.
-        if not isinstance(sub_paths, list) or not all(isinstance(p, str) for p in sub_paths):
-            self.error = "invalid repo index file format: expected a list of relative paths."
-            return
-
-        self.relative_paths = sub_paths
+        self.relative_paths = repo_index["paths"]
 
     def __repr__(self):
         return (

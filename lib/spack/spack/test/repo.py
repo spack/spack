@@ -8,6 +8,7 @@ import pytest
 
 import spack
 import spack.environment
+import spack.error
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -962,3 +963,45 @@ def test_unknownpkgerror_match_fails():
 def test_unknownpkgerror_str_repo():
     """Ensure reasonable error message when repo is a string."""
     assert "not found in repository" in str(spack.repo.UnknownPackageError("pkg_a", "my_repo"))
+
+
+index_fmt = """\
+repo_index:
+  {}
+"""
+
+
+def test_local_repo_entry(tmp_path: pathlib.Path):
+    destination = str(tmp_path)
+    result = ("https://example.com/fake.git", destination)
+    index_path = spack.repo.repo_index_path(destination)
+    path = os.path.join("repos", "spack_repo", "test")
+    with open(index_path, "w", encoding="utf-8") as f:
+        f.write(index_fmt.format(f"paths:\n  - {path}"))
+
+    entry = spack.repo.local_repo_entry(os.path.join(destination, path), result)
+    assert len(entry["paths"]) == 1
+    assert entry["paths"][0] == path
+
+
+@pytest.mark.parametrize(
+    "contents,message",
+    [
+        ("", f"{spack.repo.SPACK_REPO_INDEX_FILE_NAME} is missing"),
+        ("invalid_info", "missing 'repo_index' key"),
+        ("repo_index: []", "must be a dictionary"),
+        (index_fmt.format("git: unchecks-url"), "missing 'paths' key"),
+        (index_fmt.format(f"paths: repos{os.sep}spack_repo"), "must be a list"),
+        (index_fmt.format(f"paths:\n  - {os.sep}repos"), "relative paths"),
+    ],
+)
+def test_local_repo_entry_fails(tmp_path: pathlib.Path, contents, message):
+    destination = str(tmp_path)
+    result = ("https://example.com/fake.git", destination)
+    index_path = spack.repo.repo_index_path(destination)
+    if contents:
+        with open(index_path, "w", encoding="utf-8") as f:
+            f.write(contents)
+
+    with pytest.raises(spack.error.SpackError, match=message):
+        spack.repo.local_repo_entry(destination, result)
