@@ -176,9 +176,10 @@ The ``spack repo update`` command will update the repo on disk to match the curr
 If the repo is pinned to a commit or tag, it will ensure the repo on disk reflects that commit or tag.
 If the repo is pinned to a branch or unpinned, ``spack repo update`` will pull the most recent state of the branch (the default branch if unpinned).
 
+.. _package_repo_index:
+
 Git repositories need a package repo index
 """"""""""""""""""""""""""""""""""""""""""
-
 A single Git repository can contain one or more Spack package repositories.
 To enable Spack to discover these, the root of the Git repository should contain a ``spack-repo-index.yaml`` file.
 This file lists the relative paths to package repository roots within the git repo.
@@ -286,6 +287,8 @@ This accomplishes two things:
    The ``namespace`` defined in the package repository's ``repo.yaml`` is the **authoritative source** for the namespace.
    It is *not* derived from the local configuration in ``repos.yaml``.
    This means that the namespace is determined by the repository maintainer, not by the user or local configuration.
+
+.. _nested_repo_namespaces:
 
 Nested Namespaces for Organizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -491,7 +494,6 @@ To register package repositories from local paths or a remote Git repositories w
      $ spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
      ==> Added repo to config with name 'myorg.projectx'.
 
-  If the local path falls within a *remote* Git package repository, the url is automatically extracted.
   For example, suppose the above path is to an existing repository with the structure in :ref:`cmd-spack-repo-create` that was cloned from GitHub using ssh and the url ``git@github.com:myorg/my_spack_projects.git``.
   The configuration resulting from adding its local path would be:
 
@@ -502,6 +504,28 @@ To register package repositories from local paths or a remote Git repositories w
       myorg.projectx:
         destination:  ~/my_spack_projects
         git: git@github.com:myorg/my_spack_projects.git
+
+  Should the repository include multiple package repositories in the form of :ref:`nested namespaces <nested_repo_namespaces>` but you want to register individually, you can provide the path as follows:
+
+  .. code-block:: console
+
+     $ spack repo add /path/to/my_pkgs/repos/spack_repo/llnl/pls
+     ==> Added repo to config with name 'llnl.pls'
+
+  And the following entry will be added to the repository:
+
+  .. code-block:: yaml
+
+    # ~/.spack/repos.yaml after the command
+    repos:
+      llnl.pls:
+        destination: /path/to/my_pkgs
+        git: https://github.com/my_pkgs.git
+        paths:
+        - repos/spack_repo/llnl/pls
+
+  .. warning::
+    The local path **must** fall within a *remote* Git package repository **and** a properly configured :ref:`spack-repo-index.yaml <package_repo_index>` file must be present under the repository root.
 
 * **For a Git repository:** Provide the Git URL.
 
