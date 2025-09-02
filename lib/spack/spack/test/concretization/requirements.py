@@ -1397,3 +1397,34 @@ packages:
     assert concrete.satisfies("%gcc")
     assert concrete["mpi"].satisfies("mpich@4.3.0")
     assert concrete["mpi"].prefix == str(tmp_path / "gcc")
+
+
+@pytest.mark.regression("51262")
+def test_overriding_preference_with_provider_details(
+    concretize_scope, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that if we have a preference with provider details, such as a version range,
+    or a variant, we can override it from the command line.
+    """
+    packages_yaml = """
+packages:
+  c:
+    prefer:
+    - gcc@9
+  mpi:
+    prefer:
+    - mpich@3 +debug
+"""
+    update_packages_config(packages_yaml)
+
+    # Override the compiler preference with a different version of gcc
+    concrete = spack.concretize.concretize_one("mpileaks %c=gcc@10")
+    assert concrete.satisfies("%c=gcc@10")
+
+    # Override the mpi preference with a different version of mpich
+    concrete = spack.concretize.concretize_one("mpileaks %mpi=mpich@3 ~debug")
+    assert concrete.satisfies("%mpi=mpich ~debug")
+
+    # Override the mpi preference with a different provider
+    concrete = spack.concretize.concretize_one("mpileaks %mpi=mpich2")
+    assert concrete.satisfies("%mpi=mpich2")
