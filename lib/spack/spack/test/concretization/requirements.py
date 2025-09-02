@@ -1421,6 +1421,10 @@ packages:
     concrete = spack.concretize.concretize_one("mpileaks %c=gcc@10")
     assert concrete.satisfies("%c=gcc@10")
 
+    # Same, but without specifying the virtual
+    concrete = spack.concretize.concretize_one("mpileaks %gcc@10")
+    assert concrete.satisfies("%c=gcc@10")
+
     # Override the mpi preference with a different version of mpich
     concrete = spack.concretize.concretize_one("mpileaks %mpi=mpich@3 ~debug")
     assert concrete.satisfies("%mpi=mpich ~debug")
