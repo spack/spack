@@ -1708,25 +1708,6 @@ def test_spec_dict_hashless_dep():
 
 
 @pytest.mark.parametrize(
-    "specs,expected",
-    [
-        # Anonymous specs without dependencies
-        (["+baz", "+bar"], "+baz+bar"),
-        (["@2.0:", "@:5.1", "+bar"], "@2.0:5.1 +bar"),
-        # Anonymous specs with dependencies
-        (["^mpich@3.2", "^mpich@:4.0+foo"], "^mpich@3.2 +foo"),
-        # Mix a real package with a virtual one. This test
-        # should fail if we start using the repository
-        (["^mpich@3.2", "^mpi+foo"], "^mpich@3.2 ^mpi+foo"),
-    ],
-)
-def test_merge_abstract_anonymous_specs(specs, expected):
-    specs = [Spec(x) for x in specs]
-    result = spack.spec.merge_abstract_anonymous_specs(*specs)
-    assert result == Spec(expected)
-
-
-@pytest.mark.parametrize(
     "anonymous,named,expected",
     [
         ("+plumed", "gromacs", "gromacs+plumed"),
@@ -2339,3 +2320,33 @@ def test_edge_equality_accounts_for_when_condition():
     edge1 = DependencySpec(parent, child, depflag=0, virtuals=(), when=Spec("%c"))
     edge2 = DependencySpec(parent, child, depflag=0, virtuals=())
     assert edge1 != edge2
+
+
+@pytest.mark.parametrize(
+    "constraints,expected",
+    [
+        # Anonymous specs without dependencies
+        (["+baz", "+bar"], "+baz+bar"),
+        (["@2.0:", "@:5.1", "+bar"], "@2.0:5.1 +bar"),
+        # Anonymous specs with dependencies
+        (["^mpich@3.2", "^mpich@:4.0+foo"], "^mpich@3.2 +foo"),
+        # Mix a real package with a virtual one. This test
+        # should fail if we start using the repository
+        (["^mpich@3.2", "^mpi+foo"], "^mpich@3.2 ^mpi+foo"),
+        # Non direct dependencies + direct dependencies
+        (["^mpich", "%mpich"], "%mpich"),
+        (["^foo", "^bar %foo"], "^foo ^bar%foo"),
+        (["^foo", "%bar %foo"], "%bar%foo"),
+    ],
+)
+def test_constrain_symbolically(constraints, expected):
+    """Tests the semantics of constraining a spec when we don't resolve virtuals."""
+    merged = Spec()
+    for c in constraints:
+        merged._constrain_symbolically(c)
+    assert merged == Spec(expected)
+
+    reverse_order = Spec()
+    for c in reversed(constraints):
+        reverse_order._constrain_symbolically(c)
+    assert reverse_order == Spec(expected)
