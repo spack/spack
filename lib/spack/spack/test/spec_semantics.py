@@ -2350,3 +2350,8 @@ def test_constrain_symbolically(constraints, expected):
     for c in constraints:
         merged._constrain_symbolically(c)
     assert merged == Spec(expected)
+
+    reverse_order = Spec()
+    for c in reversed(constraints):
+        reverse_order._constrain_symbolically(c)
+    assert reverse_order == Spec(expected)
