@@ -15,23 +15,22 @@ import spack.concretize
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
-import spack.llnl.util.tty as tty
 import spack.url
 import spack.util.crypto as crypto
-import spack.util.executable
+import spack.util.download
 import spack.util.web as web_util
 import spack.version
 from spack.llnl.util.filesystem import is_exe, working_dir
 from spack.stage import Stage
-from spack.util.executable import which
 
 
 @pytest.fixture
 def missing_curl(monkeypatch):
-    def require_curl():
+    def _mock_call(*args, **kwargs):
         raise spack.error.FetchError("curl is required but not found")
 
-    monkeypatch.setattr(web_util, "require_curl", require_curl)
+    monkeypatch.setattr(spack.util.download, "which_string", _mock_call)
+    monkeypatch.setattr(web_util, "require_curl", _mock_call)
 
 
 @pytest.fixture(params=list(crypto.hashes.keys()))
@@ -111,24 +110,30 @@ def test_fetch_options(tmp_path: pathlib.Path, mock_archive):
             assert filecmp.cmp(archive_file, mock_archive.archive_file)
 
 
-def test_fetch_curl_options(tmp_path: pathlib.Path, mock_archive, monkeypatch):
-    with spack.config.override("config:url_fetch_method", "curl -k -q"):
-        fetcher = fs.URLFetchStrategy(
-            url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
-        )
-
-        def check_args(*args, **kwargs):
-            # Raise StopIteration to avoid running the rest of the fetch method
-            # args[0] is `which curl`, next two are our config options
-            assert args[1:3] == ("-k", "-q")
-            raise StopIteration
-
-        monkeypatch.setattr(type(fetcher.curl), "__call__", check_args)
-
-        with Stage(fetcher, path=str(tmp_path)):
-            assert fetcher.archive_file is None
-            with pytest.raises(StopIteration):
-                fetcher.fetch()
+@pytest.mark.parametrize(
+    "method,options,expected_args,expected_timeout",
+    [
+        ("curl -k -q", {"cookie": "True", "timeout": 10}, ["-k", "-q", "-j", "-b", "True"], 10),
+        ("curl", {"cookie": "True"}, ["-j", "-b", "True"], 10),
+        ("curl -k", {"timeout": 15}, ["-k"], 15),
+        # This is the builtin default
+        ("curl", {}, [], 10),
+    ],
+)
+def test_fetch_curl_options(
+    method,
+    options: spack.fetch_strategy.FetchOptions,
+    expected_args,
+    expected_timeout,
+    tmp_path: pathlib.Path,
+    mock_archive,
+    config,
+    monkeypatch,
+):
+    with spack.config.override("config:url_fetch_method", method):
+        fetcher = fs.URLFetchStrategy(url=mock_archive.url, fetch_options=options)
+        assert fetcher.fetch_args == expected_args
+        assert fetcher.timeout == expected_timeout
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
@@ -221,10 +226,10 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == url
         assert fetch_strategy.digest == digest
-        assert fetch_strategy.extra_options == {}
+        assert fetch_strategy.timeout == 10
         s.package.fetch_options = {"timeout": 60}
         fetch_strategy = fs.from_list_url(s.package)
-        assert fetch_strategy.extra_options == {"timeout": 60}
+        assert fetch_strategy.timeout == 60
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
@@ -248,10 +253,10 @@ def test_new_version_from_list_url(
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == tarball
         assert fetch_strategy.digest == digest
-        assert fetch_strategy.extra_options == {}
+        assert fetch_strategy.timeout == 10
         s.package.fetch_options = {"timeout": 60}
         fetch_strategy = fs.from_list_url(s.package)
-        assert fetch_strategy.extra_options == {"timeout": 60}
+        assert fetch_strategy.timeout == 60
 
 
 def test_nosource_from_list_url(mock_packages, config):
@@ -271,27 +276,6 @@ def test_hash_detection(checksum_type):
 def test_unknown_hash(checksum_type):
     with pytest.raises(ValueError):
         crypto.Checker("a")
-
-
-@pytest.mark.skipif(which("curl") is None, reason="Urllib does not have built-in status bar")
-def test_url_with_status_bar(tmp_path: pathlib.Path, mock_archive, monkeypatch, capfd):
-    """Ensure fetch with status bar option succeeds."""
-
-    def is_true():
-        return True
-
-    testpath = str(tmp_path)
-
-    monkeypatch.setattr(sys.stdout, "isatty", is_true)
-    monkeypatch.setattr(tty, "msg_enabled", is_true)
-    with spack.config.override("config:url_fetch_method", "curl"):
-        fetcher = fs.URLFetchStrategy(url=mock_archive.url)
-        with Stage(fetcher, path=testpath) as stage:
-            assert fetcher.archive_file is None
-            stage.fetch()
-
-        status = capfd.readouterr()[1]
-        assert "##### 100" in status
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
@@ -326,7 +310,7 @@ def test_url_extra_fetch(tmp_path: pathlib.Path, mutable_config, mock_archive, _
     ],
 )
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method):
+def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method, config):
     """Tests that candidate urls include mirrors and that they go through
     pattern matching and substitution for versions.
     """
@@ -334,10 +318,10 @@ def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method
         pkg = pkg_factory(url, urls)
         f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
         assert f.candidate_urls == expected
-        assert f.extra_options == {}
+        assert f.timeout == 10
         pkg = pkg_factory(url, urls, fetch_options={"timeout": 60})
         f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
-        assert f.extra_options == {"timeout": 60}
+        assert f.timeout == 60
 
 
 @pytest.mark.regression("19673")

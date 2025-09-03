@@ -22,20 +22,18 @@ in order to build it.  They need to define the following methods:
     Archive a source directory, e.g. for creating a mirror.
 """
 import copy
-import functools
 import hashlib
-import http.client
 import os
 import re
 import shutil
-import sys
-import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import urllib.response
 from pathlib import PurePath
-from typing import Callable, List, Mapping, Optional
+from typing import List, Optional, Tuple
+
+from spack.vendor.typing_extensions import TypedDict
 
 import spack.config
 import spack.error
@@ -54,23 +52,17 @@ import spack.version.git_ref_lookup
 from spack.llnl.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
-from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.download import (
+    DownloadMethod,
+    DownloadOptions,
+    create_download_options,
+    curl_cookie_args,
+    download_file,
+)
+from spack.util.executable import CommandNotFoundError, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
-
-
-def _needs_stage(fun):
-    """Many methods on fetch strategies require a stage to be set
-    using set_stage().  This decorator adds a check for self.stage."""
-
-    @functools.wraps(fun)
-    def wrapper(self, *args, **kwargs):
-        if not self.stage:
-            raise NoStageError(fun)
-        return fun(self, *args, **kwargs)
-
-    return wrapper
 
 
 def _ensure_one_stage_entry(stage_path):
@@ -99,16 +91,26 @@ class FetchStrategy:
     # optional attributes in version() args.
     optional_attrs: List[str] = []
 
-    def __init__(self, **kwargs):
-        # The stage is initialized late, so that fetch strategies can be
+    def __init__(self, *, no_cache: bool = False):
+        # The stage is initialized late so that fetch strategies can be
         # constructed at package construction time.  This is where things
         # will be fetched.
-        self.stage = None
+        self._stage = None
         # Enable or disable caching for this strategy based on
         # 'no_cache' option from version directive.
-        self.cache_enabled = not kwargs.pop("no_cache", False)
-
+        self.cache_enabled = not no_cache
         self.package = None
+
+    @property
+    def stage(self):
+        if self._stage is None:
+            raise NoStageError()
+        return self._stage
+
+    @stage.setter
+    def stage(self, stage) -> None:
+        """Set the stage for this fetch strategy."""
+        self._stage = stage
 
     def set_package(self, package):
         self.package = package
@@ -128,7 +130,7 @@ class FetchStrategy:
         """Expand the downloaded archive into the stage source path."""
 
     def reset(self):
-        """Revert to freshly downloaded state.
+        """Revert to a freshly downloaded state.
 
         For archive files, this may just re-expand the archive.
         """
@@ -221,112 +223,22 @@ class BundleFetchStrategy(FetchStrategy):
         """BundlePackages don't have a mirror id."""
 
 
-def _format_speed(total_bytes: int, elapsed: float) -> str:
-    """Return a human-readable average download speed string."""
-    elapsed = 1 if elapsed <= 0 else elapsed  # avoid divide by zero
-    speed = total_bytes / elapsed
-    if speed >= 1e9:
-        return f"{speed / 1e9:6.1f} GB/s"
-    elif speed >= 1e6:
-        return f"{speed / 1e6:6.1f} MB/s"
-    elif speed >= 1e3:
-        return f"{speed / 1e3:6.1f} KB/s"
-    return f"{speed:6.1f}  B/s"
+class FetchOptions(TypedDict, total=False):
+    cookie: str
+    timeout: int
 
 
-def _format_bytes(total_bytes: int) -> str:
-    """Return a human-readable total bytes string."""
-    if total_bytes >= 1e9:
-        return f"{total_bytes / 1e9:7.2f} GB"
-    elif total_bytes >= 1e6:
-        return f"{total_bytes / 1e6:7.2f} MB"
-    elif total_bytes >= 1e3:
-        return f"{total_bytes / 1e3:7.2f} KB"
-    return f"{total_bytes:7.2f}  B"
+def default_timeout() -> int:
+    return spack.config.CONFIG.get("config:connect_timeout", 30)
 
 
-class FetchProgress:
-    #: Characters to rotate in the spinner.
-    spinner = ["|", "/", "-", "\\"]
-
-    def __init__(
-        self,
-        total_bytes: Optional[int] = None,
-        enabled: bool = True,
-        get_time: Callable[[], float] = time.time,
-    ) -> None:
-        """Initialize a FetchProgress instance.
-        Args:
-            total_bytes: Total number of bytes to download, if known.
-            enabled: Whether to print progress information.
-            get_time: Function to get the current time."""
-        #: Number of bytes downloaded so far.
-        self.current_bytes = 0
-        #: Delta time between progress prints
-        self.delta = 0.1
-        #: Whether to print progress information.
-        self.enabled = enabled
-        #: Function to get the current time.
-        self.get_time = get_time
-        #: Time of last progress print to limit output
-        self.last_printed = 0.0
-        #: Time of start of download
-        self.start_time = get_time() if enabled else 0.0
-        #: Total number of bytes to download, if known.
-        self.total_bytes = total_bytes if total_bytes and total_bytes > 0 else 0
-        #: Index of spinner character to print (used if total bytes is unknown)
-        self.index = 0
-
-    @classmethod
-    def from_headers(
-        cls,
-        headers: Mapping[str, str],
-        enabled: bool = True,
-        get_time: Callable[[], float] = time.time,
-    ) -> "FetchProgress":
-        """Create a FetchProgress instance from HTTP headers."""
-        # headers.get is case-insensitive if it's from a HTTPResponse object.
-        content_length = headers.get("Content-Length")
-        try:
-            total_bytes = int(content_length) if content_length else None
-        except ValueError:
-            total_bytes = None
-        return cls(total_bytes=total_bytes, enabled=enabled, get_time=get_time)
-
-    def advance(self, num_bytes: int, out=sys.stdout) -> None:
-        if not self.enabled:
-            return
-        self.current_bytes += num_bytes
-        self.print(out=out)
-
-    def print(self, final: bool = False, out=sys.stdout) -> None:
-        if not self.enabled:
-            return
-        current_time = self.get_time()
-        if self.last_printed + self.delta < current_time or final:
-            self.last_printed = current_time
-            # print a newline if this is the final update
-            maybe_newline = "\n" if final else ""
-            # if we know the total bytes, show a percentage, otherwise a spinner
-            if self.total_bytes > 0:
-                percentage = min(100 * self.current_bytes / self.total_bytes, 100.0)
-                percent_or_spinner = f"[{percentage:3.0f}%] "
-            else:
-                # only show the spinner if we are not at 100%
-                if final:
-                    percent_or_spinner = "[100%] "
-                else:
-                    percent_or_spinner = f"[ {self.spinner[self.index]}  ] "
-                self.index = (self.index + 1) % len(self.spinner)
-
-            print(
-                f"\r    {percent_or_spinner}{_format_bytes(self.current_bytes)} "
-                f"@ {_format_speed(self.current_bytes, current_time - self.start_time)}"
-                f"{maybe_newline}",
-                end="",
-                flush=True,
-                file=out,
-            )
+def default_url_fetch_method() -> Tuple[DownloadMethod, List[str]]:
+    # Assume configuration has been validated already, so not raising
+    config_str = spack.config.CONFIG.get("config:url_fetch_method", "urllib")
+    if config_str.startswith("curl"):
+        return DownloadMethod.CURL, config_str.split()[1:]
+    else:
+        return DownloadMethod.URLLIB, []
 
 
 @fetcher
@@ -339,34 +251,52 @@ class URLFetchStrategy(FetchStrategy):
 
     url_attr = "url"
 
-    # these are checksum types. The generic 'checksum' is deprecated for
-    # specific hash names, but we need it for backward compatibility
-    optional_attrs = [*crypto.hashes.keys(), "checksum"]
+    #: Checksum types
+    optional_attrs = [*crypto.hashes.keys()]
 
-    def __init__(self, *, url: str, checksum: Optional[str] = None, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        *,
+        url: str,
+        checksum: Optional[str] = None,
+        fetch_options: Optional[FetchOptions] = None,
+        mirrors: Optional[List[str]] = None,
+        expand: bool = True,
+        extension: Optional[str] = None,
+        no_cache: bool = False,
+        **kwargs,
+    ) -> None:
+        super().__init__(no_cache=no_cache)
 
-        self.url = url
-        self.mirrors = kwargs.get("mirrors", [])
-
-        # digest can be set as the first argument, or from an explicit
-        # kwarg by the hash name.
+        self.mirrors = mirrors or []
+        # The generic 'checksum' is deprecated for specific hash names,
+        # but we need it for backward compatibility
         self.digest: Optional[str] = checksum
         for h in self.optional_attrs:
             if h in kwargs:
                 self.digest = kwargs[h]
+        self.extension: Optional[str] = extension
+        self.expand_archive = expand
 
-        self.expand_archive: bool = kwargs.get("expand", True)
-        self.extra_options: dict = kwargs.get("fetch_options", {})
-        self._curl: Optional[Executable] = None
-        self.extension: Optional[str] = kwargs.get("extension", None)
-        self._effective_url: Optional[str] = None
+        self.fetch_method, self.fetch_args = default_url_fetch_method()
+        self.timeout, self.cookie = default_timeout(), None
 
-    @property
-    def curl(self) -> Executable:
-        if not self._curl:
-            self._curl = web_util.require_curl()
-        return self._curl
+        # Fetch options are overridden per "resource" being fetched
+        if fetch_options and "timeout" in fetch_options:
+            self.timeout = fetch_options["timeout"]
+
+        if (
+            fetch_options
+            and "cookie" in fetch_options
+            and self.fetch_method == DownloadMethod.CURL
+        ):
+            self.fetch_args.extend(curl_cookie_args(fetch_options["cookie"]))
+
+        self.url = url
+        self._effective_url = url
+
+    def _download_options(self) -> DownloadOptions:
+        return create_download_options(self.fetch_method, extra_args=self.fetch_args)
 
     def source_id(self):
         return self.digest
@@ -380,10 +310,9 @@ class URLFetchStrategy(FetchStrategy):
         return os.path.sep.join(["archive", self.digest[:2], self.digest])
 
     @property
-    def candidate_urls(self):
-        return [self.url] + (self.mirrors or [])
+    def candidate_urls(self) -> List[str]:
+        return [self.url] + self.mirrors
 
-    @_needs_stage
     def fetch(self):
         if self.archive_file:
             tty.debug(f"Already downloaded {self.archive_file}")
@@ -404,48 +333,21 @@ class URLFetchStrategy(FetchStrategy):
                 RuntimeError(f"Missing archive {self.archive_file} after fetching")
             )
 
-    def _fetch_from_url(self, url):
-        fetch_method = spack.config.get("config:url_fetch_method", "urllib")
-        if fetch_method.startswith("curl"):
-            return self._fetch_curl(url, config_args=fetch_method.split()[1:])
-        else:
-            return self._fetch_urllib(url)
-
-    def _check_headers(self, headers):
-        # Check if we somehow got an HTML file rather than the archive we
-        # asked for.  We only look at the last content type, to handle
-        # redirects properly.
-        content_types = re.findall(r"Content-Type:[^\r\n]+", headers, flags=re.IGNORECASE)
-        if content_types and "text/html" in content_types[-1]:
-            msg = (
-                f"The contents of {self.archive_file or 'the archive'} fetched from {self.url} "
-                " looks like HTML. This can indicate a broken URL, or an internet gateway issue."
-            )
-            if self._effective_url != self.url:
-                msg += f" The URL redirected to {self._effective_url}."
-            tty.warn(msg)
-
-    @_needs_stage
-    def _fetch_urllib(self, url, chunk_size=65536):
+    def _fetch_from_url(self, url: str) -> None:
         save_file = self.stage.save_filename
-
-        request = urllib.request.Request(url, headers={"User-Agent": web_util.SPACK_USER_AGENT})
-
-        if os.path.lexists(save_file):
-            os.remove(save_file)
-
         try:
-            response = web_util.urlopen(request)
-            tty.msg(f"Fetching {url}")
-            progress = FetchProgress.from_headers(response.headers, enabled=sys.stdout.isatty())
-            with open(save_file, "wb") as f:
-                while True:
-                    chunk = response.read(chunk_size)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-                    progress.advance(len(chunk))
-            progress.print(final=True)
+            tty.debug(f"[{__name__}] Attempting to get {url}")
+            self._effective_url, self.url = (
+                download_file(
+                    url=url,
+                    destination=save_file,
+                    timeout=self.timeout,
+                    options=self._download_options(),
+                ),
+                url,
+            )
+        except spack.error.FetchError as e:
+            raise FailedDownloadError(e) from e
         except OSError as e:
             # clean up archive on failure.
             if self.archive_file:
@@ -454,72 +356,8 @@ class URLFetchStrategy(FetchStrategy):
                 os.remove(save_file)
             raise FailedDownloadError(e) from e
 
-        # Save the redirected URL for error messages. Sometimes we're redirected to an arbitrary
-        # mirror that is broken, leading to spurious download failures. In that case it's helpful
-        # for users to know which URL was actually fetched.
-        if isinstance(response, http.client.HTTPResponse):
-            self._effective_url = response.geturl()
-
-        self._check_headers(str(response.headers))
-
-    @_needs_stage
-    def _fetch_curl(self, url, config_args=[]):
-        save_file = None
-        partial_file = None
-        if self.stage.save_filename:
-            save_file = self.stage.save_filename
-            partial_file = self.stage.save_filename + ".part"
-        tty.msg(f"Fetching {url}")
-        if partial_file:
-            save_args = [
-                "-C",
-                "-",  # continue partial downloads
-                "-o",
-                partial_file,
-            ]  # use a .part file
-        else:
-            save_args = ["-O"]
-
-        timeout = 0
-        cookie_args = []
-        if self.extra_options:
-            cookie = self.extra_options.get("cookie")
-            if cookie:
-                cookie_args.append("-j")  # junk cookies
-                cookie_args.append("-b")  # specify cookie
-                cookie_args.append(cookie)
-
-            timeout = self.extra_options.get("timeout")
-
-        base_args = web_util.base_curl_fetch_args(url, timeout)
-        curl_args = config_args + save_args + base_args + cookie_args
-
-        # Run curl but grab the mime type from the http headers
-        curl = self.curl
-        with working_dir(self.stage.path):
-            headers = curl(*curl_args, output=str, fail_on_error=False)
-
-        if curl.returncode != 0:
-            # clean up archive on failure.
-            if self.archive_file:
-                os.remove(self.archive_file)
-
-            if partial_file and os.path.lexists(partial_file):
-                os.remove(partial_file)
-
-            try:
-                web_util.check_curl_code(curl.returncode)
-            except spack.error.FetchError as e:
-                raise FailedDownloadError(e) from e
-
-        self._check_headers(headers)
-
-        if save_file and (partial_file is not None):
-            fs.rename(partial_file, save_file)
-
-    @property  # type: ignore # decorated properties unsupported in mypy
-    @_needs_stage
-    def archive_file(self):
+    @property
+    def archive_file(self) -> str:
         """Path to the source archive within this stage directory."""
         return self.stage.archive_file
 
@@ -527,7 +365,6 @@ class URLFetchStrategy(FetchStrategy):
     def cachable(self):
         return self.cache_enabled and bool(self.digest)
 
-    @_needs_stage
     def expand(self):
         if not self.expand_archive:
             tty.debug(
@@ -572,7 +409,6 @@ class URLFetchStrategy(FetchStrategy):
             self.archive_file, url_util.path_to_file_url(destination), keep_original=True
         )
 
-    @_needs_stage
     def check(self):
         """Check the downloaded archive against a checksum digest.
         No-op if this stage checks code out of a repository."""
@@ -581,7 +417,6 @@ class URLFetchStrategy(FetchStrategy):
 
         verify_checksum(self.archive_file, self.digest, self.url, self._effective_url)
 
-    @_needs_stage
     def reset(self):
         """
         Removes the source path if it exists, then re-expands the archive.
@@ -612,7 +447,6 @@ class URLFetchStrategy(FetchStrategy):
 class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
 
-    @_needs_stage
     def fetch(self):
         path = url_util.file_url_string_to_path(self.url)
 
@@ -647,7 +481,6 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
 
         self._urlopen = kwargs.get("_urlopen", spack.oci.opener.urlopen)
 
-    @_needs_stage
     def fetch(self):
         file = self.stage.save_filename
 
@@ -681,26 +514,25 @@ class VCSFetchStrategy(FetchStrategy):
 
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
+    def __init__(self, no_cache: bool = False, **kwargs):
+        super().__init__(no_cache=no_cache)
         # Set a URL based on the type of fetch strategy.
-        self.url = kwargs.get(self.url_attr, None)
+        if self.url_attr is None or self.url_attr not in kwargs:
+            raise ValueError(f"{self.__class__} requires a valid 'url_attr' attribute.")
+
+        self.url = kwargs[self.url_attr]
         if not self.url:
             raise ValueError(f"{self.__class__} requires {self.url_attr} argument.")
 
         for attr in self.optional_attrs:
             setattr(self, attr, kwargs.get(attr, None))
 
-    @_needs_stage
     def check(self):
         tty.debug(f"No checksum needed when fetching with {self.url_attr}")
 
-    @_needs_stage
     def expand(self):
         tty.debug(f"Source fetched with {self.url_attr} is already expanded.")
 
-    @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
         assert spack.llnl.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
@@ -760,7 +592,6 @@ class GoFetchStrategy(VCSFetchStrategy):
             self._go = which("go", required=True)
         return self._go
 
-    @_needs_stage
     def fetch(self):
         tty.debug("Getting go resource: {0}".format(self.url))
 
@@ -776,7 +607,6 @@ class GoFetchStrategy(VCSFetchStrategy):
     def archive(self, destination):
         super().archive(destination, exclude=".git")
 
-    @_needs_stage
     def expand(self):
         tty.debug("Source fetched with %s is already expanded." % self.url_attr)
 
@@ -784,7 +614,6 @@ class GoFetchStrategy(VCSFetchStrategy):
         repo_root = _ensure_one_stage_entry(self.stage.path)
         shutil.move(repo_root, self.stage.source_path)
 
-    @_needs_stage
     def reset(self):
         with working_dir(self.stage.source_path):
             self.go("clean")
@@ -914,7 +743,6 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         return f"{self.url}{args}"
 
-    @_needs_stage
     def fetch(self):
         if self.stage.expanded:
             tty.debug(f"Already fetched {self.stage.source_path}")
@@ -1137,7 +965,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                     args.insert(1, "--quiet")
                 git(*args)
 
-    @_needs_stage
     def reset(self):
         with working_dir(self.stage.source_path):
             co_args = ["checkout", "."]
@@ -1230,7 +1057,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
             result += "%date=" + self.date
         return result
 
-    @_needs_stage
     def fetch(self):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
@@ -1266,7 +1092,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
     def archive(self, destination):
         super().archive(destination, exclude="CVS")
 
-    @_needs_stage
     def reset(self):
         self._remove_untracked_files()
         with working_dir(self.stage.source_path):
@@ -1323,7 +1148,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
             result = os.path.sep.join(["svn", repo_path, self.revision])
             return result
 
-    @_needs_stage
     def fetch(self):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
@@ -1359,7 +1183,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
     def archive(self, destination):
         super().archive(destination, exclude=".svn")
 
-    @_needs_stage
     def reset(self):
         self._remove_untracked_files()
         with working_dir(self.stage.source_path):
@@ -1432,7 +1255,6 @@ class HgFetchStrategy(VCSFetchStrategy):
             result = os.path.sep.join(["hg", repo_path, self.revision])
             return result
 
-    @_needs_stage
     def fetch(self):
         if self.stage.expanded:
             tty.debug("Already fetched {0}".format(self.stage.source_path))
@@ -1462,7 +1284,6 @@ class HgFetchStrategy(VCSFetchStrategy):
     def archive(self, destination):
         super().archive(destination, exclude=".hg")
 
-    @_needs_stage
     def reset(self):
         with working_dir(self.stage.path):
             source_path = self.stage.source_path
@@ -1487,7 +1308,9 @@ class S3FetchStrategy(URLFetchStrategy):
 
     url_attr = "s3"
 
-    @_needs_stage
+    def _download_options(self) -> DownloadOptions:
+        return create_download_options(DownloadMethod.URLLIB)
+
     def fetch(self):
         if not self.url.startswith("s3://"):
             raise spack.error.FetchError(
@@ -1496,7 +1319,7 @@ class S3FetchStrategy(URLFetchStrategy):
         if self.archive_file:
             tty.debug(f"Already downloaded {self.archive_file}")
             return
-        self._fetch_urllib(self.url)
+        self._fetch_from_url(self.url)
         if not self.archive_file:
             raise FailedDownloadError(
                 RuntimeError(f"Missing archive {self.archive_file} after fetching")
@@ -1509,7 +1332,9 @@ class GCSFetchStrategy(URLFetchStrategy):
 
     url_attr = "gs"
 
-    @_needs_stage
+    def _download_options(self) -> DownloadOptions:
+        return create_download_options(DownloadMethod.URLLIB)
+
     def fetch(self):
         if not self.url.startswith("gs"):
             raise spack.error.FetchError(
@@ -1519,7 +1344,7 @@ class GCSFetchStrategy(URLFetchStrategy):
             tty.debug(f"Already downloaded {self.archive_file}")
             return
 
-        self._fetch_urllib(self.url)
+        self._fetch_from_url(self.url)
 
         if not self.archive_file:
             raise FailedDownloadError(
@@ -1578,16 +1403,6 @@ def stable_target(fetcher):
     if isinstance(fetcher, URLFetchStrategy) and fetcher.cachable:
         return True
     return False
-
-
-def from_url(url: str) -> URLFetchStrategy:
-    """Given a URL, find an appropriate fetch strategy for it.
-    Currently just gives you a URLFetchStrategy that uses curl.
-
-    TODO: make this return appropriate fetch strategies for other
-          types of URLs.
-    """
-    return URLFetchStrategy(url=url)
 
 
 def from_kwargs(**kwargs):
@@ -1924,5 +1739,5 @@ class ChecksumError(spack.error.FetchError):
 class NoStageError(spack.error.FetchError):
     """Raised when fetch operations are called before set_stage()."""
 
-    def __init__(self, method):
-        super().__init__("Must call FetchStrategy.set_stage() before calling %s" % method.__name__)
+    def __init__(self):
+        super().__init__("Fetch method called before set_stage()")

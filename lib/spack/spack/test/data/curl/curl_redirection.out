@@ -1,0 +1,52 @@
+HTTP/2 308
+content-type: text/html; charset=utf-8
+location: http://mesa3d.org/archive/glu/glu-9.0.0.tar.gz
+x-request-id: 9c777ad02b62bc77ec084e8f55ded5f0
+accept-ranges: bytes
+date: Fri, 29 Aug 2025 16:48:51 GMT
+via: 1.1 varnish
+x-served-by: cache-lin1730038-LIN
+x-cache: MISS
+x-cache-hits: 0
+vary: Origin
+strict-transport-security: max-age=300
+content-length: 82
+
+HTTP/1.1 301 Moved Permanently
+Connection: close
+Content-Length: 0
+Server: Varnish
+Retry-After: 0
+Location: https://mesa3d.org/archive/glu/glu-9.0.0.tar.gz
+Accept-Ranges: bytes
+Date: Fri, 29 Aug 2025 16:48:51 GMT
+Via: 1.1 varnish
+X-Served-By: cache-lin1730077-LIN
+X-Cache: HIT
+X-Cache-Hits: 0
+X-Timer: S1756486131.045293,VS0,VE1
+Strict-Transport-Security: max-age=300
+
+HTTP/2 301
+content-type: text/html; charset=utf-8
+location: https://archive.mesa3d.org/glu/glu-9.0.0.tar.gz
+x-request-id: 93983fb2ada959c81c5df65b6342e190
+accept-ranges: bytes
+date: Fri, 29 Aug 2025 16:48:51 GMT
+via: 1.1 varnish
+x-served-by: cache-lin1730050-LIN
+x-cache: MISS
+x-cache-hits: 0
+vary: Origin
+strict-transport-security: max-age=300
+content-length: 82
+
+HTTP/1.1 200 OK
+Date: Fri, 29 Aug 2025 16:48:51 GMT
+Server: Apache
+Last-Modified: Mon, 17 Sep 2012 21:07:35 GMT
+ETag: "99062-4c9ec29a533c0"
+Accept-Ranges: bytes
+Content-Length: 626786
+Content-Type: application/x-gzip
+
