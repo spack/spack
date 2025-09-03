@@ -21,7 +21,7 @@ How to use this guide
 ---------------------
 
 Whether you are a :ref:`Package Reviewer <package-reviewers>`, :ref:`Maintainer <package-maintainers>`, or :ref:`Committer <committers>`, this guide highlights relevant aspects to consider when reviewing package pull requests.
-If you are a ref:`Package Contributor <package-contributors>` (or simply ``Contributor``), you may also find the information and solutions useful in your work.
+If you are a :ref:`Package Contributor <package-contributors>` (or simply ``Contributor``), you may also find the information and solutions useful in your work.
 While we provide information on what to look for, the changes themselves should drive the actual review process.
 
 .. note::
