@@ -321,12 +321,21 @@ def test_add_repo_destination_with_local_path(tmp_path: pathlib.Path):
         )
 
 
-def test_add_repo_local_git_repo_path(monkeypatch):
+def test_add_repo_local_git_repo_path(tmp_path: pathlib.Path, monkeypatch):
     """Test _add_repo succeeds when the local path is in a git repository."""
     config = make_repo_config()
     url = "git@github.com:user/repo.git"
-    path = "/some/path"
+    path = str(tmp_path)
     name = "local_git_test"
+
+    with open(spack.repo.repo_index_path(path), "w", encoding="utf-8") as f:
+        f.write(
+            f"""\
+repo_index:
+  paths:
+  - repos{os.sep}spack_repo{os.sep}builtin
+"""
+        )
 
     def mock_parse_config_descriptor(name, entry, lock):
         # Verify the entry has the expected git structure
