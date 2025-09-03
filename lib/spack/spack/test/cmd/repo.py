@@ -495,17 +495,15 @@ def test_add_repo_no_usable_repositories_error(monkeypatch):
 
 
 def test_add_repo_multiple_repos_no_name_error(monkeypatch):
-    """Test that _add_repo raises SpackError when multiple repositories found without
-    specifying --name."""
+    """Test that _add_repo raises SpackError when multiple repositories found (without
+    specifying --name)."""
 
     def mock_parse_config_descriptor(name, entry, lock):
         return MockDescriptor({"/path1": MockRepo("repo1"), "/path2": MockRepo("repo2")})
 
     monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
 
-    with pytest.raises(
-        SpackError, match="Multiple package repositories found, please specify a name"
-    ):
+    with pytest.raises(SpackError, match="contains multiple package repositories"):
         spack.cmd.repo._add_repo(
             "/path/with/multiple/repos",
             name=None,  # No name specified
