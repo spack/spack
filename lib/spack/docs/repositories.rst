@@ -494,6 +494,10 @@ To register package repositories from local paths or a remote Git repositories w
      $ spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
      ==> Added repo to config with name 'myorg.projectx'.
 
+  .. warning::
+    The local path **must** fall within a *remote* Git package repository.
+    A properly configured :ref:`spack-repo-index.yaml <package_repo_index>` file must be present under the repository root.
+
   For example, suppose the above path is to an existing repository with the structure in :ref:`cmd-spack-repo-create` that was cloned from GitHub using ssh and the url ``git@github.com:myorg/my_spack_projects.git``.
   The configuration resulting from adding its local path would be:
 
@@ -505,27 +509,24 @@ To register package repositories from local paths or a remote Git repositories w
         destination:  ~/my_spack_projects
         git: git@github.com:myorg/my_spack_projects.git
 
-  Should the repository include multiple package repositories in the form of :ref:`nested namespaces <nested_repo_namespaces>` but you want to register individually, you can provide the path as follows:
+  Should a repository include multiple package repositories in the form of :ref:`nested namespaces <nested_repo_namespaces>` but you want to register only one, you can provide the package repository-specific path as follows:
 
   .. code-block:: console
 
      $ spack repo add /path/to/my_pkgs/repos/spack_repo/llnl/pls
      ==> Added repo to config with name 'llnl.pls'
 
-  And the following entry will be added to the repository:
+  Then the following entry will be added to the repository configuration:
 
   .. code-block:: yaml
 
-    # ~/.spack/repos.yaml after the command
+    # ~/.spack/repos.yaml after the command and ignoring other repositories
     repos:
       llnl.pls:
         destination: /path/to/my_pkgs
-        git: https://github.com/my_pkgs.git
+        git: https://github.com/myorg/my_pkgs.git
         paths:
         - repos/spack_repo/llnl/pls
-
-  .. warning::
-    The local path **must** fall within a *remote* Git package repository **and** a properly configured :ref:`spack-repo-index.yaml <package_repo_index>` file must be present under the repository root.
 
 * **For a Git repository:** Provide the Git URL.
 
