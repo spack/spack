@@ -279,9 +279,15 @@ def extend_flag_list(flag_list, new_flags):
 
 def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.CompilerFlag]:
     """Reorder a list of flags to ensure that the order matches that of the flag group."""
-    assert flag_list, "expected a non-empty list of flags"
-    assert len({x.flag_group for x in flag_list}) == 1, "expected a single group of flags"
-    assert len({x.source for x in flag_list}) == 1, "expected a single source for the flags"
+    if not flag_list:
+        return []
+
+    if len({x.flag_group for x in flag_list}) != 1 or len({x.source for x in flag_list}) != 1:
+        raise InternalConcretizerError(
+            "internal solver error: cannot reorder compiler flags for concretized specs. "
+            "Please report a bug at https://github.com/spack/spack/issues"
+        )
+
     flag_group = flag_list[0].flag_group
     flag_source = flag_list[0].source
     flag_propagate = flag_list[0].propagate
