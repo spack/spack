@@ -30,17 +30,14 @@ import re
 import shutil
 import sys
 import time
-import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.response
 from pathlib import PurePath
 from typing import Callable, List, Mapping, Optional
 
 import spack.config
 import spack.error
 import spack.llnl.url
-import spack.llnl.util
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.oci.opener
@@ -50,7 +47,6 @@ import spack.util.git
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
-import spack.version.git_ref_lookup
 from spack.llnl.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
@@ -1720,7 +1716,9 @@ def for_package_version(pkg, version=None):
             )
         # Populate the version with comparisons to other commits
         if isinstance(version, spack.version.GitVersion):
-            version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
+            from spack.version.git_ref_lookup import GitRefLookup
+
+            version.attach_lookup(GitRefLookup(pkg.name))
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are

@@ -2,11 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
-from typing import Dict, Iterable, Optional, Set
+from typing import TYPE_CHECKING, Dict, Iterable, Optional, Set
 
 import spack.error
-import spack.spec
 import spack.util.spack_json as sjson
+
+if TYPE_CHECKING:
+    import spack.repo
+    import spack.spec
 
 
 class _IndexBase:
@@ -38,7 +41,9 @@ class _IndexBase:
         result = set()
         # Allow string names to be passed as input, as well as specs
         if isinstance(virtual_spec, str):
-            virtual_spec = spack.spec.Spec(virtual_spec)
+            from spack.spec import Spec
+
+            virtual_spec = Spec(virtual_spec)
 
         # Add all the providers that satisfy the vpkg spec.
         if virtual_spec.name in self.providers:
@@ -102,8 +107,10 @@ class ProviderIndex(_IndexBase):
 
         specs = specs or []
         for spec in specs:
-            if not isinstance(spec, spack.spec.Spec):
-                spec = spack.spec.Spec(spec)
+            if isinstance(spec, str):
+                from spack.spec import Spec
+
+                spec = Spec(spec)
 
             if self.repository.is_virtual_safe(spec.name):
                 continue
@@ -116,8 +123,10 @@ class ProviderIndex(_IndexBase):
         Args:
             spec: spec potentially providing additional virtual specs
         """
-        if not isinstance(spec, spack.spec.Spec):
-            spec = spack.spec.Spec(spec)
+        if isinstance(spec, str):
+            from spack.spec import Spec
+
+            spec = Spec(spec)
 
         if not spec.name:
             # Empty specs do not have a package
@@ -237,11 +246,13 @@ class ProviderIndex(_IndexBase):
 
         index = ProviderIndex(repository=repository)
         providers = data["provider_index"]["providers"]
+        from spack.spec import SpecfileLatest
+
         index.providers = _transform(
             providers,
             lambda vpkg, plist: (
-                spack.spec.SpecfileLatest.from_node_dict(vpkg),
-                set(spack.spec.SpecfileLatest.from_node_dict(p) for p in plist),
+                SpecfileLatest.from_node_dict(vpkg),
+                set(SpecfileLatest.from_node_dict(p) for p in plist),
             ),
         )
         return index

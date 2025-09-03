@@ -10,13 +10,27 @@ import enum
 import functools
 import inspect
 import itertools
-from typing import Any, Callable, Collection, Iterable, List, Optional, Tuple, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Collection,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import spack.error
 import spack.llnl.util.lang as lang
 import spack.llnl.util.tty.color
-import spack.spec
 import spack.spec_parser
+
+if TYPE_CHECKING:
+    import spack.package_base
+    import spack.spec
 
 #: These are variant names used by Spack internally; packages can't use them
 RESERVED_NAMES = {
