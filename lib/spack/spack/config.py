@@ -762,7 +762,14 @@ class Configuration:
     def print_section(
         self, section: str, yaml: bool = True, blame: bool = False, *, scope: Optional[str] = None
     ) -> None:
-        """Print a configuration to stdout."""
+        """Print a configuration to stdout.
+
+        Arguments:
+            section: The configuration section to print.
+            yaml: If True, output in YAML format, otherwise JSON (ignored when blame is True).
+            blame: Whether to include source locations for each entry.
+            scope: The configuration scope to use.
+        """
         try:
             data = syaml.syaml_dict()
             data[section] = self.get_config(section, scope=scope)
