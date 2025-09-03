@@ -660,6 +660,10 @@ attr("node_platform_set", node(X, BuildDependency), NodePlatform) :-
   attr("direct_dependency", ParentNode, node_requirement("node_platform_set", BuildDependency, NodePlatform)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
+attr("node_flag_set", node(X, BuildDependency), NodeFlag) :-
+  attr("direct_dependency", ParentNode, node_requirement("node_flag_set", BuildDependency, NodeFlag)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
+
 attr("hash", node(X, BuildDependency), BuildHash) :-
   attr("direct_dependency", ParentNode, node_requirement("hash", BuildDependency, BuildHash)),
   build_requirement(ParentNode, node(X, BuildDependency)).

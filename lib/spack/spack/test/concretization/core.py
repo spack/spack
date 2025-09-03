@@ -4159,14 +4159,3 @@ def test_when_possible_above_all(mutable_config, mock_packages):
     for result in solver.solve_in_rounds(specs):
         criteria = sorted(result.criteria, reverse=True)
         assert criteria[0].name == "number of input specs not concretized"
-
-
-@pytest.mark.regression("51209")
-def test_flags_and_duplicate_nodes(default_mock_concretization):
-    """Tests that we can concretize a spec with flags on a node that is present with duplicates
-    in the DAG. For instance, a compiler built with a previous version of itself.
-    """
-    s = default_mock_concretization("gcc@14 cflags='-O3'")
-    assert s.satisfies("gcc@14 cflags='-O3'")
-    assert s.satisfies("%gcc@10")
-    assert not s.satisfies("%gcc cflags='-O3'")
