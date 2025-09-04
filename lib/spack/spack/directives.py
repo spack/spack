@@ -46,8 +46,8 @@ import spack.patch
 import spack.spec
 import spack.util.crypto
 import spack.variant
-from spack.dependency import Dependency
 from spack.directives_meta import DirectiveError, DirectiveMeta
+from spack.package_base import Dependency
 from spack.resource import Resource
 from spack.version import (
     GitVersion,

@@ -11,10 +11,9 @@ import spack.deptypes as dt
 import spack.error
 import spack.installer
 import spack.repo
-import spack.test.conftest
 import spack.util.hash as hashutil
 import spack.version
-from spack.dependency import Dependency
+from spack.package_base import Dependency
 from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
 
