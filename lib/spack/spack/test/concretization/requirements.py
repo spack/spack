@@ -803,7 +803,7 @@ def test_requires_directive(mock_packages, config):
     assert s.satisfies("%llvm")
     s = spack.concretize.concretize_one("requires-clang %clang")
     assert s.satisfies("%llvm")
-    with pytest.raises(spack.error.SpackError, match="Cannot set the required compiler.*clang"):
+    with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
         spack.concretize.concretize_one("requires-clang %gcc")
 
 
