@@ -1570,19 +1570,18 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
 % compiler within the root unification set "registers" that compiler
 % (and the root set is prohibited from having >= 2 compilers for that
 % language).
-unification_set_compiler("root", CompilerNode, Language) :-
+unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
     attr("node", node(NodeID, NodeName)),
-    attr("virtual_on_edge", node(NodeID, NodeName), CompilerNode, Language),
+    attr("virtual_on_edge", node(NodeID, NodeName), node(CompilerID, CompilerName), Language),
+    attr("version", node(CompilerID, CompilerName), CompilerVersion),
     compiler_mixing(0, Language),
     language(Language),
     not allow_mixing(NodeName),
     unification_set("root", node(NodeID, NodeName)).
 
-unification_set_compiler("root", node(CompilerID, CompilerName), Language) :- 
+unification_set_compiler("root", CompilerName, CompilerVersion, Language) :- 
     unification_set("root", ParentNode),
     attr("hash", ParentNode, ParentHash),
-    external(node(CompilerID, CompilerName)),
-    attr("version", node(CompilerID, CompilerName), CompilerVersion),
     not allow_mixing(ParentName),
     hash_attr(ParentHash, "concrete_build_dependency", ParentName, CompilerName, CompilerHash),
     hash_attr(ParentHash, "virtual_on_build_edge", ParentName, CompilerName, Language),
@@ -1591,8 +1590,7 @@ unification_set_compiler("root", node(CompilerID, CompilerName), Language) :-
     compiler_mixing(0, Language),
     language(Language).
 
-:- external(node(_, "apple-clang")).
-%:- real_node(node(_, "apple-clang")).
+error(100, "Compiler mixing is disabled") :- #count { X,Y,Z : unification_set_compiler("root", X,Y,Z) } > 1.
 
 %:- hash_attr(ParentHash, "concrete_build_dependency", "dt-diamond-left", "gcc", CompilerHash),
 %hash_attr(ParentHash, "virtual_on_build_edge", "dt-diamond-left", "gcc", "c"),
@@ -1606,10 +1604,10 @@ unification_set_compiler("root", node(CompilerID, CompilerName), Language) :-
 
 %:- attr("hash", node(_, "apple-clang"), _).
 
-error(100, "Compiler mixing is disabled") :-
-    unification_set_compiler(X, CompilerNode1, Language),
-    unification_set_compiler(X, CompilerNode2, Language),
-    CompilerNode1 != CompilerNode2.
+%error(100, "Compiler mixing is disabled") :-
+%    unification_set_compiler(X, CompilerNode1, Language),
+%    unification_set_compiler(X, CompilerNode2, Language),
+%    CompilerNode1 != CompilerNode2.
 
 %-----------------------------------------------------------------------------
 % Runtimes
