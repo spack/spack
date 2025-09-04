@@ -79,7 +79,6 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.util.executable
-from spack import traverse
 from spack.context import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
@@ -735,12 +734,12 @@ def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
     """Obtain the ``CMAKE_PREFIX_PATH`` entries for a package, based on the
     :attr:`~spack.package_base.PackageBase.cmake_prefix_paths` package attribute of direct
     build/test and transitive link dependencies."""
-    edges = traverse.traverse_topo_edges_generator(
-        traverse.with_artificial_edges([pkg.spec]),
-        visitor=traverse.MixedDepthVisitor(
-            direct=dt.BUILD | dt.TEST, transitive=dt.LINK, key=traverse.by_dag_hash
+    edges = spack.spec.traverse_topo_edges_generator(
+        spack.spec.with_artificial_edges([pkg.spec]),
+        visitor=spack.spec.MixedDepthVisitor(
+            direct=dt.BUILD | dt.TEST, transitive=dt.LINK, key=spack.spec.by_dag_hash
         ),
-        key=traverse.by_dag_hash,
+        key=spack.spec.by_dag_hash,
         root=False,
         all_edges=False,  # cover all nodes, not all edges
     )
@@ -862,7 +861,7 @@ class EnvironmentVisitor:
             depflag = self.root_depflag
         else:
             depflag = dt.LINK | dt.RUN
-        return traverse.sort_edges(spec.edges_to_dependencies(depflag=depflag))
+        return spack.spec.sort_edges(spec.edges_to_dependencies(depflag=depflag))
 
 
 class UseMode(Flag):
@@ -893,12 +892,12 @@ def effective_deptypes(
     a flag specifying in what way they do so. The list is ordered topologically
     from root to leaf, meaning that environment modifications should be applied
     in reverse so that dependents override dependencies, not the other way around."""
-    topo_sorted_edges = traverse.traverse_topo_edges_generator(
-        traverse.with_artificial_edges(specs),
-        visitor=traverse.CoverEdgesVisitor(
-            EnvironmentVisitor(*specs, context=context), key=traverse.by_dag_hash
+    topo_sorted_edges = spack.spec.traverse_topo_edges_generator(
+        spack.spec.with_artificial_edges(specs),
+        visitor=spack.spec.CoverEdgesVisitor(
+            EnvironmentVisitor(*specs, context=context), key=spack.spec.by_dag_hash
         ),
-        key=traverse.by_dag_hash,
+        key=spack.spec.by_dag_hash,
         root=True,
         all_edges=True,
     )

@@ -9,7 +9,7 @@ import spack.config
 import spack.environment as ev
 import spack.llnl.util.tty as tty
 import spack.package_base
-import spack.traverse
+import spack.spec
 from spack.cmd.common import arguments
 
 description = "patch expanded archive sources in preparation for install"
@@ -40,7 +40,7 @@ def patch(parser, args):
 
 def _patch_env(env: ev.Environment):
     tty.msg(f"Patching specs from environment {env.name}")
-    for spec in spack.traverse.traverse_nodes(env.concrete_roots()):
+    for spec in spack.spec.traverse_nodes(env.concrete_roots()):
         _patch(spec.package)
 
 

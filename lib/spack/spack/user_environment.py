@@ -9,7 +9,6 @@ import spack.build_environment
 import spack.config
 import spack.spec
 import spack.util.environment as environment
-from spack import traverse
 from spack.context import Context
 
 #: Environment variable name Spack uses to track individually loaded packages
@@ -96,7 +95,7 @@ def environment_modifications_for_specs(
     """
     env = environment.EnvironmentModifications()
     topo_ordered = list(
-        traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
+        spack.spec.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
     )
 
     # Static environment changes (prefix inspections)

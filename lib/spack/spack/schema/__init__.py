@@ -19,7 +19,7 @@ class DeprecationMessage(typing.NamedTuple):
 
 def _validate_spec(validator, is_spec, instance, schema):
     """Check if all additional keys are valid specs."""
-    import spack.spec_parser
+    from spack.spec import parse
 
     if not validator.is_type(instance, "object"):
         return
@@ -30,7 +30,7 @@ def _validate_spec(validator, is_spec, instance, schema):
         if spec_str in properties:
             continue
         try:
-            spack.spec_parser.parse(spec_str)
+            parse(spec_str)
         except SpecSyntaxError:
             yield jsonschema.ValidationError(f"the key '{spec_str}' is not a valid spec")
 

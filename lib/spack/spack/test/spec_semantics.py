@@ -14,7 +14,6 @@ import spack.llnl.util.lang
 import spack.paths
 import spack.solver.asp
 import spack.spec
-import spack.spec_parser
 import spack.store
 import spack.variant
 import spack.version as vn
@@ -670,7 +669,7 @@ class TestSpecSemantics:
         ],
     )
     def test_propagate_reserved_variant_names(self, spec_string):
-        with pytest.raises(spack.spec_parser.SpecParsingError, match="Propagation"):
+        with pytest.raises(spack.spec.SpecParsingError, match="Propagation"):
             Spec(spec_string)
 
     def test_multivalued_variant_1(self, default_mock_concretization):
@@ -1026,7 +1025,7 @@ class TestSpecSemantics:
     def test_wildcard_is_invalid_variant_value(self):
         """The spec string x=* is parsed as a multi-valued variant with values the empty set.
         That excludes * as a literal variant value."""
-        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot use reserved value"):
+        with pytest.raises(spack.spec.SpecParsingError, match="cannot use reserved value"):
             Spec("multivalue-variant foo=*,bar")
 
     def test_errors_in_variant_directive(self):

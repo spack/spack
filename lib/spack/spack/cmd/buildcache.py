@@ -24,7 +24,6 @@ import spack.stage
 import spack.store
 import spack.util.parallel
 import spack.util.web as web_util
-from spack import traverse
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.llnl.string import plural
@@ -368,12 +367,12 @@ def _specs_to_be_packaged(
         deptype = dt.RUN | dt.LINK | dt.TEST
     specs = [
         s
-        for s in traverse.traverse_nodes(
+        for s in spack.spec.traverse_nodes(
             requested,
             root="package" in things_to_install,
             deptype=deptype,
             order="breadth",
-            key=traverse.by_dag_hash,
+            key=spack.spec.by_dag_hash,
         )
         if not s.external
     ]

@@ -10,7 +10,7 @@ import spack.error
 import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
-from spack import build_environment, traverse
+from spack import build_environment
 from spack.cmd.common import arguments
 from spack.context import Context
 from spack.util.environment import dump_environment, pickle_environment
@@ -105,7 +105,9 @@ def emulate_env_utility(cmd_name, context: Context, args):
 
     # Mass install check needs read transaction.
     with spack.store.STORE.db.read_transaction():
-        traverse.traverse_breadth_first_with_visitor([spec], traverse.CoverNodesVisitor(visitor))
+        spack.spec.traverse_breadth_first_with_visitor(
+            [spec], spack.spec.CoverNodesVisitor(visitor)
+        )
 
     if visitor.has_uninstalled_deps:
         raise spack.error.SpackError(

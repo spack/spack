@@ -30,7 +30,6 @@ import spack.spec
 import spack.util.compression as compression
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
-from spack import traverse
 from spack.llnl.util.lang import memoized
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
@@ -433,11 +432,11 @@ class PipelineDag:
         # Build dictionary of nodes
         self.nodes: Dict[str, PipelineNode] = {
             PipelineDag.key(s): PipelineNode(s)
-            for s in traverse.traverse_nodes(specs, deptype=dt.ALL_TYPES, root=True)
+            for s in spack.spec.traverse_nodes(specs, deptype=dt.ALL_TYPES, root=True)
         }
 
         # Create edges
-        for edge in traverse.traverse_edges(
+        for edge in spack.spec.traverse_edges(
             specs, deptype=dt.ALL_TYPES, root=False, cover="edges"
         ):
             parent_key = PipelineDag.key(edge.parent)

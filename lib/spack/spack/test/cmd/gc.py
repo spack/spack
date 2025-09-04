@@ -11,7 +11,6 @@ import spack.deptypes as dt
 import spack.environment as ev
 import spack.main
 import spack.spec
-import spack.traverse
 from spack.installer import PackageInstaller
 
 gc = spack.main.SpackCommand("gc")
@@ -114,7 +113,7 @@ def test_gc_except_any_environments(mutable_database, mutable_mock_env_path):
     # All runtime specs in this env should still be installed.
     assert all(
         s.installed
-        for s in spack.traverse.traverse_nodes(e.concrete_roots(), deptype=dt.LINK | dt.RUN)
+        for s in spack.spec.traverse_nodes(e.concrete_roots(), deptype=dt.LINK | dt.RUN)
     )
 
 

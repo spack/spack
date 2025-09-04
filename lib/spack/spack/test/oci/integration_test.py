@@ -23,7 +23,6 @@ import spack.environment as ev
 import spack.error
 import spack.oci.opener
 import spack.spec
-import spack.traverse
 from spack.main import SpackCommand
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import blob_exists, get_manifest_and_config, upload_blob, upload_manifest
@@ -87,9 +86,7 @@ def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
         with ev.read("test") as e:
             specs = [
                 x
-                for x in spack.traverse.traverse_nodes(
-                    e.concrete_roots(), deptype=dt.LINK | dt.RUN
-                )
+                for x in spack.spec.traverse_nodes(e.concrete_roots(), deptype=dt.LINK | dt.RUN)
                 if not x.external
             ]
 

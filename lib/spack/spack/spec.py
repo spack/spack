@@ -45,6 +45,59 @@ line is a spec for a particular installation of the mpileaks package.
    associated with the current package spec.
 
 6. The architecture to build with.
+
+Here is the EBNF grammar for a spec::
+
+    spec          = [name] [node_options] { ^[edge_properties] node } |
+                    [name] [node_options] hash |
+                    filename
+
+    node          =  name [node_options] |
+                     [name] [node_options] hash |
+                     filename
+
+    node_options    = [@(version_list|version_pair)] [%compiler] { variant }
+    edge_properties = [ { bool_variant | key_value } ]
+
+    hash          = / id
+    filename      = (.|/|[a-zA-Z0-9-_]*/)([a-zA-Z0-9-_./]*)(.json|.yaml)
+
+    name          = id | namespace id
+    namespace     = { id . }
+
+    variant       = bool_variant | key_value | propagated_bv | propagated_kv
+    bool_variant  =  +id |  ~id |  -id
+    propagated_bv = ++id | ~~id | --id
+    key_value     =  id=id |  id=quoted_id
+    propagated_kv = id==id | id==quoted_id
+
+    compiler      = id [@version_list]
+
+    version_pair  = git_version=vid
+    version_list  = (version|version_range) [ { , (version|version_range)} ]
+    version_range = vid:vid | vid: | :vid | :
+    version       = vid
+
+    git_version   = git.(vid) | git_hash
+    git_hash      = [A-Fa-f0-9]{40}
+
+    quoted_id     = " id_with_ws " | ' id_with_ws '
+    id_with_ws    = [a-zA-Z0-9_][a-zA-Z_0-9-.\\s]*
+    vid           = [a-zA-Z0-9_][a-zA-Z_0-9-.]*
+    id            = [a-zA-Z0-9_][a-zA-Z_0-9-]*
+
+Identifiers using the ``<name>=<value>`` command, such as architectures and
+compiler flags, require a space before the name.
+
+There is one context-sensitive part: ids in versions may contain ``.``, while
+other ids may not.
+
+There is one ambiguity: since ``-`` is allowed in an id, you need to put
+whitespace space before ``-variant`` for it to be tokenized properly.  You can
+either use whitespace, or you can just use ``~variant`` since it means the same
+thing.  Spack uses ``~variant`` in directory names and in the canonical form of
+specs to avoid ambiguity.  Both are provided because ``~`` can cause shell
+expansion when it is the first character in an id typed on the command line.
 """
 import collections
 import collections.abc
@@ -57,14 +110,18 @@ import pathlib
 import platform
 import re
 import socket
+import traceback
 import warnings
+from collections import defaultdict, deque
 from typing import (
     Any,
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     Match,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -79,6 +136,7 @@ from spack.vendor.typing_extensions import Literal
 import spack
 import spack.aliases
 import spack.compilers.flags
+import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
@@ -92,8 +150,6 @@ import spack.paths
 import spack.platforms
 import spack.provider_index
 import spack.repo
-import spack.spec_parser
-import spack.traverse
 import spack.util.hash
 import spack.util.prefix
 import spack.util.spack_json as sjson
@@ -101,6 +157,10 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
+from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
+from spack.llnl.util.tty import color
+from spack.spec_utils import SpecTokens, quote_if_needed, strip_quotes_and_unescape
+from spack.tokenize import Token, Tokenizer
 
 from .enums import InstallRecordStatus
 
@@ -189,6 +249,10 @@ CLEARSIGN_FILE_REGEX = re.compile(
 
 #: specfile format version. Must increase monotonically
 SPECFILE_FORMAT_VERSION = 5
+
+OrderType = Literal["pre", "post", "breadth", "topo"]
+CoverType = Literal["nodes", "edges", "paths"]
+DirectionType = Literal["children", "parents"]
 
 
 class InstallStatus(enum.Enum):
@@ -975,12 +1039,12 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         for flag_type, flags in sorted_items:
             normal = [f for f in flags if not f.propagate]
             if normal:
-                value = spack.spec_parser.quote_if_needed(" ".join(normal))
+                value = quote_if_needed(" ".join(normal))
                 result += f" {flag_type}={value}"
 
             propagated = [f for f in flags if f.propagate]
             if propagated:
-                value = spack.spec_parser.quote_if_needed(" ".join(propagated))
+                value = quote_if_needed(" ".join(propagated))
                 result += f" {flag_type}=={value}"
 
         # TODO: somehow add this space only if something follows in Spec.format()
@@ -1334,7 +1398,7 @@ def tree(
     depth: bool = False,
     hashes: bool = False,
     hashlen: Optional[int] = None,
-    cover: spack.traverse.CoverType = "nodes",
+    cover: CoverType = "nodes",
     indent: int = 0,
     format: str = DEFAULT_FORMAT,
     deptypes: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
@@ -1375,15 +1439,13 @@ def tree(
     # reduce deptypes over all in-edges when covering nodes
     if show_types and cover == "nodes":
         deptype_lookup: Dict[str, dt.DepFlag] = collections.defaultdict(dt.DepFlag)
-        for edge in spack.traverse.traverse_edges(
-            specs, cover="edges", deptype=deptypes, root=False
-        ):
+        for edge in traverse_edges(specs, cover="edges", deptype=deptypes, root=False):
             deptype_lookup[edge.spec.dag_hash()] |= edge.depflag
 
     # SupportsRichComparisonT issue with List[Spec]
     sorted_specs: List["Spec"] = sorted(specs)  # type: ignore[type-var]
 
-    for d, dep_spec in spack.traverse.traverse_tree(
+    for d, dep_spec in traverse_tree(
         sorted_specs, cover=cover, deptype=deptypes, depth_first=depth_first, key=key
     ):
         node = dep_spec.spec
@@ -1552,7 +1614,7 @@ class Spec:
         self.annotations = SpecAnnotations()
 
         if isinstance(spec_like, str):
-            spack.spec_parser.parse_one_or_raise(spec_like, self)
+            parse_one_or_raise(spec_like, self)
 
         elif spec_like is not None:
             raise TypeError(f"Can't make spec out of {type(spec_like)}")
@@ -2032,9 +2094,9 @@ class Spec:
         self,
         *,
         root: bool = ...,
-        order: spack.traverse.OrderType = ...,
-        cover: spack.traverse.CoverType = ...,
-        direction: spack.traverse.DirectionType = ...,
+        order: OrderType = ...,
+        cover: CoverType = ...,
+        direction: DirectionType = ...,
         deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
         depth: Literal[False] = False,
         key: Callable[["Spec"], Any] = ...,
@@ -2046,9 +2108,9 @@ class Spec:
         self,
         *,
         root: bool = ...,
-        order: spack.traverse.OrderType = ...,
-        cover: spack.traverse.CoverType = ...,
-        direction: spack.traverse.DirectionType = ...,
+        order: OrderType = ...,
+        cover: CoverType = ...,
+        direction: DirectionType = ...,
         deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
         depth: Literal[True],
         key: Callable[["Spec"], Any] = ...,
@@ -2059,16 +2121,16 @@ class Spec:
         self,
         *,
         root: bool = True,
-        order: spack.traverse.OrderType = "pre",
-        cover: spack.traverse.CoverType = "nodes",
-        direction: spack.traverse.DirectionType = "children",
+        order: OrderType = "pre",
+        cover: CoverType = "nodes",
+        direction: DirectionType = "children",
         deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
         depth: bool = False,
         key: Callable[["Spec"], Any] = id,
         visited: Optional[Set[Any]] = None,
     ) -> Iterable[Union["Spec", Tuple[int, "Spec"]]]:
-        """Shorthand for :meth:`~spack.traverse.traverse_nodes`"""
-        return spack.traverse.traverse_nodes(
+        """Shorthand for :func:`~spack.spec.traverse_nodes`"""
+        return traverse_nodes(
             [self],
             root=root,
             order=order,
@@ -2085,9 +2147,9 @@ class Spec:
         self,
         *,
         root: bool = ...,
-        order: spack.traverse.OrderType = ...,
-        cover: spack.traverse.CoverType = ...,
-        direction: spack.traverse.DirectionType = ...,
+        order: OrderType = ...,
+        cover: CoverType = ...,
+        direction: DirectionType = ...,
         deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
         depth: Literal[False] = False,
         key: Callable[["Spec"], Any] = ...,
@@ -2099,9 +2161,9 @@ class Spec:
         self,
         *,
         root: bool = ...,
-        order: spack.traverse.OrderType = ...,
-        cover: spack.traverse.CoverType = ...,
-        direction: spack.traverse.DirectionType = ...,
+        order: OrderType = ...,
+        cover: CoverType = ...,
+        direction: DirectionType = ...,
         deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
         depth: Literal[True],
         key: Callable[["Spec"], Any] = ...,
@@ -2112,16 +2174,16 @@ class Spec:
         self,
         *,
         root: bool = True,
-        order: spack.traverse.OrderType = "pre",
-        cover: spack.traverse.CoverType = "nodes",
-        direction: spack.traverse.DirectionType = "children",
+        order: OrderType = "pre",
+        cover: CoverType = "nodes",
+        direction: DirectionType = "children",
         deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
         depth: bool = False,
         key: Callable[["Spec"], Any] = id,
         visited: Optional[Set[Any]] = None,
     ) -> Iterable[Union[DependencySpec, Tuple[int, DependencySpec]]]:
-        """Shorthand for :meth:`~spack.traverse.traverse_edges`"""
-        return spack.traverse.traverse_edges(
+        """Shorthand for :func:`~spack.spec.traverse_edges`"""
+        return traverse_edges(
             [self],
             root=root,
             order=order,
@@ -3878,7 +3940,7 @@ class Spec:
         # A full traversal involves constructing data structurs, visitor objects, etc.,
         # and it can be expensive if we have to do it to compare a bunch of tiny
         # abstract specs. Therefore, there are 3 cases below, which avoid calling
-        # `spack.traverse.traverse_edges()` unless necessary.
+        # `spack.spec.traverse_edges()` unless necessary.
         #
         # WARNING: the cases below need to be consistent, so don't mess with this code
         # unless you really know what you're doing. Be sure to keep all three consistent.
@@ -3899,7 +3961,7 @@ class Spec:
         #   2. Spec has dependencies, but dependencies have no dependencies.
         #      * We need to sort edges, but we don't need to track visited nodes, which
         #        can save us the cost of setting up all the tracking data structures
-        #        `spack.traverse` uses.
+        #        `spack.spec` uses.
         #
         #   3. Spec has dependencies that have dependencies.
         #      * In this case, the spec is *probably* concrete. Equality comparisons
@@ -3907,10 +3969,10 @@ class Spec:
         #        to lazily enumerate components of the spec. The traversal logic is
         #        unavoidable.
         #
-        # TODO: consider reworking `spack.traverse` to construct fewer data structures
+        # TODO: consider reworking `spack.spec` to construct fewer data structures
         # and objects, as this would make all traversals faster and could eliminate the
         # need for the complexity here. It was not clear at the time of writing that how
-        # much optimization was possible in `spack.traverse`.
+        # much optimization was possible in `spack.spec`.
 
         sorted_l1_edges = None
         edge_list = None
@@ -3931,7 +3993,7 @@ class Spec:
             deps_have_deps = False
             sorted_l1_edges = self.edges_to_dependencies(depflag=dt.ALL)
             if len(sorted_l1_edges) > 1:
-                sorted_l1_edges = spack.traverse.sort_edges(sorted_l1_edges)
+                sorted_l1_edges = sort_edges(sorted_l1_edges)
 
             for edge in sorted_l1_edges:
                 yield edge.spec._cmp_node
@@ -3953,7 +4015,7 @@ class Spec:
                 node_ids[id(spec)]  # l1 starts at 1
 
             edge_list = []
-            for edge in spack.traverse.traverse_edges(
+            for edge in traverse_edges(
                 l1_specs, order="breadth", cover="edges", root=False, visited=set([0])
             ):
                 # yield each node only once, and generate a consistent id for it the
@@ -4461,7 +4523,7 @@ class Spec:
         depth: bool = False,
         hashes: bool = False,
         hashlen: Optional[int] = None,
-        cover: spack.traverse.CoverType = "nodes",
+        cover: CoverType = "nodes",
         indent: int = 0,
         format: str = DEFAULT_FORMAT,
         deptypes: Union[dt.DepTypes, dt.DepFlag] = dt.ALL,
@@ -5659,3 +5721,1219 @@ class InvalidSpecDetected(spack.error.SpecError):
 class SpliceError(spack.error.SpecError):
     """Raised when a splice is not possible due to dependency or provider
     satisfaction mismatch. The resulting splice would be unusable."""
+
+
+#: Tokenizer that includes all the regexes in the SpecTokens enum
+SPEC_TOKENIZER = Tokenizer(SpecTokens)
+
+
+def tokenize(text: str) -> Iterator[Token]:
+    """Return a token generator from the text passed as input.
+
+    Raises:
+        SpecTokenizationError: when unexpected characters are found in the text
+    """
+    for token in SPEC_TOKENIZER.tokenize(text):
+        if token.kind == SpecTokens.UNEXPECTED:
+            raise SpecTokenizationError(list(SPEC_TOKENIZER.tokenize(text)), text)
+        yield token
+
+
+def parseable_tokens(text: str) -> Iterator[Token]:
+    """Return non-whitespace tokens from the text passed as input
+
+    Raises:
+        SpecTokenizationError: when unexpected characters are found in the text
+    """
+    return filter(lambda x: x.kind != SpecTokens.WS, tokenize(text))
+
+
+class TokenContext:
+    """Token context passed around by parsers"""
+
+    __slots__ = "token_stream", "current_token", "next_token", "pushed_tokens"
+
+    def __init__(self, token_stream: Iterator[Token]):
+        self.token_stream = token_stream
+        self.current_token = None
+        self.next_token = None  # the next token to be read
+
+        # if not empty, back of list is front of stream, and we pop from here instead.
+        self.pushed_tokens: List[Token] = []
+
+        self.advance()
+
+    def advance(self):
+        """Advance one token"""
+        self.current_token = self.next_token
+        if self.pushed_tokens:
+            self.next_token = self.pushed_tokens.pop()
+        else:
+            self.next_token = next(self.token_stream, None)
+
+    def accept(self, kind: SpecTokens):
+        """If the next token is of the specified kind, advance the stream and return True.
+        Otherwise return False.
+        """
+        if self.next_token and self.next_token.kind == kind:
+            self.advance()
+            return True
+        return False
+
+    def push_front(self, token=Token):
+        """Push a token onto the front of the stream. Enables a bit of lookahead."""
+        self.pushed_tokens.append(self.next_token)  # back of list is front of stream
+        self.next_token = token
+
+    def expect(self, *kinds: SpecTokens):
+        return self.next_token and self.next_token.kind in kinds
+
+
+class SpecTokenizationError(spack.error.SpecSyntaxError):
+    """Syntax error in a spec string"""
+
+    def __init__(self, tokens: List[Token], text: str):
+        message = f"unexpected characters in the spec string\n{text}\n"
+
+        underline = ""
+        for token in tokens:
+            is_error = token.kind == SpecTokens.UNEXPECTED
+            underline += ("^" if is_error else " ") * (token.end - token.start)
+
+        message += color.colorize(f"@*r{{{underline}}}")
+        super().__init__(message)
+
+
+def _warn_about_variant_after_compiler(literal_str: str, issues: List[str]):
+    """Issue a warning if variant or other token is preceded by a compiler token. The warning is
+    only issued if it's actionable: either we know the config file it originates from, or we have
+    call site that's not internal to Spack."""
+    ignore = [spack.paths.lib_path, spack.paths.bin_path]
+    mark = syaml.get_mark_from_yaml_data(literal_str)
+    issue_str = ", ".join(issues)
+    error = f"{issue_str} in `{literal_str}`"
+
+    # warning from config file
+    if mark:
+        warnings.warn(f"{mark.name}:{mark.line + 1}: {error}")
+        return
+
+    # warning from hopefully package.py
+    for frame in reversed(traceback.extract_stack()):
+        if frame.lineno and not any(frame.filename.startswith(path) for path in ignore):
+            warnings.warn_explicit(
+                error,
+                category=spack.error.SpackAPIWarning,
+                filename=frame.filename,
+                lineno=frame.lineno,
+            )
+            return
+
+
+def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
+    """Look at subvalues and, if present, extract virtual and a push a substitute token.
+
+    This handles things like:
+
+    * ``^c=gcc``
+    * ``^c,cxx=gcc``
+    * ``%[when=+bar] c=gcc``
+    * ``%[when=+bar] c,cxx=gcc``
+
+    Virtual assignment can happen anywhere a dependency node can appear. It is
+    shorthand for ``%[virtuals=c,cxx] gcc``.
+
+    The ``virtuals=substitute`` key value pair appears in the subvalues of
+    :attr:`~spack.spec_parser.SpecTokens.DEPENDENCY` and
+    :attr:`~spack.spec_parser.SpecTokens.END_EDGE_PROPERTIES` tokens. We extract the virtuals and
+    create a token from the substitute, which is then pushed back on the parser stream so that the
+    head of the stream can be parsed like a regular node.
+
+    Returns:
+        the virtuals assigned, or None if there aren't any
+
+    """
+    assert context.current_token is not None
+
+    subvalues = context.current_token.subvalues
+    if not subvalues:
+        return ()
+
+    # build a token for the substitute that we can put back on the stream
+    pkg = subvalues["substitute"]
+    token_type = SpecTokens.UNQUALIFIED_PACKAGE_NAME
+    if "." in pkg:
+        token_type = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME
+    start = context.current_token.value.index(pkg)
+
+    token = Token(token_type, pkg, start, start + len(pkg))
+    context.push_front(token)
+
+    return tuple(subvalues["virtuals"].split(","))
+
+
+class SpecParser:
+    """Parse text into specs"""
+
+    __slots__ = "literal_str", "ctx", "toolchains", "parsed_toolchains"
+
+    def __init__(self, literal_str: str):
+        self.literal_str = literal_str
+        self.ctx = TokenContext(parseable_tokens(literal_str))
+
+        # TODO: Move toolchains out of the parser, and expand them as a separate step
+        self.toolchains = {}
+        configuration = getattr(spack.config, "CONFIG", None)
+        if configuration is not None:
+            self.toolchains = configuration.get("toolchains", {})
+        self.parsed_toolchains: Dict[str, Spec] = {}
+
+    def tokens(self) -> List[Token]:
+        """Return the entire list of token from the initial text. White spaces are
+        filtered out.
+        """
+        return list(filter(lambda x: x.kind != SpecTokens.WS, tokenize(self.literal_str)))
+
+    def next_spec(self, initial_spec: Optional[Spec] = None) -> Optional[Spec]:
+        """Return the next spec parsed from text.
+
+        Args:
+            initial_spec: object where to parse the spec. If None a new one
+                will be created.
+
+        Return:
+            The spec that was parsed
+        """
+        if not self.ctx.next_token:
+            return initial_spec
+
+        def add_dependency(dep, **edge_properties):
+            """wrapper around root_spec._add_dependency"""
+            try:
+                target_spec._add_dependency(dep, **edge_properties)
+            except spack.error.SpecError as e:
+                raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
+
+        if not initial_spec:
+            initial_spec = Spec()
+        root_spec, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
+        current_spec = root_spec
+        while True:
+            if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
+                is_direct = self.ctx.current_token.value[0] == "%"
+
+                edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
+                edge_properties.setdefault("virtuals", ())
+                edge_properties["direct"] = is_direct
+                edge_properties.setdefault("depflag", 0)
+
+                dependency, warnings = self._parse_node(root_spec)
+
+                if is_direct:
+                    target_spec = current_spec
+                    if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
+                        dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
+                else:
+                    current_spec = dependency
+                    target_spec = root_spec
+
+                parser_warnings.extend(warnings)
+                add_dependency(dependency, **edge_properties)
+
+            elif self.ctx.accept(SpecTokens.DEPENDENCY):
+                is_direct = self.ctx.current_token.value[0] == "%"
+                virtuals = parse_virtual_assignment(self.ctx)
+
+                # if no virtual assignment, check for a toolchain - look ahead to find the
+                # toolchain and substitute it
+                if not virtuals and is_direct and self.ctx.next_token.value in self.toolchains:
+                    assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
+                    try:
+                        self._apply_toolchain(current_spec, self.ctx.current_token.value)
+                    except spack.error.SpecError as e:
+                        raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
+                    continue
+
+                edge_properties = {"direct": is_direct, "virtuals": virtuals, "depflag": 0}
+                dependency, warnings = self._parse_node(root_spec)
+
+                if is_direct:
+                    target_spec = current_spec
+                    if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
+                        dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
+                else:
+                    current_spec = dependency
+                    target_spec = root_spec
+
+                parser_warnings.extend(warnings)
+                add_dependency(dependency, **edge_properties)
+
+            else:
+                break
+
+        if parser_warnings:
+            _warn_about_variant_after_compiler(self.literal_str, parser_warnings)
+
+        return root_spec
+
+    def _parse_node(self, root_spec: Spec, root: bool = True):
+        dependency, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(root=root)
+        if dependency is None:
+            msg = (
+                "the dependency sigil and any optional edge attributes must be followed by a "
+                "package name or a node attribute (version, variant, etc.)"
+            )
+            raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
+        if root_spec.concrete:
+            raise spack.error.SpecError(root_spec, "^" + str(dependency))
+        return dependency, parser_warnings
+
+    def _apply_toolchain(self, spec: Spec, name: str) -> None:
+        if name not in self.parsed_toolchains:
+            toolchain = self._parse_toolchain(name)
+            self.parsed_toolchains[name] = toolchain
+
+        toolchain = self.parsed_toolchains[name]
+        spec.constrain(toolchain)
+
+    def _parse_toolchain(self, name: str) -> Spec:
+        toolchain_config = self.toolchains[name]
+        if isinstance(toolchain_config, str):
+            toolchain = parse_one_or_raise(toolchain_config)
+            self._ensure_all_direct_edges(toolchain)
+        else:
+            toolchain = Spec()
+            for entry in toolchain_config:
+                toolchain_part = parse_one_or_raise(entry["spec"])
+                when = entry.get("when", "")
+                self._ensure_all_direct_edges(toolchain_part)
+
+                # Conditions are applied to every edge in the constraint
+                for edge in toolchain_part.traverse_edges():
+                    edge.when.constrain(when)
+                toolchain.constrain(toolchain_part)
+        return toolchain
+
+    def _ensure_all_direct_edges(self, constraint: Spec) -> None:
+        for edge in constraint.traverse_edges(root=False):
+            if not edge.direct:
+                raise spack.error.SpecError(
+                    f"cannot use '^' in toolchain definitions, and the current "
+                    f"toolchain contains '{edge.format()}'"
+                )
+
+    def all_specs(self) -> List[Spec]:
+        """Return all the specs that remain to be parsed"""
+        return list(iter(self.next_spec, None))
+
+
+class SpecNodeParser:
+    """Parse a single spec node from a stream of tokens"""
+
+    __slots__ = "ctx", "has_version", "literal_str"
+
+    def __init__(self, ctx, literal_str):
+        self.ctx = ctx
+        self.literal_str = literal_str
+        self.has_version = False
+
+    def parse(
+        self, initial_spec: Optional[Spec] = None, root: bool = True
+    ) -> Tuple[Spec, List[str]]:
+        """Parse a single spec node from a stream of tokens
+
+        Args:
+            initial_spec: object to be constructed
+            root: True if we're parsing a root, False if dependency after ^ or %
+
+        Return:
+            The object passed as argument
+        """
+        parser_warnings: List[str] = []
+        last_compiler = None
+
+        if initial_spec is None:
+            initial_spec = Spec()
+
+        if not self.ctx.next_token or self.ctx.expect(SpecTokens.DEPENDENCY):
+            return initial_spec, parser_warnings
+
+        # If we start with a package name we have a named spec, we cannot
+        # accept another package name afterwards in a node
+        if self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME):
+            # if name is '*', this is an anonymous spec
+            if self.ctx.current_token.value != "*":
+                initial_spec.name = self.ctx.current_token.value
+
+        elif self.ctx.accept(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME):
+            parts = self.ctx.current_token.value.split(".")
+            name = parts[-1]
+            namespace = ".".join(parts[:-1])
+            initial_spec.name = name
+            initial_spec.namespace = namespace
+
+        elif self.ctx.accept(SpecTokens.FILENAME):
+            return FileParser(self.ctx).parse(initial_spec), parser_warnings
+
+        def raise_parsing_error(string: str, cause: Optional[Exception] = None):
+            """Raise a spec parsing error with token context."""
+            raise SpecParsingError(string, self.ctx.current_token, self.literal_str) from cause
+
+        def add_flag(name: str, value: Union[str, bool], propagate: bool, concrete: bool):
+            """Wrapper around ``Spec._add_flag()`` that adds parser context to errors raised."""
+            try:
+                initial_spec._add_flag(name, value, propagate, concrete)
+            except Exception as e:
+                raise_parsing_error(str(e), e)
+
+        def warn_if_after_compiler(token: str):
+            """Register a warning for %compiler followed by +variant that will in the future apply
+            to the compiler instead of the current root."""
+            if last_compiler:
+                parser_warnings.append(f"`{token}` should go before `{last_compiler}`")
+
+        while True:
+            if (
+                self.ctx.accept(SpecTokens.VERSION_HASH_PAIR)
+                or self.ctx.accept(SpecTokens.GIT_VERSION)
+                or self.ctx.accept(SpecTokens.VERSION)
+            ):
+                if self.has_version:
+                    raise_parsing_error("Spec cannot have multiple versions")
+
+                initial_spec.versions = vn.VersionList(
+                    [vn.from_string(self.ctx.current_token.value[1:])]
+                )
+                initial_spec.attach_git_version_lookup()
+                self.has_version = True
+                warn_if_after_compiler(self.ctx.current_token.value)
+
+            elif self.ctx.accept(SpecTokens.BOOL_VARIANT):
+                name = self.ctx.current_token.value[1:].strip()
+                variant_value = self.ctx.current_token.value[0] == "+"
+                add_flag(name, variant_value, propagate=False, concrete=True)
+                warn_if_after_compiler(self.ctx.current_token.value)
+
+            elif self.ctx.accept(SpecTokens.PROPAGATED_BOOL_VARIANT):
+                name = self.ctx.current_token.value[2:].strip()
+                variant_value = self.ctx.current_token.value[0:2] == "++"
+                add_flag(name, variant_value, propagate=True, concrete=True)
+                warn_if_after_compiler(self.ctx.current_token.value)
+
+            elif self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
+                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
+                concrete = name.endswith(":")
+                if concrete:
+                    name = name[:-1]
+
+                add_flag(
+                    name, strip_quotes_and_unescape(value), propagate=False, concrete=concrete
+                )
+                warn_if_after_compiler(self.ctx.current_token.value)
+
+            elif self.ctx.accept(SpecTokens.PROPAGATED_KEY_VALUE_PAIR):
+                name, value = self.ctx.current_token.value.split("==", maxsplit=1)
+                concrete = name.endswith(":")
+                if concrete:
+                    name = name[:-1]
+                add_flag(name, strip_quotes_and_unescape(value), propagate=True, concrete=concrete)
+                warn_if_after_compiler(self.ctx.current_token.value)
+
+            elif self.ctx.expect(SpecTokens.DAG_HASH):
+                if initial_spec.abstract_hash:
+                    break
+                self.ctx.accept(SpecTokens.DAG_HASH)
+                initial_spec.abstract_hash = self.ctx.current_token.value[1:]
+                warn_if_after_compiler(self.ctx.current_token.value)
+
+            else:
+                break
+
+        return initial_spec, parser_warnings
+
+
+class FileParser:
+    """Parse a single spec from a JSON or YAML file"""
+
+    __slots__ = ("ctx",)
+
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    def parse(self, initial_spec: Spec) -> Spec:
+        """Parse a spec tree from a specfile.
+
+        Args:
+            initial_spec: object where to parse the spec
+
+        Return:
+            The initial_spec passed as argument, once constructed
+        """
+        file = pathlib.Path(self.ctx.current_token.value)
+
+        if not file.exists():
+            raise spack.error.NoSuchSpecFileError(f"No such spec file: '{file}'")
+
+        with file.open("r", encoding="utf-8") as stream:
+            if str(file).endswith(".json"):
+                spec_from_file = Spec.from_json(stream)
+            else:
+                spec_from_file = Spec.from_yaml(stream)
+        initial_spec._dup(spec_from_file)
+        return initial_spec
+
+
+class EdgeAttributeParser:
+    __slots__ = "ctx", "literal_str"
+
+    def __init__(self, ctx, literal_str):
+        self.ctx = ctx
+        self.literal_str = literal_str
+
+    def parse(self):
+        attributes = {}
+        while True:
+            if self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
+                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
+                if name.endswith(":"):
+                    name = name[:-1]
+                value = value.strip("'\" ").split(",")
+                attributes[name] = value
+                if name not in ("deptypes", "virtuals", "when"):
+                    msg = (
+                        "the only edge attributes that are currently accepted "
+                        'are "deptypes", "virtuals", and "when"'
+                    )
+                    raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
+            # TODO: Add code to accept bool variants here as soon as use variants are implemented
+            elif self.ctx.accept(SpecTokens.END_EDGE_PROPERTIES):
+                virtuals = attributes.get("virtuals", ())
+                virtuals += parse_virtual_assignment(self.ctx)
+                attributes["virtuals"] = virtuals
+                break
+            else:
+                msg = "unexpected token in edge attributes"
+                raise SpecParsingError(msg, self.ctx.next_token, self.literal_str)
+
+        # Turn deptypes=... to depflag representation
+        if "deptypes" in attributes:
+            deptype_string = attributes.pop("deptypes")
+            attributes["depflag"] = dt.canonicalize(deptype_string)
+
+        # Turn "when" into a spec
+        if "when" in attributes:
+            attributes["when"] = parse_one_or_raise(attributes["when"][0])
+
+        return attributes
+
+
+def parse(text: str) -> List[Spec]:
+    """Parse text into a list of strings
+
+    Args:
+        text (str): text to be parsed
+
+    Return:
+        List of specs
+    """
+    return SpecParser(text).all_specs()
+
+
+def parse_one_or_raise(text: str, initial_spec: Optional[Spec] = None) -> Spec:
+    """Parse exactly one spec from text and return it, or raise
+
+    Args:
+        text (str): text to be parsed
+        initial_spec: buffer where to parse the spec. If None a new one will be created.
+    """
+    parser = SpecParser(text)
+    result = parser.next_spec(initial_spec)
+    next_token = parser.ctx.next_token
+
+    if next_token:
+        message = f"expected a single spec, but got more:\n{text}"
+        underline = f"\n{' ' * next_token.start}{'^' * len(next_token.value)}"
+        message += color.colorize(f"@*r{{{underline}}}")
+        raise ValueError(message)
+
+    if result is None:
+        raise ValueError("expected a single spec, but got none")
+
+    return result
+
+
+class SpecParsingError(spack.error.SpecSyntaxError):
+    """Error when parsing tokens"""
+
+    def __init__(self, message, token, text):
+        message += f"\n{text}"
+        if token:
+            underline = f"\n{' '*token.start}{'^'*(token.end - token.start)}"
+            message += color.colorize(f"@*r{{{underline}}}")
+        super().__init__(message)
+
+
+#: Data class that stores a directed edge together with depth at
+#: which the target vertex was found. It is passed to ``accept``
+#: and ``neighbors`` of visitors, so they can decide whether to
+#: follow the edge or not.
+class EdgeAndDepth(NamedTuple):
+    edge: DependencySpec
+    depth: int
+
+
+# Sort edges by name first, then abstract hash, then full edge comparison to break ties
+def sort_edges(edges):
+    edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or "", edge))
+    return edges
+
+
+class BaseVisitor:
+    """A simple visitor that accepts all edges unconditionally and follows all
+    edges to dependencies of a given ``deptype``."""
+
+    def __init__(self, depflag: dt.DepFlag = dt.ALL):
+        self.depflag = depflag
+
+    def accept(self, item):
+        """
+        Arguments:
+            item (EdgeAndDepth): Provides the depth and the edge through which the
+                node was discovered
+
+        Returns:
+            bool: Returns ``True`` if the node is accepted. When ``False``, this
+                indicates that the node won't be yielded by iterators and dependencies
+                are not followed.
+        """
+        return True
+
+    def neighbors(self, item):
+        return sort_edges(item.edge.spec.edges_to_dependencies(depflag=self.depflag))
+
+
+class ReverseVisitor:
+    """A visitor that reverses the arrows in the DAG, following dependents."""
+
+    def __init__(self, visitor, depflag: dt.DepFlag = dt.ALL):
+        self.visitor = visitor
+        self.depflag = depflag
+
+    def accept(self, item):
+        return self.visitor.accept(item)
+
+    def neighbors(self, item):
+        """Return dependents, note that we actually flip the edge direction to allow
+        generic programming"""
+        spec = item.edge.spec
+        return sort_edges(
+            [edge.flip() for edge in spec.edges_from_dependents(depflag=self.depflag)]
+        )
+
+
+class CoverNodesVisitor:
+    """A visitor that traverses each node once."""
+
+    def __init__(self, visitor, key=id, visited=None):
+        self.visitor = visitor
+        self.key = key
+        self.visited = set() if visited is None else visited
+
+    def accept(self, item):
+        # Covering nodes means: visit nodes once and only once.
+        key = self.key(item.edge.spec)
+
+        if key in self.visited:
+            return False
+
+        accept = self.visitor.accept(item)
+        self.visited.add(key)
+        return accept
+
+    def neighbors(self, item):
+        return self.visitor.neighbors(item)
+
+
+class CoverEdgesVisitor:
+    """A visitor that traverses all edges once."""
+
+    def __init__(self, visitor, key=id, visited=None):
+        self.visitor = visitor
+        self.visited = set() if visited is None else visited
+        self.key = key
+
+    def accept(self, item):
+        return self.visitor.accept(item)
+
+    def neighbors(self, item):
+        # Covering edges means: drop dependencies of visited nodes.
+        key = self.key(item.edge.spec)
+
+        if key in self.visited:
+            return []
+
+        self.visited.add(key)
+        return self.visitor.neighbors(item)
+
+
+class MixedDepthVisitor:
+    """Visits all unique edges of the sub-DAG induced by direct dependencies of type ``direct``
+    and transitive dependencies of type ``transitive``. An example use for this is traversing build
+    type dependencies non-recursively, and link dependencies recursively."""
+
+    def __init__(
+        self, *, direct: dt.DepFlag, transitive: dt.DepFlag, key: Callable[[Spec], Any] = id
+    ) -> None:
+        self.direct_type = direct
+        self.transitive_type = transitive
+        self.key = key
+        self.seen: Set[Any] = set()
+        self.seen_roots: Set[Any] = set()
+
+    def accept(self, item: EdgeAndDepth) -> bool:
+        # Do not accept duplicate root nodes. This only happens if the user starts iterating from
+        # multiple roots and lists one of the roots multiple times.
+        if item.edge.parent is None:
+            node_id = self.key(item.edge.spec)
+            if node_id in self.seen_roots:
+                return False
+            self.seen_roots.add(node_id)
+        return True
+
+    def neighbors(self, item: EdgeAndDepth) -> List[EdgeAndDepth]:
+        # If we're here through an artificial source node, it's a root, and we return all
+        # direct_type  and transitive_type edges. If we're here through a transitive_type edge, we
+        # return all transitive_type edges. To avoid returning the same edge twice:
+        # 1. If we had already encountered the current node through a transitive_type edge, we
+        #    don't need to return transitive_type edges again.
+        # 2. If we encounter the current node through a direct_type edge, and we had already seen
+        #    it through a transitive_type edge, only return the non-transitive_type, direct_type
+        #    edges.
+        node_id = self.key(item.edge.spec)
+        seen = node_id in self.seen
+        is_root = item.edge.parent is None
+        follow_transitive = is_root or bool(item.edge.depflag & self.transitive_type)
+        follow = self.direct_type if is_root else dt.NONE
+
+        if follow_transitive and not seen:
+            follow |= self.transitive_type
+            self.seen.add(node_id)
+        elif follow == dt.NONE:
+            return []
+
+        edges = item.edge.spec.edges_to_dependencies(depflag=follow)
+
+        # filter direct_type edges already followed before becuase they were also transitive_type.
+        if seen:
+            edges = [edge for edge in edges if not edge.depflag & self.transitive_type]
+
+        return sort_edges(edges)
+
+
+def get_visitor_from_args(
+    cover, direction, depflag: Union[dt.DepFlag, dt.DepTypes], key=id, visited=None, visitor=None
+):
+    """
+    Create a visitor object from common keyword arguments.
+
+    Arguments:
+        cover (str): Determines how extensively to cover the dag.  Possible values:
+            ``nodes`` -- Visit each unique node in the dag only once.
+            ``edges`` -- If a node has been visited once but is reached along a
+            new path, it's accepted, but not recurisvely followed. This traverses
+            each 'edge' in the DAG once.
+            ``paths`` -- Explore every unique path reachable from the root.
+            This descends into visited subtrees and will accept nodes multiple
+            times if they're reachable by multiple paths.
+        direction (str): ``children`` or ``parents``. If ``children``, does a traversal
+            of this spec's children.  If ``parents``, traverses upwards in the DAG
+            towards the root.
+        deptype: allowed dependency types
+        key: function that takes a spec and outputs a key for uniqueness test.
+        visited (set or None): a set of nodes not to follow (when using cover=nodes/edges)
+        visitor: An initial visitor that is used for composition.
+
+    Returns:
+        A visitor
+    """
+    if not isinstance(depflag, dt.DepFlag):
+        depflag = dt.canonicalize(depflag)
+    visitor = visitor or BaseVisitor(depflag)
+    if cover == "nodes":
+        visitor = CoverNodesVisitor(visitor, key, visited)
+    elif cover == "edges":
+        visitor = CoverEdgesVisitor(visitor, key, visited)
+    if direction == "parents":
+        visitor = ReverseVisitor(visitor, depflag)
+    return visitor
+
+
+def with_artificial_edges(specs):
+    """Initialize a deque of edges from an artificial root node to the root specs."""
+    return deque(
+        EdgeAndDepth(edge=DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0)
+        for s in specs
+    )
+
+
+def traverse_depth_first_edges_generator(edges, visitor, post_order=False, root=True, depth=False):
+    """Generator that takes explores a DAG in depth-first fashion starting from
+    a list of edges. Note that typically DFS would take a vertex not a list of edges,
+    but the API is like this so we don't have to create an artificial root node when
+    traversing from multiple roots in a DAG.
+
+    Arguments:
+        edges (list): List of EdgeAndDepth instances
+        visitor: class instance implementing accept() and neigbors()
+        post_order (bool): Whether to yield nodes when backtracking
+        root (bool): whether to yield at depth 0
+        depth (bool): when ``True`` yield a tuple of depth and edge, otherwise only the
+            edge.
+    """
+    for edge in edges:
+        if not visitor.accept(edge):
+            continue
+
+        yield_me = root or edge.depth > 0
+
+        # Pre
+        if yield_me and not post_order:
+            yield (edge.depth, edge.edge) if depth else edge.edge
+
+        neighbors = [EdgeAndDepth(edge=n, depth=edge.depth + 1) for n in visitor.neighbors(edge)]
+
+        # This extra branch is just for efficiency.
+        if len(neighbors) > 0:
+            for item in traverse_depth_first_edges_generator(
+                neighbors, visitor, post_order, root, depth
+            ):
+                yield item
+
+        # Post
+        if yield_me and post_order:
+            yield (edge.depth, edge.edge) if depth else edge.edge
+
+
+def traverse_breadth_first_edges_generator(queue: deque, visitor, root=True, depth=False):
+    while len(queue) > 0:
+        edge = queue.popleft()
+
+        # If the visitor doesn't accept the node, we don't yield it nor follow its edges.
+        if not visitor.accept(edge):
+            continue
+
+        if root or edge.depth > 0:
+            yield (edge.depth, edge.edge) if depth else edge.edge
+
+        for e in visitor.neighbors(edge):
+            queue.append(EdgeAndDepth(e, edge.depth + 1))
+
+
+def traverse_breadth_first_with_visitor(specs, visitor):
+    """Performs breadth first traversal for a list of specs (not a generator).
+
+    Arguments:
+        specs (list): List of Spec instances.
+        visitor: object that implements accept and neighbors interface, see
+            for example BaseVisitor.
+    """
+    queue = with_artificial_edges(specs)
+    while len(queue) > 0:
+        edge = queue.popleft()
+
+        # If the visitor doesn't accept the node, we don't traverse it further.
+        if not visitor.accept(edge):
+            continue
+
+        for e in visitor.neighbors(edge):
+            queue.append(EdgeAndDepth(e, edge.depth + 1))
+
+
+def traverse_depth_first_with_visitor(edges, visitor):
+    """Traverse a DAG in depth-first fashion using a visitor, starting from
+    a list of edges. Note that typically DFS would take a vertex not a list of edges,
+    but the API is like this so we don't have to create an artificial root node when
+    traversing from multiple roots in a DAG.
+
+    Arguments:
+        edges (list): List of EdgeAndDepth instances
+        visitor: class instance implementing accept(), pre(), post() and neighbors()
+    """
+    for edge in edges:
+        if not visitor.accept(edge):
+            continue
+
+        visitor.pre(edge)
+
+        neighbors = [EdgeAndDepth(edge=e, depth=edge.depth + 1) for e in visitor.neighbors(edge)]
+
+        traverse_depth_first_with_visitor(neighbors, visitor)
+
+        visitor.post(edge)
+
+
+# Helper functions for generating a tree using breadth-first traversal
+
+
+def breadth_first_to_tree_edges(roots, deptype="all", key=id):
+    """This produces an adjacency list (with edges) and a map of parents.
+    There may be nodes that are reached through multiple edges. To print as
+    a tree, one should use the parents dict to verify if the path leading to
+    the node is through the correct parent. If not, the branch should be
+    truncated."""
+    edges = defaultdict(list)
+    parents = dict()
+
+    for edge in traverse_edges(roots, order="breadth", cover="edges", deptype=deptype, key=key):
+        parent_id = None if edge.parent is None else key(edge.parent)
+        child_id = key(edge.spec)
+        edges[parent_id].append(edge)
+        if child_id not in parents:
+            parents[child_id] = parent_id
+
+    return edges, parents
+
+
+def breadth_first_to_tree_nodes(roots, deptype="all", key=id):
+    """This produces a list of edges that forms a tree; every node has no more
+    that one incoming edge."""
+    edges = defaultdict(list)
+
+    for edge in traverse_edges(roots, order="breadth", cover="nodes", deptype=deptype, key=key):
+        parent_id = None if edge.parent is None else key(edge.parent)
+        edges[parent_id].append(edge)
+
+    return edges
+
+
+def traverse_breadth_first_tree_edges(parent_id, edges, parents, key=id, depth=0):
+    """Do a depth-first search on edges generated by bread-first traversal,
+    which can be used to produce a tree."""
+    for edge in edges[parent_id]:
+        yield (depth, edge)
+
+        child_id = key(edge.spec)
+
+        # Don't follow further if we're not the parent
+        if parents[child_id] != parent_id:
+            continue
+
+        yield from traverse_breadth_first_tree_edges(child_id, edges, parents, key, depth + 1)
+
+
+def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
+    for edge in edges[parent_id]:
+        yield (depth, edge)
+        for item in traverse_breadth_first_tree_nodes(key(edge.spec), edges, key, depth + 1):
+            yield item
+
+
+def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=False):
+    """
+    Returns a list of edges in topological order, in the sense that all in-edges of a vertex appear
+    before all out-edges.
+
+    Arguments:
+        edges (list): List of EdgeAndDepth instances
+        visitor: visitor that produces unique edges defining the (sub)DAG of interest.
+        key: function that takes a spec and outputs a key for uniqueness test.
+        root (bool): Yield the root nodes themselves
+        all_edges (bool): When ``False`` only one in-edge per node is returned, when
+            ``True`` all reachable edges are returned.
+    """
+    # Topo order used to be implemented using a DFS visitor, which was relatively efficient in that
+    # it would visit nodes only once, and it was composable. In practice however it would yield a
+    # DFS order on DAGs that are trees, which is undesirable in many cases. For example, a list of
+    # search paths for trees is better in BFS order, so that direct dependencies are listed first.
+    # That way a transitive dependency cannot shadow a direct one. So, here we collect the sub-DAG
+    # of interest and then compute a topological order that is the most breadth-first possible.
+
+    # maps node identifier to the number of remaining in-edges
+    in_edge_count = defaultdict(int)
+    # maps parent identifier to a list of edges, where None is a special identifier
+    # for the artificial root/source.
+    node_to_edges = defaultdict(list)
+    for edge in traverse_breadth_first_edges_generator(edges, visitor, root=True, depth=False):
+        in_edge_count[key(edge.spec)] += 1
+        parent_id = key(edge.parent) if edge.parent is not None else None
+        node_to_edges[parent_id].append(edge)
+
+    queue = deque((None,))
+
+    while queue:
+        for edge in node_to_edges[queue.popleft()]:
+            child_id = key(edge.spec)
+            in_edge_count[child_id] -= 1
+
+            should_yield = root or edge.parent is not None
+
+            if all_edges and should_yield:
+                yield edge
+
+            if in_edge_count[child_id] == 0:
+                if not all_edges and should_yield:
+                    yield edge
+                queue.append(key(edge.spec))
+
+
+# High-level API: traverse_edges, traverse_nodes, traverse_tree.
+
+
+@overload
+def traverse_edges(
+    specs: Sequence[Spec],
+    *,
+    root: bool = ...,
+    order: OrderType = ...,
+    cover: CoverType = ...,
+    direction: DirectionType = ...,
+    deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
+    depth: Literal[False] = False,
+    key: Callable[[Spec], Any] = ...,
+    visited: Optional[Set[Any]] = ...,
+) -> Iterable[DependencySpec]: ...
+
+
+@overload
+def traverse_edges(
+    specs: Sequence[Spec],
+    *,
+    root: bool = ...,
+    order: OrderType = ...,
+    cover: CoverType = ...,
+    direction: DirectionType = ...,
+    deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
+    depth: Literal[True],
+    key: Callable[[Spec], Any] = ...,
+    visited: Optional[Set[Any]] = ...,
+) -> Iterable[Tuple[int, DependencySpec]]: ...
+
+
+@overload
+def traverse_edges(
+    specs: Sequence[Spec],
+    *,
+    root: bool = ...,
+    order: OrderType = ...,
+    cover: CoverType = ...,
+    direction: DirectionType = ...,
+    deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
+    depth: bool,
+    key: Callable[[Spec], Any] = ...,
+    visited: Optional[Set[Any]] = ...,
+) -> Iterable[Union[DependencySpec, Tuple[int, DependencySpec]]]: ...
+
+
+def traverse_edges(
+    specs: Sequence[Spec],
+    root: bool = True,
+    order: OrderType = "pre",
+    cover: CoverType = "nodes",
+    direction: DirectionType = "children",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
+    depth: bool = False,
+    key: Callable[[Spec], Any] = id,
+    visited: Optional[Set[Any]] = None,
+) -> Iterable[Union[DependencySpec, Tuple[int, DependencySpec]]]:
+    """
+    Iterable of edges from the DAG, starting from a list of root specs.
+
+    Arguments:
+
+        specs: List of root specs (considered to be depth 0)
+        root: Yield the root nodes themselves
+        order: What order of traversal to use in the DAG. For depth-first search this can be
+            ``pre`` or ``post``. For BFS this should be ``breadth``. For topological order use
+            ``topo``
+        cover: Determines how extensively to cover the dag.  Possible values:
+            ``nodes`` -- Visit each unique node in the dag only once.
+            ``edges`` -- If a node has been visited once but is reached along a new path, it's
+            accepted, but not recurisvely followed. This traverses each 'edge' in the DAG once.
+            ``paths`` -- Explore every unique path reachable from the root. This descends into
+            visited subtrees and will accept nodes multiple times if they're reachable by multiple
+            paths.
+        direction: ``children`` or ``parents``. If ``children``, does a traversal of this spec's
+            children.  If ``parents``, traverses upwards in the DAG towards the root.
+        deptype: allowed dependency types
+        depth: When ``False``, yield just edges. When ``True`` yield the tuple (depth, edge), where
+            depth corresponds to the depth at which edge.spec was discovered.
+        key: function that takes a spec and outputs a key for uniqueness test.
+        visited: a set of nodes not to follow
+
+    Returns:
+        An iterable of ``DependencySpec`` if depth is ``False`` or a tuple of
+        ``(depth, DependencySpec)`` if depth is ``True``.
+    """
+    # validate input
+    if order == "topo":
+        if cover == "paths":
+            raise ValueError("cover=paths not supported for order=topo")
+        if visited is not None:
+            raise ValueError("visited set not implemented for order=topo")
+    elif order not in ("post", "pre", "breadth"):
+        raise ValueError(f"Unknown order {order}")
+
+    # In topo traversal we need to construct a sub-DAG including all unique edges even if we are
+    # yielding a subset of them, hence "edges".
+    _cover = "edges" if order == "topo" else cover
+    visitor = get_visitor_from_args(_cover, direction, deptype, key, visited)
+    root_edges = with_artificial_edges(specs)
+
+    # Depth-first
+    if order == "pre" or order == "post":
+        return traverse_depth_first_edges_generator(
+            root_edges, visitor, order == "post", root, depth
+        )
+    elif order == "breadth":
+        return traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
+    elif order == "topo":
+        return traverse_topo_edges_generator(
+            root_edges, visitor, key, root, all_edges=cover == "edges"
+        )
+
+
+@overload
+def traverse_nodes(
+    specs: Sequence[Spec],
+    *,
+    root: bool = ...,
+    order: OrderType = ...,
+    cover: CoverType = ...,
+    direction: DirectionType = ...,
+    deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
+    depth: Literal[False] = False,
+    key: Callable[[Spec], Any] = ...,
+    visited: Optional[Set[Any]] = ...,
+) -> Iterable[Spec]: ...
+
+
+@overload
+def traverse_nodes(
+    specs: Sequence[Spec],
+    *,
+    root: bool = ...,
+    order: OrderType = ...,
+    cover: CoverType = ...,
+    direction: DirectionType = ...,
+    deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
+    depth: Literal[True],
+    key: Callable[[Spec], Any] = ...,
+    visited: Optional[Set[Any]] = ...,
+) -> Iterable[Tuple[int, Spec]]: ...
+
+
+@overload
+def traverse_nodes(
+    specs: Sequence[Spec],
+    *,
+    root: bool = ...,
+    order: OrderType = ...,
+    cover: CoverType = ...,
+    direction: DirectionType = ...,
+    deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
+    depth: bool,
+    key: Callable[[Spec], Any] = ...,
+    visited: Optional[Set[Any]] = ...,
+) -> Iterable[Union[Spec, Tuple[int, Spec]]]: ...
+
+
+def traverse_nodes(
+    specs: Sequence[Spec],
+    *,
+    root: bool = True,
+    order: OrderType = "pre",
+    cover: CoverType = "nodes",
+    direction: DirectionType = "children",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
+    depth: bool = False,
+    key: Callable[[Spec], Any] = id,
+    visited: Optional[Set[Any]] = None,
+) -> Iterable[Union[Spec, Tuple[int, Spec]]]:
+    """
+    Iterable of specs from the DAG, starting from a list of root specs.
+
+    Arguments:
+        specs: List of root specs (considered to be depth 0)
+        root: Yield the root nodes themselves
+        order: What order of traversal to use in the DAG. For depth-first search this can be
+            ``pre`` or ``post``. For BFS this should be ``breadth``.
+        cover: Determines how extensively to cover the dag.  Possible values:
+            ``nodes`` -- Visit each unique node in the dag only once.
+            ``edges`` -- If a node has been visited once but is reached along a new path, it's
+            accepted, but not recurisvely followed. This traverses each 'edge' in the DAG once.
+            ``paths`` -- Explore every unique path reachable from the root. This descends into
+            visited subtrees and will accept nodes multiple times if they're reachable by multiple
+            paths.
+        direction: ``children`` or ``parents``. If ``children``, does a traversal of this spec's
+            children.  If ``parents``, traverses upwards in the DAG towards the root.
+        deptype: allowed dependency types
+        depth: When ``False``, yield just edges. When ``True`` yield the tuple ``(depth, edge)``,
+            where depth corresponds to the depth at which ``edge.spec`` was discovered.
+        key: function that takes a spec and outputs a key for uniqueness test.
+        visited: a set of nodes not to follow
+
+    Yields:
+        By default :class:`~spack.spec.Spec`, or a tuple ``(depth, Spec)`` if depth is
+        set to ``True``.
+    """
+    for item in traverse_edges(
+        specs,
+        root=root,
+        order=order,
+        cover=cover,
+        direction=direction,
+        deptype=deptype,
+        depth=depth,
+        key=key,
+        visited=visited,
+    ):
+        yield (item[0], item[1].spec) if depth else item.spec  # type: ignore
+
+
+def traverse_tree(
+    specs: Sequence[Spec],
+    cover: CoverType = "nodes",
+    deptype: Union[dt.DepFlag, dt.DepTypes] = "all",
+    key: Callable[[Spec], Any] = id,
+    depth_first: bool = True,
+) -> Iterable[Tuple[int, DependencySpec]]:
+    """
+    Generator that yields ``(depth, DependencySpec)`` tuples in the depth-first
+    pre-order, so that a tree can be printed from it.
+
+    Arguments:
+
+        specs: List of root specs (considered to be depth 0)
+        cover: Determines how extensively to cover the dag.  Possible values:
+            ``nodes`` -- Visit each unique node in the dag only once.
+            ``edges`` -- If a node has been visited once but is reached along a
+            new path, it's accepted, but not recurisvely followed. This traverses each 'edge' in
+            the DAG once.
+            ``paths`` -- Explore every unique path reachable from the root. This descends into
+            visited subtrees and will accept nodes multiple times if they're reachable by multiple
+            paths.
+        deptype: allowed dependency types
+        key: function that takes a spec and outputs a key for uniqueness test.
+        depth_first: Explore the tree in depth-first or breadth-first order. When setting
+            ``depth_first=True`` and ``cover=nodes``, each spec only occurs once at the shallowest
+            level, which is useful when rendering the tree in a terminal.
+
+    Returns:
+        A generator that yields ``(depth, DependencySpec)`` tuples in such an order that a tree can
+        be printed.
+    """
+    # BFS only makes sense when going over edges and nodes, for paths the tree is
+    # identical to DFS, which is much more efficient then.
+    if not depth_first and cover == "edges":
+        edges, parents = breadth_first_to_tree_edges(specs, deptype, key)
+        return traverse_breadth_first_tree_edges(None, edges, parents, key)
+    elif not depth_first and cover == "nodes":
+        edges = breadth_first_to_tree_nodes(specs, deptype, key)
+        return traverse_breadth_first_tree_nodes(None, edges, key)
+
+    return traverse_edges(specs, order="pre", cover=cover, deptype=deptype, key=key, depth=True)
+
+
+def by_dag_hash(s: Spec) -> str:
+    """Used very often as a key function for traversals."""
+    return s.dag_hash()

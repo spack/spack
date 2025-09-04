@@ -12,7 +12,6 @@ import spack.environment as ev
 import spack.package_base
 import spack.spec
 import spack.store
-import spack.traverse as traverse
 from spack.cmd.common import arguments
 from spack.llnl.util import tty
 from spack.llnl.util.tty.colify import colify
@@ -140,7 +139,7 @@ def installed_dependents(specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
         record = spack.store.STORE.db.query_local_by_spec_hash(spec.dag_hash())
         return record and record.installed
 
-    all_specs = traverse.traverse_nodes(
+    all_specs = spack.spec.traverse_nodes(
         specs,
         root=False,
         order="breadth",
@@ -194,7 +193,7 @@ def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
     # so that we don't have to do a dance of list -> set -> list -> set
     hashes_to_remove = set(s.dag_hash() for s in specs)
 
-    for s in traverse.traverse_nodes(
+    for s in spack.spec.traverse_nodes(
         specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"
     ):
         if s.dag_hash() in hashes_to_remove:

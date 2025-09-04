@@ -5,7 +5,7 @@
 import pytest
 
 import spack.deptypes as dt
-import spack.traverse as traverse
+import spack.spec
 from spack.spec import Spec
 
 
@@ -108,7 +108,7 @@ def test_all_orders_traverse_the_same_nodes(direction, deptype, abstract_specs_d
     kwargs = {"root": True, "direction": direction, "deptype": deptype, "cover": "nodes"}
 
     def nodes(order):
-        s = traverse.traverse_nodes(specs, order=order, **kwargs)
+        s = spack.spec.traverse_nodes(specs, order=order, **kwargs)
         return sorted(list(s))
 
     assert nodes("pre") == nodes("post") == nodes("breadth") == nodes("topo")
@@ -125,7 +125,7 @@ def test_all_orders_traverse_the_same_edges(direction, root, deptype, abstract_s
     kwargs = {"root": root, "direction": direction, "deptype": deptype, "cover": "edges"}
 
     def edges(order):
-        s = traverse.traverse_edges(specs, order=order, **kwargs)
+        s = spack.spec.traverse_edges(specs, order=order, **kwargs)
         return sorted(list(s))
 
     assert edges("pre") == edges("post") == edges("breadth") == edges("topo")
@@ -136,7 +136,7 @@ def test_breadth_first_traversal(abstract_specs_dtuse):
     s = abstract_specs_dtuse["dttop"]
     depths = [
         depth
-        for (depth, _) in traverse.traverse_nodes(
+        for (depth, _) in spack.spec.traverse_nodes(
             [s], order="breadth", key=lambda s: s.name, depth=True
         )
     ]
@@ -148,7 +148,7 @@ def test_breadth_first_deptype_traversal(abstract_specs_dtuse):
 
     names = ["dtuse", "dttop", "dtbuild1", "dtlink1", "dtbuild2", "dtlink2", "dtlink3", "dtlink4"]
 
-    traversal = traverse.traverse_nodes([s], order="breadth", key=id, deptype=("build", "link"))
+    traversal = spack.spec.traverse_nodes([s], order="breadth", key=id, deptype=("build", "link"))
     assert [x.name for x in traversal] == names
 
 
@@ -157,7 +157,7 @@ def test_breadth_firsrt_traversal_deptype_with_builddeps(abstract_specs_dtuse):
 
     names = ["dttop", "dtbuild1", "dtlink1", "dtbuild2", "dtlink2", "dtlink3", "dtlink4"]
 
-    traversal = traverse.traverse_nodes([s], order="breadth", key=id, deptype=("build", "link"))
+    traversal = spack.spec.traverse_nodes([s], order="breadth", key=id, deptype=("build", "link"))
     assert [x.name for x in traversal] == names
 
 
@@ -179,19 +179,19 @@ def test_breadth_first_traversal_deptype_full(abstract_specs_dtuse):
         "dtbuild3",
     ]
 
-    traversal = traverse.traverse_nodes([s], order="breadth", key=id, deptype="all")
+    traversal = spack.spec.traverse_nodes([s], order="breadth", key=id, deptype="all")
     assert [x.name for x in traversal] == names
 
 
 def test_breadth_first_traversal_deptype_run(abstract_specs_dtuse):
     s = abstract_specs_dtuse["dttop"]
     names = ["dttop", "dtrun1", "dtrun3"]
-    traversal = traverse.traverse_nodes([s], order="breadth", key=id, deptype="run")
+    traversal = spack.spec.traverse_nodes([s], order="breadth", key=id, deptype="run")
     assert [x.name for x in traversal] == names
 
 
 def test_breadth_first_traversal_reverse(abstract_specs_dt_diamond):
-    gen = traverse.traverse_nodes(
+    gen = spack.spec.traverse_nodes(
         [abstract_specs_dt_diamond["dt-diamond-bottom"]],
         order="breadth",
         key=id,
@@ -214,7 +214,7 @@ def test_breadth_first_traversal_multiple_input_specs(abstract_specs_dt_diamond)
         abstract_specs_dt_diamond["dt-diamond"],
         abstract_specs_dt_diamond["dt-diamond-right"],
     ]
-    gen = traverse.traverse_edges(input_specs, order="breadth", key=id, depth=True, root=False)
+    gen = spack.spec.traverse_edges(input_specs, order="breadth", key=id, depth=True, root=False)
     assert [(depth, edge.parent.name, edge.spec.name) for (depth, edge) in gen] == [
         (1, "dt-diamond", "dt-diamond-left"),  # edge from first input spec "to" depth 1
         (1, "dt-diamond-right", "dt-diamond-bottom"),  # edge from second input spec "to" depth 1
@@ -234,19 +234,19 @@ def test_breadth_first_versus_depth_first_tree(abstract_specs_chain):
     # BFS should find all nodes as direct deps
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=False)
+        for (depth, edge) in spack.spec.traverse_tree([s], cover="nodes", depth_first=False)
     ] == [(0, "chain-a"), (1, "chain-b"), (1, "chain-c"), (1, "chain-d")]
 
     # DFS will disover all nodes along the chain a -> b -> c -> d.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=True)
+        for (depth, edge) in spack.spec.traverse_tree([s], cover="nodes", depth_first=True)
     ] == [(0, "chain-a"), (1, "chain-b"), (2, "chain-c"), (3, "chain-d")]
 
     # When covering all edges, we should never exceed depth 2 in BFS.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse.traverse_tree([s], cover="edges", depth_first=False)
+        for (depth, edge) in spack.spec.traverse_tree([s], cover="edges", depth_first=False)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -259,7 +259,7 @@ def test_breadth_first_versus_depth_first_tree(abstract_specs_chain):
     # In DFS we see the chain again.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse.traverse_tree([s], cover="edges", depth_first=True)
+        for (depth, edge) in spack.spec.traverse_tree([s], cover="edges", depth_first=True)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -282,10 +282,10 @@ def test_tree_traversal_with_key(cover, depth_first, abstract_specs_chain):
     dag_hash = lambda s: s.dag_hash()
 
     # Traverse DAG spanned by a unique set of Spec instances
-    first = traverse.traverse_tree([a, c], key=id, **kwargs)
+    first = spack.spec.traverse_tree([a, c], key=id, **kwargs)
 
     # Traverse equivalent DAG with copies of Spec instances included, keyed by dag hash.
-    second = traverse.traverse_tree([a, c.copy()], key=dag_hash, **kwargs)
+    second = spack.spec.traverse_tree([a, c.copy()], key=dag_hash, **kwargs)
 
     # Check that the same nodes are discovered at the same depth
     node_at_depth_first = [(depth, dag_hash(edge.spec)) for (depth, edge) in first]
@@ -377,7 +377,9 @@ def test_traverse_nodes_topo(abstract_specs_toposort):
     def test_topo(input_specs, direction="children"):
         # Ensure the invariant that all parents of specs[i] are in specs[0:i]
         specs = list(
-            traverse.traverse_nodes(input_specs, order="topo", cover="nodes", direction=direction)
+            spack.spec.traverse_nodes(
+                input_specs, order="topo", cover="nodes", direction=direction
+            )
         )
         reverse = "parents" if direction == "children" else "children"
         for i in range(len(specs)):
@@ -402,7 +404,7 @@ def test_traverse_edges_topo(abstract_specs_toposort):
     # Collect pairs of (parent spec name, child spec name)
     edges = [
         (e.parent.name, e.spec.name)
-        for e in traverse.traverse_edges(input_specs, order="topo", cover="edges", root=False)
+        for e in spack.spec.traverse_edges(input_specs, order="topo", cover="edges", root=False)
     ]
 
     # See figure above, we have 7 edges (excluding artifical ones to the root)
@@ -427,7 +429,7 @@ def test_traverse_nodes_no_deps(abstract_specs_dtuse):
         abstract_specs_dtuse["dtlink5"],
         abstract_specs_dtuse["dtuse"],  # <- duplicate
     ]
-    outputs = [x for x in traverse.traverse_nodes(inputs, deptype=dt.NONE)]
+    outputs = [x for x in spack.spec.traverse_nodes(inputs, deptype=dt.NONE)]
     assert outputs == [abstract_specs_dtuse["dtuse"], abstract_specs_dtuse["dtlink5"]]
 
 
@@ -449,8 +451,8 @@ def test_topo_is_bfs_for_trees(cover):
         ),
     )
 
-    assert list(traverse.traverse_nodes([binary_tree["A"]], order="topo", cover=cover)) == list(
-        traverse.traverse_nodes([binary_tree["A"]], order="breadth", cover=cover)
+    assert list(spack.spec.traverse_nodes([binary_tree["A"]], order="topo", cover=cover)) == list(
+        spack.spec.traverse_nodes([binary_tree["A"]], order="breadth", cover=cover)
     )
 
 
@@ -476,19 +478,19 @@ def test_mixed_depth_visitor(roots, order, include_root):
             ("H", "B", dt.LINK),
         ),
     )
-    starting_points = traverse.with_artificial_edges([my_graph[root] for root in roots])
-    visitor = traverse.MixedDepthVisitor(direct=dt.BUILD, transitive=dt.LINK)
+    starting_points = spack.spec.with_artificial_edges([my_graph[root] for root in roots])
+    visitor = spack.spec.MixedDepthVisitor(direct=dt.BUILD, transitive=dt.LINK)
 
     if order == "pre":
-        edges = traverse.traverse_depth_first_edges_generator(
+        edges = spack.spec.traverse_depth_first_edges_generator(
             starting_points, visitor, post_order=False, root=include_root
         )
     elif order == "post":
-        edges = traverse.traverse_depth_first_edges_generator(
+        edges = spack.spec.traverse_depth_first_edges_generator(
             starting_points, visitor, post_order=True, root=include_root
         )
     elif order == "breadth":
-        edges = traverse.traverse_breadth_first_edges_generator(
+        edges = spack.spec.traverse_breadth_first_edges_generator(
             starting_points, visitor, root=include_root
         )
 

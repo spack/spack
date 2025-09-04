@@ -5,8 +5,7 @@ from functools import cmp_to_key
 from typing import Dict, List, NamedTuple
 
 import spack.deptypes as dt
-from spack.spec import Spec
-from spack.traverse import by_dag_hash, traverse_nodes
+from spack.spec import Spec, by_dag_hash, traverse_nodes
 
 
 class Splice(NamedTuple):

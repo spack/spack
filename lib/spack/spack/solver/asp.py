@@ -62,7 +62,6 @@ import spack.util.timer
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
-from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.llnl.util.filesystem import current_file_position
 from spack.llnl.util.lang import elide_list
@@ -2653,7 +2652,7 @@ class SpackSolverSetup:
         self, specs, origin, *, allow_deprecated: bool, require_checksum: bool
     ):
         """Add concrete versions to possible versions from lists of CLI/dev specs."""
-        for s in traverse.traverse_nodes(specs):
+        for s in spack.spec.traverse_nodes(specs):
             # If there is a concrete version on the CLI *that we know nothing
             # about*, add it to the known versions. Use idx=0, which is the
             # best possible, so they're guaranteed to be used preferentially.
@@ -3037,7 +3036,7 @@ class SpackSolverSetup:
         self.pkgs = node_counter.possible_dependencies()
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
-        for node in traverse.traverse_nodes(specs):
+        for node in spack.spec.traverse_nodes(specs):
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
@@ -3338,7 +3337,7 @@ class SpackSolverSetup:
             if pkg_name == "all" or "require" not in d:
                 continue
 
-            for s in traverse.traverse_nodes(self._specs_from_requires(pkg_name, d["require"])):
+            for s in spack.spec.traverse_nodes(self._specs_from_requires(pkg_name, d["require"])):
                 name, versions = s.name, s.versions
 
                 if name not in self.pkgs or versions == spack.version.any_version:

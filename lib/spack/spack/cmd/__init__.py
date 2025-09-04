@@ -23,9 +23,7 @@ import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.spec
-import spack.spec_parser
 import spack.store
-import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -33,6 +31,7 @@ from spack.llnl.util.filesystem import join_path
 from spack.llnl.util.lang import attr_setdefault, index_by
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
+from spack.spec_utils import quote_kvp
 
 from ..enums import InstallRecordStatus
 
@@ -154,23 +153,6 @@ def get_command(cmd_name):
     return getattr(get_module(cmd_name), pname)
 
 
-def quote_kvp(string: str) -> str:
-    """For strings like ``name=value`` or ``name==value``, quote and escape the value if needed.
-
-    This is a compromise to respect quoting of key-value pairs on the CLI. The shell
-    strips quotes from quoted arguments, so we cannot know *exactly* how CLI arguments
-    were quoted. To compensate, we re-add quotes around anything staritng with ``name=``
-    or ``name==``, and we assume the rest of the argument is the value. This covers the
-    common cases of passign flags, e.g., ``cflags="-O2 -g"`` on the command line.
-    """
-    match = spack.spec_parser.SPLIT_KVP.match(string)
-    if not match:
-        return string
-
-    key, delim, value = match.groups()
-    return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}"
-
-
 def parse_specs(
     args: Union[str, List[str]],
     concretize: bool = False,
@@ -182,7 +164,7 @@ def parse_specs(
     args = [args] if isinstance(args, str) else args
     arg_string = " ".join([quote_kvp(arg) for arg in args])
 
-    specs = spack.spec_parser.parse(arg_string)
+    specs = spack.spec.parse(arg_string)
     if not concretize:
         return specs
 
@@ -222,8 +204,8 @@ def _concretize_spec_pairs(
             runtimes = spack.repo.PATH.packages_with_tags("runtime")
             specs_per_name = Counter(
                 spec.name
-                for spec in traverse.traverse_nodes(
-                    ret, deptype=("link", "run"), key=traverse.by_dag_hash
+                for spec in spack.spec.traverse_nodes(
+                    ret, deptype=("link", "run"), key=spack.spec.by_dag_hash
                 )
                 if spec.name not in runtimes  # runtimes are allowed multiple times
             )
@@ -512,7 +494,7 @@ def display_specs(specs, args=None, **kwargs):
         formatted = []
         for spec in specs:
             if deps:
-                for depth, dep in traverse.traverse_tree([spec], depth_first=False):
+                for depth, dep in spack.spec.traverse_tree([spec], depth_first=False):
                     formatted.append((fmt(dep.spec, depth), dep.spec))
                 formatted.append(("", None))  # mark newlines
             else:

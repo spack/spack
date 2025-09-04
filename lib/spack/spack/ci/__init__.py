@@ -37,7 +37,6 @@ import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack import traverse
 from spack.error import SpackError
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
@@ -201,13 +200,13 @@ def get_spec_filter_list(
     all_concrete_specs = env.all_specs()
     env_matches = [s for s in all_concrete_specs if s.name in affected_pkgs]
     visited: Set[str] = set()
-    for depth, parent in traverse.traverse_nodes(
-        env_matches, direction="parents", key=traverse.by_dag_hash, depth=True, order="breadth"
+    for depth, parent in spack.spec.traverse_nodes(
+        env_matches, direction="parents", key=spack.spec.by_dag_hash, depth=True, order="breadth"
     ):
         if dependent_traverse_depth is not None and depth > dependent_traverse_depth:
             break
         affected_specs.update(
-            parent.traverse(direction="children", visited=visited, key=traverse.by_dag_hash)
+            parent.traverse(direction="children", visited=visited, key=spack.spec.by_dag_hash)
         )
     return affected_specs
 

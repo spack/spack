@@ -61,7 +61,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack import traverse
 from spack.llnl.util.filesystem import mkdirp
 from spack.oci.image import (
     Digest,
@@ -598,7 +597,7 @@ def specs_to_relocate(spec: spack.spec.Spec) -> List[spack.spec.Spec]:
     specs = [
         s
         for s in itertools.chain(
-            spec.traverse(root=True, deptype="link", order="breadth", key=traverse.by_dag_hash),
+            spec.traverse(root=True, deptype="link", order="breadth", key=spack.spec.by_dag_hash),
             spec.dependencies(deptype="run"),
         )
         if not s.external
@@ -1349,7 +1348,7 @@ def _oci_put_manifest(
 
     expected_blobs: List[spack.spec.Spec] = [
         s
-        for s in traverse.traverse_nodes(specs, order="topo", deptype=("link", "run"), root=True)
+        for s in spack.spec.traverse_nodes(specs, order="topo", deptype=("link", "run"), root=True)
         if not s.external
     ]
     expected_blobs.reverse()

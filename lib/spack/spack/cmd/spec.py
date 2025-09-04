@@ -13,7 +13,6 @@ import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
-import spack.traverse
 from spack.cmd.common import arguments
 
 description = "show what would be installed, given a spec"
@@ -119,6 +118,6 @@ def spec(parser, args):
                 show_types=args.types,
                 status_fn=install_status_fn if args.install_status else None,
                 hashes=args.long or args.very_long,
-                key=spack.traverse.by_dag_hash,
+                key=spack.spec.by_dag_hash,
             )
         )

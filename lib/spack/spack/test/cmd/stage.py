@@ -9,7 +9,7 @@ import pytest
 import spack.config
 import spack.environment as ev
 import spack.package_base
-import spack.traverse
+import spack.spec
 from spack.cmd.stage import StageFilter
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
@@ -106,7 +106,7 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
 
     # list all the package names that should be staged
     expected, externals = set(), set()
-    for dep in spack.traverse.traverse_nodes(e.concrete_roots()):
+    for dep in spack.spec.traverse_nodes(e.concrete_roots()):
         expected.add(dep.name)
         if dep.external:
             externals.add(dep.name)

@@ -26,7 +26,7 @@ from typing import (
 import spack.error
 import spack.llnl.util.lang as lang
 import spack.llnl.util.tty.color
-import spack.spec_parser
+from spack.spec_utils import quote_if_needed
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -473,7 +473,7 @@ class VariantValue:
             value_str = ",".join(str(x)[:7] for x in self.values)
         else:
             value_str = ",".join(str(x) for x in self.values)
-        return f"{self.name}{concrete}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
+        return f"{self.name}{concrete}{delim}{quote_if_needed(value_str)}"
 
     def __repr__(self):
         return (

@@ -8,7 +8,7 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.llnl.util.tty as tty
-import spack.traverse
+import spack.spec
 from spack.cmd.common import arguments
 
 description = "fetch archives for packages"
@@ -59,7 +59,7 @@ def fetch(parser, args):
             tty.die("fetch requires at least one spec argument")
 
     if args.dependencies or args.missing:
-        to_be_fetched = spack.traverse.traverse_nodes(specs, key=spack.traverse.by_dag_hash)
+        to_be_fetched = spack.spec.traverse_nodes(specs, key=spack.spec.by_dag_hash)
     else:
         to_be_fetched = specs
 

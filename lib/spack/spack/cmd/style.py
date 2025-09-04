@@ -17,7 +17,7 @@ import spack.repo
 import spack.util.git
 import spack.util.spack_yaml
 from spack.llnl.util.filesystem import working_dir
-from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
+from spack.spec_utils import NAME, VERSION_LIST, SpecTokens
 from spack.tokenize import Token, TokenBase, Tokenizer
 from spack.util.executable import Executable, which
 

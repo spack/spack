@@ -128,7 +128,7 @@ PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
 
 
 from spack.llnl.util.lang import classproperty
-from spack.spec_parser import SpecTokens
+from spack.spec import SpecTokens
 
 # replace classproperty.__get__ to return `self` so Sphinx can document it correctly. Otherwise
 # it evaluates the callback, and it documents the result, which is not what we want.
@@ -368,7 +368,7 @@ nitpick_ignore = [
     ("py:class", "spack.spec.InstallStatus"),
     ("py:class", "spack.spec.SpecfileReaderBase"),
     ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
-    ("py:class", "spack.traverse.EdgeAndDepth"),
+    ("py:class", "spack.spec.EdgeAndDepth"),
     ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.compiler.CompilerCache"),
     # TypeVar that is not handled correctly

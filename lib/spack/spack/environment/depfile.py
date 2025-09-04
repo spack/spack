@@ -16,7 +16,6 @@ import spack.deptypes as dt
 import spack.environment.environment as ev
 import spack.paths
 import spack.spec
-import spack.traverse as traverse
 
 
 class UseBuildCache(Enum):
@@ -79,7 +78,7 @@ class DepfileSpecVisitor:
     def neighbors(self, node):
         """Produce a list of spec to follow from node"""
         depflag = self.depflag_root if node.depth == 0 else self.depflag_deps
-        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(depflag=depflag))
+        return spack.spec.sort_edges(node.edge.spec.edges_to_dependencies(depflag=depflag))
 
     def accept(self, node):
         self.adjacency_list.append(
@@ -264,8 +263,8 @@ class MakefileModel:
         """
         roots = env.all_matching_specs(*filter_specs) if filter_specs else env.concrete_roots()
         visitor = DepfileSpecVisitor(pkg_buildcache, dep_buildcache)
-        traverse.traverse_breadth_first_with_visitor(
-            roots, traverse.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
+        spack.spec.traverse_breadth_first_with_visitor(
+            roots, spack.spec.CoverNodesVisitor(visitor, key=lambda s: s.dag_hash())
         )
 
         return MakefileModel(env, roots, visitor.adjacency_list, make_prefix, jobserver)

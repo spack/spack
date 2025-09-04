@@ -55,7 +55,6 @@ import spack.hash_types as ht
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.spec
-import spack.traverse as tr
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -985,10 +984,10 @@ class Database:
             )
 
         # Store all nodes of known specs, excluding ones found in upstreams
-        tr.traverse_breadth_first_with_visitor(
+        spack.spec.traverse_breadth_first_with_visitor(
             known_specs,
-            tr.CoverNodesVisitor(
-                NoUpstreamVisitor(upstream_hashes, create_node), key=tr.by_dag_hash
+            spack.spec.CoverNodesVisitor(
+                NoUpstreamVisitor(upstream_hashes, create_node), key=spack.spec.by_dag_hash
             ),
         )
 
@@ -1033,10 +1032,10 @@ class Database:
             )
 
         # Then store edges
-        tr.traverse_breadth_first_with_visitor(
+        spack.spec.traverse_breadth_first_with_visitor(
             known_specs,
-            tr.CoverEdgesVisitor(
-                NoUpstreamVisitor(upstream_hashes, create_edge), key=tr.by_dag_hash
+            spack.spec.CoverEdgesVisitor(
+                NoUpstreamVisitor(upstream_hashes, create_edge), key=spack.spec.by_dag_hash
             ),
         )
 
@@ -1403,7 +1402,7 @@ class Database:
     def installed_relatives(
         self,
         spec: "spack.spec.Spec",
-        direction: tr.DirectionType = "children",
+        direction: spack.spec.DirectionType = "children",
         transitive: bool = True,
         deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
     ) -> Set["spack.spec.Spec"]:
@@ -1815,7 +1814,7 @@ class Database:
 
         with self.read_transaction():
             roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
-            needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
+            needed = set(id(spec) for spec in spack.spec.traverse_nodes(roots, deptype=deptype))
             return [
                 rec.spec
                 for rec in self._data.values()
@@ -1834,14 +1833,14 @@ class NoUpstreamVisitor:
         self.upstream_hashes = upstream_hashes
         self.on_visit = on_visit
 
-    def accept(self, item: tr.EdgeAndDepth) -> bool:
+    def accept(self, item: spack.spec.EdgeAndDepth) -> bool:
         self.on_visit(item.edge, self.is_upstream(item))
         return True
 
-    def is_upstream(self, item: tr.EdgeAndDepth) -> bool:
+    def is_upstream(self, item: spack.spec.EdgeAndDepth) -> bool:
         return item.edge.spec.dag_hash() in self.upstream_hashes
 
-    def neighbors(self, item: tr.EdgeAndDepth):
+    def neighbors(self, item: spack.spec.EdgeAndDepth):
         # Prune edges from upstream nodes, only follow database tracked dependencies
         return (
             []

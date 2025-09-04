@@ -45,7 +45,6 @@ import spack.deptypes as dt
 import spack.llnl.util.tty.color
 import spack.spec
 import spack.tengine
-import spack.traverse
 from spack.solver.input_analysis import create_graph_analyzer
 
 
@@ -507,7 +506,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
     def visit(self, edge):
         if edge.parent is None:
-            for node in spack.traverse.traverse_nodes([edge.spec], deptype=dt.LINK | dt.RUN):
+            for node in spack.spec.traverse_nodes([edge.spec], deptype=dt.LINK | dt.RUN):
                 self.main_unified_space.add(node.dag_hash())
         super().visit(edge)
 
@@ -586,9 +585,7 @@ def graph_dot(
         out = sys.stdout
 
     builder = builder or SimpleDAG()
-    for edge in spack.traverse.traverse_edges(
-        specs, cover="edges", order="breadth", deptype=depflag
-    ):
+    for edge in spack.spec.traverse_edges(specs, cover="edges", order="breadth", deptype=depflag):
         builder.visit(edge)
 
     out.write(builder.render())

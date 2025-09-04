@@ -19,15 +19,14 @@ import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.spec
-from spack.spec_parser import (
-    UNIX_FILENAME,
-    WINDOWS_FILENAME,
+from spack.spec import (
     SpecParser,
     SpecParsingError,
     SpecTokenizationError,
     SpecTokens,
     parse_one_or_raise,
 )
+from spack.spec_utils import UNIX_FILENAME, WINDOWS_FILENAME
 from spack.tokenize import Token
 
 SKIP_ON_WINDOWS = pytest.mark.skipif(sys.platform == "win32", reason="Unix style path on Windows")
