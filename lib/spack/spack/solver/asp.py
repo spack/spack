@@ -3817,34 +3817,20 @@ class SpecBuilder:
         )
         self._splices.setdefault(parent_spec, []).append(splice)
 
-    @staticmethod
-    def sort_fn(function_tuple) -> Tuple[int, int]:
-        """Ensure attributes are evaluated in the correct order.
-
-        hash attributes are handled first, since they imply entire concrete specs
-        node attributes are handled next, since they instantiate nodes
-        external_spec_selected attributes are handled last, so that external extensions can find
-        the concrete specs on which they depend because all nodes are fully constructed before we
-        consider which ones are external.
-        """
-        name = function_tuple[0]
-        if name == "hash":
-            return (-5, 0)
-        elif name == "node":
-            return (-4, 0)
-        elif name == "node_flag":
-            return (-2, 0)
-        elif name == "external_spec_selected":
-            return (0, 0)  # note out of order so this goes last
-        elif name == "virtual_on_edge":
-            return (1, 0)
-        else:
-            return (-1, 0)
-
     def build_specs(self, function_tuples):
-        # Functions don't seem to be in particular order in output. Sort them here so that
-        # directives that build objects, like node, are called in the right order.
-        self.function_tuples = sorted(set(function_tuples), key=self.sort_fn)
+
+        attr_key = {
+            # hash attributes are handled first, since they imply entire concrete specs
+            "hash": -5,
+            # node attributes are handled next, since they instantiate nodes
+            "node": -4,
+            # evaluated last, so all nodes are fully constructed
+            "external_spec_selected": 1,
+            "virtual_on_edge": 2,
+        }
+
+        # Sort functions so that directives building objects are called in the right order
+        self.function_tuples = sorted(function_tuples, key=lambda x: attr_key.get(x[0], 0))
         self._specs = {}
         for name, args in self.function_tuples:
             if SpecBuilder.ignored_attributes.match(name):
