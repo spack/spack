@@ -10,7 +10,7 @@ import spack.vendor.ruamel.yaml
 
 import spack
 import spack.binary_distribution
-import spack.config as cfg
+import spack.config
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
