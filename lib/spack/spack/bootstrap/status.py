@@ -5,6 +5,7 @@
 import sys
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
+import spack.spec
 import spack.util.executable
 
 from ._common import _executables_in_store, _python_import, _try_import_from_store
@@ -21,7 +22,7 @@ from .environment import (
 
 ExecutablesType = Union[str, Sequence[str]]
 RequiredResponseType = Tuple[bool, Optional[str]]
-SpecLike = Union["spack.spec.Spec", str]
+SpecLike = Union[spack.spec.Spec, str]
 
 
 def _required_system_executable(exes: ExecutablesType, msg: str) -> RequiredResponseType:
