@@ -243,7 +243,7 @@ error(100, no_value_error, Attribute, Package)
      not attr(Attribute, node(ID, Package), _).
 
 % Error when multiple attr need to be selected
-error(100, multiple_values_error, Attribute, Package)
+error(10100, multiple_values_error, Attribute, Package)
   :- attr("node", node(ID, Package)),
      attr_single_value(Attribute),
      2 { attr(Attribute, node(ID, Package), Value) }.
@@ -342,7 +342,7 @@ error(10000, "Cannot satisfy '{0}@{1}' (={2})", Package, Constraint, Version)
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)).
 
-error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
+error(10200, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      not attr("version", node(ID, Package), _).
 
