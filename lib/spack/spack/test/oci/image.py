@@ -83,3 +83,17 @@ def test_digest():
     # Missing algorithm
     with pytest.raises(ValueError):
         Digest.from_string(valid_digest)
+
+
+def test_url_with_scheme():
+    """Test that scheme=http translates to http:// URLs"""
+    http = ImageReference.from_string("localhost:1234/myimage:abc", scheme="http")
+    https = ImageReference.from_string("localhost:1234/myimage:abc", scheme="https")
+    default = ImageReference.from_string("localhost:1234/myimage:abc")
+
+    assert http != https
+    assert https == default
+
+    assert http.manifest_url() == "http://localhost:1234/v2/myimage/manifests/abc"
+    assert https.manifest_url() == "https://localhost:1234/v2/myimage/manifests/abc"
+    assert default.manifest_url() == "https://localhost:1234/v2/myimage/manifests/abc"

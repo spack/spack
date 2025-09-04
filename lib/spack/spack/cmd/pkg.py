@@ -86,7 +86,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def pkg_add(args):
-    """add a package to the git stage with `git add`"""
+    """add a package to the git stage with ``git add``"""
     spack.repo.add_package_to_git_stage(args.packages, spack.repo.builtin_repo())
 
 

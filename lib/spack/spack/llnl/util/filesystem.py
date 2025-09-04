@@ -399,9 +399,7 @@ class FileFilter:
     multiple times to perform search-and-replace operations using Python regular expressions,
     similar to ``sed``.
 
-    Example usage:
-
-    .. code-block:: python
+    Example usage::
 
         foo_c = FileFilter("foo.c")
         foo_c.filter(r"#define FOO", "#define BAR")
@@ -433,7 +431,7 @@ class FileFilter:
         )
 
 
-def change_sed_delimiter(old_delim, new_delim, *filenames):
+def change_sed_delimiter(old_delim: str, new_delim: str, *filenames: str) -> None:
     """Find all sed search/replace commands and change the delimiter.
 
     e.g., if the file contains seds that look like ``'s///'``, you can
@@ -444,8 +442,8 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
     Handling those is left for future work.
 
     Parameters:
-        old_delim (str): The delimiter to search for
-        new_delim (str): The delimiter to replace with
+        old_delim: The delimiter to search for
+        new_delim: The delimiter to replace with
         *filenames: One or more files to search and replace
     """
     assert len(old_delim) == 1
@@ -629,7 +627,7 @@ def chgrp(path, group, follow_symlinks=True):
 @system_path_filter(arg_slice=slice(1))
 def chmod_x(entry, perms):
     """Implements chmod, treating all executable bits as set using the chmod
-    utility's `+X` option.
+    utility's ``+X`` option.
     """
     mode = os.stat(entry).st_mode
     if os.path.isfile(entry):
@@ -677,7 +675,7 @@ def copy(src: str, dest: str, _permissions: bool = False) -> None:
     Parameters:
         src: the file(s) to copy
         dest: the destination file or directory
-        _permissions (bool): for internal use only
+        _permissions: for internal use only
 
     Raises:
         OSError: if ``src`` does not match any files or directories
@@ -708,7 +706,7 @@ def copy(src: str, dest: str, _permissions: bool = False) -> None:
 
 
 @system_path_filter
-def install(src: str, dest: str):
+def install(src: str, dest: str) -> None:
     """Install the file(s) ``src`` to the file or directory ``dest``.
 
     Same as :py:func:`copy` with the addition of setting proper
@@ -860,13 +858,13 @@ def install_tree(
 
 
 @system_path_filter
-def is_exe(path):
+def is_exe(path) -> bool:
     """Returns :obj:`True` iff the specified path exists, is a regular file, and has executable
     permissions for the current process."""
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
-def has_shebang(path):
+def has_shebang(path) -> bool:
     """Returns whether a path has a shebang line. Returns False if the file cannot be opened."""
     try:
         with open(path, "rb") as f:
@@ -917,11 +915,11 @@ def mkdirp(
             if not provided
         group: optional group for permissions of final created directory -- use OS
             default if not provided. Only used if world write permissions are not set
-        default_perms: one of 'parents' or 'args'. The default permissions that are set for
-            directories that are not themselves an argument for mkdirp. 'parents' means
+        default_perms: one of ``"parents"`` or ``"args"``. The default permissions that are set for
+            directories that are not themselves an argument for mkdirp. ``"parents"`` means
             intermediate directories get the permissions of their direct parent directory,
-            'args' means intermediate get the same permissions specified in the arguments to
-            mkdirp -- default value is 'args'
+            ``"args"`` means intermediate get the same permissions specified in the arguments to
+            mkdirp -- default value is ``"args"``
     """
     default_perms = default_perms or "args"
     paths = path_to_os_path(*paths)
@@ -996,7 +994,7 @@ def longest_existing_parent(path: str) -> Tuple[str, List[str]]:
 
 
 @system_path_filter
-def force_remove(*paths):
+def force_remove(*paths: str) -> None:
     """Remove files without printing errors.  Like ``rm -f``, does NOT
     remove directories."""
     for path in paths:
@@ -1015,9 +1013,7 @@ def working_dir(dirname: str, *, create: bool = False):
         dirname: the directory to change to
         create: if :obj:`True`, create the directory if it does not exist
 
-    Example usage:
-
-    .. code-block:: python
+    Example usage::
 
        with working_dir("/path/to/dir"):
            # do something in /path/to/dir
@@ -1154,7 +1150,7 @@ def touchp(path):
 
 
 @system_path_filter
-def force_symlink(src, dest):
+def force_symlink(src: str, dest: str) -> None:
     """Create a symlink at ``dest`` pointing to ``src``. Similar to ``ln -sf``."""
     try:
         symlink(src, dest)
@@ -1164,7 +1160,7 @@ def force_symlink(src, dest):
 
 
 @system_path_filter
-def join_path(prefix, *args):
+def join_path(prefix, *args) -> str:
     """Alias for :func:`os.path.join`"""
     path = str(prefix)
     for elt in args:
@@ -1279,16 +1275,16 @@ def traverse_tree(
 
     When called on dest, this yields::
 
-        ('root',         'dest')
-        ('root/a',       'dest/a')
-        ('root/a/file1', 'dest/a/file1')
-        ('root/a/file2', 'dest/a/file2')
-        ('root/b',       'dest/b')
-        ('root/b/file3', 'dest/b/file3')
+        ("root",         "dest")
+        ("root/a",       "dest/a")
+        ("root/a/file1", "dest/a/file1")
+        ("root/a/file2", "dest/a/file2")
+        ("root/b",       "dest/b")
+        ("root/b/file3", "dest/b/file3")
 
     Keyword Arguments:
         order (str): Whether to do pre- or post-order traversal. Accepted
-            values are 'pre' and 'post'
+            values are ``"pre"`` and ``"post"``
         ignore (typing.Callable): function indicating which files to ignore. This will also
             ignore symlinks if they point to an ignored file (regardless of whether the symlink
             is explicitly ignored); note this only supports one layer of indirection (i.e. if
@@ -1606,7 +1602,7 @@ def readonly_file_handler(ignore_errors=False):
 
 
 @system_path_filter
-def remove_linked_tree(path):
+def remove_linked_tree(path: str) -> None:
     """Removes a directory and its contents.
 
     If the directory is a symlink, follows the link and removes the real
@@ -1615,9 +1611,9 @@ def remove_linked_tree(path):
     This method will force-delete files on Windows
 
     Parameters:
-        path (str): Directory to be removed
+        path: Directory to be removed
     """
-    kwargs = {"ignore_errors": True}
+    kwargs: dict = {"ignore_errors": True}
 
     # Windows readonly files cannot be removed by Python
     # directly.
@@ -1704,13 +1700,13 @@ def find_first(root: str, files: Union[Iterable[str], str], bfs_depth: int = 2) 
     until depth bfs_depth, after which depth-first search is used.
 
     Parameters:
-        root (str): The root directory to start searching from
-        files (str or Iterable): File pattern(s) to search for
-        bfs_depth (int): (advanced) parameter that specifies at which
+        root: The root directory to start searching from
+        files: File pattern(s) to search for
+        bfs_depth: (advanced) parameter that specifies at which
             depth to switch to depth-first search.
 
     Returns:
-        str or None: The matching file or None when no file is found.
+        The matching file or :data:`None` when no file is found.
     """
     if isinstance(files, str):
         files = [files]
@@ -1729,7 +1725,7 @@ def find(
     matching file is returned only once at lowest depth in case multiple paths exist due to
     symlinked directories.
 
-    Accepts any glob characters accepted by fnmatch:
+    Accepts any glob characters accepted by :py:func:`fnmatch.fnmatch`:
 
     ==========  ====================================
     Pattern     Meaning
@@ -1924,41 +1920,41 @@ class FileList(collections.abc.Sequence):
     Provides a few convenience methods to manipulate file paths.
     """
 
-    def __init__(self, files):
+    def __init__(self, files: Union[str, Iterable[str]]) -> None:
         if isinstance(files, str):
             files = [files]
 
         self.files = list(dedupe(files))
 
     @property
-    def directories(self):
+    def directories(self) -> List[str]:
         """Stable de-duplication of the directories where the files reside.
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/libc.a'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir1/libc.a"])
         >>> l.directories
-        ['/dir1', '/dir2']
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        ["/dir1", "/dir2"]
+        >>> h = HeaderList(["/dir1/a.h", "/dir1/b.h", "/dir2/c.h"])
         >>> h.directories
-        ['/dir1', '/dir2']
+        ["/dir1", "/dir2"]
 
         Returns:
-            list: A list of directories
+            A list of directories
         """
         return list(dedupe(os.path.dirname(x) for x in self.files if os.path.dirname(x)))
 
     @property
-    def basenames(self):
+    def basenames(self) -> List[str]:
         """Stable de-duplication of the base-names in the list
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir3/liba.a"])
         >>> l.basenames
-        ['liba.a', 'libb.a']
-        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+        ["liba.a", "libb.a"]
+        >>> h = HeaderList(["/dir1/a.h", "/dir2/b.h", "/dir3/a.h"])
         >>> h.basenames
-        ['a.h', 'b.h']
+        ["a.h", "b.h"]
 
         Returns:
-            list: A list of base-names
+            A list of base-names
         """
         return list(dedupe(os.path.basename(x) for x in self.files))
 
@@ -1980,7 +1976,7 @@ class FileList(collections.abc.Sequence):
     def __len__(self):
         return len(self.files)
 
-    def joined(self, separator=" "):
+    def joined(self, separator: str = " ") -> str:
         return separator.join(self.files)
 
     def __repr__(self):
@@ -2010,7 +2006,7 @@ class HeaderList(FileList):
         self._directories = None
 
     @property
-    def directories(self):
+    def directories(self) -> List[str]:
         """Directories to be searched for header files."""
         values = self._directories
         if values is None:
@@ -2041,31 +2037,31 @@ class HeaderList(FileList):
         return values
 
     @property
-    def headers(self):
+    def headers(self) -> List[str]:
         """Stable de-duplication of the headers.
 
         Returns:
-            list: A list of header files
+            A list of header files
         """
         return self.files
 
     @property
-    def names(self):
+    def names(self) -> List[str]:
         """Stable de-duplication of header names in the list without extensions
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+        >>> h = HeaderList(["/dir1/a.h", "/dir2/b.h", "/dir3/a.h"])
         >>> h.names
-        ['a', 'b']
+        ["a", "b"]
 
         Returns:
-            list: A list of files without extensions
+            A list of files without extensions
         """
         names = []
 
         for x in self.basenames:
             name = x
 
-            # Valid extensions include: ['.cuh', '.hpp', '.hh', '.h']
+            # Valid extensions include: [".cuh", ".hpp", ".hh", ".h"]
             for ext in [".cuh", ".hpp", ".hh", ".h"]:
                 i = name.rfind(ext)
                 if i != -1:
@@ -2078,84 +2074,84 @@ class HeaderList(FileList):
         return list(dedupe(names))
 
     @property
-    def include_flags(self):
+    def include_flags(self) -> str:
         """Include flags
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> h = HeaderList(["/dir1/a.h", "/dir1/b.h", "/dir2/c.h"])
         >>> h.include_flags
-        '-I/dir1 -I/dir2'
+        "-I/dir1 -I/dir2"
 
         Returns:
-            str: A joined list of include flags
+            A joined list of include flags
         """
         return " ".join(["-I" + x for x in self.directories])
 
     @property
-    def macro_definitions(self):
+    def macro_definitions(self) -> str:
         """Macro definitions
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-        >>> h.add_macro('-DBOOST_LIB_NAME=boost_regex')
-        >>> h.add_macro('-DBOOST_DYN_LINK')
+        >>> h = HeaderList(["/dir1/a.h", "/dir1/b.h", "/dir2/c.h"])
+        >>> h.add_macro("-DBOOST_LIB_NAME=boost_regex")
+        >>> h.add_macro("-DBOOST_DYN_LINK")
         >>> h.macro_definitions
-        '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'
+        "-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK"
 
         Returns:
-            str: A joined list of macro definitions
+            A joined list of macro definitions
         """
         return " ".join(self._macro_definitions)
 
     @property
-    def cpp_flags(self):
+    def cpp_flags(self) -> str:
         """Include flags + macro definitions
 
-        >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> h = HeaderList(["/dir1/a.h", "/dir1/b.h", "/dir2/c.h"])
         >>> h.cpp_flags
-        '-I/dir1 -I/dir2'
-        >>> h.add_macro('-DBOOST_DYN_LINK')
+        "-I/dir1 -I/dir2"
+        >>> h.add_macro("-DBOOST_DYN_LINK")
         >>> h.cpp_flags
-        '-I/dir1 -I/dir2 -DBOOST_DYN_LINK'
+        "-I/dir1 -I/dir2 -DBOOST_DYN_LINK"
 
         Returns:
-            str: A joined list of include flags and macro definitions
+            A joined list of include flags and macro definitions
         """
         cpp_flags = self.include_flags
         if self.macro_definitions:
             cpp_flags += " " + self.macro_definitions
         return cpp_flags
 
-    def add_macro(self, macro):
+    def add_macro(self, macro: str) -> None:
         """Add a macro definition
 
         Parameters:
-            macro (str): The macro to add
+            macro: The macro to add
         """
         self._macro_definitions.append(macro)
 
 
-def find_headers(headers, root, recursive=False):
+def find_headers(headers: Union[str, List[str]], root: str, recursive: bool = False) -> HeaderList:
     """Returns an iterable object containing a list of full paths to
     headers if found.
 
-    Accepts any glob characters accepted by fnmatch:
+    Accepts any glob characters accepted by :py:func:`fnmatch.fnmatch`:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches one or more characters
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
-        headers (str or list): Header name(s) to search for
-        root (str): The root directory to start searching from
-        recursive (bool): if False search only root folder,
-            if True descends top-down from the root. Defaults to False.
+        headers: Header name(s) to search for
+        root: The root directory to start searching from
+        recursive: if :data:`False` search only root folder,
+            if :data:`True` descends top-down from the root. Defaults to :data:`False`.
 
     Returns:
-        HeaderList: The headers that have been found
+        The headers that have been found
     """
     if isinstance(headers, str):
         headers = [headers]
@@ -2189,12 +2185,12 @@ def find_headers(headers, root, recursive=False):
 
 
 @system_path_filter
-def find_all_headers(root):
+def find_all_headers(root: str) -> HeaderList:
     """Convenience function that returns the list of all headers found
     in the directory passed as argument.
 
     Args:
-        root (str): directory where to look recursively for header files
+        root: directory where to look recursively for header files
 
     Returns:
         List of all headers found in ``root`` and subdirectories.
@@ -2210,24 +2206,24 @@ class LibraryList(FileList):
     """
 
     @property
-    def libraries(self):
+    def libraries(self) -> List[str]:
         """Stable de-duplication of library files.
 
         Returns:
-            list: A list of library files
+            A list of library files
         """
         return self.files
 
     @property
-    def names(self):
+    def names(self) -> List[str]:
         """Stable de-duplication of library names in the list
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.so'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir3/liba.so"])
         >>> l.names
-        ['a', 'b']
+        ["a", "b"]
 
         Returns:
-            list: A list of library names
+            A list of library names
         """
         names = []
 
@@ -2253,46 +2249,46 @@ class LibraryList(FileList):
         return list(dedupe(names))
 
     @property
-    def search_flags(self):
+    def search_flags(self) -> str:
         """Search flags for the libraries
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir1/liba.so"])
         >>> l.search_flags
-        '-L/dir1 -L/dir2'
+        "-L/dir1 -L/dir2"
 
         Returns:
-            str: A joined list of search flags
+            A joined list of search flags
         """
         return " ".join(["-L" + x for x in self.directories])
 
     @property
-    def link_flags(self):
+    def link_flags(self) -> str:
         """Link flags for the libraries
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir1/liba.so"])
         >>> l.link_flags
-        '-la -lb'
+        "-la -lb"
 
         Returns:
-            str: A joined list of link flags
+            A joined list of link flags
         """
         return " ".join(["-l" + name for name in self.names])
 
     @property
-    def ld_flags(self):
+    def ld_flags(self) -> str:
         """Search flags + link flags
 
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
+        >>> l = LibraryList(["/dir1/liba.a", "/dir2/libb.a", "/dir1/liba.so"])
         >>> l.ld_flags
-        '-L/dir1 -L/dir2 -la -lb'
+        "-L/dir1 -L/dir2 -la -lb"
 
         Returns:
-            str: A joined list of search flags and link flags
+            A joined list of search flags and link flags
         """
         return self.search_flags + " " + self.link_flags
 
 
-def find_system_libraries(libraries, shared=True):
+def find_system_libraries(libraries: Union[str, List[str]], shared: bool = True) -> LibraryList:
     """Searches the usual system library locations for ``libraries``.
 
     Search order is as follows:
@@ -2304,24 +2300,24 @@ def find_system_libraries(libraries, shared=True):
     5. ``/usr/local/lib64``
     6. ``/usr/local/lib``
 
-    Accepts any glob characters accepted by fnmatch:
+    Accepts any glob characters accepted by :py:func:`fnmatch.fnmatch`:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches one or more characters
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
-        libraries (str or list): Library name(s) to search for
-        shared (bool): if True searches for shared libraries,
-            otherwise for static. Defaults to True.
+        libraries: Library name(s) to search for
+        shared: if :data:`True` searches for shared libraries,
+            otherwise for static. Defaults to :data:`True`.
 
     Returns:
-        LibraryList: The libraries that have been found
+        The libraries that have been found
     """
     if isinstance(libraries, str):
         libraries = [libraries]
@@ -2331,7 +2327,7 @@ def find_system_libraries(libraries, shared=True):
         message = message.format(find_system_libraries.__name__, type(libraries))
         raise TypeError(message)
 
-    libraries_found = []
+    libraries_found = LibraryList([])
     search_locations = [
         "/lib64",
         "/lib",
@@ -2352,37 +2348,42 @@ def find_system_libraries(libraries, shared=True):
 
 
 def find_libraries(
-    libraries, root, shared=True, recursive=False, runtime=True, max_depth: Optional[int] = None
-):
+    libraries: Union[str, List[str]],
+    root: str,
+    shared: bool = True,
+    recursive: bool = False,
+    runtime: bool = True,
+    max_depth: Optional[int] = None,
+) -> LibraryList:
     """Returns an iterable of full paths to libraries found in a root dir.
 
-    Accepts any glob characters accepted by fnmatch:
+    Accepts any glob characters accepted by :py:func:`fnmatch.fnmatch`:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches one or more characters
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
-        libraries (str or list): Library name(s) to search for
-        root (str): The root directory to start searching from
-        shared (bool): if True searches for shared libraries,
-            otherwise for static. Defaults to True.
-        recursive (bool): if False search only root folder,
-            if True descends top-down from the root. Defaults to False.
-        max_depth (int): if set, don't search below this depth. Cannot be set
-            if recursive is False
-        runtime (bool): Windows only option, no-op elsewhere. If true,
-            search for runtime shared libs (.DLL), otherwise, search
-            for .Lib files. If shared is false, this has no meaning.
-            Defaults to True.
+        libraries: Library name(s) to search for
+        root: The root directory to start searching from
+        shared: if :data:`True` searches for shared libraries,
+            otherwise for static. Defaults to :data:`True`.
+        recursive: if :data:`False` search only root folder,
+            if :data:`True` descends top-down from the root. Defaults to :data:`False`.
+        max_depth: if set, don't search below this depth. Cannot be set
+            if recursive is :data:`False`
+        runtime: Windows only option, no-op elsewhere. If :data:`True`,
+            search for runtime shared libs (``.DLL``), otherwise, search
+            for ``.Lib`` files. If ``shared`` is :data:`False`, this has no meaning.
+            Defaults to :data:`True`.
 
     Returns:
-        LibraryList: The libraries that have been found
+        The libraries that have been found
     """
 
     if isinstance(libraries, str):
@@ -2443,243 +2444,36 @@ def find_libraries(
     return LibraryList(found_libs)
 
 
-def find_all_shared_libraries(root, recursive=False, runtime=True):
+def find_all_shared_libraries(
+    root: str, recursive: bool = False, runtime: bool = True
+) -> LibraryList:
     """Convenience function that returns the list of all shared libraries found
     in the directory passed as argument.
 
-    See documentation for `spack.llnl.util.filesystem.find_libraries` for more information
+    See documentation for :py:func:`find_libraries` for more information
     """
     return find_libraries("*", root=root, shared=True, recursive=recursive, runtime=runtime)
 
 
-def find_all_static_libraries(root, recursive=False):
+def find_all_static_libraries(root: str, recursive: bool = False) -> LibraryList:
     """Convenience function that returns the list of all static libraries found
     in the directory passed as argument.
 
-    See documentation for `spack.llnl.util.filesystem.find_libraries` for more information
+    See documentation for :py:func:`find_libraries` for more information
     """
     return find_libraries("*", root=root, shared=False, recursive=recursive)
 
 
-def find_all_libraries(root, recursive=False):
+def find_all_libraries(root: str, recursive: bool = False) -> LibraryList:
     """Convenience function that returns the list of all libraries found
     in the directory passed as argument.
 
-    See documentation for `spack.llnl.util.filesystem.find_libraries` for more information
+    See documentation for :py:func:`find_libraries` for more information
     """
 
     return find_all_shared_libraries(root, recursive=recursive) + find_all_static_libraries(
         root, recursive=recursive
     )
-
-
-class WindowsSimulatedRPath:
-    """Class representing Windows filesystem rpath analog
-
-    One instance of this class is associated with a package (only on Windows)
-    For each lib/binary directory in an associated package, this class introduces
-    a symlink to any/all dependent libraries/binaries. This includes the packages
-    own bin/lib directories, meaning the libraries are linked to the binary directory
-    and vis versa.
-    """
-
-    def __init__(
-        self,
-        package,
-        base_modification_prefix: Optional[Union[str, pathlib.Path]] = None,
-        link_install_prefix: bool = True,
-    ):
-        """
-        Args:
-            package (spack.package_base.PackageBase): Package requiring links
-            base_modification_prefix (str|pathlib.Path): Path representation indicating
-                the root directory in which to establish the simulated rpath, ie where the
-                symlinks that comprise the "rpath" behavior will be installed.
-
-                Note: This is a mutually exclusive option with `link_install_prefix` using
-                both is an error.
-
-                Default: None
-            link_install_prefix (bool): Link against package's own install or stage root.
-                Packages that run their own executables during build and require rpaths to
-                the build directory during build time require this option.
-
-                Default: install
-                root
-
-                Note: This is a mutually exclusive option with `base_modification_prefix`, using
-                both is an error.
-        """
-        self.pkg = package
-        self._addl_rpaths: set[str] = set()
-        if link_install_prefix and base_modification_prefix:
-            raise RuntimeError(
-                "Invalid combination of arguments given to WindowsSimulated RPath.\n"
-                "Select either `link_install_prefix` to create an install prefix rpath"
-                " or specify a `base_modification_prefix` for any other link type. "
-                "Specifying both arguments is invalid."
-            )
-        if not (link_install_prefix or base_modification_prefix):
-            raise RuntimeError(
-                "Insufficient arguments given to WindowsSimulatedRpath.\n"
-                "WindowsSimulatedRPath requires one of link_install_prefix"
-                " or base_modification_prefix to be specified."
-                " Neither was provided."
-            )
-
-        self.link_install_prefix = link_install_prefix
-        if base_modification_prefix:
-            self.base_modification_prefix = pathlib.Path(base_modification_prefix)
-        else:
-            self.base_modification_prefix = pathlib.Path(self.pkg.prefix)
-        self._additional_library_dependents: set[pathlib.Path] = set()
-        if not self.link_install_prefix:
-            tty.debug(f"Generating rpath for non install context: {base_modification_prefix}")
-
-    @property
-    def library_dependents(self):
-        """
-        Set of directories where package binaries/libraries are located.
-        """
-        base_pths = set()
-        if self.link_install_prefix:
-            base_pths.add(pathlib.Path(self.pkg.prefix.bin))
-        base_pths |= self._additional_library_dependents
-        return base_pths
-
-    def add_library_dependent(self, *dest):
-        """
-        Add paths to directories or libraries/binaries to set of
-        common paths that need to link against other libraries
-
-        Specified paths should fall outside of a package's common
-        link paths, i.e. the bin
-        directories.
-        """
-        for pth in dest:
-            if os.path.isfile(pth):
-                new_pth = pathlib.Path(pth).parent
-            else:
-                new_pth = pathlib.Path(pth)
-            path_is_in_prefix = new_pth.is_relative_to(self.base_modification_prefix)
-            if not path_is_in_prefix:
-                raise RuntimeError(
-                    f"Attempting to generate rpath symlink out of rpath context:\
-{str(self.base_modification_prefix)}"
-                )
-            self._additional_library_dependents.add(new_pth)
-
-    @property
-    def rpaths(self):
-        """
-        Set of libraries this package needs to link against during runtime
-        These packages will each be symlinked into the packages lib and binary dir
-        """
-        dependent_libs = []
-        for path in self.pkg.rpath:
-            dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
-        for extra_path in self._addl_rpaths:
-            dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
-        return set([pathlib.Path(x) for x in dependent_libs])
-
-    def add_rpath(self, *paths):
-        """
-        Add libraries found at the root of provided paths to runtime linking
-
-        These are libraries found outside of the typical scope of rpath linking
-        that require manual inclusion in a runtime linking scheme.
-        These links are unidirectional, and are only
-        intended to bring outside dependencies into this package
-
-        Args:
-            *paths (str): arbitrary number of paths to be added to runtime linking
-        """
-        self._addl_rpaths = self._addl_rpaths | set(paths)
-
-    def _link(self, path: pathlib.Path, dest_dir: pathlib.Path):
-        """Perform link step of simulated rpathing, installing
-        simlinks of file in path to the dest_dir
-        location. This method deliberately prevents
-        the case where a path points to a file inside the dest_dir.
-        This is because it is both meaningless from an rpath
-        perspective, and will cause an error when Developer
-        mode is not enabled"""
-
-        def report_already_linked():
-            # We have either already symlinked or we are encountering a naming clash
-            # either way, we don't want to overwrite existing libraries
-            already_linked = islink(str(dest_file))
-            tty.debug(
-                "Linking library %s to %s failed, " % (str(path), str(dest_file))
-                + "already linked."
-                if already_linked
-                else "library with name %s already exists at location %s."
-                % (str(file_name), str(dest_dir))
-            )
-
-        file_name = path.name
-        dest_file = dest_dir / file_name
-        if not dest_file.exists() and dest_dir.exists() and not dest_file == path:
-            try:
-                symlink(str(path), str(dest_file))
-            # For py2 compatibility, we have to catch the specific Windows error code
-            # associate with trying to create a file that already exists (winerror 183)
-            # Catch OSErrors missed by the SymlinkError checks
-            except OSError as e:
-                if sys.platform == "win32" and e.errno == errno.EEXIST:
-                    report_already_linked()
-                else:
-                    raise e
-            # catch errors we raise ourselves from Spack
-            except AlreadyExistsError:
-                report_already_linked()
-
-    def establish_link(self):
-        """
-        (sym)link packages to runtime dependencies based on RPath configuration for
-        Windows heuristics
-        """
-        # from build_environment.py:463
-        # The top-level package is always RPATHed. It hasn't been installed yet
-        # so the RPATHs are added unconditionally
-
-        # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
-        # install a symlink to each dependent library
-
-        # do not rpath for system libraries included in the dag
-        # we should not be modifying libraries managed by the Windows system
-        # as this will negatively impact linker behavior and can result in permission
-        # errors if those system libs are not modifiable by Spack
-        if "windows-system" not in getattr(self.pkg, "tags", []):
-            for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
-                self._link(library, lib_dir)
-
-
-def make_package_test_rpath(pkg, test_dir: Union[str, pathlib.Path]):
-    """Establishes a temp Windows simulated rpath for the pkg in the testing directory
-    so an executable can test the libraries/executables with proper access
-    to dependent dlls
-
-    Note: this is a no-op on all other platforms besides Windows
-
-    Args:
-        pkg (spack.package_base.PackageBase): the package for which the rpath should be computed
-        test_dir: the testing directory in which we should construct an rpath
-    """
-    # link_install_prefix as false ensures we're not linking into the install prefix
-    mini_rpath = WindowsSimulatedRPath(pkg, link_install_prefix=False)
-    # add the testing directory as a location to install rpath symlinks
-    mini_rpath.add_library_dependent(test_dir)
-
-    # check for whether build_directory is available, if not
-    # assume the stage root is the build dir
-    build_dir_attr = getattr(pkg, "build_directory", None)
-    build_directory = build_dir_attr if build_dir_attr else pkg.stage.path
-    # add the build dir & build dir bin
-    mini_rpath.add_rpath(os.path.join(build_directory, "bin"))
-    mini_rpath.add_rpath(os.path.join(build_directory))
-    # construct rpath
-    mini_rpath.establish_link()
 
 
 @system_path_filter
@@ -2890,11 +2684,16 @@ def remove_directory_contents(dir):
 
 @contextmanager
 @system_path_filter
-def keep_modification_time(*filenames):
+def keep_modification_time(*filenames: str) -> Generator[None, None, None]:
     """
     Context manager to keep the modification timestamps of the input files.
     Tolerates and has no effect on non-existent files and files that are
     deleted by the nested code.
+
+    Example::
+
+        with keep_modification_time("file1.txt", "file2.txt"):
+            # do something that modifies file1.txt and file2.txt
 
     Parameters:
         *filenames: one or more files that must have their modification

@@ -11,7 +11,7 @@ import spack.llnl.util.tty as tty
 #: this is module-scoped because it needs to be set very early
 debug = 0
 
-#: whether to show a backtrace when an error is printed, enabled with --backtrace.
+#: whether to show a backtrace when an error is printed, enabled with ``--backtrace``.
 SHOW_BACKTRACE = False
 
 

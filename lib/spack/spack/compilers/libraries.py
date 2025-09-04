@@ -317,10 +317,16 @@ def dynamic_linker_filter_for(node: spack.spec.Spec) -> Optional[DefaultDynamicL
 
 
 def compiler_spec(node: spack.spec.Spec) -> Optional[spack.spec.Spec]:
-    """Returns the compiler spec associated with the node passed as argument.
+    """Returns a compiler :class:`~spack.spec.Spec` associated with the node passed as argument.
 
-    The function looks for a "c", "cxx", and "fortran" compiler in that order,
-    and returns the first found. If none is found, returns None.
+    The function looks for a ``c``, ``cxx``, and ``fortran`` compiler in that order,
+    and returns the first found. If the node does not depend on any of these languages,
+    it returns :obj:`None`.
+
+    Use of this function is *discouraged*, because a single spec can have multiple compilers
+    associated with it, and this function only returns one of them. It can be better to refer to
+    compilers on a per-language basis, through the language virtuals: ``spec["c"]``,
+    ``spec["cxx"]``, and ``spec["fortran"]``.
     """
     for language in ("c", "cxx", "fortran"):
         candidates = node.dependencies(virtuals=[language])

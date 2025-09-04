@@ -12,6 +12,7 @@ import json
 import os
 import pathlib
 import pprint
+import random
 import re
 import sys
 import typing
@@ -163,30 +164,45 @@ build_priority_offset = 200
 fixed_priority_offset = 100
 
 
+class OptimizationKind:
+    """Enum for the optimization KIND of a criteria.
+
+    It's not using enum.Enum since it must be serializable.
+    """
+
+    BUILD = 0
+    CONCRETE = 1
+    OTHER = 2
+
+
+class OptimizationCriteria(NamedTuple):
+    """A named tuple describing an optimization criteria."""
+
+    priority: int
+    value: int
+    name: str
+    kind: OptimizationKind
+
+
 def build_criteria_names(costs, arg_tuples):
     """Construct an ordered mapping from criteria names to costs."""
     # pull optimization criteria names out of the solution
     priorities_names = []
 
-    num_fixed = 0
-    num_high_fixed = 0
     for args in arg_tuples:
         priority, name = args[:2]
         priority = int(priority)
 
-        # add the priority of this opt criterion and its name
-        priorities_names.append((priority, name))
-
-        # if the priority is less than fixed_priority_offset, then it
-        # has an associated build priority -- the same criterion but for
-        # nodes that we have to build.
+        # Add the priority of this opt criterion and its name
         if priority < fixed_priority_offset:
+            # if the priority is less than fixed_priority_offset, then it
+            # has an associated build priority -- the same criterion but for
+            # nodes that we have to build.
+            priorities_names.append((priority, name, OptimizationKind.CONCRETE))
             build_priority = priority + build_priority_offset
-            priorities_names.append((build_priority, name))
-        elif priority >= high_fixed_priority_offset:
-            num_high_fixed += 1
+            priorities_names.append((build_priority, name, OptimizationKind.BUILD))
         else:
-            num_fixed += 1
+            priorities_names.append((priority, name, OptimizationKind.OTHER))
 
     # sort the criteria by priority
     priorities_names = sorted(priorities_names, reverse=True)
@@ -196,33 +212,10 @@ def build_criteria_names(costs, arg_tuples):
     error_criteria = len(costs) - len(priorities_names)
     costs = costs[error_criteria:]
 
-    # split list into three parts: build criteria, fixed criteria, non-build criteria
-    num_criteria = len(priorities_names)
-    num_build = (num_criteria - num_fixed - num_high_fixed) // 2
-
-    build_start_idx = num_high_fixed
-    fixed_start_idx = num_high_fixed + num_build
-    installed_start_idx = num_high_fixed + num_build + num_fixed
-
-    high_fixed = priorities_names[:build_start_idx]
-    build = priorities_names[build_start_idx:fixed_start_idx]
-    fixed = priorities_names[fixed_start_idx:installed_start_idx]
-    installed = priorities_names[installed_start_idx:]
-
-    # mapping from priority to index in cost list
-    indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
-
-    # make a list that has each name with its build and non-build costs
-    criteria = [(cost, None, name) for cost, (p, name) in zip(costs[:build_start_idx], high_fixed)]
-    criteria += [
-        (cost, None, name)
-        for cost, (p, name) in zip(costs[fixed_start_idx:installed_start_idx], fixed)
+    return [
+        OptimizationCriteria(priority, value, name, status)
+        for (priority, name, status), value in zip(priorities_names, costs)
     ]
-
-    for (i, name), (b, _) in zip(installed, build):
-        criteria.append((costs[indices[i]], costs[indices[b]], name))
-
-    return criteria
 
 
 def specify(spec):
@@ -1343,7 +1336,7 @@ class ConditionIdContext(SourceContext):
 
 class ConditionContext(SourceContext):
     """Tracks context in which a condition (i.e. ``SpackSolverSetup.condition``)
-    is generated (e.g. for a `depends_on`).
+    is generated (e.g. for a ``depends_on``).
 
     This may modify the required/imposed specs generated as relevant
     for the context.
@@ -1381,11 +1374,12 @@ class ConditionContext(SourceContext):
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
+    gen: "ProblemInstanceBuilder"
+
     def __init__(self, tests: bool = False):
         self.possible_graph = create_graph_analyzer()
 
         # these are all initialized in setup()
-        self.gen: "ProblemInstanceBuilder" = ProblemInstanceBuilder()
         self.requirement_parser = RequirementParser(spack.config.CONFIG)
         self.possible_virtuals: Set[str] = set()
 
@@ -1831,7 +1825,7 @@ class SpackSolverSetup:
                 (required if imposed_spec is anonymous, ignored if not)
             msg: description of the condition
             context: if provided, indicates how to modify the clause-sets for the required/imposed
-                specs based on the type of constraint they are generated for (e.g. `depends_on`)
+                specs based on the type of constraint they are generated for (e.g. ``depends_on``)
         Returns:
             int: id of the condition created by this function
         """
@@ -1886,7 +1880,7 @@ class SpackSolverSetup:
             self.gen.newline()
 
     def package_dependencies_rules(self, pkg):
-        """Translate 'depends_on' directives into ASP logic."""
+        """Translate ``depends_on`` directives into ASP logic."""
         for cond, deps_by_name in sorted(pkg.dependencies.items()):
             for _, dep in sorted(deps_by_name.items()):
                 depflag = dep.depflag
@@ -2096,7 +2090,7 @@ class SpackSolverSetup:
 
                 when_spec = spec
                 if virtual and spec.name != pkg_name:
-                    when_spec = spack.spec.Spec(f"^[virtuals={pkg_name}] {spec.name}")
+                    when_spec = spack.spec.Spec(f"^[virtuals={pkg_name}] {spec}")
 
                 try:
                     context = ConditionContext()
@@ -2324,7 +2318,7 @@ class SpackSolverSetup:
         required_from: Optional[str] = None,
         context: Optional[SourceContext] = None,
     ) -> List[AspFunction]:
-        """Wrap a call to `_spec_clauses()` into a try/except block with better error handling.
+        """Wrap a call to ``_spec_clauses()`` into a try/except block with better error handling.
 
         Arguments are as for ``_spec_clauses()`` except ``required_from``.
 
@@ -2372,7 +2366,7 @@ class SpackSolverSetup:
             include_runtimes: generate full dependency clauses from runtime libraries that
                 are ommitted from the solve.
             context: tracks what constraint this clause set is generated for (e.g. a
-                `depends_on` constraint in a package.py file)
+                ``depends_on`` constraint in a package.py file)
 
         Normally, if called with ``transitive=True``, ``spec_clauses()`` just generates
         hashes for the dependency requirements of concrete specs. If ``expand_hashes``
@@ -2688,7 +2682,7 @@ class SpackSolverSetup:
 
         Results are ordered most to least recent.
         """
-        supported = []
+        supported, unsupported = [], []
 
         for target in targets:
             try:
@@ -2699,11 +2693,11 @@ class SpackSolverSetup:
                     )
                 supported.append(target)
             except spack.vendor.archspec.cpu.UnsupportedMicroarchitecture:
-                continue
+                unsupported.append(target)
             except ValueError:
-                continue
+                unsupported.append(target)
 
-        return sorted(supported, reverse=True)
+        return supported, unsupported
 
     def platform_defaults(self):
         self.gen.h2("Default platform")
@@ -2778,20 +2772,24 @@ class SpackSolverSetup:
         uarch = spack.vendor.archspec.cpu.TARGETS.get(platform.default)
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
-            supported = self._supported_targets(compiler.name, compiler.version, candidate_targets)
-
-            if not supported:
-                continue
+            supported, unsupported = self._supported_targets(
+                compiler.name, compiler.version, candidate_targets
+            )
 
             for target in supported:
                 best_targets.add(target.name)
+                self.gen.fact(fn.target_supported(compiler.name, compiler.version, target.name))
+
+            if supported:
                 self.gen.fact(
-                    fn.compiler_supports_target(compiler.name, compiler.version, target.name)
+                    fn.target_supported(compiler.name, compiler.version, uarch.family.name)
                 )
 
-            self.gen.fact(
-                fn.compiler_supports_target(compiler.name, compiler.version, uarch.family.name)
-            )
+            for target in unsupported:
+                self.gen.fact(
+                    fn.target_not_supported(compiler.name, compiler.version, target.name)
+                )
+
             self.gen.newline()
 
         i = 0  # TODO compute per-target offset?
@@ -3008,7 +3006,7 @@ class SpackSolverSetup:
         """
         reuse = reuse or []
         check_packages_exist(specs)
-        self.gen = ProblemInstanceBuilder()
+        self.gen = ProblemInstanceBuilder(randomize="SPACK_SOLVER_RANDOMIZATION" in os.environ)
 
         # Compute possible compilers first, so we can record which dependencies they might inject
         _ = spack.compilers.config.all_compilers(init_config=True)
@@ -3445,10 +3443,14 @@ class ProblemInstanceBuilder:
     >>> problem_instance = builder.value()
 
     The problem instance can be added directly to the "control" structure of clingo.
+
+    Arguments:
+        randomize: whether to randomize the order of facts to the solver. Useful for benchmarking.
     """
 
-    def __init__(self):
-        self.asp_problem = []
+    def __init__(self, randomize: bool = False) -> None:
+        self.randomize = randomize
+        self.asp_problem: List[str] = []
 
     def fact(self, atom: AspFunction) -> None:
         self.asp_problem.append(f"{atom}.\n")
@@ -3457,12 +3459,8 @@ class ProblemInstanceBuilder:
         self.asp_problem.append(rule)
 
     def title(self, header: str, char: str) -> None:
-        self.asp_problem.append("\n")
-        self.asp_problem.append("%" + (char * 76))
-        self.asp_problem.append("\n")
-        self.asp_problem.append(f"% {header}\n")
-        self.asp_problem.append("%" + (char * 76))
-        self.asp_problem.append("\n")
+        sep = char * 76
+        self.asp_problem.append(f"\n%{sep}\n% {header}\n%{sep}\n")
 
     def h1(self, header: str) -> None:
         self.title(header, "=")
@@ -3477,6 +3475,8 @@ class ProblemInstanceBuilder:
         self.asp_problem.append("\n")
 
     def value(self) -> str:
+        if self.randomize:
+            random.shuffle(self.asp_problem)
         return "".join(self.asp_problem)
 
 
@@ -3675,7 +3675,7 @@ class SpecBuilder:
 
         1. Flags applied in compiler definitions should come first
         2. Flags applied by dependents are ordered topologically (with a
-           dependency on `traverse` to resolve the partial order into a
+           dependency on ``traverse`` to resolve the partial order into a
            stable total order)
         3. Flags from requirements are then applied (requirements always
            come from the package and never a parent)
@@ -3683,7 +3683,7 @@ class SpecBuilder:
 
         Additionally, for each source (requirements, compiler, command line, and
         dependents), flags from that source should retain their order and grouping:
-        e.g. for `y cflags="-z -a"` "-z" and "-a" should never have any intervening
+        e.g. for ``y cflags="-z -a"`` ``-z`` and ``-a`` should never have any intervening
         flags inserted, and should always appear in that order.
         """
         cmd_specs = {s.name: s for spec in self._command_line_specs for s in spec.traverse()}
@@ -3870,6 +3870,10 @@ class SpecBuilder:
         for s in self._specs.values():
             _develop_specs_from_env(s, ev.active_environment())
 
+        # check for commits must happen after all version adaptations are complete
+        for s in self._specs.values():
+            _specs_with_commits(s)
+
         # mark concrete and assign hashes to all specs in the solve
         for root in roots.values():
             root._finalize_concretization()
@@ -3904,10 +3908,6 @@ class SpecBuilder:
                     spec.version.attach_lookup(
                         spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )
-
-        # check for commits must happen after all version adaptations are complete
-        for s in self._specs.values():
-            _specs_with_commits(s)
 
         specs = self.execute_explicit_splices()
         return specs
@@ -3950,14 +3950,15 @@ class SpecBuilder:
 
 
 def _specs_with_commits(spec):
-    if not spec.package.needs_commit(spec.version):
+    pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
+    if not pkg_class.needs_commit(spec.version):
         return
 
     if isinstance(spec.version, spack.version.GitVersion):
         if "commit" not in spec.variants and spec.version.commit_sha:
             spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
 
-    spec.package.resolve_binary_provenance()
+    pkg_class._resolve_git_provenance(spec)
 
     if "commit" not in spec.variants:
         tty.warn(

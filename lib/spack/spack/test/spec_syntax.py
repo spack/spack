@@ -92,7 +92,7 @@ def specfile_for(default_mock_concretization):
         (
             "platform=test",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="platform=test")],
-            "arch=test-None-None",
+            "platform=test",
         ),
         # Multiple tokens anonymous specs
         (
@@ -392,27 +392,27 @@ def specfile_for(default_mock_concretization):
         (
             r"os=fe",  # Various translations associated with the architecture
             [Token(SpecTokens.KEY_VALUE_PAIR, value="os=fe")],
-            "arch=test-debian6-None",
+            "platform=test os=debian6",
         ),
         (
             r"os=default_os",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="os=default_os")],
-            "arch=test-debian6-None",
+            "platform=test os=debian6",
         ),
         (
             r"target=be",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="target=be")],
-            f"arch=test-None-{spack.platforms.test.Test.default}",
+            f"platform=test target={spack.platforms.test.Test.default}",
         ),
         (
             r"target=default_target",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="target=default_target")],
-            f"arch=test-None-{spack.platforms.test.Test.default}",
+            f"platform=test target={spack.platforms.test.Test.default}",
         ),
         (
             r"platform=linux",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="platform=linux")],
-            r"arch=linux-None-None",
+            r"platform=linux",
         ),
         # Version hash pair
         (
@@ -495,7 +495,7 @@ def specfile_for(default_mock_concretization):
         (
             r"target=:broadwell,icelake",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="target=:broadwell,icelake")],
-            r"arch=None-None-:broadwell,icelake",
+            r"target=:broadwell,icelake",
         ),
         # Hash pair version followed by a variant
         (
@@ -635,7 +635,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.VERSION, value="@10.4.0:10,11.3.0:"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="target=aarch64:"),
             ],
-            "@10.4.0:10,11.3.0: arch=None-None-aarch64:",
+            "@10.4.0:10,11.3.0: target=aarch64:",
         ),
         (
             "@:0.4 % nvhpc",
@@ -883,7 +883,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.KEY_VALUE_PAIR, "languages:=c,c++"),
                 Token(SpecTokens.KEY_VALUE_PAIR, "target=x86_64"),
             ],
-            "mvapich %gcc languages:='c,c++' arch=None-None-x86_64",
+            "mvapich %gcc languages:='c,c++' target=x86_64",
         ),
         # Test conditional dependencies
         (

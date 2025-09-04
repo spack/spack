@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
+import json
 import os
 import pathlib
 import re
@@ -94,6 +95,22 @@ def test_config_scopes_path_section():
 
 def test_get_config_scope(mock_low_high_config):
     assert config("get", "compilers").strip() == "compilers: {}"
+
+
+def test_get_config_roundtrip(mutable_config):
+    """Test that ``spack config get [--json] <section>`` roundtrips correctly."""
+    json_roundtrip = json.loads(config("get", "--json", "config"))
+    yaml_roundtrip = syaml.load(config("get", "config"))
+    assert json_roundtrip["config"] == yaml_roundtrip["config"] == mutable_config.get("config")
+
+
+def test_get_all_config_roundtrip(mutable_config):
+    """Test that ``spack config get [--json]`` roundtrips correctly."""
+    json_roundtrip = json.loads(config("get", "--json"))
+    yaml_roundtrip = syaml.load(config("get"))
+    assert json_roundtrip == yaml_roundtrip
+    for section in spack.config.SECTION_SCHEMAS:
+        assert json_roundtrip["spack"][section] == mutable_config.get(section)
 
 
 def test_get_config_scope_merged(mock_low_high_config):

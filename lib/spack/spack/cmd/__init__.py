@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+import textwrap
 from collections import Counter
 from typing import Generator, List, Optional, Sequence, Union
 
@@ -330,7 +331,11 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{ arch=architecture} {%compiler.name}{@compiler.version}"
+    format_string = (
+        "{name}{@version}"
+        "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
+        "{%compiler.name}{@compiler.version}"
+    )
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -658,20 +663,20 @@ def require_active_env(cmd_name):
     )
 
 
-def find_environment(args):
+def find_environment(args: argparse.Namespace) -> Optional[ev.Environment]:
     """Find active environment from args or environment variable.
 
     Check for an environment in this order:
-        1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
-        2. via a path in the spack.environment.spack_env_var environment variable.
+
+    1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
+    2. via a path in the spack.environment.spack_env_var environment variable.
 
     If an environment is found, read it in.  If not, return None.
 
     Arguments:
-        args (argparse.Namespace): argparse namespace with command arguments
+        args: argparse namespace with command arguments
 
-    Returns:
-        (spack.environment.Environment): a found environment, or ``None``
+    Returns: a found environment, or ``None``
     """
 
     # treat env as a name
@@ -701,9 +706,23 @@ def find_environment(args):
     raise ev.SpackEnvironmentError("no environment in %s" % env)
 
 
-def first_line(docstring):
+def doc_first_line(function: object) -> Optional[str]:
     """Return the first line of the docstring."""
-    return docstring.split("\n")[0]
+    return function.__doc__.split("\n", 1)[0].strip() if function.__doc__ else None
+
+
+if sys.version_info >= (3, 13):
+    # indent of __doc__ is automatically removed in 3.13+
+    # see https://github.com/python/cpython/commit/2566b74b26bcce24199427acea392aed644f4b17
+    def doc_dedented(function: object) -> Optional[str]:
+        """Return the docstring with leading indentation removed."""
+        return function.__doc__
+
+else:
+
+    def doc_dedented(function: object) -> Optional[str]:
+        """Return the docstring with leading indentation removed."""
+        return textwrap.dedent(function.__doc__) if function.__doc__ else None
 
 
 def converted_arg_length(arg: str):
@@ -740,7 +759,7 @@ def group_arguments(
         max_group_size: max number of elements in any group (default 500)
         prefix_length: length of any additional arguments (including spaces) to be passed before
             the groups from args; default is 0 characters
-        max_group_length: max length of characters that if a group of args is joined by " "
+        max_group_length: max length of characters that if a group of args is joined by ``" "``
             On unix, ths defaults to SC_ARG_MAX from sysconf. On Windows the default is
             the max usable for CreateProcess (32,768 chars)
 

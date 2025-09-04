@@ -158,7 +158,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         """Format help on sections for a particular verbosity level.
 
         Args:
-            level (str): 'short' or 'long' (more commands shown for long)
+            level (str): ``"short"`` or ``"long"`` (more commands shown for long)
         """
         if level not in levels:
             raise ValueError("level must be one of: %s" % levels)
@@ -364,7 +364,7 @@ def make_argument_parser(**kwargs):
         action="store_const",
         const="long",
         default=None,
-        help="show help for all commands (same as spack help --all)",
+        help="show help for all commands (same as ``spack help --all``)",
     )
     parser.add_argument(
         "--color",
@@ -746,7 +746,7 @@ def print_setup_info(*info):
 
     Args:
         info (list): list of things to print: comma-separated list
-            of 'csh', 'sh', or 'modules'
+            of ``"csh"``, ``"sh"``, or ``"modules"``
 
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
@@ -802,10 +802,10 @@ def print_setup_info(*info):
 
 def restore_macos_dyld_vars():
     """
-    Spack mutates DYLD_* variables in `spack load` and `spack env activate`.
+    Spack mutates ``DYLD_*`` variables in ``spack load`` and ``spack env activate``.
     Unlike Linux, macOS SIP clears these variables in new processes, meaning
-    that os.environ["DYLD_*"] in our Python process is not the same as the user's
-    shell. Therefore, we store the user's DYLD_* variables in SPACK_DYLD_* and
+    that ``os.environ["DYLD_*"]`` in our Python process is not the same as the user's
+    shell. Therefore, we store the user's ``DYLD_*`` variables in ``SPACK_DYLD_*`` and
     restore them here.
     """
     if not sys.platform == "darwin":
@@ -883,7 +883,7 @@ def add_command_line_scopes(
     command_line_scopes: List[Any],  # str or _ENV but mypy can't type sentinels
     add_environment: Callable[[ConfigScopePriority], None],
 ) -> None:
-    """Add additional scopes from the --config-scope argument, either envs or dirs.
+    """Add additional scopes from the ``--config-scope`` argument, either envs or dirs.
 
     Args:
         cfg: configuration instance
@@ -982,13 +982,18 @@ def _main(argv=None):
     if not args.no_env:
         try:
             env = spack.cmd.find_environment(args)
-        except spack.config.ConfigFormatError as e:
+        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError) as e:
             # print the context but delay this exception so that commands like
             # `spack config edit` can still work with a bad environment.
             e.print_context()
             env_format_error = e
 
     def add_environment_scope(priority):
+        if env_format_error:
+            # Allow command to continue without env in case it is `spack config edit`
+            # All other cases will raise in `finish_parse_and_run`
+            spack.environment.environment._active_environment_error = env_format_error
+            return
         # do not call activate here, as it has a lot of expensive function calls to deal
         # with mutation of spack.config.CONFIG -- but we are still building the config.
         env.manifest.prepare_config_scope(priority)

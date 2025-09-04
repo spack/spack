@@ -1889,9 +1889,14 @@ class TestConcretize:
             # version_declared("pkg-b","0.9",1,"package_py").
             # version_declared("pkg-b","1.0",2,"installed").
             # version_declared("pkg-b","0.9",3,"installed").
-            v_weights = [x for x in result.criteria if x[2] == "version badness (non roots)"][0]
-            reused_weights, built_weights, _ = v_weights
-            assert reused_weights > 2 and built_weights == 0
+            weights = {}
+            for x in [x for x in result.criteria if x.name == "version badness (non roots)"]:
+                if x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
+                    weights["reused"] = x.value
+                else:
+                    weights["built"] = x.value
+
+            assert weights["reused"] > 2 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
@@ -3325,14 +3330,22 @@ packages:
     assert s["c"].satisfies("gcc@9.4.0")
 
 
-def test_compiler_can_depend_on_themselves_to_build(config, mock_packages):
+@pytest.mark.parametrize(
+    "spec_str,expected",
+    [
+        ("gcc@14 %gcc@9.4.0", ["gcc@14", "%c,cxx=gcc@9.4.0", "^gcc-runtime@9.4.0"]),
+        # If we don't specify a compiler, we should get the default compiler which is gcc
+        ("gcc@14", ["gcc@14", "%c,cxx=gcc@10", "^gcc-runtime@10"]),
+    ],
+)
+def test_compiler_can_depend_on_themselves_to_build(
+    spec_str, expected, default_mock_concretization
+):
     """Tests that a compiler can depend on "itself" to bootstrap."""
-    s = spack.concretize.concretize_one("gcc@14 %gcc@9.4.0")
-    assert s.satisfies("gcc@14")
-    assert s.satisfies("^gcc-runtime@9.4.0")
-
-    gcc_used_to_build = s.dependencies(name="gcc", virtuals=("c",))
-    assert len(gcc_used_to_build) == 1 and gcc_used_to_build[0].satisfies("gcc@9.4.0")
+    s = default_mock_concretization(spec_str)
+    assert not s.external
+    for c in expected:
+        assert s.satisfies(c)
 
 
 def test_compiler_attribute_is_tolerated_in_externals(
@@ -4052,3 +4065,97 @@ packages:
         s = spack.concretize.concretize_one(spec_str)
         assert s.external
         assert s.prefix == "/path/mpich/gcc"
+
+
+@pytest.mark.regression("51146,51067")
+def test_caret_in_input_cannot_set_transitive_build_dependencies(default_mock_concretization):
+    """Tests that a caret in the input spec does not set transitive build dependencies, and errors
+    with an appropriate message.
+    """
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="transitive 'link' or"):
+        _ = default_mock_concretization("multivalue-variant ^gmake")
+
+
+@pytest.mark.regression("51167")
+@pytest.mark.require_provenance
+def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypatch):
+    """Tests that an implicit commit variant, obtained from resolving the commit sha of a branch,
+    enters the hash of the spec.
+    """
+
+    first_call = True
+
+    def _mock_resolve(spec) -> None:
+        if first_call:
+            spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'b' * 40}")
+            return
+
+        spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'a' * 40}")
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _mock_resolve)
+
+    before = spack.concretize.concretize_one("git-ref-package@develop")
+    first_call = False
+    after = spack.concretize.concretize_one("git-ref-package@develop")
+
+    assert before.package.needs_commit(before.version)
+    assert before.satisfies(f"commit={'b' * 40}")
+    assert after.satisfies(f"commit={'a' * 40}")
+    assert before.dag_hash() != after.dag_hash()
+
+
+@pytest.mark.regression("51180")
+def test_reuse_with_mixed_compilers(mutable_config, mock_packages):
+    """Tests that potentially reusing a spec with a mixed compiler set, will not interfere
+    with a request on one of the languages for the same package.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@15.1 languages='c,c++,fortran'"
+      prefix: /path1
+      extra_attributes:
+        compilers:
+          c: /path1/bin/gcc
+          cxx: /path1/bin/g++
+          fortran: /path1/bin/gfortran
+  llvm:
+    externals:
+    - spec: "llvm@20 +flang+clang"
+      prefix: /path2
+      extra_attributes:
+        compilers:
+          c: /path2/bin/clang
+          cxx: /path2/bin/clang++
+          fortran: /path2/bin/flang
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    s = spack.concretize.concretize_one("openblas %c=gcc %fortran=llvm")
+    reusable_specs = list(s.traverse(root=True))
+
+    root_specs = [Spec("openblas %fortran=gcc")]
+
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reusable_specs)
+
+    assert len(result.specs) == 1
+    r = result.specs[0]
+    assert r.satisfies("openblas %fortran=gcc")
+    assert r.dag_hash() != s.dag_hash()
+
+
+@pytest.mark.regression("51224")
+def test_when_possible_above_all(mutable_config, mock_packages):
+    """Tests that the criterion to solve as many specs as possible is above all other criteria."""
+    specs = [Spec("pkg-a"), Spec("pkg-b")]
+    solver = spack.solver.asp.Solver()
+
+    for result in solver.solve_in_rounds(specs):
+        criteria = sorted(result.criteria, reverse=True)
+        assert criteria[0].name == "number of input specs not concretized"

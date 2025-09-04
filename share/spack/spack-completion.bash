@@ -839,7 +839,7 @@ _spack_config() {
 _spack_config_get() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --json"
     else
         _config_sections
     fi

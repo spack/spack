@@ -22,29 +22,29 @@ def _spec_type(component):
 class PackagePrefs:
     """Defines the sort order for a set of specs.
 
-    Spack's package preference implementation uses PackagePrefss to
+    Spack's package preference implementation uses PackagePrefs to
     define sort order. The PackagePrefs class looks at Spack's
     packages.yaml configuration and, when called on a spec, returns a key
     that can be used to sort that spec in order of the user's
     preferences.
 
-    You can use it like this:
+    You can use it like this::
 
        # key function sorts CompilerSpecs for `mpich` in order of preference
-       kf = PackagePrefs('mpich', 'compiler')
+       kf = PackagePrefs("mpich", "compiler")
        compiler_list.sort(key=kf)
 
-    Or like this:
+    Or like this::
 
        # key function to sort VersionLists for OpenMPI in order of preference.
-       kf = PackagePrefs('openmpi', 'version')
+       kf = PackagePrefs("openmpi", "version")
        version_list.sort(key=kf)
 
     Optionally, you can sort in order of preferred virtual dependency
-    providers.  To do that, provide 'providers' and a third argument
-    denoting the virtual package (e.g., ``mpi``):
+    providers.  To do that, provide ``"providers"`` and a third argument
+    denoting the virtual package (e.g., ``mpi``)::
 
-       kf = PackagePrefs('trilinos', 'providers', 'mpi')
+       kf = PackagePrefs("trilinos", "providers", "mpi")
        provider_spec_list.sort(key=kf)
 
     """

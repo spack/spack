@@ -101,12 +101,12 @@ def create(path, specs, skip_unstable_versions=False):
             they do not have a stable archive checksum (as determined by
             ``fetch_strategy.stable_target``)
 
-    Return Value:
-        Returns a tuple of lists: (present, mirrored, error)
+    Returns:
+        A tuple of lists, each containing specs
 
-        * present:  Package specs that were already present.
+        * present: Package specs that were already present.
         * mirrored: Package specs that were successfully mirrored.
-        * error:    Package specs that failed to mirror due to some error.
+        * error: Package specs that failed to mirror due to some error.
     """
     # automatically spec-ify anything in the specs array.
     specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]

@@ -99,7 +99,7 @@ def output_filter(filter_fn):
 
 
 class SuppressOutput:
-    """Class for disabling output in a scope using 'with' keyword"""
+    """Class for disabling output in a scope using ``with`` keyword"""
 
     def __init__(self, msg_enabled=True, warn_enabled=True, error_enabled=True):
         self._msg_enabled_initial = _msg_enabled
@@ -127,7 +127,7 @@ def set_stacktrace(flag):
 
 
 def process_stacktrace(countback):
-    """Gives file and line frame 'countback' frames from the bottom"""
+    """Gives file and line frame ``countback`` frames from the bottom"""
     st = traceback.extract_stack()
     # Not all entries may be spack files, we have to remove those that aren't.
     file_list = []
@@ -286,7 +286,7 @@ def hline(label=None, **kwargs):
     """Draw a labeled horizontal line.
 
     Keyword Arguments:
-        char (str): Char to draw the line with.  Default '-'
+        char (str): Char to draw the line with.  Default ``-``
         max_width (int): Maximum width of the line.  Default is 64 chars.
     """
     char = kwargs.pop("char", "-")

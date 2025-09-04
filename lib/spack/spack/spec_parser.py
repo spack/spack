@@ -43,17 +43,17 @@ Here is the EBNF grammar for a spec::
     vid           = [a-zA-Z0-9_][a-zA-Z_0-9-.]*
     id            = [a-zA-Z0-9_][a-zA-Z_0-9-]*
 
-Identifiers using the <name>=<value> command, such as architectures and
+Identifiers using the ``<name>=<value>`` command, such as architectures and
 compiler flags, require a space before the name.
 
-There is one context-sensitive part: ids in versions may contain '.', while
+There is one context-sensitive part: ids in versions may contain ``.``, while
 other ids may not.
 
-There is one ambiguity: since '-' is allowed in an id, you need to put
-whitespace space before -variant for it to be tokenized properly.  You can
-either use whitespace, or you can just use ~variant since it means the same
-thing.  Spack uses ~variant in directory names and in the canonical form of
-specs to avoid ambiguity.  Both are provided because ~ can cause shell
+There is one ambiguity: since ``-`` is allowed in an id, you need to put
+whitespace space before ``-variant`` for it to be tokenized properly.  You can
+either use whitespace, or you can just use ``~variant`` since it means the same
+thing.  Spack uses ``~variant`` in directory names and in the canonical form of
+specs to avoid ambiguity.  Both are provided because ``~`` can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import json
@@ -76,12 +76,12 @@ from spack.llnl.util.tty import color
 from spack.tokenize import Token, TokenBase, Tokenizer
 
 #: Valid name for specs and variants. Here we are not using
-#: the previous "w[\w.-]*" since that would match most
+#: the previous ``w[\w.-]*`` since that would match most
 #: characters that can be part of a word in any language
 IDENTIFIER = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9\-]*)"
 DOTTED_IDENTIFIER = rf"(?:{IDENTIFIER}(?:\.{IDENTIFIER})+)"
 GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
-#: Git refs include branch names, and can contain "." and "/"
+#: Git refs include branch names, and can contain ``.`` and ``/``
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 
@@ -112,8 +112,8 @@ VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VER
 
 SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 
-#: A filename starts either with a "." or a "/" or a "{name}/, or on Windows, a drive letter
-#: followed by a colon and "\" or "." or {name}\
+#: A filename starts either with a ``.`` or a ``/`` or a ``{name}/``, or on Windows, a drive letter
+#: followed by a colon and ``\`` or ``.`` or ``{name}\``
 WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?:\.json|\.yaml)"
 UNIX_FILENAME = r"(?:\.|\/|[a-zA-Z0-9-_]*\/)(?:[a-zA-Z0-9-_\.\/]*)(?:\.json|\.yaml)"
 FILENAME = WINDOWS_FILENAME if sys.platform == "win32" else UNIX_FILENAME
@@ -276,18 +276,20 @@ def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
     """Look at subvalues and, if present, extract virtual and a push a substitute token.
 
     This handles things like:
-        * ^c=gcc
-        * ^c,cxx=gcc
-        * %[when=+bar] c=gcc
-        * %[when=+bar] c,cxx=gcc
+
+    * ``^c=gcc``
+    * ``^c,cxx=gcc``
+    * ``%[when=+bar] c=gcc``
+    * ``%[when=+bar] c,cxx=gcc``
 
     Virtual assignment can happen anywhere a dependency node can appear. It is
-    shorthand for %[virtuals=c,cxx] gcc.
+    shorthand for ``%[virtuals=c,cxx] gcc``.
 
-    The virtuals=substitute key value pair appears in the subvalues of DEPENDENCY
-    and END_EDGE_PROPERTIES tokens. We extract the virutals and create a token from
-    the substitute, which is then pushed back on the parser stream so that the head
-    of the stream can be parsed like a regular node.
+    The ``virtuals=substitute`` key value pair appears in the subvalues of
+    :attr:`~spack.spec_parser.SpecTokens.DEPENDENCY` and
+    :attr:`~spack.spec_parser.SpecTokens.END_EDGE_PROPERTIES` tokens. We extract the virtuals and
+    create a token from the substitute, which is then pushed back on the parser stream so that the
+    head of the stream can be parsed like a regular node.
 
     Returns:
         the virtuals assigned, or None if there aren't any
@@ -343,7 +345,7 @@ class SpecParser:
             initial_spec: object where to parse the spec. If None a new one
                 will be created.
 
-        Return
+        Return:
             The spec that was parsed
         """
         if not self.ctx.next_token:
@@ -487,7 +489,7 @@ class SpecNodeParser:
             initial_spec: object to be constructed
             root: True if we're parsing a root, False if dependency after ^ or %
 
-        Return
+        Return:
             The object passed as argument
         """
         parser_warnings: List[str] = []
@@ -607,7 +609,7 @@ class FileParser:
         Args:
             initial_spec: object where to parse the spec
 
-        Return
+        Return:
             The initial_spec passed as argument, once constructed
         """
         file = pathlib.Path(self.ctx.current_token.value)
@@ -730,9 +732,10 @@ def strip_quotes_and_unescape(string: str) -> str:
 def quote_if_needed(value: str) -> str:
     """Add quotes around the value if it requires quotes.
 
-    This will add quotes around the value unless it matches ``NO_QUOTES_NEEDED``.
+    This will add quotes around the value unless it matches :data:`NO_QUOTES_NEEDED`.
 
     This adds:
+
     * single quotes by default
     * double quotes around any value that contains single quotes
 

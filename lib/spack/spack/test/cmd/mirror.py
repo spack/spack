@@ -583,7 +583,7 @@ def test_mirror_add_set_autopush(mutable_config):
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize("mirror_knows_commit", (True, False))
-def test_binary_provenance_url_fails_mirror_resolves_commit(
+def test_git_provenance_url_fails_mirror_resolves_commit(
     git,
     mock_git_repository,
     mock_packages,
@@ -609,14 +609,15 @@ def test_binary_provenance_url_fails_mirror_resolves_commit(
     mirror("add", "--type", "source", "test-mirror", mirror_path)
 
     spec = spack.concretize.concretize_one("git-test-commit@main")
-    assert spec.package.stage.archive_file
+
+    assert spec.package.fetcher.source_id() == gold_commit
     assert "commit" in spec.variants
     assert spec.variants["commit"].value == gold_commit
 
 
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
-def test_binary_provenance_relative_to_mirror(
+def test_git_provenance_relative_to_mirror(
     git, mock_git_version_info, mock_packages, monkeypatch, tmp_path: pathlib.Path, mutable_config
 ):
     """Integration test to evaluate how commit resolution should behave with a mirror
