@@ -18,7 +18,7 @@ import os
 import pathlib
 import re
 import sys
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
 
 import spack.config
 import spack.error
@@ -29,6 +29,9 @@ import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
 from spack.llnl.util import tty
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 
 def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:

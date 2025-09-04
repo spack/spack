@@ -6,7 +6,7 @@ import hashlib
 import os
 import pathlib
 import sys
-from typing import Any, Dict, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Type, Union
 
 import spack
 import spack.error
@@ -18,6 +18,9 @@ import spack.util.spack_json as sjson
 from spack.llnl.url import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 
 def apply_patch(

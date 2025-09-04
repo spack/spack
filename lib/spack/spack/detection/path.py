@@ -12,7 +12,7 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import spack.error
 import spack.llnl.util.filesystem
@@ -36,6 +36,9 @@ from .common import (
     library_prefix,
     path_to_dict,
 )
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 #: Timeout used for package detection (seconds)
 DETECTION_TIMEOUT = 60
