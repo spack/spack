@@ -1592,23 +1592,6 @@ unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
 
 error(100, "Compiler mixing is disabled") :- #count { X,Y,Z : unification_set_compiler("root", X,Y,Z) } > 1.
 
-%:- hash_attr(ParentHash, "concrete_build_dependency", "dt-diamond-left", "gcc", CompilerHash),
-%hash_attr(ParentHash, "virtual_on_build_edge", "dt-diamond-left", "gcc", "c"),
-%hash_attr(CompilerHash, "virtual_on_incoming_edges", "gcc", "c"),
-%hash_attr(CompilerHash, "version", "gcc", CompilerVersion),
-%compiler_mixing(0, "c"),
-%language("c"),
-%not allow_mixing("dt-diamond-left"),
-%attr("hash", ParentNode, ParentHash). <--- it all works up to here
-%attr("hash", CompilerNode, CompilerHash).
-
-%:- attr("hash", node(_, "apple-clang"), _).
-
-%error(100, "Compiler mixing is disabled") :-
-%    unification_set_compiler(X, CompilerNode1, Language),
-%    unification_set_compiler(X, CompilerNode2, Language),
-%    CompilerNode1 != CompilerNode2.
-
 %-----------------------------------------------------------------------------
 % Runtimes
 %-----------------------------------------------------------------------------
