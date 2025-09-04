@@ -1578,10 +1578,11 @@ unification_set_compiler("root", CompilerNode, Language) :-
     not allow_mixing(NodeName),
     unification_set("root", node(NodeID, NodeName)).
 
-unification_set_compiler("root", CompilerNode, Language) :- 
+unification_set_compiler("root", node(CompilerID, CompilerName), Language) :- 
     unification_set("root", ParentNode),
     attr("hash", ParentNode, ParentHash),
-    attr("hash", CompilerNode, CompilerHash),
+    external(node(CompilerID, CompilerName)),
+    attr("version", node(CompilerID, CompilerName), CompilerVersion),
     not allow_mixing(ParentName),
     hash_attr(ParentHash, "concrete_build_dependency", ParentName, CompilerName, CompilerHash),
     hash_attr(ParentHash, "virtual_on_build_edge", ParentName, CompilerName, Language),
@@ -1589,6 +1590,21 @@ unification_set_compiler("root", CompilerNode, Language) :-
     hash_attr(CompilerHash,"version", CompilerName, CompilerVersion),
     compiler_mixing(0, Language),
     language(Language).
+
+:- external(node(_, "apple-clang")).
+%:- real_node(node(_, "apple-clang")).
+
+%:- hash_attr(ParentHash, "concrete_build_dependency", "dt-diamond-left", "gcc", CompilerHash),
+%hash_attr(ParentHash, "virtual_on_build_edge", "dt-diamond-left", "gcc", "c"),
+%hash_attr(CompilerHash, "virtual_on_incoming_edges", "gcc", "c"),
+%hash_attr(CompilerHash, "version", "gcc", CompilerVersion),
+%compiler_mixing(0, "c"),
+%language("c"),
+%not allow_mixing("dt-diamond-left"),
+%attr("hash", ParentNode, ParentHash). <--- it all works up to here
+%attr("hash", CompilerNode, CompilerHash).
+
+%:- attr("hash", node(_, "apple-clang"), _).
 
 error(100, "Compiler mixing is disabled") :-
     unification_set_compiler(X, CompilerNode1, Language),
