@@ -438,12 +438,15 @@ def test_null_variant_for_requested_version(concretize_scope, test_repo):
 
 
 # Error message for requirement introduced in the package
-# definition is bad (not informative)
+# definition is bad without ea7ab09
 def test_errmsg_requirements_1(concretize_scope, test_repo):
     # w4 has: depends_on("w3+v1", when="@2.0")
     # w3 has: requires("~v1", when="@2.1")
-    # NOTE: the error message can be made good by changing
-    # W4 constraint on W3 from
+
+    # Prior to ea7ab09, the version constraints heavily affect
+    # the quality of error messages.
+    # Before that commit, the error message can be made good by
+    # changing W4 constraint on W3 from
     # depends_on("w3+v1", when="@2.0")
     # to
     # depends_on("w3+v1", when="@:2.0")
@@ -451,8 +454,7 @@ def test_errmsg_requirements_1(concretize_scope, test_repo):
         concretize_one("w4@:2.0 ^w3@2.1")
 
 
-# This error message is short. Would it be good if I encoded
-# it in the package.py?
+# This error message is short without ea7ab09
 def test_errmsg_requirements_2(concretize_scope, test_repo):
     conf_str = """\
 packages:
@@ -464,9 +466,11 @@ packages:
 """
     update_packages_config(conf_str)
 
-    # NOTE: for the error message to be good, *both* spots have to
-    # be in EX-1-format.
-    # NOTE: this can also be fixed by updating the W4 package: replace
+    # Prior to ea7ab09, the version constraints heavily affect
+    # the quality of error messages.
+    # For the error message to be good (before that commit),
+    # *both* spots have to be in EX-1-format.
+    # this can also be fixed by updating the W4 package: replace
     # depends_on("w2@:2.0", when="@:2.0")
     # with
     # depends_on("w2@2.0", when="@2.0")
