@@ -337,7 +337,7 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
+error(10000, "Cannot satisfy '{0}@{1}' (={2})", Package, Constraint, Version)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)).
