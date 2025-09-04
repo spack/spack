@@ -1582,10 +1582,12 @@ unification_set_compiler("root", CompilerNode, Language) :-
     unification_set("root", ParentNode),
     attr("hash", ParentNode, ParentHash),
     attr("hash", CompilerNode, CompilerHash),
+    not allow_mixing(ParentName),
     hash_attr(ParentHash, "concrete_build_dependency", ParentName, CompilerName, CompilerHash),
     hash_attr(ParentHash, "virtual_on_build_edge", ParentName, CompilerName, Language),
     hash_attr(CompilerHash, "virtual_on_incoming_edges", CompilerName, Language),
     hash_attr(CompilerHash,"version", CompilerName, CompilerVersion),
+    compiler_mixing(0, Language),
     language(Language).
 
 error(100, "Compiler mixing is disabled") :-
