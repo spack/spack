@@ -1547,16 +1547,19 @@ def test_ci_help(subcmd, capsys):
     assert usage in out
 
 
-def test_cmd_first_line():
-    """Explicitly test first_line since not picked up in test_ci_help."""
-    first = "This is a test."
-    doc = """{0}
+def test_docstring_utils():
+    def example_function():
+        """\
+        this is the first line
 
-    Is there more to be said?""".format(
-        first
+        this is not the first line
+        """
+        pass
+
+    assert spack.cmd.doc_first_line(example_function) == "this is the first line"
+    assert spack.cmd.doc_dedented(example_function) == (
+        "this is the first line\n\nthis is not the first line\n"
     )
-
-    assert spack.cmd.first_line(doc) == first
 
 
 @pytest.mark.skip(reason="Gitlab CI was removed from Spack")

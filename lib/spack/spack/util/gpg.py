@@ -36,7 +36,7 @@ def init(gnupghome=None, force=False):
     When calling any gpg executable, the GNUPGHOME environment
     variable is set to:
 
-    1. The value of the `gnupghome` argument, if not None
+    1. The value of the ``gnupghome`` argument, if not None
     2. The value of the "SPACK_GNUPGHOME" environment variable, if set
     3. The default gpg path for Spack otherwise
 

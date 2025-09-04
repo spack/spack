@@ -38,7 +38,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_const",
         dest="format",
         const="{/hash}",
-        help="same as '--format {/hash}'; use with xargs or $()",
+        help="same as ``--format {/hash}``; use with ``xargs`` or ``$()``",
     )
     format_group.add_argument(
         "--json",
@@ -238,7 +238,7 @@ def make_env_decorator(env):
 def display_env(env, args, decorator, results):
     """Display extra find output when running in an environment.
 
-    In an environment, `spack find` outputs a preliminary section
+    In an environment, ``spack find`` outputs a preliminary section
     showing the root specs of the environment (this is in addition
     to the section listing out specs matching the query parameters).
 

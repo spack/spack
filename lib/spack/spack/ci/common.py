@@ -232,9 +232,9 @@ class CDashHandler:
     def build_name(self, spec: Optional[spack.spec.Spec] = None) -> Optional[str]:
         """Returns the CDash build name.
 
-        A name will be generated if the `spec` is provided,
+        A name will be generated if the ``spec`` is provided,
         otherwise, the value will be retrieved from the environment
-        through the `SPACK_CDASH_BUILD_NAME` variable.
+        through the ``SPACK_CDASH_BUILD_NAME`` variable.
 
         Returns: (str) given spec's CDash build name."""
         if spec:

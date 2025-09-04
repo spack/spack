@@ -8,13 +8,13 @@ import re
 
 import spack.llnl.util.lang
 from spack.util.executable import Executable
-from spack.version import Version
+from spack.version import StandardVersion, Version
 
 from ._operating_system import OperatingSystem
 
 
 @spack.llnl.util.lang.memoized
-def macos_version():
+def macos_version() -> StandardVersion:
     """Get the current macOS version as a version object.
 
     This has three mechanisms for determining the macOS version, which is used
@@ -43,7 +43,7 @@ def macos_version():
     """
     env_ver = os.environ.get("MACOSX_DEPLOYMENT_TARGET", None)
     if env_ver:
-        return Version(env_ver)
+        return StandardVersion.from_string(env_ver)
 
     try:
         output = Executable("sw_vers")(output=str, fail_on_error=False)
@@ -53,11 +53,11 @@ def macos_version():
     else:
         match = re.search(r"ProductVersion:\s*([0-9.]+)", output)
         if match:
-            return Version(match.group(1))
+            return StandardVersion.from_string(match.group(1))
 
     # Fall back to python-reported version, which can be inaccurate around
     # macOS 11 (e.g. showing 10.16 for macOS 12)
-    return Version(py_platform.mac_ver()[0])
+    return StandardVersion.from_string(py_platform.mac_ver()[0])
 
 
 @spack.llnl.util.lang.memoized

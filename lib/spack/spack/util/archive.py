@@ -9,7 +9,7 @@ import pathlib
 import tarfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, Generator, List, Tuple
 
 from spack.llnl.util import tty
 from spack.llnl.util.filesystem import readlink
@@ -97,15 +97,19 @@ class ChecksumWriter(io.BufferedIOBase):
 
 
 @contextmanager
-def gzip_compressed_tarfile(path):
+def gzip_compressed_tarfile(
+    path: str,
+) -> Generator[Tuple[tarfile.TarFile, ChecksumWriter, ChecksumWriter], None, None]:
     """Create a reproducible, gzip compressed tarfile, and keep track of shasums of both the
     compressed and uncompressed tarfile. Reproduciblity is achived by normalizing the gzip header
     (no file name and zero mtime).
 
-    Yields a tuple of the following:
-        tarfile.TarFile: tarfile object
-        ChecksumWriter: checksum of the gzip compressed tarfile
-        ChecksumWriter: checksum of the uncompressed tarfile
+    Yields:
+        A tuple of three elements
+
+        * :class:`tarfile.TarFile`: tarfile object
+        * :class:`ChecksumWriter`: checksum of the gzip compressed tarfile
+        * :class:`ChecksumWriter`: checksum of the uncompressed tarfile
     """
     # Create gzip compressed tarball of the install prefix
     # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.

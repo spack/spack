@@ -38,7 +38,7 @@ in the lockfile.
         "-s",
         "--static",
         action="store_true",
-        help="graph static (possible) deps, don't concretize (implies --dot)",
+        help="graph static (possible) deps, don't concretize (implies ``--dot``)",
     )
     subparser.add_argument(
         "-c",

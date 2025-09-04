@@ -78,10 +78,10 @@ class CDash(Reporter):
     ``spack install``::
 
         spack install --cdash-upload-url=\\
-            https://mydomain.com/cdash/submit.php?project=Spack <spec>
+            https://example.com/cdash/submit.php?project=Spack <spec>
 
     In this example, results will be uploaded to the *Spack* project on the
-    CDash instance hosted at https://mydomain.com/cdash.
+    CDash instance hosted at ``https://example.com/cdash``.
     """
 
     def __init__(self, configuration: CDashConfiguration):

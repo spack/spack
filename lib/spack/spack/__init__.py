@@ -70,7 +70,7 @@ def get_spack_commit() -> Optional[str]:
 def get_version() -> str:
     """Get a descriptive version of this instance of Spack.
 
-    Outputs '<PEP440 version> (<git commit sha>)'.
+    Outputs ``"<PEP440 version> (<git commit sha>)"``.
 
     The commit sha is only added when available.
     """

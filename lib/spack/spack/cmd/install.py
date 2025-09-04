@@ -384,9 +384,9 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter)
         specs_to_install = env.all_matching_specs(*specs)
         if not specs_to_install:
             msg = (
-                "Cannot install '{0}' because no matching specs are in the current environment."
-                " You can add specs to the environment with 'spack add {0}', or as part"
-                " of the install command with 'spack install --add {0}'"
+                "Cannot install '{0}' because no matching specs are in the current environment.\n"
+                " Specs can be added to the environment with 'spack add {0}',\n"
+                " or as part of the install command with 'spack install --add {0}'"
             ).format(" ".join(args.spec))
             tty.die(msg)
 

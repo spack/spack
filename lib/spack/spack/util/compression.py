@@ -279,7 +279,7 @@ def _system_7zip(archive_file):
 def decompressor_for(path: str, extension: Optional[str] = None):
     """Returns appropriate decompression/extraction algorithm function pointer
     for provided extension. If extension is none, it is computed
-    from the `path` and the decompression function is derived
+    from the ``path`` and the decompression function is derived
     from that information."""
     if not extension:
         extension = extension_from_magic_numbers(path, decompress=True)
@@ -558,7 +558,7 @@ def _maybe_abbreviate_extension(path: str, extension: str) -> str:
 
 def extension_from_magic_numbers(path: str, decompress: bool = False) -> Optional[str]:
     """Return typical extension without leading ``.`` of a compressed file or archive at the given
-    path, based on its magic numbers, similar to the `file` utility. Notice that the extension
+    path, based on its magic numbers, similar to the ``file`` utility. Notice that the extension
     returned from this function may not coincide with the file's given extension.
 
     Args:

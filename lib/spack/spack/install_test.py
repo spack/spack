@@ -12,7 +12,7 @@ import re
 import shutil
 import sys
 from collections import Counter, OrderedDict
-from typing import Callable, Iterable, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import spack.config
 import spack.error
@@ -89,13 +89,12 @@ def get_escaped_text_output(filename: str) -> List[str]:
     return [re.escape(ln) for ln in expected.split("\n")]
 
 
-def get_test_stage_dir():
+def get_test_stage_dir() -> str:
     """Retrieves the ``config:test_stage`` path to the configured test stage
     root directory
 
     Returns:
-        str: absolute path to the configured test stage root or, if none,
-            the default test stage path
+        absolute path to the configured test stage root or, if none, the default test stage path
     """
     return spack.util.path.canonicalize_path(
         spack.config.get("config:test_stage", spack.paths.default_test_path)
@@ -1129,17 +1128,17 @@ class TestSuite:
 
         write_test_suite_file(self)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Build a dictionary for the test suite.
 
         Returns:
-            dict: The dictionary contains entries for up to two keys:
+            The dictionary contains entries for up to two keys.
 
-                specs: list of the test suite's specs in dictionary form
-                alias: the alias, or name, given to the test suite if provided
+            * specs: list of the test suite's specs in dictionary form
+            * alias: the alias, or name, given to the test suite if provided
         """
         specs = [s.to_dict() for s in self.specs]
-        d = {"specs": specs}
+        d: Dict[str, Any] = {"specs": specs}
         if self.alias:
             d["alias"] = self.alias
         return d
@@ -1149,8 +1148,8 @@ class TestSuite:
         """Instantiates a TestSuite based on a dictionary specs and an
         optional alias:
 
-            specs: list of the test suite's specs in dictionary form
-            alias: the test suite alias
+        * specs: list of the test suite's specs in dictionary form
+        * alias: the test suite alias
 
         Returns:
             TestSuite: Instance created from the specs

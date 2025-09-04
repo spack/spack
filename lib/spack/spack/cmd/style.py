@@ -38,7 +38,7 @@ def grouper(iterable, n, fillvalue=None):
 exclude_paths = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
 
 #: Order in which tools should be run. flake8 is last so that it can
-#: double-check the results of other tools (if, e.g., --fix was provided)
+#: double-check the results of other tools (if, e.g., ``--fix`` was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
 tool_names = ["import", "isort", "black", "flake8", "mypy"]
@@ -55,7 +55,7 @@ def is_package(f):
     """Whether flake8 should consider a file as a core file or a package.
 
     We run flake8 with different exceptions for the core and for
-    packages, since we allow `from spack.package import *` and poking globals
+    packages, since we allow ``from spack.package import *`` and poking globals
     into packages.
     """
     return f.startswith("var/spack/") and f.endswith("package.py")
@@ -205,7 +205,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--spec-strings",
         action="store_true",
         help="upgrade spec strings in Python, JSON and YAML files for compatibility with Spack "
-        "v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: must be "
+        "v1.0 and v0.x. Example: spack style ``--spec-strings $(git ls-files)``. Note: must be "
         "used only on specs from spack v0.X.",
     )
 
@@ -488,7 +488,7 @@ def run_import_check(import_check_cmd, file_list, args):
 
 
 def validate_toolset(arg_value):
-    """Validate --tool and --skip arguments (sets of optionally comma-separated tools)."""
+    """Validate ``--tool`` and ``--skip`` arguments (sets of optionally comma-separated tools)."""
     tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
     for tool in tools:
         if tool not in tool_names:

@@ -108,7 +108,7 @@ def ensure_extension_loaded(extension, *, path):
 
 
 def load_extension(name: str) -> str:
-    """Loads a single extension into the 'spack.extensions' package.
+    """Loads a single extension into the ``spack.extensions`` package.
 
     Args:
         name: name of the extension

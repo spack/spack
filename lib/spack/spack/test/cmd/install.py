@@ -798,7 +798,7 @@ def test_install_no_add_in_env(
         # Assert using --no-add with a spec not in the env fails
         inst_out = install("--fake", "--no-add", "boost", fail_on_error=False, output=str)
 
-        assert "You can add specs to the environment with 'spack add " in inst_out
+        assert "Specs can be added to the environment with 'spack add " in inst_out
 
         # Without --add, ensure that two packages "a" get installed
         inst_out = install("--fake", "pkg-a", output=str)

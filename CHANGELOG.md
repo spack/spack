@@ -1,3 +1,27 @@
+# v1.0.1 (2025-08-11)
+
+## Bug Fixes
+
+* Ensure forward compatibility of package hashing with the upcoming Python 3.14 release. (#51042)
+* The `spack diff` command now shows differences in runtime dependencies (e.g., `gcc-runtime`, `glibc`), which were previously hidden. (#51076)
+* Fix a regression where the solver would mishandle a compiler that was required as both a build and a link dependency. (#51074)
+* Resolved issues with selecting external packages that have a specific compiler specified. (#51064)
+* Fix a bug where the concretizer would compute solution scores incorrectly when the package does not depend on a compiler. (#51037)
+* The solver now correctly evaluates and respects package requirements that specify a hash. (#51065)
+* Fix an issue where sparse checkouts for different packages could overwrite each other in a source cache or mirror. (#51080)
+* Prevent `spack repo add` from overwriting the default branch when initially cloning a repository. (#51105)
+* Add exception handling for bad URLs when fetching git provenance information. (#51022)
+* Spack no longer conflates git warning messages with command output. (#51045)
+* Fix an issue with non-path-based package repositories in environments. (#51055)
+* Spack now validates the terminal size and will fall back to `LINES` and `COLUMNS` environment variables if detection fails. (#51090)
+* Fix an issue where the package's fetcher was not being set correctly. (#51108)
+* Ensure `spack tutorial` clones Spack v1.0 instead of v0.23. (#51091)
+
+## Enhancements
+
+* Various improvements to the documentation (#51014, #51033, #51039, #51049, #51066, #51073, #51079, #51082, #51083, #51086, #51126, #51131, #51132, #51025)
+
+
 # v1.0.0 (2025-07-20)
 
 `v1.0.0` is a major feature release and a significant milestone. It introduces compiler

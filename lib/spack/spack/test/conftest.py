@@ -2364,7 +2364,7 @@ def skip_provenance_check(monkeypatch, request):
     @pytest.mark.require_provenance decorator
     """
     if "require_provenance" not in request.keywords:
-        monkeypatch.setattr(spack.package_base.PackageBase, "resolve_binary_provenance", _noop)
+        monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _noop)
 
 
 @pytest.fixture(scope="function")

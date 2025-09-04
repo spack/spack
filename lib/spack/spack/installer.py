@@ -1212,8 +1212,8 @@ def check_db(spec: "spack.spec.Spec") -> Tuple[Optional[spack.database.InstallRe
         spec: spec whose database install status is being checked
 
     Return:
-        Tuple of optional database record, and a boolean installed_in_db
-            that's ``True`` iff the spec is considered installed
+        Tuple of optional database record, and a boolean installed_in_db that's ``True`` iff the
+        spec is considered installed
     """
     try:
         rec = spack.store.STORE.db.get_record(spec)

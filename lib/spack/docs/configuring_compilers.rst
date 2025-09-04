@@ -8,7 +8,6 @@
 
 .. _compiler-config:
 
-=====================
 Configuring Compilers
 =====================
 
@@ -23,7 +22,6 @@ For convenience, Spack will automatically detect compilers as externals the firs
 
 .. _cmd-spack-compilers:
 
------------------------
 ``spack compiler list``
 -----------------------
 
@@ -50,12 +48,11 @@ To see them you need a specific option:
    -- gcc ubuntu20.04-x86_64 ---------------------------------------
     -   gcc@12.4.0
 
-Any of these compilers can be used to build Spack packages. 
+Any of these compilers can be used to build Spack packages.
 More details on how this is done can be found in :ref:`sec-specs`.
 
 .. _cmd-spack-compiler-find:
 
------------------------
 ``spack compiler find``
 -----------------------
 
@@ -65,8 +62,8 @@ If you do not see a compiler in the list shown by:
 
    $ spack compiler list
 
-but you want to use it with Spack, you can simply run ``spack compiler find`` with the
-path to where the compiler is installed.  For example:
+but you want to use it with Spack, you can simply run ``spack compiler find`` with the path to where the compiler is installed.
+For example:
 
 .. code-block:: console
 
@@ -76,10 +73,9 @@ path to where the compiler is installed.  For example:
    ==> Compilers are defined in the following files:
        /home/user/.spack/packages.yaml
 
-Or you can run ``spack compiler find`` with no arguments to force
-auto-detection.  This is useful if you do not know where compilers are
-installed, but you know that new compilers have been added to your
-``PATH``.  For example, you might load a module, like this:
+Or you can run ``spack compiler find`` with no arguments to force auto-detection.
+This is useful if you do not know where compilers are installed, but you know that new compilers have been added to your ``PATH``.
+For example, you might load a module, like this:
 
 .. code-block:: console
 
@@ -88,24 +84,20 @@ installed, but you know that new compilers have been added to your
    ==> Added 1 new compiler to /home/user/.spack/packages.yaml
        gcc@4.9.0
 
-This loads the environment module for gcc-4.9.0 to add it to
-``PATH``, and then it adds the compiler to Spack.
+This loads the environment module for gcc-4.9.0 to add it to ``PATH``, and then it adds the compiler to Spack.
 
 .. note::
 
-   By default, Spack does not fill in the ``modules:`` field in the
-   ``packages.yaml`` file.  If you are using a compiler from a
-   module, then you should add this field manually.
+   By default, Spack does not fill in the ``modules:`` field in the ``packages.yaml`` file.
+   If you are using a compiler from a module, then you should add this field manually.
    See the section on :ref:`compilers-requiring-modules`.
 
 .. _cmd-spack-compiler-info:
 
------------------------
 ``spack compiler info``
 -----------------------
 
-If you want to see additional information about specific compilers, you can run
-``spack compiler info``:
+If you want to see additional information about specific compilers, you can run ``spack compiler info``:
 
 .. code-block:: console
 
@@ -132,10 +124,9 @@ If you want to see additional information about specific compilers, you can run
        fortran: /usr/bin/gfortran-10
 
 This shows the details of the compilers that were detected by Spack.
-Notice also that we didn't have to be too specific about the version. We just said ``gcc``, and we got information
-about all the matching compilers.
+Notice also that we didn't have to be too specific about the version.
+We just said ``gcc``, and we got information about all the matching compilers.
 
-------------------------------------------
 Manual configuration of external compilers
 ------------------------------------------
 
@@ -166,9 +157,10 @@ Each compiler has an "external" entry in the file with ``extra_attributes``:
 The compiler executables are listed under ``extra_attributes:compilers``, and are keyed by language.
 Once you save the file, the configured compilers will show up in the list displayed by ``spack compilers``.
 
-You can also add compiler flags to manually configured compilers. These flags should be specified in the
-``flags`` section of the compiler specification. The valid flags are ``cflags``, ``cxxflags``, ``fflags``,
-``cppflags``, ``ldflags``, and ``ldlibs``. For example:
+You can also add compiler flags to manually configured compilers.
+These flags should be specified in the ``flags`` section of the compiler specification.
+The valid flags are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
+For example:
 
 .. code-block:: yaml
 
@@ -187,18 +179,15 @@ You can also add compiler flags to manually configured compilers. These flags sh
              cxxflags: -O3 -fPIC
              cppflags: -O3 -fPIC
 
-These flags will be treated by Spack as if they were entered from
-the command line each time this compiler is used. The compiler wrappers
-then inject those flags into the compiler command. Compiler flags
-entered from the command line will be discussed in more detail in the
-following section.
+These flags will be treated by Spack as if they were entered from the command line each time this compiler is used.
+The compiler wrappers then inject those flags into the compiler command.
+Compiler flags entered from the command line will be discussed in more detail in the following section.
 
 Some compilers also require additional environment configuration.
-Examples include Intel's oneAPI and AMD's AOCC compiler suites,
-which have custom scripts for loading environment variables and setting paths.
-These variables should be specified in the ``environment`` section of the compiler
-specification. The operations available to modify the environment are ``set``, ``unset``,
-``prepend_path``, ``append_path``, and ``remove_path``. For example:
+Examples include Intel's oneAPI and AMD's AOCC compiler suites, which have custom scripts for loading environment variables and setting paths.
+These variables should be specified in the ``environment`` section of the compiler specification.
+The operations available to modify the environment are ``set``, ``unset``, ``prepend_path``, ``append_path``, and ``remove_path``.
+For example:
 
 .. code-block:: yaml
 
@@ -216,7 +205,7 @@ specification. The operations available to modify the environment are ``set``, `
              set:
                MKL_ROOT: "/path/to/mkl/root"
              unset: # A list of environment variables to unset
-               - CC
+             - CC
              prepend_path: # Similar for append|remove_path
                LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
@@ -241,7 +230,6 @@ This is useful for forcing certain compilers to RPATH their own runtime librarie
 
 .. _compilers-requiring-modules:
 
----------------------------
 Compilers Requiring Modules
 ---------------------------
 
@@ -265,19 +253,13 @@ In such a case, you should tell Spack which module(s) to load in order to run th
              fortran: /opt/compilers/bin/gfortran-10
          modules: [gcc/10.5.0]
 
-Some compilers require special environment settings to be loaded not just
-to run, but also to execute the code they build, breaking packages that
-need to execute code they just compiled.  If it's not possible or
-practical to use a better compiler, you'll need to ensure that
-environment settings are preserved for compilers like this (i.e., you'll
-need to load the module or source the compiler's shell script).
+Some compilers require special environment settings to be loaded not just to run, but also to execute the code they build, breaking packages that need to execute code they just compiled.
+If it's not possible or practical to use a better compiler, you'll need to ensure that environment settings are preserved for compilers like this (i.e., you'll need to load the module or source the compiler's shell script).
 
-By default, Spack tries to ensure that builds are reproducible by
-cleaning the environment before building.  If this interferes with your
-compiler settings, you CAN use ``spack install --dirty`` as a workaround.
+By default, Spack tries to ensure that builds are reproducible by cleaning the environment before building.
+If this interferes with your compiler settings, you CAN use ``spack install --dirty`` as a workaround.
 Note that this MAY interfere with package builds.
 
------------------------
 Build Your Own Compiler
 -----------------------
 
@@ -293,3 +275,8 @@ Once the compiler is installed, you can start using it without additional config
 .. code-block:: spec
 
    $ spack install hdf5~mpi %gcc@14
+
+Mixing Compilers
+----------------
+
+For more options on configuring Spack to mix different compilers for different languages, see :ref:`the toolchains configuration docs <toolchains>`.

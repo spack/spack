@@ -476,6 +476,13 @@ def test_image_from_mirror():
     assert image_from_mirror(mirror) == ImageReference.from_string("example.com/image")
 
 
+def test_image_from_mirror_with_http_scheme():
+    image = image_from_mirror(spack.mirrors.mirror.Mirror({"url": "oci+http://example.com/image"}))
+    assert image.scheme == "http"
+    assert image.with_tag("latest").scheme == "http"
+    assert image.with_digest(f"sha256:{1234:064x}").scheme == "http"
+
+
 def test_image_reference_str():
     """Test that with_digest() works with Digest and str."""
     digest_str = f"sha256:{1234:064x}"

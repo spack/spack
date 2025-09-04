@@ -43,7 +43,7 @@ def inverted_dependencies():
     names to possible dependencies.
 
     Virtual packages are included as sources, so that you can query
-    dependents of, e.g., `mpi`, but virtuals are not included as
+    dependents of, e.g., ``mpi``, but virtuals are not included as
     actual dependents.
     """
     dag = collections.defaultdict(set)
