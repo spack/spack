@@ -20,7 +20,7 @@ dotenv:
   image: ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18
   tags: [ spack, service ]
   script:
-    - export REPO_DESTINATION=${CI_PROJECT_DIR}/etc/spack-packages
+    - export REPO_DESTINATION=etc/spack-packages
     - *clone_packages
     - repo_commit=$(git -C ${REPO_DESTINATION} rev-parse FETCH_HEAD)
     # When running CI from spack/spack all packages are untouched

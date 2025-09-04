@@ -26,7 +26,6 @@ from .common import (
     SpackCIError,
     ensure_expected_target_path,
     unpack_script,
-    update_env_scopes,
     write_pipeline_manifest,
 )
 from .generator_registry import generator
@@ -129,29 +128,57 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     # concrete environment directory, along with the spack.lock file.
     if not os.path.exists(concrete_env_dir):
         os.makedirs(concrete_env_dir)
-    shutil.copyfile(options.env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
-    shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
-    update_env_scopes(
-        options.env,
-        [
-            os.path.relpath(s.path, concrete_env_dir)
-            for s in cfg.scopes().values()
-            if not s.writable
-            and isinstance(s, (cfg.DirectoryConfigScope))
-            and os.path.exists(s.path)
-        ],
-        os.path.join(concrete_env_dir, "spack.yaml"),
-        # Here transforming windows paths is only required in the special case
-        # of copy_only_pipelines, a unique scenario where the generate job and
-        # child pipelines are run on different platforms. To make this compatible
-        # w/ Windows, we cannot write Windows style path separators that will be
-        # consumed on by the Posix copy job runner.
-        #
-        # TODO (johnwparent): Refactor config + cli read/write to deal only in
-        # posix style paths
-        transform_windows_paths=(options.pipeline_type == PipelineType.COPY_ONLY),
-    )
+    # Copy the manifest and handle relative included paths
+    with open(options.env.manifest_path, "r") as fin, open(
+        os.path.join(concrete_env_dir, "spack.yaml"), "w"
+    ) as fout:
+        data = syaml.load(fin)
+        if "spack" not in data:
+            raise spack.config.ConfigSectionError(
+                'Missing top level "spack" section in environment'
+            )
+
+        # If there are no includes, just copy
+        if "include" not in data["spack"]:
+            shutil.copyfileobj(fin, fout)
+        else:
+            includes = data["spack"]["include"]
+            # If there are includes in the config, then we need to fix the relative paths
+            # to be relative from the concrete env dir used by downstream pipelines
+            env_root_path = os.path.dirname(os.path.abspath(options.env.manifest_path))
+            fixed_includes = []
+            for inc in includes:
+                if isinstance(inc, dict):
+                    inc_path = inc["path"]
+                else:
+                    inc_path = inc
+
+                print(f"checking_include: {inc_path}")
+                if os.path.isabs(inc_path):
+                    fixed_includes.append(inc)
+                    continue
+
+                inc_abs_path = os.path.normpath(os.path.join(env_root_path, inc_path))
+                inc_path = os.path.relpath(inc_abs_path, start=concrete_env_dir)
+
+                print(f"abs: {inc_abs_path}")
+                print(f"fixed rel: {inc_path}")
+                if isinstance(inc, dict):
+                    inc["path"] = inc_path
+                else:
+                    inc = inc_path
+
+                fixed_includes.append(inc)
+
+            print(fixed_includes)
+
+            data["spack"]["include"] = fixed_includes
+
+            os.makedirs(concrete_env_dir, exist_ok=True)
+            syaml.dump(data, fout)
+
+    shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
     job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
     job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
