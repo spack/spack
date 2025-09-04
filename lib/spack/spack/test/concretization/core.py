@@ -483,9 +483,7 @@ class TestConcretize:
                 assert root["dt-diamond-bottom"].satisfies("%gcc")
                 assert root["dt-diamond-left"].satisfies("%clang")
 
-    def test_disable_mixing2(
-        self, mutable_database,
-    ):
+    def test_disable_mixing2(self, mutable_database):
         # Install a spec
         left = spack.concretize.concretize_one("dt-diamond-left %gcc")
         PackageInstaller([left.package], fake=True, explicit=True).install()
