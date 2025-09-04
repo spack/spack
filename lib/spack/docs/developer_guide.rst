@@ -137,7 +137,7 @@ Spec-related modules
 ^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.spec`
-  Contains :class:`~spack.spec.Spec` and :class:`~spack.spec.SpecParser`.
+  Contains :class:`~spack.spec.Spec`.
   Also implements most of the logic for concretization of specs.
 
 :mod:`spack.version`

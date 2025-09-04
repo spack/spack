@@ -2129,7 +2129,7 @@ class Spec:
         key: Callable[["Spec"], Any] = id,
         visited: Optional[Set[Any]] = None,
     ) -> Iterable[Union["Spec", Tuple[int, "Spec"]]]:
-        """Shorthand for :func:`~spack.spec.traverse_nodes`"""
+        """Shorthand for ``spack.spec.traverse_nodes``"""
         return traverse_nodes(
             [self],
             root=root,
@@ -2182,7 +2182,7 @@ class Spec:
         key: Callable[["Spec"], Any] = id,
         visited: Optional[Set[Any]] = None,
     ) -> Iterable[Union[DependencySpec, Tuple[int, DependencySpec]]]:
-        """Shorthand for :func:`~spack.spec.traverse_edges`"""
+        """Shorthand for ``spack.spec.traverse_edges``"""
         return traverse_edges(
             [self],
             root=root,
