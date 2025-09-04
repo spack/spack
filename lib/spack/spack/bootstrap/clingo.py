@@ -74,11 +74,11 @@ class ClingoBootstrapConcretizer:
         return candidates[0]
 
     def _externals_from_yaml(
-        self, configuration: "spack.config.Configuration"
-    ) -> Tuple[Optional["spack.spec.Spec"], Optional["spack.spec.Spec"]]:
+        self, configuration: spack.config.Configuration
+    ) -> Tuple[Optional[spack.spec.Spec], Optional[spack.spec.Spec]]:
         packages_yaml = configuration.get("packages")
         requirements = {"cmake": "@3.20:", "bison": "@2.5:"}
-        selected: Dict[str, Optional["spack.spec.Spec"]] = {"cmake": None, "bison": None}
+        selected: Dict[str, Optional[spack.spec.Spec]] = {"cmake": None, "bison": None}
         for pkg_name in ["cmake", "bison"]:
             if pkg_name not in packages_yaml:
                 continue
@@ -113,7 +113,7 @@ class ClingoBootstrapConcretizer:
 
         return result
 
-    def concretize(self) -> "spack.spec.Spec":
+    def concretize(self) -> spack.spec.Spec:
         # Read the prototype and mark it NOT concrete
         s = spack.spec.Spec.from_specfile(str(self.prototype_path()))
         s._mark_concrete(False)
@@ -152,17 +152,17 @@ class ClingoBootstrapConcretizer:
         # we modified edges inconsistently
         return s.copy()
 
-    def python_external_spec(self) -> "spack.spec.Spec":
+    def python_external_spec(self) -> spack.spec.Spec:
         """Python external spec corresponding to the current running interpreter"""
         result = spack.spec.Spec(spec_for_current_python(), external_path=sys.exec_prefix)
         return self._external_spec(result)
 
-    def libc_external_spec(self) -> "spack.spec.Spec":
+    def libc_external_spec(self) -> spack.spec.Spec:
         detector = spack.compilers.libraries.CompilerPropertyDetector(self.host_compiler)
         result = detector.default_libc()
         return self._external_spec(result)
 
-    def _external_spec(self, initial_spec) -> "spack.spec.Spec":
+    def _external_spec(self, initial_spec) -> spack.spec.Spec:
         initial_spec.namespace = "builtin"
         initial_spec.architecture = self.host_architecture
         for flag_type in spack.spec.FlagMap.valid_compiler_flags():

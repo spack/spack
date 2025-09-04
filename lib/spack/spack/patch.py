@@ -21,7 +21,7 @@ from spack.util.executable import which, which_string
 
 
 def apply_patch(
-    stage: "spack.stage.Stage",
+    stage: spack.stage.Stage,
     patch_path: str,
     level: int = 1,
     working_dir: str = ".",
@@ -278,7 +278,7 @@ class UrlPatch(Patch):
             raise spack.error.PatchDirectiveError("URL patches require a sha256 checksum")
         self.sha256 = sha256
 
-    def fetcher(self) -> "spack.fetch_strategy.FetchStrategy":
+    def fetcher(self) -> spack.fetch_strategy.FetchStrategy:
         """Construct a fetcher that can download (and unpack) this patch."""
         # Two checksums, one for compressed file, one for its contents
         if self.archive_sha256 and self.sha256:
@@ -304,7 +304,7 @@ class UrlPatch(Patch):
 
 
 def from_dict(
-    dictionary: Dict[str, Any], repository: Optional["spack.repo.RepoPath"] = None
+    dictionary: Dict[str, Any], repository: Optional[spack.repo.RepoPath] = None
 ) -> Patch:
     """Create a patch from json dictionary.
 
@@ -383,7 +383,7 @@ class PatchCache:
     """
 
     def __init__(
-        self, repository: "spack.repo.RepoPath", data: Optional[Dict[str, Any]] = None
+        self, repository: spack.repo.RepoPath, data: Optional[Dict[str, Any]] = None
     ) -> None:
         """Initialize a new PatchCache instance.
 
@@ -401,7 +401,7 @@ class PatchCache:
         self.repository = repository
 
     @classmethod
-    def from_json(cls, stream: Any, repository: "spack.repo.RepoPath") -> "PatchCache":
+    def from_json(cls, stream: Any, repository: spack.repo.RepoPath) -> "PatchCache":
         """Initialize a new PatchCache instance from JSON.
 
         Args:
@@ -499,7 +499,7 @@ class PatchCache:
 
     @staticmethod
     def _index_patches(
-        pkg_class: Type["spack.package_base.PackageBase"], repository: "spack.repo.RepoPath"
+        pkg_class: Type["spack.package_base.PackageBase"], repository: spack.repo.RepoPath
     ) -> Dict[Any, Any]:
         """Patch index for a specific patch.
 

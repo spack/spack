@@ -124,9 +124,9 @@ def _read_and_sanitize_configuration() -> Dict[str, Any]:
     }
 
 
-def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
+def _bootstrap_config_scopes() -> Sequence[spack.config.ConfigScope]:
     tty.debug("[BOOTSTRAP CONFIG SCOPE] name=_builtin")
-    config_scopes: MutableSequence["spack.config.ConfigScope"] = [
+    config_scopes: MutableSequence[spack.config.ConfigScope] = [
         spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)
     ]
     configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, ("bootstrap", _config_path()))

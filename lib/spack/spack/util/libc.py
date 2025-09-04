@@ -22,7 +22,7 @@ def _env() -> Dict[str, str]:
     return {**os.environ, "LC_ALL": "C"}
 
 
-def _libc_from_ldd(ldd: str) -> Optional["spack.spec.Spec"]:
+def _libc_from_ldd(ldd: str) -> Optional[spack.spec.Spec]:
     try:
         result = run([ldd, "--version"], stdout=PIPE, stderr=PIPE, check=False, env=_env())
         stdout = result.stdout.decode("utf-8")
@@ -59,7 +59,7 @@ def default_search_paths_from_dynamic_linker(dynamic_linker: str) -> List[str]:
     ]
 
 
-def libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]:
+def libc_from_dynamic_linker(dynamic_linker: str) -> Optional[spack.spec.Spec]:
     """Get the libc spec from the dynamic linker path."""
     maybe_spec = _libc_from_dynamic_linker(dynamic_linker)
     if maybe_spec:
@@ -68,7 +68,7 @@ def libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]
 
 
 @memoized
-def _libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"]:
+def _libc_from_dynamic_linker(dynamic_linker: str) -> Optional[spack.spec.Spec]:
     if not os.path.exists(dynamic_linker):
         return None
 
@@ -143,7 +143,7 @@ def _libc_from_dynamic_linker(dynamic_linker: str) -> Optional["spack.spec.Spec"
         return maybe_spec
 
 
-def libc_from_current_python_process() -> Optional["spack.spec.Spec"]:
+def libc_from_current_python_process() -> Optional[spack.spec.Spec]:
     if not sys.executable:
         return None
 

@@ -272,11 +272,11 @@ def _construct_upstream_dbs_from_install_roots(
 
 
 def find(
-    constraints: Union[str, List[str], List["spack.spec.Spec"]],
+    constraints: Union[str, List[str], List[spack.spec.Spec]],
     multiple: bool = False,
-    query_fn: Optional[Callable[[Any], List["spack.spec.Spec"]]] = None,
+    query_fn: Optional[Callable[[Any], List[spack.spec.Spec]]] = None,
     **kwargs,
-) -> List["spack.spec.Spec"]:
+) -> List[spack.spec.Spec]:
     """Returns a list of specs matching the constraints passed as inputs.
 
     At least one spec per constraint must match, otherwise the function
@@ -325,7 +325,7 @@ def find(
     return matching_specs
 
 
-def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
+def specfile_matches(filename: str, **kwargs) -> List[spack.spec.Spec]:
     """Same as find but reads the query from a spec file.
 
     Args:

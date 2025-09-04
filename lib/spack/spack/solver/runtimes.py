@@ -123,7 +123,7 @@ class RuntimePropertyRecorder:
     def node_for(name: str) -> str:
         return f'node(ID{name.replace("-", "_")}, "{name}")'
 
-    def rule_body_from(self, when_spec: "spack.spec.Spec") -> Tuple[str, str]:
+    def rule_body_from(self, when_spec: spack.spec.Spec) -> Tuple[str, str]:
         """Computes the rule body from a "when" spec, and returns it, along with the
         node variable.
         """
@@ -203,7 +203,7 @@ class RuntimePropertyRecorder:
 
         self.reset()
 
-    def default_flags(self, spec: "spack.spec.Spec"):
+    def default_flags(self, spec: spack.spec.Spec):
         if not spec.external or "flags" not in spec.extra_attributes:
             self.reset()
             return

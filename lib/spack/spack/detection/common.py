@@ -45,7 +45,7 @@ ExternalEntryType = Union[str, Dict[str, str]]
 
 
 def _pkg_config_dict(
-    external_pkg_entries: List["spack.spec.Spec"],
+    external_pkg_entries: List[spack.spec.Spec],
 ) -> Dict[str, Union[bool, List[Dict[str, ExternalEntryType]]]]:
     """Generate a package specific config dict according to the packages.yaml schema.
 
@@ -201,7 +201,7 @@ def library_prefix(library_dir: str) -> str:
 
 
 def update_configuration(
-    detected_packages: Dict[str, List["spack.spec.Spec"]],
+    detected_packages: Dict[str, List[spack.spec.Spec]],
     scope: Optional[str] = None,
     buildable: bool = True,
 ) -> List[spack.spec.Spec]:

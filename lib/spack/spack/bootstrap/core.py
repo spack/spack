@@ -501,7 +501,7 @@ def patchelf_root_spec() -> str:
     return _root_spec("patchelf@0.13.1:")
 
 
-def verify_patchelf(patchelf: "spack.util.executable.Executable") -> bool:
+def verify_patchelf(patchelf: spack.util.executable.Executable) -> bool:
     """Older patchelf versions can produce broken binaries, so we
     verify the version here.
 

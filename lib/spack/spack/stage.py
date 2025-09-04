@@ -20,6 +20,7 @@ import spack.llnl.string
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.mirrors.layout
+import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.oci.image
 import spack.resource
@@ -354,8 +355,8 @@ class Stage(LockableStagingDir):
         url_or_fetch_strategy,
         *,
         name=None,
-        mirror_paths: Optional["spack.mirrors.layout.MirrorLayout"] = None,
-        mirrors: Optional[Iterable["spack.mirrors.mirror.Mirror"]] = None,
+        mirror_paths: Optional[spack.mirrors.layout.MirrorLayout] = None,
+        mirrors: Optional[Iterable[spack.mirrors.mirror.Mirror]] = None,
         keep=False,
         path=None,
         lock=True,
@@ -609,7 +610,7 @@ class Stage(LockableStagingDir):
         spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_layout.path)
 
     def cache_mirror(
-        self, mirror: "spack.caches.MirrorCache", stats: "spack.mirrors.utils.MirrorStats"
+        self, mirror: spack.caches.MirrorCache, stats: spack.mirrors.utils.MirrorStats
     ) -> None:
         """Perform a fetch if the resource is not already cached
 

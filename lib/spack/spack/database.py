@@ -134,7 +134,7 @@ _INDEX_VERIFIER_FILE = "index_verifier"
 _LOCK_FILE = "lock"
 
 
-def reader(version: vn.StandardVersion) -> Type["spack.spec.SpecfileReaderBase"]:
+def reader(version: vn.StandardVersion) -> Type[spack.spec.SpecfileReaderBase]:
     reader_cls = {
         vn.StandardVersion.from_string("5"): spack.spec.SpecfileV1,
         vn.StandardVersion.from_string("6"): spack.spec.SpecfileV3,
@@ -196,7 +196,7 @@ class InstallRecord:
 
     def __init__(
         self,
-        spec: "spack.spec.Spec",
+        spec: spack.spec.Spec,
         path: Optional[str],
         installed: bool,
         ref_count: int = 0,
@@ -336,7 +336,7 @@ class SpecLocker:
         # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
         self.locks: Dict[Tuple[str, str], lk.Lock] = {}
 
-    def lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
+    def lock(self, spec: spack.spec.Spec, timeout: Optional[float] = None) -> lk.Lock:
         """Returns a lock on a concrete spec.
 
         The lock is a byte range lock on the nth byte of a file.
@@ -358,7 +358,7 @@ class SpecLocker:
 
         return self.locks[key]
 
-    def raw_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
+    def raw_lock(self, spec: spack.spec.Spec, timeout: Optional[float] = None) -> lk.Lock:
         """Returns a raw lock for a Spec, but doesn't keep track of it."""
         return lk.Lock(
             str(self.lock_path),
@@ -368,15 +368,15 @@ class SpecLocker:
             desc=spec.name,
         )
 
-    def has_lock(self, spec: "spack.spec.Spec") -> bool:
+    def has_lock(self, spec: spack.spec.Spec) -> bool:
         """Returns True if the spec is already managed by this spec locker"""
         return self._lock_key(spec) in self.locks
 
-    def _lock_key(self, spec: "spack.spec.Spec") -> Tuple[str, str]:
+    def _lock_key(self, spec: spack.spec.Spec) -> Tuple[str, str]:
         return (spec.dag_hash(), spec.name)
 
     @contextlib.contextmanager
-    def write_lock(self, spec: "spack.spec.Spec") -> Generator["SpecLocker", None, None]:
+    def write_lock(self, spec: spack.spec.Spec) -> Generator["SpecLocker", None, None]:
         lock = self.lock(spec)
         lock.acquire_write()
 
@@ -392,7 +392,7 @@ class SpecLocker:
         else:
             lock.release_write()
 
-    def clear(self, spec: "spack.spec.Spec") -> Tuple[bool, Optional[lk.Lock]]:
+    def clear(self, spec: spack.spec.Spec) -> Tuple[bool, Optional[lk.Lock]]:
         key = self._lock_key(spec)
         lock = self.locks.pop(key, None)
         return bool(lock), lock
@@ -438,7 +438,7 @@ class FailureTracker:
         """
         self.dir.mkdir(parents=True, exist_ok=True)
 
-    def clear(self, spec: "spack.spec.Spec", force: bool = False) -> None:
+    def clear(self, spec: spack.spec.Spec, force: bool = False) -> None:
         """Removes any persistent and cached failure tracking for the spec.
 
         see :meth:`mark`.
@@ -493,7 +493,7 @@ class FailureTracker:
             except OSError as exc:
                 tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
 
-    def mark(self, spec: "spack.spec.Spec") -> lk.Lock:
+    def mark(self, spec: spack.spec.Spec) -> lk.Lock:
         """Marks a spec as failing to install.
 
         Args:
@@ -519,7 +519,7 @@ class FailureTracker:
 
         return self.locker.lock(spec)
 
-    def has_failed(self, spec: "spack.spec.Spec") -> bool:
+    def has_failed(self, spec: spack.spec.Spec) -> bool:
         """Return True if the spec is marked as failed."""
         # The failure was detected in this process.
         if self.locker.has_lock(spec):
@@ -534,16 +534,16 @@ class FailureTracker:
         # spack build process running concurrently.
         return self.persistent_mark(spec)
 
-    def lock_taken(self, spec: "spack.spec.Spec") -> bool:
+    def lock_taken(self, spec: spack.spec.Spec) -> bool:
         """Return True if another process has a failure lock on the spec."""
         check = self.locker.raw_lock(spec)
         return check.is_write_locked()
 
-    def persistent_mark(self, spec: "spack.spec.Spec") -> bool:
+    def persistent_mark(self, spec: spack.spec.Spec) -> bool:
         """Determine if the spec has a persistent failure marking."""
         return self._path(spec).exists()
 
-    def _path(self, spec: "spack.spec.Spec") -> pathlib.Path:
+    def _path(self, spec: spack.spec.Spec) -> pathlib.Path:
         """Return the path to the spec's failure file, which may not exist."""
         assert spec.concrete, "concrete spec required for failure path"
         return self.dir / f"{spec.name}-{spec.dag_hash()}"
@@ -752,7 +752,7 @@ class Database:
 
     def _assign_dependencies(
         self,
-        spec_reader: Type["spack.spec.SpecfileReaderBase"],
+        spec_reader: Type[spack.spec.SpecfileReaderBase],
         hash_key: str,
         installs: dict,
         data: Dict[str, InstallRecord],
@@ -1143,7 +1143,7 @@ class Database:
 
     def _add(
         self,
-        spec: "spack.spec.Spec",
+        spec: spack.spec.Spec,
         explicit: bool = False,
         installation_time: Optional[float] = None,
         allow_missing: bool = False,
@@ -1247,7 +1247,7 @@ class Database:
         self._data[key].explicit = explicit
 
     @_autospec
-    def add(self, spec: "spack.spec.Spec", *, explicit: bool = False, allow_missing=False) -> None:
+    def add(self, spec: spack.spec.Spec, *, explicit: bool = False, allow_missing=False) -> None:
         """Add spec at path to database, locking and reading DB to sync.
 
         ``add()`` will lock and read from the DB on disk.
@@ -1258,7 +1258,7 @@ class Database:
         with self.write_transaction():
             self._add(spec, explicit=explicit, allow_missing=allow_missing)
 
-    def _get_matching_spec_key(self, spec: "spack.spec.Spec", **kwargs) -> str:
+    def _get_matching_spec_key(self, spec: spack.spec.Spec, **kwargs) -> str:
         """Get the exact spec OR get a single spec that matches."""
         key = spec.dag_hash()
         _, record = self.query_by_spec_hash(key)
@@ -1270,12 +1270,12 @@ class Database:
         return key
 
     @_autospec
-    def get_record(self, spec: "spack.spec.Spec", **kwargs) -> Optional[InstallRecord]:
+    def get_record(self, spec: spack.spec.Spec, **kwargs) -> Optional[InstallRecord]:
         key = self._get_matching_spec_key(spec, **kwargs)
         _, record = self.query_by_spec_hash(key)
         return record
 
-    def _decrement_ref_count(self, spec: "spack.spec.Spec") -> None:
+    def _decrement_ref_count(self, spec: spack.spec.Spec) -> None:
         key = spec.dag_hash()
 
         if key not in self._data:
@@ -1292,7 +1292,7 @@ class Database:
             for dep in spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
                 self._decrement_ref_count(dep)
 
-    def _increment_ref_count(self, spec: "spack.spec.Spec") -> None:
+    def _increment_ref_count(self, spec: spack.spec.Spec) -> None:
         key = spec.dag_hash()
 
         if key not in self._data:
@@ -1301,7 +1301,7 @@ class Database:
         rec = self._data[key]
         rec.ref_count += 1
 
-    def _remove(self, spec: "spack.spec.Spec") -> "spack.spec.Spec":
+    def _remove(self, spec: spack.spec.Spec) -> spack.spec.Spec:
         """Non-locking version of remove(); does real work."""
         key = self._get_matching_spec_key(spec)
         rec = self._data[key]
@@ -1332,7 +1332,7 @@ class Database:
         return rec.spec
 
     @_autospec
-    def remove(self, spec: "spack.spec.Spec") -> "spack.spec.Spec":
+    def remove(self, spec: spack.spec.Spec) -> spack.spec.Spec:
         """Removes a spec from the database.  To be called on uninstall.
 
         Reads the database, then:
@@ -1347,7 +1347,7 @@ class Database:
         with self.write_transaction():
             return self._remove(spec)
 
-    def deprecator(self, spec: "spack.spec.Spec") -> Optional["spack.spec.Spec"]:
+    def deprecator(self, spec: spack.spec.Spec) -> Optional[spack.spec.Spec]:
         """Return the spec that the given spec is deprecated for, or None"""
         with self.read_transaction():
             spec_key = self._get_matching_spec_key(spec)
@@ -1358,14 +1358,14 @@ class Database:
             else:
                 return None
 
-    def specs_deprecated_by(self, spec: "spack.spec.Spec") -> List["spack.spec.Spec"]:
+    def specs_deprecated_by(self, spec: spack.spec.Spec) -> List[spack.spec.Spec]:
         """Return all specs deprecated in favor of the given spec"""
         with self.read_transaction():
             return [
                 rec.spec for rec in self._data.values() if rec.deprecated_for == spec.dag_hash()
             ]
 
-    def _deprecate(self, spec: "spack.spec.Spec", deprecator: "spack.spec.Spec") -> None:
+    def _deprecate(self, spec: spack.spec.Spec, deprecator: spack.spec.Spec) -> None:
         spec_key = self._get_matching_spec_key(spec)
         spec_rec = self._data[spec_key]
 
@@ -1383,17 +1383,17 @@ class Database:
         self._data[spec_key] = spec_rec
 
     @_autospec
-    def mark(self, spec: "spack.spec.Spec", key: str, value: Any) -> None:
+    def mark(self, spec: spack.spec.Spec, key: str, value: Any) -> None:
         """Mark an arbitrary record on a spec."""
         with self.write_transaction():
             return self._mark(spec, key, value)
 
-    def _mark(self, spec: "spack.spec.Spec", key, value) -> None:
+    def _mark(self, spec: spack.spec.Spec, key, value) -> None:
         record = self._data[self._get_matching_spec_key(spec)]
         setattr(record, key, value)
 
     @_autospec
-    def deprecate(self, spec: "spack.spec.Spec", deprecator: "spack.spec.Spec") -> None:
+    def deprecate(self, spec: spack.spec.Spec, deprecator: spack.spec.Spec) -> None:
         """Marks a spec as deprecated in favor of its deprecator"""
         with self.write_transaction():
             return self._deprecate(spec, deprecator)
@@ -1401,11 +1401,11 @@ class Database:
     @_autospec
     def installed_relatives(
         self,
-        spec: "spack.spec.Spec",
+        spec: spack.spec.Spec,
         direction: spack.spec.DirectionType = "children",
         transitive: bool = True,
         deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
-    ) -> Set["spack.spec.Spec"]:
+    ) -> Set[spack.spec.Spec]:
         """Return installed specs related to this one."""
         if direction not in ("parents", "children"):
             raise ValueError("Invalid direction: %s" % direction)
@@ -1437,7 +1437,7 @@ class Database:
         return relatives
 
     @_autospec
-    def installed_extensions_for(self, extendee_spec: "spack.spec.Spec"):
+    def installed_extensions_for(self, extendee_spec: spack.spec.Spec):
         """Returns the specs of all packages that extend the given spec"""
         for spec in self.query():
             if spec.package.extends(extendee_spec):
@@ -1446,9 +1446,9 @@ class Database:
     def _get_by_hash_local(
         self,
         dag_hash: str,
-        default: Optional[List["spack.spec.Spec"]] = None,
+        default: Optional[List[spack.spec.Spec]] = None,
         installed: Union[bool, InstallRecordStatus] = InstallRecordStatus.ANY,
-    ) -> Optional[List["spack.spec.Spec"]]:
+    ) -> Optional[List[spack.spec.Spec]]:
         installed = normalize_query(installed)
         # hash is a full hash and is in the data somewhere
         if dag_hash in self._data:
@@ -1473,9 +1473,9 @@ class Database:
     def get_by_hash_local(
         self,
         dag_hash: str,
-        default: Optional[List["spack.spec.Spec"]] = None,
+        default: Optional[List[spack.spec.Spec]] = None,
         installed: Union[bool, InstallRecordStatus] = InstallRecordStatus.ANY,
-    ) -> Optional[List["spack.spec.Spec"]]:
+    ) -> Optional[List[spack.spec.Spec]]:
         """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
 
         Args:
@@ -1494,9 +1494,9 @@ class Database:
     def get_by_hash(
         self,
         dag_hash: str,
-        default: Optional[List["spack.spec.Spec"]] = None,
+        default: Optional[List[spack.spec.Spec]] = None,
         installed: Union[bool, InstallRecordStatus] = InstallRecordStatus.ANY,
-    ) -> Optional[List["spack.spec.Spec"]]:
+    ) -> Optional[List[spack.spec.Spec]]:
         """Look up a spec by DAG hash, or by a DAG hash prefix.
 
         Args:
@@ -1523,7 +1523,7 @@ class Database:
 
     def _query(
         self,
-        query_spec: Optional[Union[str, "spack.spec.Spec"]] = None,
+        query_spec: Optional[Union[str, spack.spec.Spec]] = None,
         *,
         predicate_fn: Optional[SelectType] = None,
         installed: Union[bool, InstallRecordStatus] = True,
@@ -1533,7 +1533,7 @@ class Database:
         hashes: Optional[Iterable[str]] = None,
         in_buildcache: Optional[bool] = None,
         origin: Optional[str] = None,
-    ) -> List["spack.spec.Spec"]:
+    ) -> List[spack.spec.Spec]:
         installed = normalize_query(installed)
 
         # Restrict the set of records over which we iterate first
@@ -1606,7 +1606,7 @@ class Database:
 
     def query_local(
         self,
-        query_spec: Optional[Union[str, "spack.spec.Spec"]] = None,
+        query_spec: Optional[Union[str, spack.spec.Spec]] = None,
         *,
         predicate_fn: Optional[SelectType] = None,
         installed: Union[bool, InstallRecordStatus] = True,
@@ -1616,7 +1616,7 @@ class Database:
         hashes: Optional[List[str]] = None,
         in_buildcache: Optional[bool] = None,
         origin: Optional[str] = None,
-    ) -> List["spack.spec.Spec"]:
+    ) -> List[spack.spec.Spec]:
         """Queries the local Spack database.
 
         This function doesn't guarantee any sorting of the returned data for performance reason,
@@ -1666,7 +1666,7 @@ class Database:
 
     def query(
         self,
-        query_spec: Optional[Union[str, "spack.spec.Spec"]] = None,
+        query_spec: Optional[Union[str, spack.spec.Spec]] = None,
         *,
         predicate_fn: Optional[SelectType] = None,
         installed: Union[bool, InstallRecordStatus] = True,
@@ -1677,7 +1677,7 @@ class Database:
         hashes: Optional[List[str]] = None,
         origin: Optional[str] = None,
         install_tree: str = "all",
-    ) -> List["spack.spec.Spec"]:
+    ) -> List[spack.spec.Spec]:
         """Queries the Spack database including all upstream databases.
 
         Args:
@@ -1741,7 +1741,7 @@ class Database:
                 or []
             )
 
-        local_results: Set["spack.spec.Spec"] = set()
+        local_results: Set[spack.spec.Spec] = set()
         if install_tree in ("all", "local") or self.root == install_tree:
             local_results = set(
                 self.query_local(
@@ -1763,10 +1763,10 @@ class Database:
 
     def query_one(
         self,
-        query_spec: Optional[Union[str, "spack.spec.Spec"]],
+        query_spec: Optional[Union[str, spack.spec.Spec]],
         predicate_fn: Optional[SelectType] = None,
         installed: Union[bool, InstallRecordStatus] = True,
-    ) -> Optional["spack.spec.Spec"]:
+    ) -> Optional[spack.spec.Spec]:
         """Query for exactly one spec that matches the query spec.
 
         Returns None if no installed package matches.
@@ -1796,7 +1796,7 @@ class Database:
         self,
         root_hashes: Optional[Container[str]] = None,
         deptype: Union[dt.DepFlag, dt.DepTypes] = dt.LINK | dt.RUN,
-    ) -> List["spack.spec.Spec"]:
+    ) -> List[spack.spec.Spec]:
         """Return all specs that are currently installed but not needed by root specs.
 
         By default, roots are all explicit specs in the database. If a set of root
@@ -1828,7 +1828,7 @@ class NoUpstreamVisitor:
     def __init__(
         self,
         upstream_hashes: Set[str],
-        on_visit: Callable[["spack.spec.DependencySpec", bool], None],
+        on_visit: Callable[[spack.spec.DependencySpec, bool], None],
     ):
         self.upstream_hashes = upstream_hashes
         self.on_visit = on_visit

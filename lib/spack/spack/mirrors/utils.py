@@ -6,7 +6,6 @@ import traceback
 
 import spack.caches
 import spack.config
-import spack.error
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
@@ -211,7 +210,7 @@ class MirrorStats:
 
 
 def create_mirror_from_package_object(
-    pkg_obj, mirror_cache: "spack.caches.MirrorCache", mirror_stats: MirrorStats
+    pkg_obj, mirror_cache: spack.caches.MirrorCache, mirror_stats: MirrorStats
 ) -> bool:
     """Add a single package object to a mirror.
 

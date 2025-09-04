@@ -69,5 +69,5 @@ class MirrorCache:
 
 
 #: Spack's local cache for downloaded source archives
-FETCH_CACHE: "spack.fetch_strategy.FsCache"
+FETCH_CACHE: spack.fetch_strategy.FsCache
 FETCH_CACHE = spack.llnl.util.lang.Singleton(_fetch_cache)  # type: ignore

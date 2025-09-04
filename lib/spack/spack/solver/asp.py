@@ -3476,7 +3476,7 @@ class ProblemInstanceBuilder:
         return "".join(self.asp_problem)
 
 
-def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
+def possible_compilers(*, configuration) -> Tuple[Set[spack.spec.Spec], Set[spack.spec.Spec]]:
     result, rejected = set(), set()
 
     # Compilers defined in configuration

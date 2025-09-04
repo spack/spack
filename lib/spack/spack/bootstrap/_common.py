@@ -40,7 +40,7 @@ def _python_import(module: str) -> bool:
 
 
 def _try_import_from_store(
-    module: str, query_spec: Union[str, "spack.spec.Spec"], query_info: Optional[QueryInfo] = None
+    module: str, query_spec: Union[str, spack.spec.Spec], query_info: Optional[QueryInfo] = None
 ) -> bool:
     """Return True if the module can be imported from an already
     installed spec, False otherwise.
@@ -113,7 +113,7 @@ def _try_import_from_store(
     return False
 
 
-def _fix_ext_suffix(candidate_spec: "spack.spec.Spec"):
+def _fix_ext_suffix(candidate_spec: spack.spec.Spec):
     """Fix the external suffixes of Python extensions on the fly for
     platforms that may need it
 
@@ -183,7 +183,7 @@ def _fix_ext_suffix(candidate_spec: "spack.spec.Spec"):
 
 def _executables_in_store(
     executables: Sequence[str],
-    query_spec: Union["spack.spec.Spec", str],
+    query_spec: Union[spack.spec.Spec, str],
     query_info: Optional[QueryInfo] = None,
 ) -> bool:
     """Return True if at least one of the executables can be retrieved from

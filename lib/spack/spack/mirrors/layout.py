@@ -112,9 +112,9 @@ Spack not to expand it with the following syntax:
 
 
 def default_mirror_layout(
-    fetcher: "spack.fetch_strategy.FetchStrategy",
+    fetcher: spack.fetch_strategy.FetchStrategy,
     per_package_ref: str,
-    spec: Optional["spack.spec.Spec"] = None,
+    spec: Optional[spack.spec.Spec] = None,
 ) -> MirrorLayout:
     """Returns a ``MirrorReference`` object which keeps track of the relative
     storage path of the resource associated with the specified ``fetcher``."""

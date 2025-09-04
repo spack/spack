@@ -252,7 +252,7 @@ class Finder:
 
     def detect_specs(
         self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str], repo_path
-    ) -> List["spack.spec.Spec"]:
+    ) -> List[spack.spec.Spec]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
 
         Args:
@@ -334,7 +334,7 @@ class Finder:
 
     def find(
         self, *, pkg_name: str, repository, initial_guess: Optional[List[str]] = None
-    ) -> List["spack.spec.Spec"]:
+    ) -> List[spack.spec.Spec]:
         """For a given package, returns a list of detected specs.
 
         Args:
@@ -417,7 +417,7 @@ def by_path(
     *,
     path_hints: Optional[List[str]] = None,
     max_workers: Optional[int] = None,
-) -> Dict[str, List["spack.spec.Spec"]]:
+) -> Dict[str, List[spack.spec.Spec]]:
     """Return the list of packages that have been detected on the system, keyed by
     unqualified package name.
 

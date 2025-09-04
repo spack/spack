@@ -50,9 +50,7 @@ spack_install_test_log = "install-time-test-log.txt"
 ListOrStringType = Union[str, List[str]]
 LogType = Union[spack.llnl.util.tty.log.nixlog, spack.llnl.util.tty.log.winlog]
 
-PackageObjectOrClass = Union[
-    "spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]
-]
+PackageObjectOrClass = Union[spack.package_base.PackageBase, Type[spack.package_base.PackageBase]]
 
 
 class TestStatus(enum.Enum):
@@ -101,7 +99,7 @@ def get_test_stage_dir() -> str:
     )
 
 
-def cache_extra_test_sources(pkg: "spack.package_base.PackageBase", srcs: ListOrStringType):
+def cache_extra_test_sources(pkg: spack.package_base.PackageBase, srcs: ListOrStringType):
     """Copy relative source paths to the corresponding install test subdir
 
     This routine is intended as an optional install test setup helper for
@@ -196,7 +194,7 @@ def find_required_file(
     return paths[0] if expected == 1 else paths
 
 
-def install_test_root(pkg: "spack.package_base.PackageBase") -> str:
+def install_test_root(pkg: spack.package_base.PackageBase) -> str:
     """The install test root directory."""
     return os.path.join(pkg.metadata_dir, "test")
 
@@ -245,7 +243,7 @@ def overall_status(current_status: "TestStatus", substatuses: List["TestStatus"]
 class PackageTest:
     """The class that manages stand-alone (post-install) package tests."""
 
-    def __init__(self, pkg: "spack.package_base.PackageBase") -> None:
+    def __init__(self, pkg: spack.package_base.PackageBase) -> None:
         """
         Args:
             pkg: package being tested
@@ -461,7 +459,7 @@ class PackageTest:
 
 @contextlib.contextmanager
 def test_part(
-    pkg: "spack.package_base.PackageBase",
+    pkg: spack.package_base.PackageBase,
     test_name: str,
     purpose: str,
     work_dir: str = ".",
@@ -545,7 +543,7 @@ def test_part(
                 tester.add_failure(exc, m)
 
 
-def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec.Spec):
+def copy_test_files(pkg: spack.package_base.PackageBase, test_spec: spack.spec.Spec):
     """Copy the spec's cached and custom test files to the test stage directory.
 
     Args:
@@ -647,7 +645,7 @@ def test_functions(
 
 
 def process_test_parts(
-    pkg: "spack.package_base.PackageBase", test_specs: List[spack.spec.Spec], verbose: bool = False
+    pkg: spack.package_base.PackageBase, test_specs: List[spack.spec.Spec], verbose: bool = False
 ):
     """Process test parts associated with the package.
 
@@ -724,7 +722,7 @@ def process_test_parts(
             tty.msg("No tests to run")
 
 
-def test_process(pkg: "spack.package_base.PackageBase", kwargs):
+def test_process(pkg: spack.package_base.PackageBase, kwargs):
     verbose = kwargs.get("verbose", True)
     externals = kwargs.get("externals", False)
 

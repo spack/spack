@@ -363,7 +363,7 @@ class Counter:
     """
 
     def __init__(
-        self, specs: List["spack.spec.Spec"], tests: bool, possible_graph: PossibleDependencyGraph
+        self, specs: List[spack.spec.Spec], tests: bool, possible_graph: PossibleDependencyGraph
     ) -> None:
         self.possible_graph = possible_graph
         self.specs = specs
@@ -426,7 +426,7 @@ class NoDuplicatesCounter(Counter):
 
 class MinimalDuplicatesCounter(NoDuplicatesCounter):
     def __init__(
-        self, specs: List["spack.spec.Spec"], tests: bool, possible_graph: PossibleDependencyGraph
+        self, specs: List[spack.spec.Spec], tests: bool, possible_graph: PossibleDependencyGraph
     ) -> None:
         super().__init__(specs, tests, possible_graph)
         self._link_run: Set[str] = set()

@@ -1120,7 +1120,7 @@ def load_external_modules(context: SetupContext) -> None:
 
 
 def _setup_pkg_and_run(
-    serialized_pkg: "spack.subprocess_context.PackageInstallContext",
+    serialized_pkg: spack.subprocess_context.PackageInstallContext,
     function: Callable,
     kwargs: Dict,
     write_pipe: Connection,
@@ -1261,7 +1261,7 @@ class BuildProcess:
         *,
         target: Callable,
         args: Tuple[Any, ...],
-        pkg: "spack.package_base.PackageBase",
+        pkg: spack.package_base.PackageBase,
         read_pipe: Connection,
         timeout: Optional[int],
     ) -> None:
@@ -1313,7 +1313,7 @@ class BuildProcess:
 
 
 def start_build_process(
-    pkg: "spack.package_base.PackageBase",
+    pkg: spack.package_base.PackageBase,
     function: Callable,
     kwargs: Dict[str, Any],
     *,

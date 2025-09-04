@@ -24,13 +24,13 @@ default_projections = {
 }
 
 
-def _check_concrete(spec: "spack.spec.Spec") -> None:
+def _check_concrete(spec: spack.spec.Spec) -> None:
     """If the spec is not concrete, raise a ValueError"""
     if not spec.concrete:
         raise ValueError("Specs passed to a DirectoryLayout must be concrete!")
 
 
-def _get_spec(prefix: str) -> Optional["spack.spec.Spec"]:
+def _get_spec(prefix: str) -> Optional[spack.spec.Spec]:
     """Returns a spec if the prefix contains a spec file in the .spack subdir"""
     for f in ("spec.json", "spec.yaml"):
         try:
@@ -40,7 +40,7 @@ def _get_spec(prefix: str) -> Optional["spack.spec.Spec"]:
     return None
 
 
-def specs_from_metadata_dirs(root: str) -> List["spack.spec.Spec"]:
+def specs_from_metadata_dirs(root: str) -> List[spack.spec.Spec]:
     stack = [root]
     specs = []
 
@@ -122,14 +122,14 @@ class DirectoryLayout:
     def hidden_file_regexes(self) -> Tuple[str]:
         return ("^{0}$".format(re.escape(self.metadata_dir)),)
 
-    def relative_path_for_spec(self, spec: "spack.spec.Spec") -> str:
+    def relative_path_for_spec(self, spec: spack.spec.Spec) -> str:
         _check_concrete(spec)
 
         projection = spack.projections.get_projection(self.projections, spec)
         path = spec.format_path(projection)
         return str(Path(path))
 
-    def write_spec(self, spec: "spack.spec.Spec", path: str) -> None:
+    def write_spec(self, spec: spack.spec.Spec, path: str) -> None:
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, "w", encoding="utf-8") as f:
@@ -137,7 +137,7 @@ class DirectoryLayout:
             # the full provenance, so it's available if we want it later
             spec.to_json(f, hash=ht.dag_hash)
 
-    def write_host_environment(self, spec: "spack.spec.Spec") -> None:
+    def write_host_environment(self, spec: spack.spec.Spec) -> None:
         """The host environment is a json file with os, kernel, and spack
         versioning. We use it in the case that an analysis later needs to
         easily access this information.
@@ -147,7 +147,7 @@ class DirectoryLayout:
         with open(env_file, "w", encoding="utf-8") as fd:
             sjson.dump(environ, fd)
 
-    def read_spec(self, path: str) -> "spack.spec.Spec":
+    def read_spec(self, path: str) -> spack.spec.Spec:
         """Read the contents of a file and parse them as a spec"""
         try:
             with open(path, encoding="utf-8") as f:
@@ -168,7 +168,7 @@ class DirectoryLayout:
         spec._mark_concrete()
         return spec
 
-    def spec_file_path(self, spec: "spack.spec.Spec") -> str:
+    def spec_file_path(self, spec: spack.spec.Spec) -> str:
         """Gets full path to spec file"""
         _check_concrete(spec)
         yaml_path = os.path.join(self.metadata_path(spec), self._spec_file_name_yaml)
@@ -176,9 +176,7 @@ class DirectoryLayout:
         return yaml_path if os.path.exists(yaml_path) else json_path
 
     def deprecated_file_path(
-        self,
-        deprecated_spec: "spack.spec.Spec",
-        deprecator_spec: Optional["spack.spec.Spec"] = None,
+        self, deprecated_spec: spack.spec.Spec, deprecator_spec: Optional[spack.spec.Spec] = None
     ) -> str:
         """Gets full path to spec file for deprecated spec
 
@@ -213,16 +211,16 @@ class DirectoryLayout:
 
         return yaml_path if os.path.exists(yaml_path) else json_path
 
-    def metadata_path(self, spec: "spack.spec.Spec") -> str:
+    def metadata_path(self, spec: spack.spec.Spec) -> str:
         return os.path.join(spec.prefix, self.metadata_dir)
 
-    def env_metadata_path(self, spec: "spack.spec.Spec") -> str:
+    def env_metadata_path(self, spec: spack.spec.Spec) -> str:
         return os.path.join(self.metadata_path(spec), "install_environment.json")
 
-    def build_packages_path(self, spec: "spack.spec.Spec") -> str:
+    def build_packages_path(self, spec: spack.spec.Spec) -> str:
         return os.path.join(self.metadata_path(spec), self.packages_dir)
 
-    def create_install_directory(self, spec: "spack.spec.Spec") -> None:
+    def create_install_directory(self, spec: spack.spec.Spec) -> None:
         _check_concrete(spec)
 
         # Create install directory with properly configured permissions
@@ -240,7 +238,7 @@ class DirectoryLayout:
 
         self.write_spec(spec, self.spec_file_path(spec))
 
-    def ensure_installed(self, spec: "spack.spec.Spec") -> None:
+    def ensure_installed(self, spec: spack.spec.Spec) -> None:
         """
         Throws InconsistentInstallDirectoryError if:
         1. spec prefix does not exist
@@ -267,7 +265,7 @@ class DirectoryLayout:
                 "Spec file in %s does not match hash!" % spec_file_path
             )
 
-    def path_for_spec(self, spec: "spack.spec.Spec") -> str:
+    def path_for_spec(self, spec: spack.spec.Spec) -> str:
         """Return absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
 
@@ -278,7 +276,7 @@ class DirectoryLayout:
         assert not path.startswith(self.root)
         return os.path.join(self.root, path)
 
-    def remove_install_directory(self, spec: "spack.spec.Spec", deprecated: bool = False) -> None:
+    def remove_install_directory(self, spec: spack.spec.Spec, deprecated: bool = False) -> None:
         """Removes a prefix and any empty parent directories from the root.
         Raised RemoveFailedError if something goes wrong.
         """
@@ -326,7 +324,7 @@ class DirectoryLayout:
                         raise e
             path = os.path.dirname(path)
 
-    def all_specs(self) -> List["spack.spec.Spec"]:
+    def all_specs(self) -> List[spack.spec.Spec]:
         """Returns a list of all specs detected in self.root, detected by ``.spack`` directories.
         Their prefix is set to the directory containing the ``.spack`` directory. Note that these
         specs may follow a different layout than the current layout if it was changed after
@@ -334,8 +332,8 @@ class DirectoryLayout:
         return specs_from_metadata_dirs(self.root)
 
     def deprecated_for(
-        self, specs: List["spack.spec.Spec"]
-    ) -> List[Tuple["spack.spec.Spec", "spack.spec.Spec"]]:
+        self, specs: List[spack.spec.Spec]
+    ) -> List[Tuple[spack.spec.Spec, spack.spec.Spec]]:
         """Returns a list of tuples of specs (new, old) where new is deprecated for old"""
         spec_with_deprecated = []
         for spec in specs:
