@@ -834,6 +834,10 @@ class CompilerFlag(str):
             for "-g" would indicate ``depends_on``.
     """
 
+    propagate: bool
+    flag_group: str
+    source: str
+
     def __new__(cls, value, **kwargs):
         obj = str.__new__(cls, value)
         obj.propagate = kwargs.pop("propagate", False)
