@@ -191,7 +191,7 @@ properties: Dict[str, Any] = {
                                 },
                             },
                         },
-                        "additionalProperties": True,
+                        "additionalProperties": False,
                         "required": ["spec"],
                     },
                 },
