@@ -1525,3 +1525,58 @@ def test_included_path_git_unsat(
     captured = capsys.readouterr()[1]
     assert "condition is not satisfied" in captured
     assert scopes is None
+
+
+@pytest.mark.parametrize(
+    "key,value", [("branch", "main"), ("commit", "abcdef123456"), ("tag", "v1.0")]
+)
+def test_included_path_git(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch, key, value):
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+
+    class MockIncludeGit(spack.util.executable.Executable):
+        def __init__(self, required: bool):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "config":
+                return "origin"
+
+            return ""
+
+    paths = ["config.yaml", "packages.yaml"]
+    entry = {
+        "git": "https://example.com/windows/configs.git",
+        key: value,
+        "paths": paths,
+        "when": 'platform == "test"',
+    }
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.GitIncludePaths)
+    assert not include.optional and include.satisfied
+
+    destination = include._destination()
+    assert not os.path.exists(destination)
+
+    # set up minimal git and repository operations
+    monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
+
+    def _init_repo(*args, **kwargs):
+        fs.mkdirp(fs.join_path(destination, ".git"))
+
+    def _checkout(*args, **kwargs):
+        # Make sure the files exist at the clone destination
+        with fs.working_dir(destination):
+            for p in paths:
+                fs.touch(p)
+
+    monkeypatch.setattr(spack.util.git, "init_git_repo", _init_repo)
+    monkeypatch.setattr(spack.util.git, f"pull_checkout_{key}", _checkout)
+
+    parent_scope = mock_low_high_config.scopes["low"]
+    scopes = include.scopes(parent_scope)
+    assert len(scopes) == len(paths)
+    for scope in scopes:
+        assert os.path.basename(scope.path) in paths
+        assert isinstance(scope, spack.config.SingleFileScope)
