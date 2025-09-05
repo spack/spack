@@ -2107,6 +2107,8 @@ class SpackSolverSetup:
                     # "virtual_node" in imposed specs
 
                     info_msg = f"{input_spec} is a requirement for package {pkg_name}"
+                    if rule.condition != spack.spec.Spec():
+                        info_msg += f" when {rule.condition}"
                     if rule.message:
                         info_msg += f" ({rule.message})"
                     member_id = self.condition(
