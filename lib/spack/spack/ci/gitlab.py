@@ -130,8 +130,8 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         os.makedirs(concrete_env_dir)
 
     # Copy the manifest and handle relative included paths
-    with open(options.env.manifest_path, "r") as fin, open(
-        os.path.join(concrete_env_dir, "spack.yaml"), "w"
+    with open(options.env.manifest_path, "r", encoding="utf-8") as fin, open(
+        os.path.join(concrete_env_dir, "spack.yaml"), "w", encoding="utf-8"
     ) as fout:
         data = syaml.load(fin)
         if "spack" not in data:
@@ -154,7 +154,6 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 else:
                     inc_path = inc
 
-                print(f"checking_include: {inc_path}")
                 if os.path.isabs(inc_path):
                     fixed_includes.append(inc)
                     continue
@@ -162,16 +161,12 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 inc_abs_path = os.path.normpath(os.path.join(env_root_path, inc_path))
                 inc_path = os.path.relpath(inc_abs_path, start=concrete_env_dir)
 
-                print(f"abs: {inc_abs_path}")
-                print(f"fixed rel: {inc_path}")
                 if isinstance(inc, dict):
                     inc["path"] = inc_path
                 else:
                     inc = inc_path
 
                 fixed_includes.append(inc)
-
-            print(fixed_includes)
 
             data["spack"]["include"] = fixed_includes
 
