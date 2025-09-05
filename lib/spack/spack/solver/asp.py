@@ -291,6 +291,8 @@ def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.
     flag_group = flag_list[0].flag_group
     flag_source = flag_list[0].source
     flag_propagate = flag_list[0].propagate
+    # Once we have the flag_group, no need to iterate over the flag_list because the
+    # group represents all of them
     return [
         spack.spec.CompilerFlag(
             flag, propagate=flag_propagate, flag_group=flag_group, source=flag_source
@@ -3723,6 +3725,8 @@ class SpecBuilder:
                 if not flags:
                     continue
 
+                # For compiler flags from literal specs, reorder any flags to
+                # the input order from flag.flag_group
                 flagmap_from_cli[flag_type] = _reorder_flags(flags)
 
             for flag_type in spec.compiler_flags.valid_compiler_flags():
