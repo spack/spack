@@ -140,9 +140,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             )
 
         # If there are no includes, just copy
-        if "include" not in data["spack"]:
-            shutil.copyfileobj(fin, fout)
-        else:
+        if "include" in data["spack"]:
             includes = data["spack"]["include"]
             # If there are includes in the config, then we need to fix the relative paths
             # to be relative from the concrete env dir used by downstream pipelines
@@ -171,7 +169,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             data["spack"]["include"] = fixed_includes
 
             os.makedirs(concrete_env_dir, exist_ok=True)
-            syaml.dump(data, fout)
+        syaml.dump(data, fout)
 
     shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
