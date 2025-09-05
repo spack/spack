@@ -991,7 +991,7 @@ possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback
     pkg_fact(Package, version_declared(Version, Weight, "external")) }
     :- external(node(ID, Package)).
 
-error(40000, "2 Attempted to use external for '{0}' which does not satisfy any configured external spec version", Package)
+error(1000, "Attempted to use external for '{0}' which does not satisfy any configured external spec version", Package)
   :- external(node(ID, Package)),
      not external_version(node(ID, Package), _, _).
 
