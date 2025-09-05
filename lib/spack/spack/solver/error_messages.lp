@@ -152,7 +152,7 @@ error(0, "'{0}' requires conflicting variant values 'Spec({1}={2})' and 'Spec({1
      Value1 < Value2. % see[1] in concretize.lp
 
 % Externals have to specify external conditions
-error(10000, "Attempted to use external for {0} which does not satisfy any configured external spec version", Package, startcauses, ExternalCause, CID)
+error(0, "Attempted to use external for {0} which does not satisfy any configured external spec version", Package, startcauses, ExternalCause, CID)
   :- external(node(ID, Package)),
      attr("external_spec_selected", node(ID, Package), Index),
      imposed_constraint(EID, "external_conditions_hold", Package, Index),
@@ -160,7 +160,7 @@ error(10000, "Attempted to use external for {0} which does not satisfy any confi
      condition_holds(ExternalCause, node(CID, TriggerPkg)),
      not external_version(node(ID, Package), _, _).
 
-error(10000, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}') is an external constraint for {0} which was not satisfied", Package, Name, A1)
+error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}') is an external constraint for {0} which was not satisfied", Package, Name, A1)
   :- external(node(ID, Package)),
      not attr("external_conditions_hold", node(ID, Package), _),
      imposed_constraint(EID, "external_conditions_hold", Package, _),
@@ -168,7 +168,7 @@ error(10000, "Attempted to build package {0} which is not buildable and does not
      condition_requirement(TID, Name, A1),
      not attr(Name, node(_, A1)).
 
-error(10000, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2)
+error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2)
   :- external(node(ID, Package)),
      not attr("external_conditions_hold", node(ID, Package), _),
      imposed_constraint(EID, "external_conditions_hold", Package, _),
@@ -176,7 +176,7 @@ error(10000, "Attempted to build package {0} which is not buildable and does not
      condition_requirement(TID, Name, A1, A2),
      not attr(Name, node(_, A1), A2).
 
-error(10000, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}', '{4}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2, A3)
+error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}', '{4}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2, A3)
   :- external(node(ID, Package)),
      not attr("external_conditions_hold", node(ID, Package), _),
      imposed_constraint(EID, "external_conditions_hold", Package, _),
@@ -184,7 +184,7 @@ error(10000, "Attempted to build package {0} which is not buildable and does not
      condition_requirement(TID, Name, A1, A2, A3),
      not attr(Name, node(_, A1), A2, A3).
 
-error(10000, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        'Spec({0} {1}={2})' is an external constraint for {0} which was not satisfied\n        'Spec({0} {1}={3})' required", Package, Variant, Value, OtherValue, startcauses, OtherValueCause, CID)
+error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        'Spec({0} {1}={2})' is an external constraint for {0} which was not satisfied\n        'Spec({0} {1}={3})' required", Package, Variant, Value, OtherValue, startcauses, OtherValueCause, CID)
   :- external(node(ID, Package)),
      not attr("external_conditions_hold", node(ID, Package), _),
      imposed_constraint(EID, "external_conditions_hold", Package, _),
@@ -196,7 +196,7 @@ error(10000, "Attempted to build package {0} which is not buildable and does not
      pkg_fact(TriggerPkg, condition_effect(OtherValueCause, EID2)),
      condition_holds(OtherValueCause, node(CID, TriggerPkg)).
 
-error(10000, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}', '{4}', '{5}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2, A3, A4)
+error(0, "Attempted to build package {0} which is not buildable and does not have a satisfying external\n        attr('{1}', '{2}', '{3}', '{4}', '{5}') is an external constraint for {0} which was not satisfied", Package, Name, A1, A2, A3, A4)
   :- external(node(ID, Package)),
      not attr("external_conditions_hold", node(ID, Package), _),
      imposed_constraint(EID, "external_conditions_hold", Package, _),
