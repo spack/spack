@@ -237,13 +237,13 @@ attr_single_value("node_os").
 attr_single_value("node_target").
 
 % Error when no attribute is selected
-error(100, no_value_error, Attribute, Package)
+error(10000, no_value_error, Attribute, Package)
   :- attr("node", node(ID, Package)),
      attr_single_value(Attribute),
      not attr(Attribute, node(ID, Package), _).
 
 % Error when multiple attr need to be selected
-error(10100, multiple_values_error, Attribute, Package)
+error(100, multiple_values_error, Attribute, Package)
   :- attr("node", node(ID, Package)),
      attr_single_value(Attribute),
      2 { attr(Attribute, node(ID, Package), Value) }.
@@ -278,8 +278,10 @@ pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declar
 % is not precisely one version chosen. Error facts are heavily optimized
 % against to ensure they cannot be inferred when a non-error solution is
 % possible
-{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
+{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
  :- attr("node", node(ID, Package)).
+
+attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
 
 % A virtual package may or may not have a version, but never has more than one
 error(100, "Cannot select a single version for virtual '{0}'", Virtual)
@@ -337,12 +339,19 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(10000, "Cannot satisfy '{0}@{1}' (={2})", Package, Constraint, Version)
+error(10000, "Cannot satisfy '{0}@{1}' 1({2})", Package, Constraint, Version)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)).
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     choose_version(node(ID, Package), Version).
 
-error(10200, "Cannot satisfy '{0}@{1}'", Package, Constraint)
+error(100, "Cannot satisfy '{0}@{1}' 2({2})", Package, Constraint, Version)
+  :- attr("node_version_satisfies", node(ID, Package), Constraint),
+     attr("version", node(ID, Package), Version),
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     not choose_version(node(ID, Package), _).
+
+error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      not attr("version", node(ID, Package), _).
 
@@ -972,7 +981,7 @@ possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback
     pkg_fact(Package, version_declared(Version, Weight, "external")) }
     :- external(node(ID, Package)).
 
-error(100, "Attempted to use external for '{0}' which does not satisfy any configured external spec version", Package)
+error(40000, "2 Attempted to use external for '{0}' which does not satisfy any configured external spec version", Package)
   :- external(node(ID, Package)),
      not external_version(node(ID, Package), _, _).
 
@@ -1160,14 +1169,14 @@ requirement_weight(node(ID, Package), Group, W) :-
   requirement_policy(Package, Group, "any_of"),
   requirement_group_satisfied(node(ID, Package), Group).
 
-error(10100, "cannot satisfy a requirement for package '{0}'.", Package) :-
+error(60000, "cannot satisfy a requirement for package '{0}'.", Package) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   not requirement_message(Package, X, _),
   not requirement_group_satisfied(node(ID, Package), X).
 
 
-error(10000, Message) :-
+error(50000, Message) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   requirement_message(Package, X, Message),
