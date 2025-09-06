@@ -858,10 +858,11 @@ class OptionalInclude:
         self.optional = entry.get("optional", False)
         self._scopes = None
 
-    def _scope(self, config_path: str, parent_scope: ConfigScope) -> Optional[ConfigScope]:
+    def _scope(self, path: str, config_path: str, parent_scope: ConfigScope) -> Optional[ConfigScope]:
         """Instantiate a configuration scope for the configuration path.
 
         Args:
+            path: raw include path
             config_path: configuration path
             parent_scope: including scope
 
@@ -897,7 +898,8 @@ class OptionalInclude:
             return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
 
         if not self.optional:
-            raise ValueError(f"Required path ({config_path}) does not exist")
+            dest = f" at ({config_path})" if config_path != path else ""
+            raise ValueError(f"Required path ({path}) does not exist{dest}")
 
         return None
 
@@ -967,7 +969,7 @@ class IncludePath(OptionalInclude):
 
         self.destination = config_path
 
-        scope = self._scope(self.destination, parent_scope)
+        scope = self._scope(self.path, self.destination, parent_scope)
         if scope is not None:
             self._scopes = [scope]
 
@@ -1092,7 +1094,7 @@ class GitIncludePaths(OptionalInclude):
         scopes: List[ConfigScope] = []
         for relative_path in self.paths:
             config_path = os.path.join(destination, relative_path)
-            scope = self._scope(config_path, parent_scope)
+            scope = self._scope(relative_path, config_path, parent_scope)
             if scope is not None:
                 scopes.append(scope)
 
