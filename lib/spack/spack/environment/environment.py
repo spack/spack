@@ -2677,8 +2677,12 @@ def initialize_environment_dir(
             tty.warn(f"Included file does not exist; will not copy: '{path}'")
             continue
 
-        fs.touchp(abspath)
-        shutil.copy(orig_abspath, abspath)
+        if os.path.isfile(orig_abspath):
+            fs.touchp(abspath)
+            shutil.copy(orig_abspath, abspath)
+        else:
+            os.makedirs(abspath)
+            shutil.copytree(orig_abspath, abspath, symlinks=True, dirs_exist_ok=True)
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
