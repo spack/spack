@@ -3858,11 +3858,10 @@ class SpecBuilder:
             # predicates on virtual packages.
             if name != "error":
                 node = args[0]
-                if not isinstance(node, NodeArgument):
-                    raise InternalConcretizerError(
-                        f"internal solver error: expected a node, but got a {type(args[0])}. "
-                        "Please report a bug at https://github.com/spack/spack/issues"
-                    )
+                assert isinstance(node, NodeArgument), (
+                    f"internal solver error: expected a node, but got a {type(args[0])}. "
+                    "Please report a bug at https://github.com/spack/spack/issues"
+                )
 
                 pkg = node.pkg
                 if spack.repo.PATH.is_virtual(pkg):
