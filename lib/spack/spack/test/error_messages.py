@@ -4,8 +4,8 @@
 
 import os
 import os.path
-from contextlib import contextmanager
 import re
+from contextlib import contextmanager
 
 import pytest
 
