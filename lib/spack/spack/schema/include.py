@@ -14,20 +14,46 @@ properties: Dict[str, Any] = {
         "type": "array",
         "default": [],
         "additionalProperties": False,
+        "description": "Include external configuration files to pull in configuration from "
+        "other files/URLs for modular and reusable configurations",
         "items": {
             "anyOf": [
                 # local, required path
-                {"type": "string"},
+                {
+                    "type": "string",
+                    "description": "Simple include entry specifying path to required "
+                    "configuration file/directory",
+                },
                 # local or remote paths that may be optional or conditional
                 {
                     "type": "object",
+                    "description": "Advanced include entry with optional conditions and "
+                    "remote file support",
                     "properties": {
-                        "when": {"type": "string"},
+                        "when": {
+                            "type": "string",
+                            "description": "Include this config only when the condition (as "
+                            "Python code) evaluates to true",
+                        },
                         "name": {"type": "string"},
                         "path_override_env_var": {"type": "string"},
-                        "path": {"type": "string"},
-                        "sha256": {"type": "string"},
-                        "optional": {"type": "boolean"},
+                        "path": {
+                            "type": "string",
+                            "description": "Path to configuration file/directory (absolute, "
+                            "relative, or URL). URLs must be raw file content (GitHub/GitLab "
+                            "raw form). Supports file, ftp, http, https schemes and "
+                            "Spack/environment variables",
+                        },
+                        "sha256": {
+                            "type": "string",
+                            "description": "Required SHA256 hash for remote URLs to verify "
+                            "file integrity",
+                        },
+                        "optional": {
+                            "type": "boolean",
+                            "description": "If true, include only if path exists; if false "
+                            "(default), path is required and missing files cause errors",
+                        },
                         "prefer_modify": {"type": "boolean"},
                     },
                     "required": ["path"],
@@ -36,14 +62,46 @@ properties: Dict[str, Any] = {
                 # remote git paths that may be optional or conditional
                 {
                     "type": "object",
+                    "description": "Include configuration files from a git repository with "
+                    "conditional and optional support",
                     "properties": {
-                        "git": {"type": "string"},
-                        "branch": {"type": "string"},
-                        "commit": {"type": "string"},
-                        "tag": {"type": "string"},
-                        "paths": {"type": "array", "items": {"type": "string"}},
-                        "when": {"type": "string"},
-                        "optional": {"type": "boolean"},
+                        "git": {
+                            "type": "string",
+                            "description": "URL of the git repository to clone (e.g., "
+                            "https://github.com/spack/spack-configs)",
+                        },
+                        "branch": {
+                            "type": "string",
+                            "description": "Branch to check out from the repository",
+                        },
+                        "commit": {
+                            "type": "string",
+                            "description": "Specific commit SHA to check out from the repository",
+                        },
+                        "tag": {
+                            "type": "string",
+                            "description": "Tag to check out from the repository",
+                        },
+                        "paths": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "description": "Relative path within the repository to a "
+                                "configuration file to include",
+                            },
+                            "description": "List of relative paths within the repository where "
+                            "configuration files are located",
+                        },
+                        "when": {
+                            "type": "string",
+                            "description": "Include this config only when the condition (as "
+                            "Python code) evaluates to true",
+                        },
+                        "optional": {
+                            "type": "boolean",
+                            "description": "If true, include only if repository is accessible; "
+                            "if false (default), inaccessible repository causes errors",
+                        },
                     },
                     "required": ["git", "paths"],
                     "additionalProperties": False,
