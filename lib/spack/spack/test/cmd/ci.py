@@ -1589,6 +1589,7 @@ spack:
   include:
   - {rel_configs_path}
   - path: {rel_configs_path}
+  - {configs_path}
   view: false
   specs:
     - dependent-install
