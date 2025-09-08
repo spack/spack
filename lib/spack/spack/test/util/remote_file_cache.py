@@ -9,6 +9,7 @@ import pytest
 
 import spack.config
 import spack.llnl.util.tty as tty
+import spack.paths
 import spack.util.remote_file_cache as rfc_util
 from spack.llnl.util.filesystem import join_path
 
@@ -35,7 +36,7 @@ def test_rfc_local_path_bad_scheme(path, err):
         ("file:///this/is/a/file/url/include.yaml", "/this/is/a/file/url/include.yaml"),
         (
             "relative/packages.txt",
-            os.path.join(os.environ["SPACK_ROOT"], "relative", "packages.txt"),
+            os.path.join(spack.paths.spack_root, "relative", "packages.txt"),
         ),
         (r"C:\Files (x86)\Windows\10", r"C:\Files (x86)\Windows\10"),
         (r"D:/spack stage", "D:\\spack stage"),
