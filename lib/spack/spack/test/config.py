@@ -30,6 +30,8 @@ import spack.schema.mirrors
 import spack.schema.repos
 import spack.spec
 import spack.store
+import spack.util.executable
+import spack.util.git
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 from spack.enums import ConfigScopePriority
