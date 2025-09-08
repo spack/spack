@@ -2681,6 +2681,9 @@ def initialize_environment_dir(
             fs.touchp(abspath)
             shutil.copy(orig_abspath, abspath)
         else:
+            if os.path.exists(abspath):
+                tty.warn(f"Skipping copying duplicate directories: {path}")
+                continue
             shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 
