@@ -1576,7 +1576,7 @@ def test_included_path_git(tmp_path: pathlib.Path, mock_low_high_config, monkeyp
 
     parent_scope = mock_low_high_config.scopes["low"]
     scopes = include.scopes(parent_scope)
-    assert len(scopes) == len(paths)
+    assert scopes and len(scopes) == len(paths)
     for scope in scopes:
-        assert os.path.basename(scope.path) in paths
         assert isinstance(scope, spack.config.SingleFileScope)
+        assert os.path.basename(scope.path) in paths  # type: ignore[union-attr]
