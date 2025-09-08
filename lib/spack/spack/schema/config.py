@@ -10,7 +10,6 @@ from typing import Any, Dict
 
 import spack.schema
 import spack.schema.projections
-from spack.llnl.util.lang import union_dicts
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {
@@ -41,18 +40,16 @@ properties: Dict[str, Any] = {
                 "anyOf": [
                     {
                         "type": "object",
-                        "properties": union_dicts(
-                            {"root": {"type": "string"}},
-                            {
-                                "padded_length": {
-                                    "oneOf": [
-                                        {"type": "integer", "minimum": 0},
-                                        {"type": "boolean"},
-                                    ]
-                                }
+                        "properties": {
+                            "root": {"type": "string"},
+                            "padded_length": {
+                                "oneOf": [
+                                    {"type": "integer", "minimum": 0},
+                                    {"type": "boolean"},
+                                ]
                             },
-                            spack.schema.projections.properties,
-                        ),
+                            **spack.schema.projections.properties,
+                        },
                     },
                     {"type": "string"},  # deprecated
                 ]
