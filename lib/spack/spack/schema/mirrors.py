@@ -9,46 +9,23 @@
 """
 from typing import Any, Dict
 
-import spack.vendor.jsonschema
-
 #: Common properties for connection specification
 connection = {
     "url": {"type": "string"},
-    # todo: replace this with named keys "username" / "password" or "id" / "secret"
     "access_pair": {
-        "oneOf": [
-            {
-                "type": "array",
-                "items": {"minItems": 2, "maxItems": 2, "type": ["string", "null"]},
-            },  # deprecated
-            {
-                "type": "object",
-                "required": ["secret_variable"],
-                # Only allow id or id_variable to be set, not both
-                "oneOf": [{"required": ["id"]}, {"required": ["id_variable"]}],
-                "properties": {
-                    "id": {"type": "string"},
-                    "id_variable": {"type": "string"},
-                    "secret_variable": {"type": "string"},
-                },
-            },
-        ]
+        "type": "object",
+        "required": ["secret_variable"],
+        # Only allow id or id_variable to be set, not both
+        "oneOf": [{"required": ["id"]}, {"required": ["id_variable"]}],
+        "properties": {
+            "id": {"type": "string"},
+            "id_variable": {"type": "string"},
+            "secret_variable": {"type": "string"},
+        },
     },
     "profile": {"type": ["string", "null"]},
     "endpoint_url": {"type": ["string", "null"]},
-    "access_token": {"type": ["string", "null"]},  # deprecated
     "access_token_variable": {"type": ["string", "null"]},
-}
-
-connection_ext = {
-    "deprecatedProperties": [
-        {
-            "names": ["access_token"],
-            "message": "Use of plain text `access_token` in mirror config is deprecated, use "
-            "environment variables instead (access_token_variable)",
-            "error": False,
-        }
-    ]
 }
 
 
@@ -56,12 +33,7 @@ connection_ext = {
 fetch_and_push = {
     "anyOf": [
         {"type": "string"},
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {**connection},  # type: ignore
-            **connection_ext,  # type: ignore
-        },
+        {"type": "object", "additionalProperties": False, "properties": {**connection}},
     ]
 }
 
@@ -77,9 +49,8 @@ mirror_entry = {
         "fetch": fetch_and_push,
         "push": fetch_and_push,
         "autopush": {"type": "boolean"},
-        **connection,  # type: ignore
+        **connection,
     },
-    **connection_ext,  # type: ignore
 }
 
 #: Properties for inclusion in other schemas
@@ -101,27 +72,3 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
-
-
-def update(data):
-    data = data["mirrors"]
-    errors = []
-
-    def check_access_pair(name, section):
-        if not section or not isinstance(section, dict):
-            return
-
-        if "access_token" in section and "access_token_variable" in section:
-            errors.append(
-                f'{name}: mirror credential "access_token" conflicts with "access_token_variable"'
-            )
-
-    # Check all of the sections
-    for name, section in data.items():
-        check_access_pair(name, section)
-        if isinstance(section, dict):
-            check_access_pair(name, section.get("fetch"))
-            check_access_pair(name, section.get("push"))
-
-    if errors:
-        raise spack.vendor.jsonschema.ValidationError("\n".join(errors))
