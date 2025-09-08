@@ -3543,6 +3543,9 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
     return result, rejected
 
 
+FunctionTupleT = Tuple[str, Tuple[Union[str, NodeArgument], ...]]
+
+
 class SpecBuilder:
     """Class with actions to rebuild a spec from ASP results."""
 
@@ -3592,6 +3595,7 @@ class SpecBuilder:
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or ConcreteSpecsByHash()
+        self.function_tuples: List[FunctionTupleT] = []
 
     def hash(self, node, h):
         if node not in self._specs:
@@ -3817,7 +3821,7 @@ class SpecBuilder:
         )
         self._splices.setdefault(parent_spec, []).append(splice)
 
-    def build_specs(self, function_tuples):
+    def build_specs(self, function_tuples: List[FunctionTupleT]) -> List[spack.spec.Spec]:
 
         attr_key = {
             # hash attributes are handled first, since they imply entire concrete specs
@@ -3830,7 +3834,8 @@ class SpecBuilder:
         }
 
         # Sort functions so that directives building objects are called in the right order
-        self.function_tuples = sorted(function_tuples, key=lambda x: attr_key.get(x[0], 0))
+        function_tuples.sort(key=lambda x: attr_key.get(x[0], 0))
+        self.function_tuples = function_tuples
         self._specs = {}
         for name, args in self.function_tuples:
             if SpecBuilder.ignored_attributes.match(name):
@@ -3855,6 +3860,12 @@ class SpecBuilder:
             # predicates on virtual packages.
             if name != "error":
                 node = args[0]
+                if not isinstance(node, NodeArgument):
+                    raise InternalConcretizerError(
+                        f"internal solver error: expected a node, but got a {type(args[0])}. "
+                        "Please report a bug at https://github.com/spack/spack/issues"
+                    )
+
                 pkg = node.pkg
                 if spack.repo.PATH.is_virtual(pkg):
                     continue
@@ -3863,7 +3874,7 @@ class SpecBuilder:
                 # do not bother calling actions on it except for node_flag_source,
                 # since node_flag_source is tracking information not in the spec itself
                 # we also need to keep track of splicing information.
-                spec = self._specs.get(args[0])
+                spec = self._specs.get(node)
                 if spec and spec.concrete:
                     do_not_ignore_attrs = ["node_flag_source", "splice_at_hash"]
                     if name not in do_not_ignore_attrs:
