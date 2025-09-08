@@ -3595,7 +3595,7 @@ class SpecBuilder:
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
         self._hash_lookup = hash_lookup or ConcreteSpecsByHash()
-        self.function_tuples: List[FunctionTupleT] = []
+        self._function_tuples: List[FunctionTupleT] = []
 
     def hash(self, node, h):
         if node not in self._specs:
@@ -3835,9 +3835,9 @@ class SpecBuilder:
 
         # Sort functions so that directives building objects are called in the right order
         function_tuples.sort(key=lambda x: attr_key.get(x[0], 0))
-        self.function_tuples = function_tuples
+        self._function_tuples = function_tuples
         self._specs = {}
-        for name, args in self.function_tuples:
+        for name, args in self._function_tuples:
             if SpecBuilder.ignored_attributes.match(name):
                 continue
 
