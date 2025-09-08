@@ -858,7 +858,9 @@ class OptionalInclude:
         self.optional = entry.get("optional", False)
         self._scopes = None
 
-    def _scope(self, path: str, config_path: str, parent_scope: ConfigScope) -> Optional[ConfigScope]:
+    def _scope(
+        self, path: str, config_path: str, parent_scope: ConfigScope
+    ) -> Optional[ConfigScope]:
         """Instantiate a configuration scope for the configuration path.
 
         Args:
@@ -964,9 +966,19 @@ class IncludePath(OptionalInclude):
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
-        config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location)
-        assert config_path
+        # Make sure to use the proper (default) working directory when obtaining
+        # the local path for a local file.
+        def work_dir():
+            if not os.path.isabs(self.path) and hasattr(parent_scope, "path"):
+                if os.path.isfile(parent_scope.path):
+                    return os.path.dirname(parent_scope.path)
+                if os.path.isdir(parent_scope.path):
+                    return parent_scope.path
+            return os.getcwd()
 
+        with filesystem.working_dir(work_dir()):
+            config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location)
+        assert config_path
         self.destination = config_path
 
         scope = self._scope(self.path, self.destination, parent_scope)
