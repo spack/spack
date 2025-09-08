@@ -153,7 +153,11 @@ class ConfigScope:
                 include_paths = [included_path(data) for data in includes["include"]]
                 for path in include_paths:
                     included_scope = include_path_scope(path, self)
-                    if included_scope:
+                    # Do not include duplicate scopes
+                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
+                        tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                        continue
+                    if included_scope and included_scope not in self._included_scopes:
                         self._included_scopes.append(included_scope)
 
         return self._included_scopes
