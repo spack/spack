@@ -5,6 +5,7 @@
 import os
 import os.path
 from contextlib import contextmanager
+import re
 
 import pytest
 
@@ -393,13 +394,35 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
 @contextmanager
 def expect_failure_and_print():
     got_an_error_as_expected = False
+    err_msg = None
     try:
         yield
     except spack.error.UnsatisfiableSpecError as e:
-        print(str(e))
         got_an_error_as_expected = True
+        err_msg = str(e)
     if not got_an_error_as_expected:
         raise ValueError("A failure was supposed to occur in this context manager")
+    elif not err_msg:
+        raise ValueError("No error message for failed concretization")
+    print(err_msg)
+    check_error(err_msg)
+
+
+def check_error(msg):
+    excludes = [
+        "failed to concretize .* for the following reasons:",
+        "Cannot satisfy .*",
+        "required because .* requested explicitly",
+        "cannot satisfy a requirement for package .*",
+    ]
+    lines = msg.split("\n")
+    remaining = []
+    for line in lines:
+        if any(re.search(p, line) for p in excludes):
+            continue
+        remaining.append(line)
+    if not remaining:
+        raise ValueError("The error message contains only generic statements")
 
 
 # Error message is good
@@ -419,6 +442,7 @@ def test_diamond_with_pkg_conflict2(concretize_scope, test_repo):
 
 
 # This error message is not so great
+@pytest.mark.xfail(reason="Not addressed yet")
 def test_version_range_null(concretize_scope, test_repo):
     with expect_failure_and_print():
         concretize_one("x2@3:4")
