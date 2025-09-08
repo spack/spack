@@ -2056,12 +2056,28 @@ class SpackSolverSetup:
             if not rules and virtual_str not in virtual_preferences:
                 continue
 
+            required, preferred = [], []
+            for rule in rules:
+                # Account only for unconditional requirements
+                if rule.condition != spack.spec.Spec():
+                    continue
+
+                if len(rule.requirements) == 1:
+                    required.append(rule.requirements[0].name)
+                    continue
+
+                # TODO: here we may have edge cases that are difficult to deal with, and won't
+                # TODO: make much sense. Should we report them?
+                preferred.extend([x.name for x in rule.requirements if x.name])
+
+            current_preferences = required + preferred + virtual_preferences.get(virtual_str, [])
+
             if rules:
                 self.emit_facts_from_requirement_rules(rules)
                 self.trigger_rules()
                 self.effect_rules()
 
-            for i, provider in enumerate(virtual_preferences[virtual_str]):
+            for i, provider in enumerate(spack.llnl.util.lang.dedupe(current_preferences)):
                 provider_name = spack.spec.Spec(provider).name
                 self.gen.fact(fn.provider_weight_from_config(virtual_str, provider_name, i))
             self.gen.newline()
