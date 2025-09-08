@@ -125,7 +125,8 @@ error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}'", Package, Constraint1, Constra
      attr("version", node(ID, Package), Version),
      % version satisfies one but not the other
      pkg_fact(Package, version_satisfies(Constraint1, Version)),
-     not pkg_fact(Package, version_satisfies(Constraint2, Version)).
+     not pkg_fact(Package, version_satisfies(Constraint2, Version)),
+     Cause1 < Cause2.
 
 % causation tracking error for no or multiple virtual providers
 error(0, "Cannot find a valid provider for virtual {0}", Virtual, startcauses, Cause, CID)
