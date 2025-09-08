@@ -44,9 +44,10 @@ spec expression syntax:
 
     variants:
       @B{+variant}                      enable <variant>
-      @r{-variant} or @r{~variant}          disable <variant>
-      @B{variant=value}                 set non-boolean <variant> to <value>
-      @B{variant=value1,value2,value3}  set multi-value <variant> values
+      @r{~variant} or @r{-variant}          disable <variant>
+      @B{variant=value}                 <variant> has <value> (at least)
+      @B{variant=value1,value2,value3}  <variant> has value1, 2, and 3 (at least)
+      @B{variant:=value1,value2}        <variant> has exactly value1 and value2
       @B{++}, @r{--}, @r{~~}, @B{==}                propagate variants to package dependencies
 
     architecture variants:
