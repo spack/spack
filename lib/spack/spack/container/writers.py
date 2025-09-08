@@ -196,7 +196,7 @@ class PathContext(tengine.Context):
 
         # Ensure that a few paths are where they need to be
         manifest.setdefault("config", syaml.syaml_dict())
-        manifest["config"]["install_tree"] = self.paths.store
+        manifest["config"]["install_tree"] = {"root": self.paths.store}
         manifest["view"] = self.paths.view
         manifest = {"spack": manifest}
 
