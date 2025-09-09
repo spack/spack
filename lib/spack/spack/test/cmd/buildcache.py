@@ -954,3 +954,81 @@ def test_buildcache_prune_with_invalid_keep_hash(
 
     with pytest.raises(spack.buildcache_prune.BuildcachePruningException):
         buildcache(*cmd_args)
+
+
+def test_buildcache_prune_new_specs_race_condition(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, monkeypatch
+):
+    """Test that specs uploaded after pruning begins are not considered for pruning"""
+
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Install and push multiple packages
+    spec1 = mutable_database.query_local("libelf", installed=True)[0]
+    spec2 = mutable_database.query_local("mpich", installed=True)[0]
+
+    # Push libelf first (this will be "old" and should be pruned)
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec1.dag_hash()}")
+
+    # Get current time to simulate pruning start time
+    pruning_start_time = time.time()
+
+    # Wait a moment, then push mpich (this will be "new" and should be protected)
+    time.sleep(0.1)
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec2.dag_hash()}")
+
+    # Create a keeplist with a dummy hash so both specs are not in the keeplist.
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text("00000000000000000000000000000000\n")
+
+    # Mock stat_url to return different modification times for different specs
+    original_stat_url = web_util.stat_url
+
+    def mock_stat_url(url: str):
+        """Mock stat_url to simulate different modification times"""
+        # Call original stat first to get real size
+        original_result = original_stat_url(url)
+        if original_result is None:
+            return None
+        size = original_result[0]
+
+        # For mpich, return a time after pruning started (should be protected)
+        if spec2.dag_hash() in url:
+            return (size, pruning_start_time + 10)  # Modified after pruning started
+        # For libelf, return a time before pruning started (should be pruned)
+        elif spec1.dag_hash() in url:
+            return (size, pruning_start_time - 10)  # Modified before pruning started
+        else:
+            return original_result
+
+    monkeypatch.setattr(web_util, "stat_url", mock_stat_url)
+
+    # Get URLs for both specs before pruning
+    cache_entry1 = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
+    )
+    cache_entry2 = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec2, allow_unsigned=True
+    )
+    manifest_url1 = cache_entry1.get_manifest_url(spec1, f"file://{mirror_directory}")
+    manifest_url2 = cache_entry2.get_manifest_url(spec2, f"file://{mirror_directory}")
+
+    # Verify both specs exist before pruning
+    assert web_util.url_exists(manifest_url1)
+    assert web_util.url_exists(manifest_url2)
+
+    # Run direct pruning with dummy keeplist (both specs would normally be pruned)
+    output = buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
+
+    # Verify the race condition protection worked:
+    # 1. The pruner should find 2 specs to prune
+    assert "Found 2 spec(s) to prune" in output
+
+    # 2. But due to race condition protection, no objects should be pruned in direct phase
+    assert "Pruned 0 objects from mirror" in output
+
+    # 3. Both manifests should still exist because the race condition logic
+    #    protected them from deletion (they appear to be modified after pruning started)
+    assert web_util.url_exists(manifest_url1)
+    assert web_util.url_exists(manifest_url2)

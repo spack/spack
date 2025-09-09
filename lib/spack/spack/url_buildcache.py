@@ -12,6 +12,8 @@ import os
 import re
 import shutil
 from contextlib import closing, contextmanager
+from datetime import datetime
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
@@ -1120,16 +1122,36 @@ def _entries_from_cache_aws_cli(
         tmpspecsdir,
     ]
 
+    # Use aws s3 ls to get mtimes of manifests
+    ls_command_args = ["s3", "ls", "--recursive", url]
+    s3_ls_regex = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\d+\s+(.+)$")
+
+    filename_to_mtime: Dict[str, float] = {}
+
     tty.debug(f"Using aws s3 sync to download manifests from {url} to {tmpspecsdir}")
 
     try:
         aws(*sync_command_args, output=os.devnull, error=os.devnull)
         file_list = fsys.find(tmpspecsdir, [include_pattern])
         read_fn = file_read_method
-    except Exception:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
 
-    return file_list, read_fn
+        # Use `aws s3 ls` to get mtimes of manifests
+        for line in aws(*ls_command_args, output=str, error=os.devnull).splitlines():
+            match = s3_ls_regex.match(line)
+            if match:
+                s3_path = "/".join(url.removeprefix("s3://").split("/")[1:])
+                filename = match.group(2).removeprefix(s3_path).lstrip("/")
+                local_path = "/".join([tmpspecsdir, filename])
+
+                if Path(local_path).exists():
+                    filename_to_mtime[local_path] = datetime.strptime(
+                        match.group(1), "%Y-%m-%d %H:%M:%S"
+                    ).timestamp()
+    except Exception as e:
+        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
+        raise e
+
+    return filename_to_mtime, read_fn
 
 
 def _entries_from_cache_fallback(
@@ -1149,7 +1171,7 @@ def _entries_from_cache_fallback(
         returning a `URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
-    file_list = None
+    filename_to_mtime = None
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
@@ -1159,20 +1181,23 @@ def _entries_from_cache_fallback(
         return cache_entry
 
     try:
-        file_list = [
-            url_util.join(url, entry)
-            for entry in web_util.list_url(url, recursive=True)
+        filename_to_mtime = {}
+
+        for entry in web_util.list_url(url, recursive=True):
             if fnmatch.fnmatch(
                 entry, cache_class.get_buildcache_component_include_pattern(component_type)
-            )
-        ]
+            ):
+                entry_url = url_util.join(url, entry)
+                stat_result = web_util.stat_url(entry_url)
+                if stat_result is not None:
+                    filename_to_mtime[entry_url] = stat_result[1]  # mtime is second element
         read_fn = url_read_method
     except Exception as err:
         # If we got some kind of S3 (access denied or other connection error), the first non
         # boto-specific class in the exception is Exception.  Just print a warning and return
         tty.warn(f"Encountered problem listing packages at {url}: {err}")
 
-    return file_list, read_fn
+    return filename_to_mtime, read_fn
 
 
 def get_entries_from_cache(
@@ -1198,9 +1223,9 @@ def get_entries_from_cache(
     callbacks.append(_entries_from_cache_fallback)
 
     for specs_from_cache_fn in callbacks:
-        file_list, read_fn = specs_from_cache_fn(url, tmpspecsdir, component_type)
-        if file_list:
-            return file_list, read_fn
+        file_to_mtime_mapping, read_fn = specs_from_cache_fn(url, tmpspecsdir, component_type)
+        if file_to_mtime_mapping:
+            return file_to_mtime_mapping, read_fn
 
     raise ListMirrorSpecsError("Failed to get list of entries from {0}".format(url))
 

@@ -33,7 +33,7 @@ from spack.llnl.util.lang import elide_list, stable_partition
 from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
-from ..buildcache_prune import prune_direct, prune_orphan
+from ..buildcache_prune import get_buildcache_normalized_time, prune_direct, prune_orphan
 from ..enums import InstallRecordStatus
 from ..url_buildcache import (
     BuildcacheComponent,
@@ -858,10 +858,12 @@ def prune_fn(args):
     dry_run: bool = args.dry_run
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
 
-    if args.keeplist:
-        prune_direct(mirror, pathlib.Path(args.keeplist), dry_run)
+    started_at = get_buildcache_normalized_time(mirror)
 
-    prune_orphan(mirror, dry_run)
+    if args.keeplist:
+        prune_direct(mirror, pathlib.Path(args.keeplist), started_at, dry_run)
+
+    prune_orphan(mirror, started_at, dry_run)
 
 
 def buildcache(parser, args):
