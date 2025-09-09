@@ -1532,7 +1532,9 @@ def test_included_path_git_unsat(
 @pytest.mark.parametrize(
     "key,value", [("branch", "main"), ("commit", "abcdef123456"), ("tag", "v1.0")]
 )
-def test_included_path_git(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch, key, value):
+def test_included_path_git(
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capsys
+):
     monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
 
     class MockIncludeGit(spack.util.executable.Executable):
@@ -1576,9 +1578,63 @@ def test_included_path_git(tmp_path: pathlib.Path, mock_low_high_config, monkeyp
     monkeypatch.setattr(spack.util.git, "init_git_repo", _init_repo)
     monkeypatch.setattr(spack.util.git, f"pull_checkout_{key}", _checkout)
 
+    # First successful pass builds the scope
     parent_scope = mock_low_high_config.scopes["low"]
     scopes = include.scopes(parent_scope)
     assert scopes and len(scopes) == len(paths)
     for scope in scopes:
         assert isinstance(scope, spack.config.SingleFileScope)
         assert os.path.basename(scope.path) in paths  # type: ignore[union-attr]
+
+    # Second pass uses the scopes previously built.
+    # Only need to do this for one of the parameters.
+    if key == "branch":
+        assert include._scopes is not None
+        scopes = include.scopes(parent_scope)
+        captured = capsys.readouterr()[1]
+        assert "Using existing scopes" in captured
+
+
+def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+
+    paths = ["concretizer.yaml"]
+    entry = {
+        "git": "https://example.com/linux/configs.git",
+        "branch": "develop",
+        "paths": paths,
+        "when": 'platform == "test"',
+    }
+    include = spack.config.included_path(entry)
+    parent_scope = mock_low_high_config.scopes["low"]
+
+    # fail to initialize the repository
+    def _failing_init(*args, **kwargs):
+        raise spack.util.executable.ProcessError("mock init repo failure")
+
+    monkeypatch.setattr(spack.util.git, "init_git_repo", _failing_init)
+
+    with pytest.raises(spack.error.ConfigError, match="Unable to initialize"):
+        include.scopes(parent_scope)
+
+    # fail in git config (so use default remote) *and* git checkout
+    def _init_repo(*args, **kwargs):
+        fs.mkdirp(fs.join_path(include.destination, ".git"))
+
+    class MockIncludeGit(spack.util.executable.Executable):
+        def __init__(self, required: bool):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            raise spack.util.executable.ProcessError("mock git failure")
+
+    monkeypatch.setattr(spack.util.git, "init_git_repo", _init_repo)
+    monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
+
+    with pytest.raises(spack.error.ConfigError, match="Unable to check out"):
+        include.scopes(parent_scope)
+
+    # set up invalid option failure
+    include.branch = ""  # type: ignore[union-attr]
+    with pytest.raises(spack.error.ConfigError, match="Missing or unsupported options"):
+        include.scopes(parent_scope)
