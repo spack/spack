@@ -1971,6 +1971,42 @@ class TestConcretize:
                     'provider_weight_from_config("mpi","low-priority-mpi",3).',
                 ],
             ),
+            # Configuration with conflicts
+            (
+                """
+    packages:
+      all:
+        providers:
+          mpi: [mpich, low-priority-mpi]
+      mpi:
+        require:
+        - mpich2
+        conflict:
+        - mpich
+    """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("mpi","low-priority-mpi",1).',
+                ],
+            ),
+            (
+                """
+        packages:
+          all:
+            providers:
+              mpi: [mpich, low-priority-mpi]
+          mpi:
+            require:
+            - mpich2
+            conflict:
+            - mpich@1
+        """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("mpi","mpich",1).',
+                    'provider_weight_from_config("mpi","low-priority-mpi",2).',
+                ],
+            ),
         ],
     )
     def test_requirements_and_weights(self, packages_config, expected, mutable_config):

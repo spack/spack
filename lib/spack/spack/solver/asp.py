@@ -84,7 +84,7 @@ from .core import (
     using_libc_compatibility,
 )
 from .input_analysis import create_counter, create_graph_analyzer
-from .requirements import RequirementKind, RequirementParser, RequirementRule
+from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFilter
 from .runtimes import RuntimePropertyRecorder, _external_config_with_implicit_externals
 from .versions import DeclaredVersion, Provenance, concretization_version_order
@@ -2056,31 +2056,33 @@ class SpackSolverSetup:
             if not rules and virtual_str not in virtual_preferences:
                 continue
 
-            required, preferred = [], []
+            required, preferred, removed = [], [], set()
             for rule in rules:
                 # We don't deal with conditional requirements
                 if rule.condition != spack.spec.Spec():
                     continue
 
-                if len(rule.requirements) == 1:
-                    required.append(rule.requirements[0].name)
-                else:
+                if rule.origin == RequirementOrigin.PREFER_YAML:
                     preferred.extend(x.name for x in rule.requirements if x.name)
+                elif rule.origin == RequirementOrigin.REQUIRE_YAML:
+                    required.extend(x.name for x in rule.requirements if x.name)
+                elif rule.origin == RequirementOrigin.CONFLICT_YAML:
+                    conflict_spec = rule.requirements[0]
+                    # For conflicts, we take action only if just a name is used
+                    if spack.spec.Spec(conflict_spec.name).satisfies(conflict_spec):
+                        removed.add(conflict_spec.name)
 
             current_preferences = required + preferred + virtual_preferences.get(virtual_str, [])
-
+            current_preferences = [x for x in current_preferences if x not in removed]
             for i, provider in enumerate(spack.llnl.util.lang.dedupe(current_preferences)):
                 provider_name = spack.spec.Spec(provider).name
                 self.gen.fact(fn.provider_weight_from_config(virtual_str, provider_name, i))
+            self.gen.newline()
 
             if rules:
                 self.emit_facts_from_requirement_rules(rules)
                 self.trigger_rules()
                 self.effect_rules()
-
-            self.gen.newline()
-
-        self.gen.newline()
 
     def emit_facts_from_requirement_rules(self, rules: List[RequirementRule]):
         """Generate facts to enforce requirements.
