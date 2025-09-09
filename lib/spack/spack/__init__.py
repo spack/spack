@@ -10,7 +10,7 @@ import spack.paths
 import spack.util.git
 
 #: PEP440 canonical <major>.<minor>.<micro>.<devN> string
-__version__ = "1.0.2.dev0"
+__version__ = "1.0.2"
 spack_version = __version__
 
 #: The current Package API version implemented by this version of Spack. The Package API defines

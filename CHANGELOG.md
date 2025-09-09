@@ -1,3 +1,26 @@
+# v1.0.2 (2025-09-11)
+
+## Bug Fixes
+
+* `spack config edit` can now open malformed YAML files. (#51088)
+* `spack edit -b` supports specifying the repository path or its namespace. (#51084)
+* `spack repo list` escapes the color code for paths that contain `@g`. (#51178)
+* Fixed various issues on the solver:
+  * Improved the error message when an invalid dependency is specified in the input. (#51176)
+  * Build the preferred compiler with itself by default. (#51201)
+  * Fixed a performance regression when using `unify:when_possible`. (#51226)
+  * Fixed an issue with strong preferences, when provider details are given. (#51263)
+  * Fixed an issue when specifying flags on a package that appears multiple times in the DAG. (#51218) 
+* Fixed a regression for `zsh` in `spack env activate --prompt`. (#51258)
+* Fix a few cases where the `when` context manager was not dealing with direct dependencies correctly. (#51259)
+* Various fixes to string representations of specs. (#51207) 
+
+## Enhancements
+
+* Various improvements to the documentation (#51145, #51151, #51147, #51181, #51172, #51188, #51195)
+* Greatly improve the performance of `spack diff`. (#51270)
+* `spack solve` highlights optimization weights in a more intuitive way. (#51198)
+
 # v1.0.1 (2025-08-11)
 
 ## Bug Fixes
