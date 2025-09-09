@@ -1062,13 +1062,29 @@ package_in_dag(Node) :-  attr("virtual_node", Node).
 activate_requirement(node(ID, Package), X) :-
   package_in_dag(node(ID, Package)),
   requirement_group(Package, X),
-  not requirement_conditional(Package, X, _).
+  not requirement_conditional(Package, X, _),
+  not deactivate_requirements(node(ID, Package), X).
 
 activate_requirement(node(ID, Package), X) :-
   package_in_dag(node(ID, Package)),
   requirement_group(Package, X),
   condition_holds(Y, node(ID, Package)),
-  requirement_conditional(Package, X, Y).
+  requirement_conditional(Package, X, Y),
+  not deactivate_requirements(node(ID, Package), X).
+
+deactivate_requirements(node(ID, Package), X) :-
+  requirement_group(Package, X),
+  exclude_requirement_for_externals(Package, X),
+  external(node(ID, Package)).
+
+deactivate_requirements(node(ID, Package), X) :-
+  requirement_group(Package, X),
+  exclude_requirement_for_build(Package, X),
+  not unification_set("root", node(ID, Package)),
+  attr("node", node(ID, Package)).
+
+#defined exclude_requirement_for_build/2.
+#defined exclude_requirement_for_externals/2.
 
 requirement_group_satisfied(node(ID, Package), GroupID) :-
   1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } 1,

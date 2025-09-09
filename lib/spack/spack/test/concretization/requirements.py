@@ -18,14 +18,141 @@ import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
 from spack.installer import PackageInstaller
+from spack.main import SpackCommand
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
+from spack.test.conftest import create_test_repo
 from spack.util.url import path_to_file_url
 
 
 def update_packages_config(conf_str):
     conf = syaml.load_config(conf_str)
     spack.config.set("packages", conf["packages"], scope="concretize")
+
+
+_tree1_top = (
+    "tree1-top",
+    """\
+from spack.package import *
+class Tree1Top(Package):
+    version('1.1')
+    version('1.0')
+
+    depends_on("tree1-left")
+    depends_on("tree1-right", type="build")
+""",
+)
+
+
+_tree1_left = (
+    "tree1-left",
+    """\
+from spack.package import *
+class Tree1Left(Package):
+    version('1.1')
+    version('1.0')
+
+    depends_on("tree1-bottom")
+""",
+)
+
+
+_tree1_right = (
+    "tree1-right",
+    """\
+from spack.package import *
+class Tree1Right(Package):
+    version('1.1')
+    version('1.0')
+
+    depends_on("tree1-bottom")
+    depends_on("tree1-right-right")
+""",
+)
+
+
+_tree1_bottom = (
+    "tree1-bottom",
+    """\
+from spack.package import *
+class Tree1Bottom(Package):
+    version('1.1')
+    version('1.0')
+""",
+)
+
+
+_tree1_rightright = (
+    "tree1-right-right",
+    """\
+from spack.package import *
+class Tree1RightRight(Package):
+    version('1.1')
+    version('1.0')
+""",
+)
+
+
+"""
+A DAG where a dependency ("right") is build-only
+
+top____
+|      |
+left   right
+|     _/   \
+bottom      right-right
+"""
+_tree1_packages = [_tree1_top, _tree1_left, _tree1_right, _tree1_bottom, _tree1_rightright]
+
+
+@pytest.fixture
+def _create_test_repo2(tmpdir, mutable_config):
+    yield create_test_repo(tmpdir, _tree1_packages)
+
+
+@pytest.fixture
+def test_repo2(_create_test_repo2, monkeypatch, mock_stage):
+    with spack.repo.use_repositories(_create_test_repo2) as mock_repo_path:
+        yield mock_repo_path
+
+
+solve = SpackCommand("solve")
+
+
+def test_selective_requirements_linkrunonly(concretize_scope, test_repo2):
+    conf_str = """\
+packages:
+  all:
+    require:
+    - spec: "@1.0"
+      turn_off_for: ["build", "externals"]
+"""
+    update_packages_config(conf_str)
+
+    result = Spec("tree1-top ^tree1-right@1.1").concretized()
+
+    assert result["tree1-right"].satisfies("@1.1")
+    assert result["tree1-right"]["tree1-right-right"].satisfies("@1.1")
+    assert result["tree1-left"].satisfies("@1.0")
+    assert result["tree1-left"]["tree1-bottom"].satisfies("@1.0")
+
+
+def test_selective_requirements_notexternals(concretize_scope, test_repo2):
+    conf_str = """\
+packages:
+  all:
+    require:
+    - spec: "@1.0"
+      turn_off_for: ["externals"]
+  tree1-bottom:
+    buildable: false
+    externals:
+    - spec: tree1-bottom@1.1
+"""
+    update_packages_config(conf_str)
+
+    result = Spec("tree1-top").concretized()
+    assert result["tree1-bottom"].satisfies("@1.1")
 
 
 @pytest.fixture

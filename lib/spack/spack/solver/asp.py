@@ -2107,6 +2107,11 @@ class SpackSolverSetup:
                 self.gen.fact(fn.requirement_message(pkg_name, requirement_grp_id, rule.message))
             self.gen.newline()
 
+            if rule.not_externals:
+                self.gen.fact(fn.exclude_requirement_for_externals(pkg_name, requirement_grp_id))
+            if rule.not_build:
+                self.gen.fact(fn.exclude_requirement_for_build(pkg_name, requirement_grp_id))
+
             for input_spec in requirement_grp:
                 spec = spack.spec.Spec(input_spec)
                 spec.replace_hash()
