@@ -1457,6 +1457,22 @@ def test_included_path_string(
     assert "Using existing scopes" in captured
 
 
+def test_included_path_string_no_parent_path(
+    tmp_path: pathlib.Path, config, ensure_debug, monkeypatch
+):
+    """Use a relative include path and no parent scope path so destination
+    will be rooted in the current working directory (usually SPACK_ROOT)."""
+    entry = {"path": "config.yaml", "optional": True}
+    include = spack.config.included_path(entry)
+    FakeScope = collections.namedtuple("FakeScope", ["path"])
+    parent_scope = FakeScope("")
+
+    assert include.scopes(parent_scope) is None  # type: ignore[arg-type]
+    destination = include.destination
+    curr_dir = os.getcwd()
+    assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]
+
+
 def test_included_path_conditional_bad_when(
     tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, capsys
 ):
@@ -1593,6 +1609,13 @@ def test_included_path_git(
         scopes = include.scopes(parent_scope)
         captured = capsys.readouterr()[1]
         assert "Using existing scopes" in captured
+
+    # A direct clone now returns already cloned destination and debug message.
+    # Again only need to run this test once.
+    if key == "tag":
+        assert include._clone() == include.destination
+        captured = capsys.readouterr()[1]
+        assert "already cloned" in captured
 
 
 def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
