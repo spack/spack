@@ -2058,7 +2058,7 @@ class SpackSolverSetup:
 
             required, preferred = [], []
             for rule in rules:
-                # Account only for unconditional requirements
+                # We don't deal with conditional requirements
                 if rule.condition != spack.spec.Spec():
                     continue
 
@@ -2066,8 +2066,6 @@ class SpackSolverSetup:
                     required.append(rule.requirements[0].name)
                     continue
 
-                # TODO: here we may have edge cases that are difficult to deal with, and won't
-                # TODO: make much sense. Should we report them?
                 preferred.extend([x.name for x in rule.requirements if x.name])
 
             current_preferences = required + preferred + virtual_preferences.get(virtual_str, [])
