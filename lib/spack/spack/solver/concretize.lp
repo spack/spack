@@ -1590,7 +1590,11 @@ unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
     compiler_mixing(0, Language),
     language(Language).
 
-error(100, "Compiler mixing is disabled") :- #count { X,Y,Z : unification_set_compiler("root", X,Y,Z) } > 1.
+% You can't have >1 (CompilerName, CompilerVersion) pairs for a given
+% language if mixing is disabled
+error(100, "Compiler mixing is disabled") :-
+    unification_set_compiler("root", _, _, Z),
+    #count { X,Y : unification_set_compiler("root", X, Y, Z) } > 1.
 
 %-----------------------------------------------------------------------------
 % Runtimes
