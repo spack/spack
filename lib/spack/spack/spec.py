@@ -2194,12 +2194,12 @@ class Spec:
         hash_string = getattr(self, hash.attr, None)
         if hash_string:
             return hash_string[:length]
-        else:
-            hash_string = self.spec_hash(hash)
-            if force or self.concrete:
-                setattr(self, hash.attr, hash_string)
 
-            return hash_string[:length]
+        hash_string = self.spec_hash(hash)
+        if force or self.concrete:
+            setattr(self, hash.attr, hash_string)
+
+        return hash_string[:length]
 
     def package_hash(self):
         """Compute the hash of the contents of the package for this node"""
