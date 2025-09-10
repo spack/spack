@@ -122,16 +122,19 @@ pipeline_gen_schema = {
     },
 }
 
-core_shared_properties = {
-    "pipeline-gen": pipeline_gen_schema,
-    "rebuild-index": {"type": "boolean"},
-    "broken-specs-url": {"type": "string"},
-    "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
-    "target": {"type": "string", "enum": ["gitlab"], "default": "gitlab"},
-}
-
 #: Properties for inclusion in other schemas
-properties: Dict[str, Any] = {"ci": core_shared_properties}
+properties: Dict[str, Any] = {
+    "ci": {
+        "type": "object",
+        "properties": {
+            "pipeline-gen": pipeline_gen_schema,
+            "rebuild-index": {"type": "boolean"},
+            "broken-specs-url": {"type": "string"},
+            "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
+            "target": {"type": "string", "enum": ["gitlab"], "default": "gitlab"},
+        },
+    }
+}
 
 #: Full schema with metadata
 schema = {

@@ -11,8 +11,6 @@ from typing import Any, Dict
 
 import spack.schema.spec
 
-# spack.schema.spec.properties
-
 properties: Dict[str, Any] = {
     "database": {
         "type": "object",
@@ -25,7 +23,7 @@ properties: Dict[str, Any] = {
                     r"^[\w\d]{32}$": {
                         "type": "object",
                         "properties": {
-                            "spec": spack.schema.spec.properties,
+                            **spack.schema.spec.properties,
                             "path": {"oneOf": [{"type": "string"}, {"type": "null"}]},
                             "installed": {"type": "boolean"},
                             "ref_count": {"type": "integer", "minimum": 0},
