@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import importlib
 import json
 import os
 
@@ -12,6 +13,125 @@ from spack.vendor import jsonschema
 import spack.paths
 import spack.schema
 import spack.util.spack_yaml as syaml
+from spack.llnl.util.lang import list_modules
+
+_draft_07_with_spack_extensions = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://json-schema.org/draft-07/schema#",
+    "title": "Core schema meta-schema",
+    "definitions": {
+        "schemaArray": {"type": "array", "minItems": 1, "items": {"$ref": "#"}},
+        "nonNegativeInteger": {"type": "integer", "minimum": 0},
+        "nonNegativeIntegerDefault0": {
+            "allOf": [{"$ref": "#/definitions/nonNegativeInteger"}, {"default": 0}]
+        },
+        "simpleTypes": {
+            "enum": ["array", "boolean", "integer", "null", "number", "object", "string"]
+        },
+        "stringArray": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": True,
+            "default": [],
+        },
+    },
+    "type": ["object", "boolean"],
+    "properties": {
+        "$id": {"type": "string", "format": "uri-reference"},
+        "$schema": {"type": "string", "format": "uri"},
+        "$ref": {"type": "string", "format": "uri-reference"},
+        "$comment": {"type": "string"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "default": True,
+        "readOnly": {"type": "boolean", "default": False},
+        "writeOnly": {"type": "boolean", "default": False},
+        "examples": {"type": "array", "items": True},
+        "multipleOf": {"type": "number", "exclusiveMinimum": 0},
+        "maximum": {"type": "number"},
+        "exclusiveMaximum": {"type": "number"},
+        "minimum": {"type": "number"},
+        "exclusiveMinimum": {"type": "number"},
+        "maxLength": {"$ref": "#/definitions/nonNegativeInteger"},
+        "minLength": {"$ref": "#/definitions/nonNegativeIntegerDefault0"},
+        "pattern": {"type": "string", "format": "regex"},
+        "additionalItems": {"$ref": "#"},
+        "items": {
+            "anyOf": [{"$ref": "#"}, {"$ref": "#/definitions/schemaArray"}],
+            "default": True,
+        },
+        "maxItems": {"$ref": "#/definitions/nonNegativeInteger"},
+        "minItems": {"$ref": "#/definitions/nonNegativeIntegerDefault0"},
+        "uniqueItems": {"type": "boolean", "default": False},
+        "contains": {"$ref": "#"},
+        "maxProperties": {"$ref": "#/definitions/nonNegativeInteger"},
+        "minProperties": {"$ref": "#/definitions/nonNegativeIntegerDefault0"},
+        "required": {"$ref": "#/definitions/stringArray"},
+        "additionalProperties": {"$ref": "#"},
+        "definitions": {"type": "object", "additionalProperties": {"$ref": "#"}, "default": {}},
+        "properties": {"type": "object", "additionalProperties": {"$ref": "#"}, "default": {}},
+        "patternProperties": {
+            "type": "object",
+            "additionalProperties": {"$ref": "#"},
+            "propertyNames": {"format": "regex"},
+            "default": {},
+        },
+        "dependencies": {
+            "type": "object",
+            "additionalProperties": {
+                "anyOf": [{"$ref": "#"}, {"$ref": "#/definitions/stringArray"}]
+            },
+        },
+        "propertyNames": {"$ref": "#"},
+        "const": True,
+        "enum": {"type": "array", "items": True, "minItems": 1, "uniqueItems": True},
+        "type": {
+            "anyOf": [
+                {"$ref": "#/definitions/simpleTypes"},
+                {
+                    "type": "array",
+                    "items": {"$ref": "#/definitions/simpleTypes"},
+                    "minItems": 1,
+                    "uniqueItems": True,
+                },
+            ]
+        },
+        "format": {"type": "string"},
+        "contentMediaType": {"type": "string"},
+        "contentEncoding": {"type": "string"},
+        "if": {"$ref": "#"},
+        "then": {"$ref": "#"},
+        "else": {"$ref": "#"},
+        "allOf": {"$ref": "#/definitions/schemaArray"},
+        "anyOf": {"$ref": "#/definitions/schemaArray"},
+        "oneOf": {"$ref": "#/definitions/schemaArray"},
+        "not": {"$ref": "#"},
+        # What follows is two Spack extensions to JSON Schema Draft 7:
+        # deprecatedProperties and additionalKeysAreSpecs
+        "deprecatedProperties": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "names": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                        "uniqueItems": True,
+                    },
+                    "message": {"type": "string"},
+                    "error": {"type": "boolean"},
+                },
+                "required": ["names", "message"],
+                "additionalProperties": False,
+            },
+        },
+        "additionalKeysAreSpecs": {"type": "boolean"},
+    },
+    "default": True,
+    # note: not in draft-07, this is for catching typos
+    "additionalProperties": False,
+}
 
 
 @pytest.fixture()
@@ -151,3 +271,21 @@ def test_list_merge_order():
     result = spack.schema.merge_yaml(dest, source)
 
     assert ["a", "b", "c", "d", "e", "f"] == result
+
+
+@pytest.mark.parametrize(
+    "schema_name", sorted(list_modules(os.path.dirname(spack.schema.__file__)))
+)
+def test_spack_schemas_are_valid(schema_name: str):
+    """Test that the Spack schemas in spack.schema.*.schema are valid under JSON Schema Draft 7
+    with Spack extensions *only*."""
+    module_name = f"spack.schema.{schema_name}"
+    try:
+        schema = getattr(importlib.import_module(module_name), "schema")
+    except Exception:
+        return  # it is okay if a module does not define a schema
+
+    try:
+        jsonschema.validate(schema, _draft_07_with_spack_extensions)
+    except jsonschema.ValidationError as e:
+        raise RuntimeError(f"Schema defined by {module_name} is not valid: {e.message}")
