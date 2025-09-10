@@ -274,13 +274,12 @@ In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` wo
 Requirements, Preferences, and Conflicts
 ----------------------------------------
 
-Spack can be configured to control which package versions, variants, and dependencies are selected during concretization.
-This is accomplished through package requirements, preferences, and conflicts.
+You can control how Spack selects versions, variants and providers during concretization using package requirements, preferences, and conflicts.
 
-Package requirements are useful when you find yourself repeatedly specifying the same constraints on the command line or in Spack environments, and wish that Spack respects these constraints whether you mention them explicitly or not.
+Package requirements are useful when you find yourself repeatedly specifying the same constraints on the command line or in Spack environments, and you wish that Spack respects these constraints whether you mention them explicitly or not.
 
-Both **requirements** and **conflicts** are hard constraints that Spack must satisfy when concretizing a spec.
-If a requirement or a conflict cannot be satisfied, concretization will fail.
+Both **requirements** and **conflicts** are hard constraints that Spack must satisfy.
+If they cannot be met, concretization will fail.
 
 In contrast, **preferences** are softer constraints that Spack will satisfy if possible, but ignore if they conflict with other constraints.
 
@@ -293,8 +292,8 @@ If you are looking for ways to influence Spack's concretization choices, but pre
    FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
 
 
-Basic syntax
-^^^^^^^^^^^^
+Basic Syntax and Examples
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The package requirements, preferences and conflicts are specified in ``packages.yaml``, keyed by package name and expressed using the :doc:`spec syntax <spec_syntax>` under the ``require``, ``prefer`` and ``conflict`` attributes.
 
@@ -489,8 +488,8 @@ Notice that conditional requirements give the concretizer two options:
 
 The choice depends on the optimization criteria of the concretizer (see :ref:`spack-solve` for the current optimization criteria).
 
-The second option is sometimes considered counter-intuitive.
-For example, if an older version of a package is required when using the default compiler, it is more likely that the concretizer will pick a newer version with a non-default compiler than to pick an older version with the default compiler.
+The second option is sometimes considered counter-intuitive, as the concretizer may choose to ignore a ``when`` condition rather than satisfy it.
+For example, if an older package version is required only when using the default compiler, the concretizer may be more likely to pick a newer version with a non-default compiler, rather than an older version with the default compiler.
 
 
 Choice rules in requirements
