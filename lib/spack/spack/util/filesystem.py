@@ -3436,6 +3436,7 @@ def relocate_win_rpath(package):
                 dirs_to_relocate.append(entry.path)
     ev.set_path("SPACK_RELOCATE_PATH", dirs_to_relocate)
     ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.root)
+    ev.set("SPACK_CONTEXT_ROOT", package.spec.prefix)
     lib_map = {}
     for lib in glob.glob(os.path.join(package.spec.prefix, "**\\*.lib"), recursive=True):
         if verify_import_lib(lib, package=package):
