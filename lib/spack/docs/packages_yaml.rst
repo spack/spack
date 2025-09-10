@@ -269,182 +269,126 @@ In addition, paths from ``extra_rpaths`` are added as library search paths for t
 In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be added as well.
 
 .. _package-requirements:
+.. _package-strong-preferences:
 
-Package Requirements
---------------------
+Requirements, Preferences, and Conflicts
+----------------------------------------
 
-Spack can be configured to always use certain compilers, package versions, and variants during concretization through package requirements.
+Spack can be configured to require, prefer or avoid particular package versions, variants and dependencies during concretization through package requirements, preferences and conflicts.
 
-Package requirements are useful when you find yourself repeatedly specifying the same constraints on the command line, and wish that Spack respects these constraints whether you mention them explicitly or not.
-Another use case is specifying constraints that should apply to all root specs in an environment, without having to repeat the constraint everywhere.
+Package requirements are useful when you find yourself repeatedly specifying the same constraints on the command line or in Spack environments, and wish that Spack respects these constraints whether you mention them explicitly or not.
 
-Apart from that, requirements config is more flexible than constraints on the command line, because it can specify constraints on packages *when they occur* as a dependency.
-In contrast, on the command line it is not possible to specify constraints on dependencies while also keeping those dependencies optional.
+Both **requirements** and **conflicts** are hard constraints that Spack must satisfy when concretizing a spec.
+If a requirement or a conflict cannot be satisfied, concretization will fail.
+
+In contrast, **preferences** are softer constraints that Spack will satisfy if possible, but ignore if they conflict with other constraints.
+
+Requirements, preferences and conflicts are among the highest priorities of the concretizer, and are taken into account before other factors, such as optimizing for reuse of already installed packages.
+
+If you are looking for ways to influence Spack's concretization choices, but prefer reuse of existing installations above all else, consider using :ref:`weak package preferences <package-preferences>` instead.
 
 .. seealso::
 
    FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
 
 
-Requirements syntax
-^^^^^^^^^^^^^^^^^^^
+Basic syntax
+^^^^^^^^^^^^
 
-The package requirements configuration is specified in ``packages.yaml``, keyed by package name and expressed using the Spec syntax.
-In the simplest case you can specify attributes that you always want the package to have by providing a single spec string to ``require``:
+The package requirements, preferences and conflicts are specified in ``packages.yaml``, keyed by package name and expressed using the :doc:`spec syntax <spec_syntax>` under the ``require``, ``prefer`` and ``conflict`` attributes.
+
+Here is a basic example that features all three types of constraints:
 
 .. code-block:: yaml
 
    packages:
+     cmake:
+       require:
+       - "@3.31:"
      libfabric:
-       require: "@1.13.2"
+       prefer:
+       - "@2.2.0"
+       conflict:
+       - "fabrics=tcp"
 
-In the above example, ``libfabric`` will always build with version 1.13.2.
-If you need to compose multiple configuration scopes ``require`` accepts a list of strings:
+With this configuration, Spack will:
 
-.. code-block:: yaml
+1. always concretize ``cmake`` to version 3.31 or later,
+2. prefer ``libfabric@2.2.0``, except when that version conflicts with other constraints,
+3. never pick ``libfabric`` with the ``tcp`` fabric.
 
-   packages:
-     libfabric:
-       require:
-       - "@1.13.2"
-       - "%gcc"
-
-In this case ``libfabric`` will always build with version 1.13.2 **and** using GCC as a compiler.
-
-For more complex use cases, require accepts also a list of objects.
-These objects must have either a ``any_of`` or a ``one_of`` field, containing a list of spec strings, and they can optionally have a ``when`` and a ``message`` attribute:
-
-.. code-block:: yaml
-
-   packages:
-     openmpi:
-       require:
-       - any_of: ["@4.1.5", "%c,cxx,fortran=gcc"]
-         message: "in this example only 4.1.5 can build with other compilers"
-
-``any_of`` is a list of specs.
-One of those specs must be satisfied and it is also allowed for the concretized spec to match more than one.
-In the above example, that means you could build ``openmpi@4.1.5%gcc``, ``openmpi@4.1.5%clang`` or ``openmpi@3.9%gcc``, but not ``openmpi@3.9%clang``.
-
-If a custom message is provided, and the requirement is not satisfiable, Spack will print the custom error message:
-
-.. code-block:: spec
-
-   $ spack spec openmpi@3.9%clang
-   ==> Error: in this example only 4.1.5 can build with other compilers
-
-We could express a similar requirement using the ``when`` attribute:
-
-.. code-block:: yaml
-
-   packages:
-     openmpi:
-       require:
-       - any_of: ["%c,cxx,fortran=gcc"]
-         when: "@:4.1.4"
-         message: "in this example only 4.1.5 can build with other compilers"
-
-In the example above, if the version turns out to be 4.1.4 or less, we require the compiler to be GCC.
-For readability, Spack also allows a ``spec`` key accepting a string when there is only a single constraint:
-
-.. code-block:: yaml
-
-   packages:
-     openmpi:
-       require:
-       - spec: "%c,cxx,fortran=gcc"
-         when: "@:4.1.4"
-         message: "in this example only 4.1.5 can build with other compilers"
-
-This code snippet and the one before it are semantically equivalent.
-
-Finally, instead of ``any_of`` you can use ``one_of`` which also takes a list of specs.
-The final concretized spec must match one and only one of them:
-
-.. code-block:: yaml
-
-   packages:
-     mpich:
-       require:
-       - one_of: ["+cuda", "+rocm"]
-
-In the example above, that means you could build ``mpich+cuda`` or ``mpich+rocm`` but not ``mpich+cuda+rocm``.
-
-.. note::
-
-   For ``any_of`` and ``one_of``, the order of specs indicates a preference: items that appear earlier in the list are preferred (note that these preferences can be ignored in favor of others).
-
-.. note::
-
-   When using a conditional requirement, Spack is allowed to actively avoid the triggering condition (the ``when=...`` spec) if that leads to a concrete spec with better scores in the optimization criteria.
-   To check the current optimization criteria and their priorities you can run ``spack solve zlib``.
-
-Setting default requirements
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can also set default requirements for all packages under ``all`` like this:
-
-.. code-block:: yaml
-
-   packages:
-     all:
-       require: "%[when=%c]c=clang %[when=%cxx]cxx=clang"
-
-which means every spec will be required to use ``clang`` as the compiler for C and C++ code.
-
-.. warning::
-
-   The simpler config ``require: %clang`` will fail to build any package that does not include compiled code, because those packages cannot depend on ``clang`` (alias for ``llvm+clang``).
-   In most contexts, default requirements must use either conditional dependencies or a :ref:`toolchain <toolchains>` that combines conditional dependencies.
-
-Requirements on variants for all packages are possible too, but note that they are only enforced for those packages that define these variants, otherwise they are disregarded.
+The ``require``, ``prefer``, and ``conflict`` attributes all accept lists of specs to compose multiple constraints.
+Each spec is treated as an independent preference.
 For example:
 
 .. code-block:: yaml
 
    packages:
-     all:
-       require:
-       - "+shared"
-       - "+cuda"
+     libfabric:
+       prefer:
+       - "@2.2"
+       - "%gcc"
 
-will just enforce ``+shared`` on ``zlib``, which has a boolean ``shared`` variant but no ``cuda`` variant.
+In this case, Spack has two separate preferences for ``libfabric``: one for version ``@2.2`` and another for the ``gcc`` compiler.
+If other constraints in a spec make it impossible to use ``@2.2``, Spack will still try to use ``%gcc``.
 
-Constraints in a single spec literal are always considered as a whole, so in a case like:
-
-.. code-block:: yaml
-
-   packages:
-     all:
-       require: "+shared +cuda"
-
-the default requirement will be enforced only if a package has both a ``cuda`` and a ``shared`` variant, and will never be partially enforced.
-
-Finally, ``all`` represents a *default set of requirements* - if there are specific package requirements, then the default requirements under ``all`` are disregarded.
-For example, with a configuration like this:
+This is different from expressing the two as a single preference:
 
 .. code-block:: yaml
 
    packages:
-     all:
-       require:
-       - "build_type=Debug"
-       - "%[when=%c]c=clang %[when=%cxx]cxx=clang"
-     cmake:
-       require:
-       - "build_type=Debug"
-       - "%c,cxx=gcc"
+     libfabric:
+       prefer:
+       - "@2.2 %gcc"
 
-Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake`` dependencies) to use ``clang``.
-If enforcing ``build_type=Debug`` is needed also on ``cmake``, it must be repeated in the specific ``cmake`` requirements.
+Here, the preference is for the specific combination of version ``@2.2`` and dependency ``gcc``.
+If that combination is not possible, the entire preference is disregarded.
+
+The use of lists for ``require``, ``prefer``, and ``conflict`` makes composition of constraints from :ref:`different configuration scopes <config-scope-precedence>` possible.
+For instance, if you have the following instance-level configuration
+
+.. code-block:: yaml
+   :caption: ``$spack/etc/spack/packages.yaml``
+   :name: instance-scope-preference
+
+   packages:
+     libfabric:
+       prefer:
+       - "%gcc"
+
+and the following user-level configuration
+
+.. code-block:: yaml
+   :caption: ``~/.spack/packages.yaml``
+   :name: user-scope-preference
+
+   packages:
+     libfabric:
+       prefer:
+       - "@2.2"
+
+Spack merges configurations from different scopes by concatenating the lists for ``require``, ``prefer``, and ``conflict``.
+In this case, the two separate lists are combined into one:
+
+.. code-block:: yaml
+
+   packages:
+     libfabric:
+       prefer:
+       - "@2.2"
+       - "%gcc"
+
+
+preferring ``@2.2`` and ``%gcc`` independently.
+
 
 .. _setting-requirements-on-virtual-specs:
 
-Setting requirements on virtual specs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Constraints on virtual packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A requirement on a virtual spec applies whenever that virtual is present in the DAG.
-This can be useful for fixing which virtual provider you want to use:
+A requirement, preference or conflict on a virtual package applies whenever that virtual is present in the DAG.
+This can be useful for choosing a particular provider for a virtual package.
 
 .. code-block:: yaml
 
@@ -452,9 +396,9 @@ This can be useful for fixing which virtual provider you want to use:
      mpi:
        require: "mvapich2 %c,cxx,fortran=gcc"
 
-With the configuration above the only allowed ``mpi`` provider is ``mvapich2`` built with ``gcc``/``g++``/``gfortran``.
+With the configuration above the only allowed ``mpi`` provider is ``mvapich2`` with underlying compiler GCC.
 
-Requirements on the virtual spec and on the specific provider are both applied, if present.
+Requirements on the virtual package and on the specific provider are both applied, if present.
 For instance with a configuration like:
 
 .. code-block:: yaml
@@ -467,82 +411,173 @@ For instance with a configuration like:
 
 you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
-.. _package-strong-preferences:
+A noteworthy use case for preferences on virtual packages is specifying compilers for languages, which are virtuals in Spack.
 
-Conflicts and strong preferences
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. code-block:: yaml
 
-If the semantic of requirements is too strong, you can also express "strong preferences" and "conflicts" from configuration files:
+   packages:
+     c:
+       prefer:
+       - clang@20
+     cxx:
+       prefer:
+       - clang@20
+     fortran:
+       prefer:
+       - gcc@14
+
+In this example, ``clang@20`` is preferred for C and C++, while ``gcc@14`` is preferred for Fortran.
+
+
+Constraints on all packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can define preferences or conflicts that apply to any package under the ``all`` section of ``packages.yaml``.
+At typical use case is setting the target architecture globally:
 
 .. code-block:: yaml
 
    packages:
      all:
        prefer:
-       - "%c,cxx=clang"
-       conflict:
-       - "+shared"
+       - "target=zen2"
 
-The ``prefer`` and ``conflict`` sections can be used whenever a ``require`` section is allowed.
-The argument is always a list of constraints, and each constraint can be either a simple string, or a more complex object:
+It can also be used for certain variants that are shared by many packages, such as ``cuda``:
 
 .. code-block:: yaml
 
    packages:
      all:
-       conflict:
-       - spec: "%c,cxx=clang"
-         when: "target=x86_64_v3"
-         message: "reason why clang cannot be used"
+       prefer:
+       - "+cuda"
 
-The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are optional.
+This makes the concretizer enable the ``cuda`` variant for every package that defines it, if possible.
+
+Requirements can be set under ``all`` too, but their use cases are limited, since very few constraints can be meaningfully applied to every package.
+
+Constraints under ``all`` are *overridden* by the corresponding settings of specific packages.
+For example, if we want to prefer ``openblas@0.3:`` while generally preferring ``target=zen2`` for all packages, we have to repeat the target preference for ``openblas``:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       prefer:
+       - "target=zen2"
+     openblas:
+       prefer:
+       - "@0.3:"
+       - "target=zen2"
+
+This is because the package-specific ``prefer`` list for ``openblas`` *completely replaces* the ``prefer`` list from the ``all`` section.
+The lists are not merged.
+Therefore, if you want to retain a global preference like ``target`` while adding a package-specific one, you must repeat it in the package-specific section.
+
+Conditional constraints
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``require``, ``prefer`` and ``conflict`` attributes also accept a list of objects with ``spec`` and optionally ``when`` and ``message`` keys.
+This allows for conditional requirements, preferences and conflicts that only apply when the ``when`` spec matches the concretized spec.
+
+In the following example we require a certain compiler, but only for *older* versions of a package:
+
+.. code-block:: yaml
+
+   packages:
+     openmpi:
+       require:
+       - spec: "%c,cxx,fortran=gcc"
+         when: "@:4.1.4"
+         message: "reason why only gcc can be used for older versions"
+
+The ``message`` can be used to provide a custom error message if the requirement is not satisfiable.
+
+Notice that conditional requirements give the concretizer two options:
+
+1. either satisfy both the ``when`` condition and its associated ``spec``,
+2. or ensure that the ``when`` condition is not satisfied.
+
+The choice depends on the optimization criteria of the concretizer (see :ref:`spack-solve` for the current optimization criteria).
+
+The second option is sometimes considered counter-intuitive.
+For example, if an older version of a package is required when using the default compiler, it is more likely that the concretizer will pick a newer version with a non-default compiler than to pick an older version with the default compiler.
+
+
+Choice rules in requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For more complex use cases, ``require`` also lets you define a choice between multiple specs.
+This is done using the ``any_of`` or a ``one_of`` field (instead of a single ``spec`` field), which contains a list of specs.
+
+``any_of``
+""""""""""
+
+A requirement with ``any_of`` is satisfied if the concretized spec matches *at least one* of the specs in the list.
+
+.. code-block:: yaml
+
+   packages:
+     openmpi:
+       require:
+       - any_of: ["@4.1.5:", "%gcc"]
+         message: "openmpi must be version 4.1.5+ or built with GCC"
+
+In the above example, Spack must satisfy one of the following:
+
+* Use ``openmpi`` version 4.1.5 or later
+* Use the ``gcc`` compiler.
+
+It is also allowed for the concretized spec to match more than one, for instance ``openmpi@4.1.5%gcc``.
+However, a spec like ``openmpi@4.1.4%clang`` would fail, as it matches neither.
+If the requirement is not satisfiable, Spack will print the custom error message:
+
+.. code-block:: console
+
+   $ spack spec openmpi@4.1.4%clang
+   ==> Error: openmpi must be version 4.1.5+ or built with GCC
+
+``one_of``
+""""""""""
+
+A requirement with ``one_of`` is satisfied if the concretized spec matches *exactly one* of the specs in the list.
+This is useful for forcing a choice between mutually exclusive options.
+
+.. code-block:: yaml
+
+   packages:
+     mpich:
+       require:
+       - one_of: ["+cuda", "+rocm"]
+
+In this example, ``mpich`` must be built with either CUDA support or ROCm support, but not both.
+A spec for ``mpich+cuda+rocm`` would fail to concretize.
+
 
 .. note::
 
-   Requirements allow for expressing both "strong preferences" and "conflicts".
-   The syntax for doing so, though, may not be immediately clear.
-   For instance, if we want to prevent any package from using ``%clang``, we can set:
-
-   .. code-block:: yaml
-
-      packages:
-        all:
-          require:
-          - one_of: ["%clang", "@:"]
-
-   Since only one of the requirements must hold, and ``@:`` is always true, the rule above is equivalent to a conflict.
-   For "strong preferences" the same construction works, with the ``any_of`` policy instead of the ``one_of`` policy.
+   For ``any_of`` and ``one_of``, the order of specs indicates a preference: items that appear earlier in the list are preferred (note that these preferences can be ignored in favor of others).
 
 .. _package-preferences:
 
-Package Preferences
--------------------
+Weak Package Preferences
+------------------------
 
-In some cases package requirements can be too strong, and package preferences are the better option.
-Package preferences do not impose constraints on packages for particular versions or variants values, they rather only set defaults.
-The concretizer is free to change them if it must, due to other constraints, and also prefers reusing installed packages over building new ones that are a better match for preferences.
+Weak package preferences are low-priority hints that guide the concretizer when it has to build a new package.
+They are designed to set convenient defaults without forcing unnecessary builds.
+
+The defining rule for weak preferences is their relationship to package reuse: Spack will always prioritize reusing an already installed package (or one from a build cache) over building a new one to satisfy a weak preference.
+
+This makes them the ideal tool for setting site-wide or personal defaults (like a preferred version or variant of a package) that should give way if a different, but still valid, version or variant is already available.
+This is in direct contrast to :ref:`"strong" preferences <package-strong-preferences>`, which are treated as high-priority requests that take precedence over reuse.
 
 .. seealso::
 
    FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
 
+Weak preferences are set in ``packages.yaml`` using four specific attributes.
+The ``version`` and ``variants`` attributes are set per-package, while ``target`` and ``providers`` are set globally under the ``all`` section.
 
-The ``target`` and ``providers`` preferences can only be set globally under the ``all`` section of ``packages.yaml``:
-
-.. code-block:: yaml
-
-   packages:
-     all:
-       target: [x86_64_v3]
-       providers:
-         mpi: [mvapich2, mpich, openmpi]
-
-These preferences override Spack's default and effectively reorder priorities when looking for the best compiler, target or virtual package provider.
-Each preference takes an ordered list of spec constraints, with earlier entries in the list being preferred over later entries.
-
-In the example above all packages prefer to target the ``x86_64_v3`` microarchitecture and to use ``mvapich2`` if they depend on ``mpi``.
-
-The ``variants`` and ``version`` preferences can be set under package specific sections of the ``packages.yaml`` file:
+The ``variants`` and ``version`` preferences can be set under package specific sections as follows:
 
 .. code-block:: yaml
 
@@ -552,12 +587,23 @@ The ``variants`` and ``version`` preferences can be set under package specific s
      gperftools:
        version: [2.2, 2.4, 2.3]
 
-In this case, the preference for ``opencv`` is to build with debug options, while ``gperftools`` prefers version 2.2 over 2.4.
+In this case, the preference for ``opencv`` is to build with debug options, while ``gperftools`` prefers version 2.2 over 2.4, and 2.4 over 2.3, following the order of the list.
+If the user requests ``gperftools@2.3:``, then Spack considers 2.4 the most preferred version, since 2.2 is ruled out by the version constraint.
 
-Any preference can be overwritten on the command line if explicitly requested.
+The ``target`` and ``providers`` weak preferences can only be set globally under the ``all`` section of ``packages.yaml``:
 
-Preferences cannot overcome explicit constraints, as they only set a preferred ordering among homogeneous attribute values.
-Going back to the example, if ``gperftools@2.3:`` was requested, then Spack will install version 2.4 since the most preferred version 2.2 is prohibited by the version constraint.
+.. code-block:: yaml
+
+   packages:
+     all:
+       target: [x86_64_v3]
+       providers:
+         mpi: [mvapich2, mpich, openmpi]
+
+These weak preferences override Spack's default and effectively reorder priorities when looking for the best target architecture or virtual package provider.
+Each preference takes an ordered list of values, with earlier entries in the list being preferred over later entries.
+
+In the example above all packages prefer to target the ``x86_64_v3`` microarchitecture and to use ``mvapich2`` if they depend on ``mpi``.
 
 .. _package_permissions:
 
