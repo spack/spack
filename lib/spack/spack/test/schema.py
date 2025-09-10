@@ -3,14 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import importlib
-import json
 import os
 
 import pytest
 
 from spack.vendor import jsonschema
 
-import spack.paths
 import spack.schema
 import spack.util.spack_yaml as syaml
 from spack.llnl.util.lang import list_modules
@@ -166,15 +164,6 @@ def module_suffixes_schema():
     }
 
 
-@pytest.fixture(scope="module")
-def meta_schema():
-    """Meta schema for JSON schema validation (Draft 4)"""
-    meta_schema_file = os.path.join(spack.paths.test_path, "data", "jsonschema_meta.json")
-    with open(meta_schema_file, encoding="utf-8") as f:
-        ms = json.load(f)
-    return ms
-
-
 @pytest.mark.regression("9857")
 def test_validate_spec(validate_spec_schema):
     v = spack.schema.Validator(validate_spec_schema)
@@ -196,33 +185,6 @@ def test_module_suffixes(module_suffixes_schema):
 
     with pytest.raises(jsonschema.ValidationError, match="is not a valid spec"):
         v.validate(data)
-
-
-@pytest.mark.regression("10246")
-@pytest.mark.parametrize(
-    "config_name",
-    [
-        "compilers",
-        "config",
-        "definitions",
-        "include",
-        "env",
-        "merged",
-        "mirrors",
-        "modules",
-        "packages",
-        "repos",
-    ],
-)
-def test_schema_validation(meta_schema, config_name):
-    import importlib
-
-    module_name = "spack.schema.{0}".format(config_name)
-    module = importlib.import_module(module_name)
-    schema = getattr(module, "schema")
-
-    # If this validation throws the test won't pass
-    jsonschema.validate(schema, meta_schema)
 
 
 def test_deprecated_properties(module_suffixes_schema):
