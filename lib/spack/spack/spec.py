@@ -2292,9 +2292,7 @@ class Spec:
 
         self._dup(self.lookup_hash())
 
-    def to_node_dict(
-        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
-    ) -> Dict[str, Any]:
+    def to_node_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
 
         This method creates the content that is eventually hashed by Spack to create identifiers
@@ -2451,9 +2449,7 @@ class Spec:
 
         return d
 
-    def to_dict(
-        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
-    ) -> Dict[str, Any]:
+    def to_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary suitable for writing this spec to YAML or JSON.
 
         This dictionary is like the one that is ultimately written to a ``spec.json`` file in each
@@ -2533,9 +2529,7 @@ class Spec:
 
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
-    def node_dict_with_hashes(
-        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
-    ) -> Dict[str, Any]:
+    def node_dict_with_hashes(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Returns a node dict of this spec with the dag hash, and the provided hash (if not
         the dag hash)."""
         node = self.to_node_dict(hash)
