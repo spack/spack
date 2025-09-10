@@ -274,7 +274,8 @@ In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` wo
 Requirements, Preferences, and Conflicts
 ----------------------------------------
 
-Spack can be configured to require, prefer or avoid particular package versions, variants and dependencies during concretization through package requirements, preferences and conflicts.
+Spack can be configured to control which package versions, variants, and dependencies are selected during concretization.
+This is accomplished through package requirements, preferences, and conflicts.
 
 Package requirements are useful when you find yourself repeatedly specifying the same constraints on the command line or in Spack environments, and wish that Spack respects these constraints whether you mention them explicitly or not.
 
@@ -317,34 +318,8 @@ With this configuration, Spack will:
 2. prefer ``libfabric@2.2.0``, except when that version conflicts with other constraints,
 3. never pick ``libfabric`` with the ``tcp`` fabric.
 
-The ``require``, ``prefer``, and ``conflict`` attributes all accept lists of specs to compose multiple constraints.
-Each spec is treated as an independent preference.
-For example:
-
-.. code-block:: yaml
-
-   packages:
-     libfabric:
-       prefer:
-       - "@2.2"
-       - "%gcc"
-
-In this case, Spack has two separate preferences for ``libfabric``: one for version ``@2.2`` and another for the ``gcc`` compiler.
-If other constraints in a spec make it impossible to use ``@2.2``, Spack will still try to use ``%gcc``.
-
-This is different from expressing the two as a single preference:
-
-.. code-block:: yaml
-
-   packages:
-     libfabric:
-       prefer:
-       - "@2.2 %gcc"
-
-Here, the preference is for the specific combination of version ``@2.2`` and dependency ``gcc``.
-If that combination is not possible, the entire preference is disregarded.
-
-The use of lists for ``require``, ``prefer``, and ``conflict`` makes composition of constraints from :ref:`different configuration scopes <config-scope-precedence>` possible.
+The ``require``, ``prefer``, and ``conflict`` attributes all accept lists of specs, even if only a single spec is specified.
+The use of lists makes composition of constraints from :ref:`different configuration scopes <config-scope-precedence>` possible.
 For instance, if you have the following instance-level configuration
 
 .. code-block:: yaml
@@ -381,6 +356,21 @@ In this case, the two separate lists are combined into one:
 
 preferring ``@2.2`` and ``%gcc`` independently.
 
+The ability to specify multiple preferences in a list is useful, as each spec is treated as an independent preference.
+For example, with ``prefer: ["@2.2", "%gcc"]``, Spack has two separate preferences for ``libfabric``: one for version ``@2.2`` and another for the ``gcc`` compiler.
+If other constraints in a spec make it impossible to use ``@2.2``, Spack will still try to use ``%gcc``.
+
+This is different from expressing the two as a single preference:
+
+.. code-block:: yaml
+
+   packages:
+     libfabric:
+       prefer:
+       - "@2.2 %gcc"
+
+Here, the preference is for the specific combination of version ``@2.2`` and dependency ``gcc``.
+If that combination is not possible, the entire preference is disregarded.
 
 .. _setting-requirements-on-virtual-specs:
 
