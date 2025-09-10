@@ -14,7 +14,7 @@ import spack.schema.spec
 properties: Dict[str, Any] = {
     # `buildinfo` is no longer needed as of Spack 0.21
     "buildinfo": {"type": "object"},
-    "spec": {**spack.schema.spec.properties["spec"], "additionalProperties": True},
+    "spec": {**spack.schema.spec.spec_node, "additionalProperties": True},
     "buildcache_layout_version": {"type": "number"},
 }
 

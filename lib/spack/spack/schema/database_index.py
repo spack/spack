@@ -23,7 +23,7 @@ properties: Dict[str, Any] = {
                     r"^[\w\d]{32}$": {
                         "type": "object",
                         "properties": {
-                            **spack.schema.spec.properties,
+                            "spec": spack.schema.spec.spec_node,
                             "path": {"oneOf": [{"type": "string"}, {"type": "null"}]},
                             "installed": {"type": "boolean"},
                             "ref_count": {"type": "integer", "minimum": 0},

@@ -4,8 +4,6 @@
 
 """Schema for a spec found in spec descriptor or database index.json files
 
-TODO: This needs to be updated? Especially the hashes under properties.
-
 .. literalinclude:: _spack_root/lib/spack/spack/schema/spec.py
    :lines: 15-
 """
@@ -24,6 +22,7 @@ target = {
                 "features": {"type": "array", "items": {"type": "string"}},
                 "generation": {"type": "integer"},
                 "parents": {"type": "array", "items": {"type": "string"}},
+                "cpupart": {"type": "string"},
             },
         },
     ]
@@ -36,15 +35,23 @@ arch = {
 }
 
 dependencies = {
-    "type": "object",
-    "patternProperties": {
-        r"\w[\w-]*": {  # package name
-            "type": "object",
-            "properties": {
-                "hash": {"type": "string"},
-                "type": {"type": "array", "items": {"type": "string"}},
+    "type": "array",
+    "items": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["name", "hash", "parameters"],
+        "properties": {
+            "name": {"type": "string"},
+            "hash": {"type": "string"},
+            "parameters": {
+                "type": "object",
+                "additionalProperties": True,
+                "properties": {
+                    "deptypes": {"type": "array", "items": {"type": "string"}},
+                    "virtuals": {"type": "array", "items": {"type": "string"}},
+                },
             },
-        }
+        },
     },
 }
 
@@ -55,6 +62,57 @@ build_spec = {
     "properties": {"name": {"type": "string"}, "hash": {"type": "string"}},
 }
 
+#: Schema for a single spec node (used in both spec files and database entries)
+spec_node = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["name", "version", "arch", "namespace", "parameters"],
+    "properties": {
+        "name": {"type": "string"},
+        "hash": {"type": "string"},
+        "package_hash": {"type": "string"},
+        # these hashes were used on some specs prior to 0.18
+        "full_hash": {"type": "string"},
+        "build_hash": {"type": "string"},
+        "version": {"oneOf": [{"type": "string"}, {"type": "number"}]},
+        "arch": arch,
+        "compiler": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {"name": {"type": "string"}, "version": {"type": "string"}},
+        },
+        "develop": {"anyOf": [{"type": "boolean"}, {"type": "string"}]},
+        "namespace": {"type": "string"},
+        "parameters": {
+            "type": "object",
+            "required": ["cflags", "cppflags", "cxxflags", "fflags", "ldflags", "ldlibs"],
+            "additionalProperties": True,
+            "properties": {
+                "patches": {"type": "array", "items": {"type": "string"}},
+                "cflags": {"type": "array", "items": {"type": "string"}},
+                "cppflags": {"type": "array", "items": {"type": "string"}},
+                "cxxflags": {"type": "array", "items": {"type": "string"}},
+                "fflags": {"type": "array", "items": {"type": "string"}},
+                "ldflags": {"type": "array", "items": {"type": "string"}},
+                "ldlib": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+        "patches": {"type": "array", "items": {}},
+        "dependencies": dependencies,
+        "build_spec": build_spec,
+        "external": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "path": {"type": ["string", "null"]},
+                "module": {"type": ["string", "null"]},
+                "extra_attributes": {"type": "object"},
+            },
+        },
+        "annotations": {"type": "object"},
+    },
+}
+
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {
     "spec": {
@@ -63,58 +121,7 @@ properties: Dict[str, Any] = {
         "required": ["_meta", "nodes"],
         "properties": {
             "_meta": {"type": "object", "properties": {"version": {"type": "number"}}},
-            "nodes": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "required": ["version", "arch", "compiler", "namespace", "parameters"],
-                    "properties": {
-                        "name": {"type": "string"},
-                        "hash": {"type": "string"},
-                        "package_hash": {"type": "string"},
-                        # these hashes were used on some specs prior to 0.18
-                        "full_hash": {"type": "string"},
-                        "build_hash": {"type": "string"},
-                        "version": {"oneOf": [{"type": "string"}, {"type": "number"}]},
-                        "arch": arch,
-                        "compiler": {
-                            "type": "object",
-                            "additionalProperties": False,
-                            "properties": {
-                                "name": {"type": "string"},
-                                "version": {"type": "string"},
-                            },
-                        },
-                        "develop": {"anyOf": [{"type": "boolean"}, {"type": "string"}]},
-                        "namespace": {"type": "string"},
-                        "parameters": {
-                            "type": "object",
-                            "required": [
-                                "cflags",
-                                "cppflags",
-                                "cxxflags",
-                                "fflags",
-                                "ldflags",
-                                "ldlibs",
-                            ],
-                            "additionalProperties": True,
-                            "properties": {
-                                "patches": {"type": "array", "items": {"type": "string"}},
-                                "cflags": {"type": "array", "items": {"type": "string"}},
-                                "cppflags": {"type": "array", "items": {"type": "string"}},
-                                "cxxflags": {"type": "array", "items": {"type": "string"}},
-                                "fflags": {"type": "array", "items": {"type": "string"}},
-                                "ldflags": {"type": "array", "items": {"type": "string"}},
-                                "ldlib": {"type": "array", "items": {"type": "string"}},
-                            },
-                        },
-                        "patches": {"type": "array", "items": {}},
-                        "dependencies": dependencies,
-                        "build_spec": build_spec,
-                    },
-                },
-            },
+            "nodes": {"type": "array", "items": spec_node},
         },
     }
 }
@@ -125,5 +132,6 @@ schema = {
     "title": "Spack spec schema",
     "type": "object",
     "additionalProperties": False,
-    "patternProperties": properties,
+    "required": ["spec"],
+    "properties": properties,
 }
