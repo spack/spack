@@ -288,4 +288,4 @@ def test_spack_schemas_are_valid(schema_name: str):
     try:
         jsonschema.validate(schema, _draft_07_with_spack_extensions)
     except jsonschema.ValidationError as e:
-        raise RuntimeError(f"Schema defined by {module_name} is not valid: {e.message}")
+        raise RuntimeError(f"Schema defined by {module_name} is not valid: {e.message}") from e
