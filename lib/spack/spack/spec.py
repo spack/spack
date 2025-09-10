@@ -2191,9 +2191,6 @@ class Spec:
             length: length of hash prefix to return (default is full hash string)
             force: cache the hash even if spec is not concrete (default False)
         """
-        if not hash.attr:
-            return self.spec_hash(hash)[:length]
-
         hash_string = getattr(self, hash.attr, None)
         if hash_string:
             return hash_string[:length]
