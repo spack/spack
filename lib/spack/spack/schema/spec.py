@@ -49,6 +49,7 @@ dependencies = {
                 "properties": {
                     "deptypes": {"type": "array", "items": {"type": "string"}},
                     "virtuals": {"type": "array", "items": {"type": "string"}},
+                    "direct": {"type": "boolean"},
                 },
             },
         },
@@ -66,15 +67,17 @@ build_spec = {
 spec_node = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["name", "version", "arch", "namespace", "parameters"],
+    "required": ["name"],
     "properties": {
-        "name": {"type": "string"},
+        "name": {"type": ["string", "null"]},
         "hash": {"type": "string"},
         "package_hash": {"type": "string"},
         # these hashes were used on some specs prior to 0.18
         "full_hash": {"type": "string"},
         "build_hash": {"type": "string"},
         "version": {"oneOf": [{"type": "string"}, {"type": "number"}]},
+        "versions": {"type": "array", "items": {"type": "string"}},
+        "concrete": {"type": "boolean"},
         "arch": arch,
         "compiler": {
             "type": "object",
