@@ -1385,11 +1385,14 @@ class TestConcretize:
         assert ht.build_hash(root) == ht.build_hash(new_root_with_reuse)
         assert ht.build_hash(root) != ht.build_hash(new_root_without_reuse)
 
-        # DAG hash should be the same with reuse since only the dependency changed
-        assert root.dag_hash() == new_root_with_reuse.dag_hash()
+        # Ensure we reused the same spec. DAG hash changes due to the change in package.py
+        # that might affect the build of "root", even though the dependencies are the same
+        assert root["changing"].dag_hash() == new_root_with_reuse["changing"].dag_hash()
+        assert root.dag_hash() != new_root_with_reuse.dag_hash()
+        assert root.package_hash() != new_root_with_reuse.package_hash()
 
-        # Structure and package hash will be different without reuse
-        assert root.dag_hash() != new_root_without_reuse.dag_hash()
+        # If we didn't reuse, then the DAG hash of dependencies changes
+        assert root["changing"].dag_hash() != new_root_without_reuse["changing"].dag_hash()
 
     @pytest.mark.regression("43663")
     def test_no_reuse_when_variant_condition_does_not_hold(self, mutable_database, mock_packages):
@@ -4278,3 +4281,32 @@ def test_when_possible_above_all(mutable_config, mock_packages):
     for result in solver.solve_in_rounds(specs):
         criteria = sorted(result.criteria, reverse=True)
         assert criteria[0].name == "number of input specs not concretized"
+
+
+def test_package_hash_on_changes_to_package_py(mutable_config, repo_with_changing_recipe):
+    """Tests that the package hash of an external spec stays the same when the package.py changes.
+    Instead, the package has of a spec depending on that external would change its package hash,
+    on a change to the external package recipe.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  changing:
+    buildable: false
+    externals:
+    - spec: "changing@1.0"
+      prefix: /path
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    root_before = spack.concretize.concretize_one("root")
+    assert root_before["changing"].external
+
+    repo_with_changing_recipe.change({"delete_variant": True})
+
+    root_after = spack.concretize.concretize_one("root")
+    assert root_after["changing"].external
+
+    assert root_after.package_hash() != root_before.package_hash()
+    assert root_after["changing"].package_hash() == root_before["changing"].package_hash()
