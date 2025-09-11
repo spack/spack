@@ -186,7 +186,6 @@ spec_node = {
             "description": "Compiler name and version (in spec file v5 listed as normal "
             "dependencies)",
         },
-        "develop": {"anyOf": [{"type": "boolean"}, {"type": "string"}]},
         "namespace": {"type": "string", "description": "Package repository namespace"},
         "parameters": {
             "type": "object",
