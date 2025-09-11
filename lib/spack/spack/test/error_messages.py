@@ -463,7 +463,7 @@ def test_version_range_null(concretize_scope, test_repo):
 # search
 @pytest.mark.xfail(reason="Not addressed yet")
 def test_null_variant_for_requested_version(concretize_scope, test_repo):
-    """
+    r"""
     Z1_ (@:1.1 -> !v1)
     |  \
     Z2  |
