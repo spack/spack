@@ -235,19 +235,20 @@ def test_list_merge_order():
     assert ["a", "b", "c", "d", "e", "f"] == result
 
 
-@pytest.mark.parametrize(
-    "schema_name", sorted(list_modules(os.path.dirname(spack.schema.__file__)))
-)
-def test_spack_schemas_are_valid(schema_name: str):
+def test_spack_schemas_are_valid():
     """Test that the Spack schemas in spack.schema.*.schema are valid under JSON Schema Draft 7
     with Spack extensions *only*."""
-    module_name = f"spack.schema.{schema_name}"
-    try:
-        schema = getattr(importlib.import_module(module_name), "schema")
-    except Exception:
-        return  # it is okay if a module does not define a schema
+    # Collect schema submodules, and verify we have at least a few known ones
+    schema_submodules = (
+        importlib.import_module(f"spack.schema.{name}")
+        for name in list_modules(os.path.dirname(spack.schema.__file__))
+    )
+    schemas = {m.__name__: m.schema for m in schema_submodules if hasattr(m, "schema")}
+    assert set(schemas) >= {"spack.schema.config", "spack.schema.packages", "spack.schema.modules"}
 
-    try:
-        jsonschema.validate(schema, _draft_07_with_spack_extensions)
-    except jsonschema.ValidationError as e:
-        raise RuntimeError(f"Schema defined by {module_name} is not valid: {e.message}") from e
+    # Validate them using the meta-schema
+    for module_name, module_schema in schemas.items():
+        try:
+            jsonschema.validate(module_schema, _draft_07_with_spack_extensions)
+        except jsonschema.ValidationError as e:
+            raise RuntimeError(f"Invalid JSON schema in {module_name}: {e.message}") from e
