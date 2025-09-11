@@ -6,6 +6,7 @@ import os
 import os.path
 import re
 from contextlib import contextmanager
+from typing import Iterable, Optional
 
 import pytest
 
@@ -392,7 +393,7 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
 
 
 @contextmanager
-def expect_failure_and_print():
+def expect_failure_and_print(should_mention=None):
     got_an_error_as_expected = False
     err_msg = None
     try:
@@ -405,10 +406,10 @@ def expect_failure_and_print():
     elif not err_msg:
         raise ValueError("No error message for failed concretization")
     print(err_msg)
-    check_error(err_msg)
+    check_error(err_msg, should_mention)
 
 
-def check_error(msg):
+def check_error(msg, should_mention: Optional[Iterable] = None):
     excludes = [
         "failed to concretize .* for the following reasons:",
         "Cannot satisfy .*",
@@ -416,13 +417,21 @@ def check_error(msg):
         "cannot satisfy a requirement for package .*",
     ]
     lines = msg.split("\n")
+    should_mention = set(should_mention) if should_mention else set()
+    should_mention_hits = set()
     remaining = []
     for line in lines:
         if any(re.search(p, line) for p in excludes):
             continue
+        for p in should_mention:
+            if re.search(p, line):
+                should_mention_hits.add(p)
         remaining.append(line)
     if not remaining:
         raise ValueError("The error message contains only generic statements")
+    should_mention_misses = should_mention - should_mention_hits
+    if should_mention_misses:
+        raise ValueError(f"The error message did not contain: {sorted(should_mention_misses)}")
 
 
 # Error message is good
@@ -452,12 +461,23 @@ def test_version_range_null(concretize_scope, test_repo):
 # are mentioned, so if this hierarchy had 10 other "OK"
 # packages, a user would be conducting a tedious manual
 # search
+@pytest.mark.xfail(reason="Not addressed yet")
 def test_null_variant_for_requested_version(concretize_scope, test_repo):
+    """
+    Z1_ (@:1.1 -> !v1)
+    |  \
+    Z2  |
+      \ |
+       \|
+        Z3 (z1~v1 -> z3+v2)
+           (z2 ^z3:2.0)
+           (v2 only exists for @2.1:)
+    """
     concretize_one("z1")
     # output = solve("--show=asp", "z1@1.1")
     # with open(, "w") as f:
     #    f.write(output)
-    with expect_failure_and_print():
+    with expect_failure_and_print(should_mention=["z2"]):
         concretize_one("z1@1.1")
 
 
