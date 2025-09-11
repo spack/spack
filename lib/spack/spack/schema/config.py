@@ -88,10 +88,12 @@ properties: Dict[str, Any] = {
             "allow_sgid": {"type": "boolean"},
             "install_status": {"type": "boolean"},
             "binary_index_root": {"type": "string"},
-            "url_fetch_method": {"type": "string", "pattern": r"^urllib$|^curl( .*)*"},
+            "url_fetch_method": {
+                "anyOf": [{"enum": ["urllib", "curl"]}, {"type": "string", "pattern": r"^curl "}]
+            },
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
-            "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
+            "aliases": {"type": "object", "additionalProperties": {"type": "string"}},
         },
     }
 }

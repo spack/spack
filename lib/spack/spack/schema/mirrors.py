@@ -58,8 +58,7 @@ properties: Dict[str, Any] = {
     "mirrors": {
         "type": "object",
         "default": {},
-        "additionalProperties": False,
-        "patternProperties": {r"\w[\w-]*": {"anyOf": [{"type": "string"}, mirror_entry]}},
+        "additionalProperties": {"anyOf": [{"type": "string"}, mirror_entry]},
     }
 }
 

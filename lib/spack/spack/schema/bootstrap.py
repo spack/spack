@@ -19,7 +19,7 @@ properties: Dict[str, Any] = {
             "enable": {"type": "boolean"},
             "root": {"type": "string"},
             "sources": {"type": "array", "items": _source_schema},
-            "trusted": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "boolean"}}},
+            "trusted": {"type": "object", "additionalProperties": {"type": "boolean"}},
         },
     }
 }
