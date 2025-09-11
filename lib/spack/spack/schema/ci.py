@@ -131,7 +131,7 @@ properties: Dict[str, Any] = {
             "rebuild-index": {"type": "boolean"},
             "broken-specs-url": {"type": "string"},
             "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
-            "target": {"type": "string", "enum": ["gitlab"], "default": "gitlab"},
+            "target": {"type": "string", "default": "gitlab"},
         },
     }
 }
