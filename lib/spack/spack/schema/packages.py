@@ -88,7 +88,7 @@ permissions = {
 package_attributes = {
     "type": "object",
     "additionalProperties": False,
-    "patternProperties": {r"^[^\d\W]\w*$": {}},
+    "patternProperties": {r"^[a-zA-Z_]\w*$": {}},
 }
 
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"

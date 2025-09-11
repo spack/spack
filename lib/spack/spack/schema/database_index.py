@@ -20,7 +20,7 @@ properties: Dict[str, Any] = {
             "installs": {
                 "type": "object",
                 "patternProperties": {
-                    r"^[\w\d]{32}$": {
+                    r"^[a-z0-9]{32}$": {
                         "type": "object",
                         "properties": {
                             "spec": spack.schema.spec.spec_node,
