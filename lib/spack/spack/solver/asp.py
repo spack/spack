@@ -13,13 +13,24 @@ import pathlib
 import pprint
 import random
 import re
-import shutil
 import sys
 import time
 import typing
 import warnings
 from contextlib import contextmanager
-from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type, Union
+from typing import (
+    Callable,
+    Dict,
+    Generator,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 import spack.vendor.archspec.cpu
 
@@ -45,6 +56,7 @@ import spack.store
 import spack.util.crypto
 import spack.util.hash
 import spack.util.libc
+import spack.util.lock as lk
 import spack.util.module_cmd as md
 import spack.util.path
 import spack.util.timer
@@ -55,7 +67,6 @@ from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.llnl.util.lang import elide_list
 from spack.util.compression import GZipFileType
-from spack.util.file_cache import DirectoryFileCache
 
 from .core import (
     AspFunction,
@@ -599,38 +610,36 @@ class ConcretizationCache:
             "concretizer:concretization_cache:url", spack.paths.default_conc_cache_path
         )
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
-        self._fc = DirectoryFileCache(self.root)
+        self._lockfile = self.root / ".cc_lock"
+        self._default_lock_timeout = 120
 
     def cleanup(self):
         """Prunes the concretization cache according to configured size and entry
-        count limits. Cleanup is done in FIFO ordering."""
-        # TODO: determine a better default
+        count limits. Cleanup is done in LRU ordering."""
         entry_limit = spack.config.get("concretizer:concretization_cache:entry_limit", 1000)
         bytes_limit = spack.config.get("concretizer:concretization_cache:size_limit", 3e8)
-        # lock the entire buildcache as we're removing a lot of data from the
-        # manifest and cache itself
+
         entry_count, bytes_count = 0, 0
         rm_reg: Dict[pathlib.Path, Tuple[float, int]] = {}
-        for bucket in self.cache_buckets():
-            with self._fc.read_transaction(bucket) as f:
+        for entry in self.cache_entries():
+            # short timeout, if we can't access it, its either being cleaned
+            # or being used, either way, we don't need to bother here
+            with self.read_transaction(entry, timeout=10) as f:
                 if not f:
-                    # bucket was likely removed by another cleaning
-                    # process, no worries
-                    tty.debug(
-                        f"Attempting to purge concretization cache bucket {bucket}"
-                        " but it was already removed"
-                    )
+                    # cache entry doesn't exist, was likely already removed
+                    # move on
                     continue
-                # advance new beyond metadata entry
-                for entry in self.cache_entries(bucket):
-                    entry_count += 1
-                    entry_stat_info = entry.stat()
-                    entry_size = entry_stat_info.st_size
-                    bytes_count += entry_size
-                    access_time = entry_stat_info.st_atime
-                    mod_time = entry_stat_info.st_mtime
-                    most_recent_op_time = access_time if access_time > mod_time else mod_time
-                    rm_reg[entry] = (most_recent_op_time, entry_size)
+                # get info about entry for cleanup
+                entry_stat_info = entry.stat()
+                entry_size = entry_stat_info.st_size
+                # aggregate information about cache to determine if cleanup is required
+                entry_count += 1
+                bytes_count += entry_size
+                # get time of last use so we can implement an LRU removal
+                access_time = entry_stat_info.st_atime
+                mod_time = entry_stat_info.st_mtime
+                most_recent_op_time = access_time if access_time > mod_time else mod_time
+                rm_reg[entry] = (most_recent_op_time, entry_size)
         # Sort entries in descending order
         removal_queue = [
             (entry, stats)
@@ -641,53 +650,34 @@ class ConcretizationCache:
             entry_info_to_rm = removal_queue.pop()
             entry_to_rm = entry_info_to_rm[0]
             entry_stats = entry_info_to_rm[1]
-            entry_bucket = self._cache_bucket_from_path(entry_to_rm)
-            with self._fc.write_transaction(entry_bucket) as valid_bucket:
+            # short timeout, if we can't get a lock, its being read, so it's been used
+            # more recently, i.e. not a good candidate for LRU, or it's already being removed
+            # so we dont care. Could also be a write lock from another clean operation
+            # in which case that operation can remove it
+            with self.write_transaction(entry_to_rm, timeout=10) as exists:
                 # cache bucket was removed by another process, that's fine
                 # try pruning something else
-                if not valid_bucket:
+                if not exists:
+                    # entry was likely removed by another cleaning
+                    # process, no worries
+                    tty.debug(
+                        f"Attempting to purge concretization cache entry {entry_to_rm}"
+                        " but it was already removed"
+                    )
                     continue
                 entry_size = entry_stats[1]
                 removed = self._safe_remove(entry_to_rm)
                 if removed:
                     entry_count -= 1
                     bytes_count -= entry_size
-        # remove any buckets with no more cache entries
-        for cache_bucket in self.cache_buckets():
-            # remove takes a write lock, but there's a race
-            # if another process adds something to the bucket
-            # between the check for emptiness and the remove
-            removed = False
-            with self._fc.write_transaction(cache_bucket) as bucket:
-                if bucket and not any(cache_bucket.iterdir()):
-                    self._fc.remove(cache_bucket)
-                    removed = True
-            if removed:
-                try:
-                    self._fc.purge_lock(cache_bucket)
-                except OSError:
-                    # lock was likely taken by another process
-                    # don't clean it, something is using it!
-                    continue
 
-    def cache_buckets(self):
-        """Generator producing cache buckets"""
-        for bucket in self.root.iterdir():
-            # skip bucket lockfiles
-            if bucket.is_dir():
-                yield bucket
-
-    def cache_entries(self, bucket: pathlib.Path):
+    def cache_entries(self) -> Generator[pathlib.Path]:
         """Generator producing cache entries within a bucket"""
-        for cache_entry in bucket.iterdir():
-            if not cache_entry.is_dir():
+        for cache_entry in self.root.iterdir():
+            # Lockfile starts with "."
+            # old style concretization cache entries are in directories
+            if not cache_entry.name.startswith(".") and not cache_entry.is_dir():
                 yield cache_entry
-            else:
-                raise RuntimeError(
-                    "Improperly formed concretization cache. "
-                    f"Directory {cache_entry.name} is improperly located "
-                    "within the concretization cache."
-                )
 
     def _results_from_cache(self, cache_entry_file: str) -> Union[Result, None]:
         """Returns a Results object from the concretizer cache
@@ -710,45 +700,93 @@ class ConcretizationCache:
         """
         return json.loads(cache_entry_file)["statistics"]
 
-    def _prefix_digest(self, problem: str) -> Tuple[str, str]:
+    def _prefix_digest(self, problem: str) -> str:
         """Return the first two characters of, and the full, sha256 of the given asp problem"""
-        prob_digest = spack.util.hash.b32_hash(problem)
-        prefix = prob_digest[:2]
-        return prefix, prob_digest
+        return spack.util.hash.b32_hash(problem)
 
     def _cache_path_from_problem(self, problem: str) -> pathlib.Path:
         """Returns a Path object representing the path to the cache
-        entry for the given problem"""
-        prefix, digest = self._prefix_digest(problem)
-        return pathlib.Path(prefix) / digest
-
-    def _cache_bucket_from_path(self, cache_entry: pathlib.Path) -> str:
-        """Returns the 2 byte cache entry bucket string from a cache entry"""
-        return cache_entry.parent.name
-
-    def _cache_path_from_hash(self, hash: str) -> pathlib.Path:
-        """Returns a Path object representing the cache entry
-        corresponding to the given sha256 hash"""
-        return pathlib.Path(hash[:2]) / hash
+        entry for the given problem where the problem is the sha256 of the given asp problem"""
+        prefix = self._prefix_digest(problem)
+        return self.root / prefix
 
     def _safe_remove(self, cache_dir: pathlib.Path) -> bool:
         """Removes cache entries with handling for the case where the entry has been
         removed already or there are multiple cache entries in a directory"""
         try:
-            if cache_dir.is_dir():
-                shutil.rmtree(cache_dir)
-            else:
-                cache_dir.unlink()
+            cache_dir.unlink(missing_ok=True)
             return True
-        except FileNotFoundError:
-            # This is acceptable, removal is idempotent
-            pass
-        except OSError:
+        except OSError as e:
             # Catch other timing/access related issues
+            tty.debug(
+                f"Exception occured while attempting to remove Concretization Cache entry, {e}"
+            )
             pass
         return False
 
-    def store(self, problem: str, result: Result, statistics: List, test: bool = False):
+    def _lock(self, problem: pathlib.Path, timeout: Optional[int] = None) -> lk.Lock:
+        """Returns a lock over the byte range correspnding to the hash
+        of the asp problem
+
+        Args:
+
+            problem: Absolute path to concretization cache entry to be locked
+        """
+        return lk.Lock(
+            str(self._lockfile),
+            start=spack.util.hash.base32_prefix_bits(
+                problem.name, spack.util.crypto.bit_length(sys.maxsize)
+            ),
+            length=1,
+            default_timeout=timeout if timeout else self._default_lock_timeout,
+            desc=f"Concretization cache lock for {problem}",
+        )
+
+    @contextmanager
+    def read_transaction(self, problem_path: pathlib.Path, timeout: Optional[int] = None):
+        """Read transactions for concretization cache entries
+        Takes a read lock on the cache entry indicated by
+        problem_path and returns control back to the caller
+        releases lock on exit
+
+        Args:
+            problem_path: absolute path to the concretization
+                            cache entry to be locked
+        """
+        lock = self._lock(problem_path, timeout=timeout)
+        lock.acquire_read()
+
+        try:
+            yield problem_path.exists()
+        except Exception:
+            raise
+        finally:
+            lock.release_read()
+
+    @contextmanager
+    def write_transaction(self, problem_path: pathlib.Path, timeout: Optional[int] = None):
+        """Write transactions for concretization cache entries
+        Takes a write lock on the cache entry indicated by
+        problem_path and returns control back to the caller
+        releases lock on exit
+
+        Args:
+            problem_path: absolute path to the concretization
+                            cache entry to be locked
+        """
+        # path must be absolute at this point
+        assert problem_path.is_absolute()
+        lock = self._lock(problem_path, timeout=timeout)
+        lock.acquire_write()
+
+        try:
+            yield problem_path.exists()
+        except Exception:
+            raise
+        finally:
+            lock.release_write()
+
+    def store(self, problem: str, result: Result, statistics: List, test: bool = False) -> None:
         """Creates entry in concretization cache for problem if none exists,
         storing the concretization Result object and statistics in the cache
         as serialized json joined as a single file.
@@ -756,14 +794,15 @@ class ConcretizationCache:
         Hash membership is computed based on the sha256 of the provided asp
         problem.
         """
-        bucket, digest = self._prefix_digest(problem)
-        cache_path = self.root / bucket / digest
-        self._fc.init_entry(bucket)
-        with self._fc.write_transaction(bucket) as exists:
-            if not exists:
-                # The directory may have been pruned between init entry and the write
-                # transaction, recreate the directory
-                os.makedirs(bucket)
+        cache_path = self._cache_path_from_problem(problem)
+
+        with self.write_transaction(cache_path) as exists:
+            if exists:
+                # if cache path file exists, we already have a cache
+                # entry for this, likely created by another process
+                # exit early
+                # just opening it updates atime to indicate recent use
+                return
             try:
                 with gzip.open(cache_path, "xb", compresslevel=6) as cache_entry:
                     cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
@@ -779,13 +818,10 @@ class ConcretizationCache:
         Python objects cached on disk representing the concretization results and statistics
         or returns none if no cache entry was found.
         """
-        bucket, entry = self._prefix_digest(problem)
-        cache_path = self.root / bucket / entry
+        cache_path = self._cache_path_from_problem(problem)
         result, statistics = None, None
-        self._fc.init_entry(bucket)
-        with self._fc.read_transaction(bucket) as exists:
+        with self.read_transaction(cache_path) as exists:
             # if exists is false, then there's no chance of a hit
-            # in this bucket, as it does not exist
             if exists:
                 cache_entry_content = None
                 try:
@@ -801,7 +837,7 @@ class ConcretizationCache:
                     # check if gzip, and if not, read from plaintext
                     # otherwise re raise
                     with open(cache_path, "rb") as f:
-                        # ensure the file was not a gzip file we just failed
+                        # ensure the file was not just a gzip file we failed
                         # to open
                         if not GZipFileType().matches_magic(f):
                             cache_entry_content = f.read().decode()

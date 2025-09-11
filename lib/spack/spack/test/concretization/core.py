@@ -4266,10 +4266,9 @@ def test_concretization_cache_roundtrip(
 
 def get_current_cache_data():
     count, byte_size = 0, 0
-    for bucket in spack.solver.asp.CONC_CACHE.cache_buckets():
-        for entry in spack.solver.asp.CONC_CACHE.cache_entries(bucket):
-            count += 1
-            byte_size += entry.stat().st_size
+    for entry in spack.solver.asp.CONC_CACHE.cache_entries():
+        count += 1
+        byte_size += entry.stat().st_size
     return count, byte_size
 
 
@@ -4303,43 +4302,20 @@ def test_concretization_cache_bytes_cleanup(use_concretization_cache, mutable_co
     assert real_count == 0, "Concretization cache did not properly prune on byte limit"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="No locks on Windows")
-def test_concretization_cache_lockfile_cleanup(use_concretization_cache, mutable_config):
-    """Tests to ensure we're not leaving dangling lockfiles when we perform cleanup
-    operations"""
-    spack.config.set("concretizer:concretization_cache:entry_limit", 1)
-    spack.concretize.concretize_one("zlib")
-    spack.concretize.concretize_one("hdf5")
-    # cleanup should have been run and there should be one lockfile
-    lock_count = 0
-    for file in spack.solver.asp.CONC_CACHE.root.iterdir():
-        if file.is_file() and file.suffix == ".lock":
-            lock_count += 1
-    assert (
-        lock_count == 1
-    ), f"Unexpected number of lockfiles {lock_count} \
-concretization cache cleanup operation failed."
-
-
 def test_concretization_cache_uncompressed_entry(use_concretization_cache, monkeypatch):
-    def store(self, problem, result, statistics, test=False):
-        bucket, digest = self._prefix_digest(problem)
-        cache_path = self.root / bucket / digest
-        self._fc.init_entry(bucket)
-        with self._fc.write_transaction(bucket) as exists:
-            if not exists:
-                # The directory may have been pruned between init entry and the write
-                # transaction, recreate the directory
-                os.makedirs(bucket)
+    def _store(self, problem, result, statistics, test=False):
+        cache_path = self._cache_path_from_problem(problem)
+        with self.write_transaction(cache_path) as exists:
+            if exists:
+                return
             try:
                 with open(cache_path, "x", encoding="utf-8") as cache_entry:
                     cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
                     cache_entry.write(json.dumps(cache_dict))
             except FileExistsError:
-                # Entry for this conc hash exists already, do not overwrite
                 pass
 
-    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", store)
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _store)
     # Store the results in plaintext
     spack.concretize.concretize_one("zlib")
     # Ensure fetch can handle the plaintext cache entry
