@@ -34,7 +34,35 @@ arch = {
     "properties": {"platform": {}, "platform_os": {}, "target": target},
 }
 
-dependencies = {
+#: Corresponds to specfile format v1
+dependencies_v1 = {
+    "type": "object",
+    "additionalProperties": {
+        "type": "object",
+        "properties": {
+            "hash": {"type": "string"},
+            "type": {"type": "array", "items": {"type": "string"}},
+        },
+    },
+}
+
+#: Corresponds to specfile format v2-v3
+dependencies_v2_v3 = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["name", "hash", "type"],
+        "properties": {
+            "name": {"type": "string"},
+            "hash": {"type": "string"},
+            "type": {"type": "array", "items": {"type": "string"}},
+        },
+    },
+}
+
+#: Corresponds to specfile format v4+
+dependencies_v4_plus = {
     "type": "array",
     "items": {
         "type": "object",
@@ -45,7 +73,8 @@ dependencies = {
             "hash": {"type": "string"},
             "parameters": {
                 "type": "object",
-                "additionalProperties": True,
+                "additionalProperties": False,
+                "required": ["deptypes", "virtuals"],
                 "properties": {
                     "deptypes": {"type": "array", "items": {"type": "string"}},
                     "virtuals": {"type": "array", "items": {"type": "string"}},
@@ -55,6 +84,8 @@ dependencies = {
         },
     },
 }
+
+dependencies = {"oneOf": [dependencies_v1, dependencies_v2_v3, dependencies_v4_plus]}
 
 build_spec = {
     "type": "object",
@@ -69,14 +100,22 @@ spec_node = {
     "additionalProperties": False,
     "required": ["name"],
     "properties": {
+        # name is a string for concrete specs, but may be null for abstract specs
         "name": {"type": ["string", "null"]},
         "hash": {"type": "string"},
         "package_hash": {"type": "string"},
         # these hashes were used on some specs prior to 0.18
         "full_hash": {"type": "string"},
         "build_hash": {"type": "string"},
-        "version": {"oneOf": [{"type": "string"}, {"type": "number"}]},
+        # concrete specs have a single version
+        "version": {"type": "string"},
+        # abstract specs have a version list
         "versions": {"type": "array", "items": {"type": "string"}},
+        # list of variants to propagate (for abstract specs)
+        "propagate": {"type": "array", "items": {"type": "string"}},
+        # list of multi-valued variants that are abstract, i.e. foo=bar,baz instead of foo:=bar,baz (for abstract specs)
+        "abstract": {"type": "array", "items": {"type": "string"}},
+        # Whether the spec is concrete or not, when omitted defaults to true
         "concrete": {"type": "boolean"},
         "arch": arch,
         "compiler": {
@@ -88,7 +127,6 @@ spec_node = {
         "namespace": {"type": "string"},
         "parameters": {
             "type": "object",
-            "required": ["cflags", "cppflags", "cxxflags", "fflags", "ldflags", "ldlibs"],
             "additionalProperties": True,
             "properties": {
                 "patches": {"type": "array", "items": {"type": "string"}},
@@ -97,10 +135,10 @@ spec_node = {
                 "cxxflags": {"type": "array", "items": {"type": "string"}},
                 "fflags": {"type": "array", "items": {"type": "string"}},
                 "ldflags": {"type": "array", "items": {"type": "string"}},
-                "ldlib": {"type": "array", "items": {"type": "string"}},
+                "ldlibs": {"type": "array", "items": {"type": "string"}},
             },
         },
-        "patches": {"type": "array", "items": {}},
+        "patches": {"type": "array", "items": {"type": "string"}},
         "dependencies": dependencies,
         "build_spec": build_spec,
         "external": {
@@ -108,11 +146,20 @@ spec_node = {
             "additionalProperties": False,
             "properties": {
                 "path": {"type": ["string", "null"]},
-                "module": {"type": ["string", "null"]},
+                "module": {
+                    "anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]
+                },
                 "extra_attributes": {"type": "object"},
             },
         },
-        "annotations": {"type": "object"},
+        "annotations": {
+            "type": "object",
+            "properties": {
+                "original_specfile_version": {"type": "number"},
+                "compiler": {"type": "string"},
+            },
+            "required": ["original_specfile_version"],
+        },
     },
 }
 
