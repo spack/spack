@@ -107,62 +107,18 @@ def attr_setdefault(obj, name, value):
     return getattr(obj, name)
 
 
-def union_dicts(*dicts):
-    """Use update() to combine all dicts into one.
-
-    This builds a new dictionary, into which we ``update()`` each element
-    of ``dicts`` in order.  Items from later dictionaries will override
-    items from earlier dictionaries.
-
-    Args:
-        dicts (list): list of dictionaries
-
-    Return: (dict): a merged dictionary containing combined keys and
-        values from ``dicts``.
-
-    """
-    result = {}
-    for d in dicts:
-        result.update(d)
-    return result
-
-
-# Used as a sentinel that disambiguates tuples passed in *args from coincidentally
-# matching tuples formed from kwargs item pairs.
-_kwargs_separator = (object(),)
-
-
-def stable_args(*args, **kwargs):
-    """A key factory that performs a stable sort of the parameters."""
-    key = args
-    if kwargs:
-        key += _kwargs_separator + tuple(sorted(kwargs.items()))
-    return key
-
-
 def memoized(func):
     """Decorator that caches the results of a function, storing them in
     an attribute of that function.
+
+    Example::
+
+        @memoized
+        def expensive_computation(x):
+            # Some expensive computation
+            return result
     """
-    func.cache = {}
-
-    @functools.wraps(func)
-    def _memoized_function(*args, **kwargs):
-        key = stable_args(*args, **kwargs)
-
-        try:
-            return func.cache[key]
-        except KeyError:
-            ret = func(*args, **kwargs)
-            func.cache[key] = ret
-            return ret
-        except TypeError as e:
-            # TypeError is raised when indexing into a dict if the key is unhashable.
-            raise UnhashableArguments(
-                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__)
-            ) from e
-
-    return _memoized_function
+    return functools.lru_cache(maxsize=None)(func)
 
 
 def list_modules(directory, **kwargs):
@@ -322,12 +278,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
         class Widget:
             def _cmp_key(self):
-                return (
-                    self.a,
-                    self.b,
-                    (self.c, self.d),
-                    self.e
-                )
+                return (self.a, self.b, (self.c, self.d), self.e)
 
             def __eq__(self, other):
                 return self._cmp_key() == other._cmp_key()
@@ -383,9 +334,11 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
             def _cmp_iter(self):
                 yield a
                 yield b
+
                 def cd_fun():
                     yield c
                     yield d
+
                 yield cd_fun
                 yield e
 
@@ -394,10 +347,10 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
     ``_cmp_fast_eq`` should return:
 
-        * ``True`` if ``self`` is equal to ``other``,
-        * ``False`` if ``self`` is not equal to ``other``, and
-        * ``None`` if it's not known whether they are equal, and the full
-          comparison should be done.
+    * ``True`` if ``self`` is equal to ``other``,
+    * ``False`` if ``self`` is not equal to ``other``, and
+    * ``None`` if it's not known whether they are equal, and the full
+      comparison should be done.
 
     ``lazy_lexicographic_ordering`` uses ``_cmp_fast_eq`` to short-circuit
     the comparison if the answer can be determined quickly. If you do not
@@ -405,16 +358,16 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
     Some things to note:
 
-      * If a class already has ``__eq__``, ``__ne__``, ``__lt__``,
-        ``__le__``, ``__gt__``, ``__ge__``, or ``__hash__`` defined, this
-        decorator will overwrite them.
+    * If a class already has ``__eq__``, ``__ne__``, ``__lt__``,
+      ``__le__``, ``__gt__``, ``__ge__``, or ``__hash__`` defined, this
+      decorator will overwrite them.
 
-      * If ``set_hash`` is ``False``, this will not overwrite
-        ``__hash__``.
+    * If ``set_hash`` is ``False``, this will not overwrite
+      ``__hash__``.
 
-      * This class uses Python 2 None-comparison semantics. If you yield
-        None and it is compared to a non-None type, None will always be
-        less than the other object.
+    * This class uses Python 2 None-comparison semantics. If you yield
+      None and it is compared to a non-None type, None will always be
+      less than the other object.
 
     Raises:
         TypeError: If the class does not have a ``_cmp_iter`` method
@@ -554,7 +507,7 @@ def dedupe(sequence, key=None):
 
     Examples:
 
-        Dedupe a list of integers:
+        Dedupe a list of integers::
 
             [x for x in dedupe([1, 2, 1, 3, 2])] == [1, 2, 3]
 
@@ -568,17 +521,15 @@ def dedupe(sequence, key=None):
             seen.add(x_key)
 
 
-def pretty_date(time, now=None):
+def pretty_date(time: Union[datetime, int], now: Optional[datetime] = None) -> str:
     """Convert a datetime or timestamp to a pretty, relative date.
 
     Args:
-        time (datetime.datetime or int): date to print prettily
-        now (datetime.datetime): datetime for 'now', i.e. the date the pretty date
-            is relative to (default is datetime.now())
+        time: date to print prettily
+        now: the date the pretty date is relative to (default is ``datetime.now()``)
 
     Returns:
-        (str): pretty string like 'an hour ago', 'Yesterday',
-            '3 months ago', 'just now', etc.
+        pretty string like "an hour ago", "Yesterday", "3 months ago", "just now", etc.
 
     Adapted from https://stackoverflow.com/questions/1551382.
 
@@ -603,51 +554,49 @@ def pretty_date(time, now=None):
         if second_diff < 10:
             return "just now"
         if second_diff < 60:
-            return str(second_diff) + " seconds ago"
+            return f"{second_diff} seconds ago"
         if second_diff < 120:
             return "a minute ago"
         if second_diff < 3600:
-            return str(second_diff // 60) + " minutes ago"
+            return f"{second_diff // 60} minutes ago"
         if second_diff < 7200:
             return "an hour ago"
         if second_diff < 86400:
-            return str(second_diff // 3600) + " hours ago"
+            return f"{second_diff // 3600} hours ago"
     if day_diff == 1:
         return "yesterday"
     if day_diff < 7:
-        return str(day_diff) + " days ago"
+        return f"{day_diff} days ago"
     if day_diff < 28:
         weeks = day_diff // 7
         if weeks == 1:
             return "a week ago"
         else:
-            return str(day_diff // 7) + " weeks ago"
+            return f"{day_diff // 7} weeks ago"
     if day_diff < 365:
         months = day_diff // 30
         if months == 1:
             return "a month ago"
         elif months == 12:
             months -= 1
-        return str(months) + " months ago"
+        return f"{months} months ago"
 
-    diff = day_diff // 365
-    if diff == 1:
+    year_diff = day_diff // 365
+    if year_diff == 1:
         return "a year ago"
-    else:
-        return str(diff) + " years ago"
+    return f"{year_diff} years ago"
 
 
-def pretty_string_to_date(date_str, now=None):
+def pretty_string_to_date(date_str: str, now: Optional[datetime] = None) -> datetime:
     """Parses a string representing a date and returns a datetime object.
 
     Args:
-        date_str (str): string representing a date. This string might be
+        date_str: string representing a date. This string might be
             in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``,
             ``YYYY-MM-DD HH:MM``, ``YYYY-MM-DD HH:MM:SS``)
             or be a *pretty date* (like ``yesterday`` or ``two months ago``)
 
-    Returns:
-        (datetime.datetime): datetime object corresponding to ``date_str``
+    Returns: datetime object corresponding to ``date_str``
     """
 
     pattern = {}
@@ -694,8 +643,7 @@ def pretty_string_to_date(date_str, now=None):
         if bool(regexp.match(date_str)):
             return parser(date_str)
 
-    msg = 'date "{0}" does not match any valid format'.format(date_str)
-    raise ValueError(msg)
+    raise ValueError(f'date "{date_str}" does not match any valid format')
 
 
 def pretty_seconds_formatter(seconds):
@@ -909,7 +857,7 @@ def uniq(sequence):
 
 def elide_list(line_list: List[str], max_num: int = 10) -> List[str]:
     """Takes a long list and limits it to a smaller number of elements,
-    replacing intervening elements with '...'.  For example::
+    replacing intervening elements with ``"..."``.  For example::
 
         elide_list(["1", "2", "3", "4", "5", "6"], 4)
 
@@ -1002,12 +950,12 @@ class Const:
 class TypedMutableSequence(collections.abc.MutableSequence):
     """Base class that behaves like a list, just with a different type.
 
-    Client code can inherit from this base class:
+    Client code can inherit from this base class::
 
         class Foo(TypedMutableSequence):
             pass
 
-    and later perform checks based on types:
+    and later perform checks based on types::
 
         if isinstance(l, Foo):
             # do something
@@ -1100,6 +1048,7 @@ class classproperty(Generic[ClassPropertyType]):
 
     def __init__(self, callback: Callable[[Any], ClassPropertyType]) -> None:
         self.callback = callback
+        self.__doc__ = callback.__doc__
 
     def __get__(self, instance, owner) -> ClassPropertyType:
         return self.callback(owner)

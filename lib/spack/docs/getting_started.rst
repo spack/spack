@@ -2,70 +2,69 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      A beginner's guide to Spack, walking you through the initial setup, basic commands, and core concepts to get you started with managing software.
+
 .. _getting_started:
 
-===============
 Getting Started
 ===============
 
-Getting Spack is easy.  You can clone it from the `GitHub repository
-<https://github.com/spack/spack>`_ using this command:
+Getting Spack is easy.
+You can clone it from the `GitHub repository <https://github.com/spack/spack>`_ using this command:
 
 .. code-block:: console
 
    $ git clone --depth=2 https://github.com/spack/spack.git
 
-This will create a directory called ``spack``. Once you have cloned Spack, we recommend sourcing the appropriate script for your shell:
+This will create a directory called ``spack``.
+Once you have cloned Spack, we recommend sourcing the appropriate script for your shell.
 
-.. tab-set::
+For *bash*, *zsh* and *sh* users:
 
-   .. tab-item:: bash/zsh/sh
+.. code-block:: console
 
-      .. code-block:: console
+   $ . spack/share/spack/setup-env.sh
 
-         $ . spack/share/spack/setup-env.sh
+For *csh* and *tcsh* users:
 
-   .. tab-item:: tcsh/csh
+.. code-block:: console
 
-      .. code-block:: console
+   $ source spack/share/spack/setup-env.csh
 
-         $ source spack/share/spack/setup-env.csh
+For *fish* users:
 
-   .. tab-item:: fish
+.. code-block:: console
 
-      .. code-block:: console
-
-         $ . spack/share/spack/setup-env.fish
+   $ . spack/share/spack/setup-env.fish
 
 Now you're ready to use Spack!
 
------------------------------
 List packages you can install
 -----------------------------
 
-Once Spack is ready you can list all the packages it knows about with the following command:
+Once Spack is ready, you can list all the packages it knows about with the following command:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack list
 
 If you want to get more information on a specific package, for instance ``hdf5``, you can use:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack info hdf5
 
 This command shows information about ``hdf5``, including a brief description, the versions of the package Spack knows about, and all the options you can activate when installing.
 
-As you can see it's quite simple to gather basic information on packages, before you install them!
+As you can see, it's quite simple to gather basic information on packages before you install them!
 
 .. admonition:: Slowdown on the very first command
    :class: warning
-   :collapsible:
 
-   The very first command run with Spack will take a while to finish, as Spack has to build a few caches to speed up subsequent command execution.
+   The first command you run with Spack may take a while, as Spack builds caches to speed up future commands.
 
------------------------------
 Installing your first package
 -----------------------------
 
@@ -76,7 +75,7 @@ To search your machine for available compilers, you can run:
 
    $ spack compiler find
 
-The command shows users if any compiler was found, and where its configuration is stored.
+The command shows users whether any compilers were found and where their configuration is stored.
 If the search was successful, you can now list known compilers, and get an output similar to the following:
 
 .. code-block:: console
@@ -86,14 +85,14 @@ If the search was successful, you can now list known compilers, and get an outpu
    -- gcc ubuntu20.04-x86_64 ---------------------------------------
    [e]  gcc@9.4.0  [e]  gcc@8.4.0  [e]  gcc@10.5.0
 
-If no compilers were found, you need either to:
+If no compilers were found, you need to either:
 
 * Install further prerequisites, see :ref:`verify-spack-prerequisites`, and repeat the search above.
 * Register a buildcache that provides a compiler already available as a binary
 
-Once a compiler is available you can proceed installing your first package:
+Once a compiler is available, you can proceed installing your first package:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack install tcl
 
@@ -150,9 +149,9 @@ The output of this command should look similar to the following:
      Stage: 0.46s.  Autoreconf: 0.00s.  Configure: 9.25s.  Build: 1m 8.71s.  Install: 3.32s.  Post-install: 0.68s.  Total: 1m 22.61s
    [+] /home/spack/.local/spack/opt/linux-icelake/tcl-8.6.12-6vo5hxeqw5plzd6gvzm74wlfz5stnzcv
 
-Congratulations! You just installed your first package with Spack!
+Congratulations!
+You just installed your first package with Spack!
 
------------------------------------
 Use the software you just installed
 -----------------------------------
 
@@ -168,19 +167,20 @@ This works, but using such a long absolute path is not the most convenient way t
 
 The simplest way to have ``tclsh`` available on the command line is:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack load tcl
 
-The environment of the current shell has now been modified, and you can run:
+The environment of the current shell has now been modified, and you can run
 
 .. code-block:: console
 
-   $ tcsh
+   $ tclsh
 
-directly. To undo these modifications, you can:
+directly.
+To undo these modifications, you can:
 
-.. code-block:: console
+.. code-block:: spec
 
    $ spack unload tcl
 
@@ -190,23 +190,18 @@ directly. To undo these modifications, you can:
    :ref:`Spack Environments <spack-environments-basic-usage>` are a better way to install and load a set of packages that are frequently used together.
    The discussion of this topic goes beyond this ``Getting Started`` guide, and we refer to :ref:`environments` for more information.
 
-----------
 Next steps
 ----------
 
 This section helped you get Spack installed and running quickly.
 There are further resources in the documentation that cover both basic and advanced topics in more detail:
 
-.. tab-set::
+Basic Usage
+   1. :ref:`basic-usage`
+   2. :ref:`compiler-config`
+   3. :ref:`spack-environments-basic-usage`
 
-   .. tab-item:: Basic Usage
-
-      1. :ref:`basic-usage`
-      2. :ref:`compiler-config`
-      3. :ref:`spack-environments-basic-usage`
-
-   .. tab-item:: Advanced Topics
-
-      1. :ref:`toolchains`
-      2. :ref:`audit-packages-and-configuration`
-      3. :ref:`verify-installations`
+Advanced Topics
+   1. :ref:`toolchains`
+   2. :ref:`cmd-spack-audit`
+   3. :ref:`cmd-spack-verify`

@@ -377,7 +377,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dev-build -d 'dev
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a develop -d 'add a spec to an environment'"'"'s dev-build information'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a diff -d 'compare two specs'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a docs -d 'open spack documentation in a web browser'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a edit -d 'open package files in $EDITOR'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a edit -d 'open package files in ``$EDITOR``'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a env -d 'manage virtual environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a extensions -d 'list extensions for package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a external -d 'manage external packages in Spack configuration'
@@ -430,7 +430,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a view -d 'project 
 complete -c spack -n '__fish_spack_using_command ' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ' -s H -l all-help -f -a help
-complete -c spack -n '__fish_spack_using_command ' -s H -l all-help -d 'show help for all commands (same as spack help --all)'
+complete -c spack -n '__fish_spack_using_command ' -s H -l all-help -d 'show help for all commands (same as ``spack help --all``)'
 complete -c spack -n '__fish_spack_using_command ' -l color -r -f -a 'always never auto'
 complete -c spack -n '__fish_spack_using_command ' -l color -r -d 'when to colorize output (default: auto)'
 complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -f -a config_vars
@@ -960,7 +960,7 @@ complete -c spack -n '__fish_spack_using_command ci' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -d 'show this help message and exit'
 
 # spack ci generate
-set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= prune-dag no-prune-dag prune-unaffected no-prune-unaffected prune-externals no-prune-externals check-index-only artifacts-root= f/force U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_ci_generate h/help output-file= prune-dag no-prune-dag prune-unaffected no-prune-unaffected prune-externals no-prune-externals check-index-only artifacts-root= forward-variable= f/force U/fresh reuse fresh-roots deprecated j/jobs=
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci generate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ci generate' -l output-file -r -f -a output_file
@@ -981,6 +981,8 @@ complete -c spack -n '__fish_spack_using_command ci generate' -l check-index-onl
 complete -c spack -n '__fish_spack_using_command ci generate' -l check-index-only -d 'only check spec state from buildcache indices'
 complete -c spack -n '__fish_spack_using_command ci generate' -l artifacts-root -r -f -a artifacts_root
 complete -c spack -n '__fish_spack_using_command ci generate' -l artifacts-root -r -d 'path to the root of the artifacts directory'
+complete -c spack -n '__fish_spack_using_command ci generate' -l forward-variable -r -f -a forward_variable
+complete -c spack -n '__fish_spack_using_command ci generate' -l forward-variable -r -d 'Environment variables to forward from the generate environment to the generated jobs.'
 complete -c spack -n '__fish_spack_using_command ci generate' -s f -l force -f -a concretizer_force
 complete -c spack -n '__fish_spack_using_command ci generate' -s f -l force -d 'allow changes to concretized specs in spack.lock (in an env)'
 complete -c spack -n '__fish_spack_using_command ci generate' -s U -l fresh -f -a concretizer_reuse
@@ -1054,7 +1056,7 @@ complete -c spack -n '__fish_spack_using_command clean' -s p -l python-cache -d 
 complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -f -a bootstrap
 complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -d 'remove software and configuration needed to bootstrap Spack'
 complete -c spack -n '__fish_spack_using_command clean' -s a -l all -f -a all
-complete -c spack -n '__fish_spack_using_command clean' -s a -l all -d 'equivalent to -sdfmp (does not include --bootstrap)'
+complete -c spack -n '__fish_spack_using_command clean' -s a -l all -d 'equivalent to ``-sdfmp`` (does not include ``--bootstrap``)'
 
 # spack commands
 set -g __fish_spack_optspecs_spack_commands h/help update-completion a/aliases format= header= update=
@@ -1229,10 +1231,12 @@ complete -c spack -n '__fish_spack_using_command config' -l scope -r -f -a '_bui
 complete -c spack -n '__fish_spack_using_command config' -l scope -r -d 'configuration scope to read/modify'
 
 # spack config get
-set -g __fish_spack_optspecs_spack_config_get h/help
+set -g __fish_spack_optspecs_spack_config_get h/help json
 complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command config get' -l json -f -a json
+complete -c spack -n '__fish_spack_using_command config get' -l json -d 'output configuration as JSON'
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame h/help
@@ -1473,7 +1477,7 @@ complete -c spack -n '__fish_spack_using_command develop' -s b -l build-director
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -f -a clone
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -d 'do not clone, the package already exists at the source path'
 complete -c spack -n '__fish_spack_using_command develop' -l clone -f -a clone
-complete -c spack -n '__fish_spack_using_command develop' -l clone -d '(default) clone the package unless the path already exists, use --force to overwrite'
+complete -c spack -n '__fish_spack_using_command develop' -l clone -d '(default) clone the package unless the path already exists, use ``--force`` to overwrite'
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a force
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -a recursive
@@ -1504,7 +1508,7 @@ complete -c spack -n '__fish_spack_using_command_pos_remainder 0 edit' -f -a '(_
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -f -a path
-complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -d 'edit the build system with the supplied name'
+complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -d 'edit the build system with the supplied name or fullname'
 complete -c spack -n '__fish_spack_using_command edit' -s c -l command -f -a path
 complete -c spack -n '__fish_spack_using_command edit' -s c -l command -d 'edit the command with the supplied name'
 complete -c spack -n '__fish_spack_using_command edit' -s d -l docs -f -a path
@@ -1514,9 +1518,9 @@ complete -c spack -n '__fish_spack_using_command edit' -s t -l test -d 'edit the
 complete -c spack -n '__fish_spack_using_command edit' -s m -l module -f -a path
 complete -c spack -n '__fish_spack_using_command edit' -s m -l module -d 'edit the main spack module with the supplied name'
 complete -c spack -n '__fish_spack_using_command edit' -s r -l repo -r -f -a repo
-complete -c spack -n '__fish_spack_using_command edit' -s r -l repo -r -d 'path to repo to edit package in'
+complete -c spack -n '__fish_spack_using_command edit' -s r -l repo -r -d 'path to repo to edit package or build system in'
 complete -c spack -n '__fish_spack_using_command edit' -s N -l namespace -r -f -a namespace
-complete -c spack -n '__fish_spack_using_command edit' -s N -l namespace -r -d 'namespace of package to edit'
+complete -c spack -n '__fish_spack_using_command edit' -s N -l namespace -r -d 'namespace of package or build system to edit'
 
 # spack env
 set -g __fish_spack_optspecs_spack_env h/help
@@ -1839,7 +1843,7 @@ complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show thi
 complete -c spack -n '__fish_spack_using_command find' -l format -r -f -a format
 complete -c spack -n '__fish_spack_using_command find' -l format -r -d 'output specs with the specified format string'
 complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -f -a format
-complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -d 'same as '"'"'--format {/hash}'"'"'; use with xargs or $()'
+complete -c spack -n '__fish_spack_using_command find' -s H -l hashes -d 'same as ``--format {/hash}``; use with ``xargs`` or ``$()``'
 complete -c spack -n '__fish_spack_using_command find' -l json -f -a json
 complete -c spack -n '__fish_spack_using_command find' -l json -d 'output specs as machine-readable json records'
 complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -f -a install_status
@@ -2016,7 +2020,7 @@ complete -c spack -n '__fish_spack_using_command graph' -s a -l ascii -d 'draw g
 complete -c spack -n '__fish_spack_using_command graph' -s d -l dot -f -a dot
 complete -c spack -n '__fish_spack_using_command graph' -s d -l dot -d 'generate graph in dot format and print to stdout'
 complete -c spack -n '__fish_spack_using_command graph' -s s -l static -f -a static
-complete -c spack -n '__fish_spack_using_command graph' -s s -l static -d 'graph static (possible) deps, don'"'"'t concretize (implies --dot)'
+complete -c spack -n '__fish_spack_using_command graph' -s s -l static -d 'graph static (possible) deps, don'"'"'t concretize (implies ``--dot``)'
 complete -c spack -n '__fish_spack_using_command graph' -s c -l color -f -a color
 complete -c spack -n '__fish_spack_using_command graph' -s c -l color -d 'use different colors for different dependency types'
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -f -a installed
@@ -2202,7 +2206,7 @@ complete -c spack -n '__fish_spack_using_command load' -l pwsh -d 'print pwsh co
 complete -c spack -n '__fish_spack_using_command load' -l first -f -a load_first
 complete -c spack -n '__fish_spack_using_command load' -l first -d 'load the first match if multiple packages match the spec'
 complete -c spack -n '__fish_spack_using_command load' -l list -f -a list
-complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as `spack find --loaded`'
+complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as ``spack find --loaded``'
 
 # spack location
 set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= first
@@ -2352,14 +2356,14 @@ complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -
 complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -r -d 'find mirror to destroy by url'
 
 # spack mirror add
-set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret= s3-access-key-secret-variable= s3-access-token= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password= oci-password-variable=
+set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror add' -f
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command mirror add' -l scope -r -f -a '_builtin defaults:base defaults system end-user site user this-spack command_line'
 complete -c spack -n '__fish_spack_using_command mirror add' -l scope -r -d 'configuration scope to modify'
 complete -c spack -n '__fish_spack_using_command mirror add' -l type -r -f -a 'binary source'
-complete -c spack -n '__fish_spack_using_command mirror add' -l type -r -d 'specify the mirror type: for both binary and source use `--type binary --type source` (default)'
+complete -c spack -n '__fish_spack_using_command mirror add' -l type -r -d 'specify the mirror type: for both binary and source use ``--type binary --type source`` (default)'
 complete -c spack -n '__fish_spack_using_command mirror add' -l autopush -f -a autopush
 complete -c spack -n '__fish_spack_using_command mirror add' -l autopush -d 'set mirror to push automatically after installation'
 complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -f -a signed
@@ -2370,12 +2374,8 @@ complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id -r -d 'ID string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id-variable -r -f -a s3_access_key_id_variable
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id-variable -r -d 'environment variable containing ID string to use to connect to this S3 mirror'
-complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-secret -r -f -a s3_access_key_secret
-complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-secret -r -d 'secret string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-secret-variable -r -f -a s3_access_key_secret_variable
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-secret-variable -r -d 'environment variable containing secret string to use to connect to this S3 mirror'
-complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-token -r -f -a s3_access_token
-complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-token -r -d 'access token to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-token-variable -r -f -a s3_access_token_variable
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-token-variable -r -d 'environment variable containing access token to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-profile -r -f -a s3_profile
@@ -2386,8 +2386,6 @@ complete -c spack -n '__fish_spack_using_command mirror add' -l oci-username -r 
 complete -c spack -n '__fish_spack_using_command mirror add' -l oci-username -r -d 'username to use to connect to this OCI mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l oci-username-variable -r -f -a oci_username_variable
 complete -c spack -n '__fish_spack_using_command mirror add' -l oci-username-variable -r -d 'environment variable containing username to use to connect to this OCI mirror'
-complete -c spack -n '__fish_spack_using_command mirror add' -l oci-password -r -f -a oci_password
-complete -c spack -n '__fish_spack_using_command mirror add' -l oci-password -r -d 'password to use to connect to this OCI mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l oci-password-variable -r -f -a oci_password_variable
 complete -c spack -n '__fish_spack_using_command mirror add' -l oci-password-variable -r -d 'environment variable containing password to use to connect to this OCI mirror'
 
@@ -2408,7 +2406,7 @@ complete -c spack -n '__fish_spack_using_command mirror rm' -l scope -r -f -a '_
 complete -c spack -n '__fish_spack_using_command mirror rm' -l scope -r -d 'configuration scope to modify'
 
 # spack mirror set-url
-set -g __fish_spack_optspecs_spack_mirror_set_url h/help push fetch scope= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret= s3-access-key-secret-variable= s3-access-token= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password= oci-password-variable=
+set -g __fish_spack_optspecs_spack_mirror_set_url h/help push fetch scope= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror set-url' -f -a '(__fish_spack_mirrors)'
 complete -c spack -n '__fish_spack_using_command mirror set-url' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror set-url' -s h -l help -d 'show this help message and exit'
@@ -2422,12 +2420,8 @@ complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-ke
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-key-id -r -d 'ID string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-key-id-variable -r -f -a s3_access_key_id_variable
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-key-id-variable -r -d 'environment variable containing ID string to use to connect to this S3 mirror'
-complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-key-secret -r -f -a s3_access_key_secret
-complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-key-secret -r -d 'secret string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-key-secret-variable -r -f -a s3_access_key_secret_variable
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-key-secret-variable -r -d 'environment variable containing secret string to use to connect to this S3 mirror'
-complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-token -r -f -a s3_access_token
-complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-token -r -d 'access token to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-token-variable -r -f -a s3_access_token_variable
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-access-token-variable -r -d 'environment variable containing access token to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l s3-profile -r -f -a s3_profile
@@ -2438,13 +2432,11 @@ complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-username
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-username -r -d 'username to use to connect to this OCI mirror'
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-username-variable -r -f -a oci_username_variable
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-username-variable -r -d 'environment variable containing username to use to connect to this OCI mirror'
-complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password -r -f -a oci_password
-complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password -r -d 'password to use to connect to this OCI mirror'
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password-variable -r -f -a oci_password_variable
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password-variable -r -d 'environment variable containing password to use to connect to this OCI mirror'
 
 # spack mirror set
-set -g __fish_spack_optspecs_spack_mirror_set h/help push fetch type= url= autopush no-autopush unsigned signed scope= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret= s3-access-key-secret-variable= s3-access-token= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password= oci-password-variable=
+set -g __fish_spack_optspecs_spack_mirror_set h/help push fetch type= url= autopush no-autopush unsigned signed scope= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror set' -f -a '(__fish_spack_mirrors)'
 complete -c spack -n '__fish_spack_using_command mirror set' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror set' -s h -l help -d 'show this help message and exit'
@@ -2453,7 +2445,7 @@ complete -c spack -n '__fish_spack_using_command mirror set' -l push -d 'modify 
 complete -c spack -n '__fish_spack_using_command mirror set' -l fetch -f -a fetch
 complete -c spack -n '__fish_spack_using_command mirror set' -l fetch -d 'modify just the fetch connection details'
 complete -c spack -n '__fish_spack_using_command mirror set' -l type -r -f -a 'binary source'
-complete -c spack -n '__fish_spack_using_command mirror set' -l type -r -d 'specify the mirror type: for both binary and source use `--type binary --type source`'
+complete -c spack -n '__fish_spack_using_command mirror set' -l type -r -d 'specify the mirror type: for both binary and source use ``--type binary --type source``'
 complete -c spack -n '__fish_spack_using_command mirror set' -l url -r -f -a url
 complete -c spack -n '__fish_spack_using_command mirror set' -l url -r -d 'url of mirror directory from '"'"'spack mirror create'"'"''
 complete -c spack -n '__fish_spack_using_command mirror set' -l autopush -f -a autopush
@@ -2470,12 +2462,8 @@ complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-id
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-id -r -d 'ID string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-id-variable -r -f -a s3_access_key_id_variable
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-id-variable -r -d 'environment variable containing ID string to use to connect to this S3 mirror'
-complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-secret -r -f -a s3_access_key_secret
-complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-secret -r -d 'secret string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-secret-variable -r -f -a s3_access_key_secret_variable
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-secret-variable -r -d 'environment variable containing secret string to use to connect to this S3 mirror'
-complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-token -r -f -a s3_access_token
-complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-token -r -d 'access token to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-token-variable -r -f -a s3_access_token_variable
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-token-variable -r -d 'environment variable containing access token to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-profile -r -f -a s3_profile
@@ -2486,8 +2474,6 @@ complete -c spack -n '__fish_spack_using_command mirror set' -l oci-username -r 
 complete -c spack -n '__fish_spack_using_command mirror set' -l oci-username -r -d 'username to use to connect to this OCI mirror'
 complete -c spack -n '__fish_spack_using_command mirror set' -l oci-username-variable -r -f -a oci_username_variable
 complete -c spack -n '__fish_spack_using_command mirror set' -l oci-username-variable -r -d 'environment variable containing username to use to connect to this OCI mirror'
-complete -c spack -n '__fish_spack_using_command mirror set' -l oci-password -r -f -a oci_password
-complete -c spack -n '__fish_spack_using_command mirror set' -l oci-password -r -d 'password to use to connect to this OCI mirror'
 complete -c spack -n '__fish_spack_using_command mirror set' -l oci-password-variable -r -f -a oci_password_variable
 complete -c spack -n '__fish_spack_using_command mirror set' -l oci-password-variable -r -d 'environment variable containing password to use to connect to this OCI mirror'
 
@@ -2656,7 +2642,7 @@ complete -c spack -n '__fish_spack_using_command patch' -l deprecated -d 'allow 
 
 # spack pkg
 set -g __fish_spack_optspecs_spack_pkg h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a add -d 'add a package to the git stage with `git add`'
+complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a add -d 'add a package to the git stage with ``git add``'
 complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a list -d 'list packages associated with a particular spack git revision'
 complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a diff -d 'compare packages available in two different git revisions'
 complete -c spack -n '__fish_spack_using_command_pos 0 pkg' -f -a added -d 'show packages added since a commit'
@@ -3049,7 +3035,7 @@ complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -d 'spec
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -f -a skip
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -d 'specify tools to skip (choose from import, isort, black, flake8, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -l spec-strings -f -a spec_strings
-complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: must be used only on specs from spack v0.X.'
+complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style ``--spec-strings $(git ls-files)``. Note: must be used only on specs from spack v0.X.'
 
 # spack tags
 set -g __fish_spack_optspecs_spack_tags h/help i/installed a/all

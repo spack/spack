@@ -6,22 +6,19 @@ of the information that module systems need.
 
 This information maps **a single spec** to:
 
-  * a unique module filename
-  * the module file content
+* a unique module filename
+* the module file content
 
 and is divided among four classes:
 
-  * a configuration class that provides a convenient interface to query
-    details about the configuration for the spec under consideration.
-
-  * a layout class that provides the information associated with module
-    file names and directories
-
-  * a context class that provides the dictionary used by the template engine
-    to generate the module file
-
-  * a writer that collects and uses the information above to either write
-    or remove the module file
+* a configuration class that provides a convenient interface to query
+  details about the configuration for the spec under consideration.
+* a layout class that provides the information associated with module
+  file names and directories
+* a context class that provides the dictionary used by the template engine
+  to generate the module file
+* a writer that collects and uses the information above to either write
+  or remove the module file
 
 Each of the four classes needs to be sub-classed when implementing a new
 module type.
@@ -136,7 +133,7 @@ def dependencies(spec: spack.spec.Spec, request: str = "all") -> List[spack.spec
 
     Args:
         spec: spec to be analyzed
-        request: one of "none", "run", "direct", "all"
+        request: one of ``"none"``, ``"run"``, ``"direct"``, ``"all"``
 
     Returns:
         list of requested dependencies
@@ -206,7 +203,7 @@ def root_path(name, module_set_name):
     """Returns the root folder for module file installation.
 
     Args:
-        name: name of the module system to be used (e.g. 'tcl')
+        name: name of the module system to be used (``"tcl"`` or ``"lmod"``)
         module_set_name: name of the set of module configs to use
 
     Returns:
@@ -1025,19 +1022,19 @@ class ModuleNotFoundError(ModulesError):
 
 
 class DefaultTemplateNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute 'default_template' has not been specified
+    """Raised if the attribute ``default_template`` has not been specified
     in the derived classes.
     """
 
 
 class HideCmdFormatNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute 'hide_cmd_format' has not been specified
+    """Raised if the attribute ``hide_cmd_format`` has not been specified
     in the derived classes.
     """
 
 
 class ModulercHeaderNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute 'modulerc_header' has not been specified
+    """Raised if the attribute ``modulerc_header`` has not been specified
     in the derived classes.
     """
 

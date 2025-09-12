@@ -8,8 +8,6 @@
 """
 from typing import Any, Dict
 
-from spack.llnl.util.lang import union_dicts
-
 # Schema for script fields
 # List of lists and/or strings
 # This is similar to what is allowed in
@@ -44,7 +42,7 @@ attributes_schema = {
         "tags": {"type": "array", "items": {"type": "string"}},
         "variables": {
             "type": "object",
-            "patternProperties": {r"[\w\d\-_\.]+": {"type": ["string", "number"]}},
+            "patternProperties": {r"^[\w\-\.]+$": {"type": ["string", "number"]}},
         },
         "before_script": script_schema,
         "script": script_schema,
@@ -124,18 +122,19 @@ pipeline_gen_schema = {
     },
 }
 
-core_shared_properties = union_dicts(
-    {
-        "pipeline-gen": pipeline_gen_schema,
-        "rebuild-index": {"type": "boolean"},
-        "broken-specs-url": {"type": "string"},
-        "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
-        "target": {"type": "string", "enum": ["gitlab"], "default": "gitlab"},
-    }
-)
-
 #: Properties for inclusion in other schemas
-properties: Dict[str, Any] = {"ci": core_shared_properties}
+properties: Dict[str, Any] = {
+    "ci": {
+        "type": "object",
+        "properties": {
+            "pipeline-gen": pipeline_gen_schema,
+            "rebuild-index": {"type": "boolean"},
+            "broken-specs-url": {"type": "string"},
+            "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
+            "target": {"type": "string", "default": "gitlab"},
+        },
+    }
+}
 
 #: Full schema with metadata
 schema = {

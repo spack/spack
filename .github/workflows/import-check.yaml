@@ -40,11 +40,14 @@ jobs:
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:
         repository: haampie/circular-import-fighter
-        ref: 6645c9d4e81ac278f4b3970f221dbead699204fe
+        ref: f1c56367833f3c82f6a85dc58595b2cd7995ad48
         path: circular-import-fighter
     - name: Install dependencies
       working-directory: circular-import-fighter
       run: make -j dependencies
-    - name: Circular import check
+    - name: Circular import check (without inline imports)
       working-directory: circular-import-fighter
       run: make -j compare "SPACK_ROOT=../old ../new"
+    - name: Circular import check (with inline imports)
+      working-directory: circular-import-fighter
+      run: make clean-graph && make -j compare "SPACK_ROOT=../old ../new" IMPORTS_FLAGS=--inline

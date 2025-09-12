@@ -58,6 +58,10 @@ spack_env_view_var = "SPACK_ENV_VIEW"
 #: currently activated environment
 _active_environment: Optional["Environment"] = None
 
+# This is used in spack.main to bypass env failures if the command is `spack config edit`
+# It is used in spack.cmd.config to get the path to a failed env for `spack config edit`
+#: Validation error for a currently activate environment that failed to parse
+_active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
 #: default path where environments are stored in the spack tree
 default_env_path = spack.paths.default_envs_path
@@ -88,9 +92,10 @@ def environment_name(path: Union[str, pathlib.Path]) -> str:
     This is the path for directory environments, and just the name
     for managed environments.
     """
+    env_root = pathlib.Path(env_root_path()).resolve()
     path_str = str(path)
-    if path_str.startswith(env_root_path()):
-        return os.path.basename(path_str)
+    if path_str.startswith(str(env_root)):
+        return str(pathlib.Path(path_str).relative_to(env_root))
     else:
         return path_str
 
@@ -124,8 +129,10 @@ spack:
     )
 
 
+sep_re = re.escape(os.sep)
+
 #: regex for validating environment names
-valid_environment_name_re = r"^\w[\w-]*$"
+valid_environment_name_re = rf"^\w[{sep_re}\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
 lockfile_format_version = 6
@@ -438,6 +445,9 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
         if not repos_specs:
             return
         for name, entry in list(repos_specs.items()):
+            # only rewrite when we have a path-based repository
+            if not isinstance(entry, str):
+                continue
             repo_path = substitute_path_variables(entry)
             expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
 
@@ -548,11 +558,22 @@ def all_environment_names():
     if not os.path.exists(env_root_path()):
         return []
 
-    candidates = sorted(os.listdir(env_root_path()))
+    env_root = pathlib.Path(env_root_path()).resolve()
+
+    def yaml_paths():
+        for root, dirs, files in os.walk(env_root, topdown=True, followlinks=True):
+            dirs[:] = [
+                d
+                for d in dirs
+                if not d.startswith(".") and not env_root.samefile(os.path.join(root, d))
+            ]
+            if manifest_name in files:
+                yield os.path.join(root, manifest_name)
+
     names = []
-    for candidate in candidates:
-        yaml_path = os.path.join(_root(candidate), manifest_name)
-        if valid_env_name(candidate) and os.path.exists(yaml_path):
+    for yaml_path in yaml_paths():
+        candidate = str(pathlib.Path(yaml_path).relative_to(env_root).parent)
+        if valid_env_name(candidate):
             names.append(candidate)
     return names
 
@@ -569,7 +590,7 @@ def _read_yaml(str_or_file):
         data = syaml.load_config(str_or_file)
     except syaml.SpackYAMLError as e:
         raise SpackEnvironmentConfigError(
-            f"Invalid environment configuration detected: {e.message}"
+            f"Invalid environment configuration detected: {e.message}", e.filename
         )
 
     filename = getattr(str_or_file, "name", None)
@@ -1011,7 +1032,7 @@ class Environment:
                 shutil.copy(self.lock_path, self._lock_backup_v1_path)
 
     def write_transaction(self):
-        """Get a write lock context manager for use in a `with` block."""
+        """Get a write lock context manager for use in a ``with`` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
     def _process_view(self, env_view: Optional[Union[bool, str, Dict]]):
@@ -1274,12 +1295,12 @@ class Environment:
         """Remove this environment from Spack entirely."""
         shutil.rmtree(self.path)
 
-    def add(self, user_spec, list_name=user_speclist_name):
+    def add(self, user_spec, list_name=user_speclist_name) -> bool:
         """Add a single user_spec (non-concretized) to the Environment
 
         Returns:
-            (bool): True if the spec was added, False if it was already
-                present and did not need to be added
+            True if the spec was added, False if it was already present and did not need to be
+            added
 
         """
         spec = Spec(user_spec)
@@ -1298,7 +1319,7 @@ class Environment:
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list
         if not existing:
-            list_to_change.add(str(spec))
+            list_to_change.add(spec)
             if list_name == user_speclist_name:
                 self.manifest.add_user_spec(str(user_spec))
             else:
@@ -1315,17 +1336,17 @@ class Environment:
         allow_changing_multiple_specs=False,
     ):
         """
-        Find the spec identified by `match_spec` and change it to `change_spec`.
+        Find the spec identified by ``match_spec`` and change it to ``change_spec``.
 
         Arguments:
             change_spec: defines the spec properties that
                 need to be changed. This will not change attributes of the
-                matched spec unless they conflict with `change_spec`.
+                matched spec unless they conflict with ``change_spec``.
             list_name: identifies the spec list in the environment that
                 should be modified
             match_spec: if set, this identifies the spec
                 that should be changed. If not set, it is assumed we are
-                looking for a spec with the same name as `change_spec`.
+                looking for a spec with the same name as ``change_spec``.
         """
         if not (change_spec.name or (match_spec and match_spec.name)):
             raise ValueError(
@@ -1600,8 +1621,6 @@ class Environment:
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
-        import spack.bootstrap
-
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
@@ -1644,10 +1663,10 @@ class Environment:
         """Updates the path of the default view.
 
         If the argument passed as input is False the default view is deleted, if present. The
-        manifest will have an entry "view: false".
+        manifest will have an entry ``view: false``.
 
         If the argument passed as input is True a default view is created, if not already present.
-        The manifest will have an entry "view: true". If a default view is already declared, it
+        The manifest will have an entry ``view: true``. If a default view is already declared, it
         will be left untouched.
 
         If the argument passed as input is a path a default view pointing to that path is created,
@@ -1919,7 +1938,7 @@ class Environment:
         """Specs explicitly requested by the user *in this environment*.
 
         Yields both added and installed specs that have user specs in
-        `spack.yaml`.
+        ``spack.yaml``.
         """
         concretized = dict(self.concretized_specs())
         for spec in self.user_specs:
@@ -1995,8 +2014,8 @@ class Environment:
         spec in the environment.
 
         The matching spec does not have to be installed in the environment,
-        but must be concrete (specs added with `spack add` without an
-        intervening `spack concretize` will not be matched).
+        but must be concrete (specs added with ``spack add`` without an
+        intervening ``spack concretize`` will not be matched).
 
         If there is a single root spec that matches the provided spec or a
         single dependency spec that matches the provided spec, then the
@@ -3008,3 +3027,7 @@ class SpackEnvironmentViewError(SpackEnvironmentError):
 
 class SpackEnvironmentConfigError(SpackEnvironmentError):
     """Class for Spack environment-specific configuration errors."""
+
+    def __init__(self, msg, filename):
+        self.filename = filename
+        super().__init__(msg)

@@ -138,7 +138,7 @@ class keyboard_input(preserve_terminal_settings):
     the stream immediately, and they are not printed to the
     terminal. Typically, standard input is line-buffered, which means
     keypresses won't be sent until the user hits return. In this mode, a
-    user can hit, e.g., 'v', and it will be read on the other end of the
+    user can hit, e.g., ``v``, and it will be read on the other end of the
     pipe immediately but not printed.
 
     The handler takes care to ensure that terminal changes only take
@@ -415,7 +415,7 @@ class nixlog:
     process and the daemon.  The daemon writes our output to both the
     file and to stdout (if echoing).  The parent process can communicate
     with the daemon to tell it when and when not to echo; this is what
-    force_echo does.  You can also enable/disable echoing by typing 'v'.
+    force_echo does.  You can also enable/disable echoing by typing ``v``.
 
     We try to use OS-level file descriptors to do the redirection, but if
     stdout or stderr has been set to some Python-level file object, we
@@ -732,7 +732,7 @@ class winlog:
     Similar to nixlog, with underlying
     functionality ported to support Windows.
 
-    Does not support the use of 'v' toggling as nixlog does.
+    Does not support the use of ``v`` toggling as nixlog does.
     """
 
     def __init__(self, file_like=None, echo=False, debug=0, buffer=False, filter_fn=None):

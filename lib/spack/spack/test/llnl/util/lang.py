@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import pytest
 
 import spack.llnl.util.lang
-from spack.llnl.util.lang import dedupe, match_predicate, memoized, pretty_date, stable_args
+from spack.llnl.util.lang import dedupe, match_predicate, memoized, pretty_date
 
 
 @pytest.fixture()
@@ -223,28 +223,6 @@ def test_key_ordering():
     assert hash(b) == hash(b2)
 
 
-@pytest.mark.parametrize(
-    "args1,kwargs1,args2,kwargs2",
-    [
-        # Ensure tuples passed in args are disambiguated from equivalent kwarg items.
-        (("a", 3), {}, (), {"a": 3})
-    ],
-)
-def test_unequal_args(args1, kwargs1, args2, kwargs2):
-    assert stable_args(*args1, **kwargs1) != stable_args(*args2, **kwargs2)
-
-
-@pytest.mark.parametrize(
-    "args1,kwargs1,args2,kwargs2",
-    [
-        # Ensure that kwargs are stably sorted.
-        ((), {"a": 3, "b": 4}, (), {"b": 4, "a": 3})
-    ],
-)
-def test_equal_args(args1, kwargs1, args2, kwargs2):
-    assert stable_args(*args1, **kwargs1) == stable_args(*args2, **kwargs2)
-
-
 @pytest.mark.parametrize("args, kwargs", [((1,), {}), ((), {"a": 3}), ((1,), {"a": 3})])
 def test_memoized(args, kwargs):
     @memoized
@@ -252,9 +230,8 @@ def test_memoized(args, kwargs):
         return "return-value"
 
     assert f(*args, **kwargs) == "return-value"
-    key = stable_args(*args, **kwargs)
-    assert list(f.cache.keys()) == [key]
-    assert f.cache[key] == "return-value"
+    assert f(*args, **kwargs) == "return-value"
+    assert f.cache_info().hits == 1
 
 
 @pytest.mark.parametrize("args, kwargs", [(([1],), {}), ((), {"a": [1]})])
@@ -265,12 +242,8 @@ def test_memoized_unhashable(args, kwargs):
     def f(*args, **kwargs):
         return None
 
-    with pytest.raises(spack.llnl.util.lang.UnhashableArguments) as exc_info:
+    with pytest.raises(TypeError, match="unhashable type:"):
         f(*args, **kwargs)
-    exc_msg = str(exc_info.value)
-    key = stable_args(*args, **kwargs)
-    assert str(key) in exc_msg
-    assert "function 'f'" in exc_msg
 
 
 def test_dedupe():

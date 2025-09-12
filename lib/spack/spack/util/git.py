@@ -28,7 +28,7 @@ def git(required: bool = ...) -> Optional[exe.Executable]: ...
 
 
 def git(required: bool = False) -> Optional[exe.Executable]:
-    """Get a git executable. Raises CommandNotFoundError if `required` and git is not found."""
+    """Get a git executable. Raises CommandNotFoundError if ``required`` and git is not found."""
     git_path = _find_git()
 
     if not git_path:
@@ -114,10 +114,10 @@ def pull_checkout_branch(
 def get_modified_files(
     from_ref: str = "HEAD~1", to_ref: str = "HEAD", git_exe: Optional[exe.Executable] = None
 ) -> List[str]:
-    """Get a list of files modified between `from_ref` and `to_ref`
+    """Get a list of files modified between ``from_ref`` and ``to_ref``
     Args:
-       from_ref (str): oldest git ref, defaults to `HEAD~1`
-       to_ref (str): newer git ref, defaults to `HEAD`
+       from_ref (str): oldest git ref, defaults to ``HEAD~1``
+       to_ref (str): newer git ref, defaults to ``HEAD``
     Returns: list of file paths
     """
     git_exe = git_exe or git(required=True)

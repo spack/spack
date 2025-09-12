@@ -110,7 +110,7 @@ def colify(
     uniform-width and variable-width (tighter) columns.
 
     If elts is not a list of strings, each element is first converted
-    using ``str()``.
+    using :class:`str`.
 
     Keyword Arguments:
         output: A file object to write to. Default is ``sys.stdout``

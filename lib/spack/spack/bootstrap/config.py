@@ -34,8 +34,9 @@ def spec_for_current_python() -> str:
     minor version (all patches are ABI compatible with the same minor).
 
     See:
-      https://www.python.org/dev/peps/pep-0513/
-      https://stackoverflow.com/a/35801395/771663
+
+    * https://www.python.org/dev/peps/pep-0513/
+    * https://stackoverflow.com/a/35801395/771663
     """
     version_str = ".".join(str(x) for x in sys.version_info[:2])
     return f"python@{version_str}"

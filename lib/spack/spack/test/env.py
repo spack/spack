@@ -37,6 +37,14 @@ class TestDirectoryInitialization:
         with pytest.raises(ev.SpackEnvironmentError, match="environment already exists"):
             ev.environment_dir_from_name("test", exists_ok=False)
 
+    def test_environment_dir_from_nested_name(self, mutable_mock_env_path):
+        """Test the function mapping a nested managed environment name to its folder."""
+        env = ev.create("group/test")
+        environment_dir = ev.environment_dir_from_name("group/test")
+        assert env.path == environment_dir
+        with pytest.raises(ev.SpackEnvironmentError, match="environment already exists"):
+            ev.environment_dir_from_name("group/test", exists_ok=False)
+
 
 def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     # create an environment
@@ -923,6 +931,16 @@ def test_environment_from_name_or_dir(mutable_mock_env_path):
     dir_env = ev.environment_from_name_or_dir(test_env.path)
     assert dir_env.name == test_env.name
     assert dir_env.path == test_env.path
+
+    nested_test_env = ev.create("group/test")
+
+    nested_name_env = ev.environment_from_name_or_dir(nested_test_env.name)
+    assert nested_name_env.name == nested_test_env.name
+    assert nested_name_env.path == nested_test_env.path
+
+    nested_dir_env = ev.environment_from_name_or_dir(nested_test_env.path)
+    assert nested_dir_env.name == nested_test_env.name
+    assert nested_dir_env.path == nested_test_env.path
 
     with pytest.raises(ev.SpackEnvironmentError, match="no such environment"):
         _ = ev.environment_from_name_or_dir("fake-env")

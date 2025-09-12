@@ -231,7 +231,7 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
         (rootfs / "bin").mkdir(parents=True)
         (rootfs / "bin" / "sh").write_text("hello world")
         tarball = tmp_path / "base.tar.gz"
-        with gzip_compressed_tarfile(tarball) as (tar, tar_gz_checksum, tar_checksum):
+        with gzip_compressed_tarfile(str(tarball)) as (tar, tar_gz_checksum, tar_checksum):
             tar.add(rootfs, arcname=".")
         tar_gz_digest = Digest.from_sha256(tar_gz_checksum.hexdigest())
         tar_digest = Digest.from_sha256(tar_checksum.hexdigest())

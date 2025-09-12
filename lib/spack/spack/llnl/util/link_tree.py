@@ -456,25 +456,27 @@ class LinkTree:
                     os.remove(marker)
 
     def merge(
-        self, dest_root, ignore_conflicts=False, ignore=None, link=fs.symlink, relative=False
+        self,
+        dest_root,
+        ignore_conflicts: bool = False,
+        ignore: Optional[Callable[[str], bool]] = None,
+        link: Callable = fs.symlink,
+        relative: bool = False,
     ):
-        """Link all files in src into dest, creating directories
-           if necessary.
+        """Link all files in src into dest, creating directories if necessary.
 
-        Keyword Args:
+        Arguments:
 
-        ignore_conflicts (bool): if True, do not break when the target exists;
-            return a list of files that could not be linked
+            ignore_conflicts: if True, do not break when the target exists; return a list of files
+                that could not be linked
 
-        ignore (callable): callable that returns True if a file is to be
-            ignored in the merge (by default ignore nothing)
+            ignore: callable that returns True if a file is to be ignored in the merge (by default
+                ignore nothing)
 
-        link (callable): function to create links with
-            (defaults to spack.llnl.util.filesystem.symlink)
+            link: function to create links with (defaults to
+                ``spack.llnl.util.filesystem.symlink``)
 
-        relative (bool): create all symlinks relative to the target
-            (default False)
-
+            relative: create all symlinks relative to the target (default False)
         """
         if ignore is None:
             ignore = lambda x: False

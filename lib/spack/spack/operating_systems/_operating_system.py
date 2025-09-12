@@ -16,8 +16,8 @@ class OperatingSystem:
 
     There are two different types of compiler detection:
 
-        1. Through the $PATH env variable (front-end detection)
-        2. Through the module system. (back-end detection)
+    1. Through the $PATH env variable (front-end detection)
+    2. Through the module system. (back-end detection)
 
     Depending on which operating system is specified, the compiler will be detected
     using one of those methods.

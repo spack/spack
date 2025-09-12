@@ -706,7 +706,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --prune-dag --no-prune-dag --prune-unaffected --no-prune-unaffected --prune-externals --no-prune-externals --check-index-only --artifacts-root -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
+    SPACK_COMPREPLY="-h --help --output-file --prune-dag --no-prune-dag --prune-unaffected --no-prune-unaffected --prune-externals --no-prune-externals --check-index-only --artifacts-root --forward-variable -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
 }
 
 _spack_ci_rebuild_index() {
@@ -839,7 +839,7 @@ _spack_config() {
 _spack_config_get() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --json"
     else
         _config_sections
     fi
@@ -1477,7 +1477,7 @@ _spack_mirror_destroy() {
 _spack_mirror_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope --type --autopush --unsigned --signed --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret --s3-access-key-secret-variable --s3-access-token --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password --oci-password-variable"
+        SPACK_COMPREPLY="-h --help --scope --type --autopush --unsigned --signed --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret-variable --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password-variable"
     else
         _mirrors
     fi
@@ -1504,7 +1504,7 @@ _spack_mirror_rm() {
 _spack_mirror_set_url() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --push --fetch --scope --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret --s3-access-key-secret-variable --s3-access-token --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password --oci-password-variable"
+        SPACK_COMPREPLY="-h --help --push --fetch --scope --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret-variable --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password-variable"
     else
         _mirrors
     fi
@@ -1513,7 +1513,7 @@ _spack_mirror_set_url() {
 _spack_mirror_set() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --push --fetch --type --url --autopush --no-autopush --unsigned --signed --scope --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret --s3-access-key-secret-variable --s3-access-token --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password --oci-password-variable"
+        SPACK_COMPREPLY="-h --help --push --fetch --type --url --autopush --no-autopush --unsigned --signed --scope --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret-variable --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password-variable"
     else
         _mirrors
     fi

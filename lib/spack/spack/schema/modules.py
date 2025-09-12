@@ -15,8 +15,6 @@ import spack.schema.projections
 #: Definitions for parts of module schema
 array_of_strings = {"type": "array", "default": [], "items": {"type": "string"}}
 
-dictionary_of_strings = {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}}
-
 dependency_selection = {"type": "string", "enum": ["none", "run", "direct", "all"]}
 
 module_file_configuration = {
@@ -103,11 +101,8 @@ module_config_properties = {
     "tcl": tcl_configuration,
     "prefix_inspections": {
         "type": "object",
-        "additionalProperties": False,
-        "patternProperties": {
-            # prefix-relative path to be inspected for existence
-            r"^[\w-]*": array_of_strings
-        },
+        # prefix-relative path to be inspected for existence
+        "additionalProperties": array_of_strings,
     },
 }
 
@@ -119,11 +114,8 @@ properties: Dict[str, Any] = {
         "properties": {
             "prefix_inspections": {
                 "type": "object",
-                "additionalProperties": False,
-                "patternProperties": {
-                    # prefix-relative path to be inspected for existence
-                    r"^[\w-]*": array_of_strings
-                },
+                # prefix-relative path to be inspected for existence
+                "additionalProperties": array_of_strings,
             }
         },
         "additionalProperties": {

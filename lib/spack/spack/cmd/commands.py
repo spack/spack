@@ -31,7 +31,7 @@ formatters: Dict[str, Callable[[Namespace, IO], None]] = {}
 
 
 #: standard arguments for updating completion scripts
-#: we iterate through these when called with --update-completion
+#: we iterate through these when called with ``--update-completion``
 update_completion_args: Dict[str, Dict[str, Any]] = {
     "bash": {
         "aliases": True,

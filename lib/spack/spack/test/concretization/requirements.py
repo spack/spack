@@ -8,6 +8,7 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.error
+import spack.installer
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -310,6 +311,27 @@ packages:
     s2 = spack.concretize.concretize_one("x")
     # The requirement forces choosing the eariler version
     assert s2.satisfies("@1.0")
+
+
+def test_require_hash(mock_fetch, install_mockery, concretize_scope, test_repo):
+    """Apply a requirement to use a specific hash.
+
+    Install multiple hashes to ensure non-default concretization"""
+    s1 = spack.concretize.concretize_one("x@1.1")
+    s2 = spack.concretize.concretize_one("x@1.0")
+
+    builder = spack.installer.PackageInstaller([s1.package, s2.package], fake=True)
+    builder.install()
+
+    conf_str = f"""\
+packages:
+  x:
+    require: x/{s2.dag_hash()}
+"""
+    update_packages_config(conf_str)
+
+    test_spec = spack.concretize.concretize_one("x")
+    assert test_spec == s2
 
 
 def test_multiple_packages_requirements_are_respected(concretize_scope, test_repo):
@@ -1375,3 +1397,53 @@ packages:
     assert concrete.satisfies("%gcc")
     assert concrete["mpi"].satisfies("mpich@4.3.0")
     assert concrete["mpi"].prefix == str(tmp_path / "gcc")
+
+
+@pytest.mark.regression("51262")
+@pytest.mark.parametrize(
+    "input_constraint",
+    [
+        # Override the compiler preference with a different version of gcc
+        "%c=gcc@10",
+        # Same, but without specifying the virtual
+        "%gcc@10",
+        # Override the mpi preference with a different version of mpich
+        "%mpi=mpich@3 ~debug",
+        # Override the mpi preference with a different provider
+        "%mpi=mpich2",
+    ],
+)
+def test_overriding_preference_with_provider_details(
+    input_constraint, concretize_scope, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that if we have a preference with provider details, such as a version range,
+    or a variant, we can override it from the command line, while we can't do the same
+    when we have a requirement.
+    """
+    # A preference can be overridden
+    packages_yaml = """
+packages:
+  c:
+    prefer:
+    - gcc@9
+  mpi:
+    prefer:
+    - mpich@3 +debug
+"""
+    update_packages_config(packages_yaml)
+    concrete = spack.concretize.concretize_one(f"mpileaks {input_constraint}")
+    assert concrete.satisfies(input_constraint)
+
+    # A requirement cannot
+    packages_yaml = """
+    packages:
+      c:
+        require:
+        - gcc@9
+      mpi:
+        require:
+        - mpich@3 +debug
+    """
+    update_packages_config(packages_yaml)
+    with pytest.raises(UnsatisfiableSpecError):
+        spack.concretize.concretize_one(f"mpileaks {input_constraint}")

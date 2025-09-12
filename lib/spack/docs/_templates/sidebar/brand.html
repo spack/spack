@@ -1,0 +1,23 @@
+<a class="sidebar-brand{% if logo %} centered{% endif %}" href="{{ pathto(master_doc) }}">
+  {%- block brand_content %}
+  {#- Remember to update the prefetch logic in `block logo_prefetch_links` in base.html #}
+  {%- if logo_url %}
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="{{ logo_url }}" alt="Logo"/>
+  </div>
+  {%- endif %}
+  {%- if theme_light_logo and theme_dark_logo %}
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" width="850" height="256" src="{{ pathto('_static/' + theme_light_logo, 1) }}" alt="Spack Logo"/>
+    <img class="sidebar-logo only-dark" width="850" height="256" src="{{ pathto('_static/' + theme_dark_logo, 1) }}" alt="Spack Logo"/>
+  </div>
+  {%- endif %}
+  {% if not theme_sidebar_hide_name %}
+  <span class="sidebar-brand-text">{{ docstitle if docstitle else project }}</span>
+  {%- endif %}
+  {% endblock brand_content %}
+</a>
+
+{%- if READTHEDOCS %}
+<div class="version-switch"></div>
+{%- endif %}

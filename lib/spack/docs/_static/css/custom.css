@@ -1,9 +1,57 @@
 div.versionadded {
-    border-left: 3px solid #0c731f;
-    color: #0c731f;
-    padding-left: 1rem;
+  border-left: 3px solid #0c731f;
+  color: #0c731f;
+  padding-left: 1rem;
 }
 
 .py.property {
   display: block !important;
+}
+
+div.version-switch {
+  text-align: center;
+  min-height: 2em;
+}
+
+div.version-switch>select {
+  display: inline-block;
+  text-align-last: center;
+  background: none;
+  border: none;
+  border-radius: 0.5em;
+  box-shadow: none;
+  color: var(--color-foreground-primary);
+  cursor: pointer;
+  appearance: none;
+  padding: 0.2em;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+div.version-switch select:active,
+div.version-switch select:focus,
+div.version-switch select:hover {
+  color: var(--color-foreground-secondary);
+  background: var(--color-background-hover);
+}
+
+.toc-tree li.scroll-current>.reference {
+  font-weight: normal;
+}
+
+.search-results span {
+  background-color: #fff3cd;
+  padding: 0.1rem 0.2rem;
+  border-radius: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) .search-results span {
+    background-color: #664d03;
+    color: #fff3cd;
+  }
+}
+
+.highlight .go {
+  color: #333;
 }

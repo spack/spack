@@ -17,6 +17,7 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.oci.image
 import spack.oci.oci
 import spack.spec
 import spack.stage
@@ -399,7 +400,7 @@ def push_fn(args):
         unsigned = not (args.key or args.signed)
 
     # For OCI images, we require dependencies to be pushed for now.
-    if mirror.push_url.startswith("oci://") and not unsigned:
+    if spack.oci.image.is_oci_url(mirror.push_url) and not unsigned:
         tty.warn(
             "Code signing is currently not supported for OCI images. "
             "Use --unsigned to silence this warning."
@@ -437,7 +438,7 @@ def push_fn(args):
                 )
 
     # Warn about possible old binary mirror layout
-    if not mirror.push_url.startswith("oci://"):
+    if not spack.oci.image.is_oci_url(mirror.push_url):
         check_mirror_for_layout(mirror)
 
     with spack.binary_distribution.make_uploader(
@@ -806,15 +807,15 @@ def migrate_fn(args):
     will attempt to verify the signatures on specs, and then re-sign them before
     migration, using whatever keys are already installed in your key ring.  You can
     migrate a mirror of unsigned binaries (or convert a mirror of signed binaries
-    to unsigned) by providing the --unsigned argument.
+    to unsigned) by providing the ``--unsigned`` argument.
 
     By default spack will leave the original mirror contents (in the old layout) in
     place after migration. You can have spack remove the old contents by providing
-    the --delete-existing argument.  Because migrating a mostly-already-migrated
+    the ``--delete-existing`` argument.  Because migrating a mostly-already-migrated
     mirror should be fast, consider a workflow where you perform a default migration,
     (i.e. preserve the existing layout rather than deleting it) then evaluate the
     state of the migrated mirror by attempting to install from it, and finally
-    running the migration again with --delete-existing."""
+    running the migration again with ``--delete-existing``."""
     target_mirror = args.mirror
     unsigned = args.unsigned
     assert isinstance(target_mirror, spack.mirrors.mirror.Mirror)

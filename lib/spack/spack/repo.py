@@ -22,6 +22,7 @@ import types
 import uuid
 import warnings
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -44,11 +45,8 @@ import spack.llnl.path
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
-import spack.patch
 import spack.paths
 import spack.provider_index
-import spack.spec
-import spack.tag
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
@@ -58,6 +56,12 @@ import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.llnl.util.filesystem import working_dir
+
+if TYPE_CHECKING:
+    import spack.package_base
+    import spack.patch
+    import spack.spec
+    import spack.tag
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
@@ -84,7 +88,7 @@ def is_package_module(fullname: str) -> bool:
 def namespace_from_fullname(fullname: str) -> str:
     """Return the repository namespace only for the full module name.
 
-    For instance:
+    For instance::
 
         namespace_from_fullname("spack.pkg.builtin.hdf5") == "builtin"
         namespace_from_fullname("spack_repo.x.y.z.packages.pkg_name.package") == "x.y.z"
@@ -253,9 +257,9 @@ def get_all_package_diffs(type: str, repo: "Repo", rev1="HEAD^1", rev2="HEAD") -
 
     Arguments:
 
-        type: String containing one or more of 'A', 'R', 'C'
-        rev1: Revision to compare against, default is 'HEAD^'
-        rev2: Revision to compare to rev1, default is 'HEAD'
+        type: String containing one or more of ``A``, ``R``, ``C``.
+        rev1: Revision to compare against, default is ``"HEAD^"``
+        rev2: Revision to compare to rev1, default is ``"HEAD"``
     """
     lower_type = type.lower()
     if not re.match("^[arc]*$", lower_type):
@@ -291,7 +295,7 @@ def get_all_package_diffs(type: str, repo: "Repo", rev1="HEAD^1", rev2="HEAD") -
 
 
 def add_package_to_git_stage(packages: List[str], repo: "Repo") -> None:
-    """add a package to the git stage with `git add`"""
+    """add a package to the git stage with ``git add``"""
     git = GitExe(repo.packages_path)
 
     for pkg_name in packages:
@@ -309,8 +313,10 @@ def autospec(function):
 
     @functools.wraps(function)
     def converter(self, spec_like, *args, **kwargs):
-        if not isinstance(spec_like, spack.spec.Spec):
-            spec_like = spack.spec.Spec(spec_like)
+        from spack.spec import Spec
+
+        if not isinstance(spec_like, Spec):
+            spec_like = Spec(spec_like)
         return function(self, spec_like, *args, **kwargs)
 
     return converter
@@ -357,7 +363,7 @@ class SpackNamespace(types.ModuleType):
 
 class FastPackageChecker(Mapping[str, os.stat_result]):
     """Cache that maps package names to the stats obtained on the
-    'package.py' files associated with them.
+    ``package.py`` files associated with them.
 
     For each repository a cache is maintained at class level, and shared among
     all instances referring to it. Update of the global cache is done lazily
@@ -460,12 +466,11 @@ class Indexer(metaclass=abc.ABCMeta):
     def _create(self):
         """Create an empty index and return it."""
 
-    def needs_update(self, pkg):
+    def needs_update(self, pkg) -> bool:
         """Whether an update is needed when the package file hasn't changed.
 
         Returns:
-            (bool): ``True`` if this package needs its index
-                updated, ``False`` otherwise.
+            ``True`` iff this package needs its index updated.
 
         We already automatically update indexes when package files
         change, but other files (like patches) may change underneath the
@@ -492,11 +497,15 @@ class Indexer(metaclass=abc.ABCMeta):
 class TagIndexer(Indexer):
     """Lifecycle methods for a TagIndex on a Repo."""
 
-    def _create(self):
-        return spack.tag.TagIndex(self.repository)
+    def _create(self) -> "spack.tag.TagIndex":
+        from spack.tag import TagIndex
+
+        return TagIndex(self.repository)
 
     def read(self, stream):
-        self.index = spack.tag.TagIndex.from_json(stream, self.repository)
+        from spack.tag import TagIndex
+
+        self.index = TagIndex.from_json(stream, self.repository)
 
     def update(self, pkg_fullname):
         self.index.update_package(pkg_fullname.split(".")[-1])
@@ -508,7 +517,7 @@ class TagIndexer(Indexer):
 class ProviderIndexer(Indexer):
     """Lifecycle methods for virtual package providers."""
 
-    def _create(self):
+    def _create(self) -> "spack.provider_index.ProviderIndex":
         return spack.provider_index.ProviderIndex(repository=self.repository)
 
     def read(self, stream):
@@ -531,8 +540,10 @@ class ProviderIndexer(Indexer):
 class PatchIndexer(Indexer):
     """Lifecycle methods for patch cache."""
 
-    def _create(self):
-        return spack.patch.PatchCache(repository=self.repository)
+    def _create(self) -> "spack.patch.PatchCache":
+        from spack.patch import PatchCache
+
+        return PatchCache(repository=self.repository)
 
     def needs_update(self):
         # TODO: patches can change under a package and we should handle
@@ -542,7 +553,9 @@ class PatchIndexer(Indexer):
         return False
 
     def read(self, stream):
-        self.index = spack.patch.PatchCache.from_json(stream, repository=self.repository)
+        from spack.patch import PatchCache
+
+        self.index = PatchCache.from_json(stream, repository=self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -615,9 +628,9 @@ class RepoIndex:
         """Determine which packages need an update, and update indexes."""
 
         # Filename of the provider index cache (we assume they're all json)
-        cache_filename = (
-            f"{name}/{self.namespace}-specfile_v{spack.spec.SPECFILE_FORMAT_VERSION}-index.json"
-        )
+        from spack.spec import SPECFILE_FORMAT_VERSION
+
+        cache_filename = f"{name}/{self.namespace}-specfile_v{SPECFILE_FORMAT_VERSION}-index.json"
 
         # Compute which packages needs to be updated in the cache
         index_mtime = self.cache.mtime(cache_filename)
@@ -660,8 +673,8 @@ class RepoPath:
         self.repos: List[Repo] = []
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index: Optional[spack.provider_index.ProviderIndex] = None
-        self._patch_index: Optional[spack.patch.PatchCache] = None
-        self._tag_index: Optional[spack.tag.TagIndex] = None
+        self._patch_index: Optional["spack.patch.PatchCache"] = None
+        self._tag_index: Optional["spack.tag.TagIndex"] = None
 
         for repo in repos:
             self.put_last(repo)
@@ -799,19 +812,23 @@ class RepoPath:
         return self._provider_index
 
     @property
-    def tag_index(self) -> spack.tag.TagIndex:
+    def tag_index(self) -> "spack.tag.TagIndex":
         """Merged TagIndex from all Repos in the RepoPath."""
         if self._tag_index is None:
-            self._tag_index = spack.tag.TagIndex(repository=self)
+            from spack.tag import TagIndex
+
+            self._tag_index = TagIndex(repository=self)
             for repo in reversed(self.repos):
                 self._tag_index.merge(repo.tag_index)
         return self._tag_index
 
     @property
-    def patch_index(self) -> spack.patch.PatchCache:
+    def patch_index(self) -> "spack.patch.PatchCache":
         """Merged PatchIndex from all Repos in the RepoPath."""
         if self._patch_index is None:
-            self._patch_index = spack.patch.PatchCache(repository=self)
+            from spack.patch import PatchCache
+
+            self._patch_index = PatchCache(repository=self)
             for repo in reversed(self.repos):
                 self._patch_index.update(repo.patch_index)
         return self._patch_index
@@ -831,10 +848,12 @@ class RepoPath:
     def extensions_for(
         self, extendee_spec: "spack.spec.Spec"
     ) -> List["spack.package_base.PackageBase"]:
+        from spack.spec import Spec
+
         return [
-            pkg_cls(spack.spec.Spec(pkg_cls.name))
+            pkg_cls(Spec(pkg_cls.name))
             for pkg_cls in self.all_package_classes()
-            if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)
+            if pkg_cls(Spec(pkg_cls.name)).extends(extendee_spec)
         ]
 
     def last_mtime(self):
@@ -845,7 +864,9 @@ class RepoPath:
         """Given a spec, get the repository for its package."""
         # We don't @_autospec this function b/c it's called very frequently
         # and we want to avoid parsing str's into Specs unnecessarily.
-        if isinstance(spec, spack.spec.Spec):
+        from spack.spec import Spec
+
+        if isinstance(spec, Spec):
             namespace = spec.namespace
             name = spec.name
         else:
@@ -874,8 +895,10 @@ class RepoPath:
 
     def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
         """Returns the package associated with the supplied spec."""
+        from spack.spec import Spec
+
         msg = "RepoPath.get can only be called on concrete specs"
-        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
+        assert isinstance(spec, Spec) and spec.concrete, msg
         return self.repo_for_pkg(spec).get(spec)
 
     def python_paths(self) -> List[str]:
@@ -1007,18 +1030,18 @@ def _validate_and_normalize_subdir(subdir: Any, root: str, package_api: Tuple[in
 class Repo:
     """Class representing a package repository in the filesystem.
 
-    Each package repository must have a top-level configuration file called `repo.yaml`.
+    Each package repository must have a top-level configuration file called ``repo.yaml``.
 
     It contains the following keys:
 
-    `namespace`:
+    ``namespace``
         A Python namespace where the repository's packages should live.
 
-    `subdirectory`:
+    ``subdirectory``
         An optional subdirectory name where packages are placed
 
-    `api`:
-        A string of the form vX.Y that indicates the Package API version. The default is "v1.0".
+    ``api``
+        A string of the form vX.Y that indicates the Package API version. The default is ``v1.0``.
         For the repo to be compatible with the current version of Spack, the version must be
         greater than or equal to :py:data:`spack.min_package_api_version` and less than or equal to
         :py:data:`spack.package_api_version`.
@@ -1061,6 +1084,7 @@ class Repo:
             config.get("subdirectory", packages_dir_name), root, self.package_api
         )
         self.packages_path = os.path.join(self.root, self.subdirectory)
+        self.build_systems_path = os.path.join(self.root, "build_systems")
 
         check(
             os.path.isdir(self.packages_path),
@@ -1150,9 +1174,10 @@ class Repo:
         package names and Python module names, so there is no guessing.
 
         For Packge API v1.x we support the following one-to-many mappings:
-            num3proxy -> 3proxy
-            foo_bar -> foo_bar, foo-bar
-            foo_bar_baz -> foo_bar_baz, foo-bar-baz, foo_bar-baz, foo-bar_baz
+
+        * ``num3proxy`` -> ``3proxy``
+        * ``foo_bar`` -> ``foo_bar``, ``foo-bar``
+        * ``foo_bar_baz`` -> ``foo_bar_baz``, ``foo-bar-baz``, ``foo_bar-baz``, ``foo-bar_baz``
         """
         if self.package_api >= (2, 0):
             if nm.pkg_dir_to_pkg_name(import_name, package_api=self.package_api) in self:
@@ -1199,8 +1224,10 @@ class Repo:
 
     def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
         """Returns the package associated with the supplied spec."""
+        from spack.spec import Spec
+
         msg = "Repo.get can only be called on concrete specs"
-        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
+        assert isinstance(spec, Spec) and spec.concrete, msg
         # NOTE: we only check whether the package is None here, not whether it
         # actually exists, because we have to load it anyway, and that ends up
         # checking for existence. We avoid constructing FastPackageChecker,
@@ -1270,12 +1297,12 @@ class Repo:
         return self.index["providers"]
 
     @property
-    def tag_index(self) -> spack.tag.TagIndex:
+    def tag_index(self) -> "spack.tag.TagIndex":
         """Index of tags and which packages they're defined on."""
         return self.index["tags"]
 
     @property
-    def patch_index(self) -> spack.patch.PatchCache:
+    def patch_index(self) -> "spack.patch.PatchCache":
         """Index of patches and packages they're defined on."""
         return self.index["patches"]
 
@@ -1290,7 +1317,9 @@ class Repo:
     def extensions_for(
         self, extendee_spec: "spack.spec.Spec"
     ) -> List["spack.package_base.PackageBase"]:
-        result = [pkg_cls(spack.spec.Spec(pkg_cls.name)) for pkg_cls in self.all_package_classes()]
+        from spack.spec import Spec
+
+        result = [pkg_cls(Spec(pkg_cls.name)) for pkg_cls in self.all_package_classes()]
         return [x for x in result if x.extends(extendee_spec)]
 
     def dirname_for_package_name(self, pkg_name: str) -> str:
@@ -1492,8 +1521,8 @@ def partition_package_name(pkg_name: str) -> Tuple[str, str]:
     If the package name is unqualified, the namespace is an empty string.
 
     Args:
-        pkg_name: a package name, either unqualified like "llvl", or
-            fully-qualified, like "builtin.llvm"
+        pkg_name: a package name, either unqualified like ``llvm``, or
+            fully-qualified, like ``builtin.llvm``
     """
     namespace, _, pkg_name = pkg_name.rpartition(".")
     return namespace, pkg_name
@@ -1705,12 +1734,16 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         spack.util.git.init_git_repo(self.repository, remote=remote, git_exe=git)
 
                         # determine the default branch from ls-remote
-                        refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
-                        ref_match = re.search(r"refs/heads/(\S+)", refs)
-                        if not ref_match:
-                            self.error = f"Unable to locate a default branch for {self.repository}"
-                            return
-                        self.branch = ref_match.group(1)
+                        # (if no branch, tag, or commit is specified)
+                        if not (self.commit or self.tag or self.branch):
+                            refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
+                            ref_match = re.search(r"refs/heads/(\S+)", refs)
+                            if not ref_match:
+                                self.error = (
+                                    f"Unable to locate a default branch for {self.repository}"
+                                )
+                                return
+                            self.branch = ref_match.group(1)
 
                     # determine the branch and remote if no config values exist
                     elif not (self.commit or self.tag or self.branch):
@@ -1917,7 +1950,7 @@ def parse_config_descriptor(
     Args:
         name: the name of the repository, used for error messages
         descriptor: the configuration for the repository, which can be a string (local path),
-            or a dictionary with 'git' key containing git URL and other options.
+            or a dictionary with ``git`` key containing git URL and other options.
 
     Returns:
         A RepoDescriptor instance, either LocalRepoDescriptor or RemoteRepoDescriptor.

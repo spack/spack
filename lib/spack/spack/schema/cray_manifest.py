@@ -91,19 +91,14 @@ properties: Dict[str, Any] = {
                 },
                 "dependencies": {
                     "type": "object",
-                    "patternProperties": {
-                        "\\w[\\w-]*": {
-                            "type": "object",
-                            "required": ["hash"],
-                            "additionalProperties": False,
-                            "properties": {
-                                "hash": {"type": "string", "minLength": 1},
-                                "type": {
-                                    "type": "array",
-                                    "items": {"type": "string", "minLength": 1},
-                                },
-                            },
-                        }
+                    "additionalProperties": {
+                        "type": "object",
+                        "required": ["hash"],
+                        "additionalProperties": False,
+                        "properties": {
+                            "hash": {"type": "string", "minLength": 1},
+                            "type": {"type": "array", "items": {"type": "string", "minLength": 1}},
+                        },
                     },
                 },
                 "prefix": {"type": "string", "minLength": 1},

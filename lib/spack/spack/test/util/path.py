@@ -9,6 +9,7 @@ import pytest
 
 import spack.config
 import spack.llnl.util.tty as tty
+import spack.paths
 import spack.util.path as sup
 
 #: Some lines with lots of placeholders
@@ -140,7 +141,7 @@ def test_path_debug_padded_filter(debug, monkeypatch):
     [
         ("/home/spack/path/to/file.txt", "/home/spack/path/to/file.txt"),
         ("file:///home/another/config.yaml", "/home/another/config.yaml"),
-        ("path/to.txt", os.path.join(os.environ["SPACK_ROOT"], "path", "to.txt")),
+        ("path/to.txt", os.path.join(spack.paths.spack_root, "path", "to.txt")),
         (r"C:\Files (x86)\Windows\10", r"C:\Files (x86)\Windows\10"),
         (r"E:/spack stage", "E:\\spack stage"),
     ],

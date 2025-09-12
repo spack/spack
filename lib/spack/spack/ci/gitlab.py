@@ -396,6 +396,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
             "SPACK_REQUIRE_SIGNING": str(options.require_signing),
         }
+        output_object["variables"].update(
+            dict([(v, os.environ[v]) for v in options.forward_variables if v in os.environ])
+        )
 
         if options.stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = options.stack_name

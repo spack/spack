@@ -2,18 +2,18 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Learn how to modify shell environment variables within a Spack environment using the env_vars.yaml file.
+
 .. _env-vars-yaml:
 
-=============================================
 Environment Variable Settings (env_vars.yaml)
 =============================================
 
-Spack allows you to include shell environment variable modifications
-for a Spack environment by including an ``env_vars.yaml`` file. Environment
-variables can be modified by setting, unsetting, appending, and prepending
-variables in the shell environment.
-The changes to the shell environment will take effect when the Spack
-environment is activated.
+Spack allows you to include shell environment variable modifications for a Spack environment by including an ``env_vars.yaml`` file.
+Environment variables can be modified by setting, unsetting, appending, and prepending variables in the shell environment.
+The changes to the shell environment will take effect when the Spack environment is activated.
 
 For example:
 
