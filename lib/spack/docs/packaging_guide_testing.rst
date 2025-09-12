@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A guide to adding tests to Spack packages to ensure correct installation and functionality.
+   :og:description:
+      A guide to adding tests to Spack packages to ensure correct installation and functionality.
+   :og:title:
+      Adding Tests to Spack Packages
 
 .. list-table::
    :widths: 25 25 25 25

@@ -3,9 +3,15 @@
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn about the Lua build system in Spack for packages using rockspec files.
+   :og:description:
+      Learn about the Lua build system in Spack for packages using rockspec files.
+   :og:title:
+      Using the Lua Build System in Spack
 
 .. _luapackage:
 

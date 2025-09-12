@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to package software that uses the CMake build system with Spack, covering common practices and customization options for CMake-based packages.
+   :og:description:
+      Learn how to package software that uses the CMake build system with Spack, covering common practices and customization options for CMake-based packages.
+   :og:title:
+      Packaging CMake-Based Software with Spack
 
 .. _cmakepackage:
 

@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Answers to common Spack questions, including version and variant selection, package preferences, compiler configuration, and concretizer behavior, with practical YAML and command-line examples.
+   :og:description:
+      Answers to common Spack questions, including version and variant selection, package preferences, compiler configuration, and concretizer behavior, with practical YAML and command-line examples.
+   :og:title:
+      Frequently Asked Questions about Spack
 
 Frequently Asked Questions
 ==========================

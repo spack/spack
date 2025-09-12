@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Find out how to get help with Spack, including using the spack help command.
+   :og:description:
+      Find out how to get help with Spack, including using the spack help command.
+   :og:title:
+      Getting Help with Spack
 
 Getting Help
 ============

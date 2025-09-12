@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A guide to packaging CUDA applications with Spack, including helpers for managing CUDA dependencies and architecture-specific builds.
+   :og:description:
+      A guide to packaging CUDA applications with Spack, including helpers for managing CUDA dependencies and architecture-specific builds.
+   :og:title:
+      Packaging CUDA Applications with Spack
 
 .. _cudapackage:
 

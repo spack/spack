@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A beginner's guide to Spack, walking you through the initial setup, basic commands, and core concepts to get you started with managing software.
+   :og:description:
+      A beginner's guide to Spack, walking you through the initial setup, basic commands, and core concepts to get you started with managing software.
+   :og:title:
+      Getting Started with Spack: A Beginner's Guide
 
 .. _getting_started:
 

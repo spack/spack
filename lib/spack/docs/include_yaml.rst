@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to use include directives to modularize your Spack YAML configuration files for better organization and reusability.
+   :og:description:
+      Learn how to use include directives to modularize your Spack YAML configuration files for better organization and reusability.
+   :og:title:
+      Modularizing Spack Configuration with Includes
 
 .. _include-yaml:
 

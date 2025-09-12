@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Discover how to extend Spack's core functionality by creating custom commands and plugins.
+   :og:description:
+      Discover how to extend Spack's core functionality by creating custom commands and plugins.
+   :og:title:
+      Extending Spack with Custom Commands and Plugins
 
 Custom Extensions
 =================

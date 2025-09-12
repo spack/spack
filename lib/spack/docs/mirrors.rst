@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Discover how to set up and manage mirrors in Spack to provide a local repository of tarballs for offline package fetching.
+   :og:description:
+      Discover how to set up and manage mirrors in Spack to provide a local repository of tarballs for offline package fetching.
+   :og:title:
+      Setting Up and Managing Mirrors in Spack
 
 .. _mirrors:
 

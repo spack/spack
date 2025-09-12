@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A comprehensive guide for developers working on Spack itself, covering the directory structure, code organization, and key concepts like specs and packages.
+   :og:description:
+      A comprehensive guide for developers working on Spack itself, covering the directory structure, code organization, and key concepts like specs and packages.
+   :og:title:
+      A Developer's Guide to the Spack Internals
 
 .. _developer_guide:
 

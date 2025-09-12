@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Discover how to use the SourceforgePackage mixin in Spack to automatically generate download URLs for packages hosted on SourceForge.
+   :og:description:
+      Discover how to use the SourceforgePackage mixin in Spack to automatically generate download URLs for packages hosted on SourceForge.
+   :og:title:
+      Using the SourceforgePackage Mixin in Spack
 
 .. _sourceforgepackage:
 

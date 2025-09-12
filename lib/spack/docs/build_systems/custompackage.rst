@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A guide to creating custom build systems in Spack for packaging software with its own build scripts or adding support for new build systems.
+   :og:description:
+      A guide to creating custom build systems in Spack for packaging software with its own build scripts or adding support for new build systems.
+   :og:title:
+      Creating Custom Build Systems in Spack
 
 .. _custompackage:
 

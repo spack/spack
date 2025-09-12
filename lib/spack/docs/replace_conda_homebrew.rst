@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to use Spack environments to manage single-user installations, similar to Homebrew and Conda.
+   :og:description:
+      Learn how to use Spack environments to manage single-user installations, similar to Homebrew and Conda.
+   :og:title:
+      Using Spack Environments for Single-User Installations
 
 .. _spack-environments-basic-usage:
 

@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to generate and run automated build pipelines in Spack for CI instances, enabling the building and deployment of binaries and reporting to CDash.
+   :og:description:
+      Learn how to generate and run automated build pipelines in Spack for CI instances, enabling the building and deployment of binaries and reporting to CDash.
+   :og:title:
+      Generating Automated Build Pipelines in Spack
 
 .. _pipelines:
 

@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A guide to setting up and using Spack on Windows, including installing prerequisites and configuring the environment.
+   :og:description:
+      A guide to setting up and using Spack on Windows, including installing prerequisites and configuring the environment.
+   :og:title:
+      Setting Up and Using Spack on Windows
 
 .. _windows_support:
 

@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn the fundamental Spack commands for managing software packages, including how to find, inspect, install, and remove them.
+   :og:description:
+      Learn the fundamental Spack commands for managing software packages, including how to find, inspect, install, and remove them.
+   :og:title:
+      Fundamental Spack Commands for Package Management
 
 .. _basic-usage:
 

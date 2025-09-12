@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A guide for developers and administrators on contributing new packages, features, or bug fixes to Spack, covering Git workflows, pull requests, and continuous integration testing.
+   :og:description:
+      A guide for developers and administrators on contributing new packages, features, or bug fixes to Spack, covering Git workflows, pull requests, and continuous integration testing.
+   :og:title:
+      Contributing to the Spack Project
 
 .. _contribution-guide:
 

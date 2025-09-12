@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Define named compiler sets (toolchains) in Spack to easily and consistently apply compiler choices for C, C++, and Fortran across different packages.
+   :og:description:
+      Define named compiler sets (toolchains) in Spack to easily and consistently apply compiler choices for C, C++, and Fortran across different packages.
+   :og:title:
+      Defining Compiler Toolchains in Spack
 
 .. _toolchains:
 

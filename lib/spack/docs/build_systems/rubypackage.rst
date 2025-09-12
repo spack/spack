@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Discover the Ruby build system in Spack for installing Ruby gems, with support for gemspec, Rakefile, and pre-packaged .gem files.
+   :og:description:
+      Discover the Ruby build system in Spack for installing Ruby gems, with support for gemspec, Rakefile, and pre-packaged .gem files.
+   :og:title:
+      Using the Ruby Build System in Spack
 
 .. _rubypackage:
 

@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Discover how to configure compilers in Spack, whether by specifying them as externals, or by installing them with Spack.
+   :og:description:
+      Discover how to configure compilers in Spack, whether by specifying them as externals, or by installing them with Spack.
+   :og:title:
+      Configuring Compilers in Spack
 
 .. _compiler-config:
 

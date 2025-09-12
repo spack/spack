@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn about the Maven build system in Spack for building and managing Java-based projects.
+   :og:description:
+      Learn about the Maven build system in Spack for building and managing Java-based projects.
+   :og:title:
+      Using the Maven Build System in Spack
 
 .. _mavenpackage:
 

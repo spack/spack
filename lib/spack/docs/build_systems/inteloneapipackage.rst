@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A guide to using the Intel oneAPI packages in Spack, including how to build with icx, use the oneAPI Spack environment, and configure externally installed oneAPI tools.
+   :og:description:
+      A guide to using the Intel oneAPI packages in Spack, including how to build with icx, use the oneAPI Spack environment, and configure externally installed oneAPI tools.
+   :og:title:
+      Using Intel oneAPI Packages in Spack
 
 .. _inteloneapipackage:
 

@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to chain Spack installations by pointing one Spack instance to another to use its installed packages.
+   :og:description:
+      Learn how to chain Spack installations by pointing one Spack instance to another to use its installed packages.
+   :og:title:
+      Chaining Spack Installations for Shared Packages
 
 Chaining Spack Installations (upstreams.yaml)
 =============================================

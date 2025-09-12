@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Advanced topics in Spack packaging, covering packages with multiple build systems, making packages discoverable with spack external find, and specifying ABI compatibility.
+   :og:description:
+      Advanced topics in Spack packaging, covering packages with multiple build systems, making packages discoverable with spack external find, and specifying ABI compatibility.
+   :og:title:
+      Advanced Topics in Spack Packaging
 
 .. list-table::
    :widths: 25 25 25 25

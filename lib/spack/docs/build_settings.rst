@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Understand how to control the build process in Spack by customizing package-specific build settings and environment variables.
+   :og:description:
+      Understand how to control the build process in Spack by customizing package-specific build settings and environment variables.
+   :og:title:
+      Customizing Build Settings and Environment in Spack
 
 .. _concretizer-options:
 

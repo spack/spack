@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to configure Spack using its flexible YAML-based system. This guide covers the different configuration scopes and provides links to detailed documentation for each configuration file, helping you customize Spack to your specific needs.
+   :og:description:
+      Learn how to configure Spack using its flexible YAML-based system. This guide covers the different configuration scopes and provides links to detailed documentation for each configuration file, helping you customize Spack to your specific needs.
+   :og:title:
+      Customizing Spack with YAML Configuration Files
 
 .. _configuration:
 

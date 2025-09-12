@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Explore the Waf build system in Spack, a Python-based tool for configuring and building software projects without Makefiles.
+   :og:description:
+      Explore the Waf build system in Spack, a Python-based tool for configuring and building software projects without Makefiles.
+   :og:title:
+      Using the Waf Build System in Spack
 
 .. _wafpackage:
 

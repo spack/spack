@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to turn Spack environments into container images, either by copying existing installations or by generating recipes for Docker and Singularity.
+   :og:description:
+      Learn how to turn Spack environments into container images, either by copying existing installations or by generating recipes for Docker and Singularity.
+   :og:title:
+      Creating Container Images with Spack
 
 .. _containers:
 

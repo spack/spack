@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Discover how to create, use, and manage build caches in Spack to share pre-built binary packages and speed up installations.
+   :og:description:
+      Discover how to create, use, and manage build caches in Spack to share pre-built binary packages and speed up installations.
+   :og:title:
+      Managing Build Caches in Spack for Faster Installations
 
 .. _binary_caches:
 

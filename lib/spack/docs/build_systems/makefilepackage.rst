@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A guide to using the Makefile build system in Spack for packages that use plain Makefiles.
+   :og:description:
+      A guide to using the Makefile build system in Spack for packages that use plain Makefiles.
+   :og:title:
+      Using the Makefile Build System in Spack
 
 .. _makefilepackage:
 

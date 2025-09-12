@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Discover how to create meta-packages known as "bundles" in Spack to group multiple packages together for a single installation.
+   :og:description:
+      Discover how to create meta-packages known as "bundles" in Spack to group multiple packages together for a single installation.
+   :og:title:
+      Creating and Using Bundle Packages in Spack
 
 .. _bundlepackage:
 

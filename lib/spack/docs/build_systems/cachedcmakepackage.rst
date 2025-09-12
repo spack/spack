@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn about the CachedCMakePackage build system in Spack for CMake-based projects.
+   :og:description:
+      Learn about the CachedCMakePackage build system in Spack for CMake-based projects.
+   :og:title:
+      Using the CachedCMakePackage Build System in Spack
 
 .. _cachedcmakepackage:
 

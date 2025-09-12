@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to configure and customize module file generation in Spack for Environment Modules and Lmod.
+   :og:description:
+      Learn how to configure and customize module file generation in Spack for Environment Modules and Lmod.
+   :og:title:
+      Configuring Module File Generation in Spack
 
 .. _modules:
 

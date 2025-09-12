@@ -4,9 +4,15 @@
 
 .. _config-yaml:
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A detailed guide to the config.yaml file in Spack, which allows you to set core configuration options like installation paths, build parallelism, and trusted sources.
+   :og:description:
+      A detailed guide to the config.yaml file in Spack, which allows you to set core configuration options like installation paths, build parallelism, and trusted sources.
+   :og:title:
+      Configuring Spack with the config.yaml File
 
 Spack Settings (config.yaml)
 ============================

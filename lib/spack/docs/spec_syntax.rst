@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A detailed guide to the Spack spec syntax for describing package constraints, including versions, variants, and dependencies.
+   :og:description:
+      A detailed guide to the Spack spec syntax for describing package constraints, including versions, variants, and dependencies.
+   :og:title:
+      A Detailed Guide to the Spack Spec Syntax
 
 .. _sec-specs:
 

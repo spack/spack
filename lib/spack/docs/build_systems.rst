@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       An overview of the build systems supported by Spack, with links to detailed documentation for each system.
+   :og:description:
+      An overview of the build systems supported by Spack, with links to detailed documentation for each system.
+   :og:title:
+      A Comprehensive Overview of Build Systems in Spack
 
 .. _build-systems:
 

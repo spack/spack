@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A guide to using the SIP build system in Spack for creating Python bindings for C and C++ libraries.
+   :og:description:
+      A guide to using the SIP build system in Spack for creating Python bindings for C and C++ libraries.
+   :og:title:
+      Using the SIP Build System in Spack
 
 .. _sippackage:
 

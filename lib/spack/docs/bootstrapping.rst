@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how Spack's bootstrapping feature automatically fetches and installs essential build tools when they are not available on the host system.
+   :og:description:
+      Learn how Spack's bootstrapping feature automatically fetches and installs essential build tools when they are not available on the host system.
+   :og:title:
+      Automated Build Tool Bootstrapping with Spack
 
 .. _bootstrapping:
 .. _cmd-spack-bootstrap:

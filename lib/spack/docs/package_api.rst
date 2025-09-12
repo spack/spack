@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       An overview of the Spack Package API, a stable interface for package authors to interact with the Spack framework.
+   :og:description:
+      An overview of the Spack Package API, a stable interface for package authors to interact with the Spack framework.
+   :og:title:
+      An Overview of the Spack Package API
 
 Spack Package API v2.2
 ======================

@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Explore advanced topics in Spack, including auditing packages and configuration, and verifying installations.
+   :og:description:
+      Explore advanced topics in Spack, including auditing packages and configuration, and verifying installations.
+   :og:title:
+      Advanced Topics in Spack: Auditing and Verification
 
 .. _cmd-spack-audit:
 

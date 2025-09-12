@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to use Spack environments to manage reproducible software stacks, making it easy to share and recreate specific sets of packages and their dependencies.
+   :og:description:
+      Learn how to use Spack environments to manage reproducible software stacks, making it easy to share and recreate specific sets of packages and their dependencies.
+   :og:title:
+      Managing Reproducible Software Stacks with Spack
 
 .. _environments:
 

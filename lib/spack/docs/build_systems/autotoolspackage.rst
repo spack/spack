@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       An overview of the Autotools build system in Spack for packages that use GNU Autotools.
+   :og:description:
+      An overview of the Autotools build system in Spack for packages that use GNU Autotools.
+   :og:title:
+      Using the Autotools Build System in Spack
 
 .. _autotoolspackage:
 

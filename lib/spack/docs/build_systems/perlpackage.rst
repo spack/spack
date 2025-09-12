@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       A guide to packaging Perl modules with Spack, covering when to add a package and build system integration.
+   :og:description:
+      A guide to packaging Perl modules with Spack, covering when to add a package and build system integration.
+   :og:title:
+      Packaging Perl Modules with Spack
 
 .. _perlpackage:
 

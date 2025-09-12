@@ -2,9 +2,15 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. include:: /_common/og.rst
+
 .. meta::
    :description lang=en:
       Learn how to set up and manage package repositories in Spack, enabling you to maintain custom packages and override built-in ones.
+   :og:description:
+      Learn how to set up and manage package repositories in Spack, enabling you to maintain custom packages and override built-in ones.
+   :og:title:
+      Managing Package Repositories in Spack
 
 .. _repositories:
 
