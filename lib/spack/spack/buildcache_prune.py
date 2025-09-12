@@ -5,6 +5,7 @@ import os
 import pathlib
 import re
 import tempfile
+import uuid
 from concurrent.futures import Future, as_completed
 from fnmatch import fnmatch
 from pathlib import Path
@@ -442,7 +443,7 @@ def get_buildcache_normalized_time(mirror: Mirror) -> float:
     """
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as f:
         tmpdir = Path(f)
-        touch_file = tmpdir / ".spack-prune-marker"
+        touch_file = tmpdir / f".spack-prune-marker-{uuid.uuid4()}"
         touch_file.touch()
         remote_path = url_util.join(mirror.push_url, touch_file.name)
 
