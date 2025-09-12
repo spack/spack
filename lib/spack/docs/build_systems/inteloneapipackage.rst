@@ -141,9 +141,7 @@ Before 2024, the directory structure was different:
 Libraries
 ^^^^^^^^^
 
-If you want Spack to use oneMKL that you have installed without Spack in
-the default location, then add the following to
-``~/.config/spack/packages.yaml``, adjusting the version as appropriate:
+If you want Spack to use oneMKL that you have installed without Spack in the default location, then add the following to ``~/.config/spack/packages.yaml``, adjusting the version as appropriate:
 
 .. code-block:: yaml
 

@@ -147,7 +147,8 @@ For example, to use ``~/custom_packages_clone`` for ``my_remote_repo``:
        destination: ~/custom_packages_clone
 
 
-Spack uses the ``repos.yaml`` file in ``~/.config/spack`` (and :ref:`elsewhere <configuration>`) to find repositories. Note that the ``repos.yaml`` configuration file is distinct from the ``repo.yaml`` file in each repository.
+Spack uses the ``repos.yaml`` file in ``~/.config/spack`` (and :ref:`elsewhere <configuration>`) to find repositories.
+Note that the ``repos.yaml`` configuration file is distinct from the ``repo.yaml`` file in each repository.
 For more on the YAML format, and on how configuration file precedence works in Spack, see :ref:`configuration <configuration>`.
 
 If the ``git`` URL is defined in a lower-precedence configuration (like Spack's defaults for ``builtin``), you only need to specify the ``destination`` in your user-level ``repos.yaml``.

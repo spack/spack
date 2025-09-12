@@ -131,14 +131,11 @@ If multiple scopes are provided:
 Scopes and XDG Compliance
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack respects XDG variables, and the search location for user
-configuration files can be affected by them. When ``XDG_CONFIG_HOME``
-is not defined, Spack assumes the XDG default value of ``~/.config``,
-and will apply user and this-spack configuration files located in
-``~/.config/spack``. Defining ``XDG_CONFIG_HOME`` will change where
-Spack searches for configuration files. To override this behavior,
-define ``SPACK_USER_CONFIG_PATH`` to be the desired path. For more
-information, see the :ref:`xdg_overrides` for more details.
+Spack respects XDG variables, and the search location for user configuration files can be affected by them.
+When ``XDG_CONFIG_HOME`` is not defined, Spack assumes the XDG default value of ``~/.config``, and will apply user and this-spack configuration files located in ``~/.config/spack``.
+Defining ``XDG_CONFIG_HOME`` will change where Spack searches for configuration files.
+To override this behavior, define ``SPACK_USER_CONFIG_PATH`` to be the desired path.
+For more information, see the :ref:`xdg_overrides` for more details.
 
 
 """""""""""""""""""""""""""""""""""""""""""
@@ -688,54 +685,45 @@ With these settings, if you want to isolate Spack in a CI environment, you can d
 
 .. _xdg_overrides:
 
--------------------------------------------
 Overriding default paths with XDG variables
--------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-While Spack will by default use locations within the ``$spack`` and
-the user's home directory, it can now store all state in locations
-goverened by XDG variables. Many default storage locations have
-changed in 1.0, so this section will summarize the changes, and how
-XDG variables can help users organize their Spack artifacts.
+While Spack will by default use locations within the ``$spack`` and the user's home directory, it can now store all state in locations goverened by XDG variables.
+Many default storage locations have changed in 1.0, so this section will summarize the changes, and how XDG variables can help users organize their Spack artifacts.
 
-``XDG_DATA_HOME`` is used to store long-lived data. Its default value
-is ``$HOME/.local/share``. The following items are always stored by
-default using ``$XDG_DATA_HOME``:
+``XDG_DATA_HOME`` is used to store long-lived data.
+Its default value is ``$HOME/.local/share``.
+The following items are always stored by default using ``$XDG_DATA_HOME``:
 
 * Modules: ``$XDG_DATA_HOME/spack/``
 * Package indices: ``$XDG_DATA_HOME/$spack_instance_id/spack``
 
-The data listed below will be placed in ``$spack`` by default. However,
-if ``XDG_DATA_HOME`` is set, they will be stored under that path. The
-default values for these are as follows:
+The data listed below will be placed in ``$spack`` by default.
+However, if ``XDG_DATA_HOME`` is set, they will be stored under that path.
+The default values for these are as follows:
 
 * Source caches: ``$HOME/.local/share`` or ``$XDG_DATA_HOME/spack/downloads``.
 * The install tree: ``$spack/opt/data/installs`` or ``$XDG_DATA_HOME/spack/installs``.
 * Environment management: ``$spack/opt/data/environments`` or ``$XDG_DATA_HOME/spack/environments``
 
-``XDG_STATE_HOME`` is used to store data that is useful if persistent,
-but not integral to Spack's functionality. If not defined, its default
-value is ``~/.local/state``. ``misc_cache`` is placed by default using
-this variable.
+``XDG_STATE_HOME`` is used to store data that is useful if persistent, but not integral to Spack's functionality.
+If not defined, its default value is ``~/.local/state``.
+``misc_cache`` is placed by default using this variable.
 
 * ``misc_cache``: ``$XDG_STATE_HOME/$spack_instance_id/spack``
 
-``XDG_CACHE_HOME`` is used to store temporary data. If not defined,
-its default value is ``~/.cache``. Build stages are placed by default
-using this variable.
+``XDG_CACHE_HOME`` is used to store temporary data.
+If not defined, its default value is ``~/.cache``.
+Build stages are placed by default using this variable.
 
 * Build stages: ``$XDG_CACHE_HOME/spack``
 
-The user configuration scope's files will be located with ``XDG_CONFIG_HOME``. Its
-default value is ``~/.config``.
+The user configuration scope's files will be located with ``XDG_CONFIG_HOME``.
+Its default value is ``~/.config``.
 
 * User configuration scope: ``$XDG_CONFIG_HOME/spack``
 
-Spack also includes the variables ``SPACK_DATA_HOME``,
-``SPACK_CONFIG_HOME``, and ``SPACK_STATE_HOME`` that map directly to
-the XDG variables described above. They work the same way, but have
-higher precedence than the XDG variables. If the Spack-specific
-environment variables *are not* defined, Spack will uses the XDG
-variables with a suffix of "/spack" to define ``$spack_state_home``,
-``$spack_data_home``, and ``spack_cache_home``. If they are defined,
-they are used directly without any additional suffix.
+Spack also includes the variables ``SPACK_DATA_HOME``, ``SPACK_CONFIG_HOME``, and ``SPACK_STATE_HOME`` that map directly to the XDG variables described above.
+They work the same way, but have higher precedence than the XDG variables.
+If the Spack-specific environment variables *are not* defined, Spack will uses the XDG variables with a suffix of "/spack" to define ``$spack_state_home``, ``$spack_data_home``, and ``spack_cache_home``.
+If they are defined, they are used directly without any additional suffix.

@@ -17,10 +17,8 @@ You can see the default settings by looking at ``etc/spack/defaults/config.yaml`
 .. literalinclude:: _spack_root/etc/spack/defaults/config.yaml
    :language: yaml
 
-These settings can be overridden in ``etc/spack/config.yaml``, or
-``~/.config/spack/config.yaml``, or
-``~/.config/spack/$spack_instance_id/config.yaml``.  See
-:ref:`configuration-scopes` for details.
+These settings can be overridden in ``etc/spack/config.yaml``, or ``~/.config/spack/config.yaml``, or ``~/.config/spack/$spack_instance_id/config.yaml``.
+See :ref:`configuration-scopes` for details.
 
 ``install_tree:root``
 ---------------------
@@ -92,10 +90,7 @@ By default, Spack's ``build_stage`` is configured like this:
 This can be an ordered list of paths that Spack should search when trying to find a temporary directory for the build stage.
 The list is searched in order, and Spack will use the first directory to which it has write access.
 
-Specifying `$spack_cache_home` first will ensure each user builds in
-their home directory, or wherever the user overrides ``XDG_CACHE_HOME`` to
-be - see :ref:`xdg_overrides` and :ref:`config-file-variables` for more on
-``$tempdir``, XDG variables, and ``$spack``.
+Specifying `$spack_cache_home` first will ensure each user builds in their home directory, or wherever the user overrides ``XDG_CACHE_HOME`` to be - see :ref:`xdg_overrides` and :ref:`config-file-variables` for more on ``$tempdir``, XDG variables, and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the ``build_stage``.
 After the package is successfully installed, Spack deletes the temporary directory it used to build.
@@ -108,9 +103,9 @@ Unsuccessful builds are not deleted, but you can manually purge them with ``spac
 ``source_cache``
 --------------------
 
-Location to cache downloaded tarballs and repositories. By default,
-these are stored in ``$spack/opt/data/downloads``. These are stored
-indefinitely by default and can be purged with ``spack clean --downloads``.
+Location to cache downloaded tarballs and repositories.
+By default, these are stored in ``$spack/opt/data/downloads``.
+These are stored indefinitely by default and can be purged with ``spack clean --downloads``.
 
 .. _Misc Cache:
 
