@@ -7,6 +7,7 @@ import json
 import os
 import pathlib
 import shutil
+import urllib.parse
 from datetime import datetime, timedelta
 from typing import Dict, List
 
@@ -982,7 +983,8 @@ def test_buildcache_prune_new_specs_race_condition(
         """
         if url == manifest_url:
             return 1, datetime.now().timestamp() + timedelta(minutes=10).total_seconds()
-        stat_result = pathlib.Path(url.removeprefix("file://")).stat()
+        parsed_url = urllib.parse.urlparse(url)
+        stat_result = pathlib.Path(parsed_url.path).stat()
         return stat_result.st_size, stat_result.st_mtime
 
     monkeypatch.setattr(web_util, "stat_url", mock_stat_url)

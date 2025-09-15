@@ -11,6 +11,7 @@ import json
 import os
 import re
 import shutil
+import urllib.parse
 from contextlib import closing, contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -1139,9 +1140,14 @@ def _entries_from_cache_aws_cli(
         for line in aws(*ls_command_args, output=str, error=os.devnull).splitlines():
             match = s3_ls_regex.match(line)
             if match:
-                s3_path = "/".join(url.removeprefix("s3://").split("/")[1:])
-                filename = match.group(2).removeprefix(s3_path).lstrip("/")
-                local_path = "/".join([tmpspecsdir, filename])
+                # Parse the url and use the S3 path of the file to derive the
+                # local path of the file (i.e. where `aws s3 sync` put it).
+                parsed_url = urllib.parse.urlparse(url)
+                s3_path = parsed_url.path.lstrip("/")
+                filename = match.group(2)
+                if s3_path and filename.startswith(s3_path):
+                    filename = filename[len(s3_path) :].lstrip("/")
+                local_path = url_util.join(tmpspecsdir, filename)
 
                 if Path(local_path).exists():
                     filename_to_mtime[local_path] = datetime.strptime(
