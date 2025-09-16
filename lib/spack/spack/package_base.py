@@ -1055,6 +1055,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return False
 
     @classmethod
+    def commit_from_src_mirror(cls, spec) -> Optional[str]:
+        # commit = check_local_cache(spec)
+        # if commit:
+        #    return commit
+        # for m in other_source_mirrors:
+        #     add_src_if_spec_in_mirror(m, spec)
+        # commit = check_local_cache(spec)
+        # return commit
+        pass
+
+    @classmethod
     def _resolve_git_provenance(cls, spec) -> None:
         # early return cases, don't overwrite user intention
         # commit pre-assigned or develop specs don't need commits changed
@@ -1088,6 +1099,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         sha = None
 
         # construct a package instance to get fetch/staging together
+        # TODO we really need to detangle package class, fetcher, stage, and mirrors
         pkg_instance = cls(spec.copy())
 
         try:
