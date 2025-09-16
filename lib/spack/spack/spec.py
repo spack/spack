@@ -102,7 +102,7 @@ import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
 
-from .enums import InstallRecordStatus
+from .enums import InstallRecordStatus, PropagationPolicy
 
 __all__ = [
     "CompilerSpec",
@@ -734,7 +734,7 @@ class DependencySpec:
         virtuals: virtual packages provided from child to parent node.
     """
 
-    __slots__ = "parent", "spec", "depflag", "virtuals", "direct", "when"
+    __slots__ = "parent", "spec", "depflag", "virtuals", "direct", "when", "propagation"
 
     def __init__(
         self,
@@ -744,6 +744,7 @@ class DependencySpec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
     ):
         self.parent = parent
@@ -751,6 +752,7 @@ class DependencySpec:
         self.depflag = depflag
         self.virtuals = tuple(sorted(set(virtuals)))
         self.direct = direct
+        self.propagation = propagation
         self.when = when or Spec()
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
@@ -781,6 +783,7 @@ class DependencySpec:
             self.spec,
             depflag=self.depflag,
             virtuals=self.virtuals,
+            propagation=self.propagation,
             direct=self.direct,
             when=self.when,
         )
@@ -1832,6 +1835,7 @@ class Spec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
     ):
         """Called by the parser to add another spec as a dependency.
@@ -1840,6 +1844,7 @@ class Spec:
             depflag: dependency type for this edge
             virtuals: virtuals on this edge
             direct: if True denotes a direct dependency (associated with the % sigil)
+            propagation: propagation policy for this edge
             when: optional condition under which dependency holds
         """
         if when is None:
@@ -1847,7 +1852,12 @@ class Spec:
 
         if spec.name not in self._dependencies or not spec.name:
             self.add_dependency_edge(
-                spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
+                spec,
+                depflag=depflag,
+                virtuals=virtuals,
+                direct=direct,
+                when=when,
+                propagation=propagation,
             )
             return
 
@@ -1895,6 +1905,7 @@ class Spec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
     ):
         """Add a dependency edge to this spec.
@@ -1904,6 +1915,7 @@ class Spec:
             depflag: dependency type for this edge
             virtuals: virtuals provided by this edge
             direct: if True denotes a direct dependency
+            propagation: propagation policy for this edge
             when: if non-None, condition under which dependency holds
         """
         if when is None:
@@ -1950,7 +1962,13 @@ class Spec:
                 return
 
         edge = DependencySpec(
-            self, dependency_spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
+            self,
+            dependency_spec,
+            depflag=depflag,
+            virtuals=virtuals,
+            direct=direct,
+            propagation=propagation,
+            when=when,
         )
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
@@ -3699,6 +3717,7 @@ class Spec:
                 new_specs[spid(edge.spec)],
                 depflag=edge.depflag,
                 virtuals=edge.virtuals,
+                propagation=edge.propagation,
                 direct=edge.direct,
                 when=edge.when,
             )
@@ -4338,9 +4357,14 @@ class Spec:
             new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(old_name)
             try:
                 # this is ugly but copies can be expensive
+                sigil = "%"
                 if new_name:
                     edge.spec.name = new_name
-                parts.append(format_edge(edge, "%", edge.spec))
+
+                if edge.propagation == PropagationPolicy.PREFERENCE:
+                    sigil = "%%"
+
+                parts.append(format_edge(edge, sigil=sigil, dep_spec=edge.spec))
             finally:
                 edge.spec.name = old_name
 
