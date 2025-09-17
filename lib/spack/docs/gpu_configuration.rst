@@ -38,11 +38,6 @@ components for use by dependent packages:
        externals:
        - spec: hsa-rocr-dev@5.3.0
          prefix: /opt/rocm-5.3.0/
-     llvm-amdgpu:
-       buildable: false
-       externals:
-       - spec: llvm-amdgpu@5.3.0
-         prefix: /opt/rocm-5.3.0/llvm/
      comgr:
        buildable: false
        externals:
@@ -78,10 +73,11 @@ This is in combination with the following compiler definition:
        externals:
        - spec: llvm-amdgpu@=5.3.0
          prefix: /opt/rocm-5.3.0
-         compilers:
-           c: /opt/rocm-5.3.0/bin/amdclang
-           cxx: /opt/rocm-5.3.0/bin/amdclang++
-           fortran: null
+         extra_attributes:
+           compilers:
+             c: /opt/rocm-5.3.0/bin/amdclang
+             cxx: /opt/rocm-5.3.0/bin/amdclang++
+             fortran: null
 
 This includes the following considerations:
 
