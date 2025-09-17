@@ -70,7 +70,7 @@ This is in combination with the following compiler definition:
        - spec: llvm-amdgpu@=5.3.0
          prefix: /opt/rocm-5.3.0
          extra_attributes:
-	   compilers:
+           compilers:
              c: /opt/rocm-5.3.0/bin/amdclang
              cxx: /opt/rocm-5.3.0/bin/amdclang++
 
