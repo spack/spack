@@ -205,6 +205,7 @@ class MirrorStatsForOneSpec:
 
 class MirrorStatsForAllSpecs:
     def __init__(self):
+        # Counter is used to easily merge mirror stats for one spec into mirror stats for all specs
         self.present = Counter()
         self.new = Counter()
         self.errors = Counter()
