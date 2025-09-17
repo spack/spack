@@ -183,9 +183,9 @@ class MirrorStatsForOneSpec:
     def finalize(self):
         if self.spec:
             if self.added_resources:
-                self.new[self.spec] = 1
+                self.new[self.spec] = len(self.added_resources)
             if self.existing_resources:
-                self.present[self.spec] = 1
+                self.present[self.spec] = len(self.existing_resources)
             self.added_resources = set()
             self.existing_resources = set()
 
