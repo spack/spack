@@ -1204,6 +1204,23 @@ requirement_weight(node(ID, Package), Group, W) :-
   requirement_policy(Package, Group, "any_of"),
   requirement_group_satisfied(node(ID, Package), Group).
 
+requirement_penalty(node(ID, Package), Group, W) :-
+  requirement_weight(node(ID, Package), Group, W),
+  not language(Package).
+
+requirement_penalty(PackageNode, Language, Group, W) :-
+  requirement_weight(node(ID, Language), Group, W),
+  language(Language),
+  provider(ProviderNode, node(ID, Language)),
+  attr("virtual_on_edge", PackageNode, ProviderNode, Language).
+
+requirement_penalty(PackageNode, Language, Group, W) :-
+  requirement_weight(node(CompilerHash, Language), Group, W),
+  language(Language),
+  reused_provider(node(CompilerHash, CompilerName), node(CompilerHash, Language)),
+  attr("concrete_build_dependency", PackageNode, CompilerName, CompilerHash),
+  attr("virtual_on_build_edge", PackageNode, CompilerName, Language).
+
 error(100, "cannot satisfy a requirement for package '{0}'.", Package) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
@@ -1919,7 +1936,11 @@ opt_criterion(310, "requirement weight").
 #minimize{ 0@310: #true }.
 #minimize {
     Weight@310,PackageNode,Group
-    : requirement_weight(PackageNode, Group, Weight)
+    : requirement_penalty(PackageNode, Group, Weight)
+}.
+#minimize {
+    Weight@310,PackageNode,Language,Group
+    : requirement_penalty(PackageNode, Language, Group, Weight)
 }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
