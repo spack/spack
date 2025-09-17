@@ -10,7 +10,10 @@ packages.
 
 import base64
 import collections
+<<<<<<< HEAD
 import copy
+=======
+>>>>>>> 05703d29cd (style: remove unused import)
 import errno
 import functools
 import glob
@@ -65,9 +68,9 @@ from spack.llnl.util.filesystem import (
     symlink,
 )
 from spack.llnl.util.lang import ClassProperty, classproperty, memoized
-from spack.util.executable import Executable
 from spack.resource import Resource
 from spack.solver.versions import concretization_version_order
+from spack.util.executable import Executable
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
