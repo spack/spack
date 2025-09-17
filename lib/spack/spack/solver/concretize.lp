@@ -1975,6 +1975,21 @@ opt_criterion(50, "number of non-default variants (non-roots)").
       build_priority(PackageNode, Priority)
 }.
 
+% Minimize the ids of the providers, i.e. use as much as
+% possible the first providers
+% Count each provider per-parent so that each usage of the
+% secondary provider is penalized
+opt_criterion(49, "number of duplicate virtuals needed").
+#minimize{ 0@249: #true }.
+#minimize{ 0@49: #true }.
+#minimize{
+    Weight@49+Priority,ProviderNode,Virtual,ParentNode
+    : provider(ProviderNode, node(Weight, Virtual)),
+      attr("depends_on", ParentNode, ProviderNode, Type),
+      Type != "build",
+      build_priority(ProviderNode, Priority)
+}.
+
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
 opt_criterion(48, "preferred providers (non-roots)").
@@ -1999,17 +2014,6 @@ opt_criterion(46, "number of compilers used on the same node").
 #minimize{
     Penalty@46+Priority,PackageNode
     : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
-}.
-
-% Minimize the ids of the providers, i.e. use as much as
-% possible the first providers
-opt_criterion(45, "number of duplicate virtuals needed").
-#minimize{ 0@245: #true }.
-#minimize{ 0@45: #true }.
-#minimize{
-    Weight@45+Priority,ProviderNode,Virtual
-    : provider(ProviderNode, node(Weight, Virtual)),
-      build_priority(ProviderNode, Priority)
 }.
 
 opt_criterion(40, "preferred compilers").
