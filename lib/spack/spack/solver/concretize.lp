@@ -827,10 +827,6 @@ error(1, Msg)
 % Virtual dependencies
 %-----------------------------------------------------------------------------
 
-% If the provider is set from the command line, its weight is 0
-possible_provider_weight(ProviderNode, VirtualNode, 0, "Set on the command line")
-  :- attr("provider_set", ProviderNode, VirtualNode).
-
 % Enforces all virtuals to be provided, if multiple of them are provided together
 error(100, "Package '{0}' needs to provide both '{1}' and '{2}' together, but provides only '{1}'", Package, Virtual1, Virtual2)
 :- % This package provides 2 or more virtuals together
@@ -1906,7 +1902,6 @@ opt_criterion(110, "number of packages to build (vs. reuse)").
 opt_criterion(100, "number of nodes from the same package").
 #minimize { 0@100: #true }.
 #minimize { ID@100,Package : attr("node", node(ID, Package)), not self_build_requirement(_, node(ID, Package)) }.
-#minimize { ID@100,Package : attr("virtual_node", node(ID, Package)) }.
 #defined optimize_for_reuse/0.
 
 % Minimize the number of deprecated versions being used
@@ -2006,19 +2001,15 @@ opt_criterion(46, "number of compilers used on the same node").
 opt_criterion(45, "number of duplicate virtuals needed").
 #minimize{ 0@245: #true }.
 #minimize{ 0@45: #true }.
-#minimize{
-    Weight@45+Priority,ProviderNode,Virtual
-    : provider(ProviderNode, node(Weight, Virtual)),
-      build_priority(ProviderNode, Priority)
-}.
 
 opt_criterion(40, "preferred compilers").
 #minimize{ 0@240: #true }.
 #minimize{ 0@40: #true }.
 #minimize{
-    Weight@40+Priority,ProviderNode,X,Virtual
-    : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      language(Virtual),
+    Weight@40+Priority,PackageNode,ProviderNode,Language
+    : attr("virtual_on_edge", PackageNode, ProviderNode, Language),
+      provider_weight(ProviderNode, node(_, Language), Weight),
+      language(Language),
       build_priority(ProviderNode, Priority)
 }.
 
