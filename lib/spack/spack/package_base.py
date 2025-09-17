@@ -65,6 +65,7 @@ from spack.llnl.util.filesystem import (
     symlink,
 )
 from spack.llnl.util.lang import ClassProperty, classproperty, memoized
+from spack.util.executable import Executable
 from spack.resource import Resource
 from spack.solver.versions import concretization_version_order
 from spack.util.package_hash import package_hash
@@ -1885,7 +1886,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return False
 
         # Prevent altering LC_ALL for 'make' outside this function
-        make = copy.deepcopy(self.module.make)
+        make = Executable("make")
 
         # Use English locale for missing target message comparison
         make.add_default_env("LC_ALL", "C")
@@ -1936,7 +1937,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         if self._has_make_target(target):
             # Execute target
-            self.module.make(target, *args, **kwargs)
+            make = Executable("make")
+            make(target, *args, **kwargs)
 
     def _has_ninja_target(self, target):
         """Checks to see if 'target' is a valid target in a Ninja build script.
@@ -1947,7 +1949,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Returns:
             bool: True if 'target' is found, else False
         """
-        ninja = self.module.ninja
+        ninja = Executable("ninja")
 
         # Check if we have a Ninja build script
         if not os.path.exists("build.ninja"):
@@ -1976,7 +1978,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         if self._has_ninja_target(target):
             # Execute target
-            self.module.ninja(target, *args, **kwargs)
+            ninja = Executable("ninja")
+            ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
         # We use intersects here cause it would also work if self.spec is abstract
