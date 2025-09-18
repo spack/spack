@@ -1473,19 +1473,11 @@ complete -c spack -n '__fish_spack_using_command develop' -s b -l build-director
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -f -a clone
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -d 'do not clone, the package already exists at the source path'
 complete -c spack -n '__fish_spack_using_command develop' -l clone -f -a clone
-<<<<<<< HEAD
 complete -c spack -n '__fish_spack_using_command develop' -l clone -d '(default) clone the package unless the path already exists, use ``--force`` to overwrite'
-complete -c spack -n '__fish_spack_using_command develop' -l no-concretize -f -a concretize
-complete -c spack -n '__fish_spack_using_command develop' -l no-concretize -d 'do not mutate concrete specs to have dev_path provenance'
-complete -c spack -n '__fish_spack_using_command develop' -l concretize -f -a concretize
-complete -c spack -n '__fish_spack_using_command develop' -l concretize -d '(default) mutate concrete specs to have dev_path provenance. This does not do other aspects of concretization. It will fail if the dev specs are incompatible with concrete specs in the env.'
-=======
-complete -c spack -n '__fish_spack_using_command develop' -l clone -d '(default) clone the package unless the path already exists, use --force to overwrite'
 complete -c spack -n '__fish_spack_using_command develop' -l no-apply-changes -f -a apply_changes
 complete -c spack -n '__fish_spack_using_command develop' -l no-apply-changes -d 'do not mutate concrete specs to have dev_path provenance. This requires a later `spack concretize --force` command to use develop specs'
 complete -c spack -n '__fish_spack_using_command develop' -l apply-changes -f -a apply_changes
 complete -c spack -n '__fish_spack_using_command develop' -l apply-changes -d '(default) mutate concrete specs to have dev_path provenance. This does not do other aspects of concretization. It will fail if the develop spec is incompatible with concrete specs in the env.'
->>>>>>> a1a58aaf26 (update completions)
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a force
 complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -a recursive
