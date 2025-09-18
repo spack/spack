@@ -163,6 +163,7 @@ def version(
     tag: Optional[str] = None,
     branch: Optional[str] = None,
     get_full_repo: Optional[bool] = None,
+    git_sparse_paths: Optional[bool] = None,
     submodules: Union[SubmoduleCallback, Optional[bool]] = None,
     submodules_delete: Optional[bool] = None,
     # other version control
@@ -197,6 +198,7 @@ def version(
             ("hg", hg),
             ("cvs", cvs),
             ("get_full_repo", get_full_repo),
+            ("git_sparse_paths", git_sparse_paths),
             ("branch", branch),
             ("submodules", submodules),
             ("submodules_delete", submodules_delete),
