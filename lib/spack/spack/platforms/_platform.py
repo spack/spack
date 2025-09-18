@@ -1,12 +1,19 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from enum import Flag, auto
 import warnings
 from typing import Optional
 
 import spack.vendor.archspec.cpu
 
 import spack.llnl.util.lang
+
+class PlatformSupport(Flag):
+    WINDOWS = auto()
+    LINUX = auto()
+    DARWIN = auto()
+    FREEBSD = auto()
 
 
 @spack.llnl.util.lang.lazy_lexicographic_ordering
@@ -31,6 +38,8 @@ class Platform:
     reserved_targets = ["default_target", "frontend", "fe", "backend", "be"]
     reserved_oss = ["default_os", "frontend", "fe", "backend", "be"]
     deprecated_names = ["frontend", "fe", "backend", "be"]
+
+    platform_support: PlatformSupport
 
     def __init__(self, name):
         self.targets = {}

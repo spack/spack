@@ -23,6 +23,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 from spack.operating_systems import windows_os
+from spack.platforms import PlatformSupport
 from spack.util.environment import get_path
 
 #: Tag used to identify packages providing a compiler
@@ -104,15 +105,15 @@ def supported_compilers() -> List[str]:
     return sorted(spack.repo.PATH.packages_with_tags(COMPILER_TAG))
 
 
-def is_supported_compiler_class_for_platform(cls_str: str, platform: "spack.platforms.Platform") -> bool:
-    supported_platform_for_compiler_attr = getattr(spack.repo.PATH.get_pkg_class(cls_str), "is_supported_on_platform", None)
+def is_supported_compiler_class_for_platform(cls_str: str, platform: PlatformSupport) -> bool:
+    supported_platform_for_compiler_attr = getattr(spack.repo.PATH.get_pkg_class(cls_str), "supported_platform", None)
     if supported_platform_for_compiler_attr:
-        return supported_platform_for_compiler_attr(platform)
+        return platform in supported_platform_for_compiler_attr
     return False
 
 
 def is_supported_compiler_class_for_host_platform(cls_str: str) ->bool:
-    host_plat = spack.platforms.real_host()
+    host_plat = spack.platforms.real_host().platform_support
     return is_supported_compiler_class_for_platform(cls_str, host_plat)
 
 

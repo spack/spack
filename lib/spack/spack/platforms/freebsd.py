@@ -5,11 +5,13 @@ import platform
 
 from spack.operating_systems.freebsd import FreeBSDOs
 
-from ._platform import Platform
+from ._platform import Platform, PlatformSupport
 
 
 class FreeBSD(Platform):
     priority = 102
+
+    platform_support = PlatformSupport.FREEBSD
 
     def __init__(self):
         super().__init__("freebsd")

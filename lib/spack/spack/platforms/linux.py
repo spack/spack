@@ -5,12 +5,13 @@ import platform
 
 from spack.operating_systems.linux_distro import LinuxDistro
 
-from ._platform import Platform
+from ._platform import Platform, PlatformSupport
 
 
 class Linux(Platform):
     priority = 90
-
+    platform_support = PlatformSupport.LINUX
+    
     def __init__(self):
         super().__init__("linux")
         linux_dist = LinuxDistro()

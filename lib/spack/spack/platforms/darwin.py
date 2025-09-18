@@ -7,13 +7,15 @@ import platform as py_platform
 from spack.operating_systems.mac_os import MacOs
 from spack.version import Version
 
-from ._platform import Platform
+from ._platform import Platform, PlatformSupport
 
 
 class Darwin(Platform):
     priority = 89
 
     binary_formats = ["macho"]
+
+    platform_support = PlatformSupport.DARWIN
 
     def __init__(self):
         super().__init__("darwin")

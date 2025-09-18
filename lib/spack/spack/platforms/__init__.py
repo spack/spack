@@ -5,7 +5,7 @@ import contextlib
 from typing import Callable
 
 from ._functions import _host, by_name, platforms, reset
-from ._platform import Platform
+from ._platform import Platform, PlatformSupport
 from .darwin import Darwin
 from .freebsd import FreeBSD
 from .linux import Linux
@@ -14,6 +14,7 @@ from .windows import Windows
 
 __all__ = [
     "Platform",
+    "PlatformSupport",
     "Darwin",
     "Linux",
     "FreeBSD",

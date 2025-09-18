@@ -6,12 +6,13 @@ import platform
 
 from spack.operating_systems.windows_os import WindowsOs
 
-from ._platform import Platform
+from ._platform import Platform, PlatformSupport
 
 
 class Windows(Platform):
     priority = 101
-
+    platform_support = PlatformSupport.WINDOWS
+    
     def __init__(self):
         super().__init__("windows")
         windows_os = WindowsOs()
