@@ -71,7 +71,13 @@ def find_compilers(
     default_paths = fs.search_paths_for_executables(*path_hints)
     if sys.platform == "win32":
         default_paths.extend(windows_os.WindowsOs().compiler_search_paths)
-    compiler_pkgs = spack.repo.PATH.packages_with_tags(COMPILER_TAG, full=True)
+
+    compiler_pkgs = list(
+        filter(
+            is_supported_compiler_class_for_host_platform,
+            spack.repo.PATH.packages_with_tags(COMPILER_TAG, full=True),
+        )
+    )
 
     detected_packages = spack.detection.by_path(
         compiler_pkgs, path_hints=default_paths, max_workers=max_workers
@@ -96,6 +102,18 @@ def select_new_compilers(
 def supported_compilers() -> List[str]:
     """Returns all the currently supported compiler packages"""
     return sorted(spack.repo.PATH.packages_with_tags(COMPILER_TAG))
+
+
+def is_supported_compiler_class_for_platform(cls_str: str, platform: "spack.platforms.Platform") -> bool:
+    supported_platform_for_compiler_attr = getattr(spack.repo.PATH.get_pkg_class(cls_str), "is_supported_on_platform", None)
+    if supported_platform_for_compiler_attr:
+        return supported_platform_for_compiler_attr(platform)
+    return False
+
+
+def is_supported_compiler_class_for_host_platform(cls_str: str) ->bool:
+    host_plat = spack.platforms.real_host()
+    return is_supported_compiler_class_for_platform(cls_str, host_plat)
 
 
 def all_compilers(scope: Optional[str] = None, init_config: bool = True) -> List[spack.spec.Spec]:
