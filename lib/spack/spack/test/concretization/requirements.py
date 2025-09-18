@@ -897,14 +897,13 @@ def test_default_requirements_semantic(packages_yaml, concretize_scope, mock_pac
             ["libs=static", "libs=foo"],
         ),
         (
-            # (TODO): revisit this case when we'll have exact value semantic for mv variants
             """
         packages:
           all:
             require: "libs=static"
     """,
             "multivalue-variant",
-            ["libs=static", "libs=shared"],
+            ["libs=static"],
             [],
         ),
         (
