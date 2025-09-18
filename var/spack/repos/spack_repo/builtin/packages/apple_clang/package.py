@@ -4,7 +4,7 @@
 import os
 
 from spack_repo.builtin.build_systems.bundle import BundlePackage
-from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.compiler import CompilerPackage, PlatformSupport
 from spack_repo.builtin.packages.llvm.package import LlvmDetection
 
 from spack.package import *
@@ -31,7 +31,8 @@ class AppleClang(BundlePackage, LlvmDetection, CompilerPackage):
     implicit_rpath_libs = ["libclang"]
     
     # apple-clang is Darwin only
-    is_supported_on_platform = lambda x: isinstance(x, Darwin)
+    supported_platform = PlatformSupport.DARWIN
+
     provides("c", "cxx")
 
     requires("platform=darwin")

@@ -6,7 +6,7 @@ import re
 import subprocess
 
 from spack_repo.builtin.build_systems import compiler
-from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.compiler import CompilerPackage, PlatformSupport
 from spack_repo.builtin.build_systems.generic import Package
 
 import spack.platforms
@@ -47,7 +47,7 @@ class Msvc(Package, CompilerPackage):
 
     compiler_version_argument = ""
     compiler_version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
-    is_supported_on_platform = lambda x: isinstance(x, Windows)
+    supported_platform = PlatformSupport.WINDOWS
 
     # Due to the challenges of supporting compiler wrappers
     # in Windows, we leave these blank, and dynamically compute
