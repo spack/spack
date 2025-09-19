@@ -163,7 +163,7 @@ def _delete_object(url: str) -> int:
         return 0
 
 
-def _object_has_prunable_mtime(url: str, pruning_started_at: float) -> tuple[str, bool]:
+def _object_has_prunable_mtime(url: str, pruning_started_at: float) -> Tuple[str, bool]:
     """Check if an object's modification time makes it eligible for pruning.
 
     Objects modified after pruning started should not be pruned to avoid
