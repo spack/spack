@@ -129,12 +129,49 @@ def _delete_entries_from_cache_manual(
     return pruned_objects
 
 
+def _delete_entries_from_cache(
+    mirror: Mirror,
+    tmpspecsdir: str,
+    manifests_to_delete: Set[str],
+    blobs_to_delete: Set[str],
+    pruning_started_at: float,
+) -> int:
+    pruned_manifests: Optional[int] = None
+
+    if mirror.fetch_url.startswith("s3://"):
+        pruned_manifests = _delete_manifests_from_cache_aws(
+            url=mirror.fetch_url,
+            tmpspecsdir=tmpspecsdir,
+            urls_to_delete=manifests_to_delete,
+            pruning_started_at=pruning_started_at,
+        )
+
+    if pruned_manifests is None:
+        # If the AWS CLI deletion failed, we fall back to deleting both manifests
+        # and blobs with the fallback method.
+        objects_to_delete = blobs_to_delete.union(manifests_to_delete)
+        pruned_objects = 0
+    else:
+        # If the AWS CLI deletion succeeded, we only need to worry about
+        # deleting the blobs, since the manifests have already been deleted.
+        objects_to_delete = blobs_to_delete
+        pruned_objects = pruned_manifests
+
+    return pruned_objects + _delete_entries_from_cache_manual(
+        url=mirror.fetch_url,
+        urls_to_delete=objects_to_delete,
+        pruning_started_at=pruning_started_at,
+    )
+
+
 def _delete_object(url: str, pruning_started_at: float) -> int:
     try:
         stat_result = web_util.stat_url(url)
         assert stat_result is not None
         if stat_result[1] > pruning_started_at:
-            tty.verbose(f"Skipping deletion of {url} because it was modified after pruning started")
+            tty.verbose(
+                f"Skipping deletion of {url} because it was modified after pruning started"
+            )
             return 0
         web_util.remove_url(url=url)
         tty.info(f"Removed object {url}")
@@ -222,6 +259,8 @@ def _prune_orphans(
     if orphaned_manifests:
         tty.info(f"Found {len(orphaned_manifests)} manifest(s) that are missing blobs")
 
+    # If dry run, just print the manifests and blobs that would be deleted
+    # and exit early.
     if dry_run:
         pruned_object_count = len(orphaned_blobs) + len(orphaned_manifests)
         for manifest in orphaned_manifests:
@@ -232,31 +271,12 @@ def _prune_orphans(
             tty.info(f"  Would prune blob: {blob}")
         return pruned_object_count
 
-    # Try to delete the orphaned manifests using the AWS CLI,
-    # if possible.
-    pruned_manifests: Optional[int] = None
-    if mirror.fetch_url.startswith("s3://"):
-        pruned_manifests = _delete_manifests_from_cache_aws(
-            url=mirror.fetch_url,
-            tmpspecsdir=tmpspecsdir,
-            urls_to_delete=orphaned_manifests,
-            pruning_started_at=pruning_started_at,
-        )
-
-    if pruned_manifests is None:
-        # If the AWS CLI deletion failed, we fall back to deleting both manifests
-        # and blobs with the fallback method.
-        orphans_to_delete = orphaned_blobs.union(orphaned_manifests)
-        pruned_object_count = 0
-    else:
-        # If the AWS CLI deletion succeeded, we only need to worry about
-        # deleting the blobs, since the manifests have already been deleted.
-        orphans_to_delete = orphaned_blobs
-        pruned_object_count = pruned_manifests
-
-    pruned_object_count += _delete_entries_from_cache_manual(
-        url=mirror.fetch_url,
-        urls_to_delete=orphans_to_delete,
+    # Otherwise, perform the deletions.
+    pruned_object_count = _delete_entries_from_cache(
+        mirror=mirror,
+        tmpspecsdir=tmpspecsdir,
+        manifests_to_delete=orphaned_manifests,
+        blobs_to_delete=orphaned_blobs,
         pruning_started_at=pruning_started_at,
     )
 
@@ -354,23 +374,13 @@ def prune_direct(
         else:
             manifests_to_delete = set(manifests_to_prune)
 
-            # Try AWS CLI deletion first for S3 mirrors
-            if mirror.fetch_url.startswith("s3://"):
-                total_pruned = _delete_manifests_from_cache_aws(
-                    url=mirror.fetch_url,
-                    tmpspecsdir=tmpspecsdir,
-                    urls_to_delete=manifests_to_delete,
-                    pruning_started_at=pruning_started_at,
-                )
-
-            if total_pruned is None:
-                # Fall back to manual deletion if using a non-S3 mirror and/or
-                # AWS CLI is not available
-                total_pruned = _delete_entries_from_cache_manual(
-                    url=mirror.fetch_url,
-                    urls_to_delete=manifests_to_delete,
-                    pruning_started_at=pruning_started_at,
-                )
+            total_pruned = _delete_entries_from_cache(
+                mirror=mirror,
+                tmpspecsdir=tmpspecsdir,
+                manifests_to_delete=manifests_to_delete,
+                blobs_to_delete=set(),
+                pruning_started_at=pruning_started_at,
+            )
 
     if dry_run:
         tty.info(f"Would have pruned {total_pruned} objects from mirror: {mirror.fetch_url}")
