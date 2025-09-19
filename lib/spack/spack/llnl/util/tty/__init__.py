@@ -333,7 +333,8 @@ def terminal_size() -> Tuple[int, int]:
 
         def ioctl_gwinsz(fd):
             try:
-                rc = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
+                buf = fcntl.ioctl(fd, termios.TIOCGWINSZ, "12345678")
+                rc = struct.unpack("hh", buf[0:4])
                 return rc if is_valid_size(rc[0], rc[1]) else None
             except (OSError, ValueError):
                 return None
