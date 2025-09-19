@@ -1410,10 +1410,13 @@ def complete_build_process(process: BuildProcess):
         typ = "exit" if process.exitcode >= 0 else "signal"
         return f"{typ} {abs(process.exitcode)}"
 
-    if process.poll():
-        child_result = process.read_pipe.recv()
-    else:
-        child_result = None
+    try:
+        if process.poll():
+            child_result = process.read_pipe.recv()
+        else:
+            child_result = None
+    except EOFError:
+        raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
 
     timeout = process.timeout
     process.join(timeout=timeout)
