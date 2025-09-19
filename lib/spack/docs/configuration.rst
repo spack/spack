@@ -346,7 +346,7 @@ For example:
      install_tree:
        root-: /my/custom/suffix/
 
-Spack will then append to the lower-precedence configuration under the ``install_tree-:`` section:
+Spack will then append to the lower-precedence configuration under the ``root`` key:
 
 .. code-block:: console
 

@@ -121,7 +121,8 @@ The ``Dockerfile`` that gets created uses multi-stage builds and other technique
    &&   echo "  concretizer:" \
    &&   echo "    unify: true" \
    &&   echo "  config:" \
-   &&   echo "    install_tree: /opt/software" \
+   &&   echo "    install_tree: \
+   &&   echo "      root: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
@@ -311,7 +312,8 @@ uses ``spack/almalinux9:0.22.0`` and ``almalinux:9`` for the stages where the so
    &&   echo '  concretizer:' \
    &&   echo '    unify: true' \
    &&   echo '  config:' \
-   &&   echo '    install_tree: /opt/software' \
+   &&   echo '    install_tree: ' \
+   &&   echo '      root: /opt/software' \
    &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
    [ ... ]
    # Bare OS image to run the installed executables
@@ -420,7 +422,8 @@ produces, for instance, the following ``Dockerfile``:
    &&   echo "  concretizer:" \
    &&   echo "    unify: true" \
    &&   echo "  config:" \
-   &&   echo "    install_tree: /opt/software" \
+   &&   echo "    install_tree: " \
+   &&   echo "      root: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
@@ -559,7 +562,8 @@ The recipe that gets generated contains the two extra instructions that we added
    &&   echo "  config:" \
    &&   echo "    template_dirs:" \
    &&   echo "    - /tmp/environment/templates" \
-   &&   echo "    install_tree: /opt/software" \
+   &&   echo "    install_tree: " \
+   &&   echo "      root: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
