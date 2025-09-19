@@ -1411,10 +1411,8 @@ def complete_build_process(process: BuildProcess):
         return f"{typ} {abs(process.exitcode)}"
 
     try:
-        if process.poll():
-            child_result = process.read_pipe.recv()
-        else:
-            child_result = None
+        # Check if information from the read pipe has been received.
+        child_result = process.read_pipe.recv()
     except EOFError:
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
 
@@ -1423,13 +1421,6 @@ def complete_build_process(process: BuildProcess):
     if process.is_alive():
         warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
         process.terminate()
-
-    try:
-        # Check if information from the read pipe has been received.
-        if not child_result:
-            child_result = process.read_pipe.recv()
-    except EOFError:
-        raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
 
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):
