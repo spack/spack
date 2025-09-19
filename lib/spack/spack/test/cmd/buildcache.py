@@ -995,8 +995,6 @@ def test_buildcache_prune_new_specs_race_condition(
     # Run end-to-end buildcache prune - this should not delete `libelf`, despite it
     # not being in the keeplist, because its mtime is after the pruning started
     assert web_util.url_exists(manifest_url)
-    output = buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
+    buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
     assert web_util.url_exists(manifest_url)
 
-    # Verify the race condition warning message appears for protected objects
-    assert "Skipping deletion" in output and "modified after pruning started" in output

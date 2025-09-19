@@ -134,7 +134,7 @@ def _delete_object(url: str, pruning_started_at: float) -> int:
         stat_result = web_util.stat_url(url)
         assert stat_result is not None
         if stat_result[1] > pruning_started_at:
-            tty.info(f"Skipping deletion of {url} because it was modified after pruning started")
+            tty.verbose(f"Skipping deletion of {url} because it was modified after pruning started")
             return 0
         web_util.remove_url(url=url)
         tty.info(f"Removed object {url}")
@@ -285,14 +285,14 @@ def prune_direct(
         pruning_started_at: Timestamp of when the pruning started
         dry_run: Whether to perform a dry run without actually deleting
     """
-    tty.info("=== Direct Pruning Phase ===")
+    tty.info("Running Direct Pruning")
     tty.debug(f"Direct pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
 
     keep_hashes: Set[str] = set()
     for line in keeplist_file.read_text().splitlines():
         keep_hash = line.strip()
         if len(keep_hash) != 32:
-            raise MalformedKeepListException(f"Found malformed hash in keeplist: {keep_hash}")
+            raise MalformedKeepListException(f"Found malformed hash in keeplist: {line}")
         keep_hashes.add(keep_hash)
 
     if not keep_hashes:
