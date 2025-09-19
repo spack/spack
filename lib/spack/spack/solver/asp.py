@@ -598,7 +598,7 @@ class ConcretizationCache:
             "concretizer:concretization_cache:url", spack.paths.default_conc_cache_path
         )
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
-        self.root.mkdir(exist_ok=True)
+        self.root.mkdir(parents=True, exist_ok=True)
         self._lockfile = self.root / ".cc_lock"
         self._default_lock_timeout = 120
 
