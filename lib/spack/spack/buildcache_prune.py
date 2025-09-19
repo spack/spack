@@ -326,7 +326,7 @@ def prune_direct(
 
     keep_hashes: Set[str] = set()
     for line in keeplist_file.read_text().splitlines():
-        keep_hash = line.strip().lstrip('/')
+        keep_hash = line.strip().lstrip("/")
         if len(keep_hash) != 32:
             raise MalformedKeepListException(f"Found malformed hash in keeplist: {line}")
         keep_hashes.add(keep_hash)
