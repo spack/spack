@@ -352,36 +352,33 @@ Here's an example of a Spack configuration file describing a build pipeline:
 
 .. code-block:: yaml
 
-  ci:
-    target: gitlab
+  spack:
+    ci:
+      target: gitlab
+      rebuild_index: true
+      broken-specs-url: https://broken.specs.url
+      broken-tests-packages:
+      - gptune
+      pipeline-gen:
+      - submapping:
+        - match:
+          - os=ubuntu24.04
+          build-job:
+            tags:
+            - spack-kube
+            image: spack/ubuntu-noble
+        - match:
+          - os=almalinux9
+          build-job:
+            tags:
+            - spack-kube
+            image: spack/almalinux9
 
-    rebuild_index: true
-
-    broken-specs-url: https://broken.specs.url
-
-    broken-tests-packages:
-    - gptune
-
-    pipeline-gen:
-    - submapping:
-      - match:
-        - os=ubuntu24.04
-        build-job:
-          tags:
-          - spack-kube
-          image: spack/ubuntu-noble
-      - match:
-        - os=almalinux9
-        build-job:
-          tags:
-          - spack-kube
-          image: spack/almalinux9
-
-  cdash:
-    build-group: Release Testing
-    url: https://cdash.spack.io
-    project: Spack
-    site: Spack AWS Gitlab Instance
+    cdash:
+      build-group: Release Testing
+      url: https://cdash.spack.io
+      project: Spack
+      site: Spack AWS Gitlab Instance
 
 The ``ci`` config section is used to configure how the pipeline workload should be generated, mainly how the jobs for building specs should be assigned to the configured runners on your instance.
 The main section for configuring pipelines is ``pipeline-gen``, which is a list of job attribute sections that are merged, using the same rules as Spack configs (:ref:`config-scope-precedence`), from the bottom up.

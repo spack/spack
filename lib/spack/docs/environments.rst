@@ -862,7 +862,7 @@ The environment can be configured to set, unset, prepend, or append using ``env_
       set:
         ENVAR_TO_SET_IN_ENV_LOAD: "FOO"
       unset:
-        ENVAR_TO_UNSET_IN_ENV_LOAD:
+      - ENVAR_TO_UNSET_IN_ENV_LOAD
       prepend_path:
         PATH_LIST: "path/to/prepend"
       append_path:

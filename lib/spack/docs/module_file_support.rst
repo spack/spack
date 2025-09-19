@@ -537,8 +537,8 @@ If the ``use_view`` value is set in the config, then the prefix inspections for 
          - PATH
      view:
        my_view:
+         root: /path/to/my/view
          projections:
-           root: /path/to/my/view
            all: "{name}-{hash}"
 
 The ``spack`` key is relevant to :ref:`environment <environments>` configuration, and the view key is discussed in detail in the section on :ref:`Configuring environment views <configuring_environment_views>`.
