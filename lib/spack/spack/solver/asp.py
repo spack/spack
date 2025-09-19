@@ -18,19 +18,7 @@ import time
 import typing
 import warnings
 from contextlib import contextmanager
-from typing import (
-    Callable,
-    Dict,
-    Generator,
-    Iterator,
-    List,
-    NamedTuple,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type, Union
 
 import spack.vendor.archspec.cpu
 
@@ -610,6 +598,7 @@ class ConcretizationCache:
             "concretizer:concretization_cache:url", spack.paths.default_conc_cache_path
         )
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
+        self.root.mkdir(exist_ok=True)
         self._lockfile = self.root / ".cc_lock"
         self._default_lock_timeout = 120
 
@@ -671,7 +660,7 @@ class ConcretizationCache:
                     entry_count -= 1
                     bytes_count -= entry_size
 
-    def cache_entries(self) -> Generator[pathlib.Path]:
+    def cache_entries(self):
         """Generator producing cache entries within a bucket"""
         for cache_entry in self.root.iterdir():
             # Lockfile starts with "."
