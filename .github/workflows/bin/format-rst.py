@@ -60,7 +60,7 @@ DOCUTILS_SETTING = {"report_level": 5, "raw_enabled": False, "file_insertion_ena
 
 
 def _warning(msg: str) -> str:
-    return f"\033[33mwarning:\033[0m {msg}"
+    return f"\033[1;31mwarning:\033[0m {msg}"
 
 
 class Warning:
