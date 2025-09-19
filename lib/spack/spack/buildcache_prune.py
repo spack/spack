@@ -9,7 +9,7 @@ import uuid
 from concurrent.futures import Future, as_completed
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple, cast
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, Set, Tuple, cast
 
 import spack.binary_distribution
 import spack.error
@@ -64,7 +64,7 @@ def _fetch_manifests(
 
 
 def _delete_manifests_from_cache_aws(
-    url: str, tmpspecsdir: str, urls_to_delete: Set[str], pruning_started_at: float
+    url: str, tmpspecsdir: str, urls_to_delete: Set[str]
 ) -> Optional[int]:
     aws = which("aws")
 
@@ -82,7 +82,7 @@ def _delete_manifests_from_cache_aws(
     urls_to_delete = {url_util.path_to_file_url(url) for url in urls_to_delete}
 
     tty.debug(f"Deleting {len(urls_to_delete)} entries from cache at {url}")
-    deleted = _delete_entries_from_cache_manual(tmpspecsdir, urls_to_delete, pruning_started_at)
+    deleted = _delete_entries_from_cache_manual(tmpspecsdir, urls_to_delete)
     tty.debug(f"Deleted {deleted} entries from cache at {url}")
 
     sync_command_args = [
@@ -113,15 +113,13 @@ def _delete_manifests_from_cache_aws(
     return None
 
 
-def _delete_entries_from_cache_manual(
-    url: str, urls_to_delete: Set[str], pruning_started_at: float
-) -> int:
+def _delete_entries_from_cache_manual(url: str, urls_to_delete: Set[str]) -> int:
     pruned_objects = 0
     futures: List[Future] = []
 
     with spack.util.parallel.make_concurrent_executor() as executor:
         for url in urls_to_delete:
-            futures.append(executor.submit(_delete_object, url, pruning_started_at))
+            futures.append(executor.submit(_delete_object, url))
 
         for manifest_or_blob_future in as_completed(futures):
             pruned_objects += manifest_or_blob_future.result()
@@ -130,20 +128,13 @@ def _delete_entries_from_cache_manual(
 
 
 def _delete_entries_from_cache(
-    mirror: Mirror,
-    tmpspecsdir: str,
-    manifests_to_delete: Set[str],
-    blobs_to_delete: Set[str],
-    pruning_started_at: float,
+    mirror: Mirror, tmpspecsdir: str, manifests_to_delete: Set[str], blobs_to_delete: Set[str]
 ) -> int:
     pruned_manifests: Optional[int] = None
 
     if mirror.fetch_url.startswith("s3://"):
         pruned_manifests = _delete_manifests_from_cache_aws(
-            url=mirror.fetch_url,
-            tmpspecsdir=tmpspecsdir,
-            urls_to_delete=manifests_to_delete,
-            pruning_started_at=pruning_started_at,
+            url=mirror.fetch_url, tmpspecsdir=tmpspecsdir, urls_to_delete=manifests_to_delete
         )
 
     if pruned_manifests is None:
@@ -158,27 +149,49 @@ def _delete_entries_from_cache(
         pruned_objects = pruned_manifests
 
     return pruned_objects + _delete_entries_from_cache_manual(
-        url=mirror.fetch_url,
-        urls_to_delete=objects_to_delete,
-        pruning_started_at=pruning_started_at,
+        url=mirror.fetch_url, urls_to_delete=objects_to_delete
     )
 
 
-def _delete_object(url: str, pruning_started_at: float) -> int:
+def _delete_object(url: str) -> int:
     try:
-        stat_result = web_util.stat_url(url)
-        assert stat_result is not None
-        if stat_result[1] > pruning_started_at:
-            tty.verbose(
-                f"Skipping deletion of {url} because it was modified after pruning started"
-            )
-            return 0
         web_util.remove_url(url=url)
         tty.info(f"Removed object {url}")
         return 1
     except Exception as e:
         tty.warn(f"Unable to remove object {url} due to: {e}")
         return 0
+
+
+def _object_has_prunable_mtime(url: str, pruning_started_at: float) -> tuple[str, bool]:
+    """Check if an object's modification time makes it eligible for pruning.
+
+    Objects modified after pruning started should not be pruned to avoid
+    race conditions with concurrent uploads.
+    """
+    stat_result = web_util.stat_url(url)
+    assert stat_result is not None
+    if stat_result[1] > pruning_started_at:
+        tty.verbose(f"Skipping deletion of {url} because it was modified after pruning started")
+        return url, False
+    return url, True
+
+
+def _filter_new_specs(urls: Iterable[str], pruning_started_at: float) -> Iterator[str]:
+    """Filter out URLs that were modified after pruning started.
+
+    Runs parallel modification time checks on all URLs and yields only
+    those that are old enough to be safely pruned.
+    """
+    with spack.util.parallel.make_concurrent_executor() as executor:
+        futures = []
+        for url in urls:
+            futures.append(executor.submit(_object_has_prunable_mtime, url, pruning_started_at))
+
+        for manifest_or_blob_future in as_completed(futures):
+            url, has_prunable_mtime = manifest_or_blob_future.result()
+            if has_prunable_mtime:
+                yield url
 
 
 def _prune_orphans(
@@ -254,6 +267,10 @@ def _prune_orphans(
     if not orphaned_blobs and not orphaned_manifests:
         return 0
 
+    # Filter out any new specs that have been uploaded since the pruning started
+    orphaned_blobs = set(_filter_new_specs(orphaned_blobs, pruning_started_at))
+    orphaned_manifests = set(_filter_new_specs(orphaned_manifests, pruning_started_at))
+
     if orphaned_blobs:
         tty.info(f"Found {len(orphaned_blobs)} blob(s) with no manifest")
     if orphaned_manifests:
@@ -277,7 +294,6 @@ def _prune_orphans(
         tmpspecsdir=tmpspecsdir,
         manifests_to_delete=orphaned_manifests,
         blobs_to_delete=orphaned_blobs,
-        pruning_started_at=pruning_started_at,
     )
 
     for manifest in orphaned_manifests:
@@ -372,14 +388,13 @@ def prune_direct(
                 tty.info(f"  Would prune: {spec_name}")
             total_pruned = len(manifests_to_prune)
         else:
-            manifests_to_delete = set(manifests_to_prune)
+            manifests_to_delete = set(_filter_new_specs(manifests_to_prune, pruning_started_at))
 
             total_pruned = _delete_entries_from_cache(
                 mirror=mirror,
                 tmpspecsdir=tmpspecsdir,
                 manifests_to_delete=manifests_to_delete,
                 blobs_to_delete=set(),
-                pruning_started_at=pruning_started_at,
             )
 
     if dry_run:

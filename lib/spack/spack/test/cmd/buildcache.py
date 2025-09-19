@@ -997,4 +997,3 @@ def test_buildcache_prune_new_specs_race_condition(
     assert web_util.url_exists(manifest_url)
     buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
     assert web_util.url_exists(manifest_url)
-
