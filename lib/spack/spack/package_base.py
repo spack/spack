@@ -10,10 +10,6 @@ packages.
 
 import base64
 import collections
-<<<<<<< HEAD
-import copy
-=======
->>>>>>> 05703d29cd (style: remove unused import)
 import errno
 import functools
 import glob
