@@ -51,13 +51,14 @@ jobs:
     - name: Install Python packages
       run: |
         pip install -r .github/workflows/requirements/style/requirements.txt
+        echo "PYTHONPATH=$PWD/lib/spack" >> $GITHUB_ENV
     - name: Run style tests (code)
       run: |
         bin/spack style --base HEAD^1
         bin/spack license verify
         pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/spack/vendor lib
     - name: Run style tests (docs)
-      run: bin/spack python .github/workflows/bin/format-rst.py $(git ls-files 'lib/spack/docs/*.rst')
+      run: .github/workflows/bin/format-rst.py $(git ls-files 'lib/spack/docs/*.rst')
 
 
   # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
