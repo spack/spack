@@ -4,7 +4,6 @@
 import collections
 import collections.abc
 import enum
-import errno
 import gzip
 import io
 import itertools
@@ -23,9 +22,6 @@ from contextlib import contextmanager
 from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type, Union
 
 import spack.vendor.archspec.cpu
-
-import llnl.util.tty as tty
-from llnl.util.lang import elide_list
 
 import spack
 import spack.compilers.config
@@ -614,28 +610,44 @@ class ConcretizationCache:
         # lock the entire buildcache as we're removing a lot of data from the
         # manifest and cache itself
         entry_count, bytes_count = 0, 0
-        rm_reg: List[pathlib.Path] = []
+        rm_reg: Dict[pathlib.Path, Tuple[float, int]] = {}
         for bucket in self.cache_buckets():
             with self._fc.read_transaction(bucket) as f:
                 if not f:
-                    raise RuntimeError(
-                        "Attempting to clean non existent cache bucket" f" {bucket.name}"
+                    # bucket was likely removed by another cleaning
+                    # process, no worries
+                    tty.debug(
+                        f"Attempting to purge concretization cache bucket {bucket}"
+                        " but it was already removed"
                     )
+                    continue
                 # advance new beyond metadata entry
                 for entry in self.cache_entries(bucket):
                     entry_count += 1
-                    bytes_count += entry.stat().st_size
-                    rm_reg.append(entry)
-        rm_reg.sort(key=lambda x: x.stat().st_mtime, reverse=True)
-        while (entry_count > entry_limit or bytes_count > bytes_limit) and rm_reg:
-            entry_to_rm = rm_reg.pop()
+                    entry_stat_info = entry.stat()
+                    entry_size = entry_stat_info.st_size
+                    bytes_count += entry_size
+                    access_time = entry_stat_info.st_atime
+                    mod_time = entry_stat_info.st_mtime
+                    most_recent_op_time = access_time if access_time > mod_time else mod_time
+                    rm_reg[entry] = (most_recent_op_time, entry_size)
+        # Sort entries in descending order
+        removal_queue = [
+            (entry, stats)
+            for entry, stats in sorted(rm_reg.items(), key=lambda x: x[1][0], reverse=True)
+        ]
+        while (entry_count > entry_limit or bytes_count > bytes_limit) and removal_queue:
+            # entries are descending, so least recently used is last entry
+            entry_info_to_rm = removal_queue.pop()
+            entry_to_rm = entry_info_to_rm[0]
+            entry_stats = entry_info_to_rm[1]
             entry_bucket = self._cache_bucket_from_path(entry_to_rm)
             with self._fc.write_transaction(entry_bucket) as valid_bucket:
                 # cache bucket was removed by another process, that's fine
                 # try pruning something else
                 if not valid_bucket:
                     continue
-                entry_size = entry_to_rm.stat().st_size
+                entry_size = entry_stats[1]
                 removed = self._safe_remove(entry_to_rm)
                 if removed:
                     entry_count -= 1
@@ -651,7 +663,12 @@ class ConcretizationCache:
                     self._fc.remove(cache_bucket)
                     removed = True
             if removed:
-                self._fc.purge_lock(cache_bucket)
+                try:
+                    self._fc.purge_lock(cache_bucket)
+                except OSError:
+                    # lock was likely taken by another process
+                    # don't clean it, something is using it!
+                    continue
 
     def cache_buckets(self):
         """Generator producing cache buckets"""
@@ -695,7 +712,6 @@ class ConcretizationCache:
 
     def _prefix_digest(self, problem: str) -> Tuple[str, str]:
         """Return the first two characters of, and the full, sha256 of the given asp problem"""
-        # compress the problem w/ gzip so we can validate checksum w/o decompressing
         prob_digest = spack.util.hash.b32_hash(problem)
         prefix = prob_digest[:2]
         return prefix, prob_digest
@@ -727,10 +743,9 @@ class ConcretizationCache:
         except FileNotFoundError:
             # This is acceptable, removal is idempotent
             pass
-        except OSError as e:
-            if e.errno == errno.ENOTEMPTY:
-                # there exists another cache entry in this directory, don't clean yet
-                pass
+        except OSError:
+            # Catch other timing/access related issues
+            pass
         return False
 
     def store(self, problem: str, result: Result, statistics: List, test: bool = False):
@@ -783,10 +798,12 @@ class ConcretizationCache:
                     pass
                 except OSError:
                     # Cache may have been created pre compression
-                    # check if gzip, and if so, read from plaintext
+                    # check if gzip, and if not, read from plaintext
                     # otherwise re raise
                     with open(cache_path, "rb") as f:
-                        if GZipFileType().matches_magic(f):
+                        # ensure the file was not a gzip file we just failed
+                        # to open
+                        if not GZipFileType().matches_magic(f):
                             cache_entry_content = f.read().decode()
                         else:
                             raise

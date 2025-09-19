@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import json
 import os
 import pathlib
 import platform
@@ -3348,13 +3349,6 @@ def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusabl
         assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
 
 
-def extract_cache_metadata():
-    cache_root = pathlib.Path(spack.config.get("config:concretization_cache:url"))
-    cache = cache_root / ".cache_manifest"
-    with cache.open("r") as f:
-        return spack.solver.asp.CONC_CACHE._extract_cache_metadata(f)
-
-
 @pytest.mark.regression("42679")
 @pytest.mark.parametrize("compiler_str", ["gcc@=9.4.0", "gcc@=9.4.0-foo"])
 def test_selecting_compiler_with_suffix(mutable_config, mock_packages, compiler_str):
@@ -4246,8 +4240,9 @@ def test_concretization_cache_roundtrip(
     # memoization
     h = spack.concretize.concretize_one("hdf5")
 
-    # due to our forced determinism above, we should not be observing
-    # cache misses, assert that we're not storing any new cache entries
+    # ASP output should be stable, concretizing the same spec
+    # should have the same problem output
+    # assert that we're not storing any new cache entries
     def _ensure_no_store(self, problem: str, result, statistics, test=False):
         # always throw, we never want to reach this code path
         assert False, "Concretization cache hit expected"
@@ -4315,7 +4310,7 @@ def test_concretization_cache_lockfile_cleanup(use_concretization_cache, mutable
     spack.config.set("concretizer:concretization_cache:entry_limit", 1)
     spack.concretize.concretize_one("zlib")
     spack.concretize.concretize_one("hdf5")
-    # cleanup should have been run and there should be no lockfiles
+    # cleanup should have been run and there should be one lockfile
     lock_count = 0
     for file in spack.solver.asp.CONC_CACHE.root.iterdir():
         if file.is_file() and file.suffix == ".lock":
@@ -4324,3 +4319,28 @@ def test_concretization_cache_lockfile_cleanup(use_concretization_cache, mutable
         lock_count == 1
     ), f"Unexpected number of lockfiles {lock_count} \
 concretization cache cleanup operation failed."
+
+
+def test_concretization_cache_uncompressed_entry(use_concretization_cache, monkeypatch):
+    def store(self, problem, result, statistics, test=False):
+        bucket, digest = self._prefix_digest(problem)
+        cache_path = self.root / bucket / digest
+        self._fc.init_entry(bucket)
+        with self._fc.write_transaction(bucket) as exists:
+            if not exists:
+                # The directory may have been pruned between init entry and the write
+                # transaction, recreate the directory
+                os.makedirs(bucket)
+            try:
+                with open(cache_path, "x", encoding="utf-8") as cache_entry:
+                    cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
+                    cache_entry.write(json.dumps(cache_dict))
+            except FileExistsError:
+                # Entry for this conc hash exists already, do not overwrite
+                pass
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", store)
+    # Store the results in plaintext
+    spack.concretize.concretize_one("zlib")
+    # Ensure fetch can handle the plaintext cache entry
+    spack.concretize.concretize_one("zlib")
