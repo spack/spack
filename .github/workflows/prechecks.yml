@@ -57,7 +57,7 @@ jobs:
         bin/spack license verify
         pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/spack/vendor lib
     - name: Run style tests (docs)
-      run: .github/workflows/bin/format-rst.py $(git ls-files 'lib/spack/docs/*.rst')
+      run: bin/spack python .github/workflows/bin/format-rst.py $(git ls-files 'lib/spack/docs/*.rst')
 
 
   # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8

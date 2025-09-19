@@ -7,6 +7,7 @@
 whitespace. It exits with a non-zero status if any files were modified."""
 
 import difflib
+import importlib
 import io
 import json
 import os
@@ -20,6 +21,25 @@ from docutils import nodes
 from docutils.core import publish_doctree
 from docutils.parsers.rst import Directive, directives
 from ruamel.yaml import YAML
+
+from spack.vendor import jsonschema
+
+import spack.schema
+
+#: Map Spack config sections to their corresponding JSON schema
+SECTION_AND_SCHEMA = [
+    # The first property's key is the config section name
+    (next(iter(m.schema["properties"])), m.schema)
+    # Dynamically load all modules in spack.schema to be future-proof
+    for m in (
+        importlib.import_module(f"spack.schema.{f[:-3]}")
+        for f in os.listdir(os.path.dirname(spack.schema.__file__))
+        if f.endswith(".py") and f != "__init__.py"
+    )
+    if hasattr(m, "schema") and len(m.schema.get("properties", {})) == 1
+]
+
+assert SECTION_AND_SCHEMA, "no schemas found"
 
 END_OF_SENTENCE = re.compile(
     r"""
@@ -37,6 +57,32 @@ END_OF_SENTENCE = re.compile(
     re.VERBOSE,
 )
 DOCUTILS_SETTING = {"report_level": 5, "raw_enabled": False, "file_insertion_enabled": False}
+
+
+def _warning(msg: str) -> str:
+    return f"\033[33mwarning:\033[0m {msg}"
+
+
+class Warning:
+    def __init__(self, path: str, line: int, message: str) -> None:
+        self.path = path
+        self.line = line
+        self.message = message
+
+    def __str__(self) -> str:
+        return _warning(f"{self.path}:{self.line}: {self.message}")
+
+
+class CodeBlockWarning(Warning):
+    def __init__(self, path: str, line: int, message: str, diff: str):
+        super().__init__(path, line, f"{message}\n{diff}")
+
+    def __str__(self) -> str:
+        return _warning(f"{self.path}:{self.line}: {self.message}")
+
+
+class ValidationWarning(Warning):
+    pass
 
 
 class SphinxCodeBlock(Directive):
@@ -89,15 +135,25 @@ def _is_node_in_table(node: nodes.Node) -> bool:
     return False
 
 
-def _format_code_blocks(document: nodes.document, path: str) -> None:
+def _validate_schema(data: object) -> None:
+    if not isinstance(data, dict):
+        return
+    for section, schema in SECTION_AND_SCHEMA:
+        if section in data:
+            jsonschema.validate(data, schema)
+
+
+def _format_code_blocks(document: nodes.document, path: str) -> List[Warning]:
     """Try to parse and format Python, YAML, and JSON code blocks. This does *not* update the
-    sources, but merely warns. That's because not all code examples are meant to be valid."""
+    sources, but collects issues for later reporting. Returns a list of warnings."""
+    issues: List[Warning] = []
     for code_block in document.findall(nodes.literal_block):
         language = code_block.attributes.get("language", "")
         if language not in ("python", "yaml", "json"):
             continue
         original = code_block.astext()
         line = code_block.line if code_block.line else 0
+        possible_config_data = None
 
         try:
             if language == "python":
@@ -107,17 +163,22 @@ def _format_code_blocks(document: nodes.document, path: str) -> None:
                 yaml.width = 10000  # do not wrap lines
                 yaml.preserve_quotes = True  # do not force particular quotes
                 buf = io.BytesIO()
-                yaml.dump(yaml.load(original), buf)
+                possible_config_data = yaml.load(original)
+                yaml.dump(possible_config_data, buf)
                 formatted = buf.getvalue().decode("utf-8")
             elif language == "json":
                 formatted = json.dumps(json.loads(original), indent=2)
             else:
                 assert False
         except Exception as e:
-            print(
-                f"{path}:{line}: formatting failed: {e}: {original!r}", flush=True, file=sys.stderr
-            )
+            issues.append(Warning(path, line, f"formatting failed: {e}: {original!r}"))
             continue
+
+        try:
+            _validate_schema(possible_config_data)
+        except jsonschema.ValidationError as e:
+            issues.append(ValidationWarning(path, line, f"schema validation failed: {e.message}"))
+
         if formatted == original:
             continue
         diff = "\n".join(
@@ -130,7 +191,8 @@ def _format_code_blocks(document: nodes.document, path: str) -> None:
             )
         )
         if diff:
-            print(diff, flush=True, file=sys.stderr)
+            issues.append(CodeBlockWarning(path, line, "formatting suggested:", diff))
+    return issues
 
 
 def _format_paragraphs(document: nodes.document, path: str, src_lines: List[str]) -> bool:
@@ -171,7 +233,7 @@ def _format_paragraphs(document: nodes.document, path: str, src_lines: List[str]
     return modified
 
 
-def reformat_rst_file(path: str) -> bool:
+def reformat_rst_file(path: str, warnings: List[Warning]) -> bool:
     """Reformat a reStructuredText file "in-place". Returns True if modified, False otherwise."""
     with open(path, "r", encoding="utf-8") as f:
         src = f.read()
@@ -179,7 +241,7 @@ def reformat_rst_file(path: str) -> bool:
     src_lines = src.splitlines()
     document: nodes.document = publish_doctree(src, settings_overrides=DOCUTILS_SETTING)
 
-    _format_code_blocks(document, path)
+    warnings.extend(_format_code_blocks(document, path))
 
     if not _format_paragraphs(document, path, src_lines):
         return False
@@ -194,10 +256,22 @@ def reformat_rst_file(path: str) -> bool:
 
 def main(*files: str) -> None:
     modified = False
+    warnings: List[Warning] = []
     for f in files:
-        modified |= reformat_rst_file(f)
+        modified |= reformat_rst_file(f, warnings)
+
     if modified:
         subprocess.run(["git", "--no-pager", "diff", "--color=always", "--", *files])
+
+    for warning in sorted(warnings, key=lambda w: isinstance(w, ValidationWarning)):
+        print(warning, flush=True, file=sys.stderr)
+
+    if warnings:
+        print(
+            _warning(f"completed with {len(warnings)} potential issues"),
+            flush=True,
+            file=sys.stderr,
+        )
     sys.exit(1 if modified else 0)
 
 
