@@ -703,8 +703,11 @@ class ConcretizationCache:
         """Removes cache entries with handling for the case where the entry has been
         removed already or there are multiple cache entries in a directory"""
         try:
-            cache_dir.unlink(missing_ok=True)
+            cache_dir.unlink()
             return True
+        except FileNotFoundError:
+            # That's fine, removal is idempotent
+            pass
         except OSError as e:
             # Catch other timing/access related issues
             tty.debug(
