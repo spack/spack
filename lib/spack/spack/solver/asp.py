@@ -20,6 +20,8 @@ import warnings
 from contextlib import contextmanager
 from typing import (
     IO,
+    TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
     Iterator,
@@ -30,6 +32,7 @@ from typing import (
     Tuple,
     Type,
     Union,
+    cast,
 )
 
 import spack.vendor.archspec.cpu
@@ -43,6 +46,7 @@ import spack.detection
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.lang
+import spack.llnl.util.subthread as subthread
 import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs
@@ -89,8 +93,15 @@ from .reuse import ReusableSpecsSelector, SpecFilter
 from .runtimes import RuntimePropertyRecorder, _external_config_with_implicit_externals
 from .versions import DeclaredVersion, Provenance, concretization_version_order
 
-GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
+if TYPE_CHECKING:
+    from types import TracebackType
 
+    from typing_extensions import Self
+
+    from ._pyclingo import Control, SolveHandle, SolveResult
+
+
+GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
 TransformFunction = Callable[[spack.spec.Spec, List[AspFunction]], List[AspFunction]]
 
 
@@ -1033,6 +1044,62 @@ class ErrorHandler:
         raise UnsatisfiableSpecError(msg)
 
 
+class _ClingoSolveTask(subthread.SubthreadTask["SolveResult"]):
+    def __init__(self, handle: "SolveHandle") -> None:
+        self._handle = handle
+
+    def thread_name(self) -> str:
+        return "clingo-solve"
+
+    def poll_for(self, poll_period: float) -> bool:
+        return self._handle.wait(poll_period)
+
+    def block_on(self) -> "SolveResult":
+        return self._handle.get()
+
+    def send_cancel(self) -> None:
+        self._handle.cancel()
+
+    def __enter__(self) -> None:
+        self._handle.__enter__()
+
+    def __exit__(
+        self,
+        exc_ty: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        tb: Optional["TracebackType"],
+    ) -> Optional[bool]:
+        return self._handle.__exit__(exc_ty, exc_val, tb)
+
+
+class _ClingoSolveSpawner(subthread.TaskSpawner["SolveResult"]):
+    @classmethod
+    def create(cls, specs: List[spack.spec.Spec], control: "Control") -> "Self":
+        return cls(specs, control, timeout=subthread.TimeoutConfig.from_config())
+
+    def __init__(
+        self, specs: List[spack.spec.Spec], control: "Control", *, timeout: subthread.TimeoutConfig
+    ) -> None:
+        super().__init__(timeout=timeout)
+        self._specs = specs
+        self._control = control
+
+    def _generate_message(self) -> str:
+        s = ", ".join(spack.llnl.util.lang.elide_list([str(s) for s in self._specs], 4))
+        return f"Spack is taking more than {self._timeout.time_limit} seconds to solve for {s}"
+
+    def generate_timeout_error(self) -> Exception:
+        header = self._generate_message()
+        return UnsatisfiableSpecError(f"{header}, stopping concretization")
+
+    def generate_timeout_warning(self) -> str:
+        header = self._generate_message()
+        return f"{header}, using the best configuration found so far"
+
+    def spawn_task(self, *args: Any, **kwargs: Any) -> _ClingoSolveTask:
+        return _ClingoSolveTask(self._control.solve(*args, **kwargs, async_=True))
+
+
 class PyclingoDriver:
     def __init__(self, cores=True):
         """Driver for the Python clingo interface.
@@ -1143,27 +1210,9 @@ class PyclingoDriver:
             if clingo_cffi():
                 solve_kwargs["on_unsat"] = cores.append
 
+            spawner = _ClingoSolveSpawner.create(specs, cast("Control", self.control))
             timer.start("solve")
-            time_limit = spack.config.CONFIG.get("concretizer:timeout", -1)
-            error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
-            # Spack uses 0 to set no time limit, clingo API uses -1
-            if time_limit == 0:
-                time_limit = -1
-            with self.control.solve(**solve_kwargs, async_=True) as handle:
-                finished = handle.wait(time_limit)
-                if not finished:
-                    specs_str = ", ".join(
-                        spack.llnl.util.lang.elide_list([str(s) for s in specs], 4)
-                    )
-                    header = (
-                        f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
-                    )
-                    if error_on_timeout:
-                        raise UnsatisfiableSpecError(f"{header}, stopping concretization")
-                    warnings.warn(f"{header}, using the best configuration found so far")
-                    handle.cancel()
-
-                solve_result = handle.get()
+            solve_result = spawner(**solve_kwargs)
             timer.stop("solve")
 
             # once done, construct the solve result
