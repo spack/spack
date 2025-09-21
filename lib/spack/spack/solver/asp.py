@@ -1146,11 +1146,16 @@ class PyclingoDriver:
             timer.start("solve")
             time_limit = spack.config.CONFIG.get("concretizer:timeout", -1)
             error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
-            # Spack uses 0 to set no time limit, clingo API uses -1
-            if time_limit == 0:
-                time_limit = -1
             with self.control.solve(**solve_kwargs, async_=True) as handle:
-                finished = handle.wait(time_limit)
+                # We need the loop below to be able to Ctrl-C out of the solve
+                finished, remaining = handle.wait(0), time_limit
+                while not finished:
+                    if time_limit > 0:
+                        remaining -= 1
+                        if remaining < 0:
+                            break
+                    finished = handle.wait(1.0)
+
                 if not finished:
                     specs_str = ", ".join(
                         spack.llnl.util.lang.elide_list([str(s) for s in specs], 4)
