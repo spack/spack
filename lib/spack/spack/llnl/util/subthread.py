@@ -49,22 +49,32 @@ TODO: See if free threading in CPython 3.15 introduces any improved performance 
 """
 
 import abc
+import asyncio
+import concurrent.futures
 import enum
-import errno
-import selectors
-import signal
-import socket
-import threading
 import time
 import warnings
-from contextlib import closing, contextmanager
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Optional, Type, TypeVar, Union
+from collections.abc import AsyncIterator
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Awaitable,
+    ClassVar,
+    Generic,
+    Optional,
+    Protocol,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
+
+import spack.vendor.attrs as attrs
 
 import spack.llnl.util.tty as tty
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
     from types import TracebackType
 
     from typing_extensions import Self
@@ -73,26 +83,62 @@ if TYPE_CHECKING:
 _Result = TypeVar("_Result")
 
 
-@dataclass(frozen=True)
-class _PollConfig:
-    """A nonzero time to wait for between iterations of a ``SubthreadTask``."""
+@attrs.frozen(slots=True, kw_only=True, auto_attribs=True, init=True)
+class TimeoutConfig:
+    """How long to wait for a worker task and whether to accept a best-effort result."""
 
-    period: float
-    limit: Optional[float]
+    time_limit: Optional[float]
+    error_on_timeout: bool
+    poll_period: float
 
-    def __post_init__(self) -> None:
-        assert self.period > 0, self
-        if self.limit is not None:
-            assert self.limit >= self.period, self
+    def __attrs_post_init__(self) -> None:
+        assert self.poll_period > 0, self
+        if self.time_limit is not None:
+            assert self.time_limit > 0, self
+            assert self.poll_period <= self.time_limit
+        if self.error_on_timeout:
+            assert self.time_limit is not None
 
     def _description(self) -> str:
-        polling = f"polling output every {self.period!r} seconds"
-        if self.limit is None:
-            return f"{polling}, without limit"
-        return f"{polling}, until {self.limit!r} seconds total"
+        msg = f"polling output every {self.poll_period!r} seconds"
+        if self.time_limit is None:
+            msg += ", without limit"
+        else:
+            msg += f", until {self.time_limit!r} seconds total"
+        if self.error_on_timeout:
+            msg += ", or raising a timeout error"
+        else:
+            msg += ", then returning the best result"
+        return msg
+
+    #: How long to wait in between printing debug logs.
+    #:
+    #: This must be a floating-point number > 0. If there is a finite timeout limit in
+    #: `TimeoutConfig.time_limit`, this will be clamped to at most that limit (polling just once).
+    POLL_PERIOD: ClassVar[float] = 0.25
 
     @classmethod
-    def create(cls, *, poll_period: float, time_limit: Optional[float]) -> "Self":
+    def create(
+        cls,
+        *,
+        time_limit: Optional[Union[float, int]],
+        error_on_timeout: bool,
+        poll_period: float | None = None,
+    ) -> "Self":
+        """Coerce arguments (e.g. from config) and raise :class:`TypeError` for invalid values."""
+        if time_limit == 0:
+            tty.debug("converting 0 wait to -1")
+            time_limit = -1
+        if time_limit == -1:
+            tty.debug("waiting indefinitely (-1)")
+            time_limit = None
+        if isinstance(time_limit, int):
+            time_limit = float(time_limit)
+        if not (time_limit is None or time_limit > 0):
+            raise TypeError(f"time limit must be nonzero fractional seconds: {time_limit!r}")
+
+        if poll_period is None:
+            poll_period = cls.POLL_PERIOD
         if not (isinstance(poll_period, float) and poll_period > 0):
             raise TypeError(f"poll period must be nonzero fractional seconds: {poll_period!r}")
         if time_limit is not None:
@@ -101,17 +147,211 @@ class _PollConfig:
                 tty.debug(f"clamping poll period {poll_period!r} to match limit {time_limit!r}")
                 poll_period = time_limit
 
-        ret = cls(period=poll_period, limit=time_limit)
+        if error_on_timeout and time_limit is None:
+            raise TypeError(
+                f"time_limit {time_limit!r} must be nonzero fractional seconds "
+                f"if error_on_timeout {error_on_timeout!r} is set"
+            )
+
+        # mypy doesn't like attrs for some reason.
+        ret = cls(  # type: ignore[call-arg]
+            time_limit=time_limit, error_on_timeout=error_on_timeout, poll_period=poll_period
+        )
         tty.debug(ret._description())
         return ret
 
 
+@attrs.define(slots=True, auto_attribs=True)
+class _TaskGeneratorProgressMessage:
+    """A message sent from the coroutine for every regular poll of the background task."""
+    elapsed: float
+
+    def __attr_post_init__(self) -> None:
+        assert self.elapsed >= 0, self
+
+    @classmethod
+    def elapsed_time(cls, elapsed: float) -> "Self":
+        # mypy doesn't like attrs.
+        return cls(elapsed)  # type: ignore[call-arg]
+
+    def __str__(self) -> str:
+        return f"<elapsed: {self.elapsed:_.3f} seconds>"
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(elapsed={self.elapsed!r})"
+
+
+class Timeout(Exception):
+    """Wrap an error produced from overrunning a polling time limit."""
+
+    def __init__(self, elapsed: float, limit: float) -> None:
+        assert elapsed > limit and limit > 0, (elapsed, limit)
+        super().__init__(f"timed out with {elapsed} seconds (> {limit} seconds)")
+        self.elapsed = elapsed
+        self.limit = limit
+
+
+class _TaskGeneratorResultType(enum.Enum):
+    """Tags for the single output result of a background task."""
+    error = enum.auto()
+    success = enum.auto()
+    timeout = enum.auto()
+
+
+@attrs.frozen(slots=True, kw_only=True, auto_attribs=True, init=True)
+class _TaskGeneratorResultMessage(Generic[_Result]):
+    """Classification of all possible end states of the background task."""
+    kind: _TaskGeneratorResultType
+    payload: Optional[Union[BaseException, _Result, "Timeout", Tuple["Timeout", _Result]]]
+
+    @classmethod
+    def error(cls, error: BaseException) -> "Self":
+        return cls(kind=_TaskGeneratorResultType.error, payload=error)  # type: ignore[call-arg]
+
+    @classmethod
+    def success(cls, result: _Result) -> "Self":
+        return cls(kind=_TaskGeneratorResultType.success, payload=result)  # type: ignore[call-arg]
+
+    @classmethod
+    def timeout_best_effort(cls, result: Tuple["Timeout", _Result]) -> "Self":
+        return cls(kind=_TaskGeneratorResultType.timeout, payload=result)  # type: ignore[call-arg]
+
+    @classmethod
+    def timeout_failed(cls, error: "Timeout") -> "Self":
+        return cls(kind=_TaskGeneratorResultType.timeout, payload=error)  # type: ignore[call-arg]
+
+
+_Out = TypeVar("_Out", covariant=True)
+
+
+class _BlockingThunk(Protocol[_Out]):
+    @abc.abstractmethod
+    def __call__(self, *args: Any) -> _Out: ...
+
+
+@attrs.define(slots=True, auto_attribs=True, init=True)
+class ThreadExecutor:
+    """Wrapper for a thread-pool executor.
+
+    This kind of executor is necessary to block on pyclingo's computation within the same process
+    as spack, but they don't make it easy.
+    """
+
+    exe: concurrent.futures.ThreadPoolExecutor
+
+    @classmethod
+    def create(cls, **kwargs: Any) -> "Self":
+        return cls(  # type: ignore[call-arg]
+            concurrent.futures.ThreadPoolExecutor(
+                thread_name_prefix="subthread-executor", **kwargs
+            )
+        )
+
+    def run_blocking(
+        self, loop: asyncio.AbstractEventLoop, thunk: _BlockingThunk[_Result], *args: Any
+    ) -> asyncio.Future[_Result]:
+        return loop.run_in_executor(self.exe, thunk, *args)
+
+
+@attrs.define(slots=True, auto_attribs=True)
+class Looper:
+    """Wrapper for an asyncio event loop."""
+
+    loop: asyncio.AbstractEventLoop
+
+    @classmethod
+    def create(cls, *, debug: bool = False) -> "Self":
+        loop = asyncio.new_event_loop()
+        if debug:
+            tty.debug("set new asyncio loop to debug mode")
+            loop.set_debug(True)
+        return cls(loop)  # type: ignore[call-arg]
+
+
+@attrs.define(slots=True, auto_attribs=True)
+class EventLoop:
+    """Class to orchestrate thread pools and event loops.
+
+    These two have to work together pretty closely to integrate blocking operations into the async
+    model, so this class decouples their interactions together from the act of allocating them.
+    """
+
+    exe: ThreadExecutor
+    looper: Looper
+
+    def _get_loop(self) -> asyncio.AbstractEventLoop:
+        return self.looper.loop
+
+    def _poll_single(self, task: "SubthreadTask[_Result]", poll_period: float) -> Awaitable[bool]:
+        return self.exe.run_blocking(self._get_loop(), task.poll_for, poll_period)
+
+    async def _poll_long_running_blocking(
+        self, start: float, task: "SubthreadTask[_Result]", poll_period: float
+    ) -> AsyncIterator[_TaskGeneratorProgressMessage]:
+        assert poll_period > 0, poll_period
+
+        yield _TaskGeneratorProgressMessage.elapsed_time(0.0)
+
+        while not await self._poll_single(task, poll_period):
+            elapsed = time.monotonic() - start
+            yield _TaskGeneratorProgressMessage.elapsed_time(elapsed)
+
+    async def _handle_progress_updates(
+        self, task: "SubthreadTask[_Result]", timeout: TimeoutConfig
+    ) -> _TaskGeneratorResultMessage[_Result]:
+        start = time.monotonic()
+
+        try:
+            async for msg in self._poll_long_running_blocking(start, task, timeout.poll_period):
+                tty.debug(str(msg))
+                if timeout.time_limit is not None:
+                    if msg.elapsed > timeout.time_limit:
+                        raise Timeout(msg.elapsed, timeout.time_limit)
+            return _TaskGeneratorResultMessage.success(task.block_on())
+        except Timeout as e:
+            if timeout.error_on_timeout:
+                return _TaskGeneratorResultMessage.timeout_failed(e)
+            task.send_cancel()
+            return _TaskGeneratorResultMessage.timeout_best_effort((e, task.block_on()))
+        except BaseException as e:
+            return _TaskGeneratorResultMessage.error(e)
+        finally:
+            task.send_cancel()
+
+        raise AssertionError("should never get here")
+
+    async def _subthread_top_level(
+        self, spawner: "TaskSpawner[_Result]", *args: Any, **kwargs: Any
+    ) -> _Result:
+        with spawner.spawn_task(*args, **kwargs) as task:
+            msg = await self._handle_progress_updates(task, spawner.timeout)
+            if msg.kind == _TaskGeneratorResultType.success:
+                return cast(_Result, msg.payload)
+            if msg.kind == _TaskGeneratorResultType.error:
+                assert isinstance(msg.payload, BaseException), msg
+                raise msg.payload from msg.payload
+            assert msg.kind == _TaskGeneratorResultType.timeout
+            if isinstance(msg.payload, Timeout):
+                # This was a failed timeout, with no best-effort result.
+                exc = spawner.generate_timeout_error(msg.payload)
+                raise exc from exc
+            # This was a best-effort timeout, with a success result.
+            assert isinstance(msg.payload, tuple), msg
+            timeout, result = msg.payload
+            warn_msg = spawner.generate_timeout_warning(timeout)
+            warnings.warn(warn_msg)
+            return cast(_Result, result)
+
+    def execute_subthread_task(
+        self, spawner: "TaskSpawner[_Result]", *args: Any, **kwargs: Any
+    ) -> _Result:
+        """Start the coroutine from `spawner` in a new task, then wait for the result."""
+        coro = self._subthread_top_level(spawner, *args, **kwargs)
+        return self._get_loop().run_until_complete(coro)
+
+
 class SubthreadTask(abc.ABC, Generic[_Result]):
     """Work to perform in a subthread."""
-
-    @abc.abstractmethod
-    def thread_name(self) -> str:
-        """How to name the thread spawned to perform this work."""
 
     @abc.abstractmethod
     def poll_for(self, poll_period: float) -> bool:
@@ -142,7 +382,7 @@ class SubthreadTask(abc.ABC, Generic[_Result]):
         """
 
     @abc.abstractmethod
-    def __enter__(self) -> None:
+    def __enter__(self) -> "Self":
         """Allocate any memory or begin any computation.
 
         NB:
@@ -163,360 +403,6 @@ class SubthreadTask(abc.ABC, Generic[_Result]):
         """
 
 
-class _ResultFlag(metaclass=abc.ABCMeta):
-    """Handle to an asynchronous worker from the main thread."""
-
-    @abc.abstractmethod
-    def has_error(self) -> bool:
-        """Whether the worker process has an error for the main thread to read."""
-
-    @abc.abstractmethod
-    def has_result(self) -> bool:
-        """Whether the worker process has a successful result for the main thread to read!"""
-
-
-class _CancellableResult(_ResultFlag, Generic[_Result]):
-    """Worker handle with a type parameter which provides access to the result objects."""
-
-    @abc.abstractmethod
-    def send_cancel(self) -> None:
-        """Interrupt any ongoing computations and set any asynchronous quit flags.
-
-        This will not induce an "error" result, but instead return a best-effort result from the
-        work performed.
-
-        See `SubthreadTask.send_cancel()`.
-        """
-
-    @abc.abstractmethod
-    def require_error(self) -> Exception:
-        """Extract an error result.
-
-        NB:
-        - This method will only be called after `self.has_error()` has returned True.
-        """
-
-    @abc.abstractmethod
-    def require_result(self) -> _Result:
-        """Extract a success result.
-
-        NB:
-        - This method will only be called after `self.has_result()` has returned True.
-        """
-
-
-class _ThreadHandle(_CancellableResult[_Result]):
-    """Worker handle that exposes a contextmanager interface to send results to the main thread."""
-
-    @abc.abstractmethod
-    def send_exit_without_feedback(self) -> None:
-        """Exit asynchronously without blocking at all.
-
-        This should call `self.send_cancel()`, but additionally set any extra flags to avoid
-        writing to any pipes or checking any outputs, or calling any destructors.
-
-        This method exists as an analogy to `SystemExit` for quick destruction, but avoids exiting
-        the entire process to allow for library usage.
-        """
-
-    @abc.abstractmethod
-    def __enter__(self) -> "Self":
-        """Ensure the thread work has started."""
-
-    @abc.abstractmethod
-    def __exit__(
-        self,
-        exc_ty: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        _tb: Optional["TracebackType"],
-    ) -> Optional[bool]:
-        """Translate results from the main thread into the worker thread."""
-
-
-class _TimeoutError(Exception):
-    """Wrap an error produced from overrunning a polling time limit.
-
-    This is used to wrap the result of `TaskSpawner.generate_timeout_error()`, so that the
-    asynchronous worker process can manage the timeout logic. This is differentiated from
-    unexpected errors from the background and/or main thread, since a timeout may generate
-    a fallback or best-effort (but still successful) result.
-    """
-
-    def __init__(self, inner: Exception) -> None:
-        super().__init__(f"timeout: {inner}")
-        self.inner = inner
-
-
-class _Subthread(threading.Thread, _ThreadHandle[_Result]):
-    """Thread class to perform some very complex polling and cleanup logic.
-
-    This thread should never be joined, but should instead use its `__enter__()`/`__exit__()`
-    implementation to translate between calling and worker thread state changes.
-    """
-
-    def __init__(
-        self,
-        *,
-        task: SubthreadTask[_Result],
-        signal_write: socket.socket,
-        success_write: socket.socket,
-        stop_iteration_flag: threading.Event,
-        poll: _PollConfig,
-    ) -> None:
-        threading.Thread.__init__(self, name=task.thread_name())
-        self._task = task
-        self._signal_write = signal_write
-        self._success_write = success_write
-
-        self._stop_iteration_flag = stop_iteration_flag
-        self._exit_without_feedback: bool = False
-
-        self._poll = poll
-
-        self._error: Optional[Exception] = None
-        self._result: Optional[_Result] = None
-
-    def _send_error_signal(self) -> None:
-        # This value isn't read, it's just a nonzero amount of bytes to trigger the read.
-        try:
-            self._signal_write.sendall(b"placeholder")
-        except Exception:
-            # Can't do anything here if our error channel is closed.
-            pass
-
-    @contextmanager
-    def _handle_thread_error(self) -> "Iterator[None]":
-        with self._task:
-            try:
-                yield
-            except Exception as e:
-                if self._exit_without_feedback:
-                    pass
-                elif isinstance(e, OSError) and e.errno == errno.EBADF:
-                    # If the receiving end is closed, we want to exit immediately.
-                    pass
-                else:
-                    self._error = e
-                    self._send_error_signal()
-
-    def _send_notification(self, msg: bytearray) -> None:
-        assert b"\0" not in msg, msg
-        msg += b"\0"
-        self._success_write.sendall(msg)
-
-    def _send_elapsed_notification(self, elapsed: float) -> None:
-        msg = bytearray(b"elapsed:")
-        # TODO: some loss of precision when stringifying numerics. Not worth worrying about.
-        msg += f"{elapsed:_.5f}".encode("utf-8")
-        self._send_notification(msg)
-
-    def _send_timeout_notification(self) -> None:
-        self._send_notification(bytearray(b"timeout"))
-
-    def _send_finished_notification(self) -> None:
-        self._send_notification(bytearray(b"finished"))
-
-    def run(self) -> None:
-        """Repeatedly poll the result of the worker task in a background thread context."""
-        with self._handle_thread_error():
-            start = time.monotonic()
-
-            while not self._stop_iteration_flag.is_set():
-                finished = self._task.poll_for(self._poll.period)
-                if finished:
-                    break
-                elapsed = time.monotonic() - start
-                self._send_elapsed_notification(elapsed)
-                if self._poll.limit is None:
-                    continue
-                assert self._poll.limit is not None
-                if elapsed > self._poll.limit:
-                    self._send_timeout_notification()
-                    break
-            if not self._exit_without_feedback:
-                self._result = self._task.block_on()
-                self._send_finished_notification()
-
-    def send_cancel(self) -> None:
-        # (1) Ensure no more polling will occur.
-        self._stop_iteration_flag.set()
-        # (2) Interrupt any poll occurring at this very moment.
-        self._task.send_cancel()
-
-    def send_exit_without_feedback(self) -> None:
-        # (3) Avoid sending any further success or error notifications.
-        self._exit_without_feedback = True
-        self.send_cancel()
-
-    def has_error(self) -> bool:
-        return self._error is not None
-
-    def require_error(self) -> Exception:
-        assert self._error is not None
-        return self._error
-
-    def has_result(self) -> bool:
-        return self._result is not None
-
-    def require_result(self) -> _Result:
-        assert self._result is not None
-        return self._result
-
-    def __enter__(self) -> "Self":
-        """Ensure the thread work has started."""
-        self.start()
-        return self
-
-    def __exit__(
-        self,
-        exc_ty: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        _tb: Optional["TracebackType"],
-    ) -> Optional[bool]:
-        """Translate results from the main thread into the worker thread."""
-        # (1) If we're returning without error, then this thread must already have completed with
-        #     a success result!
-        if exc_ty is None:
-            return None
-        # (2) If we're reporting a timeout error, that must have come after this thread essentially
-        #     completed all of its work.
-        #     We don't have any checks to bypass, so just unwrap the inner error from the
-        #     main thread.
-        if issubclass(exc_ty, _TimeoutError):
-            assert isinstance(exc_val, _TimeoutError), exc_val
-            raise exc_val.inner from exc_val
-        # (3) Here, we're handling a non-timeout exception from the main thread (which typically
-        #     means a KeyboardInterrupt). In this case, we want to immediately return control to
-        #     the user and do not care whatsoever about the results from this worker thread.
-        #
-        #     Unfortunately, our worker thread has worked very hard to get where it is, and has
-        #     laid a veritable obstacle course for us to jump through to avoid blocking further.
-        #
-        #     Typically, blocking such as SubthreadTask.__exit__() would occur off the
-        #     main thread, and the cancellation from self.send_cancel() is still intended to gather
-        #     the best-effort result, in the case of `config:concretizer:error_on_timeout: false`.
-        #
-        #     TODO: consider simpler ways to achieve the early-exit control flow in
-        #           self._handle_thread_error().
-        self.send_exit_without_feedback()
-        # (4) The exception in the main thread continues to propagate up the call stack as this
-        #     worker makes an asynchronous french exit.
-        return False
-
-
-class _MessageSplitter:
-    """Statefully concatenate byte chunks and split across a separator byte.
-
-    While socket buffering handles this by default, we want to precisely interleave any success or
-    error results in `TaskSpawner.__call__()`. This allows reading any error results immediately
-    (avoiding any user-visible delays) while maintaining sequential consistency of buffer contents
-    in a multithreaded environment.
-    """
-
-    def __init__(self, *, separator: bytes) -> None:
-        assert len(separator) == 1, separator
-        self._separator = separator
-        self._read_buf = bytearray()
-
-    def process_data(self, data: bytes) -> "Iterator[str]":
-        """Add the new chunk of data to the end, then split the result by separator.
-
-        Any leftover data is retained to start off the next chunk.
-        """
-        last_null = data.rfind(self._separator)
-        if last_null == -1:
-            self._read_buf += data
-            return
-
-        first_null = data.find(self._separator)
-        assert first_null >= 0, first_null
-        assert first_null <= last_null, data
-        self._read_buf += data[:first_null]
-
-        yield self._read_buf.decode("utf-8")
-
-        self._read_buf.clear()
-
-        if first_null < last_null:
-            for msg in data[first_null + 1 : last_null].split(self._separator):
-                yield msg.decode()
-
-        self._read_buf += data[last_null + 1 :]
-
-
-@dataclass(frozen=True)
-class TimeoutConfig:
-    """How long to wait for a worker task and whether to accept a best-effort result."""
-
-    time_limit: Optional[float]
-    error_on_timeout: bool
-
-    def __post_init__(self) -> None:
-        if self.time_limit is not None:
-            assert self.time_limit > 0, self
-
-    @classmethod
-    def create(cls, *, time_limit: Optional[Union[float, int]], error_on_timeout: bool) -> "Self":
-        if time_limit == 0:
-            tty.debug("converting 0 wait to -1")
-            time_limit = -1
-        if time_limit == -1:
-            tty.debug("waiting indefinitely (-1)")
-            time_limit = None
-        if isinstance(time_limit, int):
-            time_limit = float(time_limit)
-        if not (time_limit is None or time_limit > 0):
-            raise TypeError(f"time limit must be nonzero fractional seconds: {time_limit!r}")
-        return cls(time_limit=time_limit, error_on_timeout=error_on_timeout)
-
-    @classmethod
-    def from_config(cls) -> "Self":
-        import spack.config
-
-        return cls(
-            time_limit=float(spack.config.CONFIG.get("concretizer:timeout", 0)),
-            error_on_timeout=bool(spack.config.CONFIG.get("concretizer:error_on_timeout", True)),
-        )
-
-
-class _MessageType(enum.Enum):
-    """Kinds of messages which can be received asynchronously from a worker thread."""
-
-    interrupt = enum.auto()
-    error = enum.auto()
-    elapsed = enum.auto()
-    timeout = enum.auto()
-    finished = enum.auto()
-
-
-@dataclass(frozen=True)
-class _TaskMessage:
-    """Tagged union of message types from a worker thread."""
-
-    kind: _MessageType
-    payload: Optional[Union[_TimeoutError, float, str]]
-
-    @classmethod
-    def interrupt(cls) -> "Self":
-        return cls(kind=_MessageType.interrupt, payload=None)
-
-    @classmethod
-    def error(cls) -> "Self":
-        return cls(kind=_MessageType.error, payload=None)
-
-    @classmethod
-    def elapsed(cls, elapsed: float) -> "Self":
-        return cls(kind=_MessageType.elapsed, payload=elapsed)
-
-    @classmethod
-    def timeout(cls, payload: Union[_TimeoutError, str]) -> "Self":
-        return cls(kind=_MessageType.timeout, payload=payload)
-
-    @classmethod
-    def finished(cls) -> "Self":
-        return cls(kind=_MessageType.finished, payload=None)
-
-
 class TaskSpawner(abc.ABC, Generic[_Result]):
     """Unwieldy wrapper for spawning a background thread.
 
@@ -526,37 +412,11 @@ class TaskSpawner(abc.ABC, Generic[_Result]):
     main thread progresses with the in-memory result.
     """
 
-    #: How long to wait in between printing debug logs.
-    #:
-    #: This must be a floating-point number > 0. If there is a finite timeout limit in
-    #: `TimeoutConfig.time_limit`, this will be clamped to at most that limit (polling just once).
-    #:
-    #: This class uses :func:`signal.set_wakeup_fd()`, so this shouldn't affect the frequency of
-    #: checking for `KeyboardInterrupt`.
-    POLL_PERIOD: ClassVar[float] = 0.25
-    #: How many bytes should be read from a non-blocking socket per message.
-    #:
-    #: This value must be an integer > 0.
-    #:
-    #: This precise value shouldn't really matter because socket messages are very small, and most
-    #: data is instead sent in-memory with the GIL held.
-    READ_LEN: ClassVar[int] = 1024
-
-    def __init__(self, timeout: Optional[TimeoutConfig] = None) -> None:
-        self._timeout = timeout or TimeoutConfig.from_config()
-
-        self._was_interrupted: Optional[bool] = None
-        self._signal_read: Optional[socket.socket] = None
-        self._signal_write: Optional[socket.socket] = None
-        self._success_read: Optional[socket.socket] = None
-        self._success_write: Optional[socket.socket] = None
-
-        assert (
-            isinstance(self.__class__.READ_LEN, int) and self.__class__.READ_LEN > 0
-        ), self.__class__
+    def __init__(self, timeout: TimeoutConfig) -> None:
+        self.timeout = timeout
 
     @abc.abstractmethod
-    def generate_timeout_error(self) -> Exception:
+    def generate_timeout_error(self, timeout_result: Timeout) -> Exception:
         """Hook method called to generate an error upon polling past the time limit.
 
         The return value of this method will be raised from within `self.__call__()`, which will
@@ -564,7 +424,7 @@ class TaskSpawner(abc.ABC, Generic[_Result]):
         """
 
     @abc.abstractmethod
-    def generate_timeout_warning(self) -> str:
+    def generate_timeout_warning(self, timeout_result: Timeout) -> str:
         """Hook method called to generate a warning message upon polling past the time limit.
 
         This will result in calling :func:`SubthreadTask.block_on()` in a background thread to
@@ -580,183 +440,6 @@ class TaskSpawner(abc.ABC, Generic[_Result]):
         calling thread.
         """
 
-    @contextmanager
-    def _sigint_handler(self) -> "Iterator[None]":
-        """Generate a pair of sockets which are used to stagger ^C/SIGINT inputs.
-
-        This approach is adapted from ``pdb.py`` in the CPython stdlib, and should work equally
-        on Windows:
-        https://github.com/python/cpython/blob/20d5494c88985beb925b557ec29937b05e54779c/Lib/pdb.py#L3171-L3211
-        """
-        assert self._was_interrupted is None, self._was_interrupted
-        assert self._signal_read is None, self._signal_read
-        assert self._signal_write is None, self._signal_write
-
-        def handler(sig, frame):
-            self._was_interrupted = True
-            raise KeyboardInterrupt
-
-        sentinel = object()
-        old_handler: Any = sentinel
-        old_wakeup_fd: Any = sentinel
-
-        self._was_interrupted = False
-        self._signal_read, self._signal_write = socket.socketpair()
-        with closing(self._signal_read), closing(self._signal_write):
-            self._signal_read.setblocking(False)
-            self._signal_write.setblocking(False)
-            try:
-                old_handler = signal.signal(signal.SIGINT, handler)
-                try:
-                    old_wakeup_fd = signal.set_wakeup_fd(
-                        self._signal_write.fileno(), warn_on_full_buffer=False
-                    )
-                    yield
-                finally:
-                    # Restore the old wakeup fd if we installed a new one.
-                    if old_wakeup_fd is not sentinel:
-                        signal.set_wakeup_fd(old_wakeup_fd)
-            finally:
-                self._signal_read = self._signal_write = None
-                # Restore the old handler if we installed a new one.
-                if old_handler is not sentinel:
-                    signal.signal(signal.SIGINT, old_handler)
-
-    @contextmanager
-    def _success_outputs(self) -> "Iterator[None]":
-        """Set up a pair of sockets used to write progress and result notifications."""
-        assert self._success_read is None, self._success_read
-        assert self._success_write is None, self._success_write
-
-        self._success_read, self._success_write = socket.socketpair()
-        with closing(self._success_read), closing(self._success_write):
-            self._success_read.setblocking(False)
-            self._success_write.setblocking(False)
-            try:
-                yield
-            finally:
-                self._success_read = self._success_write = None
-
-    @contextmanager
-    def _selector(self) -> "Iterator[selectors.DefaultSelector]":
-        """Convert the two read sockets into a selector which serializes their chunks."""
-        assert self._signal_read is not None
-        assert self._success_read is not None
-
-        # Wait for either a SIGINT or a result from the handle.
-        selector = selectors.DefaultSelector()
-        selector.register(self._signal_read, selectors.EVENT_READ)
-        selector.register(self._success_read, selectors.EVENT_READ)
-
-        with selector:
-            yield selector
-
-    @contextmanager
-    def _thread(self, *args: Any, **kwargs: Any) -> "Iterator[_Subthread[_Result]]":
-        """Create and enter the context which serializes calling and background thread events."""
-        assert self._signal_write is not None
-        assert self._success_write is not None
-
-        with _Subthread(
-            task=self.spawn_task(*args, **kwargs),
-            signal_write=self._signal_write,
-            success_write=self._success_write,
-            stop_iteration_flag=threading.Event(),
-            poll=_PollConfig.create(
-                poll_period=self.__class__.POLL_PERIOD, time_limit=self._timeout.time_limit
-            ),
-        ) as thread:
-            yield thread
-
-    def _iter_messages(
-        self, selector: selectors.DefaultSelector, flag: _ResultFlag
-    ) -> "Iterator[_TaskMessage]":
-        """Serialize the two input streams into discrete messages in the calling thread.
-
-        Note that this stream of messages does not close any sockets or cancel background work.
-        This means that (like pdb in the stdlib) exceptions can be caught and handled before
-        allowing them to propagate to the :func:`_Subthread.__exit__()` omnibus handler.
-        """
-        assert self._was_interrupted is not None
-
-        # Check for pending unhandled SIGINT.
-        if self._was_interrupted:
-            self._was_interrupted = False
-            yield _TaskMessage.interrupt()
-
-        # Wait for either a SIGINT or a result from the handle.
-        read_buf = _MessageSplitter(separator=b"\0")
-        while not flag.has_result():
-            for key, _ in selector.select():
-                if key.fileobj is self._signal_read:
-                    # NB: Arbitrary nonzero amount.
-                    self._signal_read.recv(self.__class__.READ_LEN)
-                    # See if we've already processed this interrupt.
-                    if self._was_interrupted:
-                        self._was_interrupted = False
-                        yield _TaskMessage.interrupt()
-                    if flag.has_error():
-                        yield _TaskMessage.error()
-                else:
-                    assert key.fileobj is self._success_read, key
-                    data = self._success_read.recv(self.__class__.READ_LEN)
-                    assert len(data) > 0
-                    for msg in read_buf.process_data(data):
-                        if msg == "finished":
-                            yield _TaskMessage.finished()
-                        elif msg == "timeout":
-                            if self._timeout.error_on_timeout:
-                                yield _TaskMessage.timeout(
-                                    _TimeoutError(self.generate_timeout_error())
-                                )
-                            else:
-                                yield _TaskMessage.timeout(self.generate_timeout_warning())
-                        else:
-                            # TODO: This loses precision because we use null bytes as a delimiter
-                            #       over a real message encoding.
-                            assert msg.startswith("elapsed:"), msg
-                            elapsed = float(msg[len("elapsed:") :])
-                            yield _TaskMessage.elapsed(elapsed)
-        yield _TaskMessage.finished()
-
-    def _process_messages(
-        self, selector: selectors.DefaultSelector, flag: _CancellableResult[_Result]
-    ) -> _Result:
-        """Convert the stream of messages into logging, exceptions, and a return value."""
-        for msg in self._iter_messages(selector, flag):
-            if msg.kind == _MessageType.interrupt:
-                assert msg.payload is None, msg
-                tty.debug(f"interrupt: {msg}")
-                raise KeyboardInterrupt
-            elif msg.kind == _MessageType.error:
-                assert msg.payload is None, msg
-                tty.debug(f"err: {msg}")
-                raise flag.require_error()
-            elif msg.kind == _MessageType.elapsed:
-                assert isinstance(msg.payload, float), msg
-                tty.debug(f"elapsed time: {msg.payload}")
-            elif msg.kind == _MessageType.timeout:
-                assert isinstance(msg.payload, (_TimeoutError, str)), msg
-                tty.debug(f"timeout: {msg}")
-                flag.send_cancel()
-                if isinstance(msg.payload, _TimeoutError):
-                    raise msg.payload
-                warnings.warn(msg.payload)
-            else:
-                assert msg.kind == _MessageType.finished, msg
-                assert msg.payload is None, msg
-                tty.debug(f"success: {msg}")
-                return flag.require_result()
-        raise AssertionError("should never get here")
-
-    def __call__(self, *args: Any, **kwargs: Any) -> _Result:
-        """Invoke the background process, then move it to a background thread.
-
-        The background thread will do its best to delay any cleanup work until after returning
-        a value to this method.
-        """
-        with self._sigint_handler(), self._success_outputs():
-            with self._thread(*args, **kwargs) as thread:
-                with self._selector() as selector:
-                    tty.debug(f"waiting on subthread: {thread.name!r}")
-                    return self._process_messages(selector, thread)
+    def __call__(self, loop: EventLoop, *args: Any, **kwargs: Any) -> _Result:
+        """Invoke the background process within an event loop."""
+        return loop.execute_subthread_task(self, *args, **kwargs)

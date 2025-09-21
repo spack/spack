@@ -1048,9 +1048,6 @@ class _ClingoSolveTask(subthread.SubthreadTask["SolveResult"]):
     def __init__(self, handle: "SolveHandle") -> None:
         self._handle = handle
 
-    def thread_name(self) -> str:
-        return "clingo-solve"
-
     def poll_for(self, poll_period: float) -> bool:
         return self._handle.wait(poll_period)
 
@@ -1060,8 +1057,9 @@ class _ClingoSolveTask(subthread.SubthreadTask["SolveResult"]):
     def send_cancel(self) -> None:
         self._handle.cancel()
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> "Self":
         self._handle.__enter__()
+        return self
 
     def __exit__(
         self,
@@ -1073,31 +1071,45 @@ class _ClingoSolveTask(subthread.SubthreadTask["SolveResult"]):
 
 
 class _ClingoSolveSpawner(subthread.TaskSpawner["SolveResult"]):
-    @classmethod
-    def create(cls, specs: List[spack.spec.Spec], control: "Control") -> "Self":
-        return cls(specs, control, timeout=subthread.TimeoutConfig.from_config())
-
-    def __init__(
-        self, specs: List[spack.spec.Spec], control: "Control", *, timeout: subthread.TimeoutConfig
-    ) -> None:
-        super().__init__(timeout=timeout)
+    def __init__(self, specs: List[spack.spec.Spec], control: "Control", *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self._specs = specs
         self._control = control
 
-    def _generate_message(self) -> str:
+    def _generate_message(self, timeout_result: subthread.Timeout) -> str:
         s = ", ".join(spack.llnl.util.lang.elide_list([str(s) for s in self._specs], 4))
-        return f"Spack is taking more than {self._timeout.time_limit} seconds to solve for {s}"
+        return (
+            f"Spack is taking more than {self.timeout.time_limit:_.3f} seconds to solve for {s} "
+            f"(elapsed: {timeout_result.elapsed:_.3f} seconds)"
+        )
 
-    def generate_timeout_error(self) -> Exception:
-        header = self._generate_message()
+    def generate_timeout_error(self, timeout_result: subthread.Timeout) -> Exception:
+        header = self._generate_message(timeout_result)
         return UnsatisfiableSpecError(f"{header}, stopping concretization")
 
-    def generate_timeout_warning(self) -> str:
-        header = self._generate_message()
+    def generate_timeout_warning(self, timeout_result: subthread.Timeout) -> str:
+        header = self._generate_message(timeout_result)
         return f"{header}, using the best configuration found so far"
 
     def spawn_task(self, *args: Any, **kwargs: Any) -> _ClingoSolveTask:
         return _ClingoSolveTask(self._control.solve(*args, **kwargs, async_=True))
+
+
+def _thread_executor() -> subthread.ThreadExecutor:
+    max_workers = 1
+    tty.debug(f"creating thread pool executor with {max_workers} workers")
+    return subthread.ThreadExecutor.create(max_workers=max_workers)
+
+
+THREAD_EXECUTOR: subthread.ThreadExecutor = spack.llnl.util.lang.Singleton(_thread_executor)  # type: ignore[assignment] # noqa: E501
+
+
+def _looper() -> subthread.Looper:
+    tty.debug("creating event loop")
+    return subthread.Looper.create(debug=bool(spack.config.get("config:debug")))
+
+
+LOOPER: subthread.Looper = spack.llnl.util.lang.Singleton(_looper)  # type: ignore[assignment]
 
 
 class PyclingoDriver:
@@ -1111,6 +1123,15 @@ class PyclingoDriver:
         self.cores = cores
         # This attribute will be reset at each call to solve
         self.control = None
+        self.event_loop = subthread.EventLoop(THREAD_EXECUTOR, LOOPER)
+        self.timeout = self.__class__.timeout_from_config()
+
+    @staticmethod
+    def timeout_from_config() -> subthread.TimeoutConfig:
+        return subthread.TimeoutConfig.create(
+            time_limit=float(spack.config.CONFIG.get("concretizer:timeout", 0)),
+            error_on_timeout=bool(spack.config.CONFIG.get("concretizer:error_on_timeout", True)),
+        )
 
     def solve(self, setup, specs, reuse=None, output=None, control=None, allow_deprecated=False):
         """Set up the input and solve for dependencies of ``specs``.
@@ -1210,9 +1231,11 @@ class PyclingoDriver:
             if clingo_cffi():
                 solve_kwargs["on_unsat"] = cores.append
 
-            spawner = _ClingoSolveSpawner.create(specs, cast("Control", self.control))
+            spawner = _ClingoSolveSpawner(
+                specs, cast("Control", self.control), timeout=self.timeout
+            )
             timer.start("solve")
-            solve_result = spawner(**solve_kwargs)
+            solve_result = spawner(self.event_loop, **solve_kwargs)
             timer.stop("solve")
 
             # once done, construct the solve result
