@@ -1148,15 +1148,17 @@ def test_find_max_depth_relative(dir_structure_with_things_to_find):
         assert set(fs.find(".", "file_two", max_depth=2)) == {locations["file_two"]}
 
 
-@pytest.mark.parametrize("recursive,max_depth", [(False, -1), (False, 1)])
+@pytest.mark.parametrize("recursive,max_depth", [(False, 0), (False, 1)])
 def test_max_depth_and_recursive_errors(tmp_path: pathlib.Path, recursive, max_depth):
     root = str(tmp_path)
-    error_str = "cannot be set if recursive is False"
-    with pytest.raises(ValueError, match=error_str):
-        fs.find(root, ["some_file"], recursive=recursive, max_depth=max_depth)
+    with pytest.raises(ValueError, match="cannot be set if recursive is False"):
+        fs.find(root, ["*"], recursive=recursive, max_depth=max_depth)
 
-    with pytest.raises(ValueError, match=error_str):
-        fs.find_libraries(["some_lib"], root, recursive=recursive, max_depth=max_depth)
+    with pytest.raises(ValueError, match="cannot be set if strategy is 'flat'"):
+        fs.find_libraries(["*"], root, recursive=recursive, max_depth=max_depth)
+
+    with pytest.raises(ValueError, match="cannot be set if strategy is 'flat'"):
+        fs.find_headers(["*"], root, recursive=recursive, max_depth=max_depth)
 
 
 @pytest.fixture(params=[True, False])

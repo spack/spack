@@ -1773,8 +1773,8 @@ def find(
         raise TypeError(f"'files' arg must be str or a sequence of str, not '{type(files)}']")
 
     # If recursive is false, max_depth can only be None or 0
-    if max_depth and not recursive:
-        raise ValueError(f"max_depth ({max_depth}) cannot be set if recursive is False")
+    if max_depth is not None and not recursive:
+        raise ValueError("max_depth cannot be set if recursive is False")
 
     tty.debug(f"Find (max depth = {max_depth}): {root} {files}")
     if not recursive:
@@ -2184,8 +2184,8 @@ def find_headers(
     elif recursive is False:
         strategy = "flat"
 
-    if strategy == "flat" and max_depth is not None:
-        raise ValueError(f"max_depth ({max_depth}) cannot be set if strategy is 'flat'")
+    if max_depth is not None and strategy == "flat":
+        raise ValueError("max_depth cannot be set if strategy is 'flat'")
 
     # Construct the right suffix for the headers
     suffixes = [
@@ -2449,8 +2449,8 @@ def find_libraries(
     elif recursive is False:
         strategy = "flat"
 
-    if strategy == "flat" and max_depth is not None:
-        raise ValueError(f"max_depth ({max_depth}) cannot be set if strategy is 'flat'")
+    if max_depth is not None and strategy == "flat":
+        raise ValueError("max_depth cannot be set if strategy is 'flat'")
 
     if sys.platform == "win32":
         static_ext = "lib"
