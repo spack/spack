@@ -495,6 +495,16 @@ class TestConcretize:
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one(f"dt-diamond%clang ^/{lefthash}")
 
+    def test_disable_mixing_cfg_error(self):
+        # You can only set "allow_compiler_mixing" for individual
+        # packages, not the "all" pseudo package
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            with pytest.raises(spack.config.ConfigFormatError):
+                with spack.config.override(
+                    "packages", {"all": {"allow_compiler_mixing": True}}
+                ):
+                    pass
+
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")
         for x in spec.traverse(deptype=("link", "run")):

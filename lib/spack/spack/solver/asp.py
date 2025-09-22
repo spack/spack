@@ -3140,6 +3140,8 @@ class SpackSolverSetup:
 
         for pkg_name, d in spack.config.get("packages").items():
             if pkg_name == "all":
+                # Schema prohibits allow_compiler_mixing on all, so
+                # it's not relevant in this block
                 continue
             allow_mixing = d.get("allow_compiler_mixing", False)
             if allow_mixing:
