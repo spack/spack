@@ -5,17 +5,12 @@
 import contextlib
 import io
 import os
-import struct
+import shutil
 import sys
 import textwrap
 import traceback
 from datetime import datetime
-from sys import platform as _platform
-from typing import Any, NoReturn, Tuple
-
-if _platform != "win32":
-    import fcntl
-    import termios
+from typing import Any, NoReturn
 
 from .color import cescape, clen, cprint, cwrite
 
@@ -296,7 +291,7 @@ def hline(label=None, **kwargs):
             "'%s' is an invalid keyword argument for this function." % next(kwargs.iterkeys())
         )
 
-    rows, cols = terminal_size()
+    cols = shutil.get_terminal_size().columns
     if not cols:
         cols = max_width
     else:
@@ -313,45 +308,3 @@ def hline(label=None, **kwargs):
     out.write(suffix)
 
     print(out.getvalue())
-
-
-def terminal_size() -> Tuple[int, int]:
-    """Gets the dimensions of the console: (rows, cols)."""
-
-    def get_env_fallback() -> Tuple[int, int]:
-        """Get terminal size from environment variables with defaults."""
-        rows = int(os.environ.get("LINES", 25))
-        cols = int(os.environ.get("COLUMNS", 80))
-        return rows, cols
-
-    def is_valid_size(rows: int, cols: int) -> bool:
-        """Check if terminal dimensions are valid (positive integers)."""
-        return rows > 0 and cols > 0
-
-    # Try dynamic detection on Unix-like systems
-    if _platform != "win32":
-
-        def ioctl_gwinsz(fd):
-            try:
-                rc = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
-                return rc if is_valid_size(rc[0], rc[1]) else None
-            except (OSError, ValueError):
-                return None
-
-        # Try standard file descriptors first
-        rc = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
-
-        # If that fails, try opening the controlling terminal
-        if not rc:
-            try:
-                with open(os.ctermid(), "rb") as f:
-                    rc = ioctl_gwinsz(f.fileno())
-            except (OSError, ValueError):
-                pass
-
-        # Return dynamic size if valid, otherwise fall back to environment
-        if rc:
-            return rc
-
-    # Fallback to environment variables (Windows or failed Unix detection)
-    return get_env_fallback()
