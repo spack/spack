@@ -1598,7 +1598,7 @@ unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
 % language if mixing is disabled
 error(100, "Compiler mixing is disabled") :-
     unification_set_compiler("root", _, _, Z),
-    #count { X,Y : unification_set_compiler("root", X, Y, Z) } > 1.
+    #count { CompilerName,CompilerVersion : unification_set_compiler("root", CompilerName, CompilerVersion, Language) } > 1.
 
 %-----------------------------------------------------------------------------
 % Runtimes
