@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 from datetime import date
+from pathlib import Path, PurePath
 from typing import Optional
 
 import spack.llnl.util.tty as tty

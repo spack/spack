@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import errno
+import errno  # noqa: I001
 import getpass
 import hashlib
 import io
@@ -10,26 +10,8 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, Generator, Iterable, List, Optional, Set, Union
 from pathlib import Path
-from typing import Callable, Dict, Generator, Iterable, List, Optional, Set
-
-import llnl.string
-import llnl.util.lang
-import llnl.util.symlink
-import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    can_access,
-    get_owner_uid,
-    getuid,
-    install,
-    install_tree,
-    mkdirp,
-    partition_path,
-    remove_linked_tree,
-)
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import colorize
+from typing import Callable, Dict, Generator, Iterable, List, Optional, Set, Union
 
 import spack.caches
 import spack.config
@@ -82,7 +64,7 @@ def compute_stage_name(spec):
     return spec.format_path(format_string=stage_name_structure)
 
 
-def create_stage_root(path: str) -> None:
+def create_stage_root(path: Path) -> None:
     """Create the stage root directory and ensure appropriate access perms."""
     path = concrete_path(path)
     assert path.is_absolute() and len(fs_path(path).strip()) > 1

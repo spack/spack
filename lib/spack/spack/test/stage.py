@@ -11,7 +11,6 @@ import pathlib
 import shutil
 import stat
 import sys
-from pathlib import Path
 
 import pytest
 
@@ -256,7 +255,7 @@ def mock_stage_archive(tmp_build_stage_dir):
         )
         return Archive(
             url=archive_url,
-            tmpdir=tmp_build_dir,
+            tmp_path=tmp_build_dir,
             stage_path=test_stage_path,
             archive_dir=archive_dir,
         )
@@ -658,42 +657,38 @@ class TestStage:
     @pytest.mark.skipif(getuid() == 0, reason="user is root")
     def test_first_accessible_path(self, tmp_path: pathlib.Path):
         """Test _first_accessible_path names."""
-        spack_dir = tmp_path / "paths"
-        name = str(spack_dir)
-        files = [os.path.join(os.path.sep, "no", "such", "path"), name]
+        spack_path = tmp_path / "paths"
+        files = [concrete_path(os.path.sep, "no", "such", "path"), spack_path]
 
         # Ensure the tmp_path path is returned since the user should have access
-        path = spack.stage._first_accessible_path(files)
-        assert path == name
-        assert os.path.isdir(path)
-        check_stage_dir_perms(str(tmp_path), path)
+        path = concrete_path(spack.stage._first_accessible_path(files))
+        assert path == spack_path
+        assert path.is_dir()
+        check_stage_dir_perms(tmp_path, path)
 
         # Ensure an existing path is returned
-        spack_subdir = spack_dir / "existing"
-        spack_subdir.mkdir(parents=True)
-        subdir = str(spack_subdir)
-        path = spack.stage._first_accessible_path([subdir])
+        subdir = spack_path / "existing"
+        subdir.mkdir(parents=True)
+        path = concrete_path(spack.stage._first_accessible_path([subdir]))
         assert path == subdir
 
         # Ensure a path with a `$user` node has the right permissions
         # for its subdirectories.
         user = getpass.getuser()
-        user_dir = spack_dir / user / "has" / "paths"
-        user_path = str(user_dir)
-        path = spack.stage._first_accessible_path([user_path])
+        user_path = spack_path / user / "has" / "paths"
+        path = concrete_path(spack.stage._first_accessible_path([user_path]))
         assert path == user_path
-        check_stage_dir_perms(str(tmp_path), path)
+        check_stage_dir_perms(tmp_path, path)
 
         # Cleanup
         shutil.rmtree(spack_path)
 
     def test_create_stage_root(self, tmp_path: pathlib.Path, no_path_access):
         """Test create_stage_root permissions."""
-        test_dir = tmp_path / "path"
-        test_path = str(test_dir)
+        test_path = tmp_path / "path"
 
         try:
-            if getpass.getuser() in str(test_path).split(os.sep):
+            if getpass.getuser() in test_path.parts:
                 # Simply ensure directory created if tmp_path includes user
                 spack.stage.create_stage_root(test_path)
                 assert test_path.exists()
@@ -716,14 +711,22 @@ class TestStage:
         """Test _resolve_paths."""
         assert spack.stage._resolve_paths([]) == []
 
+        sep = os.sep
+        if sys.platform == "win32":
+            # obtain drive prefix from working directory
+            cwd = os.getcwd()
+            sep = os.path.splitdrive(cwd)[0]
         # resolved path without user appends user
-        path = os.sep / abstract_path("a", "b", "c")
+        path = sep / abstract_path("a", "b", "c")
         paths = [fs_path(path)]
         can_paths = [paths[0]]
         user = getpass.getuser()
 
         if sys.platform != "win32":
             can_paths = [fs_path(path / user)]
+
+        print(can_paths)
+        print(spack.stage._resolve_paths(paths))
         assert spack.stage._resolve_paths(paths) == can_paths
 
         # resolved path with node including user does not append user
@@ -778,7 +781,6 @@ class TestStage:
 
         test_dir = stage_dir / path
         test_dir.mkdir(parents=True)
-        test_path = str(test_dir)
 
         with spack.config.override("config:build_stage", stage_path):
             stage_root = spack.stage.get_stage_root()
@@ -836,8 +838,8 @@ def _create_tree_from_dir_recursive(path):
 @pytest.fixture
 def develop_path(tmp_path: pathlib.Path):
     dir_structure = {"a1": {"b1": None, "b2": "b1content"}, "a2": None}
-    srcdir = str(tmp_path / "test-src")
-    os.mkdir(srcdir)
+    srcdir = tmp_path / "test-src"
+    srcdir.mkdir()
     _create_files_from_tree(srcdir, dir_structure)
     yield dir_structure, srcdir
 
