@@ -942,7 +942,7 @@ def prefers(*preferred_specs: str, when: Optional[str] = None, msg: Optional[str
 
 
 def _requires(
-    requirements: Tuple[spack.spec.Spec],
+    requirements: Tuple[spack.spec.Spec, ...],
     policy="one_of",
     when: Optional[str] = None,
     msg: Optional[str] = None
