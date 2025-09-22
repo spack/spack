@@ -500,9 +500,7 @@ class TestConcretize:
         # packages, not the "all" pseudo package
         with spack.config.override("concretizer", {"compiler_mixing": False}):
             with pytest.raises(spack.config.ConfigFormatError):
-                with spack.config.override(
-                    "packages", {"all": {"allow_compiler_mixing": True}}
-                ):
+                with spack.config.override("packages", {"all": {"allow_compiler_mixing": True}}):
                     pass
 
     def test_compiler_inherited_upwards(self):
