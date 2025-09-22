@@ -1145,7 +1145,7 @@ class PyclingoDriver:
                 solve_kwargs["on_unsat"] = cores.append
 
             timer.start("solve")
-            start_time = time.monotonic()
+            starting_point = time.monotonic()
             # A timeout of 0 or less means no timeout
             time_limit = spack.config.CONFIG.get("concretizer:timeout", -1)
             error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
@@ -1157,7 +1157,7 @@ class PyclingoDriver:
                 # ensures the user won't have to wait long for a response to their ^C.
                 finished = handle.wait(0)
                 while not finished:
-                    elapsed_time = time.monotonic() - start_time
+                    elapsed_time = time.monotonic() - starting_point
                     if 0 < time_limit < elapsed_time:
                         break
                     finished = handle.wait(1.0)
