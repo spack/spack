@@ -1150,7 +1150,10 @@ class PyclingoDriver:
             time_limit = spack.config.CONFIG.get("concretizer:timeout", -1)
             error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
             with self.control.solve(**solve_kwargs, async_=True) as handle:
-                # We need the loop below to be able to Ctrl-C out of the solve
+                # pyclingo's `SolveHandle` blocks the calling thread for the duration of each `.wait()` call.
+                # Python also requires that signal handlers (like SIGINT for ^C) must be handled in the main thread,
+                # so any `KeyboardInterrupt` is postponed until after the `.wait()` call exits the control of pyclingo.
+                # Polling repeatedly ensures the user won't have to wait long for a response to their ^C.
                 finished = handle.wait(0)
                 while not finished:
                     elapsed_time = time.monotonic() - start_time
