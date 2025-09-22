@@ -14,7 +14,7 @@ from collections import Counter
 from typing import Generator, List, Optional, Sequence, Union
 
 import spack.concretize
-import spack.config  # breaks a cycle.
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions

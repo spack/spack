@@ -1929,6 +1929,125 @@ class TestConcretize:
             assert result_spec.satisfies("^pkg-b@1.0")
             assert result_spec["pkg-b"].dag_hash() == reusable_specs[1].dag_hash()
 
+    @pytest.mark.regression("51267")
+    @pytest.mark.parametrize(
+        "packages_config,expected",
+        [
+            # Two preferences on different virtuals
+            (
+                """
+    packages:
+      c:
+        prefer:
+        - clang
+      mpi:
+        prefer:
+        - mpich2
+    """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("c","clang",0).',
+                ],
+            ),
+            # A requirement and a preference on the same virtual
+            (
+                """
+    packages:
+      c:
+        require:
+        - gcc
+        prefer:
+        - clang
+    """,
+                [
+                    'provider_weight_from_config("c","gcc",0).',
+                    'provider_weight_from_config("c","clang",1).',
+                ],
+            ),
+            (
+                """
+        packages:
+          c:
+            require:
+            - clang
+            prefer:
+            - gcc
+        """,
+                [
+                    'provider_weight_from_config("c","gcc",1).',
+                    'provider_weight_from_config("c","clang",0).',
+                ],
+            ),
+            # Multiple requirements with priorities
+            (
+                """
+    packages:
+      all:
+        providers:
+          mpi: [low-priority-mpi]
+      mpi:
+        require:
+        - any_of: [mpich2, zmpi]
+        prefer:
+        - mpich
+    """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("mpi","zmpi",1).',
+                    'provider_weight_from_config("mpi","mpich",2).',
+                    'provider_weight_from_config("mpi","low-priority-mpi",3).',
+                ],
+            ),
+            # Configuration with conflicts
+            (
+                """
+    packages:
+      all:
+        providers:
+          mpi: [mpich, low-priority-mpi]
+      mpi:
+        require:
+        - mpich2
+        conflict:
+        - mpich
+    """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("mpi","low-priority-mpi",1).',
+                ],
+            ),
+            (
+                """
+        packages:
+          all:
+            providers:
+              mpi: [mpich, low-priority-mpi]
+          mpi:
+            require:
+            - mpich2
+            conflict:
+            - mpich@1
+        """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("mpi","mpich",1).',
+                    'provider_weight_from_config("mpi","low-priority-mpi",2).',
+                ],
+            ),
+        ],
+    )
+    def test_requirements_and_weights(self, packages_config, expected, mutable_config):
+        """Checks that requirements and strong preferences on virtual packages influence the
+        weights for providers, even if "package preferences" are not set consistently.
+        """
+        packages_yaml = syaml.load_config(packages_config)
+        mutable_config.set("packages", packages_yaml["packages"])
+
+        setup = spack.solver.asp.SpackSolverSetup()
+        asp_problem = setup.setup([Spec("mpileaks")], reuse=[], allow_deprecated=False)
+
+        assert all(x in asp_problem for x in expected)
+
     def test_reuse_succeeds_with_config_compatible_os(self):
         root_spec = Spec("pkg-b")
         s = spack.concretize.concretize_one(root_spec)

@@ -93,7 +93,6 @@ import spack.platforms
 import spack.provider_index
 import spack.repo
 import spack.spec_parser
-import spack.store
 import spack.traverse
 import spack.util.hash
 import spack.util.prefix
@@ -836,6 +835,10 @@ class CompilerFlag(str):
             ``depends_on(... cflags=-g)``, then the ``source``
             for "-g" would indicate ``depends_on``.
     """
+
+    propagate: bool
+    flag_group: str
+    source: str
 
     def __new__(cls, value, **kwargs):
         obj = str.__new__(cls, value)
@@ -2005,7 +2008,9 @@ class Spec:
         try:
             # If the spec is in the DB, check the installed
             # attribute of the record
-            return spack.store.STORE.db.get_record(self).installed
+            from spack.store import STORE
+
+            return STORE.db.get_record(self).installed
         except KeyError:
             # If the spec is not in the DB, the method
             #  above raises a Key error
@@ -2021,7 +2026,9 @@ class Spec:
         if not self.concrete:
             return False
 
-        upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
+        from spack.store import STORE
+
+        upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
         return upstream and record and record.installed
 
     @overload
@@ -2136,11 +2143,13 @@ class Spec:
             raise spack.error.SpecError(f"Spec is not concrete: {self}")
 
         if self._prefix is None:
-            _, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
+            from spack.store import STORE
+
+            _, record = STORE.db.query_by_spec_hash(self.dag_hash())
             if record and record.path:
                 self.set_prefix(record.path)
             else:
-                self.set_prefix(spack.store.STORE.layout.path_for_spec(self))
+                self.set_prefix(STORE.layout.path_for_spec(self))
         assert self._prefix is not None
         return self._prefix
 
@@ -2168,7 +2177,9 @@ class Spec:
             return out[:-7] + self.build_spec.spec_hash(hash)[-7:]
         return out
 
-    def _cached_hash(self, hash, length=None, force=False):
+    def _cached_hash(
+        self, hash: ht.SpecHashDescriptor, length: Optional[int] = None, force: bool = False
+    ) -> str:
         """Helper function for storing a cached hash on the spec.
 
         This will run spec_hash() with the deptype and package_hash
@@ -2176,22 +2187,19 @@ class Spec:
         in the supplied attribute on this spec.
 
         Arguments:
-            hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
-            length (int): length of hash prefix to return (default is full hash string)
-            force (bool): cache the hash even if spec is not concrete (default False)
+            hash: type of hash to generate.
+            length: length of hash prefix to return (default is full hash string)
+            force: cache the hash even if spec is not concrete (default False)
         """
-        if not hash.attr:
-            return self.spec_hash(hash)[:length]
-
         hash_string = getattr(self, hash.attr, None)
         if hash_string:
             return hash_string[:length]
-        else:
-            hash_string = self.spec_hash(hash)
-            if force or self.concrete:
-                setattr(self, hash.attr, hash_string)
 
-            return hash_string[:length]
+        hash_string = self.spec_hash(hash)
+        if force or self.concrete:
+            setattr(self, hash.attr, hash_string)
+
+        return hash_string[:length]
 
     def package_hash(self):
         """Compute the hash of the contents of the package for this node"""
@@ -2220,16 +2228,17 @@ class Spec:
     def _lookup_hash(self):
         """Lookup just one spec with an abstract hash, returning a spec from the the environment,
         store, or finally, binary caches."""
-        import spack.binary_distribution
-        import spack.environment
+        from spack.binary_distribution import BinaryCacheQuery
+        from spack.environment import active_environment
+        from spack.store import STORE
 
-        active_env = spack.environment.active_environment()
+        active_env = active_environment()
 
         # First env, then store, then binary cache
         matches = (
             (active_env.all_matching_specs(self) if active_env else [])
-            or spack.store.STORE.db.query(self, installed=InstallRecordStatus.ANY)
-            or spack.binary_distribution.BinaryCacheQuery(True)(self)
+            or STORE.db.query(self, installed=InstallRecordStatus.ANY)
+            or BinaryCacheQuery(True)(self)
         )
 
         if not matches:
@@ -2283,9 +2292,7 @@ class Spec:
 
         self._dup(self.lookup_hash())
 
-    def to_node_dict(
-        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
-    ) -> Dict[str, Any]:
+    def to_node_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
 
         This method creates the content that is eventually hashed by Spack to create identifiers
@@ -2442,9 +2449,7 @@ class Spec:
 
         return d
 
-    def to_dict(
-        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
-    ) -> Dict[str, Any]:
+    def to_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary suitable for writing this spec to YAML or JSON.
 
         This dictionary is like the one that is ultimately written to a ``spec.json`` file in each
@@ -2524,9 +2529,7 @@ class Spec:
 
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
-    def node_dict_with_hashes(
-        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
-    ) -> Dict[str, Any]:
+    def node_dict_with_hashes(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Returns a node dict of this spec with the dag hash, and the provided hash (if not
         the dag hash)."""
         node = self.to_node_dict(hash)
@@ -2841,9 +2844,11 @@ class Spec:
             spack.spec.SpecDeprecatedError: if any deprecated spec is found
         """
         deprecated = []
-        with spack.store.STORE.db.read_transaction():
+        from spack.store import STORE
+
+        with STORE.db.read_transaction():
             for x in root.traverse():
-                _, rec = spack.store.STORE.db.query_by_spec_hash(x.dag_hash())
+                _, rec = STORE.db.query_by_spec_hash(x.dag_hash())
                 if rec and rec.deprecated_for:
                     deprecated.append(rec)
         if deprecated:
@@ -3996,7 +4001,9 @@ class Spec:
     @property
     def spack_install(self):
         """Special field for using ``{spack_install}`` in :meth:`format`."""
-        return spack.store.STORE.layout.root
+        from spack.store import STORE
+
+        return STORE.layout.root
 
     def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out attributes of a spec according to a format string.
@@ -4420,7 +4427,9 @@ class Spec:
         if self.external:
             return InstallStatus.external
 
-        upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
+        from spack.store import STORE
+
+        upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
         if not record:
             return InstallStatus.absent
         elif upstream and record.installed:
@@ -4435,7 +4444,9 @@ class Spec:
         if not self.concrete:
             return None
         try:
-            record = spack.store.STORE.db.get_record(self)
+            from spack.store import STORE
+
+            record = STORE.db.get_record(self)
             return record.explicit
         except KeyError:
             return None
@@ -5590,14 +5601,6 @@ class InvalidHashError(spack.error.SpecError):
         msg = f"No spec with hash {hash} could be found to match {spec}."
         msg += " Either the hash does not exist, or it does not match other spec constraints."
         super().__init__(msg)
-
-
-class SpecFilenameError(spack.error.SpecError):
-    """Raised when a spec file name is invalid."""
-
-
-class NoSuchSpecFileError(SpecFilenameError):
-    """Raised when a spec file doesn't exist."""
 
 
 class SpecFormatStringError(spack.error.SpecError):

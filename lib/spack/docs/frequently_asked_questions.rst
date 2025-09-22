@@ -70,7 +70,7 @@ The following set of criteria (from lowest to highest precedence) explains commo
         foo:
           require:
           - "@1.2: +mpi"
-          conflicts:
+          conflict:
           - "@1.4"
 
 Requirements and constraints restrict the set of possible solutions, while reuse behavior and preferences influence what an optimal solution looks like.

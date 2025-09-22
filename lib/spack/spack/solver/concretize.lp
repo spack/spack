@@ -660,6 +660,10 @@ attr("node_platform_set", node(X, BuildDependency), NodePlatform) :-
   attr("direct_dependency", ParentNode, node_requirement("node_platform_set", BuildDependency, NodePlatform)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
+attr("node_flag_set", node(X, BuildDependency), NodeFlag) :-
+  attr("direct_dependency", ParentNode, node_requirement("node_flag_set", BuildDependency, NodeFlag)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
+
 attr("hash", node(X, BuildDependency), BuildHash) :-
   attr("direct_dependency", ParentNode, node_requirement("hash", BuildDependency, BuildHash)),
   build_requirement(ParentNode, node(X, BuildDependency)).
@@ -952,7 +956,7 @@ do_not_impose(EffectID, node(X, Package))
 % Any configured provider has a weight based on index in the preference list
 possible_provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), Weight, "default")
   :- provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
-     default_provider_preference(Virtual, Provider, Weight).
+     provider_weight_from_config(Virtual, Provider, Weight).
 
 % Any non-configured provider has a default weight of 100
 possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback")
@@ -961,7 +965,7 @@ possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback
 % do not warn if generated program contains none of these.
 #defined virtual/1.
 #defined buildable_false/1.
-#defined default_provider_preference/3.
+#defined provider_weight_from_config/3.
 
 %-----------------------------------------------------------------------------
 % External semantics
@@ -1752,6 +1756,12 @@ error(100, "'{0} target={1}' is not compatible with this machine", Package, Targ
 %-----------------------------------------------------------------------------
 
 attr("node_flag", PackageNode, NodeFlag) :- attr("node_flag_set", PackageNode, NodeFlag).
+
+% If we set "foo %bar cflags=A ^fee %bar cflags=B" we want two nodes for "bar"
+error(100, "Cannot set multiple {0} values for {1} from cli", FlagType, Package)
+:- attr("node_flag_set", node(X, Package), node_flag(FlagType, _, FlagGroup1, "literal")),
+   attr("node_flag_set", node(X, Package), node_flag(FlagType, _, FlagGroup2, "literal")),
+   FlagGroup1 < FlagGroup2.
 
 %-----------------------------------------------------------------------------
 % Installed Packages

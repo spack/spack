@@ -575,76 +575,11 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     assert "dirty: true" not in output
 
 
-def test_config_update_config(config_yaml_v015):
-    config_yaml_v015()
-    config("update", "-y", "config")
-
-    # Check the entires have been transformed
-    data = spack.config.get("config")
-    check_config_updated(data)
-
-
 def test_config_update_not_needed(mutable_config):
     data_before = spack.config.get("repos")
     config("update", "-y", "repos")
     data_after = spack.config.get("repos")
     assert data_before == data_after
-
-
-@pytest.mark.regression("18031")
-def test_config_update_can_handle_comments(mutable_config):
-    # Create an outdated config file with comments
-    scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
-    with open(cfg_file, mode="w", encoding="utf-8") as f:
-        f.write(
-            """
-config:
-  # system cmake in /usr
-  install_tree: './foo'
-  # Another comment after the outdated section
-  install_hash_length: 7
-"""
-        )
-
-    # Try to update it, it should not raise errors
-    config("update", "-y", "config")
-
-    # Check data
-    data = spack.config.get("config", scope=scope)
-    assert "root" in data["install_tree"]
-
-    # Check the comment is there
-    with open(cfg_file, encoding="utf-8") as f:
-        text = "".join(f.readlines())
-
-    assert "# system cmake in /usr" in text
-    assert "# Another comment after the outdated section" in text
-
-
-@pytest.mark.regression("18050")
-def test_config_update_works_for_empty_paths(mutable_config):
-    scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
-    with open(cfg_file, mode="w", encoding="utf-8") as f:
-        f.write(
-            """
-config:
-    install_tree: ''
-"""
-        )
-
-    # Try to update it, it should not raise errors
-    output = config("update", "-y", "config")
-
-    # This ensures that we updated the configuration
-    assert "[backup=" in output
-
-
-def check_config_updated(data):
-    assert isinstance(data["install_tree"], dict)
-    assert data["install_tree"]["root"] == "/fake/path"
-    assert data["install_tree"]["projections"] == {"all": "{name}-{version}"}
 
 
 def test_config_update_shared_linking(mutable_config):

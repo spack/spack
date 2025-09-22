@@ -482,12 +482,10 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
     [
         ([], [None, None, None]),
         ([["config:install_tree:root", os.sep + "path"]], [os.sep + "path", None, None]),
-        ([["config:install_tree", os.sep + "path"]], [os.sep + "path", None, None]),
         (
             [["config:install_tree:projections", {"all": "{name}"}]],
             [None, None, {"all": "{name}"}],
         ),
-        ([["config:install_path_scheme", "{name}"]], [None, None, {"all": "{name}"}]),
     ],
 )
 def test_parse_install_tree(config_settings, expected, mutable_config):
@@ -551,24 +549,12 @@ def test_change_or_add(mutable_config, mock_packages):
             [["config:install_tree:root", "/path/$padding:11"]],
             [os.path.join(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
         ),
-        (
-            [["config:install_tree", "/path/${padding:11}"]],
-            [os.path.join(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
-        ),
         ([["config:install_tree:padded_length", False]], [None, None, None]),
         (
             [
                 ["config:install_tree:padded_length", True],
                 ["config:install_tree:root", os.sep + "path"],
             ],
-            [full_padded_string, os.sep + "path", None],
-        ),
-        (
-            [["config:install_tree:", os.sep + "path$padding"]],
-            [full_padded_string, os.sep + "path", None],
-        ),
-        (
-            [["config:install_tree:", os.sep + "path" + os.sep + "${padding}"]],
             [full_padded_string, os.sep + "path", None],
         ),
     ],

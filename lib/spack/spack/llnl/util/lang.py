@@ -107,25 +107,6 @@ def attr_setdefault(obj, name, value):
     return getattr(obj, name)
 
 
-def union_dicts(*dicts: Mapping[Any, Any]) -> Dict[Any, Any]:
-    """Use update() to combine all dicts into one.
-
-    This builds a new dictionary, into which we ``update()`` each element
-    of ``dicts`` in order.  Items from later dictionaries will override
-    items from earlier dictionaries.
-
-    Args:
-        dicts: list of dictionaries
-
-    Returns: a merged dictionary containing combined keys and values from ``dicts``.
-
-    """
-    result: Dict[Any, Any] = {}
-    for d in dicts:
-        result.update(d)
-    return result
-
-
 def memoized(func):
     """Decorator that caches the results of a function, storing them in
     an attribute of that function.

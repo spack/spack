@@ -54,7 +54,7 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
 
    package_fundamentals
    configuring_compilers
-   replace_conda_homebrew
+   environments_basics
    frequently_asked_questions
    getting_help
 

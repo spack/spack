@@ -62,18 +62,20 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Union
 
 import spack.config
 import spack.deptypes
 import spack.error
 import spack.paths
-import spack.spec
 import spack.util.spack_yaml
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.llnl.util.tty import color
 from spack.tokenize import Token, TokenBase, Tokenizer
+
+if TYPE_CHECKING:
+    import spack.spec
 
 #: Valid name for specs and variants. Here we are not using
 #: the previous ``w[\w.-]*`` since that would match most
@@ -358,7 +360,10 @@ class SpecParser:
             except spack.error.SpecError as e:
                 raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
 
-        initial_spec = initial_spec or spack.spec.Spec()
+        if not initial_spec:
+            from spack.spec import Spec
+
+            initial_spec = Spec()
         root_spec, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
         current_spec = root_spec
         while True:
@@ -445,7 +450,9 @@ class SpecParser:
             toolchain = parse_one_or_raise(toolchain_config)
             self._ensure_all_direct_edges(toolchain)
         else:
-            toolchain = spack.spec.Spec()
+            from spack.spec import Spec
+
+            toolchain = Spec()
             for entry in toolchain_config:
                 toolchain_part = parse_one_or_raise(entry["spec"])
                 when = entry.get("when", "")
@@ -496,7 +503,9 @@ class SpecNodeParser:
         last_compiler = None
 
         if initial_spec is None:
-            initial_spec = spack.spec.Spec()
+            from spack.spec import Spec
+
+            initial_spec = Spec()
 
         if not self.ctx.next_token or self.ctx.expect(SpecTokens.DEPENDENCY):
             return initial_spec, parser_warnings
@@ -615,13 +624,15 @@ class FileParser:
         file = pathlib.Path(self.ctx.current_token.value)
 
         if not file.exists():
-            raise spack.spec.NoSuchSpecFileError(f"No such spec file: '{file}'")
+            raise spack.error.NoSuchSpecFileError(f"No such spec file: '{file}'")
+
+        from spack.spec import Spec
 
         with file.open("r", encoding="utf-8") as stream:
             if str(file).endswith(".json"):
-                spec_from_file = spack.spec.Spec.from_json(stream)
+                spec_from_file = Spec.from_json(stream)
             else:
-                spec_from_file = spack.spec.Spec.from_yaml(stream)
+                spec_from_file = Spec.from_yaml(stream)
         initial_spec._dup(spec_from_file)
         return initial_spec
 

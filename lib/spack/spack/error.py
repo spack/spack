@@ -219,3 +219,11 @@ class NoChecksumException(SpackError):
 
 class CompilerError(SpackError):
     """Raised if something goes wrong when probing or querying a compiler."""
+
+
+class SpecFilenameError(SpecError):
+    """Raised when a spec file name is invalid."""
+
+
+class NoSuchSpecFileError(SpecFilenameError):
+    """Raised when a spec file doesn't exist."""

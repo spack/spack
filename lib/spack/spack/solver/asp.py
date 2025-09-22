@@ -84,7 +84,7 @@ from .core import (
     using_libc_compatibility,
 )
 from .input_analysis import create_counter, create_graph_analyzer
-from .requirements import RequirementKind, RequirementParser, RequirementRule
+from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFilter
 from .runtimes import RuntimePropertyRecorder, _external_config_with_implicit_externals
 from .versions import DeclaredVersion, Provenance, concretization_version_order
@@ -275,6 +275,32 @@ def extend_flag_list(flag_list, new_flags):
         if flag in flag_list:
             flag_list.remove(flag)
         flag_list.append(flag)
+
+
+def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.CompilerFlag]:
+    """Reorder a list of flags to ensure that the order matches that of the flag group."""
+    if not flag_list:
+        return []
+
+    if len({x.flag_group for x in flag_list}) != 1 or len({x.source for x in flag_list}) != 1:
+        raise InternalConcretizerError(
+            "internal solver error: cannot reorder compiler flags for concretized specs. "
+            "Please report a bug at https://github.com/spack/spack/issues"
+        )
+
+    flag_group = flag_list[0].flag_group
+    flag_source = flag_list[0].source
+    flag_propagate = flag_list[0].propagate
+    # Once we have the flag_group, no need to iterate over the flag_list because the
+    # group represents all of them
+    return [
+        spack.spec.CompilerFlag(
+            flag, propagate=flag_propagate, flag_group=flag_group, source=flag_source
+        )
+        for flag, propagate in spack.compilers.flags.tokenize_flags(
+            flag_group, propagate=flag_propagate
+        )
+    ]
 
 
 def check_packages_exist(specs):
@@ -2017,29 +2043,42 @@ class SpackSolverSetup:
 
             self.gen.newline()
 
-    def virtual_preferences(self, pkg_name, func):
-        """Call func(vspec, provider, i) for each of pkg's provider prefs."""
-        config = spack.config.get("packages")
-        pkg_prefs = config.get(pkg_name, {}).get("providers", {})
-        for vspec, providers in pkg_prefs.items():
-            if vspec not in self.possible_virtuals:
+    def virtual_requirements_and_weights(self):
+        virtual_preferences = spack.config.CONFIG.get("packages:all:providers", {})
+
+        self.gen.h1("Virtual requirements and weights")
+        for virtual_str in sorted(self.possible_virtuals):
+            self.gen.newline()
+            self.gen.h2(f"Virtual: {virtual_str}")
+            self.gen.fact(fn.virtual(virtual_str))
+
+            rules = self.requirement_parser.rules_from_virtual(virtual_str)
+            if not rules and virtual_str not in virtual_preferences:
                 continue
 
-            for i, provider in enumerate(providers):
+            required, preferred, removed = [], [], set()
+            for rule in rules:
+                # We don't deal with conditional requirements
+                if rule.condition != spack.spec.Spec():
+                    continue
+
+                if rule.origin == RequirementOrigin.PREFER_YAML:
+                    preferred.extend(x.name for x in rule.requirements if x.name)
+                elif rule.origin == RequirementOrigin.REQUIRE_YAML:
+                    required.extend(x.name for x in rule.requirements if x.name)
+                elif rule.origin == RequirementOrigin.CONFLICT_YAML:
+                    conflict_spec = rule.requirements[0]
+                    # For conflicts, we take action only if just a name is used
+                    if spack.spec.Spec(conflict_spec.name).satisfies(conflict_spec):
+                        removed.add(conflict_spec.name)
+
+            current_preferences = required + preferred + virtual_preferences.get(virtual_str, [])
+            current_preferences = [x for x in current_preferences if x not in removed]
+            for i, provider in enumerate(spack.llnl.util.lang.dedupe(current_preferences)):
                 provider_name = spack.spec.Spec(provider).name
-                func(vspec, provider_name, i)
+                self.gen.fact(fn.provider_weight_from_config(virtual_str, provider_name, i))
             self.gen.newline()
 
-    def provider_defaults(self):
-        self.gen.h2("Default virtual providers")
-        self.virtual_preferences(
-            "all", lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i))
-        )
-
-    def provider_requirements(self):
-        self.gen.h2("Requirements on virtual providers")
-        for virtual_str in sorted(self.possible_virtuals):
-            rules = self.requirement_parser.rules_from_virtual(virtual_str)
             if rules:
                 self.emit_facts_from_requirement_rules(rules)
                 self.trigger_rules()
@@ -2349,6 +2388,7 @@ class SpackSolverSetup:
         concrete_build_deps: bool = False,
         include_runtimes: bool = False,
         context: Optional[SourceContext] = None,
+        seen: Optional[Set[int]] = None,
     ) -> List[AspFunction]:
         """Return a list of clauses for a spec mandates are true.
 
@@ -2364,6 +2404,7 @@ class SpackSolverSetup:
                 are ommitted from the solve.
             context: tracks what constraint this clause set is generated for (e.g. a
                 ``depends_on`` constraint in a package.py file)
+            seen: set of ids of specs that have already been processed (for internal use only)
 
         Normally, if called with ``transitive=True``, ``spec_clauses()`` just generates
         hashes for the dependency requirements of concrete specs. If ``expand_hashes``
@@ -2372,6 +2413,8 @@ class SpackSolverSetup:
         for spec ``diff``).
         """
         clauses = []
+        seen = seen if seen is not None else set()
+        seen.add(id(spec))
 
         f: Union[Type[_Head], Type[_Body]] = _Body if body else _Head
 
@@ -2550,13 +2593,14 @@ class SpackSolverSetup:
             # if the spec is abstract, descend into dependencies.
             # if it's concrete, then the hashes above take care of dependency
             # constraints, but expand the hashes if asked for.
-            if not spec.concrete or expand_hashes:
+            if (not spec.concrete or expand_hashes) and id(dep) not in seen:
                 dependency_clauses = self._spec_clauses(
                     dep,
                     body=body,
                     expand_hashes=expand_hashes,
                     concrete_build_deps=concrete_build_deps,
                     context=context,
+                    seen=seen,
                 )
                 ###
                 # Dependency expressed with "^"
@@ -2811,12 +2855,6 @@ class SpackSolverSetup:
 
         self.default_targets = list(sorted(set(self.default_targets)))
         self.target_preferences()
-
-    def virtual_providers(self):
-        self.gen.h2("Virtual providers")
-        for vspec in sorted(self.possible_virtuals):
-            self.gen.fact(fn.virtual(vspec))
-        self.gen.newline()
 
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
@@ -3097,9 +3135,7 @@ class SpackSolverSetup:
         self.os_defaults(specs + dev_specs)
         self.target_defaults(specs + dev_specs)
 
-        self.virtual_providers()
-        self.provider_defaults()
-        self.provider_requirements()
+        self.virtual_requirements_and_weights()
         self.external_packages()
 
         for pkg_name, d in spack.config.get("packages").items():
@@ -3528,6 +3564,9 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
     return result, rejected
 
 
+FunctionTupleT = Tuple[str, Tuple[Union[str, NodeArgument], ...]]
+
+
 class SpecBuilder:
     """Class with actions to rebuild a spec from ASP results."""
 
@@ -3694,14 +3733,25 @@ class SpecBuilder:
         e.g. for ``y cflags="-z -a"`` ``-z`` and ``-a`` should never have any intervening
         flags inserted, and should always appear in that order.
         """
-        cmd_specs = {s.name: s for spec in self._command_line_specs for s in spec.traverse()}
-
         for node, spec in self._specs.items():
             # if bootstrapping, compiler is not in config and has no flags
             flagmap_from_compiler = {
                 flag_type: [x for x in values if x.source == "compiler"]
                 for flag_type, values in spec.compiler_flags.items()
             }
+
+            flagmap_from_cli = {}
+            for flag_type, values in spec.compiler_flags.items():
+                if not values:
+                    continue
+
+                flags = [x for x in values if x.source == "literal"]
+                if not flags:
+                    continue
+
+                # For compiler flags from literal specs, reorder any flags to
+                # the input order from flag.flag_group
+                flagmap_from_cli[flag_type] = _reorder_flags(flags)
 
             for flag_type in spec.compiler_flags.valid_compiler_flags():
                 ordered_flags = []
@@ -3765,9 +3815,8 @@ class SpecBuilder:
                     extend_flag_list(ordered_flags, as_compiler_flags)
 
                 # 3. Now put cmd-line flags last
-                if node.pkg in cmd_specs:
-                    cmd_flags = cmd_specs[node.pkg].compiler_flags.get(flag_type, [])
-                    extend_flag_list(ordered_flags, cmd_flags)
+                if flag_type in flagmap_from_cli:
+                    extend_flag_list(ordered_flags, flagmap_from_cli[flag_type])
 
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
                 msg = f"{set(compiler_flags)} does not equal {set(ordered_flags)}"
@@ -3792,36 +3841,22 @@ class SpecBuilder:
         )
         self._splices.setdefault(parent_spec, []).append(splice)
 
-    @staticmethod
-    def sort_fn(function_tuple) -> Tuple[int, int]:
-        """Ensure attributes are evaluated in the correct order.
+    def build_specs(self, function_tuples: List[FunctionTupleT]) -> List[spack.spec.Spec]:
 
-        hash attributes are handled first, since they imply entire concrete specs
-        node attributes are handled next, since they instantiate nodes
-        external_spec_selected attributes are handled last, so that external extensions can find
-        the concrete specs on which they depend because all nodes are fully constructed before we
-        consider which ones are external.
-        """
-        name = function_tuple[0]
-        if name == "hash":
-            return (-5, 0)
-        elif name == "node":
-            return (-4, 0)
-        elif name == "node_flag":
-            return (-2, 0)
-        elif name == "external_spec_selected":
-            return (0, 0)  # note out of order so this goes last
-        elif name == "virtual_on_edge":
-            return (1, 0)
-        else:
-            return (-1, 0)
+        attr_key = {
+            # hash attributes are handled first, since they imply entire concrete specs
+            "hash": -5,
+            # node attributes are handled next, since they instantiate nodes
+            "node": -4,
+            # evaluated last, so all nodes are fully constructed
+            "external_spec_selected": 1,
+            "virtual_on_edge": 2,
+        }
 
-    def build_specs(self, function_tuples):
-        # Functions don't seem to be in particular order in output. Sort them here so that
-        # directives that build objects, like node, are called in the right order.
-        self.function_tuples = sorted(set(function_tuples), key=self.sort_fn)
+        # Sort functions so that directives building objects are called in the right order
+        function_tuples.sort(key=lambda x: attr_key.get(x[0], 0))
         self._specs = {}
-        for name, args in self.function_tuples:
+        for name, args in function_tuples:
             if SpecBuilder.ignored_attributes.match(name):
                 continue
 
@@ -3844,6 +3879,11 @@ class SpecBuilder:
             # predicates on virtual packages.
             if name != "error":
                 node = args[0]
+                assert isinstance(node, NodeArgument), (
+                    f"internal solver error: expected a node, but got a {type(args[0])}. "
+                    "Please report a bug at https://github.com/spack/spack/issues"
+                )
+
                 pkg = node.pkg
                 if spack.repo.PATH.is_virtual(pkg):
                     continue
@@ -3852,7 +3892,7 @@ class SpecBuilder:
                 # do not bother calling actions on it except for node_flag_source,
                 # since node_flag_source is tracking information not in the spec itself
                 # we also need to keep track of splicing information.
-                spec = self._specs.get(args[0])
+                spec = self._specs.get(node)
                 if spec and spec.concrete:
                     do_not_ignore_attrs = ["node_flag_source", "splice_at_hash"]
                     if name not in do_not_ignore_attrs:

@@ -14,7 +14,7 @@ _stages_from_dockerhub = {
                 {"type": "string"},
                 {
                     "type": "object",
-                    "additional_properties": False,
+                    "additionalProperties": False,
                     "properties": {
                         "url": {"type": "string"},
                         "ref": {"type": "string"},
