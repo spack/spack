@@ -922,13 +922,18 @@ def prefers(*preferred_specs: str, when: Optional[str] = None, msg: Optional[str
     """Declare that a spec is preferred for a package.
 
     For instance, a package that depends on `llvm` for some functionality but does not require
-    `clang` might declare:
+    ``clang`` might declare:
+
+    code-block:: python
 
         depends_on("llvm", when="+llvm")
         prefers("%llvm~clang", when="+llvm", msg="Prefer smaller, faster llvm build)
 
     This allows the package to prefer the smaller build without failing when another package in the
     solve requires llvm+clang
+
+    ``prefers("foo")`` is equivalent to ``requires("foo", "@:", policy="any_of")`` and is
+    implemented as such.
 
     Args:
         preferred_specs: specs expressing the preferences
