@@ -468,12 +468,12 @@ class TestConcretize:
             assert x.satisfies("%clang") is not expected_gcc
             assert x.satisfies("%gcc") is expected_gcc
 
-    def test_disable_mixing0(self):
+    def test_disable_mixing_prevents_mixing(self):
         with spack.config.override("concretizer", {"compiler_mixing": False}):
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
 
-    def test_disable_mixing1(self):
+    def test_disable_mixing_override_by_package(self):
         with spack.config.override("concretizer", {"compiler_mixing": False}):
             with spack.config.override(
                 "packages", {"dt-diamond-bottom": {"allow_compiler_mixing": True}}
@@ -483,7 +483,7 @@ class TestConcretize:
                 assert root["dt-diamond-bottom"].satisfies("%gcc")
                 assert root["dt-diamond-left"].satisfies("%clang")
 
-    def test_disable_mixing2(self, mutable_database):
+    def test_disable_mixing_reuse(self, mutable_database):
         # Install a spec
         left = spack.concretize.concretize_one("dt-diamond-left %gcc")
         PackageInstaller([left.package], fake=True, explicit=True).install()
