@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import io
+import shutil
 import sys
 
-import spack.llnl.util.tty as tty
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser
 
@@ -77,7 +77,7 @@ def make_log_context(log_events, width=None):
     indent = " " * (5 + num_width)
 
     if width is None:
-        _, width = tty.terminal_size()
+        width = shutil.get_terminal_size().columns
     if width <= 0:
         width = sys.maxsize
     wrap_width = width - num_width - 6

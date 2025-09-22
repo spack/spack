@@ -7,10 +7,10 @@ Routines for printing columnar output.  See ``colify()`` for more information.
 """
 import io
 import os
+import shutil
 import sys
 from typing import IO, Any, List, Optional
 
-from spack.llnl.util.tty import terminal_size
 from spack.llnl.util.tty.color import cextra, clen
 
 
@@ -138,10 +138,9 @@ def colify(
     env_size = os.environ.get("COLIFY_SIZE")
     if env_size:
         try:
-            r, c = env_size.split("x")
-            console_rows, console_cols = int(r), int(c)
+            console_cols = int(env_size.partition("x")[2])
             tty = True
-        except BaseException:
+        except ValueError:
             pass
 
     # Use only one column if not a tty.
@@ -151,7 +150,7 @@ def colify(
 
     # Specify the number of character columns to use.
     if console_cols is None:
-        console_rows, console_cols = terminal_size()
+        console_cols = shutil.get_terminal_size().columns
     elif not isinstance(console_cols, int):
         raise ValueError("Number of columns must be an int")
 
