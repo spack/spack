@@ -22,6 +22,7 @@ The available directives are:
 * ``extends``
 * ``license``
 * ``patch``
+* ``prefers``
 * ``provides``
 * ``resource``
 * ``variant``
@@ -72,6 +73,7 @@ __all__ = [
     "resource",
     "build_system",
     "requires",
+    "prefers",
     "redistribute",
     "can_splice",
 ]
@@ -911,7 +913,40 @@ def requires(
             is applied unconditionally.
         msg: optional user defined message
     """
+    requirements = tuple(spack.spec.Spec(rs) for rs in requirement_specs)
+    return _requires(requirements, policy, when, msg)
 
+
+@directive("requirements")
+def prefers(*preferred_specs: str, when: Optional[str] = None, msg: Optional[str] = None):
+    """Declare that a spec is preferred for a package.
+
+    For instance, a package that depends on `llvm` for some functionality but does not require
+    `clang` might declare:
+
+        depends_on("llvm", when="+llvm")
+        prefers("%llvm~clang", when="+llvm", msg="Prefer smaller, faster llvm build)
+
+    This allows the package to prefer the smaller build without failing when another package in the
+    solve requires llvm+clang
+
+    Args:
+        preferred_specs: specs expressing the preferences
+        when: optional constraint that triggers the preference. If None the preference is applied
+            unconditionally.
+        msg: optional user defined message
+    """
+    preferences = [spack.spec.Spec(ps) for ps in preferred_specs]
+    requirements = tuple(preferences + [spack.spec.Spec("@:")])
+    return _requires(requirements, policy="any_of", when=when, msg=msg)
+
+
+def _requires(
+    requirements: Tuple[spack.spec.Spec],
+    policy="one_of",
+    when: Optional[str] = None,
+    msg: Optional[str] = None
+):
     def _execute_requires(pkg: Type[spack.package_base.PackageBase]):
         if policy not in ("one_of", "any_of"):
             err_msg = (
@@ -927,7 +962,6 @@ def requires(
         # Save in a list the requirements and the associated custom messages
         requirement_list = pkg.requirements.setdefault(when_spec, [])
         msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
-        requirements = tuple(spack.spec.Spec(s) for s in requirement_specs)
         requirement_list.append((requirements, policy, msg_with_name))
 
     return _execute_requires
