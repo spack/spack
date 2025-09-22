@@ -139,6 +139,12 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 'Missing top level "spack" section in environment'
             )
 
+        def _rewrite_include(path, orig_root, new_root):
+            if os.path.isabs(path):
+                return path
+            abs_path = os.path.normpath(os.path.join(orig_root, path))
+            return os.path.relpath(abs_path, start=new_root)
+
         # If there are no includes, just copy
         if "include" in data["spack"]:
             includes = data["spack"]["include"]
@@ -148,21 +154,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             fixed_includes = []
             for inc in includes:
                 if isinstance(inc, dict):
-                    inc_path = inc["path"]
+                    inc["path"] = _rewrite_include(inc["path"], env_root_path, concrete_env_dir)
                 else:
-                    inc_path = inc
-
-                if os.path.isabs(inc_path):
-                    fixed_includes.append(inc)
-                    continue
-
-                inc_abs_path = os.path.normpath(os.path.join(env_root_path, inc_path))
-                inc_path = os.path.relpath(inc_abs_path, start=concrete_env_dir)
-
-                if isinstance(inc, dict):
-                    inc["path"] = inc_path
-                else:
-                    inc = inc_path
+                    inc = _rewrite_include(inc, env_root_path, concrete_env_dir)
 
                 fixed_includes.append(inc)
 
