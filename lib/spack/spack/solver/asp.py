@@ -119,6 +119,7 @@ def default_clingo_control():
     control.configuration.configuration = "tweety"
     control.configuration.solver.heuristic = "Domain"
     control.configuration.solver.opt_strategy = "usc,one,1"
+    control.configuration.solve.parallel_mode = "2"
     return control
 
 
