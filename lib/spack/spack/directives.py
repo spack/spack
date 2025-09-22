@@ -950,7 +950,7 @@ def _requires(
     requirements: Tuple[spack.spec.Spec, ...],
     policy="one_of",
     when: Optional[str] = None,
-    msg: Optional[str] = None
+    msg: Optional[str] = None,
 ):
     def _execute_requires(pkg: Type[spack.package_base.PackageBase]):
         if policy not in ("one_of", "any_of"):

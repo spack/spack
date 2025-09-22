@@ -439,9 +439,7 @@ api: Dict[str, Tuple[str, ...]] = {
         "substitute_version_in_url",
         "windows_sfn",
     ),
-    "v2.3": (
-        "prefers",
-    )
+    "v2.3": ("prefers",),
 }
 
 # Splatting does not work for static analysis tools.
