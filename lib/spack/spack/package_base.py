@@ -748,6 +748,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: TestSuite instance used to manage stand-alone tests for 1+ specs.
     test_suite: Optional[Any] = None
 
+    #: A list of sub-directories to checkout with a git sparse checkout.  Added in version 2.3.
+    git_sparse_paths: List[str] = []
+
     def __init__(self, spec: spack.spec.Spec) -> None:
         # this determines how the package should be built.
         self.spec = spec
