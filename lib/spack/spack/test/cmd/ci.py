@@ -1585,7 +1585,8 @@ ci:
         f"""\
 spack:
   config:
-    install_tree: {tmp_path / "opt"}
+    install_tree:
+      root: {tmp_path / "opt"}
   include:
   - {rel_configs_path}
   - path: {rel_configs_path}
