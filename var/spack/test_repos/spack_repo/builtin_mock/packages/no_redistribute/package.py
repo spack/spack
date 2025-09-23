@@ -15,8 +15,9 @@ class NoRedistribute(Package):
     url = "http://www.example.com/no-redistribute-1.0.tar.gz"
 
     redistribute(source=False, binary=False)
+    has_code = False
 
-    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("1.0")
 
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
