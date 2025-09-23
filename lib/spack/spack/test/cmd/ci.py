@@ -353,13 +353,21 @@ spack:
         assert ci_obj["custom_attribute"] == "custom!"
 
 
-def test_ci_generate_pkg_with_deps(ci_generate_test, tmp_path: pathlib.Path, ci_base_environment):
+@pytest.mark.parametrize("private", [True, False])
+def test_ci_generate_pkg_with_deps(
+    ci_generate_test, tmp_path: pathlib.Path, ci_base_environment, private
+):
     """Test pipeline generation for a package w/ dependencies"""
+    extra_args = []
+    if private:
+        extra_args.append("--private")
+
     spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
   specs:
     - dependent-install
+    - no-redistribute-dependent
   mirrors:
     buildcache-destination: {tmp_path / 'ci-mirror'}
   ci:
@@ -375,12 +383,22 @@ spack:
         build-job:
           tags:
             - donotcare
-"""
+""",
+        *extra_args,
     )
     yaml_contents = syaml.load(outputfile.read_text())
 
     found = []
     for ci_key, ci_obj in yaml_contents.items():
+        if "no-redistribute-dependent" in ci_key:
+            assert "stage" in ci_obj
+            assert ci_obj["stage"] == "stage-1"
+            found.append("no-redistribute-dependent")
+        elif "no-redistribute" in ci_key:
+            # This should only be allowed when private is enabled
+            assert private and "stage" in ci_obj
+            assert private and ci_obj["stage"] == "stage-0"
+            found.append("no-redistribute")
         if "dependency-install" in ci_key:
             assert "stage" in ci_obj
             assert ci_obj["stage"] == "stage-0"
@@ -390,6 +408,8 @@ spack:
             assert ci_obj["stage"] == "stage-1"
             found.append("dependent-install")
 
+    assert private == ("no-redistribute" in found)
+    assert "no-redistribute-dependent" in found
     assert "dependent-install" in found
     assert "dependency-install" in found
 
