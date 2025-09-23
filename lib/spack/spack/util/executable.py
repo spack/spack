@@ -437,10 +437,10 @@ def which(
     Parameters:
         *args: one or more executables to search for
         path: the path to search. Defaults to ``PATH``
-        required: if set to True, raise an error if executable not found
+        required: if set to :data:`True`, raise an error if executable not found
 
     Returns:
-        Executable: The first executable that is found in the path
+        The first executable that is found in the path or :data:`None` if not found.
     """
     exe = which_string(*args, path=path, required=required)
     return Executable(exe) if exe is not None else None

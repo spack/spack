@@ -648,15 +648,13 @@ def add_connection_args(subparser, add_help):
         "--s3-access-key-id",
         help="ID string to use to connect to this S3 mirror",
     )
-    add_argument_string_or_variable(
-        s3_connection_parser,
-        "--s3-access-key-secret",
-        help="secret string to use to connect to this S3 mirror",
+    s3_connection_parser.add_argument(
+        "--s3-access-key-secret-variable",
+        help="environment variable containing secret string to use to connect to this S3 mirror",
     )
-    add_argument_string_or_variable(
-        s3_connection_parser,
-        "--s3-access-token",
-        help="access token to use to connect to this S3 mirror",
+    s3_connection_parser.add_argument(
+        "--s3-access-token-variable",
+        help="environment variable containing access token to use to connect to this S3 mirror",
     )
     s3_connection_parser.add_argument(
         "--s3-profile", help="S3 profile name to use to connect to this S3 mirror", default=None
@@ -673,10 +671,9 @@ def add_connection_args(subparser, add_help):
         deprecate_str=False,
         help="username to use to connect to this OCI mirror",
     )
-    add_argument_string_or_variable(
-        oci_connection_parser,
-        "--oci-password",
-        help="password to use to connect to this OCI mirror",
+    oci_connection_parser.add_argument(
+        "--oci-password-variable",
+        help="environment variable containing password to use to connect to this OCI mirror",
     )
 
 

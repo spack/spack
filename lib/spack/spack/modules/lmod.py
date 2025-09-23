@@ -154,7 +154,7 @@ class LmodConfiguration(BaseConfiguration):
     @lang.memoized
     def hierarchy_tokens(self):
         """Returns the list of tokens that are part of the modulefile
-        hierarchy. 'compiler' is always present.
+        hierarchy. ``compiler`` is always present.
         """
         tokens = configuration(self.name).get("hierarchy", [])
 
@@ -180,7 +180,7 @@ class LmodConfiguration(BaseConfiguration):
     def requires(self):
         """Returns a dictionary mapping all the requirements of this spec to the actual provider.
 
-        The 'compiler' key is always present among the requirements.
+        The ``compiler`` key is always present among the requirements.
         """
         # If it's a core_spec, lie and say it requires a core compiler
         if (
@@ -502,12 +502,12 @@ class LmodModulefileWriter(BaseModuleFileWriter):
 
 
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
-    """Error raised if the key 'core_compilers' has not been specified
+    """Error raised if the key ``core_compilers`` has not been specified
     in the configuration file.
     """
 
 
 class NonVirtualInHierarchyError(spack.error.SpackError, TypeError):
     """Error raised if non-virtual specs are used as hierarchy tokens in
-    the lmod section of 'modules.yaml'.
+    the lmod section of ``modules.yaml``.
     """

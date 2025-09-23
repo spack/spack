@@ -188,7 +188,7 @@ def libraries_in_ld_and_system_library_path(
 def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[str, str]:
     """Get the paths of all libraries available from the system PATH paths.
 
-    For more details, see `libraries_in_ld_and_system_library_path` regarding
+    For more details, see ``libraries_in_ld_and_system_library_path`` regarding
     return type and contents.
 
     Args:

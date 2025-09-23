@@ -279,3 +279,26 @@ def test_flag_injection_different_compilers(mock_packages, mutable_config):
     s = spack.concretize.concretize_one('mpileaks cflags=="-O2" %gcc ^callpath %llvm')
     assert s.satisfies('cflags="-O2"') and s["c"].name == "gcc"
     assert not s["callpath"].satisfies('cflags="-O2"') and s["callpath"]["c"].name == "llvm"
+
+
+@pytest.mark.regression("51209")
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        # gcc using flags compiled with another gcc not using flags
+        ("gcc@14 cflags='-O3'", ["gcc@14 cflags='-O3'", "%gcc@10"], ["%gcc cflags='-O3'"]),
+        # Parent and child, imposing different flags on gmake
+        (
+            "7zip-dependent %gmake cflags='-O2' ^7zip %gmake cflags='-g'",
+            ["%gmake cflags='-O2'", "^7zip %gmake cflags='-g'"],
+            ["%gmake cflags='-g'"],
+        ),
+    ],
+)
+def test_flags_and_duplicate_nodes(spec_str, expected, not_expected, default_mock_concretization):
+    """Tests that we can concretize a spec with flags on a node that is present with duplicates
+    in the DAG. For instance, a compiler built with a previous version of itself.
+    """
+    s = default_mock_concretization(spec_str)
+    assert all(s.satisfies(x) for x in expected)
+    assert all(not s.satisfies(x) for x in not_expected)

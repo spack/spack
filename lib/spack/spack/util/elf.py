@@ -677,7 +677,7 @@ def substitute_rpath_and_pt_interp_in_place_or_raise(
 
 
 def pt_interp(path: str) -> Optional[str]:
-    """Retrieve the interpreter of an executable at `path`."""
+    """Retrieve the interpreter of an executable at ``path``."""
     try:
         with open(path, "rb") as f:
             elf = parse_elf(f, interpreter=True)

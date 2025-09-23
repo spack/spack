@@ -233,6 +233,7 @@ error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
 #defined imposed_constraint/5.
 #defined imposed_constraint/6.
 #defined condition_cause/4.
+#defined condition_nodes/3.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
 #defined condition_requirement/5.

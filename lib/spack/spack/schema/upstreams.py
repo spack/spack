@@ -8,19 +8,17 @@ properties: Dict[str, Any] = {
     "upstreams": {
         "type": "object",
         "default": {},
-        "patternProperties": {
-            r"\w[\w-]*": {
-                "type": "object",
-                "default": {},
-                "additionalProperties": False,
-                "properties": {
-                    "install_tree": {"type": "string"},
-                    "modules": {
-                        "type": "object",
-                        "properties": {"tcl": {"type": "string"}, "lmod": {"type": "string"}},
-                    },
+        "additionalProperties": {
+            "type": "object",
+            "default": {},
+            "additionalProperties": False,
+            "properties": {
+                "install_tree": {"type": "string"},
+                "modules": {
+                    "type": "object",
+                    "properties": {"tcl": {"type": "string"}, "lmod": {"type": "string"}},
                 },
-            }
+            },
         },
     }
 }

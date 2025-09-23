@@ -807,15 +807,15 @@ def migrate_fn(args):
     will attempt to verify the signatures on specs, and then re-sign them before
     migration, using whatever keys are already installed in your key ring.  You can
     migrate a mirror of unsigned binaries (or convert a mirror of signed binaries
-    to unsigned) by providing the --unsigned argument.
+    to unsigned) by providing the ``--unsigned`` argument.
 
     By default spack will leave the original mirror contents (in the old layout) in
     place after migration. You can have spack remove the old contents by providing
-    the --delete-existing argument.  Because migrating a mostly-already-migrated
+    the ``--delete-existing`` argument.  Because migrating a mostly-already-migrated
     mirror should be fast, consider a workflow where you perform a default migration,
     (i.e. preserve the existing layout rather than deleting it) then evaluate the
     state of the migrated mirror by attempting to install from it, and finally
-    running the migration again with --delete-existing."""
+    running the migration again with ``--delete-existing``."""
     target_mirror = args.mirror
     unsigned = args.unsigned
     assert isinstance(target_mirror, spack.mirrors.mirror.Mirror)

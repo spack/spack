@@ -28,14 +28,14 @@ def comma_list(sequence: List[str], article: str = "") -> str:
 
 def comma_or(sequence: List[str]) -> str:
     """Return a string with all the elements of the input joined by comma, but the last
-    one (which is joined by 'or').
+    one (which is joined by ``"or"``).
     """
     return comma_list(sequence, "or")
 
 
 def comma_and(sequence: List[str]) -> str:
     """Return a string with all the elements of the input joined by comma, but the last
-    one (which is joined by 'and').
+    one (which is joined by ``"and"``).
     """
     return comma_list(sequence, "and")
 

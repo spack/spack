@@ -11,6 +11,7 @@ import os
 import sys
 import urllib.parse
 import urllib.response
+from typing import List
 from urllib.error import URLError
 from urllib.request import BaseHandler
 
@@ -96,25 +97,23 @@ class GCSBucket:
             return self.bucket.blob(blob_path)
         return None
 
-    def get_all_blobs(self, recursive=True, relative=True):
+    def get_all_blobs(self, recursive: bool = True, relative: bool = True) -> List[str]:
         """Get a list of all blobs
-        Returns a list of all blobs within this bucket.
+
+        Returns: a list of all blobs within this bucket.
 
         Args:
-            relative: If true (default), print blob paths
-                         relative to 'build_cache' directory.
-                      If false, print absolute blob paths (useful for
-                         destruction of bucket)
+            relative: If true (default), print blob paths relative to 'build_cache' directory.
+                If false, print absolute blob paths (useful for destruction of bucket)
         """
         tty.debug("Getting GCS blobs... Recurse {0} -- Rel: {1}".format(recursive, relative))
 
-        converter = str
-        if relative:
-            converter = self._relative_blob_name
+        converter = self._relative_blob_name if relative else str
+
+        blob_list: List[str] = []
 
         if self.exists():
             all_blobs = self.bucket.list_blobs(prefix=self.prefix)
-            blob_list = []
 
             base_dirs = len(self.prefix.split("/")) + 1
 
@@ -126,7 +125,7 @@ class GCSBucket:
                 else:
                     blob_list.append(converter(blob.name))
 
-            return blob_list
+        return blob_list
 
     def _relative_blob_name(self, blob_name):
         return os.path.relpath(blob_name, self.prefix)

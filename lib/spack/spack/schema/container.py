@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Schema for the 'container' subsection of Spack environments."""
+"""Schema for the ``container`` subsection of Spack environments."""
 from typing import Any, Dict
 
 _stages_from_dockerhub = {
@@ -14,7 +14,7 @@ _stages_from_dockerhub = {
                 {"type": "string"},
                 {
                     "type": "object",
-                    "additional_properties": False,
+                    "additionalProperties": False,
                     "properties": {
                         "url": {"type": "string"},
                         "ref": {"type": "string"},

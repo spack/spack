@@ -322,8 +322,9 @@ def repo_list(args):
 
         # Print aligned output
         for status, namespace, api, path in repo_info:
+            cpath = color.cescape(path)
             color.cprint(
-                f"{status} {namespace:<{max_namespace_width}} {api:<{max_api_width}} {path}"
+                f"{status} {namespace:<{max_namespace_width}} {api:<{max_api_width}} {cpath}"
             )
 
 

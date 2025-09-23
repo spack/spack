@@ -358,15 +358,19 @@ class ConfigYAML:
             error_mark = e.context_mark if e.context_mark else e.problem_mark
             if error_mark:
                 line, column = error_mark.line, error_mark.column
-                msg += f": near {error_mark.name}, {str(line)}, {str(column)}"
+                filename = error_mark.name
+                msg += f": near {filename}, {str(line)}, {str(column)}"
             else:
+                filename = stream.name
                 msg += f": {stream.name}"
             msg += f": {e.problem}"
-            raise SpackYAMLError(msg, e) from e
+
+            raise SpackYAMLError(msg, e, filename) from e
 
         except Exception as e:
             msg = "cannot load Spack YAML configuration"
-            raise SpackYAMLError(msg, e) from e
+            filename = stream.name
+            raise SpackYAMLError(msg, e, filename) from e
 
     def dump(self, data, stream: Optional[IO] = None, *, transform=None) -> None:
         """Dumps the YAML data to a stream.
@@ -382,7 +386,8 @@ class ConfigYAML:
             return self.yaml.dump(data, stream=stream, transform=transform)
         except Exception as e:
             msg = "cannot dump Spack YAML configuration"
-            raise SpackYAMLError(msg, str(e)) from e
+            filename = stream.name if stream else None
+            raise SpackYAMLError(msg, str(e), filename) from e
 
     def as_string(self, data) -> str:
         """Returns a string representing the YAML data passed as input."""
@@ -491,7 +496,8 @@ def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) 
 class SpackYAMLError(spack.error.SpackError):
     """Raised when there are issues with YAML parsing."""
 
-    def __init__(self, msg, yaml_error):
+    def __init__(self, msg, yaml_error, filename=None):
+        self.filename = filename
         super().__init__(msg, str(yaml_error))
 
 

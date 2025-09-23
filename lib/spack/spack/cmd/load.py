@@ -71,7 +71,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--list",
         action="store_true",
         default=False,
-        help="show loaded packages: same as `spack find --loaded`",
+        help="show loaded packages: same as ``spack find --loaded``",
     )
 
 

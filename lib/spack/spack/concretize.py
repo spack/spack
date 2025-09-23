@@ -179,8 +179,8 @@ def concretize_one(spec: Union[str, Spec], tests: TestsType = False) -> Spec:
     """Return a concretized copy of the given spec.
 
     Args:
-        tests: if False disregard 'test' dependencies, if a list of names activate them for
-            the packages in the list, if True activate 'test' dependencies for all packages.
+        tests: if False disregard test dependencies, if a list of names activate them for
+            the packages in the list, if True activate test dependencies for all packages.
     """
     from spack.solver.asp import Solver, SpecBuilder
 

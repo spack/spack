@@ -266,7 +266,8 @@ class BinaryCacheIndex:
             spec_list = [
                 s
                 for s in db.query_local(installed=InstallRecordStatus.ANY)
-                if s.external or db.query_local_by_spec_hash(s.dag_hash()).in_buildcache
+                # todo, make it easer to get install records associated with specs
+                if s.external or db._data[s.dag_hash()].in_buildcache
             ]
 
             for indexed_spec in spec_list:
@@ -320,16 +321,14 @@ class BinaryCacheIndex:
 
         Returns:
             An list of objects containing the found specs and mirror url where
-                each can be found, e.g.:
+            each can be found, e.g.::
 
-                .. code-block:: python
-
-                    [
-                        {
-                            "spec": <concrete-spec>,
-                            "mirror_url": <mirror-root-url>
-                        }
-                    ]
+                [
+                    {
+                        "spec": "<concrete-spec>",
+                        "mirror_url": "<mirror-root-url>"
+                    }
+                ]
         """
         return self.find_by_hash(spec.dag_hash(), mirrors_to_check=mirrors_to_check)
 
@@ -351,8 +350,8 @@ class BinaryCacheIndex:
 
     def update_spec(self, spec: spack.spec.Spec, found_list: List[MirrorForSpec]):
         """
-        Take list of {'mirror_url': m, 'spec': s} objects and update the local
-        built_spec_cache
+        Take list of ``{"mirror_url": m, "spec": s}`` objects and update the local
+        ``built_spec_cache``.
         """
         spec_dag_hash = spec.dag_hash()
 
@@ -782,7 +781,7 @@ def _url_generate_package_index(url: str, tmpdir: str):
 def generate_key_index(mirror_url: str, tmpdir: str) -> None:
     """Create the key index page.
 
-    Creates (or replaces) the "index.json" page at the location given in mirror_url.  This page
+    Creates (or replaces) the ``index.json`` page at the location given in mirror_url.  This page
     contains an entry for each key under mirror_url.
     """
 
@@ -2223,7 +2222,7 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
 
     Return:
         A list of objects, each containing a ``mirror_url`` and ``spec`` key
-            indicating all mirrors where the spec can be found.
+        indicating all mirrors where the spec can be found.
     """
     if spec is None:
         return []
@@ -2254,7 +2253,7 @@ def update_cache_and_get_specs():
     local index cache (essentially a no-op if it has been done already and
     nothing has changed on the configured mirrors.)
 
-    Throws:
+    Raises:
         FetchCacheError
     """
     BINARY_INDEX.update()
@@ -2834,16 +2833,17 @@ class DefaultIndexFetcher(IndexFetcher):
 class EtagIndexFetcher(IndexFetcher):
     """Fetcher for buildcache index, cache invalidation via ETags headers
 
-    This class differs from the DefaultIndexFetcher in the following ways: 1) It
-    is provided with an etag value on creation, rather than an index checksum
-    value. Note that since we never start out with an etag, the default fetcher
-    must have been used initially and determined that the etag approach is valid.
-    2) It provides this etag value in the 'If-None-Match' request header for the
-    index manifest. 3) It checks for special exception type and response code
-    indicating the index manifest is not modified, exiting early and returning
-    'Fresh', if encountered. 4) If it needs to actually read the manifest, it
-    does not need to do any checks of the url scheme to determine whether an
-    etag should be included in the return value."""
+    This class differs from the :class:`DefaultIndexFetcher` in the following ways:
+
+    1. It is provided with an etag value on creation, rather than an index checksum value. Note
+    that since we never start out with an etag, the default fetcher must have been used initially
+    and determined that the etag approach is valid.
+    2. It provides this etag value in the ``If-None-Match`` request header for the
+    index manifest.
+    3. It checks for special exception type and response code indicating the index manifest is not
+    modified, exiting early and returning ``Fresh``, if encountered.
+    4. If it needs to actually read the manifest, it does not need to do any checks of the url
+    scheme to determine whether an etag should be included in the return value."""
 
     def __init__(self, url_and_version: MirrorURLAndVersion, etag, urlopen=web_util.urlopen):
         self.url = url_and_version.url

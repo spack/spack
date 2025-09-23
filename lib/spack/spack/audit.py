@@ -11,8 +11,8 @@ object:
 .. code-block:: python
 
    audit_cfgcmp = AuditClass(
-       tag='CFG-COMPILER',
-       description='Sanity checks on compilers.yaml',
+       tag="CFG-COMPILER",
+       description="Sanity checks on compilers.yaml",
        kwargs=()
    )
 

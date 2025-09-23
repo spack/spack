@@ -26,7 +26,7 @@ def reset():
     """The result of the host search is memoized. In case it needs to be recomputed
     we must clear the cache, which is what this function does.
     """
-    _host.cache.clear()
+    _host.cache_clear()
 
 
 @spack.llnl.util.lang.memoized

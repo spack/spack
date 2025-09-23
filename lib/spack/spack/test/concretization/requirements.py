@@ -1397,3 +1397,53 @@ packages:
     assert concrete.satisfies("%gcc")
     assert concrete["mpi"].satisfies("mpich@4.3.0")
     assert concrete["mpi"].prefix == str(tmp_path / "gcc")
+
+
+@pytest.mark.regression("51262")
+@pytest.mark.parametrize(
+    "input_constraint",
+    [
+        # Override the compiler preference with a different version of gcc
+        "%c=gcc@10",
+        # Same, but without specifying the virtual
+        "%gcc@10",
+        # Override the mpi preference with a different version of mpich
+        "%mpi=mpich@3 ~debug",
+        # Override the mpi preference with a different provider
+        "%mpi=mpich2",
+    ],
+)
+def test_overriding_preference_with_provider_details(
+    input_constraint, concretize_scope, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that if we have a preference with provider details, such as a version range,
+    or a variant, we can override it from the command line, while we can't do the same
+    when we have a requirement.
+    """
+    # A preference can be overridden
+    packages_yaml = """
+packages:
+  c:
+    prefer:
+    - gcc@9
+  mpi:
+    prefer:
+    - mpich@3 +debug
+"""
+    update_packages_config(packages_yaml)
+    concrete = spack.concretize.concretize_one(f"mpileaks {input_constraint}")
+    assert concrete.satisfies(input_constraint)
+
+    # A requirement cannot
+    packages_yaml = """
+    packages:
+      c:
+        require:
+        - gcc@9
+      mpi:
+        require:
+        - mpich@3 +debug
+    """
+    update_packages_config(packages_yaml)
+    with pytest.raises(UnsatisfiableSpecError):
+        spack.concretize.concretize_one(f"mpileaks {input_constraint}")
