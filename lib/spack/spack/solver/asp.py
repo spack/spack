@@ -1145,9 +1145,9 @@ class PyclingoDriver:
                 solve_kwargs["on_unsat"] = cores.append
 
             timer.start("solve")
-            starting_point = time.monotonic()
             # A timeout of 0 means no timeout
             time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
+            timeout_end = time.monotonic() + time_limit if time_limit > 0 else float("inf")
             error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
             with self.control.solve(**solve_kwargs, async_=True) as handle:
                 # Allow handling of interrupts every second.
@@ -1157,11 +1157,8 @@ class PyclingoDriver:
                 # the main thread, so any `KeyboardInterrupt` is postponed until after the
                 # `.wait()` call exits the control of pyclingo.
                 finished = False
-                while not finished:
+                while not finished and time.monotonic() < timeout_end:
                     finished = handle.wait(1.0)
-                    elapsed_time = time.monotonic() - starting_point
-                    if time_limit != 0 and elapsed_time > time_limit:
-                        break
 
                 if not finished:
                     specs_str = ", ".join(
