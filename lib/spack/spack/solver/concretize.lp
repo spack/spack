@@ -2113,7 +2113,7 @@ opt_criterion(2, "providers on edges").
       depends_on(ParentNode, ProviderNode)
 }.
 
-% Choose more recent versions for nodes
+% Try to use latest versions of nodes as much as possible
 opt_criterion(1, "version badness on edges").
 #minimize{ 0@201: #true }.
 #minimize{ 0@1: #true }.
