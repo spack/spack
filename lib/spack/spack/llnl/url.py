@@ -54,6 +54,7 @@ def find_list_urls(url: str) -> Set[str]:
         # GitHub
         # e.g. https://github.com/llnl/callpath/archive/v1.0.1.tar.gz
         (r"(.*github\.com/[^/]+/[^/]+)", lambda m: m.group(1) + "/releases"),
+        (r"(.*github\.com/[^/]+/[^/]+)", lambda m: m.group(1) + "/tags"),
         # GitLab API endpoint
         # e.g. https://gitlab.dkrz.de/api/v4/projects/k202009%2Flibaec/repository/archive.tar.gz?sha=v1.0.2
         (
