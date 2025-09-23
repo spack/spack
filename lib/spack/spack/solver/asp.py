@@ -16,6 +16,7 @@ import pathlib
 import pprint
 import re
 import sys
+import time
 import typing
 import warnings
 from contextlib import contextmanager
@@ -1230,13 +1231,24 @@ class PyclingoDriver:
                 solve_kwargs["on_unsat"] = cores.append
 
             timer.start("solve")
-            time_limit = spack.config.CONFIG.get("concretizer:timeout", -1)
+            starting_point = time.monotonic()
+            # A timeout of 0 means no timeout
+            time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
             error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
-            # Spack uses 0 to set no time limit, clingo API uses -1
-            if time_limit == 0:
-                time_limit = -1
             with self.control.solve(**solve_kwargs, async_=True) as handle:
-                finished = handle.wait(time_limit)
+                # Allow handling of interrupts every second.
+                #
+                # pyclingo's `SolveHandle` blocks the calling thread for the duration of each
+                # `.wait()` call. Python also requires that signal handlers must be handled in
+                # the main thread, so any `KeyboardInterrupt` is postponed until after the
+                # `.wait()` call exits the control of pyclingo.
+                finished = False
+                while not finished:
+                    finished = handle.wait(1.0)
+                    elapsed_time = time.monotonic() - starting_point
+                    if time_limit != 0 and elapsed_time > time_limit:
+                        break
+
                 if not finished:
                     specs_str = ", ".join(
                         spack.llnl.util.lang.elide_list([str(s) for s in specs], 4)
