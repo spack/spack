@@ -138,7 +138,7 @@ def colify(
     env_size = os.environ.get("COLIFY_SIZE")
     if env_size:
         try:
-            console_cols = int(env_size.partition("x")[2])
+            console_cols = int(env_size.lower().partition("x")[2])
             tty = True
         except ValueError:
             pass
