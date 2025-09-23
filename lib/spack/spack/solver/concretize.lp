@@ -2102,7 +2102,7 @@ opt_criterion(3, "non-preferred targets (runtimes)").
       runtime(Package)
 }.
 
-% Choose more recent versions for nodes
+% Try to use the most optimal providers as much as possible
 opt_criterion(2, "providers on edges").
 #minimize{ 0@202: #true }.
 #minimize{ 0@2: #true }.
