@@ -23,7 +23,7 @@ import spack.util.url as url_util
 from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.util.executable import Executable
+from spack.util.executable import Executable, ProcessError, which
 
 # various sha256 sums (using variables for legibility)
 # many file based shas will differ between Windows and other platforms
@@ -64,6 +64,16 @@ platform_url_sha = (
 )
 
 
+try:
+    patch = which("patch")
+    if patch is not None:
+        patch("-h")
+except ProcessError:
+    # There is a problem, such as a permission error when the command attempts
+    # to create a patch directory (e.g., on some darwin systems).
+    patch = None
+
+
 @pytest.fixture()
 def mock_patch_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch):
     # Don't disrupt the spack install directory with tests.
@@ -76,6 +86,7 @@ data_path = os.path.join(spack.paths.test_path, "data", "patch")
 
 
 @pytest.mark.not_on_windows("Line ending conflict on Windows")
+@pytest.mark.skipif(not patch, reason="'patch -h' fails")
 @pytest.mark.parametrize(
     "filename, sha256, archive_sha256",
     [
@@ -234,6 +245,7 @@ def test_nested_directives(mock_packages):
 
 
 @pytest.mark.not_on_windows("Test requires Autotools")
+@pytest.mark.skipif(not patch, reason="'patch -h' fails")
 def test_patched_dependency(mock_packages, install_mockery, mock_fetch):
     """Test whether patched dependencies work."""
     spec = spack.concretize.concretize_one("patch-a-dependency")
@@ -271,6 +283,7 @@ def trigger_bad_patch(pkg):
     return bad_file
 
 
+@pytest.mark.skipif(not patch, reason="'patch -h' fails")
 def test_patch_failure_develop_spec_exits_gracefully(
     mock_packages, install_mockery, mock_fetch, tmp_path: pathlib.Path, mock_stage
 ):
@@ -287,6 +300,7 @@ def test_patch_failure_develop_spec_exits_gracefully(
     # success if no exceptions raised
 
 
+@pytest.mark.skipif(not patch, reason="'patch -h' fails")
 def test_patch_failure_restages(mock_packages, install_mockery, mock_fetch):
     """
     ensure that a failing patch does not trigger exceptions
