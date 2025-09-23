@@ -1146,21 +1146,22 @@ class PyclingoDriver:
 
             timer.start("solve")
             starting_point = time.monotonic()
-            # A timeout of 0 or less means no timeout
-            time_limit = spack.config.CONFIG.get("concretizer:timeout", -1)
+            # A timeout of 0 means no timeout
+            time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
             error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
             with self.control.solve(**solve_kwargs, async_=True) as handle:
+                # Allow handling of interrupts every second.
+                #
                 # pyclingo's `SolveHandle` blocks the calling thread for the duration of each
-                # `.wait()` call. Python also requires that signal handlers (like SIGINT for ^C)
-                # must be handled in the main thread, so any `KeyboardInterrupt` is postponed
-                # until after the `.wait()` call exits the control of pyclingo. Polling repeatedly
-                # ensures the user won't have to wait long for a response to their ^C.
-                finished = handle.wait(0)
+                # `.wait()` call. Python also requires that signal handlers must be handled in
+                # the main thread, so any `KeyboardInterrupt` is postponed until after the
+                # `.wait()` call exits the control of pyclingo.
+                finished = False
                 while not finished:
-                    elapsed_time = time.monotonic() - starting_point
-                    if 0 < time_limit < elapsed_time:
-                        break
                     finished = handle.wait(1.0)
+                    elapsed_time = time.monotonic() - starting_point
+                    if time_limit != 0 and elapsed_time > time_limit:
+                        break
 
                 if not finished:
                     specs_str = ", ".join(
