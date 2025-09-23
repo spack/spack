@@ -152,6 +152,20 @@ def test_install_from_cache_errors(install_mockery):
     assert not spec.package.installed_from_binary_cache
 
 
+def test_install_from_cache_no_redistribute(install_mockery, capfd):
+    """Test to ensure cover install from cache errors."""
+    spec = spack.concretize.concretize_one("no-redistribute")
+    assert spec.concrete
+
+    # Check with cache-only
+    PackageInstaller(
+        [spec.package], package_cache_only=True, dependencies_cache_only=True
+    ).install()
+    assert not spec.package.installed_from_binary_cache
+    out = capfd.readouterr()[0]
+    assert "installing from source" in out
+
+
 def test_install_from_cache_ok(install_mockery, monkeypatch):
     """Test to ensure cover _install_from_cache to the return."""
     spec = spack.concretize.concretize_one("trivial-install-test-package")
