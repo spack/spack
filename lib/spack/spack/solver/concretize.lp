@@ -827,10 +827,6 @@ error(1, Msg)
 % Virtual dependencies
 %-----------------------------------------------------------------------------
 
-% If the provider is set from the command line, its weight is 0
-possible_provider_weight(ProviderNode, VirtualNode, 0, "Set on the command line")
-  :- attr("provider_set", ProviderNode, VirtualNode).
-
 % Enforces all virtuals to be provided, if multiple of them are provided together
 error(100, "Package '{0}' needs to provide both '{1}' and '{2}' together, but provides only '{1}'", Package, Virtual1, Virtual2)
 :- % This package provides 2 or more virtuals together
