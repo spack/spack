@@ -299,5 +299,8 @@ def _external_config_with_implicit_externals(configuration):
         if libc and libc not in seen:
             seen.add(libc)
             entry = {"spec": f"{libc}", "prefix": libc.external_path}
-            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
+            existing_entries = packages_yaml.setdefault(libc.name, {}).setdefault("externals", [])
+            if entry in existing_entries:
+                continue
+            existing_entries.append(entry)
     return packages_yaml
