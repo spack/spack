@@ -26,7 +26,7 @@ duplicate_penalty(node(ID1, Package), 1, "version")
      multiple_unification_sets(Package),
      ID1 < ID2, Weight2 < Weight1.
 
-% We can enforce this, and hope the grounder generates less rules
+% We can enforce this, and hope the grounder generates fewer rules
 :- provider_weight(ProviderNode1, node(ID1, Virtual), Weight1),
    provider_weight(ProviderNode2, node(ID2, Virtual), Weight2),
    ID1 < ID2, Weight2 < Weight1,
