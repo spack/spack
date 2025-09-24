@@ -16,6 +16,22 @@
 { attr("node", node(0..X-1, Package))         } :- max_dupes(Package, X), not virtual(Package).
 { attr("virtual_node", node(0..X-1, Package)) } :- max_dupes(Package, X), virtual(Package).
 
+%%%%
+% Rules to prevent symmetry on duplicates
+%%%%
+
+duplicate_penalty(node(ID1, Package), 1, "version")
+  :- attr("node", node(ID1, Package)), attr("node", node(ID2, Package)),
+     version_weight(node(ID1, Package), Weight1), version_weight(node(ID2, Package), Weight2),
+     multiple_unification_sets(Package),
+     ID1 < ID2, Weight2 < Weight1.
+
+% We can enforce this, and hope the grounder generates less rules
+:- provider_weight(ProviderNode1, node(ID1, Virtual), Weight1),
+   provider_weight(ProviderNode2, node(ID2, Virtual), Weight2),
+   ID1 < ID2, Weight2 < Weight1,
+   max_dupes(Virtual, X), X > 1.
+
 % Integrity constraints on DAG nodes
 :- attr("root", PackageNode),
    not attr("node", PackageNode),
@@ -619,6 +635,11 @@ error(100, "External {0} cannot satisfy both {1} and {2}", BuildDependency, Lite
      not attr("dependency_holds", ParentNode, Virtual,"link"),
      not attr("dependency_holds", ParentNode, Virtual,"run"),
      virtual(Virtual).
+
+% The virtual build dependency must be on the correct duplicate
+:- virtual_build_requirement(ParentNode, node(X, Virtual)),
+   provider(ProviderNode, node(X, Virtual)),
+   not depends_on(ParentNode, ProviderNode).
 
 attr("virtual_node", VirtualNode)  :- virtual_build_requirement(ParentNode, VirtualNode).
 build_requirement(ParentNode, ProviderNode)  :-
@@ -1299,7 +1320,7 @@ error(100, "Cannot set variant '{0}' for package '{1}' because the variant condi
      build(node(ID, Package)).
 
 % at most one variant value for single-valued variants.
-error(100, "'{0}' requires conflicting variant values 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2)
+error(1000, "'{0}' requires conflicting variant values 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2)
   :- attr("node", node(ID, Package)),
      node_has_variant(node(ID, Package), Variant, _),
      variant_single_value(node(ID, Package), Variant),
@@ -2124,6 +2145,13 @@ opt_criterion(1, "version badness on edges").
       depends_on(ParentNode, PackageNode)
 }.
 
+% Reduce symmetry on duplicates
+opt_criterion(0, "penalty on symmetric duplicates").
+#minimize{ 0@200: #true }.
+#minimize{ 0@0: #true }.
+#minimize{
+    Weight@1,PackageNode,Reason : duplicate_penalty(PackageNode, Weight, Reason)
+}.
 
 
 %-----------
