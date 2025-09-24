@@ -1085,6 +1085,8 @@ class OCIUploader(Uploader):
             self._base_images, self._checksums, tagged_image, self.tmpdir, None, None, *roots
         )
 
+        tty.info(f"Tagged {tagged_image}")
+
 
 class URLUploader(Uploader):
     def __init__(
