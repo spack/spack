@@ -63,6 +63,25 @@ def syaml_type(obj):
     return obj
 
 
+def deepcopy_as_builtin(obj: Any) -> Any:
+    """Deep copy a YAML object as built-in types (dict, list, str, int, ...)."""
+    if isinstance(obj, str):
+        return str(obj)
+    elif isinstance(obj, dict):
+        return {deepcopy_as_builtin(k): deepcopy_as_builtin(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [deepcopy_as_builtin(x) for x in obj]
+    elif isinstance(obj, bool):
+        return bool(obj)
+    elif isinstance(obj, int):
+        return int(obj)
+    elif isinstance(obj, float):
+        return float(obj)
+    elif obj is None:
+        return obj
+    raise ValueError(f"cannot convert {type(obj)} to built-in type")
+
+
 def markable(obj):
     """Whether an object can be marked."""
     return type(obj) in markable_types

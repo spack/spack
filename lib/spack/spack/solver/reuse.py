@@ -12,7 +12,7 @@ import spack.repo
 import spack.spec
 import spack.store
 
-from .runtimes import _external_config_with_implicit_externals
+from .runtimes import external_config_with_implicit_externals
 
 
 class SpecFilter:
@@ -58,7 +58,7 @@ class SpecFilter:
     @staticmethod
     def from_store(configuration, *, include, exclude) -> "SpecFilter":
         """Constructs a filter that takes the specs from the current store."""
-        packages = _external_config_with_implicit_externals(configuration)
+        packages = external_config_with_implicit_externals(configuration)
         is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
         factory = functools.partial(_specs_from_store, configuration=configuration)
         return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
@@ -66,7 +66,7 @@ class SpecFilter:
     @staticmethod
     def from_buildcache(configuration, *, include, exclude) -> "SpecFilter":
         """Constructs a filter that takes the specs from the configured buildcaches."""
-        packages = _external_config_with_implicit_externals(configuration)
+        packages = external_config_with_implicit_externals(configuration)
         is_reusable = functools.partial(_is_reusable, packages=packages, local=False)
         return SpecFilter(
             factory=_specs_from_mirror, is_usable=is_reusable, include=include, exclude=exclude
@@ -74,7 +74,7 @@ class SpecFilter:
 
     @staticmethod
     def from_environment(configuration, *, include, exclude, env) -> "SpecFilter":
-        packages = _external_config_with_implicit_externals(configuration)
+        packages = external_config_with_implicit_externals(configuration)
         is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
         factory = functools.partial(_specs_from_environment, env=env)
         return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
@@ -88,7 +88,7 @@ class SpecFilter:
         env: spack.environment.Environment,
         included_concrete: str,
     ) -> "SpecFilter":
-        packages = _external_config_with_implicit_externals(configuration)
+        packages = external_config_with_implicit_externals(configuration)
         is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
         factory = functools.partial(
             _specs_from_environment_included_concrete, env=env, included_concrete=included_concrete

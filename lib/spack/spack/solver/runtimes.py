@@ -1,12 +1,12 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import copy
 import itertools
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
+import spack.config
 import spack.repo
 import spack.spec
 import spack.version
@@ -257,19 +257,18 @@ class RuntimePropertyRecorder:
         self._setup.effect_rules()
 
 
-def _normalize_packages_yaml(packages_yaml):
-    normalized_yaml = copy.copy(packages_yaml)
-    for pkg_name in packages_yaml:
+def _normalize_packages_yaml(packages_yaml: Dict[str, Any]) -> None:
+    for pkg_name in list(packages_yaml.keys()):
         is_virtual = spack.repo.PATH.is_virtual(pkg_name)
         if pkg_name == "all" or not is_virtual:
             continue
 
         # Remove the virtual entry from the normalized configuration
-        data = normalized_yaml.pop(pkg_name)
+        data = packages_yaml.pop(pkg_name)
         is_buildable = data.get("buildable", True)
         if not is_buildable:
             for provider in spack.repo.PATH.providers_for(pkg_name):
-                entry = normalized_yaml.setdefault(provider.name, {})
+                entry = packages_yaml.setdefault(provider.name, {})
                 entry["buildable"] = False
 
         externals = data.get("externals", [])
@@ -278,16 +277,17 @@ def _normalize_packages_yaml(packages_yaml):
             return spack.spec.Spec(x["spec"]).name
 
         for provider, specs in itertools.groupby(externals, key=keyfn):
-            entry = normalized_yaml.setdefault(provider, {})
+            entry = packages_yaml.setdefault(provider, {})
             entry.setdefault("externals", []).extend(specs)
 
-    return normalized_yaml
 
-
-def _external_config_with_implicit_externals(configuration):
+def external_config_with_implicit_externals(
+    configuration: spack.config.Configuration,
+) -> Dict[str, Any]:
     # Read packages.yaml and normalize it so that it will not contain entries referring to
     # virtual packages.
-    packages_yaml = _normalize_packages_yaml(configuration.get("packages"))
+    packages_yaml = configuration.deepcopy_as_builtin("packages")
+    _normalize_packages_yaml(packages_yaml)
 
     # Add externals for libc from compilers on Linux
     if not using_libc_compatibility():
