@@ -989,6 +989,8 @@ def _main(argv=None):
             env_format_error = e
 
     def add_environment_scope(priority):
+        #TODO ammend python environment here? to enable env mod to apply to child processes
+        # while still allowing child processes to take precedent in further  mods
         if env_format_error:
             # Allow command to continue without env in case it is `spack config edit`
             # All other cases will raise in `finish_parse_and_run`
