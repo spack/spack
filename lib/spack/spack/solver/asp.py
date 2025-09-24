@@ -1089,8 +1089,11 @@ class PyclingoDriver:
             control_files.append("splices.lp")
 
         timer.start("setup")
-        asp_problem = setup.setup(specs, reuse=reuse, allow_deprecated=allow_deprecated)
-        if output.out is not None:
+        output_is_set = output.out is not None
+        asp_problem = setup.setup(
+            specs, reuse=reuse, allow_deprecated=allow_deprecated, output_for_cli=output_is_set
+        )
+        if output_is_set:
             output.out.write(asp_problem)
         if output.setup_only:
             return Result(specs), None, None
@@ -3036,6 +3039,7 @@ class SpackSolverSetup:
         *,
         reuse: Optional[List[spack.spec.Spec]] = None,
         allow_deprecated: bool = False,
+        output_for_cli: bool = False,
     ) -> str:
         """Generate an ASP program with relevant constraints for specs.
 
@@ -3196,11 +3200,11 @@ class SpackSolverSetup:
         self.define_target_constraints()
 
         self.gen.h1("Internal errors")
-        self.internal_errors()
+        self.internal_errors(output_for_cli=output_for_cli)
 
         return self.gen.value()
 
-    def internal_errors(self):
+    def internal_errors(self, *, output_for_cli: bool):
         parent_dir = os.path.dirname(__file__)
 
         def visit(node):
@@ -3213,7 +3217,9 @@ class SpackSolverSetup:
                                 arg = ast_sym(ast_sym(term.atom).arguments[0])
                                 symbol = AspFunction(name)(arg.string)
                                 self.assumptions.append((parse_term(str(symbol)), True))
-                                self.gen.asp_problem.append(f"{{ {symbol} }}.\n")
+                                self.gen.asp_problem.append(
+                                    f"{symbol}.\n" if output_for_cli else f"{{ {symbol} }}.\n"
+                                )
 
         path = os.path.join(parent_dir, "concretize.lp")
         parse_files([path], visit)
