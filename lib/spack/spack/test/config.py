@@ -1402,3 +1402,19 @@ def test_config_include_similar_name(tmp_path: pathlib.Path):
     assert len(config.matching_scopes("^test$")) == 1
     assert len(config.matching_scopes("^test:a/config$")) == 1
     assert len(config.matching_scopes("^test:b/config$")) == 1
+
+
+def test_deepcopy_as_builtin(env_yaml):
+    cfg = spack.config.create_from(
+        spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, yaml_path=["spack"])
+    )
+    config_copy = cfg.deepcopy_as_builtin("config")
+    assert config_copy == cfg.get_config("config")
+    assert type(config_copy) is dict
+    assert type(config_copy["verify_ssl"]) is bool
+
+    packages_copy = cfg.deepcopy_as_builtin("packages")
+    assert type(packages_copy) is dict
+    assert type(packages_copy["all"]) is dict
+    assert type(packages_copy["all"]["compiler"]) is list
+    assert type(packages_copy["all"]["compiler"][0]) is str

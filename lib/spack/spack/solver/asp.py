@@ -87,7 +87,7 @@ from .core import (
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFilter
-from .runtimes import RuntimePropertyRecorder, _external_config_with_implicit_externals
+from .runtimes import RuntimePropertyRecorder, external_config_with_implicit_externals
 from .versions import DeclaredVersion, Provenance, concretization_version_order
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
@@ -2207,7 +2207,7 @@ class SpackSolverSetup:
                     )
                 )
 
-        packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
+        packages_yaml = external_config_with_implicit_externals(spack.config.CONFIG)
         for pkg_name, data in packages_yaml.items():
             if pkg_name == "all":
                 continue
@@ -3666,7 +3666,7 @@ class SpecBuilder:
 
     def external_spec_selected(self, node, idx):
         """This means that the external spec and index idx has been selected for this package."""
-        packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
+        packages_yaml = external_config_with_implicit_externals(spack.config.CONFIG)
         spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
         self._specs[node].external_path = spec_info.get("prefix", None)
         self._specs[node].external_modules = spack.spec.Spec._format_module_list(
