@@ -1455,8 +1455,8 @@ class Environment:
                 if not dep.satisfies(spec):
                     raise SpackEnvironmentDevelopError(
                         f"Develop spec '{spec}' conflicts with concrete specs in environment."
-                        " Try again with 'spack develop --no-apply-changes'"
-                        " and run 'spack concretize --force' to apply changes."
+                        " Try again with 'spack develop --no-modify-concrete-specs'"
+                        " and run 'spack concretize --force' to apply your changes."
                     )
                 modify_specs.append(dep)
 

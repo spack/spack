@@ -1012,7 +1012,7 @@ _spack_dev_build() {
 _spack_develop() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -p --path -b --build-directory --no-clone --clone --no-apply-changes --apply-changes -f --force -r --recursive"
+        SPACK_COMPREPLY="-h --help -p --path -b --build-directory --no-clone --clone --no-modify-concrete-specs -f --force -r --recursive"
     else
         _all_packages
     fi

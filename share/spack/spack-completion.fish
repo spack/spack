@@ -1462,7 +1462,7 @@ complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -f -a 
 complete -c spack -n '__fish_spack_using_command dev-build' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack develop
-set -g __fish_spack_optspecs_spack_develop h/help p/path= b/build-directory= no-clone clone no-apply-changes apply-changes f/force= r/recursive
+set -g __fish_spack_optspecs_spack_develop h/help p/path= b/build-directory= no-clone clone no-modify-concrete-specs f/force r/recursive
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 develop' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command develop' -s h -l help -d 'show this help message and exit'
@@ -1474,12 +1474,10 @@ complete -c spack -n '__fish_spack_using_command develop' -l no-clone -f -a clon
 complete -c spack -n '__fish_spack_using_command develop' -l no-clone -d 'do not clone, the package already exists at the source path'
 complete -c spack -n '__fish_spack_using_command develop' -l clone -f -a clone
 complete -c spack -n '__fish_spack_using_command develop' -l clone -d '(default) clone the package unless the path already exists, use ``--force`` to overwrite'
-complete -c spack -n '__fish_spack_using_command develop' -l no-apply-changes -f -a apply_changes
-complete -c spack -n '__fish_spack_using_command develop' -l no-apply-changes -d 'do not mutate concrete specs to have dev_path provenance. This requires a later `spack concretize --force` command to use develop specs'
-complete -c spack -n '__fish_spack_using_command develop' -l apply-changes -f -a apply_changes
-complete -c spack -n '__fish_spack_using_command develop' -l apply-changes -d '(default) mutate concrete specs to have dev_path provenance. This does not do other aspects of concretization. It will fail if the develop spec is incompatible with concrete specs in the env.'
-complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -f -a force
-complete -c spack -n '__fish_spack_using_command develop' -s f -l force -r -d 'remove any files or directories that block cloning source code'
+complete -c spack -n '__fish_spack_using_command develop' -l no-modify-concrete-specs -f -a apply_changes
+complete -c spack -n '__fish_spack_using_command develop' -l no-modify-concrete-specs -d 'do not mutate concrete specs to have dev_path provenance. This requires a later `spack concretize --force` command to use develop specs'
+complete -c spack -n '__fish_spack_using_command develop' -s f -l force -f -a force
+complete -c spack -n '__fish_spack_using_command develop' -s f -l force -d 'remove any files or directories that block cloning source code'
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -a recursive
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -d 'traverse nodes of the graph to mark everything up to the root as a develop spec'
 

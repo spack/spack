@@ -387,8 +387,8 @@ Spack's native implementation is to check if ``mtime`` is newer than the install
 A custom check can be created by overriding the ``detect_dev_src_change`` method in your package class.
 This is particularly useful for projects using custom Spack repos to drive development and want to optimize performance.
 
-When ``spack develop`` is run in a concrete environment, Spack will modify the concrete specs in the environment to include any applicable ``dev_path`` variants.
-If the develop spec conflicts with the concrete specs in the environment, Spack will raise an exception and require the ``spack develop --no-apply-changes`` option, followed by a ``spack concretize --force`` to apply the ``dev_path`` variant and constraints from the develop spec.
+When ``spack develop`` is run in a concretized environment, Spack will modify the concrete specs in the environment to include any applicable ``dev_path`` variants.
+If the develop spec conflicts with the concrete specs in the environment, Spack will raise an exception and require the ``spack develop --no-modify-concrete-specs`` option, followed by a ``spack concretize --force`` to apply the ``dev_path`` variant and constraints from the develop spec.
 
 When ``spack develop`` is run without any arguments, Spack will clone any develop specs in the environment for which the specified path does not exist.
 

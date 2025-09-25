@@ -46,30 +46,23 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         ),
     )
 
-    apply_group = subparser.add_mutually_exclusive_group()
-    apply_group.add_argument(
-        "--no-apply-changes",
+    subparser.add_argument(
+        "--no-modify-concrete-specs",
         action="store_false",
+        default=True,
         dest="apply_changes",
         help=(
             "do not mutate concrete specs to have dev_path provenance."
             " This requires a later `spack concretize --force` command to use develop specs"
         ),
     )
-    apply_group.add_argument(
-        "--apply-changes",
-        action="store_true",
-        dest="apply_changes",
-        default=True,
-        help=(
-            "(default) mutate concrete specs to have dev_path provenance."
-            " This does not do other aspects of concretization."
-            " It will fail if the develop spec is incompatible with concrete specs in the env."
-        ),
-    )
 
     subparser.add_argument(
-        "-f", "--force", help="remove any files or directories that block cloning source code"
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        help="remove any files or directories that block cloning source code"
     )
 
     subparser.add_argument(

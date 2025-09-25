@@ -171,7 +171,7 @@ class TestDevelop:
                 assert spec.satisfies(f"dev_path={path}")
                 assert spack.config.get("develop:mpich:path") == path
 
-    def test_develop_no_apply_changes(self, monkeypatch):
+    def test_develop_no_modify(self, monkeypatch):
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")
@@ -179,7 +179,7 @@ class TestDevelop:
             e.write()
 
             monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
-            develop("--no-apply-changes", "mpich@1.0")
+            develop("--no-modify-concrete-specs", "mpich@1.0")
 
             # Check modifications were not applied
             spec = next(e.roots())
