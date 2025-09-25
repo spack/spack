@@ -266,6 +266,7 @@ needs_sphinx = "3.4"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.graphviz",
+    "sphinx.ext.imgconverter",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
@@ -496,6 +497,8 @@ sitemap_url_scheme = "{link}"
 sitemap_excludes = ["search.html", "_modules/*"]
 
 # -- Options for LaTeX output --------------------------------------------------
+
+latex_engine = "lualatex"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
