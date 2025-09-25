@@ -639,6 +639,10 @@ class Configuration:
         """
         return self._get_config_memoized(section, scope=scope, _merged_scope=_merged_scope)
 
+    def deepcopy_as_builtin(self, section: str, scope: Optional[str] = None) -> Dict[str, Any]:
+        """Get a deep copy of a section with native Python types, excluding YAML metadata."""
+        return syaml.deepcopy_as_builtin(self.get_config(section, scope=scope))
+
     @lang.memoized
     def _get_config_memoized(
         self, section: str, scope: Optional[str], _merged_scope: Optional[str]
