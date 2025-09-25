@@ -62,7 +62,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--force",
         action="store_true",
         default=False,
-        help="remove any files or directories that block cloning source code"
+        help="remove any files or directories that block cloning source code",
     )
 
     subparser.add_argument(
