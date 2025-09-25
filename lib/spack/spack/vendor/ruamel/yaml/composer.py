@@ -188,7 +188,7 @@ class Composer:
         if node.flow_style is True and end_event.comment is not None:
             if node.comment is not None:
                 nprint(
-                    'Warning: unexpected end_event commment in sequence '
+                    'Warning: unexpected end_event comment in sequence '
                     'node {}'.format(node.flow_style)
                 )
             node.comment = end_event.comment

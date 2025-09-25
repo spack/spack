@@ -1460,7 +1460,7 @@ class Scanner:
                                 'while scanning a double-quoted scalar',
                                 start_mark,
                                 _F(
-                                    'expected escape sequence of {length:d} hexdecimal '
+                                    'expected escape sequence of {length:d} hexadecimal '
                                     'numbers, but found {srp_call!r}',
                                     length=length,
                                     srp_call=srp(k),
@@ -1748,7 +1748,7 @@ class Scanner:
                         _F('while scanning an {name!s}', name=name),
                         start_mark,
                         _F(
-                            'expected URI escape sequence of 2 hexdecimal numbers,'
+                            'expected URI escape sequence of 2 hexadecimal numbers,'
                             ' but found {srp_call!r}',
                             srp_call=srp(k),
                         ),
