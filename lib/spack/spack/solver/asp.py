@@ -3066,18 +3066,17 @@ class SpackSolverSetup:
         self.possible_compilers.sort()  # type: ignore[call-overload]
 
         should_mix = spack.config.get("concretizer:compiler_mixing", True)
-        if not should_mix:
+        if isinstance(should_mix, bool) and should_mix:
+            pass
+        else:
             for lang in ["c", "cxx", "fortran"]:
                 self.gen.fact(fn.no_compiler_mixing(lang))
 
-        for pkg_name, d in spack.config.get("packages").items():
-            if pkg_name == "all":
-                # Schema prohibits allow_compiler_mixing on all, so
-                # it's not relevant in this block
-                continue
-            allow_mixing = d.get("allow_compiler_mixing", False)
-            if allow_mixing:
-                self.gen.fact(fn.allow_mixing(pkg_name))
+            try:
+                for pkg_name in should_mix:
+                    self.gen.fact(fn.allow_mixing(pkg_name))
+            except TypeError:
+                pass
 
         self.gen.h1("Runtimes")
         injected_dependencies = self.define_runtime_constraints()

@@ -474,14 +474,14 @@ class TestConcretize:
                 spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
 
     def test_disable_mixing_override_by_package(self):
-        with spack.config.override("concretizer", {"compiler_mixing": False}):
-            with spack.config.override(
-                "packages", {"dt-diamond-bottom": {"allow_compiler_mixing": True}}
-            ):
-                root = spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
-                assert root.satisfies("%clang")
-                assert root["dt-diamond-bottom"].satisfies("%gcc")
-                assert root["dt-diamond-left"].satisfies("%clang")
+        with spack.config.override("concretizer", {"compiler_mixing": ["dt-diamond-bottom"]}):
+            root = spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
+            assert root.satisfies("%clang")
+            assert root["dt-diamond-bottom"].satisfies("%gcc")
+            assert root["dt-diamond-left"].satisfies("%clang")
+
+            with pytest.raises(spack.error.UnsatisfiableSpecError):
+                spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-left%gcc")
 
     def test_disable_mixing_reuse(self, mutable_database):
         # Install a spec
@@ -494,13 +494,6 @@ class TestConcretize:
         with spack.config.override("concretizer", {"compiler_mixing": False}):
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one(f"dt-diamond%clang ^/{lefthash}")
-
-    def test_disable_mixing_cfg_error(self):
-        # You can only set "allow_compiler_mixing" for individual
-        # packages, not the "all" pseudo package
-        with spack.config.override("concretizer", {"compiler_mixing": False}):
-            with pytest.raises(spack.config.ConfigFormatError):
-                spack.config.set("packages", {"all": {"allow_compiler_mixing": True}})
 
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")

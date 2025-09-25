@@ -165,7 +165,6 @@ properties: Dict[str, Any] = {
                 # attribute, it could be useful to set it here
                 "package_attributes": package_attributes,
                 "variants": variants,
-                "allow_compiler_mixing": {"type": "boolean", "default": False},
                 "externals": {
                     "type": "array",
                     "items": {
