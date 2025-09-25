@@ -998,11 +998,13 @@ complete -c spack -n '__fish_spack_using_command ci rebuild-index' -s h -l help 
 complete -c spack -n '__fish_spack_using_command ci rebuild-index' -s h -l help -d 'show this help message and exit'
 
 # spack ci rebuild
-set -g __fish_spack_optspecs_spack_ci_rebuild h/help t/tests fail-fast timeout= j/jobs=
+set -g __fish_spack_optspecs_spack_ci_rebuild h/help t/tests no-fail-fast fail-fast timeout= j/jobs=
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s t -l tests -f -a tests
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s t -l tests -d 'run stand-alone tests after the build'
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-fail-fast -f -a fail_fast
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-fail-fast -d 'stop stand-alone tests after the first failure'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -f -a fail_fast
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -d 'stop stand-alone tests after the first failure'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -f -a timeout
