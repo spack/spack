@@ -3161,14 +3161,12 @@ complete -c spack -n '__fish_spack_using_command tutorial' -s y -l yes-to-all -f
 complete -c spack -n '__fish_spack_using_command tutorial' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack undevelop
-set -g __fish_spack_optspecs_spack_undevelop h/help no-apply-changes apply-changes a/all
+set -g __fish_spack_optspecs_spack_undevelop h/help no-modify-concrete-specs a/all
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 undevelop' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command undevelop' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command undevelop' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command undevelop' -l no-apply-changes -f -a apply_changes
-complete -c spack -n '__fish_spack_using_command undevelop' -l no-apply-changes -d 'do not mutate concrete specs to remove dev_path provenance. This requires running `spack concretize -f` later to apply changes to concrete specs'
-complete -c spack -n '__fish_spack_using_command undevelop' -l apply-changes -f -a apply_changes
-complete -c spack -n '__fish_spack_using_command undevelop' -l apply-changes -d '(default) mutate concrete specs to remove dev_path provenance.'
+complete -c spack -n '__fish_spack_using_command undevelop' -l no-modify-concrete-specs -f -a apply_changes
+complete -c spack -n '__fish_spack_using_command undevelop' -l no-modify-concrete-specs -d 'do not mutate concrete specs to remove dev_path provenance. This requires running `spack concretize -f` later to apply changes to concrete specs'
 complete -c spack -n '__fish_spack_using_command undevelop' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command undevelop' -s a -l all -d 'remove all specs from (clear) the environment'
 

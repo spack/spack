@@ -2027,7 +2027,7 @@ _spack_tutorial() {
 _spack_undevelop() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --no-apply-changes --apply-changes -a --all"
+        SPACK_COMPREPLY="-h --help --no-modify-concrete-specs -a --all"
     else
         _all_packages
     fi

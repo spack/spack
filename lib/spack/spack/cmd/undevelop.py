@@ -15,22 +15,14 @@ level = "long"
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
-    apply_group = subparser.add_mutually_exclusive_group()
-    apply_group.add_argument(
-        "--no-apply-changes",
+    subparser.add_argument(
+        "--no-modify-concrete-specs",
         action="store_false",
         dest="apply_changes",
         help=(
             "do not mutate concrete specs to remove dev_path provenance."
             " This requires running `spack concretize -f` later to apply changes to concrete specs"
         ),
-    )
-    apply_group.add_argument(
-        "--apply-changes",
-        action="store_true",
-        dest="apply_changes",
-        default=True,
-        help=("(default) mutate concrete specs to remove dev_path provenance."),
     )
 
     subparser.add_argument(
