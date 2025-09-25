@@ -1,0 +1,30 @@
+#!/bin/sh
+
+NAME=$(git config user.name)
+EMAIL=$(git config user.email)
+
+ret=0
+
+if [ -z "$NAME" ]; then
+    echo "empty config for user.name"
+    echo ""
+    echo "Set it with"
+    echo "    git config --global user.name \"John Doe\""
+    ret=1
+fi
+
+if [ -z "$EMAIL" ]; then
+    echo "empty config for user.email"
+    echo ""
+    echo "Set it with"
+    echo "    git config --global user.email john.doe@domain.com"
+    ret=1
+fi
+
+if [ $ret -ne 0 ]; then
+  exit $ret
+fi
+
+git interpret-trailers --if-exists doNothing --trailer \
+    "Signed-off-by: $NAME <$EMAIL>" \
+    --in-place "$1"
