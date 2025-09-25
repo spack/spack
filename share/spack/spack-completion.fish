@@ -1004,9 +1004,9 @@ complete -c spack -n '__fish_spack_using_command ci rebuild' -s h -l help -d 'sh
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s t -l tests -f -a tests
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s t -l tests -d 'run stand-alone tests after the build'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-fail-fast -f -a fail_fast
-complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-fail-fast -d 'stop stand-alone tests after the first failure'
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-fail-fast -d 'continue build/stand-alone tests after the first failure'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -f -a fail_fast
-complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -d 'stop stand-alone tests after the first failure'
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -d 'stop build/stand-alone tests after the first failure'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -f -a timeout
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -d 'maximum time (in seconds) that tests are allowed to run'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s j -l jobs -r -f -a jobs

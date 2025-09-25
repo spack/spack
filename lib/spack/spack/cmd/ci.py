@@ -177,15 +177,15 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     rebuild_ff_group.add_argument(
         "--no-fail-fast",
         action="store_false",
-        default=False,
+        default=True,
         dest="fail_fast",
-        help="stop stand-alone tests after the first failure",
+        help="continue build/stand-alone tests after the first failure",
     )
     rebuild_ff_group.add_argument(
         "--fail-fast",
         action="store_true",
         dest="fail_fast",
-        help="stop stand-alone tests after the first failure",
+        help="stop build/stand-alone tests after the first failure",
     )
     rebuild.add_argument(
         "--timeout",
