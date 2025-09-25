@@ -1600,7 +1600,6 @@ unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
 % You can't have >1 (CompilerName, CompilerVersion) pairs for a given
 % language if mixing is disabled
 error(100, "Compiler mixing is disabled") :-
-    unification_set_compiler("root", _, _, Z),
     #count { CompilerName,CompilerVersion : unification_set_compiler("root", CompilerName, CompilerVersion, Language) } > 1.
 
 %-----------------------------------------------------------------------------
