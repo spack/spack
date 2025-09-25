@@ -139,6 +139,23 @@ class TestDevelop:
             spec = next(e.roots())
             assert spec.satisfies("dev_path=*")
 
+    def test_develop_applies_changes_parents(self, monkeypatch):
+        env("create", "test")
+        with ev.read("test") as e:
+            e.add("hdf5^mpich@1.0")
+            e.concretize()
+            e.write()
+
+            orig_hash = next(e.roots()).dag_hash()
+
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
+            develop("mpich@1.0")
+
+            # Check modifications actually worked
+            new_hdf5 = next(e.roots())
+            assert new_hdf5.dag_hash() != orig_hash
+            assert new_hdf5["mpi"].satisfies("dev_path=*")
+
     def test_develop_applies_changes_spec_conflict(self, monkeypatch):
         env("create", "test")
         with ev.read("test") as e:
