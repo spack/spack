@@ -1594,6 +1594,8 @@ unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
     compiler_mixing(0, Language),
     language(Language).
 
+#defined allow_mixing/1.
+
 % You can't have >1 (CompilerName, CompilerVersion) pairs for a given
 % language if mixing is disabled
 error(100, "Compiler mixing is disabled") :-
