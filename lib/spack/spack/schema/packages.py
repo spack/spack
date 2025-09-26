@@ -173,7 +173,7 @@ properties: Dict[str, Any] = {
                             "spec": {"type": "string"},
                             "prefix": {"type": "string"},
                             "modules": {"type": "array", "items": {"type": "string"}},
-                            "external_id": {"type": "string"},
+                            "id": {"type": "string"},
                             "extra_attributes": {
                                 "type": "object",
                                 "additionalProperties": {"type": "string"},
@@ -193,7 +193,7 @@ properties: Dict[str, Any] = {
                                 "items": {
                                     "type": "object",
                                     "properties": {
-                                        "external_id": {"type": "string"},
+                                        "id": {"type": "string"},
                                         "deptypes": {
                                             "oneOf": [
                                                 {"type": "string"},
@@ -202,7 +202,7 @@ properties: Dict[str, Any] = {
                                         },
                                         "virtuals": {"type": "string"},
                                     },
-                                    "required": ["external_id"],
+                                    "required": ["id"],
                                 },
                             },
                         },

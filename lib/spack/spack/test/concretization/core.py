@@ -4303,9 +4303,9 @@ packages:
     - spec: "mpileaks@2.3~debug+opt"
       prefix: /user/path
       dependencies:
-      - external_id: callpath_id
+      - id: callpath_id
         deptypes: link
-      - external_id: mpich_id
+      - id: mpich_id
         deptypes:
         - "build"
         - "link"
@@ -4314,9 +4314,9 @@ packages:
     externals:
     - spec: "callpath@1.0"
       prefix: /user/path
-      external_id: callpath_id
+      id: callpath_id
       dependencies:
-      - external_id: mpich_id
+      - id: mpich_id
         deptypes:
         - "build"
         - "link"
@@ -4325,7 +4325,7 @@ packages:
     externals:
     - spec: "mpich@3.0.4"
       prefix: /user/path
-      external_id: mpich_id
+      id: mpich_id
 """,
             [
                 "%mpi=mpich@3.0.4",
@@ -4376,9 +4376,9 @@ packages:
     externals:
     - spec: "callpath@1.0"
       prefix: /user/path
-      external_id: callpath_id
+      id: callpath_id
       dependencies:
-      - external_id: mpich_id
+      - id: mpich_id
         deptypes:
         - "build"
         - "link"
@@ -4387,7 +4387,7 @@ packages:
     externals:
     - spec: "mpich@3.0.4"
       prefix: /user/path
-      external_id: mpich_id
+      id: mpich_id
 """
     )
     mutable_config.set("packages", configuration["packages"])

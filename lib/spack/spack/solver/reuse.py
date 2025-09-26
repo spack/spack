@@ -19,7 +19,7 @@ from spack.externals import (
     extract_dicts_from_configuration,
 )
 
-from .runtimes import external_config_with_implicit_externals, all_libcs
+from .runtimes import all_libcs, external_config_with_implicit_externals
 
 
 class SpecFilter:
@@ -214,7 +214,7 @@ class ReuseStrategy(enum.Enum):
 def _create_external_parser(
     configuration: spack.config.Configuration,
 ) -> Tuple[ExternalSpecsParser, Any]:
-    packages_yaml = _external_config_with_implicit_externals(configuration)
+    packages_yaml = external_config_with_implicit_externals(configuration)
     external_dicts = extract_dicts_from_configuration(packages_yaml)
     result = configuration.get("concretizer:externals:completion")
     if result == "default_variants":

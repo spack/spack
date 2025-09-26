@@ -125,9 +125,9 @@ def test_external_specs_parser_with_missing_packages():
 def test_externals_with_duplicate_id():
     """Tests the parsing of external specs when some specs have the same id"""
     externals_dict: List[ExternalDict] = [
-        {"spec": "gmake@1.0", "prefix": "/path/to/gmake1", "external_id": "gmake"},
-        {"spec": "gmake@2.0", "prefix": "/path/to/gmake2", "external_id": "gmake"},
-        {"spec": "gcc@1.0", "prefix": "/path/to/gcc", "external_id": "gcc"},
+        {"spec": "gmake@1.0", "prefix": "/path/to/gmake1", "id": "gmake"},
+        {"spec": "gmake@2.0", "prefix": "/path/to/gmake2", "id": "gmake"},
+        {"spec": "gcc@1.0", "prefix": "/path/to/gcc", "id": "gcc"},
     ]
 
     with pytest.raises(DuplicateExternalError, match=" Fix your packages.yaml configuration"):
@@ -145,16 +145,16 @@ def test_externals_with_duplicate_id():
                 {
                     "spec": "ascent@0.9.2+adios2+shared",
                     "prefix": "/user/path",
-                    "external_id": "ascent",
-                    "dependencies": [{"external_id": "adios2", "deptypes": ["build", "link"]}],
+                    "id": "ascent",
+                    "dependencies": [{"id": "adios2", "deptypes": ["build", "link"]}],
                 },
                 {
                     "spec": "adios2@2.7.1+shared",
                     "prefix": "/user/path",
-                    "external_id": "adios2",
-                    "dependencies": [{"external_id": "bzip2", "deptypes": ["build", "link"]}],
+                    "id": "adios2",
+                    "dependencies": [{"id": "bzip2", "deptypes": ["build", "link"]}],
                 },
-                {"spec": "bzip2@1.0.8+shared", "prefix": "/user/path", "external_id": "bzip2"},
+                {"spec": "bzip2@1.0.8+shared", "prefix": "/user/path", "id": "bzip2"},
             ],
             {
                 "ascent": ["%[deptypes=build,link] adios2@2.7.1"],
@@ -171,19 +171,19 @@ def test_externals_with_duplicate_id():
                 {
                     "spec": "ascent@0.9.2+adios2+shared",
                     "prefix": "/user/path",
-                    "external_id": "ascent",
+                    "id": "ascent",
                     "dependencies": [
-                        {"external_id": "adios2", "deptypes": "link"},
-                        {"external_id": "bzip2", "deptypes": "run"},
+                        {"id": "adios2", "deptypes": "link"},
+                        {"id": "bzip2", "deptypes": "run"},
                     ],
                 },
                 {
                     "spec": "adios2@2.7.1+shared",
                     "prefix": "/user/path",
-                    "external_id": "adios2",
-                    "dependencies": [{"external_id": "bzip2", "deptypes": ["build", "link"]}],
+                    "id": "adios2",
+                    "dependencies": [{"id": "bzip2", "deptypes": ["build", "link"]}],
                 },
-                {"spec": "bzip2@1.0.8+shared", "prefix": "/user/path", "external_id": "bzip2"},
+                {"spec": "bzip2@1.0.8+shared", "prefix": "/user/path", "id": "bzip2"},
             ],
             {
                 "ascent": ["%[deptypes=link] adios2@2.7.1", "%[deptypes=run] bzip2@1.0.8"],
@@ -232,16 +232,8 @@ def test_externals_with_dependencies(externals_dicts: List[ExternalDict], expect
 @pytest.mark.parametrize(
     "externals_dicts,expected_length,not_expected",
     [
-        (
-            [{"spec": "mpileaks", "prefix": "/user/path", "external_id": "mpileaks"}],
-            0,
-            ["mpileaks"],
-        ),
-        (
-            [{"spec": "mpileaks@2:", "prefix": "/user/path", "external_id": "mpileaks"}],
-            0,
-            ["mpileaks"],
-        ),
+        ([{"spec": "mpileaks", "prefix": "/user/path", "id": "mpileaks"}], 0, ["mpileaks"]),
+        ([{"spec": "mpileaks@2:", "prefix": "/user/path", "id": "mpileaks"}], 0, ["mpileaks"]),
     ],
 )
 def test_externals_without_concrete_version(

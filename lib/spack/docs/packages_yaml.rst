@@ -123,9 +123,9 @@ For instance, the following configuration describes an ``mpileaks`` external tha
        - spec: "mpileaks@2.3~debug+opt"
          prefix: /user/path
          dependencies:
-         - external_id: callpath_id
+         - id: callpath_id
            deptypes: link
-         - external_id: mpich_id
+         - id: mpich_id
            deptypes:
            - "build"
            - "link"
@@ -134,9 +134,9 @@ For instance, the following configuration describes an ``mpileaks`` external tha
        externals:
        - spec: "callpath@1.0"
          prefix: /user/path
-         external_id: callpath_id
+         id: callpath_id
          dependencies:
-         - external_id: mpich_id
+         - id: mpich_id
            deptypes:
            - "build"
            - "link"
@@ -145,10 +145,10 @@ For instance, the following configuration describes an ``mpileaks`` external tha
        externals:
        - spec: "mpich@3.0.4"
          prefix: /user/path
-         external_id: mpich_id
+         id: mpich_id
 
-The ``external_id`` attribute is a unique string identifier of the external node being described.
-The ``dependencies`` attribute is a list of objects, where you can specify the ``external_id`` of the dependency and optionally the dependency types (``deptypes``), and the ``virtuals``, along the edge.
+The ``id`` attribute is a unique string identifier of the external node being described.
+The ``dependencies`` attribute is a list of objects, where you can specify the ``id`` of the dependency and optionally the dependency types (``deptypes``), and the ``virtuals``, along the edge.
 
 
 Prevent packages from being built from sources

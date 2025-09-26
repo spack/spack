@@ -16,7 +16,7 @@ from spack.error import SpackError
 
 
 class DependencyDict(TypedDict, total=False):
-    external_id: str
+    id: str
     deptypes: spack.deptypes.DepTypes
     virtuals: str
 
@@ -28,7 +28,7 @@ class ExternalDict(TypedDict, total=False):
     prefix: str
     modules: List[str]
     extra_attributes: Dict[str, Any]
-    external_id: str
+    id: str
     dependencies: List[DependencyDict]
     required_target: str
 
@@ -192,7 +192,7 @@ class ExternalSpecsParser:
             if not package_exists:
                 raise ValueError(f"Package '{node.name}' does not exist")
 
-            eid = external_dict.setdefault("external_id", str(uuid.uuid4()))
+            eid = external_dict.setdefault("id", str(uuid.uuid4()))
             if eid in self.specs_by_external_id:
                 other_node = self.specs_by_external_id[eid].spec
                 raise DuplicateExternalError(
@@ -245,11 +245,7 @@ class ExternalSpecsParser:
                     f"'{selected.config['spec']}'. If this is incorrect, fix your packages.yaml."
                 )
                 current_dict.setdefault("dependencies", []).append(
-                    {
-                        "external_id": selected.config["external_id"],
-                        "deptypes": "build",
-                        "virtuals": "c",
-                    }
+                    {"id": selected.config["id"], "deptypes": "build", "virtuals": "c"}
                 )
             current_node.clear_edges()
 
@@ -259,7 +255,7 @@ class ExternalSpecsParser:
             current_dict = entry.config
 
             for dependency_dict in current_dict.get("dependencies", []):
-                dependency_id = dependency_dict.get("external_id")
+                dependency_id = dependency_dict.get("id")
                 if not dependency_id:
                     raise ExternalDependencyError(
                         f"A dependency for {current_dict['spec']} does not have an external id"
