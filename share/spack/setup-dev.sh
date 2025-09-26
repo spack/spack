@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 # Setup spack
 source share/spack/setup-env.sh
 
