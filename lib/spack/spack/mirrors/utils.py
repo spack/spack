@@ -111,15 +111,8 @@ def create(path, specs, skip_unstable_versions=False):
     """
     # automatically spec-ify anything in the specs array.
     specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
-
-    mirror_cache = get_mirror_cache(path, skip_unstable_versions)
-    mirror_all_stats = MirrorStatsForAllSpecs()
-    for spec in specs:
-        mirror_stats = MirrorStatsForOneSpec(spec)
-        create_mirror_from_package_object(spec.package, mirror_cache, mirror_stats)
-        mirror_all_stats.merge(mirror_stats)
-
-    return mirror_all_stats.stats()
+    mirror_stats = create_mirror_for_all_specs(specs, path, skip_unstable_versions, workers=1)
+    return mirror_stats.stats()
 
 
 def get_mirror_cache(path, skip_unstable_versions=False):

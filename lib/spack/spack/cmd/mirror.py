@@ -648,7 +648,7 @@ def create_mirror_for_one_spec(candidate, mirror_cache):
 
 
 def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, workers):
-    mirror_cache = spack.mirrors.utils.mirror_cache_and_stats(
+    mirror_cache = spack.mirrors.utils.get_mirror_cache(
         path, skip_unstable_versions=skip_unstable_versions
     )
     mirror_stats = spack.mirrors.utils.MirrorStatsForAllSpecs()
