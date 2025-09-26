@@ -266,15 +266,15 @@ needs_sphinx = "3.4"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.graphviz",
-    "sphinx.ext.imgconverter",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
-    "sphinxcontrib.programoutput",
     "sphinx_last_updated_by_git",
     "sphinx_sitemap",
+    "sphinxcontrib.inkscapeconverter",
+    "sphinxcontrib.programoutput",
 ]
 
 copybutton_exclude = ".linenos, .gp, .go"

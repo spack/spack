@@ -4,8 +4,7 @@ build:
   os: "ubuntu-22.04"
   apt_packages:
     - graphviz
-    - imagemagick
-    - libmagickwand-dev
+    - inkscape
   tools:
     python: "3.11"
   jobs:
@@ -18,7 +17,6 @@ sphinx:
 
 formats:
   - pdf
-  - epub
 
 python:
   install:

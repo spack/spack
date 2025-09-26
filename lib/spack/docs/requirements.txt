@@ -1,5 +1,6 @@
 sphinx==8.2.3
 sphinxcontrib-programoutput==0.18
+sphinxcontrib-svg2pdfconverter==1.3.0
 sphinx-copybutton==0.5.2
 sphinx-last-updated-by-git==0.3.8
 sphinx-sitemap==2.8.0
