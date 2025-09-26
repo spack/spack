@@ -707,18 +707,29 @@ After all changed files are committed, you can push the branch to your fork and 
    $ git push origin --set-upstream
 
 Development Workflow Tools
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack provides a some of tools to assist in adhering to contribution rules and interacting with the Spack development
-workflow. To install the workflow tools for Spack run ``source share/spack/setup-dev.sh``.
+All developer workflow tools can be installed using by sourcing ``share/spack/setup-dev.sh``.
 
-As part of the Linux Foundation all commits require a DCO signoff similar to ``Signed-off-by: User Name <name@email.net>``.
-This can be achieved by adding the ``--signoff`` option when commiting or by using a git ``prepare-commit-msg`` hook. Spack
-provides a simple hook script that to handle this in ``share/spack/git/hooks/prepare-commit-msg``. This can be installed either
-by running the ``share/spack/setup-dev.sh`` script or by copying ``share/spack/git/hooks/prepare-commit-msg`` into ``.git/hooks/``.
+.. note::
+   Spack does not endorse or recommend any development workflow tools.
+   The tools provider here are contributed by community members that have found personally useful when contributing to Spack.
+   Tools are contributed under the same license terms as Spack and therefore provide no warranty.
+   Developers may use them at their own peril.
 
-Spack CI utilizes `deferred pipelines <https://github.com/spack/spack-infrastructure/blob/main/docs/deferred_pipelines.md>` to avoid
-having pull requests build packages that have changed but have not yet been built by the ``develop`` pipeline. Spack provides a custom
-git command to allow users to rebase on the commit associated with the latest run ``develop`` pipeline to reduce the amount of time PRs
-need to wait in before CI can be started. This script is in ``share/spack/git/git-spack-rebase`` and can be installed by adding ``share/spack/git/``
-to the ``PATH`` or sourcing the ``share/spack/setup-dev.sh`` script.
+DCO Signoff
+"""""""""""
+
+As part of the Linux Foundation all commits are required to contain a DCO signoff in the form of ``Signed-off-by: User Name <name@email.net>``.
+This can be achieved by adding the ``--signoff`` option when commiting or by using a git ``prepare-commit-msg`` hook.
+Spack provides a git hook script that can be used to automte adding the DCO signoff ``share/spack/git/hooks/prepare-commit-msg``.
+This can be installed by copying ``share/spack/git/hooks/prepare-commit-msg`` into ``.git/hooks/``.
+
+Deferred Pipeline Rebase
+""""""""""""""""""""""""
+
+Spack CI utilizes `deferred pipelines <https://github.com/spack/spack-infrastructure/blob/main/docs/deferred_pipelines.md>` to avoid having pull requests build packages that have changed but have not yet been built by the ``develop`` pipeline.
+Spack provides a custom git command to allow users to rebase on the commit associated with the latest run ``develop`` pipeline.
+Using this command canto reduce the amount of time PRs need to wait in before CI can be started.
+The command script is in ``share/spack/git/git-spack-rebase``.
+To use it add ``share/spack/git/`` to the ``PATH`` (this is how the ``spack-dev.sh`` script does it) or copy the script to a directory already in your path.
