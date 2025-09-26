@@ -112,7 +112,7 @@ def create(path, specs, skip_unstable_versions=False):
     # automatically spec-ify anything in the specs array.
     specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
 
-    mirror_cache = mirror_cache_and_stats(path, skip_unstable_versions)
+    mirror_cache = get_mirror_cache(path, skip_unstable_versions)
     mirror_all_stats = MirrorStatsForAllSpecs()
     for spec in specs:
         mirror_stats = MirrorStatsForOneSpec(spec)
@@ -122,15 +122,17 @@ def create(path, specs, skip_unstable_versions=False):
     return mirror_all_stats.stats()
 
 
-def mirror_cache_and_stats(path, skip_unstable_versions=False):
-    """Return both a mirror cache and a mirror stats, starting from the path
-    where a mirror ought to be created.
+def get_mirror_cache(path, skip_unstable_versions=False):
+    """Returns a mirror cache, starting from the path where a mirror ought to be created.
 
     Args:
         path (str): path to create a mirror directory hierarchy in.
         skip_unstable_versions: if true, this skips adding resources when
             they do not have a stable archive checksum (as determined by
-            ``fetch_strategy.stable_target``)
+            ``fetch_strategy.stable_target``).
+
+    Returns:
+        spack.caches.MirrorCache: mirror cache object for the given path.
     """
     # Get the absolute path of the root before we start jumping around.
     if not os.path.isdir(path):
