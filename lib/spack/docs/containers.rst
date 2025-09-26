@@ -306,14 +306,14 @@ For instance, the following ``spack.yaml``:
      container:
        images:
          os: almalinux:9
-         spack: 0.22.0
+         spack: "1.0"
 
-uses ``spack/almalinux9:0.22.0`` and ``almalinux:9`` for the stages where the software is respectively built and installed:
+uses ``spack/almalinux9:1.0`` and ``almalinux:9`` for the stages where the software is respectively built and installed:
 
 .. code-block:: docker
 
    # Build stage with Spack pre-installed and ready to be used
-   FROM spack/almalinux9:0.22.0 AS builder
+   FROM spack/almalinux9:1.0 AS builder
 
 
    # What we want to install and how we want to install it
