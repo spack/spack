@@ -77,8 +77,11 @@ def _package_hash_override(spec) -> str:
     if spec.external:
         return "x" * 32
 
-    hash_content = [_content_hash(s).encode("utf-8") for s in _package_hash_nodes(spec)]
-    b32_hash = base64.b32encode(hashlib.sha256(bytes().join(hash_content)).digest()).lower()
+    hash_algorithm = hashlib.sha256()
+    for s in _package_hash_nodes(spec):
+        hash_algorithm.update(_content_hash(s).encode("utf-8"))
+
+    b32_hash = base64.b32encode(hash_algorithm.digest()).lower()
     return b32_hash.decode("utf-8")
 
 
