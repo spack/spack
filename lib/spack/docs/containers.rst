@@ -372,7 +372,7 @@ In these situations, users can extend the recipe to start with the bootstrapping
 
 
 Use a Bootstrap Stage for Spack
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""""
 
 In some cases, users may want to pin the commit SHA that is used for Spack to ensure later reproducibility or start from a fork of the official Spack repository to try a bugfix or a feature in an early stage of development.
 This is possible by being just a little more verbose when specifying information about Spack in the ``spack.yaml`` file:
@@ -406,7 +406,7 @@ The list of operating systems that can be used to bootstrap Spack can be obtaine
 
 
 Use Custom Images Provided by Users
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""""""""
 
 Consider, as an example, building a production-grade image for a CUDA application.
 The best strategy would probably be to build on top of images provided by the vendor and regard CUDA as an external package.
