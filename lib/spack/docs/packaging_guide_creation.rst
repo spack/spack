@@ -960,7 +960,7 @@ Default branch
 .. _git-branches:
 
 Branches
-  To fetch a particular branch, use the ``branch`` parameter, preferrably with the same name as the version.
+  To fetch a particular branch, use the ``branch`` parameter, preferably with the same name as the version.
   For example,
 
   .. code-block:: python
@@ -1007,7 +1007,7 @@ Commits
   .. code-block:: python
 
      version("2014-10-08", commit="1e6ef73d93a28240f954513bc4c2ed46178fa32b")
-     version("1.0.4", tag="v1.0.4", commit="420136f6f1f26050d95138e27cf8bc905bc5e7f52")   
+     version("1.0.4", tag="v1.0.4", commit="420136f6f1f26050d95138e27cf8bc905bc5e7f52")
 
   It may be useful to provide a saner version for commits like this, e.g., you might use the date as the version, as done in the first example above.
   Or, if you know the commit at which a release was cut, you can use the release version.
@@ -2355,7 +2355,7 @@ If you run ``spack spec m4``, you can see the patches that would be applied to `
    Input spec
    --------------------------------
    m4
- 
+
    Concretized
    --------------------------------
    m4@1.4.18%apple-clang@9.0.0 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,c0a408fbffb7255fcc75e26bd8edab116fc81d216bfd18b473668b7739a4158e,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 +sigsegv arch=darwin-highsierra-x86_64
