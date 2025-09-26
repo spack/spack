@@ -110,45 +110,58 @@ The ``Dockerfile`` that gets created uses multi-stage builds and other technique
 .. code-block:: docker
 
    # Build stage with Spack pre-installed and ready to be used
-   FROM spack/ubuntu-noble:latest as builder
+   FROM spack/ubuntu-jammy:develop AS builder
+
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
-   RUN mkdir /opt/spack-environment \
-   &&  (echo "spack:" \
-   &&   echo "  specs:" \
-   &&   echo "  - gromacs+mpi" \
-   &&   echo "  - mpich" \
-   &&   echo "  concretizer:" \
-   &&   echo "    unify: true" \
-   &&   echo "  config:" \
-   &&   echo "    install_tree: \
-   &&   echo "      root: /opt/software" \
-   &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
+   RUN mkdir -p /opt/spack-environment && \
+   set -o noclobber \
+   &&  (echo spack: \
+   &&   echo '  specs:' \
+   &&   echo '  - gromacs+mpi' \
+   &&   echo '  - mpich' \
+   &&   echo '  concretizer:' \
+   &&   echo '    unify: true' \
+   &&   echo '  config:' \
+   &&   echo '    install_tree:' \
+   &&   echo '      root: /opt/software' \
+   &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
 
    # Strip all the binaries
-   RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
+   RUN find -L /opt/views/view/* -type f -exec readlink -f '{}' \; | \
        xargs file -i | \
        grep 'charset=binary' | \
        grep 'x-executable\|x-archive\|x-sharedlib' | \
-       awk -F: '{print $1}' | xargs strip -s
+       awk -F: '{print $1}' | xargs strip
 
    # Modifications to the environment that are necessary to run
    RUN cd /opt/spack-environment && \
-       spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+       spack env activate --sh -d . > activate.sh
+
 
    # Bare OS image to run the installed executables
-   FROM ubuntu:18.04
+   FROM ubuntu:22.04
 
    COPY --from=builder /opt/spack-environment /opt/spack-environment
    COPY --from=builder /opt/software /opt/software
-   COPY --from=builder /opt/view /opt/view
-   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+   COPY --from=builder /opt/views /opt/views
 
-   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+   RUN { \
+         echo '#!/bin/sh' \
+         && echo '.' /opt/spack-environment/activate.sh \
+         && echo 'exec "$@"'; \
+       } > /entrypoint.sh \
+   && chmod a+x /entrypoint.sh \
+   && ln -s /opt/views/view /opt/view
+
+
+   ENTRYPOINT [ "/entrypoint.sh" ]
+   CMD [ "/bin/bash" ]
+
 
 The image itself can then be built and run in the usual way with any of the tools suitable for the task.
 For instance, if we decided to use Docker:
@@ -302,6 +315,7 @@ uses ``spack/almalinux9:0.22.0`` and ``almalinux:9`` for the stages where the so
    # Build stage with Spack pre-installed and ready to be used
    FROM spack/almalinux9:0.22.0 AS builder
 
+
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
    RUN mkdir -p /opt/spack-environment && \
@@ -313,19 +327,32 @@ uses ``spack/almalinux9:0.22.0`` and ``almalinux:9`` for the stages where the so
    &&   echo '  concretizer:' \
    &&   echo '    unify: true' \
    &&   echo '  config:' \
-   &&   echo '    install_tree: ' \
+   &&   echo '    install_tree:' \
    &&   echo '      root: /opt/software' \
    &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
-   [ ... ]
+
+   # ...
+
    # Bare OS image to run the installed executables
    FROM quay.io/almalinuxorg/almalinux:9
 
    COPY --from=builder /opt/spack-environment /opt/spack-environment
    COPY --from=builder /opt/software /opt/software
-   COPY --from=builder /opt/view /opt/view
-   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+   COPY --from=builder /opt/views /opt/views
 
-   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+   RUN { \
+         echo '#!/bin/sh' \
+         && echo '.' /opt/spack-environment/activate.sh \
+         && echo 'exec "$@"'; \
+       } > /entrypoint.sh \
+   && chmod a+x /entrypoint.sh \
+   && ln -s /opt/views/view /opt/view
+
+
+   ENTRYPOINT [ "/entrypoint.sh" ]
+   CMD [ "/bin/bash" ]
+
+
 
 This is the simplest available method of selecting base images, and we advise its use whenever possible.
 There are cases, though, where using Spack official images is not enough to fit production needs.
@@ -404,52 +431,66 @@ produces, for instance, the following ``Dockerfile``:
 .. code-block:: docker
 
    # Build stage with Spack pre-installed and ready to be used
-   FROM custom/cuda-10.1-ubuntu18.04:latest as builder
+   FROM custom/cuda-10.1-ubuntu18.04:latest AS builder
+
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
-   RUN mkdir /opt/spack-environment \
-   &&  (echo "spack:" \
-   &&   echo "  specs:" \
-   &&   echo "  - gromacs@2019.4+cuda build_type=Release" \
-   &&   echo "  - mpich" \
-   &&   echo "  - fftw precision=float" \
-   &&   echo "  packages:" \
-   &&   echo "    cuda:" \
-   &&   echo "      buildable: false" \
-   &&   echo "      externals:" \
-   &&   echo "      - spec: cuda%gcc" \
-   &&   echo "        prefix: /usr/local/cuda" \
-   &&   echo "  concretizer:" \
-   &&   echo "    unify: true" \
-   &&   echo "  config:" \
-   &&   echo "    install_tree: " \
-   &&   echo "      root: /opt/software" \
-   &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
+   RUN mkdir -p /opt/spack-environment && \
+   set -o noclobber \
+   &&  (echo spack: \
+   &&   echo '  specs:' \
+   &&   echo '  - gromacs@2019.4+cuda build_type=Release' \
+   &&   echo '  - mpich' \
+   &&   echo '  - fftw precision=float' \
+   &&   echo '  packages:' \
+   &&   echo '    cuda:' \
+   &&   echo '      buildable: false' \
+   &&   echo '      externals:' \
+   &&   echo '      - spec: cuda%gcc' \
+   &&   echo '        prefix: /usr/local/cuda' \
+   &&   echo '' \
+   &&   echo '  concretizer:' \
+   &&   echo '    unify: true' \
+   &&   echo '  config:' \
+   &&   echo '    install_tree:' \
+   &&   echo '      root: /opt/software' \
+   &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
 
    # Strip all the binaries
-   RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
+   RUN find -L /opt/views/view/* -type f -exec readlink -f '{}' \; | \
        xargs file -i | \
        grep 'charset=binary' | \
        grep 'x-executable\|x-archive\|x-sharedlib' | \
-       awk -F: '{print $1}' | xargs strip -s
+       awk -F: '{print $1}' | xargs strip
 
    # Modifications to the environment that are necessary to run
    RUN cd /opt/spack-environment && \
-       spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+       spack env activate --sh -d . > activate.sh
+
 
    # Bare OS image to run the installed executables
    FROM nvidia/cuda:10.1-base-ubuntu18.04
 
    COPY --from=builder /opt/spack-environment /opt/spack-environment
    COPY --from=builder /opt/software /opt/software
-   COPY --from=builder /opt/view /opt/view
-   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+   COPY --from=builder /opt/views /opt/views
 
-   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+   RUN { \
+         echo '#!/bin/sh' \
+         && echo '.' /opt/spack-environment/activate.sh \
+         && echo 'exec "$@"'; \
+       } > /entrypoint.sh \
+   && chmod a+x /entrypoint.sh \
+   && ln -s /opt/views/view /opt/view
+
+
+   ENTRYPOINT [ "/entrypoint.sh" ]
+   CMD [ "/bin/bash" ]
+
 
 where the base images for both stages are completely custom.
 
@@ -523,6 +564,7 @@ To use a custom template, the Spack environment must register the directory cont
 The template extension can override two blocks, named ``build_stage`` and ``final_stage``, similarly to the example below:
 
 .. code-block:: text
+   :caption: /opt/environment/templates/container/CustomDockerfile
    :emphasize-lines: 3,8
 
    {% extends "container/Dockerfile" %}
@@ -545,54 +587,64 @@ Note that the Spack environment must be active for Spack to read the template.
 The recipe that gets generated contains the two extra instructions that we added in our template extension:
 
 .. code-block:: Dockerfile
-   :emphasize-lines: 4,43
+   :emphasize-lines: 4,55
 
    # Build stage with Spack pre-installed and ready to be used
-   FROM spack/ubuntu-jammy:latest as builder
+   FROM spack/ubuntu-jammy:develop AS builder
 
    RUN echo "Start building"
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
-   RUN mkdir /opt/spack-environment \
-   &&  (echo "spack:" \
-   &&   echo "  specs:" \
-   &&   echo "  - hdf5~mpi" \
-   &&   echo "  concretizer:" \
-   &&   echo "    unify: true" \
-   &&   echo "  config:" \
-   &&   echo "    template_dirs:" \
-   &&   echo "    - /tmp/environment/templates" \
-   &&   echo "    install_tree: " \
-   &&   echo "      root: /opt/software" \
-   &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
+   RUN mkdir -p /opt/spack-environment && \
+   set -o noclobber \
+   &&  (echo spack: \
+   &&   echo '  specs:' \
+   &&   echo '  - hdf5~mpi' \
+   &&   echo '  concretizer:' \
+   &&   echo '    unify: true' \
+   &&   echo '  config:' \
+   &&   echo '    template_dirs:' \
+   &&   echo '    - /tmp/tmp.xvyLqAZpZg' \
+   &&   echo '    install_tree:' \
+   &&   echo '      root: /opt/software' \
+   &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack env activate . && spack concretize && spack env depfile -o Makefile && make -j $(nproc) && spack gc -y
 
    # Strip all the binaries
-   RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
+   RUN find -L /opt/views/view/* -type f -exec readlink -f '{}' \; | \
        xargs file -i | \
        grep 'charset=binary' | \
        grep 'x-executable\|x-archive\|x-sharedlib' | \
-       awk -F: '{print $1}' | xargs strip -s
+       awk -F: '{print $1}' | xargs strip
 
    # Modifications to the environment that are necessary to run
    RUN cd /opt/spack-environment && \
-       spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+       spack env activate --sh -d . > activate.sh
+
+
 
    # Bare OS image to run the installed executables
    FROM ubuntu:22.04
 
    COPY --from=builder /opt/spack-environment /opt/spack-environment
    COPY --from=builder /opt/software /opt/software
-   COPY --from=builder /opt/._view /opt/._view
-   COPY --from=builder /opt/view /opt/view
-   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+   COPY --from=builder /opt/views /opt/views
+
+   RUN { \
+         echo '#!/bin/sh' \
+         && echo '.' /opt/spack-environment/activate.sh \
+         && echo 'exec "$@"'; \
+       } > /entrypoint.sh \
+   && chmod a+x /entrypoint.sh \
+   && ln -s /opt/views/view /opt/view
+
+
 
    COPY data /share/myapp/data
-
-   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l", "-c", "$*", "--" ]
+   ENTRYPOINT [ "/entrypoint.sh" ]
    CMD [ "/bin/bash" ]
 
 
