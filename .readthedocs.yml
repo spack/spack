@@ -5,6 +5,7 @@ build:
   apt_packages:
     - graphviz
     - inkscape
+    - xindy
   tools:
     python: "3.11"
   jobs:
