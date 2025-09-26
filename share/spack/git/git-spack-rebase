@@ -1,0 +1,68 @@
+#!/bin/bash
+
+print_help () {
+  echo "git-spack-rebase"
+  echo ""
+  echo "  Git command for rebasing on the sha of the most recently completed"
+  echo "  develop pipeline."a
+  echo ""
+  echo "  Usage:"
+  echo ""
+  echo "    git-spack-rebase [-h|--help]"
+  echo "    git-spack-rebase [git-rebase options...]"
+}
+
+debug () {
+  if [ ! -z $SPACK_DEBUG ]; then
+    echo "$@" 1>&2
+  fi
+}
+
+quiet () {
+  if [ ! -z $SPACK_DEBUG ]; then
+    "$@"
+  else
+    "$@" 1> /dev/null 2> /dev/null
+  fi
+}
+
+# store the regular ops
+rebase_opts=""
+while [ ! -z $1 ]; do
+  case $1 in
+    -h|--help) print_help; exit 0;;
+    -*) rebase_opts="$rebase_opts $1"; shift;;
+    *) break;;
+  esac
+done
+echo "${rebase_opts[@]}"
+
+echo $1
+echo $2
+remote="${1:-origin}"
+target_branch="${2:-develop}"
+readonly remote
+readonly target_branch
+
+gitlab_host=${SPACK_GITLAB_HOST:-"https://gitlab.spack.io"}
+
+# Determine if this repo is spack/spack or spack/spack-packages
+# Using the project slug instead of number requires encoding the
+# project name
+spack_upstream=$(git remote get-url ${remote})
+if [ "${spack_upstream}" == *"-packages" ]; then
+  repo_name="spack%2Fspack-packages"
+else
+  repo_name="spack%2Fspack"
+fi
+
+# Get the second to last target_branch (develop) pipeline commit
+debug "${gitlab_host}/api/v4/projects/${repo_name}/pipelines?ref=${target_branch}&per_page=2"
+target_sha=$(curl -LSs "${gitlab_host}/api/v4/projects/${repo_name}/pipelines?ref=${target_branch}&per_page=2" | jq -r .[1].sha)
+debug "Rebasing on hash: $target_sha"
+
+debug "Fetching upstream"
+quiet git fetch $remote $target_branch
+
+echo "Rebasing on sha $target_sha"
+git rebase $rebase_opts $target_sha
