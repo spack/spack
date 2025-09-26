@@ -7,27 +7,26 @@ font-size:12px;
 .l{
 font-weight:700;
 text-anchor:middle;
-dominant-baseline:central;
 fill:#fff;
 }
 </style>
-<text x="10" y="30" fill="#2c3e50" style="font-family:SFMono-Regular,Menlo,Consolas,Monaco,LiberationMono,LucidaConsole,monospace;font-size:16px"><tspan fill="#e74c3c" font-weight="bold">mpileaks</tspan><tspan fill="#3498db">@1.2:1.4</tspan><tspan fill="#27ae60"> +debug ~qt</tspan><tspan fill="#f39c12"> target=x86_64_v3</tspan><tspan fill="#9b59b6" font-weight="bold"> %gcc</tspan><tspan fill="#3498db">@15</tspan><tspan fill="#e67e22" font-weight="bold"> ^libelf</tspan><tspan fill="#3498db">@1.1</tspan><tspan fill="#9b59b6" font-weight="bold"> %clang</tspan><tspan fill="#3498db">@20</tspan></text>
+<text x="10" y="30" fill="#2c3e50" style="font-family:SFMono-Regular,Menlo,Consolas,Monaco,LiberationMono,LucidaConsole,monospace;font-size:16px" xml:space="preserve"><tspan fill="#e74c3c" font-weight="bold">mpileaks</tspan><tspan fill="#3498db">@1.2:1.4</tspan><tspan fill="#27ae60"> +debug ~qt</tspan><tspan fill="#f39c12"> target=x86_64_v3</tspan><tspan fill="#9b59b6" font-weight="bold"> %gcc</tspan><tspan fill="#3498db">@15</tspan><tspan fill="#e67e22" font-weight="bold"> ^libelf</tspan><tspan fill="#3498db">@1.1</tspan><tspan fill="#9b59b6" font-weight="bold"> %clang</tspan><tspan fill="#3498db">@20</tspan></text>
 <path stroke="#e74c3c" stroke-width="2" d="M60 50v35"/>
 <rect width="100" height="30" x="10" y="85" fill="#e74c3c" rx="5"/>
-<text x="60" y="100" class="l">Package name</text>
+<text x="60" y="104" class="l">Package name</text>
 <path stroke="#3498db" stroke-width="2" d="M130 50v91"/>
 <rect width="60" height="30" x="100" y="130" fill="#3498db" rx="5"/>
-<text x="130" y="145" class="l">Version</text>
+<text x="130" y="149" class="l">Version</text>
 <path stroke="#27ae60" stroke-width="2" d="M230 50v50"/>
 <rect width="80" height="30" x="190" y="85" fill="#27ae60" rx="5"/>
-<text x="230" y="100" class="l">Variants</text>
+<text x="230" y="104" class="l">Variants</text>
 <path stroke="#f39c12" stroke-width="2" d="M355 50v100"/>
 <rect width="100" height="30" x="305" y="130" fill="#f39c12" rx="5"/>
-<text x="355" y="145" class="l">Architecture</text>
+<text x="355" y="149" class="l">Architecture</text>
 <path stroke="#9b59b6" stroke-width="2" d="M470 50v50"/>
 <rect width="130" height="30" x="404" y="85" fill="#9b59b6" rx="5"/>
-<text x="470" y="100" class="l">Direct dependency</text>
+<text x="470" y="104" class="l">Direct dependency</text>
 <path stroke="#e67e22" stroke-width="2" d="M560 50v100"/>
 <rect width="150" height="30" x="485" y="130" fill="#e67e22" rx="5"/>
-<text x="560" y="145" class="l">Transitive dependency</text>
+<text x="560" y="149" class="l">Transitive dependency</text>
 </svg>
