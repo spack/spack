@@ -1088,7 +1088,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         sha = None
 
         # construct a package instance to get fetch/staging together
-        # TODO need to refactor mirror/stage/package relationship to remove pkg construction here
         pkg_instance = cls(spec.copy())
 
         try:
