@@ -504,7 +504,7 @@ class TestConcretize:
     ):
         spack_yaml = tmp_path / ev.manifest_name
         spack_yaml.write_text(
-        """\
+            """\
 spack:
   specs:
   - dt-diamond%gcc
