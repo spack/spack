@@ -297,7 +297,7 @@ will have the same effect as
 OCI / Docker V2 Registries as Build Cache
 -----------------------------------------
 
-Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io, AWS ECR, GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others as build caches.
+Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io, Amazon ECR, GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others as build caches.
 This is a convenient way to share binaries using public infrastructure or to cache Spack-built binaries in GitHub Actions and GitLab CI.
 These registries can be used not only to share Spack binaries but also to create and distribute runnable container images.
 
@@ -366,10 +366,10 @@ To authenticate with Docker Hub, you can use your Docker Hub username as the use
 For the password, you need to generate a personal access token (PAT) on the Docker Hub website.
 See `Docker's documentation <https://docs.docker.com/security/access-tokens/>`_ for more information.
 
-AWS ECR
-"""""""
+Amazon ECR
+""""""""""
 
-To authenticate with AWS ECR, you can use the AWS CLI to generate a temporary password.
+To authenticate with Amazon ECR, you can use the AWS CLI to generate a temporary password.
 The username is always ``AWS``.
 
 .. code-block:: console
