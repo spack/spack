@@ -1688,6 +1688,18 @@ def _from_merged_attrs(fetcher, pkg, version):
 
 
 def for_package_version(pkg, version=None):
+    saved_versions = None
+    if version is not None:
+        saved_versions = pkg.spec.versions
+
+    try:
+        return _for_package_version(pkg, version)
+    finally:
+        if saved_versions is not None:
+            pkg.spec.versions = saved_versions
+
+
+def _for_package_version(pkg, version=None):
     """Determine a fetch strategy based on the arguments supplied to
     version() in the package description."""
 
