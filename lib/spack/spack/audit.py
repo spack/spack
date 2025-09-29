@@ -572,12 +572,14 @@ def _ensure_all_package_names_are_lowercase(pkgs, error_cls):
     reserved_names = ("all",)
     badname_regex, errors = re.compile(r"[_A-Z]"), []
     for pkg_name in pkgs:
-        if pkg_name in reserved_names:
-            error_msg = f"The name '{pkg_name}' is reserved, and cannot be used for packages"
+        short_name = pkg_name.split(".")[-1]
+
+        if short_name in reserved_names:
+            error_msg = f"The name '{short_name}' is reserved, and cannot be used for packages"
             errors.append(error_cls(error_msg, []))
 
-        if badname_regex.search(pkg_name):
-            error_msg = f"Package name '{pkg_name}' should be lowercase and must not contain '_'"
+        if badname_regex.search(short_name):
+            error_msg = f"Package name '{short_name}' should be lowercase and must not contain '_'"
             errors.append(error_cls(error_msg, []))
     return errors
 
@@ -1224,7 +1226,8 @@ def _named_specs_in_when_arguments(pkgs, error_cls):
 
         def _refers_to_pkg(when):
             when_spec = spack.spec.Spec(when)
-            return when_spec.name is None or when_spec.name == pkg_name
+            # pkg_class.name strips namespace from pkg_name, more suitable check
+            return when_spec.name is None or when_spec.name == pkg_cls.name
 
         def _error_items(when_dict):
             for when, elts in when_dict.items():
