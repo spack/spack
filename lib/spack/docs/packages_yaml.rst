@@ -105,8 +105,47 @@ Specific limitations include:
 Specifying dependencies among external packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Dependency relationships among external packages can also be be modeled in your ``packages.yaml`` configuration file.
+Dependency relationships among external packages can also be be modeled in your ``packages.yaml`` configuration file, by adding a ``dependencies:`` section to your external.
 For instance, the following configuration describes an ``mpileaks`` external that depends on ``callpath`` and on ``mpich``:
+
+.. code-block:: yaml
+
+   # Specification for the following DAG:
+   #
+   # o mpileaks@2.3
+   # |\
+   # | o callpath@1.0
+   # |/
+   # o mpich@3.0.4
+   packages:
+     mpileaks:
+       externals:
+       - spec: "mpileaks@2.3~debug+opt"
+         prefix: /user/path
+         dependencies:
+         - spec: callpath
+           deptypes: link
+         - spec: mpich
+           virtuals: "mpi"
+     callpath:
+       externals:
+       - spec: "callpath@1.0"
+         prefix: /user/path
+         dependencies:
+         - spec: mpich
+           virtuals: "mpi"
+     mpich:
+       externals:
+       - spec: "mpich@3.0.4"
+         prefix: /user/path
+
+The specs mentioned in the ``dependencies:`` section must be constrained enough to identify a single external dependency.
+If the dependency spec matches no external, or more than one external, Spack will raise an error.
+The dependency type is specified in the optional ``deptypes`` field, and defaults to ``build,link``.
+Virtuals provided on edges are specified in the optional ``virtuals`` field.
+
+For a more structured output, it is also possible to assign an ``id`` to an extenal node, and refer to an external spec by ``id`` when specifying dependencies.
+The config above written using ``id`` instead of specs looks like:
 
 .. code-block:: yaml
 
@@ -146,10 +185,6 @@ For instance, the following configuration describes an ``mpileaks`` external tha
        - spec: "mpich@3.0.4"
          prefix: /user/path
          id: mpich_id
-
-The ``id`` attribute is a unique string identifier of the external node being described.
-The ``dependencies`` attribute is a list of objects, where you can specify the ``id`` of the dependency and optionally the dependency types (``deptypes``), and the ``virtuals``, along the edge.
-
 
 Prevent packages from being built from sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

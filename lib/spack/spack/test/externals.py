@@ -190,6 +190,29 @@ def test_externals_with_duplicate_id():
                 "adios2": ["%[deptypes=build,link] bzip2@1.0.8"],
             },
         ),
+        # Same, but specifying dependencies by spec: instead of id:
+        (
+            [
+                {
+                    "spec": "ascent@0.9.2+adios2+shared",
+                    "prefix": "/user/path",
+                    "dependencies": [
+                        {"spec": "adios2", "deptypes": "link"},
+                        {"spec": "bzip2", "deptypes": "run"},
+                    ],
+                },
+                {
+                    "spec": "adios2@2.7.1+shared",
+                    "prefix": "/user/path",
+                    "dependencies": [{"spec": "bzip2", "deptypes": ["build", "link"]}],
+                },
+                {"spec": "bzip2@1.0.8+shared", "prefix": "/user/path"},
+            ],
+            {
+                "ascent": ["%[deptypes=link] adios2@2.7.1", "%[deptypes=run] bzip2@1.0.8"],
+                "adios2": ["%[deptypes=build,link] bzip2@1.0.8"],
+            },
+        ),
         # Old type specification for
         # o mpileaks@2.2
         # o gcc@15.0.1

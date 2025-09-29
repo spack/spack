@@ -4333,7 +4333,40 @@ packages:
                 "%[deptypes=link] callpath",
                 "%[deptypes=build,link] mpich",
             ],
-        )
+        ),
+        # Same, but using `spec:` instead of `id:` for dependencies
+        (
+            "mpileaks",
+            """
+packages:
+  mpileaks:
+    externals:
+    - spec: "mpileaks@2.3~debug+opt"
+      prefix: /user/path
+      dependencies:
+      - spec: callpath
+        deptypes: link
+      - spec: mpich
+        virtuals: "mpi"
+  callpath:
+    externals:
+    - spec: "callpath@1.0"
+      prefix: /user/path
+      dependencies:
+      - spec: mpich
+        virtuals: "mpi"
+  mpich:
+    externals:
+    - spec: "mpich@3.0.4"
+      prefix: /user/path
+""",
+            [
+                "%mpi=mpich@3.0.4",
+                "^callpath %mpi=mpich@3.0.4",
+                "%[deptypes=link] callpath",
+                "%[deptypes=build,link] mpich",
+            ],
+        ),
     ],
 )
 def test_external_specs_with_dependencies(

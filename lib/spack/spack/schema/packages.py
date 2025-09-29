@@ -194,6 +194,7 @@ properties: Dict[str, Any] = {
                                     "type": "object",
                                     "properties": {
                                         "id": {"type": "string"},
+                                        "spec": {"type": "string"},
                                         "deptypes": {
                                             "oneOf": [
                                                 {"type": "string"},
@@ -202,7 +203,6 @@ properties: Dict[str, Any] = {
                                         },
                                         "virtuals": {"type": "string"},
                                     },
-                                    "required": ["id"],
                                 },
                             },
                         },

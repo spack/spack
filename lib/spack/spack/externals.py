@@ -17,6 +17,7 @@ from spack.error import SpackError
 
 class DependencyDict(TypedDict, total=False):
     id: str
+    spec: str
     deptypes: spack.deptypes.DepTypes
     virtuals: str
 
@@ -207,11 +208,14 @@ class ExternalSpecsParser:
             self.specs_by_name.setdefault(node.name, []).append(spec_and_config)
             self.nodes.append(node)
 
-        # Guess how to convert old entries like 'mpich %gcc' to a dependency in the dict
+        # Map dependencies specified as specs to id
         for eid, entry in self.specs_by_external_id.items():
             current_node = entry.spec
             current_dict = entry.config
+            is_legacy = False
+            # Guess how to convert old entries like 'mpich %gcc' to a dependency in the dict
             for edge in current_node.edges_to_dependencies():
+                is_legacy = True
                 # We don't want to accept foo %[deptypes=build,link] mpich as a spec
                 if edge.depflag != 0:
                     raise ExternalDependencyError(
@@ -248,6 +252,37 @@ class ExternalSpecsParser:
                     {"id": selected.config["id"], "deptypes": "build", "virtuals": "c"}
                 )
             current_node.clear_edges()
+            if is_legacy:
+                # Legacy specs are not allowed to have a "dependencies:" section
+                continue
+
+            # Map a spec: to id:
+            for dependency_dict in current_dict.get("dependencies", []):
+                if "id" in dependency_dict:
+                    continue
+
+                if "spec" not in dependency_dict:
+                    raise ExternalDependencyError(
+                        f"the spec {current_dict['spec']} needs to specify either the id or the "
+                        f"spec of its dependencies."
+                    )
+
+                query_spec = spack.spec.Spec(dependency_dict["spec"])
+                candidates = [
+                    x for x in self.specs_by_name[query_spec.name] if x.spec.satisfies(query_spec)
+                ]
+                if len(candidates) == 0:
+                    raise ExternalDependencyError(
+                        f"the spec {current_dict['spec']} depends on {query_spec}, but there is "
+                        f"no such external spec in packages.yaml."
+                    )
+                elif len(candidates) > 1:
+                    raise ExternalDependencyError(
+                        f"the spec {current_dict['spec']} depends on {query_spec}, but there are "
+                        f"multiple external specs in packages.yaml that satisfy it."
+                    )
+
+                dependency_dict["id"] = candidates[0].config["id"]
 
         # Attach dependencies to externals
         for eid, entry in self.specs_by_external_id.items():
