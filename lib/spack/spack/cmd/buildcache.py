@@ -858,7 +858,15 @@ def prune_fn(args):
     dry_run: bool = args.dry_run
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
 
-    started_at = get_buildcache_normalized_time(mirror)
+    # Determine the time to use as the "started at" time for pruning.
+    # If a cache index exists, use that time. Otherwise, use the current time (normalized
+    # to the buildcache's time zone).
+    cache_index_url = URLBuildcacheEntry.get_index_url(mirror_url=mirror.fetch_url)
+    stat_result = web_util.stat_url(cache_index_url)
+    if stat_result is not None:
+        started_at = stat_result[1]
+    else:
+        started_at = get_buildcache_normalized_time(mirror)
 
     if args.keeplist:
         prune_direct(mirror, pathlib.Path(args.keeplist), started_at, dry_run)
