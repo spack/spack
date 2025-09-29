@@ -19,6 +19,7 @@ import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.detection
+import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
 import spack.llnl.util.lang
@@ -490,10 +491,39 @@ class TestConcretize:
         assert left.satisfies("%c=gcc")
         lefthash = left.dag_hash()[:7]
 
+        # This should work when mixing is allowed
+        spack.concretize.concretize_one(f"dt-diamond%clang ^/{lefthash}")
+
         # Now try to use it with compiler mixing disabled
         with spack.config.override("concretizer", {"compiler_mixing": False}):
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one(f"dt-diamond%clang ^/{lefthash}")
+
+    def test_disable_mixing_env(
+        self, mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+    ):
+        spack_yaml = tmp_path / ev.manifest_name
+        spack_yaml.write_text(
+        """\
+spack:
+  specs:
+  - dt-diamond%gcc
+  - dt-diamond%clang
+  concretizer:
+    compiler_mixing: false
+    unify: when_possible
+"""
+        )
+
+        with ev.Environment(tmp_path) as e:
+            e.concretize()
+            for root in e.roots():
+                if root.satisfies("%gcc"):
+                    assert root["dt-diamond-left"].satisfies("%gcc")
+                    assert root["dt-diamond-bottom"].satisfies("%gcc")
+                else:
+                    assert root["dt-diamond-left"].satisfies("%llvm")
+                    assert root["dt-diamond-bottom"].satisfies("%llvm")
 
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")
