@@ -3080,7 +3080,7 @@ class SpackSolverSetup:
 
         candidate_compilers.update(compilers_from_reuse)
         self.possible_compilers = list(candidate_compilers)
-        self.possible_compilers.sort()  # type: ignore[call-overload]
+        self.possible_compilers.sort()  # type: ignore[call-arg]
 
         self.gen.h1("Runtimes")
         injected_dependencies = self.define_runtime_constraints()
