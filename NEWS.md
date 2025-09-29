@@ -5,6 +5,9 @@ Deprecated the implicit attributes:
 - `Builder.legacy_attributes`
 - `Builder.legacy_long_methods`
 
+## Package API v2.3
+- `spack.package.version` directive: added `git_sparse_paths` parameter.
+
 ## Package API v2.2
 Added to `spack.package`:
 - `BuilderWithDefaults`

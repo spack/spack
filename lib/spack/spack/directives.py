@@ -163,7 +163,9 @@ def version(
     tag: Optional[str] = None,
     branch: Optional[str] = None,
     get_full_repo: Optional[bool] = None,
-    git_sparse_paths: Optional[bool] = None,
+    git_sparse_paths: Optional[
+        Union[List[str], Callable[[spack.package_base.PackageBase], List[str]]]
+    ] = None,
     submodules: Union[SubmoduleCallback, Optional[bool]] = None,
     submodules_delete: Optional[bool] = None,
     # other version control
@@ -179,6 +181,10 @@ def version(
 
         version("2.1", sha256="...")
         version("2.0", sha256="...", preferred=True)
+
+    .. versionchanged:: v2.3
+
+       The ``git_sparse_paths`` parameter was added.
     """
     kwargs = {
         key: value

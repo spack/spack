@@ -370,14 +370,14 @@ def test_package_version_can_have_sparse_checkout_properties(
 ):
     spec = Spec("git-sparsepaths-version")
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
-    assert hasattr(pkg_cls, "git_sparse_paths")
-    assert pkg_cls.git_sparse_paths == []
 
-    version = "1.0"
-    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), version)
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), version="1.0")
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-    assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == ["foo", "bar"]
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), version="0.9")
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.git_sparse_paths is None
 
 
 def test_package_can_depend_on_commit_of_dependency(mock_packages, config):

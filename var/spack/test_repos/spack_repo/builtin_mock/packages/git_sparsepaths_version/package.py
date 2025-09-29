@@ -14,3 +14,4 @@ class GitSparsepathsVersion(Package):
     git = "https://a/really.com/big/repo.git"
 
     version("1.0", tag="v1.0", git_sparse_paths=["foo", "bar"])
+    version("0.9", tag="v0.9")
