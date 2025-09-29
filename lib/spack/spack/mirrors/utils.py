@@ -6,6 +6,7 @@ import traceback
 from collections import Counter
 
 import spack.caches
+import spack.cmd.mirror
 import spack.config
 import spack.error
 import spack.llnl.util.tty as tty
@@ -111,7 +112,9 @@ def create(path, specs, skip_unstable_versions=False):
     """
     # automatically spec-ify anything in the specs array.
     specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
-    mirror_stats = create_mirror_for_all_specs(specs, path, skip_unstable_versions, workers=1)
+    mirror_stats = spack.cmd.mirror.create_mirror_for_all_specs(
+        specs, path, skip_unstable_versions, workers=1
+    )
     return mirror_stats.stats()
 
 
