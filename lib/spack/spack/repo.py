@@ -500,15 +500,15 @@ class TagIndexer(Indexer):
     def _create(self) -> "spack.tag.TagIndex":
         from spack.tag import TagIndex
 
-        return TagIndex(self.repository)
+        return TagIndex()
 
     def read(self, stream):
         from spack.tag import TagIndex
 
-        self.index = TagIndex.from_json(stream, self.repository)
+        self.index = TagIndex.from_json(stream)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname.split(".")[-1])
+        self.index.update_package(pkg_fullname.split(".")[-1], self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -817,7 +817,7 @@ class RepoPath:
         if self._tag_index is None:
             from spack.tag import TagIndex
 
-            self._tag_index = TagIndex(repository=self)
+            self._tag_index = TagIndex()
             for repo in reversed(self.repos):
                 self._tag_index.merge(repo.tag_index)
         return self._tag_index

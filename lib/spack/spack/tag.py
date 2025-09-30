@@ -16,15 +16,14 @@ RepoType = Union["spack.repo.Repo", "spack.repo.RepoPath"]
 class TagIndex:
     """Maps tags to list of package names."""
 
-    def __init__(self, repository: RepoType) -> None:
+    def __init__(self) -> None:
         self.tags: Dict[str, List[str]] = {}
-        self.repository = repository
 
     def to_json(self, stream) -> None:
         sjson.dump({"tags": self.tags}, stream)
 
     @staticmethod
-    def from_json(stream, repository: RepoType) -> "TagIndex":
+    def from_json(stream) -> "TagIndex":
         d = sjson.load(stream)
 
         if not isinstance(d, dict):
@@ -33,11 +32,9 @@ class TagIndex:
         if "tags" not in d:
             raise TagIndexError("TagIndex data does not start with 'tags'")
 
-        r = TagIndex(repository=repository)
-
+        r = TagIndex()
         for tag, packages in d["tags"].items():
             r.tags[tag] = packages
-
         return r
 
     def get_packages(self, tag: str) -> List[str]:
@@ -56,13 +53,13 @@ class TagIndex:
             else:
                 self.tags[tag] = sorted({*self.tags[tag], *pkgs})
 
-    def update_package(self, pkg_name: str) -> None:
+    def update_package(self, pkg_name: str, repo: RepoType) -> None:
         """Updates a package in the tag index.
 
         Args:
             pkg_name: name of the package to be updated
         """
-        pkg_cls = self.repository.get_pkg_class(pkg_name)
+        pkg_cls = repo.get_pkg_class(pkg_name)
 
         # Remove the package from the list of packages, if present
         for pkg_list in self.tags.values():

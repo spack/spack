@@ -97,23 +97,21 @@ def test_tag_index_round_trip(mock_packages):
     mock_index.to_json(ostream)
 
     istream = io.StringIO(ostream.getvalue())
-    new_index = spack.tag.TagIndex.from_json(istream, repository=mock_packages)
+    new_index = spack.tag.TagIndex.from_json(istream)
 
     assert mock_index.tags == new_index.tags
 
 
 def test_tag_equal(mock_packages):
-    first_index = spack.tag.TagIndex.from_json(io.StringIO(tags_json), repository=mock_packages)
-    second_index = spack.tag.TagIndex.from_json(io.StringIO(tags_json), repository=mock_packages)
+    first_index = spack.tag.TagIndex.from_json(io.StringIO(tags_json))
+    second_index = spack.tag.TagIndex.from_json(io.StringIO(tags_json))
 
     assert first_index.tags == second_index.tags
 
 
 def test_tag_merge(mock_packages):
-    first_index = spack.tag.TagIndex.from_json(io.StringIO(tags_json), repository=mock_packages)
-    second_index = spack.tag.TagIndex.from_json(
-        io.StringIO(more_tags_json), repository=mock_packages
-    )
+    first_index = spack.tag.TagIndex.from_json(io.StringIO(tags_json))
+    second_index = spack.tag.TagIndex.from_json(io.StringIO(more_tags_json))
 
     assert first_index != second_index
 
@@ -134,21 +132,21 @@ def test_tag_merge(mock_packages):
 def test_tag_not_dict(mock_packages):
     list_json = "[]"
     with pytest.raises(spack.tag.TagIndexError) as e:
-        spack.tag.TagIndex.from_json(io.StringIO(list_json), repository=mock_packages)
+        spack.tag.TagIndex.from_json(io.StringIO(list_json))
         assert "not a dict" in str(e)
 
 
 def test_tag_no_tags(mock_packages):
     pkg_json = '{"packages": []}'
     with pytest.raises(spack.tag.TagIndexError) as e:
-        spack.tag.TagIndex.from_json(io.StringIO(pkg_json), repository=mock_packages)
+        spack.tag.TagIndex.from_json(io.StringIO(pkg_json))
         assert "does not start with" in str(e)
 
 
 def test_tag_update_package(mock_packages):
     mock_index = mock_packages.tag_index
-    index = spack.tag.TagIndex(repository=mock_packages)
+    index = spack.tag.TagIndex()
     for name in spack.repo.all_package_names():
-        index.update_package(name)
+        index.update_package(name, repo=mock_packages)
 
     ensure_tags_results_equal(mock_index.tags, index.tags)
