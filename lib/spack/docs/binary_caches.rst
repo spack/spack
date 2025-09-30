@@ -346,7 +346,8 @@ From here, you can use the mirror as any other build cache:
 Authentication with popular Container Registries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Below are instructions for configuring authentication with some popular OCI registries.
+Below are instructions for authenticating with some of the most popular container registries.
+In all cases, you need to generate a (temporary) token to use as the password -- this is not the same as your account password.
 
 GHCR
 """"""
@@ -357,7 +358,7 @@ For the password, you can use either:
 #. A personal access token (PAT) with ``write:packages`` scope.
 #. A GitHub Actions token (``GITHUB_TOKEN``) with ``packages:write`` permission.
 
-See also `GitHub's documentation <https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry>`_.
+See also `GitHub's documentation <https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry>`_ and :ref:`github-actions-build-cache` below.
 
 Docker Hub
 """"""""""
@@ -406,6 +407,8 @@ In practice, you won't be able to run these as containers because they don't com
 However, they are still compatible with tools like ``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
 
 See the section :ref:`exporting-images` for more details on how to create container images with Spack.
+
+.. _github-actions-build-cache:
 
 Spack Build Cache for GitHub Actions
 ------------------------------------

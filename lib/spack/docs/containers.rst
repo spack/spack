@@ -5,7 +5,7 @@
 
 .. meta::
    :description lang=en:
-      Learn how to create OCI compatible container images, either by copying existing installations or by generating recipes for Docker and Singularity.
+      Learn how to turn Spack packages and Spack environments into OCI-compatible container images, either by exporting existing installations or by generating recipes for Docker and Singularity.
 
 .. _containers:
 
@@ -25,32 +25,32 @@ You can either export software packages already built on your host system as a c
      - :ref:`Container Image Export <exporting-images>`
      - :ref:`Recipe Generation <generating-recipes>`
    * - **Purpose**
-     - Exports existing installations from the host system as a container image.
-     - Runs ``spack install`` to build software from source *inside* the container build process.
+     - Exports existing installations from the host system as a container image
+     - Runs ``spack install`` to build software from source *inside* the container build process
    * - **Spack Command**
      - ``spack buildcache push``
      - ``spack containerize``
    * - **Reproducibility**
-     - Limited: depends on the host system.
-     - High: controlled build environment.
+     - Limited: depends on the host system
+     - High: controlled build environment
    * - **Input**
      - Installed Spack packages or environments
      - A ``spack.yaml`` file
    * - **Speed**
-     - Fast
-     - Slow
+     - Faster: copies existing binaries
+     - Slower: typically builds from source
    * - **Troubleshooting**
-     - Build issues are resolved on the host, where debugging is simpler.
-     - Build issues must be resolved inside the container environment.
-   * - **Required Tools**
-     - None.
-     - Docker, Podman, Singularity, or similar.
+     - Build issues are resolved on the host, where debugging is simpler
+     - Build issues must be resolved inside the container build process
+   * - **Build Tools**
+     - None
+     - Docker, Podman, Singularity, or similar
    * - **Privileges**
-     - None (rootless).
-     - May require elevated privileges (root).
+     - None (rootless)
+     - May require elevated privileges, depending on the container build tool (root)
    * - **Output destination**
-     - OCI-compatible registry.
-     - Local Docker or Singularity image.
+     - OCI-compatible registry
+     - Local Docker or Singularity image
 
 
 .. _exporting-images:
@@ -102,9 +102,9 @@ Spack publishes every individual dependency as a separate image layer, which all
     You can hit this limit when exporting container images from larger environments or packages with many dependencies.
     There are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_ to work around this limitation.
 
-The ``spack buildcache push`` command serves a **dual purpose**:
+The ``spack buildcache push --base-image ...`` command serves a **dual purpose**:
 
-1. It makes container images available for download with container runtimes like Docker or Podman.
+1. It makes container images available for container runtimes like Docker and Podman.
 2. It makes the *same* binaries available :ref:`as a build cache <binary_caches_oci>` for ``spack install``.
 
 .. _configuring-container-registries:
