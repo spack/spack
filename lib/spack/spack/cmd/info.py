@@ -370,7 +370,7 @@ def print_grouped_by_when(
 
     indent = 4
     for when, by_name in sorted(when_indexed_dictionary.items(), key=unconditional_first):
-        if not pkg.spec.intersects(when):
+        if not pkg.intersects(when):
             continue
 
         start_indent = indent
@@ -408,9 +408,19 @@ def print_by_name(
 
     indent = 4
 
+    def unconditional_first(definition: Any) -> SupportsRichComparison:
+        spec = getattr(definition, "spec", None)
+        if spec:
+            return (spec != spack.spec.Spec(spec.name), spec)
+        else:
+            return getattr(definition, "name", None)  # type: ignore[return-value]
+
     for subkey in spack.package_base._subkeys(when_indexed_dictionary):
-        for when, definition in spack.package_base._definitions(when_indexed_dictionary, subkey):
-            if not pkg.spec.intersects(when):
+        for when, definition in sorted(
+            spack.package_base._definitions(when_indexed_dictionary, subkey),
+            key=lambda t: unconditional_first(t[1]),
+        ):
+            if not pkg.intersects(when):
                 continue
 
             _print_definition(

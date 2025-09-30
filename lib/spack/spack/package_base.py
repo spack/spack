@@ -1450,6 +1450,65 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if self.spec.intersects(when_spec)
         )
 
+    def intersects(self, spec: spack.spec.Spec) -> bool:
+        """Context-ful intersection that takes into account package information.
+
+        By design, ``Spec.intersects()`` does not know anything about package metdata.
+        This avoids unnecessary package lookups and keeps things efficient where extra
+        information is not needed, and it decouples ``Spec`` from ``PackageBase``.
+
+        In many cases, though, we can rule more cases out in ``intersects()`` if we
+        know, for example, that certain variants are always single-valued, or that
+        certain variants are conditional on other variants. This adds logic for such
+        cases when they are knowable.
+
+        Note that because ``intersects()`` is conservative, it can only give false
+        positives ("i.e., the two specs *may* overlap"), not false negatives. This
+        method can fix false positives (i.e. it may return ``False`` when
+        ``Spec.intersects()`` would return ``True``, but it will never return ``True``
+        when ``Spec.intersects()`` returns ``False``.
+
+        """
+        # Spec.intersects() is right when False
+        if not self.spec.intersects(spec):
+            return False
+
+        def sv_variant_conflicts(spec, variant):
+            name = variant.name
+            return (
+                variant.name in spec.variants
+                and all(not d[name].multi for when, d in self.variants.items() if name in d)
+                and spec.variants[name].value != variant.value
+            )
+
+        # Specs don't know if a variant is single- or multi-valued (concretization handles this)
+        # But, we know if the spec has a value for a single-valued variant, it *has* to equal the
+        # value in self.spec, if there is one.
+        for v, variant in spec.variants.items():
+            if sv_variant_conflicts(self.spec, variant):
+                return False
+
+        # if there is no intersecting condition for a conditional variant, it can't exist. e.g.:
+        # - cuda_arch=<anything> can't be satisfied when ~cuda.
+        # - generator=<anything> can't be satisfied when build_system=autotools
+        def mutually_exclusive(spec, variant_name):
+            return all(
+                not spec.intersects(when)
+                or any(sv_variant_conflicts(spec, wv) for wv in when.variants.values())
+                for when, d in self.variants.items()
+                if variant_name in d
+            )
+
+        names = self.variant_names()
+        for v in set(itertools.chain(spec.variants, self.spec.variants)):
+            if v not in names:  # treat unknown variants as intersecting
+                continue
+
+            if mutually_exclusive(self.spec, v) or mutually_exclusive(spec, v):
+                return False
+
+        return True
+
     @property
     def virtuals_provided(self):
         """
