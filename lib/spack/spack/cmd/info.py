@@ -90,8 +90,23 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "-a", "--all", action="store_true", default=False, help="output all package information"
     )
 
+    by = subparser.add_mutually_exclusive_group()
+    by.add_argument(
+        "--by-name",
+        dest="by_name",
+        action="store_true",
+        default=True,
+        help="list variants, dependency, etc. in name order, then by when condition",
+    )
+    by.add_argument(
+        "--by-when",
+        dest="by_name",
+        action="store_false",
+        default=False,
+        help="group variants, dependencies, etc. first by when condition, then by name",
+    )
+
     options = [
-        ("--by-name", "list variants in strict name order; don't group by condition"),
         ("--detectable", print_detectable.__doc__),
         ("--maintainers", print_maintainers.__doc__),
         ("--namespace", print_namespace.__doc__),
