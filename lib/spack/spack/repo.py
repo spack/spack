@@ -1366,7 +1366,8 @@ class Repo:
 
     def packages_with_tags(self, *tags: str) -> Set[str]:
         v = set(self.all_package_names())
-        v.intersection_update(*(self.tag_index[tag.lower()] for tag in tags))
+        for tag in tags:
+            v.intersection_update(self.tag_index.get_packages(tag.lower()))
         return v
 
     def all_package_classes(self) -> Generator[Type["spack.package_base.PackageBase"], None, None]:

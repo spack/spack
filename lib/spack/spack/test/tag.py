@@ -6,6 +6,7 @@ import io
 
 import pytest
 
+import spack.cmd.tags
 import spack.repo
 import spack.tag
 from spack.main import SpackCommand
@@ -38,16 +39,9 @@ more_tags_json = """
     """
 
 
-def test_tag_copy(mock_packages):
-    index = spack.tag.TagIndex.from_json(io.StringIO(tags_json), repository=mock_packages)
-    new_index = index.copy()
-
-    assert index.tags == new_index.tags
-
-
 def test_tag_get_all_available(mock_packages):
     for skip in [False, True]:
-        all_pkgs = spack.tag.packages_with_tags(None, False, skip)
+        all_pkgs = spack.cmd.tags.packages_with_tags(["tag1", "tag2", "tag3"], False, skip)
         assert sorted(all_pkgs["tag1"]) == ["mpich", "mpich2"]
         assert all_pkgs["tag2"] == ["mpich"]
         assert all_pkgs["tag3"] == ["mpich2"]
@@ -73,11 +67,11 @@ def ensure_tags_results_equal(results, expected):
 )
 def test_tag_get_available(tags, expected, mock_packages):
     # Ensure results for all tags
-    all_tag_pkgs = spack.tag.packages_with_tags(tags, False, False)
+    all_tag_pkgs = spack.cmd.tags.packages_with_tags(tags, False, False)
     ensure_tags_results_equal(all_tag_pkgs, expected)
 
     # Ensure results for tags expecting results since skipping otherwise
-    only_pkgs = spack.tag.packages_with_tags(tags, False, True)
+    only_pkgs = spack.cmd.tags.packages_with_tags(tags, False, True)
     if expected[tags[0]]:
         ensure_tags_results_equal(only_pkgs, expected)
     else:
@@ -88,7 +82,7 @@ def test_tag_get_installed_packages(mock_packages, mock_archive, mock_fetch, ins
     install("--fake", "mpich")
 
     for skip in [False, True]:
-        all_pkgs = spack.tag.packages_with_tags(None, True, skip)
+        all_pkgs = spack.cmd.tags.packages_with_tags(["tag1", "tag2", "tag3"], True, skip)
         assert sorted(all_pkgs["tag1"]) == ["mpich"]
         assert all_pkgs["tag2"] == ["mpich"]
         assert skip or all_pkgs["tag3"] == []
@@ -105,14 +99,14 @@ def test_tag_index_round_trip(mock_packages):
     istream = io.StringIO(ostream.getvalue())
     new_index = spack.tag.TagIndex.from_json(istream, repository=mock_packages)
 
-    assert mock_index == new_index
+    assert mock_index.tags == new_index.tags
 
 
 def test_tag_equal(mock_packages):
     first_index = spack.tag.TagIndex.from_json(io.StringIO(tags_json), repository=mock_packages)
     second_index = spack.tag.TagIndex.from_json(io.StringIO(tags_json), repository=mock_packages)
 
-    assert first_index == second_index
+    assert first_index.tags == second_index.tags
 
 
 def test_tag_merge(mock_packages):
