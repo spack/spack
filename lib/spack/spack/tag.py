@@ -2,15 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage package tags"""
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List
 
 import spack.error
 import spack.util.spack_json as sjson
 
 if TYPE_CHECKING:
     import spack.repo
-
-RepoType = Union["spack.repo.Repo", "spack.repo.RepoPath"]
 
 
 class TagIndex:
@@ -53,7 +51,7 @@ class TagIndex:
             else:
                 self.tags[tag] = sorted({*self.tags[tag], *pkgs})
 
-    def update_package(self, pkg_name: str, repo: RepoType) -> None:
+    def update_package(self, pkg_name: str, repo: "spack.repo.Repo") -> None:
         """Updates a package in the tag index.
 
         Args:
