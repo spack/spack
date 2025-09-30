@@ -3191,7 +3191,7 @@ else:
     rename = os.rename
 
 
-class SymlinkError(RuntimeError):
+class SymlinkError(OSError):
     """Exception class for errors raised while creating symlinks,
     junctions and hard links
     """
