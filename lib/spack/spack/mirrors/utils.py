@@ -6,7 +6,6 @@ import traceback
 from collections import Counter
 
 import spack.caches
-import spack.cmd.mirror
 import spack.config
 import spack.error
 import spack.llnl.util.tty as tty
@@ -90,32 +89,23 @@ def get_matching_versions(specs, num_versions=1):
 
     return matching
 
-
-def create(path, specs, skip_unstable_versions=False):
-    """Create a directory to be used as a spack mirror, and fill it with
-    package archives.
-
-    Arguments:
-        path: Path to create a mirror directory hierarchy in.
-        specs: Any package versions matching these specs will be added \
-            to the mirror.
-        skip_unstable_versions: if true, this skips adding resources when
-            they do not have a stable archive checksum (as determined by
-            ``fetch_strategy.stable_target``)
-
-    Returns:
-        A tuple of lists, each containing specs
-
-        * present: Package specs that were already present.
-        * mirrored: Package specs that were successfully mirrored.
-        * error: Package specs that failed to mirror due to some error.
-    """
-    # automatically spec-ify anything in the specs array.
-    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
-    mirror_stats = spack.cmd.mirror.create_mirror_for_all_specs(
-        specs, path, skip_unstable_versions, workers=1
+def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, workers):
+    mirror_cache = spack.mirrors.utils.get_mirror_cache(
+        path, skip_unstable_versions=skip_unstable_versions
     )
-    return mirror_stats.stats()
+    mirror_stats = spack.mirrors.utils.MirrorStatsForAllSpecs()
+    with spack.util.parallel.make_concurrent_executor(jobs=workers) as executor:
+        # Submit tasks to the process pool
+        futures = [
+            executor.submit(create_mirror_for_one_spec, candidate, mirror_cache)
+            for candidate in mirror_specs
+        ]
+        for mirror_future in as_completed(futures):
+            ext_mirror_stats = mirror_future.result()
+            mirror_stats.merge(ext_mirror_stats)
+
+    process_mirror_stats(*mirror_stats.stats())
+    return mirror_stats
 
 
 def get_mirror_cache(path, skip_unstable_versions=False):

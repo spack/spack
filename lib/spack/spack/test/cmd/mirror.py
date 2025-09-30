@@ -206,7 +206,7 @@ def test_mirror_skip_unstable(
     specs = [
         spack.concretize.concretize_one(x) for x in ["git-test", "trivial-pkg-with-valid-hash"]
     ]
-    spack.mirrors.utils.create(mirror_dir, specs, skip_unstable_versions=True)
+    spack.cmd.mirror.create(mirror_dir, specs, skip_unstable_versions=True)
 
     assert set(os.listdir(mirror_dir)) - set(["_source-cache"]) == set(
         ["trivial-pkg-with-valid-hash"]

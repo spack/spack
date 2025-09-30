@@ -666,6 +666,31 @@ def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, work
     return mirror_stats
 
 
+def create(path, specs, skip_unstable_versions=False):
+    """Create a directory to be used as a spack mirror, and fill it with
+    package archives.
+
+    Arguments:
+        path: Path to create a mirror directory hierarchy in.
+        specs: Any package versions matching these specs will be added \
+            to the mirror.
+        skip_unstable_versions: if true, this skips adding resources when
+            they do not have a stable archive checksum (as determined by
+            ``fetch_strategy.stable_target``)
+
+    Returns:
+        A tuple of lists, each containing specs
+
+        * present: Package specs that were already present.
+        * mirrored: Package specs that were successfully mirrored.
+        * error: Package specs that failed to mirror due to some error.
+    """
+    # automatically spec-ify anything in the specs array.
+    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
+    mirror_stats = create_mirror_for_all_specs(specs, path, skip_unstable_versions, workers=1)
+    return mirror_stats.stats()
+
+
 def mirror_destroy(args):
     """given a url, recursively delete everything under it"""
     mirror_url = None
