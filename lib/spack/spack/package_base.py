@@ -786,6 +786,19 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         except StopIteration:
             raise ValueError(f"No variant '{name}' on spec: {self.spec}")
 
+    @classmethod
+    def validate_variant_names(self, spec: spack.spec.Spec):
+        """Check that all variant names on Spec exist in this package.
+
+        Raises ``UnknownVariantError`` if invalid variants are on the spec.
+        """
+        names = self.variant_names()
+        for v in spec.variants:
+            if v not in names:
+                raise spack.variant.UnknownVariantError(
+                    f"No such variant '{v}' in package {self.name}", [v]
+                )
+
     @classproperty
     def package_dir(cls):
         """Directory where the package.py file lives."""

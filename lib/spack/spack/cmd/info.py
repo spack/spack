@@ -583,6 +583,7 @@ def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
 
     spec = specs[0]
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.fullname)
+    pkg_cls.validate_variant_names(spec)
     pkg = pkg_cls(spec)
 
     # Output core package information
