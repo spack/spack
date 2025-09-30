@@ -4,11 +4,12 @@
 # mypy: disallow-untyped-defs
 
 import argparse
+import collections
 import shutil
 import sys
 import textwrap
 from argparse import Namespace
-from typing import Any, Callable, Dict, Iterable, Optional, TextIO, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple, TypeVar
 
 import spack.builder
 import spack.cmd
@@ -154,9 +155,54 @@ class DependencyFormatter(Formatter):
         return str(format_deptype(dep.depflag))
 
 
+def count_bool_variant_conditions(
+    when_indexed_dictionary: Dict[spack.spec.Spec, Any],
+) -> List[Tuple[int, Tuple[str, bool]]]:
+    """Counts boolean variants in whens in a dictionary.
+
+    Returns a list of the most used when conditions for boolean variants along with their value.
+    """
+    top: Dict = collections.defaultdict(int)
+    for when, _ in when_indexed_dictionary.items():
+        for v, variant in when.variants.items():
+            if type(variant.value) is bool:
+                top[(variant.name, variant.value)] += 1
+
+    # sorted by frequency, highest first
+    return list(reversed(sorted((n, t) for t, n in top.items())))
+
+
 def print_dependencies(pkg: PackageBase, args: Namespace) -> None:
     """output build, link, and run package dependencies"""
     print_definitions(pkg, "Dependencies", pkg.dependencies, DependencyFormatter(), args.by_name)
+
+
+def print_dependency_suggestion(pkg: PackageBase) -> None:
+    variant_counts = count_bool_variant_conditions(pkg.dependencies)
+    big_variants = [
+        (name, val)
+        for n, (name, val) in variant_counts
+        # counts >= 40 and skip if the user already disabled the variant
+        if n >= 20 and not (name in pkg.spec.variants and pkg.spec.variants[name].value != val)
+    ]
+
+    if big_variants:
+        spec = spack.spec.Spec(pkg.name)
+        for name, val in big_variants:
+            # skip if user specified, or already saw a value (e.g. many +mpi and ~mpi)
+            if name in spec.variants or name in pkg.spec.variants:
+                continue
+            spec.variants[name] = spack.variant.BoolValuedVariant(name, not val)
+
+        # if there is new stuff to add beyond the input
+        if spec.variants:
+            spec.constrain(pkg.spec)  # include already specified constraints
+            print()
+            tty.info(
+                f"{pkg.name} has many complex dependencies; consider this for a simpler view:",
+                f"spack info {spec.format(color=tty.color.get_color_when())}",
+                format="y",
+            )
 
 
 def print_detectable(pkg: PackageBase, args: Namespace) -> None:
@@ -617,5 +663,7 @@ def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
     for print_it, func in sections:
         if print_it:
             func(pkg, args)
+
+    print_dependency_suggestion(pkg)
 
     color.cprint("")
