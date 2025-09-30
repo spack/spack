@@ -653,9 +653,15 @@ class RepoIndex:
                 if new_index_mtime != index_mtime:
                     needs_update = self.checker.modified_since(new_index_mtime)
 
-                for pkg_name in needs_update:
+                for counter, pkg_name in enumerate(needs_update):
+                    if sys.stdout.isatty():
+                        progress = int(counter * 100 / len(needs_update))
+                        print(
+                            f"\r\033[KComputing {name} cache [{progress:3d}%]", end="", flush=True
+                        )
                     indexer.update(f"{self.namespace}.{pkg_name}")
-
+                if sys.stdout.isatty():
+                    print("\r\033[K", flush=True, end="")
                 indexer.write(new)
 
         return indexer.index
