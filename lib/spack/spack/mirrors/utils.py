@@ -89,24 +89,6 @@ def get_matching_versions(specs, num_versions=1):
 
     return matching
 
-def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, workers):
-    mirror_cache = spack.mirrors.utils.get_mirror_cache(
-        path, skip_unstable_versions=skip_unstable_versions
-    )
-    mirror_stats = spack.mirrors.utils.MirrorStatsForAllSpecs()
-    with spack.util.parallel.make_concurrent_executor(jobs=workers) as executor:
-        # Submit tasks to the process pool
-        futures = [
-            executor.submit(create_mirror_for_one_spec, candidate, mirror_cache)
-            for candidate in mirror_specs
-        ]
-        for mirror_future in as_completed(futures):
-            ext_mirror_stats = mirror_future.result()
-            mirror_stats.merge(ext_mirror_stats)
-
-    process_mirror_stats(*mirror_stats.stats())
-    return mirror_stats
-
 
 def get_mirror_cache(path, skip_unstable_versions=False):
     """Returns a mirror cache, starting from the path where a mirror ought to be created.
