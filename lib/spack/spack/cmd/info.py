@@ -23,6 +23,7 @@ import spack.spec
 import spack.variant
 import spack.version
 from spack.cmd.common import arguments
+import spack.llnl.util.tty as tty
 from spack.llnl.util.tty.colify import colify
 from spack.package_base import PackageBase
 from spack.util.typing import SupportsRichComparison
@@ -576,7 +577,9 @@ def print_virtuals(pkg: PackageBase, args: Namespace) -> None:
 def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
-        tty.die(f"spack info requires exactly one spec. Parsed {len(specs)}")
+        tty.die(f"`spack info` requires exactly one spec. Parsed {len(specs)}")
+    if len(specs) == 0:
+        tty.die("`spack info` requires a spec.")
 
     spec = specs[0]
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.fullname)
