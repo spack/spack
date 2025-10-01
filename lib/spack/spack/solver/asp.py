@@ -3016,6 +3016,7 @@ class SpackSolverSetup:
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
+        self.requirement_parser.parse_rules_from_input_specs(specs)
         self.gen.h1("Generic information")
         if using_libc_compatibility():
             for libc in self.libcs:

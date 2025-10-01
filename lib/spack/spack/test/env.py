@@ -1318,3 +1318,35 @@ spack:
         derived_pkga = e.concrete_roots()[0]
 
     assert base_pkga.dag_hash() == derived_pkga.dag_hash()
+
+
+def test_dependency_propagation_in_environments(tmp_path, mutable_config):
+    """Tests that we can enforce compiler preferences using %% in environments."""
+    spack_yaml = """
+spack:
+  specs:
+  - mpileaks %%c,cxx=gcc
+  - mpileaks %%c,cxx=llvm
+  packages:
+    callpath:
+      require:
+      - "%c=gcc"
+  concretizer:
+    unify: false
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        roots = e.concrete_roots()
+
+    mpileaks_gcc = [s for s in roots if s.satisfies("mpileaks %c=gcc")][0]
+    for c in ("%[when=%c]c=gcc", "%[when=%cxx]cxx=gcc"):
+        assert all(x.satisfies(c) for x in mpileaks_gcc.traverse() if x.name != "callpath")
+
+    mpileaks_llvm = [s for s in roots if s.satisfies("mpileaks %c=llvm")][0]
+    for c in ("%[when=%c]c=llvm", "%[when=%cxx]cxx=llvm"):
+        assert all(x.satisfies(c) for x in mpileaks_llvm.traverse() if x.name != "callpath")
+
+    assert mpileaks_gcc["callpath"].satisfies("%c=gcc")
+    assert mpileaks_llvm["callpath"].satisfies("%c=gcc")

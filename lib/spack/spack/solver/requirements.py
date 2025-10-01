@@ -9,6 +9,8 @@ import spack.error
 import spack.package_base
 import spack.repo
 import spack.spec
+import spack.traverse
+from spack.enums import PropagationPolicy
 from spack.llnl.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
@@ -31,6 +33,7 @@ class RequirementOrigin(enum.Enum):
     PREFER_YAML = enum.auto()
     CONFLICT_YAML = enum.auto()
     DIRECTIVE = enum.auto()
+    INPUT_SPECS = enum.auto()
 
 
 class RequirementRule(NamedTuple):
@@ -52,13 +55,37 @@ class RequirementParser:
         self.config = configuration
         self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
         self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
+        self.preferences_from_input: List[spack.spec.Spec] = []
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
         result = []
+        result.extend(self.rules_from_input_specs(pkg))
         result.extend(self.rules_from_package_py(pkg))
         result.extend(self.rules_from_require(pkg))
         result.extend(self.rules_from_prefer(pkg))
         result.extend(self.rules_from_conflict(pkg))
+        return result
+
+    def parse_rules_from_input_specs(self, specs: List[spack.spec.Spec]):
+        self.preferences_from_input.clear()
+        for edge in spack.traverse.traverse_edges(specs, root=False):
+            if edge.propagation == PropagationPolicy.PREFERENCE:
+                self.preferences_from_input.extend(_split_edge_on_virtuals(edge))
+
+    def rules_from_input_specs(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+        result = []
+        for spec in self.preferences_from_input:
+            result.append(
+                RequirementRule(
+                    pkg_name=pkg.name,
+                    policy="any_of",
+                    requirements=[spec, spack.spec.Spec("@:")],
+                    kind=RequirementKind.PACKAGE,
+                    condition=spack.spec.Spec(),
+                    origin=RequirementOrigin.INPUT_SPECS,
+                    message=None,
+                )
+            )
         return result
 
     def rules_from_package_py(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
@@ -258,6 +285,21 @@ class RequirementParser:
             )
             return True
         return False
+
+
+def _split_edge_on_virtuals(edge: spack.spec.DependencySpec) -> List[spack.spec.Spec]:
+    """Split the edge on virtuals and removes the parent."""
+    if not edge.virtuals:
+        return [spack.spec.Spec(str(edge.copy(keep_parent=False)))]
+
+    result = []
+    # We split on virtuals so that "%%c,cxx=gcc" enforces "%%c=gcc" and "%%cxx=gcc" separately
+    for v in edge.virtuals:
+        t = edge.copy(keep_parent=False, keep_virtuals=False)
+        t.update_virtuals(v)
+        result.append(spack.spec.Spec(str(t)))
+
+    return result
 
 
 def parse_spec_from_yaml_string(string: str, *, named: bool = False) -> spack.spec.Spec:

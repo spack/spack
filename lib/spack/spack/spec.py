@@ -776,13 +776,15 @@ class DependencySpec:
         self.virtuals = tuple(sorted(union))
         return True
 
-    def copy(self) -> "DependencySpec":
+    def copy(self, *, keep_virtuals: bool = True, keep_parent: bool = True) -> "DependencySpec":
         """Return a copy of this edge"""
+        parent = self.parent if keep_parent else Spec()
+        virtuals = self.virtuals if keep_virtuals else ()
         return DependencySpec(
-            self.parent,
+            parent,
             self.spec,
             depflag=self.depflag,
-            virtuals=self.virtuals,
+            virtuals=virtuals,
             propagation=self.propagation,
             direct=self.direct,
             when=self.when,
@@ -825,6 +827,9 @@ class DependencySpec:
             when_str = f"when='{self.when}'"
 
         dep_sigil = "%" if self.direct else "^"
+        if self.propagation == PropagationPolicy.PREFERENCE:
+            dep_sigil = "%%"
+
         edge_attrs = [x for x in (virtuals_str, when_str) if x]
 
         if edge_attrs:
