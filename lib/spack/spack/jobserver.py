@@ -147,20 +147,18 @@ class FifoJobserver(Jobserver):
 
                 if tokens_returned < self.num_jobs:
                     tty.warn(
-                    f"spack jobserver internal: exiting with {tokens_returned} "
-                    f"tokens instead of {self.num_jobs} "
-                    f"(missing {self.num_jobs - tokens_returned} token(s)).\n\n"
-                    "This usually means that one of the packages built during this "
-                    "install did not properly release its parallel build tokens.\n"
-                    "Parallelism may be reduced in subsequent builds. "
-                    "If you can, please report the list of packages that were built "
-                    "when this message appeared.\n\n"
-                    "This warning is safe to ignore."
+                        f"spack jobserver internal: exiting with {tokens_returned} "
+                        f"tokens instead of {self.num_jobs} "
+                        f"(missing {self.num_jobs - tokens_returned} token(s)).\n\n"
+                        "This usually means that one of the packages built during this "
+                        "install did not properly release its parallel build tokens.\n"
+                        "Parallelism may be reduced in subsequent builds. "
+                        "If you can, please report the list of packages that were built "
+                        "when this message appeared.\n\n"
+                        "This warning is safe to ignore."
                     )
                 else:
-                    tty.debug(
-                        f"spack jobserver internal: all {self.num_jobs} tokens returned."
-                    )
+                    tty.debug(f"spack jobserver internal: all {self.num_jobs} tokens returned.")
             except Exception as e:
                 tty.warn(f"Jobserver cleanup: error checking tokens: {e}")
 

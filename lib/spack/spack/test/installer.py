@@ -1499,6 +1499,7 @@ def test_fifo_jobserver_enable_and_cleanup(tmp_path, monkeypatch):
 
 class MessageCapture:
     """Helper to capture warnings and debug messages from FifoJobserver."""
+
     def __init__(self):
         self.warnings = []
         self.debugs = []
@@ -1514,12 +1515,14 @@ class MessageCapture:
 @pytest.mark.parametrize(
     "num_jobs, returned_bytes, expected_warnings, expected_debugs",
     [
-        (5, b"+++++", 0, 1),   # all tokens returned → triggers debug, no warning
-        (5, b"+++", 1, 0),     # some tokens missing → triggers warning
-        (4, b"", 1, 0),        # FIFO empty → warning for missing tokens
+        (5, b"+++++", 0, 1),  # all tokens returned → triggers debug, no warning
+        (5, b"+++", 1, 0),  # some tokens missing → triggers warning
+        (4, b"", 1, 0),  # FIFO empty → warning for missing tokens
     ],
 )
-def test_fifo_missing_tokens_check(monkeypatch, tmp_path, num_jobs, returned_bytes, expected_warnings, expected_debugs):
+def test_fifo_missing_tokens_check(
+    monkeypatch, tmp_path, num_jobs, returned_bytes, expected_warnings, expected_debugs
+):
     js = FifoJobserver()
     js.num_jobs = num_jobs
 
@@ -1530,6 +1533,7 @@ def test_fifo_missing_tokens_check(monkeypatch, tmp_path, num_jobs, returned_byt
 
     # make read FD non-blocking like real jobserver
     import fcntl
+
     flags = fcntl.fcntl(r, fcntl.F_GETFL)
     fcntl.fcntl(r, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
@@ -1556,7 +1560,5 @@ def test_fifo_missing_tokens_check(monkeypatch, tmp_path, num_jobs, returned_byt
     if expected_warnings:
         print(expected_warnings)
         assert any(
-        "exiting with" in w and f"tokens instead of {num_jobs}" in w
-        for w in messages.warnings
+            "exiting with" in w and f"tokens instead of {num_jobs}" in w for w in messages.warnings
         ), f"Warning message did not include expected info: {messages.warnings}"
-
