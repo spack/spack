@@ -471,7 +471,12 @@ class TestConcretize:
 
     @pytest.mark.xfail(reason="asp representation of compilers is merged")
     def test_flag_mixing_env(
-        self, mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+        self,
+        mutable_mock_env_path,
+        tmp_path: pathlib.Path,
+        mock_packages,
+        mutable_config,
+        mutable_database,
     ):
         spack_yaml = tmp_path / ev.manifest_name
         spack_yaml.write_text(
