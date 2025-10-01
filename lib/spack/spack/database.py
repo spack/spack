@@ -807,7 +807,9 @@ class Database:
 
         def check(cond, msg):
             if not cond:
-                raise CorruptDatabaseError(f"Spack database is corrupt: {msg}", self._index_path)
+                raise CorruptDatabaseError(
+                    f"Spack database is corrupt: {msg}", str(self._index_path)
+                )
 
         check("database" in fdata, "no 'database' attribute in JSON DB.")
 
@@ -829,7 +831,7 @@ class Database:
             return CorruptDatabaseError(
                 f"Invalid record in Spack database: hash: {hash_key}, cause: "
                 f"{type(error).__name__}: {error}",
-                self._index_path,
+                str(self._index_path),
             )
 
         # Build up the database in three passes:

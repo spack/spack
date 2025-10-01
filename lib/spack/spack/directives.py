@@ -265,7 +265,9 @@ def _depends_on(
         return
 
     if not spec.name:
-        raise DependencyError(f"Invalid dependency specification in package '{pkg.name}':", spec)
+        raise DependencyError(
+            f"Invalid dependency specification in package '{pkg.name}':", str(spec)
+        )
     if pkg.name == spec.name:
         raise CircularReferenceError(f"Package '{pkg.name}' cannot depend on itself.")
 
