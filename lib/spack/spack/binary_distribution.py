@@ -1710,7 +1710,9 @@ def try_fetch(url_to_fetch):
 
 
 def download_tarball(
-    spec: spack.spec.Spec, unsigned: Optional[bool] = False, mirrors_for_spec=None
+    spec: spack.spec.Spec,
+    unsigned: Optional[bool] = False,
+    mirrors_for_spec: Optional[List[MirrorForSpec]] = None,
 ) -> Optional[spack.stage.Stage]:
     """Download binary tarball for given package
 
@@ -1743,14 +1745,17 @@ def download_tarball(
     # we need was in an un-indexed mirror.  No need to check any
     # mirror for the spec twice though.
     try_first = [i.url_and_version for i in mirrors_for_spec] if mirrors_for_spec else []
-
-    try_next = []
-    for try_layout in SUPPORTED_LAYOUT_VERSIONS:
-        try_next.extend(MirrorURLAndVersion(i.fetch_url, try_layout) for i in configured_mirrors)
+    try_next = [
+        MirrorURLAndVersion(mirror.fetch_url, layout)
+        for mirror in configured_mirrors
+        for layout in SUPPORTED_LAYOUT_VERSIONS
+    ]
     urls_and_versions = try_first + [uv for uv in try_next if uv not in try_first]
 
     # TODO: turn `mirrors_for_spec` into a list of Mirror instances, instead of doing that here.
-    def fetch_url_to_mirror(url_and_version):
+    def fetch_url_to_mirror(
+        url_and_version: MirrorURLAndVersion,
+    ) -> Tuple[spack.mirrors.mirror.Mirror, int]:
         url = url_and_version.url
         layout_version = url_and_version.version
         for mirror in configured_mirrors:
