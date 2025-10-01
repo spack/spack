@@ -747,6 +747,9 @@ class DependencySpec:
         propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
     ):
+        if direct is False and propagation != PropagationPolicy.NONE:
+            raise InvalidEdgeError("only direct dependencies can be propagated")
+
         self.parent = parent
         self.spec = spec
         self.depflag = depflag
@@ -796,6 +799,7 @@ class DependencySpec:
         yield self.depflag
         yield self.virtuals
         yield self.direct
+        yield self.propagation
         yield self.when
 
     def __str__(self) -> str:
@@ -808,6 +812,9 @@ class DependencySpec:
 
         if self.when != Spec():
             keywords.append(f"when={self.when}")
+
+        if self.propagation != PropagationPolicy.NONE:
+            keywords.append(f"propagation={self.propagation}")
 
         keywords_str = ", ".join(keywords)
         return f"DependencySpec({self.parent.format()!r}, {self.spec.format()!r}, {keywords_str})"
@@ -5713,3 +5720,7 @@ class InvalidSpecDetected(spack.error.SpecError):
 class SpliceError(spack.error.SpecError):
     """Raised when a splice is not possible due to dependency or provider
     satisfaction mismatch. The resulting splice would be unusable."""
+
+
+class InvalidEdgeError(spack.error.SpecError):
+    """Raised when an edge doesn't pass validation checks."""
