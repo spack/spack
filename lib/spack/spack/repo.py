@@ -45,6 +45,7 @@ import spack.llnl.path
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
+import spack.patch
 import spack.paths
 import spack.provider_index
 import spack.tag
@@ -60,7 +61,6 @@ from spack.llnl.util.filesystem import working_dir
 
 if TYPE_CHECKING:
     import spack.package_base
-    import spack.patch
     import spack.spec
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
@@ -497,7 +497,7 @@ class Indexer(metaclass=abc.ABCMeta):
 class TagIndexer(Indexer):
     """Lifecycle methods for a TagIndex on a Repo."""
 
-    def _create(self) -> "spack.tag.TagIndex":
+    def _create(self) -> spack.tag.TagIndex:
         return spack.tag.TagIndex()
 
     def read(self, stream):
@@ -536,10 +536,8 @@ class ProviderIndexer(Indexer):
 class PatchIndexer(Indexer):
     """Lifecycle methods for patch cache."""
 
-    def _create(self) -> "spack.patch.PatchCache":
-        from spack.patch import PatchCache
-
-        return PatchCache(repository=self.repository)
+    def _create(self) -> spack.patch.PatchCache:
+        return spack.patch.PatchCache(repository=self.repository)
 
     def needs_update(self):
         # TODO: patches can change under a package and we should handle
@@ -549,9 +547,7 @@ class PatchIndexer(Indexer):
         return False
 
     def read(self, stream):
-        from spack.patch import PatchCache
-
-        self.index = PatchCache.from_json(stream, repository=self.repository)
+        self.index = spack.patch.PatchCache.from_json(stream, repository=self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -669,8 +665,8 @@ class RepoPath:
         self.repos: List[Repo] = []
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index: Optional[spack.provider_index.ProviderIndex] = None
-        self._patch_index: Optional["spack.patch.PatchCache"] = None
-        self._tag_index: Optional["spack.tag.TagIndex"] = None
+        self._patch_index: Optional[spack.patch.PatchCache] = None
+        self._tag_index: Optional[spack.tag.TagIndex] = None
 
         for repo in repos:
             self.put_last(repo)
@@ -808,7 +804,7 @@ class RepoPath:
         return self._provider_index
 
     @property
-    def tag_index(self) -> "spack.tag.TagIndex":
+    def tag_index(self) -> spack.tag.TagIndex:
         """Merged TagIndex from all Repos in the RepoPath."""
         if self._tag_index is None:
             self._tag_index = spack.tag.TagIndex()
@@ -817,7 +813,7 @@ class RepoPath:
         return self._tag_index
 
     @property
-    def patch_index(self) -> "spack.patch.PatchCache":
+    def patch_index(self) -> spack.patch.PatchCache:
         """Merged PatchIndex from all Repos in the RepoPath."""
         if self._patch_index is None:
             from spack.patch import PatchCache
@@ -1291,12 +1287,12 @@ class Repo:
         return self.index["providers"]
 
     @property
-    def tag_index(self) -> "spack.tag.TagIndex":
+    def tag_index(self) -> spack.tag.TagIndex:
         """Index of tags and which packages they're defined on."""
         return self.index["tags"]
 
     @property
-    def patch_index(self) -> "spack.patch.PatchCache":
+    def patch_index(self) -> spack.patch.PatchCache:
         """Index of patches and packages they're defined on."""
         return self.index["patches"]
 

@@ -1722,7 +1722,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                         patch_path = patch.path
 
                     spack.patch.apply_patch(
-                        self.stage, patch_path, patch.level, patch.working_dir, patch.reverse
+                        self.stage.source_path,
+                        patch_path,
+                        patch.level,
+                        patch.working_dir,
+                        patch.reverse,
                     )
 
                 tty.msg(f"Applied patch {patch.path_or_url}")
