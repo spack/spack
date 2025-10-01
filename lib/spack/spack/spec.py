@@ -1514,7 +1514,7 @@ class Spec:
             return
 
         # init an empty spec that matches anything.
-        self.name = None
+        self.name: str = ""
         self.versions = vn.VersionList(":")
         self.variants = VariantMap(self)
         self.architecture = None
@@ -3417,19 +3417,15 @@ class Spec:
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
-            # The condition cannot be applied in any case, skip the edge
-            test_root = rhs_edge.parent.name in (None, self.name)
-            if test_root and not self._intersects(
+            # Check satisfaction of the dependency only if its when condition can apply
+            if not rhs_edge.parent.name or rhs_edge.parent.name == self.name:
+                test_spec = self
+            elif rhs_edge.parent.name in self:
+                test_spec = self[rhs_edge.parent.name]
+            else:
+                test_spec = None
+            if test_spec and not test_spec._intersects(
                 rhs_edge.when, resolve_virtuals=resolve_virtuals
-            ):
-                continue
-
-            if (
-                not test_root
-                and rhs_edge.parent.name in self
-                and not self[rhs_edge.parent.name]._intersects(
-                    rhs_edge.when, resolve_virtuals=resolve_virtuals
-                )
             ):
                 continue
 
@@ -3449,7 +3445,7 @@ class Spec:
                 #
                 # The same assumptions hold on Spec.constrain, and Spec.intersect
                 current_node = self
-                if rhs_edge.parent.name is not None and rhs_edge.parent.name != rhs_edge.spec.name:
+                if rhs_edge.parent.name and rhs_edge.parent.name != rhs_edge.spec.name:
                     try:
                         current_node = self[rhs_edge.parent.name]
                     except KeyError:
@@ -3519,10 +3515,10 @@ class Spec:
 
             # We don't have edges to this dependency
             current_dependency_name = rhs_edge.spec.name
-            if current_dependency_name is not None and current_dependency_name not in lhs_edges:
+            if current_dependency_name and current_dependency_name not in lhs_edges:
                 return False
 
-            if current_dependency_name is None:
+            if not current_dependency_name:
                 # Here we have an anonymous spec e.g. ^ dev_path=*
                 candidate_edges = list(itertools.chain(*lhs_edges.values()))
 
@@ -5126,7 +5122,8 @@ class SpecfileReaderBase:
         for h in ht.HASHES:
             setattr(spec, h.attr, node.get(h.name, None))
 
-        spec.name = name
+        # old anonymous spec files had name=None, we use name="" now
+        spec.name = name if isinstance(name, str) else ""
         spec.namespace = node.get("namespace", None)
 
         if "version" in node or "versions" in node:

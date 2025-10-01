@@ -74,7 +74,7 @@ class RuntimePropertyRecorder:
         assert self.current_package == "*", msg
 
         when_spec = spack.spec.Spec(when)
-        assert when_spec.name is None, "only anonymous when specs are accepted"
+        assert not when_spec.name, "only anonymous when specs are accepted"
 
         dependency_spec = spack.spec.Spec(dependency_str)
         if dependency_spec.versions != spack.version.any_version:
@@ -181,7 +181,7 @@ class RuntimePropertyRecorder:
         assert self.current_package == "*", msg
 
         when_spec = spack.spec.Spec(when)
-        assert when_spec.name is None, "only anonymous when specs are accepted"
+        assert not when_spec.name, "only anonymous when specs are accepted"
 
         when_substitutions = {}
         for s in when_spec.traverse(root=False):

@@ -1226,7 +1226,7 @@ class Repo:
         # actually exists, because we have to load it anyway, and that ends up
         # checking for existence. We avoid constructing FastPackageChecker,
         # which will stat all packages.
-        if spec.name is None:
+        if not spec.name:
             raise UnknownPackageError(None, self)
 
         if spec.namespace and spec.namespace != self.namespace:
