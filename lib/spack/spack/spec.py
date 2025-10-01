@@ -3195,6 +3195,7 @@ class Spec:
                     depflag=edge.depflag,
                     virtuals=edge.virtuals,
                     direct=edge.direct,
+                    propagation=edge.propagation,
                     when=edge.when,
                 )
         return self != reference_spec
@@ -3622,7 +3623,13 @@ class Spec:
 
         return self._patches
 
-    def _dup(self, other: "Spec", deps: Union[bool, dt.DepTypes, dt.DepFlag] = True) -> bool:
+    def _dup(
+        self,
+        other: "Spec",
+        deps: Union[bool, dt.DepTypes, dt.DepFlag] = True,
+        *,
+        propagation: Optional[PropagationPolicy] = None,
+    ) -> bool:
         """Copies "other" into self, by overwriting all attributes.
 
         Args:
@@ -3685,7 +3692,7 @@ class Spec:
             depflag = dt.ALL
             if isinstance(deps, (tuple, list, str)):
                 depflag = dt.canonicalize(deps)
-            self._dup_deps(other, depflag)
+            self._dup_deps(other, depflag, propagation=propagation)
 
         self._prefix = other._prefix
         self._concrete = other._concrete
@@ -3703,7 +3710,9 @@ class Spec:
 
         return changed
 
-    def _dup_deps(self, other, depflag: dt.DepFlag):
+    def _dup_deps(
+        self, other, depflag: dt.DepFlag, propagation: Optional[PropagationPolicy] = None
+    ):
         def spid(spec):
             return id(spec)
 
@@ -3718,11 +3727,12 @@ class Spec:
             if spid(edge.spec) not in new_specs:
                 new_specs[spid(edge.spec)] = edge.spec.copy(deps=False)
 
+            edge_propagation = edge.propagation if propagation is None else propagation
             new_specs[spid(edge.parent)].add_dependency_edge(
                 new_specs[spid(edge.spec)],
                 depflag=edge.depflag,
                 virtuals=edge.virtuals,
-                propagation=edge.propagation,
+                propagation=edge_propagation,
                 direct=edge.direct,
                 when=edge.when,
             )

@@ -297,6 +297,7 @@ def _split_edge_on_virtuals(edge: spack.spec.DependencySpec) -> List[spack.spec.
     for v in edge.virtuals:
         t = edge.copy(keep_parent=False, keep_virtuals=False)
         t.update_virtuals(v)
+        t.when = spack.spec.Spec(f"%{v}")
         result.append(spack.spec.Spec(str(t)))
 
     return result

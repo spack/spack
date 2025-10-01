@@ -1320,9 +1320,10 @@ spack:
     assert base_pkga.dag_hash() == derived_pkga.dag_hash()
 
 
-def test_dependency_propagation_in_environments(tmp_path, mutable_config):
-    """Tests that we can enforce compiler preferences using %% in environments."""
-    spack_yaml = """
+@pytest.mark.parametrize(
+    "spack_yaml",
+    [
+        """
 spack:
   specs:
   - mpileaks %%c,cxx=gcc
@@ -1333,7 +1334,29 @@ spack:
       - "%c=gcc"
   concretizer:
     unify: false
-"""
+""",
+        """
+spack:
+  specs:
+  - mpileaks %%c,cxx=gcc
+  - mpileaks %%llvm_toolchain
+  toolchains:
+    llvm_toolchain:
+    - spec: "%c=llvm"
+      when: "%c"
+    - spec: "%cxx=llvm"
+      when: "%cxx"
+  packages:
+    callpath:
+      require:
+      - "%c=gcc"
+  concretizer:
+    unify: false
+""",
+    ],
+)
+def test_dependency_propagation_in_environments(spack_yaml, tmp_path, mutable_config):
+    """Tests that we can enforce compiler preferences using %% in environments."""
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:

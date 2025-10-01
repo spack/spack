@@ -408,7 +408,9 @@ class SpecParser:
                 if not virtuals and is_direct and self.ctx.next_token.value in self.toolchains:
                     assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
                     try:
-                        self._apply_toolchain(current_spec, self.ctx.current_token.value)
+                        self._apply_toolchain(
+                            current_spec, self.ctx.current_token.value, propagation=propagation
+                        )
                     except spack.error.SpecError as e:
                         raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
                     continue
@@ -452,12 +454,17 @@ class SpecParser:
             raise spack.error.SpecError(str(root_spec), "^" + str(dependency))
         return dependency, parser_warnings
 
-    def _apply_toolchain(self, spec: "spack.spec.Spec", name: str) -> None:
+    def _apply_toolchain(
+        self, spec: "spack.spec.Spec", name: str, *, propagation: PropagationPolicy
+    ) -> None:
         if name not in self.parsed_toolchains:
             toolchain = self._parse_toolchain(name)
             self.parsed_toolchains[name] = toolchain
 
         toolchain = self.parsed_toolchains[name]
+        if propagation == PropagationPolicy.PREFERENCE:
+            toolchain = toolchain.copy(propagation=propagation)
+
         spec.constrain(toolchain)
 
     def _parse_toolchain(self, name: str) -> "spack.spec.Spec":

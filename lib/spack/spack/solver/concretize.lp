@@ -1144,6 +1144,15 @@ requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
   subcondition(SubconditionID, ConditionID),
   pkg_fact(Package, condition_effect(SubconditionID, EffectID)).
 
+% clingo decided not to impose a condition for a subcondition that holds
+exclude_requirement_weight(ConditionID, Package, GroupID) :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  subcondition(SubconditionID, ConditionID),
+  condition_holds(SubconditionID, node(X, Package)),
+  do_not_impose(EffectID, node(X, Package)),
+  pkg_fact(Package, condition_effect(SubconditionID, EffectID)).
+
 % Do not impose requirements, if the conditional requirement is not active
 do_not_impose(EffectID, node(ID, Package)) :-
   trigger_condition_holds(TriggerID, node(ID, Package)),
@@ -1192,10 +1201,12 @@ error(1, "Cannot use {1} for the {0} virtual, but that is required", Virtual, Pr
   pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
   imposed_constraint(EffectID, "node_flag_set", Package, NodeFlag).
 
-
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
-    Z : requirement_has_weight(Y, Z), condition_holds(Y, node(ID, Package)), requirement_group_member(Y, Package, Group);
+    Z : requirement_has_weight(Y, Z),
+        condition_holds(Y, node(ID, Package)),
+        requirement_group_member(Y, Package, Group),
+        not exclude_requirement_weight(Y, Package, Group);
     % We need this to avoid an annoying warning during the solve
     %   concretize.lp:1151:5-11: info: tuple ignored:
     %   #sup@73
