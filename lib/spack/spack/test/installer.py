@@ -1511,13 +1511,13 @@ class MessageCapture:
         self.debugs.append(msg)
 
 
-@pytest.mark.skipif(os.name == "win32", reason="FIFO jobserver not supported on Windows in Spack.")
+@pytest.mark.skipif(os.name == "nt", reason="FIFO jobserver not supported on Windows in Spack.")
 @pytest.mark.parametrize(
     "num_jobs, returned_bytes, expected_warnings, expected_debugs",
     [
-        (5, b"+++++", 0, 1),  # all tokens returned → triggers debug, no warning
-        (5, b"+++", 1, 0),  # some tokens missing → triggers warning
-        (4, b"", 1, 0),  # FIFO empty → warning for missing tokens
+        (5, b"+++++", 0, 1),  # all tokens returned -> triggers debug, no warning
+        (5, b"+++", 1, 0),  # some tokens missing -> triggers warning
+        (4, b"", 1, 0),  # FIFO empty -> warning for missing tokens
     ],
 )
 def test_fifo_missing_tokens_check(
