@@ -1541,11 +1541,6 @@ def test_fifo_missing_tokens_check(
     if returned_bytes:
         os.write(w, returned_bytes)
 
-    # optionally simulate a FIFO directory for cleanup
-    fifo_dir = tmp_path / "jobserver_fifo"
-    fifo_dir.mkdir()
-    js.fifo_directory = str(fifo_dir)
-
     # patch tty to capture messages
     messages = MessageCapture()
     monkeypatch.setattr(tty, "warn", messages.warn)
