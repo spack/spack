@@ -94,7 +94,6 @@ class FifoJobserver(Jobserver):
 
     def enable(self) -> Tuple[Optional[str], Optional[int]]:
         """Setup and enable FIFO implementation of make jobserver."""
-
         mflags = os.environ.get("MAKEFLAGS")
         if not (mflags and "--jobserver" in mflags) and sys.platform != "win32":
             # create a named FIFO pipe for make jobserver
@@ -128,7 +127,44 @@ class FifoJobserver(Jobserver):
     # TODO: Implement Windows support.
 
     def cleanup(self) -> None:
-        """Clean up file descriptors and remove the FIFO directory and flags used by jobserver."""
+        """Clean up file descriptors, remove FIFO, and check for missing jobserver tokens."""
+        # Check for missing jobserver tokens
+        if self.fifo_read_fd is not None and self.fifo_write_fd is not None:
+            try:
+                # Count however many tokens were returned
+                tokens_returned = 0
+                try:
+                    token_bytes = os.read(self.fifo_read_fd, 1024)
+                except BlockingIOError:
+                    token_bytes = b""
+
+                while token_bytes:
+                    tokens_returned += len(token_bytes)
+                    try:
+                        token_bytes = os.read(self.fifo_read_fd, 1024)
+                    except BlockingIOError:
+                        break
+
+                if tokens_returned < self.num_jobs:
+                    tty.warn(
+                    f"spack jobserver internal: exiting with {tokens_returned} "
+                    f"tokens instead of {self.num_jobs} "
+                    f"(missing {self.num_jobs - tokens_returned} token(s)).\n\n"
+                    "This usually means that one of the packages built during this "
+                    "install did not properly release its parallel build tokens.\n"
+                    "Parallelism may be reduced in subsequent builds. "
+                    "If you can, please report the list of packages that were built "
+                    "when this message appeared.\n\n"
+                    "This warning is safe to ignore."
+                    )
+                else:
+                    tty.debug(
+                        f"spack jobserver internal: all {self.num_jobs} tokens returned."
+                    )
+            except Exception as e:
+                tty.warn(f"Jobserver cleanup: error checking tokens: {e}")
+
+        # Clean up file descriptors and remove the FIFO directory and flags used by jobserver.
         if self.fifo_read_fd is not None:
             os.close(self.fifo_read_fd)
         if self.fifo_write_fd is not None:

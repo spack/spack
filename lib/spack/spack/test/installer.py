@@ -1495,3 +1495,68 @@ def test_fifo_jobserver_enable_and_cleanup(tmp_path, monkeypatch):
         assert False, "write_fd should be closed by cleanup"
     except OSError as e:
         assert e.errno == errno.EBADF, "write_fd should be closed and raise EBADF"
+
+
+class MessageCapture:
+    """Helper to capture warnings and debug messages from FifoJobserver."""
+    def __init__(self):
+        self.warnings = []
+        self.debugs = []
+
+    def warn(self, msg):
+        self.warnings.append(msg)
+
+    def debug(self, msg):
+        self.debugs.append(msg)
+
+
+@pytest.mark.skipif(os.name == "win32", reason="FIFO jobserver not supported on Windows in Spack.")
+@pytest.mark.parametrize(
+    "num_jobs, returned_bytes, expected_warnings, expected_debugs",
+    [
+        (5, b"+++++", 0, 1),   # all tokens returned → triggers debug, no warning
+        (5, b"+++", 1, 0),     # some tokens missing → triggers warning
+        (4, b"", 1, 0),        # FIFO empty → warning for missing tokens
+    ],
+)
+def test_fifo_missing_tokens_check(monkeypatch, tmp_path, num_jobs, returned_bytes, expected_warnings, expected_debugs):
+    js = FifoJobserver()
+    js.num_jobs = num_jobs
+
+    # simulate FIFO
+    r, w = os.pipe()
+    js.fifo_read_fd = r
+    js.fifo_write_fd = w
+
+    # make read FD non-blocking like real jobserver
+    import fcntl
+    flags = fcntl.fcntl(r, fcntl.F_GETFL)
+    fcntl.fcntl(r, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+    # write tokens if needed
+    if returned_bytes:
+        os.write(w, returned_bytes)
+
+    # optionally simulate a FIFO directory for cleanup
+    fifo_dir = tmp_path / "jobserver_fifo"
+    fifo_dir.mkdir()
+    js.fifo_directory = str(fifo_dir)
+
+    # patch tty to capture messages
+    messages = MessageCapture()
+    monkeypatch.setattr(tty, "warn", messages.warn)
+    monkeypatch.setattr(tty, "debug", messages.debug)
+
+    js.cleanup()
+
+    # verify captured messages
+    assert len(messages.warnings) == expected_warnings
+    assert len(messages.debugs) == expected_debugs
+
+    if expected_warnings:
+        print(expected_warnings)
+        assert any(
+        "exiting with" in w and f"tokens instead of {num_jobs}" in w
+        for w in messages.warnings
+        ), f"Warning message did not include expected info: {messages.warnings}"
+
