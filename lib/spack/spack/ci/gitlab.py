@@ -16,6 +16,7 @@ import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.spack_yaml as syaml
+import spack.util.path as path_util
 
 from .common import (
     SPACK_RESERVED_TAGS,
@@ -140,9 +141,10 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             )
 
         def _rewrite_include(path, orig_root, new_root):
-            if os.path.isabs(path):
+            expanded_path = path_util.substitute_path_variables(path)
+            if os.path.isabs(expanded_path):
                 return path
-            abs_path = os.path.normpath(os.path.join(orig_root, path))
+            abs_path = path_util.canonicalize_path(path, orig_root)
             return os.path.relpath(abs_path, start=new_root)
 
         # If there are no includes, just copy
