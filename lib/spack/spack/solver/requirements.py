@@ -72,6 +72,30 @@ def preference(
     )
 
 
+def conflict(
+    pkg_name: str,
+    constraint: spack.spec.Spec,
+    condition: spack.spec.Spec = spack.spec.Spec(),
+    origin: RequirementOrigin = RequirementOrigin.CONFLICT_YAML,
+    kind: RequirementKind = RequirementKind.PACKAGE,
+    message: Optional[str] = None,
+) -> RequirementRule:
+    """Returns a conflict rule"""
+    # A conflict is defined as:
+    #
+    # require:
+    # - one_of: [spec_str, "@:"]
+    return RequirementRule(
+        pkg_name=pkg_name,
+        policy="one_of",
+        requirements=[constraint, spack.spec.Spec("@:")],
+        kind=kind,
+        condition=condition,
+        origin=origin,
+        message=message,
+    )
+
+
 class RequirementParser:
     """Parses requirements from package.py files and configuration, and returns rules."""
 
@@ -159,21 +183,9 @@ class RequirementParser:
     ) -> List[RequirementRule]:
         result = []
         for item in conflicts:
-            spec, condition, message = self._parse_prefer_conflict_item(item)
+            spec, condition, msg = self._parse_prefer_conflict_item(item)
             result.append(
-                # A conflict is defined as:
-                #
-                # require:
-                # - one_of: [spec_str, "@:"]
-                RequirementRule(
-                    pkg_name=pkg_name,
-                    policy="one_of",
-                    requirements=[spec, spack.spec.Spec("@:")],
-                    kind=kind,
-                    message=message,
-                    condition=condition,
-                    origin=RequirementOrigin.CONFLICT_YAML,
-                )
+                conflict(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
             )
         return result
 
