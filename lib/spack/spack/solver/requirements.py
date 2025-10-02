@@ -48,6 +48,30 @@ class RequirementRule(NamedTuple):
     message: Optional[str]
 
 
+def preference(
+    pkg_name: str,
+    constraint: spack.spec.Spec,
+    condition: spack.spec.Spec = spack.spec.Spec(),
+    origin: RequirementOrigin = RequirementOrigin.PREFER_YAML,
+    kind: RequirementKind = RequirementKind.PACKAGE,
+    message: Optional[str] = None,
+) -> RequirementRule:
+    """Returns a preference rule"""
+    # A strong preference is defined as:
+    #
+    # require:
+    # - any_of: [spec_str, "@:"]
+    return RequirementRule(
+        pkg_name=pkg_name,
+        policy="any_of",
+        requirements=[constraint, spack.spec.Spec("@:")],
+        kind=kind,
+        condition=condition,
+        origin=origin,
+        message=message,
+    )
+
+
 class RequirementParser:
     """Parses requirements from package.py files and configuration, and returns rules."""
 
@@ -73,20 +97,10 @@ class RequirementParser:
                 self.preferences_from_input.extend(_split_edge_on_virtuals(edge))
 
     def rules_from_input_specs(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
-        result = []
-        for spec in self.preferences_from_input:
-            result.append(
-                RequirementRule(
-                    pkg_name=pkg.name,
-                    policy="any_of",
-                    requirements=[spec, spack.spec.Spec("@:")],
-                    kind=RequirementKind.PACKAGE,
-                    condition=spack.spec.Spec(),
-                    origin=RequirementOrigin.INPUT_SPECS,
-                    message=None,
-                )
-            )
-        return result
+        return [
+            preference(pkg.name, constraint=s, origin=RequirementOrigin.INPUT_SPECS)
+            for s in self.preferences_from_input
+        ]
 
     def rules_from_package_py(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
         rules = []
@@ -130,21 +144,9 @@ class RequirementParser:
     ) -> List[RequirementRule]:
         result = []
         for item in preferences:
-            spec, condition, message = self._parse_prefer_conflict_item(item)
+            spec, condition, msg = self._parse_prefer_conflict_item(item)
             result.append(
-                # A strong preference is defined as:
-                #
-                # require:
-                # - any_of: [spec_str, "@:"]
-                RequirementRule(
-                    pkg_name=pkg_name,
-                    policy="any_of",
-                    requirements=[spec, spack.spec.Spec("@:")],
-                    kind=kind,
-                    message=message,
-                    condition=condition,
-                    origin=RequirementOrigin.PREFER_YAML,
-                )
+                preference(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
             )
         return result
 
