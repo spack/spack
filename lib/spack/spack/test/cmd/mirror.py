@@ -146,9 +146,9 @@ def test_mirror_stats_merge():
     # Check after merge
     present, mirrored, errors = all_stats.stats()
     assert present.count(spec2) == 1
-    assert mirrored.count(spec1) == 2
+    assert mirrored.count(spec1) == 1
     assert len(present) == 1
-    assert len(mirrored) == 2
+    assert len(mirrored) == 1
     assert len(errors) == 0
 
     # Merge package 3
@@ -162,7 +162,7 @@ def test_mirror_stats_merge():
     assert present.count(spec3) == 1
     assert mirrored.count(spec3) == 1
     assert len(present) == 2
-    assert len(mirrored) == 3
+    assert len(mirrored) == 2
     assert len(errors) == 0
 
 

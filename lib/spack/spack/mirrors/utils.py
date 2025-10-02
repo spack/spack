@@ -189,9 +189,9 @@ class MirrorStatsForAllSpecs:
 
     def stats(self):
         # Convert dictionary to list
-        present_list = list(self.present.elements())
-        new_list = list(self.new.elements())
-        errors_list = list(self.errors.elements())
+        present_list = list(self.present.keys())
+        new_list = list(self.new.keys())
+        errors_list = list(self.errors.keys())
 
         return present_list, new_list, errors_list
 
