@@ -377,18 +377,33 @@ It will configure Spack to install the package from local source.
 By default, ``spack develop`` will also clone the package to a subdirectory in the environment for the local source.
 These choices can be overridden with the ``--path`` argument, and the ``--no-clone`` argument.
 Relative paths provided to the ``--path`` argument will be resolved relative to the environment directory.
+All of these options are recorded in the environment manifest, although default values may be left implied.
 
-When concretizing an environment with develop specs, all attributes of the spec provided to the ``spack develop`` command will be applied by the concretizer (in addition to any constraints from the packages ``specs`` list).
-If a version is not included in those constraints, Spack will choose the **highest** version of the package.
-This means that any "infinity" versions (``develop``, ``main``, etc.) will be preferred for specs marked with the ``spack develop`` command.
+.. code-block:: console
+
+   $ spack develop --path src/foo foo@develop
+   $ cat `spack location -e`/spack.yaml
+   spack:
+     ...
+     develop
+       foo:
+         spec: foo@develop
+         path: src/foo
+
+When ``spack develop`` is run in a concretized environment, Spack will modify the concrete specs in the environment to reflect the modified provenance.
+Any package built from local source will have a ``dev_path`` variant, and the hash of any dependent of those packages will be modified to reflect the change.
+The value of the ``dev_path`` variant will be the absolute path to the package source directory.
+If the develop spec conflicts with the concrete specs in the environment, Spack will raise an exception and require the ``spack develop --no-modify-concrete-specs`` option, followed by a ``spack concretize --force`` to apply the ``dev_path`` variant and constraints from the develop spec.
+
+When concretizing an environment with develop specs, the version, variants, and other attributes of the spec provided to the ``spack develop`` command will be treated as constraints by the concretizer (in addition to any constraints from the packages ``specs`` list).
+If the ``develop`` configuration for the package does not include a spec version, Spack will choose the **highest** version of the package.
+This means that any "infinity" versions (``develop``, ``main``, etc.) will be preferred for specs marked with the ``spack develop`` command, which is different from the standard Spack behavior to prefer the highest **numeric** version.
 These packages will have an automatic ``dev_path`` variant added by the concretizer, with a value of the absolute path to the local source Spack is building from.
+
 Spack will ensure the package and its dependents are rebuilt any time the environment is installed if the package's local source code has been modified.
 Spack's native implementation is to check if ``mtime`` is newer than the installation.
 A custom check can be created by overriding the ``detect_dev_src_change`` method in your package class.
 This is particularly useful for projects using custom Spack repos to drive development and want to optimize performance.
-
-When ``spack develop`` is run in a concretized environment, Spack will modify the concrete specs in the environment to include any applicable ``dev_path`` variants.
-If the develop spec conflicts with the concrete specs in the environment, Spack will raise an exception and require the ``spack develop --no-modify-concrete-specs`` option, followed by a ``spack concretize --force`` to apply the ``dev_path`` variant and constraints from the develop spec.
 
 When ``spack develop`` is run without any arguments, Spack will clone any develop specs in the environment for which the specified path does not exist.
 
