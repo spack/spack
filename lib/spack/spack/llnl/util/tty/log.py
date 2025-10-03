@@ -908,7 +908,7 @@ def _writer_daemon(
 
                 # wait for input from any stream. use a coarse timeout to
                 # allow other checks while we wait for input
-                rlist, _, _ = _retry(select.select)(istreams, [], [], 1e-1)
+                rlist, _, _ = select.select(istreams, [], [], 0.1)
 
                 # Allow user to toggle echo with 'v' key.
                 # Currently ignores other chars.
@@ -932,7 +932,7 @@ def _writer_daemon(
                     try:
                         while line_count < 100:
                             # Handle output from the calling process.
-                            line = _retry(read_file.readline)()
+                            line = read_file.readline()
 
                             if not line:
                                 return
@@ -988,43 +988,6 @@ def _writer_daemon(
 
         # send echo value back to the parent so it can be preserved.
         control_fd.send(echo)
-
-
-def _retry(function):
-    """Retry a call if errors indicating an interrupted system call occur.
-
-    Interrupted system calls return -1 and set ``errno`` to ``EINTR`` if
-    certain flags are not set.  Newer Pythons automatically retry them,
-    but older Pythons do not, so we need to retry the calls.
-
-    This function converts a call like this:
-
-        syscall(args)
-
-    and makes it retry by wrapping the function like this:
-
-        _retry(syscall)(args)
-
-    This is a private function because EINTR is unfortunately raised in
-    different ways from different functions, and we only handle the ones
-    relevant for this file.
-
-    """
-
-    def wrapped(*args, **kwargs):
-        while True:
-            try:
-                return function(*args, **kwargs)
-            except OSError as e:
-                if e.errno == errno.EINTR:
-                    continue
-                raise
-            except select.error as e:
-                if e.args[0] == errno.EINTR:
-                    continue
-                raise
-
-    return wrapped
 
 
 def _input_available(f):

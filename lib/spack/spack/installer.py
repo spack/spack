@@ -59,7 +59,6 @@ import spack.report
 import spack.rewiring
 import spack.spec
 import spack.store
-import spack.util.executable
 import spack.util.path
 import spack.util.timer as timer
 from spack.llnl.string import ordinal
