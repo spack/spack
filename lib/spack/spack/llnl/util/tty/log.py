@@ -459,35 +459,6 @@ class nixlog:
 
         self._active = False  # used to prevent re-entry
 
-    def __call__(self, file_like=None, echo=None, debug=None, buffer=None):
-        """This behaves the same as init. It allows a logger to be reused.
-
-        Arguments are the same as for ``__init__()``.  Args here take
-        precedence over those passed to ``__init__()``.
-
-        With the ``__call__`` function, you can save state between uses
-        of a single logger.  This is useful if you want to remember,
-        e.g., the echo settings for a prior ``with log_output()``::
-
-            logger = log_output()
-
-            with logger('foo.txt'):
-                # log things; user can change echo settings with 'v'
-
-            with logger('bar.txt'):
-                # log things; logger remembers prior echo settings.
-
-        """
-        if file_like is not None:
-            self.file_like = file_like
-        if echo is not None:
-            self.echo = echo
-        if debug is not None:
-            self.debug = debug
-        if buffer is not None:
-            self.buffer = buffer
-        return self
-
     def __enter__(self):
         if self._active:
             raise RuntimeError("Can't re-enter the same log_output!")
