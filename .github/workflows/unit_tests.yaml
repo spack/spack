@@ -194,7 +194,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-13, macos-14]
+        os: [macos-15-intel, macos-latest]
         python-version: ["3.11"]
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
