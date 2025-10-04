@@ -34,7 +34,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "-l", "--local", action="store_true", help="verify only locally installed packages"
     )
     MANIFEST_SUBPARSER.add_argument(
-        "-j", "--json", action="store_true", help="ouptut json-formatted errors"
+        "-j", "--json", action="store_true", help="output json-formatted errors"
     )
     MANIFEST_SUBPARSER.add_argument("-a", "--all", action="store_true", help="verify all packages")
     MANIFEST_SUBPARSER.add_argument(

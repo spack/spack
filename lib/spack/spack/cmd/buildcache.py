@@ -695,7 +695,7 @@ def sync_fn(args):
         # specified, the second is ignored and the first is the override
         # destination.
         if args.dest_mirror:
-            tty.warn(f"Ignoring unused arguemnt: {args.dest_mirror.name}")
+            tty.warn(f"Ignoring unused argument: {args.dest_mirror.name}")
 
         manifest_copy(glob.glob(args.manifest_glob), args.src_mirror)
         return 0

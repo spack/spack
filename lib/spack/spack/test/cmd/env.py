@@ -167,7 +167,7 @@ def test_env_untrack_valid(tmp_path: pathlib.Path):
 
 def test_env_untrack_invalid_name():
     # test untracking an environment that doesn't exist
-    env_name = "invalid_enviornment_untrack"
+    env_name = "invalid_environment_untrack"
 
     out = env("untrack", env_name)
 
