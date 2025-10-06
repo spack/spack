@@ -1483,8 +1483,7 @@ def test_fifo_jobserver_enable_and_cleanup(tmp_path, monkeypatch):
     assert os.path.exists(fifo_path), "FIFO file should exist"
     assert write_fd > 0
     assert "MAKEFLAGS" in env
-    assert env["MAKEFLAGS"].startswith("--jobserver-auth=fifo:")
-    assert env["MAKEFLAGS"].endswith("-j 3")
+    assert env["MAKEFLAGS"].startswith(" -j3 --jobserver-auth=fifo:")
 
     # cleanup FIFO jobserver
     js.cleanup()
