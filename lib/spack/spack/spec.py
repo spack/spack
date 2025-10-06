@@ -1459,7 +1459,7 @@ class SpecAnnotations:
         return result
 
 
-def _anonymous_star(dep, dep_format):
+def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
     """Determine if a spec needs a star to disambiguate it from an anonymous spec w/variants.
 
     Returns:
@@ -1484,7 +1484,7 @@ def _anonymous_star(dep, dep_format):
     # booleans come first, and they don't need a star. key-value pairs do. If there are
     # no key value pairs, we're left with either an empty spec, which needs * as in
     # '^*', or we're left with arch, which is a key value pair, and needs a star.
-    if not any(v.type == spack.variant.VariantType.BOOL for v in dep.spec.variants.values()):
+    if not any(v.type == vt.VariantType.BOOL for v in dep.spec.variants.values()):
         return "*"
 
     return "*" if dep.spec.architecture else ""
