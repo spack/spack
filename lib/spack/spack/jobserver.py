@@ -115,7 +115,7 @@ class FifoJobserver(Jobserver):
             os.write(self.fifo_write_fd, js_tokens)
 
             # set MAKEFLAGS environment variable for make jobserver
-            os.environ["MAKEFLAGS"] = f"--jobserver-auth=fifo:{self.fifo_path} -j {self.num_jobs}"
+            os.environ["MAKEFLAGS"] = f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
 
             tty.debug(
                 f"Initialized FIFO-based jobserver at {self.fifo_path} with {self.num_jobs} jobs."
