@@ -8,7 +8,7 @@ import platform
 import re
 import sys
 import warnings
-from typing import IO, List, Set, Tuple
+from typing import IO, Any, Dict, List, Optional, Set, Tuple, Union
 
 from . import schema
 from .alias import FEATURE_ALIASES
@@ -34,43 +34,48 @@ def coerce_target_names(func):
 
 
 class Microarchitecture:
-    """Represents a specific CPU micro-architecture.
-
-    Args:
-        name (str): name of the micro-architecture (e.g. skylake).
-        parents (list): list of parents micro-architectures, if any.
-            Parenthood is considered by cpu features and not
-            chronologically. As such each micro-architecture is
-            compatible with its ancestors. For example "skylake",
-            which has "broadwell" as a parent, supports running binaries
-            optimized for "broadwell".
-        vendor (str): vendor of the micro-architecture
-        features (set of str): supported CPU flags. Note that the semantic
-            of the flags in this field might vary among architectures, if
-            at all present. For instance x86_64 processors will list all
-            the flags supported by a given CPU while Arm processors will
-            list instead only the flags that have been added on top of the
-            base model for the current micro-architecture.
-        compilers (dict): compiler support to generate tuned code for this
-            micro-architecture. This dictionary has as keys names of
-            supported compilers, while values are list of dictionaries
-            with fields:
-
-            * name: name of the micro-architecture according to the
-                compiler. This is the name passed to the ``-march`` option
-                or similar. Not needed if the name is the same as that
-                passed in as argument above.
-            * versions: versions that support this micro-architecture.
-
-        generation (int): generation of the micro-architecture, if relevant.
-        cpu_part (str): cpu part of the architecture, if relevant.
-    """
+    """A specific CPU micro-architecture"""
 
     # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-instance-attributes
     #: Aliases for micro-architecture's features
     feature_aliases = FEATURE_ALIASES
 
-    def __init__(self, name, parents, vendor, features, compilers, generation=0, cpu_part=""):
+    def __init__(
+        self,
+        name: str,
+        parents: List["Microarchitecture"],
+        vendor: str,
+        features: Set[str],
+        compilers: Dict[str, List[Dict[str, str]]],
+        generation: int = 0,
+        cpu_part: str = "",
+    ):
+        """
+        Args:
+            name: name of the micro-architecture (e.g. ``icelake``)
+            parents: list of parent micro-architectures, if any. Parenthood is considered by
+                cpu features and not chronologically. As such, each micro-architecture is
+                compatible with its ancestors. For example, ``skylake``, which has ``broadwell``
+                as a parent, supports running binaries optimized for ``broadwell``.
+            vendor: vendor of the micro-architecture
+            features: supported CPU flags. Note that the semantic of the flags in this field might
+                vary among architectures, if at all present. For instance, x86_64 processors will
+                list all the flags supported by a given CPU, while Arm processors will list instead
+                only the flags that have been added on top of the base model for the current
+                micro-architecture.
+            compilers: compiler support to generate tuned code for this micro-architecture. This
+                dictionary has as keys names of supported compilers, while values are a list of
+                dictionaries with fields:
+
+                * name: name of the micro-architecture according to the compiler. This is the name
+                    passed to the ``-march`` option or similar. Not needed if it is the same as
+                    ``self.name``.
+                * versions: versions that support this micro-architecture.
+                * flags: flags to be passed to the compiler to generate optimized code
+
+            generation: generation of the micro-architecture, if relevant.
+            cpu_part: cpu part of the architecture, if relevant.
+        """
         self.name = name
         self.parents = parents
         self.vendor = vendor
@@ -82,14 +87,18 @@ class Microarchitecture:
         self.cpu_part = cpu_part
 
         # Cache the "ancestor" computation
-        self._ancestors = None
+        self._ancestors: Optional[List["Microarchitecture"]] = None
         # Cache the "generic" computation
-        self._generic = None
+        self._generic: Optional["Microarchitecture"] = None
         # Cache the "family" computation
-        self._family = None
+        self._family: Optional["Microarchitecture"] = None
+
+        # ssse3 implies sse3; on Linux sse3 is not mentioned in /proc/cpuinfo, so add it ad-hoc.
+        if "ssse3" in self.features:
+            self.features.add("sse3")
 
     @property
-    def ancestors(self):
+    def ancestors(self) -> List["Microarchitecture"]:
         """All the ancestors of this microarchitecture."""
         if self._ancestors is None:
             value = self.parents[:]
@@ -98,14 +107,14 @@ class Microarchitecture:
             self._ancestors = value
         return self._ancestors
 
-    def _to_set(self):
+    def _to_set(self) -> Set[str]:
         """Returns a set of the nodes in this microarchitecture DAG."""
         # This function is used to implement subset semantics with
         # comparison operators
         return set([str(self)] + [str(x) for x in self.ancestors])
 
     @coerce_target_names
-    def __eq__(self, other):
+    def __eq__(self, other: Union[str, "Microarchitecture"]) -> bool:
         if not isinstance(other, Microarchitecture):
             return NotImplemented
 
@@ -119,43 +128,43 @@ class Microarchitecture:
             and self.cpu_part == other.cpu_part
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.name)
 
     @coerce_target_names
-    def __ne__(self, other):
+    def __ne__(self, other: Union[str, "Microarchitecture"]) -> bool:
         return not self == other
 
     @coerce_target_names
-    def __lt__(self, other):
+    def __lt__(self, other: Union[str, "Microarchitecture"]) -> bool:
         if not isinstance(other, Microarchitecture):
             return NotImplemented
 
         return self._to_set() < other._to_set()
 
     @coerce_target_names
-    def __le__(self, other):
+    def __le__(self, other: Union[str, "Microarchitecture"]) -> bool:
         return (self == other) or (self < other)
 
     @coerce_target_names
-    def __gt__(self, other):
+    def __gt__(self, other: Union[str, "Microarchitecture"]) -> bool:
         if not isinstance(other, Microarchitecture):
             return NotImplemented
 
         return self._to_set() > other._to_set()
 
     @coerce_target_names
-    def __ge__(self, other):
+    def __ge__(self, other: Union[str, "Microarchitecture"]) -> bool:
         return (self == other) or (self > other)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def tree(self, fp: IO[str] = sys.stdout, indent: int = 4) -> None:
-        """Format the partial order of ancestors of this microarchitecture as a tree."""
+        """Format the partial order of this microarchitecture's ancestors as a tree."""
         seen: Set[str] = set()
         stack: List[Tuple[int, Microarchitecture]] = [(0, self)]
         while stack:
@@ -168,7 +177,7 @@ class Microarchitecture:
             for parent in reversed(current.parents):
                 stack.append((level + indent, parent))
 
-    def __contains__(self, feature):
+    def __contains__(self, feature: str) -> bool:
         # Feature must be of a string type, so be defensive about that
         if not isinstance(feature, str):
             msg = "only objects of string types are accepted [got {0}]"
@@ -184,7 +193,7 @@ class Microarchitecture:
         return match_alias(self)
 
     @property
-    def family(self):
+    def family(self) -> "Microarchitecture":
         """Returns the architecture family a given target belongs to"""
         if self._family is None:
             roots = [x for x in [self] + self.ancestors if not x.ancestors]
@@ -196,14 +205,14 @@ class Microarchitecture:
         return self._family
 
     @property
-    def generic(self):
+    def generic(self) -> "Microarchitecture":
         """Returns the best generic architecture that is compatible with self"""
         if self._generic is None:
             generics = [x for x in [self] + self.ancestors if x.vendor == "generic"]
             self._generic = max(generics, key=lambda x: len(x.ancestors))
         return self._generic
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Returns a dictionary representation of this object."""
         return {
             "name": str(self.name),
@@ -228,20 +237,19 @@ class Microarchitecture:
             cpu_part=data.get("cpupart", ""),
         )
 
-    def optimization_flags(self, compiler, version):
-        """Returns a string containing the optimization flags that needs
-        to be used to produce code optimized for this micro-architecture.
+    def optimization_flags(self, compiler: str, version: str) -> str:
+        """Returns a string containing the optimization flags that needs to be used to produce
+        code optimized for this micro-architecture.
 
-        The version is expected to be a string of dot separated digits.
+        The version is expected to be a string of dot-separated digits.
 
-        If there is no information on the compiler passed as argument the
-        function returns an empty string. If it is known that the compiler
-        version we want to use does not support this architecture the function
-        raises an exception.
+        If there is no information on the compiler passed as an argument, the function returns an
+        empty string. If it is known that the compiler version we want to use does not support
+        this architecture, the function raises an exception.
 
         Args:
-            compiler (str): name of the compiler to be used
-            version (str): version of the compiler to be used
+            compiler: name of the compiler to be used
+            version: version of the compiler to be used
 
         Raises:
             UnsupportedMicroarchitecture: if the requested compiler does not support
@@ -252,7 +260,7 @@ class Microarchitecture:
         if compiler not in self.family.compilers:
             return ""
 
-        # If we have information but it stops before this
+        # If we have information, but it stops before this
         # microarchitecture, fall back to the best known target
         if compiler not in self.compilers:
             best_target = [x for x in self.ancestors if compiler in x.compilers][0]
@@ -325,16 +333,16 @@ class Microarchitecture:
         raise UnsupportedMicroarchitecture(msg)
 
 
-def generic_microarchitecture(name):
+def generic_microarchitecture(name: str) -> Microarchitecture:
     """Returns a generic micro-architecture with no vendor and no features.
 
     Args:
-        name (str): name of the micro-architecture
+        name: name of the micro-architecture
     """
     return Microarchitecture(name, parents=[], vendor="generic", features=set(), compilers={})
 
 
-def version_components(version):
+def version_components(version: str) -> Tuple[str, str]:
     """Decomposes the version passed as input in version number and
     suffix and returns them.
 
@@ -342,7 +350,7 @@ def version_components(version):
     string is returned.
 
     Args:
-        version (str): version to be decomposed into its components
+        version: version to be decomposed into its components
     """
     match = re.match(r"([\d.]*)(-?)(.*)", str(version))
     if not match:
@@ -356,7 +364,7 @@ def version_components(version):
 
 def _known_microarchitectures():
     """Returns a dictionary of the known micro-architectures. If the
-    current host platform is unknown adds it too as a generic target.
+    current host platform is unknown, add it too as a generic target.
     """
 
     def fill_target_from_dict(name, data, targets):
