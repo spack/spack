@@ -2,34 +2,41 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import glob
 import os
+import pathlib
 import shutil
 import sys
+import tempfile
 from typing import List, Optional, Union
 
 import py
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.lock as ulk
-import llnl.util.tty as tty
-
 import spack.binary_distribution
 import spack.concretize
+import spack.config
 import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.installer as inst
+import spack.jobserver
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lock as ulk
+import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
 import spack.store
+import spack.test.conftest
 import spack.util.lock as lk
 from spack.installer import PackageInstaller
+from spack.jobserver import FifoJobserver
 from spack.main import SpackCommand
+from spack.test.conftest import RepoBuilder
 
 
 def _mock_repo(root, namespace):
@@ -221,7 +228,7 @@ def test_installer_str(install_mockery):
     assert "failed (0)" in istr
 
 
-def test_installer_prune_built_build_deps(install_mockery, monkeypatch, tmpdir):
+def test_installer_prune_built_build_deps(install_mockery, monkeypatch, repo_builder: RepoBuilder):
     r"""
     Ensure that build dependencies of installed deps are pruned
     from installer package queues.
@@ -238,27 +245,26 @@ def test_installer_prune_built_build_deps(install_mockery, monkeypatch, tmpdir):
     only include four packages. [(a), (b), (c), (d), (e)]
     """
 
-    @property
     def _mock_installed(self):
         return self.name == "pkg-c"
 
-    # Mock the installed property to say that (b) is installed
-    monkeypatch.setattr(spack.spec.Spec, "installed", _mock_installed)
+    # Mock the installed property to say that (c) is installed
+    monkeypatch.setattr(spack.spec.Spec, "installed", property(_mock_installed))
 
     # Create mock repository with packages (a), (b), (c), (d), and (e)
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
-
-    builder.add_package("pkg-a", dependencies=[("pkg-b", "build", None), ("pkg-c", "build", None)])
-    builder.add_package("pkg-b", dependencies=[("pkg-d", "build", None)])
-    builder.add_package(
+    repo_builder.add_package(
+        "pkg-a", dependencies=[("pkg-b", "build", None), ("pkg-c", "build", None)]
+    )
+    repo_builder.add_package("pkg-b", dependencies=[("pkg-d", "build", None)])
+    repo_builder.add_package(
         "pkg-c",
         dependencies=[("pkg-d", "build", None), ("pkg-e", "all", None), ("pkg-f", "build", None)],
     )
-    builder.add_package("pkg-d")
-    builder.add_package("pkg-e")
-    builder.add_package("pkg-f")
+    repo_builder.add_package("pkg-d")
+    repo_builder.add_package("pkg-e")
+    repo_builder.add_package("pkg-f")
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(repo_builder.root):
         installer = create_installer(["pkg-a"])
 
         installer._init_queue()
@@ -320,7 +326,7 @@ def test_installer_ensure_ready_errors(install_mockery, monkeypatch):
         installer._ensure_install_ready(spec.package)
 
 
-def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
+def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path, capsys):
     """Test _ensure_locked when a non-lock exception is raised."""
     mock_err_msg = "Mock exception error"
 
@@ -331,7 +337,7 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
     spec = installer.build_requests[0].pkg.spec
 
     monkeypatch.setattr(ulk.Lock, "acquire_read", _raise)
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         with pytest.raises(RuntimeError):
             installer._ensure_locked("read", spec.package)
 
@@ -340,13 +346,13 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
         assert mock_err_msg in out
 
 
-def test_ensure_locked_have(install_mockery, tmpdir, capsys):
+def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capsys):
     """Test _ensure_locked when already have lock."""
     installer = create_installer(["trivial-install-test-package"], {})
     spec = installer.build_requests[0].pkg.spec
     pkg_id = inst.package_id(spec)
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         # Test "downgrade" of a read lock (to a read lock)
         lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
         lock_type = "read"
@@ -376,10 +382,10 @@ def test_ensure_locked_have(install_mockery, tmpdir, capsys):
 
 
 @pytest.mark.parametrize("lock_type,reads,writes", [("read", 1, 0), ("write", 0, 1)])
-def test_ensure_locked_new_lock(install_mockery, tmpdir, lock_type, reads, writes):
+def test_ensure_locked_new_lock(install_mockery, tmp_path: pathlib.Path, lock_type, reads, writes):
     installer = create_installer(["pkg-a"], {})
     spec = installer.build_requests[0].pkg.spec
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         ltype, lock = installer._ensure_locked(lock_type, spec.package)
         assert ltype == lock_type
         assert lock is not None
@@ -387,7 +393,7 @@ def test_ensure_locked_new_lock(install_mockery, tmpdir, lock_type, reads, write
         assert lock._writes == writes
 
 
-def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
+def test_ensure_locked_new_warn(install_mockery, monkeypatch, capsys):
     orig_pl = spack.database.SpecLocker.lock
 
     def _pl(db, spec, timeout):
@@ -430,19 +436,19 @@ def test_fake_install(install_mockery):
     assert os.path.isdir(pkg.prefix.lib)
 
 
-def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
+def test_dump_packages_deps_ok(install_mockery, tmp_path: pathlib.Path, mock_packages):
     """Test happy path for dump_packages with dependencies."""
 
     spec_name = "simple-inheritance"
     spec = spack.concretize.concretize_one(spec_name)
-    inst.dump_packages(spec, str(tmpdir))
+    inst.dump_packages(spec, str(tmp_path))
 
     repo = mock_packages.repos[0]
     dest_pkg = repo.filename_for_package_name(spec_name)
     assert os.path.isfile(dest_pkg)
 
 
-def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
+def test_dump_packages_deps_errs(install_mockery, tmp_path: pathlib.Path, monkeypatch, capsys):
     """Test error paths for dump_packages with dependencies."""
     orig_bpp = spack.store.STORE.layout.build_packages_path
     orig_dirname = spack.repo.Repo.dirname_for_package_name
@@ -466,7 +472,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     monkeypatch.setattr(spack.store.STORE.layout, "build_packages_path", bpp_path)
 
     spec = spack.concretize.concretize_one("simple-inheritance")
-    path = str(tmpdir)
+    path = str(tmp_path)
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
@@ -483,9 +489,9 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
-def test_clear_failures_success(tmpdir):
+def test_clear_failures_success(tmp_path: pathlib.Path):
     """Test the clear_failures happy path."""
-    failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)
+    failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
 
     spec = spack.spec.Spec("pkg-a")
     spec._mark_concrete()
@@ -510,9 +516,9 @@ def test_clear_failures_success(tmpdir):
 
 
 @pytest.mark.not_on_windows("chmod does not prevent removal on Win")
-def test_clear_failures_errs(tmpdir, capsys):
+def test_clear_failures_errs(tmp_path: pathlib.Path, capsys):
     """Test the clear_failures exception paths."""
-    failures = spack.database.FailureTracker(str(tmpdir), default_timeout=0.1)
+    failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
     spec = spack.spec.Spec("pkg-a")
     spec._mark_concrete()
     failures.mark(spec)
@@ -529,7 +535,7 @@ def test_clear_failures_errs(tmpdir, capsys):
     failures.dir.chmod(0o750)
 
 
-def test_combine_phase_logs(tmpdir):
+def test_combine_phase_logs(tmp_path: pathlib.Path):
     """Write temporary files, and assert that combine phase logs works
     to combine them into one file. We aren't currently using this function,
     but it's available when the logs are refactored to be written separately.
@@ -539,14 +545,14 @@ def test_combine_phase_logs(tmpdir):
 
     # Create and write to dummy phase log files
     for log_file in log_files:
-        phase_log_file = os.path.join(str(tmpdir), log_file)
+        phase_log_file = tmp_path / log_file
         with open(phase_log_file, "w", encoding="utf-8") as plf:
             plf.write("Output from %s\n" % log_file)
-        phase_log_files.append(phase_log_file)
+        phase_log_files.append(str(phase_log_file))
 
     # This is the output log we will combine them into
-    combined_log = os.path.join(str(tmpdir), "combined-out.txt")
-    inst.combine_phase_logs(phase_log_files, combined_log)
+    combined_log = tmp_path / "combined-out.txt"
+    inst.combine_phase_logs(phase_log_files, str(combined_log))
     with open(combined_log, "r", encoding="utf-8") as log_file:
         out = log_file.read()
 
@@ -555,11 +561,11 @@ def test_combine_phase_logs(tmpdir):
         assert "Output from %s\n" % log_file in out
 
 
-def test_combine_phase_logs_does_not_care_about_encoding(tmpdir):
+def test_combine_phase_logs_does_not_care_about_encoding(tmp_path: pathlib.Path):
     # this is invalid utf-8 at a minimum
     data = b"\x00\xf4\xbf\x00\xbf\xbf"
-    input = [str(tmpdir.join("a")), str(tmpdir.join("b"))]
-    output = str(tmpdir.join("c"))
+    input = [str(tmp_path / "a"), str(tmp_path / "b")]
+    output = str(tmp_path / "c")
 
     for path in input:
         with open(path, "wb") as f:
@@ -721,7 +727,7 @@ def test_install_splice_root_from_binary(
     assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
 
 
-class MockInstallStatus:
+class MockInstallStatus(inst.InstallStatus):
     def next_pkg(self, *args, **kwargs):
         pass
 
@@ -729,10 +735,10 @@ class MockInstallStatus:
         pass
 
     def get_progress(self):
-        pass
+        return "1/1"
 
 
-class MockTermStatusLine:
+class MockTermStatusLine(inst.TermStatusLine):
     def add(self, *args, **kwargs):
         pass
 
@@ -744,8 +750,8 @@ def test_installing_task_use_cache(install_mockery, monkeypatch):
     installer = create_installer(["trivial-install-test-package"], {})
     request = installer.build_requests[0]
     task = create_build_task(request.pkg)
-    install_status = MockInstallStatus()
-    term_status = MockTermStatusLine()
+    install_status = MockInstallStatus(1)
+    term_status = MockTermStatusLine(True)
 
     monkeypatch.setattr(inst, "_install_from_cache", _true)
     installer.start_task(task, install_status, term_status)
@@ -779,12 +785,12 @@ def test_install_task_requeue_build_specs(install_mockery, monkeypatch, capfd):
     assert inst.package_id(popped_task.pkg.spec) in installer.build_tasks
 
 
-def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
+def test_release_lock_write_n_exception(install_mockery, tmp_path: pathlib.Path, capsys):
     """Test _release_lock for supposed write lock with exception."""
     installer = create_installer(["trivial-install-test-package"], {})
 
     pkg_id = "test"
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
         installer.locks[pkg_id] = ("write", lock)
         assert lock._writes == 0
@@ -895,7 +901,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     assert expected_msg in out
 
 
-def test_cleanup_failed_err(install_mockery, tmpdir, monkeypatch, capsys):
+def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch, capsys):
     """Test _cleanup_failed exception path."""
     msg = "Fake release_write exception"
 
@@ -906,7 +912,7 @@ def test_cleanup_failed_err(install_mockery, tmpdir, monkeypatch, capsys):
 
     monkeypatch.setattr(lk.Lock, "release_write", _raise_except)
     pkg_id = "test"
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
         installer.failed[pkg_id] = lock
 
@@ -1230,9 +1236,7 @@ def fail(*args, **kwargs):
     assert False
 
 
-def test_overwrite_install_backup_success(
-    monkeypatch, temporary_store, config, mock_packages, tmpdir
-):
+def test_overwrite_install_backup_success(monkeypatch, temporary_store, config, mock_packages):
     """
     When doing an overwrite install that fails, Spack should restore the backup
     of the original prefix, and leave the original spec marked installed.
@@ -1242,8 +1246,8 @@ def test_overwrite_install_backup_success(
     installer = create_installer(["pkg-c"])
     installer._init_queue()
     task = installer._pop_task()
-    install_status = MockInstallStatus()
-    term_status = MockTermStatusLine()
+    install_status = MockInstallStatus(1)
+    term_status = MockTermStatusLine(True)
 
     # Make sure the install prefix exists with some trivial file
     installed_file = os.path.join(task.pkg.prefix, "some_file")
@@ -1275,9 +1279,7 @@ def remove_backup(pkg, install_args):
     raise Exception("Some fatal install error")
 
 
-def test_overwrite_install_backup_failure(
-    monkeypatch, temporary_store, config, mock_packages, tmpdir
-):
+def test_overwrite_install_backup_failure(monkeypatch, temporary_store, config, mock_packages):
     """
     When doing an overwrite install that fails, Spack should try to recover the
     original prefix. If that fails, the spec is lost, and it should be removed
@@ -1287,8 +1289,8 @@ def test_overwrite_install_backup_failure(
     installer = create_installer(["pkg-c"])
     installer._init_queue()
     task = installer._pop_task()
-    install_status = MockInstallStatus()
-    term_status = MockTermStatusLine()
+    install_status = MockInstallStatus(1)
+    term_status = MockTermStatusLine(True)
 
     # Make sure the install prefix exists
     installed_file = os.path.join(task.pkg.prefix, "some_file")
@@ -1361,7 +1363,7 @@ def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, r
 
 
 def test_print_install_test_log_failures(
-    tmpdir, install_mockery, mock_packages, ensure_debug, capfd
+    tmp_path: pathlib.Path, install_mockery, mock_packages, ensure_debug, capfd
 ):
     """Confirm expected outputs when there are test failures."""
     name = "trivial-install-test-package"
@@ -1370,7 +1372,7 @@ def test_print_install_test_log_failures(
 
     # Missing test log is an error
     pkg.run_tests = True
-    pkg.tester.test_log_file = str(tmpdir.join("test-log.txt"))
+    pkg.tester.test_log_file = str(tmp_path / "test-log.txt")
     pkg.tester.add_failure(AssertionError("test"), "test-failure")
     spack.installer.print_install_test_log(pkg)
     err = capfd.readouterr()[1]
@@ -1381,3 +1383,176 @@ def test_print_install_test_log_failures(
     spack.installer.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert "See test results at" in out
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="FIFO jobserver is currently not supported on Windows"
+)
+def test_install_gmake_ninja_with_fifo(install_mockery):
+    """Confirm that gmake/ninja packages that support fifo set up FIFO jobserver"""
+    # gmake 4.4 introduced FIFO jobserver support, should resolve to FifoJobserver
+    gmake_spec = spack.concretize.concretize_one("gmake@4.4")
+    gmake_pkg = gmake_spec.package
+    gmake_js_class = spack.jobserver.Jobserver.determine_type([gmake_pkg])
+    assert isinstance(gmake_js_class, spack.jobserver.FifoJobserver)
+
+    # ninja 1.13.0 supports FIFO jobserver, should resolve to FifoJobserver
+    ninja_spec = spack.concretize.concretize_one("ninja@1.13.0")
+    ninja_pkg = ninja_spec.package
+    ninja_js_class = spack.jobserver.Jobserver.determine_type([ninja_pkg])
+    assert isinstance(ninja_js_class, spack.jobserver.FifoJobserver)
+
+
+def test_install_gmake_ninja_without_fifo(install_mockery):
+    """Confirm that gmake/ninja packages that don't support fifo disable the jobserver"""
+    # gmake version that predates FIFO jobserver support, should be disabled
+    gmake_spec = spack.concretize.concretize_one("gmake@3.0")
+    gmake_pkg = gmake_spec.package
+    old_gmake_state = spack.jobserver.package_type(gmake_pkg)
+    assert old_gmake_state == spack.jobserver.JobserverType.DISABLE
+    gmake_js_class = spack.jobserver.Jobserver.determine_type([gmake_pkg])
+    assert isinstance(gmake_js_class, spack.jobserver.NoopJobserver)
+
+    # ninja version that predates FIFO jobserver support, should be disabled
+    ninja_spec = spack.concretize.concretize_one("ninja@1.10.2")
+    ninja_pkg = ninja_spec.package
+    old_ninja_state = spack.jobserver.package_type(ninja_pkg)
+    assert old_ninja_state == spack.jobserver.JobserverType.DISABLE
+    ninja_js_class = spack.jobserver.Jobserver.determine_type([ninja_pkg])
+    assert isinstance(ninja_js_class, spack.jobserver.NoopJobserver)
+
+
+def test_install_none_noop_jobserver_package(install_mockery):
+    """Confirm that a package that doesn't use make will return NOOP for jobserver setup"""
+    # python doesn't use make, should leave jobserver behavior unchanged
+    py_spec = spack.concretize.concretize_one("python")
+    py_pkg = py_spec.package
+    py_state = spack.jobserver.package_type(py_pkg)
+    assert py_state == spack.jobserver.JobserverType.NONE
+    py_js_class = spack.jobserver.Jobserver.determine_type([py_pkg])
+    assert isinstance(py_js_class, spack.jobserver.NoopJobserver)
+
+
+def test_disable_jobserver_type_takes_priority(install_mockery):
+    """Confirm that DISABLE state takes priority when other jobserver types are present"""
+    # spec that enables fifo
+    fifo_spec = spack.concretize.concretize_one("gmake@4.4")
+    fifo_pkg = fifo_spec.package
+    # spec that disables use of fifo-supported jobserver
+    disable_spec = spack.concretize.concretize_one("ninja@1.10.2")
+    disable_pkg = disable_spec.package
+    # spec that doesn't change jobserver setup
+    noop_spec = spack.concretize.concretize_one("python")
+    noop_pkg = noop_spec.package
+
+    packages = [fifo_pkg, disable_pkg, noop_pkg]
+    js_class = spack.jobserver.Jobserver.determine_type(packages)
+    assert isinstance(js_class, spack.jobserver.NoopJobserver)
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="FIFO jobserver is not currently supported on Windows in Spack"
+)
+def test_fifo_jobserver_enable_and_cleanup(tmp_path, monkeypatch):
+    """Ensure FIFO jobserver enable and cleanup correctly modify the environment."""
+    # directory for FIFO
+    fifo_dir = tmp_path / "jobserver_fifo"
+    fifo_dir.mkdir()
+
+    # mock functions
+    def fake_mkdtemp(prefix):
+        return str(fifo_dir)
+
+    def fake_determine_number_of_jobs(parallel=True):
+        return 3
+
+    # patch tempfile and number of build jobs
+    monkeypatch.setattr(tempfile, "mkdtemp", fake_mkdtemp)
+    monkeypatch.setattr(spack.config, "determine_number_of_jobs", fake_determine_number_of_jobs)
+
+    # isolate the environment
+    env = {}
+    monkeypatch.setattr(os, "environ", env)
+
+    # instantiate FIFO jobserver
+    js = FifoJobserver()
+    fifo_dir_created, write_fd = js.enable()
+
+    fifo_path = fifo_dir / "jobserver"
+    assert fifo_dir_created == str(fifo_dir)
+    assert os.path.exists(fifo_path), "FIFO file should exist"
+    assert write_fd > 0
+    assert "MAKEFLAGS" in env
+    assert env["MAKEFLAGS"].startswith(" -j3 --jobserver-auth=fifo:")
+
+    # cleanup FIFO jobserver
+    js.cleanup()
+    assert not os.path.exists(fifo_path), "FIFO should be cleaned up"
+    assert "MAKEFLAGS" not in env or env["MAKEFLAGS"] == "", "MAKEFLAGS should be cleaned up"
+    try:
+        os.close(write_fd)
+        assert False, "write_fd should be closed by cleanup"
+    except OSError as e:
+        assert e.errno == errno.EBADF, "write_fd should be closed and raise EBADF"
+
+
+class MessageCapture:
+    """Helper to capture warnings and debug messages from FifoJobserver."""
+
+    def __init__(self):
+        self.warnings = []
+        self.debugs = []
+
+    def warn(self, msg):
+        self.warnings.append(msg)
+
+    def debug(self, msg):
+        self.debugs.append(msg)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="FIFO jobserver not supported on Windows in Spack.")
+@pytest.mark.parametrize(
+    "num_jobs, returned_bytes, expected_warnings, expected_debugs",
+    [
+        (5, b"+++++", 0, 1),  # all tokens returned -> triggers debug, no warning
+        (5, b"+++", 1, 0),  # some tokens missing -> triggers warning
+        (4, b"", 1, 0),  # FIFO empty -> warning for missing tokens
+    ],
+)
+def test_fifo_missing_tokens_check(
+    monkeypatch, tmp_path, num_jobs, returned_bytes, expected_warnings, expected_debugs
+):
+    js = FifoJobserver()
+    js.num_jobs = num_jobs
+
+    # simulate FIFO
+    r, w = os.pipe()
+    js.fifo_read_fd = r
+    js.fifo_write_fd = w
+
+    # make read FD non-blocking like real jobserver
+    import fcntl
+
+    flags = fcntl.fcntl(r, fcntl.F_GETFL)
+    fcntl.fcntl(r, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+    # write tokens if needed
+    if returned_bytes:
+        os.write(w, returned_bytes)
+
+    # patch tty to capture messages
+    messages = MessageCapture()
+    monkeypatch.setattr(tty, "warn", messages.warn)
+    monkeypatch.setattr(tty, "debug", messages.debug)
+
+    js.cleanup()
+
+    # verify captured messages
+    assert len(messages.warnings) == expected_warnings
+    assert len(messages.debugs) == expected_debugs
+
+    if expected_warnings:
+        print(expected_warnings)
+        assert any(
+            "exiting with" in w and f"tokens instead of {num_jobs}" in w for w in messages.warnings
+        ), f"Warning message did not include expected info: {messages.warnings}"

@@ -5,7 +5,7 @@
 import hashlib
 from typing import BinaryIO, Callable, Dict, Optional
 
-import llnl.util.tty as tty
+import spack.llnl.util.tty as tty
 
 HashFactory = Callable[[], "hashlib._Hash"]
 
@@ -103,7 +103,7 @@ class Checker:
     with.  e.g., if the digest is 32 hex characters long this will
     use md5.
 
-    Example: know your tarball should hash to 'abc123'.  You want
+    Example: know your tarball should hash to ``abc123``.  You want
     to check files against this.  You would use this class like so::
 
        hexdigest = 'abc123'

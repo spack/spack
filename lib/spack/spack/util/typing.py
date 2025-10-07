@@ -4,7 +4,7 @@
 
 from typing import Any
 
-from _vendoring.typing_extensions import Protocol
+from spack.vendor.typing_extensions import Protocol
 
 
 class SupportsRichComparison(Protocol):

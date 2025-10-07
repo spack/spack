@@ -13,6 +13,7 @@ import spack.concretize
 import spack.directives
 import spack.error
 import spack.fetch_strategy
+import spack.package
 import spack.package_base
 import spack.repo
 from spack.paths import mock_packages_path
@@ -337,6 +338,48 @@ def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, 
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
 
 
+def test_package_can_have_sparse_checkout_properties_with_commit_version(
+    mock_packages, mock_fetch, mock_stage
+):
+    spec = Spec("git-sparsepaths-pkg commit=abcdefg")
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    assert hasattr(pkg_cls, "git_sparse_paths")
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), "1.0")
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert hasattr(fetcher, "git_sparse_paths")
+    assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
+
+
+def test_package_can_have_sparse_checkout_properties_with_gitversion(
+    mock_packages, mock_fetch, mock_stage
+):
+    spec = Spec("git-sparsepaths-pkg")
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    assert hasattr(pkg_cls, "git_sparse_paths")
+
+    version = "git.foo=1.0"
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), version)
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert hasattr(fetcher, "git_sparse_paths")
+    assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
+
+
+def test_package_version_can_have_sparse_checkout_properties(
+    mock_packages, mock_fetch, mock_stage
+):
+    spec = Spec("git-sparsepaths-version")
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), version="1.0")
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.git_sparse_paths == ["foo", "bar"]
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg_cls(spec), version="0.9")
+    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
+    assert fetcher.git_sparse_paths is None
+
+
 def test_package_can_depend_on_commit_of_dependency(mock_packages, config):
     spec = spack.concretize.concretize_one(Spec("git-ref-commit-dep@1.0.0"))
     assert spec.satisfies(f"^git-ref-package commit={'a' * 40}")
@@ -372,3 +415,10 @@ def test_pkg_name_can_only_be_derived_when_package_module():
 
     with pytest.raises(ValueError, match="Package ExamplePackage is not a known Spack package"):
         ExamplePackage.name
+
+
+def test_spack_package_api_versioning():
+    """Test that the symbols in spack.package.api match the public API."""
+    assert spack.package.__all__ == [
+        symbol for symbols in spack.package.api.values() for symbol in symbols
+    ]

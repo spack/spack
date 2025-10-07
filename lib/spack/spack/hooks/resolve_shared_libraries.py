@@ -4,12 +4,11 @@
 
 import io
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import visit_directory_tree
-
 import spack.config
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.verify_libraries
+from spack.llnl.util.filesystem import visit_directory_tree
 
 
 def post_install(spec, explicit):

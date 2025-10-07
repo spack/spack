@@ -8,19 +8,19 @@ import shutil
 import sys
 from typing import List
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify_table
-
 import spack.config
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.schema
 import spack.schema.env
 import spack.spec
 import spack.store
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify_table
 from spack.util.editor import editor
 
 description = "get and set configuration options"
@@ -44,6 +44,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         metavar="section",
         choices=spack.config.SECTION_SCHEMAS,
     )
+    get_parser.add_argument("--json", action="store_true", help="output configuration as JSON")
 
     blame_parser = sp.add_parser(
         "blame", help="print configuration annotated with source file:line"
@@ -91,7 +92,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     scopes_parser.add_argument(
         "section",
-        help="tailor scope path information to the specified section (implies -p|--paths)"
+        help="tailor scope path information to the specified section (implies ``--paths``)"
         "\n\noptions: %(choices)s",
         metavar="section",
         nargs="?",
@@ -171,14 +172,16 @@ def print_configuration(args, *, blame: bool) -> None:
     if args.scope and args.section is None:
         tty.die(f"the argument --scope={args.scope} requires specifying a section.")
 
+    yaml = blame or not args.json
+
     if args.section is not None:
-        spack.config.CONFIG.print_section(args.section, blame=blame, scope=args.scope)
+        spack.config.CONFIG.print_section(args.section, yaml=yaml, blame=blame, scope=args.scope)
         return
 
-    print_flattened_configuration(blame=blame)
+    print_flattened_configuration(blame=blame, yaml=yaml)
 
 
-def print_flattened_configuration(*, blame: bool) -> None:
+def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
     """Prints to stdout a flattened version of the configuration.
 
     Args:
@@ -196,7 +199,11 @@ def print_flattened_configuration(*, blame: bool) -> None:
     for config_section in spack.config.SECTION_SCHEMAS:
         current = spack.config.get(config_section)
         flattened[spack.schema.env.TOP_LEVEL_KEY][config_section] = current
-    syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)
+    if blame or yaml:
+        syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)
+    else:
+        sjson.dump(flattened, sys.stdout)
+        sys.stdout.write("\n")
 
 
 def config_get(args):
@@ -220,7 +227,16 @@ def config_edit(args):
     the active environment.
     """
     spack_env = os.environ.get(ev.spack_env_var)
-    if spack_env and not args.scope:
+    env_error = ev.environment._active_environment_error
+
+    if env_error and args.scope:
+        # Cannot use scopes beyond the environment itself with a failed environment
+        raise env_error
+    elif env_error:
+        # The rest of the config system wasn't set up fully, but spack.main was allowed
+        # to progress so the user can open the malformed environment file
+        config_file = env_error.filename
+    elif spack_env and not args.scope:
         # Don't use the scope object for envs, as `config edit` can be called
         # for a malformed environment. Use SPACK_ENV to find spack.yaml.
         config_file = ev.manifest_file(spack_env)

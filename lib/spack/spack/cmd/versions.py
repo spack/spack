@@ -5,12 +5,11 @@
 import argparse
 import sys
 
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
-
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify
 from spack.version import infinity_versions, ver
 
 description = "list available versions of a package"

@@ -4,6 +4,7 @@
 
 """Test Spack's environment utility functions."""
 import os
+import pathlib
 import sys
 
 import pytest
@@ -113,10 +114,10 @@ def test_path_put_first(prepare_environment_for_tests):
 
 
 @pytest.mark.parametrize("shell", ["pwsh", "bat"] if sys.platform == "win32" else ["bash"])
-def test_dump_environment(prepare_environment_for_tests, shell_as, shell, tmpdir):
+def test_dump_environment(prepare_environment_for_tests, shell_as, shell, tmp_path: pathlib.Path):
     test_paths = "/a:/b/x:/b/c"
     os.environ["TEST_ENV_VAR"] = test_paths
-    dumpfile_path = str(tmpdir.join("envdump.txt"))
+    dumpfile_path = str(tmp_path / "envdump.txt")
     envutil.dump_environment(dumpfile_path)
     with open(dumpfile_path, "r", encoding="utf-8") as dumpfile:
         if shell == "pwsh":

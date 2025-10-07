@@ -7,8 +7,6 @@ import re
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
-from llnl.util.filesystem import mkdirp, working_dir
-
 import spack.caches
 import spack.fetch_strategy
 import spack.paths
@@ -16,6 +14,7 @@ import spack.repo
 import spack.util.executable
 import spack.util.hash
 import spack.util.spack_json as sjson
+from spack.llnl.util.filesystem import mkdirp, working_dir
 
 from .common import VersionLookupError
 from .lookup import AbstractRefLookup

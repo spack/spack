@@ -5,8 +5,7 @@
 import argparse
 import sys
 
-import llnl.util.tty as tty
-
+import spack.llnl.util.tty as tty
 from spack.util.log_parse import make_log_context, parse_log_events
 
 description = "filter errors and warnings from build logs"

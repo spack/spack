@@ -7,22 +7,19 @@ import difflib
 import importlib
 import os
 import re
+import subprocess
 import sys
+import textwrap
 from collections import Counter
 from typing import Generator, List, Optional, Sequence, Union
 
-import llnl.string
-import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
-from llnl.util.lang import attr_setdefault, index_by
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import colorize
-
 import spack.concretize
-import spack.config  # breaks a cycle.
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.llnl.string
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.spec
@@ -32,6 +29,10 @@ import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.llnl.util.filesystem import join_path
+from spack.llnl.util.lang import attr_setdefault, index_by
+from spack.llnl.util.tty.colify import colify
+from spack.llnl.util.tty.color import colorize
 
 from ..enums import InstallRecordStatus
 
@@ -330,7 +331,11 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{ arch=architecture} {%compiler.name}{@compiler.version}"
+    format_string = (
+        "{name}{@version}"
+        "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
+        "{%compiler.name}{@compiler.version}"
+    )
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -370,9 +375,9 @@ def display_specs_as_json(specs, deps=False):
 
 
 def iter_groups(specs, indent, all_headers):
-    """Break a list of specs into groups indexed by arch/compiler."""
-    # Make a dict with specs keyed by architecture and compiler.
-    index = index_by(specs, ("architecture", "compiler"))
+    """Break a list of specs into groups indexed by arch/compilers."""
+    # Make a dict with specs keyed by architecture and compilers.
+    index = index_by(specs, ("architecture", "compilers"))
     ispace = indent * " "
 
     def _key(item):
@@ -381,25 +386,27 @@ def iter_groups(specs, indent, all_headers):
         return str(item)
 
     # Traverse the index and print out each package
-    for i, (architecture, compiler) in enumerate(sorted(index, key=_key)):
+    for i, (architecture, compilers) in enumerate(sorted(index, key=_key)):
         if i > 0:
             print()
 
+        # Drop the leading space from compilers to clean up output and aid checks.
+        compilers_info = compilers.strip() or "no compilers"
         header = "%s{%s} / %s{%s}" % (
             spack.spec.ARCHITECTURE_COLOR,
             architecture if architecture else "no arch",
             spack.spec.COMPILER_COLOR,
-            f"{compiler.display_str}" if compiler else "no compiler",
+            compilers_info,
         )
 
         # Sometimes we want to display specs that are not yet concretized.
-        # If they don't have a compiler / architecture attached to them,
+        # If they don't have compilers / architecture attached to them,
         # then skip the header
-        if all_headers or (architecture is not None or compiler is not None):
+        if all_headers or (architecture is not None or compilers_info):
             sys.stdout.write(ispace)
             tty.hline(colorize(header), char="-")
 
-        specs = index[(architecture, compiler)]
+        specs = index[(architecture, compilers)]
         specs.sort()
         yield specs
 
@@ -566,7 +573,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % llnl.string.plural(len(specs), pkg_type + " package") + suffix)
+    tty.msg("%s" % spack.llnl.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():
@@ -656,20 +663,20 @@ def require_active_env(cmd_name):
     )
 
 
-def find_environment(args):
+def find_environment(args: argparse.Namespace) -> Optional[ev.Environment]:
     """Find active environment from args or environment variable.
 
     Check for an environment in this order:
-        1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
-        2. via a path in the spack.environment.spack_env_var environment variable.
+
+    1. via ``spack -e ENV`` or ``spack -D DIR`` (arguments)
+    2. via a path in the spack.environment.spack_env_var environment variable.
 
     If an environment is found, read it in.  If not, return None.
 
     Arguments:
-        args (argparse.Namespace): argparse namespace with command arguments
+        args: argparse namespace with command arguments
 
-    Returns:
-        (spack.environment.Environment): a found environment, or ``None``
+    Returns: a found environment, or ``None``
     """
 
     # treat env as a name
@@ -699,9 +706,33 @@ def find_environment(args):
     raise ev.SpackEnvironmentError("no environment in %s" % env)
 
 
-def first_line(docstring):
+def doc_first_line(function: object) -> Optional[str]:
     """Return the first line of the docstring."""
-    return docstring.split("\n")[0]
+    return function.__doc__.split("\n", 1)[0].strip() if function.__doc__ else None
+
+
+if sys.version_info >= (3, 13):
+    # indent of __doc__ is automatically removed in 3.13+
+    # see https://github.com/python/cpython/commit/2566b74b26bcce24199427acea392aed644f4b17
+    def doc_dedented(function: object) -> Optional[str]:
+        """Return the docstring with leading indentation removed."""
+        return function.__doc__
+
+else:
+
+    def doc_dedented(function: object) -> Optional[str]:
+        """Return the docstring with leading indentation removed."""
+        return textwrap.dedent(function.__doc__) if function.__doc__ else None
+
+
+def converted_arg_length(arg: str):
+    if sys.platform == "win32":
+        # An argument may have extra characters inserted for a command
+        # line invocation (e.g. on Windows, an argument with a space
+        # is quoted)
+        return len(subprocess.list2cmdline([arg]))
+    else:
+        return len(arg)
 
 
 def group_arguments(
@@ -728,13 +759,15 @@ def group_arguments(
         max_group_size: max number of elements in any group (default 500)
         prefix_length: length of any additional arguments (including spaces) to be passed before
             the groups from args; default is 0 characters
-        max_group_length: max length of characters that if a group of args is joined by " "
+        max_group_length: max length of characters that if a group of args is joined by ``" "``
             On unix, ths defaults to SC_ARG_MAX from sysconf. On Windows the default is
             the max usable for CreateProcess (32,768 chars)
 
     """
     if max_group_length is None:
-        max_group_length = 32768  # default to the Windows limit
+        # Windows limit is 32767, including null terminator (not measured by len)
+        # so max length is 32766
+        max_group_length = 32766
         if hasattr(os, "sysconf"):  # sysconf is only on unix
             try:
                 # returns -1 if an option isn't present (soem older POSIXes)
@@ -746,7 +779,7 @@ def group_arguments(
     group: List[str] = []
     grouplen, space = prefix_length, 0
     for arg in args:
-        arglen = len(arg)
+        arglen = converted_arg_length(arg)
         if arglen > max_group_length:
             raise ValueError(f"Argument is longer than max command line size: '{arg}'")
         if arglen + prefix_length > max_group_length:

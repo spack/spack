@@ -4,13 +4,12 @@
 
 import filecmp
 import os
+import pathlib
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-from llnl.util.symlink import resolve_link_target_relative_to_the_link
-
 import spack.caches
+import spack.cmd.mirror
 import spack.concretize
 import spack.config
 import spack.fetch_strategy
@@ -23,6 +22,7 @@ import spack.util.executable
 import spack.util.spack_json as sjson
 import spack.util.url as url_util
 from spack.cmd.common.arguments import mirror_name_or_url
+from spack.llnl.util.filesystem import resolve_link_target_relative_to_the_link, working_dir
 from spack.spec import Spec
 from spack.util.executable import which
 from spack.util.spack_yaml import SpackYAMLError
@@ -62,7 +62,7 @@ def check_mirror():
         with spack.config.override("mirrors", mirrors):
             with spack.config.override("config:checksum", False):
                 specs = [spack.concretize.concretize_one(x) for x in repos]
-                spack.mirrors.utils.create(mirror_root, specs)
+                spack.cmd.mirror.create(mirror_root, specs)
 
             # Stage directory exists
             assert os.path.isdir(mirror_root)
@@ -255,7 +255,7 @@ def test_mirror_with_url_patches(mock_packages, monkeypatch):
         )
 
         with spack.config.override("config:checksum", False):
-            spack.mirrors.utils.create(mirror_root, list(spec.traverse()))
+            spack.cmd.mirror.create(mirror_root, list(spec.traverse()))
 
         assert {
             "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
@@ -275,13 +275,13 @@ class MockFetcher:
 
 
 @pytest.mark.regression("14067")
-def test_mirror_layout_make_alias(tmpdir):
+def test_mirror_layout_make_alias(tmp_path: pathlib.Path):
     """Confirm that the cosmetic symlink created in the mirror cache (which may
     be relative) targets the storage path correctly.
     """
     alias = os.path.join("zlib", "zlib-1.2.11.tar.gz")
     path = os.path.join("_source-cache", "archive", "c3", "c3e5.tar.gz")
-    cache = spack.caches.MirrorCache(root=str(tmpdir), skip_unstable_versions=False)
+    cache = spack.caches.MirrorCache(root=str(tmp_path), skip_unstable_versions=False)
     layout = spack.mirrors.layout.DefaultLayout(alias, path)
 
     cache.store(MockFetcher(), layout.path)
@@ -343,7 +343,7 @@ def test_update_4():
 
 
 @pytest.mark.parametrize("direction", ["fetch", "push"])
-def test_update_connection_params(direction, tmpdir, monkeypatch):
+def test_update_connection_params(direction, monkeypatch):
     """Test whether new connection params expand the mirror config to a dict."""
     m = spack.mirrors.mirror.Mirror("https://example.com", "example")
 
@@ -427,7 +427,7 @@ def test_update_connection_params(direction, tmpdir, monkeypatch):
     assert m.get_access_token(direction) == "expanded_token"
 
 
-def test_mirror_name_or_url_dir_parsing(tmp_path):
+def test_mirror_name_or_url_dir_parsing(tmp_path: pathlib.Path):
     curdir = tmp_path / "mirror"
     curdir.mkdir()
 

@@ -6,17 +6,16 @@ import argparse
 import sys
 import warnings
 
-import llnl.util.tty as tty
-from llnl.util.lang import index_by
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import colorize
-
 import spack.binary_distribution
 import spack.compilers.config
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
+from spack.llnl.util.lang import index_by
+from spack.llnl.util.tty.colify import colify
+from spack.llnl.util.tty.color import colorize
 
 description = "manage compilers"
 section = "system"

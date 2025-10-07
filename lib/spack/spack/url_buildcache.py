@@ -15,15 +15,14 @@ from contextlib import closing, contextmanager
 from tempfile import TemporaryDirectory
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
-import _vendoring.jsonschema
-
-import llnl.util.filesystem as fsys
-import llnl.util.tty as tty
+import spack.vendor.jsonschema
 
 import spack.config as config
 import spack.database
 import spack.error
 import spack.hash_types as ht
+import spack.llnl.util.filesystem as fsys
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
@@ -134,7 +133,7 @@ class BuildcacheManifest:
 
     @classmethod
     def from_dict(cls, manifest_json: Dict[str, Any]) -> "BuildcacheManifest":
-        _vendoring.jsonschema.validate(manifest_json, buildcache_manifest_schema)
+        spack.vendor.jsonschema.validate(manifest_json, buildcache_manifest_schema)
         return BuildcacheManifest(
             layout_version=manifest_json["version"],
             data=[BlobRecord.from_dict(blob_json) for blob_json in manifest_json["data"]],
@@ -171,7 +170,7 @@ class URLBuildcacheEntry:
     To help with downloading, this class manages two spack.spec.Stage objects
     internally, which must be destroyed when finished.  Specifically, if you
     call either of the following methods on an instance, you must eventually also
-    call destroy():
+    call destroy()::
 
         fetch_metadata()
         fetch_archive()
@@ -246,7 +245,7 @@ class URLBuildcacheEntry:
 
     @classmethod
     def get_base_url(cls, manifest_url: str) -> str:
-        """Given any manifest url (i.e. one containing 'v3/manifests/') return the
+        """Given any manifest url (i.e. one containing ``v3/manifests/``) return the
         base part of the url"""
         rematch = cls.SPEC_URL_REGEX.match(manifest_url)
         if not rematch:
@@ -593,8 +592,8 @@ class URLBuildcacheEntry:
         compression: str = "none",
     ) -> None:
         """Convenience method to push a local file to a mirror as a blob.  Both manifest
-        and blob are pushed as a component of the given component_type.  If compression
-        is 'gzip' the blob will be compressed before pushing, otherwise it will be pushed
+        and blob are pushed as a component of the given component_type.  If ``compression``
+        is ``"gzip"`` the blob will be compressed before pushing, otherwise it will be pushed
         uncompressed."""
         cache_class = get_url_buildcache_class()
         checksum_algo = "sha256"
@@ -1091,7 +1090,7 @@ def _entries_from_cache_aws_cli(
         A tuple where the first item is a list of local file paths pointing
         to the manifests that should be read from the mirror, and the
         second item is a function taking a url or file path and returning
-        a `URLBuildcacheEntry` for that manifest.
+        a :class:`URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
     file_list = None
@@ -1147,7 +1146,7 @@ def _entries_from_cache_fallback(
         A tuple where the first item is a list of absolute file paths or
         urls pointing to the manifests that should be read from the mirror,
         and the second item is a function taking a url or file path of a manifest and
-        returning a `URLBuildcacheEntry` for that manifest.
+        returning a :class:`URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
     file_list = None
@@ -1190,7 +1189,7 @@ def get_entries_from_cache(
         A tuple where the first item is a list of absolute file paths or
         urls pointing to the manifests that should be read from the mirror,
         and the second item is a function taking a url or file path and
-        returning a `URLBuildcacheEntry` for that manifest.
+        returning a :class:`URLBuildcacheEntry` for that manifest.
     """
     callbacks: List[Callable] = []
     if url.startswith("s3://"):
@@ -1229,12 +1228,15 @@ def _get_compressor(compression: str, writable: io.BufferedIOBase) -> io.Buffere
 @contextmanager
 def compression_writer(output_path: str, compression: str, checksum_algo: str):
     """Create and return a writer capable of writing compressed data. Available
-    options for compression are "gzip" or "none", checksum_algo is used to pick
-    the checksum algorithm used by the ChecksumWriter.
+    options for ``compression`` are ``"gzip"`` or ``"none"``, ``checksum_algo`` is used to pick
+    the checksum algorithm used by the :class:`~spack.util.archive.ChecksumWriter`.
 
-    Yields a tuple containing:
-        io.IOBase: writer that can compress (or not) as it writes
-        ChecksumWriter: provides checksum and length of written data
+    Yields:
+        A tuple containing
+
+        * An :class:`io.BufferedIOBase` writer that can compress (or not) as it writes
+        * A :class:`~spack.util.archive.ChecksumWriter` that provides checksum and length of
+          written data
     """
     with open(output_path, "wb") as writer, ChecksumWriter(
         fileobj=writer, algorithm=hash_fun_for_algo(checksum_algo)

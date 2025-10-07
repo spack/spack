@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
+from typing import Callable
 
 from ._functions import _host, by_name, platforms, reset
 from ._platform import Platform
@@ -30,7 +31,7 @@ real_host = _host
 
 #: The current platform used by Spack. May be swapped by the use_platform
 #: context manager.
-host = _host
+host: Callable[[], Platform] = _host
 
 
 class _PickleableCallable:

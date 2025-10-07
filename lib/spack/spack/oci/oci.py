@@ -7,14 +7,12 @@ import json
 import os
 import urllib.error
 import urllib.parse
-import urllib.request
 from http.client import HTTPResponse
 from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
-import llnl.util.tty as tty
-
 import spack.fetch_strategy
+import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.oci.opener
@@ -215,10 +213,7 @@ def upload_manifest(
 
 def image_from_mirror(mirror: spack.mirrors.mirror.Mirror) -> ImageReference:
     """Given an OCI based mirror, extract the URL and image name from it"""
-    url = mirror.push_url
-    if not url.startswith("oci://"):
-        raise ValueError(f"Mirror {mirror} is not an OCI mirror")
-    return ImageReference.from_string(url[6:])
+    return ImageReference.from_url(mirror.push_url)
 
 
 def blob_exists(
@@ -275,7 +270,7 @@ def copy_missing_layers(
         stages.cache_local()
 
         for stage, digest in zip(stages, missing_digests):
-            # No need to check existince again, force=True.
+            # No need to check existence again, force=True.
             upload_blob(
                 dst, file=stage.save_filename, force=True, digest=digest, _urlopen=_urlopen
             )

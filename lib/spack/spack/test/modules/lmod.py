@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
-import _vendoring.archspec.cpu
 import pytest
+
+import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.config
@@ -220,7 +222,7 @@ class TestLmod:
         assert len([x for x in content if 'setenv("FOO", "{{name}}, {name}, {{}}, {}")' in x]) == 1
 
     @pytest.mark.skipif(
-        str(_vendoring.archspec.cpu.host().family) != "x86_64",
+        str(spack.vendor.archspec.cpu.host().family) != "x86_64",
         reason="test data is specific for x86_64",
     )
     def test_help_message(self, modulefile_content, module_configuration):
@@ -430,9 +432,14 @@ class TestLmod:
         assert projection in writer.layout.use_name
 
     def test_modules_relative_to_view(
-        self, tmpdir, modulefile_content, module_configuration, install_mockery, mock_fetch
+        self,
+        tmp_path: pathlib.Path,
+        modulefile_content,
+        module_configuration,
+        install_mockery,
+        mock_fetch,
     ):
-        with ev.create_in_dir(str(tmpdir), with_view=True) as e:
+        with ev.create_in_dir(str(tmp_path), with_view=True) as e:
             module_configuration("with_view")
             install("--fake", "--add", "cmake")
 

@@ -5,7 +5,7 @@
 
 from typing import Iterable, List, Tuple, Union
 
-from _vendoring.typing_extensions import Literal
+from spack.vendor.typing_extensions import Literal
 
 #: Type hint for the low-level dependency input (enum.Flag is too slow)
 DepFlag = int
@@ -51,12 +51,15 @@ def compatible(flag1: DepFlag, flag2: DepFlag) -> bool:
     non-build dependency. This separates our two process spaces, build time and run time.
 
     These dependency combinations are allowed:
-        single dep on name: [b], [l], [r], [bl], [br], [blr]
-        two deps on name: [b, l], [b, r], [b, lr]
+
+    * single dep on name: ``[b]``, ``[l]``, ``[r]``, ``[bl]``, ``[br]``, ``[blr]``
+    * two deps on name: ``[b, l]``, ``[b, r]``, ``[b, lr]``
 
     but none of these make any sense:
-        two build deps: [b, b], [b, br], [b, bl], [b, blr]
-        any two deps that both have an l or an r, i.e. [l, l], [r, r], [l, r], [bl, l], [bl, r]"""
+
+    * two build deps: ``[b, b]``, ``[b, br]``, ``[b, bl]``, ``[b, blr]``
+    * any two deps that both have an ``l`` or an ``r``, i.e. ``[l, l]``, ``[r, r]``, ``[l, r]``,
+      ``[bl, l]``, ``[bl, r]``"""
     # Cannot have overlapping build types to two different dependencies
     if flag1 & flag2:
         return False
@@ -139,9 +142,9 @@ def flag_to_string(x: DepFlag) -> DepType:
 def flag_to_chars(depflag: DepFlag) -> str:
     """Create a string representing deptypes for many dependencies.
 
-    The string will be some subset of 'blrt', like 'bl ', 'b t', or
-    ' lr ' where each letter in 'blrt' stands for 'build', 'link',
-    'run', and 'test' (the dependency types).
+    The string will be some subset of ``blrt``, like ``bl ``, ``b t``, or
+    `` lr `` where each letter in ``blrt`` stands for ``build``, ``link``,
+    ``run``, and ``test`` (the dependency types).
 
     For a single dependency, this just indicates that the dependency has
     the indicated deptypes. For a list of dependnecies, this shows

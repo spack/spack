@@ -6,12 +6,11 @@ import pathlib
 
 import pytest
 
-import llnl.util.lang
-
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
 import spack.error
+import spack.llnl.util.lang
 import spack.paths
 import spack.solver.asp
 import spack.spec
@@ -1709,25 +1708,6 @@ def test_spec_dict_hashless_dep():
 
 
 @pytest.mark.parametrize(
-    "specs,expected",
-    [
-        # Anonymous specs without dependencies
-        (["+baz", "+bar"], "+baz+bar"),
-        (["@2.0:", "@:5.1", "+bar"], "@2.0:5.1 +bar"),
-        # Anonymous specs with dependencies
-        (["^mpich@3.2", "^mpich@:4.0+foo"], "^mpich@3.2 +foo"),
-        # Mix a real package with a virtual one. This test
-        # should fail if we start using the repository
-        (["^mpich@3.2", "^mpi+foo"], "^mpich@3.2 ^mpi+foo"),
-    ],
-)
-def test_merge_abstract_anonymous_specs(specs, expected):
-    specs = [Spec(x) for x in specs]
-    result = spack.spec.merge_abstract_anonymous_specs(*specs)
-    assert result == Spec(expected)
-
-
-@pytest.mark.parametrize(
     "anonymous,named,expected",
     [
         ("+plumed", "gromacs", "gromacs+plumed"),
@@ -2169,7 +2149,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, (), False),),
+                ((0, 1, 0, (), False, Spec()),),
             ),
         ],
         # root with multiple deps
@@ -2182,7 +2162,11 @@ EMPTY_FLG = Spec().compiler_flags
                     ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, (), False), (0, 2, 0, (), False), (0, 3, 0, (), False)),
+                (
+                    (0, 1, 0, (), False, Spec()),
+                    (0, 2, 0, (), False, Spec()),
+                    (0, 3, 0, (), False, Spec()),
+                ),
             ),
         ],
         # root with multiple build deps
@@ -2195,7 +2179,11 @@ EMPTY_FLG = Spec().compiler_flags
                     ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, (), True), (0, 2, 0, (), True), (0, 3, 0, (), True)),
+                (
+                    (0, 1, 0, (), True, Spec()),
+                    (0, 2, 0, (), True, Spec()),
+                    (0, 3, 0, (), True, Spec()),
+                ),
             ),
         ],
         # dependencies with dependencies
@@ -2212,12 +2200,12 @@ EMPTY_FLG = Spec().compiler_flags
                     ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), False),
-                    (0, 2, 0, (), False),
-                    (1, 3, 0, (), True),
-                    (1, 4, 0, (), True),
-                    (2, 5, 0, (), True),
-                    (2, 6, 0, (), True),
+                    (0, 1, 0, (), False, Spec()),
+                    (0, 2, 0, (), False, Spec()),
+                    (1, 3, 0, (), True, Spec()),
+                    (1, 4, 0, (), True, Spec()),
+                    (2, 5, 0, (), True, Spec()),
+                    (2, 6, 0, (), True, Spec()),
                 ),
             ),
         ],
@@ -2225,7 +2213,7 @@ EMPTY_FLG = Spec().compiler_flags
 )
 def test_spec_canonical_comparison_form(spec, expected_tuplified):
     """Tests a few expected canonical comparison form of specs"""
-    assert llnl.util.lang.tuplify(Spec(spec)._cmp_iter) == expected_tuplified
+    assert spack.llnl.util.lang.tuplify(Spec(spec)._cmp_iter) == expected_tuplified
 
 
 def test_comparison_after_breaking_hash_change():
@@ -2324,3 +2312,81 @@ def test_specs_equality(lhs, rhs, expected):
     """Tests the semantic of == for abstract specs"""
     lhs, rhs = Spec(lhs), Spec(rhs)
     assert (lhs == rhs) is expected
+
+
+def test_edge_equality_accounts_for_when_condition():
+    """Tests that edges can be distinguished by their 'when' condition."""
+    parent, child = Spec("parent"), Spec("child")
+    edge1 = DependencySpec(parent, child, depflag=0, virtuals=(), when=Spec("%c"))
+    edge2 = DependencySpec(parent, child, depflag=0, virtuals=())
+    assert edge1 != edge2
+
+
+def test_long_spec():
+    """Test that long_spec preserves dependency types and has correct ordering."""
+    assert Spec("foo %m %l ^k %n %j").long_spec == "foo %l %m ^k %j %n"
+
+
+@pytest.mark.parametrize(
+    "constraints,expected",
+    [
+        # Anonymous specs without dependencies
+        (["+baz", "+bar"], "+baz+bar"),
+        (["@2.0:", "@:5.1", "+bar"], "@2.0:5.1 +bar"),
+        # Anonymous specs with dependencies
+        (["^mpich@3.2", "^mpich@:4.0+foo"], "^mpich@3.2 +foo"),
+        # Mix a real package with a virtual one. This test
+        # should fail if we start using the repository
+        (["^mpich@3.2", "^mpi+foo"], "^mpich@3.2 ^mpi+foo"),
+        # Non direct dependencies + direct dependencies
+        (["^mpich", "%mpich"], "%mpich"),
+        (["^foo", "^bar %foo"], "^foo ^bar%foo"),
+        (["^foo", "%bar %foo"], "%bar%foo"),
+    ],
+)
+def test_constrain_symbolically(constraints, expected):
+    """Tests the semantics of constraining a spec when we don't resolve virtuals."""
+    merged = Spec()
+    for c in constraints:
+        merged._constrain_symbolically(c)
+    assert merged == Spec(expected)
+
+    reverse_order = Spec()
+    for c in reversed(constraints):
+        reverse_order._constrain_symbolically(c)
+    assert reverse_order == Spec(expected)
+
+
+@pytest.mark.parametrize(
+    "parent_str,child_str,kwargs,expected_str,expected_repr",
+    [
+        (
+            "mpileaks",
+            "callpath",
+            {"virtuals": ()},
+            "mpileaks ^callpath",
+            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=())",
+        ),
+        (
+            "mpileaks",
+            "callpath",
+            {"virtuals": ("mpi", "lapack")},
+            "mpileaks ^[virtuals=lapack,mpi] callpath",
+            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=('lapack', 'mpi'))",
+        ),
+        (
+            "",
+            "callpath",
+            {"virtuals": ("mpi", "lapack"), "direct": True},
+            " %[virtuals=lapack,mpi] callpath",
+            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True)",
+        ),
+    ],
+)
+def test_edge_representation(parent_str, child_str, kwargs, expected_str, expected_repr):
+    """Tests the string representations of edges."""
+    parent = Spec(parent_str) or Spec()
+    child = Spec(child_str) or Spec()
+    edge = DependencySpec(parent, child, depflag=0, **kwargs)
+    assert str(edge) == expected_str
+    assert repr(edge) == expected_repr

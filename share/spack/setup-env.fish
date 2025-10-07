@@ -226,7 +226,7 @@ function check_sp_flags -d "check spack flags for h/V flags"
     # Check if inputs contain h or V flags.
     #
 
-    # combine argument array into single string (space seperated), to be passed
+    # combine argument array into single string (space separated), to be passed
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
@@ -245,7 +245,7 @@ end
 
 
 
-function match_flag -d "checks all combinations of flags ocurring inside of a string"
+function match_flag -d "checks all combinations of flags occurring inside of a string"
 
     # Remove leading and trailing spaces -- but we need to insert a "guard" (x)
     # so that eg. `string trim -h` doesn't trigger the help string for `string trim`
@@ -266,7 +266,7 @@ function match_flag -d "checks all combinations of flags ocurring inside of a st
         return 0
     end
 
-    # end of string + leadingg space
+    # end of string + leading space
     if echo "$_a" | string match -r -q " +$_b\$"
         return 0
     end
@@ -287,7 +287,7 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
     # Check if inputs contain -h/--help, --sh, --csh, or --fish
     #
 
-    # combine argument array into single string (space seperated), to be passed
+    # combine argument array into single string (space separated), to be passed
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
@@ -335,7 +335,7 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
     # Check if inputs contain --sh, --csh, or --fish
     #
 
-    # combine argument array into single string (space seperated), to be passed
+    # combine argument array into single string (space separated), to be passed
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
@@ -455,7 +455,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
 
         # CASE: spack subcommand is `env`. Here we get the spack runtime to
         # supply the appropriate shell commands for setting the environment
-        # varibles. These commands are then run by fish (using the `capture_all`
+        # variables. These commands are then run by fish (using the `capture_all`
         # function, instead of a command substitution).
 
         case "env"
@@ -599,7 +599,7 @@ set -l stat $status
 
 
 #
-# Delete temprary global variabels allocated in `allocated_sp_shared`.
+# Delete temporary global variables allocated in `allocated_sp_shared`.
 #
 
 delete_sp_shared
@@ -643,7 +643,7 @@ function spack_pathadd -d "Add path to specified variable (defaults to PATH)"
     #  -> Notes: [1] (cf. EOF).
     if test -d "$pa_new_path"
 
-        # combine argument array into single string (space seperated), to be
+        # combine argument array into single string (space separated), to be
         # passed to regular expression matching (`string match -r`)
         set -l _a "$pa_oldvalue"
 
@@ -748,7 +748,7 @@ if test -z "$SPACK_SKIP_MODULES"
             sp_apply_shell_vars $sp_var_expr
         end
 
-        # _sp_module_prefix is set by spack --print-sh-vars
+        # _sp_module_prefix is set by spack --print-shell-vars
         if test "$_sp_module_prefix" != "not_installed"
             set -xg MODULE_PREFIX $_sp_module_prefix
             spack_pathadd PATH "$MODULE_PREFIX/bin"
@@ -805,7 +805,7 @@ end
 #      prepend a non-flag character, eg: `test "x$a" = "x$b"`.
 #
 # [3]: When the test in the if statement fails, the `status` flag is set to 1.
-#      `true` here manuallt resets the value of `status` to 0. Since `set`
+#      `true` here manually resets the value of `status` to 0. Since `set`
 #      passes `status` along, we thus avoid the function returning 1 by mistake.
 
 # done: unset sentinel variable as we're no longer initializing

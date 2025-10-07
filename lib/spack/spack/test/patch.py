@@ -5,12 +5,11 @@
 import collections
 import filecmp
 import os
+import pathlib
 import shutil
 import sys
 
 import pytest
-
-from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.concretize
 import spack.error
@@ -21,6 +20,7 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.url as url_util
+from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import Executable
@@ -65,9 +65,9 @@ platform_url_sha = (
 
 
 @pytest.fixture()
-def mock_patch_stage(tmpdir_factory, monkeypatch):
+def mock_patch_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch):
     # Don't disrupt the spack install directory with tests.
-    mock_path = str(tmpdir_factory.mktemp("mock-patch-stage"))
+    mock_path = str(tmp_path_factory.mktemp("mock-patch-stage"))
     monkeypatch.setattr(spack.stage, "_stage_root", mock_path)
     return mock_path
 
@@ -121,11 +121,18 @@ third line
                 )
         # apply the patch and compare files
         patch = spack.patch.UrlPatch(s.package, url, sha256=sha256, archive_sha256=archive_sha256)
-        with patch.stage:
-            patch.stage.create()
-            patch.stage.fetch()
-            patch.stage.expand_archive()
-            patch.apply(stage)
+        patch_stage = Stage(patch.fetcher())
+        with patch_stage:
+            patch_stage.create()
+            patch_stage.fetch()
+            patch_stage.expand_archive()
+            spack.patch.apply_patch(
+                stage.source_path,
+                patch_stage.single_file,
+                patch.level,
+                patch.working_dir,
+                patch.reverse,
+            )
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
@@ -134,11 +141,18 @@ third line
         patch = spack.patch.UrlPatch(
             s.package, url, sha256=sha256, archive_sha256=archive_sha256, reverse=True
         )
-        with patch.stage:
-            patch.stage.create()
-            patch.stage.fetch()
-            patch.stage.expand_archive()
-            patch.apply(stage)
+        patch_stage = Stage(patch.fetcher())
+        with patch_stage:
+            patch_stage.create()
+            patch_stage.fetch()
+            patch_stage.expand_archive()
+            spack.patch.apply_patch(
+                stage.source_path,
+                patch_stage.single_file,
+                patch.level,
+                patch.working_dir,
+                patch.reverse,
+            )
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-original.txt")
@@ -266,11 +280,11 @@ def trigger_bad_patch(pkg):
 
 
 def test_patch_failure_develop_spec_exits_gracefully(
-    mock_packages, install_mockery, mock_fetch, tmpdir, mock_stage
+    mock_packages, install_mockery, mock_fetch, tmp_path: pathlib.Path, mock_stage
 ):
     """ensure that a failing patch does not trigger exceptions for develop specs"""
 
-    spec = spack.concretize.concretize_one(f"patch-a-dependency ^libelf dev_path={tmpdir}")
+    spec = spack.concretize.concretize_one(f"patch-a-dependency ^libelf dev_path={tmp_path}")
     libelf = spec["libelf"]
     assert "patches" in list(libelf.variants.keys())
     pkg = libelf.package
@@ -431,7 +445,7 @@ def test_patch_no_file():
     patch = spack.patch.Patch(fp, "nonexistent_file", 0, "")
     patch.path = "test"
     with pytest.raises(spack.error.NoSuchPatchError, match="No such patch:"):
-        patch.apply("")
+        spack.patch.apply_patch(Stage("https://example.com/foo.patch").source_path, patch.path)
 
 
 def test_patch_no_sha256():
@@ -476,11 +490,11 @@ def test_sha256_setter(mock_packages, mock_patch_stage, config):
 def test_invalid_from_dict(mock_packages, config):
     dictionary = {}
     with pytest.raises(ValueError, match="Invalid patch dictionary:"):
-        spack.patch.from_dict(dictionary)
+        spack.patch.from_dict(dictionary, mock_packages)
 
     dictionary = {"owner": "patch"}
     with pytest.raises(ValueError, match="Invalid patch dictionary:"):
-        spack.patch.from_dict(dictionary)
+        spack.patch.from_dict(dictionary, mock_packages)
 
     dictionary = {
         "owner": "patch",
@@ -491,4 +505,4 @@ def test_invalid_from_dict(mock_packages, config):
         "sha256": bar_sha256,
     }
     with pytest.raises(spack.fetch_strategy.ChecksumError, match="sha256 checksum failed for"):
-        spack.patch.from_dict(dictionary)
+        spack.patch.from_dict(dictionary, mock_packages)

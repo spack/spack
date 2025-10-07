@@ -6,46 +6,44 @@
 Fetch strategies are used to download source code into a staging area
 in order to build it.  They need to define the following methods:
 
-    * fetch()
-        This should attempt to download/check out source from somewhere.
-    * check()
-        Apply a checksum to the downloaded source code, e.g. for an archive.
-        May not do anything if the fetch method was safe to begin with.
-    * expand()
-        Expand (e.g., an archive) downloaded file to source, with the
-        standard stage source path as the destination directory.
-    * reset()
-        Restore original state of downloaded code.  Used by clean commands.
-        This may just remove the expanded source and re-expand an archive,
-        or it may run something like git reset --hard.
-    * archive()
-        Archive a source directory, e.g. for creating a mirror.
+``fetch()``
+    This should attempt to download/check out source from somewhere.
+
+``check()``
+    Apply a checksum to the downloaded source code, e.g. for an archive.
+    May not do anything if the fetch method was safe to begin with.
+
+``expand()``
+    Expand (e.g., an archive) downloaded file to source, with the
+    standard stage source path as the destination directory.
+
+``reset()``
+    Restore original state of downloaded code.  Used by clean commands.
+    This may just remove the expanded source and re-expand an archive,
+    or it may run something like git reset ``--hard``.
+
+``archive()``
+    Archive a source directory, e.g. for creating a mirror.
 """
 import copy
 import functools
+import hashlib
 import http.client
 import os
 import re
 import shutil
 import sys
 import time
-import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.response
 from pathlib import PurePath
-from typing import Callable, List, Mapping, Optional
-
-import llnl.url
-import llnl.util
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.string import comma_and, quote
-from llnl.util.filesystem import get_single_file, mkdirp, temp_cwd, working_dir
-from llnl.util.symlink import symlink
+from typing import Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
+import spack.llnl.url
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.oci.opener
 import spack.util.archive
 import spack.util.crypto as crypto
@@ -53,12 +51,13 @@ import spack.util.git
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
-import spack.version.git_ref_lookup
+from spack.llnl.string import comma_and, quote
+from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
-all_strategies = []
+all_strategies: List[Type["FetchStrategy"]] = []
 
 
 def _needs_stage(fun):
@@ -160,7 +159,7 @@ class FetchStrategy:
         the information available to them in the Spack package.
 
         The returned value is added to the content which determines the full
-        hash for a package using `str()`.
+        hash for a package using :class:`str`.
         """
         raise NotImplementedError
 
@@ -551,7 +550,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = llnl.url.determine_url_file_extension(self.url)
+            self.extension = spack.llnl.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug("Source already staged to %s" % self.stage.source_path)
@@ -703,7 +702,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
-        assert llnl.url.extension_from_path(destination) == "tar.gz"
+        assert spack.llnl.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
         # We need to prepend this dir name to every entry of the tarfile
         top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))
@@ -727,12 +726,11 @@ class VCSFetchStrategy(FetchStrategy):
 
 @fetcher
 class GoFetchStrategy(VCSFetchStrategy):
-    """Fetch strategy that employs the `go get` infrastructure.
+    """Fetch strategy that employs the ``go get`` infrastructure.
 
-    Use like this in a package:
+    Use like this in a package::
 
-       version('name',
-               go='github.com/monochromegane/the_platinum_searcher/...')
+       version("name", go="github.com/monochromegane/the_platinum_searcher/...")
 
     Go get does not natively support versions, they can be faked with git.
 
@@ -799,20 +797,19 @@ class GoFetchStrategy(VCSFetchStrategy):
 class GitFetchStrategy(VCSFetchStrategy):
     """
     Fetch strategy that gets source code from a git repository.
-    Use like this in a package:
+    Use like this in a package::
 
-        version('name', git='https://github.com/project/repo.git')
+        version("name", git="https://github.com/project/repo.git")
 
-    Optionally, you can provide a branch, or commit to check out, e.g.:
+    Optionally, you can provide a branch, or commit to check out, e.g.::
 
-        version('1.1', git='https://github.com/project/repo.git', tag='v1.1')
+        version("1.1", git="https://github.com/project/repo.git", tag="v1.1")
 
     You can use these three optional attributes in addition to ``git``:
 
-        * ``branch``: Particular branch to build from (default is the
-                      repository's default branch)
-        * ``tag``: Particular tag to check out
-        * ``commit``: Particular commit hash in the repo
+    * ``branch``: Particular branch to build from (default is the repository's default branch)
+    * ``tag``: Particular tag to check out
+    * ``commit``: Particular commit hash in the repo
 
     Repositories are cloned into the standard stage source path directory.
     """
@@ -892,8 +889,18 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     def mirror_id(self):
         if self.commit:
+            provenance_id = self.commit
             repo_path = urllib.parse.urlparse(self.url).path
-            result = os.path.sep.join(["git", repo_path, self.commit])
+            if self.git_sparse_paths:
+                sparse_paths = []
+                if callable(self.git_sparse_paths):
+                    sparse_paths.extend(self.git_sparse_paths())
+                else:
+                    sparse_paths.extend(self.git_sparse_paths)
+                sparse_string = "_".join(sparse_paths)
+                sparse_hash = hashlib.sha1(sparse_string.encode("utf-8")).hexdigest()
+                provenance_id = f"{provenance_id}_{sparse_hash}"
+            result = os.path.sep.join(["git", repo_path, provenance_id])
             return result
 
     def _repo_info(self):
@@ -1143,9 +1150,9 @@ class GitFetchStrategy(VCSFetchStrategy):
             self.git(*clean_args)
 
     def protocol_supports_shallow_clone(self):
-        """Shallow clone operations (--depth #) are not supported by the basic
+        """Shallow clone operations (``--depth #``) are not supported by the basic
         HTTP protocol or by no-protocol file specifications.
-        Use (e.g.) https:// or file:// instead."""
+        Use (e.g.) ``https://`` or ``file://`` instead."""
         return not (self.url.startswith("http://") or self.url.startswith("/"))
 
     def __str__(self):
@@ -1155,16 +1162,17 @@ class GitFetchStrategy(VCSFetchStrategy):
 @fetcher
 class CvsFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a CVS repository.
-       Use like this in a package:
+    Use like this in a package::
 
-           version('name',
-                   cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename')
+        version("name", cvs=":pserver:anonymous@www.example.com:/cvsroot%module=modulename")
 
-       Optionally, you can provide a branch and/or a date for the URL:
+    Optionally, you can provide a branch and/or a date for the URL::
 
-           version('name',
-                   cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename',
-                   branch='branchname', date='date')
+        version(
+            "name",
+            cvs=":pserver:anonymous@www.example.com:/cvsroot%module=modulename",
+            branch="branchname", date="date"
+        )
 
     Repositories are checked out into the standard stage source path directory.
     """
@@ -1272,14 +1280,13 @@ class CvsFetchStrategy(VCSFetchStrategy):
 @fetcher
 class SvnFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a subversion repository.
-       Use like this in a package:
+    Use like this in a package::
 
-           version('name', svn='http://www.example.com/svn/trunk')
+        version("name", svn="http://www.example.com/svn/trunk")
 
-       Optionally, you can provide a revision for the URL:
+    Optionally, you can provide a revision for the URL::
 
-           version('name', svn='http://www.example.com/svn/trunk',
-                   revision='1641')
+        version("name", svn="http://www.example.com/svn/trunk", revision="1641")
 
     Repositories are checked out into the standard stage source path directory.
     """
@@ -1367,21 +1374,20 @@ class SvnFetchStrategy(VCSFetchStrategy):
 class HgFetchStrategy(VCSFetchStrategy):
     """
     Fetch strategy that gets source code from a Mercurial repository.
-    Use like this in a package:
+    Use like this in a package::
 
-        version('name', hg='https://jay.grs.rwth-aachen.de/hg/lwm2')
+        version("name", hg="https://jay.grs.rwth-aachen.de/hg/lwm2")
 
-    Optionally, you can provide a branch, or revision to check out, e.g.:
+    Optionally, you can provide a branch, or revision to check out, e.g.::
 
-        version('torus',
-                hg='https://jay.grs.rwth-aachen.de/hg/lwm2', branch='torus')
+        version("torus", hg="https://jay.grs.rwth-aachen.de/hg/lwm2", branch="torus")
 
-    You can use the optional 'revision' attribute to check out a
+    You can use the optional ``revision`` attribute to check out a
     branch, tag, or particular revision in hg.  To prevent
     non-reproducible builds, using a moving target like a branch is
     discouraged.
 
-        * ``revision``: Particular revision, branch, or tag.
+    * ``revision``: Particular revision, branch, or tag.
 
     Repositories are cloned into the standard stage source path directory.
     """
@@ -1579,22 +1585,21 @@ def from_url(url: str) -> URLFetchStrategy:
     """Given a URL, find an appropriate fetch strategy for it.
     Currently just gives you a URLFetchStrategy that uses curl.
 
-    TODO: make this return appropriate fetch strategies for other
-          types of URLs.
+    TODO: make this return appropriate fetch strategies for other types of URLs.
     """
     return URLFetchStrategy(url=url)
 
 
-def from_kwargs(**kwargs):
+def from_kwargs(**kwargs) -> FetchStrategy:
     """Construct an appropriate FetchStrategy from the given keyword arguments.
 
     Args:
-        **kwargs: dictionary of keyword arguments, e.g. from a
-            ``version()`` directive in a package.
+        **kwargs: dictionary of keyword arguments, e.g. from a ``version()`` directive in a
+            package.
 
     Returns:
-        typing.Callable: The fetch strategy that matches the args, based
-            on attribute names (e.g., ``git``, ``hg``, etc.)
+        The fetch strategy that matches the args, based on attribute names (e.g., ``git``, ``hg``,
+        etc.)
 
     Raises:
         spack.error.FetchError: If no ``fetch_strategy`` matches the args.
@@ -1715,7 +1720,9 @@ def for_package_version(pkg, version=None):
             )
         # Populate the version with comparisons to other commits
         if isinstance(version, spack.version.GitVersion):
-            version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
+            from spack.version.git_ref_lookup import GitRefLookup
+
+            version.attach_lookup(GitRefLookup(pkg.name))
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
@@ -1737,6 +1744,7 @@ def for_package_version(pkg, version=None):
         kwargs = {ref_type: ref_value, "no_cache": ref_type != "commit"}
         kwargs["git"] = pkg.version_or_package_attr("git", version)
         kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
+        kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)
 
         # if the ref_version is a known version from the package, use that version's
         # attributes

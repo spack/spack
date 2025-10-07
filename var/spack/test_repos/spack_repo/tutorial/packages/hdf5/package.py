@@ -8,8 +8,7 @@ import sys
 
 from spack_repo.builtin_mock.build_systems.cmake import CMakePackage
 
-import llnl.util.tty as tty
-
+import spack.llnl.util.tty as tty
 from spack.package import *
 
 

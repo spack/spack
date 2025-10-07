@@ -17,22 +17,20 @@ from typing import Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.compression as compression
-import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 from spack import traverse
+from spack.llnl.util.lang import memoized
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
@@ -145,34 +143,6 @@ def ensure_expected_target_path(path: str) -> str:
     return path
 
 
-def update_env_scopes(
-    env: ev.Environment,
-    cli_scopes: List[str],
-    output_file: str,
-    transform_windows_paths: bool = False,
-) -> None:
-    """Add any config scopes from cli_scopes which aren't already included in the
-    environment, by reading the yaml, adding the missing includes, and writing the
-    updated yaml back to the same location.
-    """
-    with open(env.manifest_path, "r", encoding="utf-8") as env_fd:
-        env_yaml_root = syaml.load(env_fd)
-
-    # Add config scopes to environment
-    env_includes = env_yaml_root["spack"].get("include", [])
-    include_scopes: List[str] = []
-    for scope in cli_scopes:
-        if scope not in include_scopes and scope not in env_includes:
-            include_scopes.insert(0, scope)
-    env_includes.extend(include_scopes)
-    env_yaml_root["spack"]["include"] = [
-        ensure_expected_target_path(i) if transform_windows_paths else i for i in env_includes
-    ]
-
-    with open(output_file, "w", encoding="utf-8") as fd:
-        syaml.dump_config(env_yaml_root, fd, default_flow_style=False)
-
-
 def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
     """Write out the file describing specs that should be copied"""
     buildcache_copies = {}
@@ -180,7 +150,7 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
     for release_spec in specs:
         release_spec_dag_hash = release_spec.dag_hash()
         cache_class = get_url_buildcache_class(
-            layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+            layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
         buildcache_copies[release_spec_dag_hash] = {
             "src": cache_class.get_manifest_url(release_spec, src_prefix),
@@ -233,9 +203,9 @@ class CDashHandler:
     def build_name(self, spec: Optional[spack.spec.Spec] = None) -> Optional[str]:
         """Returns the CDash build name.
 
-        A name will be generated if the `spec` is provided,
+        A name will be generated if the ``spec`` is provided,
         otherwise, the value will be retrieved from the environment
-        through the `SPACK_CDASH_BUILD_NAME` variable.
+        through the ``SPACK_CDASH_BUILD_NAME`` variable.
 
         Returns: (str) given spec's CDash build name."""
         if spec:
@@ -284,56 +254,33 @@ class CDashHandler:
         reports = fs.join_path(source, "*_Test*.xml")
         copy_files_to_artifacts(reports, dest)
 
-    def create_buildgroup(self, headers, url, group_name, group_type):
-        data = {"newbuildgroup": group_name, "project": self.project, "type": group_type}
-
+    def create_buildgroup(self):
+        """Create the CDash buildgroup if it does not already exist."""
+        headers = {
+            "Authorization": f"Bearer {self.auth_token}",
+            "Content-Type": "application/json",
+        }
+        data = {"newbuildgroup": self.build_group, "project": self.project, "type": "Daily"}
         enc_data = json.dumps(data).encode("utf-8")
+        request = Request(f"{self.url}/api/v1/buildgroup.php", data=enc_data, headers=headers)
 
-        request = Request(url, data=enc_data, headers=headers)
+        response_text = None
+        group_id = None
 
         try:
             response_text = _urlopen(request, timeout=SPACK_CDASH_TIMEOUT).read()
         except OSError as e:
             tty.warn(f"Failed to create CDash buildgroup: {e}")
-            return None
 
-        try:
-            response_json = json.loads(response_text)
-            return response_json["id"]
-        except (json.JSONDecodeError, KeyError) as e:
-            tty.warn(f"Failed to parse CDash response: {e}")
-            return None
+        if response_text:
+            try:
+                response_json = json.loads(response_text)
+                group_id = response_json["id"]
+            except (json.JSONDecodeError, KeyError) as e:
+                tty.warn(f"Failed to parse CDash response: {e}")
 
-    def populate_buildgroup(self, job_names):
-        url = f"{self.url}/api/v1/buildgroup.php"
-
-        headers = {
-            "Authorization": f"Bearer {self.auth_token}",
-            "Content-Type": "application/json",
-        }
-
-        parent_group_id = self.create_buildgroup(headers, url, self.build_group, "Daily")
-        group_id = self.create_buildgroup(headers, url, f"Latest {self.build_group}", "Latest")
-
-        if not parent_group_id or not group_id:
-            tty.warn(f"Failed to create or retrieve buildgroups for {self.build_group}")
-            return
-
-        data = {
-            "dynamiclist": [
-                {"match": name, "parentgroupid": parent_group_id, "site": self.site}
-                for name in job_names
-            ]
-        }
-
-        enc_data = json.dumps(data).encode("utf-8")
-
-        request = Request(url, data=enc_data, headers=headers, method="PUT")
-
-        try:
-            _urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
-        except OSError as e:
-            tty.warn(f"Failed to populate CDash buildgroup: {e}")
+        if not group_id:
+            tty.warn(f"Failed to create or retrieve buildgroup for {self.build_group}")
 
     def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
         """Explicitly report skipping testing of a spec (e.g., it's CI
@@ -383,6 +330,7 @@ class PipelineOptions:
         untouched_pruning_dependent_depth: Optional[int] = None,
         prune_untouched: bool = False,
         prune_up_to_date: bool = True,
+        prune_unaffected: bool = True,
         prune_external: bool = True,
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
@@ -419,11 +367,13 @@ class PipelineOptions:
         self.untouched_pruning_dependent_depth = untouched_pruning_dependent_depth
         self.prune_untouched = prune_untouched
         self.prune_up_to_date = prune_up_to_date
+        self.prune_unaffected = prune_unaffected
         self.prune_external = prune_external
         self.stack_name = stack_name
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
         self.cdash_handler = cdash_handler
+        self.forward_variables: List[str] = []
 
 
 class PipelineNode:
@@ -564,7 +514,6 @@ class SpackCIConfig:
             job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
             job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
             job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
-
         return job_object
 
     def __is_named(self, section):

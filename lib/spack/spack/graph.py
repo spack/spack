@@ -7,41 +7,42 @@ This file contains code for graphing DAGs of software packages
 (i.e. Spack specs).  There are two main functions you probably care
 about:
 
-graph_ascii() will output a colored graph of a spec in ascii format,
-kind of like the graph git shows with "git log --graph", e.g.::
+:func:`graph_ascii` will output a colored graph of a spec in ascii format,
+kind of like the graph git shows with ``git log --graph``, e.g.
 
-    o  mpileaks
-    |\
-    | |\
-    | o |  callpath
-    |/| |
-    | |\|
-    | |\ \
-    | | |\ \
-    | | | | o  adept-utils
-    | |_|_|/|
-    |/| | | |
-    o | | | |  mpi
-     / / / /
-    | | o |  dyninst
-    | |/| |
-    |/|/| |
-    | | |/
-    | o |  libdwarf
-    |/ /
-    o |  libelf
-     /
-    o  boost
+.. code-block:: text
 
-graph_dot() will output a graph of a spec (or multiple specs) in dot format.
+   o  mpileaks
+   |\
+   | |\
+   | o |  callpath
+   |/| |
+   | |\|
+   | |\ \
+   | | |\ \
+   | | | | o  adept-utils
+   | |_|_|/|
+   |/| | | |
+   o | | | |  mpi
+    / / / /
+   | | o |  dyninst
+   | |/| |
+   |/|/| |
+   | | |/
+   | o |  libdwarf
+   |/ /
+   o |  libelf
+    /
+   o  boost
+
+:func:`graph_dot` will output a graph of a spec (or multiple specs) in dot format.
 """
 import enum
 import sys
 from typing import List, Optional, Set, TextIO, Tuple
 
-import llnl.util.tty.color
-
 import spack.deptypes as dt
+import spack.llnl.util.tty.color
 import spack.spec
 import spack.tengine
 import spack.traverse
@@ -82,7 +83,7 @@ class AsciiGraph:
         self.depflag = dt.ALL
 
         # These are colors in the order they'll be used for edges.
-        # See llnl.util.tty.color for details on color characters.
+        # See spack.llnl.util.tty.color for details on color characters.
         self.colors = "rgbmcyRGBMCY"
 
         # Internal vars are used in the graph() function and are initialized there
@@ -305,14 +306,10 @@ class AsciiGraph:
         """Write out an ascii graph of the provided spec.
 
         Arguments:
-        spec -- spec to graph.  This only handles one spec at a time.
-
-        Optional arguments:
-
-        out -- file object to write out to (default is sys.stdout)
-
-        color -- whether to write in color.  Default is to autodetect
-                 based on output file.
+            spec: spec to graph.  This only handles one spec at a time.
+            out: file object to write out to (default is sys.stdout)
+            color: whether to write in color.  Default is to autodetect
+               based on output file.
 
         """
         if out is None:
@@ -321,7 +318,7 @@ class AsciiGraph:
         if color is None:
             color = out.isatty()
 
-        self._out = llnl.util.tty.color.ColorStream(out, color=color)
+        self._out = spack.llnl.util.tty.color.ColorStream(out, color=color)
 
         # We'll traverse the spec in topological order as we graph it.
         nodes_in_topological_order = list(spec.traverse(order="topo", deptype=self.depflag))

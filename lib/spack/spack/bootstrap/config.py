@@ -8,8 +8,6 @@ import os
 import sys
 from typing import Any, Dict, Generator, MutableSequence, Sequence
 
-from llnl.util import tty
-
 import spack.compilers.config
 import spack.config
 import spack.environment
@@ -20,6 +18,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.path
+from spack.llnl.util import tty
 
 #: Reference counter for the bootstrapping configuration context manager
 _REF_COUNT = 0
@@ -35,8 +34,9 @@ def spec_for_current_python() -> str:
     minor version (all patches are ABI compatible with the same minor).
 
     See:
-      https://www.python.org/dev/peps/pep-0513/
-      https://stackoverflow.com/a/35801395/771663
+
+    * https://www.python.org/dev/peps/pep-0513/
+    * https://stackoverflow.com/a/35801395/771663
     """
     version_str = ".".join(str(x) for x in sys.version_info[:2])
     return f"python@{version_str}"
@@ -117,8 +117,11 @@ def _read_and_sanitize_configuration() -> Dict[str, Any]:
     # to have it in the configuration).
     config_yaml = spack.config.get("config")
     config_yaml.pop("install_tree", None)
-    user_configuration = {"bootstrap": spack.config.get("bootstrap"), "config": config_yaml}
-    return user_configuration
+    return {
+        "bootstrap": spack.config.get("bootstrap"),
+        "config": config_yaml,
+        "repos": spack.config.get("repos"),
+    }
 
 
 def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
@@ -155,10 +158,11 @@ def _ensure_bootstrap_configuration() -> Generator:
     ), spack.store.use_store(
         bootstrap_store_path, extra_data={"padded_length": 0}
     ):
+        spack.config.set("bootstrap", user_configuration["bootstrap"])
+        spack.config.set("config", user_configuration["config"])
+        spack.config.set("repos", user_configuration["repos"])
         # We may need to compile code from sources, so ensure we
         # have compilers for the current platform
         _add_compilers_if_missing()
-        spack.config.set("bootstrap", user_configuration["bootstrap"])
-        spack.config.set("config", user_configuration["config"])
         with spack.modules.disable_modules(), spack_python_interpreter():
             yield

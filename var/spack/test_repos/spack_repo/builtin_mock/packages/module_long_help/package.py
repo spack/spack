@@ -11,8 +11,8 @@ class ModuleLongHelp(Package):
     """Package to test long description message generated in modulefile.
     Message too long is wrapped over multiple lines."""
 
-    homepage = "http://www.llnl.gov"
-    url = "http://www.llnl.gov/module-long-help-1.0.tar.gz"
+    homepage = "http://www.spack.llnl.gov"
+    url = "http://www.spack.llnl.gov/module-long-help-1.0.tar.gz"
 
     version("1.0", "0123456789abcdef0123456789abcdef")
 

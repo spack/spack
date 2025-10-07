@@ -6,8 +6,7 @@ import time
 
 from spack_repo.builtin_mock.build_systems.generic import Package
 
-from llnl.util.filesystem import touch
-
+from spack.llnl.util.filesystem import touch
 from spack.package import *
 
 

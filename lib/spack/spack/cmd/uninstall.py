@@ -6,9 +6,6 @@ import argparse
 import sys
 from typing import Dict, List, Optional
 
-from llnl.util import tty
-from llnl.util.tty.colify import colify
-
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
@@ -17,6 +14,8 @@ import spack.spec
 import spack.store
 import spack.traverse as traverse
 from spack.cmd.common import arguments
+from spack.llnl.util import tty
+from spack.llnl.util.tty.colify import colify
 
 from ..enums import InstallRecordStatus
 
@@ -84,17 +83,13 @@ def find_matching_specs(
     allow_multiple_matches: bool = False,
     origin=None,
 ) -> List[spack.spec.Spec]:
-    """Returns a list of specs matching the not necessarily
-       concretized specs given from cli
+    """Returns a list of specs matching the not necessarily concretized specs given from cli
 
     Args:
         env: optional active environment
         specs: list of specs to be matched against installed packages
         allow_multiple_matches: if True multiple matches are admitted
         origin: origin of the spec
-
-    Return:
-        list: list of specs
     """
     # constrain uninstall resolution to current environment if one is active
     hashes = env.all_hashes() if env else None
@@ -210,7 +205,7 @@ def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Envi
     """Returns unordered uninstall_list and remove_list: these may overlap (some things
     may be both uninstalled and removed from the current environment).
 
-    It is assumed we are in an environment if --remove is specified (this
+    It is assumed we are in an environment if ``--remove`` is specified (this
     method raises an exception otherwise)."""
     if args.remove and not env:
         raise ValueError("Can only use --remove when in an environment")

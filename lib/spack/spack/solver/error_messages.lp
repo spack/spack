@@ -92,7 +92,7 @@ error(1, "Cannot satisfy '{0}@{1}'", Package, Constraint, startcauses, Constrain
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)).
 
-error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}", Package, Constraint1, Constraint2, startcauses, Cause1, C1ID, Cause2, C2ID)
+error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}'", Package, Constraint1, Constraint2, startcauses, Cause1, C1ID, Cause2, C2ID)
   :- attr("node_version_satisfies", node(ID, Package), Constraint1),
      pkg_fact(TriggerPkg1, condition_effect(Cause1, EffectID1)),
      imposed_constraint(EffectID1, "node_version_satisfies", Package, Constraint1),
@@ -233,6 +233,7 @@ error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
 #defined imposed_constraint/5.
 #defined imposed_constraint/6.
 #defined condition_cause/4.
+#defined condition_nodes/3.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
 #defined condition_requirement/5.

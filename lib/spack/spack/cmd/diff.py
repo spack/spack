@@ -6,14 +6,13 @@
 import argparse
 import sys
 
-import llnl.util.tty as tty
-from llnl.util.tty.color import cprint, get_color_when
-
 import spack.cmd
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.solver.asp as asp
 import spack.util.spack_json as sjson
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.color import cprint, get_color_when
 
 description = "compare two specs"
 section = "basic"
@@ -90,12 +89,16 @@ def compare_specs(a, b, to_string=False, color=None, ignore_packages=None):
     # specs and to descend into dependency hashes so we include all facts.
     a_facts = set(
         shift(func)
-        for func in setup.spec_clauses(a, body=True, expand_hashes=True, concrete_build_deps=True)
+        for func in setup.spec_clauses(
+            a, body=True, expand_hashes=True, concrete_build_deps=True, include_runtimes=True
+        )
         if func.name == "attr"
     )
     b_facts = set(
         shift(func)
-        for func in setup.spec_clauses(b, body=True, expand_hashes=True, concrete_build_deps=True)
+        for func in setup.spec_clauses(
+            b, body=True, expand_hashes=True, concrete_build_deps=True, include_runtimes=True
+        )
         if func.name == "attr"
     )
 

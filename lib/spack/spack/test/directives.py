@@ -252,6 +252,22 @@ def test_redistribute_override_when():
     assert cls.disable_redistribute[spec_key].source
 
 
+@pytest.mark.regression("51248")
+def test_direct_dependencies_from_when_context_are_retained(mock_packages):
+    """Tests that direct dependencies from the "when" context manager don't lose the "direct"
+    attribute when turned into directives on the package class.
+    """
+    pkg_cls = spack.repo.PATH.get_pkg_class("with-constraint-met")
+    # Direct dependency in a "when" single context manager
+    assert spack.spec.Spec("%pkg-b") in pkg_cls.dependencies
+    # Direct dependency in a "when" nested context manager
+    assert spack.spec.Spec("@2 %c=gcc %pkg-c %pkg-b@:4.0") in pkg_cls.dependencies
+    # Nested ^foo followed by %foo
+    assert spack.spec.Spec("%pkg-c") in pkg_cls.dependencies
+    # Nested ^foo followed by ^foo %gcc
+    assert spack.spec.Spec("^pkg-c %gcc") in pkg_cls.dependencies
+
+
 class FakePkg:
     def __init__(self, name, directive_dict):
         self.name = name
@@ -572,3 +588,4 @@ class X(Package):
 def test_drop_patch(test_repo):
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert cls.patches == {}
+

@@ -11,10 +11,9 @@ import urllib.parse
 import urllib.request
 from typing import Callable, Optional
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import copy, join_path, mkdirp
-
+import spack.llnl.util.tty as tty
 import spack.util.crypto
+from spack.llnl.util.filesystem import copy, join_path, mkdirp
 from spack.util.path import canonicalize_path
 from spack.util.url import validate_scheme
 
@@ -67,7 +66,7 @@ def local_path(raw_path: str, sha256: str, make_dest: Optional[Callable[[], str]
     Args:
         raw_path: raw path with possible variables needing substitution
         sha256: the expected sha256 for the file
-        make_dest: function to create a stage for remote files, if needed (e.g., `mkdtemp`)
+        make_dest: function to create a stage for remote files, if needed (e.g., ``mkdtemp``)
 
     Returns: resolved, normalized local path
 

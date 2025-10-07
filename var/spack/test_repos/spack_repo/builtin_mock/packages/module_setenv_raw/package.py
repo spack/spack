@@ -8,8 +8,8 @@ from spack.package import *
 
 
 class ModuleSetenvRaw(Package):
-    homepage = "http://www.llnl.gov"
-    url = "http://www.llnl.gov/module-setenv-raw-1.0.tar.gz"
+    homepage = "http://www.spack.llnl.gov"
+    url = "http://www.spack.llnl.gov/module-setenv-raw-1.0.tar.gz"
 
     version("1.0", "0123456789abcdef0123456789abcdef")
 

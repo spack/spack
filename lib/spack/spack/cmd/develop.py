@@ -6,12 +6,11 @@ import os
 import shutil
 from typing import Optional
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.config
 import spack.environment
 import spack.fetch_strategy
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.stage
@@ -43,7 +42,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=True,
         help=(
             "(default) clone the package unless the path already exists, "
-            "use --force to overwrite"
+            "use ``--force`` to overwrite"
         ),
     )
 

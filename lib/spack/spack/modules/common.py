@@ -6,22 +6,19 @@ of the information that module systems need.
 
 This information maps **a single spec** to:
 
-  * a unique module filename
-  * the module file content
+* a unique module filename
+* the module file content
 
 and is divided among four classes:
 
-  * a configuration class that provides a convenient interface to query
-    details about the configuration for the spec under consideration.
-
-  * a layout class that provides the information associated with module
-    file names and directories
-
-  * a context class that provides the dictionary used by the template engine
-    to generate the module file
-
-  * a writer that collects and uses the information above to either write
-    or remove the module file
+* a configuration class that provides a convenient interface to query
+  details about the configuration for the spec under consideration.
+* a layout class that provides the information associated with module
+  file names and directories
+* a context class that provides the dictionary used by the template engine
+  to generate the module file
+* a writer that collects and uses the information above to either write
+  or remove the module file
 
 Each of the four classes needs to be sub-classed when implementing a new
 module type.
@@ -36,15 +33,15 @@ import re
 import string
 from typing import List, Optional
 
-import llnl.util.filesystem
-import llnl.util.tty as tty
-from llnl.util.lang import Singleton, dedupe, memoized
+import spack.vendor.jinja2
 
 import spack.build_environment
 import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
+import spack.llnl.util.filesystem
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.projections as proj
 import spack.schema
@@ -58,6 +55,7 @@ import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.context import Context
+from spack.llnl.util.lang import Singleton, dedupe, memoized
 
 
 #: config section for this file
@@ -135,7 +133,7 @@ def dependencies(spec: spack.spec.Spec, request: str = "all") -> List[spack.spec
 
     Args:
         spec: spec to be analyzed
-        request: one of "none", "run", "direct", "all"
+        request: one of ``"none"``, ``"run"``, ``"direct"``, ``"all"``
 
     Returns:
         list of requested dependencies
@@ -205,7 +203,7 @@ def root_path(name, module_set_name):
     """Returns the root folder for module file installation.
 
     Args:
-        name: name of the module system to be used (e.g. 'tcl')
+        name: name of the module system to be used (``"tcl"`` or ``"lmod"``)
         module_set_name: name of the set of module configs to use
 
     Returns:
@@ -235,7 +233,7 @@ def generate_module_index(root, modules, overwrite=False):
         entry = {"path": m.layout.filename, "use_name": m.layout.use_name}
         entries[m.spec.dag_hash()] = entry
     index = {"module_index": entries}
-    llnl.util.filesystem.mkdirp(root)
+    spack.llnl.util.filesystem.mkdirp(root)
     with open(index_path, "w", encoding="utf-8") as index_file:
         syaml.dump(index, default_flow_style=False, stream=index_file)
 
@@ -344,7 +342,7 @@ class BaseConfiguration:
     @property
     def projections(self):
         """Projection from specs to module names"""
-        # backwards compatiblity for naming_scheme key
+        # backwards compatibility for naming_scheme key
         conf = self.module.configuration(self.name)
         if "naming_scheme" in conf:
             default = {"all": conf["naming_scheme"]}
@@ -868,16 +866,15 @@ class BaseModuleFileWriter:
         # create it
         module_dir = os.path.dirname(self.layout.filename)
         if not os.path.exists(module_dir):
-            llnl.util.filesystem.mkdirp(module_dir)
+            spack.llnl.util.filesystem.mkdirp(module_dir)
 
         # Get the template for the module
         template_name = self._get_template()
-        import _vendoring.jinja2
 
         try:
             env = tengine.make_environment()
             template = env.get_template(template_name)
-        except _vendoring.jinja2.TemplateNotFound:
+        except spack.vendor.jinja2.TemplateNotFound:
             # If the template was not found raise an exception with a little
             # more information
             msg = "template '{0}' was not found for '{1}'"
@@ -1028,19 +1025,19 @@ class ModuleNotFoundError(ModulesError):
 
 
 class DefaultTemplateNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute 'default_template' has not been specified
+    """Raised if the attribute ``default_template`` has not been specified
     in the derived classes.
     """
 
 
 class HideCmdFormatNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute 'hide_cmd_format' has not been specified
+    """Raised if the attribute ``hide_cmd_format`` has not been specified
     in the derived classes.
     """
 
 
 class ModulercHeaderNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute 'modulerc_header' has not been specified
+    """Raised if the attribute ``modulerc_header`` has not been specified
     in the derived classes.
     """
 

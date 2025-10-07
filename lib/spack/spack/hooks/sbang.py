@@ -10,10 +10,9 @@ import stat
 import sys
 import tempfile
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.package_prefs
 import spack.paths
 import spack.spec
@@ -40,7 +39,7 @@ interpreter_regex = re.compile(b"#![ \t]*?([^ \t\0\n]+)")
 
 
 def sbang_install_path():
-    """Location sbang should be installed within Spack's ``install_tree``."""
+    """Location sbang is installed within the install tree."""
     sbang_root = str(spack.store.STORE.unpadded_root)
     install_path = os.path.join(sbang_root, "bin", "sbang")
     path_length = len(install_path)

@@ -5,11 +5,10 @@
 import argparse
 import os
 
-import llnl.util.tty as tty
-
 import spack.builder
 import spack.cmd
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.stage

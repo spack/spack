@@ -9,7 +9,7 @@ import shlex
 from collections import namedtuple
 from typing import Optional
 
-import _vendoring.jsonschema
+import spack.vendor.jsonschema
 
 import spack.environment as ev
 import spack.error
@@ -196,12 +196,12 @@ class PathContext(tengine.Context):
 
         # Ensure that a few paths are where they need to be
         manifest.setdefault("config", syaml.syaml_dict())
-        manifest["config"]["install_tree"] = self.paths.store
+        manifest["config"]["install_tree"] = {"root": self.paths.store}
         manifest["view"] = self.paths.view
         manifest = {"spack": manifest}
 
         # Validate the manifest file
-        _vendoring.jsonschema.validate(manifest, schema=spack.schema.env.schema)
+        spack.vendor.jsonschema.validate(manifest, schema=spack.schema.env.schema)
 
         return syaml.dump(manifest, default_flow_style=False).strip()
 
@@ -243,7 +243,7 @@ class PathContext(tengine.Context):
 
         Returns:
             Enough information to know how to update the cache, install
-            a list opf packages, and clean in the end.
+            a list of packages, and clean in the end.
         """
         if not package_list:
             return package_list

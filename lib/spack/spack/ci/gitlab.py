@@ -6,16 +6,16 @@ import os
 import shutil
 from typing import List, Optional
 
-import _vendoring.ruamel.yaml
-
-import llnl.util.tty as tty
+import spack.vendor.ruamel.yaml
 
 import spack
-import spack.binary_distribution as bindist
-import spack.config as cfg
+import spack.binary_distribution
+import spack.config
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
+import spack.util.path as path_util
 import spack.util.spack_yaml as syaml
 
 from .common import (
@@ -27,7 +27,6 @@ from .common import (
     SpackCIError,
     ensure_expected_target_path,
     unpack_script,
-    update_env_scopes,
     write_pipeline_manifest,
 )
 from .generator_registry import generator
@@ -130,29 +129,45 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     # concrete environment directory, along with the spack.lock file.
     if not os.path.exists(concrete_env_dir):
         os.makedirs(concrete_env_dir)
-    shutil.copyfile(options.env.manifest_path, os.path.join(concrete_env_dir, "spack.yaml"))
-    shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
-    update_env_scopes(
-        options.env,
-        [
-            os.path.relpath(s.path, concrete_env_dir)
-            for s in cfg.scopes().values()
-            if not s.writable
-            and isinstance(s, (cfg.DirectoryConfigScope))
-            and os.path.exists(s.path)
-        ],
-        os.path.join(concrete_env_dir, "spack.yaml"),
-        # Here transforming windows paths is only required in the special case
-        # of copy_only_pipelines, a unique scenario where the generate job and
-        # child pipelines are run on different platforms. To make this compatible
-        # w/ Windows, we cannot write Windows style path separators that will be
-        # consumed on by the Posix copy job runner.
-        #
-        # TODO (johnwparent): Refactor config + cli read/write to deal only in
-        # posix style paths
-        transform_windows_paths=(options.pipeline_type == PipelineType.COPY_ONLY),
-    )
+    # Copy the manifest and handle relative included paths
+    with open(options.env.manifest_path, "r", encoding="utf-8") as fin, open(
+        os.path.join(concrete_env_dir, "spack.yaml"), "w", encoding="utf-8"
+    ) as fout:
+        data = syaml.load(fin)
+        if "spack" not in data:
+            raise spack.config.ConfigSectionError(
+                'Missing top level "spack" section in environment'
+            )
+
+        def _rewrite_include(path, orig_root, new_root):
+            expanded_path = path_util.substitute_path_variables(path)
+            if os.path.isabs(expanded_path):
+                return path
+            abs_path = path_util.canonicalize_path(path, orig_root)
+            return os.path.relpath(abs_path, start=new_root)
+
+        # If there are no includes, just copy
+        if "include" in data["spack"]:
+            includes = data["spack"]["include"]
+            # If there are includes in the config, then we need to fix the relative paths
+            # to be relative from the concrete env dir used by downstream pipelines
+            env_root_path = os.path.dirname(os.path.abspath(options.env.manifest_path))
+            fixed_includes = []
+            for inc in includes:
+                if isinstance(inc, dict):
+                    inc["path"] = _rewrite_include(inc["path"], env_root_path, concrete_env_dir)
+                else:
+                    inc = _rewrite_include(inc, env_root_path, concrete_env_dir)
+
+                fixed_includes.append(inc)
+
+            data["spack"]["include"] = fixed_includes
+
+            os.makedirs(concrete_env_dir, exist_ok=True)
+        syaml.dump(data, fout)
+
+    shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
 
     job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
     job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
@@ -239,7 +254,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
             # Let downstream jobs know whether the spec needed rebuilding, regardless
             # whether DAG pruning was enabled or not.
-            already_built = bindist.get_mirrors_for_spec(spec=release_spec, index_only=True)
+            already_built = spack.binary_distribution.get_mirrors_for_spec(
+                spec=release_spec, index_only=True
+            )
             job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
 
             if options.cdash_handler:
@@ -262,7 +279,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             )
 
             job_object["stage"] = stage_name
-            job_object["retry"] = {"max": 2, "when": JOB_RETRY_CONDITIONS}
+            job_object["retry"] = spack.schema.merge_yaml(
+                {"max": 2, "when": JOB_RETRY_CONDITIONS}, job_object.get("retry", {})
+            )
             job_object["interruptible"] = True
 
             length_needs = len(job_object["needs"])
@@ -292,8 +311,8 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     )
     maybe_generate_manifest(pipeline, options, manifest_path)
 
-    relative_specs_url = bindist.buildcache_relative_specs_url()
-    relative_keys_url = bindist.buildcache_relative_keys_url()
+    relative_specs_url = spack.binary_distribution.buildcache_relative_specs_url()
+    relative_keys_url = spack.binary_distribution.buildcache_relative_keys_url()
 
     if options.pipeline_type == PipelineType.COPY_ONLY:
         stage_names.append("copy")
@@ -393,6 +412,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
             "SPACK_REQUIRE_SIGNING": str(options.require_signing),
         }
+        output_object["variables"].update(
+            dict([(v, os.environ[v]) for v in options.forward_variables if v in os.environ])
+        )
 
         if options.stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = options.stack_name
@@ -422,4 +444,4 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     syaml.anchorify(sorted_output)
 
     with open(output_file, "w", encoding="utf-8") as f:
-        _vendoring.ruamel.yaml.YAML().dump(sorted_output, f)
+        spack.vendor.ruamel.yaml.YAML().dump(sorted_output, f)

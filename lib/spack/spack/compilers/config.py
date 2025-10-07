@@ -10,16 +10,15 @@ import sys
 import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
-import _vendoring.archspec.cpu
-
-import llnl.util.filesystem as fs
-import llnl.util.lang
-import llnl.util.tty as tty
+import spack.vendor.archspec.cpu
 
 import spack.config
 import spack.detection
 import spack.detection.path
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -199,7 +198,7 @@ class CompilerRemover:
                     s = CompilerFactory.from_external_yaml(external_yaml)
                     return not s.satisfies(match)
 
-                to_keep, to_remove = llnl.util.lang.stable_partition(
+                to_keep, to_remove = spack.llnl.util.lang.stable_partition(
                     externals_config, _partition_match
                 )
                 if not to_remove:
@@ -316,7 +315,7 @@ class CompilerFactory:
     @staticmethod
     def _finalize_external_concretization(abstract_spec):
         if CompilerFactory._GENERIC_TARGET is None:
-            CompilerFactory._GENERIC_TARGET = _vendoring.archspec.cpu.host().family
+            CompilerFactory._GENERIC_TARGET = spack.vendor.archspec.cpu.host().family
 
         if abstract_spec.architecture:
             abstract_spec.architecture.complete_with_defaults()

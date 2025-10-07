@@ -1,10 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import llnl.util.lang
+import spack.llnl.util.lang
 
 
-@llnl.util.lang.lazy_lexicographic_ordering
+@spack.llnl.util.lang.lazy_lexicographic_ordering
 class OperatingSystem:
     """Base class for all the Operating Systems.
 
@@ -16,8 +16,8 @@ class OperatingSystem:
 
     There are two different types of compiler detection:
 
-        1. Through the $PATH env variable (front-end detection)
-        2. Through the module system. (back-end detection)
+    1. Through the $PATH env variable (front-end detection)
+    2. Through the module system. (back-end detection)
 
     Depending on which operating system is specified, the compiler will be detected
     using one of those methods.

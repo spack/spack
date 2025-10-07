@@ -27,7 +27,7 @@ def validate_scheme(scheme):
 def local_file_path(url):
     """Get a local file path from a url.
 
-    If url is a file:// URL, return the absolute path to the local
+    If url is a ``file://`` URL, return the absolute path to the local
     file or directory referenced by it.  Otherwise, return None.
     """
     if isinstance(url, str):
@@ -68,30 +68,32 @@ def format(parsed_url):
 
 
 def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> str:
-    """Convenience wrapper around ``urllib.parse.urljoin``, with a few differences:
-    1. By default resolve_href=False, which makes the function like os.path.join: for example
-    https://example.com/a/b + c/d = https://example.com/a/b/c/d. If resolve_href=True, the
-    behavior is how a browser would resolve the URL: https://example.com/a/c/d.
-    2. s3://, gs://, oci:// URLs are joined like http:// URLs.
-    3. It accepts multiple components for convenience. Note that components[1:] are treated as
-    literal path components and appended to components[0] separated by slashes."""
+    """Convenience wrapper around :func:`urllib.parse.urljoin`, with a few differences:
+
+    1. By default ``resolve_href=False``, which makes the function like :func:`os.path.join`.
+       For example ``https://example.com/a/b + c/d = https://example.com/a/b/c/d``. If
+       ``resolve_href=True``, the behavior is how a browser would resolve the URL:
+       ``https://example.com/a/c/d``.
+    2. ``s3://``, ``gs://``, ``oci://`` URLs are joined like ``http://`` URLs.
+    3. It accepts multiple components for convenience. Note that ``components[1:]`` are treated as
+       literal path components and appended to ``components[0]`` separated by slashes."""
     # Ensure a trailing slash in the path component of the base URL to get os.path.join-like
     # behavior instead of web browser behavior.
     if not resolve_href:
         parsed = urllib.parse.urlparse(base)
         if not parsed.path.endswith("/"):
             base = parsed._replace(path=f"{parsed.path}/").geturl()
-    uses_netloc = urllib.parse.uses_netloc
-    uses_relative = urllib.parse.uses_relative
+    old_netloc = urllib.parse.uses_netloc
+    old_relative = urllib.parse.uses_relative
     try:
         # NOTE: we temporarily modify urllib internals so s3 and gs schemes are treated like http.
         # This is non-portable, and may be forward incompatible with future cpython versions.
-        urllib.parse.uses_netloc = [*uses_netloc, "s3", "gs", "oci"]
-        urllib.parse.uses_relative = [*uses_relative, "s3", "gs", "oci"]
+        urllib.parse.uses_netloc = [*old_netloc, "s3", "gs", "oci", "oci+http"]  # type: ignore
+        urllib.parse.uses_relative = [*old_relative, "s3", "gs", "oci", "oci+http"]  # type: ignore
         return urllib.parse.urljoin(base, "/".join(components), **kwargs)
     finally:
-        urllib.parse.uses_netloc = uses_netloc
-        urllib.parse.uses_relative = uses_relative
+        urllib.parse.uses_netloc = old_netloc  # type: ignore
+        urllib.parse.uses_relative = old_relative  # type: ignore
 
 
 def default_download_filename(url: str) -> str:

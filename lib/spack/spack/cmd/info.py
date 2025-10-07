@@ -3,22 +3,21 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import shutil
 import sys
 import textwrap
 from itertools import zip_longest
-
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.tty.colify import colify
 
 import spack.builder
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
+import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.spec
 import spack.variant
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify
 from spack.package_base import preferred_version
 
 description = "get detailed information on a particular package"
@@ -87,7 +86,7 @@ class VariantFormatter:
         self.headers = ("Name [Default]", "When", "Allowed values", "Description")
 
         # Don't let name or possible values be less than max widths
-        _, cols = tty.terminal_size()
+        cols = shutil.get_terminal_size().columns
         max_name = min(self.column_widths[0], 30)
         max_when = min(self.column_widths[1], 30)
         max_vals = min(self.column_widths[2], 20)
@@ -293,7 +292,7 @@ def _fmt_variant_description(variant, width, indent):
 def _fmt_variant(variant, max_name_default_len, indent, when=None, out=None):
     out = out or sys.stdout
 
-    _, cols = tty.terminal_size()
+    cols = shutil.get_terminal_size().columns
 
     name_and_default = _fmt_name_and_default(variant)
     name_default_len = color.clen(name_and_default)

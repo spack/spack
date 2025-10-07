@@ -1,12 +1,14 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pathlib
 import pickle
 import sys
 
 import pytest
 
 import spack.error
+from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
 
 build_env = SpackCommand("build-env")
@@ -36,8 +38,8 @@ _out_file = "env.out"
 
 @pytest.mark.parametrize("shell", ["pwsh", "bat"] if sys.platform == "win32" else ["sh"])
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
-def test_dump(shell_as, shell, tmpdir):
-    with tmpdir.as_cwd():
+def test_dump(shell_as, shell, tmp_path: pathlib.Path):
+    with working_dir(str(tmp_path)):
         build_env("--dump", _out_file, "pkg-c")
         with open(_out_file, encoding="utf-8") as f:
             if shell == "pwsh":
@@ -49,8 +51,8 @@ def test_dump(shell_as, shell, tmpdir):
 
 
 @pytest.mark.usefixtures("config", "mock_packages", "working_env")
-def test_pickle(tmpdir):
-    with tmpdir.as_cwd():
+def test_pickle(tmp_path: pathlib.Path):
+    with working_dir(str(tmp_path)):
         build_env("--pickle", _out_file, "pkg-c")
         environment = pickle.load(open(_out_file, "rb"))
         assert isinstance(environment, dict)

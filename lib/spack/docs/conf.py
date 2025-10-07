@@ -20,10 +20,15 @@ import os
 import subprocess
 import sys
 from glob import glob
+from typing import List
 
 from docutils.statemachine import StringList
+from pygments.formatters.html import HtmlFormatter
+from pygments.lexer import RegexLexer, default
+from pygments.token import *
 from sphinx.domains.python import PythonDomain
 from sphinx.ext.apidoc import main as sphinx_apidoc
+from sphinx.highlighting import PygmentsBridge
 from sphinx.parsers import RSTParser
 
 # -- Spack customizations -----------------------------------------------------
@@ -45,14 +50,21 @@ os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
 
 sys.path[0:0] = [
-    os.path.abspath("_spack_root/lib/spack/external"),
     os.path.abspath("_spack_root/lib/spack/"),
     os.path.abspath(".spack/spack-packages/repos"),
 ]
 
-subprocess.call(["spack", "list"])
+# Init the package repo with all git history, so "Last updated on" is accurate.
+subprocess.call(["spack", "repo", "update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+if os.path.exists(".spack/spack-packages/.git/shallow"):
+    subprocess.call(
+        ["git", "fetch", "--unshallow"],
+        cwd=".spack/spack-packages",
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
-# Generate a command index if an update is needed -- this also clones the package repository.
+# Generate a command index if an update is needed
 subprocess.call(
     [
         "spack",
@@ -81,12 +93,11 @@ sphinx_apidoc(
     apidoc_args
     + [
         "_spack_root/lib/spack/spack",
-        "_spack_root/lib/spack/spack/package.py",  # sphinx struggles with os.chdir re-export.
-        "_spack_root/lib/spack/spack/test/*.py",
-        "_spack_root/lib/spack/spack/test/cmd/*.py",
+        "_spack_root/lib/spack/spack/vendor",
+        "_spack_root/lib/spack/spack/test",
+        "_spack_root/lib/spack/spack/package.py",
     ]
 )
-sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
 sphinx_apidoc(
     apidoc_args
     + [
@@ -96,6 +107,101 @@ sphinx_apidoc(
     ]
 )
 
+
+class NoWhitespaceHtmlFormatter(HtmlFormatter):
+    """HTML formatter that suppresses redundant span elements for Text.Whitespace tokens."""
+
+    def _get_css_classes(self, ttype):
+        # For Text.Whitespace return an empty string, which avoids <span class="w"> </span>
+        # elements from being generated.
+        return "" if ttype is Text.Whitespace else super()._get_css_classes(ttype)
+
+
+class CustomPygmentsBridge(PygmentsBridge):
+    def get_formatter(self, **options):
+        return NoWhitespaceHtmlFormatter(**options)
+
+
+# Use custom HTML formatter to avoid redundant <span class="w"> </span> elements.
+# See https://github.com/pygments/pygments/issues/1905#issuecomment-3170486995.
+PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
+
+
+from spack.llnl.util.lang import classproperty
+from spack.spec_parser import SpecTokens
+
+# replace classproperty.__get__ to return `self` so Sphinx can document it correctly. Otherwise
+# it evaluates the callback, and it documents the result, which is not what we want.
+classproperty.__get__ = lambda self, instance, owner: self
+
+
+class SpecLexer(RegexLexer):
+    """A custom lexer for Spack spec strings and spack commands."""
+
+    name = "Spack spec"
+    aliases = ["spec"]
+    filenames = []
+    tokens = {
+        "root": [
+            # Looks for `$ command`, which may need spec highlighting.
+            (r"^\$\s+", Generic.Prompt, "command"),
+            (r"#.*?\n", Comment.Single),
+            # Alternatively, we just get a literal spec string, so we move to spec mode. We just
+            # look ahead here, without consuming the spec string.
+            (r"(?=\S+)", Generic.Prompt, "spec"),
+        ],
+        "command": [
+            # A spack install command is followed by a spec string, which we highlight.
+            (
+                r"spack(?:\s+(?:-[eC]\s+\S+|--?\S+))*\s+(?:install|uninstall|spec|load|unload|find|info|list|versions|providers|mark|diff|add)(?: +(?:--?\S+)?)*",
+                Text,
+                "spec",
+            ),
+            # Comment
+            (r"\s+#.*?\n", Comment.Single, "command_output"),
+            # Escaped newline should leave us in this mode
+            (r".*?\\\n", Text),
+            # Otherwise, it's the end of the command
+            (r".*?\n", Text, "command_output"),
+        ],
+        "command_output": [
+            (r"^\$\s+", Generic.Prompt, "#pop"),  # new command
+            (r"#.*?\n", Comment.Single),  # comments
+            (r".*?\n", Generic.Output),  # command output
+        ],
+        "spec": [
+            # New line terminates the spec string
+            (r"\s*?$", Text, "#pop"),
+            # Dependency, with optional virtual assignment specifier
+            (SpecTokens.START_EDGE_PROPERTIES.regex, Name.Variable, "edge_properties"),
+            (SpecTokens.DEPENDENCY.regex, Name.Variable),
+            # versions
+            (SpecTokens.VERSION_HASH_PAIR.regex, Keyword.Pseudo),
+            (SpecTokens.GIT_VERSION.regex, Keyword.Pseudo),
+            (SpecTokens.VERSION.regex, Keyword.Pseudo),
+            # variants
+            (SpecTokens.PROPAGATED_BOOL_VARIANT.regex, Name.Function),
+            (SpecTokens.BOOL_VARIANT.regex, Name.Function),
+            (SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex, Name.Function),
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
+            # filename
+            (SpecTokens.FILENAME.regex, Text),
+            # Package name
+            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex, Name.Class),
+            (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, Name.Class),
+            # DAG hash
+            (SpecTokens.DAG_HASH.regex, Text),
+            (SpecTokens.WS.regex, Text),
+            # Also stop at unrecognized tokens (without consuming them)
+            default("#pop"),
+        ],
+        "edge_properties": [
+            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
+            (SpecTokens.END_EDGE_PROPERTIES.regex, Name.Variable, "#pop"),
+        ],
+    }
+
+
 # Enable todo items
 todo_include_todos = True
 
@@ -104,10 +210,10 @@ todo_include_todos = True
 # Disable duplicate cross-reference warnings.
 #
 class PatchedPythonDomain(PythonDomain):
-    def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
+    def resolve_xref(self, env, fromdocname, builder, type, target, node, contnode):
         if "refspecific" in node:
             del node["refspecific"]
-        return super().resolve_xref(env, fromdocname, builder, typ, target, node, contnode)
+        return super().resolve_xref(env, fromdocname, builder, type, target, node, contnode)
 
 
 #
@@ -122,9 +228,32 @@ class NoTabExpansionRSTParser(RSTParser):
         super().parse(inputstring, document)
 
 
+def add_package_api_version_line(app, what, name: str, obj, options, lines: List[str]):
+    """Add versionadded directive to package API docstrings"""
+    # We're adding versionadded directive here instead of in spack/package.py because most symbols
+    # are re-exported, and we don't want to modify __doc__ of symbols we don't own.
+    if name.startswith("spack.package."):
+        symbol = name[len("spack.package.") :]
+        for version, symbols in spack.package.api.items():
+            if symbol in symbols:
+                lines.extend(["", f".. versionadded:: {version}"])
+                break
+
+
+def skip_member(app, what, name, obj, skip, options):
+    # Do not skip (Make)Executable.__call__
+    if name == "__call__" and "Executable" in obj.__qualname__:
+        return False
+    return skip
+
+
 def setup(sphinx):
+    # autodoc-process-docstring
+    sphinx.connect("autodoc-process-docstring", add_package_api_version_line)
+    sphinx.connect("autodoc-skip-member", skip_member)
     sphinx.add_domain(PatchedPythonDomain, override=True)
     sphinx.add_source_parser(NoTabExpansionRSTParser, override=True)
+    sphinx.add_lexer("spec", SpecLexer)
 
 
 # -- General configuration -----------------------------------------------------
@@ -142,7 +271,9 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
-    "sphinx_design",
+    "sphinx_last_updated_by_git",
+    "sphinx_sitemap",
+    "sphinxcontrib.inkscapeconverter",
     "sphinxcontrib.programoutput",
 ]
 
@@ -174,7 +305,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Spack"
-copyright = "2013-2023, Lawrence Livermore National Laboratory."
+copyright = "Spack Project Developers"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -182,6 +313,7 @@ copyright = "2013-2023, Lawrence Livermore National Laboratory."
 #
 # The short X.Y version.
 import spack
+import spack.package
 
 version = ".".join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
@@ -206,7 +338,10 @@ gettext_uuid = False
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build", "_spack_root", ".spack-env"]
+exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack", ".venv"]
+
+autodoc_mock_imports = ["llnl"]
+autodoc_default_options = {"no-value": True}
 
 nitpicky = True
 nitpick_ignore = [
@@ -234,23 +369,22 @@ nitpick_ignore = [
     ("py:class", "spack.spec.ArchSpec"),
     ("py:class", "spack.spec.InstallStatus"),
     ("py:class", "spack.spec.SpecfileReaderBase"),
-    ("py:class", "spack.install_test.Pb"),
     ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
     ("py:class", "spack.traverse.EdgeAndDepth"),
-    ("py:class", "_vendoring.archspec.cpu.microarchitecture.Microarchitecture"),
+    ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.compiler.CompilerCache"),
     # TypeVar that is not handled correctly
-    ("py:class", "llnl.util.lang.T"),
-    ("py:class", "llnl.util.lang.KT"),
-    ("py:class", "llnl.util.lang.VT"),
-    ("py:class", "llnl.util.lang.K"),
-    ("py:class", "llnl.util.lang.V"),
-    ("py:class", "llnl.util.lang.ClassPropertyType"),
-    ("py:obj", "llnl.util.lang.KT"),
-    ("py:obj", "llnl.util.lang.VT"),
-    ("py:obj", "llnl.util.lang.ClassPropertyType"),
-    ("py:obj", "llnl.util.lang.K"),
-    ("py:obj", "llnl.util.lang.V"),
+    ("py:class", "spack.llnl.util.lang.T"),
+    ("py:class", "spack.llnl.util.lang.KT"),
+    ("py:class", "spack.llnl.util.lang.VT"),
+    ("py:class", "spack.llnl.util.lang.K"),
+    ("py:class", "spack.llnl.util.lang.V"),
+    ("py:class", "spack.llnl.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.llnl.util.lang.KT"),
+    ("py:obj", "spack.llnl.util.lang.VT"),
+    ("py:obj", "spack.llnl.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.llnl.util.lang.K"),
+    ("py:obj", "spack.llnl.util.lang.V"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
@@ -266,8 +400,6 @@ nitpick_ignore = [
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
 # show_authors = False
-sys.path.append("./_pygments")
-pygments_style = "style.SpackStyle"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -277,15 +409,13 @@ pygments_style = "style.SpackStyle"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "sphinx_rtd_theme"
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {"logo_only": True}
+html_theme = "furo"
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = ["_themes"]
+
+# Google Search Console verification file
+html_extra_path = ["google5fda5f94b4ffb8de.html"]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -296,7 +426,11 @@ html_theme_options = {"logo_only": True}
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_spack_root/share/spack/logo/spack-logo-white-text.svg"
+html_theme_options = {
+    "sidebar_hide_name": True,
+    "light_logo": "spack-logo-text.svg",
+    "dark_logo": "spack-logo-white-text.svg",
+}
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -311,6 +445,8 @@ html_static_path = ["_static"]
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 html_last_updated_fmt = "%b %d, %Y"
+pygments_style = "default"
+pygments_dark_style = "monokai"
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -336,7 +472,7 @@ html_last_updated_fmt = "%b %d, %Y"
 # html_show_sourcelink = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
-# html_show_sphinx = False
+html_show_sphinx = False
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
 # html_show_copyright = True
@@ -349,10 +485,20 @@ html_last_updated_fmt = "%b %d, %Y"
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
 
+# Base URL for the documentation, used to generate <link rel="canonical"/> for better indexing
+html_baseurl = "https://spack.readthedocs.io/en/latest/"
+
 # Output file base name for HTML help builder.
 htmlhelp_basename = "Spackdoc"
 
+# Sitemap settings
+sitemap_show_lastmod = True
+sitemap_url_scheme = "{link}"
+sitemap_excludes = ["search.html", "_modules/*"]
+
 # -- Options for LaTeX output --------------------------------------------------
+
+latex_engine = "lualatex"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
@@ -365,7 +511,7 @@ latex_elements = {
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual")]
+latex_documents = [("index", "Spack.tex", "Spack Documentation", "", "manual")]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -429,3 +575,16 @@ texinfo_documents = [
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+
+rst_epilog = f"""
+.. |package_api_version| replace:: v{spack.package_api_version[0]}.{spack.package_api_version[1]}
+.. |min_package_api_version| replace:: v{spack.min_package_api_version[0]}.{spack.min_package_api_version[1]}
+.. |spack_version| replace:: {spack.spack_version}
+"""
+
+html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]
+html_context = {}
+
+if os.environ.get("READTHEDOCS", "") == "True":
+    html_context["READTHEDOCS"] = True

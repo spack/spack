@@ -174,6 +174,9 @@ class ManyDocstrings:
     def method2():
         """ELEVEN"""
         return "TWELVE"
+
+def empty_func():
+    """THIRTEEN"""
 '''
 
 many_strings_no_docstrings = """\
@@ -189,6 +192,9 @@ class ManyDocstrings:
 
     def method2():
         return 'TWELVE'
+
+def empty_func():
+    pass
 """
 
 
@@ -339,7 +345,7 @@ def test_remove_complex_package_logic_filtered():
         # has @when("@4.1.0") and raw unicode literals
         ("mfem", "slf5qyyyhuj66mo5lpuhkrs35akh2zck"),
         ("mfem@4.0.0", "slf5qyyyhuj66mo5lpuhkrs35akh2zck"),
-        ("mfem@4.1.0", "yo3ymaulytctas67zjn663ixw5cfyh5u"),
+        ("mfem@4.1.0", "6tjbezoh2aquz6gmvoz7jf6j6lib65m2"),
         # has @when("@1.5.0:")
         ("py-torch", "m3ucsddqr7hjevtgx4cad34nrtqgyjfg"),
         ("py-torch@1.0", "m3ucsddqr7hjevtgx4cad34nrtqgyjfg"),

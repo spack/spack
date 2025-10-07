@@ -8,16 +8,15 @@ import traceback
 import warnings
 from typing import Any, Dict, Iterable, List, Optional
 
-from _vendoring import jsonschema
-from _vendoring.jsonschema import exceptions
-
-import llnl.util.tty as tty
+from spack.vendor import jsonschema
+from spack.vendor.jsonschema import exceptions
 
 import spack.cmd
 import spack.compilers.config
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as hash_types
+import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -35,7 +34,7 @@ COMPILER_NAME_TRANSLATION = {"nvidia": "nvhpc", "rocm": "llvm-amdgpu", "clang": 
 def translated_compiler_name(manifest_compiler_name):
     """
     When creating a Compiler object, Spack expects a name matching
-    one of the classes in `spack.compilers.config`. Names in the Cray manifest
+    one of the classes in :mod:`spack.compilers.config`. Names in the Cray manifest
     may differ; for cases where we know the name refers to a compiler in
     Spack, this function translates it automatically.
 

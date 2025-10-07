@@ -12,17 +12,16 @@ import sys
 import tempfile
 from typing import Dict, List, Optional, Set, Tuple
 
-import llnl.path
-import llnl.util.lang
-from llnl.util import tty
-from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
-
 import spack.caches
+import spack.llnl.path
+import spack.llnl.util.lang
 import spack.schema.environment
 import spack.spec
 import spack.util.executable
 import spack.util.libc
 import spack.util.module_cmd
+from spack.llnl.util import tty
+from spack.llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 from spack.util.environment import filter_system_paths
 from spack.util.file_cache import FileCache
 
@@ -39,7 +38,7 @@ _LINK_DIR_ARG = re.compile(r"^-L(.:)?(?P<dir>[/\\].*)")
 _LIBPATH_ARG = re.compile(r"^[-/](LIBPATH|libpath):(?P<dir>.*)")
 
 
-@llnl.path.system_path_filter
+@spack.llnl.path.system_path_filter
 def parse_non_system_link_dirs(compiler_debug_output: str) -> List[str]:
     """Parses link paths out of compiler debug output.
 
@@ -138,6 +137,7 @@ def _parse_link_paths(string):
 
 
 class CompilerPropertyDetector:
+    """Detects compiler properties of a given compiler spec. Useful for compiler wrappers."""
 
     def __init__(self, compiler_spec: spack.spec.Spec):
         assert compiler_spec.concrete, "only concrete compiler specs are allowed"
@@ -220,9 +220,11 @@ class CompilerPropertyDetector:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
     def compiler_verbose_output(self) -> Optional[str]:
+        """Get the compiler verbose output from the cache or by compiling a dummy C source."""
         return self.cache.get(self.spec).c_compiler_output
 
     def default_dynamic_linker(self) -> Optional[str]:
+        """Determine the default dynamic linker path from the compiler verbose output."""
         output = self.compiler_verbose_output()
 
         if not output:
@@ -245,6 +247,8 @@ class CompilerPropertyDetector:
         return spack.util.libc.libc_from_dynamic_linker(dynamic_linker)
 
     def implicit_rpaths(self) -> List[str]:
+        """Obtain the implicit rpaths to be added from the default ``-L`` link directories,
+        excluding system directories."""
         output = self.compiler_verbose_output()
         if output is None:
             return []
@@ -313,10 +317,16 @@ def dynamic_linker_filter_for(node: spack.spec.Spec) -> Optional[DefaultDynamicL
 
 
 def compiler_spec(node: spack.spec.Spec) -> Optional[spack.spec.Spec]:
-    """Returns the compiler spec associated with the node passed as argument.
+    """Returns a compiler :class:`~spack.spec.Spec` associated with the node passed as argument.
 
-    The function looks for a "c", "cxx", and "fortran" compiler in that order,
-    and returns the first found. If none is found, returns None.
+    The function looks for a ``c``, ``cxx``, and ``fortran`` compiler in that order,
+    and returns the first found. If the node does not depend on any of these languages,
+    it returns :obj:`None`.
+
+    Use of this function is *discouraged*, because a single spec can have multiple compilers
+    associated with it, and this function only returns one of them. It can be better to refer to
+    compilers on a per-language basis, through the language virtuals: ``spec["c"]``,
+    ``spec["cxx"]``, and ``spec["fortran"]``.
     """
     for language in ("c", "cxx", "fortran"):
         candidates = node.dependencies(virtuals=[language])
@@ -428,4 +438,6 @@ def _make_compiler_cache():
     return FileCompilerCache(spack.caches.MISC_CACHE)
 
 
-COMPILER_CACHE: CompilerCache = llnl.util.lang.Singleton(_make_compiler_cache)  # type: ignore
+COMPILER_CACHE: CompilerCache = spack.llnl.util.lang.Singleton(  # type: ignore
+    _make_compiler_cache
+)

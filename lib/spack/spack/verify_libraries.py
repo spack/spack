@@ -7,10 +7,9 @@ import os
 import re
 from typing import IO, Dict, List
 
-from llnl.util.filesystem import BaseDirectoryVisitor
-from llnl.util.lang import stable_partition
-
 import spack.util.elf as elf
+from spack.llnl.util.filesystem import BaseDirectoryVisitor
+from spack.llnl.util.lang import stable_partition
 
 #: Patterns for names of libraries that are allowed to be unresolved when *just* looking at RPATHs
 #: added by Spack. These are libraries outside of Spack's control, and assumed to be located in

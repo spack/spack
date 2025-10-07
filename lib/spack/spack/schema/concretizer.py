@@ -15,6 +15,7 @@ properties: Dict[str, Any] = {
         "type": "object",
         "additionalProperties": False,
         "properties": {
+            "force": {"type": "boolean", "default": False},
             "reuse": {
                 "oneOf": [
                     {"type": "boolean"},
@@ -87,7 +88,7 @@ properties: Dict[str, Any] = {
                     "strategy": {"type": "string", "enum": ["none", "minimal", "full"]},
                     "max_dupes": {
                         "type": "object",
-                        "additional_properties": {"type": "integer", "minimum": 1},
+                        "additionalProperties": {"type": "integer", "minimum": 1},
                     },
                 },
             },

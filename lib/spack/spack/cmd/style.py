@@ -10,14 +10,13 @@ import warnings
 from itertools import islice, zip_longest
 from typing import Callable, Dict, List, Optional
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.filesystem import working_dir
-
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.repo
 import spack.util.git
 import spack.util.spack_yaml
+from spack.llnl.util.filesystem import working_dir
 from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
 from spack.tokenize import Token, TokenBase, Tokenizer
 from spack.util.executable import Executable, which
@@ -35,11 +34,11 @@ def grouper(iterable, n, fillvalue=None):
         yield filter(None, group)
 
 
-#: List of directories to exclude from checks -- relative to spack root
-exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.prefix)]
+#: List of paths to exclude from checks -- relative to spack root
+exclude_paths = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
 
 #: Order in which tools should be run. flake8 is last so that it can
-#: double-check the results of other tools (if, e.g., --fix was provided)
+#: double-check the results of other tools (if, e.g., ``--fix`` was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
 tool_names = ["import", "isort", "black", "flake8", "mypy"]
@@ -56,7 +55,7 @@ def is_package(f):
     """Whether flake8 should consider a file as a core file or a package.
 
     We run flake8 with different exceptions for the core and for
-    packages, since we allow `from spack.package import *` and poking globals
+    packages, since we allow ``from spack.package import *`` and poking globals
     into packages.
     """
     return f.startswith("var/spack/") and f.endswith("package.py")
@@ -131,7 +130,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if all_files:
         git_args.append(["ls-files", "--exclude-standard"])
 
-    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_directories]
+    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_paths]
     changed = set()
 
     for arg_list in git_args:
@@ -206,7 +205,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--spec-strings",
         action="store_true",
         help="upgrade spec strings in Python, JSON and YAML files for compatibility with Spack "
-        "v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: must be "
+        "v1.0 and v0.x. Example: spack style ``--spec-strings $(git ls-files)``. Note: must be "
         "used only on specs from spack v0.X.",
     )
 
@@ -400,11 +399,11 @@ def _run_import_check(
         print("import check requires Python 3.9 or later")
         return 0
 
-    is_use = re.compile(r"(?<!from )(?<!import )(?:llnl|spack)\.[a-zA-Z0-9_\.]+")
+    is_use = re.compile(r"(?<!from )(?<!import )spack\.[a-zA-Z0-9_\.]+")
 
     # redundant imports followed by a `# comment` are ignored, cause there can be legimitate reason
     # to import a module: execute module scope init code, or to deal with circular imports.
-    is_abs_import = re.compile(r"^import ((?:llnl|spack)\.[a-zA-Z0-9_\.]+)$", re.MULTILINE)
+    is_abs_import = re.compile(r"^import (spack\.[a-zA-Z0-9_\.]+)$", re.MULTILINE)
 
     exit_code = 0
 
@@ -489,7 +488,7 @@ def run_import_check(import_check_cmd, file_list, args):
 
 
 def validate_toolset(arg_value):
-    """Validate --tool and --skip arguments (sets of optionally comma-separated tools)."""
+    """Validate ``--tool`` and ``--skip`` arguments (sets of optionally comma-separated tools)."""
     tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
     for tool in tools:
         if tool not in tool_names:
@@ -658,11 +657,13 @@ def _spec_str_fix_handler(path: str, line: int, col: int, old: str, new: str):
 
 def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
     """Walk the AST of a Python file and apply handler to formatted spec strings."""
-    has_constant = sys.version_info >= (3, 8)
     for node in ast.walk(tree):
-        if has_constant and isinstance(node, ast.Constant) and isinstance(node.value, str):
-            current_str = node.value
-        elif not has_constant and isinstance(node, ast.Str):
+        if sys.version_info >= (3, 8):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                current_str = node.value
+            else:
+                continue
+        elif isinstance(node, ast.Str):
             current_str = node.s
         else:
             continue

@@ -2,54 +2,38 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""spack.package defines the public API for Spack packages, by re-exporting useful symbols from
-other modules. Packages should import this module, instead of importing from spack.* directly
-to ensure forward compatibility with future versions of Spack."""
-
+import warnings
 from os import chdir, environ, getcwd, makedirs, mkdir, remove, removedirs
 from shutil import move, rmtree
 
 # import most common types used in packages
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
-from llnl.util.filesystem import (
-    FileFilter,
-    FileList,
-    HeaderList,
-    LibraryList,
-    ancestor,
-    can_access,
-    change_sed_delimiter,
-    copy,
-    copy_tree,
-    filter_file,
-    find,
-    find_all_headers,
-    find_first,
-    find_headers,
-    find_libraries,
-    find_system_libraries,
-    force_remove,
-    force_symlink,
-    install,
-    install_tree,
-    is_exe,
-    join_path,
-    keep_modification_time,
-    library_extensions,
-    mkdirp,
-    remove_directory_contents,
-    remove_linked_tree,
-    rename,
-    set_executable,
-    set_install_permissions,
-    touch,
-    working_dir,
+from spack.vendor.macholib.MachO import LC_ID_DYLIB, MachO
+
+import spack.builder
+import spack.llnl.util.tty as _tty
+from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
+from spack.build_environment import (
+    MakeExecutable,
+    ModuleChangePropagator,
+    get_cmake_prefix_path,
+    get_effective_jobs,
+    shared_library_suffix,
+    static_library_suffix,
 )
-from llnl.util.symlink import symlink
-
-from spack.build_environment import MakeExecutable
-from spack.builder import BaseBuilder, Builder, register_builder
+from spack.builder import (
+    BaseBuilder,
+    Builder,
+    BuilderWithDefaults,
+    GenericBuilder,
+    Package,
+    apply_macos_rpath_fixups,
+    execute_install_time_tests,
+    register_builder,
+)
+from spack.compilers.config import find_compilers
+from spack.compilers.libraries import CompilerPropertyDetector, compiler_spec
 from spack.config import determine_number_of_jobs
 from spack.deptypes import ALL_TYPES as all_deptypes
 from spack.directives import (
@@ -78,7 +62,15 @@ from spack.directives import (
     variant,
     version,
 )
-from spack.error import InstallError, NoHeadersError, NoLibrariesError
+from spack.error import (
+    CompilerError,
+    InstallError,
+    NoHeadersError,
+    NoLibrariesError,
+    SpackAPIWarning,
+    SpackError,
+)
+from spack.hooks.sbang import filter_shebang, sbang_install_path, sbang_shebang_line
 from spack.install_test import (
     SkipTest,
     cache_extra_test_sources,
@@ -88,38 +80,134 @@ from spack.install_test import (
     install_test_root,
     test_part,
 )
+from spack.llnl.util.filesystem import (
+    FileFilter,
+    FileList,
+    HeaderList,
+    LibraryList,
+    ancestor,
+    can_access,
+    change_sed_delimiter,
+    copy,
+    copy_tree,
+    filter_file,
+    find,
+    find_all_headers,
+    find_all_libraries,
+    find_first,
+    find_headers,
+    find_libraries,
+    find_system_libraries,
+    force_remove,
+    force_symlink,
+    has_shebang,
+    install,
+    install_tree,
+    is_exe,
+    join_path,
+    keep_modification_time,
+    library_extensions,
+    mkdirp,
+    path_contains_subdirectory,
+    readlink,
+    remove_directory_contents,
+    remove_linked_tree,
+    rename,
+    safe_remove,
+    set_executable,
+    set_install_permissions,
+    symlink,
+    touch,
+    windows_sfn,
+    working_dir,
+)
+from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
+from spack.llnl.util.link_tree import LinkTree
 from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import default_args, when
-from spack.package_base import (
-    PackageBase,
-    build_system_flags,
-    env_flags,
-    inject_flags,
-    on_package_attributes,
-)
+from spack.operating_systems.linux_distro import kernel_version
+from spack.operating_systems.mac_os import macos_version
+from spack.package_base import PackageBase, make_package_test_rpath, on_package_attributes
 from spack.package_completions import (
     bash_completion_path,
     fish_completion_path,
     zsh_completion_path,
 )
+from spack.package_test import compare_output, compare_output_file, compile_c_and_execute
+from spack.paths import spack_script
 from spack.phase_callbacks import run_after, run_before
+from spack.platforms import host as host_platform
 from spack.spec import Spec
+from spack.url import substitute_version as substitute_version_in_url
+from spack.user_environment import environment_modifications_for_specs
+from spack.util.elf import delete_needed_from_elf, delete_rpath, get_elf_compat, parse_elf
 from spack.util.environment import EnvironmentModifications
+from spack.util.environment import filter_system_paths as _filter_system_paths
+from spack.util.environment import is_system_path as _is_system_path
+from spack.util.environment import set_env
 from spack.util.executable import Executable, ProcessError, which, which_string
 from spack.util.filesystem import fix_darwin_install_name
+from spack.util.libc import libc_from_dynamic_linker, parse_dynamic_linker
+from spack.util.module_cmd import get_path_args_from_module_line
+from spack.util.module_cmd import module as module_command
+from spack.util.path import get_user
 from spack.util.prefix import Prefix
+from spack.util.url import join as join_url
+from spack.util.windows_registry import HKEY, WindowsRegistryView
 from spack.variant import any_combination_of, auto_or_any_combination_of, disjoint_sets
 from spack.version import Version, ver
 
-# Emulate some shell commands for convenience
+#: Alias for :data:`os.environ`
 env = environ
+
+#: Alias for :func:`os.chdir`
 cd = chdir
+
+#: Alias for :func:`os.getcwd`
 pwd = getcwd
+
+#: Alias for :func:`os.rename`
+rename = rename
+
+#: Alias for :func:`os.makedirs`
+makedirs = makedirs
+
+#: Alias for :func:`os.mkdir`
+mkdir = mkdir
+
+#: Alias for :func:`os.remove`
+remove = remove
+
+#: Alias for :func:`os.removedirs`
+removedirs = removedirs
+
+#: Alias for :func:`shutil.move`
+move = move
+
+#: Alias for :func:`shutil.rmtree`
+rmtree = rmtree
+
+#: Alias for :func:`os.readlink` (with certain Windows-specific changes)
+readlink = readlink
+
+#: Alias for :func:`os.rename` (with certain Windows-specific changes)
+rename = rename
+
+#: Alias for :func:`os.symlink` (with certain Windows-specific changes)
+symlink = symlink
+
+# Not an import alias because black and isort disagree about style
+create_builder = spack.builder.create
+
+#: MachO class from the ``macholib`` package (vendored in Spack).
+MachO = MachO
+
+#: Constant for MachO ``LC_ID_DYLIB`` load command, from the ``macholib`` package (vendored in
+#: Spack).
+LC_ID_DYLIB = LC_ID_DYLIB
 
 
 class tty:
-    import llnl.util.tty as _tty
-
     debug = _tty.debug
     error = _tty.error
     info = _tty.info
@@ -127,122 +215,416 @@ class tty:
     warn = _tty.warn
 
 
+def is_system_path(path: str) -> bool:
+    """Returns :obj:`True` iff the argument is a system path.
+
+    .. deprecated:: v2.0
+    """
+    warnings.warn(
+        "spack.package.is_system_path is deprecated", category=SpackAPIWarning, stacklevel=2
+    )
+    return _is_system_path(path)
+
+
+def filter_system_paths(paths: Iterable[str]) -> List[str]:
+    """Returns a copy of the input where system paths are filtered out.
+
+    .. deprecated:: v2.0
+    """
+    warnings.warn(
+        "spack.package.filter_system_paths is deprecated", category=SpackAPIWarning, stacklevel=2
+    )
+    return _filter_system_paths(paths)
+
+
+#: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags
+#: are passed to the build system. This can be used in any package that derives from a build system
+#: class that implements :meth:`spack.package_base.PackageBase.flags_to_build_system_args`.
+#:
+#: See also :func:`env_flags` and :func:`inject_flags`.
+#:
+#: Example::
+#:
+#:     from spack.package import *
+#:
+#:     class MyPackage(CMakePackage):
+#:         flag_handler = build_system_flags
+build_system_flags = PackageBase.build_system_flags
+
+#: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags
+#: are set as canonical environment variables.
+#:
+#: See also :func:`build_system_flags` and :func:`inject_flags`.
+#:
+#: Example::
+#:
+#:     from spack.package import *
+#:
+#:     class MyPackage(MakefilePackage):
+#:         flag_handler = env_flags
+env_flags = PackageBase.env_flags
+
+
+#: This is the default value of :attr:`spack.package_base.PackageBase.flag_handler`, which tells
+#: Spack to inject compiler flags through the compiler wrappers, which means that the build system
+#: will not see them directly. This is typically a good default, but in rare case you may need to
+#: use :func:`env_flags` or :func:`build_system_flags` instead.
+#:
+#: See also :func:`build_system_flags` and :func:`env_flags`.
+#:
+#: Example::
+#:
+#:     from spack.package import *
+#:
+#:     class MyPackage(MakefilePackage):
+#:         flag_handler = inject_flags
+inject_flags = PackageBase.inject_flags
+
+
+api: Dict[str, Tuple[str, ...]] = {
+    "v2.0": (
+        "BaseBuilder",
+        "Builder",
+        "Dict",
+        "EnvironmentModifications",
+        "Executable",
+        "FileFilter",
+        "FileList",
+        "HeaderList",
+        "InstallError",
+        "LibraryList",
+        "List",
+        "MakeExecutable",
+        "NoHeadersError",
+        "NoLibrariesError",
+        "Optional",
+        "PackageBase",
+        "Prefix",
+        "ProcessError",
+        "SkipTest",
+        "Spec",
+        "Version",
+        "all_deptypes",
+        "ancestor",
+        "any_combination_of",
+        "auto_or_any_combination_of",
+        "bash_completion_path",
+        "build_system_flags",
+        "build_system",
+        "cache_extra_test_sources",
+        "can_access",
+        "can_splice",
+        "cd",
+        "change_sed_delimiter",
+        "check_outputs",
+        "conditional",
+        "conflicts",
+        "copy_tree",
+        "copy",
+        "default_args",
+        "depends_on",
+        "determine_number_of_jobs",
+        "disjoint_sets",
+        "drop_all_conflicts",
+        "drop_all_depends_on",
+        "drop_all_requires",
+        "drop_all_versions",
+        "drop_conflict",
+        "drop_depends_on",
+        "drop_patch",
+        "drop_requires",
+        "drop_version",
+        "env_flags",
+        "env",
+        "extends",
+        "filter_compiler_wrappers",
+        "filter_file",
+        "find_all_headers",
+        "find_first",
+        "find_headers",
+        "find_libraries",
+        "find_required_file",
+        "find_system_libraries",
+        "find",
+        "fish_completion_path",
+        "fix_darwin_install_name",
+        "force_remove",
+        "force_symlink",
+        "get_escaped_text_output",
+        "inject_flags",
+        "install_test_root",
+        "install_tree",
+        "install",
+        "is_exe",
+        "join_path",
+        "keep_modification_time",
+        "library_extensions",
+        "license",
+        "maintainers",
+        "makedirs",
+        "mkdir",
+        "mkdirp",
+        "move",
+        "on_package_attributes",
+        "patch",
+        "provides",
+        "pwd",
+        "redistribute",
+        "register_builder",
+        "remove_directory_contents",
+        "remove_linked_tree",
+        "remove",
+        "removedirs",
+        "rename",
+        "requires",
+        "resource",
+        "rmtree",
+        "run_after",
+        "run_before",
+        "set_executable",
+        "set_install_permissions",
+        "symlink",
+        "test_part",
+        "touch",
+        "tty",
+        "variant",
+        "ver",
+        "version",
+        "when",
+        "which_string",
+        "which",
+        "working_dir",
+        "zsh_completion_path",
+    ),
+    "v2.1": ("CompilerError", "SpackError"),
+    "v2.2": (
+        "BuilderWithDefaults",
+        "ClassProperty",
+        "CompilerPropertyDetector",
+        "GenericBuilder",
+        "HKEY",
+        "LC_ID_DYLIB",
+        "LinkTree",
+        "MachO",
+        "ModuleChangePropagator",
+        "Package",
+        "WindowsRegistryView",
+        "apply_macos_rpath_fixups",
+        "classproperty",
+        "compare_output_file",
+        "compare_output",
+        "compile_c_and_execute",
+        "compiler_spec",
+        "create_builder",
+        "dedupe",
+        "delete_needed_from_elf",
+        "delete_rpath",
+        "environment_modifications_for_specs",
+        "execute_install_time_tests",
+        "filter_shebang",
+        "filter_system_paths",
+        "find_all_libraries",
+        "find_compilers",
+        "get_cmake_prefix_path",
+        "get_effective_jobs",
+        "get_elf_compat",
+        "get_path_args_from_module_line",
+        "get_user",
+        "has_shebang",
+        "host_platform",
+        "is_system_path",
+        "join_url",
+        "kernel_version",
+        "libc_from_dynamic_linker",
+        "macos_version",
+        "make_package_test_rpath",
+        "memoized",
+        "microarchitecture_flags_from_target",
+        "microarchitecture_flags",
+        "module_command",
+        "parse_dynamic_linker",
+        "parse_elf",
+        "path_contains_subdirectory",
+        "readlink",
+        "safe_remove",
+        "sbang_install_path",
+        "sbang_shebang_line",
+        "set_env",
+        "shared_library_suffix",
+        "spack_script",
+        "static_library_suffix",
+        "substitute_version_in_url",
+        "windows_sfn",
+    ),
+}
+
+# Splatting does not work for static analysis tools.
 __all__ = [
-    "chdir",
-    "environ",
-    "getcwd",
-    "makedirs",
-    "mkdir",
-    "remove",
-    "removedirs",
-    "move",
-    "rmtree",
+    # v2.0
+    "BaseBuilder",
+    "Builder",
     "Dict",
-    "List",
-    "Optional",
+    "EnvironmentModifications",
+    "Executable",
     "FileFilter",
     "FileList",
     "HeaderList",
+    "InstallError",
     "LibraryList",
+    "List",
+    "MakeExecutable",
+    "NoHeadersError",
+    "NoLibrariesError",
+    "Optional",
+    "PackageBase",
+    "Prefix",
+    "ProcessError",
+    "SkipTest",
+    "Spec",
+    "Version",
+    "all_deptypes",
     "ancestor",
+    "any_combination_of",
+    "auto_or_any_combination_of",
+    "bash_completion_path",
+    "build_system_flags",
+    "build_system",
+    "cache_extra_test_sources",
     "can_access",
+    "can_splice",
+    "cd",
     "change_sed_delimiter",
-    "copy",
+    "check_outputs",
+    "conditional",
+    "conflicts",
     "copy_tree",
+    "copy",
+    "default_args",
+    "depends_on",
+    "determine_number_of_jobs",
+    "disjoint_sets",
+    "env_flags",
+    "env",
+    "extends",
+    "filter_compiler_wrappers",
     "filter_file",
-    "find",
     "find_all_headers",
     "find_first",
     "find_headers",
     "find_libraries",
+    "find_required_file",
     "find_system_libraries",
+    "find",
+    "fish_completion_path",
+    "fix_darwin_install_name",
     "force_remove",
     "force_symlink",
-    "install",
+    "get_escaped_text_output",
+    "inject_flags",
+    "install_test_root",
     "install_tree",
+    "install",
     "is_exe",
     "join_path",
     "keep_modification_time",
     "library_extensions",
-    "mkdirp",
-    "remove_directory_contents",
-    "remove_linked_tree",
-    "rename",
-    "set_executable",
-    "set_install_permissions",
-    "touch",
-    "working_dir",
-    "symlink",
-    "MakeExecutable",
-    "BaseBuilder",
-    "determine_number_of_jobs",
-    "all_deptypes",
-    "build_system",
-    "can_splice",
-    "conditional",
-    "conflicts",
-    "depends_on",
-    "drop_all_conflicts",
-    "drop_all_depends_on",
-    "drop_all_requires",
-    "drop_all_versions",
-    "drop_conflict",
-    "drop_depends_on",
-    "drop_patch",
-    "drop_requires",
-    "drop_version",
-    "extends",
     "license",
     "maintainers",
+    "makedirs",
+    "mkdir",
+    "mkdirp",
+    "move",
+    "on_package_attributes",
     "patch",
     "provides",
+    "pwd",
     "redistribute",
+    "register_builder",
+    "remove_directory_contents",
+    "remove_linked_tree",
+    "remove",
+    "removedirs",
+    "rename",
     "requires",
     "resource",
-    "variant",
-    "version",
-    "InstallError",
-    "NoHeadersError",
-    "NoLibrariesError",
-    "SkipTest",
-    "cache_extra_test_sources",
-    "check_outputs",
-    "find_required_file",
-    "get_escaped_text_output",
-    "install_test_root",
-    "test_part",
-    "filter_compiler_wrappers",
-    "default_args",
-    "when",
-    "build_system_flags",
-    "env_flags",
-    "inject_flags",
-    "on_package_attributes",
-    "bash_completion_path",
-    "fish_completion_path",
-    "zsh_completion_path",
+    "rmtree",
     "run_after",
     "run_before",
-    "Spec",
-    "EnvironmentModifications",
-    "Executable",
-    "ProcessError",
-    "which",
-    "which_string",
-    "fix_darwin_install_name",
-    "Prefix",
-    "any_combination_of",
-    "auto_or_any_combination_of",
-    "disjoint_sets",
-    "Version",
-    "ver",
-    "env",
-    "cd",
-    "pwd",
+    "set_executable",
+    "set_install_permissions",
+    "symlink",
+    "test_part",
+    "touch",
     "tty",
-    "Builder",
-    "PackageBase",
-    "register_builder",
+    "variant",
+    "ver",
+    "version",
+    "when",
+    "which_string",
+    "which",
+    "working_dir",
+    "zsh_completion_path",
+    # v2.1
+    "CompilerError",
+    "SpackError",
+    # v2.2
+    "BuilderWithDefaults",
+    "ClassProperty",
+    "CompilerPropertyDetector",
+    "GenericBuilder",
+    "HKEY",
+    "LC_ID_DYLIB",
+    "LinkTree",
+    "MachO",
+    "ModuleChangePropagator",
+    "Package",
+    "WindowsRegistryView",
+    "apply_macos_rpath_fixups",
+    "classproperty",
+    "compare_output_file",
+    "compare_output",
+    "compile_c_and_execute",
+    "compiler_spec",
+    "create_builder",
+    "dedupe",
+    "delete_needed_from_elf",
+    "delete_rpath",
+    "environment_modifications_for_specs",
+    "execute_install_time_tests",
+    "filter_shebang",
+    "filter_system_paths",
+    "find_all_libraries",
+    "find_compilers",
+    "get_cmake_prefix_path",
+    "get_effective_jobs",
+    "get_elf_compat",
+    "get_path_args_from_module_line",
+    "get_user",
+    "has_shebang",
+    "host_platform",
+    "is_system_path",
+    "join_url",
+    "kernel_version",
+    "libc_from_dynamic_linker",
+    "macos_version",
+    "make_package_test_rpath",
+    "memoized",
+    "microarchitecture_flags_from_target",
+    "microarchitecture_flags",
+    "module_command",
+    "parse_dynamic_linker",
+    "parse_elf",
+    "path_contains_subdirectory",
+    "readlink",
+    "safe_remove",
+    "sbang_install_path",
+    "sbang_shebang_line",
+    "set_env",
+    "shared_library_suffix",
+    "spack_script",
+    "static_library_suffix",
+    "substitute_version_in_url",
+    "windows_sfn",
 ]
 
 # These are just here for editor support; they may be set when the build env is set up.

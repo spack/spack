@@ -6,18 +6,18 @@ import collections
 import getpass
 import io
 import os
+import pathlib
 import tempfile
 from datetime import date
 
 import pytest
-
-from llnl.util.filesystem import join_path, touch
 
 import spack
 import spack.config
 import spack.directory_layout
 import spack.environment as ev
 import spack.error
+import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -33,6 +33,7 @@ import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 from spack.enums import ConfigScopePriority
+from spack.llnl.util.filesystem import join_path, touch
 
 # sample config data
 config_low = {
@@ -56,9 +57,9 @@ config_override_dict = {"config": {"aliases:": {"be": "build-env", "deps": "depe
 
 
 @pytest.fixture()
-def env_yaml(tmpdir):
+def env_yaml(tmp_path: pathlib.Path):
     """Return a sample env.yaml for test purposes"""
-    env_yaml = str(tmpdir.join("env.yaml"))
+    env_yaml = str(tmp_path / "env.yaml")
     with open(env_yaml, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -307,9 +308,9 @@ def test_add_config_path_with_enumerated_type(mutable_config):
         spack.config.add("config:flags:keep_werror:foo")
 
 
-def test_add_config_filename(mock_low_high_config, tmpdir):
-    config_yaml = tmpdir.join("config-filename.yaml")
-    config_yaml.ensure()
+def test_add_config_filename(mock_low_high_config, tmp_path: pathlib.Path):
+    config_yaml = tmp_path / "config-filename.yaml"
+    config_yaml.touch()
     with config_yaml.open("w") as f:
         syaml.dump_config(config_low, f)
 
@@ -481,12 +482,10 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
     [
         ([], [None, None, None]),
         ([["config:install_tree:root", os.sep + "path"]], [os.sep + "path", None, None]),
-        ([["config:install_tree", os.sep + "path"]], [os.sep + "path", None, None]),
         (
             [["config:install_tree:projections", {"all": "{name}"}]],
             [None, None, {"all": "{name}"}],
         ),
-        ([["config:install_path_scheme", "{name}"]], [None, None, {"all": "{name}"}]),
     ],
 )
 def test_parse_install_tree(config_settings, expected, mutable_config):
@@ -550,24 +549,12 @@ def test_change_or_add(mutable_config, mock_packages):
             [["config:install_tree:root", "/path/$padding:11"]],
             [os.path.join(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
         ),
-        (
-            [["config:install_tree", "/path/${padding:11}"]],
-            [os.path.join(os.sep + "path", PAD_STRING[:5]), os.sep + "path", None],
-        ),
         ([["config:install_tree:padded_length", False]], [None, None, None]),
         (
             [
                 ["config:install_tree:padded_length", True],
                 ["config:install_tree:root", os.sep + "path"],
             ],
-            [full_padded_string, os.sep + "path", None],
-        ),
-        (
-            [["config:install_tree:", os.sep + "path$padding"]],
-            [full_padded_string, os.sep + "path", None],
-        ),
-        (
-            [["config:install_tree:", os.sep + "path" + os.sep + "${padding}"]],
             [full_padded_string, os.sep + "path", None],
         ),
     ],
@@ -744,7 +731,7 @@ def test_keys_are_ordered(configuration_dir):
         "./",
     )
 
-    config_scope = spack.config.DirectoryConfigScope("modules", configuration_dir.join("site"))
+    config_scope = spack.config.DirectoryConfigScope("modules", configuration_dir / "site")
 
     data = config_scope.get_section("modules")
 
@@ -777,8 +764,8 @@ def get_config_error(filename, schema, yaml_string):
         pytest.fail("ConfigFormatError was not raised!")
 
 
-def test_config_parse_dict_in_list(tmpdir):
-    with tmpdir.as_cwd():
+def test_config_parse_dict_in_list(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
         e = get_config_error(
             "repos.yaml",
             spack.schema.repos.schema,
@@ -795,8 +782,8 @@ repos:
         assert "repos.yaml:2" in str(e)
 
 
-def test_config_parse_str_not_bool(tmpdir):
-    with tmpdir.as_cwd():
+def test_config_parse_str_not_bool(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
         e = get_config_error(
             "config.yaml",
             spack.schema.config.schema,
@@ -810,8 +797,8 @@ config:
         assert "config.yaml:3" in str(e)
 
 
-def test_config_parse_list_in_dict(tmpdir):
-    with tmpdir.as_cwd():
+def test_config_parse_list_in_dict(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
         e = get_config_error(
             "mirrors.yaml",
             spack.schema.mirrors.schema,
@@ -881,8 +868,8 @@ def test_alternate_override(monkeypatch):
         assert data["debug"] is False
 
 
-def test_immutable_scope(tmpdir):
-    config_yaml = str(tmpdir.join("config.yaml"))
+def test_immutable_scope(tmp_path: pathlib.Path):
+    config_yaml = str(tmp_path / "config.yaml")
     with open(config_yaml, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -891,9 +878,10 @@ config:
       root: dummy_tree_value
 """
         )
-    scope = spack.config.DirectoryConfigScope("test", str(tmpdir), writable=False)
+    scope = spack.config.DirectoryConfigScope("test", str(tmp_path), writable=False)
 
     data = scope.get_section("config")
+    assert data is not None
     assert data["config"]["install_tree"] == {"root": "dummy_tree_value"}
 
     with pytest.raises(spack.error.ConfigError):
@@ -920,13 +908,13 @@ def test_single_file_scope(config, env_yaml):
         }
 
 
-def test_single_file_scope_section_override(tmpdir, config):
+def test_single_file_scope_section_override(tmp_path: pathlib.Path, config):
     """Check that individual config sections can be overridden in an
     environment config. The config here primarily differs in that the
     ``packages`` section is intended to override all other scopes (using the
     "::" syntax).
     """
-    env_yaml = str(tmpdir.join("env.yaml"))
+    env_yaml = str(tmp_path / "env.yaml")
     with open(env_yaml, "w", encoding="utf-8") as f:
         f.write(
             """\
@@ -959,11 +947,11 @@ spack:
         }
 
 
-def test_write_empty_single_file_scope(tmpdir):
+def test_write_empty_single_file_scope(tmp_path: pathlib.Path):
     env_schema = spack.schema.env.schema
-    scope = spack.config.SingleFileScope(
-        "test", str(tmpdir.ensure("config.yaml")), env_schema, yaml_path=["spack"]
-    )
+    config_file = tmp_path / "config.yaml"
+    config_file.touch()
+    scope = spack.config.SingleFileScope("test", str(config_file), env_schema, yaml_path=["spack"])
     scope._write_section("config")
     # confirm we can write empty config
     assert not scope.get_section("config")
@@ -976,7 +964,7 @@ def check_schema(name, file_contents):
     spack.config.validate(data, name)
 
 
-def test_good_env_yaml(tmpdir):
+def test_good_env_yaml():
     check_schema(
         spack.schema.env.schema,
         """\
@@ -1002,7 +990,7 @@ spack:
     )
 
 
-def test_bad_env_yaml(tmpdir):
+def test_bad_env_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.env.schema,
@@ -1015,7 +1003,7 @@ spack:
         )
 
 
-def test_bad_config_yaml(tmpdir):
+def test_bad_config_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.config.schema,
@@ -1029,7 +1017,7 @@ config:
         )
 
 
-def test_bad_include_yaml(tmpdir):
+def test_bad_include_yaml():
     with pytest.raises(spack.config.ConfigFormatError, match="is not of type"):
         check_schema(
             spack.schema.include.schema,
@@ -1039,7 +1027,7 @@ include: $HOME/include.yaml
         )
 
 
-def test_bad_mirrors_yaml(tmpdir):
+def test_bad_mirrors_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.mirrors.schema,
@@ -1050,7 +1038,7 @@ mirrors:
         )
 
 
-def test_bad_repos_yaml(tmpdir):
+def test_bad_repos_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.repos.schema,
@@ -1061,7 +1049,7 @@ repos:
         )
 
 
-def test_bad_compilers_yaml(tmpdir):
+def test_bad_compilers_yaml():
     with pytest.raises(spack.config.ConfigFormatError):
         check_schema(
             spack.schema.compilers.schema,
@@ -1266,16 +1254,16 @@ def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_cache_path()
 
 
-def test_config_file_dir_failure(tmpdir, mutable_empty_config):
+def test_config_file_dir_failure(tmp_path: pathlib.Path, mutable_empty_config):
     with pytest.raises(spack.config.ConfigFileError, match="not a file"):
-        spack.config.read_config_file(tmpdir.strpath)
+        spack.config.read_config_file(str(tmp_path))
 
 
 @pytest.mark.not_on_windows("chmod not supported on Windows")
-def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
+def test_config_file_read_perms_failure(tmp_path: pathlib.Path, mutable_empty_config):
     """Test reading a configuration file without permissions to ensure
     ConfigFileError is raised."""
-    filename = join_path(tmpdir.strpath, "test.yaml")
+    filename = join_path(str(tmp_path), "test.yaml")
     touch(filename)
     os.chmod(filename, 0o200)
 
@@ -1283,10 +1271,10 @@ def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
         spack.config.read_config_file(filename)
 
 
-def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
+def test_config_file_read_invalid_yaml(tmp_path: pathlib.Path, mutable_empty_config):
     """Test reading a configuration file with invalid (unparseable) YAML
     raises a ConfigFileError."""
-    filename = join_path(tmpdir.strpath, "test.yaml")
+    filename = join_path(str(tmp_path), "test.yaml")
     with open(filename, "w", encoding="utf-8") as f:
         f.write("spack:\nview")
 
@@ -1390,3 +1378,43 @@ def test_env_activation_preserves_config_scopes(mutable_mock_env_path):
         )
 
     assert highest_priority_scopes(spack.config.CONFIG, nscopes=2) == expected_scopes_without_env
+
+
+@pytest.mark.regression("51059")
+def test_config_include_similar_name(tmp_path: pathlib.Path):
+    config_a = tmp_path / "a" / "config"
+    config_b = tmp_path / "b" / "config"
+
+    os.makedirs(config_a)
+    with open(config_a / "config.yaml", "w", encoding="utf-8") as fd:
+        syaml.dump_config({"config": {"install_tree": {"root": str(tmp_path)}}}, fd)
+
+    os.makedirs(config_b)
+    with open(config_b / "config.yaml", "w", encoding="utf-8") as fd:
+        syaml.dump_config({"config": {"install_tree": {"padded_length": 64}}}, fd)
+
+    with open(tmp_path / "include.yaml", "w", encoding="utf-8") as fd:
+        syaml.dump_config({"include": [str(config_a), str(config_b)]}, fd)
+
+    config = spack.config.create_from(spack.config.DirectoryConfigScope("test", str(tmp_path)))
+
+    # Ensure all of the scopes are found
+    assert len(config.matching_scopes("^test$")) == 1
+    assert len(config.matching_scopes("^test:a/config$")) == 1
+    assert len(config.matching_scopes("^test:b/config$")) == 1
+
+
+def test_deepcopy_as_builtin(env_yaml):
+    cfg = spack.config.create_from(
+        spack.config.SingleFileScope("env", env_yaml, spack.schema.env.schema, yaml_path=["spack"])
+    )
+    config_copy = cfg.deepcopy_as_builtin("config")
+    assert config_copy == cfg.get_config("config")
+    assert type(config_copy) is dict
+    assert type(config_copy["verify_ssl"]) is bool
+
+    packages_copy = cfg.deepcopy_as_builtin("packages")
+    assert type(packages_copy) is dict
+    assert type(packages_copy["all"]) is dict
+    assert type(packages_copy["all"]["compiler"]) is list
+    assert type(packages_copy["all"]["compiler"][0]) is str

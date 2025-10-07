@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import os
+import pathlib
 import re
 import sys
 
@@ -12,6 +13,8 @@ import spack.binary_distribution
 import spack.cmd
 import spack.concretize
 import spack.config
+import spack.error
+import spack.llnl.util.filesystem as fs
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
@@ -90,7 +93,7 @@ def specfile_for(default_mock_concretization):
         (
             "platform=test",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="platform=test")],
-            "arch=test-None-None",
+            "platform=test",
         ),
         # Multiple tokens anonymous specs
         (
@@ -390,27 +393,27 @@ def specfile_for(default_mock_concretization):
         (
             r"os=fe",  # Various translations associated with the architecture
             [Token(SpecTokens.KEY_VALUE_PAIR, value="os=fe")],
-            "arch=test-debian6-None",
+            "platform=test os=debian6",
         ),
         (
             r"os=default_os",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="os=default_os")],
-            "arch=test-debian6-None",
+            "platform=test os=debian6",
         ),
         (
             r"target=be",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="target=be")],
-            f"arch=test-None-{spack.platforms.test.Test.default}",
+            f"platform=test target={spack.platforms.test.Test.default}",
         ),
         (
             r"target=default_target",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="target=default_target")],
-            f"arch=test-None-{spack.platforms.test.Test.default}",
+            f"platform=test target={spack.platforms.test.Test.default}",
         ),
         (
             r"platform=linux",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="platform=linux")],
-            r"arch=linux-None-None",
+            r"platform=linux",
         ),
         # Version hash pair
         (
@@ -493,7 +496,7 @@ def specfile_for(default_mock_concretization):
         (
             r"target=:broadwell,icelake",
             [Token(SpecTokens.KEY_VALUE_PAIR, value="target=:broadwell,icelake")],
-            r"arch=None-None-:broadwell,icelake",
+            r"target=:broadwell,icelake",
         ),
         # Hash pair version followed by a variant
         (
@@ -633,7 +636,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.VERSION, value="@10.4.0:10,11.3.0:"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="target=aarch64:"),
             ],
-            "@10.4.0:10,11.3.0: arch=None-None-aarch64:",
+            "@10.4.0:10,11.3.0: target=aarch64:",
         ),
         (
             "@:0.4 % nvhpc",
@@ -881,7 +884,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.KEY_VALUE_PAIR, "languages:=c,c++"),
                 Token(SpecTokens.KEY_VALUE_PAIR, "target=x86_64"),
             ],
-            "mvapich %gcc languages:='c,c++' arch=None-None-x86_64",
+            "mvapich %gcc languages:='c,c++' target=x86_64",
         ),
         # Test conditional dependencies
         (
@@ -1468,55 +1471,57 @@ def test_error_conditions(text, match_string):
     [
         # Specfile related errors
         pytest.param(
-            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+            "/bogus/path/libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
-        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
-        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
+        pytest.param(
+            "../../libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+        ),
+        pytest.param("./libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
         pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+            "libfoo ^../../libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
-            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+            "libfoo ^./libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
             "/bogus/path/libdwarf.yamlfoobar",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
+            "c:\\bogus\\path\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
-        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
-        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
+        pytest.param("..\\..\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
+        pytest.param(".\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
         pytest.param(
             "libfoo ^c:\\bogus\\path\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_UNIX,
         ),
         pytest.param(
-            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
+            "libfoo ^..\\..\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
-            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
+            "libfoo ^.\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
             "c:\\bogus\\path\\libdwarf.yamlfoobar",
-            spack.spec.SpecFilenameError,
+            spack.error.SpecFilenameError,
             marks=SKIP_ON_UNIX,
         ),
         pytest.param(
             "libdwarf^c:\\bogus\\path\\libelf.yamlfoobar ^c:\\path\\to\\bogus.yaml",
-            spack.spec.SpecFilenameError,
+            spack.error.SpecFilenameError,
             marks=SKIP_ON_UNIX,
         ),
     ],
@@ -1543,26 +1548,26 @@ def test_specfile_parsing(filename, regex):
     assert match.end() == len(filename)
 
 
-def test_parse_specfile_simple(specfile_for, tmpdir):
-    specfile = tmpdir.join("libdwarf.json")
+def test_parse_specfile_simple(specfile_for, tmp_path: pathlib.Path):
+    specfile = tmp_path / "libdwarf.json"
     s = specfile_for("libdwarf", specfile)
 
-    spec = SpecParser(specfile.strpath).next_spec()
+    spec = SpecParser(str(specfile)).next_spec()
     assert spec == s
 
     # Check we can mix literal and spec-file in text
-    specs = SpecParser(f"mvapich_foo {specfile.strpath}").all_specs()
+    specs = SpecParser(f"mvapich_foo {str(specfile)}").all_specs()
     assert len(specs) == 2
 
 
 @pytest.mark.parametrize("filename", ["libelf.yaml", "libelf.json"])
-def test_parse_filename_missing_slash_as_spec(specfile_for, tmpdir, filename):
+def test_parse_filename_missing_slash_as_spec(specfile_for, tmp_path: pathlib.Path, filename):
     """Ensure that libelf(.yaml|.json) parses as a spec, NOT a file."""
-    specfile = tmpdir.join(filename)
+    specfile = tmp_path / filename
     specfile_for(filename.split(".")[0], specfile)
 
     # Move to where the specfile is located so that libelf.yaml is there
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         specs = SpecParser("libelf.yaml").all_specs()
     assert len(specs) == 1
 
@@ -1582,71 +1587,70 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmpdir, filename):
 
     # make sure that only happens when the spec ends in yaml
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
-        spack.concretize.concretize_one(SpecParser("builtin_mock.doesnotexist").next_spec())
+        spack.concretize.concretize_one("builtin_mock.doesnotexist")
     assert not exc_info.value.long_message or (
         "Did you mean to specify a filename with" not in exc_info.value.long_message
     )
 
 
-def test_parse_specfile_dependency(default_mock_concretization, tmpdir):
+def test_parse_specfile_dependency(default_mock_concretization, tmp_path: pathlib.Path):
     """Ensure we can use a specfile as a dependency"""
     s = default_mock_concretization("libdwarf")
 
-    specfile = tmpdir.join("libelf.json")
-    with specfile.open("w") as f:
+    specfile = tmp_path / "libelf.json"
+    with open(specfile, "w", encoding="utf-8") as f:
         f.write(s["libelf"].to_json())
 
     # Make sure we can use yaml path as dependency, e.g.:
     #     "spack spec libdwarf ^ /path/to/libelf.json"
-    spec = SpecParser(f"libdwarf ^ {specfile.strpath}").next_spec()
-    assert spec["libelf"] == s["libelf"]
+    spec = SpecParser(f"libdwarf ^ {str(specfile)}").next_spec()
+    assert spec and spec["libelf"] == s["libelf"]
 
-    with specfile.dirpath().as_cwd():
+    with fs.working_dir(str(tmp_path)):
         # Make sure this also works: "spack spec ./libelf.yaml"
-        spec = SpecParser(f"libdwarf^.{os.path.sep}{specfile.basename}").next_spec()
-        assert spec["libelf"] == s["libelf"]
+        spec = SpecParser(f"libdwarf^.{os.path.sep}{specfile.name}").next_spec()
+        assert spec and spec["libelf"] == s["libelf"]
 
         # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
         spec = SpecParser(
-            f"libdwarf^..{os.path.sep}{specfile.dirpath().basename}"
-            f"{os.path.sep}{specfile.basename}"
+            f"libdwarf^..{os.path.sep}{specfile.parent.name}" f"{os.path.sep}{specfile.name}"
         ).next_spec()
-        assert spec["libelf"] == s["libelf"]
+        assert spec and spec["libelf"] == s["libelf"]
 
 
-def test_parse_specfile_relative_paths(specfile_for, tmpdir):
-    specfile = tmpdir.join("libdwarf.json")
+def test_parse_specfile_relative_paths(specfile_for, tmp_path: pathlib.Path):
+    specfile = tmp_path / "libdwarf.json"
     s = specfile_for("libdwarf", specfile)
 
-    basename = specfile.basename
-    parent_dir = specfile.dirpath()
+    basename = specfile.name
+    parent_dir = specfile.parent
 
-    with parent_dir.as_cwd():
+    with fs.working_dir(str(parent_dir)):
         # Make sure this also works: "spack spec ./libelf.yaml"
         spec = SpecParser(f".{os.path.sep}{basename}").next_spec()
         assert spec == s
 
         # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
-        spec = SpecParser(
-            f"..{os.path.sep}{parent_dir.basename}{os.path.sep}{basename}"
-        ).next_spec()
+        spec = SpecParser(f"..{os.path.sep}{parent_dir.name}{os.path.sep}{basename}").next_spec()
         assert spec == s
 
         # Should also handle mixed clispecs and relative paths, e.g.:
         #     "spack spec mvapich_foo ../<cur-dir>/libelf.yaml"
         specs = SpecParser(
-            f"mvapich_foo ..{os.path.sep}{parent_dir.basename}{os.path.sep}{basename}"
+            f"mvapich_foo ..{os.path.sep}{parent_dir.name}{os.path.sep}{basename}"
         ).all_specs()
         assert len(specs) == 2
         assert specs[1] == s
 
 
-def test_parse_specfile_relative_subdir_path(specfile_for, tmpdir):
-    specfile = tmpdir.mkdir("subdir").join("libdwarf.json")
+def test_parse_specfile_relative_subdir_path(specfile_for, tmp_path: pathlib.Path):
+    subdir = tmp_path / "subdir"
+    subdir.mkdir()
+    specfile = subdir / "libdwarf.json"
     s = specfile_for("libdwarf", specfile)
 
-    with tmpdir.as_cwd():
-        spec = SpecParser(f"subdir{os.path.sep}{specfile.basename}").next_spec()
+    with fs.working_dir(str(tmp_path)):
+        spec = SpecParser(f"subdir{os.path.sep}{specfile.name}").next_spec()
         assert spec == s
 
 

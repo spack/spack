@@ -5,14 +5,13 @@ import os
 import textwrap
 from typing import Optional
 
-import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
-
 import spack.config
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.schema.environment
 import spack.store
+from spack.llnl.util.tty.color import colorize
 from spack.util.environment import EnvironmentModifications
 
 

@@ -7,12 +7,11 @@ import os
 import stat
 from typing import Any, Dict
 
-import llnl.util.tty as tty
-from llnl.util.symlink import readlink
-
+import spack.llnl.util.tty as tty
 import spack.store
 import spack.util.file_permissions as fp
 import spack.util.spack_json as sjson
+from spack.llnl.util.filesystem import readlink
 from spack.package_base import spack_times_log
 
 

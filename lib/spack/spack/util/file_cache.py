@@ -9,9 +9,8 @@ import pathlib
 import shutil
 from typing import IO, Dict, Optional, Tuple, Union
 
-from llnl.util.filesystem import rename
-
 from spack.error import SpackError
+from spack.llnl.util.filesystem import rename
 from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
 
@@ -149,7 +148,7 @@ class FileCache:
         """Get a read transaction on a file cache item.
 
         Returns a ReadTransaction context manager and opens the cache file for
-        reading.  You can use it like this:
+        reading.  You can use it like this::
 
            with file_cache_object.read_transaction(key) as cache_file:
                cache_file.read()

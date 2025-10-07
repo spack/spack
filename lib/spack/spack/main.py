@@ -25,13 +25,7 @@ import traceback
 import warnings
 from typing import Any, Callable, List, Tuple
 
-import _vendoring.archspec.cpu
-
-import llnl.util.lang
-import llnl.util.tty as tty
-import llnl.util.tty.colify
-import llnl.util.tty.color as color
-from llnl.util.tty.log import log_output
+import spack.vendor.archspec.cpu
 
 import spack
 import spack.cmd
@@ -40,6 +34,10 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.colify
+import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.platforms
 import spack.solver.asp
@@ -48,6 +46,7 @@ import spack.store
 import spack.util.debug
 import spack.util.environment
 import spack.util.lock
+from spack.llnl.util.tty.log import log_output
 
 from .enums import ConfigScopePriority
 
@@ -159,7 +158,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         """Format help on sections for a particular verbosity level.
 
         Args:
-            level (str): 'short' or 'long' (more commands shown for long)
+            level (str): ``"short"`` or ``"long"`` (more commands shown for long)
         """
         if level not in levels:
             raise ValueError("level must be one of: %s" % levels)
@@ -329,7 +328,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
     def _check_value(self, action, value):
         # converted value must be one of the choices (if specified)
         if action.choices is not None and value not in action.choices:
-            cols = llnl.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
+            cols = spack.llnl.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
             msg = "invalid choice: %r choose from:\n%s" % (value, cols)
             raise argparse.ArgumentError(action, msg)
 
@@ -365,7 +364,7 @@ def make_argument_parser(**kwargs):
         action="store_const",
         const="long",
         default=None,
-        help="show help for all commands (same as spack help --all)",
+        help="show help for all commands (same as ``spack help --all``)",
     )
     parser.add_argument(
         "--color",
@@ -573,7 +572,7 @@ def allows_unknown_args(command):
     """Implements really simple argument injection for unknown arguments.
 
     Commands may add an optional argument called "unknown args" to
-    indicate they can handle unknonwn args, and we'll pass the unknown
+    indicate they can handle unknown args, and we'll pass the unknown
     args in.
     """
     info = dict(inspect.getmembers(command))
@@ -725,14 +724,14 @@ def _profile_wrapper(command, parser, args, unknown_args):
         stats.print_stats(nlines)
 
 
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def _compatible_sys_types():
     """Return a list of all the platform-os-target tuples compatible
     with the current host.
     """
     host_platform = spack.platforms.host()
     host_os = str(host_platform.default_operating_system())
-    host_target = _vendoring.archspec.cpu.host()
+    host_target = spack.vendor.archspec.cpu.host()
     compatible_targets = [host_target] + host_target.ancestors
 
     compatible_archs = [
@@ -747,7 +746,7 @@ def print_setup_info(*info):
 
     Args:
         info (list): list of things to print: comma-separated list
-            of 'csh', 'sh', or 'modules'
+            of ``"csh"``, ``"sh"``, or ``"modules"``
 
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
@@ -792,7 +791,7 @@ def print_setup_info(*info):
     # print environment module system if available. This can be expensive
     # on clusters, so skip it if not needed.
     if "modules" in info:
-        generic_arch = _vendoring.archspec.cpu.host().family
+        generic_arch = spack.vendor.archspec.cpu.host().family
         module_spec = "environment-modules target={0}".format(generic_arch)
         specs = spack.store.STORE.db.query(module_spec)
         if specs:
@@ -803,10 +802,10 @@ def print_setup_info(*info):
 
 def restore_macos_dyld_vars():
     """
-    Spack mutates DYLD_* variables in `spack load` and `spack env activate`.
+    Spack mutates ``DYLD_*`` variables in ``spack load`` and ``spack env activate``.
     Unlike Linux, macOS SIP clears these variables in new processes, meaning
-    that os.environ["DYLD_*"] in our Python process is not the same as the user's
-    shell. Therefore, we store the user's DYLD_* variables in SPACK_DYLD_* and
+    that ``os.environ["DYLD_*"]`` in our Python process is not the same as the user's
+    shell. Therefore, we store the user's ``DYLD_*`` variables in ``SPACK_DYLD_*`` and
     restore them here.
     """
     if not sys.platform == "darwin":
@@ -858,7 +857,7 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
     return cmd_name, cmd
 
 
-# sentinel scope marker for enviroments passed on the command line
+# sentinel scope marker for environments passed on the command line
 _ENV = object()
 
 
@@ -884,7 +883,7 @@ def add_command_line_scopes(
     command_line_scopes: List[Any],  # str or _ENV but mypy can't type sentinels
     add_environment: Callable[[ConfigScopePriority], None],
 ) -> None:
-    """Add additional scopes from the --config-scope argument, either envs or dirs.
+    """Add additional scopes from the ``--config-scope`` argument, either envs or dirs.
 
     Args:
         cfg: configuration instance
@@ -983,13 +982,18 @@ def _main(argv=None):
     if not args.no_env:
         try:
             env = spack.cmd.find_environment(args)
-        except spack.config.ConfigFormatError as e:
+        except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError) as e:
             # print the context but delay this exception so that commands like
             # `spack config edit` can still work with a bad environment.
             e.print_context()
             env_format_error = e
 
     def add_environment_scope(priority):
+        if env_format_error:
+            # Allow command to continue without env in case it is `spack config edit`
+            # All other cases will raise in `finish_parse_and_run`
+            spack.environment.environment._active_environment_error = env_format_error
+            return
         # do not call activate here, as it has a lot of expensive function calls to deal
         # with mutation of spack.config.CONFIG -- but we are still building the config.
         env.manifest.prepare_config_scope(priority)
@@ -1033,7 +1037,7 @@ def _main(argv=None):
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things
     # like `ConstraintAction` and `ConfigSetAction` happen at parse time.
-    bootstrap_context = llnl.util.lang.nullcontext()
+    bootstrap_context = spack.llnl.util.lang.nullcontext()
     if args.bootstrap:
         import spack.bootstrap as bootstrap  # avoid circular imports
 

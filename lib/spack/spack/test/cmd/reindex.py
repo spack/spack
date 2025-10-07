@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pathlib
 import shutil
 
 import spack.store
@@ -21,7 +22,7 @@ def test_reindex_basic(mock_packages, mock_archive, mock_fetch, install_mockery)
     assert spack.store.STORE.db.query() == all_installed
 
 
-def _clear_db(tmp_path):
+def _clear_db(tmp_path: pathlib.Path):
     empty_db = Database(str(tmp_path))
     with empty_db.write_transaction():
         pass
@@ -31,7 +32,9 @@ def _clear_db(tmp_path):
     assert len(spack.store.STORE.db.query()) == 0
 
 
-def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path):
+def test_reindex_db_deleted(
+    mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path: pathlib.Path
+):
     install("--fake", "libelf@0.8.13")
     install("--fake", "libelf@0.8.12")
     all_installed = spack.store.STORE.db.query()
@@ -41,7 +44,7 @@ def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch, install_moc
 
 
 def test_reindex_with_deprecated_packages(
-    mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path
+    mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path: pathlib.Path
 ):
     install("--fake", "libelf@0.8.13")
     install("--fake", "libelf@0.8.12")
@@ -66,6 +69,7 @@ def test_reindex_with_deprecated_packages(
     new_libelf = db.query_local_by_spec_hash(
         db.query_local("libelf@0.8.13", installed=True)[0].dag_hash()
     )
+    assert old_libelf is not None and new_libelf is not None
     assert old_libelf.deprecated_for == new_libelf.spec.dag_hash()
     assert new_libelf.deprecated_for is None
     assert new_libelf.ref_count == 1
