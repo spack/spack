@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -256,8 +257,6 @@ To reduce the likelihood of this happening, it is highly recommended to add padd
        padded_length: 128
 
 
-.. _binary_caches_oci:
-
 Automatic Push to a Build Cache
 ---------------------------------
 
@@ -293,11 +292,14 @@ will have the same effect as
 
     Packages are automatically pushed to a build cache only if they are built from source.
 
+.. _binary_caches_oci:
+
 OCI / Docker V2 Registries as Build Cache
 -----------------------------------------
 
-Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io, GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others as build caches.
+Spack can also use OCI or Docker V2 registries such as Docker Hub, Quay.io, Amazon ECR, GitHub Packages, GitLab Container Registry, JFrog Artifactory, and others as build caches.
 This is a convenient way to share binaries using public infrastructure or to cache Spack-built binaries in GitHub Actions and GitLab CI.
+These registries can be used not only to share Spack binaries but also to create and distribute runnable container images.
 
 To get started, configure an OCI mirror using ``oci://`` as the scheme and optionally specify variables that hold the username and password (or personal access token) for the registry:
 
@@ -306,6 +308,17 @@ To get started, configure an OCI mirror using ``oci://`` as the scheme and optio
     $ spack mirror add --oci-username-variable REGISTRY_USER \
                        --oci-password-variable REGISTRY_TOKEN \
                        my_registry oci://example.com/my_image
+
+This registers a mirror in your ``mirrors.yaml`` configuration file that looks as follows:
+
+.. code-block:: yaml
+
+    mirrors:
+      my_registry:
+        url: oci://example.com/my_image
+        access_pair:
+          id_variable: REGISTRY_USER
+          secret_variable: REGISTRY_TOKEN
 
 Spack follows the naming conventions of Docker, with Docker Hub as the default registry.
 To use Docker Hub, you can omit the registry domain:
@@ -328,6 +341,53 @@ From here, you can use the mirror as any other build cache:
    Spack defaults to ``https`` for OCI registries, and does not fall back to ``http`` in case of failure.
    For local registries which use ``http`` instead of ``https``, you can specify ``oci+http://localhost:5000/my_image``.
 
+.. _oci-authentication:
+
+Authentication with popular Container Registries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Below are instructions for authenticating with some of the most popular container registries.
+In all cases, you need to generate a (temporary) token to use as the password -- this is not the same as your account password.
+
+GHCR
+""""""
+
+To authenticate with GitHub Container Registry (GHCR), you can use your GitHub username as the username.
+For the password, you can use either:
+
+#. A personal access token (PAT) with ``write:packages`` scope.
+#. A GitHub Actions token (``GITHUB_TOKEN``) with ``packages:write`` permission.
+
+See also `GitHub's documentation <https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry>`_ and :ref:`github-actions-build-cache` below.
+
+Docker Hub
+""""""""""
+
+To authenticate with Docker Hub, you can use your Docker Hub username as the username.
+For the password, you need to generate a personal access token (PAT) on the Docker Hub website.
+See `Docker's documentation <https://docs.docker.com/security/access-tokens/>`_ for more information.
+
+Amazon ECR
+""""""""""
+
+To authenticate with Amazon ECR, you can use the AWS CLI to generate a temporary password.
+The username is always ``AWS``.
+
+.. code-block:: console
+
+    $ export AWS_ECR_PASSWORD=$(aws ecr get-login-password --region <region>)
+    $ spack mirror add \
+          --oci-username AWS \
+          --oci-password-variable AWS_ECR_PASSWORD \
+          my_registry \
+          oci://XXX.dkr.ecr.<region>.amazonaws.com/my/image
+
+See also `AWS's documentation <https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html>`_.
+
+
+Build Cache and Container Images
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 A unique feature of build caches on top of OCI registries is that it's incredibly easy to generate a runnable container image with the binaries installed.
 This is a great way to make applications available to users without requiring them to install Spack -- all you need is Docker, Podman, or any other OCI-compatible container runtime.
 
@@ -346,9 +406,9 @@ If ``--base-image`` is not specified, Spack produces distroless images.
 In practice, you won't be able to run these as containers because they don't come with libc and other system dependencies.
 However, they are still compatible with tools like ``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
 
-.. note::
-    The Docker ``overlayfs2`` storage driver is limited to 128 layers, above which a ``max depth exceeded`` error may be produced when pulling the image.
-    There are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_.
+See the section :ref:`exporting-images` for more details on how to create container images with Spack.
+
+.. _github-actions-build-cache:
 
 Spack Build Cache for GitHub Actions
 ------------------------------------
@@ -506,7 +566,7 @@ Binary package manifests live in the ``spec/`` directory, build cache index mani
 Regardless of the type of entity they represent, all manifest files are named with an extension ``.manifest.json``.
 
 Every manifest contains a ``data`` array, each element of which refers to an associated file stored as a content-addressed blob.
-Considering the example spec manifest shown above, the compressed installation archive can be found by picking out the data blob with the appropriate ``mediaType``, which in this case would be ``application/vnd.spack.install.v1.tar+gzip``.
+Considering the example spec manifest shown above, the compressed installation archive can be found by picking out the data blob with the appropriate ``mediaType``, which in this case would be ``application/vnd.spack.install.v2.tar+gzip``.
 The associated file is found by looking in the blobs directory under ``blobs/sha256/fb/`` for the file named with the complete checksum value.
 
 As mentioned above, every entity in a build cache is stored as a content-addressed blob pointed to by a manifest.

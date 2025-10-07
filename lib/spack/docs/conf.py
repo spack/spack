@@ -271,9 +271,10 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
-    "sphinxcontrib.programoutput",
     "sphinx_last_updated_by_git",
     "sphinx_sitemap",
+    "sphinxcontrib.inkscapeconverter",
+    "sphinxcontrib.programoutput",
 ]
 
 copybutton_exclude = ".linenos, .gp, .go"
@@ -497,6 +498,8 @@ sitemap_excludes = ["search.html", "_modules/*"]
 
 # -- Options for LaTeX output --------------------------------------------------
 
+latex_engine = "lualatex"
+
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     # 'papersize': 'letterpaper',
@@ -508,7 +511,7 @@ latex_elements = {
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual")]
+latex_documents = [("index", "Spack.tex", "Spack Documentation", "", "manual")]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.

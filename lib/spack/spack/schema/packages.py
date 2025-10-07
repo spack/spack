@@ -88,7 +88,7 @@ permissions = {
 package_attributes = {
     "type": "object",
     "additionalProperties": False,
-    "patternProperties": {r"\w+": {}},
+    "patternProperties": {r"^[a-zA-Z_]\w*$": {}},
 }
 
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
@@ -126,13 +126,10 @@ properties: Dict[str, Any] = {
                     "providers": {
                         "type": "object",
                         "default": {},
-                        "additionalProperties": False,
-                        "patternProperties": {
-                            r"\w[\w-]*": {
-                                "type": "array",
-                                "default": [],
-                                "items": {"type": "string"},
-                            }
+                        "additionalProperties": {
+                            "type": "array",
+                            "default": [],
+                            "items": {"type": "string"},
                         },
                     },
                     "variants": variants,
@@ -182,7 +179,7 @@ properties: Dict[str, Any] = {
                                 "properties": {
                                     "compilers": {
                                         "type": "object",
-                                        "patternProperties": {r"(^\w[\w-]*)": {"type": "string"}},
+                                        "patternProperties": {r"^\w": {"type": "string"}},
                                     },
                                     "environment": spack.schema.environment.definition,
                                     "extra_rpaths": extra_rpaths,

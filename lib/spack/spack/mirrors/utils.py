@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import traceback
+from collections import Counter
 
 import spack.caches
 import spack.config
@@ -89,45 +90,17 @@ def get_matching_versions(specs, num_versions=1):
     return matching
 
 
-def create(path, specs, skip_unstable_versions=False):
-    """Create a directory to be used as a spack mirror, and fill it with
-    package archives.
-
-    Arguments:
-        path: Path to create a mirror directory hierarchy in.
-        specs: Any package versions matching these specs will be added \
-            to the mirror.
-        skip_unstable_versions: if true, this skips adding resources when
-            they do not have a stable archive checksum (as determined by
-            ``fetch_strategy.stable_target``)
-
-    Returns:
-        A tuple of lists, each containing specs
-
-        * present: Package specs that were already present.
-        * mirrored: Package specs that were successfully mirrored.
-        * error: Package specs that failed to mirror due to some error.
-    """
-    # automatically spec-ify anything in the specs array.
-    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
-
-    mirror_cache, mirror_stats = mirror_cache_and_stats(path, skip_unstable_versions)
-    for spec in specs:
-        mirror_stats.next_spec(spec)
-        create_mirror_from_package_object(spec.package, mirror_cache, mirror_stats)
-
-    return mirror_stats.stats()
-
-
-def mirror_cache_and_stats(path, skip_unstable_versions=False):
-    """Return both a mirror cache and a mirror stats, starting from the path
-    where a mirror ought to be created.
+def get_mirror_cache(path, skip_unstable_versions=False):
+    """Returns a mirror cache, starting from the path where a mirror ought to be created.
 
     Args:
         path (str): path to create a mirror directory hierarchy in.
         skip_unstable_versions: if true, this skips adding resources when
             they do not have a stable archive checksum (as determined by
-            ``fetch_strategy.stable_target``)
+            ``fetch_strategy.stable_target``).
+
+    Returns:
+        spack.caches.MirrorCache: mirror cache object for the given path.
     """
     # Get the absolute path of the root before we start jumping around.
     if not os.path.isdir(path):
@@ -136,8 +109,7 @@ def mirror_cache_and_stats(path, skip_unstable_versions=False):
         except OSError as e:
             raise MirrorError("Cannot create directory '%s':" % path, str(e))
     mirror_cache = spack.caches.MirrorCache(path, skip_unstable_versions=skip_unstable_versions)
-    mirror_stats = MirrorStats()
-    return mirror_cache, mirror_stats
+    return mirror_cache
 
 
 def add(mirror: Mirror, scope=None):
@@ -169,33 +141,23 @@ def remove(name, scope):
     tty.msg("Removed mirror %s." % name)
 
 
-class MirrorStats:
-    def __init__(self):
-        self.present = {}
-        self.new = {}
-        self.errors = set()
-
-        self.current_spec = None
+class MirrorStatsForOneSpec:
+    def __init__(self, spec):
+        self.present = Counter()
+        self.new = Counter()
+        self.errors = Counter()
+        self.spec = spec
         self.added_resources = set()
         self.existing_resources = set()
 
-    def next_spec(self, spec):
-        self._tally_current_spec()
-        self.current_spec = spec
-
-    def _tally_current_spec(self):
-        if self.current_spec:
+    def finalize(self):
+        if self.spec:
             if self.added_resources:
-                self.new[self.current_spec] = len(self.added_resources)
+                self.new[self.spec] = len(self.added_resources)
             if self.existing_resources:
-                self.present[self.current_spec] = len(self.existing_resources)
+                self.present[self.spec] = len(self.existing_resources)
             self.added_resources = set()
             self.existing_resources = set()
-        self.current_spec = None
-
-    def stats(self):
-        self._tally_current_spec()
-        return list(self.present), list(self.new), list(self.errors)
 
     def already_existed(self, resource):
         # If an error occurred after caching a subset of a spec's
@@ -207,11 +169,35 @@ class MirrorStats:
         self.added_resources.add(resource)
 
     def error(self):
-        self.errors.add(self.current_spec)
+        if self.spec:
+            self.errors[self.spec] += 1
+
+
+class MirrorStatsForAllSpecs:
+    def __init__(self):
+        # Counter is used to easily merge mirror stats for one spec into mirror stats for all specs
+        self.present = Counter()
+        self.new = Counter()
+        self.errors = Counter()
+
+    def merge(self, ext_mirror_stat: MirrorStatsForOneSpec):
+        # For the sake of parallelism we need a way to reduce/merge different
+        # MirrorStats objects.
+        self.present.update(ext_mirror_stat.present)
+        self.new.update(ext_mirror_stat.new)
+        self.errors.update(ext_mirror_stat.errors)
+
+    def stats(self):
+        # Convert dictionary to list
+        present_list = list(self.present.keys())
+        new_list = list(self.new.keys())
+        errors_list = list(self.errors.keys())
+
+        return present_list, new_list, errors_list
 
 
 def create_mirror_from_package_object(
-    pkg_obj, mirror_cache: "spack.caches.MirrorCache", mirror_stats: MirrorStats
+    pkg_obj, mirror_cache: "spack.caches.MirrorCache", mirror_stats: MirrorStatsForOneSpec
 ) -> bool:
     """Add a single package object to a mirror.
 

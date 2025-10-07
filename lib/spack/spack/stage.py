@@ -58,8 +58,14 @@ stage_prefix = "spack-stage-"
 
 def compute_stage_name(spec):
     """Determine stage name given a spec"""
-    default_stage_structure = stage_prefix + "{name}-{version}-{hash}"
-    stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
+    spec_stage_structure = stage_prefix
+    if spec.concrete:
+        spec_stage_structure += "{name}-{version}-{hash}"
+    else:
+        spec_stage_structure += "{name}-{version}"
+    # TODO (psakiev, scheibelp) Technically a user could still reintroduce a hash via
+    # config:stage_name. This is a fix for how to handle staging an abstact spec (see #51305)
+    stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
     return spec.format_path(format_string=stage_name_structure)
 
 
@@ -609,7 +615,9 @@ class Stage(LockableStagingDir):
         spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_layout.path)
 
     def cache_mirror(
-        self, mirror: "spack.caches.MirrorCache", stats: "spack.mirrors.utils.MirrorStats"
+        self,
+        mirror: "spack.caches.MirrorCache",
+        stats: "spack.mirrors.utils.MirrorStatsForOneSpec",
     ) -> None:
         """Perform a fetch if the resource is not already cached
 

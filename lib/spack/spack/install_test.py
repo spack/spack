@@ -500,24 +500,6 @@ def test_part(
             # call from the error
             stack = traceback.extract_stack()[:-1]
 
-            # Package files have a line added at import time, so we re-read
-            # the file to make line numbers match. We have to subtract two
-            # from the line number because the original line number is
-            # inflated once by the import statement and the lines are
-            # displaced one by the import statement.
-            for i, entry in enumerate(stack):
-                filename, lineno, function, text = entry
-                if spack.repo.is_package_file(filename):
-                    with open(filename, encoding="utf-8") as f:
-                        lines = f.readlines()
-                    new_lineno = lineno - 2
-                    text = lines[new_lineno]
-                    if isinstance(entry, tuple):
-                        new_entry = (filename, new_lineno, function, text)
-                        stack[i] = new_entry  # type: ignore[call-overload]
-                    elif isinstance(entry, list):
-                        stack[i][1] = new_lineno  # type: ignore[index]
-
             # Format and print the stack
             out = traceback.format_list(stack)
             for line in out:

@@ -122,8 +122,7 @@ def ci_generate_test(
     def _func(spack_yaml_content, *args, fail_on_error=True):
         spack_yaml = tmp_path / "spack.yaml"
         spack_yaml.write_text(spack_yaml_content)
-
-        env_cmd("create", "test", str(spack_yaml))
+        ev.create("test", init_file=spack_yaml, with_view=False)
         outputfile = tmp_path / ".gitlab-ci.yml"
         with ev.read("test"):
             output = ci_cmd(
@@ -595,6 +594,7 @@ def activate_rebuild_env(tmp_path: pathlib.Path, pkg_name: str, rebuild_env: Reb
 
 
 @pytest.mark.parametrize("broken_tests", [True, False])
+@pytest.mark.requires_executables("gpg2")
 def test_ci_rebuild_mock_success(
     tmp_path: pathlib.Path,
     working_env,
@@ -628,6 +628,7 @@ def test_ci_rebuild_mock_success(
             assert "Cannot copy test logs" in out
 
 
+@pytest.mark.requires_executables("gpg2")
 def test_ci_rebuild_mock_failure_to_push(
     tmp_path: pathlib.Path,
     working_env,
@@ -770,6 +771,7 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
+@pytest.mark.requires_executables("gpg2")
 def test_push_to_build_cache(
     tmp_path: pathlib.Path,
     mutable_mock_env_path,
@@ -1562,16 +1564,36 @@ def test_docstring_utils():
     )
 
 
-@pytest.mark.skip(reason="Gitlab CI was removed from Spack")
 def test_gitlab_config_scopes(install_mockery, ci_generate_test, tmp_path: pathlib.Path):
-    """Test pipeline generation with real configs included"""
-    configs_path = os.path.join(spack_paths.share_path, "gitlab", "cloud_pipelines", "configs")
-    _, outputfile, _ = ci_generate_test(
+    """Test pipeline generation with included configs"""
+    # Create an included config scope
+    configs_path = tmp_path / "gitlab" / "configs"
+    configs_path.mkdir(parents=True, exist_ok=True)
+    with open(configs_path / "ci.yaml", "w", encoding="utf-8") as fd:
+        fd.write(
+            """
+ci:
+  pipeline-gen:
+  - reindex-job:
+      variables:
+        CI_JOB_SIZE: small
+        KUBERNETES_CPU_REQUEST: 10
+        KUBERNETES_MEMORY_REQUEST: 100
+      tags: ["spack", "service"]
+"""
+        )
+
+    rel_configs_path = configs_path.relative_to(tmp_path)
+    manifest, outputfile, _ = ci_generate_test(
         f"""\
 spack:
   config:
-    install_tree: {tmp_path / "opt"}
-  include: [{configs_path}]
+    install_tree:
+      root: {tmp_path / "opt"}
+  include:
+  - {rel_configs_path}
+  - path: {rel_configs_path}
+  - {configs_path}
   view: false
   specs:
     - dependent-install
@@ -1598,6 +1620,17 @@ spack:
     assert all([t in rebuild_tags for t in ["spack", "service"]])
     expected_vars = ["CI_JOB_SIZE", "KUBERNETES_CPU_REQUEST", "KUBERNETES_MEMORY_REQUEST"]
     assert all([v in rebuild_vars for v in expected_vars])
+
+    # Read the concrete environment and ensure the relative path was updated
+    conc_env_path = tmp_path / "jobs_scratch_dir" / "concrete_environment"
+    conc_env_manifest = conc_env_path / "spack.yaml"
+
+    env_manifest = syaml.load(conc_env_manifest.read_text())
+    assert "include" in env_manifest["spack"]
+    # Ensure the relocated concrete env includes point to the same location
+    rel_conc_path = env_manifest["spack"]["include"][0]
+    abs_conc_path = (conc_env_path / rel_conc_path).absolute().resolve()
+    assert str(abs_conc_path) == os.path.join(ev.as_env_dir("test"), "gitlab", "configs")
 
 
 def test_ci_generate_mirror_config(

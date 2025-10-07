@@ -10,7 +10,6 @@ import functools
 import importlib
 import importlib.machinery
 import importlib.util
-import inspect
 import itertools
 import os
 import re
@@ -45,8 +44,10 @@ import spack.llnl.path
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
+import spack.patch
 import spack.paths
 import spack.provider_index
+import spack.tag
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
@@ -59,9 +60,7 @@ from spack.llnl.util.filesystem import working_dir
 
 if TYPE_CHECKING:
     import spack.package_base
-    import spack.patch
     import spack.spec
-    import spack.tag
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
@@ -322,23 +321,6 @@ def autospec(function):
     return converter
 
 
-def is_package_file(filename):
-    """Determine whether we are in a package file from a repo."""
-    # Package files are named `package.py` and are not in lib/spack/spack
-    # We have to remove the file extension because it can be .py and can be
-    # .pyc depending on context, and can differ between the files
-    import spack.package_base  # break cycle
-
-    filename_noext = os.path.splitext(filename)[0]
-    packagebase_filename_noext = os.path.splitext(inspect.getfile(spack.package_base.PackageBase))[
-        0
-    ]
-    return (
-        filename_noext != packagebase_filename_noext
-        and os.path.basename(filename_noext) == "package"
-    )
-
-
 class SpackNamespace(types.ModuleType):
     """Allow lazy loading of modules."""
 
@@ -497,18 +479,14 @@ class Indexer(metaclass=abc.ABCMeta):
 class TagIndexer(Indexer):
     """Lifecycle methods for a TagIndex on a Repo."""
 
-    def _create(self) -> "spack.tag.TagIndex":
-        from spack.tag import TagIndex
-
-        return TagIndex(self.repository)
+    def _create(self) -> spack.tag.TagIndex:
+        return spack.tag.TagIndex()
 
     def read(self, stream):
-        from spack.tag import TagIndex
-
-        self.index = TagIndex.from_json(stream, self.repository)
+        self.index = spack.tag.TagIndex.from_json(stream)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname.split(".")[-1])
+        self.index.update_package(pkg_fullname.split(".")[-1], self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -540,10 +518,8 @@ class ProviderIndexer(Indexer):
 class PatchIndexer(Indexer):
     """Lifecycle methods for patch cache."""
 
-    def _create(self) -> "spack.patch.PatchCache":
-        from spack.patch import PatchCache
-
-        return PatchCache(repository=self.repository)
+    def _create(self) -> spack.patch.PatchCache:
+        return spack.patch.PatchCache(repository=self.repository)
 
     def needs_update(self):
         # TODO: patches can change under a package and we should handle
@@ -553,9 +529,7 @@ class PatchIndexer(Indexer):
         return False
 
     def read(self, stream):
-        from spack.patch import PatchCache
-
-        self.index = PatchCache.from_json(stream, repository=self.repository)
+        self.index = spack.patch.PatchCache.from_json(stream, repository=self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -673,8 +647,8 @@ class RepoPath:
         self.repos: List[Repo] = []
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index: Optional[spack.provider_index.ProviderIndex] = None
-        self._patch_index: Optional["spack.patch.PatchCache"] = None
-        self._tag_index: Optional["spack.tag.TagIndex"] = None
+        self._patch_index: Optional[spack.patch.PatchCache] = None
+        self._tag_index: Optional[spack.tag.TagIndex] = None
 
         for repo in repos:
             self.put_last(repo)
@@ -812,18 +786,16 @@ class RepoPath:
         return self._provider_index
 
     @property
-    def tag_index(self) -> "spack.tag.TagIndex":
+    def tag_index(self) -> spack.tag.TagIndex:
         """Merged TagIndex from all Repos in the RepoPath."""
         if self._tag_index is None:
-            from spack.tag import TagIndex
-
-            self._tag_index = TagIndex(repository=self)
+            self._tag_index = spack.tag.TagIndex()
             for repo in reversed(self.repos):
                 self._tag_index.merge(repo.tag_index)
         return self._tag_index
 
     @property
-    def patch_index(self) -> "spack.patch.PatchCache":
+    def patch_index(self) -> spack.patch.PatchCache:
         """Merged PatchIndex from all Repos in the RepoPath."""
         if self._patch_index is None:
             from spack.patch import PatchCache
@@ -1232,7 +1204,7 @@ class Repo:
         # actually exists, because we have to load it anyway, and that ends up
         # checking for existence. We avoid constructing FastPackageChecker,
         # which will stat all packages.
-        if spec.name is None:
+        if not spec.name:
             raise UnknownPackageError(None, self)
 
         if spec.namespace and spec.namespace != self.namespace:
@@ -1297,12 +1269,12 @@ class Repo:
         return self.index["providers"]
 
     @property
-    def tag_index(self) -> "spack.tag.TagIndex":
+    def tag_index(self) -> spack.tag.TagIndex:
         """Index of tags and which packages they're defined on."""
         return self.index["tags"]
 
     @property
-    def patch_index(self) -> "spack.patch.PatchCache":
+    def patch_index(self) -> spack.patch.PatchCache:
         """Index of patches and packages they're defined on."""
         return self.index["patches"]
 
@@ -1366,7 +1338,8 @@ class Repo:
 
     def packages_with_tags(self, *tags: str) -> Set[str]:
         v = set(self.all_package_names())
-        v.intersection_update(*(self.tag_index[tag.lower()] for tag in tags))
+        for tag in tags:
+            v.intersection_update(self.tag_index.get_packages(tag.lower()))
         return v
 
     def all_package_classes(self) -> Generator[Type["spack.package_base.PackageBase"], None, None]:

@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
 import sys
+from typing import Optional
 
 import spack.llnl.util.tty as tty
 
@@ -24,7 +24,7 @@ class SpackError(Exception):
     Subclasses can be found in the modules they have to do with.
     """
 
-    def __init__(self, message, long_message=None):
+    def __init__(self, message: str, long_message: Optional[str] = None) -> None:
         super().__init__()
         self.message = message
         self._long_message = long_message
@@ -78,16 +78,13 @@ class SpackError(Exception):
         sys.exit(1)
 
     def __str__(self):
-        msg = self.message
         if self._long_message:
-            msg += "\n    %s" % self._long_message
-        return msg
+            return f"{self.message}\n    {self._long_message}"
+        return self.message
 
     def __repr__(self):
-        args = [repr(self.message), repr(self.long_message)]
-        args = ",".join(args)
-        qualified_name = inspect.getmodule(self).__name__ + "." + type(self).__name__
-        return qualified_name + "(" + args + ")"
+        qualified_name = type(self).__module__ + "." + type(self).__name__
+        return f"{qualified_name}({repr(self.message)}, {repr(self.long_message)})"
 
     def __reduce__(self):
         return type(self), (self.message, self.long_message)

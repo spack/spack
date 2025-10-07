@@ -42,7 +42,7 @@ attributes_schema = {
         "tags": {"type": "array", "items": {"type": "string"}},
         "variables": {
             "type": "object",
-            "patternProperties": {r"[\w\d\-_\.]+": {"type": ["string", "number"]}},
+            "patternProperties": {r"^[\w\-\.]+$": {"type": ["string", "number"]}},
         },
         "before_script": script_schema,
         "script": script_schema,
@@ -87,7 +87,7 @@ dynamic_mapping_schema = {
                 "endpoint": {"type": "string"},
                 "timeout": {"type": "integer", "minimum": 0},
                 "verify_ssl": {"type": "boolean", "default": False},
-                "header": {"type": "object", "additionalProperties": False},
+                "header": {"type": "object", "additionalProperties": {"type": "string"}},
                 "allow": {"type": "array", "items": {"type": "string"}},
                 "require": {"type": "array", "items": {"type": "string"}},
                 "ignore": {"type": "array", "items": {"type": "string"}},
@@ -122,16 +122,19 @@ pipeline_gen_schema = {
     },
 }
 
-core_shared_properties = {
-    "pipeline-gen": pipeline_gen_schema,
-    "rebuild-index": {"type": "boolean"},
-    "broken-specs-url": {"type": "string"},
-    "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
-    "target": {"type": "string", "enum": ["gitlab"], "default": "gitlab"},
-}
-
 #: Properties for inclusion in other schemas
-properties: Dict[str, Any] = {"ci": core_shared_properties}
+properties: Dict[str, Any] = {
+    "ci": {
+        "type": "object",
+        "properties": {
+            "pipeline-gen": pipeline_gen_schema,
+            "rebuild-index": {"type": "boolean"},
+            "broken-specs-url": {"type": "string"},
+            "broken-tests-packages": {"type": "array", "items": {"type": "string"}},
+            "target": {"type": "string", "default": "gitlab"},
+        },
+    }
+}
 
 #: Full schema with metadata
 schema = {

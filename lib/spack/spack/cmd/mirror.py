@@ -4,6 +4,7 @@
 
 import argparse
 import sys
+from concurrent.futures import as_completed
 
 import spack.caches
 import spack.cmd
@@ -17,6 +18,7 @@ import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
 import spack.spec
+import spack.util.parallel
 import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.error import SpackError
@@ -36,7 +38,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     create_parser.add_argument(
         "-d", "--directory", default=None, help="directory in which to create mirror"
     )
-
     create_parser.add_argument(
         "-a",
         "--all",
@@ -44,6 +45,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="mirror all versions of all packages in Spack, or all packages"
         " in the current environment if there is an active environment"
         " (this requires significant time and space)",
+    )
+    create_parser.add_argument(
+        "-j",
+        "--jobs",
+        type=int,
+        default=None,
+        help="Use a given number of workers to make the mirror (used in combination with -a)",
     )
     create_parser.add_argument("--file", help="file with specs of packages to put in mirror")
     create_parser.add_argument(
@@ -598,45 +606,89 @@ def mirror_create(args):
     # When no directory is provided, the source dir is used
     path = args.directory or spack.caches.fetch_cache_location()
 
-    mirror_specs, mirror_fn = _specs_and_action(args)
-    mirror_fn(mirror_specs, path=path, skip_unstable_versions=args.skip_unstable_versions)
+    mirror_specs = _specs_to_mirror(args)
+    workers = args.jobs
+    if workers is None:
+        if args.all:
+            workers = min(
+                16, spack.config.determine_number_of_jobs(parallel=True), len(mirror_specs)
+            )
+        else:
+            workers = 1
+
+    create_mirror_for_all_specs(
+        mirror_specs,
+        path=path,
+        skip_unstable_versions=args.skip_unstable_versions,
+        workers=workers,
+    )
 
 
-def _specs_and_action(args):
+def _specs_to_mirror(args):
     include_fn = IncludeFilter(args)
 
     if args.all and not ev.active_environment():
         mirror_specs = all_specs_with_all_versions()
-        mirror_fn = create_mirror_for_all_specs
     elif args.all and ev.active_environment():
         mirror_specs = concrete_specs_from_environment()
-        mirror_fn = create_mirror_for_individual_specs
     else:
         mirror_specs = concrete_specs_from_user(args)
-        mirror_fn = create_mirror_for_individual_specs
 
     mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=include_fn)
-    return mirror_specs, mirror_fn
+    return mirror_specs
 
 
-def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions):
-    mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
+def create_mirror_for_one_spec(candidate, mirror_cache):
+    pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
+    pkg_obj = pkg_cls(spack.spec.Spec(candidate))
+    mirror_stats = spack.mirrors.utils.MirrorStatsForOneSpec(candidate)
+    spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
+    mirror_stats.finalize()
+    return mirror_stats
+
+
+def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, workers):
+    mirror_cache = spack.mirrors.utils.get_mirror_cache(
         path, skip_unstable_versions=skip_unstable_versions
     )
-    for candidate in mirror_specs:
-        pkg_cls = spack.repo.PATH.get_pkg_class(candidate.name)
-        pkg_obj = pkg_cls(spack.spec.Spec(candidate))
-        mirror_stats.next_spec(pkg_obj.spec)
-        spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
+    mirror_stats = spack.mirrors.utils.MirrorStatsForAllSpecs()
+    with spack.util.parallel.make_concurrent_executor(jobs=workers) as executor:
+        # Submit tasks to the process pool
+        futures = [
+            executor.submit(create_mirror_for_one_spec, candidate, mirror_cache)
+            for candidate in mirror_specs
+        ]
+        for mirror_future in as_completed(futures):
+            ext_mirror_stats = mirror_future.result()
+            mirror_stats.merge(ext_mirror_stats)
+
     process_mirror_stats(*mirror_stats.stats())
+    return mirror_stats
 
 
-def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions):
-    present, mirrored, error = spack.mirrors.utils.create(
-        path, mirror_specs, skip_unstable_versions
-    )
-    tty.msg("Summary for mirror in {}".format(path))
-    process_mirror_stats(present, mirrored, error)
+def create(path, specs, skip_unstable_versions=False):
+    """Create a directory to be used as a spack mirror, and fill it with
+    package archives.
+
+    Arguments:
+        path: Path to create a mirror directory hierarchy in.
+        specs: Any package versions matching these specs will be added \
+            to the mirror.
+        skip_unstable_versions: if true, this skips adding resources when
+            they do not have a stable archive checksum (as determined by
+            ``fetch_strategy.stable_target``)
+
+    Returns:
+        A tuple of lists, each containing specs
+
+        * present: Package specs that were already present.
+        * mirrored: Package specs that were successfully mirrored.
+        * error: Package specs that failed to mirror due to some error.
+    """
+    # automatically spec-ify anything in the specs array.
+    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
+    mirror_stats = create_mirror_for_all_specs(specs, path, skip_unstable_versions, workers=1)
+    return mirror_stats.stats()
 
 
 def mirror_destroy(args):

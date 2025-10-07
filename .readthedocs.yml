@@ -4,6 +4,8 @@ build:
   os: "ubuntu-22.04"
   apt_packages:
     - graphviz
+    - inkscape
+    - xindy
   tools:
     python: "3.11"
   jobs:
@@ -13,6 +15,9 @@ build:
 sphinx:
   configuration: lib/spack/docs/conf.py
   fail_on_warning: true
+
+formats:
+  - pdf
 
 python:
   install:

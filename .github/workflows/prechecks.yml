@@ -51,6 +51,7 @@ jobs:
     - name: Install Python packages
       run: |
         pip install -r .github/workflows/requirements/style/requirements.txt
+        echo "PYTHONPATH=$PWD/lib/spack" >> $GITHUB_ENV
     - name: Run style tests (code)
       run: |
         bin/spack style --base HEAD^1
