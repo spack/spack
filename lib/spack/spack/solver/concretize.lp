@@ -2145,16 +2145,6 @@ opt_criterion(46, "number of compilers used on the same node").
     : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
 }.
 
-% Minimize the ids of the providers, i.e. use as much as
-% possible the first providers
-opt_criterion(45, "number of duplicate virtuals needed").
-#minimize{ 0@245: #true }.
-#minimize{ 0@45: #true }.
-#minimize{
-    Weight@45+Priority,ProviderNode,Virtual
-    : provider(ProviderNode, node(Weight, Virtual)),
-      build_priority(ProviderNode, Priority)
-}.
 
 opt_criterion(40, "preferred compilers").
 #minimize{ 0@240: #true }.
@@ -2260,9 +2250,10 @@ opt_criterion(2, "providers on edges").
 #minimize{ 0@202: #true }.
 #minimize{ 0@2: #true }.
 #minimize{
-    Weight@2,ParentNode,ProviderNode,Virtual
-    : provider_weight(ProviderNode, Virtual, Weight),
+    Weight@2,ParentNode,ProviderNode,node(X, Virtual)
+    : provider_weight(ProviderNode, node(X, Virtual), Weight),
       not attr("root", ProviderNode),
+      language(Virtual),
       depends_on(ParentNode, ProviderNode)
 }.
 
