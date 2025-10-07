@@ -1447,3 +1447,69 @@ packages:
     update_packages_config(packages_yaml)
     with pytest.raises(UnsatisfiableSpecError):
         spack.concretize.concretize_one(f"mpileaks {input_constraint}")
+
+
+@pytest.mark.parametrize(
+    "initial_preference,current_preference",
+    [
+        # Different provider
+        ("llvm", "gcc"),
+        ("gcc", "llvm"),
+        # Different version of the same provider
+        ("gcc@9", "gcc@10"),
+        ("gcc@10", "gcc@9"),
+        # Different configuration of the same provider
+        ("llvm+lld", "llvm~lld"),
+        ("llvm~lld", "llvm+lld"),
+    ],
+)
+@pytest.mark.parametrize("constraint_kind", ["require", "prefer"])
+def test_language_preferences_and_reuse(
+    initial_preference, current_preference, constraint_kind, concretize_scope, mock_packages
+):
+    """Tests that language preferences are respected when reusing specs."""
+
+    # Install mpileaks with a non-default variant to avoid "accidental" reuse
+    packages_yaml = f"""
+packages:
+  c:
+    {constraint_kind}:
+    - {initial_preference}
+  cxx:
+    {constraint_kind}:
+    - {initial_preference}
+"""
+    update_packages_config(packages_yaml)
+    initial_mpileaks = spack.concretize.concretize_one("mpileaks+debug")
+    reused_nodes = list(initial_mpileaks.traverse())
+
+    # Ask for just "mpileaks" and check the spec is reused
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, [Spec("mpileaks")], reuse=reused_nodes)
+        reused_mpileaks = result.specs[0]
+
+    assert reused_mpileaks.dag_hash() == initial_mpileaks.dag_hash()
+
+    # Change the language preferences and verify reuse is not happening
+    packages_yaml = f"""
+packages:
+  c:
+    {constraint_kind}:
+    - {current_preference}
+  cxx:
+    {constraint_kind}:
+    - {current_preference}
+"""
+    update_packages_config(packages_yaml)
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, [Spec("mpileaks")], reuse=reused_nodes)
+        mpileaks = result.specs[0]
+
+    assert initial_mpileaks.dag_hash() != mpileaks.dag_hash()
+    for node in mpileaks.traverse():
+        assert node.satisfies(f"%[when=%c]c={current_preference}")
+        assert node.satisfies(f"%[when=%cxx]cxx={current_preference}")
