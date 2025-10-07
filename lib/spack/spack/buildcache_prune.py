@@ -358,14 +358,15 @@ def prune_direct(
 
             # Attempt to regex match the manifest name in order to extract the name, version,
             # and hash for the spec.
-            regex_match = re.match(r"([^ ]+)-([^_ ]+)-([^-_\. ]+)", manifest)
+            manifest_name = manifest.split("/")[-1]  # strip off parent directories
+            regex_match = re.match(r"([^ ]+)-([^_ ]+)-([^-_\. ]+)", manifest_name)
 
             if regex_match is None:
                 # This should never happen, unless the buildcache is somehow corrupted
                 # and/or there is a bug.
                 raise BuildcachePruningException(
                     "Unable to extract spec name, version, and hash from "
-                    f'the manifest named "{manifest}"'
+                    f'the manifest named "{manifest_name}"'
                 )
 
             spec_name, spec_version, spec_hash = regex_match.groups()
