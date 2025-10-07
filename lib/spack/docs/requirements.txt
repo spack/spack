@@ -1,6 +1,6 @@
 # using forks of sphinx/furo to account for changes not yet merged upstream
 # sphinx==8.2.3
-git+https://github.com/haampie/sphinx.git@8df10d919a842aa34cda8449e4d63a8cdde41b54#egg=sphinx
+git+https://github.com/haampie/sphinx.git@7e36aafa051069360e396c8de4463b82f8db6daf#egg=sphinx
 sphinxcontrib-programoutput==0.18
 sphinxcontrib-svg2pdfconverter==1.3.0
 sphinx-copybutton==0.5.2
