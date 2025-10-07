@@ -125,6 +125,25 @@ unification_set(SetID, VirtualNode)
   :- provider(PackageNode, VirtualNode),
      unification_set(SetID, PackageNode).
 
+% Compute sub-sets of the nodes, if requested. These can be either the nodes connected
+% to another node by "link" edges, or the nodes connected to another node by "link and
+% "run" edges.
+
+compute_closure(node(ID, Package), "link")  :-
+  condition_requirement(_, "closure", Package, _, "link"),
+  attr("node", node(ID, Package)).
+
+attr("closure", PackageNode, DependencyNode, "link") :-
+  attr("depends_on", PackageNode, DependencyNode, "link"),
+  compute_closure(PackageNode, "link").
+
+attr("closure", PackageNode, DependencyNode, "link") :-
+  attr("depends_on", ParentNode, DependencyNode, "link"),
+  attr("closure", PackageNode, ParentNode, "link"),
+  compute_closure(PackageNode, "link").
+
+related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "link").
+
 % Do not allow split dependencies, for now. This ensures that we don't construct graphs where e.g.
 % a python extension depends on setuptools@63.4 as a run dependency, but uses e.g. setuptools@68
 % as a build dependency.
@@ -182,6 +201,7 @@ node_attributes_with_custom_rules("virtual_on_edge").
 node_attributes_with_custom_rules("provider_set").
 node_attributes_with_custom_rules("concrete_variant_set").
 node_attributes_with_custom_rules("concrete_variant_request").
+node_attributes_with_custom_rules("closure").
 
 trigger_condition_holds(TriggerID, node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
@@ -461,6 +481,11 @@ satisfied(trigger(PackageNode), condition_requirement(ID, "depends_on", A1, A2, 
 satisfied(trigger(PackageNode), condition_requirement(ID, "concrete_variant_request", A1, A2, A3)) :-
   trigger_node(ID, PackageNode, _),
   condition_requirement(ID, "concrete_variant_request", A1, A2, A3),
+  condition_nodes(ID, PackageNode, node(X, A1)).
+
+satisfied(trigger(PackageNode), condition_requirement(ID, "closure", A1, A2, A3)) :-
+  attr("closure", node(X, A1), node(_, A2), A3),
+  condition_requirement(ID, "closure", A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 %%%%
@@ -1100,6 +1125,16 @@ activate_requirement(node(ID, Package), X) :-
   requirement_group(Package, X),
   condition_holds(Y, node(ID, Package)),
   requirement_conditional(Package, X, Y).
+
+activate_requirement(node(ID, Package), X) :-
+  package_in_dag(node(ID, Package)),
+  package_in_dag(node(CID, ConditionPackage)),
+  requirement_group(Package, X),
+  pkg_fact(ConditionPackage, condition(Y)),
+  related(node(CID, ConditionPackage), node(ID, Package)),
+  condition_holds(Y, node(CID, ConditionPackage)),
+  requirement_conditional(Package, X, Y),
+  ConditionPackage != Package.
 
 requirement_group_satisfied(node(ID, Package), GroupID) :-
   1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } 1,

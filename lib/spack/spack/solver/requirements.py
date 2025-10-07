@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
-from typing import List, NamedTuple, Optional, Sequence
+from typing import List, NamedTuple, Optional, Sequence, Tuple
 
 import spack.config
 import spack.error
@@ -103,7 +103,7 @@ class RequirementParser:
         self.config = configuration
         self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
         self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
-        self.preferences_from_input: List[spack.spec.Spec] = []
+        self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
         result = []
@@ -114,16 +114,23 @@ class RequirementParser:
         result.extend(self.rules_from_conflict(pkg))
         return result
 
-    def parse_rules_from_input_specs(self, specs: List[spack.spec.Spec]):
+    def parse_rules_from_input_specs(self, specs: Sequence[spack.spec.Spec]):
         self.preferences_from_input.clear()
         for edge in spack.traverse.traverse_edges(specs, root=False):
             if edge.propagation == PropagationPolicy.PREFERENCE:
-                self.preferences_from_input.extend(_split_edge_on_virtuals(edge))
+                for constraint in _split_edge_on_virtuals(edge):
+                    root_name = edge.parent.name
+                    self.preferences_from_input.append((constraint, root_name))
 
     def rules_from_input_specs(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
         return [
-            preference(pkg.name, constraint=s, origin=RequirementOrigin.INPUT_SPECS)
-            for s in self.preferences_from_input
+            preference(
+                pkg.name,
+                constraint=s,
+                condition=spack.spec.Spec(f"{root_name} ^[deptypes=link]{pkg.name}"),
+                origin=RequirementOrigin.INPUT_SPECS,
+            )
+            for s, root_name in self.preferences_from_input
         ]
 
     def rules_from_package_py(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
