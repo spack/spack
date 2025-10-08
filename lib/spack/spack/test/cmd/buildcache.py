@@ -77,8 +77,13 @@ def buildcache_url_minio(request: pytest.FixtureRequest, monkeypatch: pytest.Mon
     if not request.config.getoption("--minio-integration-tests", default=False):
         pytest.skip("MinIO tests disabled, use --minio-integration-tests to enable")
 
-    def _entries_from_cache_fallback_patch(*args, **kwargs):
-        raise NotImplementedError()
+    def _entries_from_cache_fallback_patch(url: str, *args, **kwargs):
+        if url.startswith("s3://"):
+            raise NotImplementedError()
+        else:
+            from spack.url_buildcache import _entries_from_cache_fallback
+
+            return _entries_from_cache_fallback(url, *args, **kwargs)
 
     # We want to ensure the MinIO tests use the `_entries_from_cache_aws_cli`
     # function, and do not fall back to the `_entries_from_cache_fallback`
@@ -911,20 +916,18 @@ def test_buildcache_prune_orphaned_manifest(
 
 @pytest.mark.parametrize("dry_run", [False, True])
 def test_buildcache_prune_direct_with_keeplist(
-    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
+    buildcache_url, tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
 ):
     """Test direct pruning functionality with a keeplist file"""
-    mirror_directory = str(tmp_path)
+    mirror_directory = buildcache_url
     mirror("add", "--unsigned", "my-mirror", mirror_directory)
 
     # Install and push multiple packages
     specs = mutable_database.query_local("libelf", installed=True)
     spec1 = specs[0]
 
-    cache_entry = URLBuildcacheEntry(
-        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
-    )
-    manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
+    cache_entry = URLBuildcacheEntry(mirror_url=mirror_directory, spec=spec1, allow_unsigned=True)
+    manifest_url = cache_entry.get_manifest_url(spec1, mirror_directory)
 
     # Push the first spec (package only, no dependencies)
     buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec1.dag_hash()}")
