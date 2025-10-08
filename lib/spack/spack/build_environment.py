@@ -1360,8 +1360,7 @@ def start_build_process(
             if m:
                 jobserver_fd1 = Connection(int(m.group(1)))
                 jobserver_fd2 = Connection(int(m.group(2)))
-        if pkg.name == "paraview":
-            import ipdb; ipdb.set_trace()
+
         p = BuildProcess(
             target=_setup_pkg_and_run,
             args=(
@@ -1416,9 +1415,10 @@ def complete_build_process(process: BuildProcess):
         child_result = process.read_pipe.recv()
     except EOFError:
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
+    finally:
+        timeout = process.timeout
+        process.join(timeout=timeout)
 
-    timeout = process.timeout
-    process.join(timeout=timeout)
     if process.is_alive():
         warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
         process.terminate()
