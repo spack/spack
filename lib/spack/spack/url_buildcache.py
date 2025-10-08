@@ -1107,7 +1107,7 @@ def _entries_from_cache_aws_cli(
 
     def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
         cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
-        cache_entry.read_manifest(manifest_url=f"file://{manifest_path}")
+        cache_entry.read_manifest(manifest_url=manifest_path)
         return cache_entry
 
     include_pattern = cache_class.get_buildcache_component_include_pattern(component_type)
@@ -1150,7 +1150,7 @@ def _entries_from_cache_aws_cli(
                 local_path = url_util.join(tmpspecsdir, filename)
 
                 if Path(local_path).exists():
-                    filename_to_mtime[local_path] = datetime.strptime(
+                    filename_to_mtime[url_util.path_to_file_url(local_path)] = datetime.strptime(
                         match.group(1), "%Y-%m-%d %H:%M:%S"
                     ).timestamp()
     except Exception as e:

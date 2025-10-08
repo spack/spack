@@ -78,9 +78,6 @@ def _delete_manifests_from_cache_aws(
 
     file_count_before_deletion = len(list(pathlib.Path(tmpspecsdir).rglob(include_pattern)))
 
-    # Add file:// prefix to URLs so that they are deleted properly by web_util.remove_url
-    urls_to_delete = {url_util.path_to_file_url(url) for url in urls_to_delete}
-
     tty.debug(f"Deleting {len(urls_to_delete)} entries from cache at {url}")
     deleted = _delete_entries_from_cache_manual(tmpspecsdir, urls_to_delete)
     tty.debug(f"Deleted {deleted} entries from cache at {url}")
