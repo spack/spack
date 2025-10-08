@@ -8,16 +8,15 @@ import traceback
 import warnings
 from typing import Any, Dict, Iterable, List, Optional
 
-import jsonschema
-import jsonschema.exceptions
-
-import llnl.util.tty as tty
+from spack.vendor import jsonschema
+from spack.vendor.jsonschema import exceptions
 
 import spack.cmd
 import spack.compilers.config
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as hash_types
+import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -35,7 +34,7 @@ COMPILER_NAME_TRANSLATION = {"nvidia": "nvhpc", "rocm": "llvm-amdgpu", "clang": 
 def translated_compiler_name(manifest_compiler_name):
     """
     When creating a Compiler object, Spack expects a name matching
-    one of the classes in `spack.compilers.config`. Names in the Cray manifest
+    one of the classes in :mod:`spack.compilers.config`. Names in the Cray manifest
     may differ; for cases where we know the name refers to a compiler in
     Spack, this function translates it automatically.
 
@@ -88,7 +87,7 @@ def compiler_spec_from_paths(*, pkg_name: str, compiler_paths: Iterable[str]) ->
     """Returns the external spec associated with a series of compilers, if any."""
     pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
     finder = ExecutablesFinder()
-    specs = finder.detect_specs(pkg=pkg_cls, paths=compiler_paths)
+    specs = finder.detect_specs(pkg=pkg_cls, paths=compiler_paths, repo_path=spack.repo.PATH)
 
     if not specs or len(specs) > 1:
         raise CrayCompilerDetectionError(
@@ -227,7 +226,7 @@ def read(path, apply_updates):
             json_data = json.load(json_file)
 
         jsonschema.validate(json_data, manifest_schema)
-    except (jsonschema.exceptions.ValidationError, decode_exception_type) as e:
+    except (exceptions.ValidationError, decode_exception_type) as e:
         raise ManifestValidationError("error parsing manifest JSON:", str(e)) from e
 
     specs = entries_to_specs(json_data["specs"])

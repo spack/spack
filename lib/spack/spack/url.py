@@ -10,7 +10,9 @@ from there.
 
 **Example:** when spack is given the following URL:
 
-    https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz
+.. code-block::
+
+   https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz
 
 It can figure out that the package name is ``hdf``, and that it is at version
 ``4.2.12``. This is useful for making the creation of packages simple: a user
@@ -18,7 +20,9 @@ just supplies a URL and skeleton code is generated automatically.
 
 Spack can also figure out that it can most likely download 4.2.6 at this URL:
 
-    https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.6/src/hdf-4.2.6.tar.gz
+.. code-block::
+
+   https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.6/src/hdf-4.2.6.tar.gz
 
 This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
@@ -28,15 +32,14 @@ import io
 import os
 import pathlib
 import re
-from typing import Any, Dict, Optional, Sequence, Union
-
-import llnl.url
-from llnl.path import convert_to_posix_path
-from llnl.util.tty.color import cescape, colorize
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import spack.error
+import spack.llnl.url
 import spack.util.web
 import spack.version
+from spack.llnl.path import convert_to_posix_path
+from spack.llnl.util.tty.color import cescape, colorize
 
 #
 # Note: We call the input to most of these functions a "path" but the functions
@@ -45,7 +48,7 @@ import spack.version
 #
 
 
-def strip_name_suffixes(path, version):
+def strip_name_suffixes(path: str, version: Union[str, spack.version.StandardVersion]) -> str:
     """Most tarballs contain a package name followed by a version number.
     However, some also contain extraneous information in-between the name
     and version:
@@ -64,8 +67,8 @@ def strip_name_suffixes(path, version):
     * ``jpeg``
 
     Args:
-        path (str): The filename or URL for the package
-        version (str): The version detected for this URL
+        path: The filename or URL for the package
+        version: The version detected for this URL
 
     Returns:
         str: The ``path`` with any extraneous suffixes removed
@@ -117,19 +120,20 @@ def strip_name_suffixes(path, version):
     return path
 
 
-def parse_version_offset(path):
+def parse_version_offset(path: str) -> Tuple[str, int, int, int, str]:
     """Try to extract a version string from a filename or URL.
 
     Args:
         path (str): The filename or URL for the package
 
     Returns:
-        tuple: A tuple containing:
-            version of the package,
-            first index of version,
-            length of version string,
-            the index of the matching regex,
-            the matching regex
+        A tuple containing
+
+        * version of the package
+        * first index of version
+        * length of version string
+        * the index of the matching regex
+        * the matching regex
 
     Raises:
         UndetectableVersionError: If the URL does not match any regexes
@@ -139,13 +143,13 @@ def parse_version_offset(path):
     # path:   The prefix of the URL, everything before the ext and suffix
     # ext:    The file extension
     # suffix: Any kind of query string that begins with a '?'
-    path, ext, suffix = llnl.url.split_url_extension(path)
+    path, ext, suffix = spack.llnl.url.split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
     original_stem = os.path.basename(path)
 
     # Try to strip off anything after the version number
-    stem = llnl.url.strip_version_suffixes(original_stem)
+    stem = spack.llnl.url.strip_version_suffixes(original_stem)
 
     # Assumptions:
     #
@@ -301,20 +305,23 @@ def parse_version(path: str) -> spack.version.StandardVersion:
     return spack.version.StandardVersion.from_string(version)
 
 
-def parse_name_offset(path, v=None):
+def parse_name_offset(
+    path: str, v: Optional[Union[str, spack.version.StandardVersion]] = None
+) -> Tuple[str, int, int, int, str]:
     """Try to determine the name of a package from its filename or URL.
 
     Args:
-        path (str): The filename or URL for the package
-        v (str): The version of the package
+        path: The filename or URL for the package
+        v: The version of the package
 
     Returns:
-        tuple: A tuple containing:
-            name of the package,
-            first index of name,
-            length of name,
-            the index of the matching regex,
-            the matching regex
+        A tuple containing
+
+        * name of the package
+        * first index of name
+        * length of name
+        * the index of the matching regex
+        * the matching regex
 
     Raises:
         UndetectableNameError: If the URL does not match any regexes
@@ -334,7 +341,7 @@ def parse_name_offset(path, v=None):
     # path:   The prefix of the URL, everything before the ext and suffix
     # ext:    The file extension
     # suffix: Any kind of query string that begins with a '?'
-    path, ext, suffix = llnl.url.split_url_extension(path)
+    path, ext, suffix = spack.llnl.url.split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
     original_stem = os.path.basename(path)
@@ -430,12 +437,12 @@ def parse_name(path, ver=None):
     return name
 
 
-def parse_name_and_version(path):
+def parse_name_and_version(path: str) -> Tuple[str, spack.version.StandardVersion]:
     """Try to determine the name of a package and extract its version
     from its filename or URL.
 
     Args:
-        path (str): The filename or URL for the package
+        path: The filename or URL for the package
 
     Returns:
         tuple: a tuple containing the package (name, version)
@@ -506,24 +513,24 @@ def wildcard_version(path):
     return result
 
 
-def substitute_version(path, new_version):
+def substitute_version(path: str, new_version) -> str:
     """Given a URL or archive name, find the version in the path and
     substitute the new version for it.  Replace all occurrences of
     the version *if* they don't overlap with the package name.
 
     Simple example:
 
-    .. code-block:: python
+    .. code-block:: pycon
 
-       substitute_version('http://www.mr511.de/software/libelf-0.8.13.tar.gz', '2.9.3')
-       >>> 'http://www.mr511.de/software/libelf-2.9.3.tar.gz'
+       >>> substitute_version("http://www.mr511.de/software/libelf-0.8.13.tar.gz", "2.9.3")
+       "http://www.mr511.de/software/libelf-2.9.3.tar.gz"
 
     Complex example:
 
-    .. code-block:: python
+    .. code-block:: pycon
 
-       substitute_version('https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz', '2.3')
-       >>> 'https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz'
+       >>> substitute_version("https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz", "2.3")
+       "https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz"
     """
     (name, ns, nl, noffs, ver, vs, vl, voffs) = substitution_offsets(path)
 
@@ -542,11 +549,11 @@ def color_url(path, **kwargs):
     """Color the parts of the url according to Spack's parsing.
 
     Colors are:
-       | Cyan: The version found by :func:`parse_version_offset`.
-       | Red:  The name found by :func:`parse_name_offset`.
 
-       | Green:   Instances of version string from :func:`substitute_version`.
-       | Magenta: Instances of the name (protected from substitution).
+    * Cyan: The version found by :func:`parse_version_offset`.
+    * Red: The name found by :func:`parse_name_offset`.
+    * Green: Instances of version string from :func:`substitute_version`.
+    * Magenta: Instances of the name (protected from substitution).
 
     Args:
         path (str): The filename or URL for the package
@@ -638,7 +645,7 @@ def find_versions_of_archive(
     if list_url is not None:
         list_urls.add(list_url)
     for aurl in archive_urls:
-        list_urls |= llnl.url.find_list_urls(aurl)
+        list_urls |= spack.llnl.url.find_list_urls(aurl)
 
     # Add '/' to the end of the URL. Some web servers require this.
     additional_list_urls = set()

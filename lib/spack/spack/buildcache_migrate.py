@@ -9,11 +9,10 @@ import pathlib
 import tempfile
 from typing import NamedTuple
 
-import llnl.util.tty as tty
-
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.database as spack_db
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
@@ -258,8 +257,11 @@ def migrate(
     signing_key = ""
     if not unsigned:
         try:
-            signing_key = bindist.select_signing_key()
-        except (bindist.NoKeyException, bindist.PickKeyException):
+            signing_key = spack.binary_distribution.select_signing_key()
+        except (
+            spack.binary_distribution.NoKeyException,
+            spack.binary_distribution.PickKeyException,
+        ):
             raise MigrationException(
                 "Signed migration requires exactly one secret key in keychain"
             )
@@ -287,13 +289,14 @@ def migrate(
         with open(index_path, "w", encoding="utf-8") as fd:
             fd.write(contents)
 
-        db = bindist.BuildCacheDatabase(tmpdir)
+        db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
         db._read_from_file(pathlib.Path(index_path))
 
         specs_to_migrate = [
             s
             for s in db.query_local(installed=InstallRecordStatus.ANY)
-            if not s.external and db.query_local_by_spec_hash(s.dag_hash()).in_buildcache
+            # todo, make it easer to get install records associated with specs
+            if not s.external and db._data[s.dag_hash()].in_buildcache
         ]
 
         # Run the tasks in parallel if possible
@@ -330,13 +333,13 @@ def migrate(
             # Push the migrated mirror index
             index_tmpdir = os.path.join(tmpdir, "rebuild_index")
             os.mkdir(index_tmpdir)
-            bindist._push_index(db, index_tmpdir, mirror_url)
+            spack.binary_distribution._push_index(db, index_tmpdir, mirror_url)
 
             # Push the public part of the signing key
             if not unsigned:
                 keys_tmpdir = os.path.join(tmpdir, "keys")
                 os.mkdir(keys_tmpdir)
-                bindist._url_push_keys(
+                spack.binary_distribution._url_push_keys(
                     mirror_url, keys=[signing_key], update_index=True, tmpdir=keys_tmpdir
                 )
         else:

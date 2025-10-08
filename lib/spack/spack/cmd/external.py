@@ -8,15 +8,14 @@ import re
 import sys
 from typing import List, Optional, Set
 
-import llnl.util.tty as tty
-import llnl.util.tty.colify as colify
-
 import spack
 import spack.cmd
 import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.colify as colify
 import spack.package_base
 import spack.repo
 import spack.spec
@@ -27,7 +26,7 @@ section = "config"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
 
     find_parser = sp.add_parser("find", help="add external packages to packages.yaml")

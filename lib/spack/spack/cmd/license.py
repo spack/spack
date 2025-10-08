@@ -2,14 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import enum
 import os
 import re
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, Generator
 
-import llnl.util.tty as tty
-
+import spack.llnl.util.tty as tty
 import spack.paths
 
 description = "list and check license headers on files in spack"
@@ -22,8 +22,10 @@ license_lines = 6
 #: Spack's license identifier
 apache2_mit_spdx = "(Apache-2.0 OR MIT)"
 
+subdirs = ("bin", "lib", "share", ".github")
+
 #: regular expressions for licensed files.
-licensed_files = [
+licensed_files_patterns = [
     # spack scripts
     r"^bin/spack$",
     r"^bin/spack\.bat$",
@@ -33,20 +35,19 @@ licensed_files = [
     r"^bin/spack-python$",
     r"^bin/haspywin\.py$",
     # all of spack core except unparse
-    r"^lib/spack/spack_installable/main\.py$",
-    r"^lib/spack/spack/(?!(test/)?util/unparse).*\.py$",
+    r"^lib/spack/spack/(?!vendor/|util/unparse|util/ctest_log_parser|test/util/unparse).*\.py$",
     r"^lib/spack/spack/.*\.sh$",
     r"^lib/spack/spack/.*\.lp$",
     r"^lib/spack/llnl/.*\.py$",
+    # 1 file in vendored packages
+    r"^lib/spack/spack/vendor/__init__.py$",
     # special case some test data files that have license headers
     r"^lib/spack/spack/test/data/style/broken.dummy",
     r"^lib/spack/spack/test/data/unparse/.*\.txt",
     # rst files in documentation
-    r"^lib/spack/docs/(?!command_index|spack|llnl).*\.rst$",
-    r"^lib/spack/docs/.*\.py$",
+    r"^lib/spack/docs/(?!command_index|spack).*\.rst$",
+    r"^lib/spack/docs/(?!\.spack/|\.spack-env/).*\.py$",
     r"^lib/spack/docs/spack.yaml$",
-    # 1 file in external
-    r"^lib/spack/external/__init__.py$",
     # shell scripts in share
     r"^share/spack/.*\.sh$",
     r"^share/spack/.*\.bash$",
@@ -58,32 +59,32 @@ licensed_files = [
     r"^share/spack/bash/spack-completion.in$",
     # action workflows
     r"^.github/actions/.*\.py$",
-    # all packages
-    r"^var/spack/repos/.*/package.py$",
 ]
 
 
-def _all_spack_files(root=spack.paths.prefix):
-    """Generates root-relative paths of all files in the spack repository."""
-    visited = set()
-    for cur_root, folders, files in os.walk(root):
-        for filename in files:
-            path = os.path.realpath(os.path.join(cur_root, filename))
+def _licensed_files(root: str = spack.paths.prefix) -> Generator[str, None, None]:
+    """Generates paths of licensed files."""
+    licensed_files = re.compile("|".join(f"(?:{pattern})" for pattern in licensed_files_patterns))
+    dirs = [
+        os.path.join(root, subdir)
+        for subdir in subdirs
+        if os.path.isdir(os.path.join(root, subdir))
+    ]
 
-            if path not in visited:
-                yield os.path.relpath(path, root)
-                visited.add(path)
-
-
-def _licensed_files(args):
-    for relpath in _all_spack_files(args.root):
-        if any(regex.match(relpath) for regex in licensed_files):
-            yield relpath
+    while dirs:
+        with os.scandir(dirs.pop()) as it:
+            for entry in it:
+                if entry.is_dir(follow_symlinks=False):
+                    dirs.append(entry.path)
+                elif entry.is_file(follow_symlinks=False):
+                    relpath = os.path.relpath(entry.path, root)
+                    if licensed_files.match(relpath):
+                        yield relpath
 
 
 def list_files(args):
     """list files in spack that should have license headers"""
-    for relpath in sorted(_licensed_files(args)):
+    for relpath in sorted(_licensed_files(args.root)):
         print(os.path.join(spack.paths.spack_root, relpath))
 
 
@@ -170,7 +171,7 @@ def verify(args):
 
     license_errors = LicenseError()
 
-    for relpath in _licensed_files(args):
+    for relpath in _licensed_files(args.root):
         path = os.path.join(args.root, relpath)
         with open(path, encoding="utf-8") as f:
             lines = [line for line in f][:license_lines]
@@ -185,7 +186,7 @@ def verify(args):
         tty.msg("No license issues found.")
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--root",
         action="store",
@@ -199,7 +200,5 @@ def setup_parser(subparser):
 
 
 def license(parser, args):
-    licensed_files[:] = [re.compile(regex) for regex in licensed_files]
-
     commands = {"list-files": list_files, "verify": verify}
     return commands[args.license_command](args)

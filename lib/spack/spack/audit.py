@@ -11,8 +11,8 @@ object:
 .. code-block:: python
 
    audit_cfgcmp = AuditClass(
-       tag='CFG-COMPILER',
-       description='Sanity checks on compilers.yaml',
+       tag="CFG-COMPILER",
+       description="Sanity checks on compilers.yaml",
        kwargs=()
    )
 
@@ -49,18 +49,17 @@ import warnings
 from typing import Iterable, List, Set, Tuple
 from urllib.request import urlopen
 
-import llnl.util.lang
-from llnl.string import plural
-
 import spack.builder
 import spack.config
 import spack.fetch_strategy
+import spack.llnl.util.lang
 import spack.patch
 import spack.repo
 import spack.spec
 import spack.util.crypto
 import spack.util.spack_yaml as syaml
 import spack.variant
+from spack.llnl.string import plural
 
 #: Map an audit tag to a list of callables implementing checks
 CALLBACKS = {}
@@ -331,7 +330,7 @@ def _wrongly_named_spec(error_cls):
 def _ensure_all_virtual_packages_have_default_providers(error_cls):
     """All virtual packages must have a default provider explicitly set."""
     configuration = spack.config.create()
-    defaults = configuration.get("packages", scope="defaults")
+    defaults = configuration.get_config("packages", _merged_scope="defaults")
     default_providers = defaults["all"]["providers"]
     virtuals = spack.repo.PATH.provider_index.providers
     default_providers_filename = configuration.scopes["defaults"].get_section_filename("packages")
@@ -350,7 +349,7 @@ def _ensure_no_folders_without_package_py(error_cls):
     for repository in spack.repo.PATH.repos:
         missing = []
         for entry in os.scandir(repository.packages_path):
-            if not entry.is_dir():
+            if not entry.is_dir() or entry.name == "__pycache__":
                 continue
             package_py = pathlib.Path(entry.path) / spack.repo.package_file_name
             if not package_py.exists():
@@ -929,7 +928,7 @@ def _linting_package_file(pkgs, error_cls):
                 msg = 'Package "{0}" uses http but has a valid https endpoint.'
                 errors.append(msg.format(pkg_cls.name))
 
-    return llnl.util.lang.dedupe(errors)
+    return spack.llnl.util.lang.dedupe(errors)
 
 
 @package_directives
@@ -991,7 +990,7 @@ def _unknown_variants_in_directives(pkgs, error_cls):
                 )
             )
 
-    return llnl.util.lang.dedupe(errors)
+    return spack.llnl.util.lang.dedupe(errors)
 
 
 @package_directives
@@ -1225,7 +1224,7 @@ def _named_specs_in_when_arguments(pkgs, error_cls):
 
         def _refers_to_pkg(when):
             when_spec = spack.spec.Spec(when)
-            return when_spec.name is None or when_spec.name == pkg_name
+            return not when_spec.name or when_spec.name == pkg_name
 
         def _error_items(when_dict):
             for when, elts in when_dict.items():
@@ -1272,7 +1271,7 @@ def _named_specs_in_when_arguments(pkgs, error_cls):
                 error_cls(f"{pkg_name}: wrong 'when=' condition in 'resource' directives", details)
             )
 
-    return llnl.util.lang.dedupe(errors)
+    return spack.llnl.util.lang.dedupe(errors)
 
 
 #: Sanity checks on package directives

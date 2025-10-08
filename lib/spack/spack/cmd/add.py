@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
+import argparse
 
 import spack.cmd
+import spack.llnl.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "add a spec to an environment"
@@ -12,7 +13,7 @@ section = "environments"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-l",
         "--list-name",

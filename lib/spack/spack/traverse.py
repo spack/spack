@@ -4,6 +4,7 @@
 
 from collections import defaultdict, deque
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Iterable,
@@ -17,10 +18,12 @@ from typing import (
     overload,
 )
 
-from typing_extensions import Literal
+from spack.vendor.typing_extensions import Literal
 
 import spack.deptypes as dt
-import spack.spec
+
+if TYPE_CHECKING:
+    import spack.spec
 
 # Export only the high-level API.
 __all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
@@ -35,8 +38,9 @@ class EdgeAndDepth(NamedTuple):
     depth: int
 
 
+# Sort edges by name first, then abstract hash, then full edge comparison to break ties
 def sort_edges(edges):
-    edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or ""))
+    edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or "", edge))
     return edges
 
 
@@ -226,10 +230,10 @@ def get_visitor_from_args(
 
 def with_artificial_edges(specs):
     """Initialize a deque of edges from an artificial root node to the root specs."""
+    from spack.spec import DependencySpec
+
     return deque(
-        EdgeAndDepth(
-            edge=spack.spec.DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0
-        )
+        EdgeAndDepth(edge=DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0)
         for s in specs
     )
 
@@ -376,9 +380,7 @@ def traverse_breadth_first_tree_edges(parent_id, edges, parents, key=id, depth=0
         if parents[child_id] != parent_id:
             continue
 
-        # yield from ... in Python 3.
-        for item in traverse_breadth_first_tree_edges(child_id, edges, parents, key, depth + 1):
-            yield item
+        yield from traverse_breadth_first_tree_edges(child_id, edges, parents, key, depth + 1)
 
 
 def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):

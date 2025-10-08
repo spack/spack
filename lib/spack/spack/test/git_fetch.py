@@ -4,21 +4,24 @@
 
 import copy
 import os
+import pathlib
 import shutil
 
 import pytest
-
-from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.concretize
 import spack.config
 import spack.error
 import spack.fetch_strategy
+import spack.package_base
 import spack.platforms
 import spack.repo
 from spack.fetch_strategy import GitFetchStrategy
+from spack.llnl.util.filesystem import mkdirp, touch, working_dir
+from spack.package_base import PackageBase
 from spack.spec import Spec
 from spack.stage import Stage
+from spack.variant import SingleValuedVariant
 from spack.version import Version
 
 _mock_transport_error = "Mock HTTP transport error"
@@ -68,9 +71,9 @@ def mock_bad_git(monkeypatch):
     yield
 
 
-def test_bad_git(tmpdir, mock_bad_git):
+def test_bad_git(tmp_path: pathlib.Path, mock_bad_git):
     """Trigger a SpackError when attempt a fetch with a bad git."""
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
 
     with pytest.raises(spack.error.SpackError):
         fetcher = GitFetchStrategy(git="file:///not-a-real-git-repo")
@@ -216,9 +219,9 @@ def test_debug_fetch(
             assert os.path.isdir(s.package.stage.source_path)
 
 
-def test_git_extra_fetch(git, tmpdir):
+def test_git_extra_fetch(git, tmp_path: pathlib.Path):
     """Ensure a fetch after 'expanding' is effectively a no-op."""
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
 
     fetcher = GitFetchStrategy(git="file:///not-a-real-git-repo")
     with Stage(fetcher, path=testpath) as stage:
@@ -326,6 +329,7 @@ def test_gitsubmodules_callable(
     """
 
     def submodules_callback(package):
+        assert isinstance(package, PackageBase)
         name = "third_party/submodule0"
         return [name]
 
@@ -378,6 +382,7 @@ def test_gitsubmodules_falsey(
     """
 
     def submodules_callback(package):
+        assert isinstance(package, PackageBase)
         return False
 
     type_of_test = "tag-branch"
@@ -429,3 +434,38 @@ def test_git_sparse_paths_partial_clone(
 
         # fixture file is in the sparse-path expansion tree
         assert os.path.isfile(t.file)
+
+
+@pytest.mark.regression("50699")
+def test_git_sparse_path_have_unique_mirror_projections(
+    git, mock_git_repository, mutable_mock_repo, monkeypatch, mutable_config
+):
+    """
+    Confirm two packages with different sparse paths but the same git commit
+    have different mirror projections so tarfiles in the mirror are unique
+    and don't get overwritten
+    """
+    repo_path = mock_git_repository.path
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", pathlib.Path(repo_path).as_uri(), raising=False
+    )
+    gold_commit = git("-C", repo_path, "rev-parse", "many_dirs", output=str).strip()
+    s_a = spack.concretize.concretize_one(f"git-sparse-a commit={gold_commit}")
+    s_b = spack.concretize.concretize_one(f"git-sparse-b commit={gold_commit}")
+    assert s_a.package.stage[0].mirror_layout.path != s_b.package.stage[0].mirror_layout.path
+
+
+@pytest.mark.disable_clean_stage_check
+def test_commit_variant_clone(
+    git, default_mock_concretization, mutable_mock_repo, mock_git_version_info, monkeypatch
+):
+
+    repo_path, filename, commits = mock_git_version_info
+    test_commit = commits[-2]
+    s = default_mock_concretization("git-test")
+    args = {"git": pathlib.Path(repo_path).as_uri()}
+    monkeypatch.setitem(s.package.versions, Version("git"), args)
+    s.variants["commit"] = SingleValuedVariant("commit", test_commit)
+    s.package.do_stage()
+    with working_dir(s.package.stage.source_path):
+        assert git("rev-parse", "HEAD", output=str, error=str).strip() == test_commit

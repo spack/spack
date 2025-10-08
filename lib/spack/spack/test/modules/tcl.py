@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-import archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.modules.common
@@ -186,7 +186,8 @@ class TestTcl:
         assert len([x for x in content if "setenv FOO {{{name}}, {name}, {{}}, {}}" in x]) == 1
 
     @pytest.mark.skipif(
-        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+        str(spack.vendor.archspec.cpu.host().family) != "x86_64",
+        reason="test data is specific for x86_64",
     )
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""
@@ -327,14 +328,16 @@ class TestTcl:
         with pytest.raises(spack.modules.common.ModulesError):
             modulefile_content("mpileaks")
 
-    def test_module_index(self, module_configuration, factory, tmpdir_factory):
+    def test_module_index(
+        self, module_configuration, factory, tmp_path_factory: pytest.TempPathFactory
+    ):
         module_configuration("suffix")
 
         w1, s1 = factory("mpileaks")
         w2, s2 = factory("callpath")
         w3, s3 = factory("openblas")
 
-        test_root = str(tmpdir_factory.mktemp("module-root"))
+        test_root = str(tmp_path_factory.mktemp("module-root"))
 
         spack.modules.common.generate_module_index(test_root, [w1, w2])
 

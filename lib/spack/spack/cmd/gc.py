@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
+import argparse
 
 import spack.cmd.common.arguments
 import spack.cmd.common.confirmation
 import spack.cmd.uninstall
 import spack.deptypes as dt
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.store
 
 description = "remove specs that are now no longer needed"
@@ -16,7 +17,7 @@ section = "build"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-E",
         "--except-any-environment",

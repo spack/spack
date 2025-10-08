@@ -5,7 +5,7 @@ import platform
 
 import pytest
 
-import archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.operating_systems
@@ -125,7 +125,8 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
 )
 @pytest.mark.usefixtures("mock_packages", "config")
 @pytest.mark.skipif(
-    str(archspec.cpu.host().family) != "x86_64", reason="tests are for x86_64 uarch ranges"
+    str(spack.vendor.archspec.cpu.host().family) != "x86_64",
+    reason="tests are for x86_64 uarch ranges",
 )
 def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
     spec = spack.concretize.concretize_one(

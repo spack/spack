@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import sys
 from textwrap import dedent
 
@@ -90,8 +91,8 @@ def test_list_format_html():
     assert "<h1>hdf5" in output
 
 
-def test_list_update(tmpdir):
-    update_file = tmpdir.join("output")
+def test_list_update(tmp_path: pathlib.Path):
+    update_file = tmp_path / "output"
 
     # not yet created when list is run
     list("--update", str(update_file))
@@ -102,7 +103,7 @@ def test_list_update(tmpdir):
     # created but older than any package
     with update_file.open("w") as f:
         f.write("empty\n")
-    update_file.setmtime(0)
+    os.utime(str(update_file), (0, 0))  # Set mtime to 0
     list("--update", str(update_file))
     assert update_file.exists()
     with update_file.open() as f:
@@ -143,13 +144,13 @@ def test_list_count():
 
 def test_list_repos():
     with spack.repo.use_repositories(
-        os.path.join(spack.paths.test_repos_path, "builtin.mock"),
-        os.path.join(spack.paths.test_repos_path, "builder.test"),
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "builtin_mock"),
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "builder_test"),
     ):
         total_pkgs = len(list().strip().split())
-        mock_pkgs = len(list("-r", "builtin.mock").strip().split())
-        builder_pkgs = len(list("-r", "builder.test").strip().split())
-        both_repos = len(list("-r", "builtin.mock", "-r", "builder.test").strip().split())
+        mock_pkgs = len(list("-r", "builtin_mock").strip().split())
+        builder_pkgs = len(list("-r", "builder_test").strip().split())
+        both_repos = len(list("-r", "builtin_mock", "-r", "builder_test").strip().split())
 
         assert total_pkgs > mock_pkgs > builder_pkgs
         assert both_repos == total_pkgs

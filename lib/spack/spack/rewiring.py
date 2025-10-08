@@ -5,7 +5,7 @@
 import os
 import tempfile
 
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.error
 import spack.hooks
 import spack.store
@@ -34,11 +34,11 @@ def rewire_node(spec, explicit):
 
     # Copy spec.build_spec.prefix to spec.prefix through a temporary tarball
     tarball = os.path.join(tempdir, f"{spec.dag_hash()}.tar.gz")
-    bindist.create_tarball(spec.build_spec, tarball)
+    spack.binary_distribution.create_tarball(spec.build_spec, tarball)
 
     spack.hooks.pre_install(spec)
-    bindist.extract_buildcache_tarball(tarball, destination=spec.prefix)
-    bindist.relocate_package(spec)
+    spack.binary_distribution.extract_buildcache_tarball(tarball, destination=spec.prefix)
+    spack.binary_distribution.relocate_package(spec)
 
     # run post install hooks and add to db
     spack.hooks.post_install(spec, explicit)

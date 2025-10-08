@@ -3,16 +3,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import spack.util.ld_so_conf as ld_so_conf
 
 
-def test_ld_so_conf_parsing(tmpdir):
+def test_ld_so_conf_parsing(tmp_path: pathlib.Path):
     cwd = os.getcwd()
-    tmpdir.ensure("subdir", dir=True)
+    (tmp_path / "subdir").mkdir()
 
     # Entrypoint config file
-    with open(str(tmpdir.join("main.conf")), "wb") as f:
+    with open(str(tmp_path / "main.conf"), "wb") as f:
         f.write(b"  \n")
         f.write(b"include subdir/*.conf\n")
         f.write(b"include non-existent/file\n")
@@ -25,18 +26,18 @@ def test_ld_so_conf_parsing(tmpdir):
         f.write(b"#/skip/me\n")
 
     # Should be parsed: subdir/first.conf
-    with open(str(tmpdir.join("subdir", "first.conf")), "wb") as f:
+    with open(str(tmp_path / "subdir" / "first.conf"), "wb") as f:
         f.write(b"/first.conf/lib")
 
     # Should be parsed: subdir/second.conf
-    with open(str(tmpdir.join("subdir", "second.conf")), "wb") as f:
+    with open(str(tmp_path / "subdir" / "second.conf"), "wb") as f:
         f.write(b"/second.conf/lib")
 
     # Not matching subdir/*.conf
-    with open(str(tmpdir.join("subdir", "third")), "wb") as f:
+    with open(str(tmp_path / "subdir" / "third"), "wb") as f:
         f.write(b"/third/lib")
 
-    paths = ld_so_conf.parse_ld_so_conf(str(tmpdir.join("main.conf")))
+    paths = ld_so_conf.parse_ld_so_conf(str(tmp_path / "main.conf"))
 
     assert len(paths) == 3
     assert "/main.conf/lib" in paths

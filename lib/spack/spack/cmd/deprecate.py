@@ -14,16 +14,15 @@ installation and its deprecator.
 """
 import argparse
 
-import llnl.util.tty as tty
-from llnl.util.symlink import symlink
-
 import spack.cmd
 import spack.concretize
 import spack.environment as ev
 import spack.installer
+import spack.llnl.util.tty as tty
 import spack.store
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.llnl.util.filesystem import symlink
 
 from ..enums import InstallRecordStatus
 
@@ -35,8 +34,8 @@ level = "long"
 display_args = {"long": True, "show_flags": True, "variants": True, "indent": 4}
 
 
-def setup_parser(sp):
-    setup_parser.parser = sp
+def setup_parser(sp: argparse.ArgumentParser) -> None:
+    setattr(setup_parser, "parser", sp)
 
     arguments.add_common_arguments(sp, ["yes_to_all"])
 

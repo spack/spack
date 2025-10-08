@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -26,7 +27,7 @@ test_module_lines = [
 ]
 
 
-def test_module_function_change_env(tmp_path):
+def test_module_function_change_env(tmp_path: pathlib.Path):
     environb = {b"TEST_MODULE_ENV_VAR": b"TEST_FAIL", b"NOT_AFFECTED": b"NOT_AFFECTED"}
     src_file = tmp_path / "src_me"
     src_file.write_text("export TEST_MODULE_ENV_VAR=TEST_SUCCESS\n")
@@ -35,7 +36,7 @@ def test_module_function_change_env(tmp_path):
     assert environb[b"NOT_AFFECTED"] == b"NOT_AFFECTED"
 
 
-def test_module_function_change_env_with_module_src_cmd(tmp_path):
+def test_module_function_change_env_with_module_src_cmd(tmp_path: pathlib.Path):
     environb = {
         b"MODULESHOME": b"here",
         b"TEST_MODULE_ENV_VAR": b"TEST_FAIL",
@@ -59,7 +60,7 @@ def test_module_function_change_env_with_module_src_cmd(tmp_path):
     assert environb[b"NOT_AFFECTED"] == b"NOT_AFFECTED"
 
 
-def test_module_function_change_env_without_moduleshome_no_module_src_cmd(tmp_path):
+def test_module_function_change_env_without_moduleshome_no_module_src_cmd(tmp_path: pathlib.Path):
     environb = {
         b"TEST_MODULE_ENV_VAR": b"TEST_FAIL",
         b"TEST_ANOTHER_MODULE_ENV_VAR": b"TEST_FAIL",
@@ -82,8 +83,8 @@ def test_module_function_change_env_without_moduleshome_no_module_src_cmd(tmp_pa
     assert environb[b"NOT_AFFECTED"] == b"NOT_AFFECTED"
 
 
-def test_module_function_no_change(tmpdir):
-    src_file = str(tmpdir.join("src_me"))
+def test_module_function_no_change(tmp_path: pathlib.Path):
+    src_file = str(tmp_path / "src_me")
     with open(src_file, "w", encoding="utf-8") as f:
         f.write("echo TEST_MODULE_FUNCTION_PRINT")
 

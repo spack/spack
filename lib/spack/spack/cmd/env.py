@@ -9,14 +9,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import List, Optional, Set
-
-import llnl.string as string
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.symlink import islink, symlink
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import cescape, colorize
+from typing import List, Optional, Set, Tuple, Union
 
 import spack.cmd
 import spack.cmd.common
@@ -27,8 +20,14 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
+import spack.llnl.string as string
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.tengine
 from spack.cmd.common import arguments
+from spack.llnl.util.filesystem import islink, symlink
+from spack.llnl.util.tty.colify import colify
+from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
@@ -36,22 +35,22 @@ section = "environments"
 level = "short"
 
 
-#: List of subcommands of `spack env`
-subcommands = [
-    "activate",
-    "deactivate",
-    "create",
-    ["remove", "rm"],
-    ["rename", "mv"],
-    ["list", "ls"],
-    ["status", "st"],
-    "loads",
-    "view",
-    "update",
-    "revert",
-    "depfile",
-    "track",
-    "untrack",
+#: List of subcommands of ``spack env``
+subcommands: List[Tuple[str, ...]] = [
+    ("activate",),
+    ("deactivate",),
+    ("create",),
+    ("remove", "rm"),
+    ("rename", "mv"),
+    ("list", "ls"),
+    ("status", "st"),
+    ("loads",),
+    ("view",),
+    ("update",),
+    ("revert",),
+    ("depfile",),
+    ("track",),
+    ("untrack",),
 ]
 
 
@@ -59,7 +58,8 @@ subcommands = [
 # env create
 #
 def env_create_setup_parser(subparser):
-    """create a new environment
+    """\
+    create a new environment
 
     create a new environment or, optionally, copy an existing environment
 
@@ -134,7 +134,7 @@ def _env_create(
     *,
     init_file: Optional[str] = None,
     dir: bool = False,
-    with_view: Optional[str] = None,
+    with_view: Optional[Union[bool, str]] = None,
     keep_relative: bool = False,
     include_concrete: Optional[List[str]] = None,
 ):
@@ -331,7 +331,8 @@ def env_activate(args):
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
-        ev.create_in_dir(env).write(regenerate=False)
+        view = not args.without_view
+        ev.create_in_dir(env, with_view=view).write(regenerate=False)
         _tty_info(f"Created and activated temporary environment in {env_path}")
 
     # Managed environment
@@ -575,7 +576,8 @@ def _env_untrack_or_remove(
             f"Really {'remove' if remove else 'untrack'} {environments} {envs}?", default=False
         )
         if not answer:
-            tty.die("Will not remove any environments")
+            tty.msg(f"Will not remove environment(s) {envs}")
+            return
 
     # keep track of the environments we remove for later printing the exit code
     removed_env_names = []
@@ -639,7 +641,8 @@ def env_untrack(args):
 # env remove
 #
 def env_remove_setup_parser(subparser):
-    """remove managed environment(s)
+    """\
+    remove managed environment(s)
 
     remove existing environment(s) managed by Spack
 
@@ -669,7 +672,8 @@ def env_remove(args):
 # env rename
 #
 def env_rename_setup_parser(subparser):
-    """rename an existing environment
+    """\
+    rename an existing environment
 
     rename a managed environment or move an independent/directory environment
 
@@ -779,7 +783,8 @@ class ViewAction:
 # env view
 #
 def env_view_setup_parser(subparser):
-    """manage the environment's view
+    """\
+    manage the environment's view
 
     provide the path when enabling a view with a non-default path
     """
@@ -874,7 +879,8 @@ def env_loads(args):
 
 
 def env_update_setup_parser(subparser):
-    """update the environment manifest to the latest schema format
+    """\
+    update the environment manifest to the latest schema format
 
     update the environment to the latest schema format, which may not be
     readable by older versions of spack
@@ -919,7 +925,8 @@ def env_update(args):
 
 
 def env_revert_setup_parser(subparser):
-    """restore the environment manifest to its previous format
+    """\
+    restore the environment manifest to its previous format
 
     revert the environment's manifest to the schema format from its last
     'spack env update'
@@ -966,7 +973,8 @@ def env_revert(args):
 
 
 def env_depfile_setup_parser(subparser):
-    """generate a depfile to exploit parallel builds across specs
+    """\
+    generate a depfile to exploit parallel builds across specs
 
     requires the active environment to be concrete
     """
@@ -1065,30 +1073,26 @@ subcommand_functions = {}
 #
 # spack env
 #
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="env_command")
 
-    for name in subcommands:
-        if isinstance(name, (list, tuple)):
-            name, aliases = name[0], name[1:]
-        else:
-            aliases = []
+    _globals = globals()
+
+    for name_and_aliases in subcommands:
+        name, aliases = name_and_aliases[0], name_and_aliases[1:]
 
         # add commands to subcommands dict
-        function_name = "env_%s" % name
-        function = globals()[function_name]
-        for alias in [name] + aliases:
-            subcommand_functions[alias] = function
+        for alias in name_and_aliases:
+            subcommand_functions[alias] = _globals[f"env_{name}"]
 
         # make a subparser and run the command's setup function on it
-        setup_parser_cmd_name = "env_%s_setup_parser" % name
-        setup_parser_cmd = globals()[setup_parser_cmd_name]
+        setup_parser_cmd = _globals[f"env_{name}_setup_parser"]
 
         subsubparser = sp.add_parser(
             name,
             aliases=aliases,
-            description=setup_parser_cmd.__doc__,
-            help=spack.cmd.first_line(setup_parser_cmd.__doc__),
+            description=spack.cmd.doc_dedented(setup_parser_cmd),
+            help=spack.cmd.doc_first_line(setup_parser_cmd),
         )
         setup_parser_cmd(subsubparser)
 

@@ -1,15 +1,15 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Tests for llnl.url functions"""
+"""Tests for spack.llnl.url functions"""
 import itertools
 
 import pytest
 
-import llnl.url
+import spack.llnl.url
 
 
-@pytest.fixture(params=llnl.url.ALLOWED_ARCHIVE_TYPES)
+@pytest.fixture(params=spack.llnl.url.ALLOWED_ARCHIVE_TYPES)
 def archive_and_expected(request):
     archive_name = ".".join(["Foo", request.param])
     return archive_name, request.param
@@ -18,13 +18,13 @@ def archive_and_expected(request):
 def test_get_extension(archive_and_expected):
     """Tests that we can predict correctly known extensions for simple cases."""
     archive, expected = archive_and_expected
-    result = llnl.url.extension_from_path(archive)
+    result = spack.llnl.url.extension_from_path(archive)
     assert result == expected
 
 
 def test_get_bad_extension():
     """Tests that a bad extension returns None"""
-    result = llnl.url.extension_from_path("Foo.cxx")
+    result = spack.llnl.url.extension_from_path("Foo.cxx")
     assert result is None
 
 
@@ -137,26 +137,28 @@ def test_get_bad_extension():
     ],
 )
 def test_url_strip_version_suffixes(url, expected):
-    stripped = llnl.url.strip_version_suffixes(url)
+    stripped = spack.llnl.url.strip_version_suffixes(url)
     assert stripped == expected
 
 
 def test_strip_compression_extension(archive_and_expected):
     archive, extension = archive_and_expected
-    stripped = llnl.url.strip_compression_extension(archive)
+    stripped = spack.llnl.url.strip_compression_extension(archive)
     if extension == "zip":
         assert stripped == "Foo.zip"
-        stripped = llnl.url.strip_compression_extension(archive, "zip")
+        stripped = spack.llnl.url.strip_compression_extension(archive, "zip")
         assert stripped == "Foo"
     elif extension == "whl":
         assert stripped == "Foo.whl"
     elif (
         extension.lower() == "tar"
-        or extension in llnl.url.CONTRACTION_MAP
+        or extension in spack.llnl.url.CONTRACTION_MAP
         or extension
         in [
             ".".join(ext)
-            for ext in itertools.product(llnl.url.PREFIX_EXTENSIONS, llnl.url.EXTENSIONS)
+            for ext in itertools.product(
+                spack.llnl.url.PREFIX_EXTENSIONS, spack.llnl.url.EXTENSIONS
+            )
         ]
     ):
         assert stripped == "Foo.tar" or stripped == "Foo.TAR"
@@ -166,4 +168,4 @@ def test_strip_compression_extension(archive_and_expected):
 
 def test_allowed_archive(archive_and_expected):
     archive, _ = archive_and_expected
-    assert llnl.url.allowed_archive(archive)
+    assert spack.llnl.url.allowed_archive(archive)

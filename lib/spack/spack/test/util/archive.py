@@ -9,14 +9,22 @@ import shutil
 import tarfile
 from pathlib import Path, PurePath
 
+import pytest
+
 import spack.util.crypto
-from spack.util.archive import gzip_compressed_tarfile, reproducible_tarfile_from_prefix
+import spack.version
+from spack.llnl.util.filesystem import working_dir
+from spack.util.archive import (
+    gzip_compressed_tarfile,
+    reproducible_tarfile_from_prefix,
+    retrieve_commit_from_archive,
+)
 
 
-def test_gzip_compressed_tarball_is_reproducible(tmpdir):
+def test_gzip_compressed_tarball_is_reproducible(tmp_path: Path, monkeypatch):
     """Test gzip_compressed_tarfile and reproducible_tarfile_from_prefix for reproducibility"""
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         # Create a few directories
         root = Path("root")
         dir_a = root / "a"
@@ -151,8 +159,8 @@ def test_gzip_compressed_tarball_is_reproducible(tmpdir):
             assert (
                 tarfile_checksum_1.hexdigest()
                 == tarfile_checksum_2.hexdigest()
-                == spack.util.crypto.checksum_stream(hashlib.sha256, f)
-                == spack.util.crypto.checksum_stream(hashlib.sha256, g)
+                == spack.util.crypto.checksum_stream(hashlib.sha256, f)  # type: ignore
+                == spack.util.crypto.checksum_stream(hashlib.sha256, g)  # type: ignore
             )
 
 
@@ -186,3 +194,31 @@ def test_reproducible_tarfile_from_prefix_path_to_name(tmp_path: Path):
             "some/common/prefix/file1",
             "some/common/prefix/file2",
         ]
+
+
+@pytest.mark.parametrize("ref", ("test-branch", "test-tag"))
+def test_get_commits_from_archive(mock_git_repository, tmp_path: Path, ref):
+    with working_dir(str(tmp_path)):
+        archive_file = str(tmp_path / "archive.tar.gz")
+        path_to_name = lambda path: PurePath(path).relative_to(mock_git_repository.path).as_posix()
+        with gzip_compressed_tarfile(archive_file) as (tar, _, _):
+            reproducible_tarfile_from_prefix(
+                tar=tar, prefix=mock_git_repository.path, path_to_name=path_to_name
+            )
+        commit = retrieve_commit_from_archive(archive_file, ref)
+        assert commit
+        assert spack.version.is_git_commit_sha(commit)
+
+
+def test_can_tell_if_archive_has_git(mock_git_repository, tmp_path: Path):
+    with working_dir(str(tmp_path)):
+        archive_file = str(tmp_path / "archive.tar.gz")
+        path_to_name = lambda path: PurePath(path).relative_to(mock_git_repository.path).as_posix()
+        exclude = lambda entry: ".git" in PurePath(entry.path).parts
+        with gzip_compressed_tarfile(archive_file) as (tar, _, _):
+            reproducible_tarfile_from_prefix(
+                tar=tar, prefix=mock_git_repository.path, path_to_name=path_to_name, skip=exclude
+            )
+            with pytest.raises(AssertionError) as err:
+                retrieve_commit_from_archive(archive_file, "main")
+                assert "does not contain git data" in str(err.value)

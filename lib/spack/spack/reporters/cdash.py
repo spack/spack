@@ -16,10 +16,8 @@ from typing import Dict, Optional
 from urllib.parse import urlencode
 from urllib.request import Request
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
-
 import spack
+import spack.llnl.util.tty as tty
 import spack.paths
 import spack.platforms
 import spack.spec
@@ -27,6 +25,7 @@ import spack.tengine
 import spack.util.git
 import spack.util.web as web_util
 from spack.error import SpackError
+from spack.llnl.util.filesystem import working_dir
 from spack.util.crypto import checksum
 from spack.util.log_parse import parse_log_events
 
@@ -79,10 +78,10 @@ class CDash(Reporter):
     ``spack install``::
 
         spack install --cdash-upload-url=\\
-            https://mydomain.com/cdash/submit.php?project=Spack <spec>
+            https://example.com/cdash/submit.php?project=Spack <spec>
 
     In this example, results will be uploaded to the *Spack* project on the
-    CDash instance hosted at https://mydomain.com/cdash.
+    CDash instance hosted at ``https://example.com/cdash``.
     """
 
     def __init__(self, configuration: CDashConfiguration):
@@ -117,7 +116,7 @@ class CDash(Reporter):
         )
         self.buildIds: Dict[str, str] = {}
         self.revision = ""
-        git = spack.util.git.git()
+        git = spack.util.git.git(required=True)
         with working_dir(spack.paths.spack_root):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.get_version())
@@ -278,6 +277,8 @@ class CDash(Reporter):
         self.multiple_packages = False
         num_packages = 0
         for spec in specs:
+            spec.summarize()
+
             # Do not generate reports for packages that were installed
             # from the binary cache.
             spec["packages"] = [
@@ -362,6 +363,8 @@ class CDash(Reporter):
         """Generate reports for each package in each spec."""
         tty.debug("Processing test report")
         for spec in specs:
+            spec.summarize()
+
             duration = 0
             if "time" in spec:
                 duration = int(spec["time"])

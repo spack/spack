@@ -10,10 +10,10 @@ Hooks are not executed in any particular order.
 
 Currently the following hooks are supported:
 
-    * pre_install(spec)
-    * post_install(spec, explicit)
-    * pre_uninstall(spec)
-    * post_uninstall(spec)
+* ``pre_install(spec)``
+* ``post_install(spec, explicit)``
+* ``pre_uninstall(spec)``
+* ``post_uninstall(spec)``
 
 This can be used to implement support for things like module
 systems (e.g. modules, lmod, etc.) or to add other custom

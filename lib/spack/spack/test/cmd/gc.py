@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
 
 import pytest
 
@@ -137,26 +138,30 @@ def test_gc_except_specific_environments(mutable_database, mutable_mock_env_path
 
 
 @pytest.mark.db
-def test_gc_except_nonexisting_dir_env(mutable_database, mutable_mock_env_path, tmpdir):
-    output = gc("-ye", tmpdir.strpath, fail_on_error=False)
+def test_gc_except_nonexisting_dir_env(
+    mutable_database, mutable_mock_env_path, tmp_path: pathlib.Path
+):
+    output = gc("-ye", str(tmp_path), fail_on_error=False)
     assert "No such environment" in output
     assert gc.returncode == 1
 
 
 @pytest.mark.db
-def test_gc_except_specific_dir_env(mutable_database, mutable_mock_env_path, tmpdir):
+def test_gc_except_specific_dir_env(
+    mutable_database, mutable_mock_env_path, tmp_path: pathlib.Path
+):
     s = spack.concretize.concretize_one("simple-inheritance")
     PackageInstaller([s.package], explicit=True, fake=True).install()
 
     assert mutable_database.query_local("zmpi")
 
-    e = ev.create_in_dir(tmpdir.strpath)
+    e = ev.create_in_dir(str(tmp_path))
     with e:
         add("simple-inheritance")
         install()
         assert mutable_database.query_local("simple-inheritance")
 
-    output = gc("-ye", tmpdir.strpath)
+    output = gc("-ye", str(tmp_path))
     assert "Restricting garbage collection" not in output
     assert "Successfully uninstalled zmpi" in output
     assert not mutable_database.query_local("zmpi")

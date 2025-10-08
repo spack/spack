@@ -1,23 +1,24 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-==========================
+.. meta::
+   :description lang=en:
+      A guide to configuring Spack to use external GPU support, including ROCm and CUDA installations, as well as the OpenGL API.
+
 Using External GPU Support
 ==========================
 
-Many packages come with a ``+cuda`` or ``+rocm`` variant. With no added
-configuration Spack will download and install the needed components.
-It may be preferable to use existing system support: the following sections
-help with using a system installation of GPU libraries.
+Many packages come with a ``+cuda`` or ``+rocm`` variant.
+With no added configuration, Spack will download and install the needed components.
+It may be preferable to use existing system support: the following sections help with using a system installation of GPU libraries.
 
------------------------------------
 Using an External ROCm Installation
 -----------------------------------
 
-Spack breaks down ROCm into many separate component packages. The following
-is an example ``packages.yaml`` that organizes a consistent set of ROCm
-components for use by dependent packages:
+Spack breaks down ROCm into many separate component packages.
+The following is an example ``packages.yaml`` that organizes a consistent set of ROCm components for use by dependent packages:
 
 .. code-block:: yaml
 
@@ -34,11 +35,6 @@ components for use by dependent packages:
        externals:
        - spec: hsa-rocr-dev@5.3.0
          prefix: /opt/rocm-5.3.0/
-     llvm-amdgpu:
-       buildable: false
-       externals:
-       - spec: llvm-amdgpu@5.3.0
-         prefix: /opt/rocm-5.3.0/llvm/
      comgr:
        buildable: false
        externals:
@@ -74,22 +70,17 @@ This is in combination with the following compiler definition:
        externals:
        - spec: llvm-amdgpu@=5.3.0
          prefix: /opt/rocm-5.3.0
-         compilers:
-           c: /opt/rocm-5.3.0/bin/amdclang
-           cxx: /opt/rocm-5.3.0/bin/amdclang++
-           fortran: null
+         extra_attributes:
+           compilers:
+             c: /opt/rocm-5.3.0/bin/amdclang
+             cxx: /opt/rocm-5.3.0/bin/amdclang++
 
 This includes the following considerations:
 
-- Each of the listed externals specifies ``buildable: false`` to force Spack
-  to use only the externals we defined.
-- ``spack external find`` can automatically locate some of the ``hip``/``rocm``
-  packages, but not all of them, and furthermore not in a manner that
-  guarantees a complementary set if multiple ROCm installations are available.
-- The ``prefix`` is the same for several components, but note that others
-  require listing one of the subdirectories as a prefix.
+- Each of the listed externals specifies ``buildable: false`` to force Spack to use only the externals we defined.
+- ``spack external find`` can automatically locate some of the ``hip``/``rocm`` packages, but not all of them, and furthermore not in a manner that guarantees a complementary set if multiple ROCm installations are available.
+- The ``prefix`` is the same for several components, but note that others require listing one of the subdirectories as a prefix.
 
------------------------------------
 Using an External CUDA Installation
 -----------------------------------
 
@@ -111,25 +102,25 @@ where ``/opt/cuda/cuda-11.0.2/lib/`` contains ``libcudart.so``.
 
 
 
------------------------------------
 Using an External OpenGL API
------------------------------------
+----------------------------
 Depending on whether we have a graphics card or not, we may choose to use OSMesa or GLX to implement the OpenGL API.
 
 If a graphics card is unavailable, OSMesa is recommended and can typically be built with Spack.
-However, if we prefer to utilize the system GLX tailored to our graphics card, we need to declare it as an external. Here's how to do it:
+However, if we prefer to utilize the system GLX tailored to our graphics card, we need to declare it as an external.
+Here's how to do it:
 
 
 .. code-block:: yaml
 
-  packages:
-    libglx:
-      require: [opengl]
-    opengl:
-      buildable: false
-      externals:
-      - prefix: /usr/
-        spec: opengl@4.6
+   packages:
+     libglx:
+       require: [opengl]
+     opengl:
+       buildable: false
+       externals:
+       - prefix: /usr/
+         spec: opengl@4.6
 
-Note that prefix has to be the root of both the libraries and the headers, using is /usr not the path the the lib.
-To know which spec for opengl is available use ``cd /usr/include/GL && grep -Ri gl_version``.
+Note that the prefix has to be the root of both the libraries and the headers (e.g., ``/usr``), not the path to the ``lib`` directory.
+To know which spec for OpenGL is available, use ``cd /usr/include/GL && grep -Ri gl_version``.

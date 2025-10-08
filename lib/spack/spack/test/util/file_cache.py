@@ -4,18 +4,18 @@
 
 """Test Spack's FileCache."""
 import os
+import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-
+import spack.llnl.util.filesystem as fs
 from spack.util.file_cache import CacheError, FileCache
 
 
 @pytest.fixture()
-def file_cache(tmpdir):
+def file_cache(tmp_path: pathlib.Path):
     """Returns a properly initialized FileCache instance"""
-    return FileCache(str(tmpdir))
+    return FileCache(str(tmp_path))
 
 
 def test_write_and_read_cache_file(file_cache):

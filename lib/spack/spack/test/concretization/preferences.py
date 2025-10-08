@@ -98,6 +98,16 @@ class TestConcretizePreferences:
         update_packages(package_name, "variants", variant_value)
         assert_variant_values(package_name, **expected_results)
 
+    @pytest.mark.regression("50921")
+    @pytest.mark.parametrize("config_type", ("require", "prefer"))
+    def test_preferred_commit_variant(self, config_type):
+        """Tests that we can use auto-variants in requirements and preferences."""
+        commit_value = "b" * 40
+        name = "git-ref-package"
+        value = f"commit={commit_value}"
+        update_packages(name, config_type, [value])
+        assert_variant_values(name, **{"commit": commit_value})
+
     def test_preferred_variants_from_wildcard(self):
         """
         Test that 'foo=*' concretizes to any value
@@ -158,17 +168,17 @@ class TestConcretizePreferences:
                 {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
                 "http://www.somewhereelse.com/mpileaks-2.3.tar.gz",
             ),
-            ({}, "http://www.llnl.gov/mpileaks-2.3.tar.gz"),
+            ({}, "http://www.spack.llnl.gov/mpileaks-2.3.tar.gz"),
         ],
     )
-    def test_config_set_pkg_property_url(self, update, expected, mock_repo_path):
+    def test_config_set_pkg_property_url(self, update, expected, mock_packages_repo):
         """Test setting an existing attribute in the package class"""
         update_packages("mpileaks", "package_attributes", update)
-        with spack.repo.use_repositories(mock_repo_path):
+        with spack.repo.use_repositories(mock_packages_repo):
             spec = concretize("mpileaks")
             assert spec.package.fetcher.url == expected
 
-    def test_config_set_pkg_property_new(self, mock_repo_path):
+    def test_config_set_pkg_property_new(self, mock_packages_repo):
         """Test that you can set arbitrary attributes on the Package class"""
         conf = syaml.load_config(
             """\
@@ -187,7 +197,7 @@ mpileaks:
 """
         )
         spack.config.set("packages", conf, scope="concretize")
-        with spack.repo.use_repositories(mock_repo_path):
+        with spack.repo.use_repositories(mock_packages_repo):
             spec = concretize("mpileaks")
             assert spec.package.v1 == 1
             assert spec.package.v2 is True
@@ -197,7 +207,7 @@ mpileaks:
             assert list(spec.package.v6) == [1, 2]
 
         update_packages("mpileaks", "package_attributes", {})
-        with spack.repo.use_repositories(mock_repo_path):
+        with spack.repo.use_repositories(mock_packages_repo):
             spec = concretize("mpileaks")
             with pytest.raises(AttributeError):
                 spec.package.v1

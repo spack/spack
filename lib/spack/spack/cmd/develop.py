@@ -1,16 +1,16 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import os
 import shutil
 from typing import Optional
-
-import llnl.util.tty as tty
 
 import spack.cmd
 import spack.config
 import spack.environment
 import spack.fetch_strategy
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.stage
@@ -24,7 +24,7 @@ section = "environments"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument("-p", "--path", help="source location of package")
     subparser.add_argument("-b", "--build-directory", help="build directory for the package")
 
@@ -42,7 +42,7 @@ def setup_parser(subparser):
         default=True,
         help=(
             "(default) clone the package unless the path already exists, "
-            "use --force to overwrite"
+            "use ``--force`` to overwrite"
         ),
     )
 

@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
 import os
+import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.compilers.config
 import spack.compilers.libraries
+import spack.llnl.util.filesystem as fs
 import spack.util.executable
 import spack.util.module_cmd
 
@@ -28,11 +28,14 @@ def call_compiler(exe, *args, **kwargs):
 @pytest.fixture()
 def mock_gcc(config):
     compilers = spack.compilers.config.all_compilers_from(configuration=config)
+    assert compilers, "No compilers available"
+
     compilers.sort(key=lambda x: (x.name == "gcc", x.version))
     # Deepcopy is used to avoid more boilerplate when changing the "extra_attributes"
     return copy.deepcopy(compilers[-1])
 
 
+@pytest.mark.usefixtures("mock_packages")
 class TestCompilerPropertyDetector:
     @pytest.mark.parametrize(
         "language,flagname",
@@ -74,7 +77,7 @@ class TestCompilerPropertyDetector:
         assert detector._compile_dummy_c_source() is None
 
     @pytest.mark.not_on_windows("Module files are not supported on Windows")
-    def test_compile_dummy_c_source_load_env(self, mock_gcc, monkeypatch, tmp_path):
+    def test_compile_dummy_c_source_load_env(self, mock_gcc, monkeypatch, tmp_path: pathlib.Path):
         gcc = tmp_path / "gcc"
         gcc.write_text(
             f"""#!/bin/sh

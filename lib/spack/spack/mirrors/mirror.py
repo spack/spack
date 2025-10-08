@@ -1,15 +1,13 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import collections.abc
 import operator
 import os
 import urllib.parse
-from typing import Any, Dict, Optional, Tuple, Union
-
-import llnl.util.tty as tty
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -17,7 +15,7 @@ import spack.util.url as url_util
 from spack.error import MirrorError
 
 #: What schemes do we support
-supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci")
+supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -316,9 +314,10 @@ class Mirror:
             Dictionary from credential type string to value
 
             Credential Type Map:
-                access_token -> str
-                access_pair  -> tuple(str,str)
-                profile      -> str
+
+            * ``access_token``: ``str``
+            * ``access_pair``: ``Tuple[str, str]``
+            * ``profile``: ``str``
         """
         creddict: Dict[str, Any] = {}
         access_token = self.get_access_token(direction)
@@ -361,7 +360,7 @@ class Mirror:
         return self._get_value("endpoint_url", direction)
 
 
-class MirrorCollection(collections.abc.Mapping):
+class MirrorCollection(Mapping[str, Mirror]):
     """A mapping of mirror names to mirrors."""
 
     def __init__(

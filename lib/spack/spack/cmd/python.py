@@ -9,16 +9,16 @@ import platform
 import runpy
 import sys
 
-import llnl.util.tty as tty
-
 import spack
+import spack.llnl.util.tty as tty
+import spack.repo
 
 description = "launch an interpreter as spack would launch a command"
 section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-V",
         "--version",
@@ -74,6 +74,9 @@ def python(parser, args, unknown_args):
     # Unexpected behavior from supplying both
     if args.python_command and args.python_args:
         tty.die("You can only specify a command OR script, but not both.")
+
+    # Ensure that spack.repo.PATH is initialized
+    spack.repo.PATH.repos
 
     # Run user choice of interpreter
     if args.python_interpreter == "ipython":

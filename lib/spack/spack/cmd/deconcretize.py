@@ -6,11 +6,10 @@ import argparse
 import sys
 from typing import List
 
-import llnl.util.tty as tty
-
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.spec
 from spack.cmd.common import arguments
 
@@ -22,7 +21,7 @@ level = "long"
 display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--root", action="store_true", help="deconcretize only specific environment roots"
     )

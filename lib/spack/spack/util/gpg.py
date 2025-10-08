@@ -8,9 +8,8 @@ import os
 import re
 from typing import List
 
-import llnl.util.filesystem
-
 import spack.error
+import spack.llnl.util.filesystem
 import spack.paths
 import spack.util.executable
 import spack.version
@@ -37,7 +36,7 @@ def init(gnupghome=None, force=False):
     When calling any gpg executable, the GNUPGHOME environment
     variable is set to:
 
-    1. The value of the `gnupghome` argument, if not None
+    1. The value of the ``gnupghome`` argument, if not None
     2. The value of the "SPACK_GNUPGHOME" environment variable, if set
     3. The default gpg path for Spack otherwise
 
@@ -388,7 +387,7 @@ def _socket_dir(gpgconf):
                 os.mkdir(var_run_user)
                 os.chmod(var_run_user, 0o777)
 
-            user_dir = os.path.join(var_run_user, str(llnl.util.filesystem.getuid()))
+            user_dir = os.path.join(var_run_user, str(spack.llnl.util.filesystem.getuid()))
 
             if not os.path.exists(user_dir):
                 os.mkdir(user_dir)

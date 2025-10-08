@@ -9,8 +9,6 @@
 """
 from typing import Any, Dict
 
-from llnl.util.lang import union_dicts
-
 import spack.schema.bootstrap
 import spack.schema.cdash
 import spack.schema.ci
@@ -26,29 +24,31 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
+import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
 
 #: Properties for inclusion in other schemas
-properties: Dict[str, Any] = union_dicts(
-    spack.schema.bootstrap.properties,
-    spack.schema.cdash.properties,
-    spack.schema.compilers.properties,
-    spack.schema.concretizer.properties,
-    spack.schema.config.properties,
-    spack.schema.container.properties,
-    spack.schema.ci.properties,
-    spack.schema.definitions.properties,
-    spack.schema.develop.properties,
-    spack.schema.env_vars.properties,
-    spack.schema.include.properties,
-    spack.schema.mirrors.properties,
-    spack.schema.modules.properties,
-    spack.schema.packages.properties,
-    spack.schema.repos.properties,
-    spack.schema.upstreams.properties,
-    spack.schema.view.properties,
-)
+properties: Dict[str, Any] = {
+    **spack.schema.bootstrap.properties,
+    **spack.schema.cdash.properties,
+    **spack.schema.compilers.properties,
+    **spack.schema.concretizer.properties,
+    **spack.schema.config.properties,
+    **spack.schema.container.properties,
+    **spack.schema.ci.properties,
+    **spack.schema.definitions.properties,
+    **spack.schema.develop.properties,
+    **spack.schema.env_vars.properties,
+    **spack.schema.include.properties,
+    **spack.schema.mirrors.properties,
+    **spack.schema.modules.properties,
+    **spack.schema.packages.properties,
+    **spack.schema.repos.properties,
+    **spack.schema.toolchains.properties,
+    **spack.schema.upstreams.properties,
+    **spack.schema.view.properties,
+}
 
 #: Full schema with metadata
 schema = {

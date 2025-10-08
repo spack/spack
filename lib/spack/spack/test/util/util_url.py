@@ -4,17 +4,19 @@
 
 """Test Spack's URL handling utility functions."""
 import os
+import pathlib
 import urllib.parse
 
 import pytest
 
 import spack.util.path
 import spack.util.url as url_util
+from spack.llnl.util.filesystem import working_dir
 
 
-def test_url_local_file_path(tmpdir):
+def test_url_local_file_path(tmp_path: pathlib.Path):
     # Create a file
-    path = str(tmpdir.join("hello.txt"))
+    path = str(tmp_path / "hello.txt")
     with open(path, "wb") as f:
         f.write(b"hello world")
 
@@ -34,13 +36,13 @@ def test_url_local_file_path_no_file_scheme():
     assert url_util.local_file_path("C:\\Program Files\\hello.txt") is None
 
 
-def test_relative_path_to_file_url(tmpdir):
+def test_relative_path_to_file_url(tmp_path: pathlib.Path):
     # Create a file
-    path = str(tmpdir.join("hello.txt"))
+    path = str(tmp_path / "hello.txt")
     with open(path, "wb") as f:
         f.write(b"hello world")
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         roundtrip = url_util.local_file_path(url_util.path_to_file_url("hello.txt"))
         assert os.path.samefile(roundtrip, path)
 

@@ -14,7 +14,7 @@ class Splice(NamedTuple):
     splice_spec: Spec
     #: The name of the child that splice spec is replacing
     child_name: str
-    #: The hash of the child that `splice_spec` is replacing
+    #: The hash of the child that ``splice_spec`` is replacing
     child_hash: str
 
 

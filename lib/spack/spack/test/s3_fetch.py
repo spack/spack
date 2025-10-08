@@ -2,11 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
+
 import spack.fetch_strategy as spack_fs
 import spack.stage as spack_stage
 
 
-def test_s3fetchstrategy_downloaded(tmp_path):
+def test_s3fetchstrategy_downloaded(tmp_path: pathlib.Path):
     """Ensure fetch with archive file already downloaded is a noop."""
     archive = tmp_path / "s3.tar.gz"
 

@@ -148,6 +148,25 @@ contains "usage: spack env deactivate " spack env deactivate no_such_environment
 contains "usage: spack env deactivate " spack env deactivate -h
 contains "usage: spack env deactivate " spack env deactivate --help
 
+title "Testing 'spack config edit'"
+echo "Testing 'spack config edit' with malformed spack.yaml"
+spack env activate --temp
+bad_yaml_env=$(spack location -e)
+mv $bad_yaml_env/spack.yaml $bad_yaml_env/.backup
+echo "bad_yaml" > $bad_yaml_env/spack.yaml
+EDITOR=cat contains "Error: " spack config edit  # error message prints first
+EDITOR=cat contains "bad_yaml" spack config edit  # followed by call to EDITOR
+
+echo "testing 'spack config edit' with non-complying spack.yaml"
+cat > $bad_yaml_env/spack.yaml <<EOF
+spack:
+  foo: bar
+EOF
+EDITOR=cat contains "Error: " spack config edit  # error message prints first
+EDITOR=cat contains "foo: bar" spack config edit  # followed by call to EDITOR
+mv $bad_yaml_env/.backup $bad_yaml_env/spack.yaml
+despacktivate
+
 title 'Testing activate and deactivate together'
 echo "Testing 'spack env activate spack_test_env'"
 succeeds spack env activate spack_test_env
@@ -221,3 +240,52 @@ contains 'True' spack -c config:ccache:true python -c "import spack.config;print
 succeeds spack -c config:ccache:true python "$SHARE_DIR/qa/config_state.py"
 
 spack env deactivate
+
+
+# -----------------------------------------------------------------------
+# Make sure environments and custom scopes on the CLI have the right
+# precedence, based on order of appearance
+# -----------------------------------------------------------------------
+echo "Testing correct scope precedence on command line"
+contains 'unify: true' spack -e $QA_DIR/scopes/true config get concretizer
+contains 'unify: true' spack -D $QA_DIR/scopes/true config get concretizer
+contains 'unify: false' spack -C $QA_DIR/scopes/false config get concretizer
+contains 'unify: when_possible' spack -C $QA_DIR/scopes/wp config get concretizer
+contains 'unify: false' \
+         spack -C $QA_DIR/scopes/wp -C $QA_DIR/scopes/false config get concretizer
+
+contains 'unify: true' \
+         spack -C $QA_DIR/scopes/wp \
+               -C $QA_DIR/scopes/false \
+               -e $QA_DIR/scopes/true \
+               config get concretizer
+
+contains 'unify: when_possible' \
+         spack -C $QA_DIR/scopes/false \
+               -e $QA_DIR/scopes/true \
+               -C $QA_DIR/scopes/wp \
+               config get concretizer
+
+contains 'unify: false' \
+         spack -e $QA_DIR/scopes/true \
+               -C $QA_DIR/scopes/wp \
+               -C $QA_DIR/scopes/false \
+         config get concretizer
+
+contains 'unify: true' \
+         spack -C $QA_DIR/scopes/wp \
+               -C $QA_DIR/scopes/false \
+               -D $QA_DIR/scopes/true \
+         config get concretizer
+
+contains 'unify: when_possible' \
+         spack -C $QA_DIR/scopes/false \
+               -D $QA_DIR/scopes/true \
+               -C $QA_DIR/scopes/wp \
+               config get concretizer
+
+contains 'unify: false' \
+         spack -D $QA_DIR/scopes/true \
+               -C $QA_DIR/scopes/wp \
+               -C $QA_DIR/scopes/false \
+              config get concretizer

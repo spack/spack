@@ -4,9 +4,8 @@
 import enum
 from typing import Dict, List
 
-from llnl.util import lang
-
 import spack.spec
+from spack.llnl.util import lang
 
 from .libraries import CompilerPropertyDetector
 
@@ -18,8 +17,8 @@ class Languages(enum.Enum):
 
 
 class CompilerAdaptor:
-    """Provides access to compiler attributes via `Package.compiler`. Useful for
-    packages which do not yet access compiler properties via `self.spec[language]`.
+    """Provides access to compiler attributes via ``Package.compiler``. Useful for
+    packages which do not yet access compiler properties via ``self.spec[language]``.
     """
 
     def __init__(

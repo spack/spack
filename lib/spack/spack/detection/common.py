@@ -20,8 +20,6 @@ import re
 import sys
 from typing import Dict, List, Optional, Set, Tuple, Union
 
-from llnl.util import tty
-
 import spack.config
 import spack.error
 import spack.operating_systems.windows_os as winOs
@@ -30,6 +28,7 @@ import spack.spec
 import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
+from spack.llnl.util import tty
 
 
 def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
@@ -393,7 +392,7 @@ def find_win32_additional_install_paths() -> List[str]:
     windows_search_ext = []
     cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
     # The list below should be expanded with other
-    # common Windows install locations as neccesary
+    # common Windows install locations as necessary
     path_ext_keys = ["I_MPI_ONEAPI_ROOT", "MSMPI_BIN", "MLAB_ROOT", "NUGET_PACKAGES"]
     user = os.environ["USERPROFILE"]
     add_path = lambda key: re.search(cuda_re, key) or key in path_ext_keys

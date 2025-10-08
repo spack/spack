@@ -4,16 +4,14 @@
 import collections
 import multiprocessing
 import os
+import pathlib
 import posixpath
 import sys
 from typing import Dict, Optional, Tuple
 
 import pytest
 
-import archspec.cpu
-
-from llnl.path import Path, convert_to_platform_path
-from llnl.util.filesystem import HeaderList, LibraryList
+import spack.vendor.archspec.cpu
 
 import spack.build_environment
 import spack.concretize
@@ -26,6 +24,8 @@ import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.context import Context
 from spack.installer import PackageInstaller
+from spack.llnl.path import Path, convert_to_platform_path
+from spack.llnl.util.filesystem import HeaderList, LibraryList
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -42,7 +42,7 @@ def prep_and_join(path, *pths):
 
 
 @pytest.fixture
-def build_environment(monkeypatch, wrapper_dir, tmp_path):
+def build_environment(monkeypatch, wrapper_dir, tmp_path: pathlib.Path):
     realcc = "/bin/mycc"
     prefix = str(tmp_path)
 
@@ -691,36 +691,6 @@ def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_con
     assert result["ANOTHER_VAR"] == "this-should-be-present"
 
 
-@pytest.mark.parametrize("context", [Context.BUILD, Context.RUN])
-def test_build_system_globals_only_set_on_root_during_build(default_mock_concretization, context):
-    """Test whether when setting up a build environment, the build related globals are set only
-    in the top level spec.
-
-    TODO: Since module instances are globals themselves, and Spack defines properties on them, they
-    persist across tests. In principle this is not terrible, cause the variables are mostly static.
-    But obviously it can lead to very hard to find bugs... We should get rid of those globals and
-    define them instead as a property on the package instance.
-    """
-    root = spack.concretize.concretize_one("mpileaks")
-    build_variables = ("std_cmake_args", "std_meson_args", "std_pip_args")
-
-    # See todo above, we clear out any properties that may have been set by the previous test.
-    # Commenting this loop will make the test fail. I'm leaving it here as a reminder that those
-    # globals were always a bad idea, and we should pass them to the package instance.
-    for spec in root.traverse():
-        for variable in build_variables:
-            spec.package.module.__dict__.pop(variable, None)
-
-    spack.build_environment.SetupContext(root, context=context).set_all_package_py_globals()
-
-    # Excpect the globals to be set at the root in a build context only.
-    should_be_set = lambda depth: context == Context.BUILD and depth == 0
-
-    for depth, spec in root.traverse(depth=True, root=True):
-        for variable in build_variables:
-            assert hasattr(spec.package.module, variable) == should_be_set(depth)
-
-
 def test_rpath_with_duplicate_link_deps():
     """If we have two instances of one package in the same link sub-dag, only the newest version is
     rpath'ed. This is for runtime support without splicing."""
@@ -757,14 +727,15 @@ def test_rpath_with_duplicate_link_deps():
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
 def test_optimization_flags(compiler_spec, target_name, expected_flags, compiler_factory):
-    target = archspec.cpu.TARGETS[target_name]
+    target = spack.vendor.archspec.cpu.TARGETS[target_name]
     compiler = spack.spec.parse_with_version_concrete(compiler_spec)
     opt_flags = spack.build_environment.optimization_flags(compiler, target)
     assert opt_flags == expected_flags
 
 
 @pytest.mark.skipif(
-    str(archspec.cpu.host().family) != "x86_64", reason="tests check specific x86_64 uarch flags"
+    str(spack.vendor.archspec.cpu.host().family) != "x86_64",
+    reason="tests check specific x86_64 uarch flags",
 )
 @pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
 def test_optimization_flags_are_using_node_target(default_mock_concretization, monkeypatch):
@@ -838,14 +809,22 @@ class _TestProcess:
     terminated = False
     runtime = 0
 
-    def __init__(self, *, target, args):
+    def __init__(self, *, target, args, pkg, read_pipe, timeout):
         self.alive = None
         self.exitcode = 0
         self._reset()
+        self.read_pipe = read_pipe
+        self.timeout = timeout
 
     def start(self):
         self.calls["start"] += 1
         self.alive = True
+
+    def poll(self):
+        return True
+
+    def complete(self):
+        return None
 
     def is_alive(self):
         self.calls["is_alive"] += 1
@@ -860,6 +839,8 @@ class _TestProcess:
         self.calls["terminate"] += 1
         self._set_terminated()
         self.alive = False
+        # Do not set exit code. A non-zero exit code will trigger an error
+        # instead of gracefully inspecting values for test
 
     @classmethod
     def _set_terminated(cls):
@@ -897,22 +878,20 @@ def mock_build_process(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "runtime,timeout,expected_result,expected_calls",
+    "runtime,timeout,expected_calls",
     [
         # execution time < timeout
-        (2, 5, 0, {"start": 1, "join": 1, "is_alive": 1}),
+        (2, 5, {"start": 1, "join": 1, "is_alive": 1}),
         # execution time > timeout
-        (5, 2, 1, {"start": 1, "join": 2, "is_alive": 1, "terminate": 1}),
+        (5, 2, {"start": 1, "join": 1, "is_alive": 1, "terminate": 1}),
     ],
 )
-def test_build_process_timeout(
-    mock_build_process, runtime, timeout, expected_result, expected_calls
-):
+def test_build_process_timeout(mock_build_process, runtime, timeout, expected_calls):
     """Tests that we make the correct function calls in different timeout scenarios."""
     mock_build_process(runtime=runtime)
-    result = spack.build_environment.start_build_process(
+    process = spack.build_environment.start_build_process(
         pkg=None, function=None, kwargs={}, timeout=timeout
     )
+    _ = spack.build_environment.complete_build_process(process)
 
-    assert result == expected_result
     assert _TestProcess.calls == expected_calls

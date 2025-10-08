@@ -2,15 +2,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
-
-import llnl.util.lang as lang
-import llnl.util.tty as tty
 
 import spack
 import spack.cmd
 import spack.environment as ev
 import spack.hash_types as ht
+import spack.llnl.util.lang as lang
+import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 import spack.traverse
@@ -21,7 +21,7 @@ section = "build"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.epilog = """\
 when an environment is active and no specs are provided, the environment root \
 specs are used instead

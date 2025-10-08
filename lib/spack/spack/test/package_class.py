@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Test class methods on Package objects.
+"""Test class methods on PackageBase objects.
 
 This doesn't include methods on package *instances* (like do_patch(),
 etc.).  Only methods like ``possible_dependencies()`` that deal with the
@@ -13,25 +13,24 @@ import shutil
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.binary_distribution
 import spack.concretize
 import spack.deptypes as dt
 import spack.error
 import spack.install_test
-import spack.package
+import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.spec
 import spack.store
-from spack.build_systems.generic import Package
+import spack.subprocess_context
 from spack.error import InstallError
+from spack.package_base import PackageBase
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
 
 
 @pytest.fixture(scope="module")
-def compiler_names(mock_repo_path):
-    return [spec.name for spec in mock_repo_path.providers_for("c")]
+def compiler_names(mock_packages_repo):
+    return [spec.name for spec in mock_packages_repo.providers_for("c")]
 
 
 @pytest.fixture()
@@ -240,7 +239,7 @@ def test_cache_extra_sources_fails(install_mockery):
 def test_package_exes_and_libs():
     with pytest.raises(spack.error.SpackError, match="defines both"):
 
-        class BadDetectablePackage(spack.package.Package):
+        class BadDetectablePackage(PackageBase):
             executables = ["findme"]
             libraries = ["libFindMe.a"]
 
@@ -248,7 +247,7 @@ def test_package_exes_and_libs():
 def test_package_url_and_urls():
     UrlsPackage = type(
         "URLsPackage",
-        (spack.package.Package,),
+        (PackageBase,),
         {
             "__module__": "spack.pkg.builtin.urls_package",
             "url": "https://www.example.com/url-package-1.0.tgz",
@@ -263,9 +262,7 @@ def test_package_url_and_urls():
 
 def test_package_license():
     LicensedPackage = type(
-        "LicensedPackage",
-        (spack.package.Package,),
-        {"__module__": "spack.pkg.builtin.licensed_package"},
+        "LicensedPackage", (PackageBase,), {"__module__": "spack.pkg.builtin.licensed_package"}
     )
 
     pkg = LicensedPackage(spack.spec.Spec("licensed-package"))
@@ -275,8 +272,8 @@ def test_package_license():
     assert os.path.basename(pkg.global_license_file) == pkg.license_files[0]
 
 
-class BaseTestPackage(Package):
-    extendees = None  # currently a required attribute for is_extension()
+class BaseTestPackage(PackageBase):
+    extendees = {}  # currently a required attribute for is_extension()
 
 
 def test_package_version_fails():
@@ -323,3 +320,62 @@ def test_package_subscript(default_mock_concretization):
     # Subscript on concrete
     for d in root.traverse():
         assert isinstance(root_pkg[d.name], spack.package_base.PackageBase)
+
+
+def test_deserialize_preserves_package_attribute(default_mock_concretization):
+    x = default_mock_concretization("mpileaks").package
+    assert x.spec._package is x
+
+    y = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(x))
+    assert y.spec._package is y
+
+
+@pytest.mark.require_provenance
+def test_git_provenance_commit_version(default_mock_concretization):
+    spec = default_mock_concretization("git-ref-package@stable")
+    assert spec.satisfies(f"commit={'c' * 40}")
+
+
+@pytest.mark.parametrize("version", ("main", "tag"))
+@pytest.mark.parametrize("pre_stage", (True, False))
+@pytest.mark.require_provenance
+@pytest.mark.disable_clean_stage_check
+def test_git_provenance_find_commit_ls_remote(
+    git, mock_git_repository, mock_packages, config, monkeypatch, version, pre_stage
+):
+    repo_path = mock_git_repository.path
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
+    )
+
+    spec_str = f"git-test-commit@{version}"
+
+    if pre_stage:
+        spack.concretize.concretize_one(spec_str).package.do_stage(False)
+    else:
+        # explicitly disable ability to use stage or mirror, force url path
+        monkeypatch.setattr(
+            spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None
+        )
+
+    spec = spack.concretize.concretize_one(spec_str)
+
+    if pre_stage:
+        # confirmation that we actually had an expanded stage to query with ls-remote
+        assert spec.package.stage.expanded
+
+    vattrs = spec.package.versions[spec.version]
+    git_ref = vattrs.get("tag") or vattrs.get("branch")
+    actual_commit = git("-C", repo_path, "rev-parse", git_ref, output=str, error=str).strip()
+    assert spec.variants["commit"].value == actual_commit
+
+
+@pytest.mark.require_provenance
+@pytest.mark.disable_clean_stage_check
+def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capsys):
+    """Fail all attempts to resolve git commits"""
+    monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)
+    spec = spack.concretize.concretize_one("git-ref-package@develop")
+    captured = capsys.readouterr()
+    assert "commit" not in spec.variants
+    assert "Warning: Unable to resolve the git commit" in captured.err

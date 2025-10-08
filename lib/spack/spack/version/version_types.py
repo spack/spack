@@ -386,7 +386,7 @@ class StandardVersion(ConcreteVersion):
         return other.intersection(self)
 
     def isdevelop(self) -> bool:
-        """Triggers on the special case of the `@develop-like` version."""
+        """Triggers on the special case of the ``@develop-like`` version."""
         return any(
             isinstance(p, VersionStrComponent) and isinstance(p.data, int) for p in self.version[0]
         )
@@ -410,6 +410,7 @@ class StandardVersion(ConcreteVersion):
         """The dotted representation of the version.
 
         Example:
+
         >>> version = Version('1-2-3b')
         >>> version.dotted
         Version('1.2.3b')
@@ -424,13 +425,13 @@ class StandardVersion(ConcreteVersion):
         """The underscored representation of the version.
 
         Example:
-        >>> version = Version('1.2.3b')
+
+        >>> version = Version("1.2.3b")
         >>> version.underscored
-        Version('1_2_3b')
+        Version("1_2_3b")
 
         Returns:
-            Version: The version with separator characters replaced by
-                underscores
+            Version: The version with separator characters replaced by underscores
         """
         return type(self).from_string(self.string.replace(".", "_").replace("-", "_"))
 
@@ -439,9 +440,10 @@ class StandardVersion(ConcreteVersion):
         """The dashed representation of the version.
 
         Example:
-        >>> version = Version('1.2.3b')
+
+        >>> version = Version("1.2.3b")
         >>> version.dashed
-        Version('1-2-3b')
+        Version("1-2-3b")
 
         Returns:
             Version: The version with separator characters replaced by dashes
@@ -453,9 +455,10 @@ class StandardVersion(ConcreteVersion):
         """The joined representation of the version.
 
         Example:
-        >>> version = Version('1.2.3b')
+
+        >>> version = Version("1.2.3b")
         >>> version.joined
-        Version('123b')
+        Version("123b")
 
         Returns:
             Version: The version with separator characters removed
@@ -468,21 +471,22 @@ class StandardVersion(ConcreteVersion):
         """The version up to the specified component.
 
         Examples:
-        >>> version = Version('1.23-4b')
+
+        >>> version = Version("1.23-4b")
         >>> version.up_to(1)
-        Version('1')
+        Version("1")
         >>> version.up_to(2)
-        Version('1.23')
+        Version("1.23")
         >>> version.up_to(3)
-        Version('1.23-4')
+        Version("1.23-4")
         >>> version.up_to(4)
-        Version('1.23-4b')
+        Version("1.23-4b")
         >>> version.up_to(-1)
-        Version('1.23-4')
+        Version("1.23-4")
         >>> version.up_to(-2)
-        Version('1.23')
+        Version("1.23")
         >>> version.up_to(-3)
-        Version('1')
+        Version("1")
 
         Returns:
             Version: The first index components of the version
@@ -517,7 +521,7 @@ class GitVersion(ConcreteVersion):
 
     There are two distinct categories of git versions:
 
-    1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
+    1) GitVersions instantiated with an associated reference version (e.g. ``git.foo=1.2``)
     2) GitVersions requiring commit lookups
 
     Git ref versions that are not paired with a known version are handled separately from
@@ -548,14 +552,18 @@ class GitVersion(ConcreteVersion):
     sufficient.
     """
 
-    __slots__ = ["ref", "has_git_prefix", "is_commit", "_ref_lookup", "_ref_version"]
+    __slots__ = ["has_git_prefix", "commit_sha", "ref", "std_version", "_ref_lookup"]
 
     def __init__(self, string: str):
+        # TODO will be required for concrete specs when commit lookup added
+        self.commit_sha: Optional[str] = None
+        self.std_version: Optional[StandardVersion] = None
+
+        # optional user supplied git ref
+        self.ref: Optional[str] = None
+
         # An object that can lookup git refs to compare them to versions
         self._ref_lookup: Optional[AbstractRefLookup] = None
-
-        # This is the effective version.
-        self._ref_version: Optional[StandardVersion]
 
         self.has_git_prefix = string.startswith("git.")
 
@@ -565,23 +573,27 @@ class GitVersion(ConcreteVersion):
         if "=" in normalized_string:
             # Store the git reference, and parse the user provided version.
             self.ref, spack_version = normalized_string.split("=")
-            self._ref_version = StandardVersion(
+            self.std_version = StandardVersion(
                 spack_version, *parse_string_components(spack_version)
             )
         else:
             # The ref_version is lazily attached after parsing, since we don't know what
             # package it applies to here.
-            self._ref_version = None
+            self.std_version = None
             self.ref = normalized_string
 
         # Used by fetcher
         self.is_commit: bool = len(self.ref) == 40 and bool(COMMIT_VERSION.match(self.ref))
 
+        # translations
+        if self.is_commit:
+            self.commit_sha = self.ref
+
     @property
     def ref_version(self) -> StandardVersion:
         # Return cached version if we have it
-        if self._ref_version is not None:
-            return self._ref_version
+        if self.std_version is not None:
+            return self.std_version
 
         if self.ref_lookup is None:
             raise VersionLookupError(
@@ -594,10 +606,10 @@ class GitVersion(ConcreteVersion):
         # Add a -git.<distance> suffix when we're not exactly on a tag
         if distance > 0:
             version_string += f"-git.{distance}"
-        self._ref_version = StandardVersion(
+        self.std_version = StandardVersion(
             version_string, *parse_string_components(version_string)
         )
-        return self._ref_version
+        return self.std_version
 
     def intersects(self, other: VersionType) -> bool:
         # For concrete things intersects = satisfies = equality
@@ -629,7 +641,9 @@ class GitVersion(ConcreteVersion):
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
 
     def __str__(self) -> str:
-        s = f"git.{self.ref}" if self.has_git_prefix else self.ref
+        s = ""
+        if self.ref:
+            s += f"git.{self.ref}" if self.has_git_prefix else self.ref
         # Note: the solver actually depends on str(...) to produce the effective version.
         # So when a lookup is attached, we require the resolved version to be printed.
         # But for standalone git versions that don't have a repo attached, it would still
@@ -651,6 +665,7 @@ class GitVersion(ConcreteVersion):
         return (
             isinstance(other, GitVersion)
             and self.ref == other.ref
+            # TODO(psakiev) this needs to chamge to commits when we turn on lookups
             and self.ref_version == other.ref_version
         )
 
@@ -1302,8 +1317,8 @@ def from_string(string: str) -> VersionType:
 
 
 def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
-    """Parses a Version, VersionRange, or VersionList from a string
-    or list of strings.
+    """Returns a :class:`~spack.version.ClosedOpenRange`, :class:`~spack.version.StandardVersion`,
+    :class:`~spack.version.GitVersion`, or :class:`~spack.version.VersionList` from the argument.
     """
     if isinstance(obj, VersionType):
         return obj

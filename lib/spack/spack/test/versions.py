@@ -11,12 +11,11 @@ import pathlib
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.concretize
 import spack.package_base
 import spack.spec
 import spack.version
+from spack.llnl.util.filesystem import working_dir
 from spack.version import (
     EmptyRangeError,
     GitVersion,
@@ -809,6 +808,33 @@ def test_version_range_satisfies_means_nonempty_intersection():
 def test_version_list_with_range_and_concrete_version_is_not_concrete():
     v = VersionList([Version("3.1"), VersionRange(Version("3.1.1"), Version("3.1.2"))])
     assert not v.concrete
+
+
+@pytest.mark.parametrize(
+    "git_ref, std_version",
+    (("foo", "develop"), ("a" * 40, "develop"), ("a" * 40, None), ("v1.2.0", "1.2.0")),
+)
+def test_git_versions_store_ref_requests(git_ref, std_version):
+    """
+    User requested ref's should be known on creation
+    Commit and standard version may not be known until concretization
+    To be concrete a GitVersion must have a commit and standard version
+    """
+    if std_version:
+        vstring = f"git.{git_ref}={std_version}"
+    else:
+        vstring = git_ref
+
+    v = Version(vstring)
+
+    assert isinstance(v, GitVersion)
+    assert v.ref == git_ref
+
+    if std_version:
+        assert v.std_version == Version(std_version)
+
+    if v.is_commit:
+        assert v.ref == v.commit_sha
 
 
 @pytest.mark.parametrize(

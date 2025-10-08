@@ -9,12 +9,12 @@ Spack-installed package file hierarchies.  The union is formed from:
 
 - specs resolved from the package names given by the user (the seeds)
 
-- all dependencies of the seeds unless user specifies `--no-dependencies`
+- all dependencies of the seeds unless user specifies ``--no-dependencies``
 
 - less any specs with names matching the regular expressions given by
-  `--exclude`
+  ``--exclude``
 
-The `view` can be built and tore down via a number of methods (the "actions"):
+The ``view`` can be built and tore down via a number of methods (the "actions"):
 
 - symlink :: a file system view which is a directory hierarchy that is
   the union of the hierarchies of the installed packages in the DAG
@@ -25,24 +25,24 @@ The `view` can be built and tore down via a number of methods (the "actions"):
 - statlink :: a view producing a status report of a symlink or
   hardlink view.
 
-The file system view concept is imspired by Nix, implemented by
-brett.viren@gmail.com ca 2016.
+The file system view concept is inspired by Nix, implemented by
+Brett Viren ca 2016.
 
 All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 """
+import argparse
 import sys
-
-import llnl.util.tty as tty
-from llnl.util.link_tree import MergeConflictError
 
 import spack.cmd
 import spack.environment as ev
 import spack.filesystem_view as fsv
+import spack.llnl.util.tty as tty
 import spack.schema.projections
 import spack.store
 from spack.config import validate
+from spack.llnl.util.link_tree import MergeConflictError
 from spack.util import spack_yaml as s_yaml
 
 description = "project packages to a compact naming scheme on the filesystem"
@@ -74,8 +74,8 @@ def disambiguate_in_view(specs, view):
     return list(map(squash, map(spack.store.STORE.db.query, specs)))
 
 
-def setup_parser(sp):
-    setup_parser.parser = sp
+def setup_parser(sp: argparse.ArgumentParser) -> None:
+    setattr(setup_parser, "parser", sp)
 
     sp.add_argument(
         "-v",
@@ -100,8 +100,6 @@ def setup_parser(sp):
     )
 
     ssp = sp.add_subparsers(metavar="ACTION", dest="action")
-
-    specs_opts = dict(metavar="spec", action="store", help="seed specs of the packages to view")
 
     # The action parameterizes the command but in keeping with Spack
     # patterns we make it a subcommand.
@@ -154,28 +152,38 @@ def setup_parser(sp):
             )
 
             # with all option, spec is an optional argument
-            so = specs_opts.copy()
-            so["nargs"] = "*"
-            so["default"] = []
-            grp.add_argument("specs", **so)
+            grp.add_argument(
+                "specs",
+                nargs="*",
+                default=[],
+                metavar="spec",
+                action="store",
+                help="seed specs of the packages to view",
+            )
             grp.add_argument("-a", "--all", action="store_true", help="act on all specs in view")
 
         elif cmd == "statlink":
-            so = specs_opts.copy()
-            so["nargs"] = "*"
-            act.add_argument("specs", **so)
+            act.add_argument(
+                "specs",
+                nargs="*",
+                metavar="spec",
+                action="store",
+                help="seed specs of the packages to view",
+            )
 
         else:
             # without all option, spec is required
-            so = specs_opts.copy()
-            so["nargs"] = "+"
-            act.add_argument("specs", **so)
+            act.add_argument(
+                "specs",
+                nargs="+",
+                metavar="spec",
+                action="store",
+                help="seed specs of the packages to view",
+            )
 
-    for cmd in ["symlink", "hardlink", "copy"]:
+    for cmd in ("symlink", "hardlink", "copy"):
         act = file_system_view_actions[cmd]
         act.add_argument("-i", "--ignore-conflicts", action="store_true")
-
-    return
 
 
 def view(parser, args):

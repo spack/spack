@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 from typing import Callable, Dict
 
 import spack.cmd.modules.lmod
@@ -15,7 +16,7 @@ level = "short"
 _subcommands: Dict[str, Callable] = {}
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="module_command")
     spack.cmd.modules.lmod.add_command(sp, _subcommands)
     spack.cmd.modules.tcl.add_command(sp, _subcommands)

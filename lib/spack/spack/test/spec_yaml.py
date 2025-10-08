@@ -13,10 +13,12 @@ import gzip
 import io
 import json
 import os
+import pathlib
 import pickle
 
 import pytest
-import ruamel.yaml
+
+import spack.vendor.ruamel.yaml
 
 import spack.concretize
 import spack.config
@@ -24,9 +26,11 @@ import spack.hash_types as ht
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.test.conftest
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec, save_dependency_specfiles
+from spack.test.conftest import RepoBuilder
 from spack.util.spack_yaml import SpackYAMLError, syaml_dict
 
 
@@ -229,30 +233,32 @@ def check_specs_equal(original_spec, spec_yaml_path):
         return original_spec.eq_dag(spec_from_yaml)
 
 
-def test_save_dependency_spec_jsons_subset(tmpdir, config):
-    output_path = str(tmpdir.mkdir("spec_jsons"))
+def test_save_dependency_spec_jsons_subset(
+    tmp_path: pathlib.Path, config, repo_builder: RepoBuilder
+):
+    output_path = tmp_path / "spec_jsons"
+    output_path.mkdir()
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock-repo"))
-    builder.add_package("pkg-g")
-    builder.add_package("pkg-f")
-    builder.add_package("pkg-e")
-    builder.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
-    builder.add_package("pkg-c")
-    builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
-    builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
+    repo_builder.add_package("pkg-g")
+    repo_builder.add_package("pkg-f")
+    repo_builder.add_package("pkg-e")
+    repo_builder.add_package("pkg-d", dependencies=[("pkg-f", None, None), ("pkg-g", None, None)])
+    repo_builder.add_package("pkg-c")
+    repo_builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
+    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(repo_builder.root):
         spec_a = spack.concretize.concretize_one("pkg-a")
         b_spec = spec_a["pkg-b"]
         c_spec = spec_a["pkg-c"]
 
-        save_dependency_specfiles(spec_a, output_path, [Spec("pkg-b"), Spec("pkg-c")])
+        save_dependency_specfiles(spec_a, str(output_path), [Spec("pkg-b"), Spec("pkg-c")])
 
-        assert check_specs_equal(b_spec, os.path.join(output_path, "pkg-b.json"))
-        assert check_specs_equal(c_spec, os.path.join(output_path, "pkg-c.json"))
+        assert check_specs_equal(b_spec, str(output_path / "pkg-b.json"))
+        assert check_specs_equal(c_spec, str(output_path / "pkg-c.json"))
 
 
-def test_legacy_yaml(tmpdir, install_mockery, mock_packages):
+def test_legacy_yaml(install_mockery, mock_packages):
     """Tests a simple legacy YAML with a dependency and ensures spec survives
     concretization."""
     yaml = """
@@ -420,13 +426,15 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     openmpi_edges = s2.edges_to_dependencies(name="openmpi")
     assert len(openmpi_edges) == 1
 
-    # Check that virtuals have been reconstructed
-    assert "mpi" in openmpi_edges[0].virtuals
+    # Check that virtuals have been reconstructed for specfiles conforming to
+    # version 4 on.
+    if reader_cls.SPEC_VERSION >= spack.spec.SpecfileV4.SPEC_VERSION:
+        assert "mpi" in openmpi_edges[0].virtuals
 
-    # The virtuals attribute must be a tuple, when read from a
-    # JSON or YAML file, not a list
-    for edge in s2.traverse_edges():
-        assert isinstance(edge.virtuals, tuple), edge
+        # The virtuals attribute must be a tuple, when read from a
+        # JSON or YAML file, not a list
+        for edge in s2.traverse_edges():
+            assert isinstance(edge.virtuals, tuple), edge
 
     # Ensure we can format {compiler} tokens
     assert s2.format("{compiler}") != "none"
@@ -449,7 +457,7 @@ def test_anchorify_1():
 
     # Check if anchors are used
     out = io.StringIO()
-    ruamel.yaml.YAML().dump(after, out)
+    spack.vendor.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\
@@ -472,7 +480,7 @@ def test_anchorify_2():
 
     # Check if anchors are used
     out = io.StringIO()
-    ruamel.yaml.YAML().dump(after, out)
+    spack.vendor.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\
@@ -494,6 +502,10 @@ e: *id002
         "hdf5~~mpi++shared",
         "hdf5 cflags==-g foo==bar cxxflags==-O3",
         "hdf5 cflags=-g foo==bar cxxflags==-O3",
+        "hdf5%gcc",
+        "hdf5%cmake",
+        "hdf5^gcc",
+        "hdf5^cmake",
     ],
 )
 def test_pickle_roundtrip_for_abstract_specs(spec_str):
@@ -513,3 +525,25 @@ def test_specfile_alias_is_updated():
     specfile_class_name = f"SpecfileV{spack.spec.SPECFILE_FORMAT_VERSION}"
     specfile_cls = getattr(spack.spec, specfile_class_name)
     assert specfile_cls is spack.spec.SpecfileLatest
+
+
+@pytest.mark.parametrize("spec_str", ["mpileaks %gcc", "mpileaks ^zmpi ^callpath%gcc"])
+def test_direct_edges_and_round_tripping_to_dict(spec_str, default_mock_concretization):
+    """Tests that we preserve edge information when round-tripping to dict"""
+    original = Spec(spec_str)
+    reconstructed = Spec.from_dict(original.to_dict())
+    assert original == reconstructed
+    assert original.to_dict() == reconstructed.to_dict()
+
+    concrete = default_mock_concretization(spec_str)
+    concrete_reconstructed = Spec.from_dict(concrete.to_dict())
+    assert concrete == concrete_reconstructed
+    assert concrete.to_dict() == concrete_reconstructed.to_dict()
+
+    # Ensure we don't get 'direct' in concrete JSON specs, for the time being
+    d = concrete.to_dict()
+    for node in d["spec"]["nodes"]:
+        if "dependencies" not in node:
+            continue
+        for dependency_data in node["dependencies"]:
+            assert "direct" not in dependency_data["parameters"]

@@ -7,9 +7,8 @@ import os
 import re
 import sys
 
-from llnl.util.lang import dedupe
-
 import spack.util.elf as elf_utils
+from spack.llnl.util.lang import dedupe
 
 
 def parse_ld_so_conf(conf_file="/etc/ld.so.conf"):

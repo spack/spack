@@ -10,16 +10,15 @@ import warnings
 from itertools import islice, zip_longest
 from typing import Callable, Dict, List, Optional
 
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
-from llnl.util.filesystem import working_dir
-
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.repo
 import spack.util.git
 import spack.util.spack_yaml
-from spack.spec_parser import SPEC_TOKENIZER, SpecTokens
-from spack.tokenize import Token
+from spack.llnl.util.filesystem import working_dir
+from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
+from spack.tokenize import Token, TokenBase, Tokenizer
 from spack.util.executable import Executable, which
 
 description = "runs source code style checks on spack"
@@ -35,11 +34,11 @@ def grouper(iterable, n, fillvalue=None):
         yield filter(None, group)
 
 
-#: List of directories to exclude from checks -- relative to spack root
-exclude_directories = [os.path.relpath(spack.paths.external_path, spack.paths.prefix)]
+#: List of paths to exclude from checks -- relative to spack root
+exclude_paths = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
 
 #: Order in which tools should be run. flake8 is last so that it can
-#: double-check the results of other tools (if, e.g., --fix was provided)
+#: double-check the results of other tools (if, e.g., ``--fix`` was provided)
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
 tool_names = ["import", "isort", "black", "flake8", "mypy"]
@@ -56,7 +55,7 @@ def is_package(f):
     """Whether flake8 should consider a file as a core file or a package.
 
     We run flake8 with different exceptions for the core and for
-    packages, since we allow `from spack import *` and poking globals
+    packages, since we allow ``from spack.package import *`` and poking globals
     into packages.
     """
     return f.startswith("var/spack/") and f.endswith("package.py")
@@ -131,7 +130,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if all_files:
         git_args.append(["ls-files", "--exclude-standard"])
 
-    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_directories]
+    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_paths]
     changed = set()
 
     for arg_list in git_args:
@@ -151,7 +150,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     return sorted(changed)
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-b",
         "--base",
@@ -206,8 +205,8 @@ def setup_parser(subparser):
         "--spec-strings",
         action="store_true",
         help="upgrade spec strings in Python, JSON and YAML files for compatibility with Spack "
-        "v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: this flag "
-        "will be removed in Spack v1.0.",
+        "v1.0 and v0.x. Example: spack style ``--spec-strings $(git ls-files)``. Note: must be "
+        "used only on specs from spack v0.X.",
     )
 
     subparser.add_argument("files", nargs=argparse.REMAINDER, help="specific files to check")
@@ -332,18 +331,8 @@ def run_isort(isort_cmd, file_list, args):
 
             rewrite_and_print_output(output, args, pat, replacement)
 
-    packages_isort_args = (
-        "--rm",
-        "spack.pkgkit",
-        "--rm",
-        "spack.package_defs",
-        "-a",
-        "from spack.package import *",
-    )
-    packages_isort_args = packages_isort_args + isort_args
-
     # packages
-    process_files(filter(is_package, file_list), packages_isort_args)
+    process_files(filter(is_package, file_list), isort_args)
     # non-packages
     process_files(filter(lambda f: not is_package(f), file_list), isort_args)
 
@@ -410,11 +399,11 @@ def _run_import_check(
         print("import check requires Python 3.9 or later")
         return 0
 
-    is_use = re.compile(r"(?<!from )(?<!import )(?:llnl|spack)\.[a-zA-Z0-9_\.]+")
+    is_use = re.compile(r"(?<!from )(?<!import )spack\.[a-zA-Z0-9_\.]+")
 
     # redundant imports followed by a `# comment` are ignored, cause there can be legimitate reason
     # to import a module: execute module scope init code, or to deal with circular imports.
-    is_abs_import = re.compile(r"^import ((?:llnl|spack)\.[a-zA-Z0-9_\.]+)$", re.MULTILINE)
+    is_abs_import = re.compile(r"^import (spack\.[a-zA-Z0-9_\.]+)$", re.MULTILINE)
 
     exit_code = 0
 
@@ -499,7 +488,7 @@ def run_import_check(import_check_cmd, file_list, args):
 
 
 def validate_toolset(arg_value):
-    """Validate --tool and --skip arguments (sets of optionally comma-separated tools)."""
+    """Validate ``--tool`` and ``--skip`` arguments (sets of optionally comma-separated tools)."""
     tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
     for tool in tools:
         if tool not in tool_names:
@@ -521,20 +510,52 @@ def _bootstrap_dev_dependencies():
 IS_PROBABLY_COMPILER = re.compile(r"%[a-zA-Z_][a-zA-Z0-9\-]")
 
 
+class _LegacySpecTokens(TokenBase):
+    """Reconstructs the tokens for previous specs, so we can reuse code to rotate them"""
+
+    # Dependency
+    START_EDGE_PROPERTIES = r"(?:\^\[)"
+    END_EDGE_PROPERTIES = r"(?:\])"
+    DEPENDENCY = r"(?:\^)"
+    # Version
+    VERSION_HASH_PAIR = SpecTokens.VERSION_HASH_PAIR.regex
+    GIT_VERSION = SpecTokens.GIT_VERSION.regex
+    VERSION = SpecTokens.VERSION.regex
+    # Variants
+    PROPAGATED_BOOL_VARIANT = SpecTokens.PROPAGATED_BOOL_VARIANT.regex
+    BOOL_VARIANT = SpecTokens.BOOL_VARIANT.regex
+    PROPAGATED_KEY_VALUE_PAIR = SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex
+    KEY_VALUE_PAIR = SpecTokens.KEY_VALUE_PAIR.regex
+    # Compilers
+    COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
+    COMPILER = rf"(?:%\s*(?:{NAME}))"
+    # FILENAME
+    FILENAME = SpecTokens.FILENAME.regex
+    # Package name
+    FULLY_QUALIFIED_PACKAGE_NAME = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex
+    UNQUALIFIED_PACKAGE_NAME = SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex
+    # DAG hash
+    DAG_HASH = SpecTokens.DAG_HASH.regex
+    # White spaces
+    WS = SpecTokens.WS.regex
+    # Unexpected character(s)
+    UNEXPECTED = SpecTokens.UNEXPECTED.regex
+
+
 def _spec_str_reorder_compiler(idx: int, blocks: List[List[Token]]) -> None:
     # only move the compiler to the back if it exists and is not already at the end
     if not 0 <= idx < len(blocks) - 1:
         return
     # if there's only whitespace after the compiler, don't move it
-    if all(token.kind == SpecTokens.WS for block in blocks[idx + 1 :] for token in block):
+    if all(token.kind == _LegacySpecTokens.WS for block in blocks[idx + 1 :] for token in block):
         return
     # rotate left and always add at least one WS token between compiler and previous token
     compiler_block = blocks.pop(idx)
-    if compiler_block[0].kind != SpecTokens.WS:
-        compiler_block.insert(0, Token(SpecTokens.WS, " "))
+    if compiler_block[0].kind != _LegacySpecTokens.WS:
+        compiler_block.insert(0, Token(_LegacySpecTokens.WS, " "))
     # delete the WS tokens from the new first block if it was at the very start, to prevent leading
     # WS tokens.
-    while idx == 0 and blocks[0][0].kind == SpecTokens.WS:
+    while idx == 0 and blocks[0][0].kind == _LegacySpecTokens.WS:
         blocks[0].pop(0)
     blocks.append(compiler_block)
 
@@ -552,11 +573,13 @@ def _spec_str_format(spec_str: str) -> Optional[str]:
     compiler_block_idx = -1
     in_edge_attr = False
 
-    for token in SPEC_TOKENIZER.tokenize(spec_str):
-        if token.kind == SpecTokens.UNEXPECTED:
+    legacy_tokenizer = Tokenizer(_LegacySpecTokens)
+
+    for token in legacy_tokenizer.tokenize(spec_str):
+        if token.kind == _LegacySpecTokens.UNEXPECTED:
             # parsing error, we cannot fix this string.
             return None
-        elif token.kind in (SpecTokens.COMPILER, SpecTokens.COMPILER_AND_VERSION):
+        elif token.kind in (_LegacySpecTokens.COMPILER, _LegacySpecTokens.COMPILER_AND_VERSION):
             # multiple compilers are not supported in Spack v0.x, so early return
             if compiler_block_idx != -1:
                 return None
@@ -565,19 +588,19 @@ def _spec_str_format(spec_str: str) -> Optional[str]:
             current_block = []
             compiler_block_idx = len(blocks) - 1
         elif token.kind in (
-            SpecTokens.START_EDGE_PROPERTIES,
-            SpecTokens.DEPENDENCY,
-            SpecTokens.UNQUALIFIED_PACKAGE_NAME,
-            SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME,
+            _LegacySpecTokens.START_EDGE_PROPERTIES,
+            _LegacySpecTokens.DEPENDENCY,
+            _LegacySpecTokens.UNQUALIFIED_PACKAGE_NAME,
+            _LegacySpecTokens.FULLY_QUALIFIED_PACKAGE_NAME,
         ):
             _spec_str_reorder_compiler(compiler_block_idx, blocks)
             compiler_block_idx = -1
-            if token.kind == SpecTokens.START_EDGE_PROPERTIES:
+            if token.kind == _LegacySpecTokens.START_EDGE_PROPERTIES:
                 in_edge_attr = True
             current_block.append(token)
             blocks.append(current_block)
             current_block = []
-        elif token.kind == SpecTokens.END_EDGE_PROPERTIES:
+        elif token.kind == _LegacySpecTokens.END_EDGE_PROPERTIES:
             in_edge_attr = False
             current_block.append(token)
             blocks.append(current_block)
@@ -585,19 +608,19 @@ def _spec_str_format(spec_str: str) -> Optional[str]:
         elif in_edge_attr:
             current_block.append(token)
         elif token.kind in (
-            SpecTokens.VERSION_HASH_PAIR,
-            SpecTokens.GIT_VERSION,
-            SpecTokens.VERSION,
-            SpecTokens.PROPAGATED_BOOL_VARIANT,
-            SpecTokens.BOOL_VARIANT,
-            SpecTokens.PROPAGATED_KEY_VALUE_PAIR,
-            SpecTokens.KEY_VALUE_PAIR,
-            SpecTokens.DAG_HASH,
+            _LegacySpecTokens.VERSION_HASH_PAIR,
+            _LegacySpecTokens.GIT_VERSION,
+            _LegacySpecTokens.VERSION,
+            _LegacySpecTokens.PROPAGATED_BOOL_VARIANT,
+            _LegacySpecTokens.BOOL_VARIANT,
+            _LegacySpecTokens.PROPAGATED_KEY_VALUE_PAIR,
+            _LegacySpecTokens.KEY_VALUE_PAIR,
+            _LegacySpecTokens.DAG_HASH,
         ):
             current_block.append(token)
             blocks.append(current_block)
             current_block = []
-        elif token.kind == SpecTokens.WS:
+        elif token.kind == _LegacySpecTokens.WS:
             current_block.append(token)
         else:
             raise ValueError(f"unexpected token {token}")
@@ -634,11 +657,13 @@ def _spec_str_fix_handler(path: str, line: int, col: int, old: str, new: str):
 
 def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
     """Walk the AST of a Python file and apply handler to formatted spec strings."""
-    has_constant = sys.version_info >= (3, 8)
     for node in ast.walk(tree):
-        if has_constant and isinstance(node, ast.Constant) and isinstance(node.value, str):
-            current_str = node.value
-        elif not has_constant and isinstance(node, ast.Str):
+        if sys.version_info >= (3, 8):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                current_str = node.value
+            else:
+                continue
+        elif isinstance(node, ast.Str):
             current_str = node.s
         else:
             continue

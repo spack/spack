@@ -7,21 +7,14 @@ properties: Dict[str, Any] = {
     "develop": {
         "type": "object",
         "default": {},
-        "additionalProperties": False,
-        "patternProperties": {
-            r"\w[\w-]*": {
-                "type": "object",
-                "additionalProperties": False,
-                "required": ["spec"],
-                "properties": {"spec": {"type": "string"}, "path": {"type": "string"}},
-            }
+        "additionalProperties": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["spec"],
+            "properties": {"spec": {"type": "string"}, "path": {"type": "string"}},
         },
     }
 }
-
-
-def update(data):
-    return False
 
 
 #: Full schema with metadata

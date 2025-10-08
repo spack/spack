@@ -43,7 +43,7 @@ exclude =
   var/spack/gpg*/
   var/spack/junit-report/
   var/spack/mock-configs/
-  lib/spack/external
+  lib/spack/spack/vendor/
   __pycache__
   var
 

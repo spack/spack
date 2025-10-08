@@ -8,18 +8,17 @@ import re
 import sys
 from typing import Dict, Iterable, List, Optional
 
-import macholib.mach_o
-import macholib.MachO
+import spack.vendor.macholib.mach_o
+import spack.vendor.macholib.MachO
 
-import llnl.util.filesystem as fs
-import llnl.util.lang
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-from llnl.util.symlink import readlink, symlink
-
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
+from spack.llnl.util.filesystem import readlink, symlink
+from spack.llnl.util.lang import memoized
 
 from .relocate_text import BinaryFilePrefixReplacer, PrefixToPrefix, TextFilePrefixReplacer
 
@@ -121,7 +120,7 @@ def _modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
                 new_rpaths.append(new_rpath)
 
     # Deduplicate and flatten
-    args = list(itertools.chain.from_iterable(llnl.util.lang.dedupe(args)))
+    args = list(itertools.chain.from_iterable(spack.llnl.util.lang.dedupe(args)))
     install_name_tool = executable.Executable("install_name_tool")
     if args:
         with fs.edit_in_place_through_temporary_file(cur_path) as temp_path:
@@ -132,7 +131,7 @@ def _macholib_get_paths(cur_path):
     """Get rpaths, dependent libraries, and library id of mach-o objects."""
     headers = []
     try:
-        headers = macholib.MachO.MachO(cur_path).headers
+        headers = spack.vendor.macholib.MachO.MachO(cur_path).headers
     except ValueError:
         pass
     if not headers:
@@ -147,9 +146,9 @@ def _macholib_get_paths(cur_path):
             tty.warn("File is a stub, not a full library: {0}".format(cur_path))
         commands = headers[-1].commands
 
-    LC_ID_DYLIB = macholib.mach_o.LC_ID_DYLIB
-    LC_LOAD_DYLIB = macholib.mach_o.LC_LOAD_DYLIB
-    LC_RPATH = macholib.mach_o.LC_RPATH
+    LC_ID_DYLIB = spack.vendor.macholib.mach_o.LC_ID_DYLIB
+    LC_LOAD_DYLIB = spack.vendor.macholib.mach_o.LC_LOAD_DYLIB
+    LC_RPATH = spack.vendor.macholib.mach_o.LC_RPATH
 
     ident = None
     rpaths = []
@@ -309,7 +308,7 @@ def is_binary(filename: str) -> bool:
 
 
 # Memoize this due to repeated calls to libraries in the same directory.
-@llnl.util.lang.memoized
+@spack.llnl.util.lang.memoized
 def _exists_dir(dirname):
     return os.path.isdir(dirname)
 

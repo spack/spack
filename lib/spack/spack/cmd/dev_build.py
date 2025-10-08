@@ -2,16 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 import sys
-
-import llnl.util.tty as tty
 
 import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
+import spack.llnl.util.tty as tty
 import spack.repo
 from spack.cmd.common import arguments
 from spack.installer import PackageInstaller
@@ -21,7 +21,7 @@ section = "build"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["jobs", "no_checksum", "spec"])
     subparser.add_argument(
         "-d",

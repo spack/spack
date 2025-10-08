@@ -11,30 +11,17 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, Generator, Iterable, List, Optional, Set
-
-import llnl.string
-import llnl.util.lang
-import llnl.util.symlink
-import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    can_access,
-    get_owner_uid,
-    getuid,
-    install,
-    install_tree,
-    mkdirp,
-    partition_path,
-    remove_linked_tree,
-)
-from llnl.util.tty.colify import colify
-from llnl.util.tty.color import colorize
+from typing import Callable, Dict, Generator, Iterable, List, Optional, Set, Union
 
 import spack.caches
 import spack.config
 import spack.error
+import spack.llnl.string
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.utils
+import spack.oci.image
 import spack.resource
 import spack.spec
 import spack.util.crypto
@@ -44,6 +31,20 @@ import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
+from spack.llnl.util.filesystem import (
+    AlreadyExistsError,
+    can_access,
+    get_owner_uid,
+    getuid,
+    install,
+    install_tree,
+    mkdirp,
+    partition_path,
+    remove_linked_tree,
+    symlink,
+)
+from spack.llnl.util.tty.colify import colify
+from spack.llnl.util.tty.color import colorize
 from spack.util.crypto import bit_length, prefix_bits
 from spack.util.editor import editor, executable
 from spack.version import StandardVersion, VersionList
@@ -57,8 +58,14 @@ stage_prefix = "spack-stage-"
 
 def compute_stage_name(spec):
     """Determine stage name given a spec"""
-    default_stage_structure = stage_prefix + "{name}-{version}-{hash}"
-    stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
+    spec_stage_structure = stage_prefix
+    if spec.concrete:
+        spec_stage_structure += "{name}-{version}-{hash}"
+    else:
+        spec_stage_structure += "{name}-{version}"
+    # TODO (psakiev, scheibelp) Technically a user could still reintroduce a hash via
+    # config:stage_name. This is a fix for how to handle staging an abstact spec (see #51305)
+    stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
     return spec.format_path(format_string=stage_name_structure)
 
 
@@ -418,9 +425,9 @@ class Stage(LockableStagingDir):
         self.default_fetcher_only = False
 
     @property
-    def expected_archive_files(self):
+    def expected_archive_files(self) -> List[str]:
         """Possible archive file paths."""
-        fnames = []
+        fnames: List[str] = []
         expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             expanded = self.default_fetcher.expand_archive
@@ -447,7 +454,7 @@ class Stage(LockableStagingDir):
             return possible_filenames[0]
 
     @property
-    def archive_file(self):
+    def archive_file(self) -> Optional[str]:
         """Path to the source archive within this stage directory."""
         for path in self.expected_archive_files:
             if os.path.exists(path):
@@ -464,6 +471,13 @@ class Stage(LockableStagingDir):
     def source_path(self):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
+
+    @property
+    def single_file(self):
+        assert self.expanded, "Must expand stage before calling single_file"
+        files = os.listdir(self.source_path)
+        assert len(files) == 1, f"Expected one file in stage, found {files}"
+        return os.path.join(self.source_path, files[0])
 
     def _generate_fetchers(self, mirror_only=False) -> Generator["fs.FetchStrategy", None, None]:
         fetchers: List[fs.FetchStrategy] = []
@@ -494,7 +508,7 @@ class Stage(LockableStagingDir):
                     extension=extension,
                 )
                 for mirror in self.mirrors
-                if not mirror.fetch_url.startswith("oci://")  # no support for mirrors yet
+                if not spack.oci.image.is_oci_url(mirror.fetch_url)  # no support for mirrors yet
             )
 
         if not self.default_fetcher_only and self.mirror_layout and self.default_fetcher.cachable:
@@ -601,7 +615,9 @@ class Stage(LockableStagingDir):
         spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_layout.path)
 
     def cache_mirror(
-        self, mirror: "spack.caches.MirrorCache", stats: "spack.mirrors.utils.MirrorStats"
+        self,
+        mirror: "spack.caches.MirrorCache",
+        stats: "spack.mirrors.utils.MirrorStatsForOneSpec",
     ) -> None:
         """Perform a fetch if the resource is not already cached
 
@@ -847,8 +863,8 @@ class DevelopStage(LockableStagingDir):
     def create(self):
         super().create()
         try:
-            llnl.util.symlink.symlink(self.path, self.reference_link)
-        except (llnl.util.symlink.AlreadyExistsError, FileExistsError):
+            symlink(self.path, self.reference_link)
+        except (AlreadyExistsError, FileExistsError):
             pass
 
     def destroy(self):
@@ -921,16 +937,16 @@ def interactive_version_filter(
             header = []
             if len(orig_url_dict) > 0 and len(sorted_and_filtered) == len(orig_url_dict):
                 header.append(
-                    f"Selected {llnl.string.plural(len(sorted_and_filtered), 'version')}"
+                    f"Selected {spack.llnl.string.plural(len(sorted_and_filtered), 'version')}"
                 )
             else:
                 header.append(
                     f"Selected {len(sorted_and_filtered)} of "
-                    f"{llnl.string.plural(len(orig_url_dict), 'version')}"
+                    f"{spack.llnl.string.plural(len(orig_url_dict), 'version')}"
                 )
             if sorted_and_filtered and known_versions:
                 num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
-                header.append(f"{llnl.string.plural(num_new, 'new version')}")
+                header.append(f"{spack.llnl.string.plural(num_new, 'new version')}")
             if has_filter:
                 header.append(colorize(f"Filtered by {VERSION_COLOR}@@{version_filter}@."))
 
@@ -941,7 +957,7 @@ def interactive_version_filter(
                 )
                 for v in sorted_and_filtered
             ]
-            tty.msg(". ".join(header), *llnl.util.lang.elide_list(version_with_url))
+            tty.msg(". ".join(header), *spack.llnl.util.lang.elide_list(version_with_url))
             print()
 
         print_header = True
@@ -1085,7 +1101,7 @@ def get_checksums_for_versions(
     url_by_version: Dict[StandardVersion, str],
     package_name: str,
     *,
-    first_stage_function: Optional[Callable[[Stage, str], None]] = None,
+    first_stage_function: Optional[Callable[[str, str], None]] = None,
     keep_stage: bool = False,
     concurrency: Optional[int] = None,
     fetch_options: Optional[Dict[str, str]] = None,
@@ -1100,8 +1116,8 @@ def get_checksums_for_versions(
     Args:
         url_by_version: URL keyed by version
         package_name: name of the package
-        first_stage_function: function that takes a Stage and a URL; this is run on the stage
-            of the first URL downloaded
+        first_stage_function: function that takes an archive file and a URL; this is run on the
+            stage of the first URL downloaded
         keep_stage: whether to keep staging area when command completes
         batch: whether to ask user how many versions to fetch (false) or fetch all versions (true)
         fetch_options: options used for the fetcher (such as timeout or cookies)
@@ -1113,7 +1129,8 @@ def get_checksums_for_versions(
     versions = sorted(url_by_version.keys(), reverse=True)
     search_arguments = [(url_by_version[v], v) for v in versions]
 
-    version_hashes, errors = {}, []
+    version_hashes: Dict[StandardVersion, str] = {}
+    errors: List[str] = []
 
     # Don't spawn 16 processes when we need to fetch 2 urls
     if concurrency is not None:
@@ -1126,25 +1143,24 @@ def get_checksums_for_versions(
     # can move this function call *after* having distributed the work to executors.
     if first_stage_function is not None:
         (url, version), search_arguments = search_arguments[0], search_arguments[1:]
-        checksum, error = _fetch_and_checksum(url, fetch_options, keep_stage, first_stage_function)
-        if error is not None:
-            errors.append(error)
-
-        if checksum is not None:
-            version_hashes[version] = checksum
+        result = _fetch_and_checksum(url, fetch_options, keep_stage, first_stage_function)
+        if isinstance(result, Exception):
+            errors.append(str(result))
+        else:
+            version_hashes[version] = result
 
     with spack.util.parallel.make_concurrent_executor(concurrency, require_fork=False) as executor:
-        results = []
-        for url, version in search_arguments:
-            future = executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage)
-            results.append((version, future))
+        results = [
+            (version, executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage))
+            for url, version in search_arguments
+        ]
 
         for version, future in results:
-            checksum, error = future.result()
-            if error is not None:
-                errors.append(error)
-                continue
-            version_hashes[version] = checksum
+            result = future.result()
+            if isinstance(result, Exception):
+                errors.append(str(result))
+            else:
+                version_hashes[version] = result
 
         for msg in errors:
             tty.debug(msg)
@@ -1158,13 +1174,14 @@ def get_checksums_for_versions(
     return version_hashes
 
 
-def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
+def _fetch_and_checksum(
+    url: str,
+    options: Optional[dict],
+    keep_stage: bool,
+    action_fn: Optional[Callable[[str, str], None]] = None,
+) -> Union[str, Exception]:
     try:
-        url_or_fs = url
-        if options:
-            url_or_fs = fs.URLFetchStrategy(url=url, fetch_options=options)
-
-        with Stage(url_or_fs, keep=keep_stage) as stage:
+        with Stage(fs.URLFetchStrategy(url=url, fetch_options=options), keep=keep_stage) as stage:
             # Fetch the archive
             stage.fetch()
             archive = stage.archive_file
@@ -1176,23 +1193,21 @@ def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
 
             # Checksum the archive and add it to the list
             checksum = spack.util.crypto.checksum(hashlib.sha256, archive)
-        return checksum, None
-    except fs.FailedDownloadError:
-        return None, f"[WORKER] Failed to fetch {url}"
+        return checksum
     except Exception as e:
-        return None, f"[WORKER] Something failed on {url}, skipping.  ({e})"
+        return Exception(f"[WORKER] Failed to fetch {url}: {e}")
 
 
 class StageError(spack.error.SpackError):
-    """ "Superclass for all errors encountered during staging."""
+    """Superclass for all errors encountered during staging."""
 
 
 class StagePathError(StageError):
-    """ "Error encountered with stage path."""
+    """Error encountered with stage path."""
 
 
 class RestageError(StageError):
-    """ "Error encountered during restaging."""
+    """Error encountered during restaging."""
 
 
 class VersionFetchError(StageError):

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
 import spack.cmd
@@ -16,7 +17,7 @@ section = "user environment"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     """Parser is only constructed so that this prints a nice help
     message with -h."""
     arguments.add_common_arguments(subparser, ["constraint"])
@@ -70,7 +71,7 @@ def setup_parser(subparser):
         "--list",
         action="store_true",
         default=False,
-        help="show loaded packages: same as `spack find --loaded`",
+        help="show loaded packages: same as ``spack find --loaded``",
     )
 
 

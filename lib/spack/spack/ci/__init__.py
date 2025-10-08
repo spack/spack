@@ -14,20 +14,17 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, List, Optional, Set, Union
+from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple
 from urllib.request import Request
 
-import llnl.path
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.tty.color import cescape, colorize
-
 import spack
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
-import spack.error
+import spack.llnl.path
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
 import spack.paths
@@ -42,8 +39,8 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
+from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
-from spack.version import GitVersion, StandardVersion
 
 from .common import (
     IS_WINDOWS,
@@ -69,32 +66,43 @@ PushResult = namedtuple("PushResult", "success url")
 urlopen = web_util.urlopen  # alias for mocking in tests
 
 
-def get_change_revisions():
+def get_git_root(path: str) -> Optional[str]:
+    git = spack.util.git.git(required=True)
+    try:
+        with fs.working_dir(path):
+            # Raises SpackError on command failure
+            git_dir = git("rev-parse", "--show-toplevel", fail_on_error=True, output=str).strip()
+            tty.debug(f"{path} git toplevel at {git_dir}")
+            return git_dir
+    except SpackError:
+        return None
+
+
+def get_change_revisions(path: str) -> Tuple[Optional[str], Optional[str]]:
     """If this is a git repo get the revisions to use when checking
     for changed packages and spack core modules."""
-    git_dir = os.path.join(spack.paths.prefix, ".git")
-    if os.path.exists(git_dir) and os.path.isdir(git_dir):
+
+    if get_git_root(path):
         # TODO: This will only find changed packages from the last
         # TODO: commit.  While this may work for single merge commits
         # TODO: when merging the topic branch into the base, it will
         # TODO: require more thought outside of that narrow case.
         return "HEAD^", "HEAD"
-    return None, None
+    else:
+        return None, None
 
 
-def get_added_versions(
-    checksums_version_dict: Dict[str, Union[StandardVersion, GitVersion]],
-    path: str,
-    from_ref: str = "HEAD~1",
-    to_ref: str = "HEAD",
-) -> List[Union[StandardVersion, GitVersion]]:
-    """Get a list of the versions added between `from_ref` and `to_ref`.
+def filter_added_checksums(
+    checksums: Iterable[str], path: str, from_ref: str = "HEAD~1", to_ref: str = "HEAD"
+) -> List[str]:
+    """Get a list of the version checksums added between ``from_ref`` and ``to_ref``.
+
     Args:
-       checksums_version_dict (Dict): all package versions keyed by known checksums.
-       path (str): path to the package.py
-       from_ref (str): oldest git ref, defaults to `HEAD~1`
-       to_ref (str): newer git ref, defaults to `HEAD`
-    Returns: list of versions added between refs
+       checksums: an iterable of checksums to look for in the diff
+       path: path to the package.py
+       from_ref: oldest git ref, defaults to ``HEAD~1``
+       to_ref: newer git ref, defaults to ``HEAD``
+    Returns: list of version checksums added between refs
     """
     git_exe = spack.util.git.git(required=True)
 
@@ -104,13 +112,13 @@ def get_added_versions(
     # Store added and removed versions
     # Removed versions are tracked here to determine when versions are moved in a file
     # and show up as both added and removed in a git diff.
-    added_checksums = set()
-    removed_checksums = set()
+    added_checksums: Set[str] = set()
+    removed_checksums: Set[str] = set()
 
     # Scrape diff for modified versions and prune added versions if they show up
     # as also removed (which means they've actually just moved in the file and
     # we shouldn't need to rechecksum them)
-    for checksum in checksums_version_dict.keys():
+    for checksum in checksums:
         for line in diff_lines:
             if checksum in line:
                 if line.startswith("+"):
@@ -118,94 +126,94 @@ def get_added_versions(
                 if line.startswith("-"):
                     removed_checksums.add(checksum)
 
-    return [checksums_version_dict[c] for c in added_checksums - removed_checksums]
+    return list(added_checksums - removed_checksums)
 
 
-def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
-    """Given an environment manifest path and two revisions to compare, return
-    whether or not the stack was changed.  Returns True if the environment
-    manifest changed between the provided revisions (or additionally if the
-    `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
-    # git returns posix paths always, normalize input to be comptaible
-    # with that
-    env_path = llnl.path.convert_to_posix_path(env_path)
-    git = spack.util.git.git()
-    if git:
-        with fs.working_dir(spack.paths.prefix):
-            git_log = git(
-                "diff",
-                "--name-only",
-                rev1,
-                rev2,
-                output=str,
-                error=os.devnull,
-                fail_on_error=False,
-            ).strip()
-            lines = [] if not git_log else re.split(r"\s+", git_log)
+def stack_changed(env_path: str) -> bool:
+    """Given an environment manifest path, return whether or not the stack was changed.
+    Returns True iff the environment manifest changed between the provided revisions (or
+    additionally if the ``.gitlab-ci.yml`` file itself changed)."""
+    # git returns posix paths always, normalize input to be compatible with that
+    env_path = spack.llnl.path.convert_to_posix_path(os.path.dirname(env_path))
 
-            for path in lines:
-                if ".gitlab-ci.yml" in path or path in env_path:
-                    tty.debug(f"env represented by {env_path} changed")
-                    tty.debug(f"touched file: {path}")
-                    return True
+    git = spack.util.git.git(required=True)
+    git_dir = get_git_root(env_path)
+
+    if git_dir is None:
+        return False
+
+    with fs.working_dir(git_dir):
+        diff = git(
+            "diff",
+            "--name-only",
+            "HEAD^",
+            "HEAD",
+            output=str,
+            error=os.devnull,
+            fail_on_error=False,
+        ).strip()
+
+        if not diff:
+            return False
+
+        for path in diff.split():
+            if ".gitlab-ci.yml" in path or path in env_path:
+                tty.debug(f"env represented by {env_path} changed")
+                tty.debug(f"touched file: {path}")
+                return True
     return False
 
 
-def compute_affected_packages(rev1: str = "HEAD^", rev2: str = "HEAD") -> Set[str]:
+def compute_affected_packages(
+    repo: spack.repo.Repo, rev1: str = "HEAD^", rev2: str = "HEAD"
+) -> Set[str]:
     """Determine which packages were added, removed or changed
     between rev1 and rev2, and return the names as a set"""
-    return spack.repo.get_all_package_diffs("ARC", spack.repo.builtin_repo(), rev1=rev1, rev2=rev2)
+    return spack.repo.get_all_package_diffs("ARC", repo, rev1=rev1, rev2=rev2)
 
 
-def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
-    """Given a list of package names and an active/concretized
-       environment, return the set of all concrete specs from the
-       environment that could have been affected by changing the
-       list of packages.
+def get_spec_filter_list(
+    env: ev.Environment, affected_pkgs: Set[str], dependent_traverse_depth: Optional[int] = None
+) -> Set[spack.spec.Spec]:
+    """Given a list of package names and an active/concretized environment, return the set of all
+    concrete specs from the environment that could have been affected by changing the list of
+    packages.
 
-       If a ``dependent_traverse_depth`` is given, it is used to limit
-       upward (in the parent direction) traversal of specs of touched
-       packages.  E.g. if 1 is provided, then only direct dependents
-       of touched package specs are traversed to produce specs that
-       could have been affected by changing the package, while if 0 is
-       provided, only the changed specs themselves are traversed. If ``None``
-       is given, upward traversal of touched package specs is done all
-       the way to the environment roots.  Providing a negative number
-       results in no traversals at all, yielding an empty set.
+    If a ``dependent_traverse_depth`` is given, it is used to limit upward (in the parent
+    direction) traversal of specs of touched packages. E.g. if 1 is provided, then only direct
+    dependents of touched package specs are traversed to produce specs that could have been
+    affected by changing the package, while if 0 is provided, only the changed specs themselves
+    are traversed. If ``None`` is given, upward traversal of touched package specs is done all the
+    way to the environment roots. Providing a negative number results in no traversals at all,
+    yielding an empty set.
 
     Arguments:
-
-        env (spack.environment.Environment): Active concrete environment
-        affected_pkgs (List[str]): Affected package names
-        dependent_traverse_depth: Optional integer to limit dependent
-            traversal, or None to disable the limit.
+        env: Active concrete environment
+        affected_pkgs: Affected package names
+        dependent_traverse_depth: Integer to limit dependent traversal, None means no limit
 
     Returns:
-
-        A set of concrete specs from the active environment including
-        those associated with affected packages, their dependencies and
-        dependents, as well as their dependents dependencies.
+        A set of concrete specs from the active environment including those associated with
+        affected packages, their dependencies and dependents, as well as their dependents
+        dependencies.
     """
-    affected_specs = set()
+    affected_specs: Set[spack.spec.Spec] = set()
     all_concrete_specs = env.all_specs()
-    tty.debug("All concrete environment specs:")
-    for s in all_concrete_specs:
-        tty.debug(f"  {s.name}/{s.dag_hash()[:7]}")
-    affected_pkgs = frozenset(affected_pkgs)
     env_matches = [s for s in all_concrete_specs if s.name in affected_pkgs]
-    visited = set()
-    dag_hash = lambda s: s.dag_hash()
+    visited: Set[str] = set()
     for depth, parent in traverse.traverse_nodes(
-        env_matches, direction="parents", key=dag_hash, depth=True, order="breadth"
+        env_matches, direction="parents", key=traverse.by_dag_hash, depth=True, order="breadth"
     ):
         if dependent_traverse_depth is not None and depth > dependent_traverse_depth:
             break
-        affected_specs.update(parent.traverse(direction="children", visited=visited, key=dag_hash))
+        affected_specs.update(
+            parent.traverse(direction="children", visited=visited, key=traverse.by_dag_hash)
+        )
     return affected_specs
 
 
 # Pruning functions should take a spack.spec.Spec object and
-# return a RebuildDecision containg the pruners opinion on
+# return a RebuildDecision containing the pruners opinion on
 # whether or not to keep (rebuild) the spec and a message
 # containing the reason for the decision.
 
@@ -216,9 +224,10 @@ class RebuildDecision:
         self.reason = reason
 
 
-def create_unaffected_pruner(
-    affected_specs: Set[spack.spec.Spec],
-) -> Callable[[spack.spec.Spec], RebuildDecision]:
+PrunerCallback = Callable[[spack.spec.Spec], RebuildDecision]
+
+
+def create_unaffected_pruner(affected_specs: Set[spack.spec.Spec]) -> PrunerCallback:
     """Given a set of "affected" specs, return a filter that prunes specs
     not in the set."""
 
@@ -230,18 +239,18 @@ def create_unaffected_pruner(
     return rebuild_filter
 
 
-def create_already_built_pruner(
-    check_index_only: bool = True,
-) -> Callable[[spack.spec.Spec], RebuildDecision]:
+def create_already_built_pruner(check_index_only: bool = True) -> PrunerCallback:
     """Return a filter that prunes specs already present on any configured
     mirrors"""
     try:
-        bindist.BINARY_INDEX.update()
-    except bindist.FetchCacheError as e:
+        spack.binary_distribution.BINARY_INDEX.update()
+    except spack.binary_distribution.FetchCacheError as e:
         tty.warn(e)
 
     def rebuild_filter(s: spack.spec.Spec) -> RebuildDecision:
-        spec_locations = bindist.get_mirrors_for_spec(spec=s, index_only=check_index_only)
+        spec_locations = spack.binary_distribution.get_mirrors_for_spec(
+            spec=s, index_only=check_index_only
+        )
 
         if not spec_locations:
             return RebuildDecision(True, "not found anywhere")
@@ -255,7 +264,7 @@ def create_already_built_pruner(
     return rebuild_filter
 
 
-def create_external_pruner() -> Callable[[spack.spec.Spec], RebuildDecision]:
+def create_external_pruner() -> PrunerCallback:
     """Return a filter that prunes external specs"""
 
     def rebuild_filter(s: spack.spec.Spec) -> RebuildDecision:
@@ -268,7 +277,7 @@ def create_external_pruner() -> Callable[[spack.spec.Spec], RebuildDecision]:
 
 def _format_pruning_message(spec: spack.spec.Spec, prune: bool, reasons: List[str]) -> str:
     reason_msg = ", ".join(reasons)
-    spec_fmt = "{name}{@version}{/hash:7}{%compiler}"
+    spec_fmt = "{name}{@version}{/hash:7}{compilers}"
 
     if not prune:
         status = colorize("@*g{[x]}  ")
@@ -279,9 +288,7 @@ def _format_pruning_message(spec: spack.spec.Spec, prune: bool, reasons: List[st
 
 
 def prune_pipeline(
-    pipeline: PipelineDag,
-    pruning_filters: List[Callable[[spack.spec.Spec], RebuildDecision]],
-    print_summary: bool = False,
+    pipeline: PipelineDag, pruning_filters: List[PrunerCallback], print_summary: bool = False
 ) -> None:
     """Given a PipelineDag and a list of pruning filters, return a modified
     PipelineDag containing only the nodes that survive pruning by all of the
@@ -360,8 +367,10 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.artifacts_root = args.artifacts_root
     options.output_file = args.output_file
     options.prune_up_to_date = args.prune_dag
+    options.prune_unaffected = args.prune_unaffected
     options.prune_external = args.prune_externals
     options.check_index_only = args.index_only
+    options.forward_variables = args.forward_variable or []
 
     ci_config = cfg.get("ci")
 
@@ -380,7 +389,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
                 "ignoring it."
             )
 
-    spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
+    spack_prune_untouched = str(os.environ.get("SPACK_PRUNE_UNTOUCHED", options.prune_unaffected))
     options.prune_untouched = (
         spack_prune_untouched is not None and spack_prune_untouched.lower() == "true"
     )
@@ -411,6 +420,48 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
         options.rebuild_index = False
 
     return options
+
+
+def get_unaffected_pruners(
+    env: ev.Environment, untouched_pruning_dependent_depth: Optional[int]
+) -> Optional[PrunerCallback]:
+
+    # If the stack env has changed, do not apply unaffected pruning
+    if stack_changed(env.manifest_path):
+        tty.info("Skipping unaffected pruning: stack environment changed")
+        return None
+
+    # TODO: This should be configurable to only check for changed packages
+    # in specific configured repos that are being tested with CI. For now
+    # it assumes all configured repos are merge commits that contain relevant
+    # changes to run CI on.
+    affected_pkgs: Set[str] = set()
+    for repo in spack.repo.PATH.repos:
+        rev1, rev2 = get_change_revisions(repo.root)
+        if not (rev1 and rev2):
+            continue
+
+        tty.debug(f"repo {repo.namespace}: revisions rev1={rev1}, rev2={rev2}")
+
+        repo_affected_pkgs = compute_affected_packages(repo, rev1=rev1, rev2=rev2)
+        tty.debug(f"repo {repo.namespace}: affected pkgs")
+        for p in repo_affected_pkgs:
+            tty.debug(f"  {p}")
+
+        affected_pkgs.update(repo_affected_pkgs)
+
+    if not affected_pkgs:
+        tty.info("Skipping unaffected pruning: no package changes were detected")
+        return None
+
+    affected_specs = get_spec_filter_list(
+        env, affected_pkgs, dependent_traverse_depth=untouched_pruning_dependent_depth
+    )
+    tty.debug(f"dependent_traverse_depth={untouched_pruning_dependent_depth}, affected specs:")
+    for s in affected_specs:
+        tty.debug(f"  {PipelineDag.key(s)}")
+
+    return create_unaffected_pruner(affected_specs)
 
 
 def generate_pipeline(env: ev.Environment, args) -> None:
@@ -465,37 +516,21 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         # pruning.  Otherwise, list the names of all packages touched between
         # rev1 and rev2, and prune from the pipeline any node whose spec has a
         # packagen name not in that list.
-        rev1, rev2 = get_change_revisions()
-        tty.debug(f"Got following revisions: rev1={rev1}, rev2={rev2}")
-        if rev1 and rev2:
-            # If the stack file itself did not change, proceed with pruning
-            if not get_stack_changed(env.manifest_path, rev1, rev2):
-                affected_pkgs = compute_affected_packages(rev1, rev2)
-                tty.debug("affected pkgs:")
-                for p in affected_pkgs:
-                    tty.debug(f"  {p}")
-                affected_specs = get_spec_filter_list(
-                    env,
-                    affected_pkgs,
-                    dependent_traverse_depth=options.untouched_pruning_dependent_depth,
-                )
-                tty.debug(
-                    "dependent_traverse_depth="
-                    f"{options.untouched_pruning_dependent_depth}, affected specs:"
-                )
-                for s in affected_specs:
-                    tty.debug(f"  {PipelineDag.key(s)}")
-
-                pruning_filters.append(create_unaffected_pruner(affected_specs))
+        unaffected_pruner = get_unaffected_pruners(env, options.untouched_pruning_dependent_depth)
+        if unaffected_pruner:
+            tty.info("Enabling Unaffected Pruner")
+            pruning_filters.append(unaffected_pruner)
 
     # Possibly prune specs that are already built on some configured mirror
     if options.prune_up_to_date:
+        tty.info("Enabling Up-to-date Pruner")
         pruning_filters.append(
             create_already_built_pruner(check_index_only=options.check_index_only)
         )
 
     # Possibly prune specs that are external
     if options.prune_external:
+        tty.info("Enabling Externals Pruner")
         pruning_filters.append(create_external_pruner())
 
     # Do all the pruning
@@ -520,25 +555,20 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     # Use all unpruned specs to populate the build group for this set
     cdash_config = cfg.get("cdash")
     if options.cdash_handler and options.cdash_handler.auth_token:
-        options.cdash_handler.populate_buildgroup(
-            [options.cdash_handler.build_name(s) for s in pipeline_specs]
-        )
+        options.cdash_handler.create_buildgroup()
     elif cdash_config:
         # warn only if there was actually a CDash configuration.
         tty.warn("Unable to populate buildgroup without CDash credentials")
 
 
-def import_signing_key(base64_signing_key):
-    """Given Base64-encoded gpg key, decode and import it to use for
-        signing packages.
+def import_signing_key(base64_signing_key: str) -> None:
+    """Given Base64-encoded gpg key, decode and import it to use for signing packages.
 
     Arguments:
-        base64_signing_key (str): A gpg key including the secret key,
-            armor-exported and base64 encoded, so it can be stored in a
-            gitlab CI variable.  For an example of how to generate such
-            a key, see:
-
-        https://github.com/spack/spack-infrastructure/blob/main/gitlab-docker/files/gen-key
+        base64_signing_key:
+            A gpg key including the secret key, armor-exported and base64 encoded, so it can be
+            stored in a gitlab CI variable. For an example of how to generate such a key, see
+            https://github.com/spack/spack-infrastructure/blob/main/gitlab-docker/files/gen-key.
     """
     if not base64_signing_key:
         tty.warn("No key found for signing/verifying packages")
@@ -553,9 +583,7 @@ def import_signing_key(base64_signing_key):
     tty.debug("spack gpg list:")
     tty.debug(list_output)
 
-    decoded_key = base64.b64decode(base64_signing_key)
-    if isinstance(decoded_key, bytes):
-        decoded_key = decoded_key.decode("utf8")
+    decoded_key = base64.b64decode(base64_signing_key).decode("utf-8")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         sign_key_path = os.path.join(tmpdir, "signing_key")
@@ -584,7 +612,7 @@ def can_sign_binaries():
 
 
 def can_verify_binaries():
-    """Utility method to determin if this spack instance is capable (at
+    """Utility method to determine if this spack instance is capable (at
     least in theory) of verifying signed binaries."""
     return len(gpg_util.public_keys()) >= 1
 
@@ -599,13 +627,13 @@ def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: b
         sign_binaries: If True, spack will attempt to sign binary package before pushing.
     """
     tty.debug(f"Pushing to build cache ({'signed' if sign_binaries else 'unsigned'})")
-    signing_key = bindist.select_signing_key() if sign_binaries else None
+    signing_key = spack.binary_distribution.select_signing_key() if sign_binaries else None
     mirror = spack.mirrors.mirror.Mirror.from_url(mirror_url)
     try:
-        with bindist.make_uploader(mirror, signing_key=signing_key) as uploader:
+        with spack.binary_distribution.make_uploader(mirror, signing_key=signing_key) as uploader:
             uploader.push_or_raise([spec])
         return True
-    except bindist.PushToBuildCacheError as e:
+    except spack.binary_distribution.PushToBuildCacheError as e:
         tty.error(f"Problem writing to {mirror_url}: {e}")
         return False
 
@@ -671,17 +699,15 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     )
 
 
-def download_and_extract_artifacts(url, work_dir) -> str:
+def download_and_extract_artifacts(url: str, work_dir: str) -> str:
     """Look for gitlab artifacts.zip at the given url, and attempt to download
-        and extract the contents into the given work_dir
+    and extract the contents into the given work_dir
 
     Arguments:
+        url: Complete url to artifacts.zip file
+        work_dir: Path to destination where artifacts should be extracted
 
-        url (str): Complete url to artifacts.zip file
-        work_dir (str): Path to destination where artifacts should be extracted
-
-    Output:
-
+    Returns:
         Artifacts root path relative to the archive root
     """
     tty.msg(f"Fetching artifacts from: {url}")
@@ -736,23 +762,27 @@ def get_spack_info():
     return f"no git repo, use spack {spack.spack_version}"
 
 
-def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
-    """Look in the local spack clone to find the checkout_commit, and if
-        provided, the merge_commit given as arguments.  If those commits can
-        be found locally, then clone spack and attempt to recreate a merge
-        commit with the same parent commits as tested in gitlab.  This looks
-        something like 1) git clone repo && cd repo 2) git checkout
-        <checkout_commit> 3) git merge <merge_commit>.  If there is no
-        merge_commit provided, then skip step (3).
+def setup_spack_repro_version(
+    repro_dir: str, checkout_commit: str, merge_commit: Optional[str] = None
+) -> bool:
+    """Look in the local spack clone to find the checkout_commit, and if provided, the
+    merge_commit given as arguments. If those commits can be found locally, then clone spack and
+    attempt to recreate a merge commit with the same parent commits as tested in gitlab. This looks
+    something like
+
+    1. ``git clone repo && cd repo``
+    2. ``git checkout <checkout_commit>``
+    3. ``git merge <merge_commit>``
+
+    If there is no merge_commit provided, then skip step (3).
 
     Arguments:
 
-        repro_dir (str): Location where spack should be cloned
-        checkout_commit (str): SHA of PR branch commit
-        merge_commit (str): SHA of target branch parent
+        repro_dir: Location where spack should be cloned
+        checkout_commit: SHA of PR branch commit
+        merge_commit: SHA of target branch parent
 
-    Returns: True if git repo state was successfully recreated, or False
-        otherwise.
+    Returns: True iff the git repo state was successfully recreated
     """
     # figure out the path to the spack git version being used for the
     # reproduction
@@ -833,7 +863,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
 
 def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head):
-    """Given a url to gitlab artifacts.zip from a failed 'spack ci rebuild' job,
+    """Given a url to gitlab artifacts.zip from a failed ``spack ci rebuild`` job,
     attempt to setup an environment in which the failure can be reproduced
     locally.  This entails the following:
 
@@ -847,7 +877,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
     """
     work_dir = os.path.realpath(work_dir)
     if os.path.exists(work_dir) and os.listdir(work_dir):
-        raise SpackError(f"Cannot run reproducer in non-emptry working dir:\n  {work_dir}")
+        raise SpackError(f"Cannot run reproducer in non-empty working dir:\n  {work_dir}")
 
     platform_script_ext = "ps1" if IS_WINDOWS else "sh"
     artifact_root = download_and_extract_artifacts(url, work_dir)

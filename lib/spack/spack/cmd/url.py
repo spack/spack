@@ -2,17 +2,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import urllib.parse
 from collections import defaultdict
 
-import llnl.util.tty.color as color
-from llnl.util import tty
-
 import spack.fetch_strategy as fs
+import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.spec
 import spack.url
 import spack.util.crypto as crypto
+from spack.llnl.util import tty
 from spack.url import (
     UndetectableNameError,
     UndetectableVersionError,
@@ -32,7 +32,7 @@ section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="subcommand")
 
     # Parse
@@ -517,9 +517,9 @@ def version_parsed_correctly(pkg, version):
 
 
 def remove_prefix(pkg_name):
-    """Remove build system prefix ('py-', 'perl-', etc.) from a package name.
+    """Remove build system prefix (``'py-'``, ``'perl-'``, etc.) from a package name.
 
-    After determining a name, `spack create` determines a build system.
+    After determining a name, ``spack create`` determines a build system.
     Some build systems prepend a special string to the front of the name.
     Since this can't be guessed from the URL, it would be unfair to say
     that these names are incorrectly parsed, so we remove them.
@@ -550,7 +550,7 @@ def remove_prefix(pkg_name):
 
 
 def remove_separators(version):
-    """Remove separator characters ('.', '_', and '-') from a version.
+    """Remove separator characters (``.``, ``_``, and ``-``) from a version.
 
     A version like 1.2.3 may be displayed as 1_2_3 in the URL.
     Make sure 1.2.3, 1-2-3, 1_2_3, and 123 are considered equal.

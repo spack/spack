@@ -5,6 +5,7 @@
 import argparse
 import json
 import os
+import pathlib
 import sys
 from textwrap import dedent
 
@@ -14,12 +15,14 @@ import spack.cmd as cmd
 import spack.cmd.find
 import spack.concretize
 import spack.environment as ev
+import spack.package_base
+import spack.paths
 import spack.repo
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
+from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
-from spack.test.conftest import create_test_repo
 from spack.test.utilities import SpackCommandArgs
 from spack.util.pattern import Bunch
 
@@ -129,7 +132,7 @@ def test_tag2_tag3(parser, specs):
 @pytest.mark.db
 def test_namespaces_shown_correctly(args, with_namespace, database):
     """Test that --namespace(s) works. Old syntax is --namespace"""
-    assert ("builtin.mock.zmpi" in find(*args)) == with_namespace
+    assert ("builtin_mock.zmpi" in find(*args)) == with_namespace
 
 
 @pytest.mark.db
@@ -356,10 +359,12 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
-def test_find_specs_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
-    path = tmpdir.join("spack.yaml")
+def test_find_specs_include_concrete_env(
+    mutable_mock_env_path, mutable_mock_repo, tmp_path: pathlib.Path
+):
+    path = tmp_path / "spack.yaml"
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -374,7 +379,7 @@ spack:
     test1.concretize()
     test1.write()
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -400,10 +405,12 @@ spack:
     assert "libelf" in output
 
 
-def test_find_specs_nested_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
-    path = tmpdir.join("spack.yaml")
+def test_find_specs_nested_include_concrete_env(
+    mutable_mock_env_path, mutable_mock_repo, tmp_path: pathlib.Path
+):
+    path = tmp_path / "spack.yaml"
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -448,7 +455,9 @@ def test_find_loaded(database, working_env):
 
 
 @pytest.mark.regression("37712")
-def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
+def test_environment_with_version_range_in_compiler_doesnt_fail(
+    tmp_path: pathlib.Path, mock_packages
+):
     """Tests that having an active environment with a root spec containing a compiler constrained
     by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
     when invoking "spack find".
@@ -462,90 +471,17 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
     assert "zlib" in output
 
 
-_pkga = (
-    "a0",
-    """\
-from spack.package import *
-
-class A0(Package):
-    version("1.2")
-    version("1.1")
-
-    depends_on("b0")
-    depends_on("c0")
-""",
-)
-
-
-_pkgb = (
-    "b0",
-    """\
-from spack.package import *
-
-class B0(Package):
-    version("1.2")
-    version("1.1")
-""",
-)
-
-
-_pkgc = (
-    "c0",
-    """\
-from spack.package import *
-
-class C0(Package):
-    version("1.2")
-    version("1.1")
-
-    tags = ["tag0", "tag1"]
-""",
-)
-
-
-_pkgd = (
-    "d0",
-    """\
-from spack.package import *
-
-class D0(Package):
-    version("1.2")
-    version("1.1")
-
-    depends_on("c0")
-    depends_on("e0")
-""",
-)
-
-
-_pkge = (
-    "e0",
-    """\
-from spack.package import *
-
-class E0(Package):
-    tags = ["tag1", "tag2"]
-
-    version("1.2")
-    version("1.1")
-""",
-)
+#   a0  d0
+#  / \ / \
+# b0  c0  e0
 
 
 @pytest.fixture
-def _create_test_repo(tmpdir, mutable_config):
-    r"""
-      a0  d0
-     / \ / \
-    b0  c0  e0
-    """
-    yield create_test_repo(tmpdir, [_pkga, _pkgb, _pkgc, _pkgd, _pkge])
-
-
-@pytest.fixture
-def test_repo(_create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
-        yield mock_repo_path
+def test_repo(mock_stage):
+    with spack.repo.use_repositories(
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "find")
+    ) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 def test_find_concretized_not_installed(
@@ -607,3 +543,15 @@ def test_find_concretized_not_installed(
         assert _nresults(_query(e, "--tag=tag0")) == (1, 0)
         assert _nresults(_query(e, "--tag=tag1")) == (1, 1)
         assert _nresults(_query(e, "--tag=tag2")) == (0, 1)
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_fetch")
+def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
+    repo_path, filename, commits = mock_git_version_info
+    file_url = pathlib.Path(repo_path).as_uri()
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
+
+    install("--fake", f"git-test-commit commit={commits[0]}")
+    output = find(f"commit={commits[0]}")
+    assert "git-test-commit" in output

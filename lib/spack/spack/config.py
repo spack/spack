@@ -8,13 +8,12 @@ multiple scopes with different levels of precedence.  See the
 documentation on :ref:`configuration-scopes` for details on how Spack's
 configuration system behaves.  The scopes are:
 
-  #. ``default``
-  #. ``system``
-  #. ``site``
-  #. ``user``
+#. ``default``
+#. ``system``
+#. ``site``
+#. ``user``
 
-And corresponding :ref:`per-platform scopes <platform-scopes>`. Important
-functions in this module are:
+Important functions in this module are:
 
 * :func:`~spack.config.Configuration.get_config`
 * :func:`~spack.config.Configuration.update_config`
@@ -27,7 +26,6 @@ When read in, Spack validates configurations with jsonschemas.  The
 schemas are in submodules of :py:mod:`spack.schema`.
 
 """
-import collections
 import contextlib
 import copy
 import functools
@@ -35,11 +33,10 @@ import os
 import os.path
 import re
 import sys
+from collections import defaultdict
 from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
-import jsonschema
-
-from llnl.util import filesystem, lang, tty
+from spack.vendor import jsonschema
 
 import spack.error
 import spack.paths
@@ -60,10 +57,13 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
+import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
 import spack.util.remote_file_cache as rfc_util
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.llnl.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
@@ -87,6 +87,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "bootstrap": spack.schema.bootstrap.schema,
     "ci": spack.schema.ci.schema,
     "cdash": spack.schema.cdash.schema,
+    "toolchains": spack.schema.toolchains.schema,
 }
 
 # Same as above, but including keys for environments
@@ -115,16 +116,13 @@ CONFIG_DEFAULTS = {
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
-SCOPES_METAVAR = "{defaults,system,site,user,command_line}[/PLATFORM] or env:ENVIRONMENT"
+SCOPES_METAVAR = "{defaults,system,site,user,command_line} or env:ENVIRONMENT"
 
 #: Base name for the (internal) overrides scope.
 _OVERRIDES_BASE_NAME = "overrides-"
 
 #: Type used for raw YAML configuration
 YamlConfigDict = Dict[str, Any]
-
-#: prefix for name of included configuration scopes
-INCLUDE_SCOPE_PREFIX = "include"
 
 #: safeguard for recursive includes -- maximum include depth
 MAX_RECURSIVE_INCLUDES = 100
@@ -154,8 +152,16 @@ class ConfigScope:
             if includes:
                 include_paths = [included_path(data) for data in includes["include"]]
                 for path in include_paths:
-                    included_scope = include_path_scope(path)
-                    if included_scope:
+                    included_scope = include_path_scope(path, self)
+                    if not included_scope:
+                        continue
+
+                    # Do not include duplicate scopes
+                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
+                        tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                        continue
+
+                    if included_scope not in self._included_scopes:
                         self._included_scopes.append(included_scope)
 
         return self._included_scopes
@@ -168,10 +174,6 @@ class ConfigScope:
 
     def _write_section(self, section: str) -> None:
         raise NotImplementedError
-
-    @property
-    def is_platform_dependent(self) -> bool:
-        return False
 
     def clear(self) -> None:
         """Empty cached config information."""
@@ -220,11 +222,6 @@ class DirectoryConfigScope(ConfigScope):
                 syaml.dump_config(data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
-
-    @property
-    def is_platform_dependent(self) -> bool:
-        """Returns true if the scope name is platform specific"""
-        return "/" in self.name
 
 
 class SingleFileScope(ConfigScope):
@@ -436,7 +433,7 @@ def _config_mutator(method):
 
     @functools.wraps(method)
     def _method(self, *args, **kwargs):
-        self._get_config_memoized.cache.clear()
+        self._get_config_memoized.cache_clear()
         return method(self, *args, **kwargs)
 
     return _method
@@ -454,7 +451,7 @@ class Configuration:
 
     def __init__(self) -> None:
         self.scopes = lang.PriorityOrderedMapping()
-        self.format_updates: Dict[str, List[ConfigScope]] = collections.defaultdict(list)
+        self.updated_scopes_by_section: Dict[str, List[ConfigScope]] = defaultdict(list)
 
     def ensure_unwrapped(self) -> "Configuration":
         """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
@@ -525,18 +522,12 @@ class Configuration:
         """Writable scope with the highest precedence."""
         return next(s for s in self.scopes.reversed_values() if s.writable)
 
-    def highest_precedence_non_platform_scope(self) -> ConfigScope:
-        """Writable non-platform scope with the highest precedence"""
-        return next(
-            s for s in self.scopes.reversed_values() if s.writable and not s.is_platform_dependent
-        )
-
     def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
         List of all scopes whose names match the provided regular expression.
 
-        For example, matching_scopes(r'^command') will return all scopes
-        whose names begin with `command`.
+        For example, ``matching_scopes(r'^command')`` will return all scopes
+        whose names begin with ``command``.
         """
         return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
 
@@ -600,7 +591,7 @@ class Configuration:
             scope: scope to be updated
             force: force the update
         """
-        if self.format_updates.get(section) and not force:
+        if self.updated_scopes_by_section.get(section) and not force:
             msg = (
                 'The "{0}" section of the configuration needs to be written'
                 " to disk, but is currently using a deprecated format. "
@@ -627,7 +618,9 @@ class Configuration:
 
         scope._write_section(section)
 
-    def get_config(self, section: str, scope: Optional[str] = None) -> YamlConfigDict:
+    def get_config(
+        self, section: str, scope: Optional[str] = None, _merged_scope: Optional[str] = None
+    ) -> YamlConfigDict:
         """Get configuration settings for a section.
 
         If ``scope`` is ``None`` or not provided, return the merged contents
@@ -652,37 +645,47 @@ class Configuration:
            }
 
         """
-        return self._get_config_memoized(section, scope)
+        return self._get_config_memoized(section, scope=scope, _merged_scope=_merged_scope)
+
+    def deepcopy_as_builtin(self, section: str, scope: Optional[str] = None) -> Dict[str, Any]:
+        """Get a deep copy of a section with native Python types, excluding YAML metadata."""
+        return syaml.deepcopy_as_builtin(self.get_config(section, scope=scope))
 
     @lang.memoized
-    def _get_config_memoized(self, section: str, scope: Optional[str]) -> YamlConfigDict:
+    def _get_config_memoized(
+        self, section: str, scope: Optional[str], _merged_scope: Optional[str]
+    ) -> YamlConfigDict:
         _validate_section_name(section)
 
-        if scope is None:
-            scopes = list(self.scopes.values())
-        else:
+        if scope is not None and _merged_scope is not None:
+            raise ValueError("Cannot specify both scope and _merged_scope")
+        elif scope is not None:
             scopes = [self._validate_scope(scope)]
+        elif _merged_scope is not None:
+            scope_stack = list(self.scopes.values())
+            merge_idx = next(i for i, s in enumerate(scope_stack) if s.name == _merged_scope)
+            scopes = scope_stack[: merge_idx + 1]
+        else:
+            scopes = list(self.scopes.values())
 
-        merged_section = syaml.syaml_dict()
-        for scope in scopes:
+        merged_section: Dict[str, Any] = syaml.syaml_dict()
+        updated_scopes = []
+        for config_scope in scopes:
             # read potentially cached data from the scope.
-
-            data = scope.get_section(section)
+            data = config_scope.get_section(section)
 
             # Skip empty configs
-            if not data or not isinstance(data, dict):
+            if not isinstance(data, dict) or section not in data:
                 continue
 
-            if section not in data:
-                continue
-
-            # We might be reading configuration files in an old format,
-            # thus read data and update it in memory if need be.
-            changed = _update_in_memory(data, section)
-            if changed:
-                self.format_updates[section].append(scope)
+            # If configuration is in an old format, transform it and keep track of the scope that
+            # may need to be written out to disk.
+            if _update_in_memory(data, section):
+                updated_scopes.append(config_scope)
 
             merged_section = spack.schema.merge_yaml(merged_section, data)
+
+        self.updated_scopes_by_section[section] = updated_scopes
 
         # no config files -- empty config.
         if section not in merged_section:
@@ -698,13 +701,13 @@ class Configuration:
         """Get a config section or a single value from one.
 
         Accepts a path syntax that allows us to grab nested config map
-        entries.  Getting the 'config' section would look like::
+        entries.  Getting the ``config`` section would look like::
 
-            spack.config.get('config')
+            spack.config.get("config")
 
         and the ``dirty`` section in the ``config`` scope would be::
 
-            spack.config.get('config:dirty')
+            spack.config.get("config:dirty")
 
         We use ``:`` as the separator, like YAML objects.
         """
@@ -768,12 +771,26 @@ class Configuration:
         """Iterate over scopes in this configuration."""
         yield from self.scopes.values()
 
-    def print_section(self, section: str, blame: bool = False, *, scope=None) -> None:
-        """Print a configuration to stdout."""
+    def print_section(
+        self, section: str, yaml: bool = True, blame: bool = False, *, scope: Optional[str] = None
+    ) -> None:
+        """Print a configuration to stdout.
+
+        Arguments:
+            section: The configuration section to print.
+            yaml: If True, output in YAML format, otherwise JSON (ignored when blame is True).
+            blame: Whether to include source locations for each entry.
+            scope: The configuration scope to use.
+        """
         try:
             data = syaml.syaml_dict()
             data[section] = self.get_config(section, scope=scope)
-            syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
+            if yaml or blame:
+                syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
+            else:
+                sjson.dump(data, sys.stdout)
+                sys.stdout.write("\n")
+
         except (syaml.SpackYAMLError, OSError) as e:
             raise spack.error.ConfigError(f"cannot read '{section}' configuration") from e
 
@@ -819,19 +836,6 @@ def override(
         assert scope is overrides
 
 
-def _add_platform_scope(
-    cfg: Configuration, name: str, path: str, priority: ConfigScopePriority, writable: bool = True
-) -> None:
-    """Add a platform-specific subdirectory for the current platform."""
-    import spack.platforms  # circular dependency
-
-    platform = spack.platforms.host().name
-    scope = DirectoryConfigScope(
-        f"{name}/{platform}", os.path.join(path, platform), writable=writable
-    )
-    cfg.push_scope(scope, priority=priority)
-
-
 #: Class for the relevance of an optional path conditioned on a limited
 #: python code that evaluates to a boolean and or explicit specification
 #: as optional.
@@ -848,8 +852,7 @@ def included_path(entry: Union[str, dict]) -> IncludePath:
     Args:
         entry: include configuration entry
 
-    Returns: converted entry, where an empty ``when`` means the path is
-        not conditionally included
+    Returns: converted entry, where an empty ``when`` means the path is not conditionally included
     """
     if isinstance(entry, str):
         return IncludePath(path=entry, sha256="", when="", optional=False)
@@ -861,11 +864,12 @@ def included_path(entry: Union[str, dict]) -> IncludePath:
     return IncludePath(path=path, sha256=sha256, when=when, optional=optional)
 
 
-def include_path_scope(include: IncludePath) -> Optional[ConfigScope]:
+def include_path_scope(include: IncludePath, parent_scope: ConfigScope) -> Optional[ConfigScope]:
     """Instantiate an appropriate configuration scope for the given path.
 
     Args:
         include: optional include path
+        parent_name: name of including scope
 
     Returns: configuration scope
 
@@ -882,15 +886,29 @@ def include_path_scope(include: IncludePath) -> Optional[ConfigScope]:
         if not config_path:
             raise ConfigFileError(f"Unable to fetch remote configuration from {include.path}")
 
+        # Try to use the relative path to create the included scope name
+        parent_path = getattr(parent_scope, "path", None)
+        if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
+            included_name = os.path.relpath(config_path, parent_path)
+        else:
+            included_name = config_path
+
+        if sys.platform == "win32":
+            # Clean windows path for use in config name that looks nicer
+            # ie. The path: C:\\some\\path\\to\\a\\file
+            # becomes C/some/path/to/a/file
+            included_name = included_name.replace("\\", "/")
+            included_name = included_name.replace(":", "")
+
         if os.path.isdir(config_path):
             # directories are treated as regular ConfigScopes
-            config_name = f"{INCLUDE_SCOPE_PREFIX}:{os.path.basename(config_path)}"
+            config_name = f"{parent_scope.name}:{included_name}"
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(config_name, config_path)
 
         if os.path.exists(config_path):
             # files are assumed to be SingleFileScopes
-            config_name = f"{INCLUDE_SCOPE_PREFIX}:{config_path}"
+            config_name = f"{parent_scope.name}:{included_name}"
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
 
@@ -964,12 +982,9 @@ def create_incremental() -> Generator[Configuration, None, None]:
     if not disable_local_config:
         configuration_paths.append(("user", spack.paths.user_config_path))
 
-    # add each scope and its platform-specific directory
+    # add each scope
     for name, path in configuration_paths:
         cfg.push_scope(DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES)
-        # Each scope can have per-platform overrides in subdirectories
-        _add_platform_scope(cfg, name, path, priority=ConfigScopePriority.CONFIG_FILES)
-
         # yield the config incrementally so that each config level's init code can get
         # data from the one below. This can be tricky, but it enables us to have a
         # single unified config system.
@@ -1303,7 +1318,7 @@ def remove_yaml(dest, source):
     """UnMerges source from dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
-    case dest was None to begin with, e.g.:
+    case dest was None to begin with, e.g.::
 
        dest = remove_yaml(dest, source)
 
@@ -1313,7 +1328,7 @@ def remove_yaml(dest, source):
     appear as keys in ``dest``.
 
     Config file authors can optionally end any attribute in a dict
-    with `::` instead of `:`, and the key will remove the entire section
+    with ``::`` instead of ``:``, and the key will remove the entire section
     from ``dest``
     """
 
@@ -1457,27 +1472,29 @@ class ConfigPath:
 
 
 def process_config_path(path: str) -> List[str]:
-    """Process a path argument to config.set() that may contain overrides ('::' or
-    trailing ':')
+    """Process a path argument to config.set() that may contain overrides (``::`` or
+    trailing ``:``)
 
     Colons will be treated as static strings if inside of quotes,
-    e.g. `this:is:a:path:'value:with:colon'` will yield:
+    e.g. ``this:is:a:path:'value:with:colon'`` will yield:
 
-        [this, is, a, path, value:with:colon]
+    .. code-block:: text
 
-    The path may consist only of keys (e.g. for a `get`) or may end in a value.
+       [this, is, a, path, value:with:colon]
+
+    The path may consist only of keys (e.g. for a ``get``) or may end in a value.
     Keys are always strings: if a user encloses a key in quotes, the quotes
     should be removed. Values with quotes should be treated as strings,
     but without quotes, may be parsed as a different yaml object (e.g.
-    '{}' is a dict, but '"{}"' is a string).
+    ``'{}'`` is a dict, but ``'"{}"'`` is a string).
 
     This function does not know whether the final element of the path is a
     key or value, so:
 
-    * It must strip the quotes, in case it is a key (so we look for "key" and
-      not '"key"'))
+    * It must strip the quotes, in case it is a key (so we look for ``key`` and
+      not ``"key"``)
     * It must indicate somehow that the quotes were stripped, in case it is a
-      value (so that we don't process '"{}"' as a YAML dict)
+      value (so that we don't process ``"{}"`` as a YAML dict)
 
     Therefore, all elements with quotes are stripped, and then also converted
     to ``syaml_str`` (if treating the final element as a value, the caller
@@ -1497,12 +1514,8 @@ def default_modify_scope(section: str = "config") -> str:
 
     Arguments:
         section (bool): Section for which to get the default scope.
-            If this is not 'compilers', a general (non-platform) scope is used.
     """
-    if section == "compilers":
-        return CONFIG.highest_precedence_scope().name
-    else:
-        return CONFIG.highest_precedence_non_platform_scope().name
+    return CONFIG.highest_precedence_scope().name
 
 
 def _update_in_memory(data: YamlConfigDict, section: str) -> bool:
@@ -1518,26 +1531,19 @@ def _update_in_memory(data: YamlConfigDict, section: str) -> bool:
     Returns:
         True if the data was changed, False otherwise
     """
-    update_fn = ensure_latest_format_fn(section)
-    changed = update_fn(data[section])
-    return changed
+    return ensure_latest_format_fn(section)(data)
 
 
 def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
-    """Return a function that takes as input a dictionary read from
-    a configuration file and update it to the latest format.
+    """Return a function that takes a config dictionary and update it to the latest format.
 
-    The function returns True if there was any update, False otherwise.
+    The function returns True iff there was any update.
 
     Args:
-        section: section of the configuration e.g. "packages",
-            "config", etc.
+        section: section of the configuration e.g. "packages", "config", etc.
     """
-    # The line below is based on the fact that every module we need
-    # is already imported at the top level
-    section_module = getattr(spack.schema, section)
-    update_fn = getattr(section_module, "update", lambda x: False)
-    return update_fn
+    # Every module we need is already imported at the top level, so getattr should not raise
+    return getattr(getattr(spack.schema, section), "update", lambda _: False)
 
 
 @contextlib.contextmanager

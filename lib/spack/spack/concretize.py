@@ -2,16 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """High-level functions to concretize list of specs"""
+import importlib
 import sys
 import time
 from typing import Iterable, List, Optional, Sequence, Tuple, Union
-
-import llnl.util.tty as tty
 
 import spack.compilers
 import spack.compilers.config
 import spack.config
 import spack.error
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.parallel
 from spack.spec import ArchSpec, CompilerSpec, Spec
@@ -111,9 +111,12 @@ def concretize_separately(
         if not abstract.concrete
     ]
     ret = [(i, abstract) for i, abstract in enumerate(to_concretize) if abstract.concrete]
-    # Ensure we don't try to bootstrap clingo in parallel
-    with ensure_bootstrap_configuration():
-        ensure_clingo_importable_or_raise()
+    try:
+        # Ensure we don't try to bootstrap clingo in parallel
+        importlib.import_module("clingo")
+    except ImportError:
+        with ensure_bootstrap_configuration():
+            ensure_clingo_importable_or_raise()
 
     # Ensure all the indexes have been built or updated, since
     # otherwise the processes in the pool may timeout on waiting
@@ -122,9 +125,9 @@ def concretize_separately(
     # all the indexes if there's any need for that.
     _ = spack.repo.PATH.provider_index
 
-    # Ensure we have compilers in compilers.yaml to avoid that
+    # Ensure we have compilers in packages.yaml to avoid that
     # processes try to write the config file in parallel
-    _ = spack.compilers.config.all_compilers_from(spack.config.CONFIG)
+    _ = spack.compilers.config.all_compilers()
 
     # Early return if there is nothing to do
     if len(args) == 0:
@@ -176,8 +179,8 @@ def concretize_one(spec: Union[str, Spec], tests: TestsType = False) -> Spec:
     """Return a concretized copy of the given spec.
 
     Args:
-        tests: if False disregard 'test' dependencies, if a list of names activate them for
-            the packages in the list, if True activate 'test' dependencies for all packages.
+        tests: if False disregard test dependencies, if a list of names activate them for
+            the packages in the list, if True activate test dependencies for all packages.
     """
     from spack.solver.asp import Solver, SpecBuilder
 

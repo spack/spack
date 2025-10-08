@@ -12,27 +12,7 @@ import sys
 import tempfile
 from typing import Callable, Dict, List, Optional
 
-from typing_extensions import Literal
-
-from llnl.string import comma_or
-from llnl.util import tty
-from llnl.util.filesystem import (
-    mkdirp,
-    remove_dead_links,
-    remove_empty_directories,
-    visit_directory_tree,
-)
-from llnl.util.lang import index_by, match_predicate
-from llnl.util.link_tree import (
-    ConflictingSpecsError,
-    DestinationMergeVisitor,
-    LinkTree,
-    MergeConflictSummary,
-    SingleMergeConflictError,
-    SourceMergeVisitor,
-)
-from llnl.util.symlink import symlink
-from llnl.util.tty.color import colorize
+from spack.vendor.typing_extensions import Literal
 
 import spack.config
 import spack.directory_layout
@@ -44,6 +24,25 @@ import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
+from spack.llnl.string import comma_or
+from spack.llnl.util import tty
+from spack.llnl.util.filesystem import (
+    mkdirp,
+    remove_dead_links,
+    remove_empty_directories,
+    symlink,
+    visit_directory_tree,
+)
+from spack.llnl.util.lang import index_by, match_predicate
+from spack.llnl.util.link_tree import (
+    ConflictingSpecsError,
+    DestinationMergeVisitor,
+    LinkTree,
+    MergeConflictSummary,
+    SingleMergeConflictError,
+    SourceMergeVisitor,
+)
+from spack.llnl.util.tty.color import colorize
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -147,9 +146,9 @@ class FilesystemView:
     Governs a filesystem view that is located at certain root-directory.
 
     Packages are linked from their install directories into a common file
-    hierachy.
+    hierarchy.
 
-    In distributed filesystems, loading each installed package seperately
+    In distributed filesystems, loading each installed package separately
     can lead to slow-downs due to too many directories being traversed.
     This can be circumvented by loading all needed modules into a common
     directory structure.
@@ -166,10 +165,10 @@ class FilesystemView:
         link_type: LinkType = "symlink",
     ):
         """
-        Initialize a filesystem view under the given `root` directory with
-        corresponding directory `layout`.
+        Initialize a filesystem view under the given ``root`` directory with
+        corresponding directory ``layout``.
 
-        Files are linked by method `link` (llnl.util.symlink by default).
+        Files are linked by method ``link`` (spack.llnl.util.filesystem.symlink by default).
         """
         self._root = root
         self.layout = layout
@@ -189,14 +188,14 @@ class FilesystemView:
         """
         Add given specs to view.
 
-        Should accept `with_dependencies` as keyword argument (default
+        Should accept ``with_dependencies`` as keyword argument (default
         True) to indicate wether or not dependencies should be activated as
         well.
 
-        Should except an `exclude` keyword argument containing a list of
+        Should except an ``exclude`` keyword argument containing a list of
         regexps that filter out matching spec names.
 
-        This method should make use of `activate_standalone`.
+        This method should make use of ``activate_standalone``.
         """
         raise NotImplementedError
 
@@ -216,18 +215,18 @@ class FilesystemView:
         """
         Removes given specs from view.
 
-        Should accept `with_dependencies` as keyword argument (default
+        Should accept ``with_dependencies`` as keyword argument (default
         True) to indicate wether or not dependencies should be deactivated
         as well.
 
-        Should accept `with_dependents` as keyword argument (default True)
+        Should accept ``with_dependents`` as keyword argument (default True)
         to indicate wether or not dependents on the deactivated specs
         should be removed as well.
 
-        Should except an `exclude` keyword argument containing a list of
+        Should except an ``exclude`` keyword argument containing a list of
         regexps that filter out matching spec names.
 
-        This method should make use of `deactivate_standalone`.
+        This method should make use of ``deactivate_standalone``.
         """
         raise NotImplementedError
 
@@ -254,7 +253,7 @@ class FilesystemView:
         Return the actual spec linked in this view (i.e. do not look it up
         in the database by name).
 
-        `spec` can be a name or a spec from which the name is extracted.
+        ``spec`` can be a name or a spec from which the name is extracted.
 
         As there can only be a single version active for any spec the name
         is enough to identify the spec in the view.
@@ -266,11 +265,12 @@ class FilesystemView:
     def print_status(self, *specs: spack.spec.Spec, **kwargs) -> None:
         """
         Print a short summary about the given specs, detailing whether..
-            * ..they are active in the view.
-            * ..they are active but the activated version differs.
-            * ..they are not activte in the view.
 
-        Takes `with_dependencies` keyword argument so that the status of
+        * ..they are active in the view.
+        * ..they are active but the activated version differs.
+        * ..they are not activte in the view.
+
+        Takes ``with_dependencies`` keyword argument so that the status of
         dependencies is printed as well.
         """
         raise NotImplementedError

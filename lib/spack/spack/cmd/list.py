@@ -12,13 +12,12 @@ import sys
 from html import escape
 from typing import Type
 
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
-
 import spack.deptypes as dt
+import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.repo
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify
 from spack.version import VersionList
 
 description = "list and search available packages"
@@ -35,7 +34,7 @@ def formatter(func):
     return func
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "filter",
         nargs=argparse.REMAINDER,
@@ -323,7 +322,8 @@ def list(parser, args):
     repos = [spack.repo.PATH]
     if args.repos:
         repos = [spack.repo.PATH.get_repo(name) for name in args.repos]
-    pkgs = set().union(*[set(repo.all_package_names(args.virtuals)) for repo in repos])
+
+    pkgs = {name for repo in repos for name in repo.all_package_names(args.virtuals)}
 
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)

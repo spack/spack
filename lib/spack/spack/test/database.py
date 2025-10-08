@@ -15,7 +15,9 @@ import sys
 
 import pytest
 
+import spack.config
 import spack.subprocess_context
+from spack.directory_layout import DirectoryLayoutError
 
 try:
     import uuid
@@ -24,14 +26,13 @@ try:
 except ImportError:
     _use_uuid = False
 
-import jsonschema
-
-import llnl.util.lock as lk
-from llnl.util.tty.colify import colify
+import spack.vendor.jsonschema
 
 import spack.concretize
 import spack.database
 import spack.deptypes as dt
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lock as lk
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -41,7 +42,9 @@ import spack.util.lock
 import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller
+from spack.llnl.util.tty.colify import colify
 from spack.schema.database_index import schema
+from spack.test.conftest import RepoBuilder
 from spack.util.executable import Executable
 
 pytestmark = pytest.mark.db
@@ -67,27 +70,29 @@ def writable(database):
 
 
 @pytest.fixture()
-def upstream_and_downstream_db(tmpdir, gen_mock_layout):
+def upstream_and_downstream_db(tmp_path: pathlib.Path, gen_mock_layout):
     """Fixture for a pair of stores: upstream and downstream.
 
     Upstream API prohibits writing to an upstream, so we also return a writable version
     of the upstream DB for tests to use.
 
     """
-    mock_db_root = tmpdir.mkdir("mock_db_root")
+    mock_db_root = tmp_path / "mock_db_root"
+    mock_db_root.mkdir()
     mock_db_root.chmod(0o555)
 
     upstream_db = spack.database.Database(
-        str(mock_db_root), is_upstream=True, layout=gen_mock_layout("/a/")
+        str(mock_db_root), is_upstream=True, layout=gen_mock_layout("a")
     )
     with writable(upstream_db):
         upstream_db._write()
 
-    downstream_db_root = tmpdir.mkdir("mock_downstream_db_root")
+    downstream_db_root = tmp_path / "mock_downstream_db_root"
+    downstream_db_root.mkdir()
     downstream_db_root.chmod(0o755)
 
     downstream_db = spack.database.Database(
-        str(downstream_db_root), upstream_dbs=[upstream_db], layout=gen_mock_layout("/b/")
+        str(downstream_db_root), upstream_dbs=[upstream_db], layout=gen_mock_layout("b")
     )
     downstream_db._write()
 
@@ -150,16 +155,15 @@ def test_spec_installed_upstream(
 
 
 @pytest.mark.usefixtures("config")
-def test_installed_upstream(upstream_and_downstream_db, tmpdir):
+def test_installed_upstream(upstream_and_downstream_db, repo_builder: RepoBuilder):
     upstream_db, downstream_db = upstream_and_downstream_db
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("x")
-    builder.add_package("z")
-    builder.add_package("y", dependencies=[("z", None, None)])
-    builder.add_package("w", dependencies=[("x", None, None), ("y", None, None)])
+    repo_builder.add_package("x")
+    repo_builder.add_package("z")
+    repo_builder.add_package("y", dependencies=[("z", None, None)])
+    repo_builder.add_package("w", dependencies=[("x", None, None), ("y", None, None)])
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(repo_builder.root):
         spec = spack.concretize.concretize_one("w")
         with writable(upstream_db):
             for dep in spec.traverse(root=False):
@@ -186,14 +190,67 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         downstream_db._check_ref_counts()
 
 
-def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config):
+def test_missing_upstream_build_dep(
+    upstream_and_downstream_db,
+    tmp_path: pathlib.Path,
+    monkeypatch,
+    config,
+    repo_builder: RepoBuilder,
+):
     upstream_db, downstream_db = upstream_and_downstream_db
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("z")
-    builder.add_package("y", dependencies=[("z", None, None)])
+    z_y_prefix = str(tmp_path / "z-y")
 
-    with spack.repo.use_repositories(builder):
+    def fail_for_z(spec):
+        if spec.prefix == z_y_prefix:
+            raise DirectoryLayoutError("Fake layout error for z")
+
+    upstream_db.layout.ensure_installed = fail_for_z
+
+    repo_builder.add_package("z")
+    repo_builder.add_package("y", dependencies=[("z", "build", None)])
+
+    monkeypatch.setattr(spack.store.STORE, "db", downstream_db)
+
+    with spack.repo.use_repositories(repo_builder.root):
+        y = spack.concretize.concretize_one("y")
+        z_y = y["z"]
+        z_y.set_prefix(z_y_prefix)
+
+        with writable(upstream_db):
+            upstream_db.add(y)
+        upstream_db._read()
+
+        upstream, record = downstream_db.query_by_spec_hash(z_y.dag_hash())
+        assert upstream
+        assert not record.installed
+
+        assert y.installed
+        assert y.installed_upstream
+
+        assert not z_y.installed
+        assert not z_y.installed_upstream
+
+        # Now add z to downstream with non-triggering prefix
+        # and make sure z *is* installed
+
+        z_new = z_y.copy()
+        z_new.set_prefix(str(tmp_path / "z-new"))
+        downstream_db.add(z_new)
+
+        assert z_new.installed
+        assert not z_new.installed_upstream
+
+
+def test_removed_upstream_dep(
+    upstream_and_downstream_db, capsys, config, repo_builder: RepoBuilder
+):
+    upstream_db, downstream_db = upstream_and_downstream_db
+
+    repo_builder.add_package("z")
+    repo_builder.add_package("y", dependencies=[("z", None, None)])
+
+    with spack.repo.use_repositories(repo_builder.root):
         y = spack.concretize.concretize_one("y")
         z = y["z"]
 
@@ -217,17 +274,16 @@ def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config
 
 
 @pytest.mark.usefixtures("config")
-def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
+def test_add_to_upstream_after_downstream(upstream_and_downstream_db, repo_builder: RepoBuilder):
     """An upstream DB can add a package after it is installed in the downstream
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
     upstream_db, downstream_db = upstream_and_downstream_db
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("x")
+    repo_builder.add_package("x")
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(repo_builder.root):
         spec = spack.concretize.concretize_one("x")
 
         downstream_db.add(spec)
@@ -251,7 +307,7 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
             spack.store.STORE.db = orig_db
 
 
-def test_cannot_write_upstream(tmp_path, mock_packages, config):
+def test_cannot_write_upstream(tmp_path: pathlib.Path, mock_packages, config):
     # Instantiate the database that will be used as the upstream DB and make
     # sure it has an index file
     with spack.database.Database(str(tmp_path)).write_transaction():
@@ -265,16 +321,19 @@ def test_cannot_write_upstream(tmp_path, mock_packages, config):
 
 
 @pytest.mark.usefixtures("config", "temporary_store")
-def test_recursive_upstream_dbs(tmpdir, gen_mock_layout):
-    roots = [str(tmpdir.mkdir(x)) for x in ["a", "b", "c"]]
-    layouts = [gen_mock_layout(x) for x in ["/ra/", "/rb/", "/rc/"]]
+def test_recursive_upstream_dbs(
+    tmp_path: pathlib.Path, gen_mock_layout, repo_builder: RepoBuilder
+):
+    roots = [str(tmp_path / x) for x in ["a", "b", "c"]]
+    for root in roots:
+        pathlib.Path(root).mkdir(parents=True, exist_ok=True)
+    layouts = [gen_mock_layout(x) for x in ["ra", "rb", "rc"]]
 
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
-    builder.add_package("z")
-    builder.add_package("y", dependencies=[("z", None, None)])
-    builder.add_package("x", dependencies=[("y", None, None)])
+    repo_builder.add_package("z")
+    repo_builder.add_package("y", dependencies=[("z", None, None)])
+    repo_builder.add_package("x", dependencies=[("y", None, None)])
 
-    with spack.repo.use_repositories(builder.root):
+    with spack.repo.use_repositories(repo_builder.root):
         spec = spack.concretize.concretize_one("x")
         db_c = spack.database.Database(roots[2], layout=layouts[2])
         db_c.add(spec["z"])
@@ -419,7 +478,7 @@ def _check_remove_and_add_package(database: spack.database.Database, spec):
     assert concrete_spec in installed
     assert installed == original
 
-    # sanity check against direcory layout and check ref counts.
+    # sanity check against directory layout and check ref counts.
     _check_db_sanity(database)
     database._check_ref_counts()
 
@@ -487,7 +546,7 @@ def test_005_db_exists(database):
 
     with open(index_file, encoding="utf-8") as fd:
         index_object = json.load(fd)
-        jsonschema.validate(index_object, schema)
+        spack.vendor.jsonschema.validate(index_object, schema)
 
 
 def test_010_all_install_sanity(database):
@@ -738,11 +797,11 @@ def test_110_no_write_with_exception_on_install(database):
         assert database.query("cmake", installed=InstallRecordStatus.ANY) == []
 
 
-def test_115_reindex_with_packages_not_in_repo(mutable_database, tmpdir):
+def test_115_reindex_with_packages_not_in_repo(mutable_database, repo_builder: RepoBuilder):
     # Dont add any package definitions to this repository, the idea is that
     # packages should not have to be defined in the repository once they
     # are installed
-    with spack.repo.use_repositories(spack.repo.MockRepositoryBuilder(tmpdir).root):
+    with spack.repo.use_repositories(repo_builder.root):
         spack.store.STORE.reindex()
         _check_db_sanity(mutable_database)
 
@@ -783,7 +842,7 @@ def test_old_external_entries_prefix(mutable_database):
     with open(spack.store.STORE.db._index_path, "r", encoding="utf-8") as f:
         db_obj = json.loads(f.read())
 
-    jsonschema.validate(db_obj, schema)
+    spack.vendor.jsonschema.validate(db_obj, schema)
 
     s = spack.concretize.concretize_one("externaltool")
 
@@ -930,13 +989,13 @@ def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
 
 
 @pytest.mark.db
-def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
+def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capsys):
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
         raise lk.LockTimeoutError("write", "/mock-lock", 1.234, 10)
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         s = spack.concretize.concretize_one("pkg-a")
 
         # Ensure attempt to acquire write lock on the mark raises the exception
@@ -988,14 +1047,15 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
 
 
 @pytest.mark.regression("26600")
-def test_database_works_with_empty_dir(tmpdir):
+def test_database_works_with_empty_dir(tmp_path: pathlib.Path):
     # Create the lockfile and failures directory otherwise
     # we'll get a permission error on Database creation
-    db_dir = tmpdir.ensure_dir(".spack-db")
-    db_dir.ensure(spack.database._LOCK_FILE)
-    db_dir.ensure_dir("failures")
-    tmpdir.chmod(mode=0o555)
-    db = spack.database.Database(str(tmpdir))
+    db_dir = tmp_path / ".spack-db"
+    db_dir.mkdir()
+    (db_dir / spack.database._LOCK_FILE).touch()
+    (db_dir / "failures").mkdir()
+    tmp_path.chmod(mode=0o555)
+    db = spack.database.Database(str(tmp_path))
     with db.read_transaction():
         db.query()
     # Check that reading an empty directory didn't create a new index.json
@@ -1114,11 +1174,11 @@ def test_consistency_of_dependents_upon_remove(mutable_database):
 
 
 @pytest.mark.regression("30187")
-def test_query_installed_when_package_unknown(database, tmpdir):
+def test_query_installed_when_package_unknown(database, repo_builder: RepoBuilder):
     """Test that we can query the installation status of a spec
     when we don't know its package.py
     """
-    with spack.repo.use_repositories(spack.repo.MockRepositoryBuilder(tmpdir).root):
+    with spack.repo.use_repositories(repo_builder.root):
         specs = database.query("mpileaks")
         for s in specs:
             # Assert that we can query the installation methods even though we
@@ -1146,15 +1206,19 @@ def test_error_message_when_using_too_new_db(database, monkeypatch):
     "lock_cfg",
     [spack.database.NO_LOCK, spack.database.NO_TIMEOUT, spack.database.DEFAULT_LOCK_CFG, None],
 )
-def test_database_construction_doesnt_use_globals(tmpdir, config, nullify_globals, lock_cfg):
+def test_database_construction_doesnt_use_globals(
+    tmp_path: pathlib.Path, config, nullify_globals, lock_cfg
+):
     lock_cfg = lock_cfg or spack.database.lock_configuration(config)
-    db = spack.database.Database(str(tmpdir), lock_cfg=lock_cfg)
+    db = spack.database.Database(str(tmp_path), lock_cfg=lock_cfg)
     with db.write_transaction():
         pass  # ensure the DB is written
     assert os.path.exists(db.database_directory)
 
 
-def test_database_read_works_with_trailing_data(tmp_path, default_mock_concretization):
+def test_database_read_works_with_trailing_data(
+    tmp_path: pathlib.Path, default_mock_concretization
+):
     # Populate a database
     root = str(tmp_path)
     db = spack.database.Database(root, layout=None)
@@ -1180,7 +1244,7 @@ def test_database_errors_with_just_a_version_key(mutable_database):
         spack.database.Database(mutable_database.root).query_local()
 
 
-def test_reindex_with_upstreams(tmp_path, monkeypatch, mock_packages, config):
+def test_reindex_with_upstreams(tmp_path: pathlib.Path, monkeypatch, mock_packages, config):
     # Reindexing should not put install records of upstream entries into the local database. Here
     # we install `mpileaks` locally with dependencies in the upstream. And we even install
     # `mpileaks` with the same hash in the upstream. After reindexing, `mpileaks` should still be
@@ -1189,16 +1253,26 @@ def test_reindex_with_upstreams(tmp_path, monkeypatch, mock_packages, config):
     callpath = mpileaks.dependencies("callpath")[0]
 
     upstream_store = spack.store.create(
-        {"config": {"install_tree": {"root": str(tmp_path / "upstream")}}}
+        spack.config.create_from(
+            spack.config.InternalConfigScope(
+                "cfg", {"config": {"install_tree": {"root": str(tmp_path / "upstream")}}}
+            )
+        )
     )
+
     monkeypatch.setattr(spack.store, "STORE", upstream_store)
     PackageInstaller([callpath.package], fake=True, explicit=True).install()
 
     local_store = spack.store.create(
-        {
-            "config": {"install_tree": {"root": str(tmp_path / "local")}},
-            "upstreams": {"my-upstream": {"install_tree": str(tmp_path / "upstream")}},
-        }
+        spack.config.create_from(
+            spack.config.InternalConfigScope(
+                "cfg",
+                {
+                    "config": {"install_tree": {"root": str(tmp_path / "local")}},
+                    "upstreams": {"my-upstream": {"install_tree": str(tmp_path / "upstream")}},
+                },
+            )
+        )
     )
     monkeypatch.setattr(spack.store, "STORE", local_store)
     PackageInstaller([mpileaks.package], fake=True, explicit=True).install()
@@ -1218,10 +1292,15 @@ def test_reindex_with_upstreams(tmp_path, monkeypatch, mock_packages, config):
 
     # Create a new instance s.t. we don't have cached specs in memory
     reindexed_local_store = spack.store.create(
-        {
-            "config": {"install_tree": {"root": str(tmp_path / "local")}},
-            "upstreams": {"my-upstream": {"install_tree": str(tmp_path / "upstream")}},
-        }
+        spack.config.create_from(
+            spack.config.InternalConfigScope(
+                "cfg",
+                {
+                    "config": {"install_tree": {"root": str(tmp_path / "local")}},
+                    "upstreams": {"my-upstream": {"install_tree": str(tmp_path / "upstream")}},
+                },
+            )
+        )
     )
     reindexed_local_store.db.reindex()
 
@@ -1248,7 +1327,7 @@ def test_query_with_predicate_fn(database):
 
 
 @pytest.mark.regression("49964")
-def test_querying_reindexed_database_specfilev5(tmp_path):
+def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
     """Tests that we can query a reindexed database from before compilers as dependencies,
     and get appropriate results for %<compiler> and similar selections.
     """

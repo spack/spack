@@ -46,9 +46,9 @@ import spack.util.spack_yaml as syaml
 
 @pytest.fixture
 def test_repo(mutable_config, monkeypatch, mock_stage):
-    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "flags.test"
-    with spack.repo.use_repositories(str(repo_dir)) as mock_repo_path:
-        yield mock_repo_path
+    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "spack_repo" / "flags_test"
+    with spack.repo.use_repositories(str(repo_dir)) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 def update_concretize_scope(conf_str, section):
@@ -163,15 +163,14 @@ packages:
     if cmp_flags:
         compiler_spec = "%gcc@12.100.100"
 
+    cmd_flags_str = f'cflags="{cmd_flags}"' if cmd_flags else ""
+
     if dflags:
-        spec_str = f"x+activatemultiflag {compiler_spec} ^y"
+        spec_str = f"x+activatemultiflag {compiler_spec} ^y {cmd_flags_str}"
         expected_dflags = "-d1 -d2"
     else:
-        spec_str = f"y {compiler_spec}"
+        spec_str = f"y {cmd_flags_str} {compiler_spec}"
         expected_dflags = None
-
-    if cmd_flags:
-        spec_str += f' cflags="{cmd_flags}"'
 
     root_spec = spack.concretize.concretize_one(spec_str)
     spec = root_spec["y"]
@@ -231,7 +230,7 @@ packages:
     # the note about #37180 in concretize.lp
 
 
-def test_dev_mix_flags(tmp_path, concretize_scope, mutable_mock_env_path, test_repo):
+def test_dev_mix_flags(tmp_path: pathlib.Path, concretize_scope, mutable_mock_env_path, test_repo):
     src_dir = tmp_path / "x-src"
 
     env_content = f"""\
@@ -277,6 +276,29 @@ def test_flag_injection_different_compilers(mock_packages, mutable_config):
     """Tests that flag propagation is not activated on nodes with a compiler that is different
     from the propagation source.
     """
-    s = spack.concretize.concretize_one('mpileaks %gcc cflags=="-O2" ^callpath %llvm')
+    s = spack.concretize.concretize_one('mpileaks cflags=="-O2" %gcc ^callpath %llvm')
     assert s.satisfies('cflags="-O2"') and s["c"].name == "gcc"
     assert not s["callpath"].satisfies('cflags="-O2"') and s["callpath"]["c"].name == "llvm"
+
+
+@pytest.mark.regression("51209")
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        # gcc using flags compiled with another gcc not using flags
+        ("gcc@14 cflags='-O3'", ["gcc@14 cflags='-O3'", "%gcc@10"], ["%gcc cflags='-O3'"]),
+        # Parent and child, imposing different flags on gmake
+        (
+            "7zip-dependent %gmake cflags='-O2' ^7zip %gmake cflags='-g'",
+            ["%gmake cflags='-O2'", "^7zip %gmake cflags='-g'"],
+            ["%gmake cflags='-g'"],
+        ),
+    ],
+)
+def test_flags_and_duplicate_nodes(spec_str, expected, not_expected, default_mock_concretization):
+    """Tests that we can concretize a spec with flags on a node that is present with duplicates
+    in the DAG. For instance, a compiler built with a previous version of itself.
+    """
+    s = default_mock_concretization(spec_str)
+    assert all(s.satisfies(x) for x in expected)
+    assert all(not s.satisfies(x) for x in not_expected)

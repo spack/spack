@@ -1,19 +1,19 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import os
-
-import llnl.util.tty
 
 import spack.container
 import spack.container.images
+import spack.llnl.util.tty
 
 description = "creates recipes to build images for different container runtimes"
 section = "container"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--list-os",
         action="store_true",
@@ -33,7 +33,7 @@ def containerize(parser, args):
         possible_os = spack.container.images.all_bootstrap_os()
         msg = "The following operating systems can be used to bootstrap Spack:"
         msg += "\n{0}".format(" ".join(possible_os))
-        llnl.util.tty.msg(msg)
+        spack.llnl.util.tty.msg(msg)
         return
 
     config_dir = args.env_dir or os.getcwd()

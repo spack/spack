@@ -10,16 +10,15 @@ import sys
 import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
-import archspec.cpu
-
-import llnl.util.filesystem as fs
-import llnl.util.lang
-import llnl.util.tty as tty
+import spack.vendor.archspec.cpu
 
 import spack.config
 import spack.detection
 import spack.detection.path
 import spack.error
+import spack.llnl.util.filesystem as fs
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -199,7 +198,7 @@ class CompilerRemover:
                     s = CompilerFactory.from_external_yaml(external_yaml)
                     return not s.satisfies(match)
 
-                to_keep, to_remove = llnl.util.lang.stable_partition(
+                to_keep, to_remove = spack.llnl.util.lang.stable_partition(
                     externals_config, _partition_match
                 )
                 if not to_remove:
@@ -246,7 +245,7 @@ def name_os_target(spec: spack.spec.Spec) -> Tuple[str, str, str]:
         target = spec.architecture.target
         if not target:
             target = spack.platforms.host().target("default_target")
-        target = target
+        target = target.family
 
         operating_system = spec.os
         if not operating_system:
@@ -316,7 +315,7 @@ class CompilerFactory:
     @staticmethod
     def _finalize_external_concretization(abstract_spec):
         if CompilerFactory._GENERIC_TARGET is None:
-            CompilerFactory._GENERIC_TARGET = archspec.cpu.host().family
+            CompilerFactory._GENERIC_TARGET = spack.vendor.archspec.cpu.host().family
 
         if abstract_spec.architecture:
             abstract_spec.architecture.complete_with_defaults()
@@ -339,7 +338,9 @@ class CompilerFactory:
             pattern = re.compile(r"|".join(finder.search_patterns(pkg=pkg_cls)))
             filtered_paths = [x for x in candidate_paths if pattern.search(os.path.basename(x))]
             try:
-                detected = finder.detect_specs(pkg=pkg_cls, paths=filtered_paths)
+                detected = finder.detect_specs(
+                    pkg=pkg_cls, paths=filtered_paths, repo_path=spack.repo.PATH
+                )
             except Exception:
                 warnings.warn(
                     f"[{__name__}] cannot detect {pkg_name} from the "

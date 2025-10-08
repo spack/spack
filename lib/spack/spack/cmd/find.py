@@ -2,16 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import copy
 import sys
-
-import llnl.util.lang
-import llnl.util.tty as tty
-import llnl.util.tty.color as color
 
 import spack.cmd as cmd
 import spack.config
 import spack.environment as ev
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.spec
 import spack.store
@@ -24,7 +24,7 @@ section = "basic"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
         "--format",
@@ -38,7 +38,7 @@ def setup_parser(subparser):
         action="store_const",
         dest="format",
         const="{/hash}",
-        help="same as '--format {/hash}'; use with xargs or $()",
+        help="same as ``--format {/hash}``; use with ``xargs`` or ``$()``",
     )
     format_group.add_argument(
         "--json",
@@ -212,7 +212,7 @@ def query_arguments(args):
     for attribute in ("start_date", "end_date"):
         date = getattr(args, attribute)
         if date:
-            q_args[attribute] = llnl.util.lang.pretty_string_to_date(date)
+            q_args[attribute] = spack.llnl.util.lang.pretty_string_to_date(date)
 
     return q_args
 
@@ -238,7 +238,7 @@ def make_env_decorator(env):
 def display_env(env, args, decorator, results):
     """Display extra find output when running in an environment.
 
-    In an environment, `spack find` outputs a preliminary section
+    In an environment, ``spack find`` outputs a preliminary section
     showing the root specs of the environment (this is in addition
     to the section listing out specs matching the query parameters).
 

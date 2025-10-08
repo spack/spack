@@ -20,17 +20,16 @@ from typing import IO, Dict, Iterable, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
 
-import llnl.url
-from llnl.util import lang, tty
-from llnl.util.filesystem import mkdirp, rename, working_dir
-
 import spack
 import spack.config
 import spack.error
+import spack.llnl.url
 import spack.util.executable
 import spack.util.parallel
 import spack.util.path
 import spack.util.url as url_util
+from spack.llnl.util import lang, tty
+from spack.llnl.util.filesystem import mkdirp, rename, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
@@ -57,9 +56,33 @@ class DetailedHTTPError(HTTPError):
         return DetailedHTTPError, (self.req, self.code, self.msg, self.hdrs, None)
 
 
+class DetailedURLError(URLError):
+    def __init__(self, req: Request, reason):
+        super().__init__(reason)
+        self.req = req
+
+    def __str__(self):
+        return f"{self.req.get_method()} {self.req.get_full_url()} errored with: {self.reason}"
+
+    def __reduce__(self):
+        return DetailedURLError, (self.req, self.reason)
+
+
 class SpackHTTPDefaultErrorHandler(HTTPDefaultErrorHandler):
     def http_error_default(self, req, fp, code, msg, hdrs):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
+
+
+class SpackHTTPSHandler(HTTPSHandler):
+    """A custom HTTPS handler that shows more detailed error messages on connection failure."""
+
+    def https_open(self, req):
+        try:
+            return super().https_open(req)
+        except HTTPError:
+            raise
+        except URLError as e:
+            raise DetailedURLError(req, e.reason) from e
 
 
 def custom_ssl_certs() -> Optional[Tuple[bool, str]]:
@@ -121,12 +144,12 @@ def _urlopen():
 
     # One opener with HTTPS ssl enabled
     with_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=ssl_create_default_context()), error_handler
+        s3, gcs, SpackHTTPSHandler(context=ssl_create_default_context()), error_handler
     )
 
     # One opener with HTTPS ssl disabled
     without_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()), error_handler
+        s3, gcs, SpackHTTPSHandler(context=ssl._create_unverified_context()), error_handler
     )
 
     # And dynamically dispatch based on the config:verify_ssl.
@@ -284,8 +307,8 @@ def base_curl_fetch_args(url, timeout=0):
     It also uses the following configuration option to set an additional
     argument as needed:
 
-        * config:connect_timeout (int): connection timeout
-        * config:verify_ssl (str): Perform SSL verification
+    * config:connect_timeout (int): connection timeout
+    * config:verify_ssl (str): Perform SSL verification
 
     Arguments:
         url (str): URL whose contents will be fetched
@@ -359,13 +382,13 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
     """Retrieves text-only URL content using the configured fetch method.
     It determines the fetch method from:
 
-        * config:url_fetch_method (str): fetch method to use (e.g., 'curl')
+    * config:url_fetch_method (str): fetch method to use (e.g., 'curl')
 
-    If the method is `curl`, it also uses the following configuration
+    If the method is ``curl``, it also uses the following configuration
     options:
 
-        * config:connect_timeout (int): connection time out
-        * config:verify_ssl (str): Perform SSL verification
+    * config:connect_timeout (int): connection time out
+    * config:verify_ssl (str): Perform SSL verification
 
     Arguments:
         url (str): URL whose contents are to be fetched
@@ -421,9 +444,9 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 def url_exists(url, curl=None):
     """Determines whether url exists.
 
-    A scheme-specific process is used for Google Storage (`gs`) and Amazon
-    Simple Storage Service (`s3`) URLs; otherwise, the configured fetch
-    method defined by `config:url_fetch_method` is used.
+    A scheme-specific process is used for Google Storage (``gs``) and Amazon
+    Simple Storage Service (``s3``) URLs; otherwise, the configured fetch
+    method defined by ``config:url_fetch_method`` is used.
 
     Arguments:
         url (str): URL whose existence is being checked
@@ -726,7 +749,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             links.add(abs_link)
 
             # Skip stuff that looks like an archive
-            if any(raw_link.endswith(s) for s in llnl.url.ALLOWED_ARCHIVE_TYPES):
+            if any(raw_link.endswith(s) for s in spack.llnl.url.ALLOWED_ARCHIVE_TYPES):
                 continue
 
             # Skip already-visited links

@@ -2,15 +2,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
-
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.store
 from spack.cmd.common import arguments
+from spack.llnl.util.tty.colify import colify
 from spack.solver.input_analysis import create_graph_analyzer
 
 description = "show dependencies of a package"
@@ -18,7 +18,7 @@ section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-i",
         "--installed",

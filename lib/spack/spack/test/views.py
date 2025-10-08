@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
@@ -13,8 +14,8 @@ from spack.installer import PackageInstaller
 from spack.spec import Spec
 
 
-def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir):
-    view_dir = str(tmpdir.join("view"))
+def test_remove_extensions_ordered(install_mockery, mock_fetch, tmp_path: pathlib.Path):
+    view_dir = str(tmp_path / "view")
     layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
     e2 = spack.concretize.concretize_one("extension2")
@@ -26,8 +27,8 @@ def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir):
 
 
 @pytest.mark.regression("32456")
-def test_view_with_spec_not_contributing_files(mock_packages, tmpdir):
-    view_dir = os.path.join(str(tmpdir), "view")
+def test_view_with_spec_not_contributing_files(mock_packages, tmp_path: pathlib.Path):
+    view_dir = str(tmp_path / "view")
     os.mkdir(view_dir)
 
     layout = DirectoryLayout(view_dir)
@@ -35,8 +36,8 @@ def test_view_with_spec_not_contributing_files(mock_packages, tmpdir):
 
     a = Spec("pkg-a")
     b = Spec("pkg-b")
-    a.set_prefix(os.path.join(tmpdir, "a"))
-    b.set_prefix(os.path.join(tmpdir, "b"))
+    a.set_prefix(str(tmp_path / "a"))
+    b.set_prefix(str(tmp_path / "b"))
     a._mark_concrete()
     b._mark_concrete()
 
