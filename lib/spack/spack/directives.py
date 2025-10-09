@@ -28,15 +28,15 @@ The available directives are:
 * ``version``
 * ``requires``
 * ``redistribute``
-  * ``drop_all_conflicts``
-  * ``drop_all_depends_on``
-  * ``drop_all_requires``
-  * ``drop_all_versions``
-  * ``drop_conflict``
-  * ``drop_depends_on``
-  * ``drop_patch``
-  * ``drop_requires``
-  * ``drop_version``
+* ``drop_all_conflicts``
+* ``drop_all_depends_on``
+* ``drop_all_requires``
+* ``drop_all_versions``
+* ``drop_conflict``
+* ``drop_depends_on``
+* ``drop_patch``
+* ``drop_requires``
+* ``drop_version``
 
 """
 import collections

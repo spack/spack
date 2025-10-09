@@ -7,12 +7,10 @@ from collections import namedtuple
 import pytest
 
 import spack.concretize
-import spack.dependency
 import spack.directives
 import spack.repo
 import spack.spec
 import spack.version
-from spack.test.conftest import create_test_repo
 
 
 def test_false_directives_do_not_exist(mock_packages):
@@ -161,55 +159,6 @@ def test_version_type_validation():
         spack.directives._execute_version(package(name="python"), {})
 
 
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.3")
-    version("1.2")
-    version("1.1")
-    version("1.0")
-
-    variant("foo", default=False)
-
-    redistribute(binary=False, when="@1.1")
-    redistribute(binary=False, when="@1.0:1.2+foo")
-    redistribute(source=False, when="@1.0:1.2")
-""",
-)
-
-
-_pkgy = (
-    "y",
-    """\
-from spack.package import *
-
-class Y(Package):
-    version("2.1")
-    version("2.0")
-
-    variant("bar", default=False)
-
-    redistribute(binary=False, source=False)
-""",
-)
-
-
-@pytest.fixture
-def _create_test_repo(tmpdir, mutable_config, request):
-    pkgs = request.param
-    yield create_test_repo(tmpdir, pkgs)
-
-
-@pytest.fixture
-def test_repo(_create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
-        yield mock_repo_path
-
-
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx, _pkgy)], indirect=True)
 @pytest.mark.parametrize(
     "spec_str,distribute_src,distribute_bin",
     [
@@ -222,9 +171,7 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
         ("redistribute-y@2.1+bar", False, False),
     ],
 )
-def test_redistribute_directive(
-    mock_packages, spec_str, distribute_src, distribute_bin, _create_test_repo
-):
+def test_redistribute_directive(mock_packages, spec_str, distribute_src, distribute_bin):
     spec = spack.spec.Spec(spec_str)
     assert spack.repo.PATH.get_pkg_class(spec.fullname).redistribute_source(spec) == distribute_src
     concretized_spec = spack.concretize.concretize_one(spec)
@@ -266,6 +213,7 @@ def test_direct_dependencies_from_when_context_are_retained(mock_packages):
     assert spack.spec.Spec("%pkg-c") in pkg_cls.dependencies
     # Nested ^foo followed by ^foo %gcc
     assert spack.spec.Spec("^pkg-c %gcc") in pkg_cls.dependencies
+
 
 
 class FakePkg:
@@ -389,203 +337,58 @@ def test_remove_modify_skip_directives(mock_directive_class):
     mock.compare({"@1:2": ["pkg2"], "@1:": ["pkg3"], "@3": ["pkg4"]})
 
 
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.3")
-    version("1.2")
-    drop_all_versions()
-""",
-)
-
-
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_drop_all_versions(test_repo):
-    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
+def test_drop_all_versions(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_all_versions")
     assert len(cls.versions) == 0
 
 
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.3")
-    version("1.2")
-    version("1.1")
-    [drop_version(ver) for ver in ["1.3", "1.1"]]
-""",
-)
-
-
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_drop_version(test_repo):
-    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
-    assert cls.versions == {spack.version.Version("1.2"): {}}
-
-
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.0")
-    conflicts("%gcc", when="@1.0")
-    conflicts("%clang")
-    drop_all_conflicts()
-""",
-)
-
-
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_drop_all_conflicts(test_repo):
-    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
+def test_drop_all_conflicts(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_all_conflicts")
     assert len(cls.conflicts) == 0
 
 
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.0")
-    conflicts("%gcc", when="@1.0")
-    conflicts("%clang")
-    conflicts("^hdf5", when="@1.0")
-    drop_conflict("%clang")
-    drop_conflict("^hdf5", when="@1.0")
-""",
-)
-
-
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_drop_conflict(test_repo):
-    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
-    assert cls.conflicts == {spack.spec.Spec("@1.0"): [(spack.spec.Spec("%gcc"), None)]}
-
-
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.0")
-    conflicts("mpi", when="@3:")
-    drop_conflict("mpi", when="@5:")
-""",
-)
-
-
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_drop_conflict_range(test_repo):
-    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
-    assert cls.conflicts == {spack.spec.Spec("@3:4"): [(spack.spec.Spec("mpi"), None)]}
-
-
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.0")
-    depends_on("hdf5")
-    depends_on("mpi")
-    drop_all_depends_on()
-""",
-)
-
-
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_drop_all_depends_on(test_repo):
-    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
+def test_drop_all_depends_on(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_all_depends_on")
     assert len(cls.dependencies) == 0
 
 
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.0")
-    depends_on("hdf5")
-    depends_on("mpi", when="@1.0")
-    depends_on("netcdf-c", when="@2")
-    drop_depends_on("hdf5")
-    drop_depends_on("netcdf-c", when="@1:")
-""",
-)
+def test_drop_all_requires(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_all_requires")
+    assert len(cls.dependencies) == 0
 
 
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_drop_depends_on(test_repo):
+def test_drop_version(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_version")
+    assert cls.versions == {spack.version.Version("1.2"): {}}
 
-    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
+
+def test_drop_conflict(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_conflict")
+    assert cls.conflicts == {spack.spec.Spec("@1.0"): [(spack.spec.Spec("%gcc"), None)]}
+
+
+def test_drop_conflict_range(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_conflict_range")
+    assert cls.conflicts == {spack.spec.Spec("@3:4"): [(spack.spec.Spec("mpi"), None)]}
+
+
+def test_drop_depends_on(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_depends_on")
     assert cls.dependencies == {
         spack.spec.Spec("@1.0"): {"mpi": spack.dependency.Dependency(cls, spack.spec.Spec("mpi"))}
     }
 
 
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.0")
-    requires("hdf5")
-    requires("mpi", when="@1.0")
-    requires("netcdf-c", when="@1.0")
-    drop_requires("hdf5")
-    drop_requires("netcdf-c", when="@1.0")
-""",
-)
-
-
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_drop_requires(test_repo):
-
-    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
+def test_drop_requires(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_requires")
     assert cls.requirements == {
         spack.spec.Spec("@1.0"): [((spack.spec.Spec("mpi"),), "one_of", None)]
     }
 
 
-_pkgx = (
-    "x",
-    """\
-from spack.package import *
-
-class X(Package):
-    version("1.0")
-    patch(
-        "https://myrepo.com/patch1.patch",
-        sha256="abc",
-        when="@4.1.8,5.0.7",
-    )
-    drop_patch(
-        "https://myrepo.com/patch1.patch",
-        sha256="abc",
-        when="@4.1.8,5.0.7",
-    )
-    # patch("https://some-url.org/patch1.patch", sha256="abc")
-    # patch("patch2.patch", when="@1")
-    # drop_patch("https://some-url.org/patch1.patch", sha256="abc")
-    #drop_patch("netcdf-c", when="@1.0")
-""",
-)
-
-
-@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_drop_patch(test_repo):
-    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
-    assert cls.patches == {}
+def test_drop_patch(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_patch")
+    leftover_patch = list(cls.patches.values())[0][0]
+    assert leftover_patch.sha256 == "abc"
+    assert cls.patches == {spack.spec.Spec("@1.0"): [leftover_patch]}
 
