@@ -13,6 +13,7 @@ from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, 
 
 import spack.cmd
 import spack.config
+import spack.environment as ev
 import spack.llnl.util.tty as tty
 import spack.main
 import spack.paths
@@ -853,10 +854,18 @@ def update_completion(parser: ArgumentParser, args: Namespace) -> None:
         parser: Argument parser.
         args: Command-line arguments.
     """
+
+    env = ev.active_environment()
+    if env:
+        ev.deactivate()
+
     for shell, shell_args in update_completion_args.items():
         for attr, value in shell_args.items():
             setattr(args, attr, value)
         _commands(parser, args)
+
+    if env:
+        ev.activate(env)
 
 
 def commands(parser: ArgumentParser, args: Namespace) -> None:
