@@ -483,6 +483,31 @@ def get_buildcache_normalized_time(mirror: Mirror) -> float:
         return start_time
 
 
+def prune_buildcache(mirror: Mirror, keeplist: Optional[str] = None, dry_run: bool = False):
+    """
+    Runs buildcache pruning for a given mirror.
+
+    Args:
+        mirror: Mirror to prune
+        keeplist_file: Path to file containing newline-delimited hashes to keep
+        dry_run: Whether to perform a dry run without actually deleting
+    """
+    # Determine the time to use as the "started at" time for pruning.
+    # If a cache index exists, use that time. Otherwise, use the current time (normalized
+    # to the buildcache's time zone).
+    cache_index_url = URLBuildcacheEntry.get_index_url(mirror_url=mirror.fetch_url)
+    stat_result = web_util.stat_url(cache_index_url)
+    if stat_result is not None:
+        started_at = stat_result[1]
+    else:
+        started_at = get_buildcache_normalized_time(mirror)
+
+    if keeplist:
+        prune_direct(mirror, pathlib.Path(keeplist), started_at, dry_run)
+
+    prune_orphan(mirror, started_at, dry_run)
+
+
 class BuildcachePruningException(spack.error.SpackError):
     """
     Raised when pruning fails irrevocably
