@@ -288,14 +288,16 @@ To disable mixing (e.g. if you have multiple compilers defined, but want each co
    concretizer:
      compiler_mixing: false
 
-This affects your root spec and everything it links to (transitively).
+This affects root specs and any (transitive) link or run dependencies.
 Build-only dependencies are allowed to use different compilers (even when this is set).
 
-To enable mixing for specific packages, you can make that a whitelist:
+Some packages are difficult to build with high performance compilers, and it may be necessary to enable compiler mixing just for those packages.
+To enable mixing for specific packages, specify an allow-list in the ``compiler_mixing`` config:
 
 .. code-block:: yaml
 
    concretizer:
      compiler_mixing: ["openssl"]
 
-Note that this would not allow mixing for dependencies of ``openssl``.
+.. note::
+  Adding ``openssl`` to the compiler mixing allow-list does not allow mixing for dependencies of ``openssl``.
