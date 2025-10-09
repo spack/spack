@@ -4,7 +4,7 @@
 import argparse
 import glob
 import json
-import re
+import os
 import sys
 import tempfile
 from typing import List, Optional, Tuple
@@ -838,29 +838,28 @@ def update_index_fn(args):
 def read_concrete_hashes(source: str) -> List[str]:
     """Read all of the concrete hashes from a given source"""
 
-    if re.match(r"^/[^ ]{32}$", source):
-        return [source[1:]]
-    else:
-        # This could be a lock file or a spec file
-        try:
+    # Try to read input as a spec
+    try:
+        concrete_specs = spack.cmd.parse_specs(source, concretize=True)
+        return [spec.dag_hash() for spec in concrete_specs]
+    except Exception:
+        pass
+
+    # Try to read input as a lockfile
+    try:
+        if not os.path.exists(source):
+            raise FileNotFoundError(f"Expected lockfile: {source}")
+
+        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+            # Touch a dummy manifest file
+            with open(os.path.join(tmpdir, "spack.yaml"), "w", encoding="utf-8") as fd:
+                fd.write("spack: {}")
+            env = spack.environment.Environment(tmpdir)
             with open(source, "r", encoding="utf-8") as fd:
-                data = json.loads(fd.read())
-
-            if "spec" in data:
-                # This is a spec file, return the hashes of all of the nodes
-                tty.debug(f"Reading {source} as specfile")
-                return [n["hash"] for n in data["spec"]["nodes"]]
-            elif "concrete_specs" in data:
-                # This is a lock file
-                tty.debug(f"Reading {source} as lockfile")
-                return [h for h in data["concrete_specs"]]
-            else:
-                raise spack.error.SpackError(f"Recognized fields not found: {data}")
-
-        except Exception as e:
-            raise spack.error.SpackError(
-                f"Could not determine spec source type of {source}"
-            ) from e
+                env._read_lockfile(fd)
+            return list(env.specs_by_hash.keys())
+    except Exception as e:
+        raise spack.error.SpackError(f"Could not determine spec source type of {source}") from e
 
 
 def update_view_fn(args):

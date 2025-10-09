@@ -293,6 +293,32 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     assert "libdwarf" in cache_list
 
 
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+def test_use_bin_index_with_view(monkeypatch, tmp_path: pathlib.Path, mutable_config):
+    """Check use of binary cache index: perform an operation that
+    instantiates it, and a second operation that reconstructs it.
+    """
+    monkeypatch.setattr(
+        spack.binary_distribution, "BINARY_INDEX", spack.binary_distribution.BinaryCacheIndex()
+    )
+
+    # Create a mirror, configure us to point at it, install a spec, and
+    # put it in the mirror
+    mirror_dir = tmp_path / "mirror_dir"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
+    spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
+    s = spack.concretize.concretize_one("libdwarf")
+    install_cmd("--fake", "--no-cache", s.name)
+    buildcache_cmd("push", "-u", "test", s.name)
+    buildcache_cmd("create-view", "test", s.format("{/hash}"))
+
+    # Now the test
+    buildcache_cmd("list", "-al")
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex()
+    cache_list = buildcache_cmd("list", "-al")
+    assert "libdwarf" in cache_list
+
+
 def test_generate_key_index_failure(monkeypatch, tmp_path: pathlib.Path):
     def list_url(url, recursive=False):
         if "fails-listing" in url:

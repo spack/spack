@@ -1071,7 +1071,9 @@ def test_buildcache_create_view_empty(
     # Write a minimal lockfile (this is not validated/read by an enviornment)
     empty_lockfile = tmp_path / "emptylock" / "spack.lock"
     empty_lockfile.parent.mkdir()
-    empty_lockfile.write_text('{"concrete_specs": []}', encoding="utf-8")
+    empty_lockfile.write_text(
+        '{"_meta": {"lockfile-version": 1}, "roots": [], "concrete_specs": {}}', encoding="utf-8"
+    )
     # Create a view with now specs
     command_args = [
         "create-view",

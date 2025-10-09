@@ -1371,7 +1371,7 @@ class MirrorURLAndVersion:
     def __str__(self):
         s = f"{self.url}__v{self.version}"
         if self.view:
-            s += f"__@{self.view}"
+            s += f"__{self.view}"
         return s
 
     def __eq__(self, other):
@@ -1384,11 +1384,11 @@ class MirrorURLAndVersion:
 
     @classmethod
     def from_string(cls, s: str):
-        m = re.match(r"^(.*)__v([0-9]+)(__@(.*))?$", s)
+        m = re.match(r"^(.*)__v([0-9]+)(?:__(.*))?$", s)
         if not m:
             raise MirrorURLAndVersionError(f"Malformed string {s}")
 
-        url, version, _, view = m.groups()
+        url, version, view = m.groups()
         return cls(url, int(version), view)
 
 

@@ -312,7 +312,7 @@ class BinaryCacheIndex:
         on disk under ``_index_cache_root``)."""
         self._init_local_index_cache()
         configured_mirrors = [
-            MirrorURLAndVersion(m.fetch_url, layout_version)
+            MirrorURLAndVersion(m.fetch_url, layout_version, m.fetch_view)
             for layout_version in SUPPORTED_LAYOUT_VERSIONS
             for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
             # TODO: OCI does not have a versioned layout. Get rid of this once we no longer support
@@ -382,8 +382,11 @@ class BinaryCacheIndex:
                     except FetchIndexError as e:
                         fetch_errors.append(e)
                         self._last_fetch_times[urlAndVersion] = (now, False)
-                    except BuildcacheIndexNotExists:
+                    except BuildcacheIndexNotExists as e:
+                        fetch_errors.append(e)
                         self._last_fetch_times[urlAndVersion] = (now, False)
+                        # Binary caches are not required to have an index, don't raise
+                        # if it doesn't exist.
                         all_methods_failed = False
 
                     # The need to regenerate implies a need to clear as well.
@@ -425,8 +428,11 @@ class BinaryCacheIndex:
             except FetchIndexError as e:
                 fetch_errors.append(e)
                 self._last_fetch_times[urlAndVersion] = (now, False)
-            except BuildcacheIndexNotExists:
+            except BuildcacheIndexNotExists as e:
+                fetch_errors.append(e)
                 self._last_fetch_times[urlAndVersion] = (now, False)
+                # Binary caches are not required to have an index, don't raise
+                # if it doesn't exist.
                 all_methods_failed = False
 
             # Generally speaking, a new mirror wouldn't imply the need to
@@ -462,6 +468,7 @@ class BinaryCacheIndex:
 
         Throws:
             FetchIndexError
+            BuildcacheIndexNotExists
         """
         mirror_url = url_and_version.url
         mirror_view = url_and_version.view
