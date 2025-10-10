@@ -9,18 +9,6 @@ from spack.package import *
 
 class DropPatch(Package):
     version("1.0")
-    patch(
-        "https://myrepo.com/patch1.patch",
-        sha256="abc",
-        when="@1.0",
-    )
-    patch(
-        "https://myrepo.com/patch2.patch",
-        sha256="def",
-        when="@1.0",
-    )
-    drop_patch(
-        "https://myrepo.com/patch2.patch",
-        sha256="def",
-        when="@1.0",
-    )
+    patch("https://myrepo.com/patch1.patch", sha256="abc", when="@1.0")
+    patch("https://myrepo.com/patch2.patch", sha256="def", when="@1.0")
+    drop_patch("https://myrepo.com/patch2.patch", sha256="def", when="@1.0")

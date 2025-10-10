@@ -7,6 +7,7 @@ from collections import namedtuple
 import pytest
 
 import spack.concretize
+import spack.dependency
 import spack.directives
 import spack.repo
 import spack.spec
@@ -215,7 +216,6 @@ def test_direct_dependencies_from_when_context_are_retained(mock_packages):
     assert spack.spec.Spec("^pkg-c %gcc") in pkg_cls.dependencies
 
 
-
 class FakePkg:
     def __init__(self, name, directive_dict):
         self.name = name
@@ -388,7 +388,6 @@ def test_drop_requires(mock_packages):
 
 def test_drop_patch(mock_packages):
     cls = spack.repo.PATH.get_pkg_class("drop_patch")
-    leftover_patch = list(cls.patches.values())[0][0]
+    leftover_patch = next(iter(cls.patches.values()))[0]
     assert leftover_patch.sha256 == "abc"
     assert cls.patches == {spack.spec.Spec("@1.0"): [leftover_patch]}
-

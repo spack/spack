@@ -125,7 +125,7 @@ def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
 
     The first two conditions are useful for the third example case above.
     It allows package authors to include directives that are conditional
-    at package definition time, in additional to ones that are evaluated
+    at package definition time, in addition to ones that are evaluated
     as part of concretization.
 
     Arguments:

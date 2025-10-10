@@ -304,7 +304,7 @@ class PackageMeta(
 
 
 def on_package_attributes(**attr_dict):
-    """Decorator: executes instance function only if object has attr valuses.
+    """Decorator: executes instance function only if object has attr values.
 
     Executes the decorated method only if at the moment of calling the
     instance has attributes that are equal to certain values.
