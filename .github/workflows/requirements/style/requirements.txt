@@ -4,7 +4,7 @@ flake8==7.3.0
 isort==6.1.0
 mypy==1.18.2
 types-six==1.17.0.20250515
-vermin==1.6.0
+vermin==1.7.0
 pylint==3.3.9
 docutils==0.22.2
 ruamel.yaml==0.18.15
