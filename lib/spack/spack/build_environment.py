@@ -1408,18 +1408,17 @@ def complete_build_process(process: BuildProcess):
         typ = "exit" if process.exitcode >= 0 else "signal"
         return f"{typ} {abs(process.exitcode)}"
 
-    timeout = process.timeout
-    process.join(timeout=timeout)
-    if process.is_alive():
-        warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
-        process.terminate()
-
     try:
         # Check if information from the read pipe has been received.
         child_result = process.read_pipe.recv()
     except EOFError:
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
-
+    finally:
+        timeout = process.timeout
+        process.join(timeout=timeout)
+        if process.is_alive():
+            warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+            process.terminate()
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):
         raise child_result
