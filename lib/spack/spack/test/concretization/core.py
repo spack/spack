@@ -4264,6 +4264,17 @@ def test_concretization_cache_roundtrip(
         assert h == spack.concretize.concretize_one("hdf5")
 
 
+def test_concretization_cache_roundtrip_result(use_concretization_cache):
+    """Ensure the concretization cache doesn't change Solver Result objects."""
+    specs = [Spec("hdf5")]
+    solver = spack.solver.asp.Solver()
+
+    result1 = solver.solve(specs)
+    result2 = solver.solve(specs)
+
+    assert result1 == result2
+
+
 def get_current_cache_data():
     count, byte_size = 0, 0
     for entry in spack.solver.asp.CONC_CACHE.cache_entries():

@@ -580,7 +580,11 @@ class Result:
         if spec_list:
             spec_list = [_str_to_spec(x) for x in spec_list]
         result = Result(spec_list, asp)
-        result.criteria = obj.get("criteria")
+
+        criteria = obj.get("criteria")
+        result.criteria = (
+            None if criteria is None else [OptimizationCriteria(*t) for t in criteria]
+        )
         result.optimal = obj.get("optimal")
         result.warnings = obj.get("warnings")
         result.nmodels = obj.get("nmodels")
@@ -601,6 +605,28 @@ class Result:
             result._concrete_specs_by_input[_str_to_spec(input)] = _dict_to_spec(spec)
             result._concrete_specs.append(_dict_to_spec(spec))
         return result
+
+    def __eq__(self, other):
+        eq = (
+            self.asp == other.asp,
+            self.satisfiable == other.satisfiable,
+            self.optimal == other.optimal,
+            self.warnings == other.warnings,
+            self.nmodels == other.nmodels,
+            self.criteria == other.criteria,
+            self.answers == other.answers,
+            self.abstract_specs == other.abstract_specs,
+            self._concrete_specs_by_input == other._concrete_specs_by_input,
+            self._concrete_specs == other._concrete_specs,
+            self._unsolved_specs == other._unsolved_specs,
+            # Not considered for equality
+            # self.control
+            # self.possible_dependencies
+            # self.cores
+            # self.possible_dependencies
+        )
+        print(eq)
+        return all(eq)
 
 
 class ConcretizationCache:
