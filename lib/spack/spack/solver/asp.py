@@ -523,7 +523,7 @@ class Result:
                 msg += "\n\t(No candidate specs from solver)"
         return msg
 
-    def to_dict(self, test: bool = False) -> dict:
+    def to_dict(self) -> dict:
         """Produces dict representation of Result object
 
         Does not include anything related to unsatisfiability as we
@@ -847,7 +847,7 @@ class ConcretizationCache:
                 return
             try:
                 with gzip.open(cache_path, "xb", compresslevel=6) as cache_entry:
-                    cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
+                    cache_dict = {"results": result.to_dict(), "statistics": statistics}
                     cache_entry.write(json.dumps(cache_dict).encode())
             except FileExistsError:
                 # Entry for this conc hash exists already, do not overwrite
