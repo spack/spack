@@ -230,6 +230,8 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
 
+    ANY_TARGET = _make_microarchitecture("*")
+
     @staticmethod
     def default_arch():
         """Return the default architecture"""
@@ -403,6 +405,11 @@ class ArchSpec:
         for attribute in ("platform", "os"):
             other_attribute = getattr(other, attribute)
             self_attribute = getattr(self, attribute)
+
+            # platform=* or os=*
+            if self_attribute and other_attribute == "*":
+                return True
+
             if other_attribute and self_attribute != other_attribute:
                 return False
 
@@ -441,6 +448,10 @@ class ArchSpec:
         # other_target is there and strict=True
         if self.target is None:
             return False
+
+        # self.target is not None, and other is target=*
+        if other.target == ArchSpec.ANY_TARGET:
+            return True
 
         return bool(self._target_intersection(other))
 
@@ -783,12 +794,18 @@ class DependencySpec:
         yield self.when
 
     def __str__(self) -> str:
-        parent = self.parent.name if self.parent else None
-        child = self.spec.name if self.spec else None
-        virtuals_string = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
-        when_string = f"when='{self.when}'" if self.when != Spec() else ""
-        edge_attrs = filter(lambda x: bool(x), (virtuals_string, when_string))
-        return f"{parent} {self.depflag}[{' '.join(edge_attrs)}] --> {child}"
+        return self.format()
+
+    def __repr__(self) -> str:
+        keywords = [f"depflag={self.depflag}", f"virtuals={self.virtuals}"]
+        if self.direct:
+            keywords.append(f"direct={self.direct}")
+
+        if self.when != Spec():
+            keywords.append(f"when={self.when}")
+
+        keywords_str = ", ".join(keywords)
+        return f"DependencySpec({self.parent.format()!r}, {self.spec.format()!r}, {keywords_str})"
 
     def format(self, *, unconditional: bool = False) -> str:
         """Returns a string, using the spec syntax, representing this edge
@@ -797,8 +814,7 @@ class DependencySpec:
             unconditional: if True, removes any condition statement from the representation
         """
 
-        parent = self.parent.name if self.parent.name else ""
-        child = self.spec if self.spec else ""
+        parent_str, child_str = self.parent.format(), self.spec.format()
         virtuals_str = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
 
         when_str = ""
@@ -806,14 +822,14 @@ class DependencySpec:
             when_str = f"when='{self.when}'"
 
         dep_sigil = "%" if self.direct else "^"
-        edge_attrs = filter(lambda x: bool(x), (virtuals_str, when_str))
+        edge_attrs = [x for x in (virtuals_str, when_str) if x]
 
         if edge_attrs:
-            return f"{parent} {dep_sigil}[{' '.join(edge_attrs)}] {child}"
-        return f"{parent} {dep_sigil}{child}"
+            return f"{parent_str} {dep_sigil}[{' '.join(edge_attrs)}] {child_str}"
+        return f"{parent_str} {dep_sigil}{child_str}"
 
     def flip(self) -> "DependencySpec":
-        """Flip the dependency, and drop virtual and conditional information"""
+        """Flips the dependency and keeps its type. Drops all othe information."""
         return DependencySpec(
             parent=self.spec, spec=self.parent, depflag=self.depflag, virtuals=()
         )
@@ -1454,7 +1470,7 @@ class SpecAnnotations:
         return result
 
 
-def _anonymous_star(dep, dep_format):
+def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
     """Determine if a spec needs a star to disambiguate it from an anonymous spec w/variants.
 
     Returns:
@@ -1479,7 +1495,7 @@ def _anonymous_star(dep, dep_format):
     # booleans come first, and they don't need a star. key-value pairs do. If there are
     # no key value pairs, we're left with either an empty spec, which needs * as in
     # '^*', or we're left with arch, which is a key value pair, and needs a star.
-    if not any(v.type == spack.variant.VariantType.BOOL for v in dep.spec.variants.values()):
+    if not any(v.type == vt.VariantType.BOOL for v in dep.spec.variants.values()):
         return "*"
 
     return "*" if dep.spec.architecture else ""
@@ -1514,7 +1530,7 @@ class Spec:
             return
 
         # init an empty spec that matches anything.
-        self.name = None
+        self.name: str = ""
         self.versions = vn.VersionList(":")
         self.variants = VariantMap(self)
         self.architecture = None
@@ -1885,7 +1901,7 @@ class Spec:
 
         Args:
             dependency_spec: spec of the dependency
-            deptypes: dependency types for this edge
+            depflag: dependency type for this edge
             virtuals: virtuals provided by this edge
             direct: if True denotes a direct dependency
             when: if non-None, condition under which dependency holds
@@ -3417,19 +3433,15 @@ class Spec:
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
-            # The condition cannot be applied in any case, skip the edge
-            test_root = rhs_edge.parent.name in (None, self.name)
-            if test_root and not self._intersects(
+            # Check satisfaction of the dependency only if its when condition can apply
+            if not rhs_edge.parent.name or rhs_edge.parent.name == self.name:
+                test_spec = self
+            elif rhs_edge.parent.name in self:
+                test_spec = self[rhs_edge.parent.name]
+            else:
+                test_spec = None
+            if test_spec and not test_spec._intersects(
                 rhs_edge.when, resolve_virtuals=resolve_virtuals
-            ):
-                continue
-
-            if (
-                not test_root
-                and rhs_edge.parent.name in self
-                and not self[rhs_edge.parent.name]._intersects(
-                    rhs_edge.when, resolve_virtuals=resolve_virtuals
-                )
             ):
                 continue
 
@@ -3449,7 +3461,7 @@ class Spec:
                 #
                 # The same assumptions hold on Spec.constrain, and Spec.intersect
                 current_node = self
-                if rhs_edge.parent.name is not None and rhs_edge.parent.name != rhs_edge.spec.name:
+                if rhs_edge.parent.name and rhs_edge.parent.name != rhs_edge.spec.name:
                     try:
                         current_node = self[rhs_edge.parent.name]
                     except KeyError:
@@ -3519,10 +3531,10 @@ class Spec:
 
             # We don't have edges to this dependency
             current_dependency_name = rhs_edge.spec.name
-            if current_dependency_name is not None and current_dependency_name not in lhs_edges:
+            if current_dependency_name and current_dependency_name not in lhs_edges:
                 return False
 
-            if current_dependency_name is None:
+            if not current_dependency_name:
                 # Here we have an anonymous spec e.g. ^ dev_path=*
                 candidate_edges = list(itertools.chain(*lhs_edges.values()))
 
@@ -5126,7 +5138,8 @@ class SpecfileReaderBase:
         for h in ht.HASHES:
             setattr(spec, h.attr, node.get(h.name, None))
 
-        spec.name = name
+        # old anonymous spec files had name=None, we use name="" now
+        spec.name = name if isinstance(name, str) else ""
         spec.namespace = node.get("namespace", None)
 
         if "version" in node or "versions" in node:

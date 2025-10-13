@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -36,7 +37,8 @@ Here is an example ``config.yaml`` file:
 .. code-block:: yaml
 
    config:
-     install_tree: $spack/opt/data/installs
+     install_tree:
+       root: $spack/opt/data/installs
      build_stage:
      - $tempdir/$user/spack-stage
      - $spack_cache_home/stage
@@ -321,7 +323,8 @@ If your configurations look like this:
    :name: code-example-defaults-config-yaml
 
    config:
-     install_tree: $spack/opt/data/installs
+     install_tree:
+       root: $spack/opt/data/installs
      build_stage:
      - $tempdir/$user/spack-stage
      - $spack_cache_home/stage
@@ -332,7 +335,8 @@ If your configurations look like this:
    :name: code-example-user-config-yaml
 
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
 
 
 Spack will only override ``install_tree`` in the ``config`` section, and will take the site preferences for other settings.
@@ -343,7 +347,8 @@ You can see the final, combined configuration with the ``spack config get <confi
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
      build_stage:
      - $tempdir/$user/spack-stage
      - $spack_cache_home/stage
@@ -365,15 +370,17 @@ For example:
    :name: code-example-append-install-tree
 
    config:
-     install_tree-: /my/custom/suffix/
+     install_tree:
+       root-: /my/custom/suffix/
 
-Spack will then append to the lower-precedence configuration under the ``install_tree-:`` section:
+Spack will then append to the lower-precedence configuration under the ``root`` key:
 
 .. code-block:: console
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory/my/custom/suffix
+     install_tree:
+       root: /some/other/directory/my/custom/suffix
      build_stage:
      - $tempdir/$user/spack-stage
      - $spack_cache_home/stage
@@ -387,7 +394,8 @@ Similarly, ``+:`` can be used to *prepend* to a path or name:
    :name: code-example-prepend-install-tree
 
    config:
-     install_tree+: /my/custom/suffix/
+     install_tree:
+       root+: /my/custom/suffix/
 
 
 .. _config-overrides:
@@ -406,7 +414,8 @@ For example:
    :name: code-example-override-config-section
 
    config::
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
 
 Spack will ignore all lower-precedence configuration under the ``config::`` section:
 
@@ -414,7 +423,8 @@ Spack will ignore all lower-precedence configuration under the ``config::`` sect
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
 
 
 List-valued settings
@@ -454,7 +464,8 @@ The list in the higher-precedence scope is *prepended* to the defaults.
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
      build_stage:
      - /lustre-scratch/$user/spack
      - ~/mystage
@@ -483,7 +494,8 @@ The merged configuration would look like this:
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
      build_stage:
        - /lustre-scratch/$user/spack
        - ~/mystage

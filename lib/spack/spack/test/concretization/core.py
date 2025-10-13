@@ -3363,7 +3363,7 @@ def test_concretization_cache_roundtrip(
     # Basically just a quick and dirty memoization
     solver_setup = spack.solver.asp.SpackSolverSetup.setup
 
-    def _setup(self, specs, *, reuse=None, allow_deprecated=False):
+    def _setup(self, specs, *, reuse=None, allow_deprecated=False, _use_unsat_cores=True):
         if not getattr(_setup, "cache_setup", None):
             cache_setup = solver_setup(self, specs, reuse=reuse, allow_deprecated=allow_deprecated)
             setattr(_setup, "cache_setup", cache_setup)

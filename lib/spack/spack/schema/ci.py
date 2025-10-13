@@ -87,7 +87,7 @@ dynamic_mapping_schema = {
                 "endpoint": {"type": "string"},
                 "timeout": {"type": "integer", "minimum": 0},
                 "verify_ssl": {"type": "boolean", "default": False},
-                "header": {"type": "object", "additionalProperties": False},
+                "header": {"type": "object", "additionalProperties": {"type": "string"}},
                 "allow": {"type": "array", "items": {"type": "string"}},
                 "require": {"type": "array", "items": {"type": "string"}},
                 "ignore": {"type": "array", "items": {"type": "string"}},

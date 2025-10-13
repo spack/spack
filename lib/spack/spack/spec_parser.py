@@ -433,7 +433,7 @@ class SpecParser:
             )
             raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
         if root_spec.concrete:
-            raise spack.error.SpecError(root_spec, "^" + str(dependency))
+            raise spack.error.SpecError(str(root_spec), "^" + str(dependency))
         return dependency, parser_warnings
 
     def _apply_toolchain(self, spec: "spack.spec.Spec", name: str) -> None:

@@ -127,7 +127,11 @@ third line
             patch_stage.fetch()
             patch_stage.expand_archive()
             spack.patch.apply_patch(
-                stage, patch_stage.single_file, patch.level, patch.working_dir, patch.reverse
+                stage.source_path,
+                patch_stage.single_file,
+                patch.level,
+                patch.working_dir,
+                patch.reverse,
             )
 
         with working_dir(stage.source_path):
@@ -143,7 +147,11 @@ third line
             patch_stage.fetch()
             patch_stage.expand_archive()
             spack.patch.apply_patch(
-                stage, patch_stage.single_file, patch.level, patch.working_dir, patch.reverse
+                stage.source_path,
+                patch_stage.single_file,
+                patch.level,
+                patch.working_dir,
+                patch.reverse,
             )
 
         with working_dir(stage.source_path):
@@ -437,7 +445,7 @@ def test_patch_no_file():
     patch = spack.patch.Patch(fp, "nonexistent_file", 0, "")
     patch.path = "test"
     with pytest.raises(spack.error.NoSuchPatchError, match="No such patch:"):
-        spack.patch.apply_patch(Stage("https://example.com/foo.patch"), patch.path)
+        spack.patch.apply_patch(Stage("https://example.com/foo.patch").source_path, patch.path)
 
 
 def test_patch_no_sha256():
@@ -482,11 +490,11 @@ def test_sha256_setter(mock_packages, mock_patch_stage, config):
 def test_invalid_from_dict(mock_packages, config):
     dictionary = {}
     with pytest.raises(ValueError, match="Invalid patch dictionary:"):
-        spack.patch.from_dict(dictionary)
+        spack.patch.from_dict(dictionary, mock_packages)
 
     dictionary = {"owner": "patch"}
     with pytest.raises(ValueError, match="Invalid patch dictionary:"):
-        spack.patch.from_dict(dictionary)
+        spack.patch.from_dict(dictionary, mock_packages)
 
     dictionary = {
         "owner": "patch",
@@ -497,4 +505,4 @@ def test_invalid_from_dict(mock_packages, config):
         "sha256": bar_sha256,
     }
     with pytest.raises(spack.fetch_strategy.ChecksumError, match="sha256 checksum failed for"):
-        spack.patch.from_dict(dictionary)
+        spack.patch.from_dict(dictionary, mock_packages)

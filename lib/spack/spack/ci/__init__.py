@@ -518,16 +518,19 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         # packagen name not in that list.
         unaffected_pruner = get_unaffected_pruners(env, options.untouched_pruning_dependent_depth)
         if unaffected_pruner:
+            tty.info("Enabling Unaffected Pruner")
             pruning_filters.append(unaffected_pruner)
 
     # Possibly prune specs that are already built on some configured mirror
     if options.prune_up_to_date:
+        tty.info("Enabling Up-to-date Pruner")
         pruning_filters.append(
             create_already_built_pruner(check_index_only=options.check_index_only)
         )
 
     # Possibly prune specs that are external
     if options.prune_external:
+        tty.info("Enabling Externals Pruner")
         pruning_filters.append(create_external_pruner())
 
     # Do all the pruning

@@ -16,6 +16,16 @@ level = "long"
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
+        "--no-modify-concrete-specs",
+        action="store_false",
+        dest="apply_changes",
+        help=(
+            "do not mutate concrete specs to remove dev_path provenance."
+            " This requires running `spack concretize -f` later to apply changes to concrete specs"
+        ),
+    )
+
+    subparser.add_argument(
         "-a", "--all", action="store_true", help="remove all specs from (clear) the environment"
     )
 
@@ -51,6 +61,9 @@ def undevelop(parser, args):
     env = spack.cmd.require_active_env(cmd_name="undevelop")
     with env.write_transaction():
         _update_config(remove_specs, remove_all)
+        if args.apply_changes:
+            for spec in remove_specs:
+                env.apply_develop(spec, path=None)
 
     updated_all_dev_specs = set(spack.config.get("develop"))
     remove_spec_names = set(x.name for x in remove_specs)

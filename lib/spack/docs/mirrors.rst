@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -143,8 +144,13 @@ This is useful if there is a specific suite of software managed by your site.
 Mirror environment
 ^^^^^^^^^^^^^^^^^^
 
-To create a mirror of all packages required by a concrete environment, activate the environment and call ``spack mirror create -a``.
-This is especially useful to create a mirror of an environment concretized on another machine.
+To create a mirror of all packages required by a concrete environment, activate the environment and run ``spack mirror create -a``.
+This is especially useful to create a mirror of an environment that was concretized on another machine.
+
+Optionally specify ``-j <n_workers>`` to control the number of workers used to create a full mirror.
+If not specified, the optimal number of workers is determined dynamically.
+For a full mirror, the number of workers used is the minimum of 16 workers, available CPU cores, and number of packages to mirror.
+For individual packages, 1 worker is used.
 
 .. code-block:: console
 

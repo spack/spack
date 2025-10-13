@@ -15,6 +15,7 @@ import pprint
 import random
 import re
 import sys
+import time
 import typing
 import warnings
 from contextlib import contextmanager
@@ -86,7 +87,7 @@ from .core import (
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFilter
-from .runtimes import RuntimePropertyRecorder, _external_config_with_implicit_externals
+from .runtimes import RuntimePropertyRecorder, external_config_with_implicit_externals
 from .versions import DeclaredVersion, Provenance, concretization_version_order
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
@@ -1088,8 +1089,14 @@ class PyclingoDriver:
             control_files.append("splices.lp")
 
         timer.start("setup")
-        asp_problem = setup.setup(specs, reuse=reuse, allow_deprecated=allow_deprecated)
-        if output.out is not None:
+        output_is_set = output.out is not None
+        asp_problem = setup.setup(
+            specs,
+            reuse=reuse,
+            allow_deprecated=allow_deprecated,
+            _use_unsat_cores=not output_is_set,
+        )
+        if output_is_set:
             output.out.write(asp_problem)
         if output.setup_only:
             return Result(specs), None, None
@@ -1144,13 +1151,21 @@ class PyclingoDriver:
                 solve_kwargs["on_unsat"] = cores.append
 
             timer.start("solve")
-            time_limit = spack.config.CONFIG.get("concretizer:timeout", -1)
+            # A timeout of 0 means no timeout
+            time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
+            timeout_end = time.monotonic() + time_limit if time_limit > 0 else float("inf")
             error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
-            # Spack uses 0 to set no time limit, clingo API uses -1
-            if time_limit == 0:
-                time_limit = -1
             with self.control.solve(**solve_kwargs, async_=True) as handle:
-                finished = handle.wait(time_limit)
+                # Allow handling of interrupts every second.
+                #
+                # pyclingo's `SolveHandle` blocks the calling thread for the duration of each
+                # `.wait()` call. Python also requires that signal handlers must be handled in
+                # the main thread, so any `KeyboardInterrupt` is postponed until after the
+                # `.wait()` call exits the control of pyclingo.
+                finished = False
+                while not finished and time.monotonic() < timeout_end:
+                    finished = handle.wait(1.0)
+
                 if not finished:
                     specs_str = ", ".join(
                         spack.llnl.util.lang.elide_list([str(s) for s in specs], 4)
@@ -2198,7 +2213,7 @@ class SpackSolverSetup:
                     )
                 )
 
-        packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
+        packages_yaml = external_config_with_implicit_externals(spack.config.CONFIG)
         for pkg_name, data in packages_yaml.items():
             if pkg_name == "all":
                 continue
@@ -3027,6 +3042,7 @@ class SpackSolverSetup:
         *,
         reuse: Optional[List[spack.spec.Spec]] = None,
         allow_deprecated: bool = False,
+        _use_unsat_cores: bool = True,
     ) -> str:
         """Generate an ASP program with relevant constraints for specs.
 
@@ -3038,6 +3054,7 @@ class SpackSolverSetup:
             specs: list of Specs to solve
             reuse: list of concrete specs that can be reused
             allow_deprecated: if True adds deprecated versions into the solve
+            _use_unsat_cores: if True, use unsat cores for internal errors
         """
         reuse = reuse or []
         check_packages_exist(specs)
@@ -3063,7 +3080,7 @@ class SpackSolverSetup:
 
         candidate_compilers.update(compilers_from_reuse)
         self.possible_compilers = list(candidate_compilers)
-        self.possible_compilers.sort()  # type: ignore[call-overload]
+        self.possible_compilers.sort()  # type: ignore[call-arg]
 
         self.gen.h1("Runtimes")
         injected_dependencies = self.define_runtime_constraints()
@@ -3187,11 +3204,11 @@ class SpackSolverSetup:
         self.define_target_constraints()
 
         self.gen.h1("Internal errors")
-        self.internal_errors()
+        self.internal_errors(_use_unsat_cores=_use_unsat_cores)
 
         return self.gen.value()
 
-    def internal_errors(self):
+    def internal_errors(self, *, _use_unsat_cores: bool):
         parent_dir = os.path.dirname(__file__)
 
         def visit(node):
@@ -3203,8 +3220,11 @@ class SpackSolverSetup:
                             if name == "internal_error":
                                 arg = ast_sym(ast_sym(term.atom).arguments[0])
                                 symbol = AspFunction(name)(arg.string)
-                                self.assumptions.append((parse_term(str(symbol)), True))
-                                self.gen.asp_problem.append(f"{{ {symbol} }}.\n")
+                                if _use_unsat_cores:
+                                    self.assumptions.append((parse_term(str(symbol)), True))
+                                    self.gen.asp_problem.append(f"{{ {symbol} }}.\n")
+                                else:
+                                    self.gen.asp_problem.append(f"{symbol}.\n")
 
         path = os.path.join(parent_dir, "concretize.lp")
         parse_files([path], visit)
@@ -3657,7 +3677,7 @@ class SpecBuilder:
 
     def external_spec_selected(self, node, idx):
         """This means that the external spec and index idx has been selected for this package."""
-        packages_yaml = _external_config_with_implicit_externals(spack.config.CONFIG)
+        packages_yaml = external_config_with_implicit_externals(spack.config.CONFIG)
         spec_info = packages_yaml[node.pkg]["externals"][int(idx)]
         self._specs[node].external_path = spec_info.get("prefix", None)
         self._specs[node].external_modules = spack.spec.Spec._format_module_list(
