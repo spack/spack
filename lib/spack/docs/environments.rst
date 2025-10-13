@@ -81,7 +81,8 @@ The ``.spack-env`` subdirectory also contains:
   It allows the environment to build the same, in theory, even on different versions of Spack with different packages!
 * ``logs/``: A subdirectory containing the build logs for the packages in this environment.
 
-Spack Environments can also be created from either the user input, or manifest, file or the lockfile.
+Spack Environments can also be created from another environment.
+Environments can be created from the manifest file (the user input), the lockfile, or the entire environment at once.
 Create an environment from a manifest using:
 
 .. code-block:: console
@@ -108,6 +109,18 @@ Create an environment from a ``spack.lock`` file using:
    $ spack env create myenv spack.lock
 
 The resulting environment, when on the same or a compatible machine, is guaranteed to initially have the same concrete specs as the original.
+
+Create an environment from an entire environment using:
+
+.. code-block:: console
+
+   $ spack env create myenv /path/to/env
+
+The resulting environment will include the concrete specs from the original
+(as when created from a lockfile) and all of the config options
+specified in the original (as when created from a manifest file). It will also
+include any other files included in the environment directory, such as repos
+or source code, that could be referenced in the environment by relative path.
 
 .. note::
 

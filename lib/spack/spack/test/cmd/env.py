@@ -1043,6 +1043,48 @@ spack:
     assert not e2.specs_by_hash
 
 
+def test_init_from_env(environment_from_manifest):
+    """Test that an environment can be instantiated from an environment dir"""
+    e1 = environment_from_manifest(
+        """
+spack:
+  specs:
+  - mpileaks
+  - hypre
+  - libelf
+"""
+    )
+
+    with e1:
+        # Test that relative paths in the env are not rewritten
+        # Test that relative paths outside the env are
+        dev_config = {
+            "libelf": {"spec": "libelf", "path": "./libelf"},
+            "mpileaks": {"spec": "mpileaks", "path": "../mpileaks"},
+        }
+        spack.config.set("develop", dev_config)
+        fs.touch(os.path.join(e1.path, "libelf"))
+
+    e1.concretize()
+    e1.write()
+
+    e2 = _env_create("test2", init_file=e1.path)
+
+    for s1, s2 in zip(e1.user_specs, e2.user_specs):
+        assert s1 == s2
+
+    assert e2.concretized_order == e1.concretized_order
+    assert e2.concretized_user_specs == e1.concretized_user_specs
+    assert e2.specs_by_hash == e1.specs_by_hash
+
+    assert os.path.exists(os.path.join(e2.path, "libelf"))
+    with e2:
+        assert e2.dev_specs["libelf"]["path"] == "./libelf"
+        assert e2.dev_specs["mpileaks"]["path"] == os.path.join(
+            os.path.dirname(e1.path), "mpileaks"
+        )
+
+
 def test_init_from_yaml_relative_includes(tmp_path: pathlib.Path):
     files = [
         "relative_copied/packages.yaml",

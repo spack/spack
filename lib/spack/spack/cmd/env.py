@@ -143,7 +143,7 @@ def _env_create(
     Arguments:
         name_or_path (str): name of the environment to create, or path to it
         init_file (str or file): optional initialization file -- can be
-            a JSON lockfile (*.lock, *.json) or YAML manifest file
+            a JSON lockfile (*.lock, *.json), YAML manifest file, or env dir
         dir (bool): if True, create an environment in a directory instead
             of a named environment
         keep_relative (bool): if True, develop paths are copied verbatim into

@@ -362,7 +362,7 @@ def create_in_dir(
 
     Args:
         root: directory where to create the environment.
-        init_file: either a lockfile, a manifest file, or None
+        init_file: either a lockfile, a manifest file, an env directory, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
@@ -395,7 +395,12 @@ def create_in_dir(
     env = Environment(root)
 
     if init_file:
-        init_file_dir = os.path.abspath(os.path.dirname(init_file))
+        if os.path.isdir(init_file):
+            init_file_dir = init_file
+            copied = True
+        else:
+            init_file_dir = os.path.abspath(os.path.dirname(init_file))
+            copied = False
 
         if not keep_relative:
             if env.path != init_file_dir:
@@ -403,13 +408,15 @@ def create_in_dir(
                 # spack.yaml file in another directory, and moreover we want
                 # dev paths in this environment to refer to their original
                 # locations.
-                _rewrite_relative_dev_paths_on_relocation(env, init_file_dir)
-                _rewrite_relative_repos_paths_on_relocation(env, init_file_dir)
+                # If the full env was copied including internal files, only rewrite
+                # relative paths outside of env
+                _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=copied)
+                _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
 
     return env
 
 
-def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
+def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=False):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
     relative paths to absolute ones."""
@@ -425,6 +432,10 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
             if entry["path"] == expanded_path:
                 continue
 
+            # If copied and it's inside the env, we copied it and don't need to relativize
+            if copied_env and expanded_path.startswith(init_file_dir):
+                continue
+
             tty.debug("Expanding develop path for {0} to {1}".format(name, expanded_path))
 
             dev_specs[name]["path"] = expanded_path
@@ -437,7 +448,7 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
         env._re_read()
 
 
-def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
+def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=False):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
     relative repo paths to absolute ones and expand environment variables."""
@@ -454,6 +465,10 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry == expanded_path:
+                continue
+
+            # If copied and it's inside the env, we copied it and don't need to relativize
+            if copied_env and expanded_path.startswith(init_file_dir):
                 continue
 
             tty.debug("Expanding repo path for {0} to {1}".format(entry, expanded_path))
@@ -2679,9 +2694,17 @@ def initialize_environment_dir(
         return
 
     envfile = pathlib.Path(envfile)
-    if not envfile.exists() or not envfile.is_file():
+    if not envfile.exists():
         msg = f"cannot initialize environment, {envfile} is not a valid file"
         raise SpackEnvironmentError(msg)
+
+    if envfile.is_dir():
+        # initialization file is an entire env directory
+        if not (envfile / "spack.yaml").is_file():
+            msg = f"cannot initialize environment, {envfile} is not a valid environment"
+            raise SpackEnvironmentError(msg)
+        shutil.copytree(envfile, environment_dir)
+        return
 
     _ensure_env_dir()
 
