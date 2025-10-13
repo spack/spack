@@ -370,7 +370,7 @@ def create_in_dir(
         include_concrete: concrete environment names/paths to be included
     """
     # If the initfile is a named environment, get its path
-    if exists(init_file):
+    if init_file and exists(init_file):
         init_file = read(init_file).path
     initialize_environment_dir(root, envfile=init_file)
 
