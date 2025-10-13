@@ -116,11 +116,8 @@ Create an environment from an entire environment using:
 
    $ spack env create myenv /path/to/env
 
-The resulting environment will include the concrete specs from the original
-(as when created from a lockfile) and all of the config options
-specified in the original (as when created from a manifest file). It will also
-include any other files included in the environment directory, such as repos
-or source code, that could be referenced in the environment by relative path.
+The resulting environment will include the concrete specs from the original (as when created from a lockfile) and all of the config options specified in the original (as when created from a manifest file).
+It will also include any other files included in the environment directory, such as repos or source code, that could be referenced in the environment by relative path.
 
 .. note::
 
