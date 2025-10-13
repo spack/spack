@@ -765,63 +765,64 @@ class ConcretizationCache:
             pass
         return False
 
-    def _lock(self, problem: pathlib.Path, timeout: Optional[int] = None) -> lk.Lock:
-        """Returns a lock over the byte range correspnding to the hash
-        of the asp problem
+    def _lock(self, path: pathlib.Path, timeout: Optional[int] = None) -> lk.Lock:
+        """Returns a lock over the byte range correspnding to the hash of the asp problem.
+
+        ``path`` is a path to a file in the cache, and its basename is the hash of the problem.
 
         Args:
 
-            problem: Absolute path to concretization cache entry to be locked
+            path: absolute path to concretization cache entry to be locked
         """
         return lk.Lock(
             str(self._lockfile),
             start=spack.util.hash.base32_prefix_bits(
-                problem.name, spack.util.crypto.bit_length(sys.maxsize)
+                path.name, spack.util.crypto.bit_length(sys.maxsize)
             ),
             length=1,
             default_timeout=timeout if timeout else self._default_lock_timeout,
-            desc=f"Concretization cache lock for {problem}",
+            desc=f"Concretization cache lock for {path}",
         )
 
     @contextmanager
-    def read_transaction(self, problem_path: pathlib.Path, timeout: Optional[int] = None):
-        """Read transactions for concretization cache entries
-        Takes a read lock on the cache entry indicated by
-        problem_path and returns control back to the caller
-        releases lock on exit
+    def read_transaction(self, path: pathlib.Path, timeout: Optional[int] = None):
+        """Read transactions for concretization cache entries.
+
+        Takes a read lock on the cache entry indicated by ``path`` and returns
+        control back to the caller releases lock on exit
 
         Args:
-            problem_path: absolute path to the concretization
-                            cache entry to be locked
+            path: absolute path to the concretization cache entry to be locked
+
         """
-        lock = self._lock(problem_path, timeout=timeout)
+        lock = self._lock(path, timeout=timeout)
         lock.acquire_read()
 
         try:
-            yield problem_path.exists()
+            yield path.exists()
         except Exception:
             raise
         finally:
             lock.release_read()
 
     @contextmanager
-    def write_transaction(self, problem_path: pathlib.Path, timeout: Optional[int] = None):
+    def write_transaction(self, path: pathlib.Path, timeout: Optional[int] = None):
         """Write transactions for concretization cache entries
-        Takes a write lock on the cache entry indicated by
-        problem_path and returns control back to the caller
-        releases lock on exit
+
+        Takes a write lock on the cache entry indicated by ``path`` and returns
+        control back to the caller releases lock on exit
 
         Args:
-            problem_path: absolute path to the concretization
-                            cache entry to be locked
+            path: absolute path to the concretization cache entry to be locked
+
         """
         # path must be absolute at this point
-        assert problem_path.is_absolute()
-        lock = self._lock(problem_path, timeout=timeout)
+        assert path.is_absolute()
+        lock = self._lock(path, timeout=timeout)
         lock.acquire_write()
 
         try:
-            yield problem_path.exists()
+            yield path.exists()
         except Exception:
             raise
         finally:
