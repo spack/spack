@@ -23,6 +23,7 @@ from typing import (
     Callable,
     Dict,
     Generator,
+    Iterable,
     Iterator,
     List,
     NamedTuple,
@@ -1074,6 +1075,150 @@ class PyclingoDriver:
         # This attribute will be reset at each call to solve
         self.control = None
 
+    def _control_file_paths(self, control_files: List[str]) -> List[str]:
+        """Get absolute paths based on relative paths of control files.
+
+        Right now the control files just live next to this file in the Spack tree.
+        """
+        parent_dir = os.path.dirname(__file__)
+        return [os.path.join(parent_dir, rel_path) for rel_path in control_files]
+
+    def _make_cache_key(self, asp_problem: List[str], control_file_paths: List[str]) -> str:
+        """Make a key for fetching a solve from the concretization cache.
+
+        A key comprises the entire input to clingo, i.e., the problem instance plus the
+        control files.  The problem instance is assumed to already be sorted and stripped of
+        comments and empty lines.
+
+        The control files are stripped but not sorted, so changes to the control files will cause
+        cache misses if they modify any code.
+
+        Arguments:
+            asp_problem: list of statements in the ASP program
+            control_file_paths: list of paths to control files we'll send to clingo
+        """
+        lines = list(asp_problem)
+        for path in control_file_paths:
+            with open(path, "r", encoding="utf-8") as f:
+                lines.extend(strip_asp_problem(f.readlines()))
+
+        return "\n".join(lines)
+
+    def _run_clingo(
+        self,
+        specs: List[spack.spec.Spec],
+        setup: "SpackSolverSetup",
+        problem_str: str,
+        control_file_paths: List[str],
+        timer: spack.util.timer.Timer,
+    ) -> Result:
+        """Actually run clingo and generate a result.
+
+        This is the core solve logic once the setup is done and once we know we can't
+        fetch a result from cache. See ``solve()`` for caching and setup logic.
+        """
+        # We could just take the cache_key and add it to clingo (since it is the
+        # full problem representation), but we load conrol files separately as it
+        # makes clingo give us better, file-aware error messages.
+        with timer.measure("load"):
+            # Add the problem instance
+            self.control.add("base", [], problem_str)
+            # Load additinoal files
+            for path in control_file_paths:
+                self.control.load(path)
+
+        # Grounding is the first step in the solve -- it turns our facts
+        # and first-order logic rules into propositional logic.
+        with timer.measure("ground"):
+            self.control.ground([("base", [])])
+
+        # With a grounded program, we can run the solve.
+        models = []  # stable models if things go well
+        cores: List = []  # unsatisfiable cores if they do not
+
+        def on_model(model):
+            models.append((model.cost, model.symbols(shown=True, terms=True)))
+
+        solve_kwargs = {
+            "assumptions": setup.assumptions,
+            "on_model": on_model,
+            "on_core": cores.append,
+        }
+
+        if clingo_cffi():
+            solve_kwargs["on_unsat"] = cores.append
+
+        timer.start("solve")
+        # A timeout of 0 means no timeout
+        time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
+        timeout_end = time.monotonic() + time_limit if time_limit > 0 else float("inf")
+        error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
+        with self.control.solve(**solve_kwargs, async_=True) as handle:
+            # Allow handling of interrupts every second.
+            #
+            # pyclingo's `SolveHandle` blocks the calling thread for the duration of each
+            # `.wait()` call. Python also requires that signal handlers must be handled in
+            # the main thread, so any `KeyboardInterrupt` is postponed until after the
+            # `.wait()` call exits the control of pyclingo.
+            finished = False
+            while not finished and time.monotonic() < timeout_end:
+                finished = handle.wait(1.0)
+
+            if not finished:
+                specs_str = ", ".join(spack.llnl.util.lang.elide_list([str(s) for s in specs], 4))
+                header = f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
+                if error_on_timeout:
+                    raise UnsatisfiableSpecError(f"{header}, stopping concretization")
+                warnings.warn(f"{header}, using the best configuration found so far")
+                handle.cancel()
+
+            solve_result = handle.get()
+        timer.stop("solve")
+
+        # once done, construct the solve result
+        result = Result(specs)
+        result.satisfiable = solve_result.satisfiable
+
+        if result.satisfiable:
+            timer.start("construct_specs")
+            # get the best model
+            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+            min_cost, best_model = min(models)
+
+            # first check for errors
+            error_handler = ErrorHandler(best_model, specs)
+            error_handler.raise_if_errors()
+
+            # build specs from spec attributes in the model
+            spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
+            answers = builder.build_specs(spec_attrs)
+
+            # add best spec to the results
+            result.answers.append((list(min_cost), 0, answers))
+
+            # get optimization criteria
+            criteria_args = extract_args(best_model, "opt_criterion")
+            result.criteria = build_criteria_names(min_cost, criteria_args)
+
+            # record the number of models the solver considered
+            result.nmodels = len(models)
+
+            # record the possible dependencies in the solve
+            result.possible_dependencies = setup.pkgs
+            timer.stop("construct_specs")
+            timer.stop()
+
+        elif cores:
+            result.control = self.control
+            result.cores.extend(cores)
+
+        result.raise_if_unsat()
+
+        if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
+            raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
+
+        return result
+
     def solve(
         self,
         setup: "SpackSolverSetup",
@@ -1112,6 +1257,9 @@ class PyclingoDriver:
         if sys.platform == "win32":
             tty.debug("Ensuring basic dependencies {win-sdk, wgl} available")
             ensure_winsdk_external_or_raise()
+
+        # assemble a list of the control files needed for this problem. Some are conditionally
+        # included depending on what features we're using in the solve.
         control_files = ["concretize.lp", "heuristic.lp", "display.lp", "direct_dependency.lp"]
         if not setup.concretize_everything:
             control_files.append("when_possible.lp")
@@ -1129,146 +1277,55 @@ class PyclingoDriver:
             allow_deprecated=allow_deprecated,
             _use_unsat_cores=output.out is None,
         )
-
-        asp_problem = problem_builder.value(randomize="SPACK_SOLVER_RANDOMIZATION" in os.environ)
-        if output.out is not None:
-            output.out.write(asp_problem)
-        if output.setup_only:
-            return Result(specs), None, None
         timer.stop("setup")
 
-        timer.start("cache-check")
         timer.start("ordering")
-        # ensure deterministic output
-        problem_repr = "\n".join(sorted(asp_problem.split("\n")))
-        timer.stop("ordering")
-        parent_dir = os.path.dirname(__file__)
-        full_path = lambda x: os.path.join(parent_dir, x)
-        abs_control_files = [full_path(x) for x in control_files]
-        for ctrl_file in abs_control_files:
-            with open(ctrl_file, "r", encoding="utf-8") as f:
-                problem_repr += "\n" + f.read()
+        # print the output with comments, etc. if the user asked
+        problem = problem_builder.asp_problem
+        if output.out is not None:
+            output.out.write("\n".join(problem))
 
-        result = None
+        if output.setup_only:
+            return Result(specs), None, None
+
+        # strip the problem of comments and empty lines
+        problem = strip_asp_problem(problem)
+        randomize = "SPACK_SOLVER_RANDOMIZATION" in os.environ
+        if randomize:
+            # create a shuffled copy -- useful for understanding performance variation
+            problem = random.sample(problem, len(problem))
+        else:
+            problem.sort()  # sort for deterministic output
+
+        timer.stop("ordering")
+
+        timer.start("cache-check")
+        # load control files to add to the input representation
+        control_file_paths = self._control_file_paths(control_files)
+        cache_key = self._make_cache_key(problem, control_file_paths)
+
+        result, concretization_stats = None, None
         conc_cache_enabled = spack.config.get("concretizer:concretization_cache:enable", False)
         if conc_cache_enabled:
-            result, concretization_stats = CONC_CACHE.fetch(problem_repr)
-
+            result, concretization_stats = CONC_CACHE.fetch(cache_key)
         timer.stop("cache-check")
+
+        # run the solver and store the result, if it wasn't cached already
         if not result:
-            timer.start("load")
-            # Add the problem instance
-            self.control.add("base", [], asp_problem)
-            # Load the files
-            [self.control.load(lp) for lp in abs_control_files]
-            timer.stop("load")
-
-            # Grounding is the first step in the solve -- it turns our facts
-            # and first-order logic rules into propositional logic.
-            timer.start("ground")
-            self.control.ground([("base", [])])
-            timer.stop("ground")
-
-            # With a grounded program, we can run the solve.
-            models = []  # stable models if things go well
-            cores: List = []  # unsatisfiable cores if they do not
-
-            def on_model(model):
-                models.append((model.cost, model.symbols(shown=True, terms=True)))
-
-            solve_kwargs = {
-                "assumptions": setup.assumptions,
-                "on_model": on_model,
-                "on_core": cores.append,
-            }
-
-            if clingo_cffi():
-                solve_kwargs["on_unsat"] = cores.append
-
-            timer.start("solve")
-            # A timeout of 0 means no timeout
-            time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
-            timeout_end = time.monotonic() + time_limit if time_limit > 0 else float("inf")
-            error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
-            with self.control.solve(**solve_kwargs, async_=True) as handle:
-                # Allow handling of interrupts every second.
-                #
-                # pyclingo's `SolveHandle` blocks the calling thread for the duration of each
-                # `.wait()` call. Python also requires that signal handlers must be handled in
-                # the main thread, so any `KeyboardInterrupt` is postponed until after the
-                # `.wait()` call exits the control of pyclingo.
-                finished = False
-                while not finished and time.monotonic() < timeout_end:
-                    finished = handle.wait(1.0)
-
-                if not finished:
-                    specs_str = ", ".join(
-                        spack.llnl.util.lang.elide_list([str(s) for s in specs], 4)
-                    )
-                    header = (
-                        f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
-                    )
-                    if error_on_timeout:
-                        raise UnsatisfiableSpecError(f"{header}, stopping concretization")
-                    warnings.warn(f"{header}, using the best configuration found so far")
-                    handle.cancel()
-
-                solve_result = handle.get()
-            timer.stop("solve")
-
-            # once done, construct the solve result
-            result = Result(specs)
-            result.satisfiable = solve_result.satisfiable
-
-            if result.satisfiable:
-                timer.start("construct_specs")
-                # get the best model
-                builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
-                min_cost, best_model = min(models)
-
-                # first check for errors
-                error_handler = ErrorHandler(best_model, specs)
-                error_handler.raise_if_errors()
-
-                # build specs from spec attributes in the model
-                spec_attrs = [
-                    (name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")
-                ]
-                answers = builder.build_specs(spec_attrs)
-
-                # add best spec to the results
-                result.answers.append((list(min_cost), 0, answers))
-
-                # get optimization criteria
-                criteria_args = extract_args(best_model, "opt_criterion")
-                result.criteria = build_criteria_names(min_cost, criteria_args)
-
-                # record the number of models the solver considered
-                result.nmodels = len(models)
-
-                # record the possible dependencies in the solve
-                result.possible_dependencies = setup.pkgs
-                timer.stop("construct_specs")
-                timer.stop()
-            elif cores:
-                result.control = self.control
-                result.cores.extend(cores)
-
-            result.raise_if_unsat()
-
-            if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
-                raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
-
+            problem_repr = "\n".join(problem)
+            result = self._run_clingo(specs, setup, problem_repr, control_file_paths, timer)
             if conc_cache_enabled:
                 CONC_CACHE.store(problem_repr, result, self.control.statistics, test=setup.tests)
-            concretization_stats = self.control.statistics
+
         if output.timers:
             timer.write_tty()
             print()
 
+        concretization_stats = concretization_stats or self.control.statistics
         if output.stats:
             print("Statistics:")
             pprint.pprint(concretization_stats)
+
         return result, timer, concretization_stats
 
 
@@ -3531,6 +3588,19 @@ class _Body:
     propagate = fn.attr("propagate")
 
 
+def strip_asp_problem(asp_problem: Iterable[str]) -> List[str]:
+    """Remove comments and empty lines from an ASP program."""
+
+    def strip_statement(stmt: str) -> str:
+        lines = [line for line in stmt.split("\n") if not line.startswith("%")]
+        return "".join(line.strip() for line in lines if line)
+
+    value = [strip_statement(stmt) for stmt in asp_problem]
+    value = [s for s in value if s]
+
+    return value
+
+
 class ProblemInstanceBuilder:
     """Provides an interface to construct a problem instance.
 
@@ -3571,36 +3641,6 @@ class ProblemInstanceBuilder:
 
     def newline(self):
         self.asp_problem.append("")
-
-    def problem(self, strip: bool = False) -> List[str]:
-        """Return the ASP problem as a list of rules.
-
-        Arguments:
-            strip: strip comments and empty lines.
-        """
-        if not strip:
-            return self.asp_problem
-
-        def strip_statement(stmt: str) -> str:
-            lines = [line for line in stmt.split("\n") if not line.startswith("%")]
-            return "".join(line.strip() for line in lines if line)
-
-        stripped = [strip_statement(stmt) for stmt in self.asp_problem]
-        stripped = [s for s in stripped if s]
-
-        return stripped
-
-    def value(self, randomize: bool = False) -> str:
-        """Return the ASP problem as a string that can be loaded directly by clingo.
-
-        Arguments:
-            randomize: whether to randomize the order of facts to the solver.
-                Useful for understanding performance variation when benchmarking.
-        """
-        value = self.asp_problem
-        if randomize:
-            value = random.sample(value, len(value))  # create a shuffled copy
-        return "\n".join(value)
 
 
 def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
