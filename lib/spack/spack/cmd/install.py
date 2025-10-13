@@ -17,9 +17,9 @@ import spack.spec
 import spack.store
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
-from spack.installer import PackageInstaller
 from spack.llnl.string import plural
 from spack.llnl.util import tty
+from spack.new_installer import PackageInstaller
 
 description = "build and install packages"
 section = "build"
