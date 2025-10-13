@@ -110,14 +110,15 @@ Create an environment from a ``spack.lock`` file using:
 
 The resulting environment, when on the same or a compatible machine, is guaranteed to initially have the same concrete specs as the original.
 
-Create an environment from an entire environment using:
+Create an environment from an entire environment using either the environment name or path:
 
 .. code-block:: console
 
    $ spack env create myenv /path/to/env
+   $ spack env create myenv2 myenv
 
-The resulting environment will include the concrete specs from the original (as when created from a lockfile) and all of the config options specified in the original (as when created from a manifest file).
-It will also include any other files included in the environment directory, such as repos or source code, that could be referenced in the environment by relative path.
+The resulting environment will include the concrete specs from the original if the original is concretized (as when created from a lockfile) and all of the config options and abstract specs specified in the original (as when created from a manifest file).
+It will also include any other files included in the environment directory, such as repos or source code, as they could be referenced in the environment by relative path.
 
 .. note::
 

@@ -1043,7 +1043,8 @@ spack:
     assert not e2.specs_by_hash
 
 
-def test_init_from_env(environment_from_manifest):
+@pytest.mark.parametrize("use_name", (True, False))
+def test_init_from_env(use_name, environment_from_manifest):
     """Test that an environment can be instantiated from an environment dir"""
     e1 = environment_from_manifest(
         """
@@ -1068,7 +1069,7 @@ spack:
     e1.concretize()
     e1.write()
 
-    e2 = _env_create("test2", init_file=e1.path)
+    e2 = _env_create("test2", init_file="test" if use_name else e1.path)
 
     for s1, s2 in zip(e1.user_specs, e2.user_specs):
         assert s1 == s2

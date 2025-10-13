@@ -369,6 +369,9 @@ def create_in_dir(
             otherwise they are made absolute
         include_concrete: concrete environment names/paths to be included
     """
+    # If the initfile is a named environment, get its path
+    if exists(init_file):
+        init_file = read(init_file).path
     initialize_environment_dir(root, envfile=init_file)
 
     if with_view is None and keep_relative:
