@@ -38,6 +38,7 @@ from typing import (
 import spack.vendor.archspec.cpu
 
 import spack
+import spack.caches
 import spack.compilers.config
 import spack.compilers.flags
 import spack.concretize
@@ -51,7 +52,6 @@ import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs
 import spack.patch
-import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.splicing
@@ -643,9 +643,9 @@ class ConcretizationCache:
     """
 
     def __init__(self, root: Union[str, None] = None):
-        root = root or spack.config.get(
-            "concretizer:concretization_cache:url", spack.paths.default_conc_cache_path
-        )
+        root = root or spack.config.get("concretizer:concretization_cache:url", None)
+        if root is None:
+            root = os.path.join(spack.caches.misc_cache_location(), "concretization")
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
         self.root.mkdir(parents=True, exist_ok=True)
         self._lockfile = self.root / ".cc_lock"
@@ -1315,7 +1315,7 @@ class PyclingoDriver:
             problem_repr = "\n".join(problem)
             result = self._run_clingo(specs, setup, problem_repr, control_file_paths, timer)
             if conc_cache_enabled:
-                CONC_CACHE.store(problem_repr, result, self.control.statistics, test=setup.tests)
+                CONC_CACHE.store(cache_key, result, self.control.statistics, test=setup.tests)
 
         if output.timers:
             timer.write_tty()

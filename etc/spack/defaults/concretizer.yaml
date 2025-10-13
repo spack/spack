@@ -91,6 +91,7 @@ concretizer:
   # cases where there are requirements that prevent part of the search space to be explored.
   static_analysis: false
 
+  # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
+  # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.
   concretization_cache:
     enable: true
-    url: $user_cache_path/concretization
