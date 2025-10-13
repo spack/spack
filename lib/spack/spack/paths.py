@@ -292,10 +292,8 @@ class SpackPaths:
             return os.path.expanduser(
                 os.path.join(os.environ[XDG_vars.data_home.value], "spack", subdir)
             )
-        elif dir_is_occupied(old_location):
-            return old_location
         else:
-            return os.path.join(self.prefix, "opt", "data", subdir)
+            return old_location
 
 
 locations = SpackPaths()

@@ -38,7 +38,7 @@ Here is an example ``config.yaml`` file:
 
    config:
      install_tree:
-       root: $spack/opt/data/installs
+       root: $spack/opt/spack
      build_stage:
      - $tempdir/$user/spack-stage
      - $spack_cache_home/stage
@@ -324,7 +324,7 @@ If your configurations look like this:
 
    config:
      install_tree:
-       root: $spack/opt/data/installs
+       root: $spack/opt/spack
      build_stage:
      - $tempdir/$user/spack-stage
      - $spack_cache_home/stage
@@ -714,9 +714,9 @@ The data listed below will be placed in ``$spack`` by default.
 However, if ``XDG_DATA_HOME`` is set, they will be stored under that path.
 The default values for these are as follows:
 
-* Source caches: ``$HOME/.local/share`` or ``$XDG_DATA_HOME/spack/downloads``.
-* The install tree: ``$spack/opt/data/installs`` or ``$XDG_DATA_HOME/spack/installs``.
-* Environment management: ``$spack/opt/data/environments`` or ``$XDG_DATA_HOME/spack/environments``
+* Source caches: ``$spack/var/spack/cache`` or ``$XDG_DATA_HOME/spack/downloads``.
+* The install tree: ``$spack/opt/spack`` or ``$XDG_DATA_HOME/spack/installs``.
+* Environment management: ``$spack/var/spack/environtments`` or ``$XDG_DATA_HOME/spack/environments``
 
 ``XDG_STATE_HOME`` is used to store data that is useful if persistent, but not integral to Spack's functionality.
 If not defined, its default value is ``~/.local/state``.
