@@ -1594,6 +1594,8 @@ spack:
   - {rel_configs_path}
   - path: {rel_configs_path}
   - {configs_path}
+  - when: 'False'
+    path: https://dummy.io
   view: false
   specs:
     - dependent-install
@@ -1627,10 +1629,27 @@ spack:
 
     env_manifest = syaml.load(conc_env_manifest.read_text())
     assert "include" in env_manifest["spack"]
+
+    # Ensure relative path include correctly updated
     # Ensure the relocated concrete env includes point to the same location
     rel_conc_path = env_manifest["spack"]["include"][0]
     abs_conc_path = (conc_env_path / rel_conc_path).absolute().resolve()
     assert str(abs_conc_path) == os.path.join(ev.as_env_dir("test"), "gitlab", "configs")
+
+    # Ensure relative path include with "path" correctly updated
+    # Ensure the relocated concrete env includes point to the same location
+    rel_conc_path = env_manifest["spack"]["include"][1]["path"]
+    abs_conc_path = (conc_env_path / rel_conc_path).absolute().resolve()
+    assert str(abs_conc_path) == os.path.join(ev.as_env_dir("test"), "gitlab", "configs")
+
+    # Ensure absolute path is unchanged
+    # Ensure the relocated concrete env includes point to the same location
+    abs_config_path = env_manifest["spack"]["include"][2]
+    assert str(abs_config_path) == str(configs_path)
+
+    # Ensure URL path is unchanged
+    url_config_path = env_manifest["spack"]["include"][3]["path"]
+    assert str(url_config_path) == "https://dummy.io"
 
 
 def test_ci_generate_mirror_config(
