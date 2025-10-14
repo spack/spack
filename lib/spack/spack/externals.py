@@ -13,6 +13,7 @@ import spack.deptypes
 import spack.repo
 import spack.spec
 from spack.error import SpackError
+from spack.llnl.util import tty
 
 
 class DependencyDict(TypedDict, total=False):
@@ -194,10 +195,10 @@ class ExternalSpecsParser:
             try:
                 node = node_from_dict(external_dict)
             except spack.spec.UnsatisfiableArchitectureSpecError:
-                warnings.warn(
-                    f"cannot constrain external spec '{external_dict['spec']}' with target "
-                    f"'{external_dict['required_target']}'. This spec will not be considered "
-                    f"during concretization."
+                tty.debug(
+                    f"[{__name__}] skipping external spec '{external_dict['spec']}' because it"
+                    f" cannot be constrained with the required target "
+                    f"'{external_dict['required_target']}'."
                 )
                 continue
             except ExternalSpecError as e:
