@@ -653,14 +653,13 @@ compiler_penalty_from_reuse(Hash) :-
   compiler_from_reuse(Hash, DependencyPackage),
   not node_compiler(_, node(_, DependencyPackage)),
   % We don't want to give penalties if we're just installing binaries
-  has_built_packages().
+  will_build_packages().
 
 compiler_penalty_from_reuse(Hash) :-
   compiler_from_reuse(Hash, DependencyPackage),
   not 1 { attr("hash", node(X, DependencyPackage), Hash) : node_compiler(_, node(X, DependencyPackage)) },
   % We don't want to give penalties if we're just installing binaries
-  has_built_packages().
-
+  will_build_packages().
 
 
 error(100, "Cannot satisfy the request on {0} to have {1}={2}", BuildDependency, Variant, Value)
@@ -1603,10 +1602,10 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
 %-----------------------------------------------------------------------------
 
 % Check whether the DAG has any built package
-has_built_packages() :- build(X).
+will_build_packages() :- build(X).
 
 % "gcc-runtime" is always built
-:- concrete(node(X, "gcc-runtime")), has_built_packages().
+:- concrete(node(X, "gcc-runtime")), will_build_packages().
 
 % The "gcc" linked to "gcc-runtime" must be used by at least another package
 :- attr("depends_on", node(X, "gcc-runtime"), node(Y, "gcc"), "build"),
