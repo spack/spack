@@ -17,6 +17,7 @@ import spack.dependency
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
+import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.package_base
 import spack.repo
@@ -24,7 +25,6 @@ import spack.spec
 import spack.variant
 import spack.version
 from spack.cmd.common import arguments
-import spack.llnl.util.tty as tty
 from spack.llnl.util.tty.colify import colify
 from spack.package_base import PackageBase
 from spack.util.typing import SupportsRichComparison
@@ -35,6 +35,10 @@ level = "short"
 
 header_color = "@*b"
 plain_format = "@."
+
+#: Allow at least this much room for values when formatting definitions
+#: Wrap after a long variant name/condition if we need to do so to preserve this width.
+MIN_VALUES_WIDTH = 30
 
 
 class Formatter:
@@ -348,10 +352,12 @@ def _print_definition(
     out = out or sys.stdout
     cols = shutil.get_terminal_size().columns
 
+    # prevent values from being compressed by really long names
+    name_col_width = min(max_name_len, cols - MIN_VALUES_WIDTH - indent)
     name_len = color.clen(name_field)
 
     pad = 4  # min padding between name and values
-    value_indent = (indent + max_name_len + pad) * " "  # left edge of values
+    value_indent = (indent + name_col_width + pad) * " "  # left edge of values
 
     formatted_name_and_values = f"{indent * ' '}{name_field}"
     if values_field:
@@ -363,11 +369,16 @@ def _print_definition(
                 subsequent_indent=value_indent,
             )
         )
-        # trim initial indentation
-        formatted_values = formatted_values[indent + name_len + pad :]
 
-        # e.g,. name [default]   value1, value2, value3, ...
-        formatted_name_and_values += f"{pad * ' '}{formatted_values}"
+        if name_len > name_col_width:
+            # for overlong names, values appear aligned on next line
+            formatted_name_and_values += f"\n{formatted_values}"
+        else:
+            # for regular names, trim indentation to make room for name on same line
+            formatted_values = formatted_values[indent + name_len + pad :]
+
+            # e.g,. name [default]   value1, value2, value3, ...
+            formatted_name_and_values += f"{pad * ' '}{formatted_values}"
 
     out.write(f"{formatted_name_and_values}\n")
 
