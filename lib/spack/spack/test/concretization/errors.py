@@ -21,8 +21,8 @@ version_error_messages = [
 ]
 
 external_error_messages = [
-    "Cannot build quantum-espresso, since it's marked non-buildable and "
-    "no externals satisfy the requests"
+    "Cannot build quantum-espresso, since it is configured `buildable:false` and "
+    "no externals satisfy the request"
 ]
 
 variant_error_messages = [
