@@ -2257,8 +2257,7 @@ class SpackSolverSetup:
             if pkg_name not in self.pkgs:
                 continue
 
-            external_buildable = data.get("buildable", True)
-            if not external_buildable:
+            if not data.get("buildable", True):
                 self.gen.h2(f"External package: {pkg_name}")
                 self.gen.fact(fn.buildable_false(pkg_name))
 
