@@ -1475,7 +1475,12 @@ packages:
 )
 @pytest.mark.parametrize("constraint_kind", ["require", "prefer"])
 def test_language_preferences_and_reuse(
-    initial_preference, current_preference, constraint_kind, concretize_scope, mock_packages
+    initial_preference,
+    current_preference,
+    constraint_kind,
+    concretize_scope,
+    mutable_config,
+    mock_packages,
 ):
     """Tests that language preferences are respected when reusing specs."""
 
@@ -1488,16 +1493,29 @@ packages:
   cxx:
     {constraint_kind}:
     - {initial_preference}
+  llvm:
+    externals:
+    - spec: "llvm@15.0.0 +clang~flang ~lld"
+      prefix: /path1
+      extra_attributes:
+        compilers:
+          c: /path1/bin/clang
+          cxx: /path1/bin/clang++
 """
     update_packages_config(packages_yaml)
     initial_mpileaks = spack.concretize.concretize_one("mpileaks+debug")
     reused_nodes = list(initial_mpileaks.traverse())
+    external_specs = SpecFilter.from_packages_yaml(
+        mutable_config, include=[], exclude=[]
+    ).selected_specs()
 
     # Ask for just "mpileaks" and check the spec is reused
     with spack.config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
-        result, _, _ = solver.driver.solve(setup, [Spec("mpileaks")], reuse=reused_nodes)
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("mpileaks")], reuse=reused_nodes + external_specs
+        )
         reused_mpileaks = result.specs[0]
 
     assert reused_mpileaks.dag_hash() == initial_mpileaks.dag_hash()
@@ -1511,12 +1529,22 @@ packages:
   cxx:
     {constraint_kind}:
     - {current_preference}
+  llvm:
+    externals:
+    - spec: "llvm@15.0.0 +clang~flang ~lld"
+      prefix: /path1
+      extra_attributes:
+        compilers:
+          c: /path1/bin/clang
+          cxx: /path1/bin/clang++
 """
     update_packages_config(packages_yaml)
     with spack.config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
-        result, _, _ = solver.driver.solve(setup, [Spec("mpileaks")], reuse=reused_nodes)
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("mpileaks")], reuse=reused_nodes + external_specs
+        )
         mpileaks = result.specs[0]
 
     assert initial_mpileaks.dag_hash() != mpileaks.dag_hash()
