@@ -23,7 +23,11 @@ class DependencyDict(TypedDict, total=False):
 
 
 class ExternalDict(TypedDict, total=False):
-    """Dictionary representation of an external spec."""
+    """Dictionary representation of an external spec.
+
+    This representation mostly follows the one used in the configuration files, with a few
+    exceptions needed to support specific features.
+    """
 
     spec: str
     prefix: str
@@ -31,6 +35,7 @@ class ExternalDict(TypedDict, total=False):
     extra_attributes: Dict[str, Any]
     id: str
     dependencies: List[DependencyDict]
+    # Not in the external schema. This field represents a target requirement from configuration.
     required_target: str
 
 
@@ -55,7 +60,11 @@ def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
 
 
 def complete_architecture(node: spack.spec.Spec) -> None:
-    """Completes a node with architecture information."""
+    """Completes a node with architecture information.
+
+    Undefined targets are set to the default host target family (e.g. ``x86_64``).
+    The operating system and platform are set based on the current host.
+    """
     if node.architecture:
         if not node.architecture.target:
             node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
@@ -69,28 +78,37 @@ def complete_architecture(node: spack.spec.Spec) -> None:
 
 
 def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
-    """Completes a node with variants and architecture information."""
+    """Completes a node with variants and architecture information.
+
+    Architecture is completed first, delegating to ``complete_architecture``.
+    Variants are then added to the node, using their default value.
+    """
     complete_architecture(node)
     pkg_class = spack.repo.PATH.get_pkg_class(node.name)
     variants_dict = pkg_class.variants.copy()
+    changed = True
 
-    progress = True
-    while progress:
-        progress = False
-        current_keys = list(variants_dict.keys())
-        for key in current_keys:
-            if not node.satisfies(key):
+    while variants_dict and changed:
+        changed = False
+        items = list(variants_dict.items())  # copy b/c loop modifies dict
+
+        for when, variants_by_name in items:
+            if not node.satisfies(when):
                 continue
-            applicable_variants = variants_dict.pop(key)
-            for v in applicable_variants.values():
-                if not node.satisfies(f"{v.name}=*"):
+            variants_dict.pop(when)
+            for name, vdef in variants_by_name.items():
+                if name not in node.variants:
                     # Cannot use Spec.constrain, because we lose information on the variant type
-                    node.variants[v.name] = v.make_default()
-            progress = True
+                    node.variants[name] = vdef.make_default()
+            changed = True
 
 
 def extract_dicts_from_configuration(packages_yaml) -> List[ExternalDict]:
-    """Extracts external specs from a configuration dictionary."""
+    """Transforms the packages.yaml configuration into a list of external dictionaries.
+
+    The default required target is extracted from ``packages:all:require``, if present.
+    Any package-specific required target overrides the default.
+    """
     result = []
     default_required_target = ""
     if "all" in packages_yaml:
@@ -110,6 +128,9 @@ _TARGET_RE = re.compile(r"target=([^\s:]+)")
 
 
 def _required_target(entry) -> str:
+    """Parses the YAML configuration for a single external spec and returns the required target
+    if defined. Returns an empty string otherwise.
+    """
     if "require" not in entry:
         return ""
 
@@ -138,6 +159,8 @@ class ExternalSpecAndConfig(NamedTuple):
 
 
 class ExternalSpecsParser:
+    """Transforms a list of external dicts into a list of specs."""
+
     def __init__(
         self,
         external_dicts: List[ExternalDict],
@@ -145,7 +168,7 @@ class ExternalSpecsParser:
         complete_node: Callable[[spack.spec.Spec], None] = complete_variants_and_architecture,
         allow_nonexisting: bool = True,
     ):
-        """Initializes a class to manage and process external specifications.
+        """Initializes a class to manage and process external specifications in ``packages.yaml``.
 
         Args:
             external_dicts: list of ExternalDict objects to provide external specifications.
@@ -189,9 +212,6 @@ class ExternalSpecsParser:
 
             if not package_exists and not self.allow_nonexisting:
                 raise spack.repo.UnknownPackageError(node.name, repo=spack.repo.PATH)
-
-            if not package_exists:
-                raise ValueError(f"Package '{node.name}' does not exist")
 
             eid = external_dict.setdefault("id", str(uuid.uuid4()))
             if eid in self.specs_by_external_id:
