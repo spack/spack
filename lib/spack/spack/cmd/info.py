@@ -153,7 +153,7 @@ def format_deptype(depflag: int) -> str:
 
 class DependencyFormatter(Formatter):
     def format_name(self, dep: spack.dependency.Dependency) -> str:
-        return dep.spec.format(color=color.get_color_when())
+        return dep.spec._long_spec(color=color.get_color_when())
 
     def format_values(self, dep: spack.dependency.Dependency) -> str:
         return str(format_deptype(dep.depflag))
