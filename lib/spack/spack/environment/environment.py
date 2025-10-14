@@ -12,7 +12,7 @@ import re
 import shutil
 import stat
 import warnings
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import spack
 import spack.concretize
@@ -1467,29 +1467,51 @@ class Environment:
     def apply_develop(self, spec: spack.spec.Spec, path: Optional[str] = None):
         """Mutate concrete specs to include dev_path provenance pointing to path.
 
-        This does not do any other aspect of concretization. It will fail if any existing concrete
-        spec for the same package does not satisfy the given develop spec."""
-        # Find all specs that this develop request applies to
-        modify_specs = []
-        for dep in self.all_specs_generator():
-            if dep.name == spec.name:
-                if not dep.satisfies(spec):
-                    raise SpackEnvironmentDevelopError(
-                        f"Develop spec '{spec}' conflicts with concrete specs in environment."
-                        " Try again with 'spack develop --no-modify-concrete-specs'"
-                        " and run 'spack concretize --force' to apply your changes."
-                    )
-                modify_specs.append(dep)
-
-        # Manipulate dev_path variant on modify_specs
-        for s in modify_specs:
+        This will fail if any existing concrete spec for the same package does not satisfy the
+        given develop spec."""
+        def apply_dev_path(spec):
             # Remove any existing dev_path variant in all cases
             # If setting a path, add the new variant
-            s.variants.pop("dev_path", None)
-            if path:
-                s.variants["dev_path"] = vt.VariantValue(
-                    vt.VariantType.SINGLE, "dev_path", (path,)
-                )
+            spec.variants.pop("dev_path", None)
+            if not path:
+                return
+            spec.variants["dev_path"] = vt.VariantValue(vt.VariantType.SINGLE, "dev_path", (path,))
+
+        msg = (
+            f"Develop spec '{spec}' conflicts with concrete specs in environment."
+            " Try again with 'spack develop --no-modify-concrete-specs'"
+            " and run 'spack concretize --force' to apply your changes."
+        )
+        selector = spack.spec.Spec(spec.name)
+        self.mutate(selector=selector, mutator=apply_dev_path, validator=spec, msg=msg)
+
+    def mutate(
+        self,
+        selector: spack.spec.Spec,
+        mutator: Callable,
+        validator: Optional[spack.spec.Spec] = None,
+        msg: Optional[str] = None
+    ):
+        """Mutate concrete specs of an environment
+
+        Mutate any spec that matches ``selector``. Invalidate caches on parents of mutated specs.
+        If a validator spec is supplied, throw an error if a selected spec does not satisfy the
+        validator.
+        """
+        # Find all specs that this mutation applies to
+        modify_specs = []
+        for dep in self.all_specs_generator():
+            if dep.satisfies(selector):
+                if not dep.satisfies(validator or selector):
+                    if not msg:
+                        msg = f"spec {dep} satisfies selector {selector}"
+                        msg += " but not validator {validator}"
+                    raise SpackEnvironmentDevelopError(msg)
+                modify_specs.append(dep)
+
+        # Manipulate selected specs
+        for s in modify_specs:
+            mutator(s)
 
         # Identify roots modified and invalidate all dependent hashes
         modified_roots = []
