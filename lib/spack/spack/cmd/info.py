@@ -356,7 +356,7 @@ def _print_definition(
     formatted_name_and_values = f"{indent * ' '}{name_field}"
     if values_field:
         formatted_values = "\n".join(
-            textwrap.wrap(
+            spack.llnl.util.tty.color.cwrap(
                 values_field,
                 width=cols - 2,
                 initial_indent=value_indent,
