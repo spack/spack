@@ -649,72 +649,65 @@ class ConcretizationCache:
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
         self.root.mkdir(parents=True, exist_ok=True)
         self._lockfile = self.root / ".cc_lock"
-        self._default_lock_timeout = 120
 
     def cleanup(self):
         """Prunes the concretization cache according to configured size and entry
         count limits. Cleanup is done in LRU ordering."""
         entry_limit = spack.config.get("concretizer:concretization_cache:entry_limit", 1000)
-        bytes_limit = spack.config.get("concretizer:concretization_cache:size_limit", 3e8)
 
-        entry_count, bytes_count = 0, 0
-        rm_reg: Dict[pathlib.Path, Tuple[float, int]] = {}
-        for entry in self.cache_entries():
-            # short timeout, if we can't access it, its either being cleaned
-            # or being used, either way, we don't need to bother here
-            with self.read_transaction(entry, timeout=10) as f:
-                if not f:
-                    # cache entry doesn't exist, was likely already removed
-                    # move on
-                    continue
-                # get info about entry for cleanup
-                entry_stat_info = entry.stat()
-                entry_size = entry_stat_info.st_size
-                # aggregate information about cache to determine if cleanup is required
-                entry_count += 1
-                bytes_count += entry_size
-                # get time of last use so we can implement an LRU removal
-                access_time = entry_stat_info.st_atime
-                mod_time = entry_stat_info.st_mtime
-                most_recent_op_time = access_time if access_time > mod_time else mod_time
-                rm_reg[entry] = (most_recent_op_time, entry_size)
-        # Sort entries in descending order
-        removal_queue = [
-            (entry, stats)
-            for entry, stats in sorted(rm_reg.items(), key=lambda x: x[1][0], reverse=True)
-        ]
-        while (entry_count > entry_limit or bytes_count > bytes_limit) and removal_queue:
-            # entries are descending, so least recently used is last entry
-            entry_info_to_rm = removal_queue.pop()
-            entry_to_rm = entry_info_to_rm[0]
-            entry_stats = entry_info_to_rm[1]
-            # short timeout, if we can't get a lock, its being read, so it's been used
-            # more recently, i.e. not a good candidate for LRU, or it's already being removed
-            # so we dont care. Could also be a write lock from another clean operation
-            # in which case that operation can remove it
-            with self.write_transaction(entry_to_rm, timeout=10) as exists:
-                # cache bucket was removed by another process, that's fine
-                # try pruning something else
-                if not exists:
-                    # entry was likely removed by another cleaning
-                    # process, no worries
-                    tty.debug(
-                        f"Attempting to purge concretization cache entry {entry_to_rm}"
-                        " but it was already removed"
-                    )
-                    continue
-                entry_size = entry_stats[1]
-                removed = self._safe_remove(entry_to_rm)
-                if removed:
-                    entry_count -= 1
-                    bytes_count -= entry_size
+        # determine if we even need to clean up
+        entries = list(self.cache_entries())
+        entry_count = sum(1 for _ in entries)
+        # we have too many entries
+        if entry_count > entry_limit:
+            removal_queue = []
+            # collect stat info for mod time about all entries
+            for entry in entries:
+                # take read transaction so we can guaruntee the file
+                # we're trying to stat exists
+                with self.read_transaction(entry, timeout=1e-6) as exists:
+                    # if file doesn't exist, we probably don't need to
+                    # worry about cleanup
+                    if exists:
+                        entry_stat_info = entry.stat()
+                        # mtime will always be time of last use as we update it after 
+                        # each read and obviously after each write
+                        mod_time = entry_stat_info.st_mtime
+                        removal_queue.append((entry, mod_time))
+            # sort items for removal 
+            removal_queue.sort(key=lambda x: x[1], reverse=True)
+
+            # try to remove half the current cache, but if we for some reason
+            # make it through every entry in the queue and dont exit, exit anyway
+            while entry_count > (entry_limit // 2) and removal_queue:
+                # entries are descending, so least recently used is last entry
+                entry_to_rm = removal_queue.pop()
+                # short timeout, if we can't get a lock, its being read, so it's been used
+                # more recently, i.e. not a good candidate for LRU, or it's already being removed
+                # so we dont care. Could also be a write lock from another clean operation
+                # in which case that operation can remove it
+                with self.write_transaction(entry_to_rm, timeout=1e-6) as exists:
+                    # cache bucket was removed by another process, that's fine
+                    # try pruning something else
+                    if not exists:
+                        # entry was likely removed by another cleaning
+                        # process, no worries
+                        tty.debug(
+                            f"Attempting to purge concretization cache entry {entry_to_rm}"
+                            " but it was already removed"
+                        )
+                        removed = True
+                    else:
+                        removed = self._safe_remove(entry_to_rm)
+                    if removed:
+                        entry_count -= 1
 
     def cache_entries(self):
         """Generator producing cache entries within a bucket"""
         for cache_entry in self.root.iterdir():
             # Lockfile starts with "."
             # old style concretization cache entries are in directories
-            if not cache_entry.name.startswith(".") and not cache_entry.is_dir():
+            if not cache_entry.name.startswith(".") and cache_entry.is_file():
                 yield cache_entry
 
     def _results_from_cache(self, cache_entry_file: str) -> Union[Result, None]:
@@ -765,7 +758,7 @@ class ConcretizationCache:
             pass
         return False
 
-    def _lock(self, path: pathlib.Path, timeout: Optional[int] = None) -> lk.Lock:
+    def _lock(self, path: pathlib.Path, timeout: Optional[float] = None) -> lk.Lock:
         """Returns a lock over the byte range correspnding to the hash of the asp problem.
 
         ``path`` is a path to a file in the cache, and its basename is the hash of the problem.
@@ -780,12 +773,12 @@ class ConcretizationCache:
                 path.name, spack.util.crypto.bit_length(sys.maxsize)
             ),
             length=1,
-            default_timeout=timeout if timeout else self._default_lock_timeout,
+            default_timeout=timeout if timeout else None,
             desc=f"Concretization cache lock for {path}",
         )
 
     @contextmanager
-    def read_transaction(self, path: pathlib.Path, timeout: Optional[int] = None):
+    def read_transaction(self, path: pathlib.Path, timeout: Optional[float] = None):
         """Read transactions for concretization cache entries.
 
         Takes a read lock on the cache entry indicated by ``path`` and returns
@@ -796,17 +789,25 @@ class ConcretizationCache:
 
         """
         lock = self._lock(path, timeout=timeout)
-        lock.acquire_read()
-
+        locked = False
         try:
+            # can timeout
+            # if it does, no lock is acquired so we
+            # must be careful about releasing
+            lock.acquire_read()
+            locked = True
             yield path.exists()
+        except lk.LockTimeoutError:
+            # if read lock times out, just exit early
+            tty.debug(f"Concretization cache read lock on {path} timed out")
         except Exception:
             raise
         finally:
-            lock.release_read()
+            if locked:
+                lock.release_read()
 
     @contextmanager
-    def write_transaction(self, path: pathlib.Path, timeout: Optional[int] = None):
+    def write_transaction(self, path: pathlib.Path, timeout: Optional[float] = None):
         """Write transactions for concretization cache entries
 
         Takes a write lock on the cache entry indicated by ``path`` and returns
@@ -819,14 +820,19 @@ class ConcretizationCache:
         # path must be absolute at this point
         assert path.is_absolute()
         lock = self._lock(path, timeout=timeout)
-        lock.acquire_write()
-
+        locked = False
         try:
+            lock.acquire_write()
+            locked = True
             yield path.exists()
+        except lk.LockTimeoutError:
+            # if read lock times out, just exit early
+            tty.debug(f"Concretization cache write lock on {path} timed out")
         except Exception:
             raise
         finally:
-            lock.release_write()
+            if locked:
+                lock.release_write()
 
     def store(
         self,
@@ -868,7 +874,7 @@ class ConcretizationCache:
         """
         cache_path = self._cache_path_from_problem(problem)
         result, statistics = None, None
-        with self.read_transaction(cache_path) as exists:
+        with self.read_transaction(cache_path, timeout=2) as exists:
             # if exists is false, then there's no chance of a hit
             if exists:
                 cache_entry_content = None
@@ -892,6 +898,8 @@ class ConcretizationCache:
                         else:
                             raise
                 if cache_entry_content:
+                    # update mod/access time for use w/ LRU cleanup
+                    os.utime(cache_path)
                     result = self._results_from_cache(cache_entry_content)
                     statistics = self._stats_from_cache(cache_entry_content)
         if result and statistics:
