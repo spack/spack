@@ -102,7 +102,6 @@ properties: Dict[str, Any] = {
                     "enable": {"type": "boolean"},
                     "url": {"type": "string"},
                     "entry_limit": {"type": "integer", "minimum": 0},
-                    "size_limit": {"type": "integer", "minimum": 0},
                 },
             },
         },
