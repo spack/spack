@@ -4294,19 +4294,20 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
     spack.concretize.concretize_one("py-black")
 
     real_count, _ = get_current_cache_data()
-    # ensure we only have 2 entries
-    assert real_count == 2, "Concretization cache cleanup pruned incorrectly"
+    # ensure we only have 1 entry
+    # should be cleaning entry count // 2
+    assert real_count == 1, "Concretization cache cleanup pruned incorrectly"
 
 
 def test_concretization_cache_uncompressed_entry(use_concretization_cache, monkeypatch):
-    def _store(self, problem, result, statistics, test=False):
+    def _store(self, problem, result, statistics):
         cache_path = self._cache_path_from_problem(problem)
         with self.write_transaction(cache_path) as exists:
             if exists:
                 return
             try:
                 with open(cache_path, "x", encoding="utf-8") as cache_entry:
-                    cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
+                    cache_dict = {"results": result.to_dict(), "statistics": statistics}
                     cache_entry.write(json.dumps(cache_dict))
             except FileExistsError:
                 pass

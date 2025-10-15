@@ -681,7 +681,7 @@ class ConcretizationCache:
             # make it through every entry in the queue and dont exit, exit anyway
             while entry_count > (entry_limit // 2) and removal_queue:
                 # entries are descending, so least recently used is last entry
-                entry_to_rm = removal_queue.pop()
+                entry_to_rm = removal_queue.pop()[0]
                 # short timeout, if we can't get a lock, its being read, so it's been used
                 # more recently, i.e. not a good candidate for LRU, or the system is busy,
                 # or it's already being removed so we dont care. Could also be a write
