@@ -670,11 +670,11 @@ class ConcretizationCache:
                     # worry about cleanup
                     if exists:
                         entry_stat_info = entry.stat()
-                        # mtime will always be time of last use as we update it after 
+                        # mtime will always be time of last use as we update it after
                         # each read and obviously after each write
                         mod_time = entry_stat_info.st_mtime
                         removal_queue.append((entry, mod_time))
-            # sort items for removal 
+            # sort items for removal
             removal_queue.sort(key=lambda x: x[1], reverse=True)
 
             # try to remove half the current cache, but if we for some reason
@@ -684,8 +684,8 @@ class ConcretizationCache:
                 entry_to_rm = removal_queue.pop()
                 # short timeout, if we can't get a lock, its being read, so it's been used
                 # more recently, i.e. not a good candidate for LRU, or the system is busy,
-                # or it's already being removed so we dont care. Could also be a write 
-                # lock from another clean operation in which case that operation can 
+                # or it's already being removed so we dont care. Could also be a write
+                # lock from another clean operation in which case that operation can
                 # remove it
                 with self.write_transaction(entry_to_rm, timeout=1e-6) as exists:
                     # cache bucket was removed by another process, that's fine
