@@ -789,6 +789,7 @@ class ConcretizationCache:
             path: absolute path to the concretization cache entry to be locked
 
         """
+        assert path.is_absolute()
         lock = self._lock(path, timeout=timeout)
         locked = False
         try:
@@ -851,7 +852,7 @@ class ConcretizationCache:
         """
         cache_path = self._cache_path_from_problem(problem)
 
-        with self.write_transaction(cache_path) as exists:
+        with self.write_transaction(cache_path, timeout=30) as exists:
             if exists:
                 # if cache path file exists, we already have a cache
                 # entry for this, likely created by another process
