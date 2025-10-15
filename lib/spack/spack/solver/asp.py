@@ -683,9 +683,10 @@ class ConcretizationCache:
                 # entries are descending, so least recently used is last entry
                 entry_to_rm = removal_queue.pop()
                 # short timeout, if we can't get a lock, its being read, so it's been used
-                # more recently, i.e. not a good candidate for LRU, or it's already being removed
-                # so we dont care. Could also be a write lock from another clean operation
-                # in which case that operation can remove it
+                # more recently, i.e. not a good candidate for LRU, or the system is busy,
+                # or it's already being removed so we dont care. Could also be a write 
+                # lock from another clean operation in which case that operation can 
+                # remove it
                 with self.write_transaction(entry_to_rm, timeout=1e-6) as exists:
                     # cache bucket was removed by another process, that's fine
                     # try pruning something else
