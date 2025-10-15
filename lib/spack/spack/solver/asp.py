@@ -651,7 +651,7 @@ class ConcretizationCache:
         self._lockfile = self.root / ".cc_lock"
 
     def cleanup(self):
-        """Prunes the concretization cache according to configured size and entry
+        """Prunes the concretization cache according to configured entry
         count limits. Cleanup is done in LRU ordering."""
         entry_limit = spack.config.get("concretizer:concretization_cache:entry_limit", 1000)
 
