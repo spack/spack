@@ -584,8 +584,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: which is deprecated
     legacy_buildsystem: str
 
-    #: Must be defined in derived classes. Used when reporting the build system to users
-    build_system_class: str
+    #: Used when reporting the build system to users
+    build_system_class: str = "PackageBase"
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
