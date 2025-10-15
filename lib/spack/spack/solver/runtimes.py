@@ -286,7 +286,7 @@ def external_config_with_implicit_externals(
 ) -> Dict[str, Any]:
     # Read packages.yaml and normalize it so that it will not contain entries referring to
     # virtual packages.
-    packages_yaml = configuration.deepcopy_as_builtin("packages")
+    packages_yaml = configuration.deepcopy_as_builtin("packages", line_info=True)
     _normalize_packages_yaml(packages_yaml)
 
     # Add externals for libc from compilers on Linux

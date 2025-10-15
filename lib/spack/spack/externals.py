@@ -36,7 +36,7 @@ class ExternalDict(TypedDict, total=False):
     extra_attributes: Dict[str, Any]
     id: str
     dependencies: List[DependencyDict]
-    # Not in the external schema. This field represents a target requirement from configuration.
+    # Target requirement from configuration. Not in the external schema
     required_target: str
 
 
