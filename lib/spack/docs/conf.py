@@ -54,9 +54,17 @@ sys.path[0:0] = [
     os.path.abspath(".spack/spack-packages/repos"),
 ]
 
-subprocess.call(["spack", "list"], stdout=subprocess.DEVNULL)
+# Init the package repo with all git history, so "Last updated on" is accurate.
+subprocess.call(["spack", "repo", "update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+if os.path.exists(".spack/spack-packages/.git/shallow"):
+    subprocess.call(
+        ["git", "fetch", "--unshallow"],
+        cwd=".spack/spack-packages",
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
-# Generate a command index if an update is needed -- this also clones the package repository.
+# Generate a command index if an update is needed
 subprocess.call(
     [
         "spack",
@@ -119,7 +127,12 @@ class CustomPygmentsBridge(PygmentsBridge):
 PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
 
 
+from spack.llnl.util.lang import classproperty
 from spack.spec_parser import SpecTokens
+
+# replace classproperty.__get__ to return `self` so Sphinx can document it correctly. Otherwise
+# it evaluates the callback, and it documents the result, which is not what we want.
+classproperty.__get__ = lambda self, instance, owner: self
 
 
 class SpecLexer(RegexLexer):
@@ -258,7 +271,9 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
-    "sphinx_design",
+    "sphinx_last_updated_by_git",
+    "sphinx_sitemap",
+    "sphinxcontrib.inkscapeconverter",
     "sphinxcontrib.programoutput",
 ]
 
@@ -326,6 +341,7 @@ gettext_uuid = False
 exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack", ".venv"]
 
 autodoc_mock_imports = ["llnl"]
+autodoc_default_options = {"no-value": True}
 
 nitpicky = True
 nitpick_ignore = [
@@ -475,7 +491,14 @@ html_baseurl = "https://spack.readthedocs.io/en/latest/"
 # Output file base name for HTML help builder.
 htmlhelp_basename = "Spackdoc"
 
+# Sitemap settings
+sitemap_show_lastmod = True
+sitemap_url_scheme = "{link}"
+sitemap_excludes = ["search.html", "_modules/*"]
+
 # -- Options for LaTeX output --------------------------------------------------
+
+latex_engine = "lualatex"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
@@ -488,7 +511,7 @@ latex_elements = {
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual")]
+latex_documents = [("index", "Spack.tex", "Spack Documentation", "", "manual")]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.

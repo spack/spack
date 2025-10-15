@@ -627,7 +627,7 @@ def chgrp(path, group, follow_symlinks=True):
 @system_path_filter(arg_slice=slice(1))
 def chmod_x(entry, perms):
     """Implements chmod, treating all executable bits as set using the chmod
-    utility's `+X` option.
+    utility's ``+X`` option.
     """
     mode = os.stat(entry).st_mode
     if os.path.isfile(entry):
@@ -706,7 +706,7 @@ def copy(src: str, dest: str, _permissions: bool = False) -> None:
 
 
 @system_path_filter
-def install(src: str, dest: str):
+def install(src: str, dest: str) -> None:
     """Install the file(s) ``src`` to the file or directory ``dest``.
 
     Same as :py:func:`copy` with the addition of setting proper
@@ -858,13 +858,13 @@ def install_tree(
 
 
 @system_path_filter
-def is_exe(path):
+def is_exe(path) -> bool:
     """Returns :obj:`True` iff the specified path exists, is a regular file, and has executable
     permissions for the current process."""
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
-def has_shebang(path):
+def has_shebang(path) -> bool:
     """Returns whether a path has a shebang line. Returns False if the file cannot be opened."""
     try:
         with open(path, "rb") as f:
@@ -915,11 +915,11 @@ def mkdirp(
             if not provided
         group: optional group for permissions of final created directory -- use OS
             default if not provided. Only used if world write permissions are not set
-        default_perms: one of 'parents' or 'args'. The default permissions that are set for
-            directories that are not themselves an argument for mkdirp. 'parents' means
+        default_perms: one of ``"parents"`` or ``"args"``. The default permissions that are set for
+            directories that are not themselves an argument for mkdirp. ``"parents"`` means
             intermediate directories get the permissions of their direct parent directory,
-            'args' means intermediate get the same permissions specified in the arguments to
-            mkdirp -- default value is 'args'
+            ``"args"`` means intermediate get the same permissions specified in the arguments to
+            mkdirp -- default value is ``"args"``
     """
     default_perms = default_perms or "args"
     paths = path_to_os_path(*paths)
@@ -994,7 +994,7 @@ def longest_existing_parent(path: str) -> Tuple[str, List[str]]:
 
 
 @system_path_filter
-def force_remove(*paths):
+def force_remove(*paths: str) -> None:
     """Remove files without printing errors.  Like ``rm -f``, does NOT
     remove directories."""
     for path in paths:
@@ -1150,7 +1150,7 @@ def touchp(path):
 
 
 @system_path_filter
-def force_symlink(src, dest):
+def force_symlink(src: str, dest: str) -> None:
     """Create a symlink at ``dest`` pointing to ``src``. Similar to ``ln -sf``."""
     try:
         symlink(src, dest)
@@ -1160,7 +1160,7 @@ def force_symlink(src, dest):
 
 
 @system_path_filter
-def join_path(prefix, *args):
+def join_path(prefix, *args) -> str:
     """Alias for :func:`os.path.join`"""
     path = str(prefix)
     for elt in args:
@@ -1275,16 +1275,16 @@ def traverse_tree(
 
     When called on dest, this yields::
 
-        ('root',         'dest')
-        ('root/a',       'dest/a')
-        ('root/a/file1', 'dest/a/file1')
-        ('root/a/file2', 'dest/a/file2')
-        ('root/b',       'dest/b')
-        ('root/b/file3', 'dest/b/file3')
+        ("root",         "dest")
+        ("root/a",       "dest/a")
+        ("root/a/file1", "dest/a/file1")
+        ("root/a/file2", "dest/a/file2")
+        ("root/b",       "dest/b")
+        ("root/b/file3", "dest/b/file3")
 
     Keyword Arguments:
         order (str): Whether to do pre- or post-order traversal. Accepted
-            values are 'pre' and 'post'
+            values are ``"pre"`` and ``"post"``
         ignore (typing.Callable): function indicating which files to ignore. This will also
             ignore symlinks if they point to an ignored file (regardless of whether the symlink
             is explicitly ignored); note this only supports one layer of indirection (i.e. if
@@ -2476,215 +2476,6 @@ def find_all_libraries(root: str, recursive: bool = False) -> LibraryList:
     )
 
 
-class WindowsSimulatedRPath:
-    """Class representing Windows filesystem rpath analog
-
-    One instance of this class is associated with a package (only on Windows)
-    For each lib/binary directory in an associated package, this class introduces
-    a symlink to any/all dependent libraries/binaries. This includes the packages
-    own bin/lib directories, meaning the libraries are linked to the binary directory
-    and vis versa.
-    """
-
-    def __init__(
-        self,
-        package,
-        base_modification_prefix: Optional[Union[str, pathlib.Path]] = None,
-        link_install_prefix: bool = True,
-    ):
-        """
-        Args:
-            package (spack.package_base.PackageBase): Package requiring links
-            base_modification_prefix (str|pathlib.Path): Path representation indicating
-                the root directory in which to establish the simulated rpath, ie where the
-                symlinks that comprise the "rpath" behavior will be installed.
-
-                Note: This is a mutually exclusive option with `link_install_prefix` using
-                both is an error.
-
-                Default: None
-            link_install_prefix (bool): Link against package's own install or stage root.
-                Packages that run their own executables during build and require rpaths to
-                the build directory during build time require this option.
-
-                Default: install
-                root
-
-                Note: This is a mutually exclusive option with `base_modification_prefix`, using
-                both is an error.
-        """
-        self.pkg = package
-        self._addl_rpaths: set[str] = set()
-        if link_install_prefix and base_modification_prefix:
-            raise RuntimeError(
-                "Invalid combination of arguments given to WindowsSimulated RPath.\n"
-                "Select either `link_install_prefix` to create an install prefix rpath"
-                " or specify a `base_modification_prefix` for any other link type. "
-                "Specifying both arguments is invalid."
-            )
-        if not (link_install_prefix or base_modification_prefix):
-            raise RuntimeError(
-                "Insufficient arguments given to WindowsSimulatedRpath.\n"
-                "WindowsSimulatedRPath requires one of link_install_prefix"
-                " or base_modification_prefix to be specified."
-                " Neither was provided."
-            )
-
-        self.link_install_prefix = link_install_prefix
-        if base_modification_prefix:
-            self.base_modification_prefix = pathlib.Path(base_modification_prefix)
-        else:
-            self.base_modification_prefix = pathlib.Path(self.pkg.prefix)
-        self._additional_library_dependents: set[pathlib.Path] = set()
-        if not self.link_install_prefix:
-            tty.debug(f"Generating rpath for non install context: {base_modification_prefix}")
-
-    @property
-    def library_dependents(self):
-        """
-        Set of directories where package binaries/libraries are located.
-        """
-        base_pths = set()
-        if self.link_install_prefix:
-            base_pths.add(pathlib.Path(self.pkg.prefix.bin))
-        base_pths |= self._additional_library_dependents
-        return base_pths
-
-    def add_library_dependent(self, *dest):
-        """
-        Add paths to directories or libraries/binaries to set of
-        common paths that need to link against other libraries
-
-        Specified paths should fall outside of a package's common
-        link paths, i.e. the bin
-        directories.
-        """
-        for pth in dest:
-            if os.path.isfile(pth):
-                new_pth = pathlib.Path(pth).parent
-            else:
-                new_pth = pathlib.Path(pth)
-            path_is_in_prefix = new_pth.is_relative_to(self.base_modification_prefix)
-            if not path_is_in_prefix:
-                raise RuntimeError(
-                    f"Attempting to generate rpath symlink out of rpath context:\
-{str(self.base_modification_prefix)}"
-                )
-            self._additional_library_dependents.add(new_pth)
-
-    @property
-    def rpaths(self):
-        """
-        Set of libraries this package needs to link against during runtime
-        These packages will each be symlinked into the packages lib and binary dir
-        """
-        dependent_libs = []
-        for path in self.pkg.rpath:
-            dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
-        for extra_path in self._addl_rpaths:
-            dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
-        return set([pathlib.Path(x) for x in dependent_libs])
-
-    def add_rpath(self, *paths):
-        """
-        Add libraries found at the root of provided paths to runtime linking
-
-        These are libraries found outside of the typical scope of rpath linking
-        that require manual inclusion in a runtime linking scheme.
-        These links are unidirectional, and are only
-        intended to bring outside dependencies into this package
-
-        Args:
-            *paths (str): arbitrary number of paths to be added to runtime linking
-        """
-        self._addl_rpaths = self._addl_rpaths | set(paths)
-
-    def _link(self, path: pathlib.Path, dest_dir: pathlib.Path):
-        """Perform link step of simulated rpathing, installing
-        simlinks of file in path to the dest_dir
-        location. This method deliberately prevents
-        the case where a path points to a file inside the dest_dir.
-        This is because it is both meaningless from an rpath
-        perspective, and will cause an error when Developer
-        mode is not enabled"""
-
-        def report_already_linked():
-            # We have either already symlinked or we are encountering a naming clash
-            # either way, we don't want to overwrite existing libraries
-            already_linked = islink(str(dest_file))
-            tty.debug(
-                "Linking library %s to %s failed, " % (str(path), str(dest_file))
-                + "already linked."
-                if already_linked
-                else "library with name %s already exists at location %s."
-                % (str(file_name), str(dest_dir))
-            )
-
-        file_name = path.name
-        dest_file = dest_dir / file_name
-        if not dest_file.exists() and dest_dir.exists() and not dest_file == path:
-            try:
-                symlink(str(path), str(dest_file))
-            # For py2 compatibility, we have to catch the specific Windows error code
-            # associate with trying to create a file that already exists (winerror 183)
-            # Catch OSErrors missed by the SymlinkError checks
-            except OSError as e:
-                if sys.platform == "win32" and e.errno == errno.EEXIST:
-                    report_already_linked()
-                else:
-                    raise e
-            # catch errors we raise ourselves from Spack
-            except AlreadyExistsError:
-                report_already_linked()
-
-    def establish_link(self):
-        """
-        (sym)link packages to runtime dependencies based on RPath configuration for
-        Windows heuristics
-        """
-        # from build_environment.py:463
-        # The top-level package is always RPATHed. It hasn't been installed yet
-        # so the RPATHs are added unconditionally
-
-        # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
-        # install a symlink to each dependent library
-
-        # do not rpath for system libraries included in the dag
-        # we should not be modifying libraries managed by the Windows system
-        # as this will negatively impact linker behavior and can result in permission
-        # errors if those system libs are not modifiable by Spack
-        if "windows-system" not in getattr(self.pkg, "tags", []):
-            for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
-                self._link(library, lib_dir)
-
-
-def make_package_test_rpath(pkg, test_dir: Union[str, pathlib.Path]):
-    """Establishes a temp Windows simulated rpath for the pkg in the testing directory
-    so an executable can test the libraries/executables with proper access
-    to dependent dlls
-
-    Note: this is a no-op on all other platforms besides Windows
-
-    Args:
-        pkg (spack.package_base.PackageBase): the package for which the rpath should be computed
-        test_dir: the testing directory in which we should construct an rpath
-    """
-    # link_install_prefix as false ensures we're not linking into the install prefix
-    mini_rpath = WindowsSimulatedRPath(pkg, link_install_prefix=False)
-    # add the testing directory as a location to install rpath symlinks
-    mini_rpath.add_library_dependent(test_dir)
-
-    # check for whether build_directory is available, if not
-    # assume the stage root is the build dir
-    build_dir_attr = getattr(pkg, "build_directory", None)
-    build_directory = build_dir_attr if build_dir_attr else pkg.stage.path
-    # add the build dir & build dir bin
-    mini_rpath.add_rpath(os.path.join(build_directory, "bin"))
-    mini_rpath.add_rpath(os.path.join(build_directory))
-    # construct rpath
-    mini_rpath.establish_link()
-
-
 @system_path_filter
 @memoized
 def can_access_dir(path):
@@ -2893,11 +2684,16 @@ def remove_directory_contents(dir):
 
 @contextmanager
 @system_path_filter
-def keep_modification_time(*filenames):
+def keep_modification_time(*filenames: str) -> Generator[None, None, None]:
     """
     Context manager to keep the modification timestamps of the input files.
     Tolerates and has no effect on non-existent files and files that are
     deleted by the nested code.
+
+    Example::
+
+        with keep_modification_time("file1.txt", "file2.txt"):
+            # do something that modifies file1.txt and file2.txt
 
     Parameters:
         *filenames: one or more files that must have their modification

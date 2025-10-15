@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -50,6 +51,8 @@ Using Environments
 ------------------
 
 Here we follow a typical use case of creating, concretizing, installing and loading an environment.
+
+.. _cmd-spack-env-create:
 
 Creating a managed Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -120,6 +123,9 @@ The name of an environment can be a nested path to help organize environments vi
 
 This will create a managed environment under ``$environments_root/projectA/configA/myenv``.
 Changing ``environment_root`` can therefore also be used to make a whole group of nested environments available.
+
+.. _cmd-spack-env-activate:
+.. _cmd-spack-env-deactivate:
 
 Activating an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -254,6 +260,8 @@ All explicitly installed packages will be listed as roots of the environment.
 All of the Spack commands that act on the list of installed specs are environment-aware in this way, including ``install``, ``uninstall``, ``find``, ``extensions``, etc.
 In the :ref:`environment-configuration` section we will discuss environment-aware commands further.
 
+.. _cmd-spack-add:
+
 Adding Abstract Specs
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -281,7 +289,7 @@ or
 
    $ spack -e myenv add python
 
-.. _environments_concretization:
+.. _cmd-spack-concretize:
 
 Concretizing
 ^^^^^^^^^^^^
@@ -349,7 +357,7 @@ Otherwise, ``spack install`` will concretize the environment before installing t
       [myenv]$ spack install & spack install & spack install & spack install
 
    Another option is to generate a ``Makefile`` and run ``make -j<N>`` to control the number of parallel install processes.
-   See :ref:`env-generate-depfile` for details.
+   See :ref:`cmd-spack-env-depfile` for details.
 
 
 As it installs, ``spack install`` creates symbolic links in the ``logs/`` directory in the environment, allowing for easy inspection of build logs related to that environment.
@@ -360,22 +368,45 @@ For root specs provided to ``spack install`` on the command line, ``--no-add`` i
 In other words, if there is an unambiguous match in the active concrete environment for a root spec provided to ``spack install`` on the command line, Spack does not require you to specify the ``--no-add`` option to prevent the spec from being added again.
 At the same time, a spec that already exists in the environment, but only as a dependency, will be added to the environment as a root spec without the ``--no-add`` option.
 
-.. _develop-specs:
+.. _cmd-spack-develop:
 
 Developing Packages in a Spack Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``spack develop`` command allows one to develop Spack packages in an environment.
-It requires a spec containing a concrete version, and will configure Spack to install the package from local source.
-If a version is not provided from the command line interface then Spack will automatically pick the highest version the package has defined.
-This means any infinity versions (``develop``, ``main``, ``stable``) will be preferred in this selection process.
+It will configure Spack to install the package from local source.
 By default, ``spack develop`` will also clone the package to a subdirectory in the environment for the local source.
-This package will have a special variant ``dev_path`` set, and Spack will ensure the package and its dependents are rebuilt any time the environment is installed if the package's local source code has been modified.
-Spack's native implementation to check for modifications is to check if ``mtime`` is newer than the installation.
+These choices can be overridden with the ``--path`` argument, and the ``--no-clone`` argument.
+Relative paths provided to the ``--path`` argument will be resolved relative to the environment directory.
+All of these options are recorded in the environment manifest, although default values may be left implied.
+
+.. code-block:: console
+
+   $ spack develop --path src/foo foo@develop
+   $ cat `spack location -e`/spack.yaml
+   spack:
+     ...
+     develop
+       foo:
+         spec: foo@develop
+         path: src/foo
+
+When ``spack develop`` is run in a concretized environment, Spack will modify the concrete specs in the environment to reflect the modified provenance.
+Any package built from local source will have a ``dev_path`` variant, and the hash of any dependent of those packages will be modified to reflect the change.
+The value of the ``dev_path`` variant will be the absolute path to the package source directory.
+If the develop spec conflicts with the concrete specs in the environment, Spack will raise an exception and require the ``spack develop --no-modify-concrete-specs`` option, followed by a ``spack concretize --force`` to apply the ``dev_path`` variant and constraints from the develop spec.
+
+When concretizing an environment with develop specs, the version, variants, and other attributes of the spec provided to the ``spack develop`` command will be treated as constraints by the concretizer (in addition to any constraints from the packages ``specs`` list).
+If the ``develop`` configuration for the package does not include a spec version, Spack will choose the **highest** version of the package.
+This means that any "infinity" versions (``develop``, ``main``, etc.) will be preferred for specs marked with the ``spack develop`` command, which is different from the standard Spack behavior to prefer the highest **numeric** version.
+These packages will have an automatic ``dev_path`` variant added by the concretizer, with a value of the absolute path to the local source Spack is building from.
+
+Spack will ensure the package and its dependents are rebuilt any time the environment is installed if the package's local source code has been modified.
+Spack's native implementation is to check if ``mtime`` is newer than the installation.
 A custom check can be created by overriding the ``detect_dev_src_change`` method in your package class.
 This is particularly useful for projects using custom Spack repos to drive development and want to optimize performance.
 
-Spack ensures that all instances of a developed package in the environment are concretized to match the version (and other constraints) passed as the spec argument to the ``spack develop`` command.
+When ``spack develop`` is run without any arguments, Spack will clone any develop specs in the environment for which the specified path does not exist.
 
 When working deep in the graph it is often desirable to have multiple specs marked as ``develop`` so you don't have to restage and/or do full rebuilds each time you call ``spack install``.
 The ``--recursive`` flag can be used in these scenarios to ensure that all the dependents of the initial spec you provide are also marked as develop specs.
@@ -389,11 +420,12 @@ If the package being developed supports out-of-source builds then users can use 
 This is a shortcut to set the ``package_attributes:build_directory`` in the ``packages`` configuration (see :ref:`assigning-package-attributes`).
 The supplied location will become the build-directory for that package in all future builds.
 
-.. warning::
-   Potential pitfalls of setting the build directory
-    Spack does not check for out-of-source build compatibility with the packages and so the onus of making sure the package supports out-of-source builds is on the user.
-    For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds while all ``CMake`` packages do.
-    Understanding these nuances is up to the software developers and we strongly encourage developers to only redirect the build directory if they understand their package's build-system.
+.. admonition:: Potential pitfalls of setting the build directory
+   :class: warning
+
+   Spack does not check for out-of-source build compatibility with the packages and so the onus of making sure the package supports out-of-source builds is on the user.
+   For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds while all ``CMake`` packages do.
+   Understanding these nuances is up to the software developers and we strongly encourage developers to only redirect the build directory if they understand their package's build-system.
 
 Loading
 ^^^^^^^
@@ -443,7 +475,7 @@ Note that you may use Spack config variables such as ``$spack`` or environment v
    spack:
      specs: []
      concretizer:
-         unify: true
+       unify: true
      include_concrete:
      - /absolute/path/to/environment1
      - $spack/../path/to/environment2
@@ -604,11 +636,11 @@ The list of abstract/root specs in the environment is maintained in the ``spack.
 .. code-block:: yaml
 
    spack:
-       specs:
-         - ncview
-         - netcdf
-         - nco
-         - py-sphinx
+     specs:
+     - ncview
+     - netcdf
+     - nco
+     - py-sphinx
 
 Appending to this list in the yaml is identical to using the ``spack add`` command from the command line.
 However, there is more power available from the yaml file.
@@ -624,11 +656,11 @@ The *default* mode is to unify all specs:
 .. code-block:: yaml
 
    spack:
-       specs:
-         - hdf5+mpi
-         - zlib@1.2.8
-       concretizer:
-         unify: true
+     specs:
+     - hdf5+mpi
+     - zlib@1.2.8
+     concretizer:
+       unify: true
 
 This means that any package in the environment corresponds to a single concrete spec.
 In the above example, when ``hdf5`` depends down the line of ``zlib``, it is required to take ``zlib@1.2.8`` instead of a newer version.
@@ -643,12 +675,12 @@ Instead of requiring reuse of dependencies across different root specs, it is on
 .. code-block:: yaml
 
    spack:
-       specs:
-         - hdf5~mpi
-         - hdf5+mpi
-         - zlib@1.2.8
-       concretizer:
-         unify: when_possible
+     specs:
+     - hdf5~mpi
+     - hdf5+mpi
+     - zlib@1.2.8
+     concretizer:
+       unify: when_possible
 
 This means that both ``hdf5`` installations will use ``zlib@1.2.8`` as a dependency even if newer versions of that library are available.
 
@@ -657,12 +689,12 @@ The third mode of operation is to concretize root specs entirely independently b
 .. code-block:: yaml
 
    spack:
-       specs:
-         - hdf5~mpi
-         - hdf5+mpi
-         - zlib@1.2.8
-       concretizer:
-         unify: false
+     specs:
+     - hdf5~mpi
+     - hdf5+mpi
+     - zlib@1.2.8
+     concretizer:
+       unify: false
 
 In this example ``hdf5`` is concretized separately, and does not consider ``zlib@1.2.8`` as a constraint or preference.
 Instead, it will take the latest possible version.
@@ -696,23 +728,27 @@ The following two environment manifests are identical:
 
    spack:
      specs:
-       - zlib %gcc@7.1.0
-       - zlib %gcc@4.9.3
-       - libelf %gcc@7.1.0
-       - libelf %gcc@4.9.3
-       - libdwarf %gcc@7.1.0
-       - cmake
+     - zlib %gcc@7.1.0
+     - zlib %gcc@4.9.3
+     - libelf %gcc@7.1.0
+     - libelf %gcc@4.9.3
+     - libdwarf %gcc@7.1.0
+     - cmake
+
+.. code-block:: yaml
 
    spack:
      specs:
-       - matrix:
-           - [zlib, libelf, libdwarf]
-           - ['%gcc@7.1.0', '%gcc@4.9.3']
-         exclude:
-           - libdwarf%gcc@4.9.3
-       - cmake
+     - matrix:
+       - [zlib, libelf, libdwarf]
+       - ["%gcc@7.1.0", "%gcc@4.9.3"]
+       exclude:
+       - libdwarf%gcc@4.9.3
+     - cmake
 
 Spec matrices can be used to install swaths of software across various toolchains.
+
+.. _spec-list-references:
 
 Spec List References
 ^^^^^^^^^^^^^^^^^^^^
@@ -734,24 +770,26 @@ As an example, the following two manifest files are identical.
 
    spack:
      definitions:
-       - first: [libelf, libdwarf]
-       - compilers: ['%gcc', '%intel']
-       - second:
-           - $first
-           - matrix:
-               - [zlib]
-               - [$compilers]
+     - first: [libelf, libdwarf]
+     - compilers: ["%gcc", "%intel"]
+     - second:
+       - $first
+       - matrix:
+         - [zlib]
+         - [$compilers]
      specs:
-       - $second
-       - cmake
+     - $second
+     - cmake
+
+.. code-block:: yaml
 
    spack:
      specs:
-       - libelf
-       - libdwarf
-       - zlib%gcc
-       - zlib%intel
-       - cmake
+     - libelf
+     - libdwarf
+     - zlib%gcc
+     - zlib%intel
+     - cmake
 
 .. note::
 
@@ -766,15 +804,15 @@ Additionally, the ``-l`` option to the ``spack add`` command allows one to add t
 The ``when`` directive can be used to conditionally add specs to a named list.
 The ``when`` directive takes a string of Python code referring to a restricted set of variables, and evaluates to a boolean.
 The specs listed are appended to the named list if the ``when`` string evaluates to ``True``.
-In the following snippet, the named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on ``x86_64`` systems and ``['%gcc', '%clang']`` on all other systems.
+In the following snippet, the named list ``compilers`` is ``["%gcc", "%clang", "%intel"]`` on ``x86_64`` systems and ``["%gcc", "%clang"]`` on all other systems.
 
 .. code-block:: yaml
 
    spack:
      definitions:
-       - compilers: ['%gcc', '%clang']
-       - when: arch.satisfies('target=x86_64:')
-         compilers: ['%intel']
+     - compilers: ["%gcc", "%clang"]
+     - when: arch.satisfies("target=x86_64:")
+       compilers: ["%intel"]
 
 .. note::
 
@@ -848,7 +886,7 @@ The environment can be configured to set, unset, prepend, or append using ``env_
       set:
         ENVAR_TO_SET_IN_ENV_LOAD: "FOO"
       unset:
-        ENVAR_TO_UNSET_IN_ENV_LOAD:
+      - ENVAR_TO_UNSET_IN_ENV_LOAD
       prepend_path:
         PATH_LIST: "path/to/prepend"
       append_path:
@@ -900,6 +938,8 @@ Another short way to configure a view is to specify just where to put it:
 
 Views can also be disabled by setting ``view: false``.
 
+.. _cmd-spack-env-view:
+
 Advanced view configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -919,7 +959,7 @@ The ``default`` view descriptor name is special: when you ``spack env activate``
 View descriptors must contain the root of the view, and optionally projections, ``select`` and ``exclude`` lists and link information via ``link`` and ``link_type``.
 
 As a more advanced example, in the following manifest file snippet we define a view named ``mpis``, rooted at ``/path/to/view`` in which all projections use the package name, version, and compiler name to determine the path for a given package.
-This view selects all packages that depend on MPI, and excludes those built with the GCC compiler at version 18.5.
+This view selects all packages that depend on MPI, and excludes those built with the GCC compiler at version 8.5.
 The root specs with their (transitive) link and run type dependencies will be put in the view due to the  ``link: all`` option, and the files in the view will be symlinks to the Spack install directories.
 
 .. code-block:: yaml
@@ -930,9 +970,9 @@ The root specs with their (transitive) link and run type dependencies will be pu
        mpis:
          root: /path/to/view
          select: [^mpi]
-         exclude: ['%gcc@18.5']
+         exclude: ["%gcc@8.5"]
          projections:
-           all: '{name}/{version}-{compiler.name}'
+           all: "{name}/{version}-{compiler.name}"
          link: all
          link_type: symlink
 
@@ -997,7 +1037,7 @@ Any entries that appear below the keyword ``all`` in the projections configurati
 Activating environment views
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``spack env activate <env>`` has two effects:
+The ``spack env activate <env>`` command has two effects:
 
 1. It activates the environment so that further Spack commands such as ``spack install`` will run in the context of the environment.
 2. It activates the view so that environment variables such as ``PATH`` are updated to include the view.
@@ -1024,7 +1064,7 @@ For this reason, it is not recommended to use non-default projections with the d
 The ``spack env deactivate`` command will remove the active view of the Spack environment from the user's environment variables.
 
 
-.. _env-generate-depfile:
+.. _cmd-spack-env-depfile:
 
 
 Generating Depfiles from Environments
@@ -1064,7 +1104,7 @@ This comes up when you want to install an environment that provides executables 
 
 The example below shows how to accomplish this: the ``env`` target specifies the generated ``spack/env`` target as a prerequisite, meaning that the environment gets installed and is available for use in the ``env`` target.
 
-.. code:: Makefile
+.. code-block:: Makefile
 
    SPACK ?= spack
 
@@ -1139,7 +1179,7 @@ They are respectively the spec hash (excluding leading ``/``), and a human-reada
 Finally, we have an entry point target ``push`` that will update the buildcache index once every package is pushed.
 Note how this target uses the generated ``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
 
-.. code:: Makefile
+.. code-block:: Makefile
 
    SPACK ?= spack
    BUILDCACHE_DIR = $(CURDIR)/tarballs

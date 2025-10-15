@@ -59,7 +59,9 @@
 This is a python port of the regular expressions CTest uses to parse log
 files here:
 
-    https://github.com/Kitware/CMake/blob/master/Source/CTest/cmCTestBuildHandler.cxx
+.. code-block::
+
+   https://github.com/Kitware/CMake/blob/master/Source/CTest/cmCTestBuildHandler.cxx
 
 This file takes the regexes verbatim from there and adds some parsing
 algorithms that duplicate the way CTest scrapes log files.  To keep this
@@ -74,7 +76,7 @@ import sys
 import threading
 import time
 from contextlib import contextmanager
-from typing import Optional, TextIO, Union
+from typing import List, Optional, TextIO, Tuple, Union
 
 _error_matches = [
     "^FAIL: ",
@@ -383,7 +385,9 @@ class CTestLogParser:
                 print("%16.2f        %s" % (self.timings[index][i] * 1e6, stringify(elt)))
             index += 1
 
-    def parse(self, stream: Union[str, TextIO], context: int = 6, jobs: Optional[int] = None):
+    def parse(
+        self, stream: Union[str, TextIO], context: int = 6, jobs: Optional[int] = None
+    ) -> Tuple[List[BuildError], List[BuildWarning]]:
         """Parse a log file by searching each line for errors and warnings.
 
         Args:
@@ -391,8 +395,7 @@ class CTestLogParser:
             context: lines of context to extract around each log event
 
         Returns:
-            (tuple): two lists containing ``BuildError`` and
-                ``BuildWarning`` objects.
+            two lists containing :class:`BuildError` and :class:`BuildWarning` objects.
         """
         if isinstance(stream, str):
             with open(stream) as f:

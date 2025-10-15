@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -361,11 +362,11 @@ You would add it as follows:
 .. code-block:: python
 
     # pre/post install and run by the install subprocess
-    pre_install = HookRunner('pre_install')
-    post_install = HookRunner('post_install')
+    pre_install = HookRunner("pre_install")
+    post_install = HookRunner("post_install")
 
     # hooks related to logging
-    post_log_write = HookRunner('post_log_write') # <- here is my new hook!
+    post_log_write = HookRunner("post_log_write")  # <- here is my new hook!
 
 
 You then need to decide what arguments your hook would expect.
@@ -378,7 +379,7 @@ That means that when you add a Python file to the ``lib/spack/spack/hooks`` fold
         """Do something custom with the message and level every time we write
         to the log
         """
-        print('running post_log_write!')
+        print("running post_log_write!")
 
 
 To use the hook, we would call it as follows somewhere in the logic to do logging.
@@ -474,14 +475,12 @@ Without any arguments, it is similar to a normal interactive Python shell, excep
 .. code-block:: console
 
    $ spack python
-   Spack version 0.10.0
-   Python 2.7.13, Linux x86_64
    >>> from spack.version import Version
-   >>> a = Version('1.2.3')
-   >>> b = Version('1_2_3')
+   >>> a = Version("1.2.3")
+   >>> b = Version("1_2_3")
    >>> a == b
    True
-   >>> c = Version('1.2.3b')
+   >>> c = Version("1.2.3b")
    >>> c > a
    True
    >>>
@@ -491,14 +490,6 @@ If you prefer using an IPython interpreter, given that IPython is installed, you
 .. code-block:: console
 
    $ spack python -i ipython
-   Python 3.8.3 (default, May 19 2020, 18:47:26)
-   Type 'copyright', 'credits' or 'license' for more information
-   IPython 7.17.0 -- An enhanced Interactive Python. Type '?' for help.
-
-
-   Spack version 0.16.0
-   Python 3.8.3, Linux x86_64
-
    In [1]:
 
 
@@ -522,8 +513,7 @@ or a file:
 just like you would with the normal Python command.
 
 
-.. _cmd-spack-url:
-
+.. _cmd-spack-blame:
 
 ``spack blame``
 ^^^^^^^^^^^^^^^
@@ -566,6 +556,8 @@ Finally, to get a JSON export of the data, add ``--json``:
     $ spack blame --json python
 
 
+.. _cmd-spack-url:
+
 ``spack url``
 ^^^^^^^^^^^^^
 
@@ -577,6 +569,9 @@ By determining the version from the URL, Spack can replace it with other version
 
 The regular expressions in ``parse_name_offset`` and ``parse_version_offset`` are used to extract the name and version, but they are not perfect.
 In order to debug Spack's URL parsing support, the ``spack url`` command can be used.
+
+
+.. _cmd-spack-url-parse:
 
 ``spack url parse``
 """""""""""""""""""
@@ -592,12 +587,18 @@ This particular package may require a ``list_url`` or ``url_for_version`` functi
 This command also accepts a ``--spider`` flag.
 If provided, Spack searches for other versions of the package and prints the matching URLs.
 
+
+.. _cmd-spack-url-list:
+
 ``spack url list``
 """"""""""""""""""
 
 This command lists every URL in every package in Spack.
 If given the ``--color`` and ``--extrapolation`` flags, it also colors the part of the string that it detected to be the name and version.
 The ``--incorrect-name`` and ``--incorrect-version`` flags can be used to print URLs that were not being parsed correctly.
+
+
+.. _cmd-spack-url-summary:
 
 ``spack url summary``
 """""""""""""""""""""
@@ -686,22 +687,22 @@ Both minor and patch releases are tagged.
 As a convenience, we also tag the latest release as ``releases/latest``, so that users can easily check it out to get the latest stable version.
 See :ref:`updating-latest-release` for more details.
 
-.. note::
+.. admonition:: PEP 440 compliance
+   :class: note
 
-   Older spack releases were merged **back** into develop so that we could do fancy things with tags, but since tarballs and many git checkouts do not have tags, this proved overly complex and confusing.
-
-   We have since converted to using `PEP 440 <https://peps.python.org/pep-0440/>`_ compliant versions.
-   `See here <https://github.com/spack/spack/pull/25267>`_ for details.
+   Spack releases up to ``v0.17`` were merged back into the ``develop`` branch to ensure that release tags would appear among its ancestors.
+   Since ``v0.18`` we opted to have a linear history of the ``develop`` branch, for reasons explained `here <https://github.com/spack/spack/pull/25267>`_.
+   At the same time, we converted to using `PEP 440 <https://peps.python.org/pep-0440/>`_ compliant versions.
 
 Scheduling work for releases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We schedule work for **minor releases** through `milestones <https://github.com/spack/spack/milestones>`_ and `GitHub Projects <https://github.com/spack/spack/projects>`_, while **patch releases** use `labels <https://github.com/spack/spack/labels>`_.
 
-There is only one milestone open at a time.
+While there can be multiple milestones open at a given time, only one is usually active.
 Its name corresponds to the next major/minor version, for example ``v1.1.0``.
 Important issues and pull requests should be assigned to this milestone by core developers, so that they are not forgotten at the time of release.
-The milestone is closed when the release is made, and a new milestone is created for the next major/minor release.
+The milestone is closed when the release is made, and a new milestone is created for the next major/minor release, if not already there.
 
 Bug reports in GitHub issues are automatically labelled ``bug`` and ``triage``.
 Spack developers assign one of the labels ``impact-low``, ``impact-medium`` or ``impact-high``.
@@ -750,7 +751,7 @@ Assuming all required work from the milestone is completed, the steps to make th
 
 #. Update ``CHANGELOG.md`` with major highlights in bullet form.
 
-   Use proper Markdown formatting, like `this example from v0.15.0 <https://github.com/spack/spack/commit/d4bf70d9882fcfe88507e9cb444331d7dd7ba71c>`_.
+   Use proper Markdown formatting, like `this example from v1.0.0 <https://github.com/spack/spack/commit/b187f8758227abdfc9eb349a48f8b725aa27a162>`_.
 
 #. Push the release branch to GitHub.
 
@@ -816,7 +817,7 @@ When all commits are cherry-picked in the ``backports/vX.Y.Z`` branch, make the 
    2. Update ``CHANGELOG.md`` with a list of the changes.
 
    This is typically a summary of the commits you cherry-picked onto the release branch.
-   See `the changelog from v0.14.1 <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
+   See `the changelog from v1.0.2 <https://github.com/spack/spack/commit/734c5db2121b01c373eed6538e452f18887e9e44>`_.
 
 #. Make sure CI passes on the **backports pull request**, including:
 
@@ -889,11 +890,11 @@ Updating `releases/latest`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the new release is the **highest** Spack release yet, you should also tag it as ``releases/latest``.
-For example, suppose the highest release is currently ``v1.0.3``:
+For example, suppose the highest release is currently ``v1.1.3``:
 
-* If you are releasing ``v1.0.4`` or ``v1.1.0``, then you should tag it with ``releases/latest``, as these are higher than ``v1.0.3``.
+* If you are releasing ``v1.1.4`` or ``v1.2.0``, then you should tag it with ``releases/latest``, as these are higher than ``v1.1.3``.
 
-* If you are making a new release of an **older** minor version of Spack, e.g., ``v1.0.4``, then you should not tag it as ``releases/latest`` (as there are newer major/minor versions).
+* If you are making a new release of an **older** minor version of Spack, e.g., ``v1.0.5``, then you should not tag it as ``releases/latest`` (as there are newer major/minor versions).
 
 To do so, first fetch the latest tag created on GitHub, since you may not have it locally:
 

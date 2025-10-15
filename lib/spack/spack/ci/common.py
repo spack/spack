@@ -28,7 +28,6 @@ import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.compression as compression
-import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 from spack import traverse
 from spack.llnl.util.lang import memoized
@@ -144,34 +143,6 @@ def ensure_expected_target_path(path: str) -> str:
     return path
 
 
-def update_env_scopes(
-    env: ev.Environment,
-    cli_scopes: List[str],
-    output_file: str,
-    transform_windows_paths: bool = False,
-) -> None:
-    """Add any config scopes from cli_scopes which aren't already included in the
-    environment, by reading the yaml, adding the missing includes, and writing the
-    updated yaml back to the same location.
-    """
-    with open(env.manifest_path, "r", encoding="utf-8") as env_fd:
-        env_yaml_root = syaml.load(env_fd)
-
-    # Add config scopes to environment
-    env_includes = env_yaml_root["spack"].get("include", [])
-    include_scopes: List[str] = []
-    for scope in cli_scopes:
-        if scope not in include_scopes and scope not in env_includes:
-            include_scopes.insert(0, scope)
-    env_includes.extend(include_scopes)
-    env_yaml_root["spack"]["include"] = [
-        ensure_expected_target_path(i) if transform_windows_paths else i for i in env_includes
-    ]
-
-    with open(output_file, "w", encoding="utf-8") as fd:
-        syaml.dump_config(env_yaml_root, fd, default_flow_style=False)
-
-
 def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
     """Write out the file describing specs that should be copied"""
     buildcache_copies = {}
@@ -232,9 +203,9 @@ class CDashHandler:
     def build_name(self, spec: Optional[spack.spec.Spec] = None) -> Optional[str]:
         """Returns the CDash build name.
 
-        A name will be generated if the `spec` is provided,
+        A name will be generated if the ``spec`` is provided,
         otherwise, the value will be retrieved from the environment
-        through the `SPACK_CDASH_BUILD_NAME` variable.
+        through the ``SPACK_CDASH_BUILD_NAME`` variable.
 
         Returns: (str) given spec's CDash build name."""
         if spec:

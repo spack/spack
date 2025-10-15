@@ -1397,3 +1397,119 @@ packages:
     assert concrete.satisfies("%gcc")
     assert concrete["mpi"].satisfies("mpich@4.3.0")
     assert concrete["mpi"].prefix == str(tmp_path / "gcc")
+
+
+@pytest.mark.regression("51262")
+@pytest.mark.parametrize(
+    "input_constraint",
+    [
+        # Override the compiler preference with a different version of gcc
+        "%c=gcc@10",
+        # Same, but without specifying the virtual
+        "%gcc@10",
+        # Override the mpi preference with a different version of mpich
+        "%mpi=mpich@3 ~debug",
+        # Override the mpi preference with a different provider
+        "%mpi=mpich2",
+    ],
+)
+def test_overriding_preference_with_provider_details(
+    input_constraint, concretize_scope, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that if we have a preference with provider details, such as a version range,
+    or a variant, we can override it from the command line, while we can't do the same
+    when we have a requirement.
+    """
+    # A preference can be overridden
+    packages_yaml = """
+packages:
+  c:
+    prefer:
+    - gcc@9
+  mpi:
+    prefer:
+    - mpich@3 +debug
+"""
+    update_packages_config(packages_yaml)
+    concrete = spack.concretize.concretize_one(f"mpileaks {input_constraint}")
+    assert concrete.satisfies(input_constraint)
+
+    # A requirement cannot
+    packages_yaml = """
+    packages:
+      c:
+        require:
+        - gcc@9
+      mpi:
+        require:
+        - mpich@3 +debug
+    """
+    update_packages_config(packages_yaml)
+    with pytest.raises(UnsatisfiableSpecError):
+        spack.concretize.concretize_one(f"mpileaks {input_constraint}")
+
+
+@pytest.mark.parametrize(
+    "initial_preference,current_preference",
+    [
+        # Different provider
+        ("llvm", "gcc"),
+        ("gcc", "llvm"),
+        # Different version of the same provider
+        ("gcc@9", "gcc@10"),
+        ("gcc@10", "gcc@9"),
+        # Different configuration of the same provider
+        ("llvm+lld", "llvm~lld"),
+        ("llvm~lld", "llvm+lld"),
+    ],
+)
+@pytest.mark.parametrize("constraint_kind", ["require", "prefer"])
+def test_language_preferences_and_reuse(
+    initial_preference, current_preference, constraint_kind, concretize_scope, mock_packages
+):
+    """Tests that language preferences are respected when reusing specs."""
+
+    # Install mpileaks with a non-default variant to avoid "accidental" reuse
+    packages_yaml = f"""
+packages:
+  c:
+    {constraint_kind}:
+    - {initial_preference}
+  cxx:
+    {constraint_kind}:
+    - {initial_preference}
+"""
+    update_packages_config(packages_yaml)
+    initial_mpileaks = spack.concretize.concretize_one("mpileaks+debug")
+    reused_nodes = list(initial_mpileaks.traverse())
+
+    # Ask for just "mpileaks" and check the spec is reused
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, [Spec("mpileaks")], reuse=reused_nodes)
+        reused_mpileaks = result.specs[0]
+
+    assert reused_mpileaks.dag_hash() == initial_mpileaks.dag_hash()
+
+    # Change the language preferences and verify reuse is not happening
+    packages_yaml = f"""
+packages:
+  c:
+    {constraint_kind}:
+    - {current_preference}
+  cxx:
+    {constraint_kind}:
+    - {current_preference}
+"""
+    update_packages_config(packages_yaml)
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, [Spec("mpileaks")], reuse=reused_nodes)
+        mpileaks = result.specs[0]
+
+    assert initial_mpileaks.dag_hash() != mpileaks.dag_hash()
+    for node in mpileaks.traverse():
+        assert node.satisfies(f"%[when=%c]c={current_preference}")
+        assert node.satisfies(f"%[when=%cxx]cxx={current_preference}")

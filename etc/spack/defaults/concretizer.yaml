@@ -60,6 +60,7 @@ concretizer:
       py-flit-core: 2
       py-pip: 2
       py-setuptools: 2
+      py-versioneer: 2
       py-wheel: 2
       xcb-proto: 2
       # Compilers

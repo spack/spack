@@ -14,7 +14,7 @@ import spack.paths
 import spack.repo
 import spack.util.editor
 
-description = "open package files in $EDITOR"
+description = "open package files in ``$EDITOR``"
 section = "packaging"
 level = "short"
 

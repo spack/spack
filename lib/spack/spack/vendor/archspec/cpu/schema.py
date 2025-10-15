@@ -9,7 +9,7 @@ import collections.abc
 import json
 import os
 import pathlib
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 class LazyDictionary(collections.abc.MutableMapping):
@@ -55,7 +55,9 @@ DIR_FROM_ENVIRONMENT = "ARCHSPEC_CPU_DIR"
 EXTENSION_DIR_FROM_ENVIRONMENT = "ARCHSPEC_EXTENSION_CPU_DIR"
 
 
-def _json_file(filename: str, allow_custom: bool = False) -> Tuple[pathlib.Path, pathlib.Path]:
+def _json_file(
+    filename: str, allow_custom: bool = False
+) -> Tuple[pathlib.Path, Optional[pathlib.Path]]:
     """Given a filename, returns the absolute path for the main JSON file, and an
     optional absolute path for an extension JSON file.
 
@@ -98,8 +100,7 @@ def _load(json_file: pathlib.Path, extension_file: pathlib.Path):
     return data
 
 
-#: In memory representation of the data in microarchitectures.json,
-#: loaded on first access
+#: In memory representation of the data in microarchitectures.json, loaded on first access
 TARGETS_JSON = LazyDictionary(_load, *_json_file("microarchitectures.json", allow_custom=True))
 
 #: JSON schema for microarchitectures.json, loaded on first access

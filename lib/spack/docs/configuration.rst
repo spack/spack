@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,6 +22,7 @@ Here is a quick list of them, in case you want to skip directly to specific docs
 * :ref:`modules.yaml <modules>`
 * :ref:`packages.yaml <packages-config>` (including :ref:`compiler configuration <compiler-config>`)
 * :ref:`repos.yaml <repositories>`
+* :ref:`toolchains.yaml <toolchains>`
 
 You can also add any of these as inline configuration in the YAML manifest file (``spack.yaml``) describing an :ref:`environment <environment-configuration>`.
 
@@ -29,16 +31,17 @@ YAML Format
 
 Spack configuration files are written in YAML.
 We chose YAML because it's human-readable but also versatile in that it supports dictionaries, lists, and nested sections.
-For more details on the format, see `yaml.org <http://yaml.org>`_ and `libyaml <http://pyyaml.org/wiki/LibYAML>`_.
+For more details on the format, see `yaml.org <https://yaml.org>`_.
 Here is an example ``config.yaml`` file:
 
 .. code-block:: yaml
 
    config:
-     install_tree: $spack/opt/spack
+     install_tree:
+       root: $spack/opt/spack
      build_stage:
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 Each Spack configuration file is nested under a top-level section corresponding to its name.
 So, ``config.yaml`` starts with ``config:``, ``mirrors.yaml`` starts with ``mirrors:``, etc.
@@ -100,11 +103,11 @@ Custom scopes
 
 In addition to the ``defaults``, ``system``, ``site``, and ``user`` scopes, you may add configuration scopes directly on the command line with the ``--config-scope`` argument, or ``-C`` for short.
 
-For example, the following adds two configuration scopes, named ``scopea`` and ``scopeb``, to a ``spack spec`` command:
+For example, the following adds two configuration scopes, named ``scope-a`` and ``scope-b``, to a ``spack spec`` command:
 
 .. code-block:: spec
 
-   $ spack -C ~/myscopes/scopea -C ~/myscopes/scopeb spec ncurses
+   $ spack -C ~/myscopes/scope-a -C ~/myscopes/scope-b spec ncurses
 
 Custom scopes come *after* the ``spack`` command and *before* the subcommand, and they specify a single path to a directory containing configuration files.
 You can add the same configuration files to that directory that you can add to any other scope (e.g., ``config.yaml``, ``packages.yaml``, etc.).
@@ -117,61 +120,62 @@ If multiple scopes are provided:
 Example: scopes for release and development
 """""""""""""""""""""""""""""""""""""""""""
 
-Suppose that you need to support simultaneous building of release and development versions of ``mypackage``, where ``mypackage`` depends on ``A``, which in turn depends on ``B``.
+Suppose that you need to support simultaneous building of release and development versions of ``mypackage``, where ``mypackage`` depends on ``pkg-a``, which in turn depends on ``pkg-b``.
 You could create the following files:
 
 .. code-block:: yaml
-   :caption: ~/myscopes/release/packages.yaml
+   :caption: ``~/myscopes/release/packages.yaml``
+   :name: code-example-release-packages-yaml
 
    packages:
-       mypackage:
-           version: [1.7]
-       A:
-           version: [2.3]
-       B:
-           version: [0.8]
+     mypackage:
+       prefer: ["@1.7"]
+     pkg-a:
+       prefer: ["@2.3"]
+     pkg-b:
+       prefer: ["@0.8"]
 
 .. code-block:: yaml
-   :caption: ~/myscopes/develop/packages.yaml
+   :caption: ``~/myscopes/develop/packages.yaml``
+   :name: code-example-develop-packages-yaml
 
    packages:
-       mypackage:
-           version: [develop]
-       A:
-           version: [develop]
-       B:
-           version: [develop]
+     mypackage:
+       prefer: ["@develop"]
+     pkg-a:
+       prefer: ["@develop"]
+     pkg-b:
+       prefer: ["@develop"]
 
 You can switch between ``release`` and ``develop`` configurations using configuration arguments.
-You would type ``spack -C ~/myscopes/release`` when you want to build the designated release versions of ``mypackage``, ``A``, and ``B``, and you would type ``spack -C ~/myscopes/develop`` when you want to build all of these packages at the ``develop`` version.
+You would type ``spack -C ~/myscopes/release`` when you want to build the designated release versions of ``mypackage``, ``pkg-a``, and ``pkg-b``, and you would type ``spack -C ~/myscopes/develop`` when you want to build all of these packages at the ``develop`` version.
 
 Example: swapping MPI providers
 """""""""""""""""""""""""""""""
 
-Suppose that you need to build two software packages, ``packagea`` and ``packageb``.
-``packagea`` is Python 2-based, and ``packageb`` is Python 3-based.
-``packagea`` only builds with OpenMPI, and ``packageb`` only builds with MPICH.
-You can create different configuration scopes for use with ``packagea`` and ``packageb``:
+Suppose that you need to build two software packages, ``pkg-a`` and ``pkg-b``.
+For ``pkg-b`` you want a newer Python version and a different MPI implementation than for ``pkg-a``.
+You can create different configuration scopes for use with ``pkg-a`` and ``pkg-b``:
 
 .. code-block:: yaml
-   :caption: ~/myscopes/packgea/packages.yaml
+   :caption: ``~/myscopes/pkg-a/packages.yaml``
+   :name: code-example-pkg-a-packages-yaml
 
    packages:
-       python:
-           version: [2.7.11]
-       all:
-           providers:
-               mpi: [openmpi]
+     python:
+       require: ["@3.11"]
+     mpi:
+       require: [openmpi]
 
 .. code-block:: yaml
-   :caption: ~/myscopes/packageb/packages.yaml
+   :caption: ``~/myscopes/pkg-b/packages.yaml``
+   :name: code-example-pkg-b-packages-yaml
 
    packages:
-       python:
-           version: [3.5.2]
-       all:
-           providers:
-               mpi: [mpich]
+     python:
+       require: ["@3.13"]
+     mpi:
+       require: [mpich]
 
 
 .. _plugin-scopes:
@@ -190,10 +194,10 @@ Consider the Python package ``my_package`` that includes Spack configurations:
 
   my-package/
   ├── src
-  │   ├── my_package
-  │   │   ├── __init__.py
-  │   │   └── spack/
-  │   │   │   └── config.yaml
+  │   ├── my_package
+  │   │   ├── __init__.py
+  │   │   └── spack/
+  │   │   │   └── config.yaml
   └── pyproject.toml
 
 Adding the following to ``my_package``'s ``pyproject.toml`` will make ``my_package``'s ``spack/`` configurations visible to Spack when ``my_package`` is installed:
@@ -208,6 +212,7 @@ The function ``my_package.get_config_path`` (matching the entry point definition
 .. code-block:: python
 
    import importlib.resources
+
 
    def get_config_path():
        dirname = importlib.resources.files("my_package").joinpath("spack")
@@ -227,7 +232,7 @@ Platform-specific Configuration
 There is often a need for platform-specific configuration settings.
 For example, on most platforms, GCC is the preferred compiler.
 However, on macOS (darwin), Clang often works for more packages, and is set as the default compiler.
-This configuration is set in ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is included as by ``$(prefix)/etc/spack/defaults/include.yaml``.
+This configuration is set in ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is included by ``$(prefix)/etc/spack/defaults/include.yaml``.
 Since it is an included configuration of the ``defaults`` scope, settings in the ``defaults`` scope will take precedence.
 You can override the values by specifying settings in ``system``, ``site``, ``user``, or ``custom``, where scope precedence is:
 
@@ -288,20 +293,24 @@ Let's look at an example of overriding a single key in a Spack configuration fil
 If your configurations look like this:
 
 .. code-block:: yaml
-   :caption: $(prefix)/etc/spack/defaults/config.yaml
+   :caption: ``$(prefix)/etc/spack/defaults/config.yaml``
+   :name: code-example-defaults-config-yaml
 
    config:
-     install_tree: $spack/opt/spack
+     install_tree:
+       root: $spack/opt/spack
      build_stage:
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 .. code-block:: yaml
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-user-config-yaml
 
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
 
 
 Spack will only override ``install_tree`` in the ``config`` section, and will take the site preferences for other settings.
@@ -312,10 +321,11 @@ You can see the final, combined configuration with the ``spack config get <confi
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
      build_stage:
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 .. _config-prepend-append:
@@ -330,31 +340,36 @@ For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-append-install-tree
 
    config:
-     install_tree-: /my/custom/suffix/
+     install_tree:
+       root-: /my/custom/suffix/
 
-Spack will then append to the lower-precedence configuration under the ``install_tree-:`` section:
+Spack will then append to the lower-precedence configuration under the ``root`` key:
 
 .. code-block:: console
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory/my/custom/suffix
+     install_tree:
+       root: /some/other/directory/my/custom/suffix
      build_stage:
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 Similarly, ``+:`` can be used to *prepend* to a path or name:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-prepend-install-tree
 
    config:
-     install_tree+: /my/custom/suffix/
+     install_tree:
+       root+: /my/custom/suffix/
 
 
 .. _config-overrides:
@@ -369,10 +384,12 @@ For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-override-config-section
 
    config::
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
 
 Spack will ignore all lower-precedence configuration under the ``config::`` section:
 
@@ -380,7 +397,8 @@ Spack will ignore all lower-precedence configuration under the ``config::`` sect
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
 
 
 List-valued settings
@@ -390,9 +408,11 @@ Let's revisit the ``config.yaml`` example one more time.
 The ``build_stage`` setting's value is an ordered list of directories:
 
 .. code-block:: yaml
-   :caption: $(prefix)/etc/spack/defaults/config.yaml
+   :caption: ``$(prefix)/etc/spack/defaults/config.yaml``
+   :name: code-example-defaults-build-stage
 
-   build_stage:
+   config:
+     build_stage:
      - $tempdir/$user/spack-stage
      - ~/.spack/stage
 
@@ -400,9 +420,11 @@ The ``build_stage`` setting's value is an ordered list of directories:
 Suppose the user configuration adds its *own* list of ``build_stage`` paths:
 
 .. code-block:: yaml
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-user-build-stage
 
-   build_stage:
+   config:
+     build_stage:
      - /lustre-scratch/$user/spack
      - ~/mystage
 
@@ -416,12 +438,13 @@ The list in the higher-precedence scope is *prepended* to the defaults.
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
      build_stage:
-       - /lustre-scratch/$user/spack
-       - ~/mystage
-       - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+     - /lustre-scratch/$user/spack
+     - ~/mystage
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can *completely* override the lower-precedence scope using ``::``.
@@ -429,9 +452,11 @@ So if the user config looked like this:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-override-build-stage
 
-   build_stage::
+   config:
+     build_stage::
      - /lustre-scratch/$user/spack
      - ~/mystage
 
@@ -443,7 +468,8 @@ The merged configuration would look like this:
 
    $ spack config get config
    config:
-     install_tree: /some/other/directory
+     install_tree:
+       root: /some/other/directory
      build_stage:
        - /lustre-scratch/$user/spack
        - ~/mystage
@@ -516,12 +542,12 @@ Every time these modifications are allowed, they are specified as a dictionary, 
 
    environment:
      set:
-       LICENSE_FILE: '/path/to/license'
+       LICENSE_FILE: "/path/to/license"
      unset:
      - CPATH
      - LIBRARY_PATH
      append_path:
-       PATH: '/new/bin/dir'
+       PATH: "/new/bin/dir"
 
 The possible actions that are permitted are ``set``, ``unset``, ``append_path``, ``prepend_path``, and finally ``remove_path``.
 They all require a dictionary of variable names mapped to the values used for the modification, with the exception of ``unset``, which requires just a list of variable names.
@@ -551,7 +577,8 @@ For example, to see the fully merged ``config.yaml``, you can type:
      verify_ssl: true
      dirty: false
      build_jobs: 8
-     install_tree: $spack/opt/spack
+     install_tree:
+       root: $spack/opt/spack
      template_dirs:
      - $spack/templates
      directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}

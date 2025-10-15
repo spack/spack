@@ -7,7 +7,7 @@ import json
 import os
 import shutil
 import sys
-from typing import Dict
+from typing import Dict, List
 from urllib.parse import urlparse, urlunparse
 
 import spack.binary_distribution
@@ -32,8 +32,10 @@ import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
-import spack.version
 from spack.llnl.util import tty
+from spack.version import StandardVersion
+
+from . import doc_dedented, doc_first_line
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -60,9 +62,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # Dynamic generation of the jobs yaml from a spack environment
     generate = subparsers.add_parser(
-        "generate",
-        description=deindent(ci_generate.__doc__),
-        help=spack.cmd.first_line(ci_generate.__doc__),
+        "generate", description=doc_dedented(ci_generate), help=doc_first_line(ci_generate)
     )
     generate.add_argument(
         "--output-file",
@@ -158,17 +158,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Rebuild the buildcache index associated with the mirror in the
     # active, gitlab-enabled environment.
     index = subparsers.add_parser(
-        "rebuild-index",
-        description=deindent(ci_reindex.__doc__),
-        help=spack.cmd.first_line(ci_reindex.__doc__),
+        "rebuild-index", description=doc_dedented(ci_reindex), help=doc_first_line(ci_reindex)
     )
     index.set_defaults(func=ci_reindex)
 
     # Handle steps of a ci build/rebuild
     rebuild = subparsers.add_parser(
-        "rebuild",
-        description=deindent(ci_rebuild.__doc__),
-        help=spack.cmd.first_line(ci_rebuild.__doc__),
+        "rebuild", description=doc_dedented(ci_rebuild), help=doc_first_line(ci_rebuild)
     )
     rebuild.add_argument(
         "-t",
@@ -195,8 +191,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Facilitate reproduction of a failed CI build job
     reproduce = subparsers.add_parser(
         "reproduce-build",
-        description=deindent(ci_reproduce.__doc__),
-        help=spack.cmd.first_line(ci_reproduce.__doc__),
+        description=doc_dedented(ci_reproduce),
+        help=doc_first_line(ci_reproduce),
     )
     reproduce.add_argument(
         "job_url", help="URL of GitLab job web page or artifact", type=_gitlab_artifacts_url
@@ -233,8 +229,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Verify checksums inside of ci workflows
     verify_versions = subparsers.add_parser(
         "verify-versions",
-        description=deindent(ci_verify_versions.__doc__),
-        help=spack.cmd.first_line(ci_verify_versions.__doc__),
+        description=doc_dedented(ci_verify_versions),
+        help=doc_first_line(ci_verify_versions),
     )
     verify_versions.add_argument("from_ref", help="git ref from which start looking at changes")
     verify_versions.add_argument("to_ref", help="git ref to end looking at changes")
@@ -242,7 +238,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def ci_generate(args):
-    """generate jobs file from a CI-aware spack file
+    """\
+    generate jobs file from a CI-aware spack file
 
     if you want to report the results on CDash, you will need to set the SPACK_CDASH_AUTH_TOKEN
     before invoking this command. the value must be the CDash authorization token needed to create
@@ -253,7 +250,8 @@ def ci_generate(args):
 
 
 def ci_reindex(args):
-    """rebuild the buildcache index for the remote mirror
+    """\
+    rebuild the buildcache index for the remote mirror
 
     use the active, gitlab-enabled environment to rebuild the buildcache index for the associated
     mirror
@@ -273,7 +271,8 @@ def ci_reindex(args):
 
 
 def ci_rebuild(args):
-    """rebuild a spec if it is not on the remote mirror
+    """\
+    rebuild a spec if it is not on the remote mirror
 
     check a single spec against the remote mirror, and rebuild it from source if the mirror does
     not contain the hash
@@ -655,7 +654,8 @@ If this project does not have public pipelines, you will need to first:
 
 
 def ci_reproduce(args):
-    """generate instructions for reproducing the spec rebuild job
+    """\
+    generate instructions for reproducing the spec rebuild job
 
     artifacts of the provided gitlab pipeline rebuild job's URL will be used to derive
     instructions for reproducing the build locally
@@ -717,18 +717,21 @@ def _gitlab_artifacts_url(url: str) -> str:
 
 
 def validate_standard_versions(
-    pkg: spack.package_base.PackageBase, versions: spack.version.VersionList
+    pkg: spack.package_base.PackageBase, versions: List[StandardVersion]
 ) -> bool:
     """Get and test the checksum of a package version based on a tarball.
     Args:
-      pkg spack.package_base.PackageBase: Spack package for which to validate a version checksum
-      versions spack.version.VersionList: list of package versions to validate
-    Returns: bool: result of the validation. True is valid and false is failed.
+      pkg: Spack package for which to validate a version checksum
+      versions: list of package versions to validate
+    Returns: True if all versions are valid, False if any version is invalid.
     """
-    url_dict: Dict[spack.version.StandardVersion, str] = {}
+    url_dict: Dict[StandardVersion, str] = {}
 
     for version in versions:
         url = pkg.find_valid_url_for_version(version)
+        assert (
+            url is not None
+        ), f"Package {pkg.name} does not have a valid URL for version {version}"
         url_dict[version] = url
 
     version_hashes = spack.stage.get_checksums_for_versions(
@@ -752,17 +755,18 @@ def validate_standard_versions(
 
 
 def validate_git_versions(
-    pkg: spack.package_base.PackageBase, versions: spack.version.VersionList
+    pkg: spack.package_base.PackageBase, versions: List[StandardVersion]
 ) -> bool:
     """Get and test the commit and tag of a package version based on a git repository.
     Args:
-      pkg spack.package_base.PackageBase: Spack package for which to validate a version
-      versions spack.version.VersionList: list of package versions to validate
-    Returns: bool: result of the validation. True is valid and false is failed.
+      pkg: Spack package for which to validate a version
+      versions: list of package versions to validate
+    Returns: True if all versions are valid, False if any version is invalid.
     """
     valid_commit = True
     for version in versions:
         fetcher = spack.fetch_strategy.for_package_version(pkg, version)
+        assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
         with spack.stage.Stage(fetcher) as stage:
             known_commit = pkg.versions[version]["commit"]
             try:
@@ -811,7 +815,8 @@ def validate_git_versions(
 
 
 def ci_verify_versions(args):
-    """validate version checksum & commits between git refs
+    """\
+    validate version checksum & commits between git refs
     This command takes a from_ref and to_ref arguments and
     then parses the git diff between the two to determine which packages
     have been modified verifies the new checksums inside of them.
@@ -822,7 +827,7 @@ def ci_verify_versions(args):
         "AC", spack.repo.builtin_repo(), args.from_ref, args.to_ref
     )
 
-    failed_version = False
+    success = True
     for pkg_name in pkgs:
         spec = spack.spec.Spec(pkg_name)
         pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
@@ -834,37 +839,41 @@ def ci_verify_versions(args):
             continue
 
         # Store versions checksums / commits for future loop
-        checksums_version_dict = {}
-        commits_version_dict = {}
+        checksum_to_url_version: Dict[str, StandardVersion] = {}
+        checksum_to_git_version: Dict[str, StandardVersion] = {}
         for version in pkg.versions:
             # If the package version defines a sha256 we'll use that as the high entropy
             # string to detect which versions have been added between from_ref and to_ref
             if "sha256" in pkg.versions[version]:
-                checksums_version_dict[pkg.versions[version]["sha256"]] = version
+                checksum_to_url_version[pkg.versions[version]["sha256"]] = version
 
             # If a package version instead defines a commit we'll use that as a
             # high entropy string to detect new versions.
             elif "commit" in pkg.versions[version]:
-                commits_version_dict[pkg.versions[version]["commit"]] = version
+                checksum_to_git_version[pkg.versions[version]["commit"]] = version
 
             # TODO: enforce every version have a commit or a sha256 defined if not
-            # an infinite version (there are a lot of package's where this doesn't work yet.)
+            # an infinite version (there are a lot of packages where this doesn't work yet.)
+
+        def filter_added_versions(checksums: Dict[str, StandardVersion]) -> List[StandardVersion]:
+            return [
+                checksums[c]
+                for c in spack_ci.filter_added_checksums(
+                    checksums, path, from_ref=args.from_ref, to_ref=args.to_ref
+                )
+            ]
 
         with fs.working_dir(os.path.dirname(path)):
-            added_checksums = spack_ci.get_added_versions(
-                checksums_version_dict, path, from_ref=args.from_ref, to_ref=args.to_ref
-            )
-            added_commits = spack_ci.get_added_versions(
-                commits_version_dict, path, from_ref=args.from_ref, to_ref=args.to_ref
-            )
+            new_url_versions = filter_added_versions(checksum_to_url_version)
+            new_git_versions = filter_added_versions(checksum_to_git_version)
 
-        if added_checksums:
-            failed_version = not validate_standard_versions(pkg, added_checksums) or failed_version
+        if new_url_versions:
+            success &= validate_standard_versions(pkg, new_url_versions)
 
-        if added_commits:
-            failed_version = not validate_git_versions(pkg, added_commits) or failed_version
+        if new_git_versions:
+            success &= validate_git_versions(pkg, new_git_versions)
 
-    if failed_version:
+    if not success:
         sys.exit(1)
 
 

@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -123,7 +124,7 @@ For example, the following:
 .. code-block:: python
 
    homepage = "https://pypi.org/project/setuptools/"
-   url      = "https://pypi.org/packages/source/s/setuptools/setuptools-49.2.0.zip"
+   url = "https://pypi.org/packages/source/s/setuptools/setuptools-49.2.0.zip"
    list_url = "https://pypi.org/simple/setuptools/"
 
 
@@ -350,6 +351,7 @@ For example, ``py-scipy`` package allows you to specify the name of the BLAS/LAP
 
    depends_on("py-pip@22.1:", type="build")
 
+
    def config_settings(self, spec, prefix):
        return {
            "blas": spec["blas"].libs.names[0],
@@ -399,10 +401,12 @@ For example, the ``py-pyyaml`` package allows you to specify the directories to 
    def install_options(self, spec, prefix):
        options = []
        if spec.satisfies("+libyaml"):
-           options.extend([
-               spec["libyaml"].libs.search_flags,
-               spec["libyaml"].headers.include_flags,
-           ])
+           options.extend(
+               [
+                   spec["libyaml"].libs.search_flags,
+                   spec["libyaml"].headers.include_flags,
+               ]
+           )
        return options
 
 
@@ -425,9 +429,8 @@ Just because a package successfully built does not mean that it built correctly.
 The most reliable test of whether or not the package was correctly installed is to attempt to import all of the modules that get installed.
 To get a list of modules, run the following command in the source directory:
 
-.. code-block:: console
+.. code-block:: pycon
 
-   $ python
    >>> import setuptools
    >>> setuptools.find_packages()
    ['numpy', 'numpy._build_utils', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc', 'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma', 'numpy.matrixlib', 'numpy.polynomial', 'numpy.random', 'numpy.testing', 'numpy.core.code_generators', 'numpy.distutils.command', 'numpy.distutils.fcompiler']

@@ -839,7 +839,7 @@ _spack_config() {
 _spack_config_get() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --json"
     else
         _config_sections
     fi
@@ -1012,7 +1012,7 @@ _spack_dev_build() {
 _spack_develop() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -p --path -b --build-directory --no-clone --clone -f --force -r --recursive"
+        SPACK_COMPREPLY="-h --help -p --path -b --build-directory --no-clone --clone --no-modify-concrete-specs -f --force -r --recursive"
     else
         _all_packages
     fi
@@ -1464,7 +1464,7 @@ _spack_mirror() {
 _spack_mirror_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -a --all --file --exclude-file --exclude-specs --skip-unstable-versions -D --dependencies -n --versions-per-spec --private -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help -d --directory -a --all -j --jobs --file --exclude-file --exclude-specs --skip-unstable-versions -D --dependencies -n --versions-per-spec --private -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1477,7 +1477,7 @@ _spack_mirror_destroy() {
 _spack_mirror_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope --type --autopush --unsigned --signed --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret --s3-access-key-secret-variable --s3-access-token --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password --oci-password-variable"
+        SPACK_COMPREPLY="-h --help --scope --type --autopush --unsigned --signed --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret-variable --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password-variable"
     else
         _mirrors
     fi
@@ -1504,7 +1504,7 @@ _spack_mirror_rm() {
 _spack_mirror_set_url() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --push --fetch --scope --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret --s3-access-key-secret-variable --s3-access-token --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password --oci-password-variable"
+        SPACK_COMPREPLY="-h --help --push --fetch --scope --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret-variable --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password-variable"
     else
         _mirrors
     fi
@@ -1513,7 +1513,7 @@ _spack_mirror_set_url() {
 _spack_mirror_set() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --push --fetch --type --url --autopush --no-autopush --unsigned --signed --scope --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret --s3-access-key-secret-variable --s3-access-token --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password --oci-password-variable"
+        SPACK_COMPREPLY="-h --help --push --fetch --type --url --autopush --no-autopush --unsigned --signed --scope --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret-variable --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password-variable"
     else
         _mirrors
     fi
@@ -2027,7 +2027,7 @@ _spack_tutorial() {
 _spack_undevelop() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --all"
+        SPACK_COMPREPLY="-h --help --no-modify-concrete-specs -a --all"
     else
         _all_packages
     fi

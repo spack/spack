@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -42,11 +43,11 @@ By default, Spack installs all packages into a unique directory relative to the 
 In very rare cases, it may be necessary to reduce the length of this path.
 For example, very old versions of the Intel compiler are known to segfault when input paths are too long:
 
-     .. code-block:: console
+.. code-block:: console
 
-       : internal error: ** The compiler has encountered an unexpected problem.
-       ** Segmentation violation signal raised. **
-       Access violation or stack overflow. Please contact Intel Support for assistance.
+   : internal error: ** The compiler has encountered an unexpected problem.
+   ** Segmentation violation signal raised. **
+   Access violation or stack overflow. Please contact Intel Support for assistance.
 
 Another case is Python and R packages with many runtime dependencies, which can result in very large ``PYTHONPATH`` and ``R_LIBS`` environment variables.
 This can cause the ``execve`` system call to fail with ``E2BIG``, preventing processes from starting.
@@ -54,13 +55,13 @@ This can cause the ``execve`` system call to fail with ``E2BIG``, preventing pro
 For this reason, Spack allows users to modify the installation layout through custom projections.
 For example:
 
-     .. code-block:: yaml
+.. code-block:: yaml
 
-       config:
-         install_tree:
-           root: $spack/opt/spack
-           projections:
-             all: "{name}/{version}/{hash:16}"
+   config:
+     install_tree:
+       root: $spack/opt/spack
+       projections:
+         all: "{name}/{version}/{hash:16}"
 
 would install packages into subdirectories using only the package name, version, and a hash length of 16 characters.
 
@@ -84,8 +85,8 @@ By default, Spack's ``build_stage`` is configured like this:
 .. code-block:: yaml
 
    build_stage:
-    - $tempdir/$user/spack-stage
-    - ~/.spack/stage
+   - $tempdir/$user/spack-stage
+   - ~/.spack/stage
 
 This can be an ordered list of paths that Spack should search when trying to find a temporary directory for the build stage.
 The list is searched in order, and Spack will use the first directory to which it has write access.
@@ -223,22 +224,23 @@ DO NOT MIX the two options within the same install tree.
 This is an *experimental option* that controls whether Spack embeds absolute paths to needed shared libraries in ELF executables and shared libraries on Linux.
 Setting this option to ``true`` has two advantages:
 
-1. **Improved startup time**: when running an executable, the dynamic loader does not have to perform a search for needed libraries, they are loaded directly.
-2. **Reliability**: libraries loaded at runtime are those that were linked to.
+1. **Improved startup time**: when running an executable, the dynamic loader does not have to search for needed libraries.
+   They are loaded directly.
+2. **Reliability**: libraries loaded at runtime are those that were linked during the build.
    This minimizes the risk of accidentally picking up system libraries.
 
 In the current implementation, Spack sets the soname (shared object name) of libraries to their install path upon installation.
 This has two implications:
 
 1. Binding does not apply to libraries installed *before* the option was enabled.
-2. Toggling the option off does *not* prevent binding of libraries installed when the option was still enabled.
+2. Disabling the option does *not* prevent binding of libraries installed when the option was still enabled.
 
 It is also worth noting that:
 
 1. Applications relying on ``dlopen(3)`` will continue to work, even when they open a library by name.
    This is because RPATHs are retained in binaries also when ``bind`` is enabled.
 2. ``LD_PRELOAD`` continues to work for the typical use case of overriding symbols, such as preloading a library with a more efficient ``malloc``.
-   However, the preloaded library will be loaded *additionally to*, instead of *in place of* another library with the same name --- this can be problematic in very rare cases where libraries rely on a particular ``init`` or ``fini`` order.
+   However, the preloaded library will be loaded *in addition to*, rather than *in place of*, another library with the same name -- which can be problematic in rare cases where libraries rely on a particular ``init`` or ``fini`` order.
 
 .. note::
 
@@ -249,7 +251,7 @@ It is also worth noting that:
    .. code-block:: python
 
       class Example(Package):
-         non_bindable_shared_objects = ["libinterface.so"]
+          non_bindable_shared_objects = ["libinterface.so"]
 
 ``install_status``
 ----------------------

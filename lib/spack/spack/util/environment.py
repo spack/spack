@@ -42,7 +42,7 @@ else:
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
-#: used in the compiler wrapper's `/usr/lib|/usr/lib64|...)` case entry
+#: used in the compiler wrapper's ``/usr/lib|/usr/lib64|...)`` case entry
 SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for suff in ("", "/")))
 
 _SHELL_SET_STRINGS = {
@@ -93,7 +93,7 @@ def prune_duplicate_paths(paths: List[Path]) -> List[Path]:
 
 def get_path(name: str) -> List[Path]:
     """Given the name of an environment variable containing multiple
-    paths separated by 'os.pathsep', returns a list of the paths.
+    paths separated by :data:`os.pathsep`, returns a list of the paths.
     """
     path = os.environ.get(name, "").strip()
     if path:
@@ -102,8 +102,8 @@ def get_path(name: str) -> List[Path]:
 
 
 def env_flag(name: str) -> bool:
-    """Given the name of an environment variable, returns True if it is set to
-    'true' or to '1', False otherwise.
+    """Given the name of an environment variable, returns True if the lowercase value is set to
+    ``true`` or to ``1``, False otherwise.
     """
     if name in os.environ:
         value = os.environ[name].lower()
@@ -112,7 +112,7 @@ def env_flag(name: str) -> bool:
 
 
 def path_set(var_name: str, directories: List[Path]):
-    """Sets the variable passed as input to the `os.pathsep` joined list of directories."""
+    """Sets the variable passed as input to the :data:`os.pathsep` joined list of directories."""
     path_str = os.pathsep.join(str(dir) for dir in directories)
     os.environ[var_name] = path_str
 
@@ -569,7 +569,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             value: flags to be appended
-            sep: separator for the flags (default: " ")
+            sep: separator for the flags (default: ``" "``)
         """
         value = _validate_value(name, value)
         item = AppendFlagsEnv(name, value, separator=sep, trace=self._trace())
@@ -590,7 +590,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             value: flags to be removed
-            sep: separator for the flags (default: " ")
+            sep: separator for the flags (default: ``" "``)
         """
         value = _validate_value(name, value)
         item = RemoveFlagsEnv(name, value, separator=sep, trace=self._trace())
@@ -603,7 +603,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             elements: ordered list paths
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         elements = [_validate_path_value(name, x) for x in elements]
         item = SetPath(name, elements, separator=separator, trace=self._trace())
@@ -617,7 +617,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be appended
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = AppendPath(name, path, separator=separator, trace=self._trace())
@@ -631,7 +631,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be prepended
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = PrependPath(name, path, separator=separator, trace=self._trace())
@@ -645,7 +645,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be removed
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = RemoveFirstPath(name, path, separator=separator, trace=self._trace())
@@ -659,7 +659,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be removed
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = RemoveLastPath(name, path, separator=separator, trace=self._trace())
@@ -673,7 +673,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be removed
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = RemovePath(name, path, separator=separator, trace=self._trace())
@@ -685,7 +685,7 @@ class EnvironmentModifications:
 
         Args:
             name: name of the environment variable
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         item = DeprioritizeSystemPaths(name, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
@@ -696,7 +696,7 @@ class EnvironmentModifications:
 
         Args:
             name: name of the environment variable
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         item = PruneDuplicatePaths(name, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
@@ -1073,19 +1073,19 @@ def inspect_path(
     ``/usr/include`` and ``/usr/lib64``. If found we want to prepend
     ``/usr/include`` to ``CPATH`` and ``/usr/lib64`` to ``MY_LIB64_PATH``.
 
-        .. code-block:: python
+    .. code-block:: python
 
-            # Set up the dictionary containing the inspection
-            inspections = {
-                'include': ['CPATH'],
-                'lib64': ['MY_LIB64_PATH']
-            }
+        # Set up the dictionary containing the inspection
+        inspections = {
+            "include": ["CPATH"],
+            "lib64": ["MY_LIB64_PATH"]
+        }
 
-            # Get back the list of command needed to modify the environment
-            env = inspect_path('/usr', inspections)
+        # Get back the list of command needed to modify the environment
+        env = inspect_path("/usr", inspections)
 
-            # Eventually execute the commands
-            env.apply_modifications()
+        # Eventually execute the commands
+        env.apply_modifications()
     """
     if exclude is None:
         exclude = lambda x: False

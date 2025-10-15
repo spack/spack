@@ -138,7 +138,7 @@ class keyboard_input(preserve_terminal_settings):
     the stream immediately, and they are not printed to the
     terminal. Typically, standard input is line-buffered, which means
     keypresses won't be sent until the user hits return. In this mode, a
-    user can hit, e.g., 'v', and it will be read on the other end of the
+    user can hit, e.g., ``v``, and it will be read on the other end of the
     pipe immediately but not printed.
 
     The handler takes care to ensure that terminal changes only take
@@ -417,7 +417,7 @@ class nixlog:
     process and the daemon.  The daemon writes our output to both the
     file and to stdout (if echoing).  The parent process can communicate
     with the daemon to tell it when and when not to echo; this is what
-    force_echo does.  You can also enable/disable echoing by typing 'v'.
+    force_echo does.  You can also enable/disable echoing by typing ``v``.
 
     We try to use OS-level file descriptors to do the redirection, but if
     stdout or stderr has been set to some Python-level file object, we
@@ -469,37 +469,6 @@ class nixlog:
         self.append = append
 
         self._active = False  # used to prevent re-entry
-
-    def __call__(self, file_like=None, echo=None, debug=None, buffer=None, append=None):
-        """This behaves the same as init. It allows a logger to be reused.
-
-        Arguments are the same as for ``__init__()``.  Args here take
-        precedence over those passed to ``__init__()``.
-
-        With the ``__call__`` function, you can save state between uses
-        of a single logger.  This is useful if you want to remember,
-        e.g., the echo settings for a prior ``with log_output()``::
-
-            logger = log_output()
-
-            with logger('foo.txt'):
-                # log things; user can change echo settings with 'v'
-
-            with logger('bar.txt'):
-                # log things; logger remembers prior echo settings.
-
-        """
-        if file_like is not None:
-            self.file_like = file_like
-        if echo is not None:
-            self.echo = echo
-        if debug is not None:
-            self.debug = debug
-        if buffer is not None:
-            self.buffer = buffer
-        if append is not None:
-            self.append = append
-        return self
 
     def __enter__(self):
         if self._active:
@@ -745,7 +714,7 @@ class winlog:
     Similar to nixlog, with underlying
     functionality ported to support Windows.
 
-    Does not support the use of 'v' toggling as nixlog does.
+    Does not support the use of ``v`` toggling as nixlog does.
     """
 
     def __init__(
@@ -925,7 +894,7 @@ def _writer_daemon(
 
                 # wait for input from any stream. use a coarse timeout to
                 # allow other checks while we wait for input
-                rlist, _, _ = _retry(select.select)(istreams, [], [], 1e-1)
+                rlist, _, _ = select.select(istreams, [], [], 0.1)
 
                 # Allow user to toggle echo with 'v' key.
                 # Currently ignores other chars.
@@ -949,7 +918,7 @@ def _writer_daemon(
                     try:
                         while line_count < 100:
                             # Handle output from the calling process.
-                            line = _retry(read_file.readline)()
+                            line = read_file.readline()
 
                             if not line:
                                 return
@@ -1005,43 +974,6 @@ def _writer_daemon(
 
         # send echo value back to the parent so it can be preserved.
         control_fd.send(echo)
-
-
-def _retry(function):
-    """Retry a call if errors indicating an interrupted system call occur.
-
-    Interrupted system calls return -1 and set ``errno`` to ``EINTR`` if
-    certain flags are not set.  Newer Pythons automatically retry them,
-    but older Pythons do not, so we need to retry the calls.
-
-    This function converts a call like this:
-
-        syscall(args)
-
-    and makes it retry by wrapping the function like this:
-
-        _retry(syscall)(args)
-
-    This is a private function because EINTR is unfortunately raised in
-    different ways from different functions, and we only handle the ones
-    relevant for this file.
-
-    """
-
-    def wrapped(*args, **kwargs):
-        while True:
-            try:
-                return function(*args, **kwargs)
-            except OSError as e:
-                if e.errno == errno.EINTR:
-                    continue
-                raise
-            except select.error as e:
-                if e.args[0] == errno.EINTR:
-                    continue
-                raise
-
-    return wrapped
 
 
 def _input_available(f):

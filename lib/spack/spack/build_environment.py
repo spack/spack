@@ -165,7 +165,9 @@ def jobserver_enabled():
     return "MAKEFLAGS" in os.environ and "--jobserver" in os.environ["MAKEFLAGS"]
 
 
-def get_effective_jobs(jobs, parallel=True, supports_jobserver=False):
+def get_effective_jobs(
+    jobs, parallel: bool = True, supports_jobserver: bool = False
+) -> Optional[int]:
     """Return the number of jobs, or None if supports_jobserver and a jobserver is detected."""
     if not parallel or jobs <= 1 or env_flag(SPACK_NO_PARALLEL_MAKE):
         return 1
@@ -249,7 +251,7 @@ class MakeExecutable(Executable):
         jobs_env_supports_jobserver: bool = False,
         **kwargs,
     ) -> Optional[str]:
-        """Runs this "make" executable in a subprocess.
+        """Runs this ``make`` executable in a subprocess.
 
         Args:
             parallel: if False, parallelism is disabled
@@ -471,12 +473,12 @@ def optimization_flags(compiler, target):
 
 def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper (which have the prefix
-    `SPACK_`) and also add the compiler wrappers to PATH.
+    ``SPACK_``) and also add the compiler wrappers to PATH.
 
     This determines the injected -L/-I/-rpath options; each of these specifies a search order and
     this function computes these options in a manner that is intended to match the DAG traversal
-    order in `SetupContext`. TODO: this is not the case yet, we're using post order, SetupContext
-    is using topo order."""
+    order in ``SetupContext``. TODO: this is not the case yet, we're using post order,
+    ``SetupContext`` is using topo order."""
     # Set compiler flags injected from the spec
     set_wrapper_environment_variables_for_flags(pkg, env)
 
@@ -1146,10 +1148,6 @@ def _setup_pkg_and_run(
     * The return value of ``function()``, which can be anything (except an exception).
       This is returned to the caller.
 
-    Note: ``jsfd1`` and ``jsfd2`` are passed solely to ensure that the child process
-    does not close these file descriptors. Some ``multiprocessing`` backends will close
-    them automatically in the child if they are not passed at process creation time.
-
     Arguments:
         serialized_pkg: Spack package install context object (serialized form of the
             package that we'll build in the child process).
@@ -1247,7 +1245,7 @@ class BuildProcess:
     """Class used to manage builds launched by Spack.
 
     Each build is launched in its own child process, and the main Spack process
-    tracks each child with a ``BuildProcess`` object. `BuildProcess`` is used to:
+    tracks each child with a ``BuildProcess`` object. ``BuildProcess`` is used to:
     - Start and monitor an active child process.
     - Clean up its processes and resources when the child process completes.
     - Kill the child process if needed.
@@ -1376,7 +1374,6 @@ def start_build_process(
         )
 
         p.start()
-
         # We close the writable end of the pipe now to be sure that p is the
         # only process which owns a handle for it. This ensures that when p
         # closes its handle for the writable end, read_pipe.recv() will
@@ -1408,18 +1405,17 @@ def complete_build_process(process: BuildProcess):
         typ = "exit" if process.exitcode >= 0 else "signal"
         return f"{typ} {abs(process.exitcode)}"
 
-    timeout = process.timeout
-    process.join(timeout=timeout)
-    if process.is_alive():
-        warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
-        process.terminate()
-
     try:
         # Check if information from the read pipe has been received.
         child_result = process.read_pipe.recv()
     except EOFError:
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
-
+    finally:
+        timeout = process.timeout
+        process.join(timeout=timeout)
+        if process.is_alive():
+            warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+            process.terminate()
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):
         raise child_result
@@ -1515,7 +1511,7 @@ def get_package_context(traceback, context=3):
 
 class ChildError(InstallError):
     """Special exception class for wrapping exceptions from child processes
-       in Spack's build environment.
+    in Spack's build environment.
 
     The main features of a ChildError are:
 
@@ -1536,11 +1532,11 @@ class ChildError(InstallError):
 
     The long_message of a ChildError displays one of two things:
 
-      1. If the original error was a ProcessError, indicating a command
-         died during the build, we'll show context from the build log.
+    1. If the original error was a ProcessError, indicating a command
+       died during the build, we'll show context from the build log.
 
-      2. If the original error was any other type of error, we'll show
-         context from the Python code.
+    2. If the original error was any other type of error, we'll show
+       context from the Python code.
 
     SpackError handles displaying the special traceback if we're in debug
     mode with spack -d.

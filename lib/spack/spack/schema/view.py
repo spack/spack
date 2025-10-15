@@ -22,19 +22,17 @@ properties: Dict[str, Any] = {
             {"type": "string"},
             {
                 "type": "object",
-                "patternProperties": {
-                    r"\w+": {
-                        "required": ["root"],
-                        "additionalProperties": False,
-                        "properties": {
-                            "root": {"type": "string"},
-                            "link": {"type": "string", "pattern": "(roots|all|run)"},
-                            "link_type": {"type": "string"},
-                            "select": {"type": "array", "items": {"type": "string"}},
-                            "exclude": {"type": "array", "items": {"type": "string"}},
-                            "projections": projections_scheme,
-                        },
-                    }
+                "additionalProperties": {
+                    "required": ["root"],
+                    "additionalProperties": False,
+                    "properties": {
+                        "root": {"type": "string"},
+                        "link": {"enum": ["roots", "all", "run"]},
+                        "link_type": {"type": "string"},
+                        "select": {"type": "array", "items": {"type": "string"}},
+                        "exclude": {"type": "array", "items": {"type": "string"}},
+                        "projections": projections_scheme,
+                    },
                 },
             },
         ]
@@ -45,5 +43,7 @@ properties: Dict[str, Any] = {
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Spack view configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
     "properties": properties,
 }

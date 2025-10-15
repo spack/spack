@@ -15,7 +15,7 @@ array_of_strings_or_num = {
 
 dictionary_of_strings_or_num = {
     "type": "object",
-    "patternProperties": {r"\w[\w-]*": {"anyOf": [{"type": "string"}, {"type": "number"}]}},
+    "additionalProperties": {"anyOf": [{"type": "string"}, {"type": "number"}]},
 }
 
 definition: Dict[str, Any] = {

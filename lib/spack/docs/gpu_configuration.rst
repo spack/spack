@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,11 +35,6 @@ The following is an example ``packages.yaml`` that organizes a consistent set of
        externals:
        - spec: hsa-rocr-dev@5.3.0
          prefix: /opt/rocm-5.3.0/
-     llvm-amdgpu:
-       buildable: false
-       externals:
-       - spec: llvm-amdgpu@5.3.0
-         prefix: /opt/rocm-5.3.0/llvm/
      comgr:
        buildable: false
        externals:
@@ -74,10 +70,10 @@ This is in combination with the following compiler definition:
        externals:
        - spec: llvm-amdgpu@=5.3.0
          prefix: /opt/rocm-5.3.0
-         compilers:
-           c: /opt/rocm-5.3.0/bin/amdclang
-           cxx: /opt/rocm-5.3.0/bin/amdclang++
-           fortran: null
+         extra_attributes:
+           compilers:
+             c: /opt/rocm-5.3.0/bin/amdclang
+             cxx: /opt/rocm-5.3.0/bin/amdclang++
 
 This includes the following considerations:
 
@@ -107,7 +103,7 @@ where ``/opt/cuda/cuda-11.0.2/lib/`` contains ``libcudart.so``.
 
 
 Using an External OpenGL API
------------------------------------
+----------------------------
 Depending on whether we have a graphics card or not, we may choose to use OSMesa or GLX to implement the OpenGL API.
 
 If a graphics card is unavailable, OSMesa is recommended and can typically be built with Spack.
@@ -117,14 +113,14 @@ Here's how to do it:
 
 .. code-block:: yaml
 
-  packages:
-    libglx:
-      require: [opengl]
-    opengl:
-      buildable: false
-      externals:
-      - prefix: /usr/
-        spec: opengl@4.6
+   packages:
+     libglx:
+       require: [opengl]
+     opengl:
+       buildable: false
+       externals:
+       - prefix: /usr/
+         spec: opengl@4.6
 
 Note that the prefix has to be the root of both the libraries and the headers (e.g., ``/usr``), not the path to the ``lib`` directory.
 To know which spec for OpenGL is available, use ``cd /usr/include/GL && grep -Ri gl_version``.

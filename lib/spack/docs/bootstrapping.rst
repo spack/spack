@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,6 +8,9 @@
       Learn how Spack's bootstrapping feature automatically fetches and installs essential build tools when they are not available on the host system.
 
 .. _bootstrapping:
+.. _cmd-spack-bootstrap:
+.. _cmd-spack-bootstrap-status:
+.. _cmd-spack-bootstrap-now:
 
 Bootstrapping
 =============
@@ -16,7 +20,7 @@ In fact, there is an entire command dedicated to the management of every aspect 
 
 .. command-output:: spack bootstrap --help
 
-Spack is configured to bootstrap its dependencies lazily by default (i.e., the first time they are needed and cannot be found).
+Spack bootstraps its dependencies automatically the first time they are needed.
 You can readily check if any prerequisite for using Spack is missing by running:
 
 .. code-block:: console
@@ -50,7 +54,7 @@ Running a command that concretizes a spec, like:
 
 automatically triggers the bootstrapping of clingo from pre-built binaries as expected.
 
-Users can also bootstrap all the dependencies needed by Spack in a single command, which might be useful to set up containers or other similar environments:
+Users can also bootstrap all Spack's dependencies in a single command, which is useful to set up containers or other similar environments:
 
 .. code-block:: console
 
@@ -64,17 +68,19 @@ Users can also bootstrap all the dependencies needed by Spack in a single comman
    ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.15.0/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spack
    ==> Installing "patchelf@0.15.0%gcc@10.2.1 ldflags="-static-libstdc++ -static-libgcc"  arch=linux-centos7-x86_64" from a buildcache
 
+.. _cmd-spack-bootstrap-root:
+
 The Bootstrapping Store
 -----------------------
 
 The software installed for bootstrapping purposes is deployed in a separate store.
-Its location can be checked with the following command:
+You can check its location with the following command:
 
 .. code-block:: console
 
    % spack bootstrap root
 
-It can also be changed with the same command by just specifying the newly desired path:
+You can also change it by specifying the desired path:
 
 .. code-block:: console
 
@@ -91,7 +97,7 @@ You can check what is installed in the bootstrapping store at any time using:
    clingo-bootstrap@spack  libassuan@2.5.5  libgpg-error@1.42  libksba@1.5.1  pinentry@1.1.1  zlib@1.2.11
    gnupg@2.3.1             libgcrypt@1.9.3  libiconv@1.16      npth@1.6       python@3.8
 
-In case it is needed, you can remove all the software in the current bootstrapping store with:
+If needed, you can remove all the software in the current bootstrapping store with:
 
 .. code-block:: console
 
@@ -102,17 +108,22 @@ In case it is needed, you can remove all the software in the current bootstrappi
    ==> Showing internal bootstrap store at "/Users/spack/.spack/bootstrap/store"
    ==> 0 installed packages
 
+.. _cmd-spack-bootstrap-list:
+.. _cmd-spack-bootstrap-disable:
+.. _cmd-spack-bootstrap-enable:
+.. _cmd-spack-bootstrap-reset:
+
 Enabling and Disabling Bootstrapping Methods
 --------------------------------------------
 
-Bootstrapping is always performed by trying the methods listed by:
+Bootstrapping is performed by trying the methods listed by:
 
 .. command-output:: spack bootstrap list
 
 in the order they appear, from top to bottom.
 By default, Spack is configured to try bootstrapping from pre-built binaries first and to fall back to bootstrapping from sources if that fails.
 
-If need be, you can disable bootstrapping altogether by running:
+If needed, you can disable bootstrapping altogether by running:
 
 .. code-block:: console
 
@@ -133,7 +144,7 @@ To add the "github-actions" method back, you can:
 
    % spack bootstrap enable github-actions
 
-There is also an option to reset the bootstrapping configuration to Spack's defaults:
+You can also reset the bootstrapping configuration to Spack's defaults:
 
 .. code-block:: console
 
@@ -142,13 +153,16 @@ There is also an option to reset the bootstrapping configuration to Spack's defa
    Do you want to continue? [Y/n]
    %
 
+.. _cmd-spack-bootstrap-mirror:
+.. _cmd-spack-bootstrap-add:
+
 Creating a Mirror for Air-Gapped Systems
 ----------------------------------------
 
-Spack's default configuration for bootstrapping relies on the user having access to the internet, either to fetch precompiled binaries or source tarballs.
+Spack's default bootstrapping configuration requires internet connection to fetch precompiled binaries or source tarballs.
 Sometimes, though, Spack is deployed on air-gapped systems where such access is denied.
 
-To help with similar situations, Spack has a command that recreates, in a local folder of choice, a mirror containing the source tarballs and/or binary packages needed for bootstrapping.
+To help in these situations, Spack provides a command to create a local mirror containing the source tarballs and/or binary packages needed for bootstrapping.
 
 .. code-block:: console
 
@@ -163,5 +177,5 @@ To help with similar situations, Spack has a command that recreates, in a local 
      % spack bootstrap add --trust local-binaries /opt/bootstrap/metadata/binaries
      % spack buildcache update-index /opt/bootstrap/bootstrap_cache
 
-This command needs to be run on a machine with internet access, and the resulting folder has to be moved over to the air-gapped system.
+Run this command on a machine with internet access, then move the resulting folder to the air-gapped system.
 Once the local sources are added using the commands suggested at the prompt, they can be used to bootstrap Spack.

@@ -327,8 +327,8 @@ class DirectoryLayout:
             path = os.path.dirname(path)
 
     def all_specs(self) -> List["spack.spec.Spec"]:
-        """Returns a list of all specs detected in self.root, detected by `.spack` directories.
-        Their prefix is set to the directory containing the `.spack` directory. Note that these
+        """Returns a list of all specs detected in self.root, detected by ``.spack`` directories.
+        Their prefix is set to the directory containing the ``.spack`` directory. Note that these
         specs may follow a different layout than the current layout if it was changed after
         installation."""
         return specs_from_metadata_dirs(self.root)

@@ -66,7 +66,7 @@ def local_path(raw_path: str, sha256: str, make_dest: Optional[Callable[[], str]
     Args:
         raw_path: raw path with possible variables needing substitution
         sha256: the expected sha256 for the file
-        make_dest: function to create a stage for remote files, if needed (e.g., `mkdtemp`)
+        make_dest: function to create a stage for remote files, if needed (e.g., ``mkdtemp``)
 
     Returns: resolved, normalized local path
 

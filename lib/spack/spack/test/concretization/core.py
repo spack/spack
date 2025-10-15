@@ -1889,13 +1889,137 @@ class TestConcretize:
             # version_declared("pkg-b","0.9",1,"package_py").
             # version_declared("pkg-b","1.0",2,"installed").
             # version_declared("pkg-b","0.9",3,"installed").
-            v_weights = [x for x in result.criteria if x[2] == "version badness (non roots)"][0]
-            reused_weights, built_weights, _ = v_weights
-            assert reused_weights > 2 and built_weights == 0
+            weights = {}
+            for x in [x for x in result.criteria if x.name == "version badness (non roots)"]:
+                if x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
+                    weights["reused"] = x.value
+                else:
+                    weights["built"] = x.value
+
+            assert weights["reused"] > 2 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
             assert result_spec["pkg-b"].dag_hash() == reusable_specs[1].dag_hash()
+
+    @pytest.mark.regression("51267")
+    @pytest.mark.parametrize(
+        "packages_config,expected",
+        [
+            # Two preferences on different virtuals
+            (
+                """
+    packages:
+      c:
+        prefer:
+        - clang
+      mpi:
+        prefer:
+        - mpich2
+    """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("c","clang",0).',
+                ],
+            ),
+            # A requirement and a preference on the same virtual
+            (
+                """
+    packages:
+      c:
+        require:
+        - gcc
+        prefer:
+        - clang
+    """,
+                [
+                    'provider_weight_from_config("c","gcc",0).',
+                    'provider_weight_from_config("c","clang",1).',
+                ],
+            ),
+            (
+                """
+        packages:
+          c:
+            require:
+            - clang
+            prefer:
+            - gcc
+        """,
+                [
+                    'provider_weight_from_config("c","gcc",1).',
+                    'provider_weight_from_config("c","clang",0).',
+                ],
+            ),
+            # Multiple requirements with priorities
+            (
+                """
+    packages:
+      all:
+        providers:
+          mpi: [low-priority-mpi]
+      mpi:
+        require:
+        - any_of: [mpich2, zmpi]
+        prefer:
+        - mpich
+    """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("mpi","zmpi",1).',
+                    'provider_weight_from_config("mpi","mpich",2).',
+                    'provider_weight_from_config("mpi","low-priority-mpi",3).',
+                ],
+            ),
+            # Configuration with conflicts
+            (
+                """
+    packages:
+      all:
+        providers:
+          mpi: [mpich, low-priority-mpi]
+      mpi:
+        require:
+        - mpich2
+        conflict:
+        - mpich
+    """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("mpi","low-priority-mpi",1).',
+                ],
+            ),
+            (
+                """
+        packages:
+          all:
+            providers:
+              mpi: [mpich, low-priority-mpi]
+          mpi:
+            require:
+            - mpich2
+            conflict:
+            - mpich@1
+        """,
+                [
+                    'provider_weight_from_config("mpi","mpich2",0).',
+                    'provider_weight_from_config("mpi","mpich",1).',
+                    'provider_weight_from_config("mpi","low-priority-mpi",2).',
+                ],
+            ),
+        ],
+    )
+    def test_requirements_and_weights(self, packages_config, expected, mutable_config):
+        """Checks that requirements and strong preferences on virtual packages influence the
+        weights for providers, even if "package preferences" are not set consistently.
+        """
+        packages_yaml = syaml.load_config(packages_config)
+        mutable_config.set("packages", packages_yaml["packages"])
+
+        setup = spack.solver.asp.SpackSolverSetup()
+        asp_problem = setup.setup([Spec("mpileaks")], reuse=[], allow_deprecated=False)
+
+        assert all(x in asp_problem for x in expected)
 
     def test_reuse_succeeds_with_config_compatible_os(self):
         root_spec = Spec("pkg-b")
@@ -3239,7 +3363,7 @@ def test_concretization_cache_roundtrip(
     # Basically just a quick and dirty memoization
     solver_setup = spack.solver.asp.SpackSolverSetup.setup
 
-    def _setup(self, specs, *, reuse=None, allow_deprecated=False):
+    def _setup(self, specs, *, reuse=None, allow_deprecated=False, _use_unsat_cores=True):
         if not getattr(_setup, "cache_setup", None):
             cache_setup = solver_setup(self, specs, reuse=reuse, allow_deprecated=allow_deprecated)
             setattr(_setup, "cache_setup", cache_setup)
@@ -3325,14 +3449,22 @@ packages:
     assert s["c"].satisfies("gcc@9.4.0")
 
 
-def test_compiler_can_depend_on_themselves_to_build(config, mock_packages):
+@pytest.mark.parametrize(
+    "spec_str,expected",
+    [
+        ("gcc@14 %gcc@9.4.0", ["gcc@14", "%c,cxx=gcc@9.4.0", "^gcc-runtime@9.4.0"]),
+        # If we don't specify a compiler, we should get the default compiler which is gcc
+        ("gcc@14", ["gcc@14", "%c,cxx=gcc@10", "^gcc-runtime@10"]),
+    ],
+)
+def test_compiler_can_depend_on_themselves_to_build(
+    spec_str, expected, default_mock_concretization
+):
     """Tests that a compiler can depend on "itself" to bootstrap."""
-    s = spack.concretize.concretize_one("gcc@14 %gcc@9.4.0")
-    assert s.satisfies("gcc@14")
-    assert s.satisfies("^gcc-runtime@9.4.0")
-
-    gcc_used_to_build = s.dependencies(name="gcc", virtuals=("c",))
-    assert len(gcc_used_to_build) == 1 and gcc_used_to_build[0].satisfies("gcc@9.4.0")
+    s = default_mock_concretization(spec_str)
+    assert not s.external
+    for c in expected:
+        assert s.satisfies(c)
 
 
 def test_compiler_attribute_is_tolerated_in_externals(
@@ -4065,7 +4197,6 @@ def test_caret_in_input_cannot_set_transitive_build_dependencies(default_mock_co
 
 @pytest.mark.regression("51167")
 @pytest.mark.require_provenance
-@pytest.mark.xfail(reason="This is a bug in the solver, related to the 'commit=' variant")
 def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypatch):
     """Tests that an implicit commit variant, obtained from resolving the commit sha of a branch,
     enters the hash of the spec.
@@ -4073,18 +4204,14 @@ def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypat
 
     first_call = True
 
-    def _mock_resolve(pkg_self) -> None:
+    def _mock_resolve(spec) -> None:
         if first_call:
-            pkg_self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
-                "commit", f"{'b' * 40}"
-            )
+            spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'b' * 40}")
             return
 
-        pkg_self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
-            "commit", f"{'a' * 40}"
-        )
+        spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'a' * 40}")
 
-    monkeypatch.setattr(spack.package_base.PackageBase, "resolve_binary_provenance", _mock_resolve)
+    monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _mock_resolve)
 
     before = spack.concretize.concretize_one("git-ref-package@develop")
     first_call = False
@@ -4094,3 +4221,60 @@ def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypat
     assert before.satisfies(f"commit={'b' * 40}")
     assert after.satisfies(f"commit={'a' * 40}")
     assert before.dag_hash() != after.dag_hash()
+
+
+@pytest.mark.regression("51180")
+def test_reuse_with_mixed_compilers(mutable_config, mock_packages):
+    """Tests that potentially reusing a spec with a mixed compiler set, will not interfere
+    with a request on one of the languages for the same package.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@15.1 languages='c,c++,fortran'"
+      prefix: /path1
+      extra_attributes:
+        compilers:
+          c: /path1/bin/gcc
+          cxx: /path1/bin/g++
+          fortran: /path1/bin/gfortran
+  llvm:
+    externals:
+    - spec: "llvm@20 +flang+clang"
+      prefix: /path2
+      extra_attributes:
+        compilers:
+          c: /path2/bin/clang
+          cxx: /path2/bin/clang++
+          fortran: /path2/bin/flang
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    s = spack.concretize.concretize_one("openblas %c=gcc %fortran=llvm")
+    reusable_specs = list(s.traverse(root=True))
+
+    root_specs = [Spec("openblas %fortran=gcc")]
+
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reusable_specs)
+
+    assert len(result.specs) == 1
+    r = result.specs[0]
+    assert r.satisfies("openblas %fortran=gcc")
+    assert r.dag_hash() != s.dag_hash()
+
+
+@pytest.mark.regression("51224")
+def test_when_possible_above_all(mutable_config, mock_packages):
+    """Tests that the criterion to solve as many specs as possible is above all other criteria."""
+    specs = [Spec("pkg-a"), Spec("pkg-b")]
+    solver = spack.solver.asp.Solver()
+
+    for result in solver.solve_in_rounds(specs):
+        criteria = sorted(result.criteria, reverse=True)
+        assert criteria[0].name == "number of input specs not concretized"

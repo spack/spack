@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -61,7 +62,7 @@ While you can certainly wait for the results of these tests after submitting a P
    If this is the case, please file an issue.
 
 
-We currently test against Python 2.7 and 3.6-3.10 on both macOS and Linux and perform three types of tests:
+We currently test against Python 3.6 and up on both macOS and Linux and perform three types of tests:
 
 .. _cmd-spack-unit-test:
 
@@ -320,25 +321,25 @@ An example entry point for a new stack called ``my-super-cool-stack``
 .. code-block:: yaml
 
     .my-super-cool-stack:
-      extends: [ ".linux_x86_64_v3" ]
+      extends: [".linux_x86_64_v3"]
       variables:
         SPACK_CI_STACK_NAME: my-super-cool-stack
-        tags: [ "all", "tags", "your", "job", "needs"]
+        tags: ["all", "tags", "your", "job", "needs"]
 
     my-super-cool-stack-generate:
-      extends: [ ".generate", ".my-super-cool-stack" ]
+      extends: [".generate", ".my-super-cool-stack"]
       image: my-super-cool-stack-image:0.0.1
 
     my-super-cool-stack-build:
-      extends: [ ".build", ".my-super-cool-stack" ]
+      extends: [".build", ".my-super-cool-stack"]
       trigger:
         include:
-          - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-            job: my-super-cool-stack-generate
+        - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+          job: my-super-cool-stack-generate
         strategy: depend
       needs:
-        - artifacts: True
-          job: my-super-cool-stack-generate
+      - artifacts: true
+        job: my-super-cool-stack-generate
 
 
 Stack Configuration
@@ -367,7 +368,7 @@ An example stack that builds ``zlib``.
       - zlib
 
       ci:
-        pipeline-gen
+        pipeline-gen:
         - build-job:
             image: my-super-cool-stack-image:0.0.1
 

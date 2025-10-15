@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,9 +32,9 @@ A package that *appears* to install successfully does not mean it is actually in
 There are a number of possible points of failure so Spack provides features for checking the software along the way.
 
 Failures can occur during and after the installation process.
-The build may start but the software may not end up fully installed.
-The installed software may not work at all or as expected.
-The software may work after being installed but, due to changes on the system, may stop working days, weeks, or months after being installed.
+The build may start, but the software may not end up fully installed.
+The installed software may not work at all, or may not work as expected.
+The software may work after being installed, but due to changes on the system, may stop working days, weeks, or months after being installed.
 
 This section describes Spack's support for checks that can be performed during and after its installation.
 The former checks are referred to as ``build-time tests`` and the latter as ``stand-alone (or smoke) tests``.
@@ -98,8 +99,15 @@ For example, the sanity checks for the ``reframe`` package below specify that ei
 
        # sanity check
        sanity_check_is_file = [join_path("bin", "reframe")]
-       sanity_check_is_dir  = ["bin", "config", "docs", "reframe", "tutorials",
-                               "unittests", "cscs-checks"]
+       sanity_check_is_dir = [
+           "bin", 
+           "config", 
+           "docs", 
+           "reframe", 
+           "tutorials",
+           "unittests",
+           "cscs-checks",
+       ]
 
 When you run ``spack install`` with tests enabled, Spack will ensure that a successfully installed package has the required files and/or directories.
 
@@ -206,7 +214,7 @@ The second decorator tells Spack to only run the checks when the ``--test`` opti
    You also want to be sure the package supports the phase you use in the ``run_after`` directive.
    For example, ``PackageBase`` only supports the ``install`` phase while the ``AutotoolsPackage`` and ``MakefilePackage`` support both ``install`` and ``build`` phases.
 
-Assuming both ``build`` and ``install`` phases are available to you, you could add additional checks to be performed after each of those phases based on the skeleton provided below.
+Assuming both ``build`` and ``install`` phases are available, you can add additional checks to be performed after each of those phases based on the skeleton provided below.
 
 .. code-block:: python
 
@@ -216,14 +224,14 @@ Assuming both ``build`` and ``install`` phases are available to you, you could a
        @run_after("build")
        @on_package_attributes(run_tests=True)
        def check_build(self):
-            # Add your custom post-build phase tests
-            pass
+           # Add your custom post-build phase tests
+           pass
 
        @run_after("install")
        @on_package_attributes(run_tests=True)
        def check_install(self):
-            # Add your custom post-install phase tests
-            pass
+           # Add your custom post-install phase tests
+           pass
 
 .. note::
 
@@ -241,9 +249,9 @@ The check is implemented as follows:
        @run_after("install")
        @on_package_attributes(run_tests=True)
        def check_list(self):
-            with working_dir(self.stage.source_path):
-                reframe = Executable(self.prefix.bin.reframe)
-                reframe("-l")
+           with working_dir(self.stage.source_path):
+               reframe = Executable(self.prefix.bin.reframe)
+               reframe("-l")
 
 Checking build-time test results
 """"""""""""""""""""""""""""""""
@@ -436,7 +444,7 @@ Adding stand-alone test parts
 """""""""""""""""""""""""""""
 
 Sometimes dependencies between steps of a test lend themselves to being broken into parts.
-Tracking the pass/fail status of each part may aid debugging.
+Tracking the pass/fail status of each part can aid debugging.
 Spack provides a ``test_part`` context manager for use within test methods.
 
 Each test part is independently run, tracked, and reported.
@@ -453,7 +461,7 @@ The signature for ``test_part`` is:
 
 .. code-block:: python
 
-   def test_part(pkg, test_name, purpose, work_dir=".", verbose=False):
+   def test_part(pkg, test_name, purpose, work_dir=".", verbose=False): ...
 
 where each argument has the following meaning:
 
@@ -487,16 +495,16 @@ We can accomplish this goal by implementing a stand-alone test method consisting
            """run setup, perform, and report"""
 
            with test_part(self, "test_series_setup", purpose="setup operation"):
-                exe = which(self.prefix.bin.setup))
-                exe()
+               exe = which(self.prefix.bin.setup)
+               exe()
 
            with test_part(self, "test_series_run", purpose="perform operation"):
-                exe = which(self.prefix.bin.run))
-                exe()
+               exe = which(self.prefix.bin.run)
+               exe()
 
            with test_part(self, "test_series_report", purpose="generate report"):
-                exe = which(self.prefix.bin.report))
-                exe()
+               exe = which(self.prefix.bin.report)
+               exe()
 
 The result is ``test_series`` runs the following executable in order: ``setup``, ``run``, and ``report``.
 In this case no options are passed to any of the executables and no outputs from running them are checked.
@@ -513,7 +521,7 @@ Consequently, the implementation could be simplified with a for-loop as follows:
            for exe, reason in [
                ("setup", "setup operation"),
                ("run", "perform operation"),
-               ("report", "generate report")
+               ("report", "generate report"),
            ]:
                with test_part(self, f"test_series_{exe}", purpose=reason):
                    exe = which(self.prefix.bin.join(exe))
@@ -590,12 +598,7 @@ The example below, which ignores how ``cxx-example.cpp`` is acquired, illustrate
            exe = "cxx-example"
            ...
            cxx = which(os.environ["CXX"])
-           cxx(
-               f"-L{self.prefix.lib}",
-               f"-I{self.prefix.include}",
-               f"{exe}.cpp",
-               "-o", exe
-           )
+           cxx(f"-L{self.prefix.lib}", f"-I{self.prefix.include}", f"{exe}.cpp", "-o", exe)
            cxx_example = which(exe)
            cxx_example()
 
@@ -614,7 +617,7 @@ The signature for ``cache_extra_test_sources`` is:
 
 .. code-block:: python
 
-   def cache_extra_test_sources(pkg, srcs):
+   def cache_extra_test_sources(pkg, srcs): ...
 
 where each argument has the following meaning:
 
@@ -659,11 +662,7 @@ This package method reuses the contents of the ``examples`` subdirectory, which 
                make()
 
                for program in ["foo", "bar"]:
-                   with test_part(
-                       self,
-                       f"test_example_{program}",
-                       purpose=f"ensure {program} runs"
-                   ):
+                   with test_part(self, f"test_example_{program}", purpose=f"ensure {program} runs"):
                        exe = Executable(program)
                        exe()
 
@@ -720,12 +719,7 @@ It also assumes the program simply needs to be compiled and linked against the i
 
            with working_dir(src_dir):
                cc = which(os.environ["CC"])
-               cc(
-                   f"-L{self.prefix.lib}",
-                   f"-I{self.prefix.include}",
-                   f"{exe}.cpp",
-                   "-o", exe
-               )
+               cc(f"-L{self.prefix.lib}", f"-I{self.prefix.include}", f"{exe}.cpp", "-o", exe)
 
                custom_example = Executable(exe)
                custom_example()
@@ -744,7 +738,7 @@ The signature for ``get_escaped_text_output`` is:
 
 .. code-block:: python
 
-   def get_escaped_text_output(filename):
+   def get_escaped_text_output(filename): ...
 
 where ``filename`` is the path to the file containing the expected output.
 
@@ -756,6 +750,7 @@ The example below shows how to reference both the custom database (``packages.db
 
    import re
 
+
    class Sqlite(AutotoolsPackage):
        ...
 
@@ -763,12 +758,10 @@ The example below shows how to reference both the custom database (``packages.db
            """check example table dump"""
            test_data_dir = self.test_suite.current_test_data_dir
            db_filename = test_data_dir.join("packages.db")
-           ..
+           ...
            expected = get_escaped_text_output(test_data_dir.join("dump.out"))
            sqlite3 = which(self.prefix.bin.sqlite3)
-           out = sqlite3(
-               db_filename, ".dump", output=str.split, error=str.split
-           )
+           out = sqlite3(db_filename, ".dump", output=str.split, error=str.split)
            for exp in expected:
                assert re.search(exp, out), f"Expected '{exp}' in output"
 
@@ -780,7 +773,7 @@ If the files were instead cached from installing the software, the paths to the 
            """check example table dump"""
            test_cache_dir = self.test_suite.current_test_cache_dir
            db_filename = test_cache_dir.join("packages.db")
-           ..
+           ...
            expected = get_escaped_text_output(test_cache_dir.join("dump.out"))
            ...
 
@@ -791,10 +784,8 @@ Alternatively, if both files had been installed by the software into the ``share
        def test_example(self):
            """check example table dump"""
            db_filename = self.prefix.share.tests.join("packages.db")
-           ..
-           expected = get_escaped_text_output(
-               self.prefix.share.tests.join("dump.out")
-           )
+           ...
+           expected = get_escaped_text_output(self.prefix.share.tests.join("dump.out"))
            ...
 
 .. _check_outputs:
@@ -808,7 +799,7 @@ The signature for ``check_outputs`` is:
 
 .. code-block:: python
 
-   def check_outputs(expected, actual):
+   def check_outputs(expected, actual): ...
 
 where each argument has the expected type and meaning:
 
@@ -956,7 +947,7 @@ The command outputs all installed packages that have defined stand-alone test me
 
 Alternatively you can use the ``--all`` option to get a list of all packages that have stand-alone test methods even if the packages are not installed.
 
-For more information, refer to `spack test list <https://spack.readthedocs.io/en/latest/command_index.html#spack-test-list>`_.
+For more information, refer to :ref:`spack-test-list`.
 
 .. _cmd-spack-test-run:
 
@@ -978,7 +969,7 @@ Some of the more commonly used debugging options are:
 
 Test output is written to a text log file by default, though ``junit`` and ``cdash`` are outputs available through the ``--log-format`` option.
 
-For more information, refer to `spack test run <https://spack.readthedocs.io/en/latest/command_index.html#spack-test-run>`_.
+For more information, refer to :ref:`spack-test-run`.
 
 
 .. _cmd-spack-test-results:
@@ -993,7 +984,7 @@ The ``--logs`` option includes the output generated by the associated test(s) to
 
 The ``--failed`` option limits results shown to that of the failed tests, if any, of matching packages.
 
-For more information, refer to `spack test results <https://spack.readthedocs.io/en/latest/command_index.html#spack-test-results>`_.
+For more information, refer to :ref:`spack-test-results`.
 
 .. _cmd-spack-test-find:
 
@@ -1002,7 +993,7 @@ For more information, refer to `spack test results <https://spack.readthedocs.io
 
 The ``spack test find`` command lists the aliases or content hashes of all test suites whose results are available.
 
-For more information, refer to `spack test find <https://spack.readthedocs.io/en/latest/command_index.html#spack-test-find>`_.
+For more information, refer to :ref:`spack-test-find`.
 
 .. _cmd-spack-test-remove:
 
@@ -1012,4 +1003,4 @@ For more information, refer to `spack test find <https://spack.readthedocs.io/en
 The ``spack test remove`` command removes test suites to declutter the test stage directory.
 You are prompted to confirm the removal of each test suite **unless** you use the ``--yes-to-all`` option.
 
-For more information, refer to `spack test remove <https://spack.readthedocs.io/en/latest/command_index.html#spack-test-remove>`_.
+For more information, refer to :ref:`spack-test-remove`.
