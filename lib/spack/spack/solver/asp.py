@@ -836,13 +836,7 @@ class ConcretizationCache:
             if locked:
                 lock.release_write()
 
-    def store(
-        self,
-        problem: str,
-        result: Result,
-        statistics: List,
-        test: spack.concretize.TestsType = False,
-    ) -> None:
+    def store(self, problem: str, result: Result, statistics: List) -> None:
         """Creates entry in concretization cache for problem if none exists,
         storing the concretization Result object and statistics in the cache
         as serialized json joined as a single file.
@@ -1326,7 +1320,7 @@ class PyclingoDriver:
             problem_repr = "\n".join(problem)
             result = self._run_clingo(specs, setup, problem_repr, control_file_paths, timer)
             if conc_cache_enabled:
-                CONC_CACHE.store(cache_key, result, self.control.statistics, test=setup.tests)
+                CONC_CACHE.store(cache_key, result, self.control.statistics)
 
         if output.timers:
             timer.write_tty()
