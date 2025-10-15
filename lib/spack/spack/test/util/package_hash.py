@@ -4,6 +4,7 @@
 
 import ast
 import os
+import random
 
 import pytest
 
@@ -12,6 +13,7 @@ import spack.directives_meta
 import spack.paths
 import spack.repo
 import spack.util.package_hash as ph
+from spack.hash_types import _package_hash_nodes
 from spack.spec import Spec
 from spack.util.unparse import unparse
 
@@ -457,3 +459,25 @@ def test_multimethod_resolution(spec_str, source, expected, not_expected):
         assert item in filtered
     for item in not_expected:
         assert item not in filtered
+
+
+@pytest.mark.parametrize("spec_str", ["mpileaks", "mpich2", "callpath"])
+def test_stable_ordering_for_package_hash(spec_str, default_mock_concretization, monkeypatch):
+    """Tests that the order of the nodes used to compute the package hash stays stable when
+    the dependencies are returned in random order.
+    """
+    root = default_mock_concretization(spec_str)
+
+    expected_order = list(_package_hash_nodes(root))
+
+    original_fn = Spec.dependencies
+
+    def _dependency_shuffle(spec, *args, **kwargs):
+        result = original_fn(spec, *args, **kwargs)
+        random.shuffle(result)
+        return result
+
+    monkeypatch.setattr(Spec, "dependencies", _dependency_shuffle)
+
+    for _ in range(5):
+        assert list(_package_hash_nodes(root)) == expected_order

@@ -2,11 +2,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Definitions that control how Spack creates Spec hashes."""
+import base64
+import hashlib
+from typing import Any, Callable, Iterable, List, Optional
 
-from typing import Any, Callable, List, Optional
+from spack.vendor.typing_extensions import TYPE_CHECKING
 
 import spack.deptypes as dt
 import spack.repo
+import spack.traverse
+
+if TYPE_CHECKING:
+    import spack.spec
 
 HASHES: List["SpecHashDescriptor"] = []
 
@@ -57,15 +64,37 @@ dag_hash = SpecHashDescriptor(
 )
 
 
-def _content_hash_override(spec):
+def _content_hash(spec):
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
     return pkg.content_hash()
 
 
+def _package_hash_override(spec) -> str:
+    # Externals won't have a package hash, since their package.py file is not considered when
+    # they are installed. The content hash of external's package.py file is instead considered
+    # whenever they are dependencies of other packages.
+    if spec.external:
+        return "x" * 32
+
+    hash_algorithm = hashlib.sha256()
+    for s in _package_hash_nodes(spec):
+        hash_algorithm.update(_content_hash(s).encode("utf-8"))
+
+    b32_hash = base64.b32encode(hash_algorithm.digest()).lower()
+    return b32_hash.decode("utf-8")
+
+
+def _package_hash_nodes(spec) -> Iterable["spack.spec.Spec"]:
+    # Sorting by name is fine. We won't have duplicate build dependencies on a single node
+    build_deps = sorted(spec.dependencies(deptype=dt.BUILD), key=lambda x: x.name)
+    for s in spack.traverse.traverse_nodes([spec, *build_deps], deptype=("link", "run")):
+        yield s
+
+
 #: Package hash used as part of dag hash
 package_hash = SpecHashDescriptor(
-    depflag=0, package_hash=True, name="package_hash", override=_content_hash_override
+    depflag=0, package_hash=True, name="package_hash", override=_package_hash_override
 )
 
 
