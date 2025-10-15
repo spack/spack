@@ -191,45 +191,46 @@ class ExternalSpecsParser:
         self._parse()
 
     def _parse(self) -> None:
-        for external_dict in self.external_dicts:
-            try:
-                node = node_from_dict(external_dict)
-            except spack.spec.UnsatisfiableArchitectureSpecError:
-                tty.debug(
-                    f"[{__name__}] skipping external spec '{external_dict['spec']}' because it"
-                    f" cannot be constrained with the required target "
-                    f"'{external_dict['required_target']}'."
+        # Parse all nodes without creating edges among them
+        self._parse_all_nodes()
+
+        # Map dependencies specified as specs to a single id
+        self._ensure_dependencies_have_single_id()
+
+        # Attach dependencies to externals
+        self._create_edges()
+
+        for node in self.nodes:
+            node._finalize_concretization()
+
+    def _create_edges(self):
+        for eid, entry in self.specs_by_external_id.items():
+            current_node = entry.spec
+            current_dict = entry.config
+
+            for dependency_dict in current_dict.get("dependencies", []):
+                dependency_id = dependency_dict.get("id")
+                if not dependency_id:
+                    raise ExternalDependencyError(
+                        f"A dependency for {current_dict['spec']} does not have an external id"
+                    )
+                elif dependency_id not in self.specs_by_external_id:
+                    raise ExternalDependencyError(
+                        f"A dependency for {current_dict['spec']} has an external id "
+                        f"{dependency_id} that is not defined in packages.yaml"
+                    )
+
+                dependency_node = self.specs_by_external_id[dependency_id].spec
+                depflag = spack.deptypes.canonicalize(
+                    dependency_dict.get("deptypes", spack.deptypes.DEFAULT_TYPES)
                 )
-                continue
-            except ExternalSpecError as e:
-                warnings.warn(f"{e} Fix your packages.yaml configuration.")
-                continue
+                virtuals: Tuple[str, ...] = ()
+                if "virtuals" in dependency_dict:
+                    virtuals = tuple(dependency_dict["virtuals"].split(","))
 
-            package_exists = spack.repo.PATH.exists(node.name)
+                current_node._add_dependency(dependency_node, depflag=depflag, virtuals=virtuals)
 
-            # If we allow non-existing packages, just continue
-            if not package_exists and self.allow_nonexisting:
-                continue
-
-            if not package_exists and not self.allow_nonexisting:
-                raise spack.repo.UnknownPackageError(node.name, repo=spack.repo.PATH)
-
-            eid = external_dict.setdefault("id", str(uuid.uuid4()))
-            if eid in self.specs_by_external_id:
-                other_node = self.specs_by_external_id[eid].spec
-                raise DuplicateExternalError(
-                    f"Specs {node} and {other_node} have the same external id {eid}."
-                    f" Fix your packages.yaml configuration."
-                )
-
-            self.complete_node(node)
-            # Normalize internally so that each node has a unique id
-            spec_and_config = ExternalSpecAndConfig(spec=node, config=external_dict)
-            self.specs_by_external_id[eid] = spec_and_config
-            self.specs_by_name.setdefault(node.name, []).append(spec_and_config)
-            self.nodes.append(node)
-
-        # Map dependencies specified as specs to id
+    def _ensure_dependencies_have_single_id(self):
         for eid, entry in self.specs_by_external_id.items():
             current_node = entry.spec
             current_dict = entry.config
@@ -305,35 +306,45 @@ class ExternalSpecsParser:
 
                 dependency_dict["id"] = candidates[0].config["id"]
 
-        # Attach dependencies to externals
-        for eid, entry in self.specs_by_external_id.items():
-            current_node = entry.spec
-            current_dict = entry.config
-
-            for dependency_dict in current_dict.get("dependencies", []):
-                dependency_id = dependency_dict.get("id")
-                if not dependency_id:
-                    raise ExternalDependencyError(
-                        f"A dependency for {current_dict['spec']} does not have an external id"
-                    )
-                elif dependency_id not in self.specs_by_external_id:
-                    raise ExternalDependencyError(
-                        f"A dependency for {current_dict['spec']} has an external id "
-                        f"{dependency_id} that is not defined in packages.yaml"
-                    )
-
-                dependency_node = self.specs_by_external_id[dependency_id].spec
-                depflag = spack.deptypes.canonicalize(
-                    dependency_dict.get("deptypes", spack.deptypes.DEFAULT_TYPES)
+    def _parse_all_nodes(self):
+        """Parses all the nodes from the external dicts, but doesn't add any edge."""
+        for external_dict in self.external_dicts:
+            try:
+                node = node_from_dict(external_dict)
+            except spack.spec.UnsatisfiableArchitectureSpecError:
+                spec_str, target_str = external_dict["spec"], external_dict["required_target"]
+                tty.debug(
+                    f"[{__name__}] Skipping external spec '{spec_str}' "
+                    f"because it cannot be constrained with the required target '{target_str}'."
                 )
-                virtuals: Tuple[str, ...] = ()
-                if "virtuals" in dependency_dict:
-                    virtuals = tuple(dependency_dict["virtuals"].split(","))
+                continue
+            except ExternalSpecError as e:
+                warnings.warn(f"{e}")
+                continue
 
-                current_node._add_dependency(dependency_node, depflag=depflag, virtuals=virtuals)
+            package_exists = spack.repo.PATH.exists(node.name)
 
-        for node in self.nodes:
-            node._finalize_concretization()
+            # If we allow non-existing packages, just continue
+            if not package_exists and self.allow_nonexisting:
+                continue
+
+            if not package_exists and not self.allow_nonexisting:
+                raise spack.repo.UnknownPackageError(node.name, repo=spack.repo.PATH)
+
+            eid = external_dict.setdefault("id", str(uuid.uuid4()))
+            if eid in self.specs_by_external_id:
+                other_node = self.specs_by_external_id[eid].spec
+                raise DuplicateExternalError(
+                    f"Specs {node} and {other_node} have the same external id {eid}."
+                    f" Fix your packages.yaml configuration."
+                )
+
+            self.complete_node(node)
+            # Normalize internally so that each node has a unique id
+            spec_and_config = ExternalSpecAndConfig(spec=node, config=external_dict)
+            self.specs_by_external_id[eid] = spec_and_config
+            self.specs_by_name.setdefault(node.name, []).append(spec_and_config)
+            self.nodes.append(node)
 
     def get_specs_for_package(self, package_name: str) -> List[spack.spec.Spec]:
         """Returns the external specs for a given package name."""
