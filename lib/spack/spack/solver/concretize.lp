@@ -1695,7 +1695,6 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
 unification_set_compiler("root", node(CompilerID, CompilerName), Language) :-
     attr("node", node(NodeID, NodeName)),
     attr("virtual_on_edge", node(NodeID, NodeName), node(CompilerID, CompilerName), Language),
-    %attr("version", node(CompilerID, CompilerName), CompilerVersion),
     no_compiler_mixing(Language),
     language(Language),
     not allow_mixing(NodeName),
@@ -1707,22 +1706,10 @@ unification_set_compiler("root", node(CompilerHash, CompilerName), Language) :-
     hash_attr(ParentHash, "concrete_build_dependency", ParentName, CompilerName, CompilerHash),
     hash_attr(ParentHash, "virtual_on_build_edge", ParentName, CompilerName, Language),
     hash_attr(CompilerHash, "virtual_on_incoming_edges", CompilerName, Language),
-    %hash_attr(CompilerHash,"version", CompilerName, CompilerVersion),
     no_compiler_mixing(Language),
     language(Language),
     not allow_mixing(ParentName),
     unification_set("root", ParentNode).
-
-%unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
-%    attr("hash", ParentNode, ParentHash),
-%    hash_attr(ParentHash, "concrete_build_dependency", ParentName, CompilerName, CompilerHash),
-%    hash_attr(ParentHash, "virtual_on_build_edge", ParentName, CompilerName, Language),
-%    hash_attr(CompilerHash, "virtual_on_incoming_edges", CompilerName, Language),
-%    hash_attr(CompilerHash,"version", CompilerName, CompilerVersion),
-%    no_compiler_mixing(Language),
-%    language(Language),
-%    not allow_mixing(ParentName),
-%    unification_set("root", ParentNode).
 
 #defined no_compiler_mixing/1.
 #defined allow_mixing/1.
