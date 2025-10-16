@@ -66,7 +66,7 @@ packages:
           compilers:
             c: /path/bin/gcc
             cxx: /path/bin/g++
-      - spec: "gcc@9.4.0 languages='c,c++' os=redhat6"
+      - spec: "gcc@9.4.1 languages='c,c++' os=redhat6"
         prefix: /path
         extra_attributes:
           compilers:

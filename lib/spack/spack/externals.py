@@ -238,48 +238,18 @@ class ExternalSpecsParser:
             current_node, current_dict = entry.spec, entry.config
             spec_str = current_dict["spec"]
             line_info = _line_info(current_dict)
-            is_legacy = False
-            # Guess how to convert old entries like 'mpich %gcc' to a dependency in the dict
+
+            # Transform inline entries like 'mpich %gcc' to a canonical form
             for edge in current_node.edges_to_dependencies():
-                is_legacy = True
                 # We don't want to accept foo %[deptypes=build,link] mpich as a spec
                 if edge.depflag != 0:
                     raise ExternalDependencyError(
                         f"The external spec '{spec_str}' cannot specify deptypes{line_info}"
                     )
-
-                if edge.spec.name not in self.specs_by_name:
-                    raise ExternalDependencyError(
-                        f"The external spec '{spec_str}' depends on {edge.spec.name}', but there "
-                        f"is no such external spec in packages.yaml{line_info}"
-                    )
-
-                candidates = [
-                    x
-                    for x in self.specs_by_name[edge.spec.name]
-                    if x.spec.satisfies(edge.spec)
-                    and x.spec.architecture.satisfies(current_node.architecture)
-                ]
-                if not candidates:
-                    raise ExternalDependencyError(
-                        f"The external spec '{spec_str}' depends on '{edge.spec}', but there is no"
-                        f" '{edge.spec.name}' that meets the requests in packages.yaml{line_info}"
-                    )
-
-                candidates.sort(key=lambda x: x.spec)  # type: ignore
-                selected = candidates[-1]
-                warnings.warn(
-                    f"the external spec '{spec_str}' has been guessed to depend on "
-                    f"'{selected.config['spec']}'. If this is incorrect, modify the spec "
-                    f"definition{line_info}"
-                )
                 current_dict.setdefault("dependencies", []).append(
-                    {"id": selected.config["id"], "deptypes": "build", "virtuals": "c"}
+                    {"spec": str(edge.spec), "deptypes": "build", "virtuals": "c"}
                 )
             current_node.clear_edges()
-            if is_legacy:
-                # Legacy specs are not allowed to have a "dependencies:" section
-                continue
 
             # Map a spec: to id:
             for dependency_dict in current_dict.get("dependencies", []):
@@ -294,17 +264,22 @@ class ExternalSpecsParser:
 
                 query_spec = spack.spec.Spec(dependency_dict["spec"])
                 candidates = [
-                    x for x in self.specs_by_name[query_spec.name] if x.spec.satisfies(query_spec)
+                    x
+                    for x in self.specs_by_name.get(query_spec.name, [])
+                    if x.spec.satisfies(query_spec)
                 ]
                 if len(candidates) == 0:
                     raise ExternalDependencyError(
-                        f"the spec {spec_str} depends on {query_spec}, but there is no such "
+                        f"the spec '{spec_str}' depends on '{query_spec}', but there is no such "
                         f"external spec in packages.yaml{line_info}"
                     )
                 elif len(candidates) > 1:
+                    candidates_str = (
+                        f" [candidates are {', '.join([str(x.spec) for x in candidates])}]"
+                    )
                     raise ExternalDependencyError(
-                        f"the spec {spec_str} depends on {query_spec}, but there are multiple "
-                        f"external specs in packages.yaml that satisfy it{line_info}"
+                        f"the spec '{spec_str}' depends on '{query_spec}', but there are multiple "
+                        f"external specs that could satisfy the request{candidates_str}{line_info}"
                     )
 
                 dependency_dict["id"] = candidates[0].config["id"]

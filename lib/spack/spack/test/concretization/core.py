@@ -40,6 +40,7 @@ import spack.util.file_cache
 import spack.util.hash
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
+from spack.externals import ExternalDependencyError
 from spack.installer import PackageInstaller
 from spack.solver.reuse import SpecFilter
 from spack.spec import Spec
@@ -3372,7 +3373,7 @@ def test_compiler_match_for_externals_is_taken_into_account(
 packages:
   libelf:
     externals:
-    - spec: "libelf@0.8.12 %gcc"
+    - spec: "libelf@0.8.12 %gcc@10"
       prefix: {tmp_path / 'gcc'}
     - spec: "libelf@0.8.13 %clang"
       prefix: {tmp_path / 'clang'}
@@ -3408,7 +3409,7 @@ packages:
     externals:
     - spec: "libelf@0.8.12 %gcc@10"
       prefix: {tmp_path / 'libelf-gcc10'}
-    - spec: "libelf@0.8.13 %gcc@9"
+    - spec: "libelf@0.8.13 %gcc@9.4.0"
       prefix: {tmp_path / 'libelf-gcc9'}
 """
     )
@@ -3496,7 +3497,7 @@ def test_input_analysis_and_conditional_requirements(default_mock_concretization
     [
         # Compilers are matched to some other external, so the compiler that picked is concrete
         ("gcc@10", ["%gcc", "%gcc@10"], ["%clang", "%gcc@9"]),
-        ("gcc@9", ["%gcc", "%gcc@9"], ["%clang", "%gcc@10"]),
+        ("gcc@9.4.0", ["%gcc", "%gcc@9"], ["%clang", "%gcc@10"]),
         ("clang", ["%clang", "%llvm+clang"], ["%gcc", "%gcc@9", "%gcc@10"]),
     ],
 )
@@ -3944,7 +3945,7 @@ def test_selecting_externals_with_compilers_as_root(mutable_config, mock_package
     packages_yaml = syaml.load_config(
         """
 packages:
-  gcc:
+  gcc::
     externals:
     - spec: "gcc@9.4.0 languages='c,c++'"
       prefix: /path
@@ -3952,7 +3953,7 @@ packages:
         compilers:
           c: /path/bin/gcc
           cxx: /path/bin/g++
-  llvm:
+  llvm::
     buildable: false
     externals:
     - spec: "llvm@20 +clang"
@@ -3994,19 +3995,10 @@ packages:
 @pytest.mark.not_on_windows("Tests use linux paths")
 @pytest.mark.regression("51001")
 @pytest.mark.parametrize(
-    "external_compiler,spec_str,expected_raising",
-    [
-        # Underspecify the compiler. This will select the best option, which is gcc@10
-        ("gcc", "mpich %gcc@9", True),
-        # Specify gcc@10 directly. This will raise too
-        ("gcc@10", "mpich %gcc@9", True),
-        # This is ok
-        ("gcc@9", "mpich %gcc@9.4", False),
-        ("gcc@9.4.0", "mpich %gcc@9", False),
-    ],
+    "external_compiler,spec_str", [("gcc@8", "mpich %gcc@8.4"), ("gcc@8.4.0", "mpich %gcc@8")]
 )
 def test_selecting_externals_with_compilers_and_versions(
-    external_compiler, spec_str, expected_raising, mutable_config, mock_packages
+    external_compiler, spec_str, mutable_config, mock_packages
 ):
     """Tests different scenarios of having a compiler specified with a version constraint, either
     in the input spec or in the external spec.
@@ -4016,7 +4008,7 @@ def test_selecting_externals_with_compilers_and_versions(
 packages:
   gcc:
     externals:
-    - spec: "gcc@9.4.0 languages='c,c++'"
+    - spec: "gcc@8.4.0 languages='c,c++'"
       prefix: /path
       extra_attributes:
         compilers:
@@ -4032,14 +4024,41 @@ packages:
 """
     )
     mutable_config.set("packages", packages_yaml["packages"])
+    s = spack.concretize.concretize_one(spec_str)
+    assert s.external
+    assert s.prefix == "/path/mpich/gcc"
 
-    if expected_raising:
-        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="Cannot build mpich"):
-            _ = spack.concretize.concretize_one(spec_str)
-    else:
-        s = spack.concretize.concretize_one(spec_str)
-        assert s.external
-        assert s.prefix == "/path/mpich/gcc"
+
+@pytest.mark.regression("51001")
+@pytest.mark.parametrize(
+    "external_compiler,spec_str,error_match",
+    [
+        # Compiler is underspecified
+        ("gcc", "mpich %gcc", "there are multiple external specs"),
+        ("gcc@9", "mpich %gcc", "there are multiple external specs"),
+        # Compiler does not exist
+        ("%oneapi", "mpich %gcc@8", "there is no"),
+    ],
+)
+def test_errors_when_specifying_externals_with_compilers(
+    external_compiler, spec_str, error_match, mutable_config, mock_packages
+):
+    """Tests different errors that can occur in an external spec with a compiler specified."""
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  mpich:
+    buildable: false
+    externals:
+    - spec: "mpich@3.4.3 %{external_compiler}"
+      prefix: /path/mpich/gcc
+    - spec: "mpich@3.4.3 %clang"
+      prefix: /path/mpich/clang
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    with pytest.raises(ExternalDependencyError, match=error_match):
+        _ = spack.concretize.concretize_one(spec_str)
 
 
 @pytest.mark.regression("51146,51067")

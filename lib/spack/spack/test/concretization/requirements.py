@@ -1394,7 +1394,7 @@ packages:
   mpich:
     buildable: false
     externals:
-    - spec: "mpich@4.3.0 %gcc"
+    - spec: "mpich@4.3.0 %gcc@10"
       prefix: {tmp_path / "gcc"}
     - spec: "mpich@4.3.0 %clang"
       prefix: {tmp_path / "clang"}

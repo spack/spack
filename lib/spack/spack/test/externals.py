@@ -219,24 +219,11 @@ def test_externals_with_duplicate_id():
         (
             [
                 [
-                    {"spec": "mpileaks@2.2 %gcc", "prefix": "/user/path"},
+                    {"spec": "mpileaks@2.2 %gcc@15", "prefix": "/user/path"},
                     {"spec": "gcc@14.2.1 languages=c,c++", "prefix": "/user/path"},
                     {"spec": "gcc@15.0.1 languages=c,c++", "prefix": "/user/path"},
                 ],
                 {"mpileaks": ["%[deptypes=build] gcc@15"]},
-            ]
-        ),
-        # Old type specification for
-        # o mpileaks@2.2
-        # o gcc@14.2.1 <- selected because of the architecture of gcc@15
-        (
-            [
-                [
-                    {"spec": "mpileaks@2.2 %gcc", "prefix": "/user/path"},
-                    {"spec": "gcc@14.2.1 languages=c,c++", "prefix": "/user/path"},
-                    {"spec": "gcc@15.0.1 os=CNL languages=c,c++", "prefix": "/user/path"},
-                ],
-                {"mpileaks": ["%[deptypes=build] gcc@14"]},
             ]
         ),
     ],
