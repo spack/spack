@@ -8,10 +8,10 @@ import pytest
 from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
-import spack.repo
 from spack.externals import (
     DuplicateExternalError,
     ExternalDict,
+    ExternalSpecError,
     ExternalSpecsParser,
     complete_architecture,
     complete_variants_and_architecture,
@@ -118,7 +118,7 @@ def test_external_specs_parser_with_missing_packages():
     assert len([x for x in external_specs if x.satisfies("gmake")]) == 2
     assert len([x for x in external_specs if x.satisfies("gcc")]) == 1
 
-    with pytest.raises(spack.repo.UnknownPackageError, match="Package 'baz' not found"):
+    with pytest.raises(ExternalSpecError, match="Package 'baz' does not exist"):
         ExternalSpecsParser(externals_dict, allow_nonexisting=False)
 
 
@@ -130,7 +130,7 @@ def test_externals_with_duplicate_id():
         {"spec": "gcc@1.0", "prefix": "/path/to/gcc", "id": "gcc"},
     ]
 
-    with pytest.raises(DuplicateExternalError, match=" Fix your packages.yaml configuration"):
+    with pytest.raises(DuplicateExternalError, match="cannot have the same external id"):
         ExternalSpecsParser(externals_dict)
 
 

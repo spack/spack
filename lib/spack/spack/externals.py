@@ -51,7 +51,7 @@ def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
     )
     if not result.versions.concrete:
         raise ExternalSpecError(
-            f"The external spec '{external_dict['spec']}' doesn't have a concrete version."
+            f"The external spec '{external_dict['spec']}' doesn't have a concrete version"
         )
 
     result.extra_attributes = extra_attributes
@@ -125,6 +125,11 @@ def extract_dicts_from_configuration(packages_yaml) -> List[ExternalDict]:
     return result
 
 
+def _line_info(config_dict: Any) -> str:
+    result = getattr(config_dict, "line_info", "")
+    return "" if not result else f" [{result}]"
+
+
 _TARGET_RE = re.compile(r"target=([^\s:]+)")
 
 
@@ -193,31 +198,29 @@ class ExternalSpecsParser:
     def _parse(self) -> None:
         # Parse all nodes without creating edges among them
         self._parse_all_nodes()
-
         # Map dependencies specified as specs to a single id
         self._ensure_dependencies_have_single_id()
-
         # Attach dependencies to externals
         self._create_edges()
-
+        # Mark the specs as concrete
         for node in self.nodes:
             node._finalize_concretization()
 
     def _create_edges(self):
         for eid, entry in self.specs_by_external_id.items():
-            current_node = entry.spec
-            current_dict = entry.config
-
+            current_node, current_dict = entry.spec, entry.config
+            line_info = _line_info(current_dict)
+            spec_str = current_dict["spec"]
             for dependency_dict in current_dict.get("dependencies", []):
                 dependency_id = dependency_dict.get("id")
                 if not dependency_id:
                     raise ExternalDependencyError(
-                        f"A dependency for {current_dict['spec']} does not have an external id"
+                        f"A dependency for {spec_str} does not have an external id{line_info}"
                     )
                 elif dependency_id not in self.specs_by_external_id:
                     raise ExternalDependencyError(
-                        f"A dependency for {current_dict['spec']} has an external id "
-                        f"{dependency_id} that is not defined in packages.yaml"
+                        f"A dependency for {spec_str} has an external id "
+                        f"{dependency_id} that cannot be found in packages.yaml{line_info}"
                     )
 
                 dependency_node = self.specs_by_external_id[dependency_id].spec
@@ -232,8 +235,9 @@ class ExternalSpecsParser:
 
     def _ensure_dependencies_have_single_id(self):
         for eid, entry in self.specs_by_external_id.items():
-            current_node = entry.spec
-            current_dict = entry.config
+            current_node, current_dict = entry.spec, entry.config
+            spec_str = current_dict["spec"]
+            line_info = _line_info(current_dict)
             is_legacy = False
             # Guess how to convert old entries like 'mpich %gcc' to a dependency in the dict
             for edge in current_node.edges_to_dependencies():
@@ -241,14 +245,13 @@ class ExternalSpecsParser:
                 # We don't want to accept foo %[deptypes=build,link] mpich as a spec
                 if edge.depflag != 0:
                     raise ExternalDependencyError(
-                        f"The external spec '{current_dict['spec']}' has an invalid dependency"
-                        f" specification. Fix your packages.yaml configuration."
+                        f"The external spec '{spec_str}' cannot specify deptypes{line_info}"
                     )
 
                 if edge.spec.name not in self.specs_by_name:
                     raise ExternalDependencyError(
-                        f"The external spec '{current_dict['spec']}' depends on "
-                        f"'{edge.spec.name}', but there is no such external spec in packages.yaml."
+                        f"The external spec '{spec_str}' depends on {edge.spec.name}', but there "
+                        f"is no such external spec in packages.yaml{line_info}"
                     )
 
                 candidates = [
@@ -259,16 +262,16 @@ class ExternalSpecsParser:
                 ]
                 if not candidates:
                     raise ExternalDependencyError(
-                        f"The external spec '{current_dict['spec']}' depends on '{edge.spec}',"
-                        f" but there is no '{edge.spec.name}' that satisfies the request "
-                        f"in packages.yaml."
+                        f"The external spec '{spec_str}' depends on '{edge.spec}', but there is no"
+                        f" '{edge.spec.name}' that meets the requests in packages.yaml{line_info}"
                     )
 
                 candidates.sort(key=lambda x: x.spec)  # type: ignore
                 selected = candidates[-1]
                 warnings.warn(
-                    f"the external spec '{current_dict['spec']}' has been guessed to depend on "
-                    f"'{selected.config['spec']}'. If this is incorrect, fix your packages.yaml."
+                    f"the external spec '{spec_str}' has been guessed to depend on "
+                    f"'{selected.config['spec']}'. If this is incorrect, modify the spec "
+                    f"definition{line_info}"
                 )
                 current_dict.setdefault("dependencies", []).append(
                     {"id": selected.config["id"], "deptypes": "build", "virtuals": "c"}
@@ -285,8 +288,8 @@ class ExternalSpecsParser:
 
                 if "spec" not in dependency_dict:
                     raise ExternalDependencyError(
-                        f"the spec {current_dict['spec']} needs to specify either the id or the "
-                        f"spec of its dependencies."
+                        f"the spec {spec_str} needs to specify either the id or the spec "
+                        f"of its dependencies{line_info}"
                     )
 
                 query_spec = spack.spec.Spec(dependency_dict["spec"])
@@ -295,31 +298,32 @@ class ExternalSpecsParser:
                 ]
                 if len(candidates) == 0:
                     raise ExternalDependencyError(
-                        f"the spec {current_dict['spec']} depends on {query_spec}, but there is "
-                        f"no such external spec in packages.yaml."
+                        f"the spec {spec_str} depends on {query_spec}, but there is no such "
+                        f"external spec in packages.yaml{line_info}"
                     )
                 elif len(candidates) > 1:
                     raise ExternalDependencyError(
-                        f"the spec {current_dict['spec']} depends on {query_spec}, but there are "
-                        f"multiple external specs in packages.yaml that satisfy it."
+                        f"the spec {spec_str} depends on {query_spec}, but there are multiple "
+                        f"external specs in packages.yaml that satisfy it{line_info}"
                     )
 
                 dependency_dict["id"] = candidates[0].config["id"]
 
-    def _parse_all_nodes(self):
-        """Parses all the nodes from the external dicts, but doesn't add any edge."""
+    def _parse_all_nodes(self) -> None:
+        """Parses all the nodes from the external dicts but doesn't add any edge."""
         for external_dict in self.external_dicts:
+            line_info = _line_info(external_dict)
             try:
                 node = node_from_dict(external_dict)
             except spack.spec.UnsatisfiableArchitectureSpecError:
                 spec_str, target_str = external_dict["spec"], external_dict["required_target"]
                 tty.debug(
-                    f"[{__name__}] Skipping external spec '{spec_str}' "
-                    f"because it cannot be constrained with the required target '{target_str}'."
+                    f"[{__name__}]{line_info} Skipping external spec '{spec_str}' because it "
+                    f"cannot be constrained with the required target '{target_str}'."
                 )
                 continue
             except ExternalSpecError as e:
-                warnings.warn(f"{e}")
+                warnings.warn(f"{e}{line_info}")
                 continue
 
             package_exists = spack.repo.PATH.exists(node.name)
@@ -329,14 +333,15 @@ class ExternalSpecsParser:
                 continue
 
             if not package_exists and not self.allow_nonexisting:
-                raise spack.repo.UnknownPackageError(node.name, repo=spack.repo.PATH)
+                raise ExternalSpecError(f"Package '{node.name}' does not exist{line_info}")
 
             eid = external_dict.setdefault("id", str(uuid.uuid4()))
             if eid in self.specs_by_external_id:
-                other_node = self.specs_by_external_id[eid].spec
+                other_node = self.specs_by_external_id[eid]
+                other_line_info = _line_info(other_node.config)
                 raise DuplicateExternalError(
-                    f"Specs {node} and {other_node} have the same external id {eid}."
-                    f" Fix your packages.yaml configuration."
+                    f"Specs {node} and {other_node.spec} cannot have the same external id {eid}"
+                    f"{line_info}{other_line_info}"
                 )
 
             self.complete_node(node)
