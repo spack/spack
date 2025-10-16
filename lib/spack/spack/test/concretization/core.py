@@ -499,6 +499,18 @@ class TestConcretize:
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one(f"dt-diamond%clang ^/{lefthash}")
 
+    def test_disable_mixing_allow_compiler_link(self):
+        """Check if we can use a compiler when mixing is disabled, and
+        still depend on a separate compiler package (in the latter case
+        not using it as a compiler but rather for some utility it
+        provides).
+        """
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            x = spack.concretize.concretize_one("llvm-client%gcc")
+            assert x.satisfies("%cxx=gcc")
+            assert x.satisfies("%c=gcc")
+            assert "llvm" in x
+
     def test_disable_mixing_env(
         self, mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
     ):
