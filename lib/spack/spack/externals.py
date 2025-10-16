@@ -239,6 +239,20 @@ class ExternalSpecsParser:
             spec_str = current_dict["spec"]
             line_info = _line_info(current_dict)
 
+            # Add a Python dependency to Python extensions
+            pkg_class = spack.repo.PATH.get_pkg_class(current_node.name)
+            if "dependencies" not in current_dict and any(
+                [c.__name__ == "PythonExtension" for c in pkg_class.__mro__]
+            ):
+                warnings.warn(
+                    f"Spack is trying attach a Python dependency to '{spec_str}'. This feature is "
+                    f"deprecated, and will be removed in v1.2. Please make the dependency "
+                    f"explicit in your configuration."
+                )
+                current_dict.setdefault("dependencies", []).append(
+                    {"spec": "python", "deptypes": ["build", "run"]}
+                )
+
             # Transform inline entries like 'mpich %gcc' to a canonical form
             for edge in current_node.edges_to_dependencies():
                 # We don't want to accept foo %[deptypes=build,link] mpich as a spec

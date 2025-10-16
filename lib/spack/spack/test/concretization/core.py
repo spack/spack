@@ -2178,6 +2178,28 @@ class TestConcretize:
 
     target = spack.platforms.test.Test.default
 
+    def test_external_python_extension_find_dependency_from_config(self, mutable_config, tmp_path):
+        """Tests that an external Python extension gets a dependency on Python."""
+        packages_yaml = f"""
+packages:
+  py-extension1:
+    buildable: false
+    externals:
+    - spec: py-extension1@2.0
+      prefix: {tmp_path / "py-extension1"}
+  python:
+    externals:
+    - spec: python@3.8.13
+      prefix: {tmp_path / "python"}
+"""
+        configuration = syaml.load_config(packages_yaml)
+        mutable_config.set("packages", configuration["packages"])
+        py_extension = spack.concretize.concretize_one("py-extension1")
+
+        assert py_extension.external
+        assert py_extension["python"].external
+        assert py_extension["python"].prefix == str(tmp_path / "python")
+
     @pytest.mark.regression("36190")
     @pytest.mark.parametrize(
         "specs",
