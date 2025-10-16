@@ -1584,15 +1584,15 @@ unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
     unification_set("root", node(NodeID, NodeName)).
 
 unification_set_compiler("root", CompilerName, CompilerVersion, Language) :- 
-    unification_set("root", ParentNode),
     attr("hash", ParentNode, ParentHash),
-    not allow_mixing(ParentName),
     hash_attr(ParentHash, "concrete_build_dependency", ParentName, CompilerName, CompilerHash),
     hash_attr(ParentHash, "virtual_on_build_edge", ParentName, CompilerName, Language),
     hash_attr(CompilerHash, "virtual_on_incoming_edges", CompilerName, Language),
     hash_attr(CompilerHash,"version", CompilerName, CompilerVersion),
     no_compiler_mixing(Language),
-    language(Language).
+    language(Language),
+    not allow_mixing(ParentName),
+    unification_set("root", ParentNode).
 
 #defined no_compiler_mixing/1.
 #defined allow_mixing/1.
