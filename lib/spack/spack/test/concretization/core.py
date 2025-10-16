@@ -491,13 +491,16 @@ class TestConcretize:
         assert left.satisfies("%c=gcc")
         lefthash = left.dag_hash()[:7]
 
-        # This should work when mixing is allowed
+        # Check if mixing works when it's allowed
         spack.concretize.concretize_one(f"dt-diamond%clang ^/{lefthash}")
 
         # Now try to use it with compiler mixing disabled
         with spack.config.override("concretizer", {"compiler_mixing": False}):
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one(f"dt-diamond%clang ^/{lefthash}")
+
+            # Should be able to reuse if the compilers match
+            spack.concretize.concretize_one(f"dt-diamond%gcc ^/{lefthash}")
 
     def test_disable_mixing_allow_compiler_link(self):
         """Check if we can use a compiler when mixing is disabled, and
