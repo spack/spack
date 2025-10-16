@@ -1702,7 +1702,6 @@ unification_set_compiler("root", node(CompilerID, CompilerName), Language) :-
 
 unification_set_compiler("root", node(CompilerHash, CompilerName), Language) :-
     attr("hash", ParentNode, ParentHash),
-    reused_provider(node(CompilerHash, CompilerName), node(CompilerHash, Language)),
     hash_attr(ParentHash, "concrete_build_dependency", ParentName, CompilerName, CompilerHash),
     hash_attr(ParentHash, "virtual_on_build_edge", ParentName, CompilerName, Language),
     hash_attr(CompilerHash, "virtual_on_incoming_edges", CompilerName, Language),
