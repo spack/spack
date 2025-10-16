@@ -130,8 +130,8 @@ def get_modified_files(
 def get_commit_sha(path: str, ref: str) -> Optional[str]:
     """Get a commit sha for an arbitrary ref using ls-remote"""
 
-    # search for matching branch, then tag
-    ref_list = [f"refs/heads/{ref}", f"refs/tags/{ref}"]
+    # search for matching branch, annotated tag's commit, then lightweight tag
+    ref_list = [f"refs/heads/{ref}", f"refs/tags/{ref}^{{}}", f"refs/tags/{ref}"]
 
     if os.path.isdir(path):
         # for the filesystem an unpacked mirror could be in a detached state from a depth 1 clone
