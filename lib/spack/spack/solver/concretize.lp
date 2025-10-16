@@ -1692,25 +1692,37 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
 % compiler within the root unification set "registers" that compiler
 % (and the root set is prohibited from having >= 2 compilers for that
 % language).
-unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
+unification_set_compiler("root", node(CompilerID, CompilerName), Language) :-
     attr("node", node(NodeID, NodeName)),
     attr("virtual_on_edge", node(NodeID, NodeName), node(CompilerID, CompilerName), Language),
-    attr("version", node(CompilerID, CompilerName), CompilerVersion),
+    %attr("version", node(CompilerID, CompilerName), CompilerVersion),
     no_compiler_mixing(Language),
     language(Language),
     not allow_mixing(NodeName),
     unification_set("root", node(NodeID, NodeName)).
 
-unification_set_compiler("root", CompilerName, CompilerVersion, Language) :- 
+unification_set_compiler("root", node(CompilerHash, CompilerName), Language) :-
     attr("hash", ParentNode, ParentHash),
+    reused_provider(node(CompilerHash, CompilerName), node(CompilerHash, Language)),
     hash_attr(ParentHash, "concrete_build_dependency", ParentName, CompilerName, CompilerHash),
     hash_attr(ParentHash, "virtual_on_build_edge", ParentName, CompilerName, Language),
     hash_attr(CompilerHash, "virtual_on_incoming_edges", CompilerName, Language),
-    hash_attr(CompilerHash,"version", CompilerName, CompilerVersion),
+    %hash_attr(CompilerHash,"version", CompilerName, CompilerVersion),
     no_compiler_mixing(Language),
     language(Language),
     not allow_mixing(ParentName),
     unification_set("root", ParentNode).
+
+%unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
+%    attr("hash", ParentNode, ParentHash),
+%    hash_attr(ParentHash, "concrete_build_dependency", ParentName, CompilerName, CompilerHash),
+%    hash_attr(ParentHash, "virtual_on_build_edge", ParentName, CompilerName, Language),
+%    hash_attr(CompilerHash, "virtual_on_incoming_edges", CompilerName, Language),
+%    hash_attr(CompilerHash,"version", CompilerName, CompilerVersion),
+%    no_compiler_mixing(Language),
+%    language(Language),
+%    not allow_mixing(ParentName),
+%    unification_set("root", ParentNode).
 
 #defined no_compiler_mixing/1.
 #defined allow_mixing/1.
@@ -1718,7 +1730,7 @@ unification_set_compiler("root", CompilerName, CompilerVersion, Language) :-
 % You can't have >1 (CompilerName, CompilerVersion) pairs for a given
 % language if mixing is disabled
 error(100, "Compiler mixing is disabled") :-
-    #count { CompilerName,CompilerVersion : unification_set_compiler("root", CompilerName, CompilerVersion, Language) } > 1.
+    #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
 
 %-----------------------------------------------------------------------------
 % Runtimes
