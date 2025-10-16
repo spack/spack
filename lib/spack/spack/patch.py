@@ -6,22 +6,24 @@ import hashlib
 import os
 import pathlib
 import sys
-from typing import Any, Dict, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Type, Union
 
 import spack
 import spack.error
 import spack.fetch_strategy
 import spack.llnl.util.filesystem
-import spack.repo
-import spack.stage
 import spack.util.spack_json as sjson
 from spack.llnl.url import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
 
+if TYPE_CHECKING:
+    import spack.package_base
+    import spack.repo
+
 
 def apply_patch(
-    stage: "spack.stage.Stage",
+    source_path: str,
     patch_path: str,
     level: int = 1,
     working_dir: str = ".",
@@ -59,7 +61,7 @@ def apply_patch(
     # has issues handling CRLF line endings unless the --binary
     # flag is passed.
     patch = which("patch", required=True, path=git_utils_path)
-    with spack.llnl.util.filesystem.working_dir(stage.source_path):
+    with spack.llnl.util.filesystem.working_dir(source_path):
         patch(*args)
 
 
@@ -278,7 +280,7 @@ class UrlPatch(Patch):
             raise spack.error.PatchDirectiveError("URL patches require a sha256 checksum")
         self.sha256 = sha256
 
-    def fetcher(self) -> "spack.fetch_strategy.FetchStrategy":
+    def fetcher(self) -> spack.fetch_strategy.FetchStrategy:
         """Construct a fetcher that can download (and unpack) this patch."""
         # Two checksums, one for compressed file, one for its contents
         if self.archive_sha256 and self.sha256:
@@ -303,9 +305,7 @@ class UrlPatch(Patch):
         return data
 
 
-def from_dict(
-    dictionary: Dict[str, Any], repository: Optional["spack.repo.RepoPath"] = None
-) -> Patch:
+def from_dict(dictionary: Dict[str, Any], repository: "spack.repo.RepoPath") -> Patch:
     """Create a patch from json dictionary.
 
     Args:
@@ -318,7 +318,6 @@ def from_dict(
     Raises:
         ValueError: If *owner* or *url*/*relative_path* are missing in the dictionary.
     """
-    repository = repository or spack.repo.PATH
     owner = dictionary.get("owner")
     if owner is None:
         raise ValueError(f"Invalid patch dictionary: {dictionary}")

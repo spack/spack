@@ -1,12 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""This is where most of the action happens in Spack.
-
-The spack package class structure is based strongly on Homebrew
-(http://brew.sh/), mainly because Homebrew makes it very easy to create
-packages.
-"""
+"""Base class for all Spack packages."""
 
 import base64
 import collections
@@ -522,82 +517,41 @@ class DisableRedistribute:
 
 
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
-    """This is the universal base class for all spack packages.
+    """This is the universal base class for all Spack packages.
 
-    ***The Package class***
-
-    At its core, a package consists of a set of software to be installed.
-    A package may focus on a piece of software and its associated software
-    dependencies or it may simply be a set, or bundle, of software.  The
-    former requires defining how to fetch, verify (via, e.g., sha256), build,
-    and install that software and the packages it depends on, so that
-    dependencies can be installed along with the package itself.   The latter,
-    sometimes referred to as a ``no-source`` package, requires only defining
-    the packages to be built.
-
-    Packages are written in pure Python.
+    At its core, a package consists of a set of software to be installed. A package may focus on a
+    piece of software and its associated software dependencies or it may simply be a set, or
+    bundle, of software. The former requires defining how to fetch, verify (via, e.g., ``sha256``),
+    build, and install that software and the packages it depends on, so that dependencies can be
+    installed along with the package itself. The latter, sometimes referred to as a "no-source"
+    package, requires only defining the packages to be built.
 
     There are two main parts of a Spack package:
 
-    1. **The package class**.  Classes contain ``directives``, which are special functions, that
-       add metadata (versions, patches, dependencies, and other information) to packages (see
-       ``directives.py``). Directives provide the constraints that are used as input to the
-       concretizer.
+    1. **The package class**.  Classes contain *directives*, which are functions such as
+       :py:func:`spack.package.version`, :py:func:`spack.package.patch`, and
+       :py:func:`spack.package.depends_on`, that store metadata on the package class. Directives
+       provide the constraints that are used as input to the concretizer.
 
-    2. **Package instances**. Once instantiated, a package can be passed to the PackageInstaller.
-       It calls methods like ``do_stage()`` on the ``Package`` object, and it uses those to drive
-       user-implemented methods like ``patch()``, ``install()``, and other build steps. To
-       install software, an instantiated package needs a *concrete* spec, which guides the
-       behavior of the various install methods.
+    2. **Package instances**. Once instantiated with a concrete spec, a package can be passed to
+       the :py:class:`spack.installer.PackageInstaller`. It calls methods like :meth:`do_stage` on
+       the package instance, and it uses those to drive user-implemented methods like ``def patch``
+       and install phases like ``def configure`` and ``def install``.
 
-    Packages are imported from repos (see ``repo.py``).
+    Packages are imported from package repositories (see :py:mod:`spack.repo`).
 
-    **Package DSL**
+    For most use cases, package creators typically just add attributes like ``homepage`` and, for
+    a code-based package, ``url``, or installation phases such as ``install()``.
+    There are many custom ``PackageBase`` subclasses in the ``spack_repo.builtin.build_systems``
+    package that make things even easier for specific build systems.
 
-    Look in ``lib/spack/docs`` or check https://spack.readthedocs.io for
-    the full documentation of the package domain-specific language.  That
-    used to be partially documented here, but as it grew, the docs here
-    became increasingly out of date.
+    .. note::
 
-    **Package Lifecycle**
-
-    A package's lifecycle over a run of Spack looks something like this:
-
-    .. code-block:: python
-
-       p = Package()  # Done for you by spack
-
-       p.do_fetch()  # downloads tarball from a URL (or VCS)
-       p.do_stage()  # expands tarball in a temp directory
-       p.do_patch()  # applies patches to expanded source
-       p.do_uninstall()  # removes install directory
-
-    although packages that do not have code have nothing to fetch so omit
-    ``p.do_fetch()``.
-
-    There are also some other commands that clean the build area:
-
-    .. code-block:: python
-
-       p.do_clean()  # removes the stage directory entirely
-       p.do_restage()  # removes the build directory and re-expands the archive.
-
-    The convention used here is that a ``do_*`` function is intended to be
-    called internally by Spack commands (in ``spack.cmd``).  These aren't for
-    package writers to override, and doing so may break the functionality
-    of the Package class.
-
-    Package creators have a lot of freedom, and they could technically
-    override anything in this class.  That is not usually required.
-
-    For most use cases.  Package creators typically just add attributes
-    like ``homepage`` and, for a code-based package, ``url``, or functions
-    such as ``install()``.
-    There are many custom ``Package`` subclasses in the
-    ``spack_repo.builtin.build_systems`` package that make things even easier for
-    specific build systems.
-
-    """
+       Many methods and attributes that appear to be public interface are not meant to be
+       overridden by packagers. They are "final", but we currently have not adopted the ``@final``
+       decorator in the Spack codebase. For example, the ``do_*`` functions are intended only to be
+       called internally by Spack commands. These aren't for package writers to override, and
+       doing so may break the functionality of the ``PackageBase`` class."""
 
     compiler = DeprecatedCompiler()
 
@@ -1722,7 +1676,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                         patch_path = patch.path
 
                     spack.patch.apply_patch(
-                        self.stage, patch_path, patch.level, patch.working_dir, patch.reverse
+                        self.stage.source_path,
+                        patch_path,
+                        patch.level,
+                        patch.working_dir,
+                        patch.reverse,
                     )
 
                 tty.msg(f"Applied patch {patch.path_or_url}")

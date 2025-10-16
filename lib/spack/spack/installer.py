@@ -48,6 +48,7 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
+import spack.jobserver
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as lk
 import spack.llnl.util.tty as tty
@@ -59,7 +60,6 @@ import spack.report
 import spack.rewiring
 import spack.spec
 import spack.store
-import spack.util.executable
 import spack.util.path
 import spack.util.timer as timer
 from spack.llnl.string import ordinal
@@ -2424,6 +2424,11 @@ class PackageInstaller:
         install_status = InstallStatus(len(self.build_pq))
         active_tasks: List[Task] = []
 
+        # Determine which type of jobserver to set up and then enable it
+        packages = [task.pkg for _, task in self.build_pq]
+        jobserver = spack.jobserver.Jobserver.determine_type(packages)
+        jobserver.enable()
+
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
         term_status = TermStatusLine(
@@ -2464,7 +2469,12 @@ class PackageInstaller:
                 for task in active_tasks:
                     task.terminate()
                 active_tasks.clear()  # they're all done now
+                # Close and cleanup the jobserver if an installation error occurs
+                jobserver.cleanup()
                 raise
+
+        # Close and cleanup the jobserver
+        jobserver.cleanup()
 
         self._clear_removed_tasks()
         if self.build_pq:

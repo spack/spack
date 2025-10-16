@@ -153,7 +153,15 @@ class ConfigScope:
                 include_paths = [included_path(data) for data in includes["include"]]
                 for path in include_paths:
                     included_scope = include_path_scope(path, self)
-                    if included_scope:
+                    if not included_scope:
+                        continue
+
+                    # Do not include duplicate scopes
+                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
+                        tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                        continue
+
+                    if included_scope not in self._included_scopes:
                         self._included_scopes.append(included_scope)
 
         return self._included_scopes
@@ -638,6 +646,10 @@ class Configuration:
 
         """
         return self._get_config_memoized(section, scope=scope, _merged_scope=_merged_scope)
+
+    def deepcopy_as_builtin(self, section: str, scope: Optional[str] = None) -> Dict[str, Any]:
+        """Get a deep copy of a section with native Python types, excluding YAML metadata."""
+        return syaml.deepcopy_as_builtin(self.get_config(section, scope=scope))
 
     @lang.memoized
     def _get_config_memoized(

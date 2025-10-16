@@ -196,9 +196,16 @@ class UsernamePassword(NamedTuple):
     username: str
     password: str
 
+    @property
+    def basic_auth_header(self) -> str:
+        encoded = base64.b64encode(f"{self.username}:{self.password}".encode("utf-8")).decode(
+            "utf-8"
+        )
+        return f"Basic {encoded}"
 
-def get_bearer_challenge(challenges: List[Challenge]) -> Optional[RealmServiceScope]:
-    # Find a challenge that we can handle (currently only Bearer)
+
+def _get_bearer_challenge(challenges: List[Challenge]) -> Optional[RealmServiceScope]:
+    """Return the realm/service/scope for a Bearer auth challenge, or None if not found."""
     challenge = next((c for c in challenges if c.scheme == "Bearer"), None)
 
     if challenge is None:
@@ -215,6 +222,16 @@ def get_bearer_challenge(challenges: List[Challenge]) -> Optional[RealmServiceSc
     return RealmServiceScope(realm, service, scope)
 
 
+def _get_basic_challenge(challenges: List[Challenge]) -> Optional[str]:
+    """Return the realm for a Basic auth challenge, or None if not found."""
+    challenge = next((c for c in challenges if c.scheme == "Basic"), None)
+
+    if challenge is None:
+        return None
+
+    return next((v for k, v in challenge.params if k == "realm"), None)
+
+
 class OCIAuthHandler(urllib.request.BaseHandler):
     def __init__(self, credentials_provider: Callable[[str], Optional[UsernamePassword]]):
         """
@@ -223,53 +240,8 @@ class OCIAuthHandler(urllib.request.BaseHandler):
         """
         self.credentials_provider = credentials_provider
 
-        # Cached bearer tokens for a given domain.
-        self.cached_tokens: Dict[str, str] = {}
-
-    def obtain_bearer_token(self, registry: str, challenge: RealmServiceScope, timeout) -> str:
-        # See https://docs.docker.com/registry/spec/auth/token/
-
-        query = urllib.parse.urlencode(
-            {"service": challenge.service, "scope": challenge.scope, "client_id": "spack"}
-        )
-
-        parsed = urllib.parse.urlparse(challenge.realm)._replace(
-            query=query, fragment="", params=""
-        )
-
-        # Don't send credentials over insecure transport.
-        if parsed.scheme != "https":
-            raise ValueError(
-                f"Cannot login to {registry} over insecure {parsed.scheme} connection"
-            )
-
-        request = Request(urllib.parse.urlunparse(parsed))
-
-        # I guess we shouldn't cache this, since we don't know
-        # the context in which it's used (may depend on config)
-        pair = self.credentials_provider(registry)
-
-        if pair is not None:
-            encoded = base64.b64encode(f"{pair.username}:{pair.password}".encode("utf-8")).decode(
-                "utf-8"
-            )
-            request.add_unredirected_header("Authorization", f"Basic {encoded}")
-
-        # Do a GET request.
-        response = self.parent.open(request, timeout=timeout)
-
-        # Read the response and parse the JSON
-        response_json = json.load(response)
-
-        # Get the token from the response
-        token = response_json["token"]
-
-        # Remember the last obtained token for this registry
-        # Note: we should probably take into account realm, service and scope
-        # so we can store multiple tokens for the same registry.
-        self.cached_tokens[registry] = token
-
-        return token
+        # Cached authorization headers for a given domain.
+        self.cached_auth_headers: Dict[str, str] = {}
 
     def https_request(self, req: Request):
         # Eagerly add the bearer token to the request if no
@@ -282,13 +254,62 @@ class OCIAuthHandler(urllib.request.BaseHandler):
             return req
 
         parsed = urllib.parse.urlparse(req.full_url)
-        token = self.cached_tokens.get(parsed.netloc)
+        auth_header = self.cached_auth_headers.get(parsed.netloc)
 
-        if not token:
+        if not auth_header:
             return req
 
-        req.add_unredirected_header("Authorization", f"Bearer {token}")
+        req.add_unredirected_header("Authorization", auth_header)
         return req
+
+    def _try_bearer_challenge(
+        self,
+        challenges: List[Challenge],
+        credentials: Optional[UsernamePassword],
+        timeout: Optional[float],
+    ) -> Optional[str]:
+        # Check whether a Bearer challenge is present in the WWW-Authenticate header
+        challenge = _get_bearer_challenge(challenges)
+        if not challenge:
+            return None
+
+        # Get the token from the auth handler
+        query = urllib.parse.urlencode(
+            {"service": challenge.service, "scope": challenge.scope, "client_id": "spack"}
+        )
+        parsed = urllib.parse.urlparse(challenge.realm)._replace(
+            query=query, fragment="", params=""
+        )
+
+        # Don't send credentials over insecure transport.
+        if parsed.scheme != "https":
+            raise ValueError(f"Cannot login over insecure {parsed.scheme} connection")
+
+        request = Request(urllib.parse.urlunparse(parsed), method="GET")
+
+        if credentials is not None:
+            request.add_unredirected_header("Authorization", credentials.basic_auth_header)
+
+        # Do a GET request.
+        response = self.parent.open(request, timeout=timeout)
+        try:
+            response_json = json.load(response)
+            token = response_json["token"]
+            assert type(token) is str
+        except Exception as e:
+            raise ValueError(f"Malformed token response from {challenge.realm}") from e
+        return f"Bearer {token}"
+
+    def _try_basic_challenge(
+        self, challenges: List[Challenge], credentials: UsernamePassword
+    ) -> Optional[str]:
+        # Check whether a Basic challenge is present in the WWW-Authenticate header
+        # A realm is required for Basic auth, although we don't use it here. Leave this as a
+        # validation step.
+        realm = _get_basic_challenge(challenges)
+        if not realm:
+            return None
+        return credentials.basic_auth_header
 
     def http_error_401(self, req: Request, fp, code, msg, headers):
         # Login failed, avoid infinite recursion where we go back and
@@ -305,47 +326,46 @@ class OCIAuthHandler(urllib.request.BaseHandler):
                 req, code, "Cannot login to registry, missing WWW-Authenticate header", headers, fp
             )
 
-        header_value = headers["WWW-Authenticate"]
+        www_auth_str = headers["WWW-Authenticate"]
 
         try:
-            challenge = get_bearer_challenge(parse_www_authenticate(header_value))
+            challenges = parse_www_authenticate(www_auth_str)
         except ValueError as e:
             raise spack.util.web.DetailedHTTPError(
                 req,
                 code,
-                f"Cannot login to registry, malformed WWW-Authenticate header: {header_value}",
+                f"Cannot login to registry, malformed WWW-Authenticate header: {www_auth_str}",
                 headers,
                 fp,
             ) from e
 
-        # If there is no bearer challenge, we can't handle it
-        if not challenge:
-            raise spack.util.web.DetailedHTTPError(
-                req,
-                code,
-                f"Cannot login to registry, unsupported authentication scheme: {header_value}",
-                headers,
-                fp,
-            )
+        registry = urllib.parse.urlparse(req.get_full_url()).netloc
 
-        # Get the token from the auth handler
+        credentials = self.credentials_provider(registry)
+
+        # First try Bearer, then Basic
         try:
-            token = self.obtain_bearer_token(
-                registry=urllib.parse.urlparse(req.get_full_url()).netloc,
-                challenge=challenge,
-                timeout=req.timeout,
-            )
-        except ValueError as e:
+            auth_header = self._try_bearer_challenge(challenges, credentials, req.timeout)
+            if not auth_header and credentials:
+                auth_header = self._try_basic_challenge(challenges, credentials)
+        except Exception as e:
+            raise spack.util.web.DetailedHTTPError(
+                req, code, f"Cannot login to registry: {e}", headers, fp
+            ) from e
+
+        if not auth_header:
             raise spack.util.web.DetailedHTTPError(
                 req,
                 code,
-                f"Cannot login to registry, failed to obtain bearer token: {e}",
+                f"Cannot login to registry, unsupported authentication scheme: {www_auth_str}",
                 headers,
                 fp,
-            ) from e
+            )
 
-        # Add the token to the request
-        req.add_unredirected_header("Authorization", f"Bearer {token}")
+        self.cached_auth_headers[registry] = auth_header
+
+        # Add the authorization header to the request
+        req.add_unredirected_header("Authorization", auth_header)
         setattr(req, "login_attempted", True)
 
         return self.parent.open(req, timeout=req.timeout)

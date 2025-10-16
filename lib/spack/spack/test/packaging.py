@@ -17,11 +17,11 @@ import pytest
 
 import spack.binary_distribution
 import spack.cmd.buildcache as buildcache
+import spack.cmd.mirror
 import spack.concretize
 import spack.config
 import spack.error
 import spack.fetch_strategy
-import spack.mirrors.utils
 import spack.package_base
 import spack.stage
 import spack.util.gpg
@@ -54,7 +54,7 @@ def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_c
 
     # Create the build cache and put it directly into the mirror
     mirror_path = str(tmp_path / "test-mirror")
-    spack.mirrors.utils.create(mirror_path, specs=[])
+    spack.cmd.mirror.create(mirror_path, specs=[])
 
     # register mirror with spack config
     mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_path)}
