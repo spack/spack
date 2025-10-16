@@ -143,5 +143,7 @@ def test_dump_logs_failure(
         with pytest.raises(spack.error.InstallError):
             e.install_all()
 
-        output = logs("canfail")
-        assert "'succeed' was false" in output
+        with stdout_as_buffered_text_stream() as redirected_stdout:
+            ((cmdline_spec, concrete_spec),) = e.concretized_specs()
+            spack.cmd.logs._logs(cmdline_spec, concrete_spec)
+            assert "'succeed' was false" in _rewind_collect_and_decode(redirected_stdout)
