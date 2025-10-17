@@ -1,6 +1,19 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+"""
+This module turns the configuration data in the ``packages`` section into a list of concrete specs.
+
+This is mainly done by the ``ExternalSpecsParser`` class, which is responsible for:
+
+ 1. Transforming an intermediate representation of the YAML configuration into a set of nodes
+ 2. Ensuring the dependency specifications are not ambiguous
+ 3. Inferring missing information about the external specs (e.g. architecture, deptypes)
+ 4. Wiring up the external specs to their dependencies
+
+The helper function ``extract_dicts_from_configuration`` is used to transform the configuration
+into the intermediate representation.
+"""
 import re
 import uuid
 import warnings
