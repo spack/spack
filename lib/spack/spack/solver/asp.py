@@ -896,11 +896,6 @@ class ConcretizationCache:
         return None, None
 
 
-CONC_CACHE: ConcretizationCache = spack.llnl.util.lang.Singleton(
-    lambda: ConcretizationCache()
-)  # type: ignore
-
-
 def _is_checksummed_git_version(v):
     return isinstance(v, vn.GitVersion) and v.is_commit
 
@@ -1060,16 +1055,18 @@ class ErrorHandler:
 
 
 class PyclingoDriver:
-    def __init__(self, cores=True):
+    def __init__(self, cores=True, conc_cache: Optional[ConcretizationCache] = None):
         """Driver for the Python clingo interface.
 
         Arguments:
             cores (bool): whether to generate unsatisfiable cores for better
                 error reporting.
+            conc_cache (ConcretizationCache)
         """
         self.cores = cores
         # This attribute will be reset at each call to solve
         self.control = None
+        self._conc_cache = conc_cache
 
     def _control_file_paths(self, control_files: List[str]) -> List[str]:
         """Get absolute paths based on relative paths of control files.
@@ -1302,16 +1299,16 @@ class PyclingoDriver:
 
         result, concretization_stats = None, None
         conc_cache_enabled = spack.config.get("concretizer:concretization_cache:enable", False)
-        if conc_cache_enabled:
-            result, concretization_stats = CONC_CACHE.fetch(cache_key)
+        if conc_cache_enabled and self._conc_cache:
+            result, concretization_stats = self._conc_cache.fetch(cache_key)
         timer.stop("cache-check")
 
         # run the solver and store the result, if it wasn't cached already
         if not result:
             problem_repr = "\n".join(problem)
             result = self._run_clingo(specs, setup, problem_repr, control_file_paths, timer)
-            if conc_cache_enabled:
-                CONC_CACHE.store(cache_key, result, self.control.statistics)
+            if conc_cache_enabled and self._conc_cache:
+                self._conc_cache.store(cache_key, result, self.control.statistics)
 
         if output.timers:
             timer.write_tty()
@@ -4347,7 +4344,8 @@ class Solver:
     """
 
     def __init__(self):
-        self.driver = PyclingoDriver()
+        self._conc_cache = ConcretizationCache()
+        self.driver = PyclingoDriver(conc_cache=self._conc_cache)
         self.selector = ReusableSpecsSelector(configuration=spack.config.CONFIG)
 
     @staticmethod
@@ -4423,7 +4421,7 @@ class Solver:
         result = self.driver.solve(
             setup, specs, reuse=reusable_specs, output=output, allow_deprecated=allow_deprecated
         )
-        CONC_CACHE.cleanup()
+        self._conc_cache.cleanup()
         return result
 
     def solve(self, specs: Sequence[spack.spec.Spec], **kwargs) -> Result:
@@ -4493,7 +4491,7 @@ class Solver:
             for spec in result.specs:
                 reusable_specs.extend(spec.traverse())
 
-        CONC_CACHE.cleanup()
+        self._conc_cache.cleanup()
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
