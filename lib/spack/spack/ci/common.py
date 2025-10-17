@@ -590,30 +590,40 @@ class SpackCIConfig:
         jobs = self.ir["jobs"]
 
         # Implicit job defaults
-        defaults = [
-            {
-                "test-job": {
-                    "script": [
-                        "cd {env_dir}",
-                        "spack env activate --without-view .",
-                        "spack ci test",
-                    ]
+        defaults = (
+            [
+                {
+                    "test-job": {
+                        "script": [
+                            "cd {env_dir}",
+                            "spack env activate --without-view .",
+                            "spack ci test",
+                        ]
+                    }
                 }
-            }
-        ] if add_test_jobs else []
+            ]
+            if add_test_jobs
+            else []
+        )
 
-        defaults.extend([
-            {
-                "build-job": {
-                    "script": [
-                        "cd {env_dir}",
-                        "spack env activate --without-view .",
-                        "spack ci rebuild",
-                    ]
-                }
-            },
-            {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
-        ])
+        defaults.extend(
+            [
+                {
+                    "build-job": {
+                        "script": [
+                            "cd {env_dir}",
+                            "spack env activate --without-view .",
+                            "spack ci rebuild",
+                        ]
+                    }
+                },
+                {
+                    "noop-job": {
+                        "script": ['echo "All specs already up to date, nothing to rebuild."']
+                    }
+                },
+            ]
+        )
 
         # Job overrides
         overrides = [
@@ -670,7 +680,7 @@ class SpackCIConfig:
                     print(f"TLD: test section ({section}):")
                     for k, job in test_jobs.items():
                         _apply_section(job["attributes"], section)
-                    
+
                 elif name == "any":
                     # Apply section attributes to all jobs
                     for _, job in jobs.items():
@@ -689,7 +699,7 @@ class SpackCIConfig:
 
             elif has_submapping:
                 # Apply section jobs with specs to match
-                #for _, job in jobs.items():
+                # for _, job in jobs.items():
                 all_jobs = {**jobs, **test_jobs}
                 for _, job in all_jobs.items():
                     if job["spec"]:
@@ -743,7 +753,7 @@ class SpackCIConfig:
                     ).format_map(job_vars)
                     return f"spec={quote(query)}"
 
-                #for job in jobs.values():
+                # for job in jobs.values():
                 all_jobs = {**jobs, **test_jobs}
                 for _, job in all_jobs.items():
                     if not job["spec"]:
@@ -794,7 +804,7 @@ class SpackCIConfig:
                             job.get("attributes", {}), clean_config
                         )
 
-        #for _, job in jobs.items():
+        # for _, job in jobs.items():
         all_jobs = {**jobs, **test_jobs}
         for _, job in all_jobs.items():
             if job["spec"]:

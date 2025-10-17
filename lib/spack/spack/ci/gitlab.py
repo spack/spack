@@ -96,7 +96,9 @@ def maybe_generate_manifest(pipeline: PipelineDag, options: PipelineOptions, man
         )
 
 
-def create_buildcache_sync_job(attributes: Dict, needs: List[Dict], destination_fetch_url: str, relative_keys_url: str) -> Dict:
+def create_buildcache_sync_job(
+    attributes: Dict, needs: List[Dict], destination_fetch_url: str, relative_keys_url: str
+) -> Dict:
     """Create a buildcache sync job configuration.
 
     Args:
@@ -132,7 +134,9 @@ def create_buildcache_sync_job(attributes: Dict, needs: List[Dict], destination_
     return sync_job
 
 
-def create_buildcache_signing_job(attributes: Dict, destination_push_url: str, relative_specs_url: str, relative_keys_url: str) -> Dict:
+def create_buildcache_signing_job(
+    attributes: Dict, destination_push_url: str, relative_specs_url: str, relative_keys_url: str
+) -> Dict:
     """Create the buildcache signing job configuration.
 
     Args:
@@ -166,7 +170,9 @@ def create_buildcache_signing_job(attributes: Dict, destination_push_url: str, r
     return signing_job
 
 
-def create_rebuild_index_job(attributes: Dict, destination_push_url: str, service_job_retries: Dict) -> Dict:
+def create_rebuild_index_job(
+    attributes: Dict, destination_push_url: str, service_job_retries: Dict
+) -> Dict:
     """Create the rebuild index job configuration.
 
     Args:
@@ -181,8 +187,7 @@ def create_rebuild_index_job(attributes: Dict, destination_push_url: str, servic
     reindex_job["stage"] = "stage-rebuild-index"
     target_mirror = destination_push_url
     reindex_job["script"] = unpack_script(
-        reindex_job["script"],
-        op=lambda cmd: cmd.replace("{index_target_mirror}", target_mirror),
+        reindex_job["script"], op=lambda cmd: cmd.replace("{index_target_mirror}", target_mirror)
     )
 
     reindex_job["when"] = "always"
@@ -307,7 +312,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     # TODO/TLD: test_stage is assumed to be okay to be at level+1
     # TODO/TLD: test job NEEDS the build job
     # TODO/TLD: test job needs unique name
-    jobs = spack_ci_ir["jobs"]
+    # TODO/TLD: what was this for: jobs = spack_ci_ir["jobs"]
     if not options.pipeline_type == PipelineType.COPY_ONLY:
         for level, node in pipeline.traverse_nodes(direction="parents"):
             release_spec = node.spec
@@ -315,7 +320,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             print(f"TLD: level {0}, node {node}, hash {release_spec_dag_hash}")
 
             # TLD/TODO: Resume here with handling each possible type
-            for job in job_types:
+            for job in spack_ci.named_jobs:
                 stage_id = level if job == "build" else level + 1
                 if len(stages) == stage_id:
                     stages.append([])
@@ -327,8 +332,6 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                     stage_names.append(stage_name)
 
                 job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
-                print(f"\nTLD: key {spec_key}: object {job_object}")
-
                 if not job_object:
                     tty.warn(f"No {job} match found for {release_spec}, skipping it")
                     continue
@@ -380,7 +383,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                     # TODO/TBD:   spec to rebuild will test run (against cache?)
                     job_object["needs"] = [
                         {"job": job_name, "artifacts": True, "optional": True},
-                        {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"}
+                        {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"},
                     ]
 
                     # Ensure the test job has a unique name (TBD: needed?)
@@ -390,7 +393,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
                 # Let downstream jobs know whether the spec needed rebuilding,
                 # whether DAG pruning was enabled or not.
-                already_built = bindist.get_mirrors_for_spec(spec=release_spec, index_only=True)
+                already_built = spack.binary_distribution.get_mirrors_for_spec(
+                    spec=release_spec, index_only=True
+                )
                 job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
 
                 if options.cdash_handler:
@@ -429,10 +434,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 job_id += 1
 
             job_str = "build"
-            stages = stage_id
-            if "test" in job_types:
+            if "test" in spack_ci.named_jobs:
                 job_str += "and test"
-                stages += 1
+                stage_id += 1
 
             tty.debug(f"{job_id} {job_str} jobs generated in {stages} stages")
 

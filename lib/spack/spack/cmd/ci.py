@@ -864,11 +864,9 @@ def ci_test(args):
     job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
     repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
     concrete_env_dir = os.environ.get("SPACK_CONCRETE_ENV_DIR")
-    ci_job_name = os.environ.get("CI_JOB_NAME")
     job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
     job_spec_dag_hash = os.environ.get("SPACK_JOB_SPEC_DAG_HASH")
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE")
-    spack_ci_stack_name = os.environ.get("SPACK_CI_STACK_NAME")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = os.environ.get("CI_PROJECT_DIR")
@@ -967,10 +965,11 @@ def ci_test(args):
         fd.write(spack_info.encode("utf8"))
         fd.write(b"\n")
 
-    matches = bindist.get_mirrors_for_spec(job_spec, index_only=False)
+    matches = spack.binary_distribution.get_mirrors_for_spec(job_spec, index_only=False)
     if not matches:
         tty.die(
-            "Unable to find a hash match for {job_spec_pkg_name} in the mirrors. Cannot run stand-alone tests."
+            "Unable to find a hash match for {job_spec_pkg_name} in the "
+            "mirrors. Cannot run stand-alone tests."
         )
 
     tty.msg(f"Found hash match for {job_spec_pkg_name} at: ")
@@ -996,21 +995,21 @@ def ci_test(args):
     can_verify = spack_ci.can_verify_binaries()
     verify_binaries = can_verify and spack_is_pr_pipeline is False
     if not verify_binaries:
-        install_args.append("--no-check-signature")
+        spack_cmd.append("--no-check-signature")
 
     if args.jobs:
-        install_args.append(f"-j{args.jobs}")
+        spack_cmd.append(f"-j{args.jobs}")
 
     slash_hash = spack_ci.common.win_quote("/" + job_spec.dag_hash())
 
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
-        install_args.extend(cdash_handler.args())
+        spack_cmd.extend(cdash_handler.args())
 
     commands = [
         # apparently there's a race when spack bootstraps? do it up front once
         [SPACK_COMMAND, "-e", unicode_escape(env.path), "bootstrap", "now"],
-        spack_cmd + install_args + [slash_hash],
+        spack_cmd + [slash_hash],
     ]
     tty.debug(f"Installing {job_spec.name} from cache")
     install_exit_code = spack_ci.process_command("install", commands)
