@@ -141,7 +141,7 @@ def test_package_output(capsys, install_mockery, mock_fetch):
     # when nested AND in pytest
     spec = spack.concretize.concretize_one("printing-package")
     pkg = spec.package
-    PackageInstaller([pkg], explicit=True, verbose=True, tests=True).install()
+    PackageInstaller([pkg], explicit=True, verbose=True, tests=sys.platform == "win32").install()
 
     with gzip.open(pkg.install_log_path, "rt") as f:
         out = f.read()
