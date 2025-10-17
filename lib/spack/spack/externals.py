@@ -211,6 +211,17 @@ class ExternalSpecsParser:
             current_node, current_dict = entry.spec, entry.config
             line_info = _line_info(current_dict)
             spec_str = current_dict["spec"]
+
+            # Compute the dependency types for this spec
+            pkg_class, deptypes_by_package = spack.repo.PATH.get_pkg_class(current_node.name), {}
+            for when, by_name in pkg_class.dependencies.items():
+                if not current_node.satisfies(when):
+                    continue
+                for name, dep in by_name.items():
+                    if name not in deptypes_by_package:
+                        deptypes_by_package[name] = dep.depflag
+                    deptypes_by_package[name] |= dep.depflag
+
             for dependency_dict in current_dict.get("dependencies", []):
                 dependency_id = dependency_dict.get("id")
                 if not dependency_id:
@@ -224,12 +235,29 @@ class ExternalSpecsParser:
                     )
 
                 dependency_node = self.specs_by_external_id[dependency_id].spec
-                depflag = spack.deptypes.canonicalize(
-                    dependency_dict.get("deptypes", spack.deptypes.DEFAULT_TYPES)
-                )
+
+                # Compute dependency types and virtuals
+                depflag = spack.deptypes.NONE
+                if "deptypes" in dependency_dict:
+                    depflag = spack.deptypes.canonicalize(dependency_dict["deptypes"])
+
                 virtuals: Tuple[str, ...] = ()
                 if "virtuals" in dependency_dict:
                     virtuals = tuple(dependency_dict["virtuals"].split(","))
+
+                # Infer dependency types and virtuals if the user didn't specify them
+                if depflag == spack.deptypes.NONE and not virtuals:
+                    # Infer the deptype if only '%' was used in the spec
+                    inferred_virtuals = []
+                    for name, current_flag in deptypes_by_package.items():
+                        if not dependency_node.intersects(name):
+                            continue
+                        depflag |= current_flag
+                        if spack.repo.PATH.is_virtual(name):
+                            inferred_virtuals.append(name)
+                    virtuals = tuple(inferred_virtuals)
+                elif depflag == spack.deptypes.NONE:
+                    depflag = spack.deptypes.DEFAULT
 
                 current_node._add_dependency(dependency_node, depflag=depflag, virtuals=virtuals)
 
@@ -245,59 +273,18 @@ class ExternalSpecsParser:
                     f"in the 'dependencies' field{line_info}"
                 )
 
-            # Add a Python dependency to Python extensions
-            pkg_class = spack.repo.PATH.get_pkg_class(current_node.name)
-            if (
-                "dependencies" not in current_dict
-                and not current_node.dependencies()
-                and any([c.__name__ == "PythonExtension" for c in pkg_class.__mro__])
-            ):
-                warnings.warn(
-                    f"Spack is trying attach a Python dependency to '{spec_str}'. This feature is "
-                    f"deprecated, and will be removed in v1.2. Please make the dependency "
-                    f"explicit in your configuration."
-                )
-                current_dict.setdefault("dependencies", []).append(
-                    {"spec": "python", "deptypes": ["build", "run"]}
-                )
-
-            # Compute the dependency types for this spec
-            deptypes_by_package = {}
-            for when, by_name in pkg_class.dependencies.items():
-                if not current_node.satisfies(when):
-                    continue
-                for name, dep in by_name.items():
-                    if name not in deptypes_by_package:
-                        deptypes_by_package[name] = dep.depflag
-                    deptypes_by_package[name] |= dep.depflag
-
             # Transform inline entries like 'mpich %gcc' to a canonical form using 'dependencies'
             for edge in current_node.edges_to_dependencies():
-                # Fallback to the same defaults as "depends_on"
-                deptypes, virtuals = ["build", "link"], ""
-                if edge.depflag == 0 and not edge.virtuals:
-                    # Infer the deptype if only '%' was used in the spec
-                    inferred_deptypes, inferred_virtuals = spack.deptypes.NONE, []
-                    for name, current_flag in deptypes_by_package.items():
-                        if not edge.spec.intersects(name):
-                            continue
-                        inferred_deptypes |= current_flag
-                        if spack.repo.PATH.is_virtual(name):
-                            inferred_virtuals.append(name)
-                    virtuals = ",".join(inferred_virtuals)
-                    if inferred_deptypes != spack.deptypes.NONE:
-                        deptypes = spack.deptypes.flag_to_tuple(inferred_deptypes)
+                entry: DependencyDict = {"spec": str(edge.spec)}
 
                 # Handle entries with more options specified
                 if edge.depflag != 0:
-                    deptypes = spack.deptypes.flag_to_tuple(edge.depflag)
+                    entry["deptypes"] = spack.deptypes.flag_to_tuple(edge.depflag)
 
                 if edge.virtuals:
-                    virtuals = ",".join(edge.virtuals)
+                    entry["virtuals"] = ",".join(edge.virtuals)
 
-                current_dict.setdefault("dependencies", []).append(
-                    {"spec": str(edge.spec), "deptypes": deptypes, "virtuals": virtuals}
-                )
+                current_dict.setdefault("dependencies", []).append(entry)
             current_node.clear_edges()
 
             # Map a spec: to id:
@@ -369,6 +356,21 @@ class ExternalSpecsParser:
                 )
 
             self.complete_node(node)
+
+            # Add a Python dependency to Python extensions that don't specify it
+            pkg_class = spack.repo.PATH.get_pkg_class(node.name)
+            if (
+                "dependencies" not in external_dict
+                and not node.dependencies()
+                and any([c.__name__ == "PythonExtension" for c in pkg_class.__mro__])
+            ):
+                warnings.warn(
+                    f"Spack is trying attach a Python dependency to '{node}'. This feature is "
+                    f"deprecated, and will be removed in v1.2. Please make the dependency "
+                    f"explicit in your configuration."
+                )
+                external_dict.setdefault("dependencies", []).append({"spec": "python"})
+
             # Normalize internally so that each node has a unique id
             spec_and_config = ExternalSpecAndConfig(spec=node, config=external_dict)
             self.specs_by_external_id[eid] = spec_and_config

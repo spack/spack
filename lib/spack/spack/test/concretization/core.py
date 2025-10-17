@@ -4468,3 +4468,89 @@ packages:
     s = spack.concretize.concretize_one("callpath")
     assert s.external
     assert all(s.satisfies(x) for x in expected), s.tree()
+
+
+@pytest.mark.parametrize(
+    "spec_str,inline,yaml",
+    [
+        (
+            "cmake-client",
+            """
+packages:
+  cmake-client:
+    externals:
+    - spec: cmake-client@1.0 %cmake
+      prefix: /mock
+  cmake:
+    externals:
+    - spec: cmake@3.23.0
+      prefix: /mock
+""",
+            """
+packages:
+  cmake-client:
+    externals:
+    - spec: cmake-client@1.0
+      prefix: /mock
+      dependencies:
+      - spec: cmake
+  cmake:
+    externals:
+    - spec: cmake@3.23.0
+      prefix: /mock
+""",
+        ),
+        (
+            "mpileaks",
+            """
+packages:
+  mpileaks:
+    externals:
+    - spec: "mpileaks@2.3~debug+opt %mpi=mpich %[deptypes=link] callpath"
+      prefix: /user/path
+  callpath:
+    externals:
+    - spec: "callpath@1.0 %mpi=mpich"
+      prefix: /user/path
+  mpich:
+    externals:
+    - spec: "mpich@3.0.4"
+      prefix: /user/path
+""",
+            """
+packages:
+  mpileaks:
+    externals:
+    - spec: "mpileaks@2.3~debug+opt"
+      prefix: /user/path
+      dependencies:
+      - spec: callpath
+        deptypes: link
+      - spec: mpich
+        virtuals: "mpi"
+  callpath:
+    externals:
+    - spec: "callpath@1.0"
+      prefix: /user/path
+      dependencies:
+      - spec: mpich
+        virtuals: "mpi"
+  mpich:
+    externals:
+    - spec: "mpich@3.0.4"
+      prefix: /user/path
+""",
+        ),
+    ],
+)
+def test_external_inline_equivalent_to_yaml(spec_str, inline, yaml, mutable_config, mock_packages):
+    """Tests that the inline syntax for external specs is equivalent to the YAML syntax."""
+    configuration = syaml.load_config(inline)
+    mutable_config.set("packages", configuration["packages"])
+    inline_spec = spack.concretize.concretize_one(spec_str)
+
+    configuration = syaml.load_config(yaml)
+    mutable_config.set("packages", configuration["packages"])
+    yaml_spec = spack.concretize.concretize_one(spec_str)
+
+    assert inline_spec == yaml_spec
