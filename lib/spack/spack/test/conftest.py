@@ -429,28 +429,17 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_as_slow)
 
 
-@pytest.fixture(scope="session")
-def concretization_cache_root(tmp_path_factory):
-    """Sets a consistent root directory for the concretization cache singleton"""
-    conc_cache_dir = tmp_path_factory.mktemp("concretization")
-    return conc_cache_dir
-
-
 @pytest.fixture(scope="function")
-def use_concretization_cache(mutable_config, concretization_cache_root):
+def use_concretization_cache(mutable_config, tmp_path: Path):
     """Enables the use of the concretization cache"""
+    conc_cache_dir = tmp_path / "concretization"
+    conc_cache_dir.mkdir()
 
     # ensure we have an isolated concretization cache while using fixture
     with spack.config.override(
-        "concretizer:concretization_cache", {"enable": True, "url": str(concretization_cache_root)}
+        "concretizer:concretization_cache", {"enable": True, "url": str(conc_cache_dir)}
     ):
-        yield concretization_cache_root
-
-    for item in concretization_cache_root.iterdir():
-        if item.is_dir():
-            item.rmdir()
-        else:
-            item.unlink()
+        yield conc_cache_dir
 
 
 #
