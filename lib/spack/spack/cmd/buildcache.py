@@ -923,9 +923,10 @@ def update_view_fn(args):
 
         if args.append:
             # Load the current state of the view index from the cache into the database
-            cache_index = BINARY_INDEX._local_index_cache[str(url_and_version)]
-            cache_key = cache_index["index_path"]
-            db._read_from_file(BINARY_INDEX._index_file_cache.cache_path(cache_key))
+            cache_index = BINARY_INDEX._local_index_cache.get(str(url_and_version))
+            if cache_index:
+                cache_key = cache_index["index_path"]
+                db._read_from_file(BINARY_INDEX._index_file_cache.cache_path(cache_key))
 
         spack.binary_distribution._url_generate_package_index(url, tmpdir, db, name, filter_fn)
 

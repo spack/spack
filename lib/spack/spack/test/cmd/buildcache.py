@@ -1090,6 +1090,49 @@ def test_buildcache_create_view_empty(
 
 
 @pytest.mark.parametrize("sources", ("hash", "specfile", "env", "lockfile"))
+def test_buildcache_create_view_append(
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, sources
+):
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Push all of the mpileaks packages to the cache
+    mpileaks_specs = mutable_database.query_local("mpileaks")
+    for s in mpileaks_specs:
+        buildcache("push", "--update-index", "my-mirror", s.format("{/hash}"))
+
+    # Grab all of the hashes for each mpileaks spec
+    mpileaks_0_hashes = [s.dag_hash() for s in mpileaks_specs[0].traverse()]
+    mpileaks_1_hashes = [s.dag_hash() for s in mpileaks_specs[1].traverse()]
+
+    # Make sure the view doesn't exist yet
+    with pytest.raises(spack.binary_distribution.FetchIndexError):
+        hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+
+    # Test append to empty index view
+    with globals()[f"spec_{sources}"](mpileaks_specs[0], tmp_path / "source_stage") as source_args:
+        command_args = ["update-view", "--append", "--name", "test_view", "my-mirror"]
+        if source_args:
+            command_args.extend(source_args)
+        buildcache(*command_args)
+
+    hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+    for h in mpileaks_0_hashes:
+        assert h in hashes_in_view
+
+    # Test append to existing index view
+    with globals()[f"spec_{sources}"](mpileaks_specs[1], tmp_path / "source_stage") as source_args:
+        command_args = ["update-view", "--append", "--name", "test_view", "my-mirror"]
+        if source_args:
+            command_args.extend(source_args)
+        buildcache(*command_args)
+
+    hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+    for h in mpileaks_0_hashes + mpileaks_1_hashes:
+        assert h in hashes_in_view
+
+
+@pytest.mark.parametrize("sources", ("hash", "specfile", "env", "lockfile"))
 def test_buildcache_create_view(
     tmp_path, mutable_config, mutable_database, mutable_mock_env_path, sources
 ):
@@ -1112,7 +1155,7 @@ def test_buildcache_create_view(
 
     # Create a view using a parametrized source that contains one of the mpileaks
     with globals()[f"spec_{sources}"](mpileaks_specs[0], tmp_path / "source_stage") as source_args:
-        command_args = ["create-view", "--force", "--name", "test_view", "my-mirror"]
+        command_args = ["create-view", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
@@ -1121,20 +1164,7 @@ def test_buildcache_create_view(
     for h in mpileaks_0_hashes:
         assert h in hashes_in_view
 
-    # Test failure due to existing index
-
-    # Test append
-    with globals()[f"spec_{sources}"](mpileaks_specs[1], tmp_path / "source_stage") as source_args:
-        command_args = ["update-view", "--append", "--name", "test_view", "my-mirror"]
-        if source_args:
-            command_args.extend(source_args)
-        buildcache(*command_args)
-
-    hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
-    for h in mpileaks_0_hashes + mpileaks_1_hashes:
-        assert h in hashes_in_view
-
-    # Test fail to overwrite
+    # Test fail to overwrite without force
     expect = "Index already exists. To overwrite or update pass --force or --append respectively"
     with pytest.raises(spack.error.SpackError, match=expect):
         command_args = [
@@ -1147,20 +1177,21 @@ def test_buildcache_create_view(
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
-    for h in mpileaks_0_hashes + mpileaks_1_hashes:
+    for h in mpileaks_0_hashes:
         assert h in hashes_in_view
+    for h in mpileaks_2_hashes:
+        assert h not in hashes_in_view or h in mpileaks_0_hashes
 
-    # Test fail to overwrite
-    with globals()[f"spec_{sources}"](mpileaks_specs[2], tmp_path / "source_stage") as source_args:
-        command_args = ["update-view", "--force", "--name", "test_view", "my-mirror"]
+    # Override a view with force
+    with globals()[f"spec_{sources}"](mpileaks_specs[1], tmp_path / "source_stage") as source_args:
+        command_args = ["create-view", "--force", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
-    for h in mpileaks_2_hashes:
+    for h in mpileaks_1_hashes:
         assert h in hashes_in_view
+    for h in mpileaks_0_hashes:
+        assert h not in hashes_in_view or h in mpileaks_1_hashes
 
-    for h in mpileaks_0_hashes + mpileaks_1_hashes:
-        if h not in mpileaks_2_hashes:
-            assert h not in hashes_in_view
