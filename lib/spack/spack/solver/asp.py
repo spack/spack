@@ -658,50 +658,41 @@ class ConcretizationCache:
         # determine if we even need to clean up
         entries = list(self.cache_entries())
         entry_count = sum(1 for _ in entries)
-        # we have too many entries
-        if entry_count > entry_limit:
-            removal_queue = []
-            # collect stat info for mod time about all entries
-            for entry in entries:
-                # take read transaction so we can guaruntee the file
-                # we're trying to stat exists
-                with self.read_transaction(entry, timeout=1e-6) as exists:
-                    # if file doesn't exist, we probably don't need to
-                    # worry about cleanup
-                    if exists:
-                        entry_stat_info = entry.stat()
-                        # mtime will always be time of last use as we update it after
-                        # each read and obviously after each write
-                        mod_time = entry_stat_info.st_mtime
-                        removal_queue.append((entry, mod_time))
-            # sort items for removal
-            removal_queue.sort(key=lambda x: x[1], reverse=True)
 
-            # try to remove half the current cache, but if we for some reason
-            # make it through every entry in the queue and dont exit, exit anyway
-            while entry_count > (entry_limit // 2) and removal_queue:
-                # entries are descending, so least recently used is last entry
-                entry_to_rm = removal_queue.pop()[0]
-                # short timeout, if we can't get a lock, its being read, so it's been used
-                # more recently, i.e. not a good candidate for LRU, or the system is busy,
-                # or it's already being removed so we dont care. Could also be a write
-                # lock from another clean operation in which case that operation can
-                # remove it
-                with self.write_transaction(entry_to_rm, timeout=1e-6) as exists:
-                    # cache bucket was removed by another process, that's fine
-                    # try pruning something else
-                    if not exists:
-                        # entry was likely removed by another cleaning
-                        # process, no worries
-                        tty.debug(
-                            f"Attempting to purge concretization cache entry {entry_to_rm}"
-                            " but it was already removed"
-                        )
-                        removed = True
-                    else:
-                        removed = self._safe_remove(entry_to_rm)
-                    if removed:
-                        entry_count -= 1
+        # if we're under the limit, we're done.
+        if entry_count <= entry_limit:
+            return
+
+        removal_queue = []
+        # collect stat info for mod time about all entries
+        for entry in entries:
+            # take read transaction so we can guaruntee the file we're trying to stat exists
+            with self.read_transaction(entry, timeout=1e-6) as exists:
+                # if file doesn't exist, we probably don't need to worry about cleanup
+                if exists:
+                    entry_stat_info = entry.stat()
+                    # mtime will always be time of last use as we update it after
+                    # each read and obviously after each write
+                    mod_time = entry_stat_info.st_mtime
+                    removal_queue.append((mod_time, entry))
+
+        removal_queue.sort()  # sort items for removal, ascending, so oldest first
+
+        # Try to remove the oldest half of the cache.
+        for _, entry_to_rm in removal_queue[: entry_limit // 2]:
+            # short timeout, if we can't get a lock, it's being read, so it's been used
+            # more recently, i.e. not a good candidate for LRU, or the system is busy,
+            # or it's already being removed so we dont care. Could also be a write lock
+            # from another clean operation in which case that operation can remove it
+            with self.write_transaction(entry_to_rm, timeout=1e-6) as exists:
+                # cache bucket was removed by another process. that's fine; move on
+                if not exists:
+                    tty.debug(
+                        f"Attempting to purge concretization cache entry {entry_to_rm},"
+                        " but it was already removed"
+                    )
+                else:
+                    self._safe_remove(entry_to_rm)
 
     def cache_entries(self):
         """Generator producing cache entries within a bucket"""

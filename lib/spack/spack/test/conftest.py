@@ -439,7 +439,7 @@ def use_concretization_cache(mutable_config, tmp_path: Path):
     with spack.config.override(
         "concretizer:concretization_cache", {"enable": True, "url": str(conc_cache_dir)}
     ):
-        yield
+        yield conc_cache_dir
 
 
 #

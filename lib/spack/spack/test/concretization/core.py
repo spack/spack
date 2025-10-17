@@ -37,6 +37,7 @@ import spack.spec
 import spack.store
 import spack.test.conftest
 import spack.util.file_cache
+import spack.util.hash
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.installer import PackageInstaller
@@ -4275,28 +4276,31 @@ def test_concretization_cache_roundtrip_result(use_concretization_cache):
     assert result1 == result2
 
 
-def get_current_cache_data():
-    count, byte_size = 0, 0
-    for entry in spack.solver.asp.CONC_CACHE.cache_entries():
-        count += 1
-        byte_size += entry.stat().st_size
-    return count, byte_size
-
-
 def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_config):
     """Tests to ensure we are cleaning the cache when we should be respective to the
     number of entries allowed in the cache"""
+    conc_cache_dir = use_concretization_cache
 
-    spack.config.set("concretizer:concretization_cache:entry_limit", 2)
-    spack.concretize.concretize_one("zlib")
-    spack.concretize.concretize_one("hdf5")
-    # cleanup should be run after the third execution
+    spack.config.set("concretizer:concretization_cache:entry_limit", 1000)
+
+    for i in range(1000):
+        name = spack.util.hash.b32_hash(f"mock_cache_file_{i}")
+        mock_cache_file = conc_cache_dir / name
+        mock_cache_file.touch()
+
+    def names():
+        return set(x.name for x in spack.solver.asp.CONC_CACHE.cache_entries())
+
+    before = names()
+    assert len(before) == 1000
+
+    # cleanup should be run after the 1,001st execution
     spack.concretize.concretize_one("py-black")
 
-    real_count, _ = get_current_cache_data()
-    # ensure we only have 1 entry
-    # should be cleaning entry count // 2
-    assert real_count == 1, "Concretization cache cleanup pruned incorrectly"
+    # ensure that half the elements were removed and that one more was created
+    after = names()
+    assert len(after) == 501
+    assert len(after - before) == 1  # one additional hash added by 1001st concretization
 
 
 def test_concretization_cache_uncompressed_entry(use_concretization_cache, monkeypatch):
