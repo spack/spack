@@ -501,6 +501,35 @@ def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
 
 
 @pytest.fixture(scope="session")
+def mock_stage_for_database(tmp_path_factory: pytest.TempPathFactory, monkeypatch_session, request):
+    """Establish the temporary build_stage for the mock archive."""
+    # The approach with this autouse fixture is to set the stage root
+    # instead of using spack.config.override() to avoid configuration
+    # conflicts with dozens of tests that rely on other configuration
+    # fixtures, such as config.
+
+    if "nomockstage" in request.keywords:
+        # Tests can opt-out with @pytest.mark.nomockstage
+        yield None
+        return
+
+    # Set the build stage to the requested path
+    new_stage = tmp_path_factory.mktemp("mock-stage")
+
+    # Ensure the source directory exists within the new stage path
+    source_path = new_stage / spack.stage._source_path_subdir
+    source_path.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch_session.setattr(spack.stage, "_stage_root", str(new_stage))
+
+    yield str(new_stage)
+
+    # Clean up the test stage directory
+    if new_stage.is_dir():
+        shutil.rmtree(new_stage, onerror=onerror)
+
+
+@pytest.fixture(scope="session")
 def ignore_stage_files():
     """Session-scoped helper for check_for_leftover_stage_files.
 
@@ -1051,6 +1080,7 @@ def mock_store(
     mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache: Tuple[Path, Path],
+    mock_stage_for_database,
 ):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled
