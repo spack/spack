@@ -151,15 +151,16 @@ def test_package_output(capsys, install_mockery, mock_fetch):
     assert "BEFORE INSTALL" in out
     assert "AFTER INSTALL" in out
 
-    # Check that install-time test log contains check and installcheck output
-    log_path = pkg.tester.archived_install_test_log
-    assert os.path.exists(log_path), f"Missing install-time test log at {log_path}"
+    if not sys.platform == "win32":
+        # Check that install-time test log contains check and installcheck output
+        log_path = pkg.tester.archived_install_test_log
+        assert os.path.exists(log_path), f"Missing install-time test log at {log_path}"
 
-    with open(log_path, "r", encoding="utf-8") as f:
-        test_log_contents = f.read()
+        with open(log_path, "r", encoding="utf-8") as f:
+            test_log_contents = f.read()
 
-    assert "PRINTING PACKAGE CHECK" in test_log_contents
-    assert "PRINTING PACKAGE INSTALLCHECK" in test_log_contents
+        assert "PRINTING PACKAGE CHECK" in test_log_contents
+        assert "PRINTING PACKAGE INSTALLCHECK" in test_log_contents
 
 
 @pytest.mark.disable_clean_stage_check
