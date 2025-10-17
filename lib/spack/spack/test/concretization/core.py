@@ -4284,7 +4284,11 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
     spack.config.set("concretizer:concretization_cache:entry_limit", 1000)
 
     def names():
-        return set(x.name for x in spack.solver.asp.CONC_CACHE.cache_entries())
+        return set(
+            x.name
+            for x in conc_cache_dir.iterdir()
+            if (not x.is_dir() and not x.name.startswith("."))
+        )
 
     assert len(names()) == 0
 
