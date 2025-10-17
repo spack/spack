@@ -12,6 +12,7 @@ import spack.archspec
 import spack.deptypes
 import spack.repo
 import spack.spec
+from spack.enums import PackageTags
 from spack.error import SpackError
 from spack.llnl.util import tty
 
@@ -234,15 +235,24 @@ class ExternalSpecsParser:
                 current_node._add_dependency(dependency_node, depflag=depflag, virtuals=virtuals)
 
     def _ensure_dependencies_have_single_id(self):
+        possible_compilers = spack.repo.PATH.packages_with_tags(PackageTags.COMPILER)
         for eid, entry in self.specs_by_external_id.items():
             current_node, current_dict = entry.spec, entry.config
             spec_str = current_dict["spec"]
             line_info = _line_info(current_dict)
 
+            if current_node.dependencies() and "dependencies" in current_dict:
+                raise ExternalSpecError(
+                    f"the spec {spec_str} cannot specify dependencies both in the root spec and"
+                    f"in the 'dependencies' field{line_info}"
+                )
+
             # Add a Python dependency to Python extensions
             pkg_class = spack.repo.PATH.get_pkg_class(current_node.name)
-            if "dependencies" not in current_dict and any(
-                [c.__name__ == "PythonExtension" for c in pkg_class.__mro__]
+            if (
+                "dependencies" not in current_dict
+                and not current_node.dependencies()
+                and any([c.__name__ == "PythonExtension" for c in pkg_class.__mro__])
             ):
                 warnings.warn(
                     f"Spack is trying attach a Python dependency to '{spec_str}'. This feature is "
@@ -253,15 +263,27 @@ class ExternalSpecsParser:
                     {"spec": "python", "deptypes": ["build", "run"]}
                 )
 
-            # Transform inline entries like 'mpich %gcc' to a canonical form
+            # Transform inline entries like 'mpich %gcc' to a canonical form using 'dependencies:'
             for edge in current_node.edges_to_dependencies():
-                # We don't want to accept foo %[deptypes=build,link] mpich as a spec
+                # In general, use the same defaults as "depends_on"
+                deptypes, virtuals = ["build", "link"], ""
+                if (
+                    edge.depflag == 0
+                    and not edge.virtuals
+                    and edge.spec.name in possible_compilers
+                ):
+                    # Default for backward compatibility with old configs
+                    deptypes, virtuals = "build", "c"
+
+                # Handle entries with more options specified
                 if edge.depflag != 0:
-                    raise ExternalDependencyError(
-                        f"The external spec '{spec_str}' cannot specify deptypes{line_info}"
-                    )
+                    deptypes = spack.deptypes.flag_to_tuple(edge.depflag)
+
+                if edge.virtuals:
+                    virtuals = ",".join(edge.virtuals)
+
                 current_dict.setdefault("dependencies", []).append(
-                    {"spec": str(edge.spec), "deptypes": "build", "virtuals": "c"}
+                    {"spec": str(edge.spec), "deptypes": deptypes, "virtuals": virtuals}
                 )
             current_node.clear_edges()
 

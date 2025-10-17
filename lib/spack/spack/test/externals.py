@@ -213,17 +213,20 @@ def test_externals_with_duplicate_id():
                 "adios2": ["%[deptypes=build,link] bzip2@1.0.8"],
             },
         ),
-        # Old type specification for
+        # Inline specification for
         # o mpileaks@2.2
+        # | \
+        # |  o callpath@1.0
+        # | /
         # o gcc@15.0.1
         (
             [
                 [
-                    {"spec": "mpileaks@2.2 %gcc@15", "prefix": "/user/path"},
-                    {"spec": "gcc@14.2.1 languages=c,c++", "prefix": "/user/path"},
+                    {"spec": "mpileaks@2.2 %gcc %callpath", "prefix": "/user/path"},
+                    {"spec": "callpath@1.0", "prefix": "/user/path"},
                     {"spec": "gcc@15.0.1 languages=c,c++", "prefix": "/user/path"},
                 ],
-                {"mpileaks": ["%[deptypes=build] gcc@15"]},
+                {"mpileaks": ["%[deptypes=build] gcc@15", "%[deptypes=build,link] callpath@1.0"]},
             ]
         ),
     ],
