@@ -235,7 +235,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # Handle steps of a ci test
     test = subparsers.add_parser(
-        "test", description=deindent(ci_test.__doc__), help=spack.cmd.first_line(ci_test.__doc__)
+        "test", description=deindent(ci_test.__doc__), help=doc_first_line(ci_test.__doc__)
     )
     test.add_argument(
         "--fail-fast",

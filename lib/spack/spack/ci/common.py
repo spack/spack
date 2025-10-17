@@ -98,8 +98,6 @@ def copy_files_to_artifacts(
         else:
             fs.copy(src, artifacts_dir)
     except Exception as err:
-        # TODO: Remove the list of files once determine why test files not copied
-        tty.info(f"Source directory contents: {os.listdir(src)}")
         tty.warn(
             (
                 f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "

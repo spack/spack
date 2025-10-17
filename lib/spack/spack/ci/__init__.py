@@ -1355,7 +1355,7 @@ def run_standalone_tests(
         repro_dir: reproduction directory
         timeout: maximum time (in seconds) that tests are allowed to run
 
-    Returns: the test exit code
+    Returns: the test exit code or 1 if an error occurs
     """
     if cdash and log_file:
         tty.msg(f"The test log file {log_file} option is ignored with CDash reporting")
