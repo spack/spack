@@ -666,15 +666,15 @@ class ConcretizationCache:
         removal_queue = []
         # collect stat info for mod time about all entries
         for entry in entries:
-            # take read transaction so we can guaruntee the file we're trying to stat exists
-            with self.read_transaction(entry, timeout=1e-6) as exists:
-                # if file doesn't exist, we probably don't need to worry about cleanup
-                if exists:
-                    entry_stat_info = entry.stat()
-                    # mtime will always be time of last use as we update it after
-                    # each read and obviously after each write
-                    mod_time = entry_stat_info.st_mtime
-                    removal_queue.append((mod_time, entry))
+            try:
+                entry_stat_info = entry.stat()
+                # mtime will always be time of last use as we update it after
+                # each read and obviously after each write
+                mod_time = entry_stat_info.st_mtime
+                removal_queue.append((mod_time, entry))
+            except FileNotFoundError:
+                # don't need to cleanup the file, it's not there!
+                pass
 
         removal_queue.sort()  # sort items for removal, ascending, so oldest first
 
