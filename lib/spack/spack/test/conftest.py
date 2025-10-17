@@ -501,22 +501,12 @@ def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
 
 
 @pytest.fixture(scope="session")
-def mock_stage_for_database(tmp_path_factory: pytest.TempPathFactory, monkeypatch_session, request):
-    """Establish the temporary build_stage for the mock archive."""
-    # The approach with this autouse fixture is to set the stage root
-    # instead of using spack.config.override() to avoid configuration
-    # conflicts with dozens of tests that rely on other configuration
-    # fixtures, such as config.
-
-    if "nomockstage" in request.keywords:
-        # Tests can opt-out with @pytest.mark.nomockstage
-        yield None
-        return
-
-    # Set the build stage to the requested path
+def mock_stage_for_database(tmp_path_factory: pytest.TempPathFactory, monkeypatch_session):
+    """A session-scoped analog of mock_stage, so that the mock_store
+    fixture uses its own stage vs. the global stage root for spack.
+    """
     new_stage = tmp_path_factory.mktemp("mock-stage")
 
-    # Ensure the source directory exists within the new stage path
     source_path = new_stage / spack.stage._source_path_subdir
     source_path.mkdir(parents=True, exist_ok=True)
 
