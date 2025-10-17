@@ -4283,13 +4283,15 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
 
     spack.config.set("concretizer:concretization_cache:entry_limit", 1000)
 
+    def names():
+        return set(x.name for x in spack.solver.asp.CONC_CACHE.cache_entries())
+
+    assert len(names()) == 0
+
     for i in range(1000):
         name = spack.util.hash.b32_hash(f"mock_cache_file_{i}")
         mock_cache_file = conc_cache_dir / name
         mock_cache_file.touch()
-
-    def names():
-        return set(x.name for x in spack.solver.asp.CONC_CACHE.cache_entries())
 
     before = names()
     assert len(before) == 1000
