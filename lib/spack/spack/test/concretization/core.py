@@ -484,7 +484,7 @@ class TestConcretize:
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-left%gcc")
 
-    def test_disable_mixing_reuse(self, mutable_database):
+    def test_disable_mixing_reuse(self, mutable_database, mutable_config):
         # Install a spec
         left = spack.concretize.concretize_one("dt-diamond-left %gcc")
         PackageInstaller([left.package], fake=True, explicit=True).install()
