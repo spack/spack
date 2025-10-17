@@ -22,10 +22,3 @@ class ConfigScopePriority(enum.IntEnum):
     ENVIRONMENT = 2
     CUSTOM = 3
     COMMAND_LINE = 4
-
-
-class PackageTags(enum.StrEnum):
-    """Common package tags used throughout the codebase"""
-
-    COMPILER = "compiler"
-    BUILD_TOOLS = "build-tools"

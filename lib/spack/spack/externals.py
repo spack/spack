@@ -12,7 +12,6 @@ import spack.archspec
 import spack.deptypes
 import spack.repo
 import spack.spec
-from spack.enums import PackageTags
 from spack.error import SpackError
 from spack.llnl.util import tty
 
@@ -235,7 +234,6 @@ class ExternalSpecsParser:
                 current_node._add_dependency(dependency_node, depflag=depflag, virtuals=virtuals)
 
     def _ensure_dependencies_have_single_id(self):
-        possible_compilers = spack.repo.PATH.packages_with_tags(PackageTags.COMPILER)
         for eid, entry in self.specs_by_external_id.items():
             current_node, current_dict = entry.spec, entry.config
             spec_str = current_dict["spec"]
@@ -263,17 +261,32 @@ class ExternalSpecsParser:
                     {"spec": "python", "deptypes": ["build", "run"]}
                 )
 
-            # Transform inline entries like 'mpich %gcc' to a canonical form using 'dependencies:'
+            # Compute the dependency types for this spec
+            deptypes_by_package = {}
+            for when, by_name in pkg_class.dependencies.items():
+                if not current_node.satisfies(when):
+                    continue
+                for name, dep in by_name.items():
+                    if name not in deptypes_by_package:
+                        deptypes_by_package[name] = dep.depflag
+                    deptypes_by_package[name] |= dep.depflag
+
+            # Transform inline entries like 'mpich %gcc' to a canonical form using 'dependencies'
             for edge in current_node.edges_to_dependencies():
-                # In general, use the same defaults as "depends_on"
+                # Fallback to the same defaults as "depends_on"
                 deptypes, virtuals = ["build", "link"], ""
-                if (
-                    edge.depflag == 0
-                    and not edge.virtuals
-                    and edge.spec.name in possible_compilers
-                ):
-                    # Default for backward compatibility with old configs
-                    deptypes, virtuals = "build", "c"
+                if edge.depflag == 0 and not edge.virtuals:
+                    # Infer the deptype if only '%' was used in the spec
+                    inferred_deptypes, inferred_virtuals = spack.deptypes.NONE, []
+                    for name, current_flag in deptypes_by_package.items():
+                        if not edge.spec.intersects(name):
+                            continue
+                        inferred_deptypes |= current_flag
+                        if spack.repo.PATH.is_virtual(name):
+                            inferred_virtuals.append(name)
+                    virtuals = ",".join(inferred_virtuals)
+                    if inferred_deptypes != spack.deptypes.NONE:
+                        deptypes = spack.deptypes.flag_to_tuple(inferred_deptypes)
 
                 # Handle entries with more options specified
                 if edge.depflag != 0:

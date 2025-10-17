@@ -135,7 +135,7 @@ def test_externals_with_duplicate_id():
 
 
 @pytest.mark.parametrize(
-    "externals_dicts,expected_satisfies",
+    "externals_dicts,expected,not_expected",
     [
         # o ascent@0.9.2
         # o adios2@2.7.1
@@ -160,6 +160,7 @@ def test_externals_with_duplicate_id():
                 "ascent": ["%[deptypes=build,link] adios2@2.7.1"],
                 "adios2": ["%[deptypes=build,link] bzip2@1.0.8"],
             },
+            {},
         ),
         # o ascent@0.9.2
         # |\
@@ -189,6 +190,14 @@ def test_externals_with_duplicate_id():
                 "ascent": ["%[deptypes=link] adios2@2.7.1", "%[deptypes=run] bzip2@1.0.8"],
                 "adios2": ["%[deptypes=build,link] bzip2@1.0.8"],
             },
+            {
+                "ascent": [
+                    "%[deptypes=build] adios2@2.7.1",
+                    "%[deptypes=run] adios2@2.7.1",
+                    "%[deptypes=build] bzip2@1.0.8",
+                    "%[deptypes=link] bzip2@1.0.8",
+                ]
+            },
         ),
         # Same, but specifying dependencies by spec: instead of id:
         (
@@ -212,6 +221,14 @@ def test_externals_with_duplicate_id():
                 "ascent": ["%[deptypes=link] adios2@2.7.1", "%[deptypes=run] bzip2@1.0.8"],
                 "adios2": ["%[deptypes=build,link] bzip2@1.0.8"],
             },
+            {
+                "ascent": [
+                    "%[deptypes=build] adios2@2.7.1",
+                    "%[deptypes=run] adios2@2.7.1",
+                    "%[deptypes=build] bzip2@1.0.8",
+                    "%[deptypes=link] bzip2@1.0.8",
+                ]
+            },
         ),
         # Inline specification for
         # o mpileaks@2.2
@@ -227,19 +244,38 @@ def test_externals_with_duplicate_id():
                     {"spec": "gcc@15.0.1 languages=c,c++", "prefix": "/user/path"},
                 ],
                 {"mpileaks": ["%[deptypes=build] gcc@15", "%[deptypes=build,link] callpath@1.0"]},
+                {"mpileaks": ["%[deptypes=link] gcc@15"]},
+            ]
+        ),
+        # CMake dependency should be inferred of `deptypes=build`
+        # o cmake-client
+        # |
+        # o cmake@3.23.1
+        (
+            [
+                [
+                    {"spec": "cmake-client@1.0 %cmake", "prefix": "/user/path"},
+                    {"spec": "cmake@3.23.1", "prefix": "/user/path"},
+                ],
+                {"cmake-client": ["%[deptypes=build] cmake"]},
+                {"cmake-client": ["%[deptypes=link] cmake", "%[deptypes=run] cmake"]},
             ]
         ),
     ],
 )
-def test_externals_with_dependencies(externals_dicts: List[ExternalDict], expected_satisfies):
+def test_externals_with_dependencies(externals_dicts: List[ExternalDict], expected, not_expected):
     """Tests constructing externals with dependencies"""
     parser = ExternalSpecsParser(externals_dicts)
 
-    for query_spec, expected_list in expected_satisfies.items():
+    for query_spec, expected_list in expected.items():
         result = parser.query(query_spec)
         assert len(result) == 1
-        for expected in expected_list:
-            assert result[0].satisfies(expected)
+        assert all(result[0].satisfies(c) for c in expected_list)
+
+    for query_spec, not_expected_list in not_expected.items():
+        result = parser.query(query_spec)
+        assert len(result) == 1
+        assert all(not result[0].satisfies(c) for c in not_expected_list)
 
 
 @pytest.mark.parametrize(
