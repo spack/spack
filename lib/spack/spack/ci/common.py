@@ -166,6 +166,34 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
         fd.write(json.dumps(buildcache_copies))
 
 
+class CIConfig:
+    """Class for managing CI options."""
+    def __init__(self):
+        ci_config = cfg.get("ci")
+        if not ci_config:
+            raise Exception("TODO: Customize this exception")
+
+        self.broken_specs_url: Optional[str] = ci_config.get("broken-specs-url", None)
+        self.broken_tests: Optional[str] = ci_config.get("broken-tests-packages", [])
+        self.rebuild_index: bool = ci_config.get("rebuild-index", True)
+        self.target: str = ci_config.get("target", "gitlab")
+
+        # TBD/TLD: Do any/all of these belong here?
+        self.pipeline_artifacts_dir = os.environ.get("SPACK_ARTIFACTS_ROOT")
+        self.job_log_dir = os.environ.get("SPACK_JOB_LOG_DIR")
+        self.job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
+        self.repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
+        self.concrete_env_dir = os.environ.get("SPACK_CONCRETE_ENV_DIR")
+        self.ci_job_name = os.environ.get("CI_JOB_NAME")
+        self.signing_key = os.environ.get("SPACK_SIGNING_KEY")
+        self.job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
+        self.job_spec_dag_hash = os.environ.get("SPACK_JOB_SPEC_DAG_HASH")
+        self.spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE")
+        self.self.spack_ci_stack_name = os.environ.get("SPACK_CI_STACK_NAME")
+        self.rebuild_everything = os.environ.get("SPACK_REBUILD_EVERYTHING")
+        self.require_signing = os.environ.get("SPACK_REQUIRE_SIGNING")
+
+
 class CDashHandler:
     """
     Class for managing CDash data and processing.
