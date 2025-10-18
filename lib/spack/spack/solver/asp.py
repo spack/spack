@@ -793,8 +793,6 @@ class ConcretizationCache:
         except lk.LockTimeoutError:
             # if read lock times out, just exit early
             tty.debug(f"Concretization cache read lock on {path} timed out")
-        except Exception:
-            raise
         finally:
             if locked:
                 lock.release_read()
@@ -821,8 +819,6 @@ class ConcretizationCache:
         except lk.LockTimeoutError:
             # if read lock times out, just exit early
             tty.debug(f"Concretization cache write lock on {path} timed out")
-        except Exception:
-            raise
         finally:
             if locked:
                 lock.release_write()
@@ -844,13 +840,9 @@ class ConcretizationCache:
                 # exit early
                 # just opening it updates atime to indicate recent use
                 return
-            try:
-                with gzip.open(cache_path, "xb", compresslevel=6) as cache_entry:
-                    cache_dict = {"results": result.to_dict(), "statistics": statistics}
-                    cache_entry.write(json.dumps(cache_dict).encode())
-            except FileExistsError:
-                # Entry for this conc hash exists already, do not overwrite
-                tty.debug(f"Cache entry {cache_path} exists, will not be overwritten")
+            with gzip.open(cache_path, "xb", compresslevel=6) as cache_entry:
+                cache_dict = {"results": result.to_dict(), "statistics": statistics}
+                cache_entry.write(json.dumps(cache_dict).encode())
 
     def fetch(self, problem: str) -> Union[Tuple[Result, Dict], Tuple[None, None]]:
         """Returns the concretization cache result for a lookup based on the given problem.
