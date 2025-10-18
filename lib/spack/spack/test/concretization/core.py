@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import difflib
 import json
 import os
 import pathlib
@@ -4327,3 +4328,34 @@ def test_concretization_cache_uncompressed_entry(use_concretization_cache, monke
     spack.concretize.concretize_one("zlib")
     # Ensure fetch can handle the plaintext cache entry
     spack.concretize.concretize_one("zlib")
+
+
+@pytest.mark.parametrize(
+    "asp_file",
+    [
+        "concretize.lp",
+        "heuristic.lp",
+        "display.lp",
+        "direct_dependency.lp",
+        "when_possible.lp",
+        "libc_compatibility.lp",
+        "os_compatibility.lp",
+        "splices.lp",
+    ],
+)
+def test_concretization_cache_asp_canonicalization(asp_file):
+    path = os.path.join(os.path.dirname(spack.solver.asp.__file__), asp_file)
+
+    with open(path, "r", encoding="utf-8") as f:
+        original = [line.strip() for line in f.readlines()]
+        stripped = spack.solver.asp.strip_asp_problem(original)
+
+    diff = list(difflib.unified_diff(original, stripped))
+
+    assert all(
+        [
+            line == "-" or line.startswith("-%")
+            for line in diff
+            if line.startswith("-") and not line.startswith("---")
+        ]
+    )
