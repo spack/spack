@@ -1065,7 +1065,7 @@ class PyclingoDriver:
         """
         self.cores = cores
         # This attribute will be reset at each call to solve
-        self.control = None
+        self.control: Any = None  # TODO: fix typing of dynamic clingo import
         self._conc_cache = conc_cache
 
     def _control_file_paths(self, control_files: List[str]) -> List[str]:
