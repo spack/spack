@@ -21,6 +21,7 @@ import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.detection
+import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
 import spack.llnl.util.lang
@@ -470,6 +471,69 @@ class TestConcretize:
             assert bool(x.dependencies(name="gcc", deptype="build")) is expected_gcc
             assert x.satisfies("%clang") is not expected_gcc
             assert x.satisfies("%gcc") is expected_gcc
+
+    @pytest.mark.xfail(reason="asp representation of compilers is merged")
+    def test_flag_mixing_env(
+        self,
+        mutable_mock_env_path,
+        tmp_path: pathlib.Path,
+        mock_packages,
+        mutable_config,
+        mutable_database,
+    ):
+        spack_yaml = tmp_path / ev.manifest_name
+        spack_yaml.write_text(
+            """\
+spack:
+  specs:
+  - dt-diamond-bottom%gcc@9.4.8
+  concretizer:
+    unify: true
+  packages:
+    gcc:
+      externals:
+      - spec: "gcc@9.4.8 languages='c,c++'"
+        prefix: /path
+        extra_attributes:
+          compilers:
+            c: /path/bin/gcc
+            cxx: /path/bin/g++
+          flags:
+            cflags: -A
+"""
+        )
+
+        with ev.Environment(tmp_path) as e:
+            e.concretize()
+            (root1,) = e.roots()
+            PackageInstaller([root1.package], fake=True, explicit=True).install()
+
+        spack_yaml.write_text(
+            """\
+spack:
+  specs:
+  - dt-diamond-bottom%gcc@9.4.8
+  concretizer:
+    unify: true
+  packages:
+    gcc:
+      externals:
+      - spec: "gcc@9.4.8 languages='c,c++'"
+        prefix: /path
+        extra_attributes:
+          compilers:
+            c: /path/bin/gcc
+            cxx: /path/bin/g++
+          flags:
+            cflags: -B
+"""
+        )
+
+        with ev.Environment(tmp_path) as e:
+            e.concretize()
+            (root2,) = e.roots()
+            # This fails right now, -A and -B are merged
+            assert not root2.satisfies("cflags=-A")
 
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")
