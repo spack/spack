@@ -657,14 +657,11 @@ class ConcretizationCache:
 
         # determine if we even need to clean up
         entries = list(self.cache_entries())
-        entry_count = sum(1 for _ in entries)
-
-        # if we're under the limit, we're done.
-        if entry_count <= entry_limit:
+        if len(entries) <= entry_limit:
             return
 
-        removal_queue = []
         # collect stat info for mod time about all entries
+        removal_queue = []
         for entry in entries:
             try:
                 entry_stat_info = entry.stat()
@@ -680,19 +677,19 @@ class ConcretizationCache:
 
         # Try to remove the oldest half of the cache.
         for _, entry_to_rm in removal_queue[: entry_limit // 2]:
-            # short timeout, if we can't get a lock, it's being read, so it's been used
-            # more recently, i.e. not a good candidate for LRU, or the system is busy,
-            # or it's already being removed so we dont care. Could also be a write lock
-            # from another clean operation in which case that operation can remove it
-            with self.write_transaction(entry_to_rm, timeout=1e-6) as exists:
-                # cache bucket was removed by another process. that's fine; move on
-                if not exists:
-                    tty.debug(
-                        f"Attempting to purge concretization cache entry {entry_to_rm},"
-                        " but it was already removed"
-                    )
-                else:
+            # cache bucket was removed by another process -- that's fine; move on
+            if not entry_to_rm.exists():
+                continue
+
+            try:
+                with self.write_transaction(entry_to_rm, timeout=1e-6):
                     self._safe_remove(entry_to_rm)
+            except lk.LockTimeoutError:
+                # if we can't get a lock, it's either
+                # 1) being read, so it's been used recently, i.e. not a good candidate for LRU,
+                # 2) it's already being removed by another process, so we don't care, or
+                # 3) system is busy, but we don't really need to wait just for cache cleanup.
+                pass  # so skip it
 
     def cache_entries(self):
         """Generator producing cache entries within a bucket"""
@@ -750,7 +747,7 @@ class ConcretizationCache:
             pass
         return False
 
-    def _lock(self, path: pathlib.Path, timeout: Optional[float] = None) -> lk.Lock:
+    def _lock(self, path: pathlib.Path) -> lk.Lock:
         """Returns a lock over the byte range correspnding to the hash of the asp problem.
 
         ``path`` is a path to a file in the cache, and its basename is the hash of the problem.
@@ -765,63 +762,34 @@ class ConcretizationCache:
                 path.name, spack.util.crypto.bit_length(sys.maxsize)
             ),
             length=1,
-            default_timeout=timeout if timeout else None,
             desc=f"Concretization cache lock for {path}",
         )
 
-    @contextmanager
-    def read_transaction(self, path: pathlib.Path, timeout: Optional[float] = None):
+    def read_transaction(
+        self, path: pathlib.Path, timeout: Optional[float] = None
+    ) -> lk.ReadTransaction:
         """Read transactions for concretization cache entries.
 
-        Takes a read lock on the cache entry indicated by ``path`` and returns
-        control back to the caller releases lock on exit
-
         Args:
             path: absolute path to the concretization cache entry to be locked
-
+            timeout: give up after this many seconds
         """
         assert path.is_absolute()
-        lock = self._lock(path, timeout=timeout)
-        locked = False
-        try:
-            # can timeout
-            # if it does, no lock is acquired so we
-            # must be careful about releasing
-            lock.acquire_read()
-            locked = True
-            yield path.exists()
-        except lk.LockTimeoutError:
-            # if read lock times out, just exit early
-            tty.debug(f"Concretization cache read lock on {path} timed out")
-        finally:
-            if locked:
-                lock.release_read()
+        return lk.ReadTransaction(self._lock(path), timeout=timeout)
 
-    @contextmanager
-    def write_transaction(self, path: pathlib.Path, timeout: Optional[float] = None):
+    def write_transaction(
+        self, path: pathlib.Path, timeout: Optional[float] = None
+    ) -> lk.WriteTransaction:
         """Write transactions for concretization cache entries
-
-        Takes a write lock on the cache entry indicated by ``path`` and returns
-        control back to the caller releases lock on exit
 
         Args:
             path: absolute path to the concretization cache entry to be locked
+            timeout: give up after this many seconds
 
         """
         # path must be absolute at this point
         assert path.is_absolute()
-        lock = self._lock(path, timeout=timeout)
-        locked = False
-        try:
-            lock.acquire_write()
-            locked = True
-            yield path.exists()
-        except lk.LockTimeoutError:
-            # if read lock times out, just exit early
-            tty.debug(f"Concretization cache write lock on {path} timed out")
-        finally:
-            if locked:
-                lock.release_write()
+        return lk.WriteTransaction(self._lock(path), timeout=timeout)
 
     def store(self, problem: str, result: Result, statistics: List) -> None:
         """Creates entry in concretization cache for problem if none exists,
@@ -832,14 +800,12 @@ class ConcretizationCache:
         problem.
         """
         cache_path = self._cache_path_from_problem(problem)
-
-        with self.write_transaction(cache_path, timeout=30) as exists:
-            if exists:
-                # if cache path file exists, we already have a cache
-                # entry for this, likely created by another process
-                # exit early
-                # just opening it updates atime to indicate recent use
+        with self.write_transaction(cache_path, timeout=30):
+            if cache_path.exists():
+                # if cache path file exists, we already have a cache entry, likely created
+                # by another process.  Exit early.
                 return
+
             with gzip.open(cache_path, "xb", compresslevel=6) as cache_entry:
                 cache_dict = {"results": result.to_dict(), "statistics": statistics}
                 cache_entry.write(json.dumps(cache_dict).encode())
@@ -852,40 +818,42 @@ class ConcretizationCache:
         or returns none if no cache entry was found.
         """
         cache_path = self._cache_path_from_problem(problem)
-        result, statistics = None, None
-        with self.read_transaction(cache_path, timeout=2) as exists:
-            # if exists is false, then there's no chance of a hit
-            if exists:
-                cache_entry_content = None
+        if not cache_path.exists():
+            return None, None  # if exists is false, then there's no chance of a hit
+
+        cache_content = None
+        try:
+            with self.read_transaction(cache_path, timeout=2):
                 try:
                     with gzip.open(cache_path, "rb", compresslevel=6) as f:
                         f.peek(1)  # Try to read at least one byte
                         f.seek(0)
-                        cache_entry_content = f.read().decode("utf-8")
-                except FileNotFoundError:
-                    # cache miss
-                    pass
+                        cache_content = f.read().decode("utf-8")
+
                 except OSError:
-                    # Cache may have been created pre compression
-                    # check if gzip, and if not, read from plaintext
-                    # otherwise re raise
+                    # Cache may have been created pre compression check if gzip, and if not,
+                    # read from plaintext otherwise re raise
                     with open(cache_path, "rb") as f:
-                        # ensure the file was not just a gzip file we failed
-                        # to open
-                        if not GZipFileType().matches_magic(f):
-                            cache_entry_content = f.read().decode()
-                        else:
+                        # raise if this is a gzip file we failed to open
+                        if GZipFileType().matches_magic(f):
                             raise
-                if cache_entry_content:
-                    # update mod/access time for use w/ LRU cleanup
-                    os.utime(cache_path)
-                    result = self._results_from_cache(cache_entry_content)
-                    statistics = self._stats_from_cache(cache_entry_content)
-        if result and statistics:
-            tty.debug(f"Concretization cache hit at {str(cache_path)}")
-            return result, statistics
-        tty.debug(f"Concretization cache miss at {str(cache_path)}")
-        return None, None
+                        cache_content = f.read().decode()
+
+                except FileNotFoundError:
+                    pass  # cache miss, already cleaned up
+
+        except lk.LockTimeoutError:
+            pass  # if the lock times, out skip the cache
+
+        if not cache_content:
+            return None, None
+
+        # update mod/access time for use w/ LRU cleanup
+        os.utime(cache_path)
+        return (
+            self._results_from_cache(cache_content),
+            self._stats_from_cache(cache_content),
+        )  # type: ignore
 
 
 def _is_checksummed_git_version(v):
