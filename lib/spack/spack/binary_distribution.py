@@ -85,7 +85,6 @@ from spack.util.executable import which
 from .enums import InstallRecordStatus
 from .url_buildcache import (
     CURRENT_BUILD_CACHE_LAYOUT_VERSION,
-    SUPPORTED_LAYOUT_VERSIONS,
     BlobRecord,
     BuildcacheComponent,
     BuildcacheEntryError,
@@ -313,12 +312,8 @@ class BinaryCacheIndex:
         self._init_local_index_cache()
         configured_mirrors = [
             MirrorURLAndVersion(m.fetch_url, layout_version, m.fetch_view)
-            for layout_version in SUPPORTED_LAYOUT_VERSIONS
             for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
-            # TODO: OCI does not have a versioned layout. Get rid of this once we no longer support
-            # URL layout v2.
-            if not spack.oci.image.is_oci_url(m.fetch_url)
-            or layout_version == SUPPORTED_LAYOUT_VERSIONS[0]
+            for layout_version in m.supported_layout_versions
         ]
         items_to_remove = []
         spec_cache_clear_needed = False
@@ -1723,7 +1718,7 @@ def download_tarball(
     try_next = [
         MirrorURLAndVersion(mirror.fetch_url, layout, mirror.fetch_view)
         for mirror in configured_mirrors
-        for layout in SUPPORTED_LAYOUT_VERSIONS
+        for layout in mirror.supported_layout_versions
     ]
     urls_and_versions = try_first + [uv for uv in try_next if uv not in try_first]
 
@@ -1749,9 +1744,6 @@ def download_tarball(
 
         # TODO: refactor this to some "nice" place.
         if spack.oci.image.is_oci_url(fetch_url):
-            # TODO: OCI does not have a concept of layout versions, get rid of this notion.
-            if layout_version != SUPPORTED_LAYOUT_VERSIONS[0]:
-                continue
             ref = ImageReference.from_url(fetch_url).with_tag(_oci_default_tag(spec))
 
             # Fetch the manifest
@@ -2172,17 +2164,12 @@ def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorURLAndVersion]:
     found_specs: List[MirrorURLAndVersion] = []
     binary_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True).values()
 
-    for layout_version in SUPPORTED_LAYOUT_VERSIONS:
-        for mirror in binary_mirrors:
-            # TODO: OCI-support
-            if spack.oci.image.is_oci_url(mirror.fetch_url):
-                continue
+    for mirror in binary_mirrors:
+        # TODO: OCI-support
+        if spack.oci.image.is_oci_url(mirror.fetch_url):
+            continue
 
-            if not mirror.supported_version(binary_layout_version=layout_version):
-                # Check if the features of this mirror are supported by the layout version
-                # ie. only v3 mirrors have view support
-                continue
-
+        for layout_version in mirror.supported_layout_versions:
             # layout_version could eventually come from the mirror config
             cache_class = get_url_buildcache_class(layout_version=layout_version)
             cache_entry = cache_class(mirror.fetch_url, spec)
@@ -2262,12 +2249,12 @@ def get_keys(
         tty.die("Please add a spack mirror to allow " + "download of build caches.")
 
     for mirror in mirror_collection.values():
-        for layout_version in SUPPORTED_LAYOUT_VERSIONS:
-            fetch_url = mirror.fetch_url
-            # TODO: oci:// does not support signing.
-            if spack.oci.image.is_oci_url(fetch_url):
-                continue
+        if not mirror.signed:
+            # Don't bother fetching keys for unsigned mirrors
+            continue
 
+        for layout_version in mirror.supported_layout_versions:
+            fetch_url = mirror.fetch_url
             if layout_version == 2:
                 _get_keys_v2(fetch_url, install, trust, force)
             else:

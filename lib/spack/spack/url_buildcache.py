@@ -42,9 +42,6 @@ from spack.util.executable import which
 #: Version 3: Introduces content-addressable tarballs
 CURRENT_BUILD_CACHE_LAYOUT_VERSION = 3
 
-#: The layout version spack can current install
-SUPPORTED_LAYOUT_VERSIONS = (3, 2)
-
 #: The name of the default buildcache index manifest file
 INDEX_MANIFEST_FILE = "index.manifest.json"
 
