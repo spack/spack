@@ -430,7 +430,7 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="function")
-def use_concretization_cache(mutable_config, tmp_path: Path):
+def use_concretization_cache(mock_packages, mutable_config, tmp_path: Path):
     """Enables the use of the concretization cache"""
     conc_cache_dir = tmp_path / "concretization"
     conc_cache_dir.mkdir()

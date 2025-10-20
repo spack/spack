@@ -4249,7 +4249,7 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
     assert len(before) == 1000
 
     # cleanup should be run after the 1,001st execution
-    spack.concretize.concretize_one("py-black")
+    spack.concretize.concretize_one("hdf5")
 
     # ensure that half the elements were removed and that one more was created
     after = names()
