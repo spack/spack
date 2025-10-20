@@ -9,7 +9,7 @@ import shutil
 import sys
 import textwrap
 from argparse import Namespace
-from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple
 
 import spack.builder
 import spack.cmd
@@ -191,7 +191,7 @@ def print_dependency_suggestion(pkg: PackageBase) -> None:
     big_variants = [
         (name, val)
         for n, (name, val) in variant_counts
-        # counts >= 40 and skip if the user already disabled the variant
+        # make a note of variants with large counts that aren't already toggled by the user.
         if n >= 20 and not (name in pkg.spec.variants and pkg.spec.variants[name].value != val)
     ]
 
@@ -349,10 +349,14 @@ def _print_definition(
         name_field: name and optional info, e.g. a default; should be short.
         values_field: possible values for the entry; Wrapped if long.
         description: description of the field (wrapped if overly long)
-        max_name_len:
+        max_name_len: max length of any definition to be printed
         indent: size of leading indent for entry
         when: optional when condition
         out: stream to print to
+
+    Caller is expected to calculate the max name length in advance and pass it to
+    ``_print_definition``.
+
     """
     out = out or sys.stdout
     cols = shutil.get_terminal_size().columns
@@ -408,10 +412,6 @@ def _print_definition(
         )
         out.write(formatted_description)
         out.write("\n")
-
-
-K = TypeVar("K", bound=SupportsRichComparison)
-V = TypeVar("V")
 
 
 def print_header(header: str, when_indexed_dictionary: Dict, formatter: Formatter) -> bool:
