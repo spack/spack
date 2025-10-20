@@ -484,10 +484,10 @@ class TestConcretize:
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-left%gcc")
 
-    def test_disable_mixing_reuse(self, fake_db_install):
+    def test_disable_mixing_reuse(self, mutable_database):
         # Install a spec
         left = spack.concretize.concretize_one("dt-diamond-left %gcc")
-        fake_db_install(left)
+        PackageInstaller([left.package], fake=True, explicit=True).install()
         assert left.satisfies("%c=gcc")
         lefthash = left.dag_hash()[:7]
 
