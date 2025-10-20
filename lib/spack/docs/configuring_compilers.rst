@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -205,7 +206,7 @@ For example:
              set:
                MKL_ROOT: "/path/to/mkl/root"
              unset: # A list of environment variables to unset
-               - CC
+             - CC
              prepend_path: # Similar for append|remove_path
                LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
@@ -275,3 +276,8 @@ Once the compiler is installed, you can start using it without additional config
 .. code-block:: spec
 
    $ spack install hdf5~mpi %gcc@14
+
+Mixing Compilers
+----------------
+
+For more options on configuring Spack to mix different compilers for different languages, see :ref:`the toolchains configuration docs <toolchains>`.

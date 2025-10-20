@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -145,7 +146,7 @@ In any of the functions above, you can
    .. code-block:: python
 
       if self.spec.satisfies("+variant_name"):
-         ...
+          ...
    
    to check if a variant is enabled, or
    
@@ -220,6 +221,7 @@ To use a particular build system, you need to import it in your ``package.py`` f
 
    from spack_repo.builtin.build_systems.cmake import CMakePackage
 
+
    class MyPkg(CMakePackage):
        pass
 
@@ -253,6 +255,7 @@ If you want to pass a flag to the configure script only if the package is built 
 
    variant("foo", default=False, description="Enable foo feature")
 
+
    def configure_args(self):
        args = []
        if self.spec.satisfies("+foo"):
@@ -266,6 +269,7 @@ For multi-valued variants, you can use the ``key=value`` syntax to test whether 
 .. code-block:: python
 
    variant("threads", default="none", values=("pthreads", "openmp", "none"), multi=False, ...)
+
 
    def configure_args(self):
        args = []
@@ -283,14 +287,15 @@ Even if *multiple* values are selected, you can still use ``key=value`` to test 
 
    variant("languages", default="c,c++", values=("c", "c++", "fortran"), multi=True, ...)
 
+
    def configure_args(self):
        args = []
        if self.spec.satisfies("languages=c"):
-          args.append("--enable-c")
+           args.append("--enable-c")
        if self.spec.satisfies("languages=c++"):
-          args.append("--enable-c++")
+           args.append("--enable-c++")
        if self.spec.satisfies("languages=fortran"):
-          args.append("--enable-fortran")
+           args.append("--enable-fortran")
        return args
 
 Notice that many build systems provide helper functions to make the above code more concise.
@@ -316,10 +321,9 @@ An example of using this is shown below:
        description="C++ standard",
    )
 
+
    def configure_args(self):
-       return [
-           f"--with-cxxstd={self.spec.variants['cxxstd'].value}"
-       ]
+       return [f"--with-cxxstd={self.spec.variants['cxxstd'].value}"]
 
 **Versions**.
 Similarly, versions are often used to dynamically change the build configuration:
@@ -467,10 +471,12 @@ In those cases, the build system could use some help, for which we give a few ex
    .. code-block:: python
    
       lapack_blas = spec["lapack"].libs + spec["blas"].libs
-      args.extend([
-        f"-DMATH_LIBRARY_NAMES={';'.join(lapack_blas.names)}",
-        f"-DMATH_LIBRARY_DIRS={';'.join(lapack_blas.directories)}"
-      ])
+      args.extend(
+          [
+              f"-DMATH_LIBRARY_NAMES={';'.join(lapack_blas.names)}",
+              f"-DMATH_LIBRARY_DIRS={';'.join(lapack_blas.directories)}",
+          ]
+      )
 
 3. Search and link flags
 
@@ -527,6 +533,7 @@ In that case, you can use the generic ``Package`` class, which defines only a si
    from spack.package import *
    from spack_repo.builtin.build_systems.generic import Package
 
+
    class MyPkg(Package):
 
        # Override the install phase
@@ -576,6 +583,7 @@ Spack makes some of these executables available as global functions, making it e
 
    from spack.package import *
    from spack_repo.builtin.build_systems.generic import Package
+
 
    class MyPkg(Package):
 
@@ -638,10 +646,11 @@ If a package does not build properly in parallel, you can simply define ``parall
 For example:
 
 .. code-block:: python
-   :emphasize-lines: 3
+   :emphasize-lines: 4
 
    class ExamplePackage(MakefilePackage):
        """Example package that does not build in parallel."""
+
        parallel = False
 
 This ensures that any ``make`` or ``ninja`` invocation will *not* set the ``-j <njobs>`` option, and the build will run sequentially.
@@ -681,7 +690,7 @@ Spack's Python Package API
 Whenever you implement :ref:`overriding phases <overriding-phases>` or :ref:`before and after build phases <before_after_build_phases>`, you typically need to modify files, work with paths and run executables.
 Spack provides a number of convenience functions and classes of its own to make your life even easier, complementing the Python standard library.
 
-All of the functionality in this section is made available by importing the ``spack.package`` module.
+All of the functionality in this section is made available by importing the :mod:`spack.package` module.
 
 .. code-block:: python
 
@@ -707,27 +716,23 @@ File filtering functions
 
      .. code-block:: python
 
-        filter_file(r"^\s*CC\s*=.*",  "CC = "  + spack_cc,  "Makefile")
+        filter_file(r"^\s*CC\s*=.*", "CC = " + spack_cc, "Makefile")
         filter_file(r"^\s*CXX\s*=.*", "CXX = " + spack_cxx, "Makefile")
         filter_file(r"^\s*F77\s*=.*", "F77 = " + spack_f77, "Makefile")
-        filter_file(r"^\s*FC\s*=.*",  "FC = "  + spack_fc,  "Makefile")
+        filter_file(r"^\s*FC\s*=.*", "FC = " + spack_fc, "Makefile")
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 
      .. code-block:: python
 
-        filter_file(r"#!/usr/bin/perl",
-                    "#!/usr/bin/env perl", prefix.bin.bib2xhtml)
+        filter_file(r"#!/usr/bin/perl", "#!/usr/bin/env perl", prefix.bin.bib2xhtml)
 
   #. Switching the compilers used by ``mpich``'s MPI wrapper scripts from ``cc``, etc. to the compilers used by the Spack build:
 
      .. code-block:: python
 
-        filter_file("CC='cc'", "CC='%s'" % self.compiler.cc,
-                    prefix.bin.mpicc)
-
-        filter_file("CXX='c++'", "CXX='%s'" % self.compiler.cxx,
-                    prefix.bin.mpicxx)
+        filter_file("CC='cc'", "CC='%s'" % self.compiler.cc, prefix.bin.mpicc)
+        filter_file("CXX='c++'", "CXX='%s'" % self.compiler.cxx, prefix.bin.mpicxx)
 
 :py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.package.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install into directories with, e.g. "@" in the name, because they use hard-coded ``sed`` commands in their build.
@@ -784,7 +789,7 @@ File functions
         with working_dir("libdwarf"):
             configure("--prefix=" + prefix, "--enable-shared")
             make()
-            install("libdwarf.a",  prefix.lib)
+            install("libdwarf.a", prefix.lib)
 
   #. Many CMake builds require that you build "out of source", that is, in a subdirectory.
      You can handle creating and ``cd``'ing to the subdirectory like the LLVM package does:
@@ -792,12 +797,14 @@ File functions
      .. code-block:: python
 
         with working_dir("spack-build", create=True):
-            cmake("..",
-                  "-DLLVM_REQUIRES_RTTI=1",
-                  "-DPYTHON_EXECUTABLE=/usr/bin/python",
-                  "-DPYTHON_INCLUDE_DIR=/usr/include/python2.6",
-                  "-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so",
-                  *std_cmake_args)
+            cmake(
+                "..",
+                "-DLLVM_REQUIRES_RTTI=1",
+                "-DPYTHON_EXECUTABLE=/usr/bin/python",
+                "-DPYTHON_INCLUDE_DIR=/usr/include/python2.6",
+                "-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so",
+                *std_cmake_args
+            )
             make()
             make("install")
 
@@ -1117,6 +1124,7 @@ To ensure that flags are always set as *environment variables*, you can use:
 
    from spack.package import *  # for env_flags
 
+
    class MyPackage(MakefilePackage):
        flag_handler = env_flags  # Use environment variables for all flags
 
@@ -1125,6 +1133,7 @@ To ensure that flags are always *passed to the build system*, you can use:
 .. code-block:: python
 
    from spack.package import *  # for build_system_flags
+
 
    class MyPackage(MakefilePackage):
        flag_handler = build_system_flags  # Pass flags to the build system
@@ -1168,6 +1177,7 @@ For example, consider a ``libdwarf`` package that just depends on ``libelf`` and
 
    from spack.package import *
    from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 
    class Libdwarf(AutotoolsPackage):
        url = "..."
@@ -1276,12 +1286,11 @@ All it takes is some lines like this:
    env["F77"] = spec["mpi"].mpif77
    env["FC"] = spec["mpi"].mpifc
 
-Or, if you pass CC, CXX, etc. directly to your build with, e.g., `--with-cc=<path>`, you'll want to substitute `spec["mpi"].mpicc` in there instead, e.g.:
+Or, if you pass CC, CXX, etc. directly to your build with, e.g., ``--with-cc=<path>``, you'll want to substitute ``spec["mpi"].mpicc`` in there instead, e.g.:
 
 .. code-block:: python
 
-   configure("--prefix=%s" % prefix,
-             "--with-cc=%s" % spec["mpi"].mpicc)
+   configure("--prefix=%s" % prefix, "--with-cc=%s" % spec["mpi"].mpicc)
 
 Now, you may think that doing this will lose the includes, library paths, and RPATHs that Spack's compiler wrappers get you, but we've actually set things up so that the MPI compiler wrappers use Spack's compiler wrappers when run from within Spack.
 So using the MPI wrappers should really be as simple as the code above.
@@ -1298,9 +1307,9 @@ E.g., in openmpi, you'll find this:
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.setup_dependent_package
 
-That code allows the ``openmpi`` package to associate an ``mpicc`` property with the ``openmpi`` node in the DAG, so that dependents can access it.
+That code allows the ``openmpi`` package to associate an ``mpicc`` property with the ``openmpi`` spec in the DAG, so that dependents can access it.
 ``mvapich2`` and ``mpich`` do similar things.
-So, no matter what MPI you're using, spec["mpi"].mpicc gets you the location of the MPI compilers.
+So, no matter what MPI you're using, ``spec["mpi"].mpicc`` gets you the location of the MPI compilers.
 This allows us to have a fairly simple polymorphic interface for information about virtual dependencies like MPI.
 
 Wrapping wrappers
@@ -1309,19 +1318,19 @@ Wrapping wrappers
 Spack likes to use its own compiler wrappers to make it easy to add ``RPATHs`` to builds, and to try hard to ensure that your builds use the right dependencies.
 This doesn't play nicely by default with MPI, so we have to do a couple of tricks.
 
-  1. If we build MPI with Spack's wrappers, mpicc and friends will be installed with hard-coded paths to Spack's wrappers, and using them from outside of Spack will fail because they only work within Spack.
-     To fix this, we patch mpicc and friends to use the regular compilers.
-     Look at the filter_compilers method in mpich, openmpi, or mvapich2 for details.
+1. If we build MPI with Spack's wrappers, mpicc and friends will be installed with hard-coded paths to Spack's wrappers, and using them from outside of Spack will fail because they only work within Spack.
+   To fix this, we patch mpicc and friends to use the regular compilers.
+   Look at the filter_compilers method in mpich, openmpi, or mvapich2 for details.
 
-  2. We still want to use the Spack compiler wrappers when Spack is calling mpicc.
-     Luckily, wrappers in all mainstream MPI implementations provide environment variables that allow us to dynamically set the compiler to be used by mpicc, mpicxx, etc.
-     Spack's build environment sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI.
-     This makes the MPI compiler wrappers use the Spack compiler wrappers so that your dependencies still get proper RPATHs even if you use the MPI wrappers.
+2. We still want to use the Spack compiler wrappers when Spack is calling mpicc.
+   Luckily, wrappers in all mainstream MPI implementations provide environment variables that allow us to dynamically set the compiler to be used by mpicc, mpicxx, etc.
+   Spack's build environment sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI.
+   This makes the MPI compiler wrappers use the Spack compiler wrappers so that your dependencies still get proper RPATHs even if you use the MPI wrappers.
 
 MPI on Cray machines
 ^^^^^^^^^^^^^^^^^^^^^
 
-The Cray programming environment notably uses ITS OWN compiler wrappers, which function like MPI wrappers.
+The Cray programming environment notably uses its own compiler wrappers, which function like MPI wrappers.
 On Cray systems, the ``CC``, ``cc``, and ``ftn`` wrappers ARE the MPI compiler wrappers, and it's assumed that you'll use them for all of your builds.
 So on Cray we don't bother with ``mpicc``, ``mpicxx``, etc., Spack MPI implementations set ``spec["mpi"].mpicc`` to point to Spack's wrappers, which wrap the Cray wrappers, which wrap the regular compilers and include MPI flags.
 That may seem complicated, but for packagers, that means the same code for using MPI wrappers will work, even on a Cray:
@@ -1398,13 +1407,15 @@ Keeping the install prefix on failure
 
 Conversely, if a build fails but *has* installed some files, you may want to keep the install prefix to diagnose the issue.
 
-By default, ``spack install`` will delete the install directory if anything fails during build.
+By default, ``spack install`` deletes the install directory if anything fails during build.
 
 The ``--keep-prefix`` option allows you to keep the install prefix regardless of the build outcome.
 
 .. code-block:: console
 
    $ spack install --keep-prefix <spec>
+
+.. _cmd-spack-graph:
 
 Understanding the DAG
 ^^^^^^^^^^^^^^^^^^^^^

@@ -19,13 +19,13 @@ class Path:
 def format_os_path(path: str, mode: int = Path.unix) -> str:
     """Formats the input path to use consistent, platform specific separators.
 
-    Absolute paths are converted between drive letters and a prepended '/' as per platform
+    Absolute paths are converted between drive letters and a prepended ``/`` as per platform
     requirement.
 
     Parameters:
         path: the path to be normalized, must be a string or expose the replace method.
         mode: the path file separator style to normalize the passed path to.
-            Default is unix style, i.e. '/'
+            Default is unix style, i.e. ``/``
     """
     if not path:
         return path

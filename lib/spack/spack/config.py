@@ -8,10 +8,10 @@ multiple scopes with different levels of precedence.  See the
 documentation on :ref:`configuration-scopes` for details on how Spack's
 configuration system behaves.  The scopes are:
 
-  #. ``default``
-  #. ``system``
-  #. ``site``
-  #. ``user``
+#. ``default``
+#. ``system``
+#. ``site``
+#. ``user``
 
 Important functions in this module are:
 
@@ -61,6 +61,7 @@ import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
 import spack.util.remote_file_cache as rfc_util
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.llnl.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
@@ -110,7 +111,8 @@ CONFIG_DEFAULTS = {
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
         "license_dir": spack.paths.default_license_dir,
-    }
+    },
+    "concretizer": {"externals": {"completion": "default_variants"}},
 }
 
 #: metavar to use for commands that accept scopes
@@ -152,7 +154,15 @@ class ConfigScope:
                 include_paths = [included_path(data) for data in includes["include"]]
                 for path in include_paths:
                     included_scope = include_path_scope(path, self)
-                    if included_scope:
+                    if not included_scope:
+                        continue
+
+                    # Do not include duplicate scopes
+                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
+                        tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                        continue
+
+                    if included_scope not in self._included_scopes:
                         self._included_scopes.append(included_scope)
 
         return self._included_scopes
@@ -517,8 +527,8 @@ class Configuration:
         """
         List of all scopes whose names match the provided regular expression.
 
-        For example, matching_scopes(r'^command') will return all scopes
-        whose names begin with `command`.
+        For example, ``matching_scopes(r'^command')`` will return all scopes
+        whose names begin with ``command``.
         """
         return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
 
@@ -638,6 +648,14 @@ class Configuration:
         """
         return self._get_config_memoized(section, scope=scope, _merged_scope=_merged_scope)
 
+    def deepcopy_as_builtin(
+        self, section: str, scope: Optional[str] = None, *, line_info: bool = False
+    ) -> Dict[str, Any]:
+        """Get a deep copy of a section with native Python types, excluding YAML metadata."""
+        return syaml.deepcopy_as_builtin(
+            self.get_config(section, scope=scope), line_info=line_info
+        )
+
     @lang.memoized
     def _get_config_memoized(
         self, section: str, scope: Optional[str], _merged_scope: Optional[str]
@@ -688,13 +706,13 @@ class Configuration:
         """Get a config section or a single value from one.
 
         Accepts a path syntax that allows us to grab nested config map
-        entries.  Getting the 'config' section would look like::
+        entries.  Getting the ``config`` section would look like::
 
-            spack.config.get('config')
+            spack.config.get("config")
 
         and the ``dirty`` section in the ``config`` scope would be::
 
-            spack.config.get('config:dirty')
+            spack.config.get("config:dirty")
 
         We use ``:`` as the separator, like YAML objects.
         """
@@ -758,12 +776,26 @@ class Configuration:
         """Iterate over scopes in this configuration."""
         yield from self.scopes.values()
 
-    def print_section(self, section: str, blame: bool = False, *, scope=None) -> None:
-        """Print a configuration to stdout."""
+    def print_section(
+        self, section: str, yaml: bool = True, blame: bool = False, *, scope: Optional[str] = None
+    ) -> None:
+        """Print a configuration to stdout.
+
+        Arguments:
+            section: The configuration section to print.
+            yaml: If True, output in YAML format, otherwise JSON (ignored when blame is True).
+            blame: Whether to include source locations for each entry.
+            scope: The configuration scope to use.
+        """
         try:
             data = syaml.syaml_dict()
             data[section] = self.get_config(section, scope=scope)
-            syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
+            if yaml or blame:
+                syaml.dump_config(data, stream=sys.stdout, default_flow_style=False, blame=blame)
+            else:
+                sjson.dump(data, sys.stdout)
+                sys.stdout.write("\n")
+
         except (syaml.SpackYAMLError, OSError) as e:
             raise spack.error.ConfigError(f"cannot read '{section}' configuration") from e
 
@@ -825,8 +857,7 @@ def included_path(entry: Union[str, dict]) -> IncludePath:
     Args:
         entry: include configuration entry
 
-    Returns: converted entry, where an empty ``when`` means the path is
-        not conditionally included
+    Returns: converted entry, where an empty ``when`` means the path is not conditionally included
     """
     if isinstance(entry, str):
         return IncludePath(path=entry, sha256="", when="", optional=False)
@@ -1292,7 +1323,7 @@ def remove_yaml(dest, source):
     """UnMerges source from dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
-    case dest was None to begin with, e.g.:
+    case dest was None to begin with, e.g.::
 
        dest = remove_yaml(dest, source)
 
@@ -1302,7 +1333,7 @@ def remove_yaml(dest, source):
     appear as keys in ``dest``.
 
     Config file authors can optionally end any attribute in a dict
-    with `::` instead of `:`, and the key will remove the entire section
+    with ``::`` instead of ``:``, and the key will remove the entire section
     from ``dest``
     """
 
@@ -1446,27 +1477,29 @@ class ConfigPath:
 
 
 def process_config_path(path: str) -> List[str]:
-    """Process a path argument to config.set() that may contain overrides ('::' or
-    trailing ':')
+    """Process a path argument to config.set() that may contain overrides (``::`` or
+    trailing ``:``)
 
     Colons will be treated as static strings if inside of quotes,
-    e.g. `this:is:a:path:'value:with:colon'` will yield:
+    e.g. ``this:is:a:path:'value:with:colon'`` will yield:
 
-        [this, is, a, path, value:with:colon]
+    .. code-block:: text
 
-    The path may consist only of keys (e.g. for a `get`) or may end in a value.
+       [this, is, a, path, value:with:colon]
+
+    The path may consist only of keys (e.g. for a ``get``) or may end in a value.
     Keys are always strings: if a user encloses a key in quotes, the quotes
     should be removed. Values with quotes should be treated as strings,
     but without quotes, may be parsed as a different yaml object (e.g.
-    '{}' is a dict, but '"{}"' is a string).
+    ``'{}'`` is a dict, but ``'"{}"'`` is a string).
 
     This function does not know whether the final element of the path is a
     key or value, so:
 
-    * It must strip the quotes, in case it is a key (so we look for "key" and
-      not '"key"'))
+    * It must strip the quotes, in case it is a key (so we look for ``key`` and
+      not ``"key"``)
     * It must indicate somehow that the quotes were stripped, in case it is a
-      value (so that we don't process '"{}"' as a YAML dict)
+      value (so that we don't process ``"{}"`` as a YAML dict)
 
     Therefore, all elements with quotes are stripped, and then also converted
     to ``syaml_str`` (if treating the final element as a value, the caller

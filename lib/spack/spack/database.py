@@ -5,12 +5,11 @@
 
 The database serves two purposes:
 
-  1. It implements a cache on top of a potentially very large Spack
-     directory hierarchy, speeding up many operations that would
-     otherwise require filesystem access.
-
-  2. It will allow us to track external installations as well as lost
-     packages and their dependencies.
+1. It implements a cache on top of a potentially very large Spack
+   directory hierarchy, speeding up many operations that would
+   otherwise require filesystem access.
+2. It will allow us to track external installations as well as lost
+   packages and their dependencies.
 
 Prior to the implementation of this store, a directory layout served
 as the authoritative database of packages in Spack.  This module
@@ -178,8 +177,8 @@ class InstallRecord:
     install path, AND whether or not it is installed.  We need the
     installed flag in case a user either:
 
-        a) blew away a directory, or
-        b) used spack uninstall -f to get rid of it
+    1. blew away a directory, or
+    2. used spack uninstall -f to get rid of it
 
     If, in either case, the package was removed but others still
     depend on it, we still need to track its spec, so we don't
@@ -443,7 +442,7 @@ class FailureTracker:
     def clear(self, spec: "spack.spec.Spec", force: bool = False) -> None:
         """Removes any persistent and cached failure tracking for the spec.
 
-        see `mark()`.
+        see :meth:`mark`.
 
         Args:
             spec: the spec whose failure indicators are being removed
@@ -649,11 +648,11 @@ class Database:
             self.database_directory.mkdir(parents=True, exist_ok=True)
 
     def write_transaction(self):
-        """Get a write lock context manager for use in a `with` block."""
+        """Get a write lock context manager for use in a ``with`` block."""
         return self._write_transaction_impl(self.lock, acquire=self._read, release=self._write)
 
     def read_transaction(self):
-        """Get a read lock context manager for use in a `with` block."""
+        """Get a read lock context manager for use in a ``with`` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
 
     def _write_to_file(self, stream):
@@ -725,10 +724,9 @@ class Database:
         """Get a spec for hash, and whether it's installed upstream.
 
         Return:
-            (tuple): (bool, optional InstallRecord): bool tells us whether
-                the record is from an upstream. Its InstallRecord is also
-                returned if available (the record must be checked to know
-                whether the hash is installed).
+            Tuple of bool and optional InstallRecord. The bool tells us whether the record is from
+            an upstream. Its InstallRecord is also returned if available (the record must be
+            checked to know whether the hash is installed).
 
         If the record is available locally, this function will always have
         a preference for returning that, even if it is not installed locally
@@ -745,12 +743,11 @@ class Database:
                 return True, db._data[hash_key]
         return False, None
 
-    def query_local_by_spec_hash(self, hash_key):
+    def query_local_by_spec_hash(self, hash_key: str) -> Optional[InstallRecord]:
         """Get a spec by hash in the local database
 
         Return:
-            (InstallRecord or None): InstallRecord when installed
-                locally, otherwise None."""
+            InstallRecord when installed locally, otherwise None."""
         with self.read_transaction():
             return self._data.get(hash_key, None)
 
@@ -810,7 +807,9 @@ class Database:
 
         def check(cond, msg):
             if not cond:
-                raise CorruptDatabaseError(f"Spack database is corrupt: {msg}", self._index_path)
+                raise CorruptDatabaseError(
+                    f"Spack database is corrupt: {msg}", str(self._index_path)
+                )
 
         check("database" in fdata, "no 'database' attribute in JSON DB.")
 
@@ -832,7 +831,7 @@ class Database:
             return CorruptDatabaseError(
                 f"Invalid record in Spack database: hash: {hash_key}, cause: "
                 f"{type(error).__name__}: {error}",
-                self._index_path,
+                str(self._index_path),
             )
 
         # Build up the database in three passes:
@@ -1711,7 +1710,7 @@ class Database:
 
             hashes: list of hashes used to restrict the search
 
-            install_tree: query 'all' (default), 'local', 'upstream', or upstream path
+            install_tree: query ``"all"`` (default), ``"local"``, ``"upstream"``, or upstream path
 
             origin: origin of the spec
         """
@@ -1762,7 +1761,7 @@ class Database:
             )
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
-        results.sort()  # type: ignore[call-overload]
+        results.sort()  # type: ignore[call-arg,call-overload]
         return results
 
     def query_one(

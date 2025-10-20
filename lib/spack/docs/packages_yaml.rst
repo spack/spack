@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,7 +29,7 @@ At a high level, the ``packages.yaml`` file is structured like this:
      all:
        # settings that apply to all packages.
 
-So you can either set build preferences specifically for *one* package, or you can specify that certain settings should apply to *all* packages.
+You can either set build preferences specifically for *one* package, or you can specify that certain settings should apply to *all* packages.
 The types of settings you can customize are described in detail below.
 
 Spack's build defaults are in the default ``etc/spack/defaults/packages.yaml`` file.
@@ -37,11 +38,11 @@ For more details on how this works, see :ref:`configuration-scopes`.
 
 .. _sec-external-packages:
 
-External Packages
+External packages
 -----------------
 
 Spack can be configured to use externally-installed packages rather than building its own packages.
-This may be desirable if machines ship with system packages, such as a customized MPI that should be used instead of Spack building its own MPI.
+This may be desirable if machines ship with system packages, such as a customized MPI, which should be used instead of Spack building its own MPI.
 
 External packages are configured through the ``packages.yaml`` file.
 Here's an example of an external configuration:
@@ -51,14 +52,12 @@ Here's an example of an external configuration:
    packages:
      openmpi:
        externals:
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+       - spec: "openmpi@1.4.3~debug"
          prefix: /opt/openmpi-1.4.3
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+       - spec: "openmpi@1.4.3+debug"
          prefix: /opt/openmpi-1.4.3-debug
-       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.6.5-intel
 
-This example lists three installations of OpenMPI, one built with GCC, one built with GCC and debug information, and another built with Intel.
+This example lists two installations of OpenMPI, one with debug information, and one without.
 If Spack is asked to build a package that uses one of these MPIs as a dependency, it will use the pre-installed OpenMPI in the given directory.
 Note that the specified path is the top-level install prefix, not the ``bin`` subdirectory.
 
@@ -78,7 +77,234 @@ To specify externals, add an ``externals:`` attribute under the package name, wh
 Each external should specify a ``spec:`` string that should be as well-defined as reasonably possible.
 If a package lacks a spec component, such as missing a compiler or package version, then Spack will guess the missing component based on its most-favored packages, and it may guess incorrectly.
 
-Each package version and compiler listed in an external should have entries in Spack's packages and compiler configuration, even though the package and compiler may not ever be built.
+
+.. _cmd-spack-external-find:
+
+Automatically find external packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can run the :ref:`spack external find <spack-external-find>` command to search for system-provided packages and add them to ``packages.yaml``.
+After running this command your ``packages.yaml`` may include new entries:
+
+.. code-block:: yaml
+
+   packages:
+     cmake:
+       externals:
+       - spec: cmake@3.17.2
+         prefix: /usr
+
+Generally this is useful for detecting a small set of commonly-used packages; for now this is generally limited to finding build-only dependencies.
+Specific limitations include:
+
+* Packages are not discoverable by default: For a package to be discoverable with ``spack external find``, it needs to add special logic.
+  See :ref:`here <make-package-findable>` for more details.
+* The logic does not search through module files, it can only detect packages with executables defined in ``PATH``; you can help Spack locate externals which use module files by loading any associated modules for packages that you want Spack to know about before running ``spack external find``.
+* Spack does not overwrite existing entries in the package configuration: If there is an external defined for a spec at any configuration scope, then Spack will not add a new external entry (``spack config blame packages`` can help locate all external entries).
+
+Prevent packages from being built from sources
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Adding an external spec in ``packages.yaml`` allows Spack to use an external location, but it does not prevent Spack from building packages from sources.
+In the above example, Spack might choose for many valid reasons to start building and linking with the latest version of OpenMPI rather than continue using the pre-installed OpenMPI versions.
+
+To prevent this, the ``packages.yaml`` configuration also allows packages to be flagged as non-buildable.
+The previous example could be modified to be:
+
+.. code-block:: yaml
+
+   packages:
+     openmpi:
+       externals:
+       - spec: "openmpi@1.4.3~debug"
+         prefix: /opt/openmpi-1.4.3
+       - spec: "openmpi@1.4.3+debug"
+         prefix: /opt/openmpi-1.4.3-debug
+       buildable: false
+
+The addition of the ``buildable`` flag tells Spack that it should never build its own version of OpenMPI from sources, and it will instead always rely on a pre-built OpenMPI.
+
+.. note::
+
+   If ``concretizer:reuse`` is on (see :ref:`concretizer-options` for more information on that flag) pre-built specs are taken from: the local store, an upstream store, a registered buildcache and externals in ``packages.yaml``.
+   If ``concretizer:reuse`` is off, only external specs in ``packages.yaml`` are included in the list of pre-built specs.
+
+If an external module is specified as not buildable, then Spack will load the external module into the build environment which can be used for linking.
+
+The ``buildable`` attribute does not need to be paired with external packages.
+It could also be used alone to forbid packages that may be buggy or otherwise undesirable.
+
+Non-buildable virtual packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Virtual packages in Spack can also be specified as not buildable, and external implementations can be provided.
+In the example above, OpenMPI is configured as not buildable, but Spack will often prefer other MPI implementations over the externally available OpenMPI.
+Spack can be configured with every MPI provider not buildable individually, but more conveniently:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       buildable: false
+     openmpi:
+       externals:
+       - spec: "openmpi@1.4.3~debug"
+         prefix: /opt/openmpi-1.4.3
+       - spec: "openmpi@1.4.3+debug"
+         prefix: /opt/openmpi-1.4.3-debug
+
+Spack can then use any of the listed external implementations of MPI to satisfy a dependency, and will choose among them depending on the compiler and architecture.
+
+In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers (available via stores or buildcaches) are not desirable, Spack can be configured to require specs matching only the available externals:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       buildable: false
+       require:
+       - one_of:
+         - "openmpi@1.4.3~debug"
+         - "openmpi@1.4.3+debug"
+     openmpi:
+       externals:
+       - spec: "openmpi@1.4.3~debug"
+         prefix: /opt/openmpi-1.4.3
+       - spec: "openmpi@1.4.3+debug"
+         prefix: /opt/openmpi-1.4.3-debug
+
+This configuration prevents any spec using MPI and originating from stores or buildcaches to be reused, unless it matches the requirements under ``packages:mpi:require``.
+For more information on requirements see :ref:`package-requirements`.
+
+Specifying dependencies among external packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+External packages frequently have dependencies on other software components.
+Explicitly modeling these relationships provides Spack with a more complete representation of the software stack.
+This ensures that:
+
+- Runtime environments include all necessary components.
+- Build-time dependencies are accurately represented.
+
+This comprehensive view, in turn, enables Spack to more reliably build software that depends on these externals.
+
+Spack provides two methods for configuring dependency relationships among externals, each offering different trade-offs between conciseness and explicit control:
+
+- An "inline" spec syntax.
+- A structured YAML configuration that is more verbose but also more explicit.
+
+The following sections will detail both approaches.
+
+Dependencies using inline spec syntax
+"""""""""""""""""""""""""""""""""""""
+
+Spack allows you to define external package dependencies using the standard spec syntax directly within your package configuration.
+This approach is concise and leverages the familiar spec syntax that you already use elsewhere in Spack.
+
+When configuring an external package with dependencies using the spec syntax, you can include dependency specifications directly in the main ``spec:`` field:
+
+.. code-block:: yaml
+
+   # Specification for the following DAG:
+   #
+   # o mpileaks@2.3
+   # |\
+   # | o callpath@1.0
+   # |/
+   # o mpich@3.0.4
+   packages:
+     mpileaks:
+       externals:
+       - spec: "mpileaks@2.3~debug+opt %mpich@3 %callpath"
+         prefix: /user/path
+     callpath:
+       externals:
+       - spec: "callpath@1.0 %mpi=mpich"
+         prefix: /user/path
+     mpich:
+       externals:
+       - spec: "mpich@3.0.4"
+         prefix: /user/path
+
+In this example ``mpileaks`` depends on both ``mpich`` and ``callpath``.
+Spack will parse the ``mpileaks`` spec string, and create the appropriate dependency relationships automatically.
+
+Users *need* to ensure that each dependency maps exactly to a single other external package.
+In case multiple externals can satisfy the same dependency, or in case no external can satisfy a dependency, Spack will error and point to the configuration line causing the issue.
+
+Whenever no information is given about the dependency type, Spack will infer it from the current package recipe.
+For instance, the dependencies in the configuration above are inferred to be of ``build,link`` type from the recipe of ``mpileaks`` and ``callpath``:
+
+.. code-block:: console
+
+   $ spack -m spec --types -l --cover edges mpileaks
+   [e]  oelprl6  [    ]  mpileaks@2.3~debug+opt+shared+static build_system=generic platform=linux os=ubuntu20.04 target=icelake
+   [e]  jdhzy2t  [bl  ]      ^callpath@1.0 build_system=generic platform=linux os=ubuntu20.04 target=icelake
+   [e]  pgem3yp  [bl  ]          ^mpich@3.0.4~debug build_system=generic platform=linux os=ubuntu20.04 target=icelake
+   [e]  pgem3yp  [bl  ]      ^mpich@3.0.4~debug build_system=generic platform=linux os=ubuntu20.04 target=icelake
+
+When inferring the dependency types, Spack will also infer virtuals if they are not already specified.
+
+This method's conciseness comes with a strict requirement: each dependency must resolve to a single, unambiguous external package.
+This makes the approach suitable for simple or temporary configurations.
+In larger, more dynamic environments, however, it can become a maintenance challenge, as adding new external packages over time may require frequent updates to existing specs to preserve their uniqueness.
+
+Dependencies using YAML configuration
+"""""""""""""""""""""""""""""""""""""
+
+While the spec syntax offers a concise way to specify dependencies, Spack's YAML-based explicit dependency configuration provides more control and clarity, especially for complex dependency relationships.
+This approach uses the ``dependencies:`` field to precisely define each dependency relationship.
+The example in the previous section, written using the YAML configuration, becomes:
+
+.. code-block:: yaml
+
+   # Specification for the following DAG:
+   #
+   # o mpileaks@2.3
+   # |\
+   # | o callpath@1.0
+   # |/
+   # o mpich@3.0.4
+   packages:
+     mpileaks:
+       externals:
+       - spec: "mpileaks@2.3~debug+opt"
+         prefix: /user/path
+         dependencies:
+         - id: callpath_id
+           deptypes: link
+         - spec: mpich
+           deptypes:
+           - "build"
+           - "link"
+           virtuals: "mpi"
+     callpath:
+       externals:
+       - spec: "callpath@1.0"
+         prefix: /user/path
+         id: callpath_id
+         dependencies:
+         - spec: mpich
+           deptypes:
+           - "build"
+           - "link"
+           virtuals: "mpi"
+     mpich:
+       externals:
+       - spec: "mpich@3.0.4"
+         prefix: /user/path
+
+Each dependency can be specified either by:
+
+- A ``spec:`` that matches an available external package, like in the previous case, or by
+- An ``id`` that explicitly references another external package.
+
+Using the ``id`` provides an unambiguous reference to a specific external package, which is essential for differentiating between externals that have similar specs but differ, for example, only by their installation prefix.
+
+The dependency types can be specified in the optional ``deptypes`` field, while virtuals can be specified in the optional ``virtuals`` field.
+As before, when the dependency types are not specified, Spack will infer them from the package recipe.
+
+.. _extra-attributes-for-externals:
 
 Extra attributes for external packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -94,7 +320,7 @@ This could be configured as follows:
    packages:
      mpich:
        externals:
-       - spec: mpich@3.3 %clang@12.0.0 +hwloc
+       - spec: mpich@3.3 +hwloc
          prefix: /path/to/mpich
          extra_attributes:
            environment:
@@ -103,10 +329,18 @@ This could be configured as follows:
 
 See :ref:`configuration_environment_variables` for more information on how to configure environment modifications in Spack config files.
 
-Extra attributes for external compilers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _configuring-system-compilers-as-external-packages:
 
-External package configuration allows several extra attributes for configuring compilers.
+Configuring system compilers as external packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In Spack, compilers are treated as packages like any other.
+This means that you can also configure system compilers as external packages and use them in Spack.
+
+Spack automatically detects system compilers and configures them in ``packages.yaml`` for you.
+You can also run :ref:`spack-compiler-find` to find and configure new system compilers.
+
+When configuring compilers as external packages, you need to set a few :ref:`extra attributes <extra-attributes-for-externals>` for them to work properly.
 The ``compilers`` extra attribute field is required to clarify which paths within the compiler prefix are used for which languages:
 
 .. code-block:: yaml
@@ -145,9 +379,9 @@ Other fields accepted by compilers under ``extra_attributes`` are ``flags``, ``e
              prepend_path:
                PATH: /usr/unusual_path_for_ld/bin
            implicit_rpaths:
-             - /usr/lib/gcc
+           - /usr/lib/gcc
            extra_rpaths:
-             - /usr/lib/unusual_gcc_path
+           - /usr/lib/unusual_gcc_path
 
 The ``flags`` attribute specifies compiler flags to apply to every spec that depends on this compiler.
 The accepted flag types are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
@@ -161,113 +395,6 @@ The ``extra_rpaths`` and ``implicit_rpaths`` fields specify additional paths to 
 The ``implicit_rpaths`` field is filled in automatically by Spack when detecting compilers, and the ``extra_rpaths`` field is available for users to configure necessary rpaths that have not been detected by Spack.
 In addition, paths from ``extra_rpaths`` are added as library search paths for the linker.
 In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be added as well.
-
-
-Prevent packages from being built from sources
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Adding an external spec in ``packages.yaml`` allows Spack to use an external location, but it does not prevent Spack from building packages from sources.
-In the above example, Spack might choose for many valid reasons to start building and linking with the latest version of OpenMPI rather than continue using the pre-installed OpenMPI versions.
-
-To prevent this, the ``packages.yaml`` configuration also allows packages to be flagged as non-buildable.
-The previous example could be modified to be:
-
-.. code-block:: yaml
-
-   packages:
-     openmpi:
-       externals:
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.4.3
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
-         prefix: /opt/openmpi-1.4.3-debug
-       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.6.5-intel
-       buildable: False
-
-The addition of the ``buildable`` flag tells Spack that it should never build its own version of OpenMPI from sources, and it will instead always rely on a pre-built OpenMPI.
-
-.. note::
-
-   If ``concretizer:reuse`` is on (see :ref:`concretizer-options` for more information on that flag) pre-built specs are taken from: the local store, an upstream store, a registered buildcache and externals in ``packages.yaml``.
-   If ``concretizer:reuse`` is off, only external specs in ``packages.yaml`` are included in the list of pre-built specs.
-
-If an external module is specified as not buildable, then Spack will load the external module into the build environment which can be used for linking.
-
-The ``buildable`` does not need to be paired with external packages.
-It could also be used alone to forbid packages that may be buggy or otherwise undesirable.
-
-Non-buildable virtual packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Virtual packages in Spack can also be specified as not buildable, and external implementations can be provided.
-In the example above, OpenMPI is configured as not buildable, but Spack will often prefer other MPI implementations over the externally available OpenMPI.
-Spack can be configured with every MPI provider not buildable individually, but more conveniently:
-
-.. code-block:: yaml
-
-   packages:
-     mpi:
-       buildable: False
-     openmpi:
-       externals:
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.4.3
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
-         prefix: /opt/openmpi-1.4.3-debug
-       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.6.5-intel
-
-Spack can then use any of the listed external implementations of MPI to satisfy a dependency, and will choose depending on the compiler and architecture.
-
-In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers (available via stores or buildcaches) are not desirable, Spack can be configured to require specs matching only the available externals:
-
-.. code-block:: yaml
-
-   packages:
-     mpi:
-       buildable: False
-       require:
-       - one_of: [
-           "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64",
-           "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug",
-           "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
-         ]
-     openmpi:
-       externals:
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.4.3
-       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
-         prefix: /opt/openmpi-1.4.3-debug
-       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
-         prefix: /opt/openmpi-1.6.5-intel
-
-This configuration prevents any spec using MPI and originating from stores or buildcaches to be reused, unless it matches the requirements under ``packages:mpi:require``.
-For more information on requirements see :ref:`package-requirements`.
-
-.. _cmd-spack-external-find:
-
-Automatically Find External Packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can run the :ref:`spack external find <spack-external-find>` command to search for system-provided packages and add them to ``packages.yaml``.
-After running this command your ``packages.yaml`` may include new entries:
-
-.. code-block:: yaml
-
-   packages:
-     cmake:
-       externals:
-       - spec: cmake@3.17.2
-         prefix: /usr
-
-Generally this is useful for detecting a small set of commonly-used packages; for now this is generally limited to finding build-only dependencies.
-Specific limitations include:
-
-* Packages are not discoverable by default: For a package to be discoverable with ``spack external find``, it needs to add special logic.
-  See :ref:`here <make-package-findable>` for more details.
-* The logic does not search through module files, it can only detect packages with executables defined in ``PATH``; you can help Spack locate externals which use module files by loading any associated modules for packages that you want Spack to know about before running ``spack external find``.
-* Spack does not overwrite existing entries in the package configuration: If there is an external defined for a spec at any configuration scope, then Spack will not add a new external entry (``spack config blame packages`` can help locate all external entries).
 
 .. _package-requirements:
 
@@ -389,7 +516,7 @@ You can also set default requirements for all packages under ``all`` like this:
 
    packages:
      all:
-       require: '%[when=%c]c=clang %[when=%cxx]cxx=clang'
+       require: "%[when=%c]c=clang %[when=%cxx]cxx=clang"
 
 which means every spec will be required to use ``clang`` as the compiler for C and C++ code.
 
@@ -429,16 +556,17 @@ For example, with a configuration like this:
    packages:
      all:
        require:
-       - 'build_type=Debug'
-       - '%[when=%c]c=clang %[when=%cxx]cxx=clang'
+       - "build_type=Debug"
+       - "%[when=%c]c=clang %[when=%cxx]cxx=clang"
      cmake:
        require:
-       - 'build_type=Debug'
-       - '%c,cxx=gcc'
+       - "build_type=Debug"
+       - "%c,cxx=gcc"
 
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake`` dependencies) to use ``clang``.
 If enforcing ``build_type=Debug`` is needed also on ``cmake``, it must be repeated in the specific ``cmake`` requirements.
 
+.. _setting-requirements-on-virtual-specs:
 
 Setting requirements on virtual specs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -450,7 +578,7 @@ This can be useful for fixing which virtual provider you want to use:
 
    packages:
      mpi:
-       require: 'mvapich2 %c,cxx,fortran=gcc'
+       require: "mvapich2 %c,cxx,fortran=gcc"
 
 With the configuration above the only allowed ``mpi`` provider is ``mvapich2`` built with ``gcc``/``g++``/``gfortran``.
 
@@ -461,9 +589,9 @@ For instance with a configuration like:
 
    packages:
      mpi:
-       require: 'mvapich2 %c,cxx,fortran=gcc'
+       require: "mvapich2 %c,cxx,fortran=gcc"
      mvapich2:
-       require: '~cuda'
+       require: "~cuda"
 
 you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
@@ -479,9 +607,9 @@ If the semantic of requirements is too strong, you can also express "strong pref
    packages:
      all:
        prefer:
-       - '%c,cxx=clang'
+       - "%c,cxx=clang"
        conflict:
-       - '+shared'
+       - "+shared"
 
 The ``prefer`` and ``conflict`` sections can be used whenever a ``require`` section is allowed.
 The argument is always a list of constraints, and each constraint can be either a simple string, or a more complex object:
@@ -491,9 +619,9 @@ The argument is always a list of constraints, and each constraint can be either 
    packages:
      all:
        conflict:
-       - spec: '%c,cxx=clang'
-         when: 'target=x86_64_v3'
-         message: 'reason why clang cannot be used'
+       - spec: "%c,cxx=clang"
+         when: "target=x86_64_v3"
+         message: "reason why clang cannot be used"
 
 The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are optional.
 
@@ -508,7 +636,7 @@ The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are opt
       packages:
         all:
           require:
-          - one_of: ['%clang', '@:']
+          - one_of: ["%clang", "@:"]
 
    Since only one of the requirements must hold, and ``@:`` is always true, the rule above is equivalent to a conflict.
    For "strong preferences" the same construction works, with the ``any_of`` policy instead of the ``one_of`` policy.
@@ -574,15 +702,15 @@ The ``read`` and ``write`` attributes take one of ``user``, ``group``, and ``wor
 
 .. code-block:: yaml
 
-  packages:
-    all:
-      permissions:
-        write: group
-        group: spack
-    my_app:
-      permissions:
-        read: group
-        group: my_team
+   packages:
+     all:
+       permissions:
+         write: group
+         group: spack
+     my_app:
+       permissions:
+         read: group
+         group: my_team
 
 The permissions settings describe the broadest level of access to installations of the specified packages.
 The execute permissions of the file are set to the same level as read permissions for those files that are executable.
@@ -605,13 +733,13 @@ You can assign class-level attributes in the configuration:
 
 .. code-block:: yaml
 
-  packages:
-    mpileaks:
-      package_attributes:
-        # Override existing attributes
-        url: http://www.somewhereelse.com/mpileaks-1.0.tar.gz
-        # ... or add new ones
-        x: 1
+   packages:
+     mpileaks:
+       package_attributes:
+         # Override existing attributes
+         url: http://www.somewhereelse.com/mpileaks-1.0.tar.gz
+         # ... or add new ones
+         x: 1
 
 Attributes set this way will be accessible to any method executed in the package.py file (e.g. the ``install()`` method).
 Values for these attributes may be any value parseable by yaml.

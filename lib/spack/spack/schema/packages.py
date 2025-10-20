@@ -88,7 +88,7 @@ permissions = {
 package_attributes = {
     "type": "object",
     "additionalProperties": False,
-    "patternProperties": {r"\w+": {}},
+    "patternProperties": {r"^[a-zA-Z_]\w*$": {}},
 }
 
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
@@ -126,13 +126,10 @@ properties: Dict[str, Any] = {
                     "providers": {
                         "type": "object",
                         "default": {},
-                        "additionalProperties": False,
-                        "patternProperties": {
-                            r"\w[\w-]*": {
-                                "type": "array",
-                                "default": [],
-                                "items": {"type": "string"},
-                            }
+                        "additionalProperties": {
+                            "type": "array",
+                            "default": [],
+                            "items": {"type": "string"},
                         },
                     },
                     "variants": variants,
@@ -176,13 +173,14 @@ properties: Dict[str, Any] = {
                             "spec": {"type": "string"},
                             "prefix": {"type": "string"},
                             "modules": {"type": "array", "items": {"type": "string"}},
+                            "id": {"type": "string"},
                             "extra_attributes": {
                                 "type": "object",
                                 "additionalProperties": {"type": "string"},
                                 "properties": {
                                     "compilers": {
                                         "type": "object",
-                                        "patternProperties": {r"(^\w[\w-]*)": {"type": "string"}},
+                                        "patternProperties": {r"^\w": {"type": "string"}},
                                     },
                                     "environment": spack.schema.environment.definition,
                                     "extra_rpaths": extra_rpaths,
@@ -190,8 +188,25 @@ properties: Dict[str, Any] = {
                                     "flags": flags,
                                 },
                             },
+                            "dependencies": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {"type": "string"},
+                                        "spec": {"type": "string"},
+                                        "deptypes": {
+                                            "oneOf": [
+                                                {"type": "string"},
+                                                {"type": "array", "items": {"type": "string"}},
+                                            ]
+                                        },
+                                        "virtuals": {"type": "string"},
+                                    },
+                                },
+                            },
                         },
-                        "additionalProperties": True,
+                        "additionalProperties": False,
                         "required": ["spec"],
                     },
                 },

@@ -60,6 +60,7 @@ concretizer:
       py-flit-core: 2
       py-pip: 2
       py-setuptools: 2
+      py-versioneer: 2
       py-wheel: 2
       xcb-proto: 2
       # Compilers
@@ -89,3 +90,15 @@ concretizer:
   # Static analysis may reduce the concretization time by generating smaller ASP problems, in
   # cases where there are requirements that prevent part of the search space to be explored.
   static_analysis: false
+
+  # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
+  # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.
+  concretization_cache:
+    enable: true
+
+  # Options to control the behavior of the concretizer with external specs
+  externals:
+    # Either 'architecture_only', to complete external specs with just the architecture of the
+    # current host, or 'default_variants' to complete external specs also with missing variants,
+    # using their default value.
+    completion: default_variants

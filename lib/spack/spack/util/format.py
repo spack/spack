@@ -2,20 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from typing import Optional
 
-
-def get_version_lines(version_hashes_dict: dict, url_dict: Optional[dict] = None) -> str:
+def get_version_lines(version_hashes_dict: dict) -> str:
     """
     Renders out a set of versions like those found in a package's
     package.py file for a given set of versions and hashes.
 
     Args:
-        version_hashes_dict (dict): A dictionary of the form: version -> checksum.
-        url_dict (dict): A dictionary of the form: version -> URL.
+        version_hashes_dict: A dictionary of the form: version -> checksum.
 
-    Returns:
-        (str): Rendered version lines.
+    Returns: Rendered version lines.
     """
     version_lines = []
 

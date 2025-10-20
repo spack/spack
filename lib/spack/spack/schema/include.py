@@ -37,5 +37,7 @@ properties: Dict[str, Any] = {
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Spack include configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
     "properties": properties,
 }

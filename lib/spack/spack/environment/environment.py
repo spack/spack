@@ -36,6 +36,7 @@ import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.variant as vt
 from spack import traverse
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import islink, readlink, symlink
@@ -1032,7 +1033,7 @@ class Environment:
                 shutil.copy(self.lock_path, self._lock_backup_v1_path)
 
     def write_transaction(self):
-        """Get a write lock context manager for use in a `with` block."""
+        """Get a write lock context manager for use in a ``with`` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
     def _process_view(self, env_view: Optional[Union[bool, str, Dict]]):
@@ -1295,12 +1296,12 @@ class Environment:
         """Remove this environment from Spack entirely."""
         shutil.rmtree(self.path)
 
-    def add(self, user_spec, list_name=user_speclist_name):
+    def add(self, user_spec, list_name=user_speclist_name) -> bool:
         """Add a single user_spec (non-concretized) to the Environment
 
         Returns:
-            (bool): True if the spec was added, False if it was already
-                present and did not need to be added
+            True if the spec was added, False if it was already present and did not need to be
+            added
 
         """
         spec = Spec(user_spec)
@@ -1319,7 +1320,7 @@ class Environment:
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list
         if not existing:
-            list_to_change.add(str(spec))
+            list_to_change.add(spec)
             if list_name == user_speclist_name:
                 self.manifest.add_user_spec(str(user_spec))
             else:
@@ -1336,17 +1337,17 @@ class Environment:
         allow_changing_multiple_specs=False,
     ):
         """
-        Find the spec identified by `match_spec` and change it to `change_spec`.
+        Find the spec identified by ``match_spec`` and change it to ``change_spec``.
 
         Arguments:
             change_spec: defines the spec properties that
                 need to be changed. This will not change attributes of the
-                matched spec unless they conflict with `change_spec`.
+                matched spec unless they conflict with ``change_spec``.
             list_name: identifies the spec list in the environment that
                 should be modified
             match_spec: if set, this identifies the spec
                 that should be changed. If not set, it is assumed we are
-                looking for a spec with the same name as `change_spec`.
+                looking for a spec with the same name as ``change_spec``.
         """
         if not (change_spec.name or (match_spec and match_spec.name)):
             raise ValueError(
@@ -1441,6 +1442,53 @@ class Environment:
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
+
+    def apply_develop(self, spec: spack.spec.Spec, path: Optional[str] = None):
+        """Mutate concrete specs to include dev_path provenance pointing to path.
+
+        This does not do any other aspect of concretization. It will fail if any existing concrete
+        spec for the same package does not satisfy the given develop spec."""
+        # Find all specs that this develop request applies to
+        modify_specs = []
+        for dep in self.all_specs_generator():
+            if dep.name == spec.name:
+                if not dep.satisfies(spec):
+                    raise SpackEnvironmentDevelopError(
+                        f"Develop spec '{spec}' conflicts with concrete specs in environment."
+                        " Try again with 'spack develop --no-modify-concrete-specs'"
+                        " and run 'spack concretize --force' to apply your changes."
+                    )
+                modify_specs.append(dep)
+
+        # Manipulate dev_path variant on modify_specs
+        for s in modify_specs:
+            # Remove any existing dev_path variant in all cases
+            # If setting a path, add the new variant
+            s.variants.pop("dev_path", None)
+            if path:
+                s.variants["dev_path"] = vt.VariantValue(
+                    vt.VariantType.SINGLE, "dev_path", (path,)
+                )
+
+        # Identify roots modified and invalidate all dependent hashes
+        modified_roots = []
+        for parent in traverse.traverse_nodes(modify_specs, direction="parents"):
+            # record whether this parent is a root before we modify the hash
+            if parent.dag_hash() in self.specs_by_hash:
+                modified_roots.append((parent, parent.dag_hash()))
+            # modify the parent to invalidate hashes
+            parent._mark_root_concrete(False)
+            parent.clear_caches()
+
+        # Compute new hashes and update the env list of specs
+        for root, old_hash in modified_roots:
+            root._finalize_concretization()
+            self.concretized_order[self.concretized_order.index(old_hash)] = root.dag_hash()
+            self.specs_by_hash.pop(old_hash)
+            self.specs_by_hash[root.dag_hash()] = root
+
+        if modified_roots:
+            self.write()
 
     def concretize(
         self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
@@ -1621,8 +1669,6 @@ class Environment:
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
-        import spack.bootstrap
-
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
@@ -1665,10 +1711,10 @@ class Environment:
         """Updates the path of the default view.
 
         If the argument passed as input is False the default view is deleted, if present. The
-        manifest will have an entry "view: false".
+        manifest will have an entry ``view: false``.
 
         If the argument passed as input is True a default view is created, if not already present.
-        The manifest will have an entry "view: true". If a default view is already declared, it
+        The manifest will have an entry ``view: true``. If a default view is already declared, it
         will be left untouched.
 
         If the argument passed as input is a path a default view pointing to that path is created,
@@ -1940,7 +1986,7 @@ class Environment:
         """Specs explicitly requested by the user *in this environment*.
 
         Yields both added and installed specs that have user specs in
-        `spack.yaml`.
+        ``spack.yaml``.
         """
         concretized = dict(self.concretized_specs())
         for spec in self.user_specs:
@@ -2016,8 +2062,8 @@ class Environment:
         spec in the environment.
 
         The matching spec does not have to be installed in the environment,
-        but must be concrete (specs added with `spack add` without an
-        intervening `spack concretize` will not be matched).
+        but must be concrete (specs added with ``spack add`` without an
+        intervening ``spack concretize`` will not be matched).
 
         If there is a single root spec that matches the provided spec or a
         single dependency spec that matches the provided spec, then the
@@ -2679,8 +2725,14 @@ def initialize_environment_dir(
             tty.warn(f"Included file does not exist; will not copy: '{path}'")
             continue
 
-        fs.touchp(abspath)
-        shutil.copy(orig_abspath, abspath)
+        if os.path.isfile(orig_abspath):
+            fs.touchp(abspath)
+            shutil.copy(orig_abspath, abspath)
+        else:
+            if os.path.exists(abspath):
+                tty.warn(f"Skipping copying duplicate directories: {path}")
+                continue
+            shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
@@ -3033,3 +3085,7 @@ class SpackEnvironmentConfigError(SpackEnvironmentError):
     def __init__(self, msg, filename):
         self.filename = filename
         super().__init__(msg)
+
+
+class SpackEnvironmentDevelopError(SpackEnvironmentError):
+    """Class for errors in applying develop information to an environment."""

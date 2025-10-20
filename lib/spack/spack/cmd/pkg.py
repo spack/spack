@@ -86,7 +86,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def pkg_add(args):
-    """add a package to the git stage with `git add`"""
+    """add a package to the git stage with ``git add``"""
     spack.repo.add_package_to_git_stage(args.packages, spack.repo.builtin_repo())
 
 
@@ -168,7 +168,8 @@ def pkg_hash(args):
 def get_grep(required=False):
     """Get a grep command to use with ``spack pkg grep``."""
     grep = exe.which(os.environ.get("SPACK_GREP") or "grep", required=required)
-    grep.ignore_quotes = True  # allow `spack pkg grep '"quoted string"'` without warning
+    if grep:
+        grep.ignore_quotes = True  # allow `spack pkg grep '"quoted string"'` without warning
     return grep
 
 

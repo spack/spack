@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,6 +18,25 @@ The default configuration is the following:
 .. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
    :language: yaml
 
+
+Completion of external nodes
+----------------------------
+
+:ref:`The external packages <sec-external-packages>` available from the ``packages.yaml`` configuration file are usually reporting only a few of the variants defined in the corresponding recipe.
+Users can configure how Spack deals with missing information for externals via the ``concretizer:externals:completion`` attribute:
+
+.. code-block:: yaml
+
+   concretizer:
+     externals:
+       completion: default_variants
+
+This attribute currently allows two possible values:
+
+- ``architecture_only``: only the mandatory architectural information is completed on externals
+- ``default_variants``: external specs are also completed with missing variants, using their default values
+
+
 Reuse Already Installed Packages
 --------------------------------
 
@@ -29,12 +49,12 @@ In the former case ("single value"), it allows Spack to:
 2. Reuse installed packages and build caches only for the dependencies of the root specs, when ``dependencies``.
 3. Disregard reusing installed packages and build caches, when ``false``.
 
-In case finer control over which specs are reused is needed, then the value of this attribute can be an object with the following keys:
+In case finer control over which specs are reused is needed, the value of this attribute can be an object with the following keys:
 
 1. ``roots``: if ``true`` root specs are reused, if ``false`` only dependencies of root specs are reused
 2. ``from``: list of sources from which reused specs are taken
 
-Each source in ``from`` is itself an object:
+Each source in ``from`` is itself an object with the following attributes:
 
 .. list-table:: Attributes for a source or reusable specs
    :header-rows: 1
@@ -127,10 +147,10 @@ If instead the option is set to:
        granularity: generic
 
 Spack will consider only generic microarchitectures.
-For instance, when running on a Haswell node, Spack will consider ``haswell`` as the best target in the former case and ``x86_64_v3`` as the best target in the latter case.
+For instance, when running on a Haswell machine, Spack will consider ``haswell`` as the best target in the former case and ``x86_64_v3`` as the best target in the latter case.
 
 The ``host_compatible`` option is a Boolean option that determines whether or not the microarchitectures considered during the solve are constrained to be compatible with the host Spack is currently running on.
-For instance, if this option is set to ``true``, a user cannot concretize for ``target=icelake`` while running on a Haswell node.
+For instance, if this option is set to ``true``, a user cannot concretize for ``target=icelake`` while running on a Haswell machine.
 
 Duplicate Nodes
 ---------------
@@ -215,7 +235,7 @@ Automatic splices are enabled in the concretizer configuration section:
 
    concretizer:
      splice:
-       automatic: True
+       automatic: true
 
 Packages can include ABI-compatibility information using the ``can_splice`` directive.
 See :ref:`the packaging guide <abi_compatibility>` for instructions on specifying ABI compatibility using the ``can_splice`` directive.

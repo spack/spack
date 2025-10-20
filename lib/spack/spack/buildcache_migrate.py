@@ -295,7 +295,8 @@ def migrate(
         specs_to_migrate = [
             s
             for s in db.query_local(installed=InstallRecordStatus.ANY)
-            if not s.external and db.query_local_by_spec_hash(s.dag_hash()).in_buildcache
+            # todo, make it easer to get install records associated with specs
+            if not s.external and db._data[s.dag_hash()].in_buildcache
         ]
 
         # Run the tasks in parallel if possible

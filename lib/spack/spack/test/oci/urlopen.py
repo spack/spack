@@ -28,9 +28,10 @@ from spack.oci.opener import (
     Challenge,
     RealmServiceScope,
     UsernamePassword,
+    _get_basic_challenge,
+    _get_bearer_challenge,
     credentials_from_mirrors,
     default_retry,
-    get_bearer_challenge,
     parse_www_authenticate,
 )
 from spack.test.conftest import MockHTTPResponse
@@ -38,7 +39,8 @@ from spack.test.oci.mock_registry import (
     DummyServer,
     DummyServerUrllibHandler,
     InMemoryOCIRegistry,
-    InMemoryOCIRegistryWithAuth,
+    InMemoryOCIRegistryWithBasicAuth,
+    InMemoryOCIRegistryWithBearerAuth,
     MiddlewareError,
     MockBearerTokenServer,
     create_opener,
@@ -114,12 +116,68 @@ def test_invalid_www_authenticate(invalid_str):
         parse_www_authenticate(invalid_str)
 
 
+def test_get_basic_challenge():
+    """Test extracting Basic challenge from a list of challenges"""
+
+    # No basic challenge
+    assert (
+        _get_basic_challenge(
+            [
+                Challenge(
+                    "Bearer",
+                    [
+                        ("realm", "https://spack.io/authenticate"),
+                        ("service", "spack-registry"),
+                        ("scope", "repository:spack-registry:pull,push"),
+                    ],
+                ),
+                Challenge(
+                    "Digest",
+                    [
+                        ("realm", "Digest Realm"),
+                        ("nonce", "1234567890"),
+                        ("algorithm", "MD5"),
+                        ("qop", "auth"),
+                    ],
+                ),
+            ]
+        )
+        is None
+    )
+
+    # Multiple challenges, should pick the basic one and return its realm.
+    assert (
+        _get_basic_challenge(
+            [
+                Challenge(
+                    "Dummy",
+                    [
+                        ("realm", "https://example.com/"),
+                        ("service", "service"),
+                        ("scope", "scope"),
+                    ],
+                ),
+                Challenge("Basic", [("realm", "simple")]),
+                Challenge(
+                    "Bearer",
+                    [
+                        ("realm", "https://spack.io/authenticate"),
+                        ("service", "spack-registry"),
+                        ("scope", "repository:spack-registry:pull,push"),
+                    ],
+                ),
+            ]
+        )
+        == "simple"
+    )
+
+
 def test_get_bearer_challenge():
     """Test extracting Bearer challenge from a list of challenges"""
 
     # Only an incomplete bearer challenge, missing service and scope, not usable.
     assert (
-        get_bearer_challenge(
+        _get_bearer_challenge(
             [
                 Challenge("Bearer", [("realm", "https://spack.io/authenticate")]),
                 Challenge("Basic", [("realm", "simple")]),
@@ -138,7 +196,7 @@ def test_get_bearer_challenge():
     )
 
     # Multiple challenges, should pick the bearer one.
-    assert get_bearer_challenge(
+    assert _get_bearer_challenge(
         [
             Challenge(
                 "Dummy",
@@ -165,14 +223,14 @@ def test_get_bearer_challenge():
         ("private.example.com/spack-registry:latest", "private_token"),
     ],
 )
-def test_automatic_oci_authentication(image_ref, token):
+def test_automatic_oci_bearer_authentication(image_ref: str, token: str):
     image = ImageReference.from_string(image_ref)
 
     def credentials_provider(domain: str):
         return UsernamePassword("user", "pass") if domain == "private.example.com" else None
 
     opener = create_opener(
-        InMemoryOCIRegistryWithAuth(
+        InMemoryOCIRegistryWithBearerAuth(
             image.domain, token=token, realm="https://auth.example.com/login"
         ),
         MockBearerTokenServer("auth.example.com"),
@@ -184,13 +242,34 @@ def test_automatic_oci_authentication(image_ref, token):
     assert opener.open(image.endpoint()).status == 200
 
 
+def test_automatic_oci_basic_authentication():
+    image = ImageReference.from_string("private.example.com/image")
+    server = InMemoryOCIRegistryWithBasicAuth(
+        image.domain, username="user", password="pass", realm="example.com"
+    )
+
+    # With correct credentials we should get a 200
+    opener_with_correct_auth = create_opener(
+        server, credentials_provider=lambda domain: UsernamePassword("user", "pass")
+    )
+    assert opener_with_correct_auth.open(image.endpoint()).status == 200
+
+    # With wrong credentials we should get a 401
+    opener_with_wrong_auth = create_opener(
+        server, credentials_provider=lambda domain: UsernamePassword("wrong", "wrong")
+    )
+    with pytest.raises(urllib.error.HTTPError) as e:
+        opener_with_wrong_auth.open(image.endpoint())
+    assert e.value.getcode() == 401
+
+
 def test_wrong_credentials():
     """Test that when wrong credentials are rejected by the auth server, we
     get a 401 error."""
     credentials_provider = lambda domain: UsernamePassword("wrong", "wrong")
     image = ImageReference.from_string("private.example.com/image")
     opener = create_opener(
-        InMemoryOCIRegistryWithAuth(
+        InMemoryOCIRegistryWithBearerAuth(
             image.domain, token="something", realm="https://auth.example.com/login"
         ),
         MockBearerTokenServer("auth.example.com"),
@@ -210,7 +289,7 @@ def test_wrong_bearer_token_returned_by_auth_server():
     registry, etc."""
     image = ImageReference.from_string("private.example.com/image")
     opener = create_opener(
-        InMemoryOCIRegistryWithAuth(
+        InMemoryOCIRegistryWithBearerAuth(
             image.domain,
             token="other_token_than_token_server_provides",
             realm="https://auth.example.com/login",
@@ -250,7 +329,7 @@ def test_registry_with_short_lived_bearer_tokens():
     credentials_provider = lambda domain: UsernamePassword("user", "pass")
 
     auth_server = TrivialAuthServer("auth.example.com", token="token")
-    registry_server = InMemoryOCIRegistryWithAuth(
+    registry_server = InMemoryOCIRegistryWithBearerAuth(
         image.domain, token="token", realm="https://auth.example.com/login"
     )
     urlopen = create_opener(
@@ -307,8 +386,8 @@ class InMemoryRegistryWithUnsupportedAuth(InMemoryOCIRegistry):
     [
         # missing service and scope
         ('Bearer realm="https://auth.example.com/login"', "unsupported authentication scheme"),
-        # we don't do basic auth
-        ('Basic realm="https://auth.example.com/login"', "unsupported authentication scheme"),
+        # missing realm
+        ("Basic", "unsupported authentication scheme"),
         # multiple unsupported challenges
         (
             "CustomChallenge method=unsupported, OtherChallenge method=x,param=y",

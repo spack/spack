@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -85,6 +86,7 @@ A typical usage of these methods may look something like this:
            entries.append(cmake_cache_option("FOO_MPI", True, "enable mpi"))
        else:
            entries.append(cmake_cache_option("FOO_MPI", False, "disable mpi"))
+
 
    def initconfig_package_entries(self):
        # Package specific options

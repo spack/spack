@@ -13,6 +13,7 @@ import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.repo
+import spack.solver.reuse
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
@@ -38,7 +39,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_const",
         dest="format",
         const="{/hash}",
-        help="same as '--format {/hash}'; use with xargs or $()",
+        help="same as ``--format {/hash}``; use with ``xargs`` or ``$()``",
     )
     format_group.add_argument(
         "--json",
@@ -87,11 +88,17 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="don't show full list of installed specs in an environment",
     )
-    subparser.add_argument(
+    concretized_vs_packages = subparser.add_mutually_exclusive_group()
+    concretized_vs_packages.add_argument(
         "-c",
         "--show-concretized",
         action="store_true",
         help="show concretized specs in an environment",
+    )
+    concretized_vs_packages.add_argument(
+        "--show-configured-externals",
+        action="store_true",
+        help="show externals defined in the 'packages' section of the configuration",
     )
     subparser.add_argument(
         "-f",
@@ -118,6 +125,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--implicit",
         action="store_true",
         help="show only specs that were installed as dependencies",
+    )
+    subparser.add_argument(
+        "-e",
+        "--external",
+        action="store_true",
+        help="show only specs that are marked as externals",
     )
     subparser.add_argument(
         "-u",
@@ -238,7 +251,7 @@ def make_env_decorator(env):
 def display_env(env, args, decorator, results):
     """Display extra find output when running in an environment.
 
-    In an environment, `spack find` outputs a preliminary section
+    In an environment, ``spack find`` outputs a preliminary section
     showing the root specs of the environment (this is in addition
     to the section listing out specs matching the query parameters).
 
@@ -315,8 +328,12 @@ def display_env(env, args, decorator, results):
 
 def _find_query(args, env):
     q_args = query_arguments(args)
-    concretized_but_not_installed = list()
-    if env:
+    concretized_but_not_installed = []
+    if args.show_configured_externals:
+        results = spack.solver.reuse.SpecFilter.from_packages_yaml(
+            spack.config.CONFIG, include=[], exclude=[]
+        ).selected_specs()
+    elif env:
         all_env_specs = env.all_specs()
         if args.constraint:
             init_specs = cmd.parse_specs(args.constraint)
@@ -336,6 +353,9 @@ def _find_query(args, env):
                     results.append(spec)
     else:
         results = args.specs(**q_args)
+
+    if args.external:
+        results = [s for s in results if s.external]
 
     # use groups by default except with format.
     if args.groups is None:

@@ -6,63 +6,64 @@
 This file implements an expression syntax, similar to ``printf``, for adding
 ANSI colors to text.
 
-See ``colorize()``, ``cwrite()``, and ``cprint()`` for routines that can
+See :func:`colorize`, :func:`cwrite`, and :func:`cprint` for routines that can
 generate colored output.
 
-``colorize`` will take a string and replace all color expressions with
+:func:`colorize` will take a string and replace all color expressions with
 ANSI control codes.  If the ``isatty`` keyword arg is set to False, then
 the color expressions will be converted to null strings, and the
 returned string will have no color.
 
-``cwrite`` and ``cprint`` are equivalent to ``write()`` and ``print()``
+:func:`cwrite` and :func:`cprint` are equivalent to ``write()`` and ``print()``
 calls in python, but they colorize their output.  If the ``stream`` argument is
 not supplied, they write to ``sys.stdout``.
 
 Here are some example color expressions:
 
-==========  ============================================================
-Expression  Meaning
-==========  ============================================================
-@r          Turn on red coloring
-@R          Turn on bright red coloring
-@*{foo}     Bold foo, but don't change text color
-@_{bar}     Underline bar, but don't change text color
-@*b         Turn on bold, blue text
-@_B         Turn on bright blue text with an underline
-@.          Revert to plain formatting
-@*g{green}  Print out 'green' in bold, green text, then reset to plain.
-@*ggreen@.  Print out 'green' in bold, green text, then reset to plain.
-==========  ============================================================
+==============  ============================================================
+Expression      Meaning
+==============  ============================================================
+``@r``          Turn on red coloring
+``@R``          Turn on bright red coloring
+``@*{foo}``     Bold foo, but don't change text color
+``@_{bar}``     Underline bar, but don't change text color
+``@*b``         Turn on bold, blue text
+``@_B``         Turn on bright blue text with an underline
+``@.``          Revert to plain formatting
+``@*g{green}``  Print out 'green' in bold, green text, then reset to plain.
+``@*ggreen@.``  Print out 'green' in bold, green text, then reset to plain.
+==============  ============================================================
 
 The syntax consists of:
 
-==========  =================================================
-color-expr  '@' [style] color-code '{' text '}' | '@.' | '@@'
-style       '*' | '_'
-color-code  [krgybmcwKRGYBMCW]
-text        .*
-==========  =================================================
+==========  =====================================================
+color-expr  ``'@' [style] color-code '{' text '}' | '@.' | '@@'``
+style       ``'*' | '_'``
+color-code  ``[krgybmcwKRGYBMCW]``
+text        ``.*``
+==========  =====================================================
 
-'@' indicates the start of a color expression.  It can be followed
-by an optional * or _ that indicates whether the font should be bold or
-underlined.  If * or _ is not provided, the text will be plain.  Then
-an optional color code is supplied.  This can be [krgybmcw] or [KRGYBMCW],
-where the letters map to  black(k), red(r), green(g), yellow(y), blue(b),
-magenta(m), cyan(c), and white(w).  Lowercase letters denote normal ANSI
+``@`` indicates the start of a color expression.  It can be followed
+by an optional ``*`` or ``_`` that indicates whether the font should be bold or
+underlined.  If ``*`` or ``_`` is not provided, the text will be plain.  Then
+an optional color code is supplied.  This can be ``[krgybmcw]`` or ``[KRGYBMCW]``,
+where the letters map to  ``black(k)``, ``red(r)``, ``green(g)``, ``yellow(y)``, ``blue(b)``,
+``magenta(m)``, ``cyan(c)``, and ``white(w)``.  Lowercase letters denote normal ANSI
 colors and capital letters denote bright ANSI colors.
 
-Finally, the color expression can be followed by text enclosed in {}.  If
+Finally, the color expression can be followed by text enclosed in ``{}``.  If
 braces are present, only the text in braces is colored.  If the braces are
 NOT present, then just the control codes to enable the color will be output.
-The console can be reset later to plain text with '@.'.
+The console can be reset later to plain text with ``@.``.
 
-To output an @, use '@@'.  To output a } inside braces, use '}}'.
+To output an ``@``, use ``@@``.  To output a ``}`` inside braces, use ``}}``.
 """
 import os
 import re
 import sys
+import textwrap
 from contextlib import contextmanager
-from typing import Optional
+from typing import List, NamedTuple, Optional, Tuple
 
 
 class ColorParseError(Exception):
@@ -191,9 +192,9 @@ def get_color_when():
 def set_color_when(when):
     """Set when color should be applied.  Options are:
 
-    * True or 'always': always print color
-    * False or 'never': never print color
-    * None or 'auto': only print color if sys.stdout is a tty.
+    * True or ``"always"``: always print color
+    * False or ``"never"``: never print color
+    * None or ``"auto"``: only print color if sys.stdout is a tty.
     """
     global _force_color
     _force_color = _color_when_value(when)
@@ -210,18 +211,17 @@ def color_when(value):
 
 def _escape(s: str, color: bool, enclose: bool, zsh: bool) -> str:
     """Returns a TTY escape sequence for a color"""
-    if color:
-        if zsh:
-            result = rf"\e[0;{s}m"
-        else:
-            result = f"\033[{s}m"
-
-        if enclose:
-            result = rf"\[{result}\]"
-
-        return result
-    else:
+    if not color:
         return ""
+    elif zsh:
+        return f"\033[0;{s}m"
+
+    result = f"\033[{s}m"
+
+    if enclose:
+        result = rf"\[{result}\]"
+
+    return result
 
 
 def colorize(
@@ -270,9 +270,96 @@ def colorize(
     return COLOR_RE.sub(match_to_ansi, string).replace("}}", "}")
 
 
+#: matches a standard ANSI color code
+ANSI_CODE_RE = re.compile(r"\033[^m]*m")
+
+
+def csub(string: str):
+    """Return the string with ANSI color sequences removed."""
+    return ANSI_CODE_RE.sub("", string)
+
+
+class ColorMapping(NamedTuple):
+    color: str  #: color string
+    colors: List[str]  #: ANSI color codes in the color string, in order
+    offsets: List[Tuple[int, int]]  #: map indices in plain string to offsets in color string
+
+    def plain_to_color(self, index: int) -> int:
+        """Convert plain string index to color index."""
+        offset = 0
+        for i, off in self.offsets:
+            if i > index:
+                break
+            offset = off
+        return index + offset
+
+
+def cmapping(string: str) -> ColorMapping:
+    """Return a mapping for translating indices in a plain string to indices in colored text.
+
+    The returned dictionary maps indices in the plain string to the offset of the cooresponding
+    indices in the colored string.
+
+    """
+    colors = []
+    offsets = []
+    color_offset = 0
+
+    for m in ANSI_CODE_RE.finditer(string):
+        start, end = m.start(), m.end()
+        start_offset = color_offset
+        color_offset += end - start
+        offsets.append((start - start_offset, color_offset))
+        colors.append(m.group())
+
+    return ColorMapping(string, colors, offsets)
+
+
+def cwrap(
+    string: str, *args, initial_indent: str = "", subsequent_indent: str = "", **kwargs
+) -> List[str]:
+    """Wrapper around ``textwrap.wrap()`` that handles ANSI color codes."""
+    plain = csub(string)
+    lines = textwrap.wrap(
+        plain, *args, initial_indent=initial_indent, subsequent_indent=subsequent_indent, **kwargs
+    )
+
+    # do nothing if string has no ANSI codes
+    if plain == string:
+        return lines
+
+    # otherwise add colors back to lines after wrapping plain text
+    cmap = cmapping(string)
+
+    clines = []
+    start = 0
+    for i, line in enumerate(lines):
+        # scan to find the actual start, skipping any whitespace from a prior line break
+        # can assume this b/c textwrap only collapses whitespace at line breaks
+        while start < len(plain) and plain[start].isspace():
+            start += 1
+
+        # map the start and end positions in the plain string to the color string
+        cstart = cmap.plain_to_color(start)
+
+        # rewind to include any color codes before cstart
+        while cstart and string[cstart - 1] == "m":
+            cstart = string.rfind("\033", 0, cstart - 1)
+
+        indent = initial_indent if i == 0 else subsequent_indent
+        end = start + len(line) - len(indent)
+        cend = cmap.plain_to_color(end)
+
+        # append the color line to the result
+        clines.append(indent + string[cstart:cend])
+        start = end
+
+    return clines
+
+
 def clen(string):
     """Return the length of a string, excluding ansi color sequences."""
-    return len(re.sub(r"\033[^m]*m", "", string))
+    return len(csub(string))
 
 
 def cextra(string):

@@ -456,39 +456,43 @@ def push_fn(args):
     ) as uploader:
         skipped, upload_errors = uploader.push(specs=specs)
         failed.extend(upload_errors)
-        if not upload_errors and args.tag:
-            uploader.tag(args.tag, roots)
 
-    if skipped:
-        if len(specs) == 1:
-            tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
-        elif len(skipped) == len(specs):
-            tty.info("All specs are already in the buildcache. Use --force to overwrite them.")
-        else:
-            tty.info(
-                "The following {} specs were skipped as they already exist in the buildcache:\n"
-                "    {}\n"
-                "    Use --force to overwrite them.".format(
-                    len(skipped), ", ".join(elide_list([_format_spec(s) for s in skipped], 5))
+        if skipped:
+            if len(specs) == 1:
+                tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
+            elif len(skipped) == len(specs):
+                tty.info("All specs are already in the buildcache. Use --force to overwrite them.")
+            else:
+                tty.info(
+                    "The following {} specs were skipped as they already exist in the "
+                    "buildcache:\n"
+                    "    {}\n"
+                    "    Use --force to overwrite them.".format(
+                        len(skipped), ", ".join(elide_list([_format_spec(s) for s in skipped], 5))
+                    )
                 )
+
+        if failed:
+            if len(failed) == 1:
+                raise failed[0][1]
+
+            raise spack.error.SpackError(
+                f"The following {len(failed)} errors occurred while pushing specs to the "
+                "buildcache",
+                "\n".join(
+                    elide_list(
+                        [
+                            f"    {_format_spec(spec)}: {e.__class__.__name__}: {e}"
+                            for spec, e in failed
+                        ],
+                        5,
+                    )
+                ),
             )
 
-    if failed:
-        if len(failed) == 1:
-            raise failed[0][1]
-
-        raise spack.error.SpackError(
-            f"The following {len(failed)} errors occurred while pushing specs to the buildcache",
-            "\n".join(
-                elide_list(
-                    [
-                        f"    {_format_spec(spec)}: {e.__class__.__name__}: {e}"
-                        for spec, e in failed
-                    ],
-                    5,
-                )
-            ),
-        )
+        # Finally tag all roots as a single image if requested.
+        if args.tag:
+            uploader.tag(args.tag, roots)
 
 
 def install_fn(args):
@@ -813,15 +817,15 @@ def migrate_fn(args):
     will attempt to verify the signatures on specs, and then re-sign them before
     migration, using whatever keys are already installed in your key ring.  You can
     migrate a mirror of unsigned binaries (or convert a mirror of signed binaries
-    to unsigned) by providing the --unsigned argument.
+    to unsigned) by providing the ``--unsigned`` argument.
 
     By default spack will leave the original mirror contents (in the old layout) in
     place after migration. You can have spack remove the old contents by providing
-    the --delete-existing argument.  Because migrating a mostly-already-migrated
+    the ``--delete-existing`` argument.  Because migrating a mostly-already-migrated
     mirror should be fast, consider a workflow where you perform a default migration,
     (i.e. preserve the existing layout rather than deleting it) then evaluate the
     state of the migrated mirror by attempting to install from it, and finally
-    running the migration again with --delete-existing."""
+    running the migration again with ``--delete-existing``."""
     target_mirror = args.mirror
     unsigned = args.unsigned
     assert isinstance(target_mirror, spack.mirrors.mirror.Mirror)

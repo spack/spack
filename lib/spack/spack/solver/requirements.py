@@ -24,11 +24,21 @@ class RequirementKind(enum.Enum):
     PACKAGE = enum.auto()
 
 
+class RequirementOrigin(enum.Enum):
+    """Origin of a requirement"""
+
+    REQUIRE_YAML = enum.auto()
+    PREFER_YAML = enum.auto()
+    CONFLICT_YAML = enum.auto()
+    DIRECTIVE = enum.auto()
+
+
 class RequirementRule(NamedTuple):
     """Data class to collect information on a requirement"""
 
     pkg_name: str
     policy: str
+    origin: RequirementOrigin
     requirements: Sequence[spack.spec.Spec]
     condition: spack.spec.Spec
     kind: RequirementKind
@@ -63,6 +73,7 @@ class RequirementParser:
                         kind=RequirementKind.PACKAGE,
                         condition=when_spec,
                         message=message,
+                        origin=RequirementOrigin.DIRECTIVE,
                     )
                 )
         return rules
@@ -105,6 +116,7 @@ class RequirementParser:
                     kind=kind,
                     message=message,
                     condition=condition,
+                    origin=RequirementOrigin.PREFER_YAML,
                 )
             )
         return result
@@ -131,6 +143,7 @@ class RequirementParser:
                     kind=kind,
                     message=message,
                     condition=condition,
+                    origin=RequirementOrigin.CONFLICT_YAML,
                 )
             )
         return result
@@ -209,6 +222,7 @@ class RequirementParser:
                         kind=kind,
                         message=requirement.get("message"),
                         condition=when,
+                        origin=RequirementOrigin.REQUIRE_YAML,
                     )
                 )
         return rules

@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -82,11 +83,7 @@ For example:
 .. code-block:: python
 
    def build_args(self):
-       return [
-           "-Pdist,native",
-           "-Dtar",
-           "-Dmaven.javadoc.skip=true"
-       ]
+       return ["-Pdist,native", "-Dtar", "-Dmaven.javadoc.skip=true"]
 
 
 External documentation

@@ -21,16 +21,8 @@ version_error_messages = [
 ]
 
 external_error_messages = [
-    (
-        "Attempted to build package quantum-espresso which is not buildable and does not have"
-        " a satisfying external"
-    ),
-    (
-        "        'quantum-espresso~veritas' is an external constraint for quantum-espresso"
-        " which was not satisfied"
-    ),
-    "        'quantum-espresso+veritas' required",
-    "        required because quantum-espresso+veritas requested explicitly",
+    "Cannot build quantum-espresso, since it is configured `buildable:false` and "
+    "no externals satisfy the request"
 ]
 
 variant_error_messages = [
@@ -64,7 +56,7 @@ def test_error_messages(error_messages, config_set, spec, mock_packages, mutable
         _ = spack.concretize.concretize_one(spec)
 
     for em in error_messages:
-        assert em in str(e.value)
+        assert em in str(e.value), str(e.value)
 
 
 def test_internal_error_handling_formatting(tmp_path: pathlib.Path):

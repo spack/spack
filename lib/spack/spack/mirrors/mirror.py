@@ -314,9 +314,10 @@ class Mirror:
             Dictionary from credential type string to value
 
             Credential Type Map:
-                access_token -> str
-                access_pair  -> tuple(str,str)
-                profile      -> str
+
+            * ``access_token``: ``str``
+            * ``access_pair``: ``Tuple[str, str]``
+            * ``profile``: ``str``
         """
         creddict: Dict[str, Any] = {}
         access_token = self.get_access_token(direction)

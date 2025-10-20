@@ -7,33 +7,35 @@ This file contains code for graphing DAGs of software packages
 (i.e. Spack specs).  There are two main functions you probably care
 about:
 
-graph_ascii() will output a colored graph of a spec in ascii format,
-kind of like the graph git shows with "git log --graph", e.g.::
+:func:`graph_ascii` will output a colored graph of a spec in ascii format,
+kind of like the graph git shows with ``git log --graph``, e.g.
 
-    o  mpileaks
-    |\
-    | |\
-    | o |  callpath
-    |/| |
-    | |\|
-    | |\ \
-    | | |\ \
-    | | | | o  adept-utils
-    | |_|_|/|
-    |/| | | |
-    o | | | |  mpi
-     / / / /
-    | | o |  dyninst
-    | |/| |
-    |/|/| |
-    | | |/
-    | o |  libdwarf
-    |/ /
-    o |  libelf
-     /
-    o  boost
+.. code-block:: text
 
-graph_dot() will output a graph of a spec (or multiple specs) in dot format.
+   o  mpileaks
+   |\
+   | |\
+   | o |  callpath
+   |/| |
+   | |\|
+   | |\ \
+   | | |\ \
+   | | | | o  adept-utils
+   | |_|_|/|
+   |/| | | |
+   o | | | |  mpi
+    / / / /
+   | | o |  dyninst
+   | |/| |
+   |/|/| |
+   | | |/
+   | o |  libdwarf
+   |/ /
+   o |  libelf
+    /
+   o  boost
+
+:func:`graph_dot` will output a graph of a spec (or multiple specs) in dot format.
 """
 import enum
 import sys
@@ -304,14 +306,10 @@ class AsciiGraph:
         """Write out an ascii graph of the provided spec.
 
         Arguments:
-        spec -- spec to graph.  This only handles one spec at a time.
-
-        Optional arguments:
-
-        out -- file object to write out to (default is sys.stdout)
-
-        color -- whether to write in color.  Default is to autodetect
-                 based on output file.
+            spec: spec to graph.  This only handles one spec at a time.
+            out: file object to write out to (default is sys.stdout)
+            color: whether to write in color.  Default is to autodetect
+               based on output file.
 
         """
         if out is None:

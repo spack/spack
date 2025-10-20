@@ -1,8 +1,9 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+.. 
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-.. Spack documentation master file, created by
+   Spack documentation master file, created by
    sphinx-quickstart on Mon Dec  9 15:32:41 2013.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -54,15 +55,9 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
 
    package_fundamentals
    configuring_compilers
-   replace_conda_homebrew
+   environments_basics
    frequently_asked_questions
    getting_help
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Advanced Topics
-
-   advanced_topics
 
 .. toctree::
    :maxdepth: 2
@@ -74,23 +69,29 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
 
 .. toctree::
    :maxdepth: 2
-   :caption: Reference
+   :caption: Configuration
 
    configuration
    config_yaml
-   include_yaml
    packages_yaml
+   toolchains_yaml
    build_settings
-   environments
-   env_vars_yaml
-   containers
-   mirrors
-   module_file_support
    repositories
+   mirrors
+   chain
+   module_file_support
+   include_yaml
+   env_vars_yaml
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+
+   environments
+   containers
    binary_caches
    bootstrapping
    command_index
-   chain
    extensions
    pipelines
    signing
@@ -107,6 +108,12 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    build_systems
    contribution_guide
    developer_guide
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced Topics
+
+   advanced_topics
 
 .. toctree::
    :maxdepth: 2

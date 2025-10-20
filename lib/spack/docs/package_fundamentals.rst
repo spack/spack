@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -43,8 +44,8 @@ The ``spack list`` command prints out a list of all of the packages Spack can in
 Packages are listed by name in alphabetical order.
 A pattern can be used to narrow the list, and the following rules apply:
 
-* A pattern with no wildcards (``*`` or ``?``) will be treated as if it started and ended with ``*``
-* All patterns will be treated as case-insensitive
+* A pattern with no wildcards (``*`` or ``?``) is treated as if it starts and ends with ``*``
+* All patterns are case-insensitive
 
 To search for all packages whose names contain the word ``sql`` you can run the following command:
 
@@ -163,7 +164,7 @@ To do this, just add ``@`` after the package name, followed by a version:
 Any number of versions of the same package can be installed at once without interfering with each other.
 This is useful for multi-user sites, as installing a version that one user needs will not disrupt existing installations for other users.
 
-In addition to different versions, Spack can customize the compiler, compile-time options (variants), compiler flags, and platform (for cross-compiles) of an installation.
+In addition to different versions, Spack can customize the compiler, compile-time options (variants), compiler flags, and target architecture of an installation.
 Spack is unique in that it can also configure the *dependencies* a package is built with.
 For example, two configurations of the same version of a package, one built with boost 1.39.0, and the other version built with version 1.43.0, can coexist.
 
@@ -237,7 +238,7 @@ but you risk breaking other installed packages.
 In general, it is safer to remove dependent packages *before* removing their dependencies or to use the ``--dependents`` option.
 
 
-.. _nondownloadable:
+.. _cmd-spack-gc:
 
 Garbage collection
 ^^^^^^^^^^^^^^^^^^
@@ -277,6 +278,8 @@ It keeps only the packages that were explicitly installed by a user, along with 
 All other packages, such as build-only dependencies or orphaned packages, are identified as "garbage" and removed.
 
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages or :ref:`dependency-types` for a more thorough treatment of dependency types.
+
+.. _cmd-spack-mark:
 
 Marking packages explicit or implicit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -362,6 +365,8 @@ If there is no new version for either of the packages, ``spack install`` will si
 When using this workflow for installations that contain more packages, care must be taken to either only mark selected packages or issue ``spack install`` for all packages that should be kept.
 
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly or implicitly installed packages.
+
+.. _nondownloadable:
 
 Non-Downloadable Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -624,7 +629,7 @@ This will output metadata on specs and all dependencies as JSON:
      ...
     ]
 
-You can use this with tools like `jq <https://stedolan.github.io/jq/>`_ to quickly create JSON records structured the way you want:
+You can use this with tools like `jq <https://jqlang.org/>`_ to quickly create JSON records structured the way you want:
 
 .. code-block:: console
 
@@ -645,6 +650,7 @@ You can use this with tools like `jq <https://stedolan.github.io/jq/>`_ to quick
       "hash": "zvaa4lhlhilypw5quj3akyd3apbq5gap"
     }
 
+.. _cmd-spack-diff:
 
 ``spack diff``
 ^^^^^^^^^^^^^^
@@ -754,7 +760,7 @@ Here is how you would filter to show just versions:
     -  python 2.7.8
     +  python 3.8.11
 
-And you can add as many attributes as you'd like with multiple `--attribute` arguments (for lots of attributes, you can use ``-a`` for short).
+And you can add as many attributes as you'd like with multiple ``--attribute`` arguments (for lots of attributes, you can use ``-a`` for short).
 Finally, if you want to view the data as JSON (and possibly pipe into an output file), just add ``--json``:
 
 
@@ -782,6 +788,7 @@ Spack has three different ways to solve this problem, which fit different use ca
 
 
 .. _cmd-spack-load:
+.. _cmd-spack-unload:
 
 ``spack load / unload``
 ^^^^^^^^^^^^^^^^^^^^^^^

@@ -10,8 +10,6 @@ import sys
 import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
-import spack.vendor.archspec.cpu
-
 import spack.config
 import spack.detection
 import spack.detection.path
@@ -22,6 +20,7 @@ import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
+from spack.externals import ExternalSpecsParser, external_spec
 from spack.operating_systems import windows_os
 from spack.util.environment import get_path
 
@@ -195,8 +194,7 @@ class CompilerRemover:
                     continue
 
                 def _partition_match(external_yaml):
-                    s = CompilerFactory.from_external_yaml(external_yaml)
-                    return not s.satisfies(match)
+                    return not external_spec(external_yaml).satisfies(match)
 
                 to_keep, to_remove = spack.llnl.util.lang.stable_partition(
                     externals_config, _partition_match
@@ -211,9 +209,7 @@ class CompilerRemover:
                 continue
 
             self.marked_packages_yaml.append((current_scope, packages_yaml))
-            all_removals.extend(
-                [CompilerFactory.from_external_yaml(x) for x in removed_from_scope]
-            )
+            all_removals.extend([external_spec(x) for x in removed_from_scope])
         return all_removals
 
     def flush(self):
@@ -258,15 +254,12 @@ def name_os_target(spec: spack.spec.Spec) -> Tuple[str, str, str]:
 class CompilerFactory:
     """Class aggregating all ways of constructing a list of compiler specs from config entries."""
 
-    _PACKAGES_YAML_CACHE: Dict[str, Optional[spack.spec.Spec]] = {}
-    _GENERIC_TARGET = None
-
     @staticmethod
     def from_packages_yaml(
         configuration: spack.config.Configuration, *, scope: Optional[str] = None
     ) -> List[spack.spec.Spec]:
         """Returns the compiler specs defined in the "packages" section of the configuration"""
-        compilers = []
+        externals_dicts = []
         compiler_package_names = supported_compilers()
         packages_yaml = configuration.get("packages", scope=scope)
         for name, entry in packages_yaml.items():
@@ -277,52 +270,17 @@ class CompilerFactory:
             if not externals_config:
                 continue
 
-            compiler_specs = []
-            for current_external in externals_config:
-                key = str(current_external)
-                if key not in CompilerFactory._PACKAGES_YAML_CACHE:
-                    CompilerFactory._PACKAGES_YAML_CACHE[key] = CompilerFactory.from_external_yaml(
-                        current_external
-                    )
+            for current in externals_config:
+                # If extra_attributes is not there don't use this entry as a compiler.
+                if _EXTRA_ATTRIBUTES_KEY not in current:
+                    header = f"The external spec '{current['spec']}' cannot be used as a compiler"
+                    tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
+                    continue
 
-                compiler = CompilerFactory._PACKAGES_YAML_CACHE[key]
-                if compiler:
-                    compiler_specs.append(compiler)
+                externals_dicts.append(current)
 
-            compilers.extend(compiler_specs)
-        return compilers
-
-    @staticmethod
-    def from_external_yaml(config: Dict[str, Any]) -> Optional[spack.spec.Spec]:
-        """Returns a compiler spec from an external definition from packages.yaml."""
-        # Allow `@x.y.z` instead of `@=x.y.z`
-        err_header = f"The external spec '{config['spec']}' cannot be used as a compiler"
-        # If extra_attributes is not there I might not want to use this entry as a compiler,
-        # therefore just leave a debug message, but don't be loud with a warning.
-        if _EXTRA_ATTRIBUTES_KEY not in config:
-            tty.debug(f"[{__file__}] {err_header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
-            return None
-        extra_attributes = config[_EXTRA_ATTRIBUTES_KEY]
-        result = spack.spec.Spec(
-            str(spack.spec.parse_with_version_concrete(config["spec"])),
-            external_path=config.get("prefix"),
-            external_modules=config.get("modules"),
-        )
-        result.extra_attributes = extra_attributes
-        CompilerFactory._finalize_external_concretization(result)
-        return result
-
-    @staticmethod
-    def _finalize_external_concretization(abstract_spec):
-        if CompilerFactory._GENERIC_TARGET is None:
-            CompilerFactory._GENERIC_TARGET = spack.vendor.archspec.cpu.host().family
-
-        if abstract_spec.architecture:
-            abstract_spec.architecture.complete_with_defaults()
-        else:
-            abstract_spec.constrain(spack.spec.Spec.default_arch())
-        abstract_spec.architecture.target = CompilerFactory._GENERIC_TARGET
-        abstract_spec._finalize_concretization()
+        external_parser = ExternalSpecsParser(externals_dicts)
+        return external_parser.all_specs()
 
     @staticmethod
     def from_legacy_yaml(compiler_dict: Dict[str, Any]) -> List[spack.spec.Spec]:

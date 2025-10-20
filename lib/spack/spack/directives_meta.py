@@ -113,8 +113,8 @@ class DirectiveMeta(type):
 
         .. code-block:: python
 
-            @directive(dicts='versions')
-            version(pkg, ...):
+            @directive(dicts="versions")
+            def version(pkg, ...):
                 ...
 
         This directive allows you write:
@@ -126,15 +126,15 @@ class DirectiveMeta(type):
 
         The ``@directive`` decorator handles a couple things for you:
 
-          1. Adds the class scope (pkg) as an initial parameter when
-             called, like a class method would.  This allows you to modify
-             a package from within a directive, while the package is still
-             being defined.
+        1. Adds the class scope (pkg) as an initial parameter when
+           called, like a class method would.  This allows you to modify
+           a package from within a directive, while the package is still
+           being defined.
 
-          2. It automatically adds a dictionary called "versions" to the
-             package so that you can refer to pkg.versions.
+        2. It automatically adds a dictionary called ``versions`` to the
+           package so that you can refer to pkg.versions.
 
-        The ``(dicts='versions')`` part ensures that ALL packages in Spack
+        The ``(dicts="versions")`` part ensures that ALL packages in Spack
         will have a ``versions`` attribute after they're constructed, and
         that if no directive actually modified it, it will just be an
         empty dict.
@@ -184,8 +184,10 @@ class DirectiveMeta(type):
                     ]
                     if kwargs.get("when"):
                         when_constraints.append(spack.spec.Spec(kwargs["when"]))
-                    when_spec = spack.spec.merge_abstract_anonymous_specs(*when_constraints)
 
+                    when_spec = spack.spec.Spec()
+                    for current in when_constraints:
+                        when_spec._constrain_symbolically(current, deps=True)
                     kwargs["when"] = when_spec
 
                 # If any of the arguments are executors returned by a

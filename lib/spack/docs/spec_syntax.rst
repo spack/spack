@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,19 +27,20 @@ Here is an example of using a complex spec to install a very specific configurat
 
 .. code-block:: spec
 
-   $ spack install mpileaks@1.2:1.4 +debug ~qt target=x86_64_v3 %gcc@15.1.0 ^libelf@1.1 %gcc@14.2.0
+   $ spack install mpileaks@1.2:1.4 +debug ~qt target=x86_64_v3 %gcc@15 ^libelf@1.1 %clang@20
 
-The figure below helps getting a sense of the various parts that compose this spec:
+The figure below helps you get a sense of the various parts that compose this spec:
 
 .. figure:: images/spec_anatomy.svg
+   :alt: Spack spec with annotations
 
-If used to install a package, this will install:
+When installing this, you will get:
 
-* The ``mpileaks`` library at some version between ``1.2`` and ``1.4`` (inclusive),
+* The ``mpileaks`` package at some version between ``1.2`` and ``1.4`` (inclusive),
 * with ``debug`` options enabled, and without ``qt`` support,
-* for an ``x86_64_v3`` architecture,
-* built using ``gcc`` at version ``15.1.0``,
-* depending on ``libelf`` at version ``1.1``, built with ``gcc`` at version ``14.2.0``.
+* optimized for an ``x86_64_v3`` architecture,
+* built using ``gcc`` at version ``15``,
+* depending on ``libelf`` at version ``1.1``, built with ``clang`` at version ``20``.
 
 Most specs will not be as complicated as this one, but this is a good example of what is possible with specs.
 There are a few general rules that we can already infer from this first example:
@@ -114,7 +116,7 @@ You can put all the same modifiers on dependency specs that you would put on the
 That is, you can specify their versions, variants, and architectures just like any other spec.
 Specifiers are associated with the nearest package name to their left.
 
-The order of transitive package dependencies doesn't matter when writing a spec.
+The order of transitive dependencies does not matter when writing a spec.
 For example, these two specs represent exactly the same configuration:
 
 .. code-block:: spec
@@ -122,7 +124,7 @@ For example, these two specs represent exactly the same configuration:
    mpileaks ^callpath@1.0 ^libelf@0.8.3
    mpileaks ^libelf@0.8.3 ^callpath@1.0
 
-Direct dependencies specified with ``%`` associate with the most recent transitive node, or with the root of the DAG.
+Direct dependencies specified with ``%`` apply either to the most recent transitive dependency (``^``), or, if none, to the root package in the spec.
 So in the spec:
 
 .. code-block:: spec
@@ -130,18 +132,6 @@ So in the spec:
    root %dep1 ^transitive %dep2 %dep3
 
 ``dep1`` is a direct dependency of ``root``, while both ``dep2`` and ``dep3`` are direct dependencies of ``transitive``.
-
-.. admonition:: Windows Spec Syntax Caveats
-   :class: note
-
-   Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells.
-   Spack's spec dependency syntax uses the carat (``^``) character; however, this is an escape string in CMD, so it must be escaped with an additional carat (i.e., ``^^``).
-   CMD also will attempt to interpret strings with ``=`` characters in them.
-   Any spec including this symbol must double-quote the string.
-
-   Note: All of these issues are unique to CMD; they can be avoided by using PowerShell.
-
-   For more context on these caveats, see the related issues: `carat <https://github.com/spack/spack/issues/42833>`_ and `equals <https://github.com/spack/spack/issues/43348>`_.
 
 Below are more details about the specifiers that you can add to specs.
 
@@ -201,6 +191,13 @@ matches any version in the range ``1.0:1.5`` and the specific version ``1.7.1``.
 
 Git versions
 ^^^^^^^^^^^^
+
+.. note::
+   Users wanting to just match specific commits for branch or tag based versions should assign the ``commit`` variant (``commit=<40 char sha>``).
+   Spack reserves this variant specifically to track provenance of git based versions.
+   Spack will attempt to compute this value for you automatically during concretization and raise a warning if it is unable to assign the commit.
+   Further details can be found in :ref:`git_version_provenance`.
+
 
 For packages with a ``git`` attribute, ``git`` references may be specified instead of a numerical version (i.e., branches, tags, and commits).
 Spack will stage and build based off the ``git`` reference provided.
@@ -304,27 +301,6 @@ If the intent is to enable *only* the specified fabrics, then the:
 
 syntax should be used with the ``:=`` operator.
 
-.. admonition:: Alternative ways to deactivate Boolean Variants
-   :class: note
-
-   In certain shells, the ``~`` character expands to the home directory.
-   To avoid these issues, avoid whitespace between the package name and the variant:
-
-   .. code-block:: spec
-
-      mpileaks ~debug   # shell may try to substitute this!
-      mpileaks~debug    # use this instead
-
-   Alternatively, you can use the ``-`` character to disable a variant, but be aware that this requires a space between the package name and the variant:
-
-   .. code-block:: spec
-
-      mpileaks-debug     # wrong: refers to a package named "mpileaks-debug"
-      mpileaks -debug    # right: refers to a package named mpileaks with debug disabled
-
-   As a last resort, ``debug=False`` can also be used to disable a boolean variant.
-
-
 
 Variant propagation to dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -346,38 +322,6 @@ For example, for the ``stackstart`` variant:
     mpileaks stackstart=4    # only mpileaks will have this variant value
 
 Spack also allows variants to be propagated from a package that does not have that variant.
-
-Binary Provenance
-^^^^^^^^^^^^^^^^^
-
-Spack versions are paired to attributes that determine the source code Spack will use to build.
-Checksummed assets are preferred but there are a few notable exceptions such as git branches and tags i.e ``pkg@develop``.
-These versions do not naturally have source provenance because they refer to a range of commits (branches) or can be changed outside the spack packaging infrastructure (tags).
-Without source provenance we cannot have binary provenance.
-
-Spack has a reserved variant to allow users to complete source and binary provenance for these cases: ``pkg@develop commit=<SHA>``.
-The ``commit`` variant must be supplied using the full 40 character commit SHA.
-Using a partial commit SHA or assigning the ``commit`` variant to a version that is not using a branch or tag reference will lead to an error during concretization.
-
-Spack will attempt to establish binary provenance by looking up commit SHA's for branch and tag based versions during concretization.
-There are 3 sources that it uses.
-In order, they are
-
-1. Staged source code (already cached source code for the version needing provenance)
-2. Source mirrors (compressed archives of the source code)
-3. The git url provided in the package definition
-
-If Spack is unable to determine what the commit should be during concretization a warning will be issued.
-Users may also specify which commit SHA they want with the spec since it is simply a variant.
-In this case, or in the case of develop specs (see :ref:`develop-specs`), Spack will skip attempts to assign the commit SHA automatically.
-
-.. note::
-
-   Users wanting to track the latest commits from the internet should utilize ``spack clean --stage`` prior to concretization to clean out old stages that will short-circuit internet queries.
-   Disabling source mirrors or ensuring they don't contain branch/tag based versions will also be necessary.
-
-   Above all else, the most robust way to ensure binaries have their desired commits is to provide the SHAs via user-specs or config i.e. ``commit=<SHA>``.
-
 
 Compiler Flags
 --------------
@@ -416,6 +360,7 @@ If you need fine-grained control over which packages use which targets (or over 
 
 
 .. _support-for-microarchitectures:
+.. _cmd-spack-arch:
 
 Support for specific microarchitectures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -430,7 +375,7 @@ Giving a command such as the following:
 
 .. code-block:: spec
 
-   $ spack install zlib%gcc@14.2.0 target=icelake
+   $ spack install zlib target=icelake %gcc@14
 
 will produce compilation lines similar to:
 
@@ -442,14 +387,14 @@ will produce compilation lines similar to:
 
 where the flags ``-march=icelake-client -mtune=icelake-client`` are injected by Spack based on the requested target and compiler.
 
-If Spack knows that the requested compiler can't optimize for the current target or can't build binaries for that target at all, it will exit with a meaningful error message:
+If Spack determines that the requested compiler cannot optimize for the requested target or cannot build binaries for that target at all, it will exit with a meaningful error message:
 
 .. code-block:: spec
 
-   $ spack install zlib%gcc@5.5.0 target=icelake
+   $ spack install zlib target=icelake %gcc@5
    ==> Error: cannot produce optimized binary for micro-architecture "icelake" with gcc@5.5.0 [supported compiler versions are 8:]
 
-Conversely, if an old compiler is selected for a newer microarchitecture, Spack will optimize for the best match it can find instead of failing:
+Conversely, if an older compiler is selected for a newer microarchitecture, Spack will optimize for the best match instead of failing:
 
 .. code-block:: spec
 
@@ -476,7 +421,7 @@ Conversely, if an old compiler is selected for a newer microarchitecture, Spack 
 
 In the snippet above, for instance, the microarchitecture was demoted to ``haswell`` when compiling with ``gcc@4.8`` because support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
 
-Finally, if Spack has no information to match compiler and target, it will proceed with the installation but avoid injecting any microarchitecture-specific flags.
+Finally, if Spack has no information to match the compiler and target, it will proceed with the installation but avoid injecting any microarchitecture-specific flags.
 
 .. _sec-virtual-dependencies:
 
@@ -645,10 +590,52 @@ Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Conditional dependencies allow dependency constraints to be applied only under certain conditions.
-We can express conditional constraint by specifying the ``when`` edge attribute:
+We can express conditional constraints by specifying the ``when`` edge attribute:
 
 .. code-block:: spec
 
    $ spack install hdf5 ^[when=+mpi] mpich@3.1
 
 This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
+
+Specs on the command line
+-------------------------
+
+The characters used in the spec syntax were chosen to work well with most shells.
+However, there are cases where the shell may interpret the spec before Spack gets a chance to parse it, leading to unexpected results.
+Here we document two such cases, and how to avoid them.
+
+Unix shells
+^^^^^^^^^^^
+
+On Unix-like systems, the shell may expand ``~foo`` to the home directory of a user named ``foo``, so Spack won't see it as a :ref:`disabled boolean variant <basic-variants>` ``foo``.
+To work around this without quoting, you can avoid whitespace between the package name and boolean variants:
+
+.. code-block:: spec
+
+   mpileaks ~debug   # shell may expand this to `mpileaks /home/debug`
+   mpileaks~debug    # use this instead
+   
+Alternatively, you can use a hyphen ``-`` character to disable a variant, but be aware that this *requires* a space between the package name and the variant:
+
+.. code-block:: spec
+
+   mpileaks-debug     # wrong: refers to a package named "mpileaks-debug"
+   mpileaks -debug    # right: refers to a package named mpileaks with debug disabled
+
+As a last resort, ``debug=False`` can also be used to disable a boolean variant.
+
+Windows CMD
+^^^^^^^^^^^
+
+In Windows CMD, the caret ``^`` is an escape character, and needs itself escaping.
+Similarly, the equals ``=`` character has special meaning in CMD.
+
+To use the caret and equals characters in a spec, you can quote and escape them like this:
+
+.. code-block:: console
+
+   C:\> spack install mpileaks "^^libelf" "foo=bar"
+
+These issues are not present in PowerShell.
+See GitHub issue `#42833 <https://github.com/spack/spack/issues/42833>`_ and `#43348 <https://github.com/spack/spack/issues/43348>`_ for more details.

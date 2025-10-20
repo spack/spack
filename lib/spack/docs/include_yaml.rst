@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,12 +33,12 @@ The first entry, ``/path/to/a/required/config.yaml``, indicates that the include
 Use of ``optional: true`` for ``/path/to/$os/$target/config`` means the path is only included if it exists.
 The condition ``os == "ventura"`` in the ``when`` clause for ``/path/to/os-specific/config-dir`` means the path is only included when the operating system (``os``) is ``ventura``.
 
-The same conditions and variables in `Spec List References <https://spack.readthedocs.io/en/latest/environments.html#spec-list-references>`_ can be used for conditional activation in the ``when`` clauses.
+The same conditions and variables in :ref:`Spec List References <spec-list-references>` can be used for conditional activation in the ``when`` clauses.
 
 Included files can be specified by path or by their parent directory.
-Paths may be absolute, relative (to the configuration file including the path), or specified as URLs.
-Only the ``file``, ``ftp``, ``http``, and ``https`` protocols (or schemes) are supported.
-Spack-specific, environment and user path variables can be used.
+Paths may be absolute, relative to the including configuration file, or specified as URLs.
+Only the ``file``, ``ftp``, ``http``, and ``https`` schemes are supported.
+Spack-specific, environment, and user path variables can be used.
 (See :ref:`config-file-variables` for more information.)
 
 A ``sha256`` is required for remote file URLs and must be specified as follows:

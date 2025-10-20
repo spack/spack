@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -45,15 +46,16 @@ Here is a simple example of a package that supports both CMake and Autotools:
    from spack.package import *
    from spack_repo.builtin.build_systems import cmake, autotools
 
+
    class Example(cmake.CMakePackage, autotools.AutotoolsPackage):
        variant("my_feature", default=True)
        build_system("cmake", "autotools", default="cmake")
 
+
    class CMakeBuilder(cmake.CMakeBuilder):
        def cmake_args(self):
-           return [
-               self.define_from_variant("MY_FEATURE", "my_feature")
-           ]
+           return [self.define_from_variant("MY_FEATURE", "my_feature")]
+
 
    class AutotoolsBuilder(autotools.AutotoolsBuilder):
        def configure_args(self):
@@ -90,6 +92,7 @@ The directives such as ``depends_on``, ``variant``, ``patch`` go into the packag
       from spack.package import *
       from spack_repo.builtin.build_systems import autotools
 
+
       class Example(autotools.AutotoolsPackage):
           def install(self, spec: Spec, prefix: str) -> None:
               # ...existing code...
@@ -102,8 +105,10 @@ The directives such as ``depends_on``, ``variant``, ``patch`` go into the packag
       from spack.package import *
       from spack_repo.builtin.build_systems import autotools, cmake
 
+
       class Example(autotools.AutotoolsPackage, cmake.CMakePackage):
           build_system("autotools", "cmake", default="cmake")
+
 
       class AutotoolsBuilder(autotools.AutotoolsBuilder):
           def install(self, pkg: Example, spec: Spec, prefix: str) -> None:
@@ -120,6 +125,7 @@ An effective way to handle this is to use a ``with when("build_system=...")`` bl
 
    from spack.package import *
    from spack_repo.builtin.build_systems import cmake, autotools
+
 
    class Example(cmake.CMakePackage, autotools.AutotoolsPackage):
 
@@ -149,6 +155,7 @@ In such cases we have to use the ``build_system`` directive to indicate when whi
    from spack.package import *
    from spack_repo.builtin.build_systems import cmake, autotools
 
+
    class Example(cmake.CMakePackage, autotools.AutotoolsPackage):
 
        build_system(
@@ -157,7 +164,7 @@ In such cases we have to use the ``build_system`` directive to indicate when whi
            default="cmake",
        )
 
-In the example the directive imposes a change from ``Autotools`` to ``CMake`` going from ``v0.63`` to ``v0.64``.
+In the example, the directive imposes a change from ``Autotools`` to ``CMake`` going from ``v0.63`` to ``v0.64``.
 
 We have seen how users can run ``spack install example build_system=cmake`` to pick the desired build system.
 The same can be done in ``depends_on`` statements, which has certain use cases.
@@ -209,7 +216,8 @@ Finally, to determine the version of each executable the ``determine_version`` m
            exe (str): absolute path to the executable being examined
        """
 
-This method receives as input the path to a single executable and must return as output its version as a string; if the user cannot determine the version or determines that the executable is not an instance of the package, they can return None and the executable will be discarded as a candidate.
+This method receives as input the path to a single executable and must return as output its version as a string.
+If the version cannot be determined, or if the executable turns out to be a false positive, the value ``None`` must be returned, which ensures that the executable is discarded as a candidate.
 Implementing the two steps above is mandatory, and gives the package the basic ability to detect if a spec is present on the system at a given version.
 
 .. note::
@@ -286,17 +294,17 @@ which takes as input a prefix and a list of matching executables and returns a f
 Using this method has the advantage of allowing custom logic for filtering, and does not restrict the user to regular expressions only.
 Consider the case of detecting the GNU C++ compiler.
 If we try to search for executables that match ``g++``, that would have the unwanted side effect of selecting also ``clang++`` - which is a C++ compiler provided by another package - if present on the system.
-Trying to select executables that contain ``g++`` but not ``clang`` would be quite complicated to do using regex only.
+Trying to select executables that contain ``g++`` but not ``clang`` would be quite complicated to do using only regular expressions.
 Employing the ``filter_detected_exes`` method it becomes:
 
 .. code-block:: python
 
    class Gcc(Package):
-      executables = ["g++"]
+       executables = ["g++"]
 
-      @classmethod
-      def filter_detected_exes(cls, prefix, exes_in_prefix):
-         return [x for x in exes_in_prefix if "clang" not in x]
+       @classmethod
+       def filter_detected_exes(cls, prefix, exes_in_prefix):
+           return [x for x in exes_in_prefix if "clang" not in x]
 
 Another possibility that this method opens is to apply certain filtering logic when specific conditions are met (e.g. take some decisions on an OS and not on another).
 
@@ -322,8 +330,7 @@ As an example, a package that wants to check that the ``compilers`` attribute is
    @classmethod
    def validate_detected_spec(cls, spec, extra_attributes):
        """Check that "compilers" is in the extra attributes."""
-       msg = ("the extra attribute 'compilers' must be set for "
-              "the detected spec '{0}'".format(spec))
+       msg = "the extra attribute 'compilers' must be set for the detected spec '{0}'".format(spec)
        assert "compilers" in extra_attributes, msg
 
 or like this:
@@ -334,8 +341,9 @@ or like this:
    def validate_detected_spec(cls, spec, extra_attributes):
        """Check that "compilers" is in the extra attributes."""
        if "compilers" not in extra_attributes:
-           msg = ("the extra attribute 'compilers' must be set for "
-                  "the detected spec '{0}'".format(spec))
+           msg = "the extra attribute 'compilers' must be set for the detected spec '{0}'".format(
+               spec
+           )
            raise InvalidSpecDetected(msg)
 
 .. _determine_spec_details:
@@ -355,6 +363,7 @@ In the rare case when the mechanisms described so far don't fit the detection of
        # return None or [] if none of the exes represent an instance of
        # the package. Return one or more Specs for each instance of the
        # package which is thought to be installed in the provided prefix
+       ...
 
 This method takes as input a set of discovered executables (which match those specified by the user) as well as a common prefix shared by all of those executables.
 The function must return one or more :py:class:`spack.package.Spec` associated with the executables (it can also return ``None`` to indicate that no provided executables are associated with the package).
@@ -376,8 +385,7 @@ As an example, consider a made-up package called ``foo-package`` which builds an
 
        @classmethod
        def determine_spec_details(cls, prefix, exes_in_prefix):
-           candidates = list(x for x in exes_in_prefix
-                             if os.path.basename(x) == "foo")
+           candidates = [x for x in exes_in_prefix if os.path.basename(x) == "foo"]
            if not candidates:
                return
            # This implementation is lazy and only checks the first candidate
@@ -385,9 +393,7 @@ As an example, consider a made-up package called ``foo-package`` which builds an
            exe = Executable(exe_path)
            output = exe("--version", output=str, error=str)
            version_str = ...  # parse output for version string
-           return Spec.from_detection(
-               "foo-package@{0}".format(version_str)
-           )
+           return Spec.from_detection("foo-package@{0}".format(version_str))
 
 Add detection tests to packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -424,7 +430,7 @@ Detection tests insisting on ``PATH`` inspections are listed under the ``paths``
          echo "InstalledDir: /usr/bin"
      platforms: ["linux", "darwin"]
      results:
-     - spec: 'llvm@3.9.1 +clang~lld~lldb'
+     - spec: "llvm@3.9.1 +clang~lld~lldb"
 
 If the ``platforms`` attribute is present, tests are run only if the current host matches one of the listed platforms.
 Each test is performed by first creating a temporary directory structure as specified in the corresponding ``layout`` and by then running package detection and checking that the outcome matches the expected ``results``.
@@ -505,8 +511,11 @@ The ``match_variants`` keyword can cover all single-value variants.
 
 .. code-block:: python
 
-   can_splice("foo@1.1", when="@1.2", match_variants=["bar"])  # any value for bar as long as they're the same
-   can_splice("foo@1.2", when="@1.3", match_variants="*")  # any variant values if all single-value variants match
+   # any value for bar as long as they're the same
+   can_splice("foo@1.1", when="@1.2", match_variants=["bar"])
+
+   # any variant values if all single-value variants match
+   can_splice("foo@1.2", when="@1.3", match_variants="*")
 
 The concretizer will use ABI compatibility to determine automatic splices when :ref:`automatic splicing<automatic_splicing>` is enabled.
 
@@ -520,5 +529,6 @@ Customizing Views
 Spack environments manage a view of their packages, which is a single directory that merges all installed packages through symlinks, so users can easily access them.
 The methods of ``PackageViewMixin`` can be overridden to customize how packages are added to views.
 Sometimes it's impossible to get an application to work just through symlinking its executables, and patching is necessary.
-For example, Python scripts in a ``bin`` directory may have a shebang that points to the Python interpreter in Python's install prefix, but it's more convenient to have the shebang point to the Python interpreter in the view, since that interpreter is aware of the Python packages in the view (the view is a virtual environment).
-As a consequence, Python extension packages (those inheriting from ``PythonPackage``) override ``add_files_to_view`` in order to rewrite shebang lines.
+For example, Python scripts in a ``bin`` directory may have a shebang that points to the Python interpreter in Python's install prefix and not to the Python interpreter in the view.
+However, it's more convenient to have the shebang point to the Python interpreter in the view, since that interpreter can locate other Python packages in the view without ``PYTHONPATH`` being set.
+Therefore, Python extension packages (those inheriting from ``PythonPackage``) override ``add_files_to_view`` in order to rewrite shebang lines.
