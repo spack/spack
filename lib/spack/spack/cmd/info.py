@@ -129,7 +129,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # deprecated for the more generic --by-name, but still here until we can remove it
     subparser.add_argument(
-        "--variants-by-name", dest="by_name", action="store_true", help=argparse.SUPPRESS
+        "--variants-by-name",
+        dest="by_name",
+        action=arguments.DeprecatedStoreTrueAction,
+        help=argparse.SUPPRESS,
+        removed_in="a future Spack release",
+        instructions="use --by-name instead",
     )
     arguments.add_common_arguments(subparser, ["spec"])
 
