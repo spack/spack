@@ -336,13 +336,14 @@ class FileWrapper:
     object.
     """
 
-    def __init__(self, file_like):
+    def __init__(self, file_like, append=False):
         # This records whether the file-like object returned by "unwrap" is
         # purely in-memory. In that case a subprocess will need to explicitly
         # transmit the contents to the parent.
         self.write_in_parent = False
 
         self.file_like = file_like
+        self.append = append
 
         if isinstance(file_like, str):
             self.open = True
@@ -358,7 +359,8 @@ class FileWrapper:
     def unwrap(self):
         if self.open:
             if self.file_like:
-                self.file = open(self.file_like, "w", encoding="utf-8")
+                mode = "a" if self.append else "w"
+                self.file = open(self.file_like, mode, encoding="utf-8")
             else:
                 self.file = io.StringIO()
             return self.file
@@ -424,7 +426,14 @@ class nixlog:
     """
 
     def __init__(
-        self, file_like=None, echo=False, debug=0, buffer=False, env=None, filter_fn=None
+        self,
+        file_like=None,
+        echo=False,
+        debug=0,
+        buffer=False,
+        env=None,
+        filter_fn=None,
+        append=False,
     ):
         """Create a new output log context manager.
 
@@ -437,6 +446,7 @@ class nixlog:
                 this doesn't set up any *new* buffering
             filter_fn (callable, optional): Callable[str] -> str to filter each
                 line of output
+            append (bool): whether to append to file ('a' mode)
 
         log_output can take either a file object or a filename. If a
         filename is passed, the file will be opened and closed entirely
@@ -456,6 +466,7 @@ class nixlog:
         self.debug = debug
         self.buffer = buffer
         self.filter_fn = filter_fn
+        self.append = append
 
         self._active = False  # used to prevent re-entry
 
@@ -467,7 +478,7 @@ class nixlog:
             raise RuntimeError("file argument must be set by either __init__ or __call__")
 
         # set up a stream for the daemon to write to
-        self.log_file = FileWrapper(self.file_like)
+        self.log_file = FileWrapper(self.file_like, append=self.append)
 
         # record parent color settings before redirecting.  We do this
         # because color output depends on whether the *original* stdout
@@ -706,7 +717,9 @@ class winlog:
     Does not support the use of ``v`` toggling as nixlog does.
     """
 
-    def __init__(self, file_like=None, echo=False, debug=0, buffer=False, filter_fn=None):
+    def __init__(
+        self, file_like=None, echo=False, debug=0, buffer=False, filter_fn=None, append=False
+    ):
         self.debug = debug
         self.echo = echo
         self.logfile = file_like
@@ -716,6 +729,7 @@ class winlog:
         self._ioflag = False
         self.old_stdout = sys.stdout
         self.old_stderr = sys.stderr
+        self.append = append
 
     def __enter__(self):
         if self._active:
@@ -731,7 +745,8 @@ class winlog:
             sys.stdout = self.logfile
             sys.stderr = self.logfile
         else:
-            self.writer = open(self.logfile, mode="wb+")
+            write_mode = "ab+" if self.append else "wb+"
+            self.writer = open(self.logfile, mode=write_mode)
             self.reader = open(self.logfile, mode="rb+")
 
             # Dup stdout so we can still write to it after redirection

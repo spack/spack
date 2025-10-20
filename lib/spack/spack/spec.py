@@ -1562,7 +1562,7 @@ class Spec:
         self.external_modules = Spec._format_module_list(external_modules)
 
         # This attribute is used to store custom information for external specs.
-        self.extra_attributes: dict = {}
+        self.extra_attributes: Dict[str, Any] = {}
 
         # This attribute holds the original build copy of the spec if it is
         # deployed differently than it was built. None signals that the spec
@@ -2882,6 +2882,8 @@ class Spec:
             return
         self._concrete = value
         self._validate_version()
+        for variant in self.variants.values():
+            variant.concrete = True
 
     def _validate_version(self):
         # Specs that were concretized with just a git sha as version, without associated
@@ -3468,7 +3470,10 @@ class Spec:
                         return False
 
                 if current_node.original_spec_format() < 5 or (
-                    current_node.original_spec_format() >= 5 and current_node.external
+                    # If the current external node has dependencies, it has no annotations
+                    current_node.original_spec_format() >= 5
+                    and current_node.external
+                    and not current_node._dependencies
                 ):
                     compiler_spec = current_node.annotations.compiler_node_attribute
                     if compiler_spec is None:

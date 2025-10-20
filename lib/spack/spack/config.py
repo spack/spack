@@ -111,7 +111,8 @@ CONFIG_DEFAULTS = {
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
         "license_dir": spack.paths.default_license_dir,
-    }
+    },
+    "concretizer": {"externals": {"completion": "default_variants"}},
 }
 
 #: metavar to use for commands that accept scopes
@@ -647,9 +648,13 @@ class Configuration:
         """
         return self._get_config_memoized(section, scope=scope, _merged_scope=_merged_scope)
 
-    def deepcopy_as_builtin(self, section: str, scope: Optional[str] = None) -> Dict[str, Any]:
+    def deepcopy_as_builtin(
+        self, section: str, scope: Optional[str] = None, *, line_info: bool = False
+    ) -> Dict[str, Any]:
         """Get a deep copy of a section with native Python types, excluding YAML metadata."""
-        return syaml.deepcopy_as_builtin(self.get_config(section, scope=scope))
+        return syaml.deepcopy_as_builtin(
+            self.get_config(section, scope=scope), line_info=line_info
+        )
 
     @lang.memoized
     def _get_config_memoized(

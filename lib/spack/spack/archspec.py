@@ -57,3 +57,7 @@ def microarchitecture_flags_from_target(
         return target.optimization_flags(compiler.package.archspec_name(), version_number)
     except ValueError:
         return ""
+
+
+#: The host target family, like x86_64 or aarch64
+HOST_TARGET_FAMILY = spack.vendor.archspec.cpu.host().family

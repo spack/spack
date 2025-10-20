@@ -18,6 +18,25 @@ The default configuration is the following:
 .. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
    :language: yaml
 
+
+Completion of external nodes
+----------------------------
+
+:ref:`The external packages <sec-external-packages>` available from the ``packages.yaml`` configuration file are usually reporting only a few of the variants defined in the corresponding recipe.
+Users can configure how Spack deals with missing information for externals via the ``concretizer:externals:completion`` attribute:
+
+.. code-block:: yaml
+
+   concretizer:
+     externals:
+       completion: default_variants
+
+This attribute currently allows two possible values:
+
+- ``architecture_only``: only the mandatory architectural information is completed on externals
+- ``default_variants``: external specs are also completed with missing variants, using their default values
+
+
 Reuse Already Installed Packages
 --------------------------------
 

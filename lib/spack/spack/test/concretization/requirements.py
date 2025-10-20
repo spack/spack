@@ -11,6 +11,7 @@ import spack.error
 import spack.installer
 import spack.package_base
 import spack.paths
+import spack.platforms
 import spack.repo
 import spack.solver.asp
 import spack.spec
@@ -19,6 +20,7 @@ import spack.util.spack_yaml as syaml
 import spack.version
 from spack.installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
+from spack.solver.reuse import SpecFilter
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
 
@@ -1302,7 +1304,12 @@ packages:
 )
 @pytest.mark.regression("49847")
 def test_requirements_on_compilers_and_reuse(
-    concretize_scope, mock_packages, packages_yaml, expected_reuse, expected_contraints
+    concretize_scope,
+    mock_packages,
+    mutable_config,
+    packages_yaml,
+    expected_reuse,
+    expected_contraints,
 ):
     """Tests that we can require compilers with `%` in configuration files, and still get reuse
     of specs (even though reused specs have no build dependency in the ASP encoding).
@@ -1313,11 +1320,14 @@ def test_requirements_on_compilers_and_reuse(
     reused_nodes = list(reused_spec.traverse())
     update_packages_config(packages_yaml)
     root_specs = [Spec(input_spec)]
+    external_specs = SpecFilter.from_packages_yaml(
+        mutable_config, include=[], exclude=[]
+    ).selected_specs()
 
     with spack.config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
-        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reused_nodes)
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reused_nodes + external_specs)
         pkga = result.specs[0]
     is_pkgb_reused = pkga["pkg-b"].dag_hash() == reused_spec.dag_hash()
 
@@ -1384,7 +1394,7 @@ packages:
   mpich:
     buildable: false
     externals:
-    - spec: "mpich@4.3.0 %gcc"
+    - spec: "mpich@4.3.0 %gcc@10"
       prefix: {tmp_path / "gcc"}
     - spec: "mpich@4.3.0 %clang"
       prefix: {tmp_path / "clang"}
@@ -1465,7 +1475,12 @@ packages:
 )
 @pytest.mark.parametrize("constraint_kind", ["require", "prefer"])
 def test_language_preferences_and_reuse(
-    initial_preference, current_preference, constraint_kind, concretize_scope, mock_packages
+    initial_preference,
+    current_preference,
+    constraint_kind,
+    concretize_scope,
+    mutable_config,
+    mock_packages,
 ):
     """Tests that language preferences are respected when reusing specs."""
 
@@ -1478,16 +1493,29 @@ packages:
   cxx:
     {constraint_kind}:
     - {initial_preference}
+  llvm:
+    externals:
+    - spec: "llvm@15.0.0 +clang~flang ~lld"
+      prefix: /path1
+      extra_attributes:
+        compilers:
+          c: /path1/bin/clang
+          cxx: /path1/bin/clang++
 """
     update_packages_config(packages_yaml)
     initial_mpileaks = spack.concretize.concretize_one("mpileaks+debug")
     reused_nodes = list(initial_mpileaks.traverse())
+    external_specs = SpecFilter.from_packages_yaml(
+        mutable_config, include=[], exclude=[]
+    ).selected_specs()
 
     # Ask for just "mpileaks" and check the spec is reused
     with spack.config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
-        result, _, _ = solver.driver.solve(setup, [Spec("mpileaks")], reuse=reused_nodes)
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("mpileaks")], reuse=reused_nodes + external_specs
+        )
         reused_mpileaks = result.specs[0]
 
     assert reused_mpileaks.dag_hash() == initial_mpileaks.dag_hash()
@@ -1501,15 +1529,51 @@ packages:
   cxx:
     {constraint_kind}:
     - {current_preference}
+  llvm:
+    externals:
+    - spec: "llvm@15.0.0 +clang~flang ~lld"
+      prefix: /path1
+      extra_attributes:
+        compilers:
+          c: /path1/bin/clang
+          cxx: /path1/bin/clang++
 """
     update_packages_config(packages_yaml)
     with spack.config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
-        result, _, _ = solver.driver.solve(setup, [Spec("mpileaks")], reuse=reused_nodes)
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("mpileaks")], reuse=reused_nodes + external_specs
+        )
         mpileaks = result.specs[0]
 
     assert initial_mpileaks.dag_hash() != mpileaks.dag_hash()
     for node in mpileaks.traverse():
         assert node.satisfies(f"%[when=%c]c={current_preference}")
         assert node.satisfies(f"%[when=%cxx]cxx={current_preference}")
+
+
+def test_external_spec_completion_with_targets_required(
+    concretize_scope, mock_packages, tmp_path: pathlib.Path
+):
+    """Tests that we can concretize a spec needing externals, when we require a specific target,
+    without extra configuration.
+    """
+    current_platform = spack.platforms.host()
+    packages_yaml = f"""
+    packages:
+      all:
+        require:
+        - target={current_platform.default}
+      mpich:
+        buildable: false
+        externals:
+        - spec: "mpich@4.3.0"
+          prefix: {tmp_path / "mpich"}
+    """
+    update_packages_config(packages_yaml)
+
+    s = spack.spec.Spec("mpileaks")
+    concrete = spack.concretize.concretize_one(s)
+
+    assert concrete.satisfies(f"target={current_platform.default}")

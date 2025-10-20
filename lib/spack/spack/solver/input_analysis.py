@@ -8,6 +8,7 @@ from typing import Dict, List, NamedTuple, Set, Tuple, Union
 import spack.vendor.archspec.cpu
 
 import spack.binary_distribution
+import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.platforms
@@ -363,7 +364,10 @@ class Counter:
     """
 
     def __init__(
-        self, specs: List["spack.spec.Spec"], tests: bool, possible_graph: PossibleDependencyGraph
+        self,
+        specs: List[spack.spec.Spec],
+        tests: spack.concretize.TestsType,
+        possible_graph: PossibleDependencyGraph,
     ) -> None:
         self.possible_graph = possible_graph
         self.specs = specs
@@ -426,7 +430,10 @@ class NoDuplicatesCounter(Counter):
 
 class MinimalDuplicatesCounter(NoDuplicatesCounter):
     def __init__(
-        self, specs: List["spack.spec.Spec"], tests: bool, possible_graph: PossibleDependencyGraph
+        self,
+        specs: List[spack.spec.Spec],
+        tests: spack.concretize.TestsType,
+        possible_graph: PossibleDependencyGraph,
     ) -> None:
         super().__init__(specs, tests, possible_graph)
         self._link_run: Set[str] = set()
@@ -528,7 +535,9 @@ class FullDuplicatesCounter(MinimalDuplicatesCounter):
 
 
 def create_counter(
-    specs: List[spack.spec.Spec], tests: bool, possible_graph: PossibleDependencyGraph
+    specs: List[spack.spec.Spec],
+    tests: spack.concretize.TestsType,
+    possible_graph: PossibleDependencyGraph,
 ) -> Counter:
     strategy = spack.config.CONFIG.get("concretizer:duplicates:strategy", "none")
     if strategy == "full":

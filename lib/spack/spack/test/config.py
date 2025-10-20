@@ -34,6 +34,7 @@ import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 from spack.enums import ConfigScopePriority
 from spack.llnl.util.filesystem import join_path, touch
+from spack.util.spack_yaml import DictWithLineInfo
 
 # sample config data
 config_low = {
@@ -1410,11 +1411,11 @@ def test_deepcopy_as_builtin(env_yaml):
     )
     config_copy = cfg.deepcopy_as_builtin("config")
     assert config_copy == cfg.get_config("config")
-    assert type(config_copy) is dict
+    assert type(config_copy) is DictWithLineInfo
     assert type(config_copy["verify_ssl"]) is bool
 
     packages_copy = cfg.deepcopy_as_builtin("packages")
-    assert type(packages_copy) is dict
-    assert type(packages_copy["all"]) is dict
+    assert type(packages_copy) is DictWithLineInfo
+    assert type(packages_copy["all"]) is DictWithLineInfo
     assert type(packages_copy["all"]["compiler"]) is list
     assert type(packages_copy["all"]["compiler"][0]) is str

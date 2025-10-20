@@ -1834,7 +1834,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status specfile-format d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status specfile-format d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized show-configured-externals f/show-flags show-full-compiler x/explicit X/implicit e/external u/unknown m/missing v/variants loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1868,6 +1868,8 @@ complete -c spack -n '__fish_spack_using_command find' -s r -l only-roots -f -a 
 complete -c spack -n '__fish_spack_using_command find' -s r -l only-roots -d 'don'"'"'t show full list of installed specs in an environment'
 complete -c spack -n '__fish_spack_using_command find' -s c -l show-concretized -f -a show_concretized
 complete -c spack -n '__fish_spack_using_command find' -s c -l show-concretized -d 'show concretized specs in an environment'
+complete -c spack -n '__fish_spack_using_command find' -l show-configured-externals -f -a show_configured_externals
+complete -c spack -n '__fish_spack_using_command find' -l show-configured-externals -d 'show externals defined in the '"'"'packages'"'"' section of the configuration'
 complete -c spack -n '__fish_spack_using_command find' -s f -l show-flags -f -a show_flags
 complete -c spack -n '__fish_spack_using_command find' -s f -l show-flags -d 'show spec compiler flags'
 complete -c spack -n '__fish_spack_using_command find' -l show-full-compiler -f -a show_full_compiler
@@ -1876,6 +1878,8 @@ complete -c spack -n '__fish_spack_using_command find' -s x -l explicit -f -a ex
 complete -c spack -n '__fish_spack_using_command find' -s x -l explicit -d 'show only specs that were installed explicitly'
 complete -c spack -n '__fish_spack_using_command find' -s X -l implicit -f -a implicit
 complete -c spack -n '__fish_spack_using_command find' -s X -l implicit -d 'show only specs that were installed as dependencies'
+complete -c spack -n '__fish_spack_using_command find' -s e -l external -f -a external
+complete -c spack -n '__fish_spack_using_command find' -s e -l external -d 'show only specs that are marked as externals'
 complete -c spack -n '__fish_spack_using_command find' -s u -l unknown -f -a unknown
 complete -c spack -n '__fish_spack_using_command find' -s u -l unknown -d 'show only specs Spack does not have a package for'
 complete -c spack -n '__fish_spack_using_command find' -s m -l missing -f -a missing
@@ -2037,12 +2041,16 @@ complete -c spack -n '__fish_spack_using_command help' -l spec -f -a guide
 complete -c spack -n '__fish_spack_using_command help' -l spec -d 'help on the package specification syntax'
 
 # spack info
-set -g __fish_spack_optspecs_spack_info h/help a/all detectable maintainers namespace no-dependencies no-variants no-versions phases tags tests virtuals variants-by-name
-complete -c spack -n '__fish_spack_using_command_pos 0 info' -f -a '(__fish_spack_packages)'
+set -g __fish_spack_optspecs_spack_info h/help a/all by-name by-when detectable maintainers namespace no-dependencies no-variants no-versions phases tags tests virtuals variants-by-name
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 info' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command info' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command info' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command info' -s a -l all -d 'output all package information'
+complete -c spack -n '__fish_spack_using_command info' -l by-name -f -a by_name
+complete -c spack -n '__fish_spack_using_command info' -l by-name -d 'list variants, dependency, etc. in name order, then by when condition'
+complete -c spack -n '__fish_spack_using_command info' -l by-when -f -a by_name
+complete -c spack -n '__fish_spack_using_command info' -l by-when -d 'group variants, dependencies, etc. first by when condition, then by name'
 complete -c spack -n '__fish_spack_using_command info' -l detectable -f -a detectable
 complete -c spack -n '__fish_spack_using_command info' -l detectable -d 'output information on external detection'
 complete -c spack -n '__fish_spack_using_command info' -l maintainers -f -a maintainers
@@ -2063,8 +2071,7 @@ complete -c spack -n '__fish_spack_using_command info' -l tests -f -a tests
 complete -c spack -n '__fish_spack_using_command info' -l tests -d 'output relevant build-time and stand-alone tests'
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -f -a virtuals
 complete -c spack -n '__fish_spack_using_command info' -l virtuals -d 'output virtual packages'
-complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -f -a variants_by_name
-complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -d 'list variants in strict name order; don'"'"'t group by condition'
+complete -c spack -n '__fish_spack_using_command info' -l variants-by-name -f -a by_name
 
 # spack install
 set -g __fish_spack_optspecs_spack_install h/help only= u/until= p/concurrent-packages= j/jobs= overwrite fail-fast keep-prefix keep-stage dont-restage use-cache no-cache cache-only use-buildcache= include-build-deps no-check-signature show-log-on-error source n/no-checksum v/verbose fake only-concrete add no-add clean dirty test= log-format= log-file= help-cdash cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= y/yes-to-all f/force U/fresh reuse fresh-roots deprecated
