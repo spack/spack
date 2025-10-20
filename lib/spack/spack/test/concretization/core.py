@@ -509,6 +509,51 @@ class TestConcretize:
             # Should be able to reuse if the compilers match
             spack.concretize.concretize_one(f"dt-diamond%gcc ^/{lefthash}")
 
+    def test_disable_mixing_reuse_and_built(self, mutable_database):
+        r"""In this case we have
+
+        x
+        |\
+        y z
+
+        Where y is a link dependency and z is a build dependency.
+        We install y with a compiler c1, and we make sure we cannot
+        ask for `x%c2 ^z%c1 ^/y
+
+        This looks similar to `test_disable_mixing_reuse`. But the
+        compiler nodes are handled differently in this case.
+        """
+        dep1 = spack.concretize.concretize_one("libdwarf %gcc")
+        PackageInstaller([dep1.package], fake=True, explicit=True).install()
+        assert dep1.satisfies("%c=gcc")
+        dep1hash = dep1.dag_hash()[:7]
+
+        spack.concretize.concretize_one(f"mixing-parent%clang ^cmake%gcc ^/{dep1hash}")
+
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            with pytest.raises(spack.error.UnsatisfiableSpecError, match="mixing is disabled"):
+                spack.concretize.concretize_one(f"mixing-parent%clang ^cmake%gcc ^/{dep1hash}")
+
+    # This is very much like the previous test, but in this case y/z are
+    # both link dependencies. It does not trigger an error when the prior
+    # test does.
+    def test_disable_mixing_reuse_and_built2(self, mutable_database):
+        # Install a spec
+        left = spack.concretize.concretize_one("dt-diamond-left %gcc")
+        PackageInstaller([left.package], fake=True, explicit=True).install()
+        assert left.satisfies("%c=gcc")
+        lefthash = left.dag_hash()[:7]
+
+        request = f"dt-diamond%clang ^dt-diamond-right%gcc ^/{lefthash}"
+
+        # Check if mixing works when it's allowed
+        spack.concretize.concretize_one(request)
+
+        # Now try to use it with compiler mixing disabled
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            with pytest.raises(spack.error.UnsatisfiableSpecError):
+                spack.concretize.concretize_one(request)
+
     def test_disable_mixing_allow_compiler_link(self):
         """Check if we can use a compiler when mixing is disabled, and
         still depend on a separate compiler package (in the latter case

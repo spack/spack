@@ -292,11 +292,6 @@ To disable mixing (e.g. if you have multiple compilers defined, but want each co
 This affects root specs and any (transitive) link or run dependencies.
 Build-only dependencies are allowed to use different compilers (even when this is set).
 
-.. note::
-
-   Mixing detection is based on identifying compilers by name and version.
-   If you have two compilers that differ only in terms of variants, ``compiler_mixing:false`` would allow using both in a DAG.
-
 Some packages are difficult to build with high performance compilers, and it may be necessary to enable compiler mixing just for those packages.
 To enable mixing for specific packages, specify an allow-list in the ``compiler_mixing`` config:
 
