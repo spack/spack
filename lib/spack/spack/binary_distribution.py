@@ -763,9 +763,10 @@ def _url_generate_package_index(url: str, tmpdir: str):
     """
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
         try:
-            file_list, read_fn = get_entries_from_cache(
+            filename_to_mtime_mapping, read_fn = get_entries_from_cache(
                 url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
             )
+            file_list = list(filename_to_mtime_mapping.keys())
         except ListMirrorSpecsError as e:
             raise GenerateIndexError(f"Unable to generate package index: {e}") from e
 

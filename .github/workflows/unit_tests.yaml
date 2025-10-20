@@ -258,3 +258,51 @@ jobs:
         name: coverage-windows
         path: coverage
         include-hidden-files: true
+  minio-buildcache:
+    runs-on: ubuntu-22.04
+    services:
+      minio:
+        image: minio/minio:edge-cicd
+        env:
+          MINIO_ROOT_USER: minioAccessKey
+          MINIO_ROOT_PASSWORD: minioSecretKey
+        options: >-
+          --health-cmd "mc ready local"
+          --health-timeout 1s
+          --health-start-period 30s
+          --health-start-interval 2s
+        ports:
+          - 9000:9000
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+      with:
+        python-version: '3.7'
+    # On ubuntu 24.04, kcov was removed. It may come back in some future Ubuntu
+    - name: Set up Homebrew
+      id: set-up-homebrew
+      uses: Homebrew/actions/setup-homebrew@40e9946c182a64b3db1bf51be0dcb915f7802aa9
+    - name: Install kcov with brew
+      run: "brew install kcov"
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip setuptools pytest pytest-xdist pytest-cov
+          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
+          pip install --upgrade awscli boto3
+    - name: Run unit tests
+      env:
+          SPACK_PYTHON: python
+          SPACK_TEST_PARALLEL: 2
+          COVERAGE: true
+          COVERAGE_FILE: coverage/.coverage-minio-integration
+          UNIT_TEST_COVERAGE: true
+      run: |
+          source share/spack/setup-env.sh
+          spack unit-test -x --verbose --cov --cov-config=pyproject.toml --minio-integration-tests
+    - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
+      with:
+        name: coverage-minio-integration
+        path: coverage
+        include-hidden-files: true

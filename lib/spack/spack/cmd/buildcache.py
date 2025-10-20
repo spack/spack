@@ -4,6 +4,7 @@
 import argparse
 import glob
 import json
+import pathlib
 import sys
 import tempfile
 from typing import List, Optional, Tuple
@@ -32,7 +33,7 @@ from spack.llnl.util.lang import elide_list, stable_partition
 from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
-from ..buildcache_prune import prune
+from ..buildcache_prune import get_buildcache_normalized_time, prune_direct, prune_orphan
 from ..enums import InstallRecordStatus
 from ..url_buildcache import (
     BuildcacheComponent,
@@ -215,6 +216,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
     prune = subparsers.add_parser("prune", help=prune_fn.__doc__)
     prune.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
+    )
+    prune.add_argument(
+        "-k",
+        "--keeplist",
+        default=None,
+        help="file containing newline-delimited list of package hashes to keep (optional)",
     )
     prune.add_argument(
         "--dry-run",
@@ -846,12 +853,29 @@ def migrate_fn(args):
 
 
 def prune_fn(args):
-    """prune stale buildcache entries from the mirror"""
+    """prune buildcache entries from the mirror
+
+    If a keeplist file is provided, performs direct pruning (deletes packages not in keeplist)
+    followed by orphan pruning. If no keeplist is provided, only performs orphan pruning.
+    """
     mirror: spack.mirrors.mirror.Mirror = args.mirror
     dry_run: bool = args.dry_run
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
 
-    prune(mirror, dry_run)
+    # Determine the time to use as the "started at" time for pruning.
+    # If a cache index exists, use that time. Otherwise, use the current time (normalized
+    # to the buildcache's time zone).
+    cache_index_url = URLBuildcacheEntry.get_index_url(mirror_url=mirror.fetch_url)
+    stat_result = web_util.stat_url(cache_index_url)
+    if stat_result is not None:
+        started_at = stat_result[1]
+    else:
+        started_at = get_buildcache_normalized_time(mirror)
+
+    if args.keeplist:
+        prune_direct(mirror, pathlib.Path(args.keeplist), started_at, dry_run)
+
+    prune_orphan(mirror, started_at, dry_run)
 
 
 def buildcache(parser, args):
