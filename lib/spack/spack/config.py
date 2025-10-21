@@ -851,12 +851,12 @@ class OptionalInclude:
 
     when: str
     optional: bool
-    _scopes: Optional[List[ConfigScope]]
+    _scopes: List[ConfigScope]
 
     def __init__(self, entry: dict):
         self.when = entry.get("when", "")
         self.optional = entry.get("optional", False)
-        self._scopes = None
+        self._scopes = []
 
     def _scope(
         self, path: str, config_path: str, parent_scope: ConfigScope
@@ -911,14 +911,14 @@ class OptionalInclude:
 
         return (not self.when) or spack.spec.eval_conditional(self.when)
 
-    def scopes(self, parent_scope: ConfigScope) -> Optional[List[ConfigScope]]:
+    def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
         """Instantiate configuration scopes.
 
         Args:
             parent_scope: including scope
 
         Returns: configuration scopes IF the when condition is satisfied;
-            otherwise, ``None``.
+            otherwise, an empty list.
 
         Raises:
             ValueError: the required configuration path does not exist
@@ -943,14 +943,14 @@ class IncludePath(OptionalInclude):
             f"when='{self.when}', optional={self.optional})"
         )
 
-    def scopes(self, parent_scope: ConfigScope) -> Optional[List[ConfigScope]]:
+    def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
         """Instantiate a configuration scope for the included path.
 
         Args:
             parent_scope: including scope
 
         Returns: configuration scopes IF the when condition is satisfied;
-            otherwise, ``None``.
+            otherwise, an empty list.
 
         Raises:
             ConfigFileError: unable to access remote configuration file
@@ -959,9 +959,9 @@ class IncludePath(OptionalInclude):
         """
         if not self.evaluate_condition():
             tty.debug(f"Include condition is not satisfied in {self}")
-            return None
+            return []
 
-        if self._scopes is not None:
+        if self._scopes:
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
@@ -1075,14 +1075,14 @@ class GitIncludePaths(OptionalInclude):
     def fetched(self):
         return self.destination is not None and os.path.join(self.destination, ".git")
 
-    def scopes(self, parent_scope: ConfigScope) -> Optional[List[ConfigScope]]:
+    def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
         """Instantiate configuration scopes for the included paths.
 
         Args:
             parent_scope: including scope
 
         Returns: configuration scopes IF the when condition is satisfied;
-            otherwise, ``None``.
+            otherwise, an empty list.
 
         Raises:
             ConfigFileError: unable to access remote configuration file(s)
@@ -1091,9 +1091,9 @@ class GitIncludePaths(OptionalInclude):
         """
         if not self.evaluate_condition():
             tty.debug(f"Include condition is not satisfied in {self}")
-            return None
+            return []
 
-        if self._scopes is not None:
+        if self._scopes:
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 

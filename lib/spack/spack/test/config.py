@@ -1467,7 +1467,7 @@ def test_included_path_string_no_parent_path(
     FakeScope = collections.namedtuple("FakeScope", ["path"])
     parent_scope = FakeScope("")
 
-    assert include.scopes(parent_scope) is None  # type: ignore[arg-type]
+    assert not include.scopes(parent_scope)  # type: ignore[arg-type]
     destination = include.destination
     curr_dir = os.getcwd()
     assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]
@@ -1489,7 +1489,7 @@ def test_included_path_conditional_bad_when(
     scopes = include.scopes(mock_low_high_config.scopes["low"])
     captured = capsys.readouterr()[1]
     assert "condition is not satisfied" in captured
-    assert scopes is None
+    assert not scopes
 
 
 def test_included_path_conditional_success(tmp_path: pathlib.Path, mock_low_high_config):
@@ -1542,7 +1542,7 @@ def test_included_path_git_unsat(
     scopes = include.scopes(mock_low_high_config.scopes["low"])
     captured = capsys.readouterr()[1]
     assert "condition is not satisfied" in captured
-    assert scopes is None
+    assert not scopes
 
 
 @pytest.mark.parametrize(
