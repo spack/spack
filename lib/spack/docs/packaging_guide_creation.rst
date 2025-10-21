@@ -2256,6 +2256,12 @@ Below is an example of specifying a conditional commit patch:
 
 In this case the patch is only processed when attempting to install version ``1.12.0`` or higher of the package when the package's ``mpi`` variant is enabled.
 
+.. note:
+
+   Be sure to append ``?full_index=1`` to the GitHub URL to ensure the patch file consistently contains the complete, stable hash information for reproducible patching.
+
+   Use the resulting URL to get the patch file contents that you then run through the appropriate utility to get the corresponding ``sha256`` value.
+
 Compressed patches
 """"""""""""""""""
 
