@@ -23,11 +23,11 @@ dotenv:
     - export REPO_DESTINATION=etc/spack-packages
     - *clone_packages
     - repo_commit=$(git -C ${REPO_DESTINATION} rev-parse FETCH_HEAD)
-    - echo "SPACK_CHECKOUT_VERSION=${repo_commit}" >> ${CI_PROJECT_DIR}/env
-    - echo "SPACK_CHECKOUT_REPO=spack/spack-packages" >> ${CI_PROJECT_DIR}/env
-    - cat ${CI_PROJECT_DIR}/env
+    - echo "SPACK_CHECKOUT_VERSION=${repo_commit}" >> ${CI_PROJECT_DIR}/.ci/env
+    - echo "SPACK_CHECKOUT_REPO=spack/spack-packages" >> ${CI_PROJECT_DIR}/.ci/env
+    - cat ${CI_PROJECT_DIR}/.ci/env
     - python3 ${CI_PROJECT_DIR}/.ci/gitlab/forward_dotenv_variables.py
-        ${CI_PROJECT_DIR}/env
+        ${CI_PROJECT_DIR}/.ci/env
         ${REPO_DESTINATION}/.ci/gitlab/.gitlab-ci.yml
 
   artifacts:
@@ -41,4 +41,3 @@ spack-packages:
     include:
       - artifact: etc/spack-packages/.ci/gitlab/.gitlab-ci.yml
         job: dotenv
-
