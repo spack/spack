@@ -35,6 +35,7 @@ import pathlib
 import re
 import sys
 from collections import defaultdict
+from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 from spack.vendor import jsonschema
@@ -155,21 +156,17 @@ class ConfigScope:
             includes = self.get_section("include")
             if includes:
                 include_paths = [included_path(data) for data in includes["include"]]
-                for include in include_paths:
-                    included_scopes = include.scopes(self)
-                    if not included_scopes:
+
+                included_scopes = chain(*[include.scopes(self) for include in include_paths])
+
+                # Do not include duplicate scopes
+                for included_scope in included_scopes:
+                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
+                        tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
                         continue
 
-                    # Do not include duplicate scopes
-                    for included_scope in included_scopes:
-                        if any(
-                            [included_scope.name == scope.name for scope in self._included_scopes]
-                        ):
-                            tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
-                            continue
-
-                        if included_scope not in self._included_scopes:
-                            self._included_scopes.append(included_scope)
+                    if included_scope not in self._included_scopes:
+                        self._included_scopes.append(included_scope)
 
         return self._included_scopes
 
