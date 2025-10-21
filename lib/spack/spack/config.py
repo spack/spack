@@ -1032,7 +1032,7 @@ class GitIncludePaths(OptionalInclude):
 
     def _clone(self) -> Optional[str]:
         """Clone the repository."""
-        if self.fetched:
+        if self.fetched():
             tty.debug(f"Repository ({self.repo}) already cloned to {self.destination}")
             return self.destination
 
@@ -1073,7 +1073,6 @@ class GitIncludePaths(OptionalInclude):
             self.destination = destination
             return self.destination
 
-    @property
     def fetched(self):
         return self.destination is not None and os.path.join(self.destination, ".git")
 
