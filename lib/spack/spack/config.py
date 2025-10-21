@@ -905,7 +905,7 @@ class OptionalInclude:
 
         return None
 
-    def satisfied(self):
+    def evaluate_condition(self) -> bool:
         # circular dependencies
         import spack.spec
 
@@ -957,7 +957,7 @@ class IncludePath(OptionalInclude):
             ValueError: included path has an unsupported URL scheme, is required
                 but does not exist; configuration stage directory argument is missing
         """
-        if not self.satisfied():
+        if not self.evaluate_condition():
             tty.debug(f"Include condition is not satisfied in {self}")
             return None
 
@@ -1089,7 +1089,7 @@ class GitIncludePaths(OptionalInclude):
             ValueError: included path has an unsupported URL scheme, is required
                 but does not exist; configuration stage directory argument is missing
         """
-        if not self.satisfied():
+        if not self.evaluate_condition():
             tty.debug(f"Include condition is not satisfied in {self}")
             return None
 
