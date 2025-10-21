@@ -1436,7 +1436,7 @@ def test_included_path_string(
     assert isinstance(include, spack.config.IncludePath)
     assert include.path == str(path)
     assert not include.optional
-    assert include.satisfied
+    assert include.satisfied()
 
     parent_scope = mock_low_high_config.scopes["low"]
 
@@ -1484,7 +1484,7 @@ def test_included_path_conditional_bad_when(
     assert include.path == entry["path"]
     assert include.when == entry["when"]
     assert include.optional
-    assert not include.satisfied
+    assert not include.satisfied()
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
     captured = capsys.readouterr()[1]
@@ -1501,7 +1501,7 @@ def test_included_path_conditional_success(tmp_path: pathlib.Path, mock_low_high
     assert include.path == entry["path"]
     assert include.when == entry["when"]
     assert include.optional
-    assert include.satisfied
+    assert include.satisfied()
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
     assert scopes and len(scopes) == 1
@@ -1537,7 +1537,7 @@ def test_included_path_git_unsat(
     assert include.tag == entry["tag"]
     assert include.paths == entry["paths"]
     assert include.when == entry["when"]
-    assert not include.optional and not include.satisfied
+    assert not include.optional and not include.satisfied()
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
     captured = capsys.readouterr()[1]
@@ -1574,7 +1574,7 @@ def test_included_path_git(
     }
     include = spack.config.included_path(entry)
     assert isinstance(include, spack.config.GitIncludePaths)
-    assert not include.optional and include.satisfied
+    assert not include.optional and include.satisfied()
 
     destination = include._destination()
     assert not os.path.exists(destination)
