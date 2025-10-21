@@ -1323,6 +1323,7 @@ spack:
 @pytest.mark.parametrize(
     "spack_yaml",
     [
+        # Use a plain requirement for callpath
         """
 spack:
   specs:
@@ -1335,6 +1336,7 @@ spack:
   concretizer:
     unify: false
 """,
+        # Propagate a toolchain
         """
 spack:
   specs:
@@ -1350,6 +1352,21 @@ spack:
     callpath:
       require:
       - "%c=gcc"
+  concretizer:
+    unify: false
+""",
+        # Override callpath from input spec
+        """
+spack:
+  specs:
+  - mpileaks %%c,cxx=gcc ^callpath %c=gcc
+  - mpileaks %%llvm_toolchain ^callpath %c=gcc
+  toolchains:
+    llvm_toolchain:
+    - spec: "%c=llvm"
+      when: "%c"
+    - spec: "%cxx=llvm"
+      when: "%cxx"
   concretizer:
     unify: false
 """,
