@@ -925,6 +925,12 @@ class OptionalInclude:
         """
         raise NotImplementedError("must be implemented in derived classes")
 
+    @property
+    def paths(self) -> List[str]:
+        """Path(s) associated with the include."""
+
+        raise NotImplementedError("must be implemented in derived classes")
+
 
 class IncludePath(OptionalInclude):
     path: str
@@ -986,13 +992,19 @@ class IncludePath(OptionalInclude):
 
         return self._scopes
 
+    @property
+    def paths(self) -> List[str]:
+        """Path(s) associated with the include."""
+
+        return [self.path]
+
 
 class GitIncludePaths(OptionalInclude):
     repo: str
     branch: str
     commit: str
     tag: str
-    paths: List[str]
+    _paths: List[str]
     destination: Optional[str]
 
     def __init__(self, entry: dict):
@@ -1001,7 +1013,7 @@ class GitIncludePaths(OptionalInclude):
         self.branch = entry.get("branch", "")
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
-        self.paths = entry.get("paths", [])
+        self._paths = entry.get("paths", [])
         self.destination = None
 
         if not self.branch and not self.commit and not self.tag:
@@ -1009,7 +1021,7 @@ class GitIncludePaths(OptionalInclude):
                 "Git include paths ({self}) must specify one or more of: branch, commit, tag"
             )
 
-        if not self.paths:
+        if not self._paths:
             raise spack.error.ConfigError(
                 "Git include paths ({self}) must include one or more relative paths"
             )
@@ -1113,6 +1125,12 @@ class GitIncludePaths(OptionalInclude):
             self._scopes = scopes
         return self._scopes
 
+    @property
+    def paths(self) -> List[str]:
+        """Path(s) associated with the include."""
+
+        return self._paths
+
 
 def included_path(entry: Union[str, pathlib.Path, dict]) -> Union[IncludePath, GitIncludePaths]:
     """Convert the included paths entry into the appropriate optional include.
@@ -1129,6 +1147,22 @@ def included_path(entry: Union[str, pathlib.Path, dict]) -> Union[IncludePath, G
         return IncludePath(entry)
 
     return GitIncludePaths(entry)
+
+
+def paths_from_includes(includes: List[Union[str, dict]]) -> List[str]:
+    """The path(s) from the configured includes.
+
+    Args:
+        includes: include configuration information
+
+    Returns: list of path or an empty list if there are none
+    """
+
+    paths = []
+    for entry in includes:
+        include = included_path(entry)
+        paths.extend(include.paths)
+    return paths
 
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:

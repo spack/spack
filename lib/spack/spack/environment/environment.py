@@ -2660,35 +2660,32 @@ def initialize_environment_dir(
 
     # TODO: make this recursive
     includes = manifest[TOP_LEVEL_KEY].get("include", [])
-    for include in includes:
-        included_path = spack.config.included_path(include)
-        paths = [included_path.path] if hasattr(included_path, "path") else included_path.paths
+    paths = spack.config.paths_from_includes(includes)
+    for path in paths:
+        if os.path.isabs(path):
+            continue
 
-        for path in paths:
-            if os.path.isabs(path):
-                continue
+        abspath = pathlib.Path(os.path.normpath(environment_dir / path))
+        common_path = pathlib.Path(os.path.commonpath([environment_dir, abspath]))
+        if common_path != environment_dir:
+            tty.debug(f"Will not copy relative include file from outside environment: {path}")
+            continue
 
-            abspath = pathlib.Path(os.path.normpath(environment_dir / path))
-            common_path = pathlib.Path(os.path.commonpath([environment_dir, abspath]))
-            if common_path != environment_dir:
-                tty.debug(f"Will not copy relative include file from outside environment: {path}")
-                continue
+        orig_abspath = os.path.normpath(envfile.parent / path)
+        if os.path.isfile(orig_abspath):
+            fs.touchp(abspath)
+            shutil.copy(orig_abspath, abspath)
+            continue
 
-            orig_abspath = os.path.normpath(envfile.parent / path)
-            if os.path.isfile(orig_abspath):
-                fs.touchp(abspath)
-                shutil.copy(orig_abspath, abspath)
-                continue
+        if not os.path.exists(orig_abspath):
+            tty.warn(f"Skipping copy of non-existent include path: '{path}'")
+            continue
 
-            if not os.path.exists(orig_abspath):
-                tty.warn(f"Skipping copy of non-existent include path: '{path}'")
-                continue
+        if os.path.exists(abspath):
+            tty.warn(f"Skipping copy of directory over existing path: {path}")
+            continue
 
-            if os.path.exists(abspath):
-                tty.warn(f"Skipping copy of directory over existing path: {path}")
-                continue
-
-            shutil.copytree(orig_abspath, abspath, symlinks=True)
+        shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
