@@ -4,7 +4,7 @@ stages:
   - packages
 
 variables:
-  SPACK_PACKAGES_CHECKOUT_VERSION: develop
+  SPACK_PACKAGES_CHECKOUT_VERSION: refs/pull/2035/head
 
 .clone_packages: &clone_packages
   - mkdir -p ${REPO_DESTINATION}
