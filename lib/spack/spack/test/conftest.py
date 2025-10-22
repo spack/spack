@@ -700,6 +700,28 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope="function")
+def fake_db_install(tmp_path):
+    """This fakes "enough" of the installation process to make Spack
+    think of a spec as being installed as far as the concretizer
+    and parser are concerned. It does not run any build phase defined
+    in the package, simply acting as though the installation had
+    completed successfully.
+
+    It allows doing things like
+
+    ``spack.concretize.concretize_one(f"x ^/hash-of-y")``
+
+    after doing something like ``fake_db_install(y)``
+    """
+    with spack.store.use_store(str(tmp_path)) as the_store:
+
+        def _install(a_spec):
+            the_store.db.add(a_spec)
+
+        yield _install
+
+
+@pytest.fixture(scope="function")
 def mock_packages(mock_packages_repo, mock_pkg_install, request):
     """Use the 'builtin_mock' repository instead of 'builtin'"""
     ensure_configuration_fixture_run_before(request)
