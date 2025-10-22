@@ -1603,8 +1603,6 @@ unification_set_compiler("root", CompilerNode, Language) :-
     not allow_mixing(Package),
     unification_set("root", node(ID, Package)).
 
-compiler_hash(CompilerNode, Hash) :- node_compiler(_, CompilerNode, _), attr("hash", CompilerNode, Hash).
-
 % Compiler for a reused node
 % This differs from compiler_from_reuse in that this is about x->y
 % where y is a compiler and x is reused (compiler_from_reuse is
@@ -1612,7 +1610,8 @@ compiler_hash(CompilerNode, Hash) :- node_compiler(_, CompilerNode, _), attr("ha
 reused_node_compiler(PackageNode, node(CompilerHash, Compiler), Language) :-
     concrete(PackageNode),
     attr("concrete_build_dependency", PackageNode, Compiler, CompilerHash),
-    attr("virtual_on_build_edge", PackageNode, Compiler, Language).
+    attr("virtual_on_build_edge", PackageNode, Compiler, Language),
+    language(Language).
 
 % Compiler-unmixing: 2nd rule
 % The compiler appears on a reused node as well as a built node. In
