@@ -107,7 +107,7 @@ exit 1
     assert spack.spack_version == spack.get_version()
 
 
-def fail_if_add_env(env):
+def fail_if_add_env():
     """Pass to add_command_line_scopes. Will raise if called"""
     assert False, "Should not add env from scope test."
 

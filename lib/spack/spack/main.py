@@ -881,7 +881,7 @@ class SetEnvironmentAction(argparse.Action):
 def add_command_line_scopes(
     cfg: spack.config.Configuration,
     command_line_scopes: List[Any],  # str or _ENV but mypy can't type sentinels
-    add_environment: Callable[[ConfigScopePriority], None],
+    add_environment: Callable[[], None],
 ) -> None:
     """Add additional scopes from the ``--config-scope`` argument, either envs or dirs.
 
@@ -901,7 +901,7 @@ def add_command_line_scopes(
     for i, path in enumerate(command_line_scopes):
         # If an environment is set on the CLI, add its scope in the order it appears there.
         if path is _ENV:
-            add_environment(ConfigScopePriority.ENVIRONMENT)
+            add_environment()
             continue
 
         name = f"cmd_scope_{i}"
@@ -987,7 +987,7 @@ def _main(argv=None):
             e.print_context()
             env_format_error = e
 
-    def add_environment_scope(priority):
+    def add_environment_scope():
         if env_format_error:
             # Allow command to continue without env in case it is `spack config edit`
             # All other cases will raise in `finish_parse_and_run`
@@ -995,12 +995,12 @@ def _main(argv=None):
             return
         # do not call activate here, as it has a lot of expensive function calls to deal
         # with mutation of spack.config.CONFIG -- but we are still building the config.
-        env.manifest.prepare_config_scope(priority)
+        env.manifest.prepare_config_scope()
         spack.environment.environment._active_environment = env
 
     # add the environment *first*, if it is coming from an environment variable
     if env and _ENV not in (args.config_scopes or []):
-        add_environment_scope(priority=ConfigScopePriority.ENVIRONMENT)
+        add_environment_scope()
 
     # Push scopes from the command line last
     if args.config_scopes:
