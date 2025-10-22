@@ -300,6 +300,4 @@ To enable mixing for specific packages, specify an allow-list in the ``compiler_
    concretizer:
      compiler_mixing: ["openssl"]
 
-.. note::
-
-   Adding ``openssl`` to the compiler mixing allow-list does not allow mixing for dependencies of ``openssl``.
+Adding ``openssl`` to the compiler mixing allow-list does not allow mixing for dependencies of ``openssl``.
