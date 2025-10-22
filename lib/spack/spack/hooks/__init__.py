@@ -39,6 +39,7 @@ class _HookRunner:
         # after all mutations to the install prefix, write metadata
         "spack.hooks.write_install_manifest",
         # after all metadata is written
+        "spack.hooks.sbom_generate,"
         "spack.hooks.autopush",
     ]
 
