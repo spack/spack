@@ -71,15 +71,13 @@ def relocate_msvc_pe_files(targets, prefixes: dict):
     ev.set_path("SPACK_RELOCATE_PATH", dirs_to_relocate)
     dll_lib_map = {}
     for target in targets:
-        # we relocate exes and dlls, libs are regenerated from the
-        # dlls if they're import libraries, if static, no op
+        # we relocate exes and dlls, libs are regenerated from themselves
+        # if import libs, if static, no op
         # Dlls have no references to their import libraries
         # but import libraries reference dlls, so although
         # the DLLs are our "relocation targets" we drive that
         # via the libs to determine the proper association
-        if target.endswith(".exe"):
-            _msvc_relocate()("--pe", target, "--export", "--full", extra_env=ev)
-        elif target.endswith(".lib"):
+        if target.endswith(".lib"):
             if sfs.verify_import_lib(target):
                 regex = re.compile("|".join(re.escape(p) for p in prefixes.keys()))
                 dll_path = sfs.get_importlib_target(target)
@@ -96,21 +94,22 @@ def relocate_msvc_pe_files(targets, prefixes: dict):
                     )
     for target in targets:
         # now we process the DLLs, now that we've mapped all our libs
-        if target.endswith(".dll"):
+        if target.endswith(".dll") or target.endswith(".exe"):
             regex = re.compile("|".join(re.escape(p) for p in prefixes.values()))
             match = regex.match(target)
+            args = ["--pe", target, "--export", "--full"]
             if match:
                 new_root = match.group()
                 dll_name = os.path.relpath(target, new_root)
-                _msvc_relocate()(
-                    "--pe",
-                    target,
-                    "--coff",
-                    dll_lib_map[dll_name],
-                    "--export",
-                    "--full",
-                    extra_env=ev,
-                )
+                if dll_name in dll_lib_map:
+                    args.extend([
+                        "--coff",
+                        dll_lib_map[dll_name]
+                    ])
+            _msvc_relocate()(
+                *args,
+                extra_env=ev,
+            )
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):

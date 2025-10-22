@@ -3424,6 +3424,10 @@ def dumpbin(pkg) -> Executable:
 
 
 def relocate_win_rpath(package):
+
+    def get_binary_file_from_prefix(ext):
+        return glob.glob(os.path.join(package.spec.prefix, f"**\\*.{ext}"), recursive=True)
+
     # populate environment with required paths to perform relocation
     # relocate relies on finding the dll an import library
     # links to and re-writing the path to the dll
@@ -3438,26 +3442,35 @@ def relocate_win_rpath(package):
     ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.root)
     ev.set("SPACK_CONTEXT_ROOT", package.spec.prefix)
     lib_map = {}
-    for lib in glob.glob(os.path.join(package.spec.prefix, "**\\*.lib"), recursive=True):
+    for lib in get_binary_file_from_prefix("lib"):
         if verify_import_lib(lib, package=package):
             # we have an import lib, determine symbols
             dll_name = get_importlib_target(lib, package=package)
             if dll_name:
-                dll_name = os.path.basename(dll_name)
+                dll_name = os.path.basename(dll_name)                
             lib_map[dll_name] = lib
-    for dll in glob.glob(os.path.join(package.spec.prefix, "**\\*.dll"), recursive=True):
-        name = os.path.basename(dll)
-        if name in lib_map and is_imp_lib_for_dll(package, lib_map[name], dll):
-            relocate(package)(
-                "--pe",
-                dll,
+    dlls = get_binary_file_from_prefix("dll")
+    exes = get_binary_file_from_prefix("exe")
+    pes = dlls + exes
+    reloc = relocate(package)
+    for pe in pes:
+        name = os.path.basename(pe)
+        args = ["--pe", pe, "--full", "--export"]
+        # PE files may or may not export symbols
+        # if they do not (i.e. most exes and plugin dlls)
+        # we still need to relocate the references to other PE files
+        # inside those PE files
+        if name in lib_map and is_imp_lib_for_pe(package, lib_map[name], pe):
+            args.extend([
                 "--coff",
                 lib_map[name],
-                "--export",
-                "--full",
-                extra_env=ev,
-                fail_on_error=True,
-            )
+            ])
+        reloc(
+            *args,
+            extra_env=ev,
+            fail_on_error=True,
+        )
+            
 
 
 def get_importlib_target(lib, package=None):
@@ -3466,9 +3479,8 @@ def get_importlib_target(lib, package=None):
     regex = re.compile("DLL: (.*)")
     match = regex.search(info)
     if match:
-        dll_name = match.group(1).strip("\r")
-        return dll_name
-    raise RuntimeError(f"Ill formed coff file: {lib}, unable to determine corresponding DLL")
+        pe_name = match.group(1).strip("\r")
+        return pe_name
 
 
 def verify_import_lib(lib: str, package=None) -> bool:
@@ -3500,10 +3512,10 @@ def collect_import_exports(pkg, lib):
     return exports
 
 
-def collect_dll_api(pkg, dll):
+def collect_pe_api(pkg, pe):
     regex = re.compile(".*? ([a-zA-Z_][a-zA-Z0-9_]*)(?: = ([a-zA-Z_][a-zA-Z0-9_]*))?\r$")
     db = dumpbin(pkg)
-    raw_exports = db("/NOLOGO", "/EXPORTS", dll, output=str).split("\n")
+    raw_exports = db("/NOLOGO", "/EXPORTS", pe, output=str).split("\n")
     raw_exports = raw_exports[16:]
     exports = []
     for export_line in raw_exports:
@@ -3519,13 +3531,13 @@ def collect_dll_api(pkg, dll):
     return exports
 
 
-def is_imp_lib_for_dll(pkg, imp_lib, dll):
+def is_imp_lib_for_pe(pkg, imp_lib, pe):
     lib_exports = collect_import_exports(pkg, imp_lib)
-    dll_exports = collect_dll_api(pkg, dll)
+    pe_exports = collect_pe_api(pkg, pe)
     assert lib_exports, f"Lib exports in {imp_lib} should not be empty"
-    assert dll_exports, f"Dll exports in {dll} should not be empty"
+    assert pe_exports, f"PE exports in {pe} should not be empty"
     # values should be ordered already, no need for sorting
-    for lib_line, dll_line in zip(lib_exports, dll_exports):
-        if lib_line not in dll_line:
+    for lib_line, pe_line in zip(lib_exports, pe_exports):
+        if lib_line not in pe_line:
             return False
     return True
