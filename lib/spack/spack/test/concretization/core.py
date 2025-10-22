@@ -521,7 +521,9 @@ class TestConcretize:
         ask for `x%c2 ^z%c1 ^/y
 
         This looks similar to `test_disable_mixing_reuse`. But the
-        compiler nodes are handled differently in this case.
+        compiler nodes are handled differently in this case: this
+        is the only test that explicitly exercises compiler unmixing
+        rule #2.
         """
         dep1 = spack.concretize.concretize_one("libdwarf %gcc")
         fake_db_install(dep1)

@@ -1616,6 +1616,15 @@ reused_node_compiler(PackageNode, node(CompilerHash, Compiler), Language) :-
 % Compiler-unmixing: 2nd rule
 % The compiler appears on a reused node as well as a built node. In
 % that case there will be a generated node() with an ID.
+% While easier to understand than rule 3, in fact this rule addresses
+% a small set of use cases beyond rules 1 and 3: generally speaking
+% rule 1 ensures that all non-reused nodes get a consistent compiler.
+% Rule 3 generates compiler IDs that almost always fail the count
+% rule, but does not "activate" when in combination with rule 1 when
+% it is possible to propagate a compiler to another built node in the
+% unification set. This in fact is only really used when the reused
+% node compiler has a node(), but associated with a different
+% unification set.
 unification_set_compiler("root", CompilerNode, Language) :-
     reused_node_compiler(node(ID, Package), node(CompilerHash, Compiler), Language),
     attr("hash", CompilerNode, CompilerHash),
