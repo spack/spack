@@ -406,7 +406,7 @@ def make_argument_parser(**kwargs):
         "--env",
         dest="env",
         metavar="ENV",
-        action=SetEnvironmentAction,
+        action="store",
         help="run with a specific environment (see spack env)",
     )
     env_group.add_argument(
@@ -414,7 +414,7 @@ def make_argument_parser(**kwargs):
         "--env-dir",
         dest="env_dir",
         metavar="DIR",
-        action=SetEnvironmentAction,
+        action="store",
         help="run with an environment directory (ignore managed environments)",
     )
     env_group.add_argument(
@@ -859,23 +859,6 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
 
 # sentinel scope marker for environments passed on the command line
 _ENV = object()
-
-
-class SetEnvironmentAction(argparse.Action):
-    """Records an environment both in the ``env`` attribute and in the ``config_scopes`` list.
-
-    We need to know where the environment appeared on the CLI set scope precedence.
-
-    """
-
-    def __call__(self, parser, namespace, name_or_dir, option_string):
-        setattr(namespace, self.dest, name_or_dir)
-
-        scopes = getattr(namespace, "config_scopes", None)
-        if scopes is None:
-            scopes = []
-        scopes.append(_ENV)
-        namespace.config_scopes = scopes
 
 
 def add_command_line_scopes(
