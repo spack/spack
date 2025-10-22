@@ -509,7 +509,7 @@ class TestConcretize:
             # Should be able to reuse if the compilers match
             spack.concretize.concretize_one(f"dt-diamond%gcc ^/{lefthash}")
 
-    def test_disable_mixing_reuse_and_built(self, mutable_database):
+    def test_disable_mixing_reuse_and_built(self, fake_db_install):
         r"""In this case we have
 
         x
@@ -524,7 +524,7 @@ class TestConcretize:
         compiler nodes are handled differently in this case.
         """
         dep1 = spack.concretize.concretize_one("libdwarf %gcc")
-        PackageInstaller([dep1.package], fake=True, explicit=True).install()
+        fake_db_install(dep1)
         assert dep1.satisfies("%c=gcc")
         dep1hash = dep1.dag_hash()[:7]
 
