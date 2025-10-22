@@ -7,4 +7,4 @@ types-six==1.17.0.20250515
 vermin==1.7.0
 pylint==4.0.1
 docutils==0.22.2
-ruamel.yaml==0.18.15
+ruamel.yaml==0.18.16
