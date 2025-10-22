@@ -81,12 +81,12 @@ From lowest to highest precedence:
 #. **user**: Stored in the home directory: ``~/.spack/``.
    These settings affect all instances of Spack and take higher precedence than site, system, plugin, or defaults scopes.
 
-#. **custom**: Stored in a custom directory specified by ``--config-scope``.
-   If multiple scopes are listed on the command line, they are ordered from lowest to highest precedence.
-
 #. **environment**: When using Spack :ref:`environments`, Spack reads additional configuration from the environment file.
    See :ref:`environment-configuration` for further details on these scopes.
    Environment scopes can be referenced from the command line as ``env:name`` (e.g., to reference environment ``foo``, use ``env:foo``).
+
+#. **custom**: Stored in a custom directory specified by ``--config-scope``.
+   If multiple scopes are listed on the command line, they are ordered from lowest to highest precedence.
 
 #. **command line**: Build settings specified on the command line take precedence over all other scopes.
 

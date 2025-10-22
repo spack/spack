@@ -900,9 +900,8 @@ def add_command_line_scopes(
 
     for i, path in enumerate(command_line_scopes):
         # If an environment is set on the CLI, add its scope in the order it appears there.
-        # Subsequent custom scopes will override it, and it will override prior custom scopes.
         if path is _ENV:
-            add_environment(ConfigScopePriority.CUSTOM)
+            add_environment(ConfigScopePriority.ENVIRONMENT)
             continue
 
         name = f"cmd_scope_{i}"
