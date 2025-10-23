@@ -735,8 +735,7 @@ class ConcretizationCache:
         ``path`` is a path to a file in the cache, and its basename is the hash of the problem.
 
         Args:
-
-            path: absolute path to concretization cache entry to be locked
+            path: absolute or relative path to concretization cache entry to be locked
         """
         return lk.Lock(
             str(self._lockfile),
@@ -753,10 +752,9 @@ class ConcretizationCache:
         """Read transactions for concretization cache entries.
 
         Args:
-            path: absolute path to the concretization cache entry to be locked
+            path: absolute or relative path to the concretization cache entry to be locked
             timeout: give up after this many seconds
         """
-        assert path.is_absolute()
         return lk.ReadTransaction(self._lock(path), timeout=timeout)
 
     def write_transaction(
@@ -765,12 +763,9 @@ class ConcretizationCache:
         """Write transactions for concretization cache entries
 
         Args:
-            path: absolute path to the concretization cache entry to be locked
+            path: absolute or relative path to the concretization cache entry to be locked
             timeout: give up after this many seconds
-
         """
-        # path must be absolute at this point
-        assert path.is_absolute()
         return lk.WriteTransaction(self._lock(path), timeout=timeout)
 
     def store(self, problem: str, result: Result, statistics: List) -> None:
