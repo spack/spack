@@ -13,93 +13,94 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  scan:
-    runs-on: ubuntu-latest
-    outputs:
-      packages: ${{ steps.scan.outputs.packages }}
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          fetch-depth: 0
-      - name: "Add Integration test repo"
-        run: |
-          . share/spack/setup-env.sh
-          spack repo add ${GITHUB_WORKSPACE}/var/spack/test_repos/spack_repo/integration_test
-      - name: "List repo packages"
-        id: scan
-        run: |
-          . share/spack/setup-env.sh
-          packages_list="$(spack list --repo integration_test | python3 -c "import sys; print([f'"{x}"' for x in sys.stdin.read().split('\n') if x])")"
-          echo "packages=${packages_list}" >> "$GITHUB_OUTPUT"
-
-  run-nix:
-    needs: [scan]
+  integration-nix:
+    name: Integration-Build-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13, macos-14]
-        package: ${{ fromJSON(needs.scan.outputs.packages) }} # list of spack intergration test packages to run
+        os: [ubuntu-latest, macos-15-intel, macos-latest]
       fail-fast: true
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Fetch Spack
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Fetch Builtin repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          fetch-depth: 0
+            fetch-depth: 1
+            repository: spack/spack-packages
+            path: spackages
+      - name: Add builtin with shallow clone
+        run: |
+          chmod +x bin/spack
+          . share/spack/setup-env.sh
+          spack repo add --scope=spack ${{ github.workspace }}/spackages/repos/spack_repo/builtin
       - name: "Add Integration test repo"
         run: |
           . share/spack/setup-env.sh
-          spack repo add ${GITHUB_WORKSPACE}/var/spack/test_repos/spack_repo/integration_test
+          spack repo add ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test
       - name: "Spack install"
         id: install
         run: |
+          pip install --upgrade pip clingo
           . share/spack/setup-env.sh
+          spack env activate ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test/integration_env
           spack compiler find
           spack external find cmake ninja
-          spack -dv install --test root ${{ matrix.package }}
+          spack concretize -U
+          spack -dv install --test root
       - name: "Determine failure stage"
         if: always() && (steps.install.outcome == 'failure')
         run: |
           . share/spack/setup-env.sh
-          echo "FAILURE_STAGE=$(spack location -s ${{ matrix.package }})" >> $GITHUB_ENV
-
+          echo "FAILURE_STAGE=$(spack location -S)" >> $GITHUB_ENV
       - name: "Collect failure artifacts"
         if: always() && (steps.install.outcome == 'failure')
         uses: actions/upload-artifact@v4
         with:
-          name: "${{ matrix.package }}-stage"
+          name: "broken-${{ matrix.os }}-stage"
           path: $FAILURE_STAGE
 
-  run-win:
+  integration-win:
+    name: Integration-Build-Windows
     defaults:
       run:
         shell:
           powershell Invoke-Expression -Command "./share/spack/qa/windows_test_setup.ps1"; {0}
-    needs: [scan]
     runs-on: windows-latest
-    strategy:
-      matrix:
-        package: ${{ fromJSON(needs.scan.outputs.packages) }} # list of spack intergration test packages to run
-      fail-fast: true
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Fetch Spack
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+      - name: Fetch Builtin Repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+            fetch-depth: 1
+            repository: spack/spack-packages
+            path: spackages
+      - name: Add builtin from clone
+        run: |
+          spack repo add --scope=spack ${{ github.workspace }}/spackages/repos/spack_repo/builtin
       - name: "Add Integration test repo"
         run: |
           spack repo add ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test
       - name: "Spack install"
         id: install
         run: |
+          pip install --upgrade pip clingo
+          spack env activate ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test/integration_env
           spack compiler find
           spack external find cmake ninja
-          spack -dv install --test root ${{ matrix.package }}
+          spack concretize -U
+          spack -dv install --test root
       - name: "Determine failure stage"
         if: always() && (steps.install.outcome == 'failure')
         run: |
-          echo "FAILURE_STAGE=$(spack location -s ${{ matrix.package }})" >> $GITHUB_ENV
+          echo "FAILURE_STAGE=$(spack location -S)" >> $GITHUB_ENV
 
       - name: "Collect failure artifacts"
         if: always() && (steps.install.outcome == 'failure')
         uses: actions/upload-artifact@v4
         with:
-          name: "${{ matrix.package }}-stage"
+          name: "broken-win-stage"
           path: $FAILURE_STAGE

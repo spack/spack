@@ -3,8 +3,8 @@
 Tests production context runs of Spack
 
 * Isolates behavior from individual package quirks
-* Guaruntees builds without worrying about Gitlab CI's pruning mechanisms (no "nothing to rebuild")
-* Directly tests specific Spack behaviors via controlled, deliberatly composed packages relying on specific behaviors
+* Guarantees builds without worrying about Gitlab CI's pruning mechanisms (no "nothing to rebuild")
+* Directly tests specific Spack behaviors via controlled, deliberatly composed packages and generated source code relying on those behaviors
 * Production style useage of Spack allows a deliberate testing environment beyond the limited and contrived nature of unit tests
 * In the event of failure revealed by the integration tests, allows for much faster development cycles without needing to wait
 hours for Gitlab to complete.
@@ -14,67 +14,133 @@ hours for Gitlab to complete.
 
 Compiler and Package detection
 
-Repo - Adding a repo beyond builtin and utilizing packages from it
+* Adding a repo beyond builtin and utilizing packages from it
 
-Fetching - Fetching a package's source from a local file url
+* Fetching a package's source from a local file url
 
-Staging - Successfully staging a packages source
+* Successfully staging a packages source
 
-Building - Executing a build system and driving the build of that system
+* Executing a build system and driving the build of that system
 
-Installing - Installing the package from the build tree
+* Installing the package from the build tree
 
-Testing - Validates the software built and installed actually runs
+* Tests ability to run package defined tests
+  * Run them to verify a correct installation
 
 Each of these higher level tasks exercises many more atomic sections of Spack that are well covered by our unit tests.
-The purpose served by this test is to validate the integration and compatibility of each of these more atomic components (hence, integration testing :) )
+The purpose served by these tests is to validate the integration and compatibility of each of these more atomic components (hence, integration testing :) )
 
 ### Roadmap for future Tests
 
-Build systems - Expand beyond CMake
+#### Build systems
 
-Platforms - Platform specific tests
+Planned coverage:
 
-Architectures - Arch specific tests
+* ~~CMake~~
+* Autotools
+* Meson
+* Make/NMake
+* MsBuild
+* Go
+* Cargo
+* Python
 
-Urls - different types of URLs to fetch from
+#### Platforms
 
-Configs - different config setups
+Target behavior on specific
 
-Repos - More complex repo setups
+* Platforms
+* Architectures
+* Operating Systems
 
-Packages - Packages doing more complex things, packages that depend on each other, virtuals, etc
+#### Fetch types
 
-Libs and executables - test all types
+* Https
+* Ssh
+* Git
+* Bundle (no fetch)
+* etc
 
-Modules - test usage of modules
+#### Mirrors
+
+Test setting up and pulling from a mirror
+
+#### Configurations
+
+Different Configurations of Spack
+
+* Concretizer settings
+* Config settings
+* Includes (Optional path, git, etc)
+* Environment settings
+* Mirror settings
+* Package settings
+* View settings
+
+#### Repositories
+
+ More complex repo setups
+
+* Multi-package repository repos
+* Mixed package API versions
+* etc
+
+#### Packages
+
+Packages doing more complex things
+
+* Packages with more complex configuration
+* Packages with dependencies
+* Virtual packages
+* Bundle Packages
+
+#### Libraries and Executables
+
+Test building, linking, running, and testing
+
+* Shared Libraries
+* Static Libraries
+* Executables
+* Python Modules
+* C++ Modules
+* Fortran Modules
+* etc
+
+#### Languages
+
+Test all languages supported by Spack
+
+* C/C++
+* Fortran
+* Python
+* Rust
+* Go
+* R
+* Ruby
+* Java
+* CUDA
+* Lua
 
 #### MPI
 
-MPI introduces a lot Spack logic. With a properly constructed integration test, we can have guarantees
-of basic MPI related behaviors functioning in Spack and behaving as expected without an expensive or potentiall no-op Gitlab CI run.
+MPI introduces a lot of Spack logic. With a properly constructed integration test, we can have guarantees of basic MPI related behaviors functioning in Spack and behaving as expected without an expensive or potentiall no-op Gitlab CI run.
 
-##### Challenges
+##### MPI Challenges
 
 None forseen, Spack can install MPI. We may not be able to get a high rank test running, but that's not really the intent of this repo
 
 #### GPU/CUDA/ROCM
 
-Nvidia packages, ROCM, GPU development, and CUDA all introduce further complication into Spack's logic, this allows us to guaruntee stability
+Nvidia packages, ROCM, GPU development, and CUDA all introduce further complication into Spack's logic, this allows us to guarantee stability
 
-##### Challenges
+##### Cuda Challenges
 
-CUDA is available on GHA runners, but GPUs are not universally available and may cost money/have a higher overhead. We may need to self host, reach out to Github about pricing options, or simply be incredbly selective about when this check is run
+CUDA is generally available on GHA runners, but GPUs are not. Additional considerations will need to be made to dertermine, how, if at all, we implement CUDA based integration testing as part of this repo.
 
 #### HIP
 
 HIP integration testing could be valuable
 
-##### Challenges
+##### HIP Challenges
 
-Feasabiliity to be investigated\
-
-
-## FAQ
-
-Coming Soon
+Feasibility to be investigated
