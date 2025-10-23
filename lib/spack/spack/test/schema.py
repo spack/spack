@@ -2,16 +2,134 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import json
+import importlib
 import os
 
 import pytest
 
 from spack.vendor import jsonschema
 
-import spack.paths
 import spack.schema
 import spack.util.spack_yaml as syaml
+from spack.llnl.util.lang import list_modules
+
+_draft_07_with_spack_extensions = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://json-schema.org/draft-07/schema#",
+    "title": "Core schema meta-schema",
+    "definitions": {
+        "schemaArray": {"type": "array", "minItems": 1, "items": {"$ref": "#"}},
+        "nonNegativeInteger": {"type": "integer", "minimum": 0},
+        "nonNegativeIntegerDefault0": {
+            "allOf": [{"$ref": "#/definitions/nonNegativeInteger"}, {"default": 0}]
+        },
+        "simpleTypes": {
+            "enum": ["array", "boolean", "integer", "null", "number", "object", "string"]
+        },
+        "stringArray": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": True,
+            "default": [],
+        },
+    },
+    "type": ["object", "boolean"],
+    "properties": {
+        "$id": {"type": "string", "format": "uri-reference"},
+        "$schema": {"type": "string", "format": "uri"},
+        "$ref": {"type": "string", "format": "uri-reference"},
+        "$comment": {"type": "string"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "default": True,
+        "readOnly": {"type": "boolean", "default": False},
+        "writeOnly": {"type": "boolean", "default": False},
+        "examples": {"type": "array", "items": True},
+        "multipleOf": {"type": "number", "exclusiveMinimum": 0},
+        "maximum": {"type": "number"},
+        "exclusiveMaximum": {"type": "number"},
+        "minimum": {"type": "number"},
+        "exclusiveMinimum": {"type": "number"},
+        "maxLength": {"$ref": "#/definitions/nonNegativeInteger"},
+        "minLength": {"$ref": "#/definitions/nonNegativeIntegerDefault0"},
+        "pattern": {"type": "string", "format": "regex"},
+        "additionalItems": {"$ref": "#"},
+        "items": {
+            "anyOf": [{"$ref": "#"}, {"$ref": "#/definitions/schemaArray"}],
+            "default": True,
+        },
+        "maxItems": {"$ref": "#/definitions/nonNegativeInteger"},
+        "minItems": {"$ref": "#/definitions/nonNegativeIntegerDefault0"},
+        "uniqueItems": {"type": "boolean", "default": False},
+        "contains": {"$ref": "#"},
+        "maxProperties": {"$ref": "#/definitions/nonNegativeInteger"},
+        "minProperties": {"$ref": "#/definitions/nonNegativeIntegerDefault0"},
+        "required": {"$ref": "#/definitions/stringArray"},
+        "additionalProperties": {"$ref": "#"},
+        "definitions": {"type": "object", "additionalProperties": {"$ref": "#"}, "default": {}},
+        "properties": {"type": "object", "additionalProperties": {"$ref": "#"}, "default": {}},
+        "patternProperties": {
+            "type": "object",
+            "additionalProperties": {"$ref": "#"},
+            "propertyNames": {"format": "regex"},
+            "default": {},
+        },
+        "dependencies": {
+            "type": "object",
+            "additionalProperties": {
+                "anyOf": [{"$ref": "#"}, {"$ref": "#/definitions/stringArray"}]
+            },
+        },
+        "propertyNames": {"$ref": "#"},
+        "const": True,
+        "enum": {"type": "array", "items": True, "minItems": 1, "uniqueItems": True},
+        "type": {
+            "anyOf": [
+                {"$ref": "#/definitions/simpleTypes"},
+                {
+                    "type": "array",
+                    "items": {"$ref": "#/definitions/simpleTypes"},
+                    "minItems": 1,
+                    "uniqueItems": True,
+                },
+            ]
+        },
+        "format": {"type": "string"},
+        "contentMediaType": {"type": "string"},
+        "contentEncoding": {"type": "string"},
+        "if": {"$ref": "#"},
+        "then": {"$ref": "#"},
+        "else": {"$ref": "#"},
+        "allOf": {"$ref": "#/definitions/schemaArray"},
+        "anyOf": {"$ref": "#/definitions/schemaArray"},
+        "oneOf": {"$ref": "#/definitions/schemaArray"},
+        "not": {"$ref": "#"},
+        # What follows is two Spack extensions to JSON Schema Draft 7:
+        # deprecatedProperties and additionalKeysAreSpecs
+        "deprecatedProperties": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "names": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                        "uniqueItems": True,
+                    },
+                    "message": {"type": "string"},
+                    "error": {"type": "boolean"},
+                },
+                "required": ["names", "message"],
+                "additionalProperties": False,
+            },
+        },
+        "additionalKeysAreSpecs": {"type": "boolean"},
+    },
+    "default": True,
+    # note: not in draft-07, this is for catching typos
+    "additionalProperties": False,
+}
 
 
 @pytest.fixture()
@@ -46,15 +164,6 @@ def module_suffixes_schema():
     }
 
 
-@pytest.fixture(scope="module")
-def meta_schema():
-    """Meta schema for JSON schema validation (Draft 4)"""
-    meta_schema_file = os.path.join(spack.paths.test_path, "data", "jsonschema_meta.json")
-    with open(meta_schema_file, encoding="utf-8") as f:
-        ms = json.load(f)
-    return ms
-
-
 @pytest.mark.regression("9857")
 def test_validate_spec(validate_spec_schema):
     v = spack.schema.Validator(validate_spec_schema)
@@ -76,33 +185,6 @@ def test_module_suffixes(module_suffixes_schema):
 
     with pytest.raises(jsonschema.ValidationError, match="is not a valid spec"):
         v.validate(data)
-
-
-@pytest.mark.regression("10246")
-@pytest.mark.parametrize(
-    "config_name",
-    [
-        "compilers",
-        "config",
-        "definitions",
-        "include",
-        "env",
-        "merged",
-        "mirrors",
-        "modules",
-        "packages",
-        "repos",
-    ],
-)
-def test_schema_validation(meta_schema, config_name):
-    import importlib
-
-    module_name = "spack.schema.{0}".format(config_name)
-    module = importlib.import_module(module_name)
-    schema = getattr(module, "schema")
-
-    # If this validation throws the test won't pass
-    jsonschema.validate(schema, meta_schema)
 
 
 def test_deprecated_properties(module_suffixes_schema):
@@ -151,3 +233,22 @@ def test_list_merge_order():
     result = spack.schema.merge_yaml(dest, source)
 
     assert ["a", "b", "c", "d", "e", "f"] == result
+
+
+def test_spack_schemas_are_valid():
+    """Test that the Spack schemas in spack.schema.*.schema are valid under JSON Schema Draft 7
+    with Spack extensions *only*."""
+    # Collect schema submodules, and verify we have at least a few known ones
+    schema_submodules = (
+        importlib.import_module(f"spack.schema.{name}")
+        for name in list_modules(os.path.dirname(spack.schema.__file__))
+    )
+    schemas = {m.__name__: m.schema for m in schema_submodules if hasattr(m, "schema")}
+    assert set(schemas) >= {"spack.schema.config", "spack.schema.packages", "spack.schema.modules"}
+
+    # Validate them using the meta-schema
+    for module_name, module_schema in schemas.items():
+        try:
+            jsonschema.validate(module_schema, _draft_07_with_spack_extensions)
+        except jsonschema.ValidationError as e:
+            raise RuntimeError(f"Invalid JSON schema in {module_name}: {e.message}") from e

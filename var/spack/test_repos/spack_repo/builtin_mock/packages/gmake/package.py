@@ -13,6 +13,8 @@ class Gmake(Package):
     homepage = "https://www.gnu.org/software/make"
     url = "https://ftpmirror.gnu.org/make/make-4.4.tar.gz"
 
+    tags = ["build-tools"]
+
     version("4.4", sha256="ce35865411f0490368a8fc383f29071de6690cbadc27704734978221f25e2bed")
     version("3.0", sha256="ce35865411f0490368a8fc383f29071de6690cbadc27704734978221f25e2bed")
 

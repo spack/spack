@@ -336,13 +336,14 @@ class FileWrapper:
     object.
     """
 
-    def __init__(self, file_like):
+    def __init__(self, file_like, append=False):
         # This records whether the file-like object returned by "unwrap" is
         # purely in-memory. In that case a subprocess will need to explicitly
         # transmit the contents to the parent.
         self.write_in_parent = False
 
         self.file_like = file_like
+        self.append = append
 
         if isinstance(file_like, str):
             self.open = True
@@ -358,7 +359,8 @@ class FileWrapper:
     def unwrap(self):
         if self.open:
             if self.file_like:
-                self.file = open(self.file_like, "w", encoding="utf-8")
+                mode = "a" if self.append else "w"
+                self.file = open(self.file_like, mode, encoding="utf-8")
             else:
                 self.file = io.StringIO()
             return self.file
@@ -424,7 +426,14 @@ class nixlog:
     """
 
     def __init__(
-        self, file_like=None, echo=False, debug=0, buffer=False, env=None, filter_fn=None
+        self,
+        file_like=None,
+        echo=False,
+        debug=0,
+        buffer=False,
+        env=None,
+        filter_fn=None,
+        append=False,
     ):
         """Create a new output log context manager.
 
@@ -437,6 +446,7 @@ class nixlog:
                 this doesn't set up any *new* buffering
             filter_fn (callable, optional): Callable[str] -> str to filter each
                 line of output
+            append (bool): whether to append to file ('a' mode)
 
         log_output can take either a file object or a filename. If a
         filename is passed, the file will be opened and closed entirely
@@ -456,37 +466,9 @@ class nixlog:
         self.debug = debug
         self.buffer = buffer
         self.filter_fn = filter_fn
+        self.append = append
 
         self._active = False  # used to prevent re-entry
-
-    def __call__(self, file_like=None, echo=None, debug=None, buffer=None):
-        """This behaves the same as init. It allows a logger to be reused.
-
-        Arguments are the same as for ``__init__()``.  Args here take
-        precedence over those passed to ``__init__()``.
-
-        With the ``__call__`` function, you can save state between uses
-        of a single logger.  This is useful if you want to remember,
-        e.g., the echo settings for a prior ``with log_output()``::
-
-            logger = log_output()
-
-            with logger('foo.txt'):
-                # log things; user can change echo settings with 'v'
-
-            with logger('bar.txt'):
-                # log things; logger remembers prior echo settings.
-
-        """
-        if file_like is not None:
-            self.file_like = file_like
-        if echo is not None:
-            self.echo = echo
-        if debug is not None:
-            self.debug = debug
-        if buffer is not None:
-            self.buffer = buffer
-        return self
 
     def __enter__(self):
         if self._active:
@@ -496,7 +478,7 @@ class nixlog:
             raise RuntimeError("file argument must be set by either __init__ or __call__")
 
         # set up a stream for the daemon to write to
-        self.log_file = FileWrapper(self.file_like)
+        self.log_file = FileWrapper(self.file_like, append=self.append)
 
         # record parent color settings before redirecting.  We do this
         # because color output depends on whether the *original* stdout
@@ -735,7 +717,9 @@ class winlog:
     Does not support the use of ``v`` toggling as nixlog does.
     """
 
-    def __init__(self, file_like=None, echo=False, debug=0, buffer=False, filter_fn=None):
+    def __init__(
+        self, file_like=None, echo=False, debug=0, buffer=False, filter_fn=None, append=False
+    ):
         self.debug = debug
         self.echo = echo
         self.logfile = file_like
@@ -745,6 +729,7 @@ class winlog:
         self._ioflag = False
         self.old_stdout = sys.stdout
         self.old_stderr = sys.stderr
+        self.append = append
 
     def __enter__(self):
         if self._active:
@@ -760,7 +745,8 @@ class winlog:
             sys.stdout = self.logfile
             sys.stderr = self.logfile
         else:
-            self.writer = open(self.logfile, mode="wb+")
+            write_mode = "ab+" if self.append else "wb+"
+            self.writer = open(self.logfile, mode=write_mode)
             self.reader = open(self.logfile, mode="rb+")
 
             # Dup stdout so we can still write to it after redirection
@@ -908,7 +894,7 @@ def _writer_daemon(
 
                 # wait for input from any stream. use a coarse timeout to
                 # allow other checks while we wait for input
-                rlist, _, _ = _retry(select.select)(istreams, [], [], 1e-1)
+                rlist, _, _ = select.select(istreams, [], [], 0.1)
 
                 # Allow user to toggle echo with 'v' key.
                 # Currently ignores other chars.
@@ -932,7 +918,7 @@ def _writer_daemon(
                     try:
                         while line_count < 100:
                             # Handle output from the calling process.
-                            line = _retry(read_file.readline)()
+                            line = read_file.readline()
 
                             if not line:
                                 return
@@ -988,43 +974,6 @@ def _writer_daemon(
 
         # send echo value back to the parent so it can be preserved.
         control_fd.send(echo)
-
-
-def _retry(function):
-    """Retry a call if errors indicating an interrupted system call occur.
-
-    Interrupted system calls return -1 and set ``errno`` to ``EINTR`` if
-    certain flags are not set.  Newer Pythons automatically retry them,
-    but older Pythons do not, so we need to retry the calls.
-
-    This function converts a call like this:
-
-        syscall(args)
-
-    and makes it retry by wrapping the function like this:
-
-        _retry(syscall)(args)
-
-    This is a private function because EINTR is unfortunately raised in
-    different ways from different functions, and we only handle the ones
-    relevant for this file.
-
-    """
-
-    def wrapped(*args, **kwargs):
-        while True:
-            try:
-                return function(*args, **kwargs)
-            except OSError as e:
-                if e.errno == errno.EINTR:
-                    continue
-                raise
-            except select.error as e:
-                if e.args[0] == errno.EINTR:
-                    continue
-                raise
-
-    return wrapped
 
 
 def _input_available(f):

@@ -1,78 +1,249 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. meta::
    :description lang=en:
-      Learn how to turn Spack environments into container images, either by copying existing installations or by generating recipes for Docker and Singularity.
+      Learn how to turn Spack packages and Spack environments into OCI-compatible container images, either by exporting existing installations or by generating recipes for Docker and Singularity.
 
 .. _containers:
 
 Container Images
 ================
 
-Spack :ref:`environments` can easily be turned into container images.
-This page outlines two ways in which this can be done:
+Whether you want to share applications with others who do not use Spack, deploy on cloud services that run container images, or move workloads to HPC clusters, containers are an effective way to package and distribute software.
 
-1. By installing the environment on the host system and copying the installations into the container image.
-   This approach does not require any tools like Docker or Singularity to be installed.
-2. By generating a Docker or Singularity recipe that can be used to build the container image.
-   In this approach, Spack builds the software inside the container runtime, not on the host system.
+Spack offers two fundamentally different paradigms for creating container images, each with distinct advantages.
+You can either export software packages already built on your host system as a container image, or you can generate a traditional recipe file (``Dockerfile`` or Singularity Definition File) to build the software from scratch inside the container.
 
-The first approach is easiest if you already have an installed environment, the second approach gives more control over the container image.
+.. list-table:: Comparison of Spack container image creation methods
+   :widths: 15 42 43
+   :header-rows: 1
 
-From Existing Installations
----------------------------
+   * - 
+     - :ref:`Container Image Export <exporting-images>`
+     - :ref:`Recipe Generation <generating-recipes>`
+   * - **Purpose**
+     - Exports existing installations from the host system as a container image
+     - Runs ``spack install`` to build software from source *inside* the container build process
+   * - **Spack Command**
+     - ``spack buildcache push``
+     - ``spack containerize``
+   * - **Reproducibility**
+     - Limited: depends on the host system
+     - High: controlled build environment
+   * - **Input**
+     - Installed Spack packages or environments
+     - A ``spack.yaml`` file
+   * - **Speed**
+     - Faster: copies existing binaries
+     - Slower: typically builds from source
+   * - **Troubleshooting**
+     - Build issues are resolved on the host, where debugging is simpler
+     - Build issues must be resolved inside the container build process
+   * - **Build Tools**
+     - None
+     - Docker, Podman, Singularity, or similar
+   * - **Privileges**
+     - None (rootless)
+     - May require elevated privileges, depending on the container build tool (root)
+   * - **Output destination**
+     - OCI-compatible registry
+     - Local Docker or Singularity image
 
-If you already have a Spack environment installed on your system, you can share the binaries as an OCI-compatible container image.
-To get started, you just have to configure an OCI registry and run ``spack buildcache push``.
+
+.. _exporting-images:
+
+Exporting Spack installations as Container Images
+-------------------------------------------------
+
+The command
+
+.. code-block:: text
+  
+   spack buildcache push [--base-image BASE_IMAGE] [--tag TAG] mirror [specs...]
+
+creates and pushes a container image to an OCI-compatible container registry, with the ``mirror`` argument specifying a registry (see below).
+
+Think of this command less as "building a container" and more as archiving a working software stack into a portable image.
+
+Container images created this way are **minimal**: they contain only runtime dependencies of the specified specs, the base image, and nothing else.
+Spack itself is *not* included in the resulting image.
+
+The arguments are as follows:
+  
+``--base-image BASE_IMAGE``
+   Specifies the base image to use for the container.
+   This should be a minimal Linux distribution with a libc that is compatible with the host system.
+   For example, if your host system is Ubuntu 22.04, you can use ``ubuntu:22.04``, ``ubuntu:24.04``, or newer: the libc in the container image must be at least the version of the host system, assuming ABI compatibility.
+   It is also perfectly fine to use a completely different Linux distribution as long as the libc is compatible.
+
+``--tag TAG``
+  Specifies a container image tag to use.
+  This tag is used for the image consisting of all specs specified in the command line together.
+
+``mirror`` argument
+  Either the name of a configured OCI registry image (in ``mirrors.yaml``), or a URL specifying the registry and image name.
+
+  * When pushing to remote registries, you will typically :ref:`specify the name of a registry <configuring-container-registries>` from your Spack configuration.
+  * When pushing to a local registry, you can simply specify a URL like ``oci+http://localhost:5000/[image]``, where ``[image]`` is the name of the image to create, and ``oci+http://`` indicates that the registry does not support HTTPS.
+
+``specs...`` arguments
+   is a list of Spack specs to include in the image.
+   These are packages that have already been installed by Spack.
+   When a Spack environment is activated, only the packages in the environment are included in the image.
+   If no specs are given, and a Spack environment is active, all packages in the environment are included.
+
+Spack publishes every individual dependency as a separate image layer, which allows for efficient storage and transfer of images with overlapping dependencies.
+
+.. note::
+    The Docker ``overlayfs2`` storage driver is limited to 128 layers, above which a ``max depth exceeded`` error may be produced when pulling the image.
+    You can hit this limit when exporting container images from larger environments or packages with many dependencies.
+    There are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_ to work around this limitation.
+
+The ``spack buildcache push --base-image ...`` command serves a **dual purpose**:
+
+1. It makes container images available for container runtimes like Docker and Podman.
+2. It makes the *same* binaries available :ref:`as a build cache <binary_caches_oci>` for ``spack install``.
+
+.. _configuring-container-registries:
+
+Container registries
+^^^^^^^^^^^^^^^^^^^^
+
+The ``spack buildcache push`` command exports container images directly to an OCI-compatible container registry, such as Docker Hub, GitHub Container Registry (GHCR), Amazon ECR, Google GCR, Azure ACR, or a private registry.
+
+These services require authentication, which is configured with the ``spack mirror add`` command:
 
 .. code-block:: spec
 
-   # Create and install an environment in the current directory
-   $ spack env create -d .
-   $ spack -e . add pkg-a pkg-b
+   $ spack mirror add \
+         --oci-username-variable REGISTRY_USER \
+         --oci-password-variable REGISTRY_TOKEN \
+         example-registry \
+         oci://example.com/name/image
+
+This registers a mirror named ``example-registry`` in your ``mirrors.yaml`` configuration file that is associated with a container registry and image ``example.com/name/image``.
+The registry can then be referred to by its name, e.g. ``spack buildcache push example-registry ...``.
+
+The ``oci://`` scheme in the URL indicates that this is an OCI-compatible registry with HTTPS support.
+If you only specify ``oci://name/image``, Spack will assume the registry is hosted on Docker Hub.
+
+The ``--oci-username-variable`` and ``--oci-password-variable`` options specify the names of *environment variables* that will be used to authenticate with the registry.
+Spack does not store your credentials in configuration files; it expects you to set the corresponding environment variables in your shell before running the ``spack buildcache push`` command:
+
+.. code-block:: console
+
+   $ REGISTRY_USER=user REGISTRY_TOKEN=token spack buildcache push ...
+
+.. seealso::
+
+   The registry password is typically a *personal access token* (PAT) generated on the registry website or a command line tool.
+   In the section :ref:`oci-authentication` we list specific examples for popular registries.
+
+If you don't have access to a remote registry, or wish to experiment with container images locally, you can run a *local registry* on your machine and let Spack push to it.
+This is as simple as running the `official registry image <https://hub.docker.com/_/registry>`_ in the background:
+
+.. code-block:: console
+
+   $ docker run -d -p 5000:5000 --name registry registry
+
+In this case, it is not necessary to configure a named mirror, you can simply refer to it by URL using ``oci+http://localhost:5000/[image]``, where ``[image]`` is the name of the image to create, and ``oci+http://`` indicates that the registry does not support HTTPS.
+
+.. _local-registry-example:
+
+Example 1: pushing selected specs as container images
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Assume we have ``python@3.13`` and ``cmake@3`` already installed by Spack, and we want to push them as a combined container image ``software_stack:latest`` to a local registry.
+
+First we verify that the specs are indeed installed:
+
+.. code-block:: spec
+
+  $ spack find --long python@3.13 cmake@3
+
+  -- linux-ubuntu24.04-zen2 / %c,cxx=gcc@13.3.0 -------------------
+  scpgv2h cmake@3.31.8  n54tvjw python@3.13.5
+
+Since these are the only installations on our system, we can simply refer to them by their spec strings.
+In case there are multiple installations, we could use ``python/n54tvjw`` and ``cmake/scpgv2h`` to uniquely refer to them by hashes.
+
+We now use ``spack buildcache push`` to publish these packages as a container image with ``ubuntu:24.04`` as a base image:
+
+.. code-block:: console
+
+   $ spack buildcache push \
+         --base-image ubuntu:24.04 \
+         --tag latest \
+         oci+http://localhost:5000/software_stack \
+         python@3.13 cmake@3
+
+They can now be pulled and run with Docker or any other OCI-compatible container runtime:
+
+.. code-block:: console
+
+   $ docker run -it localhost:5000/software_stack:latest
+   root@container-id:/# python3 --version
+   Python 3.13.5
+   root@container-id:/# cmake --version
+   cmake version 3.31.8
+
+.. _installed-environments-as-containers:
+
+Example 2: pushing entire Spack environments as container images
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example we show how to export an installed :ref:`Spack environment <environments>` as a container image and push it to a remote registry.
+
+.. code-block:: spec
+
+   # Create and install an environment
+   $ spack env create .
+   $ spack -e . add python@3.13 cmake@3
    $ spack -e . install
 
-   # Configure the registry
-   $ spack -e . mirror add --oci-username-variable REGISTRY_USER \
-                           --oci-password-variable REGISTRY_TOKEN \
-                           container-registry oci://example.com/name/image
+   # Configure a remote registry
+   $ spack -e . mirror add \
+         --oci-username-variable REGISTRY_USER \
+         --oci-password-variable REGISTRY_TOKEN \
+         container-registry \
+         oci://example.com/name/image
 
-   # Push the image (do set REGISTRY_USER and REGISTRY_TOKEN)
-   $ spack -e . buildcache push --update-index --base-image ubuntu:22.04 --tag my_env container-registry
+   # Push the image
+   $ REGISTRY_USER=user REGISTRY_TOKEN=token \
+     spack -e . buildcache push \
+         --update-index \
+         --base-image ubuntu:24.04 \
+         --tag my_env \
+         container-registry
 
 The resulting container image can then be run as follows:
 
 .. code-block:: console
 
    $ docker run -it example.com/name/image:my_env
+   root@container-id:/# python3 --version
+   Python 3.13.5
+   root@container-id:/# cmake --version
+   cmake version 3.31.8
 
-The image generated by Spack consists of the specified base image with each package from the environment as a separate layer on top.
-The image is minimal by construction, it only contains the environment roots and its runtime dependencies.
+The advantage of using a Spack environment is that we do not have to specify the individual specs on the command line when pushing the image.
+With environments, all root specs and their runtime dependencies are included in the container image.
 
-.. note::
+If you do specify specs in ``spack buildcache push`` with an environment active, only those matching specs from the environment are included in the image.
 
-  When using registries like GHCR and Docker Hub, the ``--oci-password`` flag specifies not the password for your account but rather a personal access token that you need to generate separately.
 
-The specified ``--base-image`` should have a libc that is compatible with the host system.
-For example, if your host system is Ubuntu 20.04, you can use ``ubuntu:20.04``, ``ubuntu:22.04``, or newer: the libc in the container image must be at least the version of the host system, assuming ABI compatibility.
-It is also perfectly fine to use a completely different Linux distribution as long as the libc is compatible.
-
-For convenience, Spack also turns the OCI registry into a :ref:`build cache <binary_caches_oci>`, so that future ``spack install`` of the environment will simply pull the binaries from the registry instead of doing source builds.
-The flag ``--update-index`` is needed to make Spack take the build cache into account when concretizing.
-
-.. note::
-
-  When generating container images in CI, the approach above is recommended when CI jobs already run in a sandboxed environment.
-  You can simply use Spack directly in the CI job and push the resulting image to a registry.
-  Subsequent CI jobs should run faster because Spack can install from the same registry instead of rebuilding from sources.
+.. _generating-recipes:
 
 Generating recipes for Docker and Singularity
 ---------------------------------------------
 
-Apart from copying existing installations into container images, Spack can also generate recipes for container images.
+Apart from exporting existing installations into container images, Spack can also generate recipes for container images.
 This is useful if you want to run Spack itself in a sandboxed environment instead of on the host system.
+
+This approach requires you to have a container runtime like Docker or Singularity installed on your system, and can only be used using Spack environments.
 
 Since recipes need a little more boilerplate than:
 
@@ -87,7 +258,7 @@ Customizations include minimizing the size of the image, installing packages in 
 .. _cmd-spack-containerize:
 
 A Quick Introduction
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 Consider having a Spack environment like the following:
 
@@ -109,44 +280,58 @@ The ``Dockerfile`` that gets created uses multi-stage builds and other technique
 .. code-block:: docker
 
    # Build stage with Spack pre-installed and ready to be used
-   FROM spack/ubuntu-noble:latest as builder
+   FROM spack/ubuntu-jammy:develop AS builder
+
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
-   RUN mkdir /opt/spack-environment \
-   &&  (echo "spack:" \
-   &&   echo "  specs:" \
-   &&   echo "  - gromacs+mpi" \
-   &&   echo "  - mpich" \
-   &&   echo "  concretizer:" \
-   &&   echo "    unify: true" \
-   &&   echo "  config:" \
-   &&   echo "    install_tree: /opt/software" \
-   &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
+   RUN mkdir -p /opt/spack-environment && \
+   set -o noclobber \
+   &&  (echo spack: \
+   &&   echo '  specs:' \
+   &&   echo '  - gromacs+mpi' \
+   &&   echo '  - mpich' \
+   &&   echo '  concretizer:' \
+   &&   echo '    unify: true' \
+   &&   echo '  config:' \
+   &&   echo '    install_tree:' \
+   &&   echo '      root: /opt/software' \
+   &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
 
    # Strip all the binaries
-   RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
+   RUN find -L /opt/views/view/* -type f -exec readlink -f '{}' \; | \
        xargs file -i | \
        grep 'charset=binary' | \
        grep 'x-executable\|x-archive\|x-sharedlib' | \
-       awk -F: '{print $1}' | xargs strip -s
+       awk -F: '{print $1}' | xargs strip
 
    # Modifications to the environment that are necessary to run
    RUN cd /opt/spack-environment && \
-       spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+       spack env activate --sh -d . > activate.sh
+
 
    # Bare OS image to run the installed executables
-   FROM ubuntu:18.04
+   FROM ubuntu:22.04
 
    COPY --from=builder /opt/spack-environment /opt/spack-environment
    COPY --from=builder /opt/software /opt/software
-   COPY --from=builder /opt/view /opt/view
-   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+   COPY --from=builder /opt/views /opt/views
 
-   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+   RUN { \
+         echo '#!/bin/sh' \
+         && echo '.' /opt/spack-environment/activate.sh \
+         && echo 'exec "$@"'; \
+       } > /entrypoint.sh \
+   && chmod a+x /entrypoint.sh \
+   && ln -s /opt/views/view /opt/view
+
+
+   ENTRYPOINT [ "/entrypoint.sh" ]
+   CMD [ "/bin/bash" ]
+
 
 The image itself can then be built and run in the usual way with any of the tools suitable for the task.
 For instance, if we decided to use Docker:
@@ -162,19 +347,20 @@ The various components involved in the generation of the recipe and their config
 
 .. _container_spack_images:
 
-Spack Images on Docker Hub
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Official Container Images for Spack
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Docker images with Spack preinstalled and ready to be used are built when a release is tagged, or nightly on ``develop``.
-The images are then pushed both to `Docker Hub <https://hub.docker.com/u/spack>`_ and to `GitHub Container Registry <https://github.com/orgs/spack/packages?repo_name=spack>`_.
-The OSes that are currently supported are summarized in the table below:
+Container images with Spack preinstalled are available on `Docker Hub <https://hub.docker.com/u/spack>`_ and `GitHub Container Registry <https://github.com/orgs/spack/packages?repo_name=spack>`_.
+These images are based on popular distributions and are named accordingly (e.g. ``spack/ubuntu-noble`` for Spack on top of ``ubuntu:24.04``).
+
+The table below summarizes the available base images and their corresponding Spack images:
 
 .. _containers-supported-os:
 
-.. list-table:: Supported operating systems
+.. list-table:: Supported base container images
    :header-rows: 1
 
-   * - Operating System
+   * - Base Distribution
      - Base Image
      - Spack Image
    * - Ubuntu 20.04
@@ -214,18 +400,29 @@ The OSes that are currently supported are summarized in the table below:
      - ``fedora:40``
      - ``spack/fedora40``
 
+All container images are tagged with the version of Spack they contain.
 
+.. list-table:: Spack container image tags
+   :header-rows: 1
 
-All the images are tagged with the corresponding release of Spack:
+   * - Tag
+     - Meaning
+   * - ``<image>:latest``
+     - Latest *stable* release of Spack
+   * - ``<image>:1``
+     - Latest ``1.x.y`` release of Spack
+   * - ``<image>:1.0``
+     - Latest ``1.0.y`` release of Spack
+   * - ``<image>:1.0.2``
+     - Specific ``1.0.2`` release of Spack
+   * - ``<image>:develop``
+     - Latest *development* version of Spack
 
-.. image:: images/ghcr_spack.png
-
-with the exception of the ``latest`` tag that points to the HEAD of the ``develop`` branch.
 These images are available for anyone to use and take care of all the repetitive tasks that are necessary to set up Spack within a container.
 The container recipes generated by Spack use them as default base images for their ``build`` stage, even though options to use custom base images provided by users are available to accommodate complex use cases.
 
 Configuring the Container Recipe
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Any Spack environment can be used for the automatic generation of container recipes.
 Sensible defaults are provided for things like the base image or the version of Spack used in the image.
@@ -265,7 +462,7 @@ If finer tuning is needed, it can be obtained by adding the relevant metadata un
 A detailed description of the options available can be found in the :ref:`container_config_options` section.
 
 Setting Base Images
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 The ``images`` subsection is used to select both the image where Spack builds the software and the image where the built software is installed.
 This attribute can be set in different ways and which one to use depends on the use case at hand.
@@ -291,14 +488,15 @@ For instance, the following ``spack.yaml``:
      container:
        images:
          os: almalinux:9
-         spack: 0.22.0
+         spack: "1.0"
 
-uses ``spack/almalinux9:0.22.0`` and ``almalinux:9`` for the stages where the software is respectively built and installed:
+uses ``spack/almalinux9:1.0`` and ``almalinux:9`` for the stages where the software is respectively built and installed:
 
 .. code-block:: docker
 
    # Build stage with Spack pre-installed and ready to be used
-   FROM spack/almalinux9:0.22.0 AS builder
+   FROM spack/almalinux9:1.0 AS builder
+
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
@@ -311,18 +509,32 @@ uses ``spack/almalinux9:0.22.0`` and ``almalinux:9`` for the stages where the so
    &&   echo '  concretizer:' \
    &&   echo '    unify: true' \
    &&   echo '  config:' \
-   &&   echo '    install_tree: /opt/software' \
+   &&   echo '    install_tree:' \
+   &&   echo '      root: /opt/software' \
    &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
-   [ ... ]
+
+   # ...
+
    # Bare OS image to run the installed executables
    FROM quay.io/almalinuxorg/almalinux:9
 
    COPY --from=builder /opt/spack-environment /opt/spack-environment
    COPY --from=builder /opt/software /opt/software
-   COPY --from=builder /opt/view /opt/view
-   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+   COPY --from=builder /opt/views /opt/views
 
-   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+   RUN { \
+         echo '#!/bin/sh' \
+         && echo '.' /opt/spack-environment/activate.sh \
+         && echo 'exec "$@"'; \
+       } > /entrypoint.sh \
+   && chmod a+x /entrypoint.sh \
+   && ln -s /opt/views/view /opt/view
+
+
+   ENTRYPOINT [ "/entrypoint.sh" ]
+   CMD [ "/bin/bash" ]
+
+
 
 This is the simplest available method of selecting base images, and we advise its use whenever possible.
 There are cases, though, where using Spack official images is not enough to fit production needs.
@@ -330,7 +542,7 @@ In these situations, users can extend the recipe to start with the bootstrapping
 
 
 Use a Bootstrap Stage for Spack
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""""
 
 In some cases, users may want to pin the commit SHA that is used for Spack to ensure later reproducibility or start from a fork of the official Spack repository to try a bugfix or a feature in an early stage of development.
 This is possible by being just a little more verbose when specifying information about Spack in the ``spack.yaml`` file:
@@ -364,7 +576,7 @@ The list of operating systems that can be used to bootstrap Spack can be obtaine
 
 
 Use Custom Images Provided by Users
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""""""""
 
 Consider, as an example, building a production-grade image for a CUDA application.
 The best strategy would probably be to build on top of images provided by the vendor and regard CUDA as an external package.
@@ -393,59 +605,74 @@ A ``spack.yaml`` like the following:
 
      container:
        images:
-         build: custom/cuda-10.1-ubuntu18.04:latest
-         final: nvidia/cuda:10.1-base-ubuntu18.04
+         build: custom/cuda-13.0.1-ubuntu22.04:latest
+         final: nvidia/cuda:13.0.1-base-ubuntu22.04
 
 produces, for instance, the following ``Dockerfile``:
 
 .. code-block:: docker
 
    # Build stage with Spack pre-installed and ready to be used
-   FROM custom/cuda-10.1-ubuntu18.04:latest as builder
+   FROM custom/cuda-13.0.1-ubuntu22.04:latest AS builder
+
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
-   RUN mkdir /opt/spack-environment \
-   &&  (echo "spack:" \
-   &&   echo "  specs:" \
-   &&   echo "  - gromacs@2019.4+cuda build_type=Release" \
-   &&   echo "  - mpich" \
-   &&   echo "  - fftw precision=float" \
-   &&   echo "  packages:" \
-   &&   echo "    cuda:" \
-   &&   echo "      buildable: false" \
-   &&   echo "      externals:" \
-   &&   echo "      - spec: cuda%gcc" \
-   &&   echo "        prefix: /usr/local/cuda" \
-   &&   echo "  concretizer:" \
-   &&   echo "    unify: true" \
-   &&   echo "  config:" \
-   &&   echo "    install_tree: /opt/software" \
-   &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
+   RUN mkdir -p /opt/spack-environment && \
+   set -o noclobber \
+   &&  (echo spack: \
+   &&   echo '  specs:' \
+   &&   echo '  - gromacs@2019.4+cuda build_type=Release' \
+   &&   echo '  - mpich' \
+   &&   echo '  - fftw precision=float' \
+   &&   echo '  packages:' \
+   &&   echo '    cuda:' \
+   &&   echo '      buildable: false' \
+   &&   echo '      externals:' \
+   &&   echo '      - spec: cuda%gcc' \
+   &&   echo '        prefix: /usr/local/cuda' \
+   &&   echo '' \
+   &&   echo '  concretizer:' \
+   &&   echo '    unify: true' \
+   &&   echo '  config:' \
+   &&   echo '    install_tree:' \
+   &&   echo '      root: /opt/software' \
+   &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
 
    # Strip all the binaries
-   RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
+   RUN find -L /opt/views/view/* -type f -exec readlink -f '{}' \; | \
        xargs file -i | \
        grep 'charset=binary' | \
        grep 'x-executable\|x-archive\|x-sharedlib' | \
-       awk -F: '{print $1}' | xargs strip -s
+       awk -F: '{print $1}' | xargs strip
 
    # Modifications to the environment that are necessary to run
    RUN cd /opt/spack-environment && \
-       spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+       spack env activate --sh -d . > activate.sh
+
 
    # Bare OS image to run the installed executables
-   FROM nvidia/cuda:10.1-base-ubuntu18.04
+   FROM nvidia/cuda:13.0.1-base-ubuntu22.04
 
    COPY --from=builder /opt/spack-environment /opt/spack-environment
    COPY --from=builder /opt/software /opt/software
-   COPY --from=builder /opt/view /opt/view
-   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+   COPY --from=builder /opt/views /opt/views
 
-   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
+   RUN { \
+         echo '#!/bin/sh' \
+         && echo '.' /opt/spack-environment/activate.sh \
+         && echo 'exec "$@"'; \
+       } > /entrypoint.sh \
+   && chmod a+x /entrypoint.sh \
+   && ln -s /opt/views/view /opt/view
+
+
+   ENTRYPOINT [ "/entrypoint.sh" ]
+   CMD [ "/bin/bash" ]
+
 
 where the base images for both stages are completely custom.
 
@@ -458,7 +685,7 @@ Users may need to generate their base images themselves, and it's also their res
 Therefore, we do not recommend its use in cases that can be otherwise covered by the simplified mode shown first.
 
 Singularity Definition Files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In addition to producing recipes in ``Dockerfile`` format, Spack can produce Singularity Definition Files by just changing the value of the ``format`` attribute:
 
@@ -477,7 +704,7 @@ In addition to producing recipes in ``Dockerfile`` format, Spack can produce Sin
 The minimum version of Singularity required to build a SIF (Singularity Image Format) image from the recipes generated by Spack is ``3.5.3``.
 
 Extending the Jinja2 Templates
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``Dockerfile`` and the Singularity definition file that Spack can generate are based on a few Jinja2 templates that are rendered according to the Spack environment being containerized.
 Even though Spack allows a great deal of customization by just setting appropriate values for the configuration options, sometimes that is not enough.
@@ -519,6 +746,7 @@ To use a custom template, the Spack environment must register the directory cont
 The template extension can override two blocks, named ``build_stage`` and ``final_stage``, similarly to the example below:
 
 .. code-block:: text
+   :caption: /opt/environment/templates/container/CustomDockerfile
    :emphasize-lines: 3,8
 
    {% extends "container/Dockerfile" %}
@@ -541,60 +769,71 @@ Note that the Spack environment must be active for Spack to read the template.
 The recipe that gets generated contains the two extra instructions that we added in our template extension:
 
 .. code-block:: Dockerfile
-   :emphasize-lines: 4,43
+   :emphasize-lines: 4,55
 
    # Build stage with Spack pre-installed and ready to be used
-   FROM spack/ubuntu-jammy:latest as builder
+   FROM spack/ubuntu-jammy:develop AS builder
 
    RUN echo "Start building"
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
-   RUN mkdir /opt/spack-environment \
-   &&  (echo "spack:" \
-   &&   echo "  specs:" \
-   &&   echo "  - hdf5~mpi" \
-   &&   echo "  concretizer:" \
-   &&   echo "    unify: true" \
-   &&   echo "  config:" \
-   &&   echo "    template_dirs:" \
-   &&   echo "    - /tmp/environment/templates" \
-   &&   echo "    install_tree: /opt/software" \
-   &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
+   RUN mkdir -p /opt/spack-environment && \
+   set -o noclobber \
+   &&  (echo spack: \
+   &&   echo '  specs:' \
+   &&   echo '  - hdf5~mpi' \
+   &&   echo '  concretizer:' \
+   &&   echo '    unify: true' \
+   &&   echo '  config:' \
+   &&   echo '    template_dirs:' \
+   &&   echo '    - /tmp/tmp.xvyLqAZpZg' \
+   &&   echo '    install_tree:' \
+   &&   echo '      root: /opt/software' \
+   &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack env activate . && spack concretize && spack env depfile -o Makefile && make -j $(nproc) && spack gc -y
 
    # Strip all the binaries
-   RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
+   RUN find -L /opt/views/view/* -type f -exec readlink -f '{}' \; | \
        xargs file -i | \
        grep 'charset=binary' | \
        grep 'x-executable\|x-archive\|x-sharedlib' | \
-       awk -F: '{print $1}' | xargs strip -s
+       awk -F: '{print $1}' | xargs strip
 
    # Modifications to the environment that are necessary to run
    RUN cd /opt/spack-environment && \
-       spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+       spack env activate --sh -d . > activate.sh
+
+
 
    # Bare OS image to run the installed executables
    FROM ubuntu:22.04
 
    COPY --from=builder /opt/spack-environment /opt/spack-environment
    COPY --from=builder /opt/software /opt/software
-   COPY --from=builder /opt/._view /opt/._view
-   COPY --from=builder /opt/view /opt/view
-   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+   COPY --from=builder /opt/views /opt/views
+
+   RUN { \
+         echo '#!/bin/sh' \
+         && echo '.' /opt/spack-environment/activate.sh \
+         && echo 'exec "$@"'; \
+       } > /entrypoint.sh \
+   && chmod a+x /entrypoint.sh \
+   && ln -s /opt/views/view /opt/view
+
+
 
    COPY data /share/myapp/data
-
-   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l", "-c", "$*", "--" ]
+   ENTRYPOINT [ "/entrypoint.sh" ]
    CMD [ "/bin/bash" ]
 
 
 .. _container_config_options:
 
 Configuration Reference
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The tables below describe all the configuration options that are currently supported to customize the generation of container recipes:
 
@@ -691,7 +930,7 @@ The tables below describe all the configuration options that are currently suppo
      - No
 
 Best Practices
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 MPI
 """"""

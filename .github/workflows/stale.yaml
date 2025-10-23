@@ -31,7 +31,7 @@ jobs:
             This issue was closed because it had no activity for 30 days after being marked stale.
             If you feel this is in error, please feel free to reopen this issue.
           stale-issue-label: 'stale'
-          any-of-issue-labels: 'build-error,unreproducible'
+          any-of-issue-labels: 'build-error,unreproducible,question,documentation,environments'
           exempt-issue-labels: 'pinned,triage,impact-low,impact-medium,impact-high'
 
           # Pull requests configuration

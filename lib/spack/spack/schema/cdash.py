@@ -15,7 +15,7 @@ properties: Dict[str, Any] = {
         "additionalProperties": False,
         # "required": ["build-group", "url", "project", "site"],
         "required": ["build-group"],
-        "patternProperties": {
+        "properties": {
             r"build-group": {"type": "string"},
             r"url": {"type": "string"},
             r"project": {"type": "string"},

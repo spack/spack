@@ -430,15 +430,16 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="function")
-def use_concretization_cache(mutable_config, tmp_path: Path):
+def use_concretization_cache(mock_packages, mutable_config, tmp_path: Path):
     """Enables the use of the concretization cache"""
-    spack.config.set("config:concretization_cache:enable", True)
-    # ensure we have an isolated concretization cache
     conc_cache_dir = tmp_path / "concretization"
     conc_cache_dir.mkdir()
-    new_conc_cache_loc = str(conc_cache_dir)
-    spack.config.set("config:concretization_cache:path", new_conc_cache_loc)
-    yield
+
+    # ensure we have an isolated concretization cache while using fixture
+    with spack.config.override(
+        "concretizer:concretization_cache", {"enable": True, "url": str(conc_cache_dir)}
+    ):
+        yield conc_cache_dir
 
 
 #
@@ -2237,7 +2238,7 @@ def _true(x):
 
 
 def _libc_from_python(self):
-    return spack.spec.Spec("glibc@=2.28")
+    return spack.spec.Spec("glibc@=2.28", external_path="/some/path")
 
 
 @pytest.fixture()

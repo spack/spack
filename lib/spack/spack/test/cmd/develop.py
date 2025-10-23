@@ -125,9 +125,90 @@ class TestDevelop:
             self.check_develop(e, spack.spec.Spec("mpich@=2.0"))
             assert len(e.dev_specs) == 1
 
+    def test_develop_applies_changes(self, monkeypatch):
+        env("create", "test")
+        with ev.read("test") as e:
+            e.add("mpich@1.0")
+            e.concretize()
+            e.write()
+
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
+            develop("mpich@1.0")
+
+            # Check modifications actually worked
+            spec = next(e.roots())
+            assert spec.satisfies("dev_path=*")
+
+    def test_develop_applies_changes_parents(self, monkeypatch):
+        env("create", "test")
+        with ev.read("test") as e:
+            e.add("hdf5^mpich@1.0")
+            e.concretize()
+            e.write()
+
+            orig_hash = next(e.roots()).dag_hash()
+
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
+            develop("mpich@1.0")
+
+            # Check modifications actually worked
+            new_hdf5 = next(e.roots())
+            assert new_hdf5.dag_hash() != orig_hash
+            assert new_hdf5["mpi"].satisfies("dev_path=*")
+
+    def test_develop_applies_changes_spec_conflict(self, monkeypatch):
+        env("create", "test")
+        with ev.read("test") as e:
+            e.add("mpich@1.0")
+            e.concretize()
+            e.write()
+
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
+            with pytest.raises(ev.SpackEnvironmentDevelopError, match="conflicts with concrete"):
+                develop("mpich@1.1")
+
+    def test_develop_applies_changes_path(self, monkeypatch):
+        env("create", "test")
+        with ev.read("test") as e:
+            e.add("mpich@1.0")
+            e.concretize()
+            e.write()
+
+            # canonicalize paths relative to env
+            testpath1 = spack.util.path.canonicalize_path("test/path1", e.path)
+            testpath2 = spack.util.path.canonicalize_path("test/path2", e.path)
+
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
+            # Testing that second call to develop successfully changes both config and specs
+            for path in (testpath1, testpath2):
+                develop("--path", path, "mpich@1.0")
+
+                # Check modifications actually worked
+                spec = next(e.roots())
+                assert spec.satisfies(f"dev_path={path}")
+                assert spack.config.get("develop:mpich:path") == path
+
+    def test_develop_no_modify(self, monkeypatch):
+        env("create", "test")
+        with ev.read("test") as e:
+            e.add("mpich@1.0")
+            e.concretize()
+            e.write()
+
+            monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
+            develop("--no-modify-concrete-specs", "mpich@1.0")
+
+            # Check modifications were not applied
+            spec = next(e.roots())
+            assert not spec.satisfies("dev_path=*")
+
     def test_develop_canonicalize_path(self, monkeypatch):
         env("create", "test")
         with ev.read("test") as e:
+            e.add("mpich@1.0")
+            e.concretize()
+            e.write()
+
             path = "../$user"
             abspath = spack.util.path.canonicalize_path(path, e.path)
 
@@ -140,12 +221,16 @@ class TestDevelop:
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
 
             # Check modifications actually worked
-            result = spack.concretize.concretize_one("mpich@1.0")
-            assert result.satisfies("dev_path=%s" % abspath)
+            spec = next(e.roots())
+            assert spec.satisfies("dev_path=%s" % abspath)
 
     def test_develop_canonicalize_path_no_args(self, monkeypatch):
         env("create", "test")
         with ev.read("test") as e:
+            e.add("mpich@1.0")
+            e.concretize()
+            e.write()
+
             path = "$user"
             abspath = spack.util.path.canonicalize_path(path, e.path)
 
@@ -169,8 +254,8 @@ class TestDevelop:
             self.check_develop(e, spack.spec.Spec("mpich@=1.0"), path)
 
             # Check modifications actually worked
-            result = spack.concretize.concretize_one("mpich@1.0")
-            assert result.satisfies("dev_path=%s" % abspath)
+            spec = next(e.roots())
+            assert spec.satisfies("dev_path=%s" % abspath)
 
 
 def _git_commit_list(git_repo_dir):
@@ -209,10 +294,13 @@ def test_develop_full_git_repo(
     # more than just one commit).
     env("create", "test")
     with ev.read("test") as e:
-        add("git-test-commit")
-        develop("git-test-commit@1.2")
-
+        add("git-test-commit@1.2")
         e.concretize()
+        e.write()
+
+        develop("git-test-commit@1.2")
+        e.write()
+
         spec = e.all_specs()[0]
         develop_dir = spec.variants["dev_path"].value
         commits = _git_commit_list(develop_dir)
@@ -225,6 +313,7 @@ def test_recursive(mutable_mock_env_path, install_mockery, mock_fetch):
     with ev.read("test") as e:
         add("indirect-mpich@1.0")
         e.concretize()
+        e.write()
         specs = e.all_specs()
 
         assert len(specs) > 1
@@ -233,6 +322,10 @@ def test_recursive(mutable_mock_env_path, install_mockery, mock_fetch):
         expected_dev_specs = ["mpich", "direct-mpich", "indirect-mpich"]
         for spec in expected_dev_specs:
             assert spec in e.dev_specs
+
+        spec = next(e.roots())
+        for dep in spec.traverse():
+            assert dep.satisfies("dev_path=*") == (dep.name in expected_dev_specs)
 
 
 def test_develop_fails_with_multiple_concrete_versions(
@@ -264,8 +357,9 @@ def test_concretize_dev_path_with_at_symbol_in_env(
 
     with ev.read("test_at_sym") as e:
         add(spec_like)
-        develop(f"--path={develop_dir}", spec_like)
         e.concretize()
+        e.write()
+        develop(f"--path={develop_dir}", spec_like)
         result = e.concrete_roots()
 
         assert len(result) == 1

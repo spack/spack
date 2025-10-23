@@ -13,6 +13,7 @@ import spack.binary_distribution
 import spack.cmd
 import spack.concretize
 import spack.config
+import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.platforms.test
 import spack.repo
@@ -1470,55 +1471,57 @@ def test_error_conditions(text, match_string):
     [
         # Specfile related errors
         pytest.param(
-            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+            "/bogus/path/libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
-        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
-        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
+        pytest.param(
+            "../../libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+        ),
+        pytest.param("./libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
         pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+            "libfoo ^../../libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
-            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
+            "libfoo ^./libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
             "/bogus/path/libdwarf.yamlfoobar",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
+            "c:\\bogus\\path\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
-        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
-        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
+        pytest.param("..\\..\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
+        pytest.param(".\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
         pytest.param(
             "libfoo ^c:\\bogus\\path\\libdwarf.yaml",
-            spack.spec.NoSuchSpecFileError,
+            spack.error.NoSuchSpecFileError,
             marks=SKIP_ON_UNIX,
         ),
         pytest.param(
-            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
+            "libfoo ^..\\..\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
-            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
+            "libfoo ^.\\libdwarf.yaml", spack.error.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
             "c:\\bogus\\path\\libdwarf.yamlfoobar",
-            spack.spec.SpecFilenameError,
+            spack.error.SpecFilenameError,
             marks=SKIP_ON_UNIX,
         ),
         pytest.param(
             "libdwarf^c:\\bogus\\path\\libelf.yamlfoobar ^c:\\path\\to\\bogus.yaml",
-            spack.spec.SpecFilenameError,
+            spack.error.SpecFilenameError,
             marks=SKIP_ON_UNIX,
         ),
     ],

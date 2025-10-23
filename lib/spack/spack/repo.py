@@ -10,7 +10,6 @@ import functools
 import importlib
 import importlib.machinery
 import importlib.util
-import inspect
 import itertools
 import os
 import re
@@ -22,6 +21,7 @@ import types
 import uuid
 import warnings
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -47,7 +47,6 @@ import spack.llnl.util.tty as tty
 import spack.patch
 import spack.paths
 import spack.provider_index
-import spack.spec
 import spack.tag
 import spack.util.executable
 import spack.util.file_cache
@@ -58,6 +57,10 @@ import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.llnl.util.filesystem import working_dir
+
+if TYPE_CHECKING:
+    import spack.package_base
+    import spack.spec
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
@@ -309,28 +312,13 @@ def autospec(function):
 
     @functools.wraps(function)
     def converter(self, spec_like, *args, **kwargs):
-        if not isinstance(spec_like, spack.spec.Spec):
-            spec_like = spack.spec.Spec(spec_like)
+        from spack.spec import Spec
+
+        if not isinstance(spec_like, Spec):
+            spec_like = Spec(spec_like)
         return function(self, spec_like, *args, **kwargs)
 
     return converter
-
-
-def is_package_file(filename):
-    """Determine whether we are in a package file from a repo."""
-    # Package files are named `package.py` and are not in lib/spack/spack
-    # We have to remove the file extension because it can be .py and can be
-    # .pyc depending on context, and can differ between the files
-    import spack.package_base  # break cycle
-
-    filename_noext = os.path.splitext(filename)[0]
-    packagebase_filename_noext = os.path.splitext(inspect.getfile(spack.package_base.PackageBase))[
-        0
-    ]
-    return (
-        filename_noext != packagebase_filename_noext
-        and os.path.basename(filename_noext) == "package"
-    )
 
 
 class SpackNamespace(types.ModuleType):
@@ -491,14 +479,14 @@ class Indexer(metaclass=abc.ABCMeta):
 class TagIndexer(Indexer):
     """Lifecycle methods for a TagIndex on a Repo."""
 
-    def _create(self):
-        return spack.tag.TagIndex(self.repository)
+    def _create(self) -> spack.tag.TagIndex:
+        return spack.tag.TagIndex()
 
     def read(self, stream):
-        self.index = spack.tag.TagIndex.from_json(stream, self.repository)
+        self.index = spack.tag.TagIndex.from_json(stream)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname.split(".")[-1])
+        self.index.update_package(pkg_fullname.split(".")[-1], self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -507,7 +495,7 @@ class TagIndexer(Indexer):
 class ProviderIndexer(Indexer):
     """Lifecycle methods for virtual package providers."""
 
-    def _create(self):
+    def _create(self) -> "spack.provider_index.ProviderIndex":
         return spack.provider_index.ProviderIndex(repository=self.repository)
 
     def read(self, stream):
@@ -530,7 +518,7 @@ class ProviderIndexer(Indexer):
 class PatchIndexer(Indexer):
     """Lifecycle methods for patch cache."""
 
-    def _create(self):
+    def _create(self) -> spack.patch.PatchCache:
         return spack.patch.PatchCache(repository=self.repository)
 
     def needs_update(self):
@@ -614,9 +602,9 @@ class RepoIndex:
         """Determine which packages need an update, and update indexes."""
 
         # Filename of the provider index cache (we assume they're all json)
-        cache_filename = (
-            f"{name}/{self.namespace}-specfile_v{spack.spec.SPECFILE_FORMAT_VERSION}-index.json"
-        )
+        from spack.spec import SPECFILE_FORMAT_VERSION
+
+        cache_filename = f"{name}/{self.namespace}-specfile_v{SPECFILE_FORMAT_VERSION}-index.json"
 
         # Compute which packages needs to be updated in the cache
         index_mtime = self.cache.mtime(cache_filename)
@@ -801,7 +789,7 @@ class RepoPath:
     def tag_index(self) -> spack.tag.TagIndex:
         """Merged TagIndex from all Repos in the RepoPath."""
         if self._tag_index is None:
-            self._tag_index = spack.tag.TagIndex(repository=self)
+            self._tag_index = spack.tag.TagIndex()
             for repo in reversed(self.repos):
                 self._tag_index.merge(repo.tag_index)
         return self._tag_index
@@ -810,7 +798,9 @@ class RepoPath:
     def patch_index(self) -> spack.patch.PatchCache:
         """Merged PatchIndex from all Repos in the RepoPath."""
         if self._patch_index is None:
-            self._patch_index = spack.patch.PatchCache(repository=self)
+            from spack.patch import PatchCache
+
+            self._patch_index = PatchCache(repository=self)
             for repo in reversed(self.repos):
                 self._patch_index.update(repo.patch_index)
         return self._patch_index
@@ -830,10 +820,12 @@ class RepoPath:
     def extensions_for(
         self, extendee_spec: "spack.spec.Spec"
     ) -> List["spack.package_base.PackageBase"]:
+        from spack.spec import Spec
+
         return [
-            pkg_cls(spack.spec.Spec(pkg_cls.name))
+            pkg_cls(Spec(pkg_cls.name))
             for pkg_cls in self.all_package_classes()
-            if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)
+            if pkg_cls(Spec(pkg_cls.name)).extends(extendee_spec)
         ]
 
     def last_mtime(self):
@@ -844,7 +836,9 @@ class RepoPath:
         """Given a spec, get the repository for its package."""
         # We don't @_autospec this function b/c it's called very frequently
         # and we want to avoid parsing str's into Specs unnecessarily.
-        if isinstance(spec, spack.spec.Spec):
+        from spack.spec import Spec
+
+        if isinstance(spec, Spec):
             namespace = spec.namespace
             name = spec.name
         else:
@@ -873,8 +867,10 @@ class RepoPath:
 
     def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
         """Returns the package associated with the supplied spec."""
+        from spack.spec import Spec
+
         msg = "RepoPath.get can only be called on concrete specs"
-        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
+        assert isinstance(spec, Spec) and spec.concrete, msg
         return self.repo_for_pkg(spec).get(spec)
 
     def python_paths(self) -> List[str]:
@@ -1200,13 +1196,15 @@ class Repo:
 
     def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
         """Returns the package associated with the supplied spec."""
+        from spack.spec import Spec
+
         msg = "Repo.get can only be called on concrete specs"
-        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
+        assert isinstance(spec, Spec) and spec.concrete, msg
         # NOTE: we only check whether the package is None here, not whether it
         # actually exists, because we have to load it anyway, and that ends up
         # checking for existence. We avoid constructing FastPackageChecker,
         # which will stat all packages.
-        if spec.name is None:
+        if not spec.name:
             raise UnknownPackageError(None, self)
 
         if spec.namespace and spec.namespace != self.namespace:
@@ -1291,7 +1289,9 @@ class Repo:
     def extensions_for(
         self, extendee_spec: "spack.spec.Spec"
     ) -> List["spack.package_base.PackageBase"]:
-        result = [pkg_cls(spack.spec.Spec(pkg_cls.name)) for pkg_cls in self.all_package_classes()]
+        from spack.spec import Spec
+
+        result = [pkg_cls(Spec(pkg_cls.name)) for pkg_cls in self.all_package_classes()]
         return [x for x in result if x.extends(extendee_spec)]
 
     def dirname_for_package_name(self, pkg_name: str) -> str:
@@ -1338,7 +1338,8 @@ class Repo:
 
     def packages_with_tags(self, *tags: str) -> Set[str]:
         v = set(self.all_package_names())
-        v.intersection_update(*(self.tag_index[tag.lower()] for tag in tags))
+        for tag in tags:
+            v.intersection_update(self.tag_index.get_packages(tag.lower()))
         return v
 
     def all_package_classes(self) -> Generator[Type["spack.package_base.PackageBase"], None, None]:

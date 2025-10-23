@@ -54,7 +54,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ["macos-13", "macos-14", "ubuntu-latest"]
+        runner: ["macos-15-intel", "macos-latest", "ubuntu-latest"]
     steps:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}
@@ -80,7 +80,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ["macos-13", "macos-14", "ubuntu-latest"]
+        runner: ["macos-15-intel", "macos-latest", "ubuntu-latest"]
     steps:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}
@@ -108,7 +108,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ["macos-13", "macos-14", "ubuntu-latest"]
+        runner: ["macos-15-intel", "macos-latest", "ubuntu-latest"]
     steps:
       - name: Setup macOS
         if: ${{ matrix.runner != 'ubuntu-latest' }}

@@ -1,0 +1,48 @@
+# Gitlab configuraiton for spack/spack
+
+stages:
+  - packages
+
+variables:
+  SPACK_PACKAGES_CHECKOUT_VERSION: refs/pull/342/head
+
+.clone_packages: &clone_packages
+  - mkdir -p ${REPO_DESTINATION}
+  - cd ${REPO_DESTINATION}
+  - git init
+  - git remote add origin https://github.com/spack/spack-packages.git
+  - git fetch --depth 1 origin ${SPACK_PACKAGES_CHECKOUT_VERSION}
+  - git checkout FETCH_HEAD
+  - cd -
+
+dotenv:
+  stage: .pre
+  image: ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18
+  tags: [ spack, service ]
+  script:
+    - export REPO_DESTINATION=etc/spack-packages
+    - *clone_packages
+    - repo_commit=$(git -C ${REPO_DESTINATION} rev-parse FETCH_HEAD)
+    # When running CI from spack/spack all packages are untouched
+    # so skip pruning untouched. Deferred pipelines _should_ handle
+    # most of the cases where this type of pruning would need to be
+    # applied.
+    - echo "SPACK_CHECKOUT_VERSION=${repo_commit}" >> ${CI_PROJECT_DIR}/env
+    - echo "SPACK_CHECKOUT_REPO=spack/spack-packages" >> ${CI_PROJECT_DIR}/env
+    - cat ${CI_PROJECT_DIR}/env
+    - python3 ${CI_PROJECT_DIR}/.ci/gitlab/forward_dotenv_variables.py
+        ${CI_PROJECT_DIR}/env
+        ${REPO_DESTINATION}/.ci/gitlab/.gitlab-ci.yml
+
+  artifacts:
+    paths:
+      - etc/spack-packages/.ci/gitlab/.gitlab-ci.yml
+
+spack-packages:
+  stage: packages
+  trigger:
+    strategy: depend
+    include:
+      - artifact: etc/spack-packages/.ci/gitlab/.gitlab-ci.yml
+        job: dotenv
+

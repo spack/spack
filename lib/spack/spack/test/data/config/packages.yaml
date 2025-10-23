@@ -60,19 +60,19 @@ packages:
   # Compilers
   gcc:
     externals:
-      - spec: "gcc@9.4.0 languages='c,c++' os={linux_os.name}{linux_os.version} target={target}"
+      - spec: "gcc@9.4.0 languages='c,c++' os={linux_os.name}{linux_os.version}"
         prefix: /path
         extra_attributes:
           compilers:
             c: /path/bin/gcc
             cxx: /path/bin/g++
-      - spec: "gcc@9.4.0 languages='c,c++' os=redhat6 target={target}"
+      - spec: "gcc@9.4.1 languages='c,c++' os=redhat6"
         prefix: /path
         extra_attributes:
           compilers:
             c: /path/bin/gcc
             cxx: /path/bin/g++
-      - spec: "gcc@10.2.1 languages='c,c++,fortran' os={linux_os.name}{linux_os.version} target={target}"
+      - spec: "gcc@10.2.1 languages='c,c++,fortran' os={linux_os.name}{linux_os.version}"
         prefix: /path
         extra_attributes:
           compilers:
@@ -81,7 +81,7 @@ packages:
             fortran: /path/bin/gfortran-10
   llvm:
     externals:
-      - spec: "llvm@15.0.0 +clang~flang os={linux_os.name}{linux_os.version} target={target}"
+      - spec: "llvm@15.0.0 +clang~flang os={linux_os.name}{linux_os.version}"
         prefix: /path
         extra_attributes:
           compilers:

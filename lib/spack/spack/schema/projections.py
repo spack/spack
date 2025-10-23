@@ -11,7 +11,12 @@ from typing import Any, Dict
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {
-    "projections": {"type": "object", "patternProperties": {r"all|\w[\w-]*": {"type": "string"}}}
+    "projections": {
+        "type": "object",
+        "properties": {"all": {"type": "string"}},
+        "additionalKeysAreSpecs": True,
+        "additionalProperties": {"type": "string"},
+    }
 }
 
 

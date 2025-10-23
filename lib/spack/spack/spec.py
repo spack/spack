@@ -93,7 +93,6 @@ import spack.platforms
 import spack.provider_index
 import spack.repo
 import spack.spec_parser
-import spack.store
 import spack.traverse
 import spack.util.hash
 import spack.util.prefix
@@ -230,6 +229,8 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
 @lang.lazy_lexicographic_ordering
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
+
+    ANY_TARGET = _make_microarchitecture("*")
 
     @staticmethod
     def default_arch():
@@ -404,6 +405,11 @@ class ArchSpec:
         for attribute in ("platform", "os"):
             other_attribute = getattr(other, attribute)
             self_attribute = getattr(self, attribute)
+
+            # platform=* or os=*
+            if self_attribute and other_attribute == "*":
+                return True
+
             if other_attribute and self_attribute != other_attribute:
                 return False
 
@@ -442,6 +448,10 @@ class ArchSpec:
         # other_target is there and strict=True
         if self.target is None:
             return False
+
+        # self.target is not None, and other is target=*
+        if other.target == ArchSpec.ANY_TARGET:
+            return True
 
         return bool(self._target_intersection(other))
 
@@ -784,12 +794,18 @@ class DependencySpec:
         yield self.when
 
     def __str__(self) -> str:
-        parent = self.parent.name if self.parent else None
-        child = self.spec.name if self.spec else None
-        virtuals_string = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
-        when_string = f"when='{self.when}'" if self.when != Spec() else ""
-        edge_attrs = filter(lambda x: bool(x), (virtuals_string, when_string))
-        return f"{parent} {self.depflag}[{' '.join(edge_attrs)}] --> {child}"
+        return self.format()
+
+    def __repr__(self) -> str:
+        keywords = [f"depflag={self.depflag}", f"virtuals={self.virtuals}"]
+        if self.direct:
+            keywords.append(f"direct={self.direct}")
+
+        if self.when != Spec():
+            keywords.append(f"when={self.when}")
+
+        keywords_str = ", ".join(keywords)
+        return f"DependencySpec({self.parent.format()!r}, {self.spec.format()!r}, {keywords_str})"
 
     def format(self, *, unconditional: bool = False) -> str:
         """Returns a string, using the spec syntax, representing this edge
@@ -798,8 +814,7 @@ class DependencySpec:
             unconditional: if True, removes any condition statement from the representation
         """
 
-        parent = self.parent.name if self.parent.name else ""
-        child = self.spec if self.spec else ""
+        parent_str, child_str = self.parent.format(), self.spec.format()
         virtuals_str = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
 
         when_str = ""
@@ -807,14 +822,14 @@ class DependencySpec:
             when_str = f"when='{self.when}'"
 
         dep_sigil = "%" if self.direct else "^"
-        edge_attrs = filter(lambda x: bool(x), (virtuals_str, when_str))
+        edge_attrs = [x for x in (virtuals_str, when_str) if x]
 
         if edge_attrs:
-            return f"{parent} {dep_sigil}[{' '.join(edge_attrs)}] {child}"
-        return f"{parent} {dep_sigil}{child}"
+            return f"{parent_str} {dep_sigil}[{' '.join(edge_attrs)}] {child_str}"
+        return f"{parent_str} {dep_sigil}{child_str}"
 
     def flip(self) -> "DependencySpec":
-        """Flip the dependency, and drop virtual and conditional information"""
+        """Flips the dependency and keeps its type. Drops all othe information."""
         return DependencySpec(
             parent=self.spec, spec=self.parent, depflag=self.depflag, virtuals=()
         )
@@ -836,6 +851,10 @@ class CompilerFlag(str):
             ``depends_on(... cflags=-g)``, then the ``source``
             for "-g" would indicate ``depends_on``.
     """
+
+    propagate: bool
+    flag_group: str
+    source: str
 
     def __new__(cls, value, **kwargs):
         obj = str.__new__(cls, value)
@@ -1451,7 +1470,7 @@ class SpecAnnotations:
         return result
 
 
-def _anonymous_star(dep, dep_format):
+def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
     """Determine if a spec needs a star to disambiguate it from an anonymous spec w/variants.
 
     Returns:
@@ -1476,7 +1495,7 @@ def _anonymous_star(dep, dep_format):
     # booleans come first, and they don't need a star. key-value pairs do. If there are
     # no key value pairs, we're left with either an empty spec, which needs * as in
     # '^*', or we're left with arch, which is a key value pair, and needs a star.
-    if not any(v.type == spack.variant.VariantType.BOOL for v in dep.spec.variants.values()):
+    if not any(v.type == vt.VariantType.BOOL for v in dep.spec.variants.values()):
         return "*"
 
     return "*" if dep.spec.architecture else ""
@@ -1511,7 +1530,7 @@ class Spec:
             return
 
         # init an empty spec that matches anything.
-        self.name = None
+        self.name: str = ""
         self.versions = vn.VersionList(":")
         self.variants = VariantMap(self)
         self.architecture = None
@@ -1543,7 +1562,7 @@ class Spec:
         self.external_modules = Spec._format_module_list(external_modules)
 
         # This attribute is used to store custom information for external specs.
-        self.extra_attributes: dict = {}
+        self.extra_attributes: Dict[str, Any] = {}
 
         # This attribute holds the original build copy of the spec if it is
         # deployed differently than it was built. None signals that the spec
@@ -1882,7 +1901,7 @@ class Spec:
 
         Args:
             dependency_spec: spec of the dependency
-            deptypes: dependency types for this edge
+            depflag: dependency type for this edge
             virtuals: virtuals provided by this edge
             direct: if True denotes a direct dependency
             when: if non-None, condition under which dependency holds
@@ -2005,7 +2024,9 @@ class Spec:
         try:
             # If the spec is in the DB, check the installed
             # attribute of the record
-            return spack.store.STORE.db.get_record(self).installed
+            from spack.store import STORE
+
+            return STORE.db.get_record(self).installed
         except KeyError:
             # If the spec is not in the DB, the method
             #  above raises a Key error
@@ -2021,7 +2042,9 @@ class Spec:
         if not self.concrete:
             return False
 
-        upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
+        from spack.store import STORE
+
+        upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
         return upstream and record and record.installed
 
     @overload
@@ -2136,11 +2159,13 @@ class Spec:
             raise spack.error.SpecError(f"Spec is not concrete: {self}")
 
         if self._prefix is None:
-            _, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
+            from spack.store import STORE
+
+            _, record = STORE.db.query_by_spec_hash(self.dag_hash())
             if record and record.path:
                 self.set_prefix(record.path)
             else:
-                self.set_prefix(spack.store.STORE.layout.path_for_spec(self))
+                self.set_prefix(STORE.layout.path_for_spec(self))
         assert self._prefix is not None
         return self._prefix
 
@@ -2168,7 +2193,9 @@ class Spec:
             return out[:-7] + self.build_spec.spec_hash(hash)[-7:]
         return out
 
-    def _cached_hash(self, hash, length=None, force=False):
+    def _cached_hash(
+        self, hash: ht.SpecHashDescriptor, length: Optional[int] = None, force: bool = False
+    ) -> str:
         """Helper function for storing a cached hash on the spec.
 
         This will run spec_hash() with the deptype and package_hash
@@ -2176,22 +2203,19 @@ class Spec:
         in the supplied attribute on this spec.
 
         Arguments:
-            hash (spack.hash_types.SpecHashDescriptor): type of hash to generate.
-            length (int): length of hash prefix to return (default is full hash string)
-            force (bool): cache the hash even if spec is not concrete (default False)
+            hash: type of hash to generate.
+            length: length of hash prefix to return (default is full hash string)
+            force: cache the hash even if spec is not concrete (default False)
         """
-        if not hash.attr:
-            return self.spec_hash(hash)[:length]
-
         hash_string = getattr(self, hash.attr, None)
         if hash_string:
             return hash_string[:length]
-        else:
-            hash_string = self.spec_hash(hash)
-            if force or self.concrete:
-                setattr(self, hash.attr, hash_string)
 
-            return hash_string[:length]
+        hash_string = self.spec_hash(hash)
+        if force or self.concrete:
+            setattr(self, hash.attr, hash_string)
+
+        return hash_string[:length]
 
     def package_hash(self):
         """Compute the hash of the contents of the package for this node"""
@@ -2220,16 +2244,17 @@ class Spec:
     def _lookup_hash(self):
         """Lookup just one spec with an abstract hash, returning a spec from the the environment,
         store, or finally, binary caches."""
-        import spack.binary_distribution
-        import spack.environment
+        from spack.binary_distribution import BinaryCacheQuery
+        from spack.environment import active_environment
+        from spack.store import STORE
 
-        active_env = spack.environment.active_environment()
+        active_env = active_environment()
 
         # First env, then store, then binary cache
         matches = (
             (active_env.all_matching_specs(self) if active_env else [])
-            or spack.store.STORE.db.query(self, installed=InstallRecordStatus.ANY)
-            or spack.binary_distribution.BinaryCacheQuery(True)(self)
+            or STORE.db.query(self, installed=InstallRecordStatus.ANY)
+            or BinaryCacheQuery(True)(self)
         )
 
         if not matches:
@@ -2283,9 +2308,7 @@ class Spec:
 
         self._dup(self.lookup_hash())
 
-    def to_node_dict(
-        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
-    ) -> Dict[str, Any]:
+    def to_node_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
 
         This method creates the content that is eventually hashed by Spack to create identifiers
@@ -2442,9 +2465,7 @@ class Spec:
 
         return d
 
-    def to_dict(
-        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
-    ) -> Dict[str, Any]:
+    def to_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary suitable for writing this spec to YAML or JSON.
 
         This dictionary is like the one that is ultimately written to a ``spec.json`` file in each
@@ -2524,9 +2545,7 @@ class Spec:
 
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
-    def node_dict_with_hashes(
-        self, hash: ht.SpecHashDescriptor = ht.dag_hash  # type: ignore[has-type]
-    ) -> Dict[str, Any]:
+    def node_dict_with_hashes(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Returns a node dict of this spec with the dag hash, and the provided hash (if not
         the dag hash)."""
         node = self.to_node_dict(hash)
@@ -2841,9 +2860,11 @@ class Spec:
             spack.spec.SpecDeprecatedError: if any deprecated spec is found
         """
         deprecated = []
-        with spack.store.STORE.db.read_transaction():
+        from spack.store import STORE
+
+        with STORE.db.read_transaction():
             for x in root.traverse():
-                _, rec = spack.store.STORE.db.query_by_spec_hash(x.dag_hash())
+                _, rec = STORE.db.query_by_spec_hash(x.dag_hash())
                 if rec and rec.deprecated_for:
                     deprecated.append(rec)
         if deprecated:
@@ -2861,6 +2882,8 @@ class Spec:
             return
         self._concrete = value
         self._validate_version()
+        for variant in self.variants.values():
+            variant.concrete = True
 
     def _validate_version(self):
         # Specs that were concretized with just a git sha as version, without associated
@@ -3412,19 +3435,15 @@ class Spec:
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
-            # The condition cannot be applied in any case, skip the edge
-            test_root = rhs_edge.parent.name in (None, self.name)
-            if test_root and not self._intersects(
+            # Check satisfaction of the dependency only if its when condition can apply
+            if not rhs_edge.parent.name or rhs_edge.parent.name == self.name:
+                test_spec = self
+            elif rhs_edge.parent.name in self:
+                test_spec = self[rhs_edge.parent.name]
+            else:
+                test_spec = None
+            if test_spec and not test_spec._intersects(
                 rhs_edge.when, resolve_virtuals=resolve_virtuals
-            ):
-                continue
-
-            if (
-                not test_root
-                and rhs_edge.parent.name in self
-                and not self[rhs_edge.parent.name]._intersects(
-                    rhs_edge.when, resolve_virtuals=resolve_virtuals
-                )
             ):
                 continue
 
@@ -3444,14 +3463,17 @@ class Spec:
                 #
                 # The same assumptions hold on Spec.constrain, and Spec.intersect
                 current_node = self
-                if rhs_edge.parent.name is not None and rhs_edge.parent.name != rhs_edge.spec.name:
+                if rhs_edge.parent.name and rhs_edge.parent.name != rhs_edge.spec.name:
                     try:
                         current_node = self[rhs_edge.parent.name]
                     except KeyError:
                         return False
 
                 if current_node.original_spec_format() < 5 or (
-                    current_node.original_spec_format() >= 5 and current_node.external
+                    # If the current external node has dependencies, it has no annotations
+                    current_node.original_spec_format() >= 5
+                    and current_node.external
+                    and not current_node._dependencies
                 ):
                     compiler_spec = current_node.annotations.compiler_node_attribute
                     if compiler_spec is None:
@@ -3514,10 +3536,10 @@ class Spec:
 
             # We don't have edges to this dependency
             current_dependency_name = rhs_edge.spec.name
-            if current_dependency_name is not None and current_dependency_name not in lhs_edges:
+            if current_dependency_name and current_dependency_name not in lhs_edges:
                 return False
 
-            if current_dependency_name is None:
+            if not current_dependency_name:
                 # Here we have an anonymous spec e.g. ^ dev_path=*
                 candidate_edges = list(itertools.chain(*lhs_edges.values()))
 
@@ -3996,7 +4018,9 @@ class Spec:
     @property
     def spack_install(self):
         """Special field for using ``{spack_install}`` in :meth:`format`."""
-        return spack.store.STORE.layout.root
+        from spack.store import STORE
+
+        return STORE.layout.root
 
     def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out attributes of a spec according to a format string.
@@ -4420,7 +4444,9 @@ class Spec:
         if self.external:
             return InstallStatus.external
 
-        upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
+        from spack.store import STORE
+
+        upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
         if not record:
             return InstallStatus.absent
         elif upstream and record.installed:
@@ -4435,7 +4461,9 @@ class Spec:
         if not self.concrete:
             return None
         try:
-            record = spack.store.STORE.db.get_record(self)
+            from spack.store import STORE
+
+            record = STORE.db.get_record(self)
             return record.explicit
         except KeyError:
             return None
@@ -5115,7 +5143,8 @@ class SpecfileReaderBase:
         for h in ht.HASHES:
             setattr(spec, h.attr, node.get(h.name, None))
 
-        spec.name = name
+        # old anonymous spec files had name=None, we use name="" now
+        spec.name = name if isinstance(name, str) else ""
         spec.namespace = node.get("namespace", None)
 
         if "version" in node or "versions" in node:
@@ -5590,14 +5619,6 @@ class InvalidHashError(spack.error.SpecError):
         msg = f"No spec with hash {hash} could be found to match {spec}."
         msg += " Either the hash does not exist, or it does not match other spec constraints."
         super().__init__(msg)
-
-
-class SpecFilenameError(spack.error.SpecError):
-    """Raised when a spec file name is invalid."""
-
-
-class NoSuchSpecFileError(SpecFilenameError):
-    """Raised when a spec file doesn't exist."""
 
 
 class SpecFormatStringError(spack.error.SpecError):

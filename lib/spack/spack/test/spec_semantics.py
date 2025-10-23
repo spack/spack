@@ -2355,3 +2355,83 @@ def test_constrain_symbolically(constraints, expected):
     for c in reversed(constraints):
         reverse_order._constrain_symbolically(c)
     assert reverse_order == Spec(expected)
+
+
+@pytest.mark.parametrize(
+    "parent_str,child_str,kwargs,expected_str,expected_repr",
+    [
+        (
+            "mpileaks",
+            "callpath",
+            {"virtuals": ()},
+            "mpileaks ^callpath",
+            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=())",
+        ),
+        (
+            "mpileaks",
+            "callpath",
+            {"virtuals": ("mpi", "lapack")},
+            "mpileaks ^[virtuals=lapack,mpi] callpath",
+            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=('lapack', 'mpi'))",
+        ),
+        (
+            "",
+            "callpath",
+            {"virtuals": ("mpi", "lapack"), "direct": True},
+            " %[virtuals=lapack,mpi] callpath",
+            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True)",
+        ),
+    ],
+)
+def test_edge_representation(parent_str, child_str, kwargs, expected_str, expected_repr):
+    """Tests the string representations of edges."""
+    parent = Spec(parent_str) or Spec()
+    child = Spec(child_str) or Spec()
+    edge = DependencySpec(parent, child, depflag=0, **kwargs)
+    assert str(edge) == expected_str
+    assert repr(edge) == expected_repr
+
+
+@pytest.mark.parametrize(
+    "spec_str,assertions",
+    [
+        # Check <key>=* semantics for a "regular" variant
+        ("mpileaks foo=abc", [("foo=*", True), ("bar=*", False)]),
+        # Check the semantics for architecture related key value pairs
+        (
+            "mpileaks",
+            [
+                ("target=*", False),
+                ("os=*", False),
+                ("platform=*", False),
+                ("target=* platform=*", False),
+            ],
+        ),
+        (
+            "mpileaks target=x86_64",
+            [
+                ("target=*", True),
+                ("os=*", False),
+                ("platform=*", False),
+                ("target=* platform=*", False),
+            ],
+        ),
+        ("mpileaks os=debian6", [("target=*", False), ("os=*", True), ("platform=*", False)]),
+        ("mpileaks platform=linux", [("target=*", False), ("os=*", False), ("platform=*", True)]),
+        ("mpileaks platform=linux", [("target=*", False), ("os=*", False), ("platform=*", True)]),
+        (
+            "mpileaks platform=linux target=x86_64",
+            [
+                ("target=*", True),
+                ("os=*", False),
+                ("platform=*", True),
+                ("target=* platform=*", True),
+            ],
+        ),
+    ],
+)
+def test_attribute_existence_in_satisfies(spec_str, assertions, mock_packages, config):
+    """Tests the semantics of <key>=* when used in Spec.satisfies"""
+    s = Spec(spec_str)
+    for test, expected in assertions:
+        assert s.satisfies(test) is expected
