@@ -58,7 +58,7 @@ def header_list():
 plat_static_ext = "lib" if sys.platform == "win32" else "a"
 
 
-plat_shared_ext = "dll" if sys.platform == "win32" else "so"
+plat_shared_ext = "lib" if sys.platform == "win32" else "so"
 
 
 plat_apple_shared_ext = "dylib"
