@@ -19,6 +19,7 @@ level = "long"
 
 IS_WINDOWS = sys.platform == "win32"
 
+
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-V",
