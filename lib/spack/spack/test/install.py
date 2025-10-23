@@ -97,7 +97,7 @@ def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):
 
     lib_suffix = ".so"
     if sys.platform == "win32":
-        lib_suffix = ".dll"
+        lib_suffix = ".lib"
     elif sys.platform == "darwin":
         lib_suffix = ".dylib"
 
