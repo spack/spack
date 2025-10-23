@@ -2043,6 +2043,8 @@ def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
 
 def extract_buildcache_tarball(tarfile_path: str, destination: str) -> None:
     with closing(tarfile.open(tarfile_path, "r")) as tar:
+        # Needed so that Python 3.14 and above don't error with AbsoluteLinkError
+        tar.extraction_filter = lambda member, path: member
         # Remove common prefix from tarball entries and directly extract them to the install dir.
         tar.extractall(
             path=destination, members=_tar_strip_component(tar, prefix=_ensure_common_prefix(tar))
