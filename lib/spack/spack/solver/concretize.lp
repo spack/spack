@@ -1075,7 +1075,7 @@ possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback
 external(PackageNode) :- attr("external", PackageNode).
 
 % if a package is not buildable, only concrete specs are allowed
-error(100, "Cannot build {0}, since it is configured `buildable:false` and no externals satisfy the request", Package)
+error(1000, "Cannot build {0}, since it is configured `buildable:false` and no externals satisfy the request", Package)
   :- buildable_false(Package),
      attr("node", node(ID, Package)),
      build(node(ID, Package)).
