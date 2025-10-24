@@ -667,7 +667,7 @@ def _ensure_docstring_and_no_fixme(pkgs, error_cls):
 
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         if not pkg_cls.__doc__:
-            error_msg = "Package '{}' miss a docstring"
+            error_msg = "Package '{}' is missing a docstring"
             errors.append(error_cls(error_msg.format(pkg_name), []))
 
     return errors
