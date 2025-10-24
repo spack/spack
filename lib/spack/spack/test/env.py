@@ -1390,3 +1390,122 @@ def test_dependency_propagation_in_environments(spack_yaml, tmp_path, mutable_co
 
     assert mpileaks_gcc["callpath"].satisfies("%c=gcc")
     assert mpileaks_llvm["callpath"].satisfies("%c=gcc")
+
+
+@pytest.mark.parametrize(
+    "spack_yaml,exception_nodes",
+    [
+        # trilinos and its link/run subdag are compiled with clang, all other nodes use gcc
+        (
+            """
+spack:
+  specs:
+  - trilinos %%c,cxx=clang
+  packages:
+    c:
+      prefer:
+      - gcc
+    cxx:
+      prefer:
+      - gcc
+""",
+            set(),
+        ),
+        # callpath and its link/run subdag are compiled with clang, all other nodes use gcc
+        (
+            """
+spack:
+  specs:
+  - trilinos ^callpath %%c,cxx=clang
+  packages:
+    c:
+      prefer:
+      - gcc
+    cxx:
+      prefer:
+      - gcc
+""",
+            {"trilinos", "mpich", "py-numpy"},
+        ),
+        # trilinos and its link/run subdag, with the exception of mpich, are compiled with clang.
+        # All other nodes use gcc.
+        (
+            """
+spack:
+  specs:
+  - trilinos %%c,cxx=clang ^mpich %c=gcc
+  packages:
+    c:
+      prefer:
+      - gcc
+    cxx:
+      prefer:
+      - gcc
+""",
+            {"mpich"},
+        ),
+        (
+            """
+spack:
+  specs:
+  - trilinos %%c,cxx=clang
+  packages:
+    c:
+      prefer:
+      - gcc
+    cxx:
+      prefer:
+      - gcc
+    mpich:
+      require:
+      - "%c=gcc"
+""",
+            {"mpich"},
+        ),
+    ],
+)
+def test_double_percent_semantics(spack_yaml, exception_nodes, tmp_path, mutable_config):
+    """Tests semantics of %% in environments, when combined with other features.
+
+    The test assumes clang is the propagated compiler, and gcc is the preferred compiler.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        trilinos = e.concrete_roots()[0]
+
+    runtime_nodes = [
+        x for x in trilinos.traverse(deptype=("link", "run")) if x.name not in exception_nodes
+    ]
+    remaining_nodes = [x for x in trilinos.traverse() if x not in runtime_nodes]
+
+    for x in runtime_nodes:
+        error_msg = f"\n{x.tree()} does not use clang while expected to"
+        assert x.satisfies("%[when=%c]c=clang %[when=%cxx]cxx=clang"), error_msg
+
+    for x in remaining_nodes:
+        error_msg = f"\n{x.tree()} does not use gcc while expected to"
+        assert x.satisfies("%[when=%c]c=gcc %[when=%cxx]cxx=gcc"), error_msg
+
+
+def test_cannot_use_double_percent_with_require(tmp_path, mutable_config):
+    """Tests that %% cannot be used with a requirement on languages, since they'll conflict."""
+    # trilinos wants to use clang, but we require gcc, so Spack will error
+    spack_yaml = """
+spack:
+  specs:
+  - trilinos %%c,cxx=clang
+  packages:
+    c:
+      require:
+      - gcc
+    cxx:
+      require:
+      - gcc
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="failed to concretize"):
+            e.concretize()

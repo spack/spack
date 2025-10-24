@@ -246,9 +246,9 @@ def dag_closure_by_deptype(spec: spack.spec.Spec, facts: List[AspFunction]) -> L
     # Compute the "link" transitive closure with `when: root ^[deptypes=link] <this_pkg>`
     if len(edges) == 1:
         edge = edges[0]
-        if not edge.direct and edge.depflag == dt.LINK:
+        if not edge.direct and edge.depflag == dt.LINK | dt.RUN:
             root, leaf = edge.parent.name, edge.spec.name
-            return [fn.attr("closure", root, leaf, "link")]
+            return [fn.attr("closure", root, leaf, "linkrun")]
     return facts
 
 
@@ -2143,7 +2143,8 @@ class SpackSolverSetup:
 
             pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
             requirement_weight = 0
-
+            # Propagated preferences have a higher penalty that normal preferences
+            weight_multiplier = 2 if rule.origin == RequirementOrigin.INPUT_SPECS else 1
             # Write explicitly if a requirement is conditional or not
             if rule.condition != spack.spec.Spec():
                 msg = f"activate requirement {requirement_grp_id} if {rule.condition} holds"
@@ -2217,7 +2218,9 @@ class SpackSolverSetup:
                     continue
 
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
-                self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+                self.gen.fact(
+                    fn.requirement_has_weight(member_id, requirement_weight * weight_multiplier)
+                )
                 self.gen.newline()
                 requirement_weight += 1
 

@@ -127,7 +127,7 @@ class RequirementParser:
             preference(
                 pkg.name,
                 constraint=s,
-                condition=spack.spec.Spec(f"{root_name} ^[deptypes=link]{pkg.name}"),
+                condition=spack.spec.Spec(f"{root_name} ^[deptypes=link,run]{pkg.name}"),
                 origin=RequirementOrigin.INPUT_SPECS,
             )
             for s, root_name in self.preferences_from_input

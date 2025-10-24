@@ -129,20 +129,33 @@ unification_set(SetID, VirtualNode)
 % to another node by "link" edges, or the nodes connected to another node by "link and
 % "run" edges.
 
-compute_closure(node(ID, Package), "link")  :-
-  condition_requirement(_, "closure", Package, _, "link"),
+compute_closure(node(ID, Package), "linkrun")  :-
+  condition_requirement(_, "closure", Package, _, "linkrun"),
   attr("node", node(ID, Package)).
 
-attr("closure", PackageNode, DependencyNode, "link") :-
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
   attr("depends_on", PackageNode, DependencyNode, "link"),
-  compute_closure(PackageNode, "link").
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  compute_closure(PackageNode, "linkrun").
 
-attr("closure", PackageNode, DependencyNode, "link") :-
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", PackageNode, DependencyNode, "run"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  compute_closure(PackageNode, "linkrun").
+
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
   attr("depends_on", ParentNode, DependencyNode, "link"),
-  attr("closure", PackageNode, ParentNode, "link"),
-  compute_closure(PackageNode, "link").
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  attr("closure", PackageNode, ParentNode, "linkrun"),
+  compute_closure(PackageNode, "linkrun").
 
-related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "link").
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", ParentNode, DependencyNode, "run"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  attr("closure", PackageNode, ParentNode, "linkrun"),
+  compute_closure(PackageNode, "linkrun").
+
+related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "linkrun").
 
 % Do not allow split dependencies, for now. This ensures that we don't construct graphs where e.g.
 % a python extension depends on setuptools@63.4 as a run dependency, but uses e.g. setuptools@68
