@@ -195,7 +195,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-15-intel, macos-latest]
-        python-version: ["3.11"]
+        python-version: ["3.13"]
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:
@@ -220,7 +220,7 @@ jobs:
         . share/spack/setup-env.sh
         $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib
-        common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
+        common_args=(--dist loadfile --tx '3*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
         $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
     - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
       with:
