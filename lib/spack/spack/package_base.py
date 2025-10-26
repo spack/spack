@@ -1054,10 +1054,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         except spack.error.FetchError:
             pass
         if pkg_instance.stage.archive_file:
-            sha = spack.util.archive.retrieve_commit_from_archive(
-                pkg_instance.stage.archive_file, ref
-            )
-
+            file_name = pathlib.Path(pkg_instance.stage.archive_file).file
+            sha = file_name.split(".")[0].split("_")[0]
+            # TODO(psakiev) this can be done as a stage check
+            # sha = spack.util.archive.retrieve_commit_from_archive(
+            #     pkg_instance.stage.archive_file, ref
+            # )
         if not sha:
             url = cls.version_or_package_attr("git", spec.version)
             sha = spack.util.git.get_commit_sha(url, ref)
