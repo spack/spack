@@ -270,11 +270,11 @@ def config_list(args):
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
 
 
-def _config_scope_info(args, scope, active):
+def _config_scope_info(args, scope, active, included):
     result = [scope.name]  # always print the name
 
     if args.scopes_verbose:
-        result.append(",".join(_config_basic_scope_types(scope)))
+        result.append(",".join(_config_basic_scope_types(scope, included)))
         result.append("active" if scope.name in active else "override")
 
     section_path = None
@@ -293,37 +293,36 @@ def _config_scope_info(args, scope, active):
     return result
 
 
-def _config_basic_scope_types(scope):
+def _config_basic_scope_types(scope, included):
     types = []
     if isinstance(scope, spack.config.InternalConfigScope):
         types.append("internal")
-    elif hasattr(scope, "yaml_path") and scope.yaml_path == [spack.schema.env.TOP_LEVEL_KEY]:
+    if hasattr(scope, "yaml_path") and scope.yaml_path == [spack.schema.env.TOP_LEVEL_KEY]:
         types.append("env")
     if hasattr(scope, "path"):
         types.append("path")
+    if scope.name in included:
+        types.append("include")
     return sorted(types)
 
 
 def config_scopes(args):
     """List configured scopes in descending order of precedence."""
 
-    included_scopes = list(
-        i.name for s in spack.config.scopes().reversed_values() for i in s.included_scopes
-    )
+    included = list(i.name for s in spack.config.scopes().values() for i in s.included_scopes)
     active = [s.name for s in spack.config.CONFIG.active_scopes]
-
-    scopes = list(
+    scopes = [
         s
         for s in spack.config.scopes().reversed_values()
         if (
             "include" in args.type
-            and s.name in included_scopes
-            or any(i in ("all", *_config_basic_scope_types(s)) for i in args.type)
+            and s.name in included
+            or any(i in ("all", *_config_basic_scope_types(s, included)) for i in args.type)
         )
-    )
+    ]
 
     if scopes:
-        colify_table([_config_scope_info(args, s, active) for s in scopes])
+        colify_table([_config_scope_info(args, s, active, included) for s in scopes])
 
 
 def config_add(args):

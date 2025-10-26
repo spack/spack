@@ -81,16 +81,11 @@ def test_config_scopes(path, types, mutable_mock_env_path):
         assert all(os.sep in x for x in paths)
 
 
-def test_config_scopes_include():
-    scopes_cmd = ["scopes", "-t", "include"]
-    output = config(*scopes_cmd).split()
-    assert not output or all(":" in x for x in output)
-
-
-def test_config_scopes_path_section():
-    output = config("scopes", "-t", "include", "-p", "modules")
-    assert "_builtin" not in output
-    assert "site" not in output
+@pytest.mark.parametrize("type", ["path", "include", "internal", "env"])
+def test_config_scopes_include(type):
+    scopes_cmd = ["scopes", "-vt", type]
+    output = config(*scopes_cmd).strip()
+    assert not output or all([type in line for line in output.split("\n")])
 
 
 def test_get_config_scope(mock_low_high_config):
