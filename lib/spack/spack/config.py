@@ -711,15 +711,21 @@ class Configuration:
         sufficient for include::[] in an env, which allows isolation.
         """
         # find last override in scopes
-        last_override = next((s for s in reversed(scopes) if s.override_include()), None)
-        if not last_override:
+        i = next((i for i, s in reversed(list(enumerate(scopes))) if s.override_include()), -1)
+        if i < 0:
             return scopes  # no overrides
 
-        keep = last_override.transitive_includes() | _set(
-            s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS)
-        )
+        keep = scopes[i].transitive_includes()
+        keep |= _set(s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS))
+        keep |= _set(s.name for s in scopes[i:])
+
         # return scopes to keep, with order preserved
         return [s for s in scopes if s.name in keep]
+
+    @property
+    def active_scopes(self) -> List[ConfigScope]:
+        """Return a list of scopes that have not been overridden by include::."""
+        return self._filter_overridden([s for s in self.scopes.values()])
 
     @lang.memoized
     def _get_config_memoized(

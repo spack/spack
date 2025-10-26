@@ -13,6 +13,7 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.schema
 import spack.schema.env
 import spack.spec
@@ -89,6 +90,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         nargs="+",
         choices=("all", "env", "include", "internal", "path"),
         help="list only scopes of the specified type(s)\n\noptions: %(choices)s",
+    )
+    scopes_parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="scopes_verbose",  # spack has -v as well
+        action="store_true",
+        default=False,
+        help="show scope types and whether scopes are overridden",
     )
     scopes_parser.add_argument(
         "section",
@@ -261,16 +270,27 @@ def config_list(args):
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
 
 
-def _config_scope_info(args, scope):
-    scope_path = None
+def _config_scope_info(args, scope, active):
+    result = [scope.name]  # always print the name
+
+    if args.scopes_verbose:
+        result.append(",".join(_config_basic_scope_types(scope)))
+        result.append("active" if scope.name in active else "override")
+
+    section_path = None
     if (args.section or args.paths) and hasattr(scope, "path"):
         section_path = scope.get_section_filename(args.section) if args.section else None
-        scope_path = (
+        result.append(
             section_path
             if section_path and os.path.exists(section_path)
             else f"{scope.path}{os.sep}"
         )
-    return (scope.name, scope_path or " ")
+    result.append(section_path or " ")
+
+    if scope.name not in active:
+        result = [color.colorize(f"@k{{{elt}}}") for elt in result]
+
+    return result
 
 
 def _config_basic_scope_types(scope):
@@ -290,6 +310,7 @@ def config_scopes(args):
     included_scopes = list(
         i.name for s in spack.config.scopes().reversed_values() for i in s.included_scopes
     )
+    active = [s.name for s in spack.config.CONFIG.active_scopes]
 
     scopes = list(
         s
@@ -300,8 +321,9 @@ def config_scopes(args):
             or any(i in ("all", *_config_basic_scope_types(s)) for i in args.type)
         )
     )
+
     if scopes:
-        colify_table([_config_scope_info(args, s) for s in scopes])
+        colify_table([_config_scope_info(args, s, active) for s in scopes])
 
 
 def config_add(args):
