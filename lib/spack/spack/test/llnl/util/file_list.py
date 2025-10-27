@@ -27,10 +27,10 @@ def library_list():
         if sys.platform != "win32"
         else [
             "/dir1/liblapack.lib",
-            "/dir2/libpython3.6.dll",
+            "/dir2/libpython3.6.lib",
             "/dir1/libblas.lib",
-            "/dir3/libz.dll",
-            "libmpi.dll.20.10.1",
+            "/dir3/libz.lib",
+            "libmpi.lib.20.10.1",
         ]
     )
 
@@ -75,7 +75,7 @@ class TestLibraryList:
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
                 "/dir2/libpython3.6.%s"
-                % (plat_apple_shared_ext if sys.platform != "win32" else "dll"),
+                % (plat_apple_shared_ext if sys.platform != "win32" else "lib"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
@@ -91,7 +91,7 @@ class TestLibraryList:
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
                 "/dir2/libpython3.6.%s"
-                % (plat_apple_shared_ext if sys.platform != "win32" else "dll"),
+                % (plat_apple_shared_ext if sys.platform != "win32" else "lib"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
