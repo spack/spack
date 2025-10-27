@@ -429,7 +429,9 @@ def make_argument_parser(**kwargs):
         choices=("always", "never", "auto"),
         help="when to colorize output (default: auto)",
     )
-    parser.add_argument(
+
+    config = parser.add_argument_group("environments and configuration")
+    config.add_argument(
         "-c",
         "--config",
         default=None,
@@ -437,7 +439,7 @@ def make_argument_parser(**kwargs):
         dest="config_vars",
         help="add one or more custom, one off config settings",
     )
-    parser.add_argument(
+    config.add_argument(
         "-C",
         "--config-scope",
         dest="config_scopes",
@@ -446,17 +448,8 @@ def make_argument_parser(**kwargs):
         help="add directory or environment as read-only configuration scope, without activating "
         "the environment.",
     )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="count",
-        default=0,
-        help="write out debug messages\n\n(more d's for more verbosity: -d, -dd, -ddd, etc.)",
-    )
-    parser.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
-    parser.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
 
-    env_group = parser.add_mutually_exclusive_group()
+    env_group = config.add_mutually_exclusive_group()
     env_group.add_argument(
         "-e",
         "--env",
@@ -485,6 +478,17 @@ def make_argument_parser(**kwargs):
         action="store_true",
         help="when running in an environment, use its package repository",
     )
+
+    debug = parser.add_argument_group("debugging")
+    debug.add_argument(
+        "-d",
+        "--debug",
+        action="count",
+        default=0,
+        help="write out debug messages\n\n(more d's for more verbosity: -d, -dd, -ddd, etc.)",
+    )
+    debug.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
+    debug.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
 
     parser.add_argument(
         "-k",

@@ -346,7 +346,7 @@ complete -c spack --erase
 # Everything below here is auto-generated.
 
 # spack
-set -g __fish_spack_optspecs_spack h/help H/all-help color= c/config= C/config-scope= d/debug timestamp pdb e/env= D/env-dir= E/no-env use-env-repo k/insecure l/enable-locks L/disable-locks m/mock b/bootstrap p/profile sorted-profile= lines= v/verbose stacktrace t/backtrace V/version print-shell-vars=
+set -g __fish_spack_optspecs_spack h/help H/all-help color= c/config= C/config-scope= e/env= D/env-dir= E/no-env use-env-repo d/debug timestamp pdb k/insecure l/enable-locks L/disable-locks m/mock b/bootstrap p/profile sorted-profile= lines= v/verbose stacktrace t/backtrace V/version print-shell-vars=
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a add -d 'add a spec to an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a arch -d 'print architecture information about this machine'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a audit -d 'audit configuration files, packages, etc.'
@@ -437,12 +437,6 @@ complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -f -a confi
 complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -d 'add one or more custom, one off config settings'
 complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -f -a config_scopes
 complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -d 'add directory or environment as read-only configuration scope, without activating the environment.'
-complete -c spack -n '__fish_spack_using_command ' -s d -l debug -f -a debug
-complete -c spack -n '__fish_spack_using_command ' -s d -l debug -d 'write out debug messages'
-complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
-complete -c spack -n '__fish_spack_using_command ' -l timestamp -d 'add a timestamp to tty output'
-complete -c spack -n '__fish_spack_using_command ' -l pdb -f -a pdb
-complete -c spack -n '__fish_spack_using_command ' -l pdb -d 'run spack under the pdb debugger'
 complete -c spack -n '__fish_spack_using_command ' -s e -l env -r -f -a env
 complete -c spack -n '__fish_spack_using_command ' -s e -l env -r -d 'run with a specific environment (see spack env)'
 complete -c spack -n '__fish_spack_using_command ' -s D -l env-dir -r -f -a env_dir
@@ -451,6 +445,12 @@ complete -c spack -n '__fish_spack_using_command ' -s E -l no-env -f -a no_env
 complete -c spack -n '__fish_spack_using_command ' -s E -l no-env -d 'run without any environments activated (see spack env)'
 complete -c spack -n '__fish_spack_using_command ' -l use-env-repo -f -a use_env_repo
 complete -c spack -n '__fish_spack_using_command ' -l use-env-repo -d 'when running in an environment, use its package repository'
+complete -c spack -n '__fish_spack_using_command ' -s d -l debug -f -a debug
+complete -c spack -n '__fish_spack_using_command ' -s d -l debug -d 'write out debug messages'
+complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
+complete -c spack -n '__fish_spack_using_command ' -l timestamp -d 'add a timestamp to tty output'
+complete -c spack -n '__fish_spack_using_command ' -l pdb -f -a pdb
+complete -c spack -n '__fish_spack_using_command ' -l pdb -d 'run spack under the pdb debugger'
 complete -c spack -n '__fish_spack_using_command ' -s k -l insecure -f -a insecure
 complete -c spack -n '__fish_spack_using_command ' -s k -l insecure -d 'do not check ssl certificates when downloading'
 complete -c spack -n '__fish_spack_using_command ' -s l -l enable-locks -f -a locks
