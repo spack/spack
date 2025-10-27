@@ -71,7 +71,10 @@ concretizer:
   # it can reuse. Note this is a directional compatibility so mutual compatibility between two OS's
   # requires two entries i.e. os_compatible: {sonoma: [monterey], monterey: [sonoma]}
   os_compatible: {}
-
+  # If false, force all link/run dependencies of root to match c/c++/Fortran compiler. If this is
+  # a list, then the listed packages are allowed to use a different compiler, but all others must
+  # match.
+  compiler_mixing: true
   # Option to specify whether to support splicing. Splicing allows for
   # the relinking of concrete package dependencies in order to better
   # reuse already built packages with ABI compatible dependencies
