@@ -569,6 +569,20 @@ We can express conditional constraints by specifying the ``when`` edge attribute
 
 This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
 
+Dependency propagation
+^^^^^^^^^^^^^^^^^^^^^^
+
+The dependency specifications on a node, can be propagated using a double percent ``%%`` sigil.
+This is particularly useful when specifying compilers.
+For instance, the following command:
+
+.. code-block:: spec
+
+   $ spack install hdf5+cxx+fortran %%c,cxx=clang %%fortran=gfortran
+
+tells Spack to install ``hdf5`` using Clang as the C and C++ compiler, and GCC as the Fortran compiler.
+It also tells Spack to propagate the same choices, as :ref:`strong preferences <package-strong-preferences>`,  to the runtime sub-DAG of ``hdf5``.
+Build tools are unaffected and can still prefer to use a different compiler.
 
 Specifying Specs by Hash
 ------------------------
