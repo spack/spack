@@ -16,6 +16,9 @@ properties: Dict[str, Any] = {
         "additionalProperties": False,
         "items": {
             "anyOf": [
+                # local, required path
+                {"type": "string"},
+                # local or remote paths that may be optional or conditional
                 {
                     "type": "object",
                     "properties": {
@@ -27,7 +30,21 @@ properties: Dict[str, Any] = {
                     "required": ["path"],
                     "additionalProperties": False,
                 },
-                {"type": "string"},
+                # remote git paths that may be optional or conditional
+                {
+                    "type": "object",
+                    "properties": {
+                        "git": {"type": "string"},
+                        "branch": {"type": "string"},
+                        "commit": {"type": "string"},
+                        "tag": {"type": "string"},
+                        "paths": {"type": "array", "items": {"type": "string"}},
+                        "when": {"type": "string"},
+                        "optional": {"type": "boolean"},
+                    },
+                    "required": ["git", "paths"],
+                    "additionalProperties": False,
+                },
             ]
         },
     }

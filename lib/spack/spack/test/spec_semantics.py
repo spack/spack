@@ -2390,3 +2390,48 @@ def test_edge_representation(parent_str, child_str, kwargs, expected_str, expect
     edge = DependencySpec(parent, child, depflag=0, **kwargs)
     assert str(edge) == expected_str
     assert repr(edge) == expected_repr
+
+
+@pytest.mark.parametrize(
+    "spec_str,assertions",
+    [
+        # Check <key>=* semantics for a "regular" variant
+        ("mpileaks foo=abc", [("foo=*", True), ("bar=*", False)]),
+        # Check the semantics for architecture related key value pairs
+        (
+            "mpileaks",
+            [
+                ("target=*", False),
+                ("os=*", False),
+                ("platform=*", False),
+                ("target=* platform=*", False),
+            ],
+        ),
+        (
+            "mpileaks target=x86_64",
+            [
+                ("target=*", True),
+                ("os=*", False),
+                ("platform=*", False),
+                ("target=* platform=*", False),
+            ],
+        ),
+        ("mpileaks os=debian6", [("target=*", False), ("os=*", True), ("platform=*", False)]),
+        ("mpileaks platform=linux", [("target=*", False), ("os=*", False), ("platform=*", True)]),
+        ("mpileaks platform=linux", [("target=*", False), ("os=*", False), ("platform=*", True)]),
+        (
+            "mpileaks platform=linux target=x86_64",
+            [
+                ("target=*", True),
+                ("os=*", False),
+                ("platform=*", True),
+                ("target=* platform=*", True),
+            ],
+        ),
+    ],
+)
+def test_attribute_existence_in_satisfies(spec_str, assertions, mock_packages, config):
+    """Tests the semantics of <key>=* when used in Spec.satisfies"""
+    s = Spec(spec_str)
+    for test, expected in assertions:
+        assert s.satisfies(test) is expected

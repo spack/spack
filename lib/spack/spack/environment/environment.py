@@ -36,6 +36,7 @@ import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.variant as vt
 from spack import traverse
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import islink, readlink, symlink
@@ -1442,6 +1443,53 @@ class Environment:
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
 
+    def apply_develop(self, spec: spack.spec.Spec, path: Optional[str] = None):
+        """Mutate concrete specs to include dev_path provenance pointing to path.
+
+        This does not do any other aspect of concretization. It will fail if any existing concrete
+        spec for the same package does not satisfy the given develop spec."""
+        # Find all specs that this develop request applies to
+        modify_specs = []
+        for dep in self.all_specs_generator():
+            if dep.name == spec.name:
+                if not dep.satisfies(spec):
+                    raise SpackEnvironmentDevelopError(
+                        f"Develop spec '{spec}' conflicts with concrete specs in environment."
+                        " Try again with 'spack develop --no-modify-concrete-specs'"
+                        " and run 'spack concretize --force' to apply your changes."
+                    )
+                modify_specs.append(dep)
+
+        # Manipulate dev_path variant on modify_specs
+        for s in modify_specs:
+            # Remove any existing dev_path variant in all cases
+            # If setting a path, add the new variant
+            s.variants.pop("dev_path", None)
+            if path:
+                s.variants["dev_path"] = vt.VariantValue(
+                    vt.VariantType.SINGLE, "dev_path", (path,)
+                )
+
+        # Identify roots modified and invalidate all dependent hashes
+        modified_roots = []
+        for parent in traverse.traverse_nodes(modify_specs, direction="parents"):
+            # record whether this parent is a root before we modify the hash
+            if parent.dag_hash() in self.specs_by_hash:
+                modified_roots.append((parent, parent.dag_hash()))
+            # modify the parent to invalidate hashes
+            parent._mark_root_concrete(False)
+            parent.clear_caches()
+
+        # Compute new hashes and update the env list of specs
+        for root, old_hash in modified_roots:
+            root._finalize_concretization()
+            self.concretized_order[self.concretized_order.index(old_hash)] = root.dag_hash()
+            self.specs_by_hash.pop(old_hash)
+            self.specs_by_hash[root.dag_hash()] = root
+
+        if modified_roots:
+            self.write()
+
     def concretize(
         self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
     ) -> Sequence[SpecPair]:
@@ -2660,9 +2708,8 @@ def initialize_environment_dir(
 
     # TODO: make this recursive
     includes = manifest[TOP_LEVEL_KEY].get("include", [])
-    for include in includes:
-        included_path = spack.config.included_path(include)
-        path = included_path.path
+    paths = spack.config.paths_from_includes(includes)
+    for path in paths:
         if os.path.isabs(path):
             continue
 
@@ -2673,18 +2720,20 @@ def initialize_environment_dir(
             continue
 
         orig_abspath = os.path.normpath(envfile.parent / path)
-        if not os.path.exists(orig_abspath):
-            tty.warn(f"Included file does not exist; will not copy: '{path}'")
-            continue
-
         if os.path.isfile(orig_abspath):
             fs.touchp(abspath)
             shutil.copy(orig_abspath, abspath)
-        else:
-            if os.path.exists(abspath):
-                tty.warn(f"Skipping copying duplicate directories: {path}")
-                continue
-            shutil.copytree(orig_abspath, abspath, symlinks=True)
+            continue
+
+        if not os.path.exists(orig_abspath):
+            tty.warn(f"Skipping copy of non-existent include path: '{path}'")
+            continue
+
+        if os.path.exists(abspath):
+            tty.warn(f"Skipping copy of directory over existing path: {path}")
+            continue
+
+        shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
@@ -2983,11 +3032,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ensure_no_disallowed_env_config_mods(self._env_config_scope)
         return self._env_config_scope
 
-    def prepare_config_scope(
-        self, priority: ConfigScopePriority = ConfigScopePriority.ENVIRONMENT
-    ) -> None:
+    def prepare_config_scope(self) -> None:
         """Add the manifest's scope to the global configuration search path."""
-        spack.config.CONFIG.push_scope(self.env_config_scope, priority)
+        spack.config.CONFIG.push_scope(
+            self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
+        )
 
     def deactivate_config_scope(self) -> None:
         """Remove the manifest's scope from the global config path."""
@@ -3037,3 +3086,7 @@ class SpackEnvironmentConfigError(SpackEnvironmentError):
     def __init__(self, msg, filename):
         self.filename = filename
         super().__init__(msg)
+
+
+class SpackEnvironmentDevelopError(SpackEnvironmentError):
+    """Class for errors in applying develop information to an environment."""

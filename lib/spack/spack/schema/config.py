@@ -46,15 +46,6 @@ properties: Dict[str, Any] = {
                     **spack.schema.projections.properties,
                 },
             },
-            "concretization_cache": {
-                "type": "object",
-                "properties": {
-                    "enable": {"type": "boolean"},
-                    "url": {"type": "string"},
-                    "entry_limit": {"type": "integer", "minimum": 0},
-                    "size_limit": {"type": "integer", "minimum": 0},
-                },
-            },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "build_stage": {
                 "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]

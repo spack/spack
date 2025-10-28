@@ -23,7 +23,7 @@ import sys
 import tempfile
 import traceback
 import warnings
-from typing import Any, Callable, List, Tuple
+from typing import List, Tuple
 
 import spack.vendor.archspec.cpu
 
@@ -406,7 +406,7 @@ def make_argument_parser(**kwargs):
         "--env",
         dest="env",
         metavar="ENV",
-        action=SetEnvironmentAction,
+        action="store",
         help="run with a specific environment (see spack env)",
     )
     env_group.add_argument(
@@ -414,7 +414,7 @@ def make_argument_parser(**kwargs):
         "--env-dir",
         dest="env_dir",
         metavar="DIR",
-        action=SetEnvironmentAction,
+        action="store",
         help="run with an environment directory (ignore managed environments)",
     )
     env_group.add_argument(
@@ -861,50 +861,19 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
 _ENV = object()
 
 
-class SetEnvironmentAction(argparse.Action):
-    """Records an environment both in the ``env`` attribute and in the ``config_scopes`` list.
-
-    We need to know where the environment appeared on the CLI set scope precedence.
-
-    """
-
-    def __call__(self, parser, namespace, name_or_dir, option_string):
-        setattr(namespace, self.dest, name_or_dir)
-
-        scopes = getattr(namespace, "config_scopes", None)
-        if scopes is None:
-            scopes = []
-        scopes.append(_ENV)
-        namespace.config_scopes = scopes
-
-
 def add_command_line_scopes(
-    cfg: spack.config.Configuration,
-    command_line_scopes: List[Any],  # str or _ENV but mypy can't type sentinels
-    add_environment: Callable[[ConfigScopePriority], None],
+    cfg: spack.config.Configuration, command_line_scopes: List[str]
 ) -> None:
     """Add additional scopes from the ``--config-scope`` argument, either envs or dirs.
 
     Args:
         cfg: configuration instance
         command_line_scopes: list of configuration scope paths
-        add_environment: method to add an environment scope if encountered
 
     Raises:
         spack.error.ConfigError: if the path is an invalid configuration scope
     """
-    # remove all but the last _ENV from CLI scopes, because we can only
-    # have a single environment active.
-    for _ in range(command_line_scopes.count(_ENV) - 1):
-        command_line_scopes.remove(_ENV)
-
     for i, path in enumerate(command_line_scopes):
-        # If an environment is set on the CLI, add its scope in the order it appears there.
-        # Subsequent custom scopes will override it, and it will override prior custom scopes.
-        if path is _ENV:
-            add_environment(ConfigScopePriority.CUSTOM)
-            continue
-
         name = f"cmd_scope_{i}"
         scope = ev.environment_path_scope(name, path)
         if scope is None:
@@ -988,7 +957,7 @@ def _main(argv=None):
             e.print_context()
             env_format_error = e
 
-    def add_environment_scope(priority):
+    def add_environment_scope():
         if env_format_error:
             # Allow command to continue without env in case it is `spack config edit`
             # All other cases will raise in `finish_parse_and_run`
@@ -996,16 +965,16 @@ def _main(argv=None):
             return
         # do not call activate here, as it has a lot of expensive function calls to deal
         # with mutation of spack.config.CONFIG -- but we are still building the config.
-        env.manifest.prepare_config_scope(priority)
+        env.manifest.prepare_config_scope()
         spack.environment.environment._active_environment = env
 
-    # add the environment *first*, if it is coming from an environment variable
-    if env and _ENV not in (args.config_scopes or []):
-        add_environment_scope(priority=ConfigScopePriority.ENVIRONMENT)
+    # add the environment
+    if env:
+        add_environment_scope()
 
     # Push scopes from the command line last
     if args.config_scopes:
-        add_command_line_scopes(spack.config.CONFIG, args.config_scopes, add_environment_scope)
+        add_command_line_scopes(spack.config.CONFIG, args.config_scopes)
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope("command_line"), priority=ConfigScopePriority.COMMAND_LINE
     )

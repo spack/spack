@@ -508,7 +508,9 @@
         "ssse3",
         "sse4_1",
         "sse4_2",
-        "popcnt"
+        "popcnt",
+        "lahf_lm",
+        "cx16"
       ],
       "compilers": {
         "gcc": [
@@ -577,6 +579,8 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "lahf_lm",
+        "cx16",
         "aes",
         "pclmulqdq"
       ],
@@ -642,6 +646,8 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "lahf_lm",
+        "cx16",
         "aes",
         "pclmulqdq",
         "avx"
@@ -720,6 +726,8 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "lahf_lm",
+        "cx16",
         "aes",
         "pclmulqdq",
         "avx",
@@ -801,6 +809,10 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "abm",
+        "lahf_lm",
+        "xsave",
+        "cx16",
         "aes",
         "pclmulqdq",
         "avx",
@@ -885,7 +897,11 @@
         "ssse3",
         "sse4_1",
         "sse4_2",
+        "abm",
         "popcnt",
+        "xsave",
+        "lahf_lm",
+        "cx16",
         "aes",
         "pclmulqdq",
         "avx",
@@ -964,6 +980,10 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "abm",
+        "lahf_lm",
+        "xsave",
+        "cx16",
         "aes",
         "pclmulqdq",
         "avx",
@@ -1045,7 +1065,11 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "abm",
+        "lahf_lm",
+        "cx16",
         "aes",
+        "xsave",
         "pclmulqdq",
         "avx",
         "rdrand",
@@ -1128,6 +1152,9 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "abm",
+        "lahf_lm",
+        "cx16",
         "aes",
         "pclmulqdq",
         "avx",
@@ -1141,6 +1168,7 @@
         "rdseed",
         "adx",
         "clflushopt",
+        "xsave",
         "xsavec",
         "xsaveopt",
         "avx512f",
@@ -1221,6 +1249,9 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "abm",
+        "lahf_lm",
+        "cx16",
         "aes",
         "pclmulqdq",
         "avx",
@@ -1234,6 +1265,7 @@
         "rdseed",
         "adx",
         "clflushopt",
+        "xsave",
         "xsavec",
         "xsaveopt",
         "avx512f",
@@ -1243,7 +1275,7 @@
         "avx512cd",
         "avx512vbmi",
         "avx512ifma",
-        "sha"
+        "sha_ni"
       ],
       "compilers": {
         "gcc": [
@@ -1310,6 +1342,9 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "abm",
+        "lahf_lm",
+        "cx16",
         "aes",
         "pclmulqdq",
         "avx",
@@ -1323,6 +1358,7 @@
         "rdseed",
         "adx",
         "clflushopt",
+        "xsave",
         "xsavec",
         "xsaveopt",
         "avx512f",
@@ -1399,7 +1435,11 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "abm",
+        "lahf_lm",
+        "cx16",
         "aes",
+        "sha_ni",
         "pclmulqdq",
         "avx",
         "rdrand",
@@ -1412,6 +1452,7 @@
         "rdseed",
         "adx",
         "clflushopt",
+        "xsave",
         "xsavec",
         "xsaveopt",
         "avx512f",
@@ -1512,6 +1553,10 @@
         "sse4_1",
         "sse4_2",
         "popcnt",
+        "abm",
+        "lahf_lm",
+        "cx16",
+        "sha_ni",
         "aes",
         "pclmulqdq",
         "avx",
@@ -1525,6 +1570,7 @@
         "rdseed",
         "adx",
         "clflushopt",
+        "xsave",
         "xsavec",
         "xsaveopt",
         "avx512f",
@@ -1658,6 +1704,10 @@
         "sse",
         "sse2",
         "sse4a",
+        "popcnt",
+        "lahf_lm",
+        "cx16",
+        "xsave",
         "abm",
         "avx",
         "xop",
@@ -1730,6 +1780,10 @@
         "sse",
         "sse2",
         "sse4a",
+        "popcnt",
+        "lahf_lm",
+        "cx16",
+        "xsave",
         "abm",
         "avx",
         "xop",
@@ -1806,6 +1860,10 @@
         "sse",
         "sse2",
         "sse4a",
+        "popcnt",
+        "lahf_lm",
+        "cx16",
+        "xsave",
         "abm",
         "avx",
         "xop",
@@ -1885,6 +1943,10 @@
         "sse",
         "sse2",
         "sse4a",
+        "popcnt",
+        "lahf_lm",
+        "cx16",
+        "xsave",
         "abm",
         "avx",
         "xop",
@@ -1986,10 +2048,13 @@
         "sse4_1",
         "sse4_2",
         "abm",
+        "xsave",
         "xsavec",
         "xsaveopt",
         "clflushopt",
-        "popcnt"
+        "popcnt",
+        "lahf_lm",
+        "cx16"
       ],
       "compilers": {
         "gcc": [
@@ -2072,11 +2137,13 @@
         "sse4_1",
         "sse4_2",
         "abm",
+        "xsave",
         "xsavec",
         "xsaveopt",
         "clflushopt",
         "popcnt",
-        "clwb"
+        "clwb",
+        "lahf_lm"
       ],
       "compilers": {
         "gcc": [
@@ -2159,10 +2226,12 @@
         "sse4_1",
         "sse4_2",
         "abm",
+        "xsave",
         "xsavec",
         "xsaveopt",
         "clflushopt",
         "popcnt",
+        "lahf_lm",
         "clwb",
         "vaes",
         "vpclmulqdq",
@@ -2250,10 +2319,12 @@
         "sse4_1",
         "sse4_2",
         "abm",
+        "xsave",
         "xsavec",
         "xsaveopt",
         "clflushopt",
         "popcnt",
+        "lahf_lm",
         "clwb",
         "vaes",
         "vpclmulqdq",
@@ -2354,7 +2425,6 @@
         "clflushopt",
         "clwb",
         "clzero",
-        "cppc",
         "cx16",
         "f16c",
         "flush_l1d",
@@ -2365,9 +2435,11 @@
         "mmx",
         "movbe",
         "movdir64b",
+        "lahf_lm",
         "movdiri",
         "pclmulqdq",
         "popcnt",
+        "pku",
         "rdseed",
         "sse",
         "sse2",
@@ -2378,6 +2450,7 @@
         "tsc_adjust",
         "vaes",
         "vpclmulqdq",
+        "xsave",
         "xsavec",
         "xsaveopt"
       ],
@@ -2827,6 +2900,27 @@
           {
             "versions": ":",
             "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "armv8.6a": {
+      "from": [
+        "armv8.5a"
+      ],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "10.1:",
+            "flags": "-march=armv8.6-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11:",
+            "flags": "-march=armv8.6-a -mtune=generic"
           }
         ]
       }
@@ -3613,6 +3707,182 @@
       },
       "cpupart": "0x032"
     },
+    "m3": {
+      "from": [
+        "m2",
+        "armv8.6a"
+      ],
+      "vendor": "Apple",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "asimddp",
+        "sha512",
+        "asimdfhm",
+        "dit",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "ssbs",
+        "sb",
+        "paca",
+        "pacg",
+        "dcpodp",
+        "flagm2",
+        "frint",
+        "ecv",
+        "bf16",
+        "i8mm",
+        "bti"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "8.0:",
+            "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "9.0:12.0",
+            "flags": "-march=armv8.5-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags": "-mcpu=apple-m1"
+          },
+          {
+            "versions": "16.0:",
+            "flags": "-mcpu=apple-m3"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": "11.0:12.5",
+            "flags": "-march=armv8.5-a"
+          },
+          {
+            "versions": "13.0:14.0.2",
+            "flags": "-mcpu=apple-m1"
+          },
+          {
+            "versions": "14.0.2:15",
+            "flags": "-mcpu=apple-m2"
+          },
+          {
+            "versions": "16:",
+            "flags": "-mcpu=apple-m3"
+          }
+        ]
+      },
+      "cpupart": "Unknown"
+    },
+    "m4": {
+      "from": [
+        "m3",
+        "armv8.6a"
+      ],
+      "vendor": "Apple",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "asimddp",
+        "sha512",
+        "asimdfhm",
+        "dit",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "ssbs",
+        "sb",
+        "paca",
+        "pacg",
+        "dcpodp",
+        "flagm2",
+        "frint",
+        "ecv",
+        "bf16",
+        "i8mm",
+        "bti",
+        "sme",
+        "sme2"
+      ],
+      "compilers": {
+        "clang": [
+          {
+            "versions": "9.0:12.0",
+            "flags": "-march=armv8.5-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags": "-mcpu=apple-m1"
+          },
+          {
+            "versions": "16.0:18",
+            "flags": "-mcpu=apple-m3"
+          },
+          {
+            "versions": "19:",
+            "flags": "-mcpu=apple-m4"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": "11.0:12.5",
+            "flags": "-march=armv8.5-a"
+          },
+          {
+            "versions": "13.0:14.0.2",
+            "flags": "-mcpu=apple-m1"
+          },
+          {
+            "versions": "14.0.2:15",
+            "flags": "-mcpu=apple-m2"
+          },
+          {
+            "versions": "16:",
+            "flags": "-mcpu=apple-m3"
+          },
+          {
+            "versions": "17:",
+            "flags": "-mcpu=apple-m4"
+          }
+        ]
+      },
+      "cpupart": "Unknown"
+    },
     "arm": {
       "from": [],
       "vendor": "generic",
@@ -3774,6 +4044,9 @@
       "sse4.1": "sse4_1",
       "sse4.2": "sse4_2",
       "avx1.0": "avx",
+      "lahf": "lahf_lm",
+      "sha": "sha_ni",
+      "popcnt lzcnt": "abm",
       "clfsopt": "clflushopt",
       "xsave": "xsavec xsaveopt"
     }

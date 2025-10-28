@@ -173,6 +173,7 @@ properties: Dict[str, Any] = {
                             "spec": {"type": "string"},
                             "prefix": {"type": "string"},
                             "modules": {"type": "array", "items": {"type": "string"}},
+                            "id": {"type": "string"},
                             "extra_attributes": {
                                 "type": "object",
                                 "additionalProperties": {"type": "string"},
@@ -185,6 +186,23 @@ properties: Dict[str, Any] = {
                                     "extra_rpaths": extra_rpaths,
                                     "implicit_rpaths": implicit_rpaths,
                                     "flags": flags,
+                                },
+                            },
+                            "dependencies": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {"type": "string"},
+                                        "spec": {"type": "string"},
+                                        "deptypes": {
+                                            "oneOf": [
+                                                {"type": "string"},
+                                                {"type": "array", "items": {"type": "string"}},
+                                            ]
+                                        },
+                                        "virtuals": {"type": "string"},
+                                    },
                                 },
                             },
                         },

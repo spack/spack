@@ -32,7 +32,7 @@ from spack.llnl.util.lang import elide_list, stable_partition
 from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
-from ..buildcache_prune import prune
+from ..buildcache_prune import prune_buildcache
 from ..enums import InstallRecordStatus
 from ..url_buildcache import (
     BuildcacheComponent,
@@ -215,6 +215,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
     prune = subparsers.add_parser("prune", help=prune_fn.__doc__)
     prune.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
+    )
+    prune.add_argument(
+        "-k",
+        "--keeplist",
+        default=None,
+        help="file containing newline-delimited list of package hashes to keep (optional)",
     )
     prune.add_argument(
         "--dry-run",
@@ -846,12 +852,17 @@ def migrate_fn(args):
 
 
 def prune_fn(args):
-    """prune stale buildcache entries from the mirror"""
+    """prune buildcache entries from the mirror
+
+    If a keeplist file is provided, performs direct pruning (deletes packages not in keeplist)
+    followed by orphan pruning. If no keeplist is provided, only performs orphan pruning.
+    """
     mirror: spack.mirrors.mirror.Mirror = args.mirror
+    keeplist: Optional[str] = args.keeplist
     dry_run: bool = args.dry_run
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
 
-    prune(mirror, dry_run)
+    prune_buildcache(mirror=mirror, keeplist=keeplist, dry_run=dry_run)
 
 
 def buildcache(parser, args):
