@@ -11,6 +11,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
+import spack.package_base
 import spack.repo
 import spack.spec
 import spack.store
@@ -140,7 +141,9 @@ def test_dev_build_drop_in(
         assert "SPACK_SHORT_SPEC=dev-build-test-install@0.0.0" in output
 
 
-def test_dev_build_fails_already_installed(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_messages_already_installed(
+    tmp_path: pathlib.Path, install_mockery, monkeypatch
+):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % str(tmp_path))
     )
@@ -150,8 +153,11 @@ def test_dev_build_fails_already_installed(tmp_path: pathlib.Path, install_mocke
             f.write(spec.package.original_string)
 
         dev_build("dev-build-test-install@0.0.0")
-        output = dev_build("dev-build-test-install@0.0.0", fail_on_error=False)
-        assert "Already installed in %s" % spec.prefix in output
+        monkeypatch.setattr(
+            spack.package_base.PackageBase, "detect_dev_src_change", lambda *args: False
+        )
+        output = dev_build("dev-build-test-install@0.0.0")
+        assert f"{spec.name} already installed" in output
 
 
 def test_dev_build_fails_no_spec():
@@ -176,9 +182,9 @@ def test_dev_build_fails_nonexistent_package_name(mock_packages):
     assert "Package 'no_such_package' not found" in output
 
 
-def test_dev_build_fails_no_version(mock_packages):
+def test_dev_build_msg_no_version(mock_packages):
     output = dev_build("dev-build-test-install", fail_on_error=False)
-    assert "dev-build spec must have a single, concrete version" in output
+    assert "Defaulting to highest version" in output
 
 
 def test_dev_build_can_parse_path_with_at_symbol(tmp_path: pathlib.Path, install_mockery):

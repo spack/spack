@@ -392,7 +392,7 @@ _spack_compress_aliases() {
 # Spack commands
 #
 # Everything below here is auto-generated.
-SPACK_ALIASES="concretise:concretize;containerise:containerize;rm:remove"
+SPACK_ALIASES="concretise:concretize;containerise:containerize;rm:remove;dev-dive:build-env --cd build-dir --dive"
 
 
 _spack() {

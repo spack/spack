@@ -4,19 +4,21 @@
 
 import argparse
 import os
-import sys
 
-import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
+import spack.environment as ev
 import spack.llnl.util.tty as tty
 import spack.repo
+import spack.version
 from spack.cmd.common import arguments
+from spack.cmd.common.env_utility import run_command_in_subshell
+from spack.context import Context
 from spack.installer import PackageInstaller
 
-description = "developer build: build from code in current working directory"
+description = "developer build: build from user managed code"
 section = "build"
 level = "long"
 
@@ -28,7 +30,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--source-path",
         dest="source_path",
         default=None,
-        help="path to source directory (defaults to the current directory)",
+        help=(
+            "path to source directory (defaults to the current directory)."
+            " ignored when using an active environment since the path is determined"
+            " by the develop section of the environment manifest."
+        ),
     )
     subparser.add_argument(
         "-i",
@@ -53,11 +59,18 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="do not display verbose build output while installing",
     )
     subparser.add_argument(
+        "-D",
         "--drop-in",
         type=str,
         dest="shell",
         default=None,
         help="drop into a build environment in a new shell, e.g., bash",
+    )
+    subparser.add_argument(
+        "-p",
+        "--prompt",
+        action="store_true",
+        help="change the prompt when droping into the build-env",
     )
     subparser.add_argument(
         "--test",
@@ -90,7 +103,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     spack.cmd.common.arguments.add_concretizer_args(subparser)
 
 
-def dev_build(self, args):
+def dev_build(parser, args):
     if not args.spec:
         tty.die("spack dev-build requires a package spec argument.")
 
@@ -102,25 +115,43 @@ def dev_build(self, args):
     if not spack.repo.PATH.exists(spec.name):
         raise spack.repo.UnknownPackageError(spec.name)
 
-    if not spec.versions.concrete_range_as_version:
-        tty.die(
-            "spack dev-build spec must have a single, concrete version. "
-            "Did you forget a package version number?"
-        )
+    env = ev.active_environment()
+    if env:
+        if args.source_path:
+            tty.die(
+                "--source-path options was passed by user but the dev_path should be"
+                " configured via `spack develop` for environments."
+            )
+        matches = env.all_matching_specs(spec)
+        dev_matches = [m for m in matches if m.is_develop]
+        if len(dev_matches) > 1:
+            tty.die("Too many matching develop specs in the active environment")
+        elif len(dev_matches) < 1:
+            tty.die("No matching develop specs found in the active environment")
+        else:
+            spec = dev_matches[0]
+            source_path = spec.variants.get("dev_path").value
 
-    source_path = args.source_path
-    if source_path is None:
-        source_path = os.getcwd()
-    source_path = os.path.abspath(source_path)
+    else:
+        if not spec.versions.concrete_range_as_version:
+            version = max(spack.repo.PATH.get_pkg_class(spec.fullname).versions.keys())
+            spec.versions = spack.version.VersionList([version])
+            tty.msg(f"Defaulting to highest version: {spec.name}@{version}")
 
-    # Forces the build to run out of the source directory.
+        source_path = args.source_path
+        if source_path is None:
+            source_path = os.getcwd()
+        source_path = os.path.abspath(source_path)
+
     spec.constrain(f'dev_path="{source_path}"')
     spec = spack.concretize.concretize_one(spec)
 
+    overwrite = []
     if spec.installed:
-        tty.error("Already installed in %s" % spec.prefix)
-        tty.msg("Uninstall or try adding a version suffix for this dev build.")
-        sys.exit(1)
+        if spec.package.detect_dev_src_change():
+            overwrite = [spec.dag_hash()]
+        else:
+            tty.msg(f"{spec.name} already installed and no source changes detected.")
 
     # disable checksumming if requested
     if args.no_checksum:
@@ -132,19 +163,20 @@ def dev_build(self, args):
     elif args.test == "root":
         tests = [spec.name for spec in specs]
 
-    PackageInstaller(
-        [spec.package],
-        tests=tests,
-        keep_prefix=args.keep_prefix,
-        install_deps=not args.ignore_deps,
-        verbose=not args.quiet,
-        dirty=args.dirty,
-        stop_before=args.before,
-        skip_patch=args.skip_patch,
-        stop_at=args.until,
-    ).install()
+    if overwrite or not spec.installed:
+        PackageInstaller(
+            [spec.package],
+            tests=tests,
+            keep_prefix=args.keep_prefix,
+            install_deps=not args.ignore_deps,
+            verbose=not args.quiet,
+            overwrite=overwrite,
+            dirty=args.dirty,
+            stop_before=args.before,
+            skip_patch=args.skip_patch,
+            stop_at=args.until,
+        ).install()
 
     # drop into the build environment of the package?
     if args.shell is not None:
-        spack.build_environment.setup_package(spec.package, dirty=False)
-        os.execvp(args.shell, [args.shell])
+        run_command_in_subshell(spec, Context.BUILD, [args.shell], shell=args.shell)

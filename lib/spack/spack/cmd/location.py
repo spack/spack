@@ -14,7 +14,7 @@ import spack.repo
 import spack.stage
 from spack.cmd.common import arguments
 
-description = "print out locations of packages and spack directories"
+description = "location = str out locations of packages and spack directories"
 section = "basic"
 level = "long"
 
@@ -91,15 +91,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["spec"])
 
 
-def location(parser, args):
+def _location(parser, args):
     if args.module_dir:
-        print(spack.paths.module_path)
-        return
-
+        return spack.paths.module_path
     if args.spack_root:
-        print(spack.paths.prefix)
-        return
-
+        return spack.paths.prefix
     # no -e corresponds to False, -e without arg to None, -e name to the string name.
     if args.location_env is not False:
         if args.location_env is None:
@@ -111,22 +107,19 @@ def location(parser, args):
             if not ev.exists(args.location_env):
                 tty.die("no such environment: '%s'" % args.location_env)
             path = ev.root(args.location_env)
-        print(path)
-        return
+        return path
 
     if args.repo is not False:
         if args.repo is None:
-            print(spack.repo.PATH.first_repo().root)
-            return
+            return spack.repo.PATH.first_repo().root
         try:
-            print(spack.repo.PATH.get_repo(args.repo).root)
+            return spack.repo.PATH.get_repo(args.repo).root
         except spack.repo.UnknownNamespaceError:
             tty.die(f"no such repository: '{args.repo}'")
         return
 
     if args.stages:
-        print(spack.stage.get_stage_root())
-        return
+        return spack.stage.get_stage_root()
 
     specs = spack.cmd.parse_specs(args.spec)
 
@@ -140,15 +133,13 @@ def location(parser, args):
     if args.install_dir:
         env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first)
-        print(spec.prefix)
-        return
+        return spec.prefix
 
     spec = specs[0]
 
     # Package dir just needs the spec name
     if args.package_dir:
-        print(spack.repo.PATH.dirname_for_package_name(spec.name))
-        return
+        return spack.repo.PATH.dirname_for_package_name(spec.name)
 
     # Either concretize or filter from already concretized environment
     spec = spack.cmd.matching_spec_from_env(spec)
@@ -156,20 +147,17 @@ def location(parser, args):
     builder = spack.builder.create(pkg)
 
     if args.stage_dir:
-        print(pkg.stage.path)
-        return
+        return pkg.stage.path
 
     if args.build_dir:
         # Out of source builds have build_directory defined
         if hasattr(builder, "build_directory"):
             # build_directory can be either absolute or relative to the stage path
             # in either case os.path.join makes it absolute
-            print(os.path.normpath(os.path.join(pkg.stage.path, builder.build_directory)))
-            return
+            return os.path.normpath(os.path.join(pkg.stage.path, builder.build_directory))
 
         # Otherwise assume in-source builds
-        print(pkg.stage.source_path)
-        return
+        return pkg.stage.source_path
 
     # source dir remains, which requires the spec to be staged
     if not pkg.stage.expanded:
@@ -179,4 +167,15 @@ def location(parser, args):
         )
 
     # Default to source dir.
-    print(pkg.stage.source_path)
+    return pkg.stage.source_path
+
+
+# Is this too hacky? I don't want to reproduce the parser for an internal function
+def location_emulator(*args):
+    parser = argparse.ArgumentParser()
+    setup_parser(parser)
+    return _location(parser, parser.parse_args(args))
+
+
+def location(parser, args):
+    print(_location(parser, args))
