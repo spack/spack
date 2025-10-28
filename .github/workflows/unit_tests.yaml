@@ -210,9 +210,11 @@ jobs:
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
+#    - name: Setup tmate session
+#      uses: mxschmitt/action-tmate@v3
     - name: Run unit tests
       env:
-        SPACK_TEST_PARALLEL: 4
+        SPACK_TEST_PARALLEL: 2
         COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
       run: |
         git --version
@@ -220,8 +222,7 @@ jobs:
         . share/spack/setup-env.sh
         $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib
-        common_args=(--dist loadfile --tx '3*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
-        $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
+        PYTHONPATH=$PWD/lib/spack/ pytest -n $SPACK_TEST_PARALLEL  --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x
     - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
