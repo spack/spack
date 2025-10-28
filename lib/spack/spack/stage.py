@@ -6,6 +6,8 @@ import getpass
 import glob
 import hashlib
 import io
+import itertools
+import json
 import os
 import shutil
 import stat
@@ -38,8 +40,10 @@ from spack.llnl.util.filesystem import (
     getuid,
     install,
     install_tree,
+    islink,
     mkdirp,
     partition_path,
+    readlink,
     remove_linked_tree,
     symlink,
 )
@@ -838,8 +842,9 @@ class DevelopStage(LockableStagingDir):
             link_path = reference_link
         else:
             link_path = os.path.join(self.source_path, reference_link)
-        if not os.path.isdir(os.path.dirname(link_path)):
-            raise StageError(f"The directory containing {link_path} must exist")
+
+        # Created inside of dev_path (typically a user-managed source directory
+        # that is not edited by spack except for this); points to self.path
         self.reference_link = link_path
 
     @property
@@ -862,21 +867,41 @@ class DevelopStage(LockableStagingDir):
 
     def create(self):
         super().create()
+        if not os.path.isdir(os.path.dirname(self.reference_link)):
+            raise StageError(f"The directory containing {self.reference_link} must exist")
         try:
             symlink(self.path, self.reference_link)
         except (AlreadyExistsError, FileExistsError):
             pass
 
+    @staticmethod
+    def _clean_dev_path(dev_path):
+        """Look for stage reference links."""
+        if not os.path.exists(dev_path):
+            return
+        for fname in os.listdir(dev_path):
+            path = os.path.join(dev_path, fname)
+            if islink(path):
+                target = readlink(path)
+                if stage_prefix in os.path.basename(target) and not os.path.exists(target):
+                    os.remove(path)
+
     def destroy(self):
+        try:
+            if islink(self.reference_link):
+                target = readlink(self.reference_link)
+                if stage_prefix in os.path.basename(target):
+                    os.remove(self.reference_link)
+            # else: we didn't make this link
+        except FileNotFoundError:
+            pass
+
         # Destroy all files, but do not follow symlinks
         try:
             shutil.rmtree(self.path)
         except FileNotFoundError:
             pass
-        try:
-            os.remove(self.reference_link)
-        except FileNotFoundError:
-            pass
+
         self.created = False
 
     def restage(self):
@@ -887,23 +912,112 @@ class DevelopStage(LockableStagingDir):
         tty.debug("Sources for Develop stages are not cached")
 
 
+class DevStageMap:
+    def __init__(self, path=None):
+        if not path:
+            # Note: if this was in user_cache_path, then if users customize this
+            # per-spack with SPACK_USER_CACHE_PATH, it would have strange effects
+            self.path = os.path.expanduser(os.path.join("~", ".spack", "dev-stage-index"))
+        else:
+            self.path = path
+        self.env_map = DevStageMap._read(self.path)
+
+    def write(self, dst=None):
+        with open(self.path, "w", encoding="utf-8") as f:
+            json.dump(self.env_map, f)
+
+    @staticmethod
+    def _read(src):
+        if not os.path.exists(src):
+            data = {}
+        else:
+            with open(src, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        return data
+
+    def update_env(self, env_root, dev_map):
+        # TODO: any entries in the old map that don't exist anymore
+        # could be cleaned from the filesystem immediately (although
+        # if it is not done now, that info will be lost, and at that
+        # point can only be handled with `spack clean --stage`).
+        self.env_map[env_root] = dev_map
+
+    def clean_pointers(self):
+        """If users `rm -rf` stages and envs, this map will not
+        be automatically updated, so this function handles
+        clearing "stale" entries.
+
+        This does not delete any files other than the one
+        maintained by this object.
+        """
+        deleted_envs = set()
+        for env_root, dev_map in self.env_map.items():
+            if not os.path.exists(env_root):
+                deleted_envs.add(env_root)
+                continue
+            deleted_dev_paths = set()
+            for dev_path, stage_path in dev_map.items():
+                if not os.path.exists(dev_path):
+                    deleted_dev_paths.add(dev_path)
+                elif not os.path.exists(stage_path):
+                    deleted_dev_paths.add(dev_path)
+            for dev_path in deleted_dev_paths:
+                del dev_map[dev_path]
+        for env_root in deleted_envs:
+            del self.env_map[env_root]
+        self.write()
+
+    def _all_known_dev_paths(self):
+        dev_paths = set()
+        for dev_map in self.env_map.values():
+            dev_paths.update(dev_map.keys())
+        return dev_paths
+
+    def all_tracked_stages(self):
+        """For GC on stage root: determine all stages that are being
+        used by some environment for a dev path.
+        """
+        return set(
+            itertools.chain.from_iterable(dev_map.values() for dev_map in self.env_map.values())
+        )
+
+
+dev_stage_map = DevStageMap()
+
+
 def ensure_access(file):
     """Ensure we can access a directory and die with an error if we can't."""
     if not can_access(file):
         tty.die("Insufficient permissions for %s" % file)
 
 
-def purge():
+def purge(keep_dev_stages_in_use=False):
     """Remove all build directories in the top-level stage path."""
+    known_dev_paths = dev_stage_map._all_known_dev_paths()
+    # A noop unless users manually `rm -rf`ed environments/stages/dev_paths
+    dev_stage_map.clean_pointers()
+
+    if keep_dev_stages_in_use:
+        keep_stages = dev_stage_map.all_tracked_stages()
+    else:
+        keep_stages = set()
+
     root = get_stage_root()
     if os.path.isdir(root):
-        for stage_dir in os.listdir(root):
-            if stage_dir.startswith(stage_prefix) or stage_dir == ".lock":
-                stage_path = os.path.join(root, stage_dir)
-                if os.path.isdir(stage_path):
-                    remove_linked_tree(stage_path)
-                else:
-                    os.remove(stage_path)
+        for fname in os.listdir(root):
+            path = os.path.join(root, fname)
+            if fname.startswith(stage_prefix) and path not in keep_stages:
+                remove_linked_tree(path)
+            elif fname == ".lock":
+                os.remove(path)
+
+    # A noop unless
+    # * users manually `rm -rf`ed environments/stages/dev_paths
+    # * or if we purged all stage paths without considering what
+    #   environments are tracking (in this function)
+    # * or if an env was reconcretized
+    for dev_path in known_dev_paths:
+        DevelopStage._clean_dev_path(dev_path)
 
 
 def interactive_version_filter(

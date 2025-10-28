@@ -738,7 +738,7 @@ _spack_ci_verify_versions() {
 _spack_clean() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -b --bootstrap -a --all"
+        SPACK_COMPREPLY="-h --help -s --stage --non-dev-stages -d --downloads -f --failures -m --misc-cache -p --python-cache -b --bootstrap -a --all"
     else
         _all_packages
     fi

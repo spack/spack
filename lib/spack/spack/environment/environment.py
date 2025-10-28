@@ -28,6 +28,7 @@ import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.spec
+import spack.stage
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
@@ -1530,16 +1531,24 @@ class Environment:
 
         # Pick the right concretization strategy
         if self.unify == "when_possible":
-            return self._concretize_together_where_possible(tests=tests)
+            result = self._concretize_together_where_possible(tests=tests)
+        elif self.unify is True:
+            result = self._concretize_together(tests=tests)
+        elif self.unify is False:
+            result = self._concretize_separately(tests=tests)
+        else:
+            msg = "concretization strategy not implemented [{0}]"
+            raise SpackEnvironmentError(msg.format(self.unify))
 
-        if self.unify is True:
-            return self._concretize_together(tests=tests)
+        self.update_stage_map()
+        return result
 
-        if self.unify is False:
-            return self._concretize_separately(tests=tests)
-
-        msg = "concretization strategy not implemented [{0}]"
-        raise SpackEnvironmentError(msg.format(self.unify))
+    def update_stage_map(self):
+        dev_map = {}
+        for spec in self.all_specs_generator():
+            if spec.is_develop:
+                dev_map[spec.variants.get("dev_path").value] = spec.package.stage.path
+        spack.stage.dev_stage_map.update_env(self.path, dev_map)
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
         """

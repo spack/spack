@@ -6,7 +6,9 @@ import filecmp
 import os
 import pathlib
 import pickle
+import shutil
 
+import llnl.util.symlink
 import pytest
 
 import spack.config
@@ -15,6 +17,7 @@ import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.solver.asp
 import spack.spec
+import spack.stage
 from spack.environment.environment import (
     EnvironmentManifestFile,
     SpackEnvironmentViewError,
@@ -1270,3 +1273,103 @@ spack:
 
     libelf = mpileaks["libelf"]
     assert libelf.satisfies("%[virtuals=c] gcc")  # libelf only depends on c
+
+
+class TestDevelopStage2:
+    @pytest.fixture
+    def prep_env(self, tmp_path, develop_path, config, mock_packages):
+        def create_env():
+            env_dir = tmp_path / "env-path"
+            env_dir.mkdir(parents=True, exist_ok=True)
+            manifest = env_dir / "spack.yaml"
+            devtree, srcdir = develop_path
+            manifest.write_text(
+                f"""\
+spack:
+  specs:
+  - dt-diamond
+  - dt-diamond-left
+  develop:
+    dt-diamond:
+      spec: dt-diamond
+      path: {srcdir}
+  concretizer:
+    unify: true
+""",
+                encoding="utf-8",
+            )
+            with ev.Environment(env_dir) as e:
+                e.concretize()
+            return e, srcdir
+
+        yield create_env
+
+    def test_develop_stage_basic_in_env(self, prep_env):
+        """Check basic develop stage functionality in the context
+        of an environment.
+        """
+        env, srcdir = prep_env()
+        (x,) = env.all_matching_specs("dt-diamond")
+        x.package.stage.create()
+        assert os.path.exists(x.package.stage[0].path)
+        assert os.path.exists(x.package.stage[0].reference_link)
+
+        x.package.stage.destroy()
+        assert os.path.exists(srcdir)
+
+    def test_develop_stage_purge(self, prep_env):
+        env, srcdir = prep_env()
+        (x,) = env.all_matching_specs("dt-diamond")
+        x.package.stage.create()
+        assert os.path.exists(x.package.stage[0].path)
+        assert os.path.exists(x.package.stage[0].reference_link)
+
+        # When option is provided to keep dev stages that are in use,
+        # stages should be kept if any existing environment is using
+        # them (i.e. they are associated with a concretized hash
+        # in the environment).
+        spack.stage.purge(keep_dev_stages_in_use=True)
+        assert os.path.exists(x.package.stage[0].path)
+        assert os.path.exists(x.package.stage[0].reference_link)
+
+        # With no options stage.purge removes all `Stage.path`s. Check
+        # that for develop stages, this removes the associated symlink.
+        spack.stage.purge()
+        assert not os.path.exists(x.package.stage[0].path)
+        assert not os.path.exists(x.package.stage[0].reference_link)
+        assert not llnl.util.symlink.islink(x.package.stage[0].reference_link)
+
+    def test_develop_stage_purge_manual_env_deletion(self, prep_env):
+        env, _ = prep_env()
+        (x,) = env.all_matching_specs("dt-diamond")
+        x.package.stage.create()
+        assert os.path.exists(x.package.stage[0].path)
+        assert os.path.exists(x.package.stage[0].reference_link)
+
+        shutil.rmtree(env.path)
+        spack.stage.purge(keep_dev_stages_in_use=True)
+        # The env that cares about the stage was removed, but we
+        # did that manually without updating any data structures
+        # that track this
+        assert not os.path.exists(x.package.stage[0].path)
+        assert not os.path.exists(x.package.stage[0].reference_link)
+        assert not llnl.util.symlink.islink(x.package.stage[0].reference_link)
+
+    def test_develop_stage_new_hash(self, prep_env):
+        env, _ = prep_env()
+        (x,) = env.all_matching_specs("dt-diamond")
+        x.package.stage.create()
+
+        old_stage_path = x.package.stage[0].path
+        old_ref_link = x.package.stage[0].reference_link
+
+        env.add("dt-diamond-right@0.9")
+        with env:
+            env.concretize(force=True)
+        # The root has a new hash. When we purge, we should destroy
+        # the stage path for the old hash (along with the link in
+        # the dev_path)
+        spack.stage.purge(keep_dev_stages_in_use=True)
+        assert not os.path.exists(old_stage_path)
+        assert not os.path.exists(old_ref_link)
+        assert not llnl.util.symlink.islink(old_ref_link)

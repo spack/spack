@@ -1039,12 +1039,14 @@ complete -c spack -n '__fish_spack_using_command ci verify-versions' -s h -l hel
 complete -c spack -n '__fish_spack_using_command ci verify-versions' -s h -l help -d 'show this help message and exit'
 
 # spack clean
-set -g __fish_spack_optspecs_spack_clean h/help s/stage d/downloads f/failures m/misc-cache p/python-cache b/bootstrap a/all
+set -g __fish_spack_optspecs_spack_clean h/help s/stage non-dev-stages d/downloads f/failures m/misc-cache p/python-cache b/bootstrap a/all
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 clean' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command clean' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command clean' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command clean' -s s -l stage -f -a stage
 complete -c spack -n '__fish_spack_using_command clean' -s s -l stage -d 'remove all temporary build stages (default)'
+complete -c spack -n '__fish_spack_using_command clean' -l non-dev-stages -f -a non_dev_stages
+complete -c spack -n '__fish_spack_using_command clean' -l non-dev-stages -d 'remove most temporary build stages'
 complete -c spack -n '__fish_spack_using_command clean' -s d -l downloads -f -a downloads
 complete -c spack -n '__fish_spack_using_command clean' -s d -l downloads -d 'remove cached downloads'
 complete -c spack -n '__fish_spack_using_command clean' -s f -l failures -f -a failures

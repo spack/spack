@@ -34,6 +34,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "-s", "--stage", action="store_true", help="remove all temporary build stages (default)"
     )
     subparser.add_argument(
+        "--non-dev-stages", action="store_true", help="remove most temporary build stages"
+    )
+    subparser.add_argument(
         "-d", "--downloads", action="store_true", help="remove cached downloads"
     )
     subparser.add_argument(
@@ -91,6 +94,7 @@ def clean(parser, args):
         [
             args.specs,
             args.stage,
+            args.non_dev_stages,
             args.downloads,
             args.failures,
             args.misc_cache,
@@ -113,6 +117,10 @@ def clean(parser, args):
     if args.stage:
         tty.msg("Removing all temporary build stages")
         spack.stage.purge()
+
+    if args.non_dev_stages:
+        tty.msg("Removing all non-develop build stages")
+        spack.stage.purge(keep_dev_stages_in_use=True)
 
     if args.downloads:
         tty.msg("Removing cached downloads")
