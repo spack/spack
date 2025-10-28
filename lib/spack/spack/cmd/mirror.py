@@ -599,46 +599,49 @@ def process_mirror_stats(present, mirrored, error):
 
 def mirror_create(args):
     """create a directory to be used as a spack mirror, and fill it with package archives"""
-    if args.file and args.all:
-        raise SpackError(
-            "cannot specify specs with a file if you chose to mirror all specs with '--all'"
-        )
-
-    if args.file and args.specs:
-        raise SpackError("cannot specify specs with a file AND on command line")
-
-    if not args.specs and not args.file and not args.all:
-        raise SpackError(
-            "no packages were specified.",
-            "To mirror all packages, use the '--all' option "
-            "(this will require significant time and space).",
-        )
-
-    if args.versions_per_spec and args.all:
-        raise SpackError(
-            "cannot specify '--versions_per-spec' and '--all' together",
-            "The option '--all' already implies mirroring all versions for each package.",
-        )
-
-    # When no directory is provided, the source dir is used
-    path = args.directory or spack.caches.fetch_cache_location()
-
-    mirror_specs = _specs_to_mirror(args)
-    workers = args.jobs
-    if workers is None:
-        if args.all:
-            workers = min(
-                16, spack.config.determine_number_of_jobs(parallel=True), len(mirror_specs)
+    spack.mirrors.utils.set_mirror_all(bool(args.all))
+    try:
+        if args.file and args.all:
+            raise SpackError(
+                "cannot specify specs with a file if you chose to mirror all specs with '--all'"
             )
-        else:
-            workers = 1
 
-    create_mirror_for_all_specs(
-        mirror_specs,
-        path=path,
-        skip_unstable_versions=args.skip_unstable_versions,
-        workers=workers,
-    )
+        if args.file and args.specs:
+            raise SpackError("cannot specify specs with a file AND on command line")
+
+        if not args.specs and not args.file and not args.all:
+            raise SpackError(
+                "no packages were specified.",
+                "To mirror all packages, use the '--all' option "
+                "(this will require significant time and space).",
+            )
+
+        if args.versions_per_spec and args.all:
+            raise SpackError(
+                "cannot specify '--versions_per-spec' and '--all' together",
+                "The option '--all' already implies mirroring all versions for each package.",
+            )
+
+        # When no directory is provided, the source dir is used
+        path = args.directory or spack.caches.fetch_cache_location()
+        mirror_specs = _specs_to_mirror(args)
+        workers = args.jobs
+        if workers is None:
+            if args.all:
+                workers = min(
+                    16, spack.config.determine_number_of_jobs(parallel=True), len(mirror_specs)
+                )
+            else:
+                workers = 1
+
+        create_mirror_for_all_specs(
+            mirror_specs,
+            path=path,
+            skip_unstable_versions=args.skip_unstable_versions,
+            workers=workers,
+        )
+    finally:
+        spack.mirrors.utils.set_mirror_all(False)
 
 
 def _specs_to_mirror(args):
