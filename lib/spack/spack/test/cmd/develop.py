@@ -18,6 +18,7 @@ import spack.util.git
 import spack.util.path
 from spack.error import SpackError
 from spack.main import SpackCommand
+from spack.fetch_strategy import URLFetchStrategy
 
 add = SpackCommand("add")
 develop = SpackCommand("develop")
@@ -394,7 +395,7 @@ def test_develop_with_devpath_staging(
     develop_dir = tmp_path / "build@location"
     if _devpath_should_exist:
         develop_dir.mkdir()
-        monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, "fetch", custom_fetch)
+        monkeypatch.setattr(URLFetchStrategy, "fetch", custom_fetch)
 
     spec_like = "simple-resource@1.0"
 
