@@ -30,7 +30,7 @@ from spack.package_base import PackageBase
 from spack.util.typing import SupportsRichComparison
 
 description = "get detailed information on a particular package"
-section = "basic"
+section = "query"
 level = "short"
 
 header_color = "@*b"

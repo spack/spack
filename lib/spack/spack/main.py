@@ -58,26 +58,20 @@ stat_names = pstats.Stats.sort_arg_dict_default
 levels = ["short", "long"]
 
 #: intro text for help at different levels
-intro_by_level = {
-    "short": "These are common spack commands:",
-    "long": "Complete list of spack commands:",
-}
+intro_by_level = {"short": "Common spack commands:", "long": "Commands:"}
 
 #: control top-level spack options shown in basic vs. advanced help
-options_by_level = {"short": ["h", "k", "V", "color"], "long": "all"}
+options_by_level = {"short": ["e", "h", "k", "V", "color"], "long": "all"}
 
 #: Longer text for each section, to show in help
 section_descriptions = {
-    "admin": "administration",
-    "basic": "query packages",
-    "build": "build packages",
-    "config": "configuration",
-    "developer": "developer",
+    "query": "query packages",
+    "build": "build, install, and test packages",
     "environment": "environment",
-    "extensions": "extensions",
-    "help": "more help",
+    "config": "configuration",
     "packaging": "create packages",
-    "system": "system",
+    "admin": "administration",
+    "developer": "spack development",
 }
 
 #: preferential command order for some sections (e.g., build pipeline is
@@ -250,24 +244,26 @@ class SpackArgumentParser(argparse.ArgumentParser):
 
         # select only the options for the particular level we're showing.
         show_options = options_by_level[level]
+        options = [
+            opt
+            for group in self._action_groups
+            for opt in group._group_actions
+            if group.title not in ["positional arguments"]
+        ]
+        opts = {opt.option_strings[0].strip("-"): opt for opt in options}
+        actions = [o for o in opts.values()]
         if show_options != "all":
-            opts = dict(
-                (opt.option_strings[0].strip("-"), opt) for opt in self._optionals._group_actions
-            )
-
-            new_actions = [opts[letter] for letter in show_options]
-            self._optionals._group_actions = new_actions
+            actions = [opts[letter] for letter in show_options]
 
         # custom, more concise usage for top level
-        help_options = self._optionals._group_actions
-        help_options = help_options + [self._positionals._group_actions[-1]]
+        help_options = actions + [self._positionals._group_actions[-1]]
         formatter.add_usage(self.usage, help_options, self._mutually_exclusive_groups)
 
         # description
         formatter.add_text(self.description)
 
         # start subcommands
-        formatter.add_text(color.colorize(f"@*B{{{intro_by_level[level]}}}"))
+        formatter.add_text(color.colorize(f"@*C{{{intro_by_level[level]}}}"))
 
         # add argument groups based on metadata in commands
         index = index_commands()
@@ -292,24 +288,34 @@ class SpackArgumentParser(argparse.ArgumentParser):
             # add the group to the parser
             add_subcommand_group(group_description, commands)
 
+        # start subcommands
+        formatter.add_text(color.colorize("@*C{Options:}"))
+
         # optionals and user-defined groups
-        for action_group in self._action_groups:
-            if action_group.title == "positional arguments":
+        for group in sorted(
+            self._action_groups, key=lambda g: (g.title == "help", g.title != "general", g.title)
+        ):
+            if group.title == "positional arguments":
                 continue  # handled by subcommand help above
 
-            formatter.start_section(action_group.title)
-            formatter.add_text(action_group.description)
-            formatter.add_arguments(action_group._group_actions)
+            filtered_actions = [action for action in group._group_actions if action in actions]
+            if not filtered_actions:
+                continue
+
+            formatter.start_section(group.title)
+            formatter.add_text(group.description)
+
+            formatter.add_arguments(filtered_actions)
             formatter.end_section()
 
         # epilog
         help_section = textwrap.dedent(
-            f"""\
-            @*B{{{section_descriptions["help"]}}}:
-              @c{{spack help --all}}       list all commands and options
-              @c{{spack help <command>}}   help on a specific command
-              @c{{spack help --spec}}      help on the package specification syntax
-              @c{{spack docs}}             open https://spack.rtfd.io/ in a browser
+            """\
+            @*C{More help}:
+              @c{spack help --all}       list all commands and options
+              @c{spack help <command>}   help on a specific command
+              @c{spack help --spec}      help on the package specification syntax
+              @c{spack docs}             open https://spack.rtfd.io/ in a browser
             """
         )
         formatter.add_text(color.colorize(help_section))
@@ -401,10 +407,30 @@ def make_argument_parser(**kwargs):
         **kwargs,
     )
 
-    # stat names in groups of 7, for nice wrapping.
-    stat_lines = list(zip(*(iter(stat_names),) * 7))
-
-    parser.add_argument(
+    general = parser.add_argument_group("general")
+    general.add_argument(
+        "--color",
+        action="store",
+        default=None,
+        choices=("always", "never", "auto"),
+        help="when to colorize output (default: auto)",
+    )
+    general.add_argument(
+        "-v", "--verbose", action="store_true", help="print additional output during builds"
+    )
+    general.add_argument(
+        "-k",
+        "--insecure",
+        action="store_true",
+        help="do not check ssl certificates when downloading",
+    )
+    general.add_argument(
+        "-b", "--bootstrap", action="store_true", help="use bootstrap config, store, and externals"
+    )
+    general.add_argument(
+        "-V", "--version", action="store_true", help="show version number and exit"
+    )
+    general.add_argument(
         "-h",
         "--help",
         dest="help",
@@ -413,31 +439,24 @@ def make_argument_parser(**kwargs):
         default=None,
         help="show this help message and exit",
     )
-    parser.add_argument(
+    general.add_argument(
         "-H",
         "--all-help",
         dest="help",
         action="store_const",
         const="long",
         default=None,
-        help="show help for all commands (same as ``spack help --all``)",
-    )
-    parser.add_argument(
-        "--color",
-        action="store",
-        default=None,
-        choices=("always", "never", "auto"),
-        help="when to colorize output (default: auto)",
+        help="show help for all commands (same as `spack help --all`)",
     )
 
-    config = parser.add_argument_group("environments and configuration")
+    config = parser.add_argument_group("configuration and environments")
     config.add_argument(
         "-c",
         "--config",
         default=None,
         action="append",
         dest="config_vars",
-        help="add one or more custom, one off config settings",
+        help="add one or more custom, one-off config settings",
     )
     config.add_argument(
         "-C",
@@ -445,41 +464,35 @@ def make_argument_parser(**kwargs):
         dest="config_scopes",
         action="append",
         metavar="DIR|ENV",
-        help="add directory or environment as read-only configuration scope, without activating "
-        "the environment.",
+        help="add directory or environment as read-only config scope",
     )
-
-    env_group = config.add_mutually_exclusive_group()
-    env_group.add_argument(
-        "-e",
-        "--env",
-        dest="env",
-        metavar="ENV",
-        action="store",
-        help="run with a specific environment (see spack env)",
+    envs = config  # parser.add_argument_group("environments")
+    env_mutex = envs.add_mutually_exclusive_group()
+    env_mutex.add_argument(
+        "-e", "--env", dest="env", metavar="ENV", action="store", help="run with an environment"
     )
-    env_group.add_argument(
+    env_mutex.add_argument(
         "-D",
         "--env-dir",
         dest="env_dir",
         metavar="DIR",
         action="store",
-        help="run with an environment directory (ignore managed environments)",
+        help="run with environment in directory (ignore managed envs)",
     )
-    env_group.add_argument(
+    env_mutex.add_argument(
         "-E",
         "--no-env",
         dest="no_env",
         action="store_true",
         help="run without any environments activated (see spack env)",
     )
-    parser.add_argument(
+    envs.add_argument(
         "--use-env-repo",
         action="store_true",
-        help="when running in an environment, use its package repository",
+        help="when in an environment, use its package repository",
     )
 
-    debug = parser.add_argument_group("debugging")
+    debug = parser.add_argument_group("debug")
     debug.add_argument(
         "-d",
         "--debug",
@@ -487,16 +500,31 @@ def make_argument_parser(**kwargs):
         default=0,
         help="write out debug messages\n\n(more d's for more verbosity: -d, -dd, -ddd, etc.)",
     )
-    debug.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
-    debug.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
-
-    parser.add_argument(
-        "-k",
-        "--insecure",
+    debug.add_argument(
+        "-t",
+        "--backtrace",
         action="store_true",
-        help="do not check ssl certificates when downloading",
+        default="SPACK_BACKTRACE" in os.environ,
+        help="always show backtraces for exceptions",
     )
-    parser.add_argument(
+    debug.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
+    debug.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
+    debug.add_argument(
+        "-m", "--mock", action="store_true", help="use mock packages instead of real ones"
+    )
+    debug.add_argument(
+        "--print-shell-vars", action="store", help="print info needed by setup-env.*sh"
+    )
+    debug.add_argument(
+        "--stacktrace",
+        action="store_true",
+        default="SPACK_STACKTRACE" in os.environ,
+        help="add stacktraces to all printed statements",
+    )
+
+    locks = general
+    lock_mutex = locks.add_mutually_exclusive_group()
+    lock_mutex.add_argument(
         "-l",
         "--enable-locks",
         action="store_true",
@@ -504,62 +532,34 @@ def make_argument_parser(**kwargs):
         default=None,
         help="use filesystem locking (default)",
     )
-    parser.add_argument(
+    lock_mutex.add_argument(
         "-L",
         "--disable-locks",
         action="store_false",
         dest="locks",
         help="do not use filesystem locking (unsafe)",
     )
-    parser.add_argument(
-        "-m", "--mock", action="store_true", help="use mock packages instead of real ones"
-    )
-    parser.add_argument(
-        "-b",
-        "--bootstrap",
-        action="store_true",
-        help="use bootstrap configuration (bootstrap store, config, externals)",
-    )
-    parser.add_argument(
+
+    profile = parser.add_argument_group("profiling")
+    profile.add_argument(
         "-p",
         "--profile",
         action="store_true",
         dest="spack_profile",
         help="profile execution using cProfile",
     )
-    parser.add_argument(
+    profile.add_argument(
         "--sorted-profile",
         default=None,
         metavar="STAT",
-        help=f"profile and sort\n\none or more of: {stat_lines[0]}",
+        help="profile and sort by STAT, which can be: calls, ncalls,\n"
+        "cumtime, cumulative, filename, line, module",
     )
-    parser.add_argument(
+    profile.add_argument(
         "--lines",
         default=20,
         action="store",
         help="lines of profile output or 'all' (default: 20)",
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="print additional output during builds"
-    )
-    parser.add_argument(
-        "--stacktrace",
-        action="store_true",
-        default="SPACK_STACKTRACE" in os.environ,
-        help="add stacktraces to all printed statements",
-    )
-    parser.add_argument(
-        "-t",
-        "--backtrace",
-        action="store_true",
-        default="SPACK_BACKTRACE" in os.environ,
-        help="always show backtraces for exceptions",
-    )
-    parser.add_argument(
-        "-V", "--version", action="store_true", help="show version number and exit"
-    )
-    parser.add_argument(
-        "--print-shell-vars", action="store", help="print info needed by setup-env.*sh"
     )
 
     return parser

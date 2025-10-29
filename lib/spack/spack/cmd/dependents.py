@@ -15,7 +15,7 @@ from spack.cmd.common import arguments
 from spack.llnl.util.tty.colify import colify
 
 description = "show packages that depend on another"
-section = "basic"
+section = "query"
 level = "long"
 
 

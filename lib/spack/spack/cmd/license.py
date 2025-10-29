@@ -13,7 +13,7 @@ import spack.llnl.util.tty as tty
 import spack.paths
 
 description = "list and check license headers on files in spack"
-section = "basic"
+section = "query"
 level = "long"
 
 #: SPDX license id must appear in the first <license_lines> lines of a file

@@ -11,7 +11,7 @@ import spack.repo
 from spack.llnl.util.tty.colify import colify
 
 description = "get information about package maintainers"
-section = "basic"
+section = "query"
 level = "long"
 
 
