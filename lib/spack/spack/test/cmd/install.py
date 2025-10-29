@@ -41,6 +41,9 @@ buildcache = SpackCommand("buildcache")
 find = SpackCommand("find")
 
 
+pytestmark = pytest.mark.needs_logger
+
+
 @pytest.fixture()
 def noop_install(monkeypatch):
     def noop(*args, **kwargs):
@@ -1084,7 +1087,7 @@ def test_padded_install_runtests_root(install_mockery, mock_fetch):
     output = install(
         "--verbose", "--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False
     )
-    assert output.count("method not implemented") == 1
+    assert output.count("method not implemented") == 2
 
 
 @pytest.mark.regression("35337")

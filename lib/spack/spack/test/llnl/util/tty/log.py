@@ -23,7 +23,7 @@ except ImportError:
     pass
 
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+pytestmark = [pytest.mark.not_on_windows("does not run on windows"), pytest.mark.needs_logger]
 
 
 @contextlib.contextmanager

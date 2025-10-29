@@ -63,6 +63,7 @@ def test_test_dup_alias(
     assert "already exists" in out and "Try another alias" in out
 
 
+@pytest.mark.needs_logger
 def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery):
     """Ensure output printed from pkgs is captured by output redirection."""
     install("printing-package")
@@ -162,6 +163,7 @@ def test_cdash_output_test_error(
         assert "Command exited with status 1" in content
 
 
+@pytest.mark.needs_logger
 def test_cdash_upload_clean_test(
     tmp_path: pathlib.Path,
     mock_fetch,

@@ -84,6 +84,7 @@ def test_write_test_result(mock_packages, mock_test_stage):
         assert spec.name in msg
 
 
+@pytest.mark.needs_logger
 def test_test_not_installed(mock_packages, install_mockery, mock_test_stage):
     """Attempt to perform stand-alone test for not_installed package."""
     spec = spack.concretize.concretize_one("trivial-smoke-test")
@@ -99,6 +100,7 @@ def test_test_not_installed(mock_packages, install_mockery, mock_test_stage):
     "arguments,status,msg",
     [({}, TestStatus.SKIPPED, "Skipped"), ({"externals": True}, TestStatus.NO_TESTS, "No tests")],
 )
+@pytest.mark.needs_logger
 def test_test_external(
     mock_packages, install_mockery, mock_test_stage, monkeypatch, arguments, status, msg
 ):
@@ -150,6 +152,7 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
         test_suite()
 
 
+@pytest.mark.needs_logger
 @pytest.mark.not_on_windows("Cannot find echo executable")
 def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
     spec = spack.concretize.concretize_one("simple-standalone-test")

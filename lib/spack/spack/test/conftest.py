@@ -37,9 +37,11 @@ import spack.config
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
+import spack.installer
 import spack.llnl.util.lang
 import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.log
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -2431,3 +2433,40 @@ def config_two_gccs(mutable_config):
             },
         ],
     )
+
+
+class MockLogger:
+    """Mock logger that does nothing"""
+
+    def __init__(self, *args, **kwargs):
+        self.echo = True
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+    def force_echo(self, *args, **kwargs):
+        return self
+
+
+@pytest.fixture(autouse=True)
+def _no_log_output(monkeypatch, request):
+    """Doesn't fork/spawn a new logger when installing mock packages in tests, unless the test is
+    marked with "needs_logger".
+    """
+    needs_logger = request.node.get_closest_marker(name="needs_logger")
+    if not needs_logger:
+        monkeypatch.setattr(spack.llnl.util.tty.log, "log_output", MockLogger)
+        monkeypatch.setattr(spack.installer, "log_output", MockLogger)
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _reset_log_level():
+    """Resets the log level after tests"""
+    yield
+    spack.llnl.util.tty._debug = 0
+    spack.llnl.util.tty._verbose = False
+    spack.llnl.util.tty._stacktrace = False
