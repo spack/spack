@@ -17,8 +17,8 @@ import spack.stage
 import spack.util.git
 import spack.util.path
 from spack.error import SpackError
-from spack.main import SpackCommand
 from spack.fetch_strategy import URLFetchStrategy
+from spack.main import SpackCommand
 
 add = SpackCommand("add")
 develop = SpackCommand("develop")
