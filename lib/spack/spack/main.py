@@ -21,6 +21,7 @@ import signal
 import subprocess as sp
 import sys
 import tempfile
+import textwrap
 import traceback
 import warnings
 from typing import List, Tuple
@@ -148,6 +149,55 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
             usage = "[-%s] %s" % (chars, usage)
         return usage.strip()
 
+    def start_section(self, heading):
+        return super().start_section(color.colorize(f"@*B{{{heading}}}"))
+
+    def _format_usage(self, usage, actions, groups, prefix=None):
+        # if no optionals or positionals are available, usage is just prog
+        if usage is None and not actions:
+            return super()._format_usage(usage, actions, groups, prefix)
+
+        # add color *after* argparse aligns the text, so as not to interfere
+        result = super()._format_usage(usage, actions, groups, prefix)
+        escaped = color.cescape(result)
+        escaped = escaped.replace(self._prog, f"@.@*C{{{self._prog}}}@c")
+        return color.colorize(f"@B{escaped}@.")
+
+    def add_argument(self, action):
+        if action.help is not argparse.SUPPRESS:
+
+            # find all invocations
+            get_invocation = self._format_action_invocation
+            invocation_lengths = [color.clen(get_invocation(action)) + self._current_indent]
+            for subaction in self._iter_indented_subactions(action):
+                invocation_lengths.append(
+                    color.clen(get_invocation(subaction)) + self._current_indent
+                )
+
+            # update the maximum item length
+            action_length = max(invocation_lengths)
+            self._action_max_length = max(self._action_max_length, action_length)
+
+            # add the item to the list
+            self._add_item(self._format_action, [action])
+
+    def _format_action(self, action):
+        # this is where argparse aligns the help text next to each option
+        help_position = min(self._action_max_length + 2, self._max_help_position)
+
+        result = super()._format_action(action)
+
+        # add color *after* argparse aligns the text, so we don't interfere with lengths
+        if len(result) <= help_position:
+            header, rest = result, ""
+        elif result[help_position - 1] == " ":
+            header, rest = result[:help_position], result[help_position:]
+        else:
+            first_newline = result.index("\n")
+            header, rest = result[:first_newline], result[first_newline:]
+
+        return color.colorize(f"@c{{{color.cescape(header)}}}{rest}")
+
     def add_arguments(self, actions):
         actions = sorted(actions, key=operator.attrgetter("option_strings"))
         super().add_arguments(actions)
@@ -217,7 +267,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         formatter.add_text(self.description)
 
         # start subcommands
-        formatter.add_text(intro_by_level[level])
+        formatter.add_text(color.colorize(f"@*B{{{intro_by_level[level]}}}"))
 
         # add argument groups based on metadata in commands
         index = index_commands()
@@ -242,21 +292,27 @@ class SpackArgumentParser(argparse.ArgumentParser):
             # add the group to the parser
             add_subcommand_group(group_description, commands)
 
-        # optionals
-        add_group(self._optionals)
+        # optionals and user-defined groups
+        for action_group in self._action_groups:
+            if action_group.title == "positional arguments":
+                continue  # handled by subcommand help above
+
+            formatter.start_section(action_group.title)
+            formatter.add_text(action_group.description)
+            formatter.add_arguments(action_group._group_actions)
+            formatter.end_section()
 
         # epilog
-        formatter.add_text(
-            """\
-{help}:
-  spack help --all       list all commands and options
-  spack help <command>   help on a specific command
-  spack help --spec      help on the package specification syntax
-  spack docs             open https://spack.rtfd.io/ in a browser
-""".format(
-                help=section_descriptions["help"]
-            )
+        help_section = textwrap.dedent(
+            f"""\
+            @*B{{{section_descriptions["help"]}}}:
+              @c{{spack help --all}}       list all commands and options
+              @c{{spack help <command>}}   help on a specific command
+              @c{{spack help --spec}}      help on the package specification syntax
+              @c{{spack docs}}             open https://spack.rtfd.io/ in a browser
+            """
         )
+        formatter.add_text(color.colorize(help_section))
 
         # determine help from format above
         return formatter.format_help()
