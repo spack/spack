@@ -367,3 +367,48 @@ def test_concretize_dev_path_with_at_symbol_in_env(
         assert cspec.satisfies(spec_like), cspec
         assert cspec.is_develop, cspec
         assert str(develop_dir) in cspec.variants["dev_path"], cspec
+
+
+@pytest.mark.parametrize("_devpath_should_exist", [True, False])
+@pytest.mark.disable_clean_stage_check
+def test_develop_with_devpath_staging(
+    monkeypatch,
+    mutable_mock_env_path,
+    mock_packages,
+    tmp_path: pathlib.Path,
+    mock_archive,
+    install_mockery,
+    mock_fetch,
+    mock_resource_fetch,
+    mock_stage,
+    _devpath_should_exist,
+):
+    # If the specified develop path exists, a resource should not be
+    # downloaded at all at install time. Otherwise, it should be.
+
+    env("create", "test")
+
+    def custom_fetch(*args, **kwargs):
+        assert False
+
+    develop_dir = tmp_path / "build@location"
+    if _devpath_should_exist:
+        develop_dir.mkdir()
+        monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, "fetch", custom_fetch)
+
+    spec_like = "simple-resource@1.0"
+
+    with ev.read("test") as e:
+        develop(f"--path={develop_dir}", spec_like)
+        e.add(spec_like)
+        e.concretize()
+        e.write()
+
+        e.install_all()
+
+        expected_resource_path = develop_dir / "resource.tgz"
+        if _devpath_should_exist:
+            # If we made it here, we didn't try to download anything.
+            pass
+        else:
+            assert os.path.exists(expected_resource_path)
