@@ -15,14 +15,16 @@ def test_help():
     """Sanity check the help command to make sure it works."""
     help_cmd = SpackCommand("help", subprocess=True)
     out = help_cmd()
-    assert "These are common spack commands:" in out
+    assert "Common spack commands:" in out
+    assert "Options:" in out
 
 
 def test_help_all():
     """Test the spack help --all flag"""
     help_cmd = SpackCommand("help", subprocess=True)
     out = help_cmd("--all")
-    assert "Complete list of spack commands:" in out
+    assert "Commands:" in out
+    assert "Options:" in out
 
 
 def test_help_spec():
