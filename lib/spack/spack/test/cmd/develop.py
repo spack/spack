@@ -370,6 +370,12 @@ def test_concretize_dev_path_with_at_symbol_in_env(
         assert str(develop_dir) in cspec.variants["dev_path"], cspec
 
 
+def _failing_fn(*args, **kwargs):
+    # This stands in for a function that should never be called as
+    # part of a test.
+    assert False
+
+
 @pytest.mark.parametrize("_devpath_should_exist", [True, False])
 @pytest.mark.disable_clean_stage_check
 def test_develop_with_devpath_staging(
@@ -389,13 +395,10 @@ def test_develop_with_devpath_staging(
 
     env("create", "test")
 
-    def custom_fetch(*args, **kwargs):
-        assert False
-
     develop_dir = tmp_path / "build@location"
     if _devpath_should_exist:
         develop_dir.mkdir()
-        monkeypatch.setattr(URLFetchStrategy, "fetch", custom_fetch)
+        monkeypatch.setattr(URLFetchStrategy, "fetch", _failing_fn)
 
     spec_like = "simple-resource@1.0"
 

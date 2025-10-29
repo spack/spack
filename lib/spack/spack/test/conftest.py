@@ -1214,14 +1214,19 @@ def mock_fetch(mock_archive, monkeypatch):
     )
 
 
+class MockResourceFetcherGenerator:
+    def __init__(self, url):
+        self.url = url
+
+    def _generate_fetchers(self, *args, **kwargs):
+        return [URLFetchStrategy(url=self.url)]
+
+
 @pytest.fixture()
 def mock_resource_fetch(mock_archive, monkeypatch):
     """Fake fetcher generator that works with resource stages to redirect to a file."""
-    monkeypatch.setattr(
-        spack.stage.ResourceStage,
-        "_generate_fetchers",
-        lambda x, y: [URLFetchStrategy(url=mock_archive.url)],
-    )
+    mfg = MockResourceFetcherGenerator(mock_archive.url)
+    monkeypatch.setattr(spack.stage.ResourceStage, "_generate_fetchers", mfg._generate_fetchers)
 
 
 class MockLayout:
