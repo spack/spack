@@ -3468,6 +3468,8 @@ def relocate_win_rpath(package):
         reloc(
             *args,
             extra_env=ev,
+            output=sys.stdout,
+            error=sys.stderr,
             fail_on_error=True,
         )
             
@@ -3505,6 +3507,12 @@ def collect_import_exports(pkg, lib):
             # exports end just before this section, terminate
             break
         sanitized_line = export_line.strip("\r").strip(" ")
+        # some lines define a mangled symbol and their unmangled
+        # method declaration, delinated by a whitespace
+        # we only care about the mangled symbol name to
+        # match with the PE output
+        if " " in sanitized_line:
+            sanitized_line = sanitized_line.split(" ")[0]
         if not sanitized_line:
             # there are a couple blank lines, just skip them
             continue
@@ -3513,7 +3521,7 @@ def collect_import_exports(pkg, lib):
 
 
 def collect_pe_api(pkg, pe):
-    regex = re.compile(".*? ([a-zA-Z_][a-zA-Z0-9_]*)(?: = ([a-zA-Z_][a-zA-Z0-9_]*))?\r$")
+    regex = re.compile(".*? ([?]*[@$?a-zA-Z0-9_]+)(?: = ([a-zA-Z_][a-zA-Z0-9_]*))?\r$")
     db = dumpbin(pkg)
     raw_exports = db("/NOLOGO", "/EXPORTS", pe, output=str).split("\n")
     raw_exports = raw_exports[16:]
@@ -3535,7 +3543,9 @@ def is_imp_lib_for_pe(pkg, imp_lib, pe):
     lib_exports = collect_import_exports(pkg, imp_lib)
     pe_exports = collect_pe_api(pkg, pe)
     assert lib_exports, f"Lib exports in {imp_lib} should not be empty"
-    assert pe_exports, f"PE exports in {pe} should not be empty"
+    if not pe_exports:
+        tty.debug(f"PE exports in {pe} are empty.")
+        return False
     # values should be ordered already, no need for sorting
     for lib_line, pe_line in zip(lib_exports, pe_exports):
         if lib_line not in pe_line:
