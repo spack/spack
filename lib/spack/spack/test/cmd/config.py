@@ -109,9 +109,9 @@ def test_config_scopes_path(mutable_config):
 
     lines_by_scope_name = {line.split()[0]: line for line in lines}
     print(lines_by_scope_name)
-    assert "/user/" in lines_by_scope_name["user"]
-    assert "/system/" in lines_by_scope_name["system"]
-    assert "/site/" in lines_by_scope_name["site"]
+    assert f"{os.sep}user{os.sep}" in lines_by_scope_name["user"]
+    assert f"{os.sep}system{os.sep}" in lines_by_scope_name["system"]
+    assert f"{os.sep}site{os.sep}" in lines_by_scope_name["site"]
 
 
 def test_get_config_scope(mock_low_high_config):
