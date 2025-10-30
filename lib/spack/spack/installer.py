@@ -1283,6 +1283,9 @@ class BuildTask(Task):
         self._setup_install_dir(pkg)
 
         # Create a child process to do the actual installation.
+        self._start_build_process()
+
+    def _start_build_process(self):
         self.process_handle = spack.build_environment.start_build_process(
             self.pkg, build_process, self.request.install_args
         )
@@ -1382,6 +1385,26 @@ class BuildTask(Task):
         """Terminate any processes this task still has running."""
         if self.process_handle:
             self.process_handle.terminate()
+
+
+class MockBuildProcess:
+    def complete(self) -> bool:
+        return True
+
+    def terminate(self) -> None:
+        pass
+
+
+class FakeBuildTask(BuildTask):
+    """Blocking BuildTask executed directly in the main thread. Used for --fake installs."""
+
+    process_handle = MockBuildProcess()  # type: ignore[assignment]
+
+    def _start_build_process(self):
+        build_process(self.pkg, self.request.install_args)
+
+    def poll(self):
+        return True
 
 
 class RewireTask(Task):
@@ -1600,7 +1623,12 @@ class PackageInstaller:
             request: the associated install request
             all_deps: dictionary of all dependencies and associated dependents
         """
-        cls = RewireTask if pkg.spec.spliced else BuildTask
+        cls: type[Task] = BuildTask
+        if pkg.spec.spliced:
+            cls = RewireTask
+        elif request.install_args.get("fake"):
+            cls = FakeBuildTask
+
         task = cls(pkg, request=request, status=BuildStatus.QUEUED, installed=self.installed)
         for dep_id in task.dependencies:
             all_deps[dep_id].add(package_id(pkg.spec))
