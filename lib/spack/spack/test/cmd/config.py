@@ -85,7 +85,33 @@ def test_config_scopes(path, types, mutable_mock_env_path):
 def test_config_scopes_include(type):
     scopes_cmd = ["scopes", "-vt", type]
     output = config(*scopes_cmd).strip()
-    assert not output or all([type in line for line in output.split("\n")])
+    lines = output.split("\n")
+    assert not output or all([type in line for line in lines[1:]])
+
+
+def test_config_scopes_section(mutable_config):
+    scopes_cmd = ["scopes", "-v", "packages"]
+    output = config(*scopes_cmd).strip()
+    lines = output.split("\n")
+
+    print(lines)
+
+    lines_by_scope_name = {line.split()[0]: line for line in lines}
+    assert "absent" in lines_by_scope_name["command_line"]
+    assert "absent" in lines_by_scope_name["_builtin"]
+    assert "active" in lines_by_scope_name["site"]
+
+
+def test_config_scopes_path(mutable_config):
+    scopes_cmd = ["scopes", "-p"]
+    output = config(*scopes_cmd).strip()
+    lines = output.split("\n")
+
+    lines_by_scope_name = {line.split()[0]: line for line in lines}
+    print(lines_by_scope_name)
+    assert "/user/" in lines_by_scope_name["user"]
+    assert "/system/" in lines_by_scope_name["system"]
+    assert "/site/" in lines_by_scope_name["site"]
 
 
 def test_get_config_scope(mock_low_high_config):
