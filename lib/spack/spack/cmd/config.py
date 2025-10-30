@@ -275,19 +275,26 @@ def _config_scope_info(args, scope, active, included):
 
     if args.scopes_verbose:
         result.append(",".join(_config_basic_scope_types(scope, included)))
-        result.append("active" if scope.name in active else "override")
+        if scope.name not in active:
+            scope_status = "override"
+        elif args.section and not spack.config.CONFIG.get_config(args.section, scope=scope.name):
+            scope_status = "absent"
+        else:
+            scope_status = "active"
+        result.append(scope_status)
 
     section_path = None
-    if (args.section or args.paths) and hasattr(scope, "path"):
-        section_path = scope.get_section_filename(args.section) if args.section else None
-        result.append(
-            section_path
-            if section_path and os.path.exists(section_path)
-            else f"{scope.path}{os.sep}"
-        )
-    result.append(section_path or " ")
+    if args.section or args.paths:
+        if hasattr(scope, "path"):
+            section_path = scope.get_section_filename(args.section) if args.section else None
+            result.append(
+                section_path
+                if section_path and os.path.exists(section_path)
+                else f"{scope.path}{os.sep}"
+            )
+        result.append(section_path or " ")
 
-    if scope.name not in active:
+    if args.scopes_verbose and scope_status in ("absent", "override"):
         result = [color.colorize(f"@k{{{elt}}}") for elt in result]
 
     return result
@@ -308,7 +315,6 @@ def _config_basic_scope_types(scope, included):
 
 def config_scopes(args):
     """List configured scopes in descending order of precedence."""
-
     included = list(i.name for s in spack.config.scopes().values() for i in s.included_scopes)
     active = [s.name for s in spack.config.CONFIG.active_scopes]
     scopes = [
@@ -322,7 +328,19 @@ def config_scopes(args):
     ]
 
     if scopes:
-        colify_table([_config_scope_info(args, s, active, included) for s in scopes])
+        headers = ["Scope"]
+        if args.scopes_verbose:
+            headers += ["Type", "Status"]
+        if args.section or args.paths:
+            headers += ["Path"]
+
+        table = [_config_scope_info(args, s, active, included) for s in scopes]
+
+        # add headers if we have > 1 column
+        if len(headers) > 1:
+            table = [[color.colorize(f"@*C{{{colname}}}") for colname in headers]] + table
+
+        colify_table(table)
 
 
 def config_add(args):
