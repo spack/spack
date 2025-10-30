@@ -29,4 +29,3 @@ class PropagationPolicy(enum.Enum):
 
     NONE = enum.auto()
     PREFERENCE = enum.auto()
-    REQUIREMENT = enum.auto()

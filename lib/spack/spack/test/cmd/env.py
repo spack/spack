@@ -223,11 +223,13 @@ def installed_environment(
         spack_yaml.write_text(content)
         with fs.working_dir(tmp_path):
             env("create", "test", "./spack.yaml")
-            with ev.read("test"):
-                install("--fake")
+            with ev.read("test") as current_environment:
+                current_environment.concretize()
+                current_environment.install_all(fake=True)
+                current_environment.write(regenerate=True)
 
-            test = ev.read("test")
-            yield test
+            with ev.read("test") as current_environment:
+                yield current_environment
 
     return _installed_environment
 
