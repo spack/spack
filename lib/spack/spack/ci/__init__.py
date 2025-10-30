@@ -356,7 +356,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     os environment variables"""
     pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
     if "buildcache-destination" not in pipeline_mirrors:
-        raise SpackCIError("spack ci generate requires a mirror named 'buildcache-destination'")
+        raise SpackCIError("'spack ci generate' requires a mirror named 'buildcache-destination'")
 
     buildcache_destination = pipeline_mirrors["buildcache-destination"]
     options = PipelineOptions(env, buildcache_destination)
@@ -542,7 +542,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     if options.broken_specs_url and not options.pipeline_type == PipelineType.COPY_ONLY:
         broken = check_for_broken_specs(pipeline_specs, options.broken_specs_url)
         if broken and not rebuild_everything:
-            raise SpackCIError("spack ci generate failed broken specs check")
+            raise SpackCIError("'spack ci generate' failed broken specs check")
 
     spack_ci_config = SpackCIConfig(ci_config)
     spack_ci_config.init_pipeline_jobs(pipeline)

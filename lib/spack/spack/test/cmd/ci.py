@@ -1209,7 +1209,7 @@ spack:
 
         with ev.read("test"):
             # Check the 'generate' subcommand
-            expect = "spack ci generate requires a mirror named 'buildcache-destination'"
+            expect = "'spack ci generate' requires a mirror named 'buildcache-destination'"
             with pytest.raises(ci.SpackCIError, match=expect):
                 ci_cmd("generate", "--output-file", str(tmp_path / ".gitlab-ci.yml"))
 
