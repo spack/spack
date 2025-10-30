@@ -529,9 +529,6 @@ class Configuration:
     ) -> None:
         """Add a scope to the Configuration, at a given priority.
 
-        This version of push_scope yields included scopes incrementally, so that their
-        data can be used by higher priority scopes during config initialization.
-
         If a priority is not given, it is assumed to be the current highest priority.
 
         Args:
