@@ -1450,6 +1450,9 @@ class SpackSolverSetup:
 
     gen: "ProblemInstanceBuilder"
 
+    # Cache `internal_error` symbols
+    _INTERNAL_ERRORS: List = []
+
     def __init__(self, tests: spack.concretize.TestsType = False):
         self.possible_graph = create_graph_analyzer()
 
@@ -3158,6 +3161,16 @@ class SpackSolverSetup:
                 self.gen.fact(fn.allow_mixing(pkg_name))
 
     def internal_errors(self, *, _use_unsat_cores: bool):
+        self._cache_internal_errors()
+        for symbol in SpackSolverSetup._INTERNAL_ERRORS:
+            if _use_unsat_cores:
+                self.assumptions.append((parse_term(str(symbol)), True))
+                self.gen.asp_problem.append(f"{{{symbol}}}.")
+            else:
+                self.gen.asp_problem.append(f"{symbol}.")
+
+    def _cache_internal_errors(self):
+        """Caching internal errors speeds-up unit tests, and when_possible solves"""
         parent_dir = os.path.dirname(__file__)
 
         def visit(node):
@@ -3169,14 +3182,11 @@ class SpackSolverSetup:
                             if name == "internal_error":
                                 arg = ast_sym(ast_sym(term.atom).arguments[0])
                                 symbol = AspFunction(name)(arg.string)
-                                if _use_unsat_cores:
-                                    self.assumptions.append((parse_term(str(symbol)), True))
-                                    self.gen.asp_problem.append(f"{{{symbol}}}.")
-                                else:
-                                    self.gen.asp_problem.append(f"{symbol}.")
+                                SpackSolverSetup._INTERNAL_ERRORS.append(symbol)
 
         path = os.path.join(parent_dir, "concretize.lp")
-        parse_files([path], visit)
+        if not SpackSolverSetup._INTERNAL_ERRORS:
+            parse_files([path], visit)
 
     def define_runtime_constraints(self) -> List[spack.spec.Spec]:
         """Define the constraints to be imposed on the runtimes, and returns a list of
