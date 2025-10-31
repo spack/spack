@@ -2475,6 +2475,8 @@ class PackageInstaller:
                     # handled in complete_task()
                     task.error_result = e
 
+            # 10 ms to avoid busy waiting
+            time.sleep(0.01)
             # Check if any tasks have completed and add to list
             done = [task for task in active_tasks if task.poll()]
             try:
