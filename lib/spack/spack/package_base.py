@@ -1053,8 +1053,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg_instance.do_fetch(mirror_only=True)
         except spack.error.FetchError:
             pass
-        if pkg_instance.stage.archive_file:
-            file_name = pathlib.Path(pkg_instance.stage.archive_file).file
+        commit_candidate = getattr(pkg_instance.fetcher, "commit", None)
+        if commit_candidate:
+            sha = pkg_instance.fetcher.commit
+        elif pkg_instance.stage.archive_file:
+            file_name = pathlib.Path(pkg_instance.stage.archive_file).resolve().name
             sha = file_name.split(".")[0].split("_")[0]
             # TODO(psakiev) this can be done as a stage check
             # sha = spack.util.archive.retrieve_commit_from_archive(
