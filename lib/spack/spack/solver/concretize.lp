@@ -1613,6 +1613,59 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
     attr("virtual_on_edge", PackageNode, CompilerNode2, "cxx"),
     CompilerNode1 != CompilerNode2.
 
+% Compiler-unmixing: 1st rule
+unification_set_compiler("root", CompilerNode, Language) :-
+    node_compiler(node(ID, Package), CompilerNode, Language),
+    no_compiler_mixing(Language),
+    not allow_mixing(Package),
+    unification_set("root", node(ID, Package)).
+
+% Compiler for a reused node
+% This differs from compiler_from_reuse in that this is about x->y
+% where y is a compiler and x is reused (compiler_from_reuse is
+% is concerned with reuse of the compiler itself)
+reused_node_compiler(PackageNode, node(CompilerHash, Compiler), Language) :-
+    concrete(PackageNode),
+    attr("concrete_build_dependency", PackageNode, Compiler, CompilerHash),
+    attr("virtual_on_build_edge", PackageNode, Compiler, Language),
+    language(Language).
+
+% Compiler-unmixing: 2nd rule
+% The compiler appears on a reused node as well as a built node. In
+% that case there will be a generated node() with an ID.
+% While easier to understand than rule 3, in fact this rule addresses
+% a small set of use cases beyond rules 1 and 3: generally speaking
+% rule 1 ensures that all non-reused nodes get a consistent compiler.
+% Rule 3 generates compiler IDs that almost always fail the count
+% rule, but does not "activate" when in combination with rule 1 when
+% it is possible to propagate a compiler to another built node in the
+% unification set. This in fact is only really used when the reused
+% node compiler has a node(), but associated with a different
+% unification set.
+unification_set_compiler("root", CompilerNode, Language) :-
+    reused_node_compiler(node(ID, Package), node(CompilerHash, Compiler), Language),
+    attr("hash", CompilerNode, CompilerHash),
+    no_compiler_mixing(Language),
+    not allow_mixing(Package),
+    unification_set("root", node(ID, Package)).
+
+% Compiler-unmixing: 3rd rule
+% If the compiler only appears in reused nodes, then there is no node()
+% for it; this will always generate an error unless all nodes in the
+% root unification set are reused.
+unification_set_compiler("root", node(CompilerHash, Compiler), Language) :-
+    reused_node_compiler(node(ID, Package), node(CompilerHash, Compiler), Language),
+    not attr("hash", _, CompilerHash),
+    no_compiler_mixing(Language),
+    not allow_mixing(Package),
+    unification_set("root", node(ID, Package)).
+
+#defined no_compiler_mixing/1.
+#defined allow_mixing/1.
+
+% You can't have >1 compiler for a given language if mixing is disabled
+error(100, "Compiler mixing is disabled") :-
+    #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
 
 %-----------------------------------------------------------------------------
 % Runtimes

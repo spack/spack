@@ -16,7 +16,7 @@ level = "short"
 # is only one on spec syntax.
 #
 spec_guide = """\
-spec expression syntax:
+@*B{spec expression syntax:}
 
   package [constraints] [^dependency [constraints] ...]
 
@@ -24,43 +24,43 @@ spec expression syntax:
   @K{/hash}                             unique prefix or full hash of
                                     installed package
 
-  constraints:
-    versions:
+  @*B{constraints:}
+    @*c{versions:}
       @c{@version}                      single version
       @c{@min:max}                      version range (inclusive)
       @c{@min:}                         version <min> or higher
       @c{@:max}                         up to version <max> (inclusive)
       @c{@=version}                     exact version
 
-    compilers:
+    @*c{compilers:}
       @g{%compiler}                     build with <compiler>
       @g{%compiler@version}             build with specific compiler version
       @g{%compiler@min:max}             specific version range (see above)
 
-    compiler flags:
+    @*c{compiler flags:}
       @g{cflags="flags"}                cppflags, cflags, cxxflags,
                                     fflags, ldflags, ldlibs
       @g{==}                            propagate flags to package dependencies
 
-    variants:
+    @*c{variants:}
       @B{+variant}                      enable <variant>
       @r{-variant} or @r{~variant}          disable <variant>
       @B{variant=value}                 set non-boolean <variant> to <value>
       @B{variant=value1,value2,value3}  set multi-value <variant> values
       @B{++}, @r{--}, @r{~~}, @B{==}                propagate variants to package dependencies
 
-    architecture variants:
+    @*c{architecture variants:}
       @m{platform=platform}             linux, darwin, freebsd, windows
       @m{os=operating_system}           specific <operating_system>
       @m{target=target}                 specific <target> processor
       @m{arch=platform-os-target}       shortcut for all three above
 
-    dependencies:
+    @*c{dependencies:}
       ^dependency [constraints]     specify constraints on dependencies
       ^@K{/hash}                        build with a specific installed
                                     dependency
 
-  examples:
+  @*B{examples:}
       hdf5                          any hdf5 configuration
       hdf5 @c{@1.10.1}                  hdf5 version 1.10.1
       hdf5 @c{@1.8:}                    hdf5 1.8 or higher

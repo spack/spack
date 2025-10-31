@@ -346,13 +346,13 @@ complete -c spack --erase
 # Everything below here is auto-generated.
 
 # spack
-set -g __fish_spack_optspecs_spack h/help H/all-help color= c/config= C/config-scope= d/debug timestamp pdb e/env= D/env-dir= E/no-env use-env-repo k/insecure l/enable-locks L/disable-locks m/mock b/bootstrap p/profile sorted-profile= lines= v/verbose stacktrace t/backtrace V/version print-shell-vars=
+set -g __fish_spack_optspecs_spack color= v/verbose k/insecure b/bootstrap V/version h/help H/all-help c/config= C/config-scope= e/env= D/env-dir= E/no-env use-env-repo d/debug t/backtrace pdb timestamp m/mock print-shell-vars= stacktrace l/enable-locks L/disable-locks p/profile sorted-profile= lines=
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a add -d 'add a spec to an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a arch -d 'print architecture information about this machine'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a audit -d 'audit configuration files, packages, etc.'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a blame -d 'show contributors to packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a bootstrap -d 'manage bootstrap configuration'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a build-env -d 'run a command in a spec'"'"'s install environment, or dump its environment to screen or file'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a build-env -d 'dump the install environment for a spec,'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a buildcache -d 'create, download and install binary packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a cd -d 'cd to spack directories in the shell'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a change -d 'change an existing spec in an environment'
@@ -365,20 +365,20 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a compilers -d 'lis
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a concretize -d 'concretize an environment and write a lockfile'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a concretise -d 'concretize an environment and write a lockfile'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a config -d 'get and set configuration options'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerize -d 'creates recipes to build images for different container runtimes'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerise -d 'creates recipes to build images for different container runtimes'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerize -d 'create a container build recipe from an environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a containerise -d 'create a container build recipe from an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a create -d 'create a new package file'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a debug -d 'debugging commands for troubleshooting Spack'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deconcretize -d 'remove specs from the concretized lockfile of an environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deconcretize -d 'remove specs from the lockfile of an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependencies -d 'show dependencies of a package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependents -d 'show packages that depend on another'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deprecate -d 'replace one package with another via symlinks'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dev-build -d 'developer build: build from code in current working directory'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dev-build -d 'build package from code in current working directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a develop -d 'add a spec to an environment'"'"'s dev-build information'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a diff -d 'compare two specs'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a docs -d 'open spack documentation in a web browser'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a edit -d 'open package files in ``$EDITOR``'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a env -d 'manage virtual environments'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a env -d 'manage environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a extensions -d 'list extensions for package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a external -d 'manage external packages in Spack configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a fetch -d 'fetch archives for packages'
@@ -400,7 +400,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a make-installer -d
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mark -d 'mark packages as explicitly or implicitly installed'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mirror -d 'manage mirrors (source and binary)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a module -d 'generate/manage module files'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a patch -d 'patch expanded archive sources in preparation for install'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a patch -d 'patch expanded sources in preparation for install'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a pkg -d 'query packages associated with particular git revisions'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a providers -d 'list packages that provide a particular virtual package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a pydoc -d 'run pydoc from within spack'
@@ -409,7 +409,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a reindex -d 'rebui
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a remove -d 'remove specs from an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a rm -d 'remove specs from an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a repo -d 'manage package source repositories'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a resource -d 'list downloadable resources (tarballs, repos, patches, etc.)'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a resource -d 'list downloadable resources (tarballs, repos, patches)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a restage -d 'revert checked out package source code'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a solve -d 'concretize a specs using an ASP solver'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a spec -d 'show what would be installed, given a spec'
@@ -417,7 +417,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a stage -d 'expand 
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a style -d 'runs source code style checks on spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a tags -d 'show package tags and associated packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a test -d 'run spack'"'"'s tests for an install'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a test-env -d 'run a command in a spec'"'"'s test environment, or dump its environment to screen or file'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a test-env -d 'run a command in a spec'"'"'s test environment,'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a tutorial -d 'set up spack for our tutorial (WARNING: modifies config!)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a undevelop -d 'remove specs from an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a uninstall -d 'remove installed packages'
@@ -426,57 +426,57 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a unload -d 'remove
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a url -d 'debugging tool for url parsing'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a verify -d 'verify spack installations on disk'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a versions -d 'list available versions of a package'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a view -d 'project packages to a compact naming scheme on the filesystem'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a view -d 'manipulate view directories in the filesystem'
+complete -c spack -n '__fish_spack_using_command ' -l color -r -f -a 'always never auto'
+complete -c spack -n '__fish_spack_using_command ' -l color -r -d 'when to colorize output (default: auto)'
+complete -c spack -n '__fish_spack_using_command ' -s v -l verbose -f -a verbose
+complete -c spack -n '__fish_spack_using_command ' -s v -l verbose -d 'print additional output during builds'
+complete -c spack -n '__fish_spack_using_command ' -s k -l insecure -f -a insecure
+complete -c spack -n '__fish_spack_using_command ' -s k -l insecure -d 'do not check ssl certificates when downloading'
+complete -c spack -n '__fish_spack_using_command ' -s b -l bootstrap -f -a bootstrap
+complete -c spack -n '__fish_spack_using_command ' -s b -l bootstrap -d 'use bootstrap config, store, and externals'
+complete -c spack -n '__fish_spack_using_command ' -s V -l version -f -a version
+complete -c spack -n '__fish_spack_using_command ' -s V -l version -d 'show version number and exit'
 complete -c spack -n '__fish_spack_using_command ' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ' -s H -l all-help -f -a help
-complete -c spack -n '__fish_spack_using_command ' -s H -l all-help -d 'show help for all commands (same as ``spack help --all``)'
-complete -c spack -n '__fish_spack_using_command ' -l color -r -f -a 'always never auto'
-complete -c spack -n '__fish_spack_using_command ' -l color -r -d 'when to colorize output (default: auto)'
+complete -c spack -n '__fish_spack_using_command ' -s H -l all-help -d 'show help for all commands (same as `spack help --all`)'
 complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -f -a config_vars
-complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -d 'add one or more custom, one off config settings'
+complete -c spack -n '__fish_spack_using_command ' -s c -l config -r -d 'add one or more custom, one-off config settings'
 complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -f -a config_scopes
-complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -d 'add directory or environment as read-only configuration scope, without activating the environment.'
-complete -c spack -n '__fish_spack_using_command ' -s d -l debug -f -a debug
-complete -c spack -n '__fish_spack_using_command ' -s d -l debug -d 'write out debug messages'
-complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
-complete -c spack -n '__fish_spack_using_command ' -l timestamp -d 'add a timestamp to tty output'
-complete -c spack -n '__fish_spack_using_command ' -l pdb -f -a pdb
-complete -c spack -n '__fish_spack_using_command ' -l pdb -d 'run spack under the pdb debugger'
+complete -c spack -n '__fish_spack_using_command ' -s C -l config-scope -r -d 'add directory or environment as read-only config scope'
 complete -c spack -n '__fish_spack_using_command ' -s e -l env -r -f -a env
-complete -c spack -n '__fish_spack_using_command ' -s e -l env -r -d 'run with a specific environment (see spack env)'
+complete -c spack -n '__fish_spack_using_command ' -s e -l env -r -d 'run with an environment'
 complete -c spack -n '__fish_spack_using_command ' -s D -l env-dir -r -f -a env_dir
-complete -c spack -n '__fish_spack_using_command ' -s D -l env-dir -r -d 'run with an environment directory (ignore managed environments)'
+complete -c spack -n '__fish_spack_using_command ' -s D -l env-dir -r -d 'run with environment in directory (ignore managed envs)'
 complete -c spack -n '__fish_spack_using_command ' -s E -l no-env -f -a no_env
 complete -c spack -n '__fish_spack_using_command ' -s E -l no-env -d 'run without any environments activated (see spack env)'
 complete -c spack -n '__fish_spack_using_command ' -l use-env-repo -f -a use_env_repo
-complete -c spack -n '__fish_spack_using_command ' -l use-env-repo -d 'when running in an environment, use its package repository'
-complete -c spack -n '__fish_spack_using_command ' -s k -l insecure -f -a insecure
-complete -c spack -n '__fish_spack_using_command ' -s k -l insecure -d 'do not check ssl certificates when downloading'
+complete -c spack -n '__fish_spack_using_command ' -l use-env-repo -d 'when in an environment, use its package repository'
+complete -c spack -n '__fish_spack_using_command ' -s d -l debug -f -a debug
+complete -c spack -n '__fish_spack_using_command ' -s d -l debug -d 'write out debug messages'
+complete -c spack -n '__fish_spack_using_command ' -s t -l backtrace -f -a backtrace
+complete -c spack -n '__fish_spack_using_command ' -s t -l backtrace -d 'always show backtraces for exceptions'
+complete -c spack -n '__fish_spack_using_command ' -l pdb -f -a pdb
+complete -c spack -n '__fish_spack_using_command ' -l pdb -d 'run spack under the pdb debugger'
+complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
+complete -c spack -n '__fish_spack_using_command ' -l timestamp -d 'add a timestamp to tty output'
+complete -c spack -n '__fish_spack_using_command ' -s m -l mock -f -a mock
+complete -c spack -n '__fish_spack_using_command ' -s m -l mock -d 'use mock packages instead of real ones'
+complete -c spack -n '__fish_spack_using_command ' -l print-shell-vars -r -f -a print_shell_vars
+complete -c spack -n '__fish_spack_using_command ' -l print-shell-vars -r -d 'print info needed by setup-env.*sh'
+complete -c spack -n '__fish_spack_using_command ' -l stacktrace -f -a stacktrace
+complete -c spack -n '__fish_spack_using_command ' -l stacktrace -d 'add stacktraces to all printed statements'
 complete -c spack -n '__fish_spack_using_command ' -s l -l enable-locks -f -a locks
 complete -c spack -n '__fish_spack_using_command ' -s l -l enable-locks -d 'use filesystem locking (default)'
 complete -c spack -n '__fish_spack_using_command ' -s L -l disable-locks -f -a locks
 complete -c spack -n '__fish_spack_using_command ' -s L -l disable-locks -d 'do not use filesystem locking (unsafe)'
-complete -c spack -n '__fish_spack_using_command ' -s m -l mock -f -a mock
-complete -c spack -n '__fish_spack_using_command ' -s m -l mock -d 'use mock packages instead of real ones'
-complete -c spack -n '__fish_spack_using_command ' -s b -l bootstrap -f -a bootstrap
-complete -c spack -n '__fish_spack_using_command ' -s b -l bootstrap -d 'use bootstrap configuration (bootstrap store, config, externals)'
 complete -c spack -n '__fish_spack_using_command ' -s p -l profile -f -a spack_profile
 complete -c spack -n '__fish_spack_using_command ' -s p -l profile -d 'profile execution using cProfile'
 complete -c spack -n '__fish_spack_using_command ' -l sorted-profile -r -f -a sorted_profile
-complete -c spack -n '__fish_spack_using_command ' -l sorted-profile -r -d 'profile and sort'
+complete -c spack -n '__fish_spack_using_command ' -l sorted-profile -r -d 'profile and sort by STAT, which can be: calls, ncalls,'
 complete -c spack -n '__fish_spack_using_command ' -l lines -r -f -a lines
 complete -c spack -n '__fish_spack_using_command ' -l lines -r -d 'lines of profile output or '"'"'all'"'"' (default: 20)'
-complete -c spack -n '__fish_spack_using_command ' -s v -l verbose -f -a verbose
-complete -c spack -n '__fish_spack_using_command ' -s v -l verbose -d 'print additional output during builds'
-complete -c spack -n '__fish_spack_using_command ' -l stacktrace -f -a stacktrace
-complete -c spack -n '__fish_spack_using_command ' -l stacktrace -d 'add stacktraces to all printed statements'
-complete -c spack -n '__fish_spack_using_command ' -s t -l backtrace -f -a backtrace
-complete -c spack -n '__fish_spack_using_command ' -s t -l backtrace -d 'always show backtraces for exceptions'
-complete -c spack -n '__fish_spack_using_command ' -s V -l version -f -a version
-complete -c spack -n '__fish_spack_using_command ' -s V -l version -d 'show version number and exit'
-complete -c spack -n '__fish_spack_using_command ' -l print-shell-vars -r -f -a print_shell_vars
-complete -c spack -n '__fish_spack_using_command ' -l print-shell-vars -r -d 'print info needed by setup-env.*sh'
 
 # spack add
 set -g __fish_spack_optspecs_spack_add h/help l/list-name=

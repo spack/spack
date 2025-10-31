@@ -36,6 +36,7 @@ def test_transitive_dependents(mock_packages):
             "callpath",
             "dyninst",
             "libdwarf",
+            "mixing-parent",
             "mpileaks",
             "multivalue-variant",
             "singlevalue-variant-dependent",

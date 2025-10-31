@@ -21,7 +21,7 @@ from spack.llnl.util.tty.colify import colify
 from spack.version import VersionList
 
 description = "list and search available packages"
-section = "basic"
+section = "query"
 level = "short"
 
 

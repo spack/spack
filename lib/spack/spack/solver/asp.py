@@ -2998,6 +2998,8 @@ class SpackSolverSetup:
         # TODO: warning is because mypy doesn't know Spec supports rich comparison via decorator
         self.possible_compilers.sort()  # type: ignore[call-arg,call-overload]
 
+        self.compiler_mixing()
+
         self.gen.h1("Runtimes")
         injected_dependencies = self.define_runtime_constraints()
 
@@ -3125,6 +3127,18 @@ class SpackSolverSetup:
         self.internal_errors(_use_unsat_cores=_use_unsat_cores)
 
         return self.gen
+
+    def compiler_mixing(self):
+        should_mix = spack.config.get("concretizer:compiler_mixing", True)
+        if should_mix is True:
+            return
+        # anything besides should_mix: true
+        for lang in ["c", "cxx", "fortran"]:
+            self.gen.fact(fn.no_compiler_mixing(lang))
+        # user specified an allow-list
+        if isinstance(should_mix, list):
+            for pkg_name in should_mix:
+                self.gen.fact(fn.allow_mixing(pkg_name))
 
     def internal_errors(self, *, _use_unsat_cores: bool):
         parent_dir = os.path.dirname(__file__)

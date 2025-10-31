@@ -502,6 +502,25 @@ def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
 
 
 @pytest.fixture(scope="session")
+def mock_stage_for_database(tmp_path_factory: pytest.TempPathFactory, monkeypatch_session):
+    """A session-scoped analog of mock_stage, so that the mock_store
+    fixture uses its own stage vs. the global stage root for spack.
+    """
+    new_stage = tmp_path_factory.mktemp("mock-stage")
+
+    source_path = new_stage / spack.stage._source_path_subdir
+    source_path.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch_session.setattr(spack.stage, "_stage_root", str(new_stage))
+
+    yield str(new_stage)
+
+    # Clean up the test stage directory
+    if new_stage.is_dir():
+        shutil.rmtree(new_stage, onerror=onerror)
+
+
+@pytest.fixture(scope="session")
 def ignore_stage_files():
     """Session-scoped helper for check_for_leftover_stage_files.
 
@@ -678,6 +697,28 @@ def _pkg_install_fn(pkg, spec, prefix):
 @pytest.fixture
 def mock_pkg_install(monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "install", _pkg_install_fn, raising=False)
+
+
+@pytest.fixture(scope="function")
+def fake_db_install(tmp_path):
+    """This fakes "enough" of the installation process to make Spack
+    think of a spec as being installed as far as the concretizer
+    and parser are concerned. It does not run any build phase defined
+    in the package, simply acting as though the installation had
+    completed successfully.
+
+    It allows doing things like
+
+    ``spack.concretize.concretize_one(f"x ^/hash-of-y")``
+
+    after doing something like ``fake_db_install(y)``
+    """
+    with spack.store.use_store(str(tmp_path)) as the_store:
+
+        def _install(a_spec):
+            the_store.db.add(a_spec)
+
+        yield _install
 
 
 @pytest.fixture(scope="function")
@@ -1052,6 +1093,7 @@ def mock_store(
     mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache: Tuple[Path, Path],
+    mock_stage_for_database,
 ):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled

@@ -21,7 +21,7 @@ from spack.cmd.common import arguments
 from ..enums import InstallRecordStatus
 
 description = "list and search installed packages"
-section = "basic"
+section = "query"
 level = "short"
 
 

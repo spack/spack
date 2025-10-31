@@ -12,7 +12,7 @@ from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_do
 from spack.llnl.util import tty
 
 description = "generate graphs of package dependency relationships"
-section = "basic"
+section = "query"
 level = "long"
 
 

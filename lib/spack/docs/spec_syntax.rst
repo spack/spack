@@ -116,22 +116,47 @@ You can put all the same modifiers on dependency specs that you would put on the
 That is, you can specify their versions, variants, and architectures just like any other spec.
 Specifiers are associated with the nearest package name to their left.
 
-The order of transitive dependencies does not matter when writing a spec.
-For example, these two specs represent exactly the same configuration:
+.. _sec-virtual-dependencies:
 
-.. code-block:: spec
+Virtual dependencies
+^^^^^^^^^^^^^^^^^^^^
 
-   mpileaks ^callpath@1.0 ^libelf@0.8.3
-   mpileaks ^libelf@0.8.3 ^callpath@1.0
+The dependency graph for ``mpileaks`` we saw above wasn't *quite* accurate.
+``mpileaks`` uses MPI, which is an interface that has many different implementations.
+Above, we showed ``mpileaks`` and ``callpath`` depending on ``mpich``, which is one *particular* implementation of MPI.
+However, we could build either with another implementation, such as ``openmpi`` or ``mvapich``.
 
-Direct dependencies specified with ``%`` apply either to the most recent transitive dependency (``^``), or, if none, to the root package in the spec.
-So in the spec:
+Spack represents interfaces like this using *virtual dependencies*.
+The real dependency DAG for ``mpileaks`` looks like this:
 
-.. code-block:: spec
+.. graphviz::
 
-   root %dep1 ^transitive %dep2 %dep3
+   digraph {
+       node[
+         fontname=Monaco,
+         penwidth=2,
+         fontsize=124,
+         margin=.4,
+         shape=box,
+         fillcolor=lightblue,
+         style="rounded,filled"
+       ]
 
-``dep1`` is a direct dependency of ``root``, while both ``dep2`` and ``dep3`` are direct dependencies of ``transitive``.
+       mpi [color=red]
+       mpileaks -> mpi
+       mpileaks -> callpath -> mpi
+       callpath -> dyninst
+       dyninst  -> libdwarf -> libelf
+       dyninst  -> libelf
+   }
+
+Notice that ``mpich`` has now been replaced with ``mpi``.
+There is no *real* MPI package, but some packages *provide* the MPI interface, and these packages can be substituted in for ``mpi`` when ``mpileaks`` is built.
+
+Spack is unique in that its virtual packages can be versioned, just like regular packages.
+A particular version of a package may provide a particular version of a virtual package.
+A package can *depend on* a particular version of a virtual package.
+For instance, if an application needs MPI-2 functions, it can depend on ``mpi@2:`` to indicate that it needs some implementation that provides MPI-2 functions.
 
 Below are more details about the specifiers that you can add to specs.
 
@@ -423,59 +448,45 @@ In the snippet above, for instance, the microarchitecture was demoted to ``haswe
 
 Finally, if Spack has no information to match the compiler and target, it will proceed with the installation but avoid injecting any microarchitecture-specific flags.
 
-.. _sec-virtual-dependencies:
 
-Virtual dependencies
---------------------
+.. _sec-dependencies:
 
-The dependency graph for ``mpileaks`` we saw above wasn't *quite* accurate.
-``mpileaks`` uses MPI, which is an interface that has many different implementations.
-Above, we showed ``mpileaks`` and ``callpath`` depending on ``mpich``, which is one *particular* implementation of MPI.
-However, we could build either with another implementation, such as ``openmpi`` or ``mvapich``.
+Dependencies
+------------
 
-Spack represents interfaces like this using *virtual dependencies*.
-The real dependency DAG for ``mpileaks`` looks like this:
+Each node in a DAG can specify dependencies using either the ``%`` or the ``^`` sigil:
 
-.. graphviz::
+* The ``%`` sigil identifies direct dependencies, which means there must be an edge connecting the dependency to the node they refer to.
+* The ``^`` sigil identifies transitive dependencies, which means the dependency just needs to be in the sub-DAG of the node they refer to.
 
-   digraph {
-       node[
-         fontname=Monaco,
-         penwidth=2,
-         fontsize=124,
-         margin=.4,
-         shape=box,
-         fillcolor=lightblue,
-         style="rounded,filled"
-       ]
+The order of transitive dependencies does not matter when writing a spec.
+For example, these two specs represent exactly the same configuration:
 
-       mpi [color=red]
-       mpileaks -> mpi
-       mpileaks -> callpath -> mpi
-       callpath -> dyninst
-       dyninst  -> libdwarf -> libelf
-       dyninst  -> libelf
-   }
+.. code-block:: spec
 
-Notice that ``mpich`` has now been replaced with ``mpi``.
-There is no *real* MPI package, but some packages *provide* the MPI interface, and these packages can be substituted in for ``mpi`` when ``mpileaks`` is built.
+   mpileaks ^callpath@1.0 ^libelf@0.8.3
+   mpileaks ^libelf@0.8.3 ^callpath@1.0
 
-Spack is unique in that its virtual packages can be versioned, just like regular packages.
-A particular version of a package may provide a particular version of a virtual package.
-A package can *depend on* a particular version of a virtual package.
-For instance, if an application needs MPI-2 functions, it can depend on ``mpi@2:`` to indicate that it needs some implementation that provides MPI-2 functions.
+Direct dependencies specified with ``%`` apply either to the most recent transitive dependency (``^``), or, if none, to the root package in the spec.
+So in the spec:
+
+.. code-block:: spec
+
+   root %dep1 ^transitive %dep2 %dep3
+
+``dep1`` is a direct dependency of ``root``, while both ``dep2`` and ``dep3`` are direct dependencies of ``transitive``.
 
 Constraining virtual packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When installing a package that depends on a virtual package, you can opt to specify the particular provider you want to use, or you can let Spack pick.
+When installing a package that depends on a virtual package, see :ref:`sec-virtual-dependencies`, you can opt to specify the particular provider you want to use, or you can let Spack pick.
 For example, if you just type this:
 
 .. code-block:: spec
 
    $ spack install mpileaks
 
-Then Spack will pick a provider for you according to site policies.
+Then Spack will pick an ``mpi`` provider for you according to site policies.
 If you really want a particular version, say ``mpich``, then you could run this instead:
 
 .. code-block:: spec
@@ -514,8 +525,53 @@ Concretizing the spec above produces the following DAG:
 where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former.
 The ``lapack`` and ``blas`` dependencies are satisfied by ``openblas``.
 
+Dependency edge attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some specs require additional information about the relationship between a package and its dependency.
+This information lives on the edge between the two, and can be specified by following the dependency sigil with square-brackets ``[]``.
+Edge attributes are always specified as key-value pairs:
+
+.. code-block:: spec
+
+   root ^[key=value] dep
+
+In the following sections we'll discuss the edge attributes that are currently allowed in the spec syntax.
+
+Virtuals
+""""""""
+
+Packages can provide, or depend on, multiple virtual packages.
+Users can select which virtuals to use from which dependency by specifying the ``virtuals`` edge attribute:
+
+.. code-block:: spec
+
+   $ spack install mpich %[virtuals=c,cxx] clang %[virtuals=fortran] gcc
+
+The command above tells Spack to use ``clang`` to provide the ``c`` and ``cxx`` virtuals, and ``gcc`` to provide the ``fortran`` virtual.
+
+The special syntax we have seen in :ref:`explicit-binding-virtuals` is a more compact way to specify the ``virtuals`` edge attribute.
+For instance, an equivalent formulation of the command above is:
+
+.. code-block:: spec
+
+   $ spack install mpich %c,cxx=clang %fortran=gcc
+
+Conditional dependencies
+""""""""""""""""""""""""
+
+Conditional dependencies allow dependency constraints to be applied only under certain conditions.
+We can express conditional constraints by specifying the ``when`` edge attribute:
+
+.. code-block:: spec
+
+   $ spack install hdf5 ^[when=+mpi] mpich@3.1
+
+This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
+
+
 Specifying Specs by Hash
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 Complicated specs can become cumbersome to enter on the command line, especially when many of the qualifications are necessary to distinguish between similar installs.
 To avoid this, when referencing an existing spec, Spack allows you to reference specs by their hash.
@@ -552,51 +608,6 @@ If the given spec hash is sufficiently long as to be unique, Spack will replace 
 Otherwise, it will prompt for a more qualified hash.
 
 Note that this will not work to reinstall a dependency uninstalled by ``spack uninstall --force``.
-
-Dependency edge attributes
---------------------------
-
-Some specs require additional information about the relationship between a package and its dependency.
-This information lives on the edge between the two, and can be specified by following the dependency sigil with square-brackets.
-Edge attributes are always specified as key-value pairs:
-
-.. code-block:: spec
-
-   root ^[key=value] dep
-
-In the following sections we'll discuss the edge attributes that are currently allowed in the spec syntax.
-
-Virtuals on edges
-^^^^^^^^^^^^^^^^^
-
-Packages can provide, or depend on, multiple virtual packages.
-Users can select which virtuals to use from which dependency by specifying the ``virtuals`` edge attribute:
-
-.. code-block:: spec
-
-   $ spack install mpich %[virtuals=c,cxx] clang %[virtuals=fortran] gcc
-
-The command above tells Spack to use ``clang`` to provide the ``c`` and ``cxx`` virtuals, and ``gcc`` to provide the ``fortran`` virtual.
-
-The special syntax we have seen in :ref:`explicit-binding-virtuals` is a more compact way to specify the ``virtuals`` edge attribute.
-For instance, an equivalent formulation of the command above is:
-
-.. code-block:: spec
-
-   $ spack install mpich %c,cxx=clang %fortran=gcc
-
-
-Conditional dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Conditional dependencies allow dependency constraints to be applied only under certain conditions.
-We can express conditional constraints by specifying the ``when`` edge attribute:
-
-.. code-block:: spec
-
-   $ spack install hdf5 ^[when=+mpi] mpich@3.1
-
-This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
 
 Specs on the command line
 -------------------------
