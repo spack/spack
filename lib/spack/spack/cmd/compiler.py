@@ -12,6 +12,7 @@ import spack.config
 import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
+from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.cmd.common import arguments
 from spack.llnl.util.lang import index_by
 from spack.llnl.util.tty.colify import colify
@@ -136,6 +137,8 @@ def compiler_remove(args):
 def compiler_info(args):
     """Print info about all compilers matching a spec."""
     query = spack.spec.Spec(args.compiler_spec)
+    # Replace legacy compiler name by its builtin name if available
+    query.name = LEGACY_COMPILER_TO_BUILTIN.get(query.name, query.name)
     all_compilers = spack.compilers.config.all_compilers(scope=args.scope, init_config=False)
 
     compilers = [x for x in all_compilers if x.satisfies(query)]
