@@ -1022,7 +1022,11 @@ class IncludePath(OptionalInclude):
 
     def __init__(self, entry: dict):
         super().__init__(entry)
-        self.path = entry.get("path", "")
+        path_override_env_var = entry.get("path_override_env_var", "")
+        if path_override_env_var and path_override_env_var in os.environ:
+            self.path = os.environ[path_override_env_var]
+        else:
+            self.path = entry.get("path", "")
         self.sha256 = entry.get("sha256", "")
         self.destination = None
 

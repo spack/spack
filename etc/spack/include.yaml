@@ -1,6 +1,7 @@
 include:
   # user configuration scope
   - name: "user"
+    path_override_env_var: SPACK_USER_CONFIG_PATH
     path: "~/.spack"
     optional: true
     when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
