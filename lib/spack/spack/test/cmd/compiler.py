@@ -246,3 +246,55 @@ def test_compilers_shows_packages_yaml(
 
     out = compiler("list", fail_on_error=True)
     assert out.count("gcc@7.7.7") == 1
+
+
+@pytest.mark.parametrize(
+    "externals",
+    [
+        (
+            {
+                "spec": "gcc@=7.7.7 languages=c,cxx,fortran os=foobar target=x86_64",
+                "prefix": "/path/to/fake",
+                "modules": ["gcc/7.7.7", "foobar"],
+                "extra_attributes": {
+                    "compilers": {
+                        "c": "/path/to/fake/gcc",
+                        "cxx": "/path/to/fake/g++",
+                        "fortran": "/path/to/fake/gfortran",
+                    },
+                    "flags": {"fflags": "-ffree-form"},
+                },
+            },
+            {
+                "spec": "llvm@=14.0.2 languages=c,cxx os=foobar target=x86_64",
+                "prefix": "/path/to/fake",
+                "modules": ["llvm/14.0.2", "foobar"],
+                "extra_attributes": {
+                    "compilers": {
+                        "c": "/path/to/fake/clang",
+                        "cxx": "/path/to/fake/clang++",
+                    },
+                    "flags": {"fflags": "-ffree-form"},
+                },
+            },
+        )
+    ],
+)
+def test_compilers_list_outputs_alias(
+    externals, no_packages_yaml, working_env, compilers_dir
+):
+    """Spack should list bultin and legacy (alias) compilers"""
+    gcc_spec = externals[0]
+    llvm_spec = externals[1]
+    gcc_entry = {"externals": [gcc_spec]}
+    llvm_entry = {"externals": [llvm_spec]}
+
+    packages = spack.config.get("packages")
+    packages["gcc"] = gcc_entry
+    packages["llvm"] = llvm_entry
+    spack.config.set("packages", packages)
+
+    out = compiler("list", fail_on_error=True)
+    assert out.count("gcc@7.7.7") == 1
+    assert out.count("llvm@14.0.2") == 1
+    assert out.count("clang@14.0.2") == 1
