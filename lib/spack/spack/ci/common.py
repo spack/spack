@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
+import enum
 import errno
 import glob
 import gzip
@@ -11,9 +12,8 @@ import re
 import shutil
 import sys
 import time
-from collections import deque
-from enum import Enum
-from typing import Dict, Generator, List, Optional, Set, Tuple
+from collections import OrderedDict, deque
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
 
@@ -41,6 +41,35 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 
 # this exists purely for testing purposes
 _urlopen = web_util.urlopen
+
+#: Names of the core CI jobs, which are those not dependent on a specs
+core_job_names = ["cleanup", "copy", "noop", "reindex", "signing"]
+
+#: Names of all possible jobs, which include those involving specs
+all_job_names = ["any", "build", "test"] + core_job_names
+
+#: default job settings
+default_job_settings = {
+    "build-job": {
+        "script": ["cd {env_dir}", "spack env activate --without-view .", "spack ci rebuild"]
+    },
+    "noop-job": {"script": ['echo "All specs already up-to-date, nothing to rebuild."']},
+    "test-job": {
+        "script": [
+            "cd {env_dir}",
+            "spack env activate --without-view .",
+            "spack ci rebuild --tests",
+        ]
+    },
+}
+
+#: Override job settings
+override_job_settings = {
+    "any-job-remove": {"tags": SPACK_RESERVED_TAGS},
+    "cleanup-job": {"script": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]},
+    "reindex-job": {"script": ["spack buildcache update-index --keys {index_target_mirror}"]},
+    "signing-job": {"tags": ["aws", "protected", "notary"]},
+}
 
 
 def copy_gzipped(glob_or_path: str, dest: str) -> None:
@@ -116,22 +145,6 @@ def _spec_matches(spec, match_string):
     return spec.intersects(match_string)
 
 
-def _noop(x):
-    return x
-
-
-def unpack_script(script_section, op=_noop):
-    script = []
-    for cmd in script_section:
-        if isinstance(cmd, list):
-            for subcmd in cmd:
-                script.append(op(subcmd))
-        else:
-            script.append(op(cmd))
-
-    return script
-
-
 def ensure_expected_target_path(path: str) -> str:
     """Returns passed paths with all Windows path separators exchanged
     for posix separators
@@ -166,32 +179,198 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
         fd.write(json.dumps(buildcache_copies))
 
 
-class CIConfig:
-    """Class for managing CI options."""
-    def __init__(self):
-        ci_config = cfg.get("ci")
-        if not ci_config:
-            raise Exception("TODO: Customize this exception")
+class CIImage:
+    """CI Image."""
 
-        self.broken_specs_url: Optional[str] = ci_config.get("broken-specs-url", None)
-        self.broken_tests: Optional[str] = ci_config.get("broken-tests-packages", [])
-        self.rebuild_index: bool = ci_config.get("rebuild-index", True)
-        self.target: str = ci_config.get("target", "gitlab")
+    def __init__(self, image_config):
+        if isinstance(image_config, str):
+            self.value = image_config
+            self.name = None
+            self.entrypoint = None
+            return
 
-        # TBD/TLD: Do any/all of these belong here?
-        self.pipeline_artifacts_dir = os.environ.get("SPACK_ARTIFACTS_ROOT")
-        self.job_log_dir = os.environ.get("SPACK_JOB_LOG_DIR")
-        self.job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
-        self.repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
-        self.concrete_env_dir = os.environ.get("SPACK_CONCRETE_ENV_DIR")
-        self.ci_job_name = os.environ.get("CI_JOB_NAME")
-        self.signing_key = os.environ.get("SPACK_SIGNING_KEY")
-        self.job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
-        self.job_spec_dag_hash = os.environ.get("SPACK_JOB_SPEC_DAG_HASH")
-        self.spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE")
-        self.self.spack_ci_stack_name = os.environ.get("SPACK_CI_STACK_NAME")
-        self.rebuild_everything = os.environ.get("SPACK_REBUILD_EVERYTHING")
-        self.require_signing = os.environ.get("SPACK_REQUIRE_SIGNING")
+        self.value = None
+        self.name = image_config.get("name", None)
+        self.entrypoint = image_config.get("entrypoint", [])
+
+    def to_dict(self) -> Dict[str, Any]:
+        if self.value:
+            return {"image": self.value}
+
+        base = {"image": {}}
+        if self.name:
+            base["name"] = self.name
+
+        if self.entrypoint:
+            base["entrypoint"] = self.entrypoint
+        return base
+
+    def to_yaml(self, stream=None):
+        return syaml.dump(self.to_dict(), stream=stream)
+
+
+class CIScriptStage(enum.Enum):
+    """Script stages."""
+
+    #: Script for setting up the job
+    BEFORE = "before_script"
+
+    #: Script that runs the job
+    DURING = "script"
+
+    #: Script that runs after the job
+    AFTER = "after_script"
+
+
+class CIScript:
+    """Job script."""
+
+    # TODO/TLD: when/how do we determine the override option is being used?
+    def __init__(self, contents: List[Union[str, List[str]]], override: bool = False):
+        """
+        Instantiate the CI script
+
+        Args:
+            contents: the script's contents
+            override: ``True`` if the contents should override all others;
+                otherwise ``False``
+        """
+        self.contents = contents
+        self.override = override
+
+    def convert(self, converter: Optional[Callable[str], str]) -> List[str]:
+        """Return the optionally converted commands
+
+        Args:
+            converter: optional function that takes a string and returns a string
+        """
+        if converter and not callable(converter):
+            raise ValueError(
+                f"Expected {converter} to be a conversion function, not {type(converter)}."
+            )
+
+        def _noop(line: str) -> str:
+            return line
+
+        if converter is None:
+            converter = _noop
+
+        script = []
+        for cmd in self.contents:
+            if isinstance(cmd, list):
+                for subcmd in cmd:
+                    script.append(converter(subcmd))
+            else:
+                script.append(converter(cmd))
+
+        return script
+
+
+class CIJobData:
+    """Job data for a given job name (and spec)."""
+
+    def __init__(
+        self, name: str, release_spec: Optional[spack.spec.Spec] = None, remove: bool = False
+    ):
+        """
+        Args:
+            name: standard job name
+            release_spec: release spec
+            remove: ``True`` if a remove job; otherwise, ``False``
+        """
+        self.name: str = name
+        self.spec: Optional[spack.spec.Spec] = release_spec
+        self.hash: str = release_spec.dag_hash() if release_spec else ""
+        self.remove: bool = remove
+        self.job_name = f"{self.name}-job{'-remove' if self.remove else ''}"
+
+        self.image: Optional[CIImage] = None
+        self.tags: List[str] = []
+        self.attributes: Dict[str, Union[str, int]] = {}
+        self.script: Dict[CIScriptStage, CIScript] = {}
+
+        if self.job_name in default_job_settings:
+            for key, value in default_job_settings[self.job_name].items():
+                try:
+                    self.script[CIScriptStage(key)] = CIScript(value)
+                except KeyError:
+                    setattr(self, key, value)
+
+        if release_spec:
+            job_vars = {
+                "SPACK_JOB_SPEC_DAG_HASH": release_spec.dag_hash(),
+                "SPACK_JOB_SPEC_PKG_NAME": release_spec.name,
+                "SPACK_JOB_SPEC_PKG_VERSION": release_spec.format("{version}"),
+                "SPACK_JOB_SPEC_COMPILER_NAME": release_spec.format("{compiler.name}"),
+                "SPACK_JOB_SPEC_COMPILER_VERSION": release_spec.format("{compiler.version}"),
+                "SPACK_JOB_SPEC_ARCH": release_spec.format("{architecture}"),
+                "SPACK_JOB_SPEC_VARIANTS": release_spec.format("{variants}"),
+            }
+            self.attributes["variables"] = job_vars
+
+    def update_attributes(self, section: Dict[str, Any]):
+        """Update the job attributes with the corresponding section data.
+
+        Args:
+            base_job_name: standard job name
+        """
+        if self.job_name not in section:
+            return
+
+        src = section[job_name]
+        if self.remove:
+            self.attributes = spack.config.remove_yaml(self.attributes, src)
+        else:
+            self.attributes = copy.copy(spack.schema.merge_yaml(self.attributes, src))
+
+    # TODO/TLD: Resume here ..
+    def update_submapping_attributes(self, section: Dict[str, any]):
+        """Update attributes with relevant submapping data."""
+        if "submapping" not in section:
+            return
+
+        matched = False
+        only_first = section.get("match_behavior", "first") == "first"
+
+        for match_attrs in reversed(section["submapping"]):
+            attrs = cfg.InternalConfigScope._process_dict_keyname_overrides(match_attrs)
+            for match_string in match_attrs["match"]:
+                if _spec_matches(self.spec, match_string):
+                    matched = True
+                    # TODO/TLD: Shouldn't this only be applied if the job
+                    # TODO/TLD:  has the proper job name?
+                    if "build-job-remove" in match_attrs:
+                        self.attributes = spack.config.remove_yaml(
+                            self.attributes, attrs["build-job-remove"]
+                        )
+                    if "build-job" in match_attrs:
+                        self.attributes = spack.schema.merge_yaml(
+                            self.attributes, attrs["build-job"]
+                        )
+                    break
+            if matched and only_first:
+                break
+
+    def converted_script(
+        self, stage: CIScriptStage, converter: Optional[Callable[str], str]
+    ) -> List[str]:
+        """Return the converted script contents.
+
+        Args:
+            stage: the script for the provided stage
+            converter:
+
+        Returns: converted script or an empty list if there isn't one
+        """
+        script = self.script[stage] if stage in self.script else None
+        if not script:
+            return []
+
+        return self.script[stage].convert(converter)
+
+    def to_dict(self) -> Dict[str, Any]:
+        # TODO/TLD: return the dict representation  .. only just attributes?
+        data = {}
 
 
 class CDashHandler:
@@ -332,7 +511,7 @@ class CDashHandler:
         reporter.test_skipped_report(report_dir, spec, reason)
 
 
-class PipelineType(Enum):
+class PipelineType(enum.Enum):
     COPY_ONLY = 1
     spack_copy_only = 1
     PROTECTED_BRANCH = 2
@@ -363,6 +542,7 @@ class PipelineOptions:
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
+        add_test_jobs: bool = False,
         cdash_handler: Optional["CDashHandler"] = None,
     ):
         """
@@ -507,184 +687,189 @@ class SpackCIConfig:
     used by the CI generator(s).
     """
 
-    def __init__(self, ci_config):
+    def __init__(self, ci_config: Dict[str, Any]):
         """Given the information from the ci section of the config
         and the staged jobs, set up meta data needed for generating Spack
         CI IR.
         """
-
         self.ci_config = ci_config
-        self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing"]
 
-        self.ir = {
-            "jobs": {},
-            "rebuild-index": self.ci_config.get("rebuild-index", True),
-            "broken-specs-url": self.ci_config.get("broken-specs-url", None),
-            "broken-tests-packages": self.ci_config.get("broken-tests-packages", []),
-            "target": self.ci_config.get("target", "gitlab"),
+        self.broken_specs_url: Optional[str] = ci_config.get("broken-specs-url", None)
+        self.broken_tests: List[str] = ci_config.get("broken-tests-packages", [])
+        self.rebuild_index: bool = ci_config.get("rebuild-index", True)
+
+        self.pipeline_gen: List[Dict[str, Dict]] = ci_config.get("pipeline-gen", [])
+
+        # TODO: Move this to GitlabConfig?
+        #: Callable methods that perform variable substitutions on script lines
+        self.converter: Dict[CIScriptStage, Callable] = {}
+
+        # Prep for each possible job type
+        self.jobs: Dict[str, List[CIJobData]] = {}
+        for name in all_job_names:
+            self.jobs[name] = []
+
+        # Add each core job along with its defaults
+        for name in core_job_names:
+            print(f"TLD: SpackCIConfig: instantiating '{name}' job")
+            self.jobs[name] = [CIJobData(name)]
+
+    # Create jobs for all the pipeline specs
+    def init_pipeline_jobs(self, pipeline: PipelineDag, tests: Optional[bool] = False):
+        names = ["build"]
+        if tests:
+            names.append("test")
+
+        for _, node in pipeline.traverse_nodes():
+            for name in names:
+                self.jobs[name].append(CIJobData(name, node.spec))
+
+    # TLD/TODO: Resume here
+
+    def register_script_converter(self, stage: CIScriptStage, op: Callable):
+        """Register the function that takes and string and substitutes values.
+
+        Args:
+            stage: the stage of the scripts to be converted
+            op: the method to be used to format referenced variables
+        """
+        self.converter[stage] = op
+
+    def job(self, name: str, spec: Optional[spack.spec.Spec] = None) -> Optional[CIJobData]:
+        """Retrieve the matching job
+
+        Args:
+            name: the name of the desired job
+            spec: the job spec
+
+        Returns: the job instance or ``None`` if none match
+        """
+        spec_hash = spec.dag_hash() if spec else ""
+        for job in self.jobs[name]:
+            if not spec or job.hash == spec_hash:
+                return job
+
+        return None
+
+    def ir(self) -> Dict[str, Any]:
+        """Return the intermediate representation of the Spack CI configuration."""
+        intermediate_rep = {
+            "broken-specs-url": self.broken_specs_url,
+            "broken-tests-packages": self.broken_tests,
+            "rebuild-index": self.rebuild_index,
         }
-        jobs = self.ir["jobs"]
 
-        for name in self.named_jobs:
-            # Skip the special named jobs
-            if name not in ["any", "build"]:
-                jobs[name] = self.__init_job("")
+        # Include the represenation of all of the jobs
+        all_jobs = {}
+        for name, jobs in self.jobs.items():
+            for job in jobs:
+                all_jobs.update(job.to_dict())
+        intermediate_rep["jobs"] = all_jobs
 
-    def __init_job(self, release_spec):
-        """Initialize job object"""
-        job_object = {"spec": release_spec, "attributes": {}}
-        if release_spec:
-            job_vars = job_object["attributes"].setdefault("variables", {})
-            job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec.dag_hash()
-            job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
-            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
-            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
-            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
-        return job_object
+        return intermediate_rep
 
     def __is_named(self, section):
         """Check if a pipeline-gen configuration section is for a named job,
         and if so return the name otherwise return none.
         """
-        for _name in self.named_jobs:
+        for _name in all_job_names:
             keys = [f"{_name}-job", f"{_name}-job-remove"]
             if any([key for key in keys if key in section]):
                 return _name
 
         return None
 
-    @staticmethod
-    def __job_name(name, suffix=""):
-        """Compute the name of a named job with appropriate suffix.
-        Valid suffixes are either '-remove' or empty string or None
+    def update_job_attributes(self, job_name: str, section: Dict[str, any]):
+        """Update job attributes using the corresponding job data.
+
+        Args:
+            job_name: section job name
+            section: job attribute updates
         """
-        assert isinstance(name, str)
+        if job_name in ["build", "test"]:
+            # TODO/TLD: Should we be checking for build-remove and
+            # TODO/TLD:   test-remove jobs and adding them here with the
+            # TODO/TLD:   attributes? OR do we assume we only update
+            # TODO/TLD:   when added?
+            # TODO/TLD: Is it even possible for a build or test job to NOT
+            # TODO/TLD:   have a spec? IF it is, then that needs to be check
+            # TODO/TLD:   here
 
-        jname = name
-        if suffix:
-            jname = f"{name}-job{suffix}"
-        else:
-            jname = f"{name}-job"
+            # Apply the same attributes to all build and test jobs
+            for job in self.jobs[job_name]:
+                print(
+                    f"TLD: .. {job_name}, {job.spec}, {job.remove}: applying '{job_name}' section to attributes"
+                )
+                job.update_attributes(section)
+            return
 
-        return jname
+        if job_name == "any":
+            # Apply section attributes too all jobs
+            for name, jobs in self.jobs.items():
+                for job in jobs:
+                    print(
+                        f"TLD: .. {name}, {job.spec}, {job.remove}: applying '{job_name}' section to attributes"
+                    )
+                    job.update_attributes(section)
+            return
 
-    def __apply_submapping(self, dest, spec, section):
-        """Apply submapping setion to the IR dict"""
-        matched = False
-        only_first = section.get("match_behavior", "first") == "first"
+        # Create a signing job if there is a script and the job
+        # hasn't been initialized yet
+        if job_name == "signing" and len(self.jobs[job_name]) == 0:
+            print(f"TLD: .. detected signing section and none in jobs")
+            if "signing-job" in section:
+                if "script" not in section["signing-job"]:
+                    print(f"TLD: .. .. skipping signing job missing script")
+                    continue
 
-        for match_attrs in reversed(section["submapping"]):
-            attrs = cfg.InternalConfigScope._process_dict_keyname_overrides(match_attrs)
-            for match_string in match_attrs["match"]:
-                if _spec_matches(spec, match_string):
-                    matched = True
-                    if "build-job-remove" in match_attrs:
-                        cfg.remove_yaml(dest, attrs["build-job-remove"])
-                    if "build-job" in match_attrs:
-                        spack.schema.merge_yaml(dest, attrs["build-job"])
-                    break
-            if matched and only_first:
-                break
+                self.jobs[job_name].append(CIJobData(job_name))
 
-        return dest
+        # Apply attributes to any other type of named job
+        print(
+            f"TLD: .. applying section {section} to ({len(self.jobs[job_name])}) {job_name} job(s)"
+        )
+        for job in self.jobs[job_name]:
+            job.update_attributes(section)
 
-    # Create jobs for all the pipeline specs
-    def init_pipeline_jobs(self, pipeline: PipelineDag):
-        for _, node in pipeline.traverse_nodes():
-            dag_hash = node.spec.dag_hash()
-            self.ir["jobs"][dag_hash] = self.__init_job(node.spec)
-
-    # Generate IR from the configs
     def generate_ir(self):
         """Generate the IR from the Spack CI configurations."""
 
-        jobs = self.ir["jobs"]
+        # TODO/TLD: Resume here with determining how to process the information
+        # TODO/TLD: o why reverse the configuration?
+        # TODO/TLD: o Is there anything special in ir processing wrt affect
+        # TODO/TLD:   on ordering of the CI jobs output in the IR?
 
-        # Implicit job defaults
-        defaults = [
-            {
-                "build-job": {
-                    "script": [
-                        "cd {env_dir}",
-                        "spack env activate --without-view .",
-                        "spack ci rebuild",
-                    ]
-                }
-            },
-            {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
-        ]
-
-        # Job overrides
-        overrides = [
-            # Reindex script
-            {
-                "reindex-job": {
-                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
-                }
-            },
-            # Cleanup script
-            {
-                "cleanup-job": {
-                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
-                }
-            },
-            # Add signing job tags
-            {"signing-job": {"tags": ["aws", "protected", "notary"]}},
-            # Remove reserved tags
-            {"any-job-remove": {"tags": SPACK_RESERVED_TAGS}},
-        ]
-
-        pipeline_gen = overrides + self.ci_config.get("pipeline-gen", []) + defaults
+        # TODO/TLD: defaults will be in the job instance already
+        # TODO/TLD: so the goal would be to apply pipeline-gen options THEN
+        # TODO/TLD: .. any overrides
+        # TODO/TLD:
+        # TODO/TLD: .. should overrides be in list form?
+        pipeline_gen = overrides + self.ci_config.get("pipeline-gen", [])
+        print(f"\nTLD: generate_ir: reversed(pipeline_gen):")
+        for section in reversed(pipeline_gen):
+            print(f"TLD: .. {section}")
+        print()
 
         for section in reversed(pipeline_gen):
-            name = self.__is_named(section)
-            has_submapping = "submapping" in section
-            has_dynmapping = "dynamic-mapping" in section
+            print(f"TLD: generate_ir: processing (reversed) section {section}")
             section = cfg.InternalConfigScope._process_dict_keyname_overrides(section)
+            print(f"TLD: .. new section: {section}")
 
-            if name:
-                remove_job_name = self.__job_name(name, suffix="-remove")
-                merge_job_name = self.__job_name(name)
-                do_remove = remove_job_name in section
-                do_merge = merge_job_name in section
+            job_name = self.__is_named(section)
+            if job_name:
+                self.update_job_attributes(job_name, section)
+                continue
 
-                def _apply_section(dest, src):
-                    if do_remove:
-                        dest = cfg.remove_yaml(dest, src[remove_job_name])
-                    if do_merge:
-                        dest = copy.copy(spack.schema.merge_yaml(dest, src[merge_job_name]))
-
-                if name == "build":
-                    # Apply attributes to all build jobs
-                    for _, job in jobs.items():
-                        if job["spec"]:
-                            _apply_section(job["attributes"], section)
-                elif name == "any":
-                    # Apply section attributes too all jobs
-                    for _, job in jobs.items():
-                        _apply_section(job["attributes"], section)
-                else:
-                    # Create a signing job if there is script and the job hasn't
-                    # been initialized yet
-                    if name == "signing" and name not in jobs:
-                        if "signing-job" in section:
-                            if "script" not in section["signing-job"]:
-                                continue
-                            else:
-                                jobs[name] = self.__init_job("")
-                    # Apply attributes to named job
-                    _apply_section(jobs[name]["attributes"], section)
-
-            elif has_submapping:
+            # TLD/TODO: Resume here .. make sure submapping is "right"
+            if "submapping" in section:
                 # Apply section jobs with specs to match
-                for _, job in jobs.items():
-                    if job["spec"]:
-                        job["attributes"] = self.__apply_submapping(
-                            job["attributes"], job["spec"], section
-                        )
-            elif has_dynmapping:
+                for name, jobs in self.jobs.items():
+                    for job in jobs:
+                        if job.spec:
+                            job.update_submapping_attributes(section)
+                continue
+
+            if "dynamic-mapping" in section:
                 mapping = section["dynamic-mapping"]
 
                 dynmap_name = mapping.get("name")

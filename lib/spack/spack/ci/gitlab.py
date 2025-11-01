@@ -21,13 +21,13 @@ import spack.util.spack_yaml as syaml
 
 from .common import (
     SPACK_RESERVED_TAGS,
+    CIJobData,
     PipelineDag,
     PipelineOptions,
     PipelineType,
     SpackCIConfig,
     SpackCIError,
     ensure_expected_target_path,
-    unpack_script,
     write_pipeline_manifest,
 )
 from .generator_registry import generator
@@ -51,9 +51,15 @@ JOB_RETRY_CONDITIONS = [
 JOB_NAME_FORMAT = "{name}{@version} {/hash}"
 
 
-def _remove_reserved_tags(tags):
-    """Convenience function to strip reserved tags from jobs"""
-    return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
+class GitlabJob(CIJobData):
+
+    def remove_reserved_tags(self):
+        for tag in SPACK_RESERVED_TAGS:
+            try:
+                self.tags.remove(tag)
+            except ValueError:
+                # value is not in the list
+                pass
 
 
 def get_job_name(spec: spack.spec.Spec, build_group: Optional[str] = None) -> str:
@@ -120,8 +126,6 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         gen_ci_dir = os.path.dirname(output_file_path)
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)
-
-    spack_ci_ir = spack_ci.generate_ir()
 
     concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
 
@@ -194,8 +198,12 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     rel_job_test_dir = os.path.relpath(job_test_dir, ci_project_dir)
     rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
 
-    def main_script_replacements(cmd):
+    # TODO/TLD: need to either pass variables in or have them extractable by
+    # TODO/TLD: spack_ci
+    def main_script_replacements(cmd: str):
         return cmd.replace("{env_dir}", rel_concrete_env_dir)
+
+    spack_ci.register_script_converter(CIScriptStage("script"), main_script_replacements)
 
     output_object = {}
     job_id = 0
@@ -205,6 +213,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
     max_length_needs = 0
     max_needs_job = ""
+
+    # TODO/TLD: Why must we work with the IR?
+    spack_ci_ir = spack_ci.generate_ir()
 
     if not options.pipeline_type == PipelineType.COPY_ONLY:
         for level, node in pipeline.traverse_nodes(direction="parents"):
@@ -237,12 +248,15 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             if "script" not in job_object:
                 raise AttributeError
 
+            # TODO/TLD: Call <CIScript>.convert for CIScriptStage.DURING with converter=main_script_replacements
             job_object["script"] = unpack_script(job_object["script"], op=main_script_replacements)
 
             if "before_script" in job_object:
+                # TODO/TLD: Call <CIScript>.convert for CIScriptStage.BEFORE with NO converter
                 job_object["before_script"] = unpack_script(job_object["before_script"])
 
             if "after_script" in job_object:
+                # TODO/TLD: Call <CIScript>.convert for CIScriptStage.AFTER with NO converter
                 job_object["after_script"] = unpack_script(job_object["after_script"])
 
             build_group = options.cdash_handler.build_group if options.cdash_handler else None
