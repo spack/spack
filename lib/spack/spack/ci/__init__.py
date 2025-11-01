@@ -369,6 +369,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.prune_external = args.prune_externals
     options.check_index_only = args.index_only
     options.forward_variables = args.forward_variable or []
+    options.add_test_obs = args.tests
 
     ci_config = cfg.get("ci")
 
@@ -545,7 +546,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
             raise SpackCIError("'spack ci generate' failed broken specs check")
 
     spack_ci_config = SpackCIConfig(ci_config)
-    spack_ci_config.init_pipeline_jobs(pipeline)
+    spack_ci_config.init_pipeline_jobs(pipeline, options.add_test_jobs)
 
     # Format the pipeline using the formatter specified in the configs
     generate_method(pipeline, spack_ci_config, options)
