@@ -829,8 +829,8 @@ class BuildSystemAndLanguageGuesser:
             ]
 
             # Determine the build system based on the files contained in the archive.
-            for file in self._file_entries:
-                for pattern, build_system in clues:
+            for pattern, build_system in clues:
+                for file in self._file_entries:
                     if pattern.search(file):
                         self.build_system = build_system
                         return
