@@ -292,7 +292,8 @@ def _config_scope_info(args, scope, active, included):
                 if section_path and os.path.exists(section_path)
                 else f"{scope.path}{os.sep}"
             )
-        result.append(section_path or " ")
+        else:
+            result.append(" ")
 
     if args.scopes_verbose and scope_status in ("absent", "override"):
         result = [color.colorize(f"@k{{{elt}}}") for elt in result]

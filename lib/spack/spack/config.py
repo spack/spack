@@ -6,12 +6,12 @@
 This implements Spack's configuration system, which handles merging
 multiple scopes with different levels of precedence.  See the
 documentation on :ref:`configuration-scopes` for details on how Spack's
-configuration system behaves.  The scopes are:
+configuration system behaves.  The scopes set up here are:
 
-#. ``default``
-#. ``system``
-#. ``site``
-#. ``user``
+#. ``spack`` in ``$spack/etc/spack`` - controls all built-in spack scopes,
+   except default
+#. ``defaults`` in ``$spack/etc/spack/defaults``  - defaults that Spack
+   needs to function
 
 Important functions in this module are:
 
@@ -491,8 +491,10 @@ class Configuration:
     ) -> Generator["Configuration", None, None]:
         """Adds a scope to the Configuration, at a given priority.
 
-        This version of push_scope yields included scopes incrementally, so that their
-        data can be used by higher priority scopes during config initialization.
+        ``push_scope_incremental`` yields included scopes incrementally, so that their
+        data can be used by higher priority scopes during config initialization. If you
+        push a scope that includes other, low-priority scopes, they will be pushed on
+        first, before the scope that included them.
 
         If a priority is not given, it is assumed to be the current highest priority.
 
@@ -536,6 +538,10 @@ class Configuration:
             priority: priority of the scope
 
         """
+        # Use push_scope_incremental to do the real work. It returns a generator, which needs
+        # to be consumed to get each of the yielded scopes added to the scope stack.
+        # It will usually yield one scope, but if there are includes it will yield those first,
+        # before the scope we're actually pushing.
         for _ in self.push_scope_incremental(scope=scope, priority=priority, _depth=_depth):
             pass
 
