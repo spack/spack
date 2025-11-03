@@ -258,8 +258,14 @@ def _git_prefix(archive_path, tar):
     return ""
 
 
-def _commit_from_archive(archive_path, prefix):
-    # this function extracts a commit from an archive without unpacking it
+def retrieve_commit_from_archive(archive_path, ref):
+    """extract git data from an archive with out expanding it"""
+    if not os.path.isfile(archive_path):
+        raise FileNotFoundError(f"The file {archive_path} does not exist")
+
+    tar = which("tar", required=True)
+    prefix = _git_prefix(archive_path, tar)
+
     def is_commit(value):
         return bool(value) and len(value) == 40
 
@@ -281,14 +287,3 @@ def _commit_from_archive(archive_path, prefix):
 
     tty.warn(f"Archive {archive_path} does not appear to contain git data")
     return None
-
-
-def retrieve_commit_from_archive(archive_path, ref):
-    """extract git data from an archive with out expanding it"""
-    if not os.path.isfile(archive_path):
-        raise FileNotFoundError(f"The file {archive_path} does not exist")
-
-    tar = which("tar", required=True)
-    prefix = _git_prefix(archive_path, tar)
-
-    return _commit_from_archive(archive_path, prefix)

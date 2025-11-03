@@ -64,13 +64,7 @@ from spack.resource import Resource
 from spack.solver.versions import concretization_version_order
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
-from spack.version import (
-    GitVersion,
-    StandardVersion,
-    VersionError,
-    is_git_version,
-    is_git_commit_sha,
-)
+from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -1060,12 +1054,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         except spack.error.FetchError:
             pass
 
-        commit_candidate = getattr(pkg_instance.fetcher, "commit", None)
-        if commit_candidate and is_git_commit_sha(commit_candidate):
-            sha = commit_candidate
-        elif pkg_instance.stage.archive_file:
+        if pkg_instance.stage.archive_file:
             # TODO(psakiev) technically we should be able to get the
-            # first see if the archive name already has the sha in it, we can verify during staging
+            # first see if the archive name already has the sha in it, but we need to get the
+            # mirror's archive name
+            #
+            # This could avoid quering the archive completely though and allow us to only
+            # inspect the archive during the check like we do for checksums
+            #
             # file_name = pathlib.Path(pkg_instance.stage.archive_file).resolve().name
             # sha = file_name.split(".")[0].split("_")[0]
             sha = spack.util.archive.retrieve_commit_from_archive(

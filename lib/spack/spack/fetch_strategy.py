@@ -1014,8 +1014,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                 git(*args)
 
                 repo_name = get_single_file(".")
-                # TODO(psakiev) can extract commit here
-                self.commit = git("-C", repo_name, "rev-parse", "HEAD^{}")
                 if self.stage:
                     self.stage.srcdir = repo_name
                 shutil.move(repo_name, dest)
