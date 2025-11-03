@@ -2265,6 +2265,7 @@ opt_criterion(2, "providers on edges").
 #minimize{
     Weight@2,ParentNode,ProviderNode,node(X, Virtual)
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
+      max_dupes(Virtual, MaxDupes), MaxDupes > 1,
       not attr("root", ProviderNode),
       language(Virtual),
       depends_on(ParentNode, ProviderNode)
@@ -2275,10 +2276,11 @@ opt_criterion(1, "version badness on edges").
 #minimize{ 0@201: #true }.
 #minimize{ 0@1: #true }.
 #minimize{
-    Weight@1,ParentNode,PackageNode
-    : version_weight(PackageNode, Weight),
-      not attr("root", PackageNode),
-      depends_on(ParentNode, PackageNode)
+    Weight@1,ParentNode,node(X, Package)
+    : version_weight(node(X, Package), Weight),
+      multiple_unification_sets(Package),
+      not attr("root", node(X, Package)),
+      depends_on(ParentNode, node(X, Package))
 }.
 
 % Reduce symmetry on duplicates
