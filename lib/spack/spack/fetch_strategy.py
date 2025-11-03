@@ -903,9 +903,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                 provenance_id = f"{provenance_id}_{sparse_hash}"
             result = os.path.sep.join(["git", repo_path, provenance_id])
             return result
-        else:
-            # temporary test to see if anything fails
-            assert False
 
     def _repo_info(self):
         args = ""
@@ -1015,10 +1012,10 @@ class GitFetchStrategy(VCSFetchStrategy):
 
                 args.extend([self.url])
                 git(*args)
-                # TODO(psakiev) can extract commit here
-                self.commit = git("rev-parse", "HEAD^{}")
 
                 repo_name = get_single_file(".")
+                # TODO(psakiev) can extract commit here
+                self.commit = git("-C", repo_name, "rev-parse", "HEAD^{}")
                 if self.stage:
                     self.stage.srcdir = repo_name
                 shutil.move(repo_name, dest)

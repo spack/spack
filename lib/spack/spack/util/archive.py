@@ -258,6 +258,31 @@ def _git_prefix(archive_path, tar):
     return ""
 
 
+def _commit_from_archive(archive_path, prefix):
+    # this function extracts a commit from an archive without unpacking it
+    def is_commit(value):
+        return bool(value) and len(value) == 40
+
+    tar = which("tar", required=True)
+    try:
+        head = tar("-Oxzf", archive_path, f"{prefix}.git/HEAD", output=str, error=str).strip()
+        if is_commit(head):
+            return head
+        else:
+            # HEAD file format of 'ref: <ref-path>'
+            ref = head.split()[1]
+            contents = tar(
+                "-Oxzf", archive_path, f"{prefix}.git/{ref}", output=str, error=str
+            ).strip()
+            if is_commit(contents):
+                return contents
+    except ProcessError:
+        pass
+
+    tty.warn(f"Archive {archive_path} does not appear to contain git data")
+    return None
+
+
 def retrieve_commit_from_archive(archive_path, ref):
     """extract git data from an archive with out expanding it"""
     if not os.path.isfile(archive_path):
@@ -265,16 +290,5 @@ def retrieve_commit_from_archive(archive_path, ref):
 
     tar = which("tar", required=True)
     prefix = _git_prefix(archive_path, tar)
-    # try branch, tags then detached states
-    for ref_path in [f"refs/heads/{ref}/", f"refs/tags/{ref}/", "HEAD"]:
-        try:
-            commit = tar(
-                "-Oxzf", archive_path, f"{prefix}.git/{ref_path}", output=str, error=str
-            ).strip()
-            if commit and len(commit) == 40:
-                return commit
-        except ProcessError:
-            pass
 
-    tty.warn(f"Archive {archive_path} does not appear to contain git data")
-    return None
+    return _commit_from_archive(archive_path, prefix)
