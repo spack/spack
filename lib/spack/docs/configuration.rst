@@ -69,7 +69,7 @@ From lowest to highest precedence:
    The systm scope overrides the defaults scope.
    It can be used for settings idiosyncratic to a particular machine, such as the locations of compilers or external packages.
    Be careful when modifying this scope, as changes here affect all Spack users on a machine.
-   Before putting configuration here, instaed consider using the ``site`` scope, which only affects the spack instance it's part of.
+   Before putting configuration here, instead consider using the ``site`` scope, which only affects the spack instance it's part of.
 
 #. **site**: Stored in ``$(prefix)/etc/spack/site/``.
    Settings here affect only *this instance* of Spack, and they override the defaults and system scopes.

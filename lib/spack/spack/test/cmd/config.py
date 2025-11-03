@@ -83,6 +83,7 @@ def test_config_scopes(path, types, mutable_mock_env_path):
 
 @pytest.mark.parametrize("type", ["path", "include", "internal", "env"])
 def test_config_scopes_include(type):
+    """Ensure that `spack config scopes -vt TYPE outputs only scopes of that type."""
     scopes_cmd = ["scopes", "-vt", type]
     output = config(*scopes_cmd).strip()
     lines = output.split("\n")
@@ -93,8 +94,6 @@ def test_config_scopes_section(mutable_config):
     scopes_cmd = ["scopes", "-v", "packages"]
     output = config(*scopes_cmd).strip()
     lines = output.split("\n")
-
-    print(lines)
 
     lines_by_scope_name = {line.split()[0]: line for line in lines}
     assert "absent" in lines_by_scope_name["command_line"]
@@ -108,7 +107,6 @@ def test_config_scopes_path(mutable_config):
     lines = output.split("\n")
 
     lines_by_scope_name = {line.split()[0]: line for line in lines}
-    print(lines_by_scope_name)
     assert f"{os.sep}user{os.sep}" in lines_by_scope_name["user"]
     assert f"{os.sep}system{os.sep}" in lines_by_scope_name["system"]
     assert f"{os.sep}site{os.sep}" in lines_by_scope_name["site"]

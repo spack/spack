@@ -1271,6 +1271,7 @@ def include_config_factory(mock_include_scope):
 
 
 def test_local_config_can_be_disabled(working_env, include_config_factory):
+    """Ensure that SPACK_DISABLE_LOCAL_CONFIG disables configurations with `when:`."""
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "true"
     cfg = include_config_factory()
     assert "defaults" in cfg.scopes

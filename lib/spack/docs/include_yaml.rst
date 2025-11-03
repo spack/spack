@@ -207,7 +207,7 @@ The newly included ``user`` scope will *completely* override the builtin ``user`
 
 .. warning::
 
-   Using ``name:` to override the ``defaults`` scope can have *very* unexpected consequences and is not advised.
+   Using ``name:`` to override the ``defaults`` scope can have *very* unexpected consequences and is not advised.
 
 Overriding built-in scopes with ``include::``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
