@@ -200,18 +200,6 @@ class BinaryCacheIndex:
 
             self._index_file_cache_initialized = True
 
-    def clear(self):
-        """For testing purposes we need to be able to empty the cache and
-        clear associated data structures."""
-        if self._index_file_cache:
-            self._index_file_cache.destroy()
-            self._index_file_cache = file_cache.FileCache(self._index_cache_root)
-        self._local_index_cache = {}
-        self._specs_already_associated = set()
-        self._last_fetch_times = {}
-        self._mirrors_for_spec = {}
-        self._known_specs = {}
-
     def _write_local_index_cache(self):
         self._init_local_index_cache()
         cache_key = self._index_contents_key
@@ -2211,10 +2199,6 @@ def update_cache_and_get_specs():
     """
     BINARY_INDEX.update()
     return BINARY_INDEX.get_all_built_specs()
-
-
-def clear_spec_cache():
-    BINARY_INDEX.clear()
 
 
 def get_keys(
