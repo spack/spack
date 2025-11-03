@@ -33,6 +33,7 @@ import spack.error
 import spack.hooks
 import spack.llnl.util.lock
 import spack.paths
+import spack.report
 import spack.spec
 import spack.store
 import spack.traverse
@@ -870,6 +871,7 @@ class PackageInstaller:
         self.running_builds: Dict[int, ChildInfo] = {}
         self.build_status = BuildStatus(len(self.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
+        self.reports: Dict[str, spack.report.RequestRecord] = {}
 
     def _enqueue_parents(self, dag_hash: str) -> None:
         # the job dag_hash has finished, so remove it from the mappings
@@ -892,8 +894,11 @@ class PackageInstaller:
         signal_r = setup_signal_handling()
 
         # Set stdin to non-blocking for key press detection
-        old_stdin_settings = termios.tcgetattr(sys.stdin)
-        tty.setcbreak(sys.stdin.fileno())
+        if sys.stdin.isatty():
+            old_stdin_settings = termios.tcgetattr(sys.stdin)
+            tty.setcbreak(sys.stdin.fileno())
+        else:
+            old_stdin_settings = None
 
         selector = selectors.DefaultSelector()
         selector.register(signal_r, selectors.EVENT_READ, "signal")
@@ -1003,7 +1008,8 @@ class PackageInstaller:
             raise
         finally:
             # Restore terminal settings
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_stdin_settings)
+            if old_stdin_settings:
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_stdin_settings)
 
             # Clean up resources
             # Final cleanup of any remaining finished packages before exit
