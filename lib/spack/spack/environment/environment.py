@@ -40,7 +40,6 @@ import spack.variant as vt
 from spack import traverse
 from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
 from spack.llnl.util.link_tree import ConflictingSpecsError
-from spack.new_installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.util.path import substitute_path_variables
@@ -1976,15 +1975,21 @@ class Environment:
             *(s.dag_hash() for s in roots),
         }
 
+        if spack.config.get("config:installer", "old") == "new":
+            from spack.new_installer import PackageInstaller
+        else:
+            from spack.installer import PackageInstaller  # type: ignore[assignment]
+
+        installer = PackageInstaller([spec.package for spec in specs], **install_args)
+
         try:
-            builder = PackageInstaller([spec.package for spec in specs], **install_args)
-            builder.install()
+            installer.install()
         finally:
             if reporter:
-                if isinstance(builder.reports, dict):
-                    reporter.build_report(report_file, list(builder.reports.values()))
-                elif isinstance(builder.reports, list):
-                    reporter.build_report(report_file, builder.reports)
+                if isinstance(installer.reports, dict):
+                    reporter.build_report(report_file, list(installer.reports.values()))
+                elif isinstance(installer.reports, list):
+                    reporter.build_report(report_file, installer.reports)
                 else:
                     raise TypeError("builder.reports must be either a dictionary or a list")
 

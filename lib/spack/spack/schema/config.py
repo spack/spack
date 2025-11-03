@@ -85,6 +85,7 @@ properties: Dict[str, Any] = {
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
             "aliases": {"type": "object", "additionalProperties": {"type": "string"}},
+            "installer": {"type": "string", "enum": ["old", "new"]},
         },
     }
 }

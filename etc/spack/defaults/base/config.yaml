@@ -173,6 +173,8 @@ config:
   # windows due to a lack of filesystem locks.
   concurrent_packages: 1
 
+  # Which installer to use: "old" or "new". The new installer is experimental.
+  installer: old
 
   # If set to true, Spack will use ccache to cache C compiles.
   ccache: false
