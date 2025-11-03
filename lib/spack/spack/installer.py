@@ -446,7 +446,7 @@ def _process_binary_cache_tarball(
         pkg: the package being installed
         explicit: the package was explicitly requested by the user
         unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
-        mirrors_for_spec: Optional list of concrete specs and mirrors
+        mirrors_for_spec: Optional list of mirrors to look for the spec.
         obtained by calling binary_distribution.get_mirrors_for_spec().
         timer: timer to keep track of binary install phases.
 
@@ -502,10 +502,10 @@ def _try_install_from_binary_cache(
     tty.debug(f"Searching for binary cache of {package_id(pkg.spec)}")
 
     with timer.measure("search"):
-        matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
+        mirrors = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
 
     return _process_binary_cache_tarball(
-        pkg, explicit, unsigned, mirrors_for_spec=matches, timer=timer
+        pkg, explicit, unsigned, mirrors_for_spec=mirrors, timer=timer
     )
 
 
