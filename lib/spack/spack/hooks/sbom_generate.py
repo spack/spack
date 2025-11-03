@@ -1,12 +1,13 @@
 import json
 import os
 import spack.hooks
-from llnl.util import tty
+import time
+from spack.llnl.util import tty
 
-"""Generate a Software Bill of Materials (SBOM) for each successful Spack installtion."""
+"""Generate a Software Bill of Materials (SBOM) for each successful Spack installation."""
 
-@spack.hooks.register("post_install")
-def post_install(spec, **kwargs):
+def post_install(spec, explicit=None):
+    tty.msg(f"[SBOM] Dummy hook executed for {spec.name}")
     pkg = spec.package
     sbom = {
         "SPDXID": f"SPDXRef-{spec.name}-{spec.version}",
@@ -19,8 +20,8 @@ def post_install(spec, **kwargs):
     }
 
     path = os.path.join(spec.prefix, "sbom.json")
+    print("PATH:", path)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         json.dump(sbom, f, indent=2)
     tty.msg(f"[SBOM] Wrote {path}")
-
