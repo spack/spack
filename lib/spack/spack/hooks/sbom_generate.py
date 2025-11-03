@@ -6,16 +6,26 @@ from spack.llnl.util import tty
 
 """Generate a Software Bill of Materials (SBOM) for each successful Spack installation."""
 
+# SPDX 2.3 Generation
 def post_install(spec, explicit=None):
-    tty.msg(f"[SBOM] Dummy hook executed for {spec.name}")
     pkg = spec.package
+    
+    # extract license info
+    license_field = getattr(pkg, "licenses", None)
+    if isinstance(license_field, (list, tuple)) and license_field:
+        license_id = license_field[0]
+    elif isinstance(license_field, str):
+        license_id = license_field
+    else:
+        license_id = "NOASSERTION"
+
     sbom = {
         "SPDXID": f"SPDXRef-{spec.name}-{spec.version}",
         "name": spec.name,
         "versionInfo": str(spec.version),
         "supplier": getattr(pkg, "homepage", None) or "NOASSERTION",
         "downloadLocation": getattr(pkg, "url", None) or "NOASSERTION",
-        "licenseDeclared": pkg.licenses[0] if getattr(pkg, "licenses", None) else "NOASSERTION",
+        "licenseDeclared": license_id,
         "dependencies": [d.name for d in spec.dependencies()],
     }
 
