@@ -64,7 +64,13 @@ from spack.resource import Resource
 from spack.solver.versions import concretization_version_order
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
-from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
+from spack.version import (
+    GitVersion,
+    StandardVersion,
+    VersionError,
+    is_git_version,
+    is_git_commit_sha,
+)
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -1053,16 +1059,18 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg_instance.do_fetch(mirror_only=True)
         except spack.error.FetchError:
             pass
+
         commit_candidate = getattr(pkg_instance.fetcher, "commit", None)
-        if commit_candidate:
-            sha = pkg_instance.fetcher.commit
+        if commit_candidate and is_git_commit_sha(commit_candidate):
+            sha = commit_candidate
         elif pkg_instance.stage.archive_file:
-            file_name = pathlib.Path(pkg_instance.stage.archive_file).resolve().name
-            sha = file_name.split(".")[0].split("_")[0]
-            # TODO(psakiev) this can be done as a stage check
-            # sha = spack.util.archive.retrieve_commit_from_archive(
-            #     pkg_instance.stage.archive_file, ref
-            # )
+            # TODO(psakiev) technically we should be able to get the
+            # first see if the archive name already has the sha in it, we can verify during staging
+            # file_name = pathlib.Path(pkg_instance.stage.archive_file).resolve().name
+            # sha = file_name.split(".")[0].split("_")[0]
+            sha = spack.util.archive.retrieve_commit_from_archive(
+                pkg_instance.stage.archive_file, ref
+            )
         if not sha:
             url = cls.version_or_package_attr("git", spec.version)
             sha = spack.util.git.get_commit_sha(url, ref)
