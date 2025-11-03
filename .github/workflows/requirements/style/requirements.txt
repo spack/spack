@@ -1,10 +1,10 @@
 black==25.9.0
 clingo==5.8.0
 flake8==7.3.0
-isort==6.1.0
+isort==7.0.0
 mypy==1.18.2
-types-six==1.17.0.20250515
+types-six==1.17.0.20251009
 vermin==1.7.0
-pylint==4.0.1
+pylint==4.0.2
 docutils==0.22.2
-ruamel.yaml==0.18.15
+ruamel.yaml==0.18.16

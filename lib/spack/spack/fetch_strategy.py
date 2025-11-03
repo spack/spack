@@ -429,7 +429,9 @@ class URLFetchStrategy(FetchStrategy):
     def _fetch_urllib(self, url, chunk_size=65536):
         save_file = self.stage.save_filename
 
-        request = urllib.request.Request(url, headers={"User-Agent": web_util.SPACK_USER_AGENT})
+        request = urllib.request.Request(
+            url, headers={"User-Agent": web_util.SPACK_USER_AGENT, "Accept": "*/*"}
+        )
 
         if os.path.lexists(save_file):
             os.remove(save_file)

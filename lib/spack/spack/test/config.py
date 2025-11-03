@@ -30,6 +30,8 @@ import spack.schema.mirrors
 import spack.schema.repos
 import spack.spec
 import spack.store
+import spack.util.executable
+import spack.util.git
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 from spack.enums import ConfigScopePriority
@@ -1419,3 +1421,244 @@ def test_deepcopy_as_builtin(env_yaml):
     assert type(packages_copy["all"]) is DictWithLineInfo
     assert type(packages_copy["all"]["compiler"]) is list
     assert type(packages_copy["all"]["compiler"][0]) is str
+
+
+def test_included_optional_include_scopes():
+    with pytest.raises(NotImplementedError):
+        spack.config.OptionalInclude({}).scopes(spack.config.ConfigScope("fail"))
+
+
+def test_included_path_string(
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capsys
+):
+    path = tmp_path / "local" / "config.yaml"
+    path.parent.mkdir()
+    include = spack.config.included_path(path)
+    assert isinstance(include, spack.config.IncludePath)
+    assert include.path == str(path)
+    assert not include.optional
+    assert include.evaluate_condition()
+
+    parent_scope = mock_low_high_config.scopes["low"]
+
+    # Trigger failure when required path does not exist
+    with pytest.raises(ValueError, match="does not exist"):
+        include.scopes(parent_scope)
+
+    # First successful pass builds the scope
+    path.touch()
+    scopes = include.scopes(parent_scope)
+    assert scopes and len(scopes) == 1
+    assert isinstance(scopes[0], spack.config.SingleFileScope)
+
+    # Second pass uses the scopes previously built
+    assert include._scopes is not None
+    scopes = include.scopes(parent_scope)
+    captured = capsys.readouterr()[1]
+    assert "Using existing scopes" in captured
+
+
+def test_included_path_string_no_parent_path(
+    tmp_path: pathlib.Path, config, ensure_debug, monkeypatch
+):
+    """Use a relative include path and no parent scope path so destination
+    will be rooted in the current working directory (usually SPACK_ROOT)."""
+    entry = {"path": "config.yaml", "optional": True}
+    include = spack.config.included_path(entry)
+    FakeScope = collections.namedtuple("FakeScope", ["path"])
+    parent_scope = FakeScope("")
+
+    assert not include.scopes(parent_scope)  # type: ignore[arg-type]
+    destination = include.destination
+    curr_dir = os.getcwd()
+    assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]
+
+
+def test_included_path_conditional_bad_when(
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, capsys
+):
+    path = tmp_path / "local"
+    path.mkdir()
+    entry = {"path": str(path), "when": 'platform == "nosuchplatform"', "optional": True}
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.IncludePath)
+    assert include.path == entry["path"]
+    assert include.when == entry["when"]
+    assert include.optional
+    assert not include.evaluate_condition()
+
+    scopes = include.scopes(mock_low_high_config.scopes["low"])
+    captured = capsys.readouterr()[1]
+    assert "condition is not satisfied" in captured
+    assert not scopes
+
+
+def test_included_path_conditional_success(tmp_path: pathlib.Path, mock_low_high_config):
+    path = tmp_path / "local"
+    path.mkdir()
+    entry = {"path": str(path), "when": 'platform == "test"', "optional": True}
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.IncludePath)
+    assert include.path == entry["path"]
+    assert include.when == entry["when"]
+    assert include.optional
+    assert include.evaluate_condition()
+
+    scopes = include.scopes(mock_low_high_config.scopes["low"])
+    assert scopes and len(scopes) == 1
+    assert isinstance(scopes[0], spack.config.DirectoryConfigScope)
+
+
+def test_included_path_git_missing_args():
+    # must have one or more of: branch, tag and commit so fail if missing any
+    entry = {"git": "https://example.com/windows/configs.git", "paths": ["config.yaml"]}
+    with pytest.raises(spack.error.ConfigError, match="specify one or more"):
+        spack.config.included_path(entry)
+
+    # must have one or more paths
+    entry["tag"] = "v1.0"
+    entry["paths"] = []
+    with pytest.raises(spack.error.ConfigError, match="must include one or more"):
+        spack.config.included_path(entry)
+
+
+def test_included_path_git_unsat(
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capsys
+):
+    paths = ["config.yaml", "packages.yaml"]
+    entry = {
+        "git": "https://example.com/windows/configs.git",
+        "tag": "v1.0",
+        "paths": paths,
+        "when": 'platform == "nosuchplatform"',
+    }
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.GitIncludePaths)
+    assert include.repo == entry["git"]
+    assert include.tag == entry["tag"]
+    assert include.paths == entry["paths"]
+    assert include.when == entry["when"]
+    assert not include.optional and not include.evaluate_condition()
+
+    scopes = include.scopes(mock_low_high_config.scopes["low"])
+    captured = capsys.readouterr()[1]
+    assert "condition is not satisfied" in captured
+    assert not scopes
+
+
+@pytest.mark.parametrize(
+    "key,value", [("branch", "main"), ("commit", "abcdef123456"), ("tag", "v1.0")]
+)
+def test_included_path_git(
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capsys
+):
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+
+    class MockIncludeGit(spack.util.executable.Executable):
+        def __init__(self, required: bool):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "config":
+                return "origin"
+
+            return ""
+
+    paths = ["config.yaml", "packages.yaml"]
+    entry = {
+        "git": "https://example.com/windows/configs.git",
+        key: value,
+        "paths": paths,
+        "when": 'platform == "test"',
+    }
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.GitIncludePaths)
+    assert not include.optional and include.evaluate_condition()
+
+    destination = include._destination()
+    assert not os.path.exists(destination)
+
+    # set up minimal git and repository operations
+    monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
+
+    def _init_repo(*args, **kwargs):
+        fs.mkdirp(fs.join_path(destination, ".git"))
+
+    def _checkout(*args, **kwargs):
+        # Make sure the files exist at the clone destination
+        with fs.working_dir(destination):
+            for p in paths:
+                fs.touch(p)
+
+    monkeypatch.setattr(spack.util.git, "init_git_repo", _init_repo)
+    monkeypatch.setattr(spack.util.git, f"pull_checkout_{key}", _checkout)
+
+    # First successful pass builds the scope
+    parent_scope = mock_low_high_config.scopes["low"]
+    scopes = include.scopes(parent_scope)
+    assert scopes and len(scopes) == len(paths)
+    for scope in scopes:
+        assert isinstance(scope, spack.config.SingleFileScope)
+        assert os.path.basename(scope.path) in paths  # type: ignore[union-attr]
+
+    # Second pass uses the scopes previously built.
+    # Only need to do this for one of the parameters.
+    if key == "branch":
+        assert include._scopes is not None
+        scopes = include.scopes(parent_scope)
+        captured = capsys.readouterr()[1]
+        assert "Using existing scopes" in captured
+
+    # A direct clone now returns already cloned destination and debug message.
+    # Again only need to run this test once.
+    if key == "tag":
+        assert include._clone() == include.destination
+        captured = capsys.readouterr()[1]
+        assert "already cloned" in captured
+
+
+def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+
+    paths = ["concretizer.yaml"]
+    entry = {
+        "git": "https://example.com/linux/configs.git",
+        "branch": "develop",
+        "paths": paths,
+        "when": 'platform == "test"',
+    }
+    include = spack.config.included_path(entry)
+    parent_scope = mock_low_high_config.scopes["low"]
+
+    # fail to initialize the repository
+    def _failing_init(*args, **kwargs):
+        raise spack.util.executable.ProcessError("mock init repo failure")
+
+    monkeypatch.setattr(spack.util.git, "init_git_repo", _failing_init)
+
+    with pytest.raises(spack.error.ConfigError, match="Unable to initialize"):
+        include.scopes(parent_scope)
+
+    # fail in git config (so use default remote) *and* git checkout
+    def _init_repo(*args, **kwargs):
+        fs.mkdirp(fs.join_path(include.destination, ".git"))
+
+    class MockIncludeGit(spack.util.executable.Executable):
+        def __init__(self, required: bool):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            raise spack.util.executable.ProcessError("mock git failure")
+
+    monkeypatch.setattr(spack.util.git, "init_git_repo", _init_repo)
+    monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
+
+    with pytest.raises(spack.error.ConfigError, match="Unable to check out"):
+        include.scopes(parent_scope)
+
+    # set up invalid option failure
+    include.branch = ""  # type: ignore[union-attr]
+    with pytest.raises(spack.error.ConfigError, match="Missing or unsupported options"):
+        include.scopes(parent_scope)

@@ -31,10 +31,12 @@ import copy
 import functools
 import os
 import os.path
+import pathlib
 import re
 import sys
 from collections import defaultdict
-from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
+from itertools import chain
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 from spack.vendor import jsonschema
 
@@ -60,6 +62,9 @@ import spack.schema.repos
 import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
+import spack.util.executable
+import spack.util.git
+import spack.util.hash
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -152,12 +157,11 @@ class ConfigScope:
             includes = self.get_section("include")
             if includes:
                 include_paths = [included_path(data) for data in includes["include"]]
-                for path in include_paths:
-                    included_scope = include_path_scope(path, self)
-                    if not included_scope:
-                        continue
 
-                    # Do not include duplicate scopes
+                included_scopes = chain(*[include.scopes(self) for include in include_paths])
+
+                # Do not include duplicate scopes
+                for included_scope in included_scopes:
                     if any([included_scope.name == scope.name for scope in self._included_scopes]):
                         tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
                         continue
@@ -844,53 +848,33 @@ def override(
 #: Class for the relevance of an optional path conditioned on a limited
 #: python code that evaluates to a boolean and or explicit specification
 #: as optional.
-class IncludePath(NamedTuple):
-    path: str
+class OptionalInclude:
+    """Base properties for all includes."""
+
     when: str
-    sha256: str
     optional: bool
+    _scopes: List[ConfigScope]
 
+    def __init__(self, entry: dict):
+        self.when = entry.get("when", "")
+        self.optional = entry.get("optional", False)
+        self._scopes = []
 
-def included_path(entry: Union[str, dict]) -> IncludePath:
-    """Convert the included path entry into an IncludePath.
+    def _scope(
+        self, path: str, config_path: str, parent_scope: ConfigScope
+    ) -> Optional[ConfigScope]:
+        """Instantiate a configuration scope for the configuration path.
 
-    Args:
-        entry: include configuration entry
+        Args:
+            path: raw include path
+            config_path: configuration path
+            parent_scope: including scope
 
-    Returns: converted entry, where an empty ``when`` means the path is not conditionally included
-    """
-    if isinstance(entry, str):
-        return IncludePath(path=entry, sha256="", when="", optional=False)
+        Returns: configuration scopes
 
-    path = entry["path"]
-    sha256 = entry.get("sha256", "")
-    when = entry.get("when", "")
-    optional = entry.get("optional", False)
-    return IncludePath(path=path, sha256=sha256, when=when, optional=optional)
-
-
-def include_path_scope(include: IncludePath, parent_scope: ConfigScope) -> Optional[ConfigScope]:
-    """Instantiate an appropriate configuration scope for the given path.
-
-    Args:
-        include: optional include path
-        parent_name: name of including scope
-
-    Returns: configuration scope
-
-    Raises:
-        ValueError: included path has an unsupported URL scheme, is required
-            but does not exist; configuration stage directory argument is missing
-        ConfigFileError: unable to access remote configuration file(s)
-    """
-    # circular dependencies
-    import spack.spec
-
-    if (not include.when) or spack.spec.eval_conditional(include.when):
-        config_path = rfc_util.local_path(include.path, include.sha256, _include_cache_location)
-        if not config_path:
-            raise ConfigFileError(f"Unable to fetch remote configuration from {include.path}")
-
+        Raises:
+            ValueError: the required configuration path does not exist
+        """
         # Try to use the relative path to create the included scope name
         parent_path = getattr(parent_scope, "path", None)
         if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
@@ -917,11 +901,270 @@ def include_path_scope(include: IncludePath, parent_scope: ConfigScope) -> Optio
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
 
-        if not include.optional:
-            path = f" at ({config_path})" if config_path != include.path else ""
-            raise ValueError(f"Required path ({include.path}) does not exist{path}")
+        if not self.optional:
+            dest = f" at ({config_path})" if config_path != path else ""
+            raise ValueError(f"Required path ({path}) does not exist{dest}")
 
-    return None
+        return None
+
+    def evaluate_condition(self) -> bool:
+        # circular dependencies
+        import spack.spec
+
+        return (not self.when) or spack.spec.eval_conditional(self.when)
+
+    def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
+        """Instantiate configuration scopes.
+
+        Args:
+            parent_scope: including scope
+
+        Returns: configuration scopes IF the when condition is satisfied;
+            otherwise, an empty list.
+
+        Raises:
+            ValueError: the required configuration path does not exist
+        """
+        raise NotImplementedError("must be implemented in derived classes")
+
+    @property
+    def paths(self) -> List[str]:
+        """Path(s) associated with the include."""
+
+        raise NotImplementedError("must be implemented in derived classes")
+
+
+class IncludePath(OptionalInclude):
+    path: str
+    sha256: str
+    destination: Optional[str]
+
+    def __init__(self, entry: dict):
+        super().__init__(entry)
+        self.path = entry.get("path", "")
+        self.sha256 = entry.get("sha256", "")
+        self.destination = None
+
+    def __repr__(self):
+        return (
+            f"IncludePath({self.path}, sha256={self.sha256}, "
+            f"when='{self.when}', optional={self.optional})"
+        )
+
+    def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
+        """Instantiate a configuration scope for the included path.
+
+        Args:
+            parent_scope: including scope
+
+        Returns: configuration scopes IF the when condition is satisfied;
+            otherwise, an empty list.
+
+        Raises:
+            ConfigFileError: unable to access remote configuration file
+            ValueError: included path has an unsupported URL scheme, is required
+                but does not exist; configuration stage directory argument is missing
+        """
+        if not self.evaluate_condition():
+            tty.debug(f"Include condition is not satisfied in {self}")
+            return []
+
+        if self._scopes:
+            tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
+            return self._scopes
+
+        # Make sure to use the proper (default) working directory when obtaining
+        # the local path for a local file.
+        def work_dir():
+            if not os.path.isabs(self.path) and hasattr(parent_scope, "path"):
+                if os.path.isfile(parent_scope.path):
+                    return os.path.dirname(parent_scope.path)
+                if os.path.isdir(parent_scope.path):
+                    return parent_scope.path
+            return os.getcwd()
+
+        with filesystem.working_dir(work_dir()):
+            config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location)
+        assert config_path
+        self.destination = config_path
+
+        scope = self._scope(self.path, self.destination, parent_scope)
+        if scope is not None:
+            self._scopes = [scope]
+
+        return self._scopes
+
+    @property
+    def paths(self) -> List[str]:
+        """Path(s) associated with the include."""
+
+        return [self.path]
+
+
+class GitIncludePaths(OptionalInclude):
+    repo: str
+    branch: str
+    commit: str
+    tag: str
+    _paths: List[str]
+    destination: Optional[str]
+
+    def __init__(self, entry: dict):
+        super().__init__(entry)
+        self.repo = entry.get("git", "")
+        self.branch = entry.get("branch", "")
+        self.commit = entry.get("commit", "")
+        self.tag = entry.get("tag", "")
+        self._paths = entry.get("paths", [])
+        self.destination = None
+
+        if not self.branch and not self.commit and not self.tag:
+            raise spack.error.ConfigError(
+                "Git include paths ({self}) must specify one or more of: branch, commit, tag"
+            )
+
+        if not self._paths:
+            raise spack.error.ConfigError(
+                "Git include paths ({self}) must include one or more relative paths"
+            )
+
+    def __repr__(self):
+        if self.branch:
+            identifier = f"branch={self.branch}"
+        else:
+            identifier = f"commit={self.commit}, tag={self.tag}"
+
+        return (
+            f"GitIncludePaths({self.repo}, paths={self.paths}, "
+            f"{identifier}, when='{self.when}', optional={self.optional})"
+        )
+
+    def _destination(self):
+        dir_name = spack.util.hash.b32_hash(self.repo)[-7:]
+        return os.path.join(_include_cache_location(), dir_name)
+
+    def _clone(self) -> Optional[str]:
+        """Clone the repository."""
+        if self.fetched():
+            tty.debug(f"Repository ({self.repo}) already cloned to {self.destination}")
+            return self.destination
+
+        destination = self._destination()
+        with filesystem.working_dir(destination, create=True):
+            if not os.path.exists(".git"):
+                try:
+                    spack.util.git.init_git_repo(self.repo)
+                except spack.util.executable.ProcessError as e:
+                    raise spack.error.ConfigError(
+                        f"Unable to initialize repository ({self.repo}) under {destination}: {e}"
+                    )
+
+            try:
+                if self.commit:
+                    spack.util.git.pull_checkout_commit(self.commit)
+                elif self.tag:
+                    spack.util.git.pull_checkout_tag(self.tag)
+                elif self.branch:
+                    # if the branch already exists we should use the
+                    # previously configured remote
+                    try:
+                        git = spack.util.git.git(required=True)
+                        output = git("config", f"branch.{self.branch}.remote", output=str)
+                        remote = output.strip()
+                    except spack.util.executable.ProcessError:
+                        remote = "origin"
+                    spack.util.git.pull_checkout_branch(self.branch, remote=remote)
+                else:
+                    raise spack.error.ConfigError(f"Missing or unsupported options in {self}")
+
+            except spack.util.executable.ProcessError as e:
+                raise spack.error.ConfigError(
+                    f"Unable to check out repository ({self}) in {destination}: {e}"
+                )
+
+            # only set the destination on successful clone/checkout
+            self.destination = destination
+            return self.destination
+
+    def fetched(self):
+        return self.destination is not None and os.path.join(self.destination, ".git")
+
+    def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
+        """Instantiate configuration scopes for the included paths.
+
+        Args:
+            parent_scope: including scope
+
+        Returns: configuration scopes IF the when condition is satisfied;
+            otherwise, an empty list.
+
+        Raises:
+            ConfigFileError: unable to access remote configuration file(s)
+            ValueError: included path has an unsupported URL scheme, is required
+                but does not exist; configuration stage directory argument is missing
+        """
+        if not self.evaluate_condition():
+            tty.debug(f"Include condition is not satisfied in {self}")
+            return []
+
+        if self._scopes:
+            tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
+            return self._scopes
+
+        destination = self._clone()
+        if destination is None:
+            raise spack.error.ConfigError(f"Unable to cache the include: {self}")
+
+        scopes: List[ConfigScope] = []
+        for relative_path in self.paths:
+            config_path = os.path.join(destination, relative_path)
+            scope = self._scope(relative_path, config_path, parent_scope)
+            if scope is not None:
+                scopes.append(scope)
+
+        # cache the scopes if successfully able to process all of them
+        if scopes:
+            self._scopes = scopes
+        return self._scopes
+
+    @property
+    def paths(self) -> List[str]:
+        """Path(s) associated with the include."""
+
+        return self._paths
+
+
+def included_path(entry: Union[str, pathlib.Path, dict]) -> Union[IncludePath, GitIncludePaths]:
+    """Convert the included paths entry into the appropriate optional include.
+
+    Args:
+        entry: include configuration entry
+
+    Returns: converted entry, where an empty ``when`` means the path is not conditionally included
+    """
+    if isinstance(entry, (str, pathlib.Path)):
+        return IncludePath({"path": str(entry)})
+
+    if entry.get("path", ""):
+        return IncludePath(entry)
+
+    return GitIncludePaths(entry)
+
+
+def paths_from_includes(includes: List[Union[str, dict]]) -> List[str]:
+    """The path(s) from the configured includes.
+
+    Args:
+        includes: include configuration information
+
+    Returns: list of path or an empty list if there are none
+    """
+
+    paths = []
+    for entry in includes:
+        include = included_path(entry)
+        paths.extend(include.paths)
+    return paths
 
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:

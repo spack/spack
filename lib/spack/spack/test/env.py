@@ -1270,3 +1270,51 @@ spack:
 
     libelf = mpileaks["libelf"]
     assert libelf.satisfies("%[virtuals=c] gcc")  # libelf only depends on c
+
+
+def test_reuse_environment_dependencies(tmp_path: pathlib.Path, mutable_config):
+    """Tests reusing specs from a separate, and concrete, environment."""
+    base = tmp_path / "base"
+    base.mkdir()
+
+    # Concretize the first environment asking for a non-default spec. In this way we'll know
+    # that reuse from the derived environment is not accidental.
+    manifest_base = base / "spack.yaml"
+    manifest_base.write_text(
+        """
+spack:
+  specs:
+  - pkg-a@1.0
+  packages:
+    pkg-b:
+      require:
+      - "@0.9"
+"""
+    )
+    with ev.Environment(base) as e:
+        e.concretize()
+        # We need the spack.lock for reuse in the derived environment
+        e.write(regenerate=False)
+        base_pkga = e.concrete_roots()[0]
+
+    # Create a second environment, reuse from the previous one and check pkg-a is the same
+    derived = tmp_path / "derived"
+    derived.mkdir()
+    manifest_derived = derived / "spack.yaml"
+    manifest_derived.write_text(
+        f"""
+spack:
+  specs:
+  - pkg-a
+  concretizer:
+    reuse:
+      from:
+      - type: environment
+        path: {base}
+"""
+    )
+    with ev.Environment(derived) as e:
+        e.concretize()
+        derived_pkga = e.concrete_roots()[0]
+
+    assert base_pkga.dag_hash() == derived_pkga.dag_hash()

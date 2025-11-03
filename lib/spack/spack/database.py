@@ -66,7 +66,7 @@ from spack.directory_layout import (
 )
 from spack.error import SpackError
 from spack.util.crypto import bit_length
-from spack.util.socket import _getfqdn
+from spack.util.socket import _gethostname
 
 from .enums import InstallRecordStatus
 
@@ -1103,7 +1103,7 @@ class Database:
             self._state_is_inconsistent = True
             return
 
-        temp_file = str(self._index_path) + (".%s.%s.temp" % (_getfqdn(), os.getpid()))
+        temp_file = str(self._index_path) + (".%s.%s.temp" % (_gethostname(), os.getpid()))
 
         # Write a temporary database file them move it into place
         try:

@@ -735,8 +735,7 @@ class ConcretizationCache:
         ``path`` is a path to a file in the cache, and its basename is the hash of the problem.
 
         Args:
-
-            path: absolute path to concretization cache entry to be locked
+            path: absolute or relative path to concretization cache entry to be locked
         """
         return lk.Lock(
             str(self._lockfile),
@@ -753,10 +752,9 @@ class ConcretizationCache:
         """Read transactions for concretization cache entries.
 
         Args:
-            path: absolute path to the concretization cache entry to be locked
+            path: absolute or relative path to the concretization cache entry to be locked
             timeout: give up after this many seconds
         """
-        assert path.is_absolute()
         return lk.ReadTransaction(self._lock(path), timeout=timeout)
 
     def write_transaction(
@@ -765,12 +763,9 @@ class ConcretizationCache:
         """Write transactions for concretization cache entries
 
         Args:
-            path: absolute path to the concretization cache entry to be locked
+            path: absolute or relative path to the concretization cache entry to be locked
             timeout: give up after this many seconds
-
         """
-        # path must be absolute at this point
-        assert path.is_absolute()
         return lk.WriteTransaction(self._lock(path), timeout=timeout)
 
     def store(self, problem: str, result: Result, statistics: List) -> None:
@@ -3008,6 +3003,8 @@ class SpackSolverSetup:
         # TODO: warning is because mypy doesn't know Spec supports rich comparison via decorator
         self.possible_compilers.sort()  # type: ignore[call-arg,call-overload]
 
+        self.compiler_mixing()
+
         self.gen.h1("Runtimes")
         injected_dependencies = self.define_runtime_constraints()
 
@@ -3135,6 +3132,18 @@ class SpackSolverSetup:
         self.internal_errors(_use_unsat_cores=_use_unsat_cores)
 
         return self.gen
+
+    def compiler_mixing(self):
+        should_mix = spack.config.get("concretizer:compiler_mixing", True)
+        if should_mix is True:
+            return
+        # anything besides should_mix: true
+        for lang in ["c", "cxx", "fortran"]:
+            self.gen.fact(fn.no_compiler_mixing(lang))
+        # user specified an allow-list
+        if isinstance(should_mix, list):
+            for pkg_name in should_mix:
+                self.gen.fact(fn.allow_mixing(pkg_name))
 
     def internal_errors(self, *, _use_unsat_cores: bool):
         parent_dir = os.path.dirname(__file__)

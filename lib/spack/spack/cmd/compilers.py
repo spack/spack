@@ -8,7 +8,7 @@ from spack.cmd.common import arguments
 from spack.cmd.compiler import compiler_list
 
 description = "list available compilers"
-section = "system"
+section = "config"
 level = "short"
 
 

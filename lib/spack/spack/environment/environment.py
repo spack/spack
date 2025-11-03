@@ -2708,9 +2708,8 @@ def initialize_environment_dir(
 
     # TODO: make this recursive
     includes = manifest[TOP_LEVEL_KEY].get("include", [])
-    for include in includes:
-        included_path = spack.config.included_path(include)
-        path = included_path.path
+    paths = spack.config.paths_from_includes(includes)
+    for path in paths:
         if os.path.isabs(path):
             continue
 
@@ -2721,18 +2720,20 @@ def initialize_environment_dir(
             continue
 
         orig_abspath = os.path.normpath(envfile.parent / path)
-        if not os.path.exists(orig_abspath):
-            tty.warn(f"Included file does not exist; will not copy: '{path}'")
-            continue
-
         if os.path.isfile(orig_abspath):
             fs.touchp(abspath)
             shutil.copy(orig_abspath, abspath)
-        else:
-            if os.path.exists(abspath):
-                tty.warn(f"Skipping copying duplicate directories: {path}")
-                continue
-            shutil.copytree(orig_abspath, abspath, symlinks=True)
+            continue
+
+        if not os.path.exists(orig_abspath):
+            tty.warn(f"Skipping copy of non-existent include path: '{path}'")
+            continue
+
+        if os.path.exists(abspath):
+            tty.warn(f"Skipping copy of directory over existing path: {path}")
+            continue
+
+        shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
@@ -3031,11 +3032,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ensure_no_disallowed_env_config_mods(self._env_config_scope)
         return self._env_config_scope
 
-    def prepare_config_scope(
-        self, priority: ConfigScopePriority = ConfigScopePriority.ENVIRONMENT
-    ) -> None:
+    def prepare_config_scope(self) -> None:
         """Add the manifest's scope to the global configuration search path."""
-        spack.config.CONFIG.push_scope(self.env_config_scope, priority)
+        spack.config.CONFIG.push_scope(
+            self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
+        )
 
     def deactivate_config_scope(self) -> None:
         """Remove the manifest's scope from the global config path."""

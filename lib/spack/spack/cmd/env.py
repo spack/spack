@@ -30,7 +30,7 @@ from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import EnvironmentModifications
 
-description = "manage virtual environments"
+description = "manage environments"
 section = "environments"
 level = "short"
 

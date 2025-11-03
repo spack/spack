@@ -578,7 +578,7 @@ def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch, mu
 
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand("install")
-    install("dependent-install")
+    install("--fake", "dependent-install")
 
     # Check one explicit, one implicit install
     dependent = spack.store.STORE.db.query(explicit=True)
@@ -624,7 +624,7 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
 
     e = ev.read("test")
     with e:
-        install("--add", "depends-on-run-env")
+        install("--add", "--fake", "depends-on-run-env")
 
     env_variables = {}
     spack.environment.shell.activate(e).apply_modifications(env_variables)
@@ -865,7 +865,7 @@ def test_env_status_broken_view(
     tmp_path: pathlib.Path,
 ):
     with ev.create_in_dir(tmp_path):
-        install("--add", "trivial-install-test-package")
+        install("--add", "--fake", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and warns the user
@@ -884,7 +884,7 @@ def test_env_activate_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_custom_repository, install_mockery
 ):
     with ev.create("test"):
-        install("--add", "trivial-install-test-package")
+        install("--add", "--fake", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
@@ -3034,7 +3034,7 @@ spack:
         )
 
     with ev.Environment(envdir):
-        install()
+        install("--fake")
 
     # make sure transitive run type deps are in the view
     for pkg in ("dtrun1", "dtrun3"):
@@ -3579,7 +3579,7 @@ spack:
     )
 
     with ev.read("test") as e:
-        install()
+        install("--fake")
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)

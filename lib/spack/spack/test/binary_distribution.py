@@ -182,7 +182,8 @@ def test_built_spec_cache(install_mockery, tmp_path: pathlib.Path):
 
     for s in [gspec, cspec]:
         results = spack.binary_distribution.get_mirrors_for_spec(s)
-        assert any([r.spec == s for r in results])
+        assert len(results) == 1
+        assert results[0].url == url_util.path_to_file_url(str(tmp_path))
 
 
 def fake_dag_hash(spec, length=None):

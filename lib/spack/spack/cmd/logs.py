@@ -17,7 +17,7 @@ from spack.cmd.common import arguments
 from spack.main import SpackCommandError
 
 description = "print out logs for packages"
-section = "basic"
+section = "query"
 level = "long"
 
 

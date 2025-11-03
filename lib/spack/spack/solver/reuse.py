@@ -12,6 +12,7 @@ import spack.llnl.path
 import spack.repo
 import spack.spec
 import spack.store
+import spack.traverse
 from spack.externals import (
     ExternalSpecsParser,
     complete_architecture,
@@ -191,7 +192,7 @@ def _specs_from_mirror():
 def _specs_from_environment(env):
     """Return all concrete specs from the environment. This includes all included concrete"""
     if env:
-        return [concrete for _, concrete in env.concretized_specs()]
+        return list(spack.traverse.traverse_nodes([s for _, s in env.concretized_specs()]))
     else:
         return []
 
