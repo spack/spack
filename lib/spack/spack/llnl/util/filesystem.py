@@ -1961,7 +1961,7 @@ class FileList(collections.abc.Sequence):
             list: A list of base-names
         """
         return list(dedupe(os.path.basename(x) for x in self.files))
-    
+
     def _quote_when_required(self, item):
         """Returns item with proper quoting and escaping of reserved characters"""
         """Returns args with each arg in double quotes if neccesary
@@ -1971,7 +1971,7 @@ class FileList(collections.abc.Sequence):
         """
 
         def quote(arg):
-            return '"'+arg+'"'
+            return '"' + arg + '"'
 
         def has_space(arg):
             return " " in arg
@@ -2110,7 +2110,7 @@ class HeaderList(FileList):
             str: A joined list of include flags
         """
         return " ".join(self.include_flags_list)
-    
+
     @property
     def include_flags_list(self):
         return ["-I" + x for x in self.directories]
@@ -2289,7 +2289,7 @@ class LibraryList(FileList):
             str: A joined list of search flags
         """
         return " ".join(self.search_flags_list)
-    
+
     @property
     def search_flags_list(self):
         return ["-L" + x for x in self.directories]
@@ -2323,7 +2323,7 @@ class LibraryList(FileList):
             str: A joined list of search flags and link flags
         """
         return self.search_flags + " " + self.link_flags
-    
+
     @property
     def ld_flags_list(self):
         return self.search_flags_list + self.link_flags_list
