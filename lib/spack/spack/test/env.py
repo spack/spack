@@ -1537,11 +1537,11 @@ spack:
   - fftw~mpi
 """,
         """
-    spack:
-      specs:
-      - ascent+adios2
-      - fftw~mpi
-    """,
+spack:
+  specs:
+  - ascent+adios2
+  - fftw~mpi
+""",
     ],
 )
 def test_static_analysis_in_environments(spack_yaml, tmp_path, mutable_config):
