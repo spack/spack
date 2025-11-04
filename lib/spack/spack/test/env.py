@@ -1509,3 +1509,52 @@ spack:
     with ev.Environment(tmp_path) as e:
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="failed to concretize"):
             e.concretize()
+
+
+@pytest.mark.parametrize(
+    "spack_yaml",
+    [
+        # Specs with reuse on
+        """
+spack:
+  specs:
+  - trilinos
+  - mpileaks
+  concretizer:
+    reuse: true
+""",
+        # Package with conditional dependency
+        """
+spack:
+  specs:
+  - ascent+adios2
+  - fftw+mpi
+""",
+        """
+spack:
+  specs:
+  - ascent~adios2
+  - fftw~mpi
+""",
+        """
+spack:
+  specs:
+  - ascent+adios2
+  - fftw~mpi
+""",
+    ],
+)
+def test_static_analysis_in_environments(spack_yaml, tmp_path, mutable_config):
+    """Tests that concretizations with and without static analysis produce the same results."""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        no_static_analysis = {x.dag_hash() for x in e.concrete_roots()}
+
+    mutable_config.set("concretizer:static_analysis", True)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        static_analysis = {x.dag_hash() for x in e.concrete_roots()}
+
+    assert no_static_analysis == static_analysis
