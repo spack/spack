@@ -434,17 +434,20 @@ def check_error(msg, should_mention: Optional[Iterable] = None):
         raise ValueError(f"The error message did not contain: {sorted(should_mention_misses)}")
 
 
-# Error message is good
 def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
     concretize_one("x2")
     concretize_one("x3")
     concretize_one("x4")
 
-    with expect_failure_and_print():
+    important_points = [
+        "x2 depends on x4@4.1",
+        "x3 depends on x4@4.0",
+    ]
+
+    with expect_failure_and_print(should_mention=important_points):
         concretize_one("x1")
 
 
-# Error message is good (has some redundancy though)
 def test_diamond_with_pkg_conflict2(concretize_scope, test_repo):
     with expect_failure_and_print():
         concretize_one("y1")

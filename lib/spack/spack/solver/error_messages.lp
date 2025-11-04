@@ -12,16 +12,21 @@
 
 #program error_messages.
 
-% Create a causal tree between trigger conditions by locating the effect conditions
-% that are triggers for another condition. Condition2 is caused by Condition1
+% The following "condition_cause" rules create a causal tree between trigger
+% conditions by locating the effect conditions that are triggers for another
+% condition. In all these rules, Condition2 is caused by Condition1
+
+% For condition_cause rules, it is not necessary to confirm that the attr is present
+% on the node because `condition_holds` and `impose_constraint` collectively
+% guarantee it.
+% We omit those facts to reduce the burden on the grounder/solver.
+
 condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
   pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package),
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  % removing next item doesn't affect test_null_variant_for_requested_version
-  %attr(Name, node(ID, Package)),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package),
@@ -33,7 +38,6 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_requirement(Trigger, Name, Package, A1),
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  %attr(Name, node(ID, Package), A1),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1),
@@ -42,30 +46,20 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
 condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
   pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
-  % The effects imposed by Condition1 have to be a trigger
-  % for Condition2
   condition_requirement(Trigger, Name, Package, A1, A2),
-  % should I comment out the next two?
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  %attr(Name, node(ID, Package), A1, A2),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1, A2),
   imposed_nodes(Effect, node(ID1, Package1), node(ID, Package)).
 
-% There are up to 3 packages here: ID/Package, ID1/Package1, ID2/Package2
-% what is the meaning of that?
-% There needs to be a trigger condition which holds, and an effect
-% condition which is verified to apply (i.e. hold); Condition2 is
-% the trigger.
 condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
   pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package, A1, A2, A3),
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  %attr(Name, node(ID, Package), A1, A2, A3),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1, A2, A3),
@@ -80,7 +74,6 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_requirement(Trigger, "node", Package),
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  attr("node", node(ID, Package)),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, "dependency_holds", Parent, Package, Type),
