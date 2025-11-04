@@ -439,10 +439,7 @@ def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
     concretize_one("x3")
     concretize_one("x4")
 
-    important_points = [
-        "x2 depends on x4@4.1",
-        "x3 depends on x4@4.0",
-    ]
+    important_points = ["x2 depends on x4@4.1", "x3 depends on x4@4.0"]
 
     with expect_failure_and_print(should_mention=important_points):
         concretize_one("x1")
@@ -494,7 +491,7 @@ def test_errmsg_requirements_1(concretize_scope, test_repo):
     important_points = [
         r"w4 depends on w3\+v1 when @2.0",
         r"w4@:2.0 \^w3@2.1 requested explicitly",
-        r"~v1 is a requirement for package w3 when @2.1"
+        r"~v1 is a requirement for package w3 when @2.1",
     ]
 
     with expect_failure_and_print(should_mention=important_points):
@@ -511,11 +508,10 @@ packages:
 """
     update_packages_config(conf_str)
 
-
     important_points = [
         r"~v1 is a requirement for package w2 when @2.0",
         r"w4 depends on w2@:2.0 when @:2.0",
-        r"w4@2.0 \^w2\+v1 requested explicitly"
+        r"w4@2.0 \^w2\+v1 requested explicitly",
     ]
 
     # w4 has: depends_on("w2@:2.0", when="@:2.0")
@@ -532,7 +528,7 @@ def test_errmsg_requirements_directives(concretize_scope, test_repo):
     important_points = [
         r"~v1 is a requirement for package t2 when @:2.0",
         r"t4 depends on t2@:2.0 when @:2.0",
-        r"t4@:2.0 \^t2\+v1 requested explicitly"
+        r"t4@:2.0 \^t2\+v1 requested explicitly",
     ]
 
     with expect_failure_and_print(should_mention=important_points):
@@ -554,9 +550,7 @@ packages:
 """
     update_packages_config(conf_str)
 
-    important_points = [
-        "no externals satisfy the request"
-    ]
+    important_points = ["no externals satisfy the request"]
 
     with expect_failure_and_print(should_mention=important_points):
         concretize_one("t1")
