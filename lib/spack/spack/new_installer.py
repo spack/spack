@@ -805,7 +805,7 @@ class PackageInstaller:
         keep_stage: bool = False,
         package_cache_only: bool = False,
         package_use_cache: bool = True,
-        restage: bool = False,
+        restage: bool = True,
         skip_patch: bool = False,
         stop_at: Optional[str] = None,
         stop_before: Optional[str] = None,
@@ -815,6 +815,51 @@ class PackageInstaller:
         verbose: bool = False,
         concurrent_packages: Optional[int] = None,
     ) -> None:
+
+        if cache_only:
+            raise NotImplementedError("Cache-only installs are not implemented")
+        elif dependencies_cache_only:
+            raise NotImplementedError("Dependencies cache-only installs are not implemented")
+        elif not dependencies_use_cache:
+            raise NotImplementedError("Not using cache for dependencies is not implemented")
+        elif dirty:
+            raise NotImplementedError("Dirty installs are not implemented")
+        elif overwrite:
+            raise NotImplementedError("Overwrite installs are not implemented")
+        elif fail_fast:
+            raise NotImplementedError("Fail-fast installs are not implemented")
+        elif fake:
+            raise NotImplementedError("Fake installs are not implemented")
+        elif include_build_deps:
+            raise NotImplementedError("Not including build dependencies is not implemented")
+        elif not install_deps:
+            raise NotImplementedError("Not installing dependencies is not implemented")
+        elif not install_package:
+            raise NotImplementedError("Not installing the specified package is not implemented")
+        elif install_source:
+            raise NotImplementedError("Installing sources is not implemented")
+        elif keep_prefix:
+            raise NotImplementedError("Keeping install prefixes is not implemented")
+        elif keep_stage:
+            raise NotImplementedError("Keeping build stages is not implemented")
+        elif package_cache_only:
+            raise NotImplementedError("Package cache only installs are not implemented")
+        elif not package_use_cache:
+            raise NotImplementedError("Not using package cache is not implemented")
+        elif not restage:
+            raise NotImplementedError("Restaging builds is not implemented")
+        elif skip_patch:
+            raise NotImplementedError("Skipping patches is not implemented")
+        elif stop_at is not None:
+            raise NotImplementedError("Stopping at an install phase is not implemented")
+        elif stop_before is not None:
+            raise NotImplementedError("Stopping before an install phase is not implemented")
+        elif tests is not False:
+            raise NotImplementedError("Tests during install are not implemented")
+        elif use_cache:
+            raise NotImplementedError("Using cache only is not implemented")
+        # verbose and concurrent_packages are not worth erroring out for
+
         specs = [pkg.spec for pkg in packages]
 
         # Buffer for incoming, partially received state data from child processes
