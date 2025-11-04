@@ -658,7 +658,7 @@ class BuildStatus:
         if self.last_lines_drawn > 0:
             buffer.write(f"\033[{self.last_lines_drawn}A")
 
-        max_width = os.get_terminal_size().columns
+        max_width, max_height = os.get_terminal_size()
 
         total_lines = 0
         end = "\033[1E"  # move to next line if overwriting, or newline if adding lines
@@ -671,6 +671,8 @@ class BuildStatus:
             if total_lines > self.last_lines_drawn:
                 end = "\n"
 
+        total_finished = len(self.finished_builds)
+
         # First flush the finished builds. These are "persisted" in terminal history.
         for build in self.finished_builds:
             advance()
@@ -678,10 +680,19 @@ class BuildStatus:
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
+
+        # Truncate if we have more builds than fit on the screen. In that case we have to reserve
+        # an additional line for the "N more..." message.
+        truncate_at = max_height - 3 if len(self.builds) + 2 > max_height else len(self.builds)
+
         advance()
         buffer.write(f"\033[1mProgress:\033[0m {self.completed}/{self.total}")
         buffer.write(f"\033[0m\033[K{end}")
-        for build in self.builds.values():
+        for i, build in enumerate(self.builds.values(), 1):
+            if i > truncate_at:
+                advance()
+                buffer.write(f"{len(self.builds) - i + 1} more...\033[0m\033[K{end}")
+                break
             advance()
             self._render_build(build, buffer, max_width, end)
 
@@ -693,8 +704,8 @@ class BuildStatus:
         sys.stdout.write(buffer.getvalue())
         sys.stdout.flush()
 
-        # Update the number of lines drawn for the next tick. +1 for header.
-        self.last_lines_drawn = len(self.builds) + 1
+        # Update the number of lines drawn for the next tick.
+        self.last_lines_drawn = total_lines - total_finished
         self.dirty = False
 
         # Schedule next UI update
