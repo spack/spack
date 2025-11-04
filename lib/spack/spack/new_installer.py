@@ -516,7 +516,8 @@ class BuildStatus:
         self.spinner_chars = ["|", "/", "-", "\\"]
         self.spinner_index = 0
         self.dirty = True  # Start dirty to draw initial state
-        self.last_lines_drawn = 0
+        self.active_area_rows = 0
+        self.total_lines = 0
         self.next_spinner_update = 0.0
         self.next_update = 0.0
         self.overview_mode = True  # Whether to draw the package overview
@@ -533,7 +534,7 @@ class BuildStatus:
         if self.overview_mode:
             self.next()
         else:
-            self.last_lines_drawn = 0
+            self.active_area_rows = 0
             self.overview_mode = True
             self.dirty = True
             try:
@@ -655,28 +656,17 @@ class BuildStatus:
         buffer = io.StringIO()
 
         # Move cursor up to the start of the display area
-        if self.last_lines_drawn > 0:
-            buffer.write(f"\033[{self.last_lines_drawn}A")
+        if self.active_area_rows > 0:
+            buffer.write(f"\033[{self.active_area_rows}A")
 
         max_width, max_height = os.get_terminal_size()
 
-        total_lines = 0
-        end = "\033[1E"  # move to next line if overwriting, or newline if adding lines
-
-        def advance() -> None:
-            """Use cursor movement when we're overwriting a part of terminal we own, otherwise
-            use newline to ensure the terminal scrolls properly."""
-            nonlocal total_lines, end
-            total_lines += 1
-            if total_lines > self.last_lines_drawn:
-                end = "\n"
-
+        self.total_lines = 0
         total_finished = len(self.finished_builds)
 
         # First flush the finished builds. These are "persisted" in terminal history.
         for build in self.finished_builds:
-            advance()
-            self._render_build(build, buffer, max_width, end)
+            self._render_build(build, buffer, max_width)
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
@@ -685,31 +675,37 @@ class BuildStatus:
         # an additional line for the "N more..." message.
         truncate_at = max_height - 3 if len(self.builds) + 2 > max_height else len(self.builds)
 
-        advance()
-        buffer.write(f"\033[1mProgress:\033[0m {self.completed}/{self.total}")
-        buffer.write(f"\033[0m\033[K{end}")
+        self._println(buffer, f"\033[1mProgress:\033[0m {self.completed}/{self.total}")
         for i, build in enumerate(self.builds.values(), 1):
             if i > truncate_at:
-                advance()
-                buffer.write(f"{len(self.builds) - i + 1} more...\033[0m\033[K{end}")
+                self._println(buffer, f"{len(self.builds) - i + 1} more...")
                 break
-            advance()
-            self._render_build(build, buffer, max_width, end)
+            self._render_build(build, buffer, max_width)
 
         # Clear any remaining lines from previous display
-        if total_lines < self.last_lines_drawn:
+        if self.total_lines < self.active_area_rows:
             buffer.write("\033[0J")
 
         # Print everything at once to avoid flickering
         sys.stdout.write(buffer.getvalue())
         sys.stdout.flush()
 
-        # Update the number of lines drawn for the next tick.
-        self.last_lines_drawn = total_lines - total_finished
+        # Update the number of lines drawn for next time. It reflects the number of active builds.
+        self.active_area_rows = self.total_lines - total_finished
         self.dirty = False
 
         # Schedule next UI update
         self.next_update = now + SPINNER_INTERVAL / 2
+
+    def _println(self, buffer: io.StringIO, line: str = "") -> None:
+        """Print a line to the buffer, handling line clearing and cursor movement."""
+        self.total_lines += 1
+        if line:
+            buffer.write(line)
+        if self.total_lines > self.active_area_rows:
+            buffer.write("\033[0m\033[K\n")  # reset, clear to EOL, newline
+        else:
+            buffer.write("\033[0m\033[K\033[1E")  # reset, clear to EOL, move down 1 line
 
     def print_logs(self, build_id: str, data: bytes) -> None:
         # Discard logs we are not following. Generally this should not happen as we tell the child
@@ -721,9 +717,7 @@ class BuildStatus:
         sys.stdout.buffer.write(data)
         sys.stdout.flush()
 
-    def _render_build(
-        self, build_info: BuildInfo, buffer: io.StringIO, max_width: int, end: str
-    ) -> None:
+    def _render_build(self, build_info: BuildInfo, buffer: io.StringIO, max_width: int) -> None:
         line_width = 0
         for component in self._generate_line_components(build_info):
             # ANSI escape sequence(s), does not contribute to width
@@ -732,7 +726,7 @@ class BuildStatus:
                 if line_width > max_width:
                     break
             buffer.write(component)
-        buffer.write(f"\033[0m\033[K{end}")  # reset, clear to end of line, newline
+        self._println(buffer)
 
     def _generate_line_components(self, build_info: BuildInfo) -> Generator[str, None, None]:
         """Yield formatted line components for a package. Escape sequences are yielded as separate
