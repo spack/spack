@@ -21,6 +21,7 @@ import threading
 import time
 import traceback
 import tty
+from gzip import GzipFile
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Set, Tuple, Union
@@ -247,7 +248,7 @@ def worker_function(
         stage.create()
 
         # Start collecting logs.
-        tee.set_output_file(os.path.join(stage.path, "build.log"))
+        tee.set_output_file(pkg.log_path)
 
         send_state("staging", state_stream)
         pkg.do_patch()
@@ -259,6 +260,13 @@ def worker_function(
             for phase_fn in spack.builder.create(pkg):
                 send_state(phase_fn.name, state_stream)
                 phase_fn.execute()
+
+            # Install source build logs
+            with open(pkg.log_path, "rb") as f, open(pkg.install_log_path, "wb") as g:
+                # Use GzipFile directly so we can omit filename / mtime in header
+                gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
+                shutil.copyfileobj(f, gzip_file)
+                gzip_file.close()
 
             spack.hooks.post_install(spec, explicit)
 
