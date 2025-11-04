@@ -113,7 +113,7 @@ def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
             for key, _ in selector.select():
                 if key.fd == log_r:
                     data = os.read(log_r, OUTPUT_BUFFER_SIZE)
-                    if not data:
+                    if not data:  # EOF: exit the thread
                         return
                     os.write(file_w, data)
                     if echo_on:
@@ -122,18 +122,13 @@ def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
                 elif key.fd == control_r:
                     control_data = os.read(control_r, 1)
                     if not control_data:
-                        # Should be unreachable, but just in case avoid a busy loop where select
-                        # immediately returns again because control_r hung up.
-                        selector.unregister(control_r)
+                        return
                     else:
                         echo_on = control_data == b"1"
     except OSError:  # do not raise
         pass
     finally:
         os.close(log_r)
-        os.close(control_r)
-        os.close(file_w)
-        os.close(parent_w)
 
 
 class Tee:
@@ -149,12 +144,12 @@ class Tee:
         self.log_fd = os.dup(dev_null_fd)
         os.close(dev_null_fd)
         r, w = os.pipe()
-        tee_thread = threading.Thread(
+        self.tee_thread = threading.Thread(
             target=tee,
             args=(self.control.fileno(), r, self.log_fd, self.parent.fileno()),
             daemon=True,
         )
-        tee_thread.start()
+        self.tee_thread.start()
         os.dup2(w, sys.stdout.fileno())
         os.dup2(w, sys.stderr.fileno())
         os.close(w)
@@ -166,11 +161,15 @@ class Tee:
         os.close(log_fd)
 
     def close(self) -> None:
-        os.close(self.log_fd)
-        sys.stdout.close()
-        sys.stderr.close()
+        # Closing stdout and stderr should close the last reference to the write end of the pipe,
+        # causing the tee thread to wake up, flush the last data, and exit.
+        os.close(sys.stdout.fileno())
+        os.close(sys.stderr.fileno())
+        self.tee_thread.join()
+        # Only then close the other fds.
         self.control.close()
         self.parent.close()
+        os.close(self.log_fd)
 
 
 def install_from_buildcache(
@@ -254,6 +253,8 @@ def worker_function(
         pkg.do_patch()
         os.chdir(stage.source_path)
 
+        exit_code = 0
+
         try:
             spack.hooks.pre_install(spec)
 
@@ -271,13 +272,14 @@ def worker_function(
             spack.hooks.post_install(spec, explicit)
 
         except Exception:
-            # Print all exceptions so they are logged.
+            # Print all exceptions so they are logged by the tee thread.
             traceback.print_exc()
-            sys.stderr.flush()
-            sys.exit(1)
+            exit_code = 1
         finally:
             tee.close()
             state.close()
+
+        sys.exit(exit_code)
 
 
 class JobServer:
@@ -1080,7 +1082,10 @@ class PackageInstaller:
             os.close(signal_r)
 
         if failures:
-            raise spack.error.InstallError(f"Build failed for the following specs: {failures}")
+            lines = [f"{s}: {s.package.log_path}" for s in failures]
+            raise spack.error.InstallError(
+                "The following packages failed to install:\n" + "\n".join(lines)
+            )
 
     def _save_to_db(self, to_insert_in_database: List[ChildInfo]) -> bool:
         db = spack.store.STORE.db
