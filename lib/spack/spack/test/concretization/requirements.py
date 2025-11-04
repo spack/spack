@@ -1577,3 +1577,62 @@ def test_external_spec_completion_with_targets_required(
     concrete = spack.concretize.concretize_one(s)
 
     assert concrete.satisfies(f"target={current_platform.default}")
+
+
+def test_penalties_for_language_preferences(concretize_scope, mock_packages):
+    """Tests the default behavior when we use more than one compiler package in a DAG,
+    under different scenarios.
+    """
+    # This test uses gcc compilers providing c,cxx and fortran, and clang providing only c and cxx
+    dependency_names = ["mpi", "callpath", "libdwarf", "libelf"]
+
+    # If we don't express requirements, Spack tries to use a single compiler package if possible
+    s = spack.concretize.concretize_one("mpileaks %c=gcc@10")
+    assert s.satisfies("%c=gcc@10")
+    assert all(s[name].satisfies("%c=gcc@10") for name in dependency_names)
+
+    # Same with clang, if nothing else requires fortran
+    s = spack.concretize.concretize_one("mpileaks %c=clang ^mpi=mpich2")
+    assert s.satisfies("%c=clang")
+    assert all(s[name].satisfies("%c=clang") for name in dependency_names)
+
+    # If something brings in fortran that node is compiled entirely with gcc,
+    # because currently we prefer to use a single toolchain for any node
+    s = spack.concretize.concretize_one("mpileaks %c=clang ^mpi=mpich")
+    assert s.satisfies("%c=clang")
+    assert s["mpich"].satisfies("%c,cxx,fortran=gcc@10")
+
+    # If we prefer compilers in configuration, that has a higher priority
+    update_packages_config(
+        """
+    packages:
+      c:
+        prefer: [gcc]
+      cxx:
+        prefer: [gcc]
+      fortran:
+        prefer: [gcc]
+"""
+    )
+
+    s = spack.concretize.concretize_one("mpileaks %c=clang ^mpi=mpich2")
+    assert s.satisfies("%c=clang")
+    assert all(s[name].satisfies("%c=gcc@10") for name in dependency_names)
+
+    # Mixed compilers in the preferences
+    update_packages_config(
+        """
+    packages:
+      c:
+        prefer: [llvm]
+      cxx:
+        prefer: [llvm]
+      fortran:
+        prefer: [gcc]
+"""
+    )
+
+    s = spack.concretize.concretize_one("mpileaks %c=gcc ^mpi=mpich")
+    assert s.satisfies("%c=gcc@10")
+    assert all(s[name].satisfies("%c=clang") for name in dependency_names)
+    assert s["mpi"].satisfies("%c,cxx=clang %fortran=gcc@10")

@@ -53,9 +53,9 @@ def test_rfc_remote_local_path_no_dest():
 
 
 packages_yaml_sha256 = (
-    "8b3f2438e920d204949ff12c542805765e2bcef2e2fa06d80f08f65f56d7e44a"
+    "8d428c600b215e3b4a207a08236659dfc2c9ae2782c35943a00ee4204a135702"
     if sys.platform != "win32"
-    else "a6cc145ade51aa03583392d9d58ea13c5c525c8147c31fde4cbe2114e5471818"
+    else "6c094ec3ee1eb5068860cdd97d8da965bf281be29e60ab9afc8f6e4d72d24f21"
 )
 
 

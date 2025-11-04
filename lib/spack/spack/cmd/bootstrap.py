@@ -24,7 +24,7 @@ import spack.util.spack_yaml
 from spack.cmd.common import arguments
 
 description = "manage bootstrap configuration"
-section = "system"
+section = "admin"
 level = "long"
 
 

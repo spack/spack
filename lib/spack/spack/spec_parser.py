@@ -71,6 +71,7 @@ import spack.paths
 import spack.util.spack_yaml
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
+from spack.enums import PropagationPolicy
 from spack.llnl.util.tty import color
 from spack.tokenize import Token, TokenBase, Tokenizer
 
@@ -135,9 +136,9 @@ class SpecTokens(TokenBase):
     """
 
     # Dependency, with optional virtual assignment specifier
-    START_EDGE_PROPERTIES = r"(?:[\^%]\[)"
+    START_EDGE_PROPERTIES = r"(?:(?:\^|\%\%|\%)\[)"
     END_EDGE_PROPERTIES = rf"(?:\](?:\s*{VIRTUAL_ASSIGNMENT})?)"
-    DEPENDENCY = rf"(?:[\^\%](?:\s*{VIRTUAL_ASSIGNMENT})?)"
+    DEPENDENCY = rf"(?:(?:\^|\%\%|\%)(?:\s*{VIRTUAL_ASSIGNMENT})?)"
 
     # Version
     VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
@@ -370,10 +371,15 @@ class SpecParser:
             if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
                 is_direct = self.ctx.current_token.value[0] == "%"
 
+                propagation = PropagationPolicy.NONE
+                if is_direct and self.ctx.current_token.value.startswith("%%"):
+                    propagation = PropagationPolicy.PREFERENCE
+
                 edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
                 edge_properties.setdefault("virtuals", ())
                 edge_properties["direct"] = is_direct
                 edge_properties.setdefault("depflag", 0)
+                edge_properties["propagation"] = propagation
 
                 dependency, warnings = self._parse_node(root_spec)
 
@@ -390,6 +396,11 @@ class SpecParser:
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
                 is_direct = self.ctx.current_token.value[0] == "%"
+                propagation = PropagationPolicy.NONE
+
+                if is_direct and self.ctx.current_token.value.startswith("%%"):
+                    propagation = PropagationPolicy.PREFERENCE
+
                 virtuals = parse_virtual_assignment(self.ctx)
 
                 # if no virtual assignment, check for a toolchain - look ahead to find the
@@ -397,12 +408,19 @@ class SpecParser:
                 if not virtuals and is_direct and self.ctx.next_token.value in self.toolchains:
                     assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
                     try:
-                        self._apply_toolchain(current_spec, self.ctx.current_token.value)
+                        self._apply_toolchain(
+                            current_spec, self.ctx.current_token.value, propagation=propagation
+                        )
                     except spack.error.SpecError as e:
                         raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
                     continue
 
-                edge_properties = {"direct": is_direct, "virtuals": virtuals, "depflag": 0}
+                edge_properties = {
+                    "direct": is_direct,
+                    "virtuals": virtuals,
+                    "depflag": 0,
+                    "propagation": propagation,
+                }
                 dependency, warnings = self._parse_node(root_spec)
 
                 if is_direct:
@@ -436,12 +454,17 @@ class SpecParser:
             raise spack.error.SpecError(str(root_spec), "^" + str(dependency))
         return dependency, parser_warnings
 
-    def _apply_toolchain(self, spec: "spack.spec.Spec", name: str) -> None:
+    def _apply_toolchain(
+        self, spec: "spack.spec.Spec", name: str, *, propagation: PropagationPolicy
+    ) -> None:
         if name not in self.parsed_toolchains:
             toolchain = self._parse_toolchain(name)
             self.parsed_toolchains[name] = toolchain
 
         toolchain = self.parsed_toolchains[name]
+        if propagation == PropagationPolicy.PREFERENCE:
+            toolchain = toolchain.copy(propagation=propagation)
+
         spec.constrain(toolchain)
 
     def _parse_toolchain(self, name: str) -> "spack.spec.Spec":

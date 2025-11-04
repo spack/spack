@@ -125,6 +125,38 @@ unification_set(SetID, VirtualNode)
   :- provider(PackageNode, VirtualNode),
      unification_set(SetID, PackageNode).
 
+% Compute sub-sets of the nodes, if requested. These can be either the nodes connected
+% to another node by "link" edges, or the nodes connected to another node by "link and
+% "run" edges.
+
+compute_closure(node(ID, Package), "linkrun")  :-
+  condition_requirement(_, "closure", Package, _, "linkrun"),
+  attr("node", node(ID, Package)).
+
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", PackageNode, DependencyNode, "link"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  compute_closure(PackageNode, "linkrun").
+
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", PackageNode, DependencyNode, "run"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  compute_closure(PackageNode, "linkrun").
+
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", ParentNode, DependencyNode, "link"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  attr("closure", PackageNode, ParentNode, "linkrun"),
+  compute_closure(PackageNode, "linkrun").
+
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", ParentNode, DependencyNode, "run"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  attr("closure", PackageNode, ParentNode, "linkrun"),
+  compute_closure(PackageNode, "linkrun").
+
+related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "linkrun").
+
 % Do not allow split dependencies, for now. This ensures that we don't construct graphs where e.g.
 % a python extension depends on setuptools@63.4 as a run dependency, but uses e.g. setuptools@68
 % as a build dependency.
@@ -182,6 +214,7 @@ node_attributes_with_custom_rules("virtual_on_edge").
 node_attributes_with_custom_rules("provider_set").
 node_attributes_with_custom_rules("concrete_variant_set").
 node_attributes_with_custom_rules("concrete_variant_request").
+node_attributes_with_custom_rules("closure").
 
 trigger_condition_holds(TriggerID, node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
@@ -461,6 +494,11 @@ satisfied(trigger(PackageNode), condition_requirement(ID, "depends_on", A1, A2, 
 satisfied(trigger(PackageNode), condition_requirement(ID, "concrete_variant_request", A1, A2, A3)) :-
   trigger_node(ID, PackageNode, _),
   condition_requirement(ID, "concrete_variant_request", A1, A2, A3),
+  condition_nodes(ID, PackageNode, node(X, A1)).
+
+satisfied(trigger(PackageNode), condition_requirement(ID, "closure", A1, A2, A3)) :-
+  attr("closure", node(X, A1), node(_, A2), A3),
+  condition_requirement(ID, "closure", A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 %%%%
@@ -1101,6 +1139,16 @@ activate_requirement(node(ID, Package), X) :-
   condition_holds(Y, node(ID, Package)),
   requirement_conditional(Package, X, Y).
 
+activate_requirement(node(ID, Package), X) :-
+  package_in_dag(node(ID, Package)),
+  package_in_dag(node(CID, ConditionPackage)),
+  requirement_group(Package, X),
+  pkg_fact(ConditionPackage, condition(Y)),
+  related(node(CID, ConditionPackage), node(ID, Package)),
+  condition_holds(Y, node(CID, ConditionPackage)),
+  requirement_conditional(Package, X, Y),
+  ConditionPackage != Package.
+
 requirement_group_satisfied(node(ID, Package), GroupID) :-
   1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } 1,
   requirement_policy(Package, GroupID, "one_of"),
@@ -1142,6 +1190,15 @@ requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
   requirement_group_member(ConditionID, Package, GroupID),
   condition_holds(ConditionID, node(X, Package)),
   subcondition(SubconditionID, ConditionID),
+  pkg_fact(Package, condition_effect(SubconditionID, EffectID)).
+
+% clingo decided not to impose a condition for a subcondition that holds
+exclude_requirement_weight(ConditionID, Package, GroupID) :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  subcondition(SubconditionID, ConditionID),
+  condition_holds(SubconditionID, node(X, Package)),
+  do_not_impose(EffectID, node(X, Package)),
   pkg_fact(Package, condition_effect(SubconditionID, EffectID)).
 
 % Do not impose requirements, if the conditional requirement is not active
@@ -1192,10 +1249,12 @@ error(1, "Cannot use {1} for the {0} virtual, but that is required", Virtual, Pr
   pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
   imposed_constraint(EffectID, "node_flag_set", Package, NodeFlag).
 
-
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
-    Z : requirement_has_weight(Y, Z), condition_holds(Y, node(ID, Package)), requirement_group_member(Y, Package, Group);
+    Z : requirement_has_weight(Y, Z),
+        condition_holds(Y, node(ID, Package)),
+        requirement_group_member(Y, Package, Group),
+        not exclude_requirement_weight(Y, Package, Group);
     % We need this to avoid an annoying warning during the solve
     %   concretize.lp:1151:5-11: info: tuple ignored:
     %   #sup@73
@@ -1203,6 +1262,23 @@ requirement_weight(node(ID, Package), Group, W) :-
   },
   requirement_policy(Package, Group, "any_of"),
   requirement_group_satisfied(node(ID, Package), Group).
+
+requirement_penalty(node(ID, Package), Group, W) :-
+  requirement_weight(node(ID, Package), Group, W),
+  not language(Package).
+
+requirement_penalty(PackageNode, Language, Group, W) :-
+  requirement_weight(node(ID, Language), Group, W),
+  language(Language),
+  provider(ProviderNode, node(ID, Language)),
+  attr("virtual_on_edge", PackageNode, ProviderNode, Language).
+
+requirement_penalty(PackageNode, Language, Group, W) :-
+  requirement_weight(node(CompilerHash, Language), Group, W),
+  language(Language),
+  reused_provider(node(CompilerHash, CompilerName), node(CompilerHash, Language)),
+  attr("concrete_build_dependency", PackageNode, CompilerName, CompilerHash),
+  attr("virtual_on_build_edge", PackageNode, CompilerName, Language).
 
 error(100, "cannot satisfy a requirement for package '{0}'.", Package) :-
   activate_requirement(node(ID, Package), X),
@@ -1596,6 +1672,59 @@ compiler_used_as_a_library(node(X, Child), Hash) :-
     attr("virtual_on_edge", PackageNode, CompilerNode2, "cxx"),
     CompilerNode1 != CompilerNode2.
 
+% Compiler-unmixing: 1st rule
+unification_set_compiler("root", CompilerNode, Language) :-
+    node_compiler(node(ID, Package), CompilerNode, Language),
+    no_compiler_mixing(Language),
+    not allow_mixing(Package),
+    unification_set("root", node(ID, Package)).
+
+% Compiler for a reused node
+% This differs from compiler_from_reuse in that this is about x->y
+% where y is a compiler and x is reused (compiler_from_reuse is
+% is concerned with reuse of the compiler itself)
+reused_node_compiler(PackageNode, node(CompilerHash, Compiler), Language) :-
+    concrete(PackageNode),
+    attr("concrete_build_dependency", PackageNode, Compiler, CompilerHash),
+    attr("virtual_on_build_edge", PackageNode, Compiler, Language),
+    language(Language).
+
+% Compiler-unmixing: 2nd rule
+% The compiler appears on a reused node as well as a built node. In
+% that case there will be a generated node() with an ID.
+% While easier to understand than rule 3, in fact this rule addresses
+% a small set of use cases beyond rules 1 and 3: generally speaking
+% rule 1 ensures that all non-reused nodes get a consistent compiler.
+% Rule 3 generates compiler IDs that almost always fail the count
+% rule, but does not "activate" when in combination with rule 1 when
+% it is possible to propagate a compiler to another built node in the
+% unification set. This in fact is only really used when the reused
+% node compiler has a node(), but associated with a different
+% unification set.
+unification_set_compiler("root", CompilerNode, Language) :-
+    reused_node_compiler(node(ID, Package), node(CompilerHash, Compiler), Language),
+    attr("hash", CompilerNode, CompilerHash),
+    no_compiler_mixing(Language),
+    not allow_mixing(Package),
+    unification_set("root", node(ID, Package)).
+
+% Compiler-unmixing: 3rd rule
+% If the compiler only appears in reused nodes, then there is no node()
+% for it; this will always generate an error unless all nodes in the
+% root unification set are reused.
+unification_set_compiler("root", node(CompilerHash, Compiler), Language) :-
+    reused_node_compiler(node(ID, Package), node(CompilerHash, Compiler), Language),
+    not attr("hash", _, CompilerHash),
+    no_compiler_mixing(Language),
+    not allow_mixing(Package),
+    unification_set("root", node(ID, Package)).
+
+#defined no_compiler_mixing/1.
+#defined allow_mixing/1.
+
+% You can't have >1 compiler for a given language if mixing is disabled
+error(100, "Compiler mixing is disabled") :-
+    #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
 
 %-----------------------------------------------------------------------------
 % Runtimes
@@ -1919,7 +2048,11 @@ opt_criterion(310, "requirement weight").
 #minimize{ 0@310: #true }.
 #minimize {
     Weight@310,PackageNode,Group
-    : requirement_weight(PackageNode, Group, Weight)
+    : requirement_penalty(PackageNode, Group, Weight)
+}.
+#minimize {
+    Weight@310,PackageNode,Language,Group
+    : requirement_penalty(PackageNode, Language, Group, Weight)
 }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
@@ -2025,16 +2158,6 @@ opt_criterion(46, "number of compilers used on the same node").
     : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
 }.
 
-% Minimize the ids of the providers, i.e. use as much as
-% possible the first providers
-opt_criterion(45, "number of duplicate virtuals needed").
-#minimize{ 0@245: #true }.
-#minimize{ 0@45: #true }.
-#minimize{
-    Weight@45+Priority,ProviderNode,Virtual
-    : provider(ProviderNode, node(Weight, Virtual)),
-      build_priority(ProviderNode, Priority)
-}.
 
 opt_criterion(40, "preferred compilers").
 #minimize{ 0@240: #true }.
@@ -2140,9 +2263,11 @@ opt_criterion(2, "providers on edges").
 #minimize{ 0@202: #true }.
 #minimize{ 0@2: #true }.
 #minimize{
-    Weight@2,ParentNode,ProviderNode,Virtual
-    : provider_weight(ProviderNode, Virtual, Weight),
+    Weight@2,ParentNode,ProviderNode,node(X, Virtual)
+    : provider_weight(ProviderNode, node(X, Virtual), Weight),
+      max_dupes(Virtual, MaxDupes), MaxDupes > 1,
       not attr("root", ProviderNode),
+      language(Virtual),
       depends_on(ParentNode, ProviderNode)
 }.
 
@@ -2151,10 +2276,11 @@ opt_criterion(1, "version badness on edges").
 #minimize{ 0@201: #true }.
 #minimize{ 0@1: #true }.
 #minimize{
-    Weight@1,ParentNode,PackageNode
-    : version_weight(PackageNode, Weight),
-      not attr("root", PackageNode),
-      depends_on(ParentNode, PackageNode)
+    Weight@1,ParentNode,node(X, Package)
+    : version_weight(node(X, Package), Weight),
+      multiple_unification_sets(Package),
+      not attr("root", node(X, Package)),
+      depends_on(ParentNode, node(X, Package))
 }.
 
 % Reduce symmetry on duplicates

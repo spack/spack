@@ -201,23 +201,22 @@ def test_test_help_cdash(mock_test_stage):
 def test_test_list_all(mock_packages):
     """Confirm `spack test list --all` returns all packages with test methods"""
     pkgs = spack_test("list", "--all").strip().split()
-    assert set(pkgs) == set(
-        [
-            "fail-test-audit",
-            "fail-test-audit-deprecated",
-            "fail-test-audit-docstring",
-            "fail-test-audit-impl",
-            "mpich",
-            "perl-extension",
-            "printing-package",
-            "py-extension1",
-            "py-extension2",
-            "py-test-callback",
-            "simple-standalone-test",
-            "test-error",
-            "test-fail",
-        ]
-    )
+    assert set(pkgs) == {
+        "py-numpy",
+        "fail-test-audit",
+        "fail-test-audit-deprecated",
+        "fail-test-audit-docstring",
+        "fail-test-audit-impl",
+        "mpich",
+        "perl-extension",
+        "printing-package",
+        "py-extension1",
+        "py-extension2",
+        "py-test-callback",
+        "simple-standalone-test",
+        "test-error",
+        "test-fail",
+    }
 
 
 def test_test_list(mock_packages, mock_archive, mock_fetch, install_mockery):

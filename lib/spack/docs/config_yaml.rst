@@ -15,7 +15,7 @@ Spack Settings (config.yaml)
 Spack's basic configuration options are set in ``config.yaml``.
 You can see the default settings by looking at ``etc/spack/defaults/config.yaml``:
 
-.. literalinclude:: _spack_root/etc/spack/defaults/config.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/base/config.yaml
    :language: yaml
 
 These settings can be overridden in ``etc/spack/config.yaml`` or ``~/.spack/config.yaml``.

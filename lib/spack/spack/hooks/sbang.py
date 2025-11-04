@@ -17,7 +17,7 @@ import spack.package_prefs
 import spack.paths
 import spack.spec
 import spack.store
-from spack.util.socket import _getfqdn
+from spack.util.socket import _gethostname
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
 #: Different Linux distributions have different limits, but 127 is the
@@ -209,7 +209,7 @@ def install_sbang():
         os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
 
     # copy over the fresh copy of `sbang`
-    sbang_tmp_path = os.path.join(sbang_bin_dir, f".sbang.{_getfqdn()}.{os.getpid()}.tmp")
+    sbang_tmp_path = os.path.join(sbang_bin_dir, f".sbang.{_gethostname()}.{os.getpid()}.tmp")
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 
     # set permissions on `sbang` (including group if set in configuration)

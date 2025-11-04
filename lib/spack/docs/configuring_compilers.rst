@@ -281,3 +281,23 @@ Mixing Compilers
 ----------------
 
 For more options on configuring Spack to mix different compilers for different languages, see :ref:`the toolchains configuration docs <toolchains>`.
+
+To disable mixing (e.g. if you have multiple compilers defined, but want each concretized DAG to use one of them consistently), you can set:
+
+.. code-block:: yaml
+
+   concretizer:
+     compiler_mixing: false
+
+This affects root specs and any (transitive) link or run dependencies.
+Build-only dependencies are allowed to use different compilers (even when this is set).
+
+Some packages are difficult to build with high performance compilers, and it may be necessary to enable compiler mixing just for those packages.
+To enable mixing for specific packages, specify an allow-list in the ``compiler_mixing`` config:
+
+.. code-block:: yaml
+
+   concretizer:
+     compiler_mixing: ["openssl"]
+
+Adding ``openssl`` to the compiler mixing allow-list does not allow mixing for dependencies of ``openssl``.

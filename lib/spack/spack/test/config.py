@@ -8,6 +8,7 @@ import io
 import os
 import pathlib
 import tempfile
+import textwrap
 from datetime import date
 
 import pytest
@@ -1223,27 +1224,145 @@ def test_default_install_tree(monkeypatch, default_config):
     assert s.format(projections["all"]) == "foo-baz/nonexistent-x.y.z-abc123"
 
 
-def test_local_config_can_be_disabled(working_env):
+@pytest.fixture
+def mock_include_scope(tmp_path):
+    for subdir in ["defaults", "test1", "test2", "test3"]:
+        path = tmp_path / subdir
+        path.mkdir()
+
+    include = tmp_path / "include.yaml"
+    with include.open("w", encoding="utf-8") as f:
+        f.write(
+            textwrap.dedent(
+                """\
+                include::
+                  - name: "test1"
+                    path: "test1"
+                    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+
+                  - name: "test2"
+                    path: "test2"
+
+                  - name: "test3"
+                    path: "test3"
+                    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+                """
+            )
+        )
+
+    yield tmp_path
+
+
+@pytest.fixture
+def include_config_factory(mock_include_scope):
+    def make_config():
+        cfg = spack.config.create()
+        cfg.push_scope(
+            spack.config.DirectoryConfigScope("defaults", str(mock_include_scope / "defaults")),
+            priority=ConfigScopePriority.DEFAULTS,
+        )
+        cfg.push_scope(
+            spack.config.DirectoryConfigScope("tmp_path", str(mock_include_scope)),
+            priority=ConfigScopePriority.CONFIG_FILES,
+        )
+        return cfg
+
+    yield make_config
+
+
+def test_local_config_can_be_disabled(working_env, include_config_factory):
+    """Ensure that SPACK_DISABLE_LOCAL_CONFIG disables configurations with `when:`."""
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "true"
-    cfg = spack.config.create()
+    cfg = include_config_factory()
     assert "defaults" in cfg.scopes
-    assert "system" not in cfg.scopes
-    assert "site" in cfg.scopes
-    assert "user" not in cfg.scopes
+    assert "test1" not in cfg.scopes
+    assert "test2" in cfg.scopes
+    assert "test3" not in cfg.scopes
 
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = ""
-    cfg = spack.config.create()
+    cfg = include_config_factory()
     assert "defaults" in cfg.scopes
-    assert "system" not in cfg.scopes
-    assert "site" in cfg.scopes
-    assert "user" not in cfg.scopes
+    assert "test1" not in cfg.scopes
+    assert "test2" in cfg.scopes
+    assert "test3" not in cfg.scopes
 
     del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
-    cfg = spack.config.create()
+    cfg = include_config_factory()
     assert "defaults" in cfg.scopes
-    assert "system" in cfg.scopes
-    assert "site" in cfg.scopes
-    assert "user" in cfg.scopes
+    assert "test1" in cfg.scopes
+    assert "test2" in cfg.scopes
+    assert "test3" in cfg.scopes
+
+
+def test_override_included_config(working_env, tmp_path, include_config_factory):
+    override_scope = tmp_path / "override"
+    override_scope.mkdir()
+
+    include_yaml = override_scope / "include.yaml"
+    subdir = override_scope / "subdir"
+    subdir.mkdir()
+
+    with include_yaml.open("w", encoding="utf-8") as f:
+        f.write(
+            textwrap.dedent(
+                """\
+                include::
+                  - name: "subdir"
+                    path: "subdir"
+                """
+            )
+        )
+
+    # check the mock config is correct
+    cfg = include_config_factory()
+
+    assert "defaults" in cfg.scopes
+    assert "test1" in cfg.scopes
+    assert "test2" in cfg.scopes
+    assert "test3" in cfg.scopes
+
+    active_names = [s.name for s in cfg.active_scopes]
+    assert "defaults" in active_names
+    assert "test1" in active_names
+    assert "test2" in active_names
+    assert "test3" in active_names
+
+    # push a scope that overrides everything under it but includes a subdir.
+    # its included subdir should be active, but scopes *not* included by the overriding
+    # scope should not.
+    cfg.push_scope(
+        spack.config.DirectoryConfigScope("override", str(override_scope)),
+        priority=ConfigScopePriority.CONFIG_FILES,
+    )
+
+    assert "defaults" in cfg.scopes
+    assert "test1" in cfg.scopes
+    assert "test2" in cfg.scopes
+    assert "test3" in cfg.scopes
+    assert "override" in cfg.scopes
+    assert "subdir" in cfg.scopes
+
+    active_names = [s.name for s in cfg.active_scopes]
+    assert "defaults" in active_names
+    assert "test1" not in active_names
+    assert "test2" not in active_names
+    assert "test3" not in active_names
+    assert "override" in active_names
+    assert "subdir" in active_names
+
+    # remove the override and ensure everything is back to normal
+    cfg.remove_scope("override")
+
+    assert "defaults" in cfg.scopes
+    assert "test1" in cfg.scopes
+    assert "test2" in cfg.scopes
+    assert "test3" in cfg.scopes
+
+    active_names = [s.name for s in cfg.active_scopes]
+    assert "defaults" in active_names
+    assert "test1" in active_names
+    assert "test2" in active_names
+    assert "test3" in active_names
 
 
 def test_user_cache_path_is_overridable(working_env):
@@ -1465,8 +1584,8 @@ def test_included_path_string_no_parent_path(
     will be rooted in the current working directory (usually SPACK_ROOT)."""
     entry = {"path": "config.yaml", "optional": True}
     include = spack.config.included_path(entry)
-    FakeScope = collections.namedtuple("FakeScope", ["path"])
-    parent_scope = FakeScope("")
+    FakeScope = collections.namedtuple("FakeScope", ["path", "name"])
+    parent_scope = FakeScope("", "")
 
     assert not include.scopes(parent_scope)  # type: ignore[arg-type]
     destination = include.destination

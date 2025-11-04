@@ -259,9 +259,9 @@ class StaticAnalysis(NoStaticAnalysis):
         store: spack.store.Store,
         binary_index: spack.binary_distribution.BinaryCacheIndex,
     ):
-        super().__init__(configuration=configuration, repo=repo)
         self.store = store
         self.binary_index = binary_index
+        super().__init__(configuration=configuration, repo=repo)
 
     @lang.memoized
     def providers_for(self, virtual_str: str) -> List[spack.spec.Spec]:

@@ -21,6 +21,7 @@ import spack.compilers.config
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
+import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
 import spack.llnl.util.lang
@@ -474,6 +475,104 @@ class TestConcretize:
             assert bool(x.dependencies(name="gcc", deptype="build")) is expected_gcc
             assert x.satisfies("%clang") is not expected_gcc
             assert x.satisfies("%gcc") is expected_gcc
+
+    def test_disable_mixing_prevents_mixing(self):
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            with pytest.raises(spack.error.UnsatisfiableSpecError):
+                spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
+
+    def test_disable_mixing_override_by_package(self):
+        with spack.config.override("concretizer", {"compiler_mixing": ["dt-diamond-bottom"]}):
+            root = spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
+            assert root.satisfies("%clang")
+            assert root["dt-diamond-bottom"].satisfies("%gcc")
+            assert root["dt-diamond-left"].satisfies("%clang")
+
+            with pytest.raises(spack.error.UnsatisfiableSpecError):
+                spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-left%gcc")
+
+    def test_disable_mixing_reuse(self, fake_db_install):
+        # Install a spec
+        left = spack.concretize.concretize_one("dt-diamond-left %gcc")
+        fake_db_install(left)
+        assert left.satisfies("%c=gcc")
+        lefthash = left.dag_hash()[:7]
+
+        # Check if mixing works when it's allowed
+        spack.concretize.concretize_one(f"dt-diamond%clang ^/{lefthash}")
+
+        # Now try to use it with compiler mixing disabled
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            with pytest.raises(spack.error.UnsatisfiableSpecError):
+                spack.concretize.concretize_one(f"dt-diamond%clang ^/{lefthash}")
+
+            # Should be able to reuse if the compilers match
+            spack.concretize.concretize_one(f"dt-diamond%gcc ^/{lefthash}")
+
+    def test_disable_mixing_reuse_and_built(self, fake_db_install):
+        r"""In this case we have
+
+        x
+        |\
+        y z
+
+        Where y is a link dependency and z is a build dependency.
+        We install y with a compiler c1, and we make sure we cannot
+        ask for `x%c2 ^z%c1 ^/y
+
+        This looks similar to `test_disable_mixing_reuse`. But the
+        compiler nodes are handled differently in this case: this
+        is the only test that explicitly exercises compiler unmixing
+        rule #2.
+        """
+        dep1 = spack.concretize.concretize_one("libdwarf %gcc")
+        fake_db_install(dep1)
+        assert dep1.satisfies("%c=gcc")
+        dep1hash = dep1.dag_hash()[:7]
+
+        spack.concretize.concretize_one(f"mixing-parent%clang ^cmake%gcc ^/{dep1hash}")
+
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            with pytest.raises(spack.error.UnsatisfiableSpecError, match="mixing is disabled"):
+                spack.concretize.concretize_one(f"mixing-parent%clang ^cmake%gcc ^/{dep1hash}")
+
+    def test_disable_mixing_allow_compiler_link(self):
+        """Check if we can use a compiler when mixing is disabled, and
+        still depend on a separate compiler package (in the latter case
+        not using it as a compiler but rather for some utility it
+        provides).
+        """
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            x = spack.concretize.concretize_one("llvm-client%gcc")
+            assert x.satisfies("%cxx=gcc")
+            assert x.satisfies("%c=gcc")
+            assert "llvm" in x
+
+    def test_disable_mixing_env(
+        self, mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+    ):
+        spack_yaml = tmp_path / ev.manifest_name
+        spack_yaml.write_text(
+            """\
+spack:
+  specs:
+  - dt-diamond%gcc
+  - dt-diamond%clang
+  concretizer:
+    compiler_mixing: false
+    unify: when_possible
+"""
+        )
+
+        with ev.Environment(tmp_path) as e:
+            e.concretize()
+            for root in e.roots():
+                if root.satisfies("%gcc"):
+                    assert root["dt-diamond-left"].satisfies("%gcc")
+                    assert root["dt-diamond-bottom"].satisfies("%gcc")
+                else:
+                    assert root["dt-diamond-left"].satisfies("%llvm")
+                    assert root["dt-diamond-bottom"].satisfies("%llvm")
 
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")

@@ -2187,7 +2187,18 @@ Like many other package systems, Spack allows you to store patches alongside you
 ^^^^^^^^^
 
 You can specify patches in your package file with the ``patch()`` directive.
-``patch`` looks like this:
+The first argument can be either the filename or URL of the patch file to be applied to your source.
+
+.. note::
+
+   Use of a URL is preferred over maintaining patch files in the package repository.
+   This helps reduce the size of the package repository, which can become an issue for those with limited space (or allocations).
+
+Filename patch
+""""""""""""""
+
+You can supply the name of the patch file.
+For example, a simple conditional ``patch`` based on a file for the ``mvapich2`` package looks like:
 
 .. code-block:: python
 
@@ -2195,10 +2206,10 @@ You can specify patches in your package file with the ``patch()`` directive.
        ...
        patch("ad_lustre_rwcontig_open_source.patch", when="@1.9:")
 
-The first argument can be either a URL or a filename.
-It specifies a patch file that should be applied to your source.
-If the patch you supply is a filename, then the patch needs to live within the Spack source tree.
-For example, the patch above lives in a directory structure like this:
+This patch will only be applied when attempting to install the package at version ``1.9`` or newer.
+
+When a filename is provided, the patch needs to live within the Spack source tree.
+The above patch file lives with the package file within the package repository directory structure in the following location:
 
 .. code-block:: none
 
@@ -2207,7 +2218,21 @@ For example, the patch above lives in a directory structure like this:
            package.py
            ad_lustre_rwcontig_open_source.patch
 
-If you supply a URL instead of a filename, you need to supply a ``sha256`` checksum, like this:
+URL patch file
+""""""""""""""
+
+If you supply a URL instead of a filename you have two options: patch file URL or commit patch file URL.
+In either case, you must supply a checksum.
+Spack requires the ``sha256`` hash so that different patches applied to the same package will have unique identifiers.
+Patches will be fetched from their URLs, checked, and applied to your source code.
+
+.. note::
+
+   To ensure consistency, a ``sha256`` checksum must be provided for the patch.
+
+   You can use the GNU utils ``sha256sum`` or the macOS ``shasum -a 256`` commands to generate a checksum for a patch file.
+
+Here is an example of specifying the unconditional use of a patch file URL:
 
 .. code-block:: python
 
@@ -2216,10 +2241,29 @@ If you supply a URL instead of a filename, you need to supply a ``sha256`` check
        sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
    )
 
-Spack includes the hashes of patches in its versioning information, so that the same package with different patches applied will have different hash identifiers.
-To ensure that the hashing scheme is consistent, you must use a ``sha256`` checksum for the patch.
-Patches will be fetched from their URLs, checked, and applied to your source code.
-You can use the GNU utils ``sha256sum`` or the macOS ``shasum -a 256`` commands to generate a checksum for a patch file.
+Sometimes you can specify the patch file associated with a repository commit.
+For example, GitHub allows you to reference the commit in the name of the patch file through a URL in the form ``https://github.com/<owner>/<repository>/commit/<commit_SHA>.patch``.
+
+Below is an example of specifying a conditional commit patch:
+
+.. code-block:: python
+
+   patch(
+       "https://github.com/ornladios/ADIOS/commit/17aee8aeed64612cd8cfa0b949147091a5525bbe.patch?full_index=1",
+       sha256="aea47e56013b57c2d5d36e23e0ae6010541c3333a84003784437768c2e350b05",
+       when="@1.12.0: +mpi",
+   )
+
+In this case the patch is only processed when attempting to install version ``1.12.0`` or higher of the package when the package's ``mpi`` variant is enabled.
+
+.. note:
+
+   Be sure to append ``?full_index=1`` to the GitHub URL to ensure the patch file consistently contains the complete, stable hash information for reproducible patching.
+
+   Use the resulting URL to get the patch file contents that you then run through the appropriate utility to get the corresponding ``sha256`` value.
+
+Compressed patches
+""""""""""""""""""
 
 Spack can also handle compressed patches.
 If you use these, Spack needs a little more help.

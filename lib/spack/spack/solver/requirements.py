@@ -2,13 +2,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
-from typing import List, NamedTuple, Optional, Sequence
+from typing import List, NamedTuple, Optional, Sequence, Tuple
 
 import spack.config
 import spack.error
 import spack.package_base
 import spack.repo
 import spack.spec
+import spack.traverse
+from spack.enums import PropagationPolicy
 from spack.llnl.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
@@ -31,6 +33,7 @@ class RequirementOrigin(enum.Enum):
     PREFER_YAML = enum.auto()
     CONFLICT_YAML = enum.auto()
     DIRECTIVE = enum.auto()
+    INPUT_SPECS = enum.auto()
 
 
 class RequirementRule(NamedTuple):
@@ -45,6 +48,54 @@ class RequirementRule(NamedTuple):
     message: Optional[str]
 
 
+def preference(
+    pkg_name: str,
+    constraint: spack.spec.Spec,
+    condition: spack.spec.Spec = spack.spec.Spec(),
+    origin: RequirementOrigin = RequirementOrigin.PREFER_YAML,
+    kind: RequirementKind = RequirementKind.PACKAGE,
+    message: Optional[str] = None,
+) -> RequirementRule:
+    """Returns a preference rule"""
+    # A strong preference is defined as:
+    #
+    # require:
+    # - any_of: [spec_str, "@:"]
+    return RequirementRule(
+        pkg_name=pkg_name,
+        policy="any_of",
+        requirements=[constraint, spack.spec.Spec("@:")],
+        kind=kind,
+        condition=condition,
+        origin=origin,
+        message=message,
+    )
+
+
+def conflict(
+    pkg_name: str,
+    constraint: spack.spec.Spec,
+    condition: spack.spec.Spec = spack.spec.Spec(),
+    origin: RequirementOrigin = RequirementOrigin.CONFLICT_YAML,
+    kind: RequirementKind = RequirementKind.PACKAGE,
+    message: Optional[str] = None,
+) -> RequirementRule:
+    """Returns a conflict rule"""
+    # A conflict is defined as:
+    #
+    # require:
+    # - one_of: [spec_str, "@:"]
+    return RequirementRule(
+        pkg_name=pkg_name,
+        policy="one_of",
+        requirements=[constraint, spack.spec.Spec("@:")],
+        kind=kind,
+        condition=condition,
+        origin=origin,
+        message=message,
+    )
+
+
 class RequirementParser:
     """Parses requirements from package.py files and configuration, and returns rules."""
 
@@ -52,14 +103,35 @@ class RequirementParser:
         self.config = configuration
         self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
         self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
+        self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
         result = []
+        result.extend(self.rules_from_input_specs(pkg))
         result.extend(self.rules_from_package_py(pkg))
         result.extend(self.rules_from_require(pkg))
         result.extend(self.rules_from_prefer(pkg))
         result.extend(self.rules_from_conflict(pkg))
         return result
+
+    def parse_rules_from_input_specs(self, specs: Sequence[spack.spec.Spec]):
+        self.preferences_from_input.clear()
+        for edge in spack.traverse.traverse_edges(specs, root=False):
+            if edge.propagation == PropagationPolicy.PREFERENCE:
+                for constraint in _split_edge_on_virtuals(edge):
+                    root_name = edge.parent.name
+                    self.preferences_from_input.append((constraint, root_name))
+
+    def rules_from_input_specs(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+        return [
+            preference(
+                pkg.name,
+                constraint=s,
+                condition=spack.spec.Spec(f"{root_name} ^[deptypes=link,run]{pkg.name}"),
+                origin=RequirementOrigin.INPUT_SPECS,
+            )
+            for s, root_name in self.preferences_from_input
+        ]
 
     def rules_from_package_py(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
         rules = []
@@ -103,21 +175,9 @@ class RequirementParser:
     ) -> List[RequirementRule]:
         result = []
         for item in preferences:
-            spec, condition, message = self._parse_prefer_conflict_item(item)
+            spec, condition, msg = self._parse_prefer_conflict_item(item)
             result.append(
-                # A strong preference is defined as:
-                #
-                # require:
-                # - any_of: [spec_str, "@:"]
-                RequirementRule(
-                    pkg_name=pkg_name,
-                    policy="any_of",
-                    requirements=[spec, spack.spec.Spec("@:")],
-                    kind=kind,
-                    message=message,
-                    condition=condition,
-                    origin=RequirementOrigin.PREFER_YAML,
-                )
+                preference(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
             )
         return result
 
@@ -130,21 +190,9 @@ class RequirementParser:
     ) -> List[RequirementRule]:
         result = []
         for item in conflicts:
-            spec, condition, message = self._parse_prefer_conflict_item(item)
+            spec, condition, msg = self._parse_prefer_conflict_item(item)
             result.append(
-                # A conflict is defined as:
-                #
-                # require:
-                # - one_of: [spec_str, "@:"]
-                RequirementRule(
-                    pkg_name=pkg_name,
-                    policy="one_of",
-                    requirements=[spec, spack.spec.Spec("@:")],
-                    kind=kind,
-                    message=message,
-                    condition=condition,
-                    origin=RequirementOrigin.CONFLICT_YAML,
-                )
+                conflict(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
             )
         return result
 
@@ -258,6 +306,22 @@ class RequirementParser:
             )
             return True
         return False
+
+
+def _split_edge_on_virtuals(edge: spack.spec.DependencySpec) -> List[spack.spec.Spec]:
+    """Split the edge on virtuals and removes the parent."""
+    if not edge.virtuals:
+        return [spack.spec.Spec(str(edge.copy(keep_parent=False)))]
+
+    result = []
+    # We split on virtuals so that "%%c,cxx=gcc" enforces "%%c=gcc" and "%%cxx=gcc" separately
+    for v in edge.virtuals:
+        t = edge.copy(keep_parent=False, keep_virtuals=False)
+        t.update_virtuals(v)
+        t.when = spack.spec.Spec(f"%{v}")
+        result.append(spack.spec.Spec(str(t)))
+
+    return result
 
 
 def parse_spec_from_yaml_string(string: str, *, named: bool = False) -> spack.spec.Spec:
