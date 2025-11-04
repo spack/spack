@@ -421,11 +421,11 @@ def check_error(msg, should_mention: Optional[Iterable] = None):
     should_mention_hits = set()
     remaining = []
     for line in lines:
-        if any(re.search(p, line) for p in excludes):
-            continue
         for p in should_mention:
             if re.search(p, line):
                 should_mention_hits.add(p)
+        if any(re.search(p, line) for p in excludes):
+            continue
         remaining.append(line)
     if not remaining:
         raise ValueError("The error message contains only generic statements")
@@ -449,11 +449,16 @@ def test_diamond_with_pkg_conflict1(concretize_scope, test_repo):
 
 
 def test_diamond_with_pkg_conflict2(concretize_scope, test_repo):
-    with expect_failure_and_print():
+    important_points = [
+        r"y2 depends on y4@4.1 when \+v1",
+        r"y1 depends on y2\+v1",
+        r"y3 depends on y4@4.0",
+    ]
+
+    with expect_failure_and_print(should_mention=important_points):
         concretize_one("y1")
 
 
-# This error message is not so great
 @pytest.mark.xfail(reason="Not addressed yet")
 def test_version_range_null(concretize_scope, test_repo):
     with expect_failure_and_print():
@@ -477,70 +482,66 @@ def test_null_variant_for_requested_version(concretize_scope, test_repo):
            (v2 only exists for @2.1:)
     """
     concretize_one("z1")
-    # output = solve("--show=asp", "z1@1.1")
-    # with open(, "w") as f:
-    #    f.write(output)
+
     with expect_failure_and_print(should_mention=["z2"]):
         concretize_one("z1@1.1")
 
 
-# Error message for requirement introduced in the package
-# definition is bad without ea7ab09
 def test_errmsg_requirements_1(concretize_scope, test_repo):
     # w4 has: depends_on("w3+v1", when="@2.0")
     # w3 has: requires("~v1", when="@2.1")
 
-    # Prior to ea7ab09, the version constraints heavily affect
-    # the quality of error messages.
-    # Before that commit, the error message can be made good by
-    # changing W4 constraint on W3 from
-    # depends_on("w3+v1", when="@2.0")
-    # to
-    # depends_on("w3+v1", when="@:2.0")
-    with expect_failure_and_print():
+    important_points = [
+        r"w4 depends on w3\+v1 when @2.0",
+        r"w4@:2.0 \^w3@2.1 requested explicitly",
+        r"~v1 is a requirement for package w3 when @2.1"
+    ]
+
+    with expect_failure_and_print(should_mention=important_points):
         concretize_one("w4@:2.0 ^w3@2.1")
 
 
-# This error message is short without ea7ab09
-def test_errmsg_requirements_2(concretize_scope, test_repo):
+def test_errmsg_requirements_cfg(concretize_scope, test_repo):
     conf_str = """\
 packages:
   w2:
     require:
     - one_of: ["~v1"]
-      #when: "@:2.0" # EX 1: good msg
-      when: "@2.0" # EX 2: bad msg
+      when: "@2.0"
 """
     update_packages_config(conf_str)
 
-    # Prior to ea7ab09, the version constraints heavily affect
-    # the quality of error messages.
-    # For the error message to be good (before that commit),
-    # *both* spots have to be in EX-1-format.
-    # this can also be fixed by updating the W4 package: replace
-    # depends_on("w2@:2.0", when="@:2.0")
-    # with
-    # depends_on("w2@2.0", when="@2.0")
+
+    important_points = [
+        r"~v1 is a requirement for package w2 when @2.0",
+        r"w4 depends on w2@:2.0 when @:2.0",
+        r"w4@2.0 \^w2\+v1 requested explicitly"
+    ]
 
     # w4 has: depends_on("w2@:2.0", when="@:2.0")
-    with expect_failure_and_print():
-        # concretize_one("w4@:2.0 ^w2+v1")  # EX 1: good msg
-        concretize_one("w4@2.0 ^w2+v1")  # EX 2: bad msg
+    with expect_failure_and_print(should_mention=important_points):
+        concretize_one("w4@2.0 ^w2+v1")
 
 
-# This reencodes test_errmsg_requirements_2
-# in terms of package `requires`, the error message is improved
-def test_errmsg_requirements_3(concretize_scope, test_repo):
+# This reencodes prior test test_errmsg_requirements_cfg
+# in terms of package `requires`,
+def test_errmsg_requirements_directives(concretize_scope, test_repo):
     # t4 has: depends_on("t2@:2.0", when="@:2.0")
     # t2 has: requires("~v1", when="@:2.0")
-    with expect_failure_and_print():
+
+    important_points = [
+        r"~v1 is a requirement for package t2 when @:2.0",
+        r"t4 depends on t2@:2.0 when @:2.0",
+        r"t4@:2.0 \^t2\+v1 requested explicitly"
+    ]
+
+    with expect_failure_and_print(should_mention=important_points):
         concretize_one("t4@:2.0 ^t2+v1")
 
 
 # Simulates a user error: package is specified as external with a version,
-# but a different version was required. Currently the error message is
-# improved WRT develop
-def test_errmsg_requirements_4(concretize_scope, test_repo):
+# but a different version was required in config.
+def test_errmsg_requirements_external_mismatch(concretize_scope, test_repo):
     conf_str = """\
 packages:
   t1:
@@ -553,5 +554,9 @@ packages:
 """
     update_packages_config(conf_str)
 
-    with expect_failure_and_print():
+    important_points = [
+        "no externals satisfy the request"
+    ]
+
+    with expect_failure_and_print(should_mention=important_points):
         concretize_one("t1")
