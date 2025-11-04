@@ -91,6 +91,8 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
 % ones describing the causal tree of the error. After startcauses, each successive pair must be
 % a condition and a condition_set id for which it holds.
 
+#defined choose_version/2.
+
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(10000, "Cannot satisfy '{0}@{1}' 3({2})", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)

@@ -294,6 +294,8 @@ pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declar
 { choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
  :- attr("node", node(ID, Package)).
 
+#defined compiler_package/1.
+
 attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
 
 % A virtual package may or may not have a version, but never has more than one
