@@ -324,31 +324,29 @@ def test_compilers_list_outputs_alias(externals, no_packages_yaml, working_env, 
                 },
             ),
             (
-                """gcc@=7.7.7 build_system=generic languages:=c,cxx,fortran platform=test os=foobar target=x86_64:
-  prefix: /path/to/fake
-  compilers:
-    c: /path/to/fake/gcc
-    cxx: /path/to/fake/g++
-    fortran: /path/to/fake/gfortran
-  flags:
-    fflags = -ffree-form
-  modules: 
-    gcc/7.7.7
-    foobar
-
-""",
-                """llvm@=14.0.2+clang~flang+lld build_system=generic languages:=c,cxx platform=test os=foobar target=x86_64:
-  prefix: /path/to/fake
-  compilers:
-    c: /path/to/fake/clang
-    cxx: /path/to/fake/clang++
-  flags:
-    fflags = -ffree-form
-  modules: 
-    llvm/14.0.2
-    foobar
-
-""",
+                """gcc@=7.7.7 build_system=generic languages:=c,cxx,fortran platform=test os=foobar target=x86_64:\n"""  # noqa: E501
+                """  prefix: /path/to/fake\n"""
+                """  compilers:\n"""
+                """    c: /path/to/fake/gcc\n"""
+                """    cxx: /path/to/fake/g++\n"""
+                """    fortran: /path/to/fake/gfortran\n"""
+                """  flags:\n"""
+                """    fflags = -ffree-form\n"""
+                """  modules: \n"""
+                """    gcc/7.7.7\n"""
+                """    foobar\n"""
+                """\n""",
+                """llvm@=14.0.2+clang~flang+lld build_system=generic languages:=c,cxx platform=test os=foobar target=x86_64:\n"""  # noqa: E501
+                """  prefix: /path/to/fake\n"""
+                """  compilers:\n"""
+                """    c: /path/to/fake/clang\n"""
+                """    cxx: /path/to/fake/clang++\n"""
+                """  flags:\n"""
+                """    fflags = -ffree-form\n"""
+                """  modules: \n"""
+                """    llvm/14.0.2\n"""
+                """    foobar\n"""
+                """\n""",
             ),
         )
     ],
