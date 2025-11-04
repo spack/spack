@@ -1055,15 +1055,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pass
 
         if pkg_instance.stage.archive_file:
-            # TODO(psakiev) technically we should be able to get the
-            # first see if the archive name already has the sha in it, but we need to get the
-            # mirror's archive name
-            #
-            # This could avoid quering the archive completely though and allow us to only
-            # inspect the archive during the check like we do for checksums
-            #
-            # file_name = pathlib.Path(pkg_instance.stage.archive_file).resolve().name
-            # sha = file_name.split(".")[0].split("_")[0]
             sha = spack.util.archive.retrieve_commit_from_archive(
                 pkg_instance.stage.archive_file, ref
             )
