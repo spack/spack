@@ -403,10 +403,10 @@ def test_develop_with_devpath_staging(
     spec_like = "simple-resource@1.0"
 
     with ev.read("test") as e:
-        develop(f"--path={develop_dir}", spec_like)
         e.add(spec_like)
         e.concretize()
         e.write()
+        develop(f"--path={develop_dir}", spec_like)
 
         e.install_all()
 
