@@ -15,7 +15,7 @@ Concretization Settings (concretizer.yaml)
 The ``concretizer.yaml`` configuration file allows users to customize aspects of the algorithm used to select the dependencies they install.
 The default configuration is the following:
 
-.. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/base/concretizer.yaml
    :language: yaml
 
 

@@ -870,7 +870,7 @@ _spack_config_list() {
 _spack_config_scopes() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -p --paths -t --type"
+        SPACK_COMPREPLY="-h --help -p --paths -t --type -v --verbose"
     else
         _config_sections
     fi

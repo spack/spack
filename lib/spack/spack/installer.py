@@ -446,7 +446,7 @@ def _process_binary_cache_tarball(
         pkg: the package being installed
         explicit: the package was explicitly requested by the user
         unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
-        mirrors_for_spec: Optional list of concrete specs and mirrors
+        mirrors_for_spec: Optional list of mirrors to look for the spec.
         obtained by calling binary_distribution.get_mirrors_for_spec().
         timer: timer to keep track of binary install phases.
 
@@ -502,10 +502,10 @@ def _try_install_from_binary_cache(
     tty.debug(f"Searching for binary cache of {package_id(pkg.spec)}")
 
     with timer.measure("search"):
-        matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
+        mirrors = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
 
     return _process_binary_cache_tarball(
-        pkg, explicit, unsigned, mirrors_for_spec=matches, timer=timer
+        pkg, explicit, unsigned, mirrors_for_spec=mirrors, timer=timer
     )
 
 
@@ -1283,6 +1283,9 @@ class BuildTask(Task):
         self._setup_install_dir(pkg)
 
         # Create a child process to do the actual installation.
+        self._start_build_process()
+
+    def _start_build_process(self):
         self.process_handle = spack.build_environment.start_build_process(
             self.pkg, build_process, self.request.install_args
         )
@@ -1382,6 +1385,26 @@ class BuildTask(Task):
         """Terminate any processes this task still has running."""
         if self.process_handle:
             self.process_handle.terminate()
+
+
+class MockBuildProcess:
+    def complete(self) -> bool:
+        return True
+
+    def terminate(self) -> None:
+        pass
+
+
+class FakeBuildTask(BuildTask):
+    """Blocking BuildTask executed directly in the main thread. Used for --fake installs."""
+
+    process_handle = MockBuildProcess()  # type: ignore[assignment]
+
+    def _start_build_process(self):
+        build_process(self.pkg, self.request.install_args)
+
+    def poll(self):
+        return True
 
 
 class RewireTask(Task):
@@ -1600,7 +1623,12 @@ class PackageInstaller:
             request: the associated install request
             all_deps: dictionary of all dependencies and associated dependents
         """
-        cls = RewireTask if pkg.spec.spliced else BuildTask
+        cls: type[Task] = BuildTask
+        if pkg.spec.spliced:
+            cls = RewireTask
+        elif request.install_args.get("fake"):
+            cls = FakeBuildTask
+
         task = cls(pkg, request=request, status=BuildStatus.QUEUED, installed=self.installed)
         for dep_id in task.dependencies:
             all_deps[dep_id].add(package_id(pkg.spec))
@@ -2447,7 +2475,8 @@ class PackageInstaller:
                     # handled in complete_task()
                     task.error_result = e
 
-            time.sleep(0.1)
+            # 10 ms to avoid busy waiting
+            time.sleep(0.01)
             # Check if any tasks have completed and add to list
             done = [task for task in active_tasks if task.poll()]
             try:

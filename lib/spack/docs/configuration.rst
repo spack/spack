@@ -66,13 +66,14 @@ From lowest to highest precedence:
 
 #. **system**: Stored in ``/etc/spack/``.
    These are settings for this machine or for all machines on which this file system is mounted.
-   The system scope can be used for settings idiosyncratic to a particular machine, such as the locations of compilers or external packages.
-   These settings are presumably controlled by someone with root access on the machine.
-   They override the defaults scope.
+   The systm scope overrides the defaults scope.
+   It can be used for settings idiosyncratic to a particular machine, such as the locations of compilers or external packages.
+   Be careful when modifying this scope, as changes here affect all Spack users on a machine.
+   Before putting configuration here, instead consider using the ``site`` scope, which only affects the spack instance it's part of.
 
-#. **site**: Stored in ``$(prefix)/etc/spack/``.
+#. **site**: Stored in ``$(prefix)/etc/spack/site/``.
    Settings here affect only *this instance* of Spack, and they override the defaults and system scopes.
-   The site scope can be used for per-project settings (one Spack instance per project) or for site-wide settings on a multi-user machine (e.g., for a common Spack instance).
+   The site scope is intended for site-wide settings on multi-user machines (e.g., for a common Spack instance).
 
 #. **plugin**: Read from a Python package's entry points.
    Settings here affect all instances of Spack running with the same Python installation.
@@ -80,6 +81,12 @@ From lowest to highest precedence:
 
 #. **user**: Stored in the home directory: ``~/.spack/``.
    These settings affect all instances of Spack and take higher precedence than site, system, plugin, or defaults scopes.
+
+#. **spack**: Stored in ``$(prefix)/etc/spack/``.
+   Settings here affect only *this instance* of Spack, and they override ``user`` and lower configuration scopes.
+   This is intended for project-specific or single-user spack installations.
+   This is the the topmost built-in spack scope, and modifying it gives you full control over configuration scopes.
+   For example, it defines the ``user``, ``site``, and ``system`` scopes, so you can use it to remove them completely if you want.
 
 #. **environment**: When using Spack :ref:`environments`, Spack reads additional configuration from the environment file.
    See :ref:`environment-configuration` for further details on these scopes.
@@ -93,7 +100,22 @@ From lowest to highest precedence:
 Each configuration directory may contain several configuration files, such as ``config.yaml``, ``packages.yaml``, or ``mirrors.yaml``.
 When configurations conflict, settings from higher-precedence scopes override lower-precedence settings.
 
-Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``, etc.) take a ``--scope=<name>`` parameter that you can use to control which scope is modified.
+All of these except ``spack`` and ``defaults`` are initially empty, so you don't have to think about the others unless you need them.
+The most commonly used scopes are ``environment``, ``user``, and ``spack``.
+If you forget, you can always see the available configuration scopes in order of precedece wiht the ``spack config scopes`` command::
+
+    > spack config scopes -p
+    Scope            Path
+    command_line
+    spack            /home/username/spack/etc/spack
+    user             /home/username/.spack/
+    site             /home/username/spack/etc/spack/site/
+    defaults         /home/username/spack/etc/spack/defaults/
+    defaults:darwin  /home/username/spack/etc/spack/defaults/darwin/
+    defaults:base    /home/username/spack/etc/spack/defaults/base/
+    _builtin
+
+Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``, ``spack external find``, etc.) take a ``--scope=<name>`` parameter that you can use to control which scope is modified.
 By default, they modify the highest-precedence available scope that is not read-only (like `defaults`).
 
 .. _custom-scopes:
@@ -101,7 +123,8 @@ By default, they modify the highest-precedence available scope that is not read-
 Custom scopes
 ^^^^^^^^^^^^^
 
-In addition to the ``defaults``, ``system``, ``site``, and ``user`` scopes, you may add configuration scopes directly on the command line with the ``--config-scope`` argument, or ``-C`` for short.
+You may add configuration scopes directly on the command line with the ``--config-scope`` argument, or ``-C`` for short.
+Custom command-line scopes override any active environments, as well as the ``defaults``, ``system``, ``site``, ``user``, and ``spack`` scopes,
 
 For example, the following adds two configuration scopes, named ``scope-a`` and ``scope-b``, to a ``spack spec`` command:
 
@@ -234,15 +257,6 @@ For example, on most platforms, GCC is the preferred compiler.
 However, on macOS (darwin), Clang often works for more packages, and is set as the default compiler.
 This configuration is set in ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is included by ``$(prefix)/etc/spack/defaults/include.yaml``.
 Since it is an included configuration of the ``defaults`` scope, settings in the ``defaults`` scope will take precedence.
-You can override the values by specifying settings in ``system``, ``site``, ``user``, or ``custom``, where scope precedence is:
-
-#. ``defaults``
-#. ``system``
-#. ``site``
-#. ``user``
-#. ``custom``
-
-and settings in each scope taking precedence over those found in configuration files listed in the corresponding ``include.yaml`` files.
 
 For example, if ``$(prefix)/etc/spack/defaults/include.yaml`` contains:
 
@@ -251,18 +265,16 @@ For example, if ``$(prefix)/etc/spack/defaults/include.yaml`` contains:
    include:
    - path: "${platform}"
      optional: true
+   - path: base
 
-then, on macOS (``darwin``), configuration settings for files under the ``$(prefix)/etc/spack/defaults/darwin`` directory would be picked up.
+then, on macOS (``darwin``), configuration settings for files under the ``$(prefix)/etc/spack/defaults/darwin`` directory would be picked up if they are present.
+Because ``${platform}`` is above the ``base`` include in the list, ``${platform}`` settings will override anything in ``base`` if there are conflicts.
 
 .. note::
 
    You can get the name to use for ``<platform>`` by running ``spack arch --platform``.
 
-Platform-specific configuration files can similarly be set up for the ``system``, ``site``, and ``user`` scopes by creating an ``include.yaml`` similar to the one above for ``defaults`` -- under the appropriate configuration paths (see :ref:`config-overrides`) and creating a subdirectory with the platform name that contains the configuration files.
-
-.. note::
-
-   Site-specific settings are located in configuration files under the ``$(prefix)/etc/spack/`` directory.
+Platform-specific configuration files can similarly be set up for any other scope by creating an ``include.yaml`` similar to the one above for ``defaults`` -- under the appropriate configuration paths (see :ref:`config-overrides`) and creating a subdirectory with the platform name that contains the configurations.
 
 .. _config-scope-precedence:
 

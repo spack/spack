@@ -241,6 +241,17 @@ def remove_facts(
     return _remove
 
 
+def dag_closure_by_deptype(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
+    edges = spec.edges_to_dependencies()
+    # Compute the "link" transitive closure with `when: root ^[deptypes=link] <this_pkg>`
+    if len(edges) == 1:
+        edge = edges[0]
+        if not edge.direct and edge.depflag == dt.LINK | dt.RUN:
+            root, leaf = edge.parent.name, edge.spec.name
+            return [fn.attr("closure", root, leaf, "linkrun")]
+    return facts
+
+
 def libc_is_compatible(lhs: spack.spec.Spec, rhs: spack.spec.Spec) -> bool:
     return (
         lhs.name == rhs.name
@@ -2132,13 +2143,16 @@ class SpackSolverSetup:
 
             pkg_name, policy, requirement_grp = rule.pkg_name, rule.policy, rule.requirements
             requirement_weight = 0
-
+            # Propagated preferences have a higher penalty that normal preferences
+            weight_multiplier = 2 if rule.origin == RequirementOrigin.INPUT_SPECS else 1
             # Write explicitly if a requirement is conditional or not
             if rule.condition != spack.spec.Spec():
-                msg = f"condition to activate requirement {requirement_grp_id}"
+                msg = f"activate requirement {requirement_grp_id} if {rule.condition} holds"
+                context = ConditionContext()
+                context.transform_required = dag_closure_by_deptype
                 try:
                     main_condition_id = self.condition(
-                        rule.condition, required_name=pkg_name, msg=msg
+                        rule.condition, required_name=pkg_name, msg=msg, context=context
                     )
                 except Exception as e:
                     if rule.kind != RequirementKind.DEFAULT:
@@ -2204,7 +2218,9 @@ class SpackSolverSetup:
                     continue
 
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
-                self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+                self.gen.fact(
+                    fn.requirement_has_weight(member_id, requirement_weight * weight_multiplier)
+                )
                 self.gen.newline()
                 requirement_weight += 1
 
@@ -3016,6 +3032,7 @@ class SpackSolverSetup:
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
 
+        self.requirement_parser.parse_rules_from_input_specs(specs)
         self.gen.h1("Generic information")
         if using_libc_compatibility():
             for libc in self.libcs:

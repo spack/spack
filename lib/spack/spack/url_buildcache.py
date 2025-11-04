@@ -427,7 +427,7 @@ class URLBuildcacheEntry:
         magic_string = "-----BEGIN PGP SIGNED MESSAGE-----"
         if manifest_contents.startswith(magic_string):
             if verify:
-                # Rry to verify and raise if we fail
+                # Try to verify and raise if we fail
                 with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
                     manifest_path = os.path.join(tmpdir, "manifest.json.sig")
                     with open(manifest_path, "w", encoding="utf-8") as fd:
@@ -436,10 +436,9 @@ class URLBuildcacheEntry:
                         raise NoVerifyException("Signature could not be verified")
 
             return spack.spec.Spec.extract_json_from_clearsig(manifest_contents)
-        else:
-            if verify:
-                raise NoVerifyException("Required signature was not found on manifest")
-            return json.loads(manifest_contents)
+        elif verify:
+            raise NoVerifyException("Required signature was not found on manifest")
+        return json.loads(manifest_contents)
 
     def read_manifest(self, manifest_url: Optional[str] = None) -> BuildcacheManifest:
         """Read and process the the buildcache entry manifest.
@@ -1363,8 +1362,7 @@ class MirrorURLAndVersion:
     track of downloaded/processed buildcache index files from remote mirrors
     in some layout version."""
 
-    url: str
-    version: int
+    __slots__ = ("url", "version")
 
     def __init__(self, url: str, version: int):
         self.url = url
@@ -1374,9 +1372,9 @@ class MirrorURLAndVersion:
         return f"{self.url}__v{self.version}"
 
     def __eq__(self, other):
-        if isinstance(other, MirrorURLAndVersion):
-            return self.url == other.url and self.version == other.version
-        return False
+        if not isinstance(other, MirrorURLAndVersion):
+            return NotImplemented
+        return self.url == other.url and self.version == other.version
 
     def __hash__(self):
         return hash((self.url, self.version))
@@ -1385,18 +1383,6 @@ class MirrorURLAndVersion:
     def from_string(cls, s: str):
         parts = s.split("__v")
         return cls(parts[0], int(parts[1]))
-
-
-class MirrorForSpec:
-    """Simple holder for a mirror (represented by a url and a layout version) and
-    an associated concrete spec"""
-
-    url_and_version: MirrorURLAndVersion
-    spec: spack.spec.Spec
-
-    def __init__(self, url_and_version: MirrorURLAndVersion, spec: spack.spec.Spec):
-        self.url_and_version = url_and_version
-        self.spec = spec
 
 
 class InvalidMetadataFile(spack.error.SpackError):

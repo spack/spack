@@ -928,7 +928,7 @@ def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
         (
-            ConfigScopePriority.BUILTIN,
+            ConfigScopePriority.DEFAULTS,
             spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
         ),
         (

@@ -5,13 +5,13 @@
 # sensible defaults out of the box. Spack maintainers should edit this
 # file to keep it current.
 #
-# Users can override these settings by editing the following files.
+# Users can override these settings by editing files in:
 #
-# Per-spack-instance settings (overrides defaults):
-#   $SPACK_ROOT/etc/spack/config.yaml
+#  * $SPACK_ROOT/etc/spack/     - Spack instance settings
+#  * ~/.spack/                  - user settings
+#  * $SPACK_ROOT/etc/spack/site - Spack "site" settings. Like instance settings
+#                                 but lower priority then user settings.
 #
-# Per-user settings (overrides default and site settings):
-#   ~/.spack/config.yaml
 # -------------------------------------------------------------------------
 config:
   # This is the path to the root of the Spack install tree.

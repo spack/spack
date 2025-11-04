@@ -36,14 +36,16 @@ def mock_calls_for_clean(monkeypatch):
     monkeypatch.setattr(spack.caches.MISC_CACHE, "destroy", Counter("caches"))
     monkeypatch.setattr(spack.store.STORE.failure_tracker, "clear_all", Counter("failures"))
     monkeypatch.setattr(spack.cmd.clean, "remove_python_cache", Counter("python_cache"))
+    monkeypatch.setattr(spack.cmd.clean, "remove_python_cache", Counter("python_cache"))
+    monkeypatch.setattr(fs, "remove_directory_contents", Counter("bootstrap"))
 
     yield counts
 
 
-all_effects = ["stages", "downloads", "caches", "failures", "python_cache"]
+all_effects = ["stages", "downloads", "caches", "failures", "python_cache", "bootstrap"]
 
 
-@pytest.mark.usefixtures("mock_packages", "config")
+@pytest.mark.usefixtures("mock_packages")
 @pytest.mark.parametrize(
     "command_line,effects",
     [
@@ -57,7 +59,9 @@ all_effects = ["stages", "downloads", "caches", "failures", "python_cache"]
         ("", []),
     ],
 )
-def test_function_calls(command_line, effects, mock_calls_for_clean):
+def test_function_calls(command_line, effects, mock_calls_for_clean, mutable_config):
+    mutable_config.set("bootstrap", {"root": "fake"})
+
     # Call the command with the supplied command line
     clean(command_line)
 
