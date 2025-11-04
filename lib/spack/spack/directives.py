@@ -128,7 +128,7 @@ def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
         return spack.spec.Spec()
 
     # This is conditional on the spec
-    return spack.spec.Spec(value)
+    return spack.spec.Spec.get_spec(value)
 
 
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
@@ -314,7 +314,7 @@ def _depends_on(
         dependency = Dependency(pkg, spec, depflag=depflag)
         deps_by_name[spec.name] = dependency
     else:
-        dependency.spec.constrain(spec, deps=False)
+        dependency.constrain(spec, deps=False)
         dependency.depflag |= depflag
 
     # apply patches to the dependency
@@ -350,7 +350,7 @@ def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str]
         # Save in a list the conflicts and the associated custom messages
         conflict_spec_list = pkg.conflicts.setdefault(when_spec, [])
         msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
-        conflict_spec_list.append((spack.spec.Spec(conflict_spec), msg_with_name))
+        conflict_spec_list.append((spack.spec.Spec.get_spec(conflict_spec), msg_with_name))
 
     return _execute_conflicts
 
@@ -376,7 +376,7 @@ def depends_on(
         patches: single result of :py:func:`patch` directive, a
             ``str`` to be passed to ``patch``, or a list of these
     """
-    dep_spec = spack.spec.Spec(spec)
+    dep_spec = spack.spec.Spec.get_spec(spec)
 
     def _execute_depends_on(pkg: Type[spack.package_base.PackageBase]):
         _depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
@@ -420,7 +420,7 @@ def _execute_redistribute(
     if not when_spec:
         return
     if source is False:
-        max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
+        max_constraint = spack.spec.Spec.get_spec(f"{pkg.name}@{when_spec.versions}")
         if not max_constraint.satisfies(when_spec):
             raise DirectiveError("Source distribution can only be disabled for versions")
 
@@ -451,14 +451,14 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
         if not when_spec:
             return
 
-        dep_spec = spack.spec.Spec(spec)
+        dep_spec = spack.spec.Spec.get_spec(spec)
 
         _depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
 
         # When extending python, also add a dependency on python-venv. This is done so that
         # Spack environment views are Python virtual environments.
         if dep_spec.name == "python" and not pkg.name == "python-venv":
-            _depends_on(pkg, spack.spec.Spec("python-venv"), when=when, type=("build", "run"))
+            _depends_on(pkg, spack.spec.Spec.get_spec("python-venv"), when=when, type=("build", "run"))
 
         pkg.extendees[dep_spec.name] = (dep_spec, when_spec)
 
@@ -481,12 +481,13 @@ def provides(*specs: SpecType, when: WhenType = None):
         when_spec = _make_when_spec(when)
         if not when_spec:
             return
+        when_spec = when_spec.copy()
 
         # ``when`` specs for ``provides()`` need a name, as they are used
         # to build the ProviderIndex.
         when_spec.name = pkg.name
 
-        spec_objs = [spack.spec.Spec(x) for x in specs]
+        spec_objs = [spack.spec.Spec.get_spec(x) for x in specs]
         spec_names = [x.name for x in spec_objs]
         if len(spec_names) > 1:
             pkg.provided_together.setdefault(when_spec, []).append(set(spec_names))
@@ -531,7 +532,7 @@ def can_splice(
             )
         if when_spec is None:
             return
-        pkg.splice_specs[when_spec] = (spack.spec.Spec(target), match_variants)
+        pkg.splice_specs[when_spec] = (spack.spec.Spec.get_spec(target), match_variants)
 
     return _execute_can_splice
 
@@ -937,7 +938,7 @@ def requires(
         # Save in a list the requirements and the associated custom messages
         requirement_list = pkg.requirements.setdefault(when_spec, [])
         msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
-        requirements = tuple(spack.spec.Spec(s) for s in requirement_specs)
+        requirements = tuple(spack.spec.Spec.get_spec(s) for s in requirement_specs)
         requirement_list.append((requirements, policy, msg_with_name))
 
     return _execute_requires

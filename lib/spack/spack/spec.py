@@ -1519,6 +1519,7 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     compiler = DeprecatedCompilerSpec()
+    spec_cache = {}
 
     @staticmethod
     def default_arch():
@@ -1526,6 +1527,17 @@ class Spec:
         s = Spec()
         s.architecture = ArchSpec.default_arch()
         return s
+
+    @staticmethod
+    def get_spec(spec_like, external_path=None, external_modules=None):
+        cache_key = (spec_like, external_path, external_modules)
+        if cache_key in Spec.spec_cache:
+            return Spec.spec_cache[cache_key]
+
+        result = Spec(spec_like)
+        Spec.spec_cache[cache_key] = result
+
+        return result
 
     def __init__(self, spec_like=None, *, external_path=None, external_modules=None):
         """Create a new Spec.
@@ -1539,9 +1551,15 @@ class Spec:
             external_modules: list of external modules, if this is an external package
                 using modules.
         """
+
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
             self._dup(spec_like)
+            return
+
+        cache_key = (spec_like, external_path, external_modules)
+        if cache_key in Spec.spec_cache:
+            self._dup(Spec.spec_cache[cache_key])
             return
 
         # init an empty spec that matches anything.
@@ -1564,6 +1582,9 @@ class Spec:
 
         # Python __hash__ is handled separately from the cached spec hashes
         self._dunder_hash = None
+
+        # Cache for Python __hash__ value, computed lazily
+        self._pyhash = None
 
         # cache of package for this spec
         self._package = None
@@ -1632,11 +1653,13 @@ class Spec:
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
         self._dependencies.clear()
+        self._pyhash = None
 
     def clear_edges(self):
         """Trim the dependencies and dependents of this spec."""
         self._dependencies.clear()
         self._dependents.clear()
+        self._pyhash = None
 
     def detach(self, deptype="all"):
         """Remove any reference that dependencies have of this node.
@@ -1984,6 +2007,7 @@ class Spec:
         )
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
+        self._pyhash = None
 
     #
     # Public interface
@@ -3170,6 +3194,8 @@ class Spec:
         if other.concrete and not self.concrete and other.satisfies(self):
             self._finalize_concretization()
 
+        self._pyhash = None
+
         return changed
 
     def _constrain_dependencies(self, other: "Spec", resolve_virtuals: bool = True) -> bool:
@@ -3706,6 +3732,7 @@ class Spec:
 
         self.abstract_hash = other.abstract_hash
 
+        self._pyhash = other._pyhash
         if self._concrete:
             self._dunder_hash = other._dunder_hash
             for h in ht.HASHES:
@@ -4609,6 +4636,7 @@ class Spec:
                     if (dep_name not in edge.virtuals) and (not dep_name == edge.spec.name):
                         new_dependencies.add(edge)
             spec._dependencies = new_dependencies
+            spec._pyhash = None
 
     def _virtuals_provided(self, root):
         """Return set of virtuals provided by self in the context of root"""
@@ -4860,6 +4888,7 @@ class Spec:
         """
         Clears all cached hashes in a Spec, while preserving other properties.
         """
+        self._pyhash = None
         for h in ht.HASHES:
             if h.attr not in ignore:
                 if hasattr(self, h.attr):
@@ -4877,10 +4906,15 @@ class Spec:
                 self._dunder_hash = self.dag_hash_bit_prefix(64)
             return self._dunder_hash
 
+        if self._pyhash:
+            return self._pyhash
+
         # This is the normal hash for lazy_lexicographic_ordering. It's
         # slow for large specs because it traverses the whole spec graph,
         # so we hope it only runs on abstract specs, which are small.
-        return hash(lang.tuplify(self._cmp_iter))
+        result = hash(lang.tuplify(self._cmp_iter))
+        self._pyhash = result
+        return result
 
     def __reduce__(self):
         return Spec.from_dict, (self.to_dict(hash=ht.dag_hash),)

@@ -51,7 +51,7 @@ class Dependency:
         assert isinstance(spec, spack.spec.Spec)
 
         self.pkg = pkg
-        self.spec = spec.copy()
+        self._spec = spec
 
         # This dict maps condition specs to lists of Patch objects, just
         # as the patches dict on packages does.
@@ -59,13 +59,18 @@ class Dependency:
         self.depflag = depflag
 
     @property
+    def spec(self):
+        return self._spec
+
+    @property
     def name(self) -> str:
         """Get the name of the dependency package."""
-        return self.spec.name
+        return self._spec.name
 
     def merge(self, other: "Dependency"):
         """Merge constraints, deptypes, and patches of other into self."""
-        self.spec.constrain(other.spec)
+        self._spec = self._spec.copy()
+        self._spec.constrain(other.spec)
         self.depflag |= other.depflag
 
         # concatenate patch lists, or just copy them in
@@ -76,9 +81,13 @@ class Dependency:
             else:
                 self.patches[cond] = other.patches[cond]
 
+    def constrain(self, spec, deps):
+        self._spec = self._spec.copy()
+        return self._spec.constrain(spec, deps=False)
+
     def __repr__(self) -> str:
         types = dt.flag_to_chars(self.depflag)
         if self.patches:
-            return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}, {self.patches}]>"
+            return f"<Dependency: {self.pkg.name} -> {self._spec} [{types}, {self.patches}]>"
         else:
-            return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}]>"
+            return f"<Dependency: {self.pkg.name} -> {self._spec} [{types}]>"
