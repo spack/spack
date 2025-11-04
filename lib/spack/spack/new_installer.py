@@ -300,6 +300,7 @@ class JobServer:
             open_attempt = open_existing_jobserver_fifo(fifo_config)
             if open_attempt:
                 self.r, self.w = open_attempt
+                self.fifo_path = fifo_config
                 return
         elif type(fifo_config) is tuple:
             # Old style pipe-based jobserver. Validate the fds before using them.
