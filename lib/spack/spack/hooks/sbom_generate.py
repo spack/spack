@@ -10,17 +10,17 @@ from spack.llnl.util import tty
 def post_install(spec, explicit=None):
     pkg = spec.package
 
-    # ---- License ----
+    # License handling
     def get_license(pkg):
         license_field = getattr(pkg, "licenses", None)
         if isinstance(license_field, (list, tuple)) and license_field:
-            license_id = license_field[0]
+            return license_field[0]
         elif isinstance(license_field, str):
-            license_id = license_field
+            return license_field
         else:
-            license_id = "NOASSERTION"
+            return "NOASSERTION"
 
-    # ---- Document-level metadata ----
+    # Document information
     t = time.gmtime()
     created_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", t)
     document_namespace = f"http://spack.io/sbom/{spec.name}-{spec.version}-{spec.dag_hash()}"
@@ -41,23 +41,28 @@ def post_install(spec, explicit=None):
     deps = []
     relationships = [
         {
-            "relatedSpdxElement": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
+            "relatedSpdxElement": f"SPDXRef-DOCUMENT-{spec.name}-{spec.version}",
             "relationshipType": "DESCRIBES",
-            "spdxElementId": "SPDXRef-DOCUMENT-{spec.name}-{spec.version}",
+            "spdxElementId": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
         }
     ]
 
     for dep in spec.dependencies():
         dep_name = dep.name
         dep_spec = dep
+        
+        dep_pkg = getattr(dep, "package", None)
+        license_declared = get_license(dep_pkg) if dep_pkg else "NOASSERTION"
+
         dep_entry = {
             "SPDXID": f"SPDXRef-PACKAGE-{dep_name}-{dep_spec.version}",
             "name": dep_name,
             "versionInfo": str(dep_spec.version),
-            "supplier": getattr(dep_spec.package, "homepage", None) or "NOASSERTION",
-            "downloadLocation": getattr(dep_spec.package, "url", None) or "NOASSERTION",
+            "supplier": getattr(dep_pkg, "homepage", None) or "NOASSERTION",
+            "downloadLocation": getattr(dep_pkg, "url", None) or "NOASSERTION",
             "filesAnalyzed": False,
-            "licenseDeclared": get_license(dep.package),
+            "licenseDeclared": license_declared,
+            "licenseConcluded":, "NOASSERTION"
         }
         deps.append(dep_entry)
 
@@ -69,11 +74,11 @@ def post_install(spec, explicit=None):
             }
         )
 
-    # ---- Compose SPDX document ----
+    # Compose SPDX document
     sbom = {
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
-        "SPDXID": "SPDXRef-DOCUMENT-{spec.name}-{spec.version}",
+        "SPDXID": f"SPDXRef-DOCUMENT-{spec.name}-{spec.version}",
         "documentNamespace": document_namespace,
         "creationInfo": {
             "created": created_time,
@@ -84,7 +89,7 @@ def post_install(spec, explicit=None):
         "relationships": relationships,
     }
 
-    # ---- Write to file ----
+    # Write to SBOM file
     path = os.path.join(spec.prefix, "sbom.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
