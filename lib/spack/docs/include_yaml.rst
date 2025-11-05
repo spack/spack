@@ -177,8 +177,8 @@ You can see that all three of these scopes are given meaningful names, and all t
 The ``user`` and ``system`` scopes can also be disabled by setting ``SPACK_DISABLE_LOCAL_CONFIG``.
 Finally, the ``user`` scope can be overridden with a path in ``SPACK_USER_CONFIG_PATH`` if it is set.
 
-Overriding scopes using ``name:``:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Overriding scopes by name:
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Configuration scopes have unique names.
 This means that you can use the ``name:`` attribute to *replace* a builtin scope.
