@@ -11,7 +11,6 @@ import pathlib
 import re
 import shutil
 import stat
-import sys
 import warnings
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
