@@ -234,11 +234,12 @@ def worker_function(
     explicit: bool,
     mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
     unsigned: Optional[bool],
-    state: Connection,  # write end of state pipe
-    parent: Connection,  # write end of output pipe to parent
-    echo_control: Connection,  # read end of control pipe from parent
-    js1: Optional[Connection],  # ensure that old style jobserver pipes are inherited
-    js2: Optional[Connection],  # ensure that old style jobserver pipes are inherited
+    state: Connection,
+    parent: Connection,
+    echo_control: Connection,
+    makeflags: str,
+    js1: Optional[Connection],
+    js2: Optional[Connection],
     store: spack.store.Store,
     config: spack.config.Configuration,
 ):
@@ -254,6 +255,7 @@ def worker_function(
         state: Connection to send state updates to
         parent: Connection to send build output to
         echo_control: Connection to receive echo control messages from
+        makeflags: MAKEFLAGS to set, so that the build process uses the POSIX jobserver
         js1: Connection for old style jobserver read fd (if any). Unused, just to inherit fd.
         js2: Connection for old style jobserver write fd (if any). Unused, just to inherit fd.
         store: global store instance from parent
@@ -263,6 +265,8 @@ def worker_function(
     # TODO: don't start a build for external packages
     if spec.external:
         return
+
+    os.environ["MAKEFLAGS"] = makeflags
 
     tee = Tee(echo_control, parent)
 
@@ -340,6 +344,13 @@ class JobServer:
         self.num_jobs = num_jobs
         self.fifo_path: Optional[str] = None
         self.created = False
+        self._setup()
+        # r_conn and w_conn are used to make build processes inherit the jobserver fds if needed.
+        # Connection objects close the fd as they are garbage collected, so store them.
+        self.r_conn = Connection(self.r)
+        self.w_conn = Connection(self.w)
+
+    def _setup(self) -> None:
 
         fifo_config = get_jobserver_config()
 
@@ -358,7 +369,7 @@ class JobServer:
                 return
 
         # No existing jobserver we can connect to: create a FIFO-based one.
-        self.r, self.w, self.fifo_path = create_jobserver_fifo(num_jobs)
+        self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
         self.created = True
 
     def acquire(self, jobs: int) -> int:
@@ -370,6 +381,15 @@ class JobServer:
             return num_acquired
         except BlockingIOError:
             return 0
+
+    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> str:
+        """Return the MAKEFLAGS for a build process, depending on its gmake build dependency."""
+        if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
+            return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
+        elif not gmake or gmake.satisfies("@4.0:"):
+            return f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}"
+        else:
+            return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}"
 
     def release(self) -> None:
         """Release a token back to the jobserver."""
@@ -393,8 +413,8 @@ class JobServer:
         # TODO: implement a sanity check here:
         # 1. did we release all tokens we acquired?
         # 2. if we created the jobserver, did the children return all tokens?
-        os.close(self.r)
-        os.close(self.w)
+        self.r_conn.close()
+        self.w_conn.close()
 
 
 def start_build(
@@ -410,6 +430,12 @@ def start_build(
     output_r_conn, output_w_conn = Pipe(duplex=False)
     control_r_conn, control_w_conn = Pipe(duplex=False)
 
+    # Obtain the MAKEFLAGS to be set in the child process, and determine whether it's necessary
+    # for the child process to inherit our jobserver fds.
+    gmake = next(iter(spec.dependencies("gmake")), None)
+    makeflags = jobserver.makeflags(gmake)
+    fifo = "--jobserver-auth=fifo:" in makeflags
+
     proc = Process(
         target=worker_function,
         args=(
@@ -420,8 +446,9 @@ def start_build(
             state_w_conn,
             output_w_conn,
             control_r_conn,
-            None if jobserver.fifo_path else Connection(jobserver.r),
-            None if jobserver.fifo_path else Connection(jobserver.w),
+            makeflags,
+            None if fifo else jobserver.r_conn,
+            None if fifo else jobserver.w_conn,
             spack.store.STORE,
             spack.config.CONFIG,
         ),
@@ -489,7 +516,6 @@ def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
         read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
         write_fd = os.open(fifo_path, os.O_WRONLY)
         os.write(write_fd, b"+" * (num_jobs - 1))
-        os.environ["MAKEFLAGS"] = f" -j{num_jobs} --jobserver-auth=fifo:{fifo_path}"
         return read_fd, write_fd, fifo_path
     except Exception:
         try:
