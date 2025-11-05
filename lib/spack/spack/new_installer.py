@@ -44,6 +44,8 @@ import spack.binary_distribution
 import spack.build_environment
 import spack.builder
 import spack.config
+import spack.database
+import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.llnl.util.lock
@@ -51,7 +53,6 @@ import spack.paths
 import spack.report
 import spack.spec
 import spack.store
-import spack.traverse
 import spack.url_buildcache
 import spack.util.lock
 
@@ -800,6 +801,70 @@ class BuildStatus:
             yield f" {build_info.state}"
 
 
+Nodes = Dict[str, spack.spec.Spec]
+Edges = Dict[str, Set[str]]
+
+
+def _init_build_graph(
+    specs: List[spack.spec.Spec], db: spack.database.Database
+) -> Tuple[Nodes, Edges, Edges]:
+    """Construct a build graph from the given specs. This includes only packages that need to be
+    installed. Installed packages are pruned from the graph, and build dependencies are only
+    included when necessary."""
+    nodes: Dict[str, spack.spec.Spec] = {}
+    parent_to_child: Dict[str, Set[str]] = {}
+    child_to_parent: Dict[str, Set[str]] = {}
+    installed_specs: Set[str] = set()
+    stack = list(specs)
+    db = spack.store.STORE.db
+
+    with db.read_transaction():
+        while stack:
+            spec = stack.pop()
+            key = spec.dag_hash()
+            nodes[key] = spec
+            _, record = db.query_by_spec_hash(key)
+
+            # Set the install prefix for each spec based on the db record or store layout
+            if record and record.path:
+                spec.set_prefix(record.path)
+            else:
+                spec.set_prefix(spack.store.STORE.layout.path_for_spec(spec))
+
+            # Conditionally include build dependencies
+            if record and record.installed:
+                installed_specs.add(key)
+                dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
+            else:
+                dependencies = spec.dependencies(deptype=dt.BUILD | dt.LINK | dt.RUN)
+
+            parent_to_child[key] = {d.dag_hash() for d in dependencies}
+            stack.extend(d for d in dependencies if d.dag_hash() not in nodes)
+
+    # Construct reverse lookup from child to parent
+    for parent, children in parent_to_child.items():
+        for child in children:
+            if child in child_to_parent:
+                child_to_parent[child].add(parent)
+            else:
+                child_to_parent[child] = {parent}
+
+    # Prune installed specs from the build graph. Their parents become parents of their children,
+    # and their children become children of their parents.
+    for key in installed_specs:
+        for parent in child_to_parent.get(key, ()):
+            parent_to_child[parent].remove(key)
+            parent_to_child[parent].update(parent_to_child.get(key, ()))
+        for child in parent_to_child.get(key, ()):
+            child_to_parent[child].remove(key)
+            child_to_parent[child].update(child_to_parent.get(key, ()))
+        parent_to_child.pop(key, None)
+        child_to_parent.pop(key, None)
+        del nodes[key]
+
+    return nodes, parent_to_child, child_to_parent
+
+
 class PackageInstaller:
 
     def __init__(
@@ -882,46 +947,9 @@ class PackageInstaller:
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
 
-        #: lookup package by unique identifier
-        self.nodes = {spec.dag_hash(): spec for spec in spack.traverse.traverse_nodes(specs)}
-
-        #: mapping from parent to children (children are deleted installed)
-        self.parent_to_child = {
-            parent.dag_hash(): {child.dag_hash() for child in parent.dependencies()}
-            for parent in self.nodes.values()
-        }
-
-        #: reverse mapping from child to parents
-        self.child_to_parent: Dict[str, Set[str]] = {}
-        for parent, children in self.parent_to_child.items():
-            for child in children:
-                if child not in self.child_to_parent:
-                    self.child_to_parent[child] = set()
-                self.child_to_parent[child].add(parent)
-
-        # 1. Assign an install prefix to each spec
-        # 2. Prune the build graph of already installed packages
-        db = spack.store.STORE.db
-        with db.read_transaction():
-            for key in list(self.nodes):
-                spec = self.nodes[key]
-                _, record = db.query_by_spec_hash(key)
-                if record and record.path:
-                    spec.set_prefix(record.path)
-                else:
-                    spec.set_prefix(spack.store.STORE.layout.path_for_spec(spec))
-                if not record:
-                    continue
-                # Remove node: wire children to parents and vice versa, delete node from graph.
-                for parent in self.child_to_parent.get(key, ()):
-                    self.parent_to_child[parent].remove(key)
-                    self.parent_to_child[parent].update(self.parent_to_child.get(key, ()))
-                for child in self.parent_to_child.get(key, ()):
-                    self.child_to_parent[child].remove(key)
-                    self.child_to_parent[child].update(self.child_to_parent.get(key, ()))
-                self.parent_to_child.pop(key, None)
-                self.child_to_parent.pop(key, None)
-                del self.nodes[key]
+        self.nodes, self.parent_to_child, self.child_to_parent = _init_build_graph(
+            specs, spack.store.STORE.db
+        )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
         spack.binary_distribution.BINARY_INDEX.update()
