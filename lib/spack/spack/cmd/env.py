@@ -88,7 +88,7 @@ def env_create_setup_parser(subparser):
         "envfile",
         nargs="?",
         default=None,
-        help="manifest or lock file (ends with '.json' or '.lock')",
+        help="manifest or lock file (ends with '.json' or '.lock') or an environment name or path",
     )
     subparser.add_argument(
         "--include-concrete",
