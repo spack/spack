@@ -11,6 +11,7 @@ import pathlib
 import re
 import shutil
 import stat
+import sys
 import warnings
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
@@ -2706,7 +2707,14 @@ def initialize_environment_dir(
         if not (envfile / "spack.yaml").is_file():
             msg = f"cannot initialize environment, {envfile} is not a valid environment"
             raise SpackEnvironmentError(msg)
-        shutil.copytree(envfile, environment_dir, dirs_exist_ok=True)
+        if sys.version_info < (3, 8, 0):
+            # shutil.copytree added dirs_exit_ok arg in 3.8
+            # prior to 3.8 distutils was the only standard library to support this
+            import distutils  # novermin
+
+            distutils.dir_util.copy_tree(envfile, environment_dir)  # novermin
+        else:
+            shutil.copytree(envfile, environment_dir, dirs_exist_ok=True)  # novermin
         return
 
     _ensure_env_dir()
