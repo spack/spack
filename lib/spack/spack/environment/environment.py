@@ -40,7 +40,7 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack import traverse
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import islink, readlink, symlink
+from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
 from spack.llnl.util.link_tree import ConflictingSpecsError
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
@@ -2707,14 +2707,7 @@ def initialize_environment_dir(
         if not (envfile / "spack.yaml").is_file():
             msg = f"cannot initialize environment, {envfile} is not a valid environment"
             raise SpackEnvironmentError(msg)
-        if sys.version_info < (3, 8, 0):
-            # shutil.copytree added dirs_exit_ok arg in 3.8
-            # prior to 3.8 distutils was the only standard library to support this
-            import distutils  # novermin
-
-            distutils.dir_util.copy_tree(envfile, environment_dir)  # novermin
-        else:
-            shutil.copytree(envfile, environment_dir, dirs_exist_ok=True)  # novermin
+        copy_tree(str(envfile), str(environment_dir))
         return
 
     _ensure_env_dir()
