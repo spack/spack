@@ -587,13 +587,7 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
 
-    module.make = DeprecatedExecutable(pkg.name, "make", "gmake")
-    module.gmake = DeprecatedExecutable(pkg.name, "gmake", "gmake")
-    module.ninja = DeprecatedExecutable(pkg.name, "ninja", "ninja")
-
     if sys.platform == "win32":
-        module.nmake = DeprecatedExecutable(pkg.name, "nmake", "msvc")
-        module.msbuild = DeprecatedExecutable(pkg.name, "msbuild", "msvc")
         # analog to configure for win32
         module.cscript = Executable("cscript")
 
@@ -1148,10 +1142,6 @@ def _setup_pkg_and_run(
     * The return value of ``function()``, which can be anything (except an exception).
       This is returned to the caller.
 
-    Note: ``jsfd1`` and ``jsfd2`` are passed solely to ensure that the child process
-    does not close these file descriptors. Some ``multiprocessing`` backends will close
-    them automatically in the child if they are not passed at process creation time.
-
     Arguments:
         serialized_pkg: Spack package install context object (serialized form of the
             package that we'll build in the child process).
@@ -1378,7 +1368,6 @@ def start_build_process(
         )
 
         p.start()
-
         # We close the writable end of the pipe now to be sure that p is the
         # only process which owns a handle for it. This ensures that when p
         # closes its handle for the writable end, read_pipe.recv() will
