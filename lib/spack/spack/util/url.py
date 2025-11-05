@@ -151,3 +151,60 @@ def parse_link_rel_next(link_value: str) -> Optional[str]:
         data = data[1:]
 
     return None
+
+
+def canonicalize_url(url: str, default_wd: Optional[str] = None) -> str:
+    """Same as substitute_path_variables, but for urls.
+
+    If the url is a yaml object with file annotations, make absolute paths
+    relative to that file's directory.
+    Otherwise, use ``default_wd`` if specified, otherwise ``os.getcwd()``
+
+    Arguments:
+        url: url being converted as needed
+        default_wd: optional working directory/root for non-yaml urls
+
+    Returns: An absolute path or non-file URL with path variable substitution
+    """
+
+    # Get file in which path was written in case we need to make it absolute
+    # relative to that path.
+    
+    filename = None
+    if isinstance(path, syaml.syaml_str):
+        filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
+        assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
+
+    path = substitute_path_variables(path)
+
+    # Ensure properly process a Windows path
+    win_path = pathlib.PureWindowsPath(path)
+    if win_path.drive:
+        # Assume only absolute paths are supported with a Windows drive
+        # (though DOS does allow drive-relative paths).
+        return os.path.normpath(str(win_path))
+
+    # Now process linux-like paths and remote URLs
+    url = urllib.parse.urlparse(path)
+    url_path = urllib.request.url2pathname(url.path)
+    if url.scheme:
+        if url.scheme != "file":
+            # Have a remote URL so simply return it with substitutions
+            return path
+
+        # Drop the URL scheme from the local path
+        path = url_path
+
+    if os.path.isabs(path):
+        return os.path.normpath(path)
+
+    # Have a relative path so prepend the appropriate dir to make it absolute
+    if filename:
+        # Prepend the directory of the syaml path
+        return os.path.normpath(os.path.join(filename, path))
+
+    # Prepend the default, if provided, or current working directory.
+    base = default_wd or os.getcwd()
+    tty.debug(f"Using working directory {base} as base for abspath")
+    return os.path.normpath(os.path.join(base, path))
+
