@@ -242,6 +242,24 @@ def worker_function(
     store: spack.store.Store,
     config: spack.config.Configuration,
 ):
+    """
+    Function run in the build child process. Installs the specified spec, sending state updates
+    and build output back to the parent process.
+
+    Args:
+        spec: Spec to install
+        explicit: Whether the spec was explicitly requested by the user
+        mirrors: List of buildcache mirrors to try
+        unsigned: Whether to allow unsigned buildcache entries
+        state: Connection to send state updates to
+        parent: Connection to send build output to
+        echo_control: Connection to receive echo control messages from
+        js1: Connection for old style jobserver read fd (if any). Unused, just to inherit fd.
+        js2: Connection for old style jobserver write fd (if any). Unused, just to inherit fd.
+        store: global store instance from parent
+        config: global config instance from parent
+    """
+
     # TODO: don't start a build for external packages
     if spec.external:
         return
