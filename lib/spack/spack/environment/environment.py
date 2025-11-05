@@ -1980,16 +1980,16 @@ class Environment:
         else:
             from spack.installer import PackageInstaller  # type: ignore[assignment]
 
-        installer = PackageInstaller([spec.package for spec in specs], **install_args)
+        builder = PackageInstaller([spec.package for spec in specs], **install_args)
 
         try:
-            installer.install()
+            builder.install()
         finally:
             if reporter:
-                if isinstance(installer.reports, dict):
-                    reporter.build_report(report_file, list(installer.reports.values()))
-                elif isinstance(installer.reports, list):
-                    reporter.build_report(report_file, installer.reports)
+                if isinstance(builder.reports, dict):
+                    reporter.build_report(report_file, list(builder.reports.values()))
+                elif isinstance(builder.reports, list):
+                    reporter.build_report(report_file, builder.reports)
                 else:
                     raise TypeError("builder.reports must be either a dictionary or a list")
 
