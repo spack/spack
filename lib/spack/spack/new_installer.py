@@ -353,7 +353,7 @@ class JobServer:
         elif type(fifo_config) is tuple:
             # Old style pipe-based jobserver. Validate the fds before using them.
             r, w = fifo_config
-            if fcntl.fcntl(r, fcntl.F_GETFD) == -1 or fcntl.fcntl(w, fcntl.F_GETFD) == -1:
+            if fcntl.fcntl(r, fcntl.F_GETFD) != -1 and fcntl.fcntl(w, fcntl.F_GETFD) != -1:
                 self.r, self.w = r, w
                 return
 
