@@ -144,6 +144,7 @@ class ConfigScope:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
+        self.prefer_modify = False
 
         #: names of any included scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -157,7 +158,6 @@ class ConfigScope:
             includes = self.get_section("include")
             if includes:
                 include_paths = [included_path(data) for data in includes["include"]]
-
                 included_scopes = chain(*[include.scopes(self) for include in include_paths])
 
                 # Do not include duplicate scopes
@@ -210,10 +210,13 @@ class ConfigScope:
 class DirectoryConfigScope(ConfigScope):
     """Config scope backed by a directory containing one file per section."""
 
-    def __init__(self, name: str, path: str, *, writable: bool = True) -> None:
+    def __init__(
+        self, name: str, path: str, *, writable: bool = True, prefer_modify: bool = True
+    ) -> None:
         super().__init__(name)
         self.path = path
         self.writable = writable
+        self.prefer_modify = prefer_modify
 
     def get_section_filename(self, section: str) -> str:
         """Returns the filename associated with a given section"""
@@ -259,6 +262,7 @@ class SingleFileScope(ConfigScope):
         *,
         yaml_path: Optional[List[str]] = None,
         writable: bool = True,
+        prefer_modify: bool = True,
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -282,6 +286,7 @@ class SingleFileScope(ConfigScope):
         self.schema = schema
         self.path = path
         self.writable = writable
+        self.prefer_modify = prefer_modify
         self.yaml_path = yaml_path or []
 
     def get_section_filename(self, section) -> str:
@@ -572,7 +577,16 @@ class Configuration:
 
     def highest_precedence_scope(self) -> ConfigScope:
         """Writable scope with the highest precedence."""
-        return next(s for s in self.scopes.reversed_values() if s.writable)
+        scope = next(s for s in self.scopes.reversed_values() if s.writable)
+
+        # if a scope prefers that we edit another, respect that.
+        while scope:
+            preferred = scope
+            scope = next(
+                (s for s in scope.included_scopes if s.writable and s.prefer_modify), None
+            )
+
+        return preferred
 
     def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
@@ -934,12 +948,14 @@ class OptionalInclude:
     name: str
     when: str
     optional: bool
+    prefer_modify: bool
     _scopes: List[ConfigScope]
 
     def __init__(self, entry: dict):
         self.name = entry.get("name", "")
         self.when = entry.get("when", "")
         self.optional = entry.get("optional", False)
+        self.prefer_modify = entry.get("prefer_modify", False)
         self._scopes = []
 
     def _scope(
@@ -981,12 +997,17 @@ class OptionalInclude:
         if os.path.isdir(config_path):
             # directories are treated as regular ConfigScopes
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-            return DirectoryConfigScope(config_name, config_path)
+            return DirectoryConfigScope(config_name, config_path, prefer_modify=self.prefer_modify)
 
         if os.path.exists(config_path):
             # files are assumed to be SingleFileScopes
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
-            return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
+            return SingleFileScope(
+                config_name,
+                config_path,
+                spack.schema.merged.schema,
+                prefer_modify=self.prefer_modify,
+            )
 
         if not self.optional:
             dest = f" at ({config_path})" if config_path != path else ""

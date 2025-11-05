@@ -81,6 +81,9 @@ We would then configure the ``include.yaml`` file as follows:
 
 If the condition is satisfied, then the ``main`` branch of the repository will be cloned and the settings for the two files integrated into Spack's configuration.
 
+.. versionadded:: 1.1
+   ``git:``, ``branch:``, ``commit:``, and ``tag:`` attributes.
+
 Precedence
 ~~~~~~~~~~
 
@@ -96,11 +99,28 @@ If you want one file to take precedence over another, you can put the include wi
    - git: https://github.com/org/git-repo-scope
      commit: 95c59784bd02ea248bf905d79d063df38e087b19
 
+``prefer_modify``
+^^^^^^^^^^^^^^^^^
+
+When you use commands like ``spack compiler find``, ``spack external find``, ``spack config edit`` or ``spack config add``, they modify the topmost writable scope in the current configuration.
+Scopes can tell Spack to prefer to edit their included scopes instead, using ``prefer_modify``:
+
+.. code-block:: yaml
+
+   include:
+   - name: "preferred"
+     path: /path/to/scope/we/want-to-write
+     prefer_modify: true
+
+Now, if the including scope is the highest precedence scope and would otherwise be selected automatically by one fo these commands, they will instead prefer to edit ``preferred``.
+The including scope can still be modified by using the ``--scope`` argument (e.g., ``spack compiler find --scope NAME``).
+
 .. warning::
 
    Recursive includes are not currently processed in a breadth-first manner, so the value of a configuration option that is altered by multiple included files may not be what you expect.
    This will be addressed in a future update.
 
+.. versionadded:: 1.1 The ``prefer_modify:`` attribute.
 
 Overriding local paths
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -119,6 +139,9 @@ If not, Spack will instead use the ``path:`` specified in configuration.
 .. note::
 
    ``path_override_env_var:`` is currently only supported for ``path:`` includes, not ``git:`` includes.
+
+.. versionadded:: 1.1
+   The ``path_override_env_var:`` attribute.
 
 Named configuration scopes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -209,6 +232,9 @@ The newly included ``user`` scope will *completely* override the builtin ``user`
 
    Using ``name:`` to override the ``defaults`` scope can have *very* unexpected consequences and is not advised.
 
+.. versionadded:: 1.1
+   The ``name:`` attribute.
+
 Overriding built-in scopes with ``include::``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -240,3 +266,6 @@ You can see that ``spack``, ``user``, and ``site`` are overridden::
 And if you run ``spack config blame``, the settings from these scopes will no longer show up.
 ``defaults`` are not overridden as they are needed by Spack to function.
 This allows you to create completely isolated environments that do not bring in external settings.
+
+.. versionadded:: 1.1
+   ``include::`` with two colons for overriding.
