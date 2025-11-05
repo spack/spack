@@ -345,6 +345,9 @@ class JobServer:
         self.fifo_path: Optional[str] = None
         self.created = False
         self._setup()
+        # Ensure that Executable()(...) in build processes ultimately inherit jobserver fds.
+        os.set_inheritable(self.r, True)
+        os.set_inheritable(self.w, True)
         # r_conn and w_conn are used to make build processes inherit the jobserver fds if needed.
         # Connection objects close the fd as they are garbage collected, so store them.
         self.r_conn = Connection(self.r)
@@ -515,6 +518,7 @@ def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
         os.mkfifo(fifo_path, 0o600)
         read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
         write_fd = os.open(fifo_path, os.O_WRONLY)
+        # write num_jobs - 1 tokens, because the first job is implicit
         os.write(write_fd, b"+" * (num_jobs - 1))
         return read_fd, write_fd, fifo_path
     except Exception:
