@@ -724,7 +724,6 @@ class BuildStatus:
                 del self.builds[build_id]
                 self.dirty = True
 
-        # Skip redraw when not in overview mode or when nothing changed
         if not self.dirty:
             return
 
