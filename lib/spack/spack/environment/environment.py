@@ -2706,7 +2706,7 @@ def initialize_environment_dir(
         if not (envfile / "spack.yaml").is_file():
             msg = f"cannot initialize environment, {envfile} is not a valid environment"
             raise SpackEnvironmentError(msg)
-        shutil.copytree(envfile, environment_dir)
+        shutil.copytree(envfile, environment_dir, dirs_exist_ok=True)
         return
 
     _ensure_env_dir()
