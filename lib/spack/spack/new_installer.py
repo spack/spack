@@ -335,8 +335,7 @@ def worker_function(
 
 
 class JobServer:
-    """Acts both as a jobserver client and server. The server is currently only FIFO-based but
-    can easily be extended to support ordinary pipes."""
+    """Attach to an existing POSIX jobserver or create a FIFO-based one."""
 
     def __init__(self, num_jobs: int) -> None:
         #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
@@ -375,6 +374,15 @@ class JobServer:
         self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
         self.created = True
 
+    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> str:
+        """Return the MAKEFLAGS for a build process, depending on its gmake build dependency."""
+        if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
+            return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
+        elif not gmake or gmake.satisfies("@4.0:"):
+            return f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}"
+        else:
+            return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}"
+
     def acquire(self, jobs: int) -> int:
         """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of
         tokens actually acquired (may be less than requested, or zero)."""
@@ -384,15 +392,6 @@ class JobServer:
             return num_acquired
         except BlockingIOError:
             return 0
-
-    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> str:
-        """Return the MAKEFLAGS for a build process, depending on its gmake build dependency."""
-        if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
-            return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
-        elif not gmake or gmake.satisfies("@4.0:"):
-            return f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}"
-        else:
-            return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}"
 
     def release(self) -> None:
         """Release a token back to the jobserver."""
