@@ -594,7 +594,6 @@ class BuildStatus:
     def _get_next(self, direction: int) -> Optional[str]:
         """Returns the next or previous unfinished build ID, or None if none found.
         Direction should be 1 for next, -1 for previous."""
-        # We could consider an ordered dict here to avoid list() calls
         build_ids = list(self.builds)
         try:
             start = build_ids.index(self.tracked_build_id) + direction
