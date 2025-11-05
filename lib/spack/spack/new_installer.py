@@ -1038,15 +1038,13 @@ class PackageInstaller:
         to_insert_in_database: List[ChildInfo] = []
         failures: List[spack.spec.Spec] = []
 
-        # Continue until there are no more packages to install or running builds
         try:
+            # Start the first job immediately, as it does not require a jobserver token.
+            if self.pending_builds and not self.running_builds:
+                self._start(selector, jobserver)
+
             while self.pending_builds or self.running_builds or to_insert_in_database:
-
-                # The first job starts immediately, because it does not need a token.
-                if self.pending_builds and not self.running_builds:
-                    self._start(selector, jobserver)
-
-                # Subsequent jobs need to acquire a token from the jobserver first.
+                # Only monitor the jobserver if we have pending builds.
                 if self.pending_builds and jobserver.r not in selector.get_map():
                     selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
                 elif not self.pending_builds and jobserver.r in selector.get_map():
