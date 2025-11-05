@@ -102,6 +102,21 @@ class ChildInfo:
         self.control_w_conn = control_w_conn
         self.explicit = explicit
 
+    def cleanup(self, selector: selectors.BaseSelector) -> None:
+        """Unregister and close file descriptors, and join the child process."""
+        try:
+            selector.unregister(self.output_r_conn.fileno())
+        except KeyError:
+            pass
+        try:
+            selector.unregister(self.state_r_conn.fileno())
+        except KeyError:
+            pass
+        self.output_r_conn.close()
+        self.state_r_conn.close()
+        self.control_w_conn.close()
+        self.proc.join()
+
 
 def send_state(state: str, state_pipe: io.TextIOWrapper) -> None:
     """Send a state update message."""
@@ -417,18 +432,7 @@ def reap_children(
             continue
         to_delete.append(pid)
         jobserver.release()
-        try:
-            selector.unregister(child.output_r_conn.fileno())
-        except KeyError:
-            pass
-        try:
-            selector.unregister(child.state_r_conn.fileno())
-        except KeyError:
-            pass
-        child.output_r_conn.close()
-        child.state_r_conn.close()
-        child.control_w_conn.close()
-        child.proc.join()
+        child.cleanup(selector)
     return to_delete
 
 
