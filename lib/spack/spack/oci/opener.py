@@ -294,7 +294,7 @@ class OCIAuthHandler(urllib.request.BaseHandler):
         response = self.parent.open(request, timeout=timeout)
         try:
             response_json = json.load(response)
-            token = response_json["token"]
+            token = response_json["access_token"]
             assert type(token) is str
         except Exception as e:
             raise ValueError(f"Malformed token response from {challenge.realm}") from e
