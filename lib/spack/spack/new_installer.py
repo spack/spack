@@ -646,8 +646,9 @@ class BuildStatus:
         self.search_mode = True
         self.dirty = True
 
-    def _matches_search(self, build: BuildInfo) -> bool:
-        """Return true when the selected build matches the search term"""
+    def _is_displayed(self, build: BuildInfo) -> bool:
+        """Returns true if the build matches the search term, or when no search term is set."""
+        # When not in search mode, the search_term is "", which always evaluates to True below
         return self.search_term in build.name or build.hash.startswith(self.search_term)
 
     def _get_next(self, direction: int) -> Optional[str]:
@@ -656,7 +657,7 @@ class BuildStatus:
         matching = [
             build_id
             for build_id, build in self.builds.items()
-            if build.finished_time is None and self._matches_search(build)
+            if build.finished_time is None and self._is_displayed(build)
         ]
         if not matching:
             return None
@@ -776,7 +777,7 @@ class BuildStatus:
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
         displayed_builds = (
-            [b for b in self.builds.values() if self._matches_search(b)]
+            [b for b in self.builds.values() if self._is_displayed(b)]
             if self.search_term
             else self.builds.values()
         )
