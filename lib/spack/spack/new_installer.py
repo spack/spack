@@ -49,6 +49,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.llnl.util.lock
+import spack.llnl.util.tty
 import spack.paths
 import spack.report
 import spack.spec
@@ -523,11 +524,13 @@ def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
     except Exception:
         try:
             os.unlink(fifo_path)
-        except OSError:
+        except OSError as e:
+            spack.llnl.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
             pass
         try:
             os.rmdir(tmpdir)
-        except OSError:
+        except OSError as e:
+            spack.llnl.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
             pass
         raise
 
