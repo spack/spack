@@ -1078,6 +1078,19 @@ class PackageInstaller:
                 self.pending_builds.append(parent)
 
     def install(self) -> None:
+        # This installer has not implemented the per-spec exclusive locks during installation.
+        # Instead, take an exclusive lock on the entire range to avoid that other Spack install
+        # process start installing the same specs.
+        lock = spack.util.lock.Lock(
+            str(spack.store.STORE.prefix_locker.lock_path), desc="prefix lock"
+        )
+        lock.acquire_write()
+        try:
+            self._installer()
+        finally:
+            lock.release_write()
+
+    def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
 
         # Set up signal handling
