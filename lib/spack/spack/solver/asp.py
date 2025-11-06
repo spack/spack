@@ -3941,11 +3941,12 @@ def _specs_with_commits(spec):
 
     pkg_class._resolve_git_provenance(spec)
 
-    if "commit" not in spec.variants and not spec.is_develop:
-        tty.warn(
-            f"Unable to resolve the git commit for {spec.name}. "
-            "An installation of this binary won't have complete binary provenance."
-        )
+    if "commit" not in spec.variants:
+        if not spec.is_develop:
+            tty.warn(
+                f"Unable to resolve the git commit for {spec.name}. "
+                "An installation of this binary won't have complete binary provenance."
+            )
         return
 
     # check integrity of user specified commit shas
