@@ -96,14 +96,13 @@ def environment_name(path: Union[str, pathlib.Path]) -> str:
     env_root = pathlib.Path(env_root_path()).resolve()
     path_path = pathlib.Path(path)
 
-    # If an environment name / directory in the configured environment root resolves
-    # to the same location as the path of a given environment, we know the environment
-    # is tracked or managed else we return the path like all other independent
-    # environments.
+    # For a managed environment created in Spack, env.path is ENV_ROOT/NAME
+    # For a tracked environment from `spack env track`, the path is symlinked to ENV_ROOT/NAME
+    # So if ENV_ROOT/NAME resolves to env.path we know the environment is tracked/managed.
+    # Otherwise, it is an independent environment and  we return the path.
     #
-    # Additionally we must resolve the env_root / name path as the root might itself
-    # be a symlink to another location. (Common use case is ~/.spack/environments/
-    # pointing to a set of dotfiles managed in a git repository.)
+    # We resolve both paths fully because the env_root itself could also be a symlink,
+    # and any directory in env.path could be a symlink.
     if (env_root / path_path.name).resolve() == path_path.resolve():
         return path_path.name
     else:
