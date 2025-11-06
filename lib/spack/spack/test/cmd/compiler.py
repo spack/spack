@@ -248,6 +248,7 @@ def test_compilers_shows_packages_yaml(
     assert out.count("gcc@7.7.7") == 1
 
 
+@pytest.mark.not_on_windows("path format conflict")
 @pytest.mark.parametrize(
     "externals",
     [
@@ -295,6 +296,7 @@ def test_compilers_list_outputs_alias(externals, no_packages_yaml, working_env, 
     assert out.count("clang@14.0.2") == 1
 
 
+@pytest.mark.not_on_windows("path format conflict")
 @pytest.mark.parametrize(
     "externals, expected",
     [
