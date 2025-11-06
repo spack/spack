@@ -1511,6 +1511,14 @@ class Environment:
         if modified_roots:
             self.write()
 
+    def needs_concretize(self):
+        force = spack.config.get("concretizer:force")
+        if force:
+            return True
+
+        new_user_specs = list(set(self.user_specs) - set(self.concretized_user_specs))
+        return len(new_user_specs) > 0
+
     def concretize(
         self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
     ) -> Sequence[SpecPair]:

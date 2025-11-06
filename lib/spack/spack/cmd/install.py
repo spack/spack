@@ -343,6 +343,9 @@ def _maybe_add_and_concretize(args, env, specs):
     if args.only_concrete:
         return
 
+    if not args.add and not env.needs_concretize():
+        return
+
     # Otherwise, we will modify the environment.
     with env.write_transaction():
         # `spack add` adds these specs.
