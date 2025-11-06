@@ -603,6 +603,8 @@ class BuildStatus:
         self.overview_mode = True  # Whether to draw the package overview
         self.tracked_build_id = ""  # identifier of the package whose logs we follow
         self.is_tty = sys.stdout.isatty()  # Whether stdout is a terminal
+        self.search_term = ""
+        self.search_mode = False
 
     def add_build(self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Connection) -> None:
         """Add a new build to the display and mark the display as dirty."""
@@ -615,6 +617,8 @@ class BuildStatus:
             self.next()
         else:
             self.active_area_rows = 0
+            self.search_term = ""
+            self.search_mode = False
             self.overview_mode = True
             self.dirty = True
             try:
@@ -623,22 +627,45 @@ class BuildStatus:
                 pass
             self.tracked_build_id = ""
 
+    def search_input(self, input: str) -> None:
+        """Handle keyboard input when in search mode"""
+        if input in ("\r", "\n"):
+            self.next(1)
+        elif input == "\x1b":  # Escape
+            self.search_mode = False
+            self.search_term = ""
+            self.dirty = True
+        elif input in ("\x7f", "\b"):  # Backspace
+            self.search_term = self.search_term[:-1]
+            self.dirty = True
+        elif input.isprintable():
+            self.search_term += input
+            self.dirty = True
+
+    def enter_search(self) -> None:
+        self.search_mode = True
+        self.dirty = True
+
+    def _matches_search(self, build: BuildInfo) -> bool:
+        """Return true when the selected build matches the search term"""
+        return self.search_term in build.name or build.hash.startswith(self.search_term)
+
     def _get_next(self, direction: int) -> Optional[str]:
-        """Returns the next or previous unfinished build ID, or None if none found.
-        Direction should be 1 for next, -1 for previous."""
-        build_ids = list(self.builds)
+        """Returns the next or previous unfinished build ID matching the search term, or None if
+        none found. Direction should be 1 for next, -1 for previous."""
+        matching = [
+            build_id
+            for build_id, build in self.builds.items()
+            if build.finished_time is None and self._matches_search(build)
+        ]
+        if not matching:
+            return None
         try:
-            start = build_ids.index(self.tracked_build_id) + direction
+            idx = matching.index(self.tracked_build_id) + direction
         except ValueError:
-            start = 0
+            return matching[0] if direction == 1 else matching[-1]
 
-        n = len(build_ids)
-        for k in range(0, n):
-            build_id = build_ids[(start + k * direction) % n]
-            if self.builds[build_id].finished_time is None:
-                return build_id
-
-        return None
+        return matching[(idx + direction) % len(matching)]
 
     def next(self, direction: int = 1) -> None:
         """Follow the logs of the next build in the list."""
@@ -735,7 +762,7 @@ class BuildStatus:
 
         # Move cursor up to the start of the display area
         if self.active_area_rows > 0:
-            buffer.write(f"\033[{self.active_area_rows}A")
+            buffer.write(f"\033[{self.active_area_rows}F")
 
         max_width, max_height = os.get_terminal_size()
 
@@ -748,21 +775,29 @@ class BuildStatus:
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
+        displayed_builds = (
+            [b for b in self.builds.values() if self._matches_search(b)]
+            if self.search_term
+            else self.builds.values()
+        )
+        len_builds = len(self.builds)
 
         # Truncate if we have more builds than fit on the screen. In that case we have to reserve
         # an additional line for the "N more..." message.
-        truncate_at = max_height - 3 if len(self.builds) + 2 > max_height else len(self.builds)
+        truncate_at = max_height - 3 if len_builds + 2 > max_height else len_builds
 
         self._println(buffer, f"\033[1mProgress:\033[0m {self.completed}/{self.total}")
-        for i, build in enumerate(self.builds.values(), 1):
+        for i, build in enumerate(displayed_builds, 1):
             if i > truncate_at:
-                self._println(buffer, f"{len(self.builds) - i + 1} more...")
+                self._println(buffer, f"{len_builds - i + 1} more...")
                 break
             self._render_build(build, buffer, max_width)
 
+        if self.search_mode:
+            buffer.write(f"filter> {self.search_term}\033[K")
+
         # Clear any remaining lines from previous display
-        if self.total_lines < self.active_area_rows:
-            buffer.write("\033[0J")
+        buffer.write("\033[0J")
 
         # Print everything at once to avoid flickering
         sys.stdout.write(buffer.getvalue())
@@ -1123,7 +1158,12 @@ class PackageInstaller:
                         char = sys.stdin.read(1)
                     except OSError:
                         continue
-                    if char == "v" or char == "q" and not self.build_status.overview_mode:
+                    overview = self.build_status.overview_mode
+                    if overview and self.build_status.search_mode:
+                        self.build_status.search_input(char)
+                    elif overview and char == "/":
+                        self.build_status.enter_search()
+                    elif char == "v" or char in ("q", "\x1b") and not overview:
                         self.build_status.toggle()
                     elif char == "n":
                         self.build_status.next(1)
