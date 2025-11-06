@@ -90,15 +90,24 @@ def env_root_path() -> str:
 def environment_name(path: Union[str, pathlib.Path]) -> str:
     """Human-readable representation of the environment.
 
-    This is the path for directory environments, and just the name
+    This is the path for independent environments, and just the name
     for managed environments.
     """
     env_root = pathlib.Path(env_root_path()).resolve()
-    path_str = str(path)
-    if path_str.startswith(str(env_root)):
-        return str(pathlib.Path(path_str).relative_to(env_root))
+    path_path = pathlib.Path(path)
+
+    # If an environment name / directory in the configured environment root resolves
+    # to the same location as the path of a given environment, we know the environment
+    # is tracked or managed else we return the path like all other independent
+    # environments.
+    #
+    # Additionally we must resolve the env_root / name path as the root might itself
+    # be a symlink to another location. (Common use case is ~/.spack/environments/
+    # pointing to a set of dotfiles managed in a git repository.)
+    if (env_root / path_path.name).resolve() == path_path.resolve():
+        return path_path.name
     else:
-        return path_str
+        return str(path)
 
 
 def ensure_no_disallowed_env_config_mods(scope: spack.config.ConfigScope) -> None:
@@ -177,10 +186,7 @@ def valid_env_name(name):
 def validate_env_name(name):
     if not valid_env_name(name):
         raise ValueError(
-            (
-                "'%s': names must start with a letter, and only contain "
-                "letters, numbers, _, and -."
-            )
+            ("'%s': names must start with a letter, and only contain letters, numbers, _, and -.")
             % name
         )
     return name
@@ -543,7 +549,7 @@ def validate_included_envs_concrete(include_concrete: List[str]) -> None:
             non_concrete_envs.add(Environment(env_path).name)
 
     if non_concrete_envs:
-        msg = "The following environment(s) are not concrete: {0}\n" "Please run:".format(
+        msg = "The following environment(s) are not concrete: {0}\nPlease run:".format(
             ", ".join(non_concrete_envs)
         )
         for env in non_concrete_envs:
@@ -2603,7 +2609,7 @@ def _top_level_key(data):
     Returns:
         Either 'spack' or 'env'
     """
-    msg = 'cannot find top level attribute "spack" or "env"' "in the environment"
+    msg = 'cannot find top level attribute "spack" or "env" in the environment'
     assert any(x in data for x in ("spack", "env")), msg
     if "spack" in data:
         return "spack"
@@ -2901,10 +2907,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                 or the list does not exist
         """
         defs = self.configuration.get("definitions", [])
-        msg = (
-            f"cannot remove {user_spec} from the '{list_name}' definition, "
-            f"no valid list exists"
-        )
+        msg = f"cannot remove {user_spec} from the '{list_name}' definition, no valid list exists"
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
             try:

@@ -290,7 +290,7 @@ def create_temp_env_directory():
 
 def _tty_info(msg):
     """tty.info like function that prints the equivalent printf statement for eval."""
-    decorated = f'{colorize("@*b{==>}")} {msg}\n'
+    decorated = f"{colorize('@*b{==>}')} {msg}\n"
     executor = "echo" if sys.platform == "win32" else "printf"
     print(f"{executor} {shlex.quote(decorated)};")
 
@@ -609,7 +609,7 @@ def _env_untrack_or_remove(
             spack.environment.environment.environment_dir_from_name(bad_env_name, exists_ok=True)
         )
         tty.msg(f"Successfully removed environment '{bad_env_name}'")
-        removed_env_names.append(env.name)
+        removed_env_names.append(bad_env_name)
 
     # Following the design of linux rm we should exit with a status of 1
     # anytime we cannot delete every environment the user asks for.
