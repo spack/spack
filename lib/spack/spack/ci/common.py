@@ -252,16 +252,15 @@ class CIScript:
         def _noop(line: str) -> str:
             return line
 
-        if converter is None:
-            converter = _noop
+        convert = converter or _noop
 
         script = []
         for cmd in self.contents:
             if isinstance(cmd, list):
                 for subcmd in cmd:
-                    script.append(converter(subcmd))
+                    script.append(convert(subcmd))
             else:
-                script.append(converter(cmd))
+                script.append(convert(cmd))
 
         return script
 
