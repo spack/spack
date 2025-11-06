@@ -1270,6 +1270,86 @@ def include_config_factory(mock_include_scope):
     yield make_config
 
 
+def test_modify_scope_precedence(working_env, include_config_factory, tmp_path):
+    """Test how spack selects the scope to modify when commands write config."""
+
+    cfg = include_config_factory()
+
+    # ensure highest precedence writable scope is selected by default
+    assert cfg.highest_precedence_scope().name == "tmp_path"
+
+    include_yaml = tmp_path / "include.yaml"
+    subdir = tmp_path / "subdir"
+    subdir2 = tmp_path / "subdir2"
+    subdir.mkdir()
+    subdir2.mkdir()
+
+    with include_yaml.open("w", encoding="utf-8") as f:
+        f.write(
+            textwrap.dedent(
+                """\
+                include::
+                  - name: "subdir"
+                    path: "subdir"
+                """
+            )
+        )
+
+    cfg.push_scope(
+        spack.config.DirectoryConfigScope("override", str(tmp_path)),
+        priority=ConfigScopePriority.CONFIG_FILES,
+    )
+
+    # ensure override scope is selected when it is on top
+    assert cfg.highest_precedence_scope().name == "override"
+
+    cfg.remove_scope("override")
+
+    with include_yaml.open("w", encoding="utf-8") as f:
+        f.write(
+            textwrap.dedent(
+                """\
+                include::
+                  - name: "subdir"
+                    path: "subdir"
+                    prefer_modify: true
+                """
+            )
+        )
+
+    cfg.push_scope(
+        spack.config.DirectoryConfigScope("override", str(tmp_path)),
+        priority=ConfigScopePriority.CONFIG_FILES,
+    )
+
+    # if the top scope prefers another, ensure it is selected
+    assert cfg.highest_precedence_scope().name == "subdir"
+
+    cfg.remove_scope("override")
+
+    with include_yaml.open("w", encoding="utf-8") as f:
+        f.write(
+            textwrap.dedent(
+                """\
+                include::
+                  - name: "subdir"
+                    path: "subdir"
+                  - name: "subdir2"
+                    path: "subdir2"
+                    prefer_modify: true
+                """
+            )
+        )
+
+    cfg.push_scope(
+        spack.config.DirectoryConfigScope("override", str(tmp_path)),
+        priority=ConfigScopePriority.CONFIG_FILES,
+    )
+
+    # if there are multiple scopes and one is preferred, make sure it's that one
+    assert cfg.highest_precedence_scope().name == "subdir2"
+
+
 def test_local_config_can_be_disabled(working_env, include_config_factory):
     """Ensure that SPACK_DISABLE_LOCAL_CONFIG disables configurations with `when:`."""
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "true"

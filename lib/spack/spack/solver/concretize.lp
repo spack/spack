@@ -283,7 +283,7 @@ attr_single_value("node_os").
 attr_single_value("node_target").
 
 % Error when no attribute is selected
-error(100, no_value_error, Attribute, Package)
+error(10000, no_value_error, Attribute, Package)
   :- attr("node", node(ID, Package)),
      attr_single_value(Attribute),
      not attr(Attribute, node(ID, Package), _).
@@ -324,13 +324,27 @@ pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declar
 % is not precisely one version chosen. Error facts are heavily optimized
 % against to ensure they cannot be inferred when a non-error solution is
 % possible
-{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
+{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
  :- attr("node", node(ID, Package)).
+
+#defined compiler_package/1.
+
+attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
 
 % A virtual package may or may not have a version, but never has more than one
 error(100, "Cannot select a single version for virtual '{0}'", Virtual)
   :- attr("virtual_node", node(ID, Virtual)),
      2 { attr("version", node(ID, Virtual), Version) }.
+
+% This exists only to improve error messages: normally selecting a
+% version with a choice rule is penalized. This avoids the penalty
+% when the version comes from an activated requirement.
+% Oddly, does not seem to work if I relocate it to error_messages.lp
+{ attr("version", node(ID, Package), Version) } :-
+  requirement_group_member(ConditionID, Package, RequirementID),
+  activate_requirement(node(ID, Package), RequirementID),
+  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+  imposed_constraint(EffectID, "node_version_satisfies", Package, Version).
 
 % If we select a deprecated version, mark the package as deprecated
 attr("deprecated", node(ID, Package), Version) :-
@@ -374,12 +388,19 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
+error(10000, "Cannot satisfy '{0}@{1}' 1({2})", Package, Constraint, Version)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)).
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     choose_version(node(ID, Package), Version).
 
-error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
+error(100, "Cannot satisfy '{0}@{1}' 2({2})", Package, Constraint, Version)
+  :- attr("node_version_satisfies", node(ID, Package), Constraint),
+     attr("version", node(ID, Package), Version),
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     not choose_version(node(ID, Package), _).
+
+error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      not attr("version", node(ID, Package), _).
 
@@ -1094,7 +1115,7 @@ possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback
 external(PackageNode) :- attr("external", PackageNode).
 
 % if a package is not buildable, only concrete specs are allowed
-error(100, "Cannot build {0}, since it is configured `buildable:false` and no externals satisfy the request", Package)
+error(1000, "Cannot build {0}, since it is configured `buildable:false` and no externals satisfy the request", Package)
   :- buildable_false(Package),
      attr("node", node(ID, Package)),
      build(node(ID, Package)).
@@ -1280,14 +1301,14 @@ requirement_penalty(PackageNode, Language, Group, W) :-
   attr("concrete_build_dependency", PackageNode, CompilerName, CompilerHash),
   attr("virtual_on_build_edge", PackageNode, CompilerName, Language).
 
-error(100, "cannot satisfy a requirement for package '{0}'.", Package) :-
+error(60000, "cannot satisfy a requirement for package '{0}'.", Package) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   not requirement_message(Package, X, _),
   not requirement_group_satisfied(node(ID, Package), X).
 
 
-error(10, Message) :-
+error(50000, Message) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   requirement_message(Package, X, Message),
