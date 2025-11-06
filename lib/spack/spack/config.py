@@ -983,7 +983,13 @@ class Configuration:
         yield from self.scopes.values()
 
     def print_section(
-        self, section: str, yaml: bool = True, blame: bool = False, *, scope: Optional[str] = None, expand_vars: bool = True
+        self,
+        section: str,
+        yaml: bool = True,
+        blame: bool = False,
+        *,
+        scope: Optional[str] = None,
+        expand_vars: bool = True,
     ) -> None:
         """Print a configuration to stdout.
 
