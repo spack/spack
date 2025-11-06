@@ -11,19 +11,30 @@ JSON file for a similar platform.
 """
 import pathlib
 import sys
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Type
 
 import spack.vendor.archspec.cpu
 
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
+import spack.package_base
 import spack.platforms
+import spack.repo
 import spack.spec
 import spack.traverse
 import spack.version
 
 from .config import spec_for_current_python
+
+
+def _select_best_version(pkg_cls: Type["spack.package_base.PackageBase"], node: spack.spec.Spec):
+    """Try to attach the best known version to a node"""
+    try:
+        best_version = spack.package_base.preferred_version(pkg_cls)
+    except KeyError:
+        return
+    node.versions.versions = [spack.version.from_string(f"={best_version}")]
 
 
 class ClingoBootstrapConcretizer:
@@ -119,13 +130,32 @@ class ClingoBootstrapConcretizer:
         s = spack.spec.Spec.from_specfile(str(self.prototype_path()))
         s._mark_concrete(False)
 
-        # Tweak it to conform to the host architecture
+        # These are nodes in the cmake stack, whose versions are frequently deprecated for
+        # security reasons. In case there is no external cmake on this machine, we'll update
+        # their versions to the most preferred according to the repository we know.
+        to_be_updated = {
+            pkg_name: spack.repo.PATH.get_pkg_class(pkg_name)
+            for pkg_name in [
+                "ca-certificates-mozilla",
+                "openssl",
+                "curl",
+                "cmake",
+                "libiconv",
+                "ncurses",
+            ]
+        }
+
+        # Tweak it to conform to the host architecture + update the version of a few dependencies
         for node in s.traverse():
             node.architecture.os = str(self.host_os)
             node.architecture = self.host_architecture
 
             if node.name == "gcc-runtime":
                 node.versions = self.host_compiler.versions
+
+            if node.name in to_be_updated:
+                pkg_cls = to_be_updated[node.name]
+                _select_best_version(pkg_cls=pkg_cls, node=node)
 
         # Can't use re2c@3.1 with Python 3.6
         if self.host_python.satisfies("@3.6"):
