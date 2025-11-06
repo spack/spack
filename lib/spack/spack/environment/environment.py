@@ -185,8 +185,7 @@ def valid_env_name(name):
 def validate_env_name(name):
     if not valid_env_name(name):
         raise ValueError(
-            ("'%s': names must start with a letter, and only contain letters, numbers, _, and -.")
-            % name
+            f"{name}: names may only contain letters, numbers, _, and -, and may not start with -."
         )
     return name
 
