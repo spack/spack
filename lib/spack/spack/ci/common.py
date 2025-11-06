@@ -12,7 +12,7 @@ import re
 import shutil
 import sys
 import time
-from collections import OrderedDict, deque
+from collections import deque
 from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
@@ -28,6 +28,7 @@ import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.compression as compression
+import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 from spack import traverse
 from spack.llnl.util.lang import memoized
@@ -316,7 +317,7 @@ class CIJobData:
         if self.job_name not in section:
             return
 
-        src = section[job_name]
+        src = section[self.job_name]
         if self.remove:
             self.attributes = spack.config.remove_yaml(self.attributes, src)
         else:
@@ -370,6 +371,7 @@ class CIJobData:
     def to_dict(self) -> Dict[str, Any]:
         # TODO/TLD: return the dict representation  .. only just attributes?
         data = {}
+        return data
 
 
 class CDashHandler:
@@ -797,7 +799,8 @@ class SpackCIConfig:
             # Apply the same attributes to all build and test jobs
             for job in self.jobs[job_name]:
                 print(
-                    f"TLD: .. {job_name}, {job.spec}, {job.remove}: applying '{job_name}' section to attributes"
+                    f"TLD: .. {job_name}, {job.spec}, {job.remove}: applying "
+                    f"'{job_name}' section to attributes"
                 )
                 job.update_attributes(section)
             return
@@ -807,7 +810,8 @@ class SpackCIConfig:
             for name, jobs in self.jobs.items():
                 for job in jobs:
                     print(
-                        f"TLD: .. {name}, {job.spec}, {job.remove}: applying '{job_name}' section to attributes"
+                        f"TLD: .. {name}, {job.spec}, {job.remove}: applying "
+                        f"'{job_name}' section to attributes"
                     )
                     job.update_attributes(section)
             return
@@ -819,7 +823,7 @@ class SpackCIConfig:
             if "signing-job" in section:
                 if "script" not in section["signing-job"]:
                     print(f"TLD: .. .. skipping signing job missing script")
-                    continue
+                    return
 
                 self.jobs[job_name].append(CIJobData(job_name))
 
@@ -843,8 +847,8 @@ class SpackCIConfig:
         # TODO/TLD: .. any overrides
         # TODO/TLD:
         # TODO/TLD: .. should overrides be in list form?
-        pipeline_gen = overrides + self.ci_config.get("pipeline-gen", [])
-        print(f"\nTLD: generate_ir: reversed(pipeline_gen):")
+        pipeline_gen = [override_job_settings] + self.ci_config.get("pipeline-gen", [])
+        print("\nTLD: generate_ir: reversed(pipeline_gen):")
         for section in reversed(pipeline_gen):
             print(f"TLD: .. {section}")
         print()

@@ -22,6 +22,7 @@ import spack.util.spack_yaml as syaml
 from .common import (
     SPACK_RESERVED_TAGS,
     CIJobData,
+    CIScriptStage,
     PipelineDag,
     PipelineOptions,
     PipelineType,
@@ -248,7 +249,8 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             if "script" not in job_object:
                 raise AttributeError
 
-            # TODO/TLD: Call <CIScript>.convert for CIScriptStage.DURING with converter=main_script_replacements
+            # TODO/TLD: Call <CIScript>.convert for CIScriptStage.DURING with 
+            # TODO/TLD:   converter=main_script_replacements
             job_object["script"] = unpack_script(job_object["script"], op=main_script_replacements)
 
             if "before_script" in job_object:
