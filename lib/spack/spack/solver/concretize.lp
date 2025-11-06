@@ -336,16 +336,6 @@ error(100, "Cannot select a single version for virtual '{0}'", Virtual)
   :- attr("virtual_node", node(ID, Virtual)),
      2 { attr("version", node(ID, Virtual), Version) }.
 
-% This exists only to improve error messages: normally selecting a
-% version with a choice rule is penalized. This avoids the penalty
-% when the version comes from an activated requirement.
-% Oddly, does not seem to work if I relocate it to error_messages.lp
-{ attr("version", node(ID, Package), Version) } :-
-  requirement_group_member(ConditionID, Package, RequirementID),
-  activate_requirement(node(ID, Package), RequirementID),
-  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
-  imposed_constraint(EffectID, "node_version_satisfies", Package, Version).
-
 % If we select a deprecated version, mark the package as deprecated
 attr("deprecated", node(ID, Package), Version) :-
      attr("version", node(ID, Package), Version),
