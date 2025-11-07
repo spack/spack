@@ -662,7 +662,7 @@ class BuildStatus:
         if not matching:
             return None
         try:
-            idx = matching.index(self.tracked_build_id) + direction
+            idx = matching.index(self.tracked_build_id)
         except ValueError:
             return matching[0] if direction == 1 else matching[-1]
 
@@ -672,7 +672,7 @@ class BuildStatus:
         """Follow the logs of the next build in the list."""
         new_build_id = self._get_next(direction)
 
-        if not new_build_id:
+        if not new_build_id or self.tracked_build_id == new_build_id:
             return
 
         new_build = self.builds[new_build_id]
@@ -781,7 +781,7 @@ class BuildStatus:
             if self.search_term
             else self.builds.values()
         )
-        len_builds = len(self.builds)
+        len_builds = len(displayed_builds)
 
         # Truncate if we have more builds than fit on the screen. In that case we have to reserve
         # an additional line for the "N more..." message.
