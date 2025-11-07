@@ -138,7 +138,7 @@ jobs:
       run: |
           dnf install -y \
               bzip2 curl gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
-              make patch tcl unzip which xz
+              make patch python3.11 tcl unzip which xz
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: Setup repo and non-root user
       run: |
@@ -151,6 +151,7 @@ jobs:
     - name: Run unit tests
       shell: runuser -u spack-test -- bash {0}
       run: |
+          export SPACK_PYTHON=$(which python3.11)
           source share/spack/setup-env.sh
           spack -d bootstrap now --dev
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose

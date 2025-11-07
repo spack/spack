@@ -11,6 +11,7 @@ from typing import Iterable, List
 import spack.vendor.archspec.cpu
 
 import spack.environment
+import spack.error
 import spack.spec
 import spack.tengine
 import spack.util.path
@@ -20,6 +21,10 @@ from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
 from .core import _add_externals_if_missing
 
+# TODO: Update this annually to keep up with python deprecation
+BOOTSTRAP_MINIMUM_PY_VERSION = (3, 6)
+DEV_MINIMUM_PY_VERSION = (3, 10)
+
 
 class BootstrapEnvironment(spack.environment.Environment):
     """Environment to install dependencies of Spack for a given interpreter and architecture"""
@@ -28,6 +33,10 @@ class BootstrapEnvironment(spack.environment.Environment):
         if not self.spack_yaml().exists():
             self._write_spack_yaml_file()
         super().__init__(self.environment_root())
+        if sys.version_info[:2] < BOOTSTRAP_MINIMUM_PY_VERSION:
+            raise SpackPythonVersionError(
+                "Spack requires Python>={}.{}".format(*BOOTSTRAP_MINIMUM_PY_VERSION)
+            )
 
         # Remove python package roots created before python-venv was introduced
         for s in self.concrete_roots():
@@ -37,17 +46,18 @@ class BootstrapEnvironment(spack.environment.Environment):
     @classmethod
     def spack_dev_requirements(cls) -> List[str]:
         """Spack development requirements"""
+        if sys.version_info[:2] < DEV_MINIMUM_PY_VERSION:
+            raise SpackPythonVersionError(
+                "Spack development requires Python>={}.{}".format(*DEV_MINIMUM_PY_VERSION)
+            )
         dev_specs = [
             isort_root_spec(),
             mypy_root_spec(),
             black_root_spec(),
             flake8_root_spec(),
             pytest_root_spec(),
+            ruff_root_spec(),
         ]
-        # Only add ruff if the python is newer than 3.7
-        if sys.version_info[:2] >= (3, 7):
-            dev_specs.append(ruff_root_spec())
-
         return dev_specs
 
     @classmethod
@@ -161,3 +171,7 @@ def ensure_environment_dependencies() -> None:
     with BootstrapEnvironment() as env:
         env.update_installations()
         env.load()
+
+
+class SpackPythonVersionError(spack.error.SpackError):
+    """Spack error when bootstrap with a python that is unsupported"""
