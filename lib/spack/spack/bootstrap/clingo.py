@@ -21,6 +21,7 @@ import spack.config
 import spack.package_base
 import spack.platforms
 import spack.repo
+import spack.solver.versions
 import spack.spec
 import spack.traverse
 import spack.version
@@ -28,11 +29,19 @@ import spack.version
 from .config import spec_for_current_python
 
 
-def _select_best_version(pkg_cls: Type["spack.package_base.PackageBase"], node: spack.spec.Spec):
+def _select_best_version(
+    pkg_cls: Type["spack.package_base.PackageBase"], node: spack.spec.Spec, valid_versions: str
+) -> None:
     """Try to attach the best known version to a node"""
+    constraint = spack.version.from_string(valid_versions)
+    allowed_versions = [
+        (v, info) for v, info in pkg_cls.versions.items() if v.satisfies(constraint)
+    ]
     try:
-        best_version = spack.package_base.preferred_version(pkg_cls)
-    except KeyError:
+        best_version, _ = max(
+            allowed_versions, key=spack.solver.versions.concretization_version_order
+        )
+    except (KeyError, ValueError):
         return
     node.versions.versions = [spack.version.from_string(f"={best_version}")]
 
@@ -132,17 +141,18 @@ class ClingoBootstrapConcretizer:
 
         # These are nodes in the cmake stack, whose versions are frequently deprecated for
         # security reasons. In case there is no external cmake on this machine, we'll update
-        # their versions to the most preferred according to the repository we know.
+        # their versions to the most preferred, within the valid range, according to the
+        # repository we know.
         to_be_updated = {
-            pkg_name: spack.repo.PATH.get_pkg_class(pkg_name)
-            for pkg_name in [
-                "ca-certificates-mozilla",
-                "openssl",
-                "curl",
-                "cmake",
-                "libiconv",
-                "ncurses",
-            ]
+            pkg_name: (spack.repo.PATH.get_pkg_class(pkg_name), valid_versions)
+            for pkg_name, valid_versions in {
+                "ca-certificates-mozilla": ":",
+                "openssl": "3:3",
+                "curl": "8:8",
+                "cmake": "3.16:3",
+                "libiconv": "1:1",
+                "ncurses": "6:6",
+            }.items()
         }
 
         # Tweak it to conform to the host architecture + update the version of a few dependencies
@@ -154,8 +164,8 @@ class ClingoBootstrapConcretizer:
                 node.versions = self.host_compiler.versions
 
             if node.name in to_be_updated:
-                pkg_cls = to_be_updated[node.name]
-                _select_best_version(pkg_cls=pkg_cls, node=node)
+                pkg_cls, valid_versions = to_be_updated[node.name]
+                _select_best_version(pkg_cls=pkg_cls, node=node, valid_versions=valid_versions)
 
         # Can't use re2c@3.1 with Python 3.6
         if self.host_python.satisfies("@3.6"):
