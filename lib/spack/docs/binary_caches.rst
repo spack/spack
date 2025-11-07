@@ -384,6 +384,23 @@ The username is always ``AWS``.
 
 See also `AWS's documentation <https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html>`_.
 
+Azure Container Registry
+""""""""""""""""""""""""
+
+To authenticate with an Azure Container Registry that has RBAC enabled, you can use the Azure CLI to generate a temporary password for your managed identity.
+The username is always ``00000000-0000-0000-0000-000000000000``.
+
+.. code-block:: console
+
+    $ export AZURE_ACR_PASSWORD=$(az acr login --name <registry-name> --expose-token --output tsv --query accessToken)
+    $ spack mirror add \
+          --oci-username 00000000-0000-0000-0000-000000000000 \
+          --oci-password-variable AZURE_ACR_PASSWORD \
+          my_registry \
+          oci://<registry-name>.azurecr.io/my/image
+
+See also `Azure's documentation <https://learn.microsoft.com/en-us/azure/container-registry/container-registry-authentication?tabs=azure-cli#az-acr-login-with---expose-token>`_.
+
 
 Build Cache and Container Images
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
