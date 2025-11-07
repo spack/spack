@@ -250,8 +250,8 @@ def retrieve_commit_from_archive(archive_path, ref):
     """Extract git data from an archive with out expanding it
 
     Open the archive and searches for .git/HEAD. Return if HEAD is a commit (detached head or tag)
-    then it returns the sha. Otherwise attempt to read the ref that .git/HEAD is pointing
-    too and return the commit associated with it.
+    Otherwise attempt to read the ref that .git/HEAD is pointing to and return the commit
+    associated with it.
     """
     if not os.path.isfile(archive_path):
         raise FileNotFoundError(f"The file {archive_path} does not exist")
