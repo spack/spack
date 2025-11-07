@@ -781,7 +781,7 @@ class BuildStatus:
             if self.search_term
             else self.builds.values()
         )
-        len_builds = len(self.builds)
+        len_builds = len(displayed_builds)
 
         # Truncate if we have more builds than fit on the screen. In that case we have to reserve
         # an additional line for the "N more..." message.
