@@ -367,7 +367,7 @@ def test_git_provenance_find_commit_ls_remote(
     vattrs = spec.package.versions[spec.version]
     git_ref = vattrs.get("tag") or vattrs.get("branch")
     # add the ^{} suffix to the ref so it redirects to the first parent git object
-    # for branches and lightweight tags the suffix makes no difference since it is 
+    # for branches and lightweight tags the suffix makes no difference since it is
     # always a commit SHA, but for annotated tags the SHA shifts from the tag SHA
     # back to the commit SHA, which is what we want
     actual_commit = git(

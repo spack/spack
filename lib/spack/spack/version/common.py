@@ -3,8 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.error
-from spack.util.git import COMMIT_VERSION, is_git_commit_sha
-
+from spack.util.git import is_git_commit_sha
 
 # Infinity-like versions. The order in the list implies the comparison rules
 infinity_versions = ["stable", "nightly", "trunk", "head", "master", "main", "develop"]

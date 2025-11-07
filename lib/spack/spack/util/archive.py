@@ -13,7 +13,6 @@ from typing import Callable, Dict, Generator, List, Tuple
 
 from spack.llnl.util import tty
 from spack.llnl.util.filesystem import readlink
-from spack.util.executable import ProcessError, which
 from spack.util.git import is_git_commit_sha
 
 
@@ -247,41 +246,31 @@ def reproducible_tarfile_from_prefix(
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
 
 
-def _git_prefix(archive_path, tar):
-    # This is an annoying method, but since we always have a prefix and can't gaurantee what
-    # it is we need this.
-    paths = tar("-tf", archive_path, output=str, error=str, fail_on_error=False)
-    if paths:
-        paths = paths.strip().split()
-        for p in paths:
-            if p.endswith(".git/"):
-                return p[:-5]
-    return ""
-
-
 def retrieve_commit_from_archive(archive_path, ref):
     """extract git data from an archive with out expanding it"""
     if not os.path.isfile(archive_path):
         raise FileNotFoundError(f"The file {archive_path} does not exist")
 
-    tar = which("tar", required=True)
-    prefix = _git_prefix(archive_path, tar)
-
-    tar = which("tar", required=True)
     try:
-        head = tar("-Oxzf", archive_path, f"{prefix}.git/HEAD", output=str, error=str).strip()
-        if is_git_commit_sha(head):
-            return head
-        else:
-            # HEAD file format of 'ref: <ref-path>'
-            ref = head.split()[1]
-            contents = tar(
-                "-Oxzf", archive_path, f"{prefix}.git/{ref}", output=str, error=str
-            ).strip()
-            if is_git_commit_sha(contents):
-                return contents
-    except ProcessError:
-        pass
-
-    tty.warn(f"Archive {archive_path} does not appear to contain git data")
-    return None
+        with tarfile.open(archive_path, "r") as tar:
+            names = tar.getnames()
+            # since we always have a prefix and can't gaurantee the value we need this lookup.
+            prefix = ""
+            for name in names:
+                if name.endswith(".git/"):
+                    prefix = name[:-5]
+            if f"{prefix}.git/HEAD" in names:
+                head = tar.extractfile(f"{prefix}.git/HEAD").read().decode("utf-8").strip()
+                if is_git_commit_sha(head):
+                    # detached HEAD/ lightweight tag
+                    return head
+                else:
+                    ref = head.split()[1]
+                    contents = (
+                        tar.extractfile(f"{prefix}.git/{ref}").read().decode("utf-8").strip()
+                    )
+                    if is_git_commit_sha(contents):
+                        return contents
+    except tarfile.ReadError:
+        tty.warn(f"Archive {archive_path} does not appear to contain git data")
+    return
