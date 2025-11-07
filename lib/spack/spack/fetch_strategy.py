@@ -965,7 +965,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                 clone_args.append("--quiet")
 
             if self.git_version >= spack.version.Version("2.19.2"):
-                clone_args.extend(["--no-checkout", "--filter=blob:none"]) 
+                clone_args.extend(["--no-checkout", "--filter=blob:none"])
 
             with temp_cwd():
                 clone_args.append(self.url)
