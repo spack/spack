@@ -221,6 +221,7 @@ def test_get_bearer_challenge():
     [
         ("public.example.com/spack-registry:latest", "public_token"),
         ("private.example.com/spack-registry:latest", "private_token"),
+        ("oauth.example.com/spack-registry:latest", "oauth_token"),
     ],
 )
 def test_automatic_oci_bearer_authentication(image_ref: str, token: str):

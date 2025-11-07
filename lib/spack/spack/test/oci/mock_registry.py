@@ -391,6 +391,8 @@ class MockBearerTokenServer(DummyServer):
             return self.public_auth(req)
         elif service == "private.example.com":
             return self.private_auth(req)
+        elif service == "oauth.example.com":
+            return self.oauth_auth(req)
 
         return MockHTTPResponse(404, "Not found")
 
@@ -398,6 +400,10 @@ class MockBearerTokenServer(DummyServer):
         # No need to login with username and password for the public registry
         assert req.get_header("Authorization") is None
         return MockHTTPResponse.with_json(200, "OK", body={"token": "public_token"})
+
+    def oauth_auth(self, req: Request):
+        assert req.get_header("Authorization") is None
+        return MockHTTPResponse.with_json(200, "OK", body={"access_token": "oauth_token"})
 
     def private_auth(self, req: Request):
         # For the private registry we need to login with username and password
