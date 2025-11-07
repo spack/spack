@@ -247,7 +247,12 @@ def reproducible_tarfile_from_prefix(
 
 
 def retrieve_commit_from_archive(archive_path, ref):
-    """extract git data from an archive with out expanding it"""
+    """Extract git data from an archive with out expanding it
+
+    Open the archive and searches for .git/HEAD. Return if HEAD is a commit (detached head or tag)
+    then it returns the sha. Otherwise attempt to read the ref that .git/HEAD is pointing
+    too and return the commit associated with it.
+    """
     if not os.path.isfile(archive_path):
         raise FileNotFoundError(f"The file {archive_path} does not exist")
 
@@ -265,6 +270,7 @@ def retrieve_commit_from_archive(archive_path, ref):
                     # detached HEAD/ lightweight tag
                     return head
                 else:
+                    # refs in had have the format "ref <relative path to ref>"
                     ref = head.split()[1]
                     contents = (
                         tar.extractfile(f"{prefix}.git/{ref}").read().decode("utf-8").strip()
