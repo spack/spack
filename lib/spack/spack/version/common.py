@@ -2,12 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
-
 import spack.error
+from spack.util.git import COMMIT_VERSION, is_git_commit_sha
 
-# regex for a commit version
-COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
 
 # Infinity-like versions. The order in the list implies the comparison rules
 infinity_versions = ["stable", "nightly", "trunk", "head", "master", "main", "develop"]
@@ -21,10 +18,6 @@ FINAL = 3
 
 PRERELEASE_TO_STRING = ["alpha", "beta", "rc"]
 STRING_TO_PRERELEASE = {"alpha": ALPHA, "beta": BETA, "rc": RC, "final": FINAL}
-
-
-def is_git_commit_sha(string: str) -> bool:
-    return len(string) == 40 and bool(COMMIT_VERSION.match(string))
 
 
 def is_git_version(string: str) -> bool:

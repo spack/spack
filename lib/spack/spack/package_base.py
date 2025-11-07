@@ -1053,7 +1053,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             pkg_instance.do_fetch(mirror_only=True)
         except spack.error.FetchError:
             pass
-
         if pkg_instance.stage.archive_file:
             sha = spack.util.archive.retrieve_commit_from_archive(
                 pkg_instance.stage.archive_file, ref

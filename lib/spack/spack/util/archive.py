@@ -14,6 +14,7 @@ from typing import Callable, Dict, Generator, List, Tuple
 from spack.llnl.util import tty
 from spack.llnl.util.filesystem import readlink
 from spack.util.executable import ProcessError, which
+from spack.util.git import is_git_commit_sha
 
 
 class ChecksumWriter(io.BufferedIOBase):
@@ -266,13 +267,10 @@ def retrieve_commit_from_archive(archive_path, ref):
     tar = which("tar", required=True)
     prefix = _git_prefix(archive_path, tar)
 
-    def is_commit(value):
-        return bool(value) and len(value) == 40
-
     tar = which("tar", required=True)
     try:
         head = tar("-Oxzf", archive_path, f"{prefix}.git/HEAD", output=str, error=str).strip()
-        if is_commit(head):
+        if is_git_commit_sha(head):
             return head
         else:
             # HEAD file format of 'ref: <ref-path>'
@@ -280,7 +278,7 @@ def retrieve_commit_from_archive(archive_path, ref):
             contents = tar(
                 "-Oxzf", archive_path, f"{prefix}.git/{ref}", output=str, error=str
             ).strip()
-            if is_commit(contents):
+            if is_git_commit_sha(contents):
                 return contents
     except ProcessError:
         pass

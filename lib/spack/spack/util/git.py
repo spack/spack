@@ -4,6 +4,7 @@
 """Single util module where Spack should get a git executable."""
 
 import os
+import re
 import sys
 from typing import List, Optional, overload
 
@@ -11,6 +12,13 @@ from spack.vendor.typing_extensions import Literal
 
 import spack.llnl.util.lang
 import spack.util.executable as exe
+
+# regex for a commit version
+COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
+
+
+def is_git_commit_sha(string: str) -> bool:
+    return len(string) == 40 and bool(COMMIT_VERSION.match(string))
 
 
 @spack.llnl.util.lang.memoized
