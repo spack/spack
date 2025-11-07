@@ -960,10 +960,15 @@ class GitFetchStrategy(VCSFetchStrategy):
         if self.commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
-            clone_args = ["clone", self.url]
+            clone_args = ["clone"]
             if not debug:
-                clone_args.insert(1, "--quiet")
+                clone_args.append("--quiet")
+
+            if self.git_version >= spack.version.Version("2.19.2"):
+                clone_args.extend(["--no-checkout", "--filter=blob:none"]) 
+
             with temp_cwd():
+                clone_args.append(self.url)
                 git(*clone_args)
                 repo_name = get_single_file(".")
                 if self.stage:
@@ -976,9 +981,10 @@ class GitFetchStrategy(VCSFetchStrategy):
                 )
 
             with working_dir(dest):
-                checkout_args = ["checkout", self.commit]
+                checkout_args = ["checkout"]
                 if not debug:
-                    checkout_args.insert(1, "--quiet")
+                    checkout_args.append("--quiet")
+                checkout_args.append(self.commit)
                 git(*checkout_args)
 
         else:
@@ -1058,8 +1064,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             )
             self._clone_src()
         else:
-            # default to depth=2 to allow for retention of some git properties
-            depth = kwargs.get("depth", 2)
+            depth = kwargs.get("depth", 1)
             needs_fetch = self.branch or self.tag
             git_ref = self.branch or self.tag or self.commit
 
