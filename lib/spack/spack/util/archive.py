@@ -264,6 +264,7 @@ def retrieve_commit_from_archive(archive_path, ref):
             for name in names:
                 if name.endswith(".git"):
                     prefix = name[:-4]
+                    break
             if f"{prefix}.git/HEAD" in names:
                 head = tar.extractfile(f"{prefix}.git/HEAD").read().decode("utf-8").strip()
                 if is_git_commit_sha(head):
