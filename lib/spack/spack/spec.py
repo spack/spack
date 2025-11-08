@@ -4879,7 +4879,10 @@ class Spec:
         if len(mutator.dependencies()) > 0:
             raise SpecMutationError(f"Cannot mutate dependencies: spec {self} mutator {mutator}")
 
-        if mutator.versions != vn.VersionList(":") and not mutator.versions.concrete:
+        if (
+            mutator.versions != vn.VersionList(":")
+            and not mutator.versions.concrete_range_as_version
+        ):
             raise SpecMutationError(
                 f"Cannot mutate abstract version: spec {self} mutator {mutator}"
             )
@@ -4903,7 +4906,7 @@ class Spec:
                 self.variants[name] = variant
             changed = True
 
-        for name, flags in mutator.compiler_flags:
+        for name, flags in mutator.compiler_flags.items():
             if not flags or flags == self.compiler_flags[name]:
                 continue
             self.compiler_flags[name] = flags
