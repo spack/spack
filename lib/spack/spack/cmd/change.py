@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import warnings
 
 import spack.cmd
+import spack.environment
 import spack.spec
 from spack.cmd.common import arguments
 
@@ -19,33 +21,66 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--list-name",
         dest="list_name",
         default="specs",
-        help="name of the list to remove specs from",
+        help="name of the list to remove abstract specs from",
     )
     subparser.add_argument(
-        "--match-spec", dest="match_spec", help="if name is ambiguous, supply a spec to match"
+        "--match-spec",
+        dest="match_spec",
+        help="change all specs matching match-spec (default is match by spec name)",
     )
     subparser.add_argument(
         "-a",
         "--all",
         action="store_true",
-        help="change all matching specs (allow changing more than one spec)",
+        help="change all matching abstract specs (allow changing more than one abstract spec)",
     )
+    subparser.add_argument(
+        "--no-abstract",
+        action="store_false",
+        default=True,
+        dest="abstract",
+        help="do not change abstract specs in the environment",
+    )
+    subparser.add_argument(
+        "--concrete",
+        action="store_true",
+        default=False,
+        help="change concrete specs in the environment",
+    )
+
     arguments.add_common_arguments(subparser, ["specs"])
 
 
 def change(parser, args):
+    if args.all and not args.abstract:
+        warnings.warn("'spack change --all' argument is ignored with '--no-abstract'")
+    if args.list_name and not args.abstract:
+        warnings.warn("'spack change --list-name' argument is ignored with '--no-abstract'")
+
     env = spack.cmd.require_active_env(cmd_name="change")
 
+    match_spec = None
+    if args.match_spec:
+        match_spec = spack.spec.Spec(args.match_spec)
+    specs = spack.cmd.parse_specs(args.specs)
+
     with env.write_transaction():
-        if args.match_spec:
-            match_spec = spack.spec.Spec(args.match_spec)
-        else:
-            match_spec = None
-        for spec in spack.cmd.parse_specs(args.specs):
-            env.change_existing_spec(
-                spec,
-                list_name=args.list_name,
-                match_spec=match_spec,
-                allow_changing_multiple_specs=args.all,
-            )
+        if args.abstract:
+            try:
+                for spec in specs:
+                    env.change_existing_spec(
+                        spec,
+                        list_name=args.list_name,
+                        match_spec=match_spec,
+                        allow_changing_multiple_specs=args.all,
+                    )
+            except (ValueError, spack.environment.SpackEnvironmentError) as e:
+                msg = "Cannot change abstract specs."
+                msg += " Try again with '--no-abstract' to change concrete specs only."
+                raise ValueError(msg) from e
+
+        if args.concrete:
+            for spec in specs:
+                env.mutate(selector=match_spec or spack.spec.Spec(spec.name), mutator=spec)
+
         env.write()
