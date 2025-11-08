@@ -1370,10 +1370,10 @@ class Environment:
                 that should be changed. If not set, it is assumed we are
                 looking for a spec with the same name as ``change_spec``.
         """
-        if not (change_spec.name or (match_spec and match_spec.name)):
+        if not (change_spec.name or match_spec):
             raise ValueError(
-                "Must specify a spec name to identify a single spec"
-                " in the environment that will be changed"
+                "Must specify a spec name or match spec to identify a single spec"
+                " in the environment that will be changed (or multiple with '--all')"
             )
         match_spec = match_spec or Spec(change_spec.name)
 
