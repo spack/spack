@@ -982,10 +982,12 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             with working_dir(dest):
                 checkout_args = ["checkout"]
+                checkout_kwargs = {}
                 if not debug:
-                    checkout_args.append("--quiet")
+                    checkout_args.extend(["--quiet", "--no-progress"])
+                    checkout_kwargs["error"] = str
                 checkout_args.append(self.commit)
-                git(*checkout_args)
+                git(*checkout_args, **checkout_kwargs)
 
         else:
             # Can be more efficient if not checking out a specific commit.
@@ -1094,10 +1096,12 @@ class GitFetchStrategy(VCSFetchStrategy):
             sparse_args.append("--cone")
 
             checkout_args = ["checkout", git_ref]
+            checkout_kwargs = {}
 
             if not spack.config.get("config:debug"):
                 clone_args.insert(1, "--quiet")
                 checkout_args.insert(1, "--quiet")
+                checkout_kwargs["error"] = str
 
             with temp_cwd():
                 git(*clone_args)
@@ -1108,7 +1112,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             with working_dir(dest):
                 git(*sparse_args)
-                git(*checkout_args)
+                git(*checkout_args, **checkout_kwargs)
 
     def submodule_operations(self):
         dest = self.stage.source_path
