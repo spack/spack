@@ -2949,6 +2949,43 @@ class SpackSolverSetup:
                 if spec.concrete:
                     self.register_concrete_spec(spec, possible)
 
+    def input_spec_version_check(self, specs, allow_deprecated: bool) -> None:
+        """Raise an error early if no versions available in the solve can satisfy the inputs.
+
+        If only deprecated versions can satisfy the specs
+
+        """
+        only_deprecated = []
+        impossible = []
+
+        for spec in specs:
+            deprecated = self.deprecated_versions.get(spec.name, set())
+            sat_deprecated = [v for v in deprecated if deprecated and v.satisfies(spec.versions)]
+
+            possible = self.possible_versions.get(spec.name, set())
+            sat_possible = [v for v in possible if possible and v.satisfies(spec.versions)]
+
+            if sat_deprecated and not sat_possible:
+                only_deprecated.append(spec)
+
+            if not sat_deprecated and not sat_possible:
+                impossible.append(spec)
+
+        if not allow_deprecated and only_deprecated:
+            raise DeprecatedVersionError(
+                "The following input specs can only be satisfied by deprecated versions:",
+                "    "
+                + ", ".join(str(spec) for spec in only_deprecated)
+                + "\n"
+                + "Run with --deprecated to allow Spack to use these versions.",
+            )
+
+        if impossible:
+            raise InvalidVersionError(
+                "No version exists that satisfies these input specs:",
+                "    " + ", ".join(str(spec) for spec in impossible),
+            )
+
     def setup(
         self,
         specs: Sequence[spack.spec.Spec],
@@ -3129,6 +3166,10 @@ class SpackSolverSetup:
 
         self.gen.h1("Internal errors")
         self.internal_errors(_use_unsat_cores=_use_unsat_cores)
+
+        # once we've done a full traversal and know possible versions, check that the
+        # requested solve is at least consistent.
+        self.input_spec_version_check(specs, allow_deprecated)
 
         return self.gen
 
@@ -4211,3 +4252,11 @@ class NoCompilerFoundError(spack.error.SpackError):
 
 class InvalidExternalError(spack.error.SpackError):
     """Raised when there is no possible compiler"""
+
+
+class DeprecatedVersionError(spack.error.SpackError):
+    """Raised when user directly requests a deprecated version."""
+
+
+class InvalidVersionError(spack.error.SpackError):
+    """Raised when a version can't be satisfied by any possible versions."""
