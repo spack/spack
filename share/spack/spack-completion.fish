@@ -915,16 +915,20 @@ complete -c spack -n '__fish_spack_using_command cd' -l first -f -a find_first
 complete -c spack -n '__fish_spack_using_command cd' -l first -d 'use the first match if multiple packages match the spec'
 
 # spack change
-set -g __fish_spack_optspecs_spack_change h/help l/list-name= match-spec= a/all
+set -g __fish_spack_optspecs_spack_change h/help l/list-name= match-spec= a/all no-abstract concrete
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 change' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command change' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command change' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command change' -s l -l list-name -r -f -a list_name
-complete -c spack -n '__fish_spack_using_command change' -s l -l list-name -r -d 'name of the list to remove specs from'
+complete -c spack -n '__fish_spack_using_command change' -s l -l list-name -r -d 'name of the list to remove abstract specs from'
 complete -c spack -n '__fish_spack_using_command change' -l match-spec -r -f -a match_spec
-complete -c spack -n '__fish_spack_using_command change' -l match-spec -r -d 'if name is ambiguous, supply a spec to match'
+complete -c spack -n '__fish_spack_using_command change' -l match-spec -r -d 'change all specs matching match-spec (default is match by spec name)'
 complete -c spack -n '__fish_spack_using_command change' -s a -l all -f -a all
-complete -c spack -n '__fish_spack_using_command change' -s a -l all -d 'change all matching specs (allow changing more than one spec)'
+complete -c spack -n '__fish_spack_using_command change' -s a -l all -d 'change all matching abstract specs (allow changing more than one abstract spec)'
+complete -c spack -n '__fish_spack_using_command change' -l no-abstract -f -a abstract
+complete -c spack -n '__fish_spack_using_command change' -l no-abstract -d 'do not change abstract specs in the environment'
+complete -c spack -n '__fish_spack_using_command change' -l concrete -f -a concrete
+complete -c spack -n '__fish_spack_using_command change' -l concrete -d 'change concrete specs in the environment'
 
 # spack checksum
 set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package verify j/jobs=
