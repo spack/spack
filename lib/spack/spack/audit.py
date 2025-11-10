@@ -1006,6 +1006,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         filename = spack.repo.PATH.filename_for_package_name(pkg_name)
 
+        bounded_deps = {}
         for when, deps_by_name in pkg_cls.dependencies.items():
             for dep_name, dep in deps_by_name.items():
 
@@ -1090,12 +1091,28 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                     max_infinity in v and min_infinity not in v for v in when.versions
                 )
                 if bounded_dependency and unbounded_condition:
-                    summary = (
-                        f"{pkg_name}: {dep.spec} has an upper bound for all versions of {pkg_name}"
-                    )
-                    errors.append(
-                        error_cls(summary=summary, details=[f"when={when}", f"in {filename}"])
-                    )
+                    bounded_deps.setdefault(dep.spec.name, []).append((dep.spec, when))
+
+        for dep_name, cases in bounded_deps.items():
+            # One case is usually fine
+            if len(cases) == 1:
+                continue
+
+            # Multiple directives, but imposing the same upper bound, are also fine
+            try:
+                upper_bounds = {v.hi for d, _ in cases for v in d.versions}
+                if len(upper_bounds) == 1:
+                    continue
+            except AttributeError as e:
+                warnings.warn(f"{pkg_name}: {e}")
+
+            for dependency, when in cases:
+                summary = (
+                    f"{pkg_name}: {dependency} has an upper bound for all versions of {pkg_name}"
+                )
+                errors.append(
+                    error_cls(summary=summary, details=[f"when={when}", f"in {filename}"])
+                )
 
     return errors
 
