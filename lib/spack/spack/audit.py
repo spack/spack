@@ -61,6 +61,7 @@ import spack.util.spack_yaml as syaml
 import spack.variant
 import spack.version
 from spack.llnl.string import plural
+from spack.version import ClosedOpenRange
 
 #: Map an audit tag to a list of callables implementing checks
 CALLBACKS = {}
@@ -1100,11 +1101,15 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
 
             # Multiple directives, but imposing the same upper bound, are also fine
             try:
-                upper_bounds = {v.hi for d, _ in cases for v in d.versions}
-                if len(upper_bounds) == 1:
+                upper_bounds = {
+                    max(v.hi for v in d.versions if isinstance(v, ClosedOpenRange))
+                    for d, _ in cases
+                }
+                if len(upper_bounds) <= 1:
                     continue
-            except AttributeError as e:
+            except (AttributeError, ValueError) as e:
                 warnings.warn(f"{pkg_name}: {e}")
+                continue
 
             for dependency, when in cases:
                 summary = (
