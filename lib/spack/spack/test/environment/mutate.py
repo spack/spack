@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import platform
+
 import pytest
 
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.spec
 from spack.main import SpackCommand
-
 
 pytestmark = [
     pytest.mark.usefixtures("mutable_config", "mutable_mock_env_path", "mutable_mock_repo"),
