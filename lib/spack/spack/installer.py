@@ -2027,6 +2027,10 @@ class PackageInstaller:
         task = self.build_pq[0][1]
         return task if task.priority == 0 else None
 
+    def _tasks_installing_in_other_spack(self) -> bool:
+        """Whether any tasks in the build queue are installing in other spack processes."""
+        return any(task.status == BuildStatus.INSTALLING for _, task in self.build_pq)
+
     def _pop_task(self) -> Task:
         """Pop the first task off the queue and return it.
 
@@ -2429,6 +2433,8 @@ class PackageInstaller:
         # include downgrading the write to a read lock
         if pkg.spec.installed:
             self._cleanup_task(pkg)
+            # mark installed if we haven't yet - may be discovering installed for the first time
+            self._update_installed(task)
 
         return None
 
@@ -2458,7 +2464,7 @@ class PackageInstaller:
         )
 
         # While a task is ready or tasks are running
-        while self._peek_ready_task() or active_tasks:
+        while self._peek_ready_task() or active_tasks or self._tasks_installing_in_other_spack():
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()
