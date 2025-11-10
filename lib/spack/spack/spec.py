@@ -5052,8 +5052,9 @@ class Spec:
                 self._dunder_hash = self.dag_hash_bit_prefix(64)
             return self._dunder_hash
 
-        # For non-concrete specs include only a subset of the spec fields and only include the first dependency if there are any.
-        # This gives a good balance between the cost of the hash function and number of collisions.
+        # For non-concrete specs include only a subset of the spec fields and only include the
+        # first dependency if there are any. This gives a good balance between the cost of the
+        # hash function and number of collisions.
         if len(self._dependencies.edges) == 1:
             first_dep_spec = next(iter(self._dependencies.edges.values()))[0].spec
             hash_tuple = (
