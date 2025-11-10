@@ -548,11 +548,7 @@ def make_argument_parser(**kwargs):
         dest="spack_profile",
         help="profile execution using cProfile",
     )
-    profile.add_argument(
-        "--profile-file",
-        default=None,
-        help="Filename to save profile data to.",
-    )
+    profile.add_argument("--profile-file", default=None, help="Filename to save profile data to.")
     profile.add_argument(
         "--sorted-profile",
         default=None,
