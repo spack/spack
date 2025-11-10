@@ -1,8 +1,7 @@
-import json
-import spack.util.spack_json as sjson
 import os
 import spack.hooks
 import time
+import spack.util.spack_json as sjson
 from spack.llnl.util import tty
 
 """Generate a Software Bill of Materials (SBOM) for each successful Spack installation."""
@@ -41,11 +40,17 @@ def post_install(spec, explicit=None):
     # Document information
     t = time.gmtime()
     created_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", t)
-    document_namespace = f"http://spack.io/sbom/{spec.name}-{str(spec.version)}-{spec.dag_hash()}"
-    document_name = f"SBOM of {spec.name}-{spec.version} built with Spack"
-
-    # ---- Package entry for this spec ----
-    print("CHECK ONE      !!!!")
+    
+    # Create path and dir for sbom
+    sbom_path = os.path.join(spec.prefix, "sbom.json")
+    os.makedirs(os.path.dirname(sbom_path), exist_ok=True)
+     
+    unique_str = f"{spec.name}-{spec.version}-{spec.dag_hash()}"
+    unique_hash = hashlib.sha256(unique_str.encode("utf-8")).hexdigest()
+    document_namespace = f"file://{sbom_path}#spack-{unique_hash}"
+    
+    # Package entry for each installation.
+    # Represents the top-level component in the SBOM (the package being installed).
     pkg_entry = {
         "SPDXID": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
         "name": spec.name,
@@ -57,7 +62,8 @@ def post_install(spec, explicit=None):
         "licenseConcluded": "NOASSERTION"
     }
 
-    # ---- Package entries for dependencies ----
+    # Package entry for each dependency of a spec.
+    # Each dependency becomes its own entry, linked to the top-level component.
     deps = []
     relationships = [
         {
@@ -67,9 +73,6 @@ def post_install(spec, explicit=None):
         }
     ]
 
-    # for dep in spec.dependencies():    
-    # for dep in spec.dependencies(deptype='all').values():
-    print("CHECK TWO      !!!!")
     for dep in spec.dependencies(deptype='all'):
         dep_name = dep.name
         dep_spec = dep
@@ -87,7 +90,6 @@ def post_install(spec, explicit=None):
             "licenseDeclared": license_declared,
             "licenseConcluded": "NOASSERTION"
         }
-        print(dep_entry)
         deps.append(dep_entry)
 
         relationships.append(
@@ -99,7 +101,6 @@ def post_install(spec, explicit=None):
         )
 
     # Compose SPDX document
-    print("CHECK THREE      !!!!")
     sbom = {
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
@@ -107,7 +108,7 @@ def post_install(spec, explicit=None):
         "documentNamespace": document_namespace,
         "creationInfo": {
             "created": created_time,
-            "creators": ["Organization: Spack SBOM Generator"],
+            "creators": ["Organization: Spack"],
         },
         "name": document_name,
         "packages": [pkg_entry] + deps,
@@ -116,13 +117,6 @@ def post_install(spec, explicit=None):
     print("sbom:", sbom)
 
     # Write to SBOM file
-    print("CHECK FOUR      !!!!")
-    path = os.path.join(spec.prefix, "sbom.json")
-    print("CHECK FIVE      !!!!")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    print("CHECK SIX      !!!!")
     with open(path, "w") as f:
-        print("CHECK SEVEN      !!!!")
         sjson.dump(sbom, f)
-        print("check 8")
     tty.msg(f"[SBOM] Wrote SPDX 2.3 SBOM to {path}")
