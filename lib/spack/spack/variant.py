@@ -56,6 +56,7 @@ class VariantType(enum.IntEnum):
     BOOL = 1
     SINGLE = 2
     MULTI = 3
+    INDICATOR = 4  # special type for placeholder variant values
 
     @property
     def string(self) -> str:
@@ -64,7 +65,10 @@ class VariantType(enum.IntEnum):
             return "bool"
         elif self == VariantType.SINGLE:
             return "single"
-        return "multi"
+        elif self == VariantType.MULTI:
+            return "multi"
+        else:
+            return "indicator"
 
 
 class Variant:
@@ -494,6 +498,13 @@ def SingleValuedVariant(
 
 def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> VariantValue:
     return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
+
+
+class VariantValueRemoval(VariantValue):
+    """Indicator class for Spec.mutate to remove a variant"""
+
+    def __init__(self, name):
+        super().__init__(VariantType.INDICATOR, name, (None,))
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply

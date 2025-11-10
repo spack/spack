@@ -4900,9 +4900,9 @@ class Spec:
             if variant == self.variants.get(name, None):
                 continue
 
-            # None instead of VariantValue(..., (None,)) used as a sigil to remove variant
+            # Special VariantValueRemoval type for variants that need to be removed
             self.variants.pop(name, None)
-            if variant is not None:
+            if not isinstance(variant, vt.VariantValueRemoval):
                 self.variants[name] = variant
             changed = True
 

@@ -1474,9 +1474,9 @@ class Environment:
 
         mutator = spack.spec.Spec()
         if path:
-            variant = vt.VariantValue(vt.VariantType.SINGLE, "dev_path", (path,))
+            variant = vt.SingleValuedVariant("dev_path", path)
         else:
-            variant = None
+            variant = vt.VariantValueRemoval("dev_path")
         mutator.variants["dev_path"] = variant
 
         msg = (
