@@ -887,6 +887,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     def source_id(self):
         # TODO: tree-hash would secure download cache and mirrors, commit only secures checkouts.
+        # TODO(psakiev): Tree-hash is part of the commit SHA computation, question comment validity
         return self.commit
 
     def mirror_id(self):

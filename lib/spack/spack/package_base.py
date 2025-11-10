@@ -1057,7 +1057,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             sha = spack.util.archive.retrieve_commit_from_archive(
                 pkg_instance.stage.archive_file, ref
             )
-
         if not sha:
             url = cls.version_or_package_attr("git", spec.version)
             sha = spack.util.git.get_commit_sha(url, ref)
