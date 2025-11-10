@@ -336,7 +336,7 @@ def test_git_provenance_commit_version(default_mock_concretization):
     assert spec.satisfies(f"commit={'c' * 40}")
 
 
-@pytest.mark.parametrize("version", ("main", "tag"))
+@pytest.mark.parametrize("version", ("main", "tag", "annotated-tag"))
 @pytest.mark.parametrize("pre_stage", (True, False))
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
@@ -366,7 +366,13 @@ def test_git_provenance_find_commit_ls_remote(
 
     vattrs = spec.package.versions[spec.version]
     git_ref = vattrs.get("tag") or vattrs.get("branch")
-    actual_commit = git("-C", repo_path, "rev-parse", git_ref, output=str, error=str).strip()
+    # add the ^{} suffix to the ref so it redirects to the first parent git object
+    # for branches and lightweight tags the suffix makes no difference since it is
+    # always a commit SHA, but for annotated tags the SHA shifts from the tag SHA
+    # back to the commit SHA, which is what we want
+    actual_commit = git(
+        "-C", repo_path, "rev-parse", f"{git_ref}^{{}}", output=str, error=str
+    ).strip()
     assert spec.variants["commit"].value == actual_commit
 
 
