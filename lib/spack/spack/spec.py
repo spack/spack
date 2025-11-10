@@ -1552,9 +1552,6 @@ class Spec:
         # Python __hash__ is handled separately from the cached spec hashes
         self._dunder_hash = None
 
-        # Cache for Python __hash__ value, computed lazily
-        self._pyhash = None
-
         # cache of package for this spec
         self._package = None
 
@@ -1622,13 +1619,11 @@ class Spec:
     def clear_dependencies(self):
         """Trim the dependencies of this spec."""
         self._dependencies.clear()
-        self._pyhash = None
 
     def clear_edges(self):
         """Trim the dependencies and dependents of this spec."""
         self._dependencies.clear()
         self._dependents.clear()
-        self._pyhash = None
 
     def detach(self, deptype="all"):
         """Remove any reference that dependencies have of this node.
@@ -1972,7 +1967,6 @@ class Spec:
         )
         _add_edge_to_map(self._dependencies, edge.spec.name, edge)
         _add_edge_to_map(dependency_spec._dependents, edge.parent.name, edge)
-        self._pyhash = None
 
     #
     # Public interface
@@ -3159,8 +3153,6 @@ class Spec:
         if other.concrete and not self.concrete and other.satisfies(self):
             self._finalize_concretization()
 
-        self._pyhash = None
-
         return changed
 
     def _constrain_dependencies(self, other: "Spec", resolve_virtuals: bool = True) -> bool:
@@ -3715,7 +3707,6 @@ class Spec:
 
         self.abstract_hash = other.abstract_hash
 
-        self._pyhash = other._pyhash
         if self._concrete:
             self._dunder_hash = other._dunder_hash
             for h in ht.HASHES:
@@ -4710,7 +4701,6 @@ class Spec:
                     if (dep_name not in edge.virtuals) and (not dep_name == edge.spec.name):
                         _add_edge_to_map(new_dependencies, edge.spec.name, edge)
             spec._dependencies = new_dependencies
-            spec._pyhash = None
 
     def _virtuals_provided(self, root):
         """Return set of virtuals provided by self in the context of root"""
@@ -5045,7 +5035,6 @@ class Spec:
         """
         Clears all cached hashes in a Spec, while preserving other properties.
         """
-        self._pyhash = None
         for h in ht.HASHES:
             if h.attr not in ignore:
                 if hasattr(self, h.attr):
@@ -5063,15 +5052,24 @@ class Spec:
                 self._dunder_hash = self.dag_hash_bit_prefix(64)
             return self._dunder_hash
 
-        if self._pyhash:
-            return self._pyhash
+        # For non-concrete specs include only a subset of the spec fields and only include the first dependency if there are any.
+        # This gives a good balance between the cost of the hash function and number of collisions.
+        if len(self._dependencies.edges) == 1:
+            first_dep_spec = next(iter(self._dependencies.edges.values()))[0].spec
+            hash_tuple = (
+                self.name,
+                self.versions,
+                self.variants,
+                self.architecture,
+                first_dep_spec.name,
+                first_dep_spec.versions,
+                first_dep_spec.variants,
+                first_dep_spec.architecture,
+            )
+        else:
+            hash_tuple = (self.name, self.versions, self.variants, self.architecture)
 
-        # This is the normal hash for lazy_lexicographic_ordering. It's
-        # slow for large specs because it traverses the whole spec graph,
-        # so we hope it only runs on abstract specs, which are small.
-        result = hash(lang.tuplify(self._cmp_iter))
-        self._pyhash = result
-        return result
+        return hash(hash_tuple)
 
     def __getstate__(self):
         state = self.__dict__.copy()
