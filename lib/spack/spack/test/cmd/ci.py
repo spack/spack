@@ -817,7 +817,10 @@ spack:
             )
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test") as current_env:
-            current_env.concretize()
+            with current_env.write_transaction():
+                current_env.concretize()
+                current_env.write(regenerate=False)
+
             install_cmd("--keep-stage")
 
             concrete_spec = list(current_env.roots())[0]
