@@ -1,3 +1,4 @@
+import hashlib
 import os
 import spack.hooks
 import time
@@ -8,7 +9,11 @@ from spack.llnl.util import tty
 
 # SPDX 2.3 Generation
 def post_install(spec, explicit=None):
+
     pkg = spec.package
+
+    if spec.external:
+        return
 
     # URL location handling 
     download_url = None
@@ -22,20 +27,13 @@ def post_install(spec, explicit=None):
         if not pkg:
             return "NOASSERTION"
 
-        # Look for license info on both the instance and the class
-        lic = (
-            getattr(pkg, "licenses", None)
-            or getattr(pkg, "license", None)
-            or getattr(pkg.__class__, "licenses", None)
-            or getattr(pkg.__class__, "license", None)
-        )
+        lic = getattr(pkg, "licenses", None)
+        
+        if isinstance(lic, dict):
+            lic = list(lic.values())[0] if lic else "NOASSERTION"
+            print(lic)
+        return lic
 
-        if not lic:
-            return "NOASSERTION"
-
-        if isinstance(lic, (list, tuple)):
-            return " AND ".join(lic)
-        return str(lic)
 
     # Document information
     t = time.gmtime()
@@ -67,9 +65,9 @@ def post_install(spec, explicit=None):
     deps = []
     relationships = [
         {
-            "relatedSpdxElement": f"SPDXRef-DOCUMENT-{spec.name}-{str(spec.version)}",
+            "spdxElementId": f"SPDXRef-DOCUMENT-{spec.name}-{str(spec.version)}",
             "relationshipType": "DESCRIBES",
-            "spdxElementId": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
+            "relatedSpdxElement": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
         }
     ]
 
@@ -110,13 +108,13 @@ def post_install(spec, explicit=None):
             "created": created_time,
             "creators": ["Organization: Spack"],
         },
-        "name": document_name,
+        "name": unique_str,
         "packages": [pkg_entry] + deps,
         "relationships": relationships,
     }
     print("sbom:", sbom)
 
     # Write to SBOM file
-    with open(path, "w") as f:
+    with open(sbom_path, "w") as f:
         sjson.dump(sbom, f)
-    tty.msg(f"[SBOM] Wrote SPDX 2.3 SBOM to {path}")
+    tty.msg(f"[SBOM] Wrote SPDX 2.3 SBOM to {sbom_path}")
