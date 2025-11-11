@@ -6,7 +6,7 @@ sphinx-last-updated-by-git==0.3.8
 sphinx-sitemap==2.9.0
 # fork of furo with a few changes that are not merged upstream
 git+https://github.com/haampie/furo.git@c1d161cb9e04b481ec3331db981aacfa132ecaa6#egg=furo
-python-levenshtein==0.27.1
+python-levenshtein==0.27.3
 docutils==0.21.2
 pygments==2.19.2
 urllib3==2.5.0
