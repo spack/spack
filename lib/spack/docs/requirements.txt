@@ -12,6 +12,6 @@ pygments==2.19.2
 urllib3==2.5.0
 pytest==9.0.0
 isort==7.0.0
-black==25.9.0
+black==25.11.0
 flake8==7.3.0
 mypy==1.18.2
