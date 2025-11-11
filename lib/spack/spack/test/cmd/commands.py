@@ -264,16 +264,14 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
     width = 72
     lines = textwrap.wrap(
         "It looks like Spack's command-line interface has been modified. "
-        "If differences are more than your global 'include:' scopes, please "
-        "update Spack's shell tab completion scripts by running:",
+        "If differences are more than your custom scopes, please update "
+        "Spack's shell tab completion scripts by running:",
         width,
     )
     lines.append("\n    spack commands --update-completion\n")
     lines.extend(
         textwrap.wrap(
-            "and adding the changed files (minus your global 'include:' scopes) "
-            "to your pull request.",
-            width,
+            "and adding the changed files (minus your custom scopes) to your pull request.", width
         )
     )
     msg = "\n".join(lines)
