@@ -21,6 +21,7 @@ import spack.config
 import spack.package_base
 import spack.platforms
 import spack.repo
+import spack.solver.asp
 import spack.solver.versions
 import spack.spec
 import spack.traverse
@@ -152,11 +153,17 @@ class ClingoBootstrapConcretizer:
                 "cmake": "3.16:3",
                 "libiconv": "1:1",
                 "ncurses": "6:6",
+                "m4": "1.4",
             }.items()
         }
 
         # Tweak it to conform to the host architecture + update the version of a few dependencies
         for node in s.traverse():
+            # Clear patches, we'll compute them correctly later
+            node.patches.clear()
+            if "patches" in node.variants:
+                del node.variants["patches"]
+
             node.architecture.os = str(self.host_os)
             node.architecture = self.host_architecture
 
@@ -187,6 +194,7 @@ class ClingoBootstrapConcretizer:
             if "libc" in edge.virtuals:
                 edge.spec = self.host_libc
 
+        spack.solver.asp._inject_patches_variant(s)
         s._finalize_concretization()
 
         # Work around the fact that the installer calls Spec.dependents() and
