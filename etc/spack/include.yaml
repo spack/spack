@@ -14,6 +14,7 @@ include:
 
   # system configuration scope
   - name: "system"
+    path_override_env_var: SPACK_SYSTEM_CONFIG_PATH
     path: "/etc/spack"
     optional: true
     when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
