@@ -1743,6 +1743,10 @@ def _for_package_version(pkg, version=None):
 
             if not commit and version.is_commit:
                 commit = version.ref
+            version_meta_data = pkg.versions.get(version.std_version)
+        else:
+            version_meta_data = pkg.versions.get(version)
+
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
@@ -1754,10 +1758,10 @@ def _for_package_version(pkg, version=None):
         # TODO(psakiev) eventually we should  only need to clone based on the commit
 
         # commit stashed on version
-        version_meta_data = pkg.versions.get(version)
-        if not commit:
-            commit = version_meta_data.get("commit")
-        tag = version_meta_data.get("tag") or version_meta_data.get("branch")
+        if version_meta_data:
+            if not commit:
+                commit = version_meta_data.get("commit")
+            tag = version_meta_data.get("tag") or version_meta_data.get("branch")
 
         kwargs = {"commit": commit, "tag": tag, "no_cache": bool(not commit)}
         kwargs["git"] = pkg.version_or_package_attr("git", version)
