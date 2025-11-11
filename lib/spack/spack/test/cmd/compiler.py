@@ -270,19 +270,14 @@ def test_compilers_shows_packages_yaml(
                 "prefix": "/path/to/fake",
                 "modules": ["llvm/14.0.2", "foobar"],
                 "extra_attributes": {
-                    "compilers": {
-                        "c": "/path/to/fake/clang",
-                        "cxx": "/path/to/fake/clang++",
-                    },
+                    "compilers": {"c": "/path/to/fake/clang", "cxx": "/path/to/fake/clang++"},
                     "flags": {"fflags": "-ffree-form"},
                 },
             },
         )
     ],
 )
-def test_compilers_list_outputs_alias(
-    externals, no_packages_yaml, working_env, compilers_dir
-):
+def test_compilers_list_outputs_alias(externals, no_packages_yaml, working_env, compilers_dir):
     """Spack should list bultin and legacy (alias) compilers"""
     gcc_spec = externals[0]
     llvm_spec = externals[1]
@@ -304,35 +299,32 @@ def test_compilers_list_outputs_alias(
     "externals, expected",
     [
         (
-          (
-            {
-                "spec": "gcc@=7.7.7 languages=c,cxx,fortran os=foobar target=x86_64",
-                "prefix": "/path/to/fake",
-                "modules": ["gcc/7.7.7", "foobar"],
-                "extra_attributes": {
-                    "compilers": {
-                        "c": "/path/to/fake/gcc",
-                        "cxx": "/path/to/fake/g++",
-                        "fortran": "/path/to/fake/gfortran",
+            (
+                {
+                    "spec": "gcc@=7.7.7 languages=c,cxx,fortran os=foobar target=x86_64",
+                    "prefix": "/path/to/fake",
+                    "modules": ["gcc/7.7.7", "foobar"],
+                    "extra_attributes": {
+                        "compilers": {
+                            "c": "/path/to/fake/gcc",
+                            "cxx": "/path/to/fake/g++",
+                            "fortran": "/path/to/fake/gfortran",
+                        },
+                        "flags": {"fflags": "-ffree-form"},
                     },
-                    "flags": {"fflags": "-ffree-form"},
                 },
-            },
-            {
-                "spec": "llvm@=14.0.2 languages=c,cxx os=foobar target=x86_64",
-                "prefix": "/path/to/fake",
-                "modules": ["llvm/14.0.2", "foobar"],
-                "extra_attributes": {
-                    "compilers": {
-                        "c": "/path/to/fake/clang",
-                        "cxx": "/path/to/fake/clang++",
+                {
+                    "spec": "llvm@=14.0.2 languages=c,cxx os=foobar target=x86_64",
+                    "prefix": "/path/to/fake",
+                    "modules": ["llvm/14.0.2", "foobar"],
+                    "extra_attributes": {
+                        "compilers": {"c": "/path/to/fake/clang", "cxx": "/path/to/fake/clang++"},
+                        "flags": {"fflags": "-ffree-form"},
                     },
-                    "flags": {"fflags": "-ffree-form"},
                 },
-            },
-          ),
-          (
-            """gcc@=7.7.7 build_system=generic languages:=c,cxx,fortran platform=test os=foobar target=x86_64:
+            ),
+            (
+                """gcc@=7.7.7 build_system=generic languages:=c,cxx,fortran platform=test os=foobar target=x86_64:
   prefix: /path/to/fake
   compilers:
     c: /path/to/fake/gcc
@@ -345,7 +337,7 @@ def test_compilers_list_outputs_alias(
     foobar
 
 """,
-            """llvm@=14.0.2+clang~flang+lld build_system=generic languages:=c,cxx platform=test os=foobar target=x86_64:
+                """llvm@=14.0.2+clang~flang+lld build_system=generic languages:=c,cxx platform=test os=foobar target=x86_64:
   prefix: /path/to/fake
   compilers:
     c: /path/to/fake/clang
@@ -356,8 +348,8 @@ def test_compilers_list_outputs_alias(
     llvm/14.0.2
     foobar
 
-"""
-          )
+""",
+            ),
         )
     ],
 )
@@ -381,6 +373,6 @@ def test_compilers_info_accepts_alias(
 
     expected_gcc, expected_llvm = expected
 
-    assert(expected_gcc == out_gcc)
-    assert(expected_llvm == out_llvm)
-    assert(expected_llvm == out_clang)
+    assert expected_gcc == out_gcc
+    assert expected_llvm == out_llvm
+    assert expected_llvm == out_clang

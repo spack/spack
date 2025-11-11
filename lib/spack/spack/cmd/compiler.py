@@ -12,7 +12,7 @@ import spack.config
 import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
-from spack.aliases import LEGACY_COMPILER_TO_BUILTIN, BUILTIN_TO_LEGACY_COMPILER
+from spack.aliases import BUILTIN_TO_LEGACY_COMPILER, LEGACY_COMPILER_TO_BUILTIN
 from spack.cmd.common import arguments
 from spack.llnl.util.lang import index_by
 from spack.llnl.util.tty.colify import colify
@@ -221,7 +221,8 @@ def compiler_list(args):
     # convert them to '' (in which case it still evaluates to False but is a
     # string type). Tuples produced by this are guaranteed to be comparable in
     # Python 3
-    def convert_str(tuple_container): return tuple(str(x) if x else "" for x in tuple_container)
+    def convert_str(tuple_container):
+        return tuple(str(x) if x else "" for x in tuple_container)
 
     index_str_keys = list((convert_str(x), y) for x, y in index.items())
     ordered_sections = sorted(index_str_keys, key=lambda item: item[0])
