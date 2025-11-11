@@ -21,7 +21,6 @@ import spack.config
 import spack.package_base
 import spack.platforms
 import spack.repo
-import spack.solver.asp
 import spack.solver.versions
 import spack.spec
 import spack.traverse
@@ -194,7 +193,7 @@ class ClingoBootstrapConcretizer:
             if "libc" in edge.virtuals:
                 edge.spec = self.host_libc
 
-        spack.solver.asp._inject_patches_variant(s)
+        spack.spec._inject_patches_variant(s)
         s._finalize_concretization()
 
         # Work around the fact that the installer calls Spec.dependents() and
