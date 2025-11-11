@@ -1599,17 +1599,22 @@ def _for_package_version(pkg, version=None):
         version = pkg.version
 
     # if it's a commit, we must use a GitFetchStrategy
-    commit_sha = pkg.spec.variants.get("commit", None)
-    if isinstance(version, spack.version.GitVersion) or commit_sha:
+    commit_var = pkg.spec.variants.get("commit", None)
+    commit = commit_var.value if commit_var else None
+    tag = None
+    if isinstance(version, spack.version.GitVersion) or commit:
         if not hasattr(pkg, "git"):
             raise spack.error.FetchError(
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
-        # Populate the version with comparisons to other commits
         if isinstance(version, spack.version.GitVersion):
+            # Populate the version with comparisons to other commits
             from spack.version.git_ref_lookup import GitRefLookup
 
             version.attach_lookup(GitRefLookup(pkg.name))
+
+            if not commit and version.is_commit:
+                commit = version.ref
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
@@ -1619,16 +1624,14 @@ def _for_package_version(pkg, version=None):
         # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
 
         # TODO(psakiev) eventually we should  only need to clone based on the commit
-        ref_type = None
-        ref_value = None
-        if commit_sha:
-            ref_type = "commit"
-            ref_value = commit_sha.value
-        else:
-            ref_type = "commit" if version.is_commit else "tag"
-            ref_value = version.ref
 
-        kwargs = {ref_type: ref_value, "no_cache": ref_type != "commit"}
+        # commit stashed on version
+        version_meta_data = pkg.versions.get(version)
+        if not commit:
+            commit = version_meta_data.get("commit")
+        tag = version_meta_data.get("tag") or version_meta_data.get("branch")
+
+        kwargs = {"commit": commit, "tag": tag, "no_cache": bool(not commit)}
         kwargs["git"] = pkg.version_or_package_attr("git", version)
         kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
         kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)
