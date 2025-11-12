@@ -623,7 +623,7 @@ def _env_untrack_or_remove(
 # env untrack
 #
 def env_untrack_setup_parser(subparser):
-    """track an environment from a directory in Spack"""
+    """untrack an environment from a directory in Spack"""
     subparser.add_argument("env", nargs="+", help="tracked environment name")
     subparser.add_argument(
         "-f", "--force", action="store_true", help="force unlink even when environment is active"
