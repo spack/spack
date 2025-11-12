@@ -796,6 +796,11 @@ class BuildStatus:
 
         if self.search_mode:
             buffer.write(f"filter> {self.search_term}\033[K")
+        else:
+            buffer.write(
+                "\033[36m/\033[0m: filter  \033[36mv\033[0m: logs  "
+                "\033[36mn\033[0m/\033[36mp\033[0m: next/prev\033[K"
+            )
 
         # Clear any remaining lines from previous display
         buffer.write("\033[0J")
