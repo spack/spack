@@ -3199,10 +3199,9 @@ class SpackSolverSetup:
                 # Inject default flags for compilers
                 recorder("*").default_flags(compiler)
 
-            # FIXME (compiler as nodes): think of using isinstance(compiler_cls, WrappedCompiler)
             # Add a dependency on the compiler wrapper
+            compiler_str = f"{compiler.name} /{compiler.dag_hash()}"
             for language in ("c", "cxx", "fortran"):
-                compiler_str = f"{compiler.name}@{compiler.versions}"
                 recorder("*").depends_on(
                     "compiler-wrapper",
                     when=f"%[deptypes=build virtuals={language}] {compiler_str}",
