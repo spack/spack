@@ -240,6 +240,9 @@ def worker_function(
     explicit: bool,
     mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
     unsigned: Optional[bool],
+    dirty: bool,
+    keep_stage: bool,
+    skip_patch: bool,
     state: Connection,
     parent: Connection,
     echo_control: Connection,
@@ -258,6 +261,9 @@ def worker_function(
         explicit: Whether the spec was explicitly requested by the user
         mirrors: List of buildcache mirrors to try
         unsigned: Whether to allow unsigned buildcache entries
+        dirty: Whether to preserve user environment in the build environment
+        keep_stage: Whether to keep the build stage after installation
+        skip_patch: Whether to skip the patch phase
         state: Connection to send state updates to
         parent: Connection to send build output to
         echo_control: Connection to receive echo control messages from
@@ -282,7 +288,7 @@ def worker_function(
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
-    spack.build_environment.setup_package(pkg, dirty=False)
+    spack.build_environment.setup_package(pkg, dirty=dirty)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
@@ -301,6 +307,9 @@ def worker_function(
 
     # Then try a source build.
     with stage:
+        # Set whether to keep the stage after installation
+        stage.keep = keep_stage
+
         stage.destroy()
         stage.create()
 
@@ -308,7 +317,10 @@ def worker_function(
         tee.set_output_file(pkg.log_path)
 
         send_state("staging", state_stream)
-        pkg.do_patch()
+        if not skip_patch:
+            pkg.do_patch()
+        else:
+            pkg.do_stage()
         os.chdir(stage.source_path)
 
         exit_code = 0
@@ -430,6 +442,9 @@ def start_build(
     explicit: bool,
     mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
     unsigned: Optional[bool],
+    dirty: bool,
+    keep_stage: bool,
+    skip_patch: bool,
     jobserver: JobServer,
 ) -> ChildInfo:
     """Start a new build."""
@@ -451,6 +466,9 @@ def start_build(
             explicit,
             mirrors,
             unsigned,
+            dirty,
+            keep_stage,
+            skip_patch,
             state_w_conn,
             output_w_conn,
             control_r_conn,
@@ -1003,8 +1021,6 @@ class PackageInstaller:
             raise NotImplementedError("Cache-only installs are not implemented")
         elif root_policy == "source_only" or dependencies_policy == "source_only":
             raise NotImplementedError("Source-only installs are not implemented")
-        elif dirty:
-            raise NotImplementedError("Dirty installs are not implemented")
         elif overwrite:
             raise NotImplementedError("Overwrite installs are not implemented")
         elif fail_fast:
@@ -1021,12 +1037,8 @@ class PackageInstaller:
             raise NotImplementedError("Installing sources is not implemented")
         elif keep_prefix:
             raise NotImplementedError("Keeping install prefixes is not implemented")
-        elif keep_stage:
-            raise NotImplementedError("Keeping build stages is not implemented")
         elif not restage:
             raise NotImplementedError("Restaging builds is not implemented")
-        elif skip_patch:
-            raise NotImplementedError("Skipping patches is not implemented")
         elif stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
         elif stop_before is not None:
@@ -1051,6 +1063,9 @@ class PackageInstaller:
             for s in self.nodes.values()
         }
         self.unsigned = unsigned
+        self.dirty = dirty
+        self.keep_stage = keep_stage
+        self.skip_patch = skip_patch
 
         #: queue of packages ready to install (no children)
         self.pending_builds = [
@@ -1258,7 +1273,16 @@ class PackageInstaller:
         dag_hash = self.pending_builds.pop()
         explicit = dag_hash in self.explicit
         mirrors = self.binary_cache_for_spec[dag_hash]
-        child_info = start_build(self.nodes[dag_hash], explicit, mirrors, self.unsigned, jobserver)
+        child_info = start_build(
+            self.nodes[dag_hash],
+            explicit,
+            mirrors,
+            self.unsigned,
+            self.dirty,
+            self.keep_stage,
+            self.skip_patch,
+            jobserver,
+        )
         pid = child_info.proc.pid
         assert type(pid) is int
         self.running_builds[pid] = child_info
