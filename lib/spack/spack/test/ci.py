@@ -19,6 +19,7 @@ import spack.repo as repo
 import spack.util.git
 from spack.spec import Spec
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
+from spack.util.executable import which
 from spack.version import Version
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
@@ -188,6 +189,7 @@ def test_pipeline_dag(config, repo_builder: RepoBuilder):
         assert all([s in a_deps_direct for s in [spec_a["pkg-b"], spec_a["pkg-c"]]])
 
 
+@pytest.mark.skipif(not (which("gpg") or which("gpg2")), reason="require gpg to be installed")
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, "package-signing-key")
