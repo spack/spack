@@ -40,6 +40,8 @@ from collections import defaultdict
 from gzip import GzipFile
 from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
+from spack.vendor.typing_extensions import Literal
+
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
 import spack.builder
@@ -75,6 +77,9 @@ from spack.util.executable import which
 _counter = itertools.count(0)
 
 _FAIL_FAST_ERR = "Terminating after first install failure"
+
+#: Type for specifying installation source modes
+InstallPolicy = Literal["auto", "cache_only", "source_only"]
 
 
 class BuildStatus(enum.Enum):
@@ -781,16 +786,14 @@ class BuildRequest:
         """Ensure standard install options are set to at least the default."""
         for arg, default in [
             ("context", "build"),  # installs *always* build
-            ("dependencies_cache_only", False),
-            ("dependencies_use_cache", True),
+            ("dependencies_policy", "auto"),
             ("dirty", False),
             ("fail_fast", False),
             ("fake", False),
             ("install_deps", True),
             ("install_package", True),
             ("install_source", False),
-            ("package_cache_only", False),
-            ("package_use_cache", True),
+            ("root_policy", "auto"),
             ("keep_prefix", False),
             ("keep_stage", False),
             ("restage", False),
@@ -814,14 +817,16 @@ class BuildRequest:
         include_build_deps = self.install_args.get("include_build_deps")
 
         if self.pkg_id == package_id(pkg.spec):
-            cache_only = self.install_args.get("package_cache_only")
+            policy = self.install_args.get("root_policy", "auto")
         else:
-            cache_only = self.install_args.get("dependencies_cache_only")
+            policy = self.install_args.get("dependencies_policy", "auto")
 
         # Include build dependencies if pkg is going to be built from sources, or
         # if build deps are explicitly requested.
         if include_build_deps or not (
-            cache_only or pkg.spec.installed and pkg.spec.dag_hash() not in self.overwrite
+            policy == "cache_only"
+            or pkg.spec.installed
+            and pkg.spec.dag_hash() not in self.overwrite
         ):
             depflag |= dt.BUILD
         if self.run_tests(pkg):
@@ -1164,20 +1169,11 @@ class Task:
         return self.pkg == self.request.pkg
 
     @property
-    def use_cache(self) -> bool:
-        _use_cache = True
+    def install_policy(self) -> InstallPolicy:
         if self.is_build_request:
-            return self.request.install_args.get("package_use_cache", _use_cache)
+            return self.request.install_args.get("root_policy", "auto")
         else:
-            return self.request.install_args.get("dependencies_use_cache", _use_cache)
-
-    @property
-    def cache_only(self) -> bool:
-        _cache_only = False
-        if self.is_build_request:
-            return self.request.install_args.get("package_cache_only", _cache_only)
-        else:
-            return self.request.install_args.get("dependencies_cache_only", _cache_only)
+            return self.request.install_args.get("dependencies_policy", "auto")
 
     @property
     def key(self) -> Tuple[int, int]:
@@ -1261,11 +1257,12 @@ class BuildTask(Task):
         # Use the binary cache to install if requested,
         # save result to be handled in BuildTask.complete()
         # TODO: change binary installs to occur in subprocesses rather than the main Spack process
-        if self.use_cache:
+        policy = self.install_policy
+        if policy != "source_only":
             if _install_from_cache(pkg, self.explicit, unsigned):
                 self.success_result = ExecuteResult.SUCCESS
                 return
-            elif self.cache_only:
+            elif policy == "cache_only":
                 self.error_result = spack.error.InstallError(
                     "No binary found when cache-only was specified", pkg=pkg
                 )
@@ -1461,9 +1458,6 @@ class PackageInstaller:
         self,
         packages: List["spack.package_base.PackageBase"],
         *,
-        cache_only: bool = False,
-        dependencies_cache_only: bool = False,
-        dependencies_use_cache: bool = True,
         dirty: bool = False,
         explicit: Union[Set[str], bool] = False,
         overwrite: Optional[Union[List[str], Set[str]]] = None,
@@ -1475,17 +1469,16 @@ class PackageInstaller:
         install_source: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
-        package_cache_only: bool = False,
-        package_use_cache: bool = True,
         restage: bool = False,
         skip_patch: bool = False,
         stop_at: Optional[str] = None,
         stop_before: Optional[str] = None,
         tests: Union[bool, List[str], Set[str]] = False,
         unsigned: Optional[bool] = None,
-        use_cache: bool = False,
         verbose: bool = False,
         concurrent_packages: Optional[int] = None,
+        root_policy: InstallPolicy = "auto",
+        dependencies_policy: InstallPolicy = "auto",
     ) -> None:
         """
         Arguments:
@@ -1507,9 +1500,10 @@ class PackageInstaller:
             stop_at: last installation phase to be executed (or None)
             tests: False to run no tests, True to test all packages, or a list of package names to
                 run tests for some
-            use_cache: Install from binary package, if available.
             verbose: Display verbose build output (by default, suppresses it)
             concurrent_packages: Max packages to be built concurrently
+            root_policy: ``"auto"``, ``"cache_only"``, ``"source_only"``.
+            dependencies_policy: ``"auto"``, ``"cache_only"``, ``"source_only"``.
         """
         if sys.platform == "win32":
             # No locks on Windows, we should always use 1 process
@@ -1525,9 +1519,7 @@ class PackageInstaller:
         self.concurrent_packages = concurrent_packages
 
         install_args = {
-            "cache_only": cache_only,
-            "dependencies_cache_only": dependencies_cache_only,
-            "dependencies_use_cache": dependencies_use_cache,
+            "dependencies_policy": dependencies_policy,
             "dirty": dirty,
             "explicit": explicit,
             "fail_fast": fail_fast,
@@ -1539,15 +1531,13 @@ class PackageInstaller:
             "keep_prefix": keep_prefix,
             "keep_stage": keep_stage,
             "overwrite": overwrite or [],
-            "package_cache_only": package_cache_only,
-            "package_use_cache": package_use_cache,
+            "root_policy": root_policy,
             "restage": restage,
             "skip_patch": skip_patch,
             "stop_at": stop_at,
             "stop_before": stop_before,
             "tests": tests,
             "unsigned": unsigned,
-            "use_cache": use_cache,
             "verbose": verbose,
             "concurrent_packages": self.concurrent_packages,
         }
@@ -2374,7 +2364,7 @@ class PackageInstaller:
             raise
 
         except BuildcacheEntryError as exc:
-            if task.cache_only:
+            if task.install_policy == "cache_only":
                 raise
 
             # Checking hash on downloaded binary failed.
@@ -2383,7 +2373,7 @@ class PackageInstaller:
                 f"to {str(exc)}: Requeuing to install from source."
             )
             # this overrides a full method, which is ugly.
-            task.use_cache = False  # type: ignore[misc]
+            task.install_policy = "source_only"  # type: ignore[misc]
             self._requeue_task(task, install_status)
             return None
 

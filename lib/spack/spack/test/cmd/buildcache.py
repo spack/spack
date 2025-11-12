@@ -472,7 +472,11 @@ def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_fla
 
     spec.package.do_uninstall(force=True)
     PackageInstaller(
-        [spec.package], explicit=True, cache_only=True, unsigned=True if signed else None
+        [spec.package],
+        explicit=True,
+        root_policy="cache_only",
+        dependencies_policy="cache_only",
+        unsigned=True if signed else None,
     ).install()
 
 
