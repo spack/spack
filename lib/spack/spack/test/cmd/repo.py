@@ -17,11 +17,10 @@ import spack.repo
 import spack.repo_migrate
 from spack.error import SpackError
 from spack.llnl.util.filesystem import working_dir
-from spack.main import SpackCommand
 from spack.util.executable import Executable
 
 repo = spack.main.SpackCommand("repo")
-env = SpackCommand("env")
+env = spack.main.SpackCommand("env")
 
 
 def test_help_option():
@@ -56,8 +55,10 @@ def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
     repo("add", "--scope=system", str(tmp_path / "spack_repo" / "mockrepo"))
 
     # Confirm that it is not removed when the scope is incorrect
-    with pytest.raises(Exception, match="No repository with path or namespace"):
+    with pytest.raises(spack.main.SpackCommandError):
         repo("remove", "--scope=user", "mockrepo")
+    output = repo("list", output=str)
+    assert "mockrepo" in output
 
     # Confirm that when the scope is specified, it is only removed from that scope
     repo("remove", "--scope=site", "mockrepo")
