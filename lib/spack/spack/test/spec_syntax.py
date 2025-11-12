@@ -921,6 +921,46 @@ def specfile_for(default_mock_concretization):
             ],
             "foo ^[when='%c'] c=gcc",
         ),
+        # Test dependency propagation
+        (
+            "foo %%gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.DEPENDENCY, "%%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+            ],
+            "foo %%gcc",
+        ),
+        (
+            "foo %%c,cxx=gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.DEPENDENCY, "%%c,cxx=gcc", virtuals="c,cxx", substitute="gcc"),
+            ],
+            "foo %%c,cxx=gcc",
+        ),
+        (
+            "foo %%[when='%c'] c=gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, "%%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, "] c=gcc", virtuals="c", substitute="gcc"),
+            ],
+            "foo %%[when='%c'] c=gcc",
+        ),
+        (
+            "foo %%[when='%c' virtuals=c] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, "%%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "virtuals=c"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, "]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+            ],
+            "foo %%[when='%c'] c=gcc",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):

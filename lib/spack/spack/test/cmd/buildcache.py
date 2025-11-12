@@ -7,12 +7,15 @@ import json
 import os
 import pathlib
 import shutil
+import urllib.parse
+from datetime import datetime, timedelta
 from typing import Dict, List
 
 import pytest
 
 import spack.binary_distribution
 import spack.buildcache_migrate as migrate
+import spack.buildcache_prune
 import spack.cmd.buildcache
 import spack.concretize
 import spack.environment as ev
@@ -848,3 +851,147 @@ def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnu
     assert "Found 1 manifest(s) that are missing blobs" in output
 
     cache_entry.destroy()
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_direct_with_keeplist(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
+):
+    """Test direct pruning functionality with a keeplist file"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Install and push multiple packages
+    specs = mutable_database.query_local("libelf", installed=True)
+    spec1 = specs[0]
+
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
+    )
+    manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
+
+    # Push the first spec (package only, no dependencies)
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec1.dag_hash()}")
+
+    # Create a keeplist file that includes only spec1
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text(f"{spec1.dag_hash()}\n")
+
+    # Run direct pruning
+    cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
+    if dry_run:
+        cmd_args.append("--dry-run")
+    output = buildcache(*cmd_args)
+
+    # Since all packages are in the keeplist, nothing should be pruned
+    assert web_util.url_exists(manifest_url)
+    assert "No specs to prune - all specs are in the keeplist" in output
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_direct_removes_unlisted(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
+):
+    """Test that direct pruning removes specs not in the keeplist"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Install and push a package (package only, no dependencies)
+    specs = mutable_database.query_local("libelf", installed=True)
+    spec1 = specs[0]
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec1.dag_hash()}")
+
+    # Create a keeplist file that excludes the pushed package
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text("0" * 32)
+
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
+    )
+    manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
+
+    assert web_util.url_exists(manifest_url)
+
+    # Run direct pruning
+    cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
+    if dry_run:
+        cmd_args.append("--dry-run")
+    buildcache(*cmd_args)
+
+    assert web_util.url_exists(manifest_url) == dry_run
+
+
+def test_buildcache_prune_direct_empty_keeplist_fails(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome
+):
+    """Test that direct pruning fails with an empty keeplist file"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Create empty keeplist file
+    keeplist_file = tmp_path / "empty_keeplist.txt"
+    keeplist_file.write_text("")
+
+    # Should fail with empty keeplist
+    with pytest.raises(spack.buildcache_prune.BuildcachePruningException):
+        buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_with_invalid_keep_hash(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run: bool
+):
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Create a keeplist file that includes an invalid hash
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text("this_is_an_invalid_hash")
+
+    cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
+    if dry_run:
+        cmd_args.append("--dry-run")
+
+    with pytest.raises(spack.buildcache_prune.BuildcachePruningException):
+        buildcache(*cmd_args)
+
+
+def test_buildcache_prune_new_specs_race_condition(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, monkeypatch: pytest.MonkeyPatch
+):
+    """Test that specs uploaded after pruning begins are protected"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
+    )
+    manifest_url = cache_entry.get_manifest_url(spec, f"file://{mirror_directory}")
+
+    def mock_stat_url(url: str):
+        """
+        Mock the stat_url function for testing.
+
+        For the specific spec created in this test, fake its mtime so that it appears to
+        have been created after the pruning started.
+        """
+        if url == manifest_url:
+            return 1, datetime.now().timestamp() + timedelta(minutes=10).total_seconds()
+        parsed_url = urllib.parse.urlparse(url)
+        stat_result = pathlib.Path(parsed_url.path).stat()
+        return stat_result.st_size, stat_result.st_mtime
+
+    monkeypatch.setattr(web_util, "stat_url", mock_stat_url)
+
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text("0" * 32)
+
+    # Run end-to-end buildcache prune - this should not delete `libelf`, despite it
+    # not being in the keeplist, because its mtime is after the pruning started
+    assert web_util.url_exists(manifest_url)
+    buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
+    assert web_util.url_exists(manifest_url)

@@ -78,7 +78,7 @@ def _compiler_cfg_one_entry_with_cflags(cflags):
 packages:
   gcc:
     externals:
-    - spec: gcc@12.100.100
+    - spec: gcc@12.100.100 languages:=c,c++
       prefix: /fake
       extra_attributes:
         compilers:

@@ -29,7 +29,7 @@ error(100, "Cannot reuse {0} since we cannot determine libc compatibility", Reus
      not attr("compatible_libc", node(R, ReusedPackage), _, _).
 
 % The libc provider must be one that a compiler can target
-:- has_built_packages(),
+:- will_build_packages(),
    provider(node(X, LibcPackage), node(0, "libc")),
    attr("node", node(X, LibcPackage)),
    attr("version", node(X, LibcPackage), LibcVersion),

@@ -46,15 +46,6 @@ properties: Dict[str, Any] = {
                     **spack.schema.projections.properties,
                 },
             },
-            "concretization_cache": {
-                "type": "object",
-                "properties": {
-                    "enable": {"type": "boolean"},
-                    "url": {"type": "string"},
-                    "entry_limit": {"type": "integer", "minimum": 0},
-                    "size_limit": {"type": "integer", "minimum": 0},
-                },
-            },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "build_stage": {
                 "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
@@ -94,6 +85,7 @@ properties: Dict[str, Any] = {
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
             "aliases": {"type": "object", "additionalProperties": {"type": "string"}},
+            "installer": {"type": "string", "enum": ["old", "new"]},
         },
     }
 }

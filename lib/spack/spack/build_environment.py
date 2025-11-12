@@ -1148,6 +1148,10 @@ def _setup_pkg_and_run(
     * The return value of ``function()``, which can be anything (except an exception).
       This is returned to the caller.
 
+    Note: ``jsfd1`` and ``jsfd2`` are passed solely to ensure that the child process
+    does not close these file descriptors. Some ``multiprocessing`` backends will close
+    them automatically in the child if they are not passed at process creation time.
+
     Arguments:
         serialized_pkg: Spack package install context object (serialized form of the
             package that we'll build in the child process).
@@ -1374,6 +1378,7 @@ def start_build_process(
         )
 
         p.start()
+
         # We close the writable end of the pipe now to be sure that p is the
         # only process which owns a handle for it. This ensures that when p
         # closes its handle for the writable end, read_pipe.recv() will
@@ -1405,18 +1410,17 @@ def complete_build_process(process: BuildProcess):
         typ = "exit" if process.exitcode >= 0 else "signal"
         return f"{typ} {abs(process.exitcode)}"
 
-    timeout = process.timeout
-    process.join(timeout=timeout)
-    if process.is_alive():
-        warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
-        process.terminate()
-
     try:
         # Check if information from the read pipe has been received.
         child_result = process.read_pipe.recv()
     except EOFError:
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
-
+    finally:
+        timeout = process.timeout
+        process.join(timeout=timeout)
+        if process.is_alive():
+            warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+            process.terminate()
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):
         raise child_result

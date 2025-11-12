@@ -13,6 +13,7 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
 import spack.schema
 import spack.schema.env
 import spack.spec
@@ -89,6 +90,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         nargs="+",
         choices=("all", "env", "include", "internal", "path"),
         help="list only scopes of the specified type(s)\n\noptions: %(choices)s",
+    )
+    scopes_parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="scopes_verbose",  # spack has -v as well
+        action="store_true",
+        default=False,
+        help="show scope types and whether scopes are overridden",
     )
     scopes_parser.add_argument(
         "section",
@@ -261,47 +270,78 @@ def config_list(args):
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
 
 
-def _config_scope_info(args, scope):
-    scope_path = None
-    if (args.section or args.paths) and hasattr(scope, "path"):
-        section_path = scope.get_section_filename(args.section) if args.section else None
-        scope_path = (
-            section_path
-            if section_path and os.path.exists(section_path)
-            else f"{scope.path}{os.sep}"
-        )
-    return (scope.name, scope_path or " ")
+def _config_scope_info(args, scope, active, included):
+    result = [scope.name]  # always print the name
+
+    if args.scopes_verbose:
+        result.append(",".join(_config_basic_scope_types(scope, included)))
+        if scope.name not in active:
+            scope_status = "override"
+        elif args.section and not spack.config.CONFIG.get_config(args.section, scope=scope.name):
+            scope_status = "absent"
+        else:
+            scope_status = "active"
+        result.append(scope_status)
+
+    section_path = None
+    if args.section or args.paths:
+        if hasattr(scope, "path"):
+            section_path = scope.get_section_filename(args.section) if args.section else None
+            result.append(
+                section_path
+                if section_path and os.path.exists(section_path)
+                else f"{scope.path}{os.sep}"
+            )
+        else:
+            result.append(" ")
+
+    if args.scopes_verbose and scope_status in ("absent", "override"):
+        result = [color.colorize(f"@k{{{elt}}}") for elt in result]
+
+    return result
 
 
-def _config_basic_scope_types(scope):
+def _config_basic_scope_types(scope, included):
     types = []
     if isinstance(scope, spack.config.InternalConfigScope):
         types.append("internal")
-    elif hasattr(scope, "yaml_path") and scope.yaml_path == [spack.schema.env.TOP_LEVEL_KEY]:
+    if hasattr(scope, "yaml_path") and scope.yaml_path == [spack.schema.env.TOP_LEVEL_KEY]:
         types.append("env")
     if hasattr(scope, "path"):
         types.append("path")
+    if scope.name in included:
+        types.append("include")
     return sorted(types)
 
 
 def config_scopes(args):
     """List configured scopes in descending order of precedence."""
-
-    included_scopes = list(
-        i.name for s in spack.config.scopes().reversed_values() for i in s.included_scopes
-    )
-
-    scopes = list(
+    included = list(i.name for s in spack.config.scopes().values() for i in s.included_scopes)
+    active = [s.name for s in spack.config.CONFIG.active_scopes]
+    scopes = [
         s
         for s in spack.config.scopes().reversed_values()
         if (
             "include" in args.type
-            and s.name in included_scopes
-            or any(i in ("all", *_config_basic_scope_types(s)) for i in args.type)
+            and s.name in included
+            or any(i in ("all", *_config_basic_scope_types(s, included)) for i in args.type)
         )
-    )
+    ]
+
     if scopes:
-        colify_table([_config_scope_info(args, s) for s in scopes])
+        headers = ["Scope"]
+        if args.scopes_verbose:
+            headers += ["Type", "Status"]
+        if args.section or args.paths:
+            headers += ["Path"]
+
+        table = [_config_scope_info(args, s, active, included) for s in scopes]
+
+        # add headers if we have > 1 column
+        if len(headers) > 1:
+            table = [[color.colorize(f"@*C{{{colname}}}") for colname in headers]] + table
+
+        colify_table(table)
 
 
 def config_add(args):

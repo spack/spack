@@ -102,7 +102,7 @@ import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
 
-from .enums import InstallRecordStatus
+from .enums import InstallRecordStatus, PropagationPolicy
 
 __all__ = [
     "CompilerSpec",
@@ -229,6 +229,8 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
 @lang.lazy_lexicographic_ordering
 class ArchSpec:
     """Aggregate the target platform, the operating system and the target microarchitecture."""
+
+    ANY_TARGET = _make_microarchitecture("*")
 
     @staticmethod
     def default_arch():
@@ -403,6 +405,11 @@ class ArchSpec:
         for attribute in ("platform", "os"):
             other_attribute = getattr(other, attribute)
             self_attribute = getattr(self, attribute)
+
+            # platform=* or os=*
+            if self_attribute and other_attribute == "*":
+                return True
+
             if other_attribute and self_attribute != other_attribute:
                 return False
 
@@ -441,6 +448,10 @@ class ArchSpec:
         # other_target is there and strict=True
         if self.target is None:
             return False
+
+        # self.target is not None, and other is target=*
+        if other.target == ArchSpec.ANY_TARGET:
+            return True
 
         return bool(self._target_intersection(other))
 
@@ -723,7 +734,7 @@ class DependencySpec:
         virtuals: virtual packages provided from child to parent node.
     """
 
-    __slots__ = "parent", "spec", "depflag", "virtuals", "direct", "when"
+    __slots__ = "parent", "spec", "depflag", "virtuals", "direct", "when", "propagation"
 
     def __init__(
         self,
@@ -733,13 +744,18 @@ class DependencySpec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
     ):
+        if direct is False and propagation != PropagationPolicy.NONE:
+            raise InvalidEdgeError("only direct dependencies can be propagated")
+
         self.parent = parent
         self.spec = spec
         self.depflag = depflag
         self.virtuals = tuple(sorted(set(virtuals)))
         self.direct = direct
+        self.propagation = propagation
         self.when = when or Spec()
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
@@ -763,13 +779,16 @@ class DependencySpec:
         self.virtuals = tuple(sorted(union))
         return True
 
-    def copy(self) -> "DependencySpec":
+    def copy(self, *, keep_virtuals: bool = True, keep_parent: bool = True) -> "DependencySpec":
         """Return a copy of this edge"""
+        parent = self.parent if keep_parent else Spec()
+        virtuals = self.virtuals if keep_virtuals else ()
         return DependencySpec(
-            self.parent,
+            parent,
             self.spec,
             depflag=self.depflag,
-            virtuals=self.virtuals,
+            virtuals=virtuals,
+            propagation=self.propagation,
             direct=self.direct,
             when=self.when,
         )
@@ -780,6 +799,7 @@ class DependencySpec:
         yield self.depflag
         yield self.virtuals
         yield self.direct
+        yield self.propagation
         yield self.when
 
     def __str__(self) -> str:
@@ -792,6 +812,9 @@ class DependencySpec:
 
         if self.when != Spec():
             keywords.append(f"when={self.when}")
+
+        if self.propagation != PropagationPolicy.NONE:
+            keywords.append(f"propagation={self.propagation}")
 
         keywords_str = ", ".join(keywords)
         return f"DependencySpec({self.parent.format()!r}, {self.spec.format()!r}, {keywords_str})"
@@ -811,6 +834,9 @@ class DependencySpec:
             when_str = f"when='{self.when}'"
 
         dep_sigil = "%" if self.direct else "^"
+        if self.propagation == PropagationPolicy.PREFERENCE:
+            dep_sigil = "%%"
+
         edge_attrs = [x for x in (virtuals_str, when_str) if x]
 
         if edge_attrs:
@@ -1551,7 +1577,7 @@ class Spec:
         self.external_modules = Spec._format_module_list(external_modules)
 
         # This attribute is used to store custom information for external specs.
-        self.extra_attributes: dict = {}
+        self.extra_attributes: Dict[str, Any] = {}
 
         # This attribute holds the original build copy of the spec if it is
         # deployed differently than it was built. None signals that the spec
@@ -1821,6 +1847,7 @@ class Spec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
     ):
         """Called by the parser to add another spec as a dependency.
@@ -1829,6 +1856,7 @@ class Spec:
             depflag: dependency type for this edge
             virtuals: virtuals on this edge
             direct: if True denotes a direct dependency (associated with the % sigil)
+            propagation: propagation policy for this edge
             when: optional condition under which dependency holds
         """
         if when is None:
@@ -1836,7 +1864,12 @@ class Spec:
 
         if spec.name not in self._dependencies or not spec.name:
             self.add_dependency_edge(
-                spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
+                spec,
+                depflag=depflag,
+                virtuals=virtuals,
+                direct=direct,
+                when=when,
+                propagation=propagation,
             )
             return
 
@@ -1884,6 +1917,7 @@ class Spec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
     ):
         """Add a dependency edge to this spec.
@@ -1893,6 +1927,7 @@ class Spec:
             depflag: dependency type for this edge
             virtuals: virtuals provided by this edge
             direct: if True denotes a direct dependency
+            propagation: propagation policy for this edge
             when: if non-None, condition under which dependency holds
         """
         if when is None:
@@ -1939,7 +1974,13 @@ class Spec:
                 return
 
         edge = DependencySpec(
-            self, dependency_spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
+            self,
+            dependency_spec,
+            depflag=depflag,
+            virtuals=virtuals,
+            direct=direct,
+            propagation=propagation,
+            when=when,
         )
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
@@ -2871,6 +2912,8 @@ class Spec:
             return
         self._concrete = value
         self._validate_version()
+        for variant in self.variants.values():
+            variant.concrete = True
 
     def _validate_version(self):
         # Specs that were concretized with just a git sha as version, without associated
@@ -3159,6 +3202,7 @@ class Spec:
                     depflag=edge.depflag,
                     virtuals=edge.virtuals,
                     direct=edge.direct,
+                    propagation=edge.propagation,
                     when=edge.when,
                 )
         return self != reference_spec
@@ -3457,7 +3501,10 @@ class Spec:
                         return False
 
                 if current_node.original_spec_format() < 5 or (
-                    current_node.original_spec_format() >= 5 and current_node.external
+                    # If the current external node has dependencies, it has no annotations
+                    current_node.original_spec_format() >= 5
+                    and current_node.external
+                    and not current_node._dependencies
                 ):
                     compiler_spec = current_node.annotations.compiler_node_attribute
                     if compiler_spec is None:
@@ -3583,7 +3630,13 @@ class Spec:
 
         return self._patches
 
-    def _dup(self, other: "Spec", deps: Union[bool, dt.DepTypes, dt.DepFlag] = True) -> bool:
+    def _dup(
+        self,
+        other: "Spec",
+        deps: Union[bool, dt.DepTypes, dt.DepFlag] = True,
+        *,
+        propagation: Optional[PropagationPolicy] = None,
+    ) -> bool:
         """Copies "other" into self, by overwriting all attributes.
 
         Args:
@@ -3646,7 +3699,7 @@ class Spec:
             depflag = dt.ALL
             if isinstance(deps, (tuple, list, str)):
                 depflag = dt.canonicalize(deps)
-            self._dup_deps(other, depflag)
+            self._dup_deps(other, depflag, propagation=propagation)
 
         self._prefix = other._prefix
         self._concrete = other._concrete
@@ -3664,7 +3717,9 @@ class Spec:
 
         return changed
 
-    def _dup_deps(self, other, depflag: dt.DepFlag):
+    def _dup_deps(
+        self, other, depflag: dt.DepFlag, propagation: Optional[PropagationPolicy] = None
+    ):
         def spid(spec):
             return id(spec)
 
@@ -3679,10 +3734,12 @@ class Spec:
             if spid(edge.spec) not in new_specs:
                 new_specs[spid(edge.spec)] = edge.spec.copy(deps=False)
 
+            edge_propagation = edge.propagation if propagation is None else propagation
             new_specs[spid(edge.parent)].add_dependency_edge(
                 new_specs[spid(edge.spec)],
                 depflag=edge.depflag,
                 virtuals=edge.virtuals,
+                propagation=edge_propagation,
                 direct=edge.direct,
                 when=edge.when,
             )
@@ -4322,9 +4379,14 @@ class Spec:
             new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(old_name)
             try:
                 # this is ugly but copies can be expensive
+                sigil = "%"
                 if new_name:
                     edge.spec.name = new_name
-                parts.append(format_edge(edge, "%", edge.spec))
+
+                if edge.propagation == PropagationPolicy.PREFERENCE:
+                    sigil = "%%"
+
+                parts.append(format_edge(edge, sigil=sigil, dep_spec=edge.spec))
             finally:
                 edge.spec.name = old_name
 
@@ -5658,3 +5720,7 @@ class InvalidSpecDetected(spack.error.SpecError):
 class SpliceError(spack.error.SpecError):
     """Raised when a splice is not possible due to dependency or provider
     satisfaction mismatch. The resulting splice would be unusable."""
+
+
+class InvalidEdgeError(spack.error.SpecError):
+    """Raised when an edge doesn't pass validation checks."""

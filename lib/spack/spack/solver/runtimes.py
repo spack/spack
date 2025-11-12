@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
 import spack.repo
 import spack.spec
+import spack.util.libc
 import spack.version
 
 from .core import SourceContext, fn, using_libc_compatibility
@@ -90,13 +91,13 @@ class RuntimePropertyRecorder:
             f"% {description}\n"
             f'1 {{ attr("depends_on", {node_variable}, node(0..X-1, "{runtime_pkg}"), "{type}") :'
             f' max_dupes("{runtime_pkg}", X)}} 1:-\n'
-            f"{body_str}.\n\n"
+            f"{body_str}."
         )
         if is_virtual:
             main_rule = (
                 f"% {description}\n"
                 f'attr("dependency_holds", {node_variable}, "{runtime_pkg}", "{type}") :-\n'
-                f"{body_str}.\n\n"
+                f"{body_str}."
             )
 
         self.rules.append(main_rule)
@@ -114,7 +115,7 @@ class RuntimePropertyRecorder:
                     f"  provider(ProviderNode, {runtime_node}),\n"
                 )
 
-            rule = f"{head_str} :-\n" f"{depends_on_constraint}" f"{body_str}.\n\n"
+            rule = f"{head_str} :-\n" f"{depends_on_constraint}" f"{body_str}."
             self.rules.append(rule)
 
         self.reset()
@@ -143,7 +144,6 @@ class RuntimePropertyRecorder:
                 _, provider, virtual = clause.args
                 clause.args = "virtual_on_edge", node_placeholder, provider, virtual
         body_str = ",\n".join(f"  {x}" for x in body_clauses)
-        body_str += f",\n  not external({node_variable})"
         body_str = body_str.replace(f'"{node_placeholder}"', f"{node_variable}")
         for old, replacement in when_substitutions.items():
             body_str = body_str.replace(old, replacement)
@@ -198,7 +198,7 @@ class RuntimePropertyRecorder:
                 )
                 args = f'"{constraint_spec.name}", "{constraint_spec.versions}"'
                 head_str = f"propagate({node_variable}, node_version_satisfies({args}))"
-                rule = f"{head_str} :-\n{body_str}.\n\n"
+                rule = f"{head_str} :-\n{body_str}."
                 self.rules.append(rule)
 
         self.reset()
@@ -225,7 +225,7 @@ class RuntimePropertyRecorder:
             if clause.args[0] == "node":
                 continue
             head_str = str(clause).replace(f'"{node_placeholder}"', f"{node_variable}")
-            rule = f"{head_str} :-\n{body_str}.\n\n"
+            rule = f"{head_str} :-\n{body_str}."
             self.rules.append(rule)
 
         self.reset()
@@ -246,7 +246,7 @@ class RuntimePropertyRecorder:
         self._setup.gen.newline()
         for rule in self.rules:
             self._setup.gen.append(rule)
-        self._setup.gen.newline()
+            self._setup.gen.newline()
 
         self._setup.gen.h2("Runtimes: requirements")
         for imposed_spec, when_spec in sorted(self.runtime_conditions):
@@ -286,7 +286,7 @@ def external_config_with_implicit_externals(
 ) -> Dict[str, Any]:
     # Read packages.yaml and normalize it so that it will not contain entries referring to
     # virtual packages.
-    packages_yaml = configuration.deepcopy_as_builtin("packages")
+    packages_yaml = configuration.deepcopy_as_builtin("packages", line_info=True)
     _normalize_packages_yaml(packages_yaml)
 
     # Add externals for libc from compilers on Linux
@@ -301,3 +301,19 @@ def external_config_with_implicit_externals(
             entry = {"spec": f"{libc}", "prefix": libc.external_path}
             packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
     return packages_yaml
+
+
+def all_libcs() -> Set[spack.spec.Spec]:
+    """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
+    libc determined from the current Python process if dynamically linked."""
+    libcs = set()
+    for c in spack.compilers.config.all_compilers_from(spack.config.CONFIG):
+        candidate = spack.compilers.libraries.CompilerPropertyDetector(c).default_libc()
+        if candidate is not None:
+            libcs.add(candidate)
+
+    if libcs:
+        return libcs
+
+    libc = spack.util.libc.libc_from_current_python_process()
+    return {libc} if libc else set()

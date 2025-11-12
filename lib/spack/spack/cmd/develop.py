@@ -47,7 +47,22 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
     subparser.add_argument(
-        "-f", "--force", help="remove any files or directories that block cloning source code"
+        "--no-modify-concrete-specs",
+        action="store_false",
+        default=True,
+        dest="apply_changes",
+        help=(
+            "do not mutate concrete specs to have dev_path provenance."
+            " This requires a later `spack concretize --force` command to use develop specs"
+        ),
+    )
+
+    subparser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        help="remove any files or directories that block cloning source code",
     )
 
     subparser.add_argument(
@@ -145,6 +160,7 @@ def update_env(
     spec: spack.spec.Spec,
     specified_path: Optional[str] = None,
     build_dir: Optional[str] = None,
+    apply_changes: bool = True,
 ):
     """
     Update the spack.yaml file with additions or changes from a develop call
@@ -164,6 +180,10 @@ def update_env(
             )
         # add develop spec and update path
         _update_config(spec, specified_path)
+
+        # If we are automatically mutating the concrete specs for dev provenance, do so
+        if apply_changes:
+            env.apply_develop(spec, _abs_code_path(env, spec, specified_path))
 
 
 def _clone(spec: spack.spec.Spec, abspath: str, force: bool = False):
@@ -225,7 +245,8 @@ def _dev_spec_generator(args, env):
                     for s in concrete_specs:
                         for node_spec in s.traverse(direction="parents", root=True):
                             tty.debug(f"Recursive develop for {node_spec.name}")
-                            yield node_spec, _abs_code_path(env, node_spec, args.path)
+                            dev_spec = spack.spec.Spec(node_spec.format("{name}@{versions}"))
+                            yield dev_spec, _abs_code_path(env, node_spec, args.path)
             else:
                 yield spec, _abs_code_path(env, spec, args.path)
 
@@ -236,4 +257,4 @@ def develop(parser, args):
     for spec, abspath in _dev_spec_generator(args, env):
         assure_concrete_spec(env, spec)
         setup_src_code(spec, abspath, clone=args.clone, force=args.force)
-        update_env(env, spec, args.path, args.build_directory)
+        update_env(env, spec, args.path, args.build_directory, args.apply_changes)

@@ -36,9 +36,9 @@ import spack.util.lock as lk
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.variant as vt
 from spack import traverse
-from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import islink, readlink, symlink
+from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
 from spack.llnl.util.link_tree import ConflictingSpecsError
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
@@ -89,15 +89,23 @@ def env_root_path() -> str:
 def environment_name(path: Union[str, pathlib.Path]) -> str:
     """Human-readable representation of the environment.
 
-    This is the path for directory environments, and just the name
+    This is the path for independent environments, and just the name
     for managed environments.
     """
     env_root = pathlib.Path(env_root_path()).resolve()
-    path_str = str(path)
-    if path_str.startswith(str(env_root)):
-        return str(pathlib.Path(path_str).relative_to(env_root))
+    path_path = pathlib.Path(path)
+
+    # For a managed environment created in Spack, env.path is ENV_ROOT/NAME
+    # For a tracked environment from `spack env track`, the path is symlinked to ENV_ROOT/NAME
+    # So if ENV_ROOT/NAME resolves to env.path we know the environment is tracked/managed.
+    # Otherwise, it is an independent environment and  we return the path.
+    #
+    # We resolve both paths fully because the env_root itself could also be a symlink,
+    # and any directory in env.path could be a symlink.
+    if (env_root / path_path.name).resolve() == path_path.resolve():
+        return path_path.name
     else:
-        return path_str
+        return str(path)
 
 
 def ensure_no_disallowed_env_config_mods(scope: spack.config.ConfigScope) -> None:
@@ -176,11 +184,7 @@ def valid_env_name(name):
 def validate_env_name(name):
     if not valid_env_name(name):
         raise ValueError(
-            (
-                "'%s': names must start with a letter, and only contain "
-                "letters, numbers, _, and -."
-            )
-            % name
+            f"{name}: names may only contain letters, numbers, _, and -, and may not start with -."
         )
     return name
 
@@ -361,13 +365,16 @@ def create_in_dir(
 
     Args:
         root: directory where to create the environment.
-        init_file: either a lockfile, a manifest file, or None
+        init_file: either a lockfile, a manifest file, an env directory, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
         include_concrete: concrete environment names/paths to be included
     """
+    # If the initfile is a named environment, get its path
+    if init_file and exists(str(init_file)):
+        init_file = read(str(init_file)).path
     initialize_environment_dir(root, envfile=init_file)
 
     if with_view is None and keep_relative:
@@ -394,7 +401,12 @@ def create_in_dir(
     env = Environment(root)
 
     if init_file:
-        init_file_dir = os.path.abspath(os.path.dirname(init_file))
+        if os.path.isdir(init_file):
+            init_file_dir = init_file
+            copied = True
+        else:
+            init_file_dir = os.path.abspath(os.path.dirname(init_file))
+            copied = False
 
         if not keep_relative:
             if env.path != init_file_dir:
@@ -402,13 +414,15 @@ def create_in_dir(
                 # spack.yaml file in another directory, and moreover we want
                 # dev paths in this environment to refer to their original
                 # locations.
-                _rewrite_relative_dev_paths_on_relocation(env, init_file_dir)
-                _rewrite_relative_repos_paths_on_relocation(env, init_file_dir)
+                # If the full env was copied including internal files, only rewrite
+                # relative paths outside of env
+                _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=copied)
+                _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
 
     return env
 
 
-def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
+def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=False):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
     relative paths to absolute ones."""
@@ -424,6 +438,10 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
             if entry["path"] == expanded_path:
                 continue
 
+            # If copied and it's inside the env, we copied it and don't need to relativize
+            if copied_env and expanded_path.startswith(init_file_dir):
+                continue
+
             tty.debug("Expanding develop path for {0} to {1}".format(name, expanded_path))
 
             dev_specs[name]["path"] = expanded_path
@@ -436,7 +454,7 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir):
         env._re_read()
 
 
-def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
+def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=False):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
     relative repo paths to absolute ones and expand environment variables."""
@@ -453,6 +471,10 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry == expanded_path:
+                continue
+
+            # If copied and it's inside the env, we copied it and don't need to relativize
+            if copied_env and expanded_path.startswith(init_file_dir):
                 continue
 
             tty.debug("Expanding repo path for {0} to {1}".format(entry, expanded_path))
@@ -542,7 +564,7 @@ def validate_included_envs_concrete(include_concrete: List[str]) -> None:
             non_concrete_envs.add(Environment(env_path).name)
 
     if non_concrete_envs:
-        msg = "The following environment(s) are not concrete: {0}\n" "Please run:".format(
+        msg = "The following environment(s) are not concrete: {0}\nPlease run:".format(
             ", ".join(non_concrete_envs)
         )
         for env in non_concrete_envs:
@@ -1442,6 +1464,53 @@ class Environment:
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
 
+    def apply_develop(self, spec: spack.spec.Spec, path: Optional[str] = None):
+        """Mutate concrete specs to include dev_path provenance pointing to path.
+
+        This does not do any other aspect of concretization. It will fail if any existing concrete
+        spec for the same package does not satisfy the given develop spec."""
+        # Find all specs that this develop request applies to
+        modify_specs = []
+        for dep in self.all_specs_generator():
+            if dep.name == spec.name:
+                if not dep.satisfies(spec):
+                    raise SpackEnvironmentDevelopError(
+                        f"Develop spec '{spec}' conflicts with concrete specs in environment."
+                        " Try again with 'spack develop --no-modify-concrete-specs'"
+                        " and run 'spack concretize --force' to apply your changes."
+                    )
+                modify_specs.append(dep)
+
+        # Manipulate dev_path variant on modify_specs
+        for s in modify_specs:
+            # Remove any existing dev_path variant in all cases
+            # If setting a path, add the new variant
+            s.variants.pop("dev_path", None)
+            if path:
+                s.variants["dev_path"] = vt.VariantValue(
+                    vt.VariantType.SINGLE, "dev_path", (path,)
+                )
+
+        # Identify roots modified and invalidate all dependent hashes
+        modified_roots = []
+        for parent in traverse.traverse_nodes(modify_specs, direction="parents"):
+            # record whether this parent is a root before we modify the hash
+            if parent.dag_hash() in self.specs_by_hash:
+                modified_roots.append((parent, parent.dag_hash()))
+            # modify the parent to invalidate hashes
+            parent._mark_root_concrete(False)
+            parent.clear_caches()
+
+        # Compute new hashes and update the env list of specs
+        for root, old_hash in modified_roots:
+            root._finalize_concretization()
+            self.concretized_order[self.concretized_order.index(old_hash)] = root.dag_hash()
+            self.specs_by_hash.pop(old_hash)
+            self.specs_by_hash[root.dag_hash()] = root
+
+        if modified_roots:
+            self.write()
+
     def concretize(
         self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
     ) -> Sequence[SpecPair]:
@@ -1910,8 +1979,14 @@ class Environment:
             *(s.dag_hash() for s in roots),
         }
 
+        if spack.config.get("config:installer", "old") == "new":
+            from spack.new_installer import PackageInstaller
+        else:
+            from spack.installer import PackageInstaller  # type: ignore[assignment]
+
+        builder = PackageInstaller([spec.package for spec in specs], **install_args)
+
         try:
-            builder = PackageInstaller([spec.package for spec in specs], **install_args)
             builder.install()
         finally:
             if reporter:
@@ -2555,7 +2630,7 @@ def _top_level_key(data):
     Returns:
         Either 'spack' or 'env'
     """
-    msg = 'cannot find top level attribute "spack" or "env"' "in the environment"
+    msg = 'cannot find top level attribute "spack" or "env" in the environment'
     assert any(x in data for x in ("spack", "env")), msg
     if "spack" in data:
         return "spack"
@@ -2631,9 +2706,17 @@ def initialize_environment_dir(
         return
 
     envfile = pathlib.Path(envfile)
-    if not envfile.exists() or not envfile.is_file():
+    if not envfile.exists():
         msg = f"cannot initialize environment, {envfile} is not a valid file"
         raise SpackEnvironmentError(msg)
+
+    if envfile.is_dir():
+        # initialization file is an entire env directory
+        if not (envfile / "spack.yaml").is_file():
+            msg = f"cannot initialize environment, {envfile} is not a valid environment"
+            raise SpackEnvironmentError(msg)
+        copy_tree(str(envfile), str(environment_dir))
+        return
 
     _ensure_env_dir()
 
@@ -2660,9 +2743,8 @@ def initialize_environment_dir(
 
     # TODO: make this recursive
     includes = manifest[TOP_LEVEL_KEY].get("include", [])
-    for include in includes:
-        included_path = spack.config.included_path(include)
-        path = included_path.path
+    paths = spack.config.paths_from_includes(includes)
+    for path in paths:
         if os.path.isabs(path):
             continue
 
@@ -2673,18 +2755,20 @@ def initialize_environment_dir(
             continue
 
         orig_abspath = os.path.normpath(envfile.parent / path)
-        if not os.path.exists(orig_abspath):
-            tty.warn(f"Included file does not exist; will not copy: '{path}'")
-            continue
-
         if os.path.isfile(orig_abspath):
             fs.touchp(abspath)
             shutil.copy(orig_abspath, abspath)
-        else:
-            if os.path.exists(abspath):
-                tty.warn(f"Skipping copying duplicate directories: {path}")
-                continue
-            shutil.copytree(orig_abspath, abspath, symlinks=True)
+            continue
+
+        if not os.path.exists(orig_abspath):
+            tty.warn(f"Skipping copy of non-existent include path: '{path}'")
+            continue
+
+        if os.path.exists(abspath):
+            tty.warn(f"Skipping copy of directory over existing path: {path}")
+            continue
+
+        shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
@@ -2852,10 +2936,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                 or the list does not exist
         """
         defs = self.configuration.get("definitions", [])
-        msg = (
-            f"cannot remove {user_spec} from the '{list_name}' definition, "
-            f"no valid list exists"
-        )
+        msg = f"cannot remove {user_spec} from the '{list_name}' definition, no valid list exists"
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
             try:
@@ -2983,11 +3064,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ensure_no_disallowed_env_config_mods(self._env_config_scope)
         return self._env_config_scope
 
-    def prepare_config_scope(
-        self, priority: ConfigScopePriority = ConfigScopePriority.ENVIRONMENT
-    ) -> None:
+    def prepare_config_scope(self) -> None:
         """Add the manifest's scope to the global configuration search path."""
-        spack.config.CONFIG.push_scope(self.env_config_scope, priority)
+        spack.config.CONFIG.push_scope(
+            self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
+        )
 
     def deactivate_config_scope(self) -> None:
         """Remove the manifest's scope from the global config path."""
@@ -3037,3 +3118,7 @@ class SpackEnvironmentConfigError(SpackEnvironmentError):
     def __init__(self, msg, filename):
         self.filename = filename
         super().__init__(msg)
+
+
+class SpackEnvironmentDevelopError(SpackEnvironmentError):
+    """Class for errors in applying develop information to an environment."""

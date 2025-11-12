@@ -32,12 +32,12 @@ def test_extensions(mock_packages, python_database, capsys):
             packages = extensions("-s", "packages", "python")
             installed = extensions("-s", "installed", "python")
         assert "==> python@2.7.11" in output
-        assert "==> 3 extensions" in output
+        assert "==> 4 extensions" in output
         assert "py-extension1" in output
         assert "py-extension2" in output
         assert "python-venv" in output
 
-        assert "==> 3 extensions" in packages
+        assert "==> 4 extensions" in packages
         assert "py-extension1" in packages
         assert "py-extension2" in packages
         assert "python-venv" in packages

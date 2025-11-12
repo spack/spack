@@ -429,7 +429,9 @@ class URLFetchStrategy(FetchStrategy):
     def _fetch_urllib(self, url, chunk_size=65536):
         save_file = self.stage.save_filename
 
-        request = urllib.request.Request(url, headers={"User-Agent": web_util.SPACK_USER_AGENT})
+        request = urllib.request.Request(
+            url, headers={"User-Agent": web_util.SPACK_USER_AGENT, "Accept": "*/*"}
+        )
 
         if os.path.lexists(save_file):
             os.remove(save_file)
@@ -885,6 +887,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     def source_id(self):
         # TODO: tree-hash would secure download cache and mirrors, commit only secures checkouts.
+        # TODO(psakiev): Tree-hash is part of the commit SHA computation, question comment validity
         return self.commit
 
     def mirror_id(self):
@@ -1688,6 +1691,18 @@ def _from_merged_attrs(fetcher, pkg, version):
 
 
 def for_package_version(pkg, version=None):
+    saved_versions = None
+    if version is not None:
+        saved_versions = pkg.spec.versions
+
+    try:
+        return _for_package_version(pkg, version)
+    finally:
+        if saved_versions is not None:
+            pkg.spec.versions = saved_versions
+
+
+def _for_package_version(pkg, version=None):
     """Determine a fetch strategy based on the arguments supplied to
     version() in the package description."""
 

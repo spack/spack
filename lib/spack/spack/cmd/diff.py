@@ -15,7 +15,7 @@ from spack.cmd.common import arguments
 from spack.llnl.util.tty.color import cprint, get_color_when
 
 description = "compare two specs"
-section = "basic"
+section = "query"
 level = "long"
 
 

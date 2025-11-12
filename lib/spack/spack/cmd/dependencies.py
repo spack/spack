@@ -14,7 +14,7 @@ from spack.llnl.util.tty.colify import colify
 from spack.solver.input_analysis import create_graph_analyzer
 
 description = "show dependencies of a package"
-section = "basic"
+section = "query"
 level = "long"
 
 

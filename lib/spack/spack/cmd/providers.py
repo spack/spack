@@ -11,7 +11,7 @@ import spack.llnl.util.tty.colify as colify
 import spack.repo
 
 description = "list packages that provide a particular virtual package"
-section = "basic"
+section = "query"
 level = "long"
 
 

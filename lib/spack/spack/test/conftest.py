@@ -430,15 +430,16 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="function")
-def use_concretization_cache(mutable_config, tmp_path: Path):
+def use_concretization_cache(mock_packages, mutable_config, tmp_path: Path):
     """Enables the use of the concretization cache"""
-    spack.config.set("config:concretization_cache:enable", True)
-    # ensure we have an isolated concretization cache
     conc_cache_dir = tmp_path / "concretization"
     conc_cache_dir.mkdir()
-    new_conc_cache_loc = str(conc_cache_dir)
-    spack.config.set("config:concretization_cache:path", new_conc_cache_loc)
-    yield
+
+    # ensure we have an isolated concretization cache while using fixture
+    with spack.config.override(
+        "concretizer:concretization_cache", {"enable": True, "url": str(conc_cache_dir)}
+    ):
+        yield conc_cache_dir
 
 
 #
@@ -492,6 +493,25 @@ def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
     source_path.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr(spack.stage, "_stage_root", str(new_stage))
+
+    yield str(new_stage)
+
+    # Clean up the test stage directory
+    if new_stage.is_dir():
+        shutil.rmtree(new_stage, onerror=onerror)
+
+
+@pytest.fixture(scope="session")
+def mock_stage_for_database(tmp_path_factory: pytest.TempPathFactory, monkeypatch_session):
+    """A session-scoped analog of mock_stage, so that the mock_store
+    fixture uses its own stage vs. the global stage root for spack.
+    """
+    new_stage = tmp_path_factory.mktemp("mock-stage")
+
+    source_path = new_stage / spack.stage._source_path_subdir
+    source_path.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch_session.setattr(spack.stage, "_stage_root", str(new_stage))
 
     yield str(new_stage)
 
@@ -677,6 +697,28 @@ def _pkg_install_fn(pkg, spec, prefix):
 @pytest.fixture
 def mock_pkg_install(monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "install", _pkg_install_fn, raising=False)
+
+
+@pytest.fixture(scope="function")
+def fake_db_install(tmp_path):
+    """This fakes "enough" of the installation process to make Spack
+    think of a spec as being installed as far as the concretizer
+    and parser are concerned. It does not run any build phase defined
+    in the package, simply acting as though the installation had
+    completed successfully.
+
+    It allows doing things like
+
+    ``spack.concretize.concretize_one(f"x ^/hash-of-y")``
+
+    after doing something like ``fake_db_install(y)``
+    """
+    with spack.store.use_store(str(tmp_path)) as the_store:
+
+        def _install(a_spec):
+            the_store.db.add(a_spec)
+
+        yield _install
 
 
 @pytest.fixture(scope="function")
@@ -886,7 +928,7 @@ def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
         (
-            ConfigScopePriority.BUILTIN,
+            ConfigScopePriority.DEFAULTS,
             spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
         ),
         (
@@ -1051,6 +1093,7 @@ def mock_store(
     mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache: Tuple[Path, Path],
+    mock_stage_for_database,
 ):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled
@@ -1622,6 +1665,10 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
         rev_hash = lambda x: git("rev-parse", x, output=str).strip()
         r2 = rev_hash(default_branch)
 
+        # annotated tag
+        a_tag = "annotated-tag"
+        git("tag", "-a", a_tag, "-m", "annotated tag")
+
         # Record the commit hash of the (only) commit from test-branch and
         # the file added by that commit
         r1 = rev_hash(branch)
@@ -1660,6 +1707,7 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
         ),
         "tag": Bunch(revision=tag, file=tag_file, args={"git": url, "tag": tag}),
         "commit": Bunch(revision=r1, file=r1_file, args={"git": url, "commit": r1}),
+        "annotated-tag": Bunch(revision=a_tag, file=r2_file, args={"git": url, "tag": a_tag}),
         # In this case, the version() args do not include a 'git' key:
         # this is the norm for packages, so this tests how the fetching logic
         # would most-commonly assemble a Git fetcher
@@ -2237,7 +2285,7 @@ def _true(x):
 
 
 def _libc_from_python(self):
-    return spack.spec.Spec("glibc@=2.28")
+    return spack.spec.Spec("glibc@=2.28", external_path="/some/path")
 
 
 @pytest.fixture()

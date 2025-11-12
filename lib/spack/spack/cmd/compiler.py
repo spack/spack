@@ -18,7 +18,7 @@ from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
 
 description = "manage compilers"
-section = "system"
+section = "config"
 level = "long"
 
 

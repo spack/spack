@@ -2,15 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 import argparse
 import os
 import textwrap
+from typing import Any, Optional
 
 import spack.cmd
 import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
+import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.reporters
@@ -127,6 +128,40 @@ class SetConcurrentPackages(argparse.Action):
         spack.config.set("config:concurrent_packages", concurrent_packages, scope="command_line")
 
         setattr(namespace, "concurrent_packages", concurrent_packages)
+
+
+class DeprecatedStoreTrueAction(argparse.Action):
+    """Like the builtin store_true, but prints a deprecation warning."""
+
+    def __init__(
+        self,
+        option_strings,
+        dest: str,
+        default: Optional[Any] = False,
+        required: bool = False,
+        help: Optional[str] = None,
+        removed_in: Optional[str] = None,
+        instructions: Optional[str] = None,
+    ):
+        super().__init__(
+            option_strings=option_strings,
+            dest=dest,
+            nargs=0,
+            const=True,
+            required=required,
+            help=help,
+            default=default,
+        )
+        self.removed_in = removed_in
+        self.instructions = instructions
+
+    def __call__(self, parser, namespace, value, option_string=None):
+        instructions = [] if not self.instructions else [self.instructions]
+        tty.warn(
+            f"{option_string} is deprecated and will be removed in {self.removed_in}.",
+            *instructions,
+        )
+        setattr(namespace, self.dest, self.const)
 
 
 class DeptypeAction(argparse.Action):

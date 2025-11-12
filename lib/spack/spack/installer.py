@@ -48,7 +48,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.jobserver
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as lk
 import spack.llnl.util.tty as tty
@@ -447,7 +446,7 @@ def _process_binary_cache_tarball(
         pkg: the package being installed
         explicit: the package was explicitly requested by the user
         unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
-        mirrors_for_spec: Optional list of concrete specs and mirrors
+        mirrors_for_spec: Optional list of mirrors to look for the spec.
         obtained by calling binary_distribution.get_mirrors_for_spec().
         timer: timer to keep track of binary install phases.
 
@@ -503,10 +502,10 @@ def _try_install_from_binary_cache(
     tty.debug(f"Searching for binary cache of {package_id(pkg.spec)}")
 
     with timer.measure("search"):
-        matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
+        mirrors = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
 
     return _process_binary_cache_tarball(
-        pkg, explicit, unsigned, mirrors_for_spec=matches, timer=timer
+        pkg, explicit, unsigned, mirrors_for_spec=mirrors, timer=timer
     )
 
 
@@ -1284,6 +1283,9 @@ class BuildTask(Task):
         self._setup_install_dir(pkg)
 
         # Create a child process to do the actual installation.
+        self._start_build_process()
+
+    def _start_build_process(self):
         self.process_handle = spack.build_environment.start_build_process(
             self.pkg, build_process, self.request.install_args
         )
@@ -1383,6 +1385,26 @@ class BuildTask(Task):
         """Terminate any processes this task still has running."""
         if self.process_handle:
             self.process_handle.terminate()
+
+
+class MockBuildProcess:
+    def complete(self) -> bool:
+        return True
+
+    def terminate(self) -> None:
+        pass
+
+
+class FakeBuildTask(BuildTask):
+    """Blocking BuildTask executed directly in the main thread. Used for --fake installs."""
+
+    process_handle = MockBuildProcess()  # type: ignore[assignment]
+
+    def _start_build_process(self):
+        build_process(self.pkg, self.request.install_args)
+
+    def poll(self):
+        return True
 
 
 class RewireTask(Task):
@@ -1601,7 +1623,12 @@ class PackageInstaller:
             request: the associated install request
             all_deps: dictionary of all dependencies and associated dependents
         """
-        cls = RewireTask if pkg.spec.spliced else BuildTask
+        cls: type[Task] = BuildTask
+        if pkg.spec.spliced:
+            cls = RewireTask
+        elif request.install_args.get("fake"):
+            cls = FakeBuildTask
+
         task = cls(pkg, request=request, status=BuildStatus.QUEUED, installed=self.installed)
         for dep_id in task.dependencies:
             all_deps[dep_id].add(package_id(pkg.spec))
@@ -1999,6 +2026,10 @@ class PackageInstaller:
 
         task = self.build_pq[0][1]
         return task if task.priority == 0 else None
+
+    def _tasks_installing_in_other_spack(self) -> bool:
+        """Whether any tasks in the build queue are installing in other spack processes."""
+        return any(task.status == BuildStatus.INSTALLING for _, task in self.build_pq)
 
     def _pop_task(self) -> Task:
         """Pop the first task off the queue and return it.
@@ -2402,6 +2433,8 @@ class PackageInstaller:
         # include downgrading the write to a read lock
         if pkg.spec.installed:
             self._cleanup_task(pkg)
+            # mark installed if we haven't yet - may be discovering installed for the first time
+            self._update_installed(task)
 
         return None
 
@@ -2424,11 +2457,6 @@ class PackageInstaller:
         install_status = InstallStatus(len(self.build_pq))
         active_tasks: List[Task] = []
 
-        # Determine which type of jobserver to set up and then enable it
-        packages = [task.pkg for _, task in self.build_pq]
-        jobserver = spack.jobserver.Jobserver.determine_type(packages)
-        jobserver.enable()
-
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
         term_status = TermStatusLine(
@@ -2436,7 +2464,7 @@ class PackageInstaller:
         )
 
         # While a task is ready or tasks are running
-        while self._peek_ready_task() or active_tasks:
+        while self._peek_ready_task() or active_tasks or self._tasks_installing_in_other_spack():
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()
@@ -2453,7 +2481,8 @@ class PackageInstaller:
                     # handled in complete_task()
                     task.error_result = e
 
-            time.sleep(0.1)
+            # 10 ms to avoid busy waiting
+            time.sleep(0.01)
             # Check if any tasks have completed and add to list
             done = [task for task in active_tasks if task.poll()]
             try:
@@ -2469,12 +2498,7 @@ class PackageInstaller:
                 for task in active_tasks:
                     task.terminate()
                 active_tasks.clear()  # they're all done now
-                # Close and cleanup the jobserver if an installation error occurs
-                jobserver.cleanup()
                 raise
-
-        # Close and cleanup the jobserver
-        jobserver.cleanup()
 
         self._clear_removed_tasks()
         if self.build_pq:

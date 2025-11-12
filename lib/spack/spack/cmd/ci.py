@@ -173,11 +173,19 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=False,
         help="run stand-alone tests after the build",
     )
-    rebuild.add_argument(
+    rebuild_ff_group = rebuild.add_mutually_exclusive_group()
+    rebuild_ff_group.add_argument(
+        "--no-fail-fast",
+        action="store_false",
+        default=True,
+        dest="fail_fast",
+        help="continue build/stand-alone tests after the first failure",
+    )
+    rebuild_ff_group.add_argument(
         "--fail-fast",
         action="store_true",
-        default=False,
-        help="stop stand-alone tests after the first failure",
+        dest="fail_fast",
+        help="stop build/stand-alone tests after the first failure",
     )
     rebuild.add_argument(
         "--timeout",
@@ -449,7 +457,7 @@ def ci_rebuild(args):
         # jobs in subsequent stages.
         tty.msg("No need to rebuild {0}, found hash match at: ".format(job_spec_pkg_name))
         for match in matches:
-            tty.msg("    {0}".format(match.url_and_version.url))
+            tty.msg("    {0}".format(match.url))
 
         # Now we are done and successful
         return 0
@@ -474,6 +482,10 @@ def ci_rebuild(args):
 
     if args.jobs:
         install_args.append(f"-j{args.jobs}")
+
+    fail_fast = bool(os.environ.get("SPACK_CI_FAIL_FAST", str(args.fail_fast)))
+    if fail_fast:
+        install_args.append("--fail-fast")
 
     slash_hash = spack_ci.common.win_quote("/" + job_spec.dag_hash())
 
@@ -553,7 +565,7 @@ def ci_rebuild(args):
                 spack_ci.run_standalone_tests(
                     cdash=cdash_handler,
                     job_spec=job_spec,
-                    fail_fast=args.fail_fast,
+                    fail_fast=fail_fast,
                     log_file=log_file,
                     repro_dir=repro_dir,
                     timeout=args.timeout,

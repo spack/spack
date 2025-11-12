@@ -17,7 +17,6 @@ import spack.spec
 import spack.store
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
-from spack.installer import PackageInstaller
 from spack.llnl.string import plural
 from spack.llnl.util import tty
 
@@ -436,6 +435,11 @@ def install_without_active_env(args, install_kwargs, reporter):
 
     installs = [s.package for s in concrete_specs]
     install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
+
+    if spack.config.get("config:installer", "old") == "new":
+        from spack.new_installer import PackageInstaller
+    else:
+        from spack.installer import PackageInstaller
 
     try:
         builder = PackageInstaller(installs, **install_kwargs)
