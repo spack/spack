@@ -15,6 +15,7 @@ def concretization_version_order(version_info: Tuple[Union[GitVersion, StandardV
     return (
         info.get("preferred", False),
         not info.get("deprecated", False),
+        not isinstance(version, GitVersion),
         not version.isdevelop(),
         not version.is_prerelease(),
         version,
@@ -36,8 +37,6 @@ class Provenance(enum.IntEnum):
     PACKAGE_PY = enum.auto()
     # An installed spec
     INSTALLED = enum.auto()
-    # An external spec declaration
-    EXTERNAL = enum.auto()
     # lower provenance for installed git refs so concretizer prefers StandardVersion installs
     INSTALLED_GIT_VERSION = enum.auto()
     # A runtime injected from another package (e.g. a compiler)
@@ -51,7 +50,7 @@ class DeclaredVersion(NamedTuple):
     """Data class to contain information on declared versions used in the solve"""
 
     #: String representation of the version
-    version: str
+    version: Union[GitVersion, StandardVersion]
     #: Unique index assigned to this version
     idx: int
     #: Provenance of the version

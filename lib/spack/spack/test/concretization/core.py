@@ -2000,10 +2000,13 @@ spack:
             # Version badness should be > 0 only for reused specs. For instance, for pkg-b
             # the version provenance is:
             #
-            # version_declared("pkg-b","1.0",0,"package_py").
-            # version_declared("pkg-b","0.9",1,"package_py").
-            # version_declared("pkg-b","1.0",2,"installed").
-            # version_declared("pkg-b","0.9",3,"installed").
+            # pkg_fact("pkg-b", version_declared("1.0", 0)).
+            # pkg_fact("pkg-b", version_origin("1.0", "installed")).
+            # pkg_fact("pkg-b", version_origin("1.0", "package_py")).
+            # pkg_fact("pkg-b", version_declared("0.9", 1)).
+            # pkg_fact("pkg-b", version_origin("0.9", "installed")).
+            # pkg_fact("pkg-b", version_origin("0.9", "package_py")).
+
             weights = {}
             for x in [x for x in result.criteria if x.name == "version badness (non roots)"]:
                 if x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
@@ -2011,7 +2014,7 @@ spack:
                 else:
                     weights["built"] = x.value
 
-            assert weights["reused"] > 2 and weights["built"] == 0
+            assert weights["reused"] == 1 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")

@@ -15,7 +15,6 @@ import random
 import re
 import sys
 import time
-import typing
 import warnings
 from contextlib import contextmanager
 from typing import (
@@ -88,7 +87,7 @@ from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector
 from .runtimes import RuntimePropertyRecorder, all_libcs, external_config_with_implicit_externals
-from .versions import DeclaredVersion, Provenance, concretization_version_order
+from .versions import DeclaredVersion, Provenance
 
 GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
 
@@ -1459,6 +1458,7 @@ class SpackSolverSetup:
         self.assumptions: List[Tuple["clingo.Symbol", bool]] = []  # type: ignore[name-defined]
         self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
         self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
+        self.versions_from_yaml: Dict[str, List[GitOrStandardVersion]] = {}
         self.git_commit_versions: Dict[str, Dict[GitOrStandardVersion, str]] = (
             collections.defaultdict(dict)
         )
@@ -1502,38 +1502,28 @@ class SpackSolverSetup:
         # If true, we have to load the code for synthesizing splices
         self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
 
-    def pkg_version_rules(self, pkg):
-        """Output declared versions of a package.
-
-        This uses self.declared_versions so that we include any versions
-        that arise from a spec.
-        """
-
-        def key_fn(version):
-            # Origins are sorted by "provenance" first, see the Provenance enumeration above
-            return version.origin, version.idx
-
-        if isinstance(pkg, str):
-            pkg = self.pkg_class(pkg)
-
+    def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
+        """Declares known versions, their origins, and their weights."""
         declared_versions = self.declared_versions[pkg.name]
-        partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
+        version_provenance: Dict[GitOrStandardVersion, List[Provenance]] = {}
+        for item in declared_versions:
+            version_provenance.setdefault(item.version, []).append(item.origin)
 
-        most_to_least_preferred = []
-        for _, group in itertools.groupby(partially_sorted_versions, key=key_fn):
-            most_to_least_preferred.extend(
-                list(sorted(group, reverse=True, key=lambda x: vn.ver(x.version)))
+        ordered_versions = spack.package_base.sort_by_pkg_preference(
+            [item.version for item in declared_versions], pkg=pkg
+        )
+        # Account for preferences in packages.yaml, if any
+        if pkg.name in self.versions_from_yaml:
+            ordered_versions = spack.llnl.util.lang.dedupe(
+                self.versions_from_yaml[pkg.name] + ordered_versions
             )
 
-        for weight, declared_version in enumerate(most_to_least_preferred):
-            self.gen.fact(
-                fn.pkg_fact(
-                    pkg.name,
-                    fn.version_declared(
-                        declared_version.version, weight, str(declared_version.origin)
-                    ),
+        for weight, declared_version in enumerate(ordered_versions):
+            self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))
+            for origin in version_provenance[declared_version]:
+                self.gen.fact(
+                    fn.pkg_fact(pkg.name, fn.version_origin(declared_version, str(origin)))
                 )
-            )
 
         for v in self.possible_versions[pkg.name]:
             if pkg.needs_commit(v):
@@ -2590,16 +2580,12 @@ class SpackSolverSetup:
             # All the versions from the corresponding package.py file. Since concepts
             # like being a "develop" version or being preferred exist only at a
             # package.py level, sort them in this partial list here
-            package_py_versions = sorted(
-                pkg_cls.versions.items(), key=concretization_version_order, reverse=True
-            )
+            from_package_py = list(pkg_cls.versions.items())
 
             if require_checksum and pkg_cls.has_code:
-                package_py_versions = [
-                    x for x in package_py_versions if _is_checksummed_version(x)
-                ]
+                from_package_py = [x for x in from_package_py if _is_checksummed_version(x)]
 
-            for idx, (v, version_info) in enumerate(package_py_versions):
+            for v, version_info in from_package_py:
                 if version_info.get("deprecated", False):
                     self.deprecated_versions[pkg_name].add(v)
                     if not allow_deprecated:
@@ -2607,7 +2593,7 @@ class SpackSolverSetup:
 
                 self.possible_versions[pkg_name].add(v)
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=v, idx=idx, origin=Provenance.PACKAGE_PY)
+                    DeclaredVersion(version=v, idx=0, origin=Provenance.PACKAGE_PY)
                 )
 
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
@@ -2615,29 +2601,31 @@ class SpackSolverSetup:
 
             # TODO(psakiev) Need facts about versions
             # - requires_commit (associated with tag or branch)
-            version_defs: List[GitOrStandardVersion] = []
+            from_packages_yaml: List[GitOrStandardVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
                 v = vn.ver(vstr)
 
                 if isinstance(v, vn.GitVersion):
                     if not require_checksum or v.is_commit:
-                        version_defs.append(v)
+                        from_packages_yaml.append(v)
                 else:
                     matches = [x for x in self.possible_versions[pkg_name] if x.satisfies(v)]
                     matches.sort(reverse=True)
                     if not matches:
                         raise spack.error.ConfigError(
                             f"Preference for version {v} does not match any known "
-                            f"version of {pkg_name} (in its package.py or any external)"
+                            f"version of {pkg_name}"
                         )
-                    version_defs.extend(matches)
+                    from_packages_yaml.extend(matches)
 
-            for weight, vdef in enumerate(spack.llnl.util.lang.dedupe(version_defs)):
+            from_packages_yaml = list(spack.llnl.util.lang.dedupe(from_packages_yaml))
+            for v in from_packages_yaml:
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=vdef, idx=weight, origin=Provenance.PACKAGES_YAML)
+                    DeclaredVersion(version=v, idx=0, origin=Provenance.PACKAGES_YAML)
                 )
-                self.possible_versions[pkg_name].add(vdef)
+                self.possible_versions[pkg_name].add(v)
+            self.versions_from_yaml[pkg_name] = from_packages_yaml
 
     def define_ad_hoc_versions_from_specs(
         self, specs, origin, *, allow_deprecated: bool, require_checksum: bool
@@ -3403,7 +3391,7 @@ class SpackSolverSetup:
             for s in spec_group[key]:
                 yield _spec_with_default_name(s, pkg_name)
 
-    def pkg_class(self, pkg_name: str) -> typing.Type[spack.package_base.PackageBase]:
+    def pkg_class(self, pkg_name: str) -> Type[spack.package_base.PackageBase]:
         request = pkg_name
         if pkg_name in self.explicitly_required_namespaces:
             namespace = self.explicitly_required_namespaces[pkg_name]

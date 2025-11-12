@@ -19,6 +19,7 @@ import sys
 import textwrap
 import time
 import traceback
+from collections.abc import Sequence
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 from spack.vendor.typing_extensions import Literal
@@ -59,7 +60,7 @@ from spack.llnl.util.filesystem import (
     islink,
     symlink,
 )
-from spack.llnl.util.lang import ClassProperty, classproperty, memoized
+from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
 from spack.solver.versions import concretization_version_order
 from spack.util.package_hash import package_hash
@@ -2588,6 +2589,18 @@ def preferred_version(pkg: Union[PackageBase, Type[PackageBase]]):
 
     version, _ = max(pkg.versions.items(), key=concretization_version_order)
     return version
+
+
+def sort_by_pkg_preference(
+    versions: Sequence[Union[GitVersion, StandardVersion]],
+    *,
+    pkg: Union[PackageBase, Type[PackageBase]],
+) -> List[Union[GitVersion, StandardVersion]]:
+    """Sorts the list of versions passed in input according to the preferences in the package. The
+    return value does not contain duplicate versions.
+    """
+    s = [(v, pkg.versions.get(v, {})) for v in dedupe(versions)]
+    return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
 
 
 class PackageStillNeededError(InstallError):
