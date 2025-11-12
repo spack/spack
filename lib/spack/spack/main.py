@@ -190,7 +190,7 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
             first_newline = result.index("\n")
             header, rest = result[:first_newline], result[first_newline:]
 
-        return color.colorize(f"@c{{{color.cescape(header)}}}{rest}")
+        return color.colorize(f"@c{{{color.cescape(header)}}}{color.cescape(rest)}")
 
     def add_arguments(self, actions):
         actions = sorted(actions, key=operator.attrgetter("option_strings"))
