@@ -49,6 +49,30 @@ def test_create_add_list_remove(mutable_config, tmp_path: pathlib.Path):
     assert "mockrepo" not in output
 
 
+def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
+    # Create and add a new repo
+    repo("create", str(tmp_path), "mockrepo")
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
+    repo("add", "--scope=system", str(tmp_path / "spack_repo" / "mockrepo"))
+
+    # Confirm that it is not removed when the scope is incorrect
+    with pytest.raises(Exception, match="No repository with path or namespace"):
+        repo("remove", "--scope=user", "mockrepo")
+
+    # Confirm that when the scope is specified, it is only removed from that scope
+    repo("remove", "--scope=site", "mockrepo")
+    site_output = repo("list", "--scope=site", output=str)
+    system_output = repo("list", "--scope=system", output=str)
+    assert "mockrepo" not in site_output
+    assert "mockrepo" in system_output
+
+    # Confirm that when the scope is not specified, it is removed from all scopes
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
+    repo("remove", "mockrepo")
+    output = repo("list", output=str)
+    assert "mockrepo" not in output
+
+
 def test_env_repo_path_vars_substitution(
     tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, monkeypatch
 ):
