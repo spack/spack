@@ -1545,7 +1545,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a update -d 'upd
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a revert -d 'restore the environment manifest to its previous format'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a depfile -d 'generate a depfile to exploit parallel builds across specs'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a track -d 'track an environment from a directory in Spack'
-complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a untrack -d 'track an environment from a directory in Spack'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a untrack -d 'untrack an environment from a directory in Spack'
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
