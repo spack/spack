@@ -35,7 +35,7 @@ The available directives are:
 * ``drop_conflict``
 * ``drop_depends_on``
 * ``drop_patch``
-* ``drop_requires``
+* ``drop_require``
 * ``drop_version``
 
 """
@@ -92,7 +92,7 @@ __all__ = [
     "drop_conflict",
     "drop_depends_on",
     "drop_patch",
-    "drop_requires",
+    "drop_require",
     "drop_version",
 ]
 
@@ -1148,7 +1148,7 @@ class DropPatch(DropConflicts):
         return directive_entry
 
 
-class DropRequires(DropConflicts):
+class DropRequire(DropConflicts):
     name = "requirements"
 
     def get_directive(self, directive_entry):
@@ -1205,7 +1205,7 @@ def drop_patch(
 
 
 @directive("requirements")
-def drop_requires(spec: SpecType, when: WhenType = None):
+def drop_require(spec: SpecType, when: WhenType = None):
     """Remove a dependency from a package.
 
     This is typically used when inheriting from another package if the author
@@ -1214,7 +1214,7 @@ def drop_requires(spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a dependency to delete
     that does not exist.
     """
-    return DropRequires(spec, when).remove()
+    return DropRequire(spec, when).remove()
 
 
 @directive("versions")

@@ -295,7 +295,7 @@ class MockRequirements(MockDirectiveBase):
 
     @property
     def removal_class(self):
-        return spack.directives.DropRequires
+        return spack.directives.DropRequire
 
 
 @pytest.fixture(params=[MockConflicts, MockDependencies, MockRequirements])
@@ -379,8 +379,10 @@ def test_drop_depends_on(mock_packages):
     }
 
 
-def test_drop_requires(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_requires")
+def test_drop_require(mock_packages):
+    cls = spack.repo.PATH.get_pkg_class("drop_require")
+    print(f"cls.conflicts={cls.conflicts}")
+    print(f"cls.requirements={cls.requirements}")
     assert cls.requirements == {
         spack.spec.Spec("@1.0"): [((spack.spec.Spec("mpi"),), "one_of", None)]
     }
