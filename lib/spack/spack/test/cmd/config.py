@@ -101,6 +101,56 @@ def test_config_scopes_section(mutable_config):
     assert "active" in lines_by_scope_name["site"]
 
 
+def test_include_overrides(mutable_config):
+    output = config("scopes").strip()
+    lines = output.split("\n")
+    assert "user" in lines
+    assert "system" in lines
+    assert "site" in lines
+    assert "_builtin" in lines
+
+    mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
+
+    # overridden scopes are not shown wtihout `-v`
+    output = config("scopes").strip()
+    lines = output.split("\n")
+    assert "user" not in lines
+    assert "system" not in lines
+    assert "site" not in lines
+
+    # scopes with ConfigScopePriority.DEFAULTS remain
+    assert "_builtin" in lines
+
+    # overridden scopes are shown wtih `-v` and marked 'override'
+    output = config("scopes", "-v").strip()
+    lines = output.split("\n")
+    assert "override" in next(line for line in lines if line.startswith("user"))
+    assert "override" in next(line for line in lines if line.startswith("system"))
+    assert "override" in next(line for line in lines if line.startswith("site"))
+
+
+def test_blame_override(mutable_config):
+    # includes are present when section is specified
+    output = config("blame", "include").strip()
+    include_path = re.escape(os.path.join(mutable_config.scopes["site"].path, "include.yaml"))
+    assert re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+
+    # includes are also present when section is NOT specified
+    output = config("blame").strip()
+    assert re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+
+    mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
+
+    # site includes are not present when overridden
+    output = config("blame", "include").strip()
+    assert not re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+    assert "include: []" in output
+
+    output = config("blame").strip()
+    assert not re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+    assert "include: []" in output
+
+
 def test_config_scopes_path(mutable_config):
     scopes_cmd = ["scopes", "-p"]
     output = config(*scopes_cmd).strip()
