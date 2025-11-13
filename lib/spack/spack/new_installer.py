@@ -776,6 +776,19 @@ class BuildStatus:
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
+        long_header_len = len(
+            f"Progress: {self.completed}/{self.total}  /: filter  v: logs  n/p: next/prev"
+        )
+        if long_header_len < max_width:
+            self._println(
+                buffer,
+                f"\033[1mProgress:\033[0m {self.completed}/{self.total}"
+                "  \033[36m/\033[0m: filter  \033[36mv\033[0m: logs"
+                "  \033[36mn\033[0m/\033[36mp\033[0m: next/prev",
+            )
+        else:
+            self._println(buffer, f"\033[1mProgress:\033[0m {self.completed}/{self.total}")
+
         displayed_builds = (
             [b for b in self.builds.values() if self._is_displayed(b)]
             if self.search_term
@@ -787,7 +800,6 @@ class BuildStatus:
         # an additional line for the "N more..." message.
         truncate_at = max_height - 3 if len_builds + 2 > max_height else len_builds
 
-        self._println(buffer, f"\033[1mProgress:\033[0m {self.completed}/{self.total}")
         for i, build in enumerate(displayed_builds, 1):
             if i > truncate_at:
                 self._println(buffer, f"{len_builds - i + 1} more...")
@@ -796,11 +808,6 @@ class BuildStatus:
 
         if self.search_mode:
             buffer.write(f"filter> {self.search_term}\033[K")
-        else:
-            buffer.write(
-                "\033[36m/\033[0m: filter  \033[36mv\033[0m: logs  "
-                "\033[36mn\033[0m/\033[36mp\033[0m: next/prev\033[K"
-            )
 
         # Clear any remaining lines from previous display
         buffer.write("\033[0J")
