@@ -774,8 +774,6 @@ class Configuration:
         for config_scope in scopes:
             # read potentially cached data from the scope.
             data = config_scope.get_section(section)
-            if data and section == "include":
-                data["include"] = data.pop("include")  # strip override
 
             # Skip empty configs
             if not isinstance(data, dict) or section not in data:
