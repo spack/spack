@@ -132,7 +132,7 @@ def test_include_overrides(mutable_config):
 def test_blame_override(mutable_config):
     # includes are present when section is specified
     output = config("blame", "include").strip()
-    site_path = mutable_config.scopes["site"].path
+    site_path = mutable_config.scopes["site"].path.replace("\\", "\\\\")
     assert re.search(rf"include:\n{site_path}/include\.yaml:\d+\s+\- path: base", output)
 
     # includes are also present when section is NOT specified
