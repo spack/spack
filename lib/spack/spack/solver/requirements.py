@@ -301,8 +301,7 @@ class RequirementParser:
         except spack.error.SpackError as e:
             tty.debug(
                 f"[{__name__}] Rejecting the default '{constraint}' requirement "
-                f"on '{pkg_name}': {str(e)}",
-                level=2,
+                f"on '{pkg_name}': {str(e)}"
             )
             return True
         return False
