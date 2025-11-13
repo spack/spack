@@ -13,3 +13,4 @@
 repos:
   builtin:
     git: https://github.com/spack/spack-packages.git
+    branch: releases/v2025.11
