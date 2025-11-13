@@ -132,22 +132,22 @@ def test_include_overrides(mutable_config):
 def test_blame_override(mutable_config):
     # includes are present when section is specified
     output = config("blame", "include").strip()
-    site_path = mutable_config.scopes["site"].path.replace("\\", "\\\\")
-    assert re.search(rf"include:\n{site_path}/include\.yaml:\d+\s+\- path: base", output)
+    include_path = re.escape(os.path.join(mutable_config.scopes["site"].path, "include.yaml"))
+    assert re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
 
     # includes are also present when section is NOT specified
     output = config("blame").strip()
-    assert re.search(rf"include:\n{site_path}/include\.yaml:\d+\s+\- path: base", output)
+    assert re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
 
     mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
 
     # site includes are not present when overridden
     output = config("blame", "include").strip()
-    assert not re.search(rf"include:\n{site_path}/include\.yaml:\d+\s+\- path: base", output)
+    assert not re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
     assert "include: []" in output
 
     output = config("blame").strip()
-    assert not re.search(rf"include:\n{site_path}/include\.yaml:\d+\s+\- path: base", output)
+    assert not re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
     assert "include: []" in output
 
 
