@@ -594,8 +594,8 @@ def test_install_from_binary_with_missing_patch_succeeds(
     PackageInstaller(
         [s.package],
         explicit=True,
-        package_cache_only=True,
-        dependencies_cache_only=True,
+        root_policy="cache_only",
+        dependencies_policy="cache_only",
         unsigned=True,
     ).install()
 

@@ -39,6 +39,8 @@ from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Set, Tuple, Union
 
+from spack.vendor.typing_extensions import Literal
+
 import spack.binary_distribution
 import spack.build_environment
 import spack.builder
@@ -58,6 +60,9 @@ import spack.util.lock
 
 if TYPE_CHECKING:
     import spack.package_base
+
+#: Type for specifying installation source modes
+InstallPolicy = Literal["auto", "cache_only", "source_only"]
 
 #: How often to update a spinner in seconds
 SPINNER_INTERVAL = 0.1
@@ -952,9 +957,6 @@ class PackageInstaller:
         self,
         packages: List["spack.package_base.PackageBase"],
         *,
-        cache_only: bool = False,
-        dependencies_cache_only: bool = False,
-        dependencies_use_cache: bool = True,
         dirty: bool = False,
         explicit: Union[Set[str], bool] = False,
         overwrite: Optional[Union[List[str], Set[str]]] = None,
@@ -966,25 +968,22 @@ class PackageInstaller:
         install_source: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
-        package_cache_only: bool = False,
-        package_use_cache: bool = True,
         restage: bool = True,
         skip_patch: bool = False,
         stop_at: Optional[str] = None,
         stop_before: Optional[str] = None,
         tests: Union[bool, List[str], Set[str]] = False,
         unsigned: Optional[bool] = None,
-        use_cache: bool = False,
         verbose: bool = False,
         concurrent_packages: Optional[int] = None,
+        root_policy: InstallPolicy = "auto",
+        dependencies_policy: InstallPolicy = "auto",
     ) -> None:
 
-        if cache_only:
+        if root_policy == "cache_only" or dependencies_policy == "cache_only":
             raise NotImplementedError("Cache-only installs are not implemented")
-        elif dependencies_cache_only:
-            raise NotImplementedError("Dependencies cache-only installs are not implemented")
-        elif not dependencies_use_cache:
-            raise NotImplementedError("Not using cache for dependencies is not implemented")
+        elif root_policy == "source_only" or dependencies_policy == "source_only":
+            raise NotImplementedError("Source-only installs are not implemented")
         elif dirty:
             raise NotImplementedError("Dirty installs are not implemented")
         elif overwrite:
@@ -1005,10 +1004,6 @@ class PackageInstaller:
             raise NotImplementedError("Keeping install prefixes is not implemented")
         elif keep_stage:
             raise NotImplementedError("Keeping build stages is not implemented")
-        elif package_cache_only:
-            raise NotImplementedError("Package cache only installs are not implemented")
-        elif not package_use_cache:
-            raise NotImplementedError("Not using package cache is not implemented")
         elif not restage:
             raise NotImplementedError("Restaging builds is not implemented")
         elif skip_patch:
@@ -1019,8 +1014,6 @@ class PackageInstaller:
             raise NotImplementedError("Stopping before an install phase is not implemented")
         elif tests is not False:
             raise NotImplementedError("Tests during install are not implemented")
-        elif use_cache:
-            raise NotImplementedError("Using cache only is not implemented")
         # verbose and concurrent_packages are not worth erroring out for
 
         specs = [pkg.spec for pkg in packages]

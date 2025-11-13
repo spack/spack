@@ -294,8 +294,8 @@ class SourceBootstrapper(Bootstrapper):
             PackageInstaller(
                 [concrete_spec.package],
                 fail_fast=True,
-                package_use_cache=False,
-                dependencies_use_cache=False,
+                root_policy="source_only",
+                dependencies_policy="source_only",
             ).install()
 
         if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
