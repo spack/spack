@@ -17,6 +17,7 @@ import spack.vendor.jinja2
 import spack.archspec
 import spack.binary_distribution
 import spack.cmd
+import spack.cmd.diff
 import spack.compilers.config
 import spack.concretize
 import spack.config
@@ -248,6 +249,12 @@ class Changing(Package):
     variant("fum", default=True, description="nope")
     variant("fum2", default=True, description="nope")
 {% endif %}
+
+    def install(self, spec, prefix):
+        touch(prefix.one)
+{% if change_install %}
+        touch(prefix.two)
+{% endif %}
 """
 
     with spack.repo.use_repositories(root, override=False) as repos:
@@ -257,6 +264,7 @@ class Changing(Package):
                 ("delete_version", True),
                 ("delete_variant", False),
                 ("add_variant", False),
+                ("change_install", False),
             ]
 
             def __init__(self):
@@ -4276,6 +4284,22 @@ def test_when_possible_above_all(mutable_config, mock_packages):
         assert criteria[0].name == "number of input specs not concretized"
 
 
+def test_concretization_cache_changing_package(
+    use_concretization_cache, repo_with_changing_recipe, mutable_config
+):
+    """Tests that package_hash is not being cached by concretization_cache."""
+    spack.config.set("concretizer:reuse", False)
+
+    spec1 = spack.concretize.concretize_one("changing")
+    repo_with_changing_recipe.change({"change_install": True, "delete_version": False})
+    spec2 = spack.concretize.concretize_one("changing")
+
+    assert spec1.package_hash != spec2.package_hash
+    comparison = spack.cmd.diff.compare_specs(spec1, spec2)
+    assert {fn.name for fn in comparison["a_not_b"]} == {"hash", "package_hash"}
+    assert {fn.name for fn in comparison["b_not_a"]} == {"hash", "package_hash"}
+
+
 def test_concretization_cache_roundtrip(
     mock_packages, use_concretization_cache, monkeypatch, mutable_config
 ):
@@ -4320,6 +4344,10 @@ def test_concretization_cache_roundtrip_result(use_concretization_cache):
     result1 = solver.solve(specs)
     result2 = solver.solve(specs)
 
+    # We have to check spec equality first because that recomputes internal caches
+    # which are checked as part of the equality check
+    # TODO: fix this so caches aren't checked on equality checks
+    assert set(result1.specs) == set(result2.specs)
     assert result1 == result2
 
 

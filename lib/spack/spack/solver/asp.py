@@ -462,7 +462,7 @@ class Result:
         min_cost, _, _ = self.answers[0]
         builder = SpecBuilder(self.abstract_specs, hash_lookup=self.hash_lookup)
         answers = builder.build_specs(self.spec_attrs)
-        self.answers[0][2] = answers
+        self.answers[0] = (min_cost, 0, answers)
 
     def clear_caches(self):
         self._concrete_specs = None
@@ -570,6 +570,10 @@ class Result:
             serial_answer = serial_answer + (serial_answer_dict,)
             serial_answers.append(serial_answer)
         ret["answers"] = serial_answers
+        ret["spec_attrs"] = self.spec_attrs
+        ret["hash_lookup"] = {}
+        for hash, spec in (self.hash_lookup or {}).items():
+            ret["hash_lookup"][hash] = spec.to_dict()
         ret["specs_by_input"] = {}
         input_specs = {} if not self.specs_by_input else self.specs_by_input
         for input, spec in input_specs.items():
@@ -611,6 +615,15 @@ class Result:
         result.nmodels = obj.get("nmodels")
         result.satisfiable = obj.get("satisfiable")
         result._unsolved_specs = []
+        spec_attr_lists = obj.get("spec_attrs", None)
+        if spec_attr_lists is not None:
+            result.spec_attrs = []
+            for name, args in spec_attr_lists:
+                rest = [x if isinstance(x, str) else NodeArgument(x[0], x[1]) for x in args]
+                result.spec_attrs.append((name, tuple(rest)))
+        result.hash_lookup = {}
+        for h, spec_dict in obj.get("hash_lookup", {}).items():
+            result.hash_lookup[h] = _dict_to_spec(spec_dict)
         answers = []
         for answer in obj.get("answers", []):
             loaded_answer = answer[:2]
