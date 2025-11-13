@@ -915,7 +915,7 @@ def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
 
     target = str(spack.vendor.archspec.cpu.host().family)
     compilers = tmp_path / "site" / "packages.yaml"
-    compilers_template = test_config / "base" / "packages.yaml"
+    compilers_template = test_config / "packages.yaml"
     compilers.write_text(compilers_template.read_text().format(linux_os=linux_os, target=target))
 
     modules = tmp_path / "site" / "modules.yaml"
