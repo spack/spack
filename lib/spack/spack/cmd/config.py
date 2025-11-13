@@ -326,6 +326,7 @@ def config_scopes(args):
             and s.name in included
             or any(i in ("all", *_config_basic_scope_types(s, included)) for i in args.type)
         )
+        and (s.name in active or args.scopes_verbose)
     ]
 
     if scopes:
