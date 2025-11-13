@@ -774,6 +774,14 @@ class Configuration:
         for config_scope in scopes:
             # read potentially cached data from the scope.
             data = config_scope.get_section(section)
+            if data and section == "include":
+                # Include overrides are handled by `_filter_overridden` above. Any remaining
+                # includes at this point are *not* actually overridden -- they're scopes with
+                # ConfigScopePriority.DEFAULT, which we currently do *not* remove with
+                # `include::`, because these scopes are needed for Spack to function correctly.
+                # So, we ignore :: here.
+                data = data.copy()
+                data["include"] = data.pop("include")  # strip override
 
             # Skip empty configs
             if not isinstance(data, dict) or section not in data:
