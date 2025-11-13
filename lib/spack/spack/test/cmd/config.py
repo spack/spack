@@ -101,6 +101,34 @@ def test_config_scopes_section(mutable_config):
     assert "active" in lines_by_scope_name["site"]
 
 
+def test_include_overrides(mutable_config, tmp_path):
+    output = config("scopes").strip()
+    lines = output.split("\n")
+    assert "user" in lines
+    assert "system" in lines
+    assert "site" in lines
+    assert "_builtin" in lines
+
+    mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
+
+    # overridden scopes are not shown wtihout `-v`
+    output = config("scopes").strip()
+    lines = output.split("\n")
+    assert "user" not in lines
+    assert "system" not in lines
+    assert "site" not in lines
+
+    # scopes with ConfigScopePriority.DEFAULTS remain
+    assert "_builtin" in lines
+
+    # overridden scopes are shown wtih `-v` and marked 'override'
+    output = config("scopes", "-v").strip()
+    lines = output.split("\n")
+    assert "override" in next(line for line in lines if line.startswith("user"))
+    assert "override" in next(line for line in lines if line.startswith("system"))
+    assert "override" in next(line for line in lines if line.startswith("site"))
+
+
 def test_config_scopes_path(mutable_config):
     scopes_cmd = ["scopes", "-p"]
     output = config(*scopes_cmd).strip()
