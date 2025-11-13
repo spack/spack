@@ -240,6 +240,7 @@ def worker_function(
     explicit: bool,
     mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
     unsigned: Optional[bool],
+    install_policy: InstallPolicy,
     dirty: bool,
     keep_stage: bool,
     skip_patch: bool,
@@ -261,6 +262,7 @@ def worker_function(
         explicit: Whether the spec was explicitly requested by the user
         mirrors: List of buildcache mirrors to try
         unsigned: Whether to allow unsigned buildcache entries
+        install_policy: ``"auto"``, ``"cache_only"``, or ``"source_only"``
         dirty: Whether to preserve user environment in the build environment
         keep_stage: Whether to keep the build stage after installation
         skip_patch: Whether to skip the patch phase
@@ -297,10 +299,16 @@ def worker_function(
     if os.path.exists(spec.prefix):
         shutil.rmtree(spec.prefix)
 
-    # First try to install from binary cache.
-    if mirrors and install_from_buildcache(mirrors, spec, unsigned, state_stream):
-        spack.hooks.post_install(spec, explicit)
-        return
+    if install_policy != "source_only":
+        if mirrors and install_from_buildcache(mirrors, spec, unsigned, state_stream):
+            spack.hooks.post_install(spec, explicit)
+            return
+        elif install_policy == "cache_only":
+            # Binary required but not available
+            send_state("no binary available", state_stream)
+            tee.close()
+            state.close()
+            sys.exit(1)
 
     store.layout.create_install_directory(spec)
     stage = pkg.stage
@@ -442,6 +450,7 @@ def start_build(
     explicit: bool,
     mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
     unsigned: Optional[bool],
+    install_policy: InstallPolicy,
     dirty: bool,
     keep_stage: bool,
     skip_patch: bool,
@@ -466,6 +475,7 @@ def start_build(
             explicit,
             mirrors,
             unsigned,
+            install_policy,
             dirty,
             keep_stage,
             skip_patch,
@@ -929,23 +939,26 @@ Edges = Dict[str, Set[str]]
 
 
 def _init_build_graph(
-    specs: List[spack.spec.Spec], db: spack.database.Database
+    specs: List[spack.spec.Spec],
+    root_policy: InstallPolicy,
+    dependencies_policy: InstallPolicy,
+    include_build_deps: bool,
+    db: spack.database.Database,
 ) -> Tuple[Nodes, Edges, Edges]:
     """Construct a build graph from the given specs. This includes only packages that need to be
     installed. Installed packages are pruned from the graph, and build dependencies are only
     included when necessary."""
-    nodes: Dict[str, spack.spec.Spec] = {}
+    nodes = {s.dag_hash(): s for s in specs}
     parent_to_child: Dict[str, Set[str]] = {}
     child_to_parent: Dict[str, Set[str]] = {}
     installed_specs: Set[str] = set()
-    stack = list(specs)
     db = spack.store.STORE.db
+    stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [(s, root_policy) for s in nodes.values()]
 
     with db.read_transaction():
         while stack:
-            spec = stack.pop()
+            spec, install_policy = stack.pop()
             key = spec.dag_hash()
-            nodes[key] = spec
             _, record = db.query_by_spec_hash(key)
 
             # Set the install prefix for each spec based on the db record or store layout
@@ -954,15 +967,23 @@ def _init_build_graph(
             else:
                 spec.set_prefix(spack.store.STORE.layout.path_for_spec(spec))
 
-            # Conditionally include build dependencies
+            # Conditionally include build dependencies based on policy and install status
             if record and record.installed:
                 installed_specs.add(key)
+                dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
+            elif install_policy == "cache_only" and not include_build_deps:
                 dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
             else:
                 dependencies = spec.dependencies(deptype=dt.BUILD | dt.LINK | dt.RUN)
 
             parent_to_child[key] = {d.dag_hash() for d in dependencies}
-            stack.extend(d for d in dependencies if d.dag_hash() not in nodes)
+
+            # Enqueue new dependencies
+            for d in dependencies:
+                if d.dag_hash() in nodes:
+                    continue
+                nodes[d.dag_hash()] = d
+                stack.append((d, dependencies_policy))
 
     # Construct reverse lookup from child to parent
     for parent, children in parent_to_child.items():
@@ -1017,18 +1038,12 @@ class PackageInstaller:
         dependencies_policy: InstallPolicy = "auto",
     ) -> None:
 
-        if root_policy == "cache_only" or dependencies_policy == "cache_only":
-            raise NotImplementedError("Cache-only installs are not implemented")
-        elif root_policy == "source_only" or dependencies_policy == "source_only":
-            raise NotImplementedError("Source-only installs are not implemented")
-        elif overwrite:
+        if overwrite:
             raise NotImplementedError("Overwrite installs are not implemented")
         elif fail_fast:
             raise NotImplementedError("Fail-fast installs are not implemented")
         elif fake:
             raise NotImplementedError("Fake installs are not implemented")
-        elif include_build_deps:
-            raise NotImplementedError("Not including build dependencies is not implemented")
         elif not install_deps:
             raise NotImplementedError("Not installing dependencies is not implemented")
         elif not install_package:
@@ -1048,12 +1063,17 @@ class PackageInstaller:
         # verbose and concurrent_packages are not worth erroring out for
 
         specs = [pkg.spec for pkg in packages]
+        self.roots = {s.dag_hash() for s in specs}
+
+        self.root_policy: InstallPolicy = root_policy
+        self.dependencies_policy: InstallPolicy = dependencies_policy
+        self.include_build_deps = include_build_deps
 
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
 
         self.nodes, self.parent_to_child, self.child_to_parent = _init_build_graph(
-            specs, spack.store.STORE.db
+            specs, root_policy, dependencies_policy, include_build_deps, spack.store.STORE.db
         )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
@@ -1273,11 +1293,13 @@ class PackageInstaller:
         dag_hash = self.pending_builds.pop()
         explicit = dag_hash in self.explicit
         mirrors = self.binary_cache_for_spec[dag_hash]
+        install_policy = self.root_policy if dag_hash in self.roots else self.dependencies_policy
         child_info = start_build(
             self.nodes[dag_hash],
             explicit,
             mirrors,
             self.unsigned,
+            install_policy,
             self.dirty,
             self.keep_stage,
             self.skip_patch,
