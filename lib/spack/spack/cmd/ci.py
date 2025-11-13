@@ -71,13 +71,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "path to the file where generated jobs file should be written. "
         "default is .gitlab-ci.yml in the root of the repository",
     )
-    generate.add_argument(
-        "-t",
-        "--tests",
-        action="store_true",
-        default=True,
-        help="run stand-alone test job after the build",
-    )
     prune_dag_group = generate.add_mutually_exclusive_group()
     prune_dag_group.add_argument(
         "--prune-dag",
