@@ -249,7 +249,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             if "script" not in job_object:
                 raise AttributeError
 
-            # TODO/TLD: Call <CIScript>.convert for CIScriptStage.DURING with 
+            # TODO/TLD: Call <CIScript>.convert for CIScriptStage.DURING with
             # TODO/TLD:   converter=main_script_replacements
             job_object["script"] = unpack_script(job_object["script"], op=main_script_replacements)
 

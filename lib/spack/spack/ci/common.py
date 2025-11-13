@@ -14,7 +14,7 @@ import sys
 import time
 from collections import deque
 from itertools import chain
-from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
 
@@ -29,7 +29,6 @@ import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.compression as compression
-import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 from spack import traverse
 from spack.llnl.util.lang import memoized
@@ -59,13 +58,6 @@ default_job_settings = {
         "script": ["cd {env_dir}", "spack env activate --without-view .", "spack ci rebuild"]
     },
     "noop-job": {"script": ['echo "All specs already up-to-date, nothing to rebuild."']},
-    "test-job": {
-        "script": [
-            "cd {env_dir}",
-            "spack env activate --without-view .",
-            "spack ci rebuild --tests",
-        ]
-    },
 }
 
 #: Override job settings
@@ -209,7 +201,7 @@ class CIScript:
         """
         self.contents = contents
 
-    def convert(self, converter: Optional[Callable[str], str]) -> List[str]:
+    def convert(self, converter: Optional[Callable[[str], str]]) -> List[str]:
         """Return the optionally converted commands
 
         Args:
@@ -243,13 +235,13 @@ class CIDynamicMap:
         # Ensure additional properties readily available when needed
         self.mapping = mapping
 
-        self.name: str = mapping.get("name")
-        self.endpoint: str = mapping.get("endpoint")
-        self.header: str = mapping.get("header", {})
+        self.name: Optional[str] = mapping.get("name")
+        self.endpoint: Optional[str] = mapping.get("endpoint")
+        self.header: Dict[str, Any] = mapping.get("header", {})
 
-        self.require = mapping.get("require", [])
-        self.allow = mapping.get("allow", [])
-        self.ignore = mapping.get("ignore", [])
+        self.require: List[str] = mapping.get("require", [])
+        self.allow: List[str] = mapping.get("allow", [])
+        self.ignore: List[str] = mapping.get("ignore", [])
 
     @property
     def allowed(self) -> set[str]:
@@ -273,6 +265,8 @@ class CIDynamicMap:
         # Expand header environment variables, ie. if tokens are passed
         for value in header.values():
             value = os.path.expandvars(value)
+
+        return header
 
     def clean_config_attrs(self, query: str) -> Dict[str, Any]:
         """Build the clean configuration attributes for the spec query.
@@ -335,7 +329,11 @@ class CIJobData:
     """Job data for a given job name (and spec)."""
 
     def __init__(
-        self, name: str, release_spec: Optional[spack.spec.Spec] = None, remove: bool = False
+        self,
+        name: str,
+        level: int = 0,
+        release_spec: Optional[spack.spec.Spec] = None,
+        remove: bool = False,
     ):
         """
         Args:
@@ -349,7 +347,6 @@ class CIJobData:
         self.remove: bool = remove
         self.job_name = f"{self.name}-job{'-remove' if self.remove else ''}"
 
-        # TODO/TLD: Is this necessary/used?
         self.tags: List[str] = []
         self.attributes: Dict[str, Union[str, int]] = {}
 
@@ -394,13 +391,21 @@ class CIJobData:
         return f"spec={quote(query)}"
 
     def merge_attributes(self, attrs: Dict[str, Any]):
-        """Merge the provided attributes into the job.
+        """Merge the attributes into those of the job
 
         Args:
-            attrs: attributes to be merged into those of the job
+            attrs: attributes to be removed
         """
-        # TODO/TBD: Should the result be copied?
-        self.attributes = spack.schema.merge_yaml(self.attributes, attrs)
+        # TODO/TBD: Should the result be optionally or always copied?
+        self.attributes = copy.copy(spack.schema.merge_yaml(self.attributes, attrs))
+
+    def remove_attributes(self, attrs: Dict[str, Any]):
+        """Remove the attributes from the job
+
+        Args:
+            attrs: attributes to be removed
+        """
+        self.attributes = spack.config.remove_yaml(self.attributes, attrs)
 
     def update_attributes(self, section: Dict[str, Any]):
         """Update the job attributes with the attribute data for the job's name.
@@ -414,19 +419,23 @@ class CIJobData:
         if self.job_name not in section:
             return
 
-        src = section[self.job_name]
+        attrs = section[self.job_name]
+
         if self.remove:
-            self.attributes = spack.config.remove_yaml(self.attributes, src)
+            self.remove_attributes(attrs)
         else:
-            # TODO/TBD: Why is there a copy here and not elsewhere?
-            self.attributes = copy.copy(spack.schema.merge_yaml(self.attributes, src))
+            self.merge_attributes(attrs)
 
     def update_submapping_attributes(self, section: Dict[str, Any]):
-        """Update attributes with relevant submapping data."""
+        """Update attributes with relevant submapping data.
+
+        Args:
+            section: section possibly containing relevant job attributes
+        """
         if "submapping" not in section or self.name not in spec_job_names:
             return
 
-        # Assumes build-job[-remove] attributes apply to all jobs with specs
+        # Assumes the attributes are job name-specific.
         matched = False
         only_first = section.get("match_behavior", "first") == "first"
 
@@ -437,11 +446,12 @@ class CIJobData:
                     matched = True
 
                     # Assumes only update if the remove property values match
-                    if "build-job-remove" in match_attrs and self.remove:
-                        self.remove_yaml_attributes(section["build-job-remove"])
+                    job_names = ["build-job", "test-job"]
 
-                    if "build-job" in match_attrs and not self.remove:
-                        self.merge_yaml_attributes(section["build-job"])
+                    for name in job_names:
+                        section_name = f"{name}-remove" if self.remove else name
+                        if section_name in match_attrs:
+                            self.update_attributes(section[section_name])
                     break
 
             if matched and only_first:
@@ -625,7 +635,6 @@ class PipelineOptions:
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
-        add_test_jobs: bool = False,
         cdash_handler: Optional["CDashHandler"] = None,
     ):
         """
@@ -783,6 +792,8 @@ class SpackCIConfig:
 
         self.pipeline_gen: List[Dict[str, Dict]] = ci_config.get("pipeline-gen", [])
 
+        self.add_tests = "test-job" in self.pipeline_gen
+
         # TODO: Move this to GitlabConfig?
         #: Callable methods that perform variable substitutions on script lines
         self.converter: Dict[CIScriptStage, Callable] = {}
@@ -798,14 +809,14 @@ class SpackCIConfig:
             self.jobs[name] = [CIJobData(name)]
 
     # Create jobs for all the pipeline specs
-    def init_pipeline_jobs(self, pipeline: PipelineDag, tests: Optional[bool] = False):
+    def init_pipeline_jobs(self, pipeline: PipelineDag):
         names = ["build"]
-        if tests:
+        if self.add_tests:
             names.append("test")
 
-        for _, node in pipeline.traverse_nodes():
-            for name in names:
-                self.jobs[name].append(CIJobData(name, node.spec))
+        for level, node in pipeline.traverse_nodes():
+            for i, name in enumerate(names):
+                self.jobs[name].append(CIJobData(name, level + i, node.spec))
 
     def register_script_converter(self, stage: CIScriptStage, op: Callable):
         """Register the function that takes and string and substitutes values.
@@ -872,14 +883,15 @@ class SpackCIConfig:
 
         return None
 
-    def remove_job_attributes(self, attrs: Any):
-        """Remove the specified job attributes from this job instance.
+    def update_job_attributes(self, job_name: str, section: Dict[str, Any]):
+        """Update the specified job attributes for corresponding jobs
 
         Args:
-            attributes to be removed
+            job_name: the job name of jobs whose attributes are to be updated
+            section: attributes to be merged or removed, depending on the job
         """
         if job_name in spec_job_names:
-            # Apply the same attributes to all jobs that can have a spec
+            # Apply the same attributes to all matching jobs that can have a spec
             for job in self.jobs[job_name]:
                 tty.debug(
                     f"TLD: .. {job_name}, {job.spec}, {job.remove}: applying "
@@ -902,10 +914,10 @@ class SpackCIConfig:
         # Create a signing job if there is a script and the job
         # hasn't been initialized yet
         if job_name == "signing" and len(self.jobs[job_name]) == 0:
-            tty.debug(f"TLD: .. detected signing section and none in jobs")
+            tty.debug("TLD: .. detected signing section and none in jobs")
             if "signing-job" in section:
                 if "script" not in section["signing-job"]:
-                    tty.debug(f"TLD: .. .. skipping signing job missing script")
+                    tty.debug("TLD: .. .. skipping signing job missing script")
                     return
 
                 self.jobs[job_name].append(CIJobData(job_name))
@@ -918,7 +930,14 @@ class SpackCIConfig:
             job.update_attributes(section)
 
     def update_submapping_job_attributes(self, section: Dict[str, Any]):
-        """Update spec job attributes with submapping data."""
+        """Update spec job attributes with submapping data.
+
+        Submapping attributes can be used to customize the tags and variables
+        used to ensure the runner has sufficient resources for the job.
+
+        Args:
+            section: section possibly containing relevant job attributes
+        """
         if "submapping" not in section:
             return
 
