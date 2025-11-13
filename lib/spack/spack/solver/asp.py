@@ -351,6 +351,10 @@ class Result:
         self._concrete_specs = None
         self._unsolved_specs = None
 
+        # Cached intermediate results for refinalizing specs
+        self.hash_lookup = None
+        self.spec_attrs = None
+
     def format_core(self, core):
         """
         Format an unsatisfiable core for human readability
@@ -445,6 +449,25 @@ class Result:
 
         conflicts = self.format_minimal_cores()
         raise SolverError(constraints, conflicts=conflicts)
+
+    def refinalize(self):
+        """Recompute specs from a cached concretization result"""
+        # TODO: types are wonky here
+        # answers is a list that only ever has one entry
+        if not self.answers:
+            return
+
+        self.clear_caches()
+
+        min_cost, _, _ = self.answers[0]
+        builder = SpecBuilder(self.abstract_specs, hash_lookup=self.hash_lookup)
+        answers = builder.build_specs(self.spec_attrs)
+        self.answers[0][2] = answers
+
+    def clear_caches(self):
+        self._concrete_specs = None
+        self._unsolved_specs = None
+        self._concrete_specs_by_input = None
 
     @property
     def specs(self):
@@ -623,7 +646,6 @@ class Result:
             # self.cores
             # self.possible_dependencies
         )
-        print(eq)
         return all(eq)
 
 
@@ -1123,7 +1145,8 @@ class PyclingoDriver:
         if result.satisfiable:
             timer.start("construct_specs")
             # get the best model
-            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+            result.hash_lookup = setup.reusable_and_possible
+            builder = SpecBuilder(specs, hash_lookup=result.hash_lookup)
             min_cost, best_model = min(models)
 
             # first check for errors
@@ -1131,8 +1154,10 @@ class PyclingoDriver:
             error_handler.raise_if_errors()
 
             # build specs from spec attributes in the model
-            spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
-            answers = builder.build_specs(spec_attrs)
+            result.spec_attrs = [
+                (name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")
+            ]
+            answers = builder.build_specs(result.spec_attrs)
 
             # add best spec to the results
             result.answers.append((list(min_cost), 0, answers))
@@ -1252,7 +1277,9 @@ class PyclingoDriver:
         timer.stop("cache-check")
 
         # run the solver and store the result, if it wasn't cached already
-        if not result:
+        if result and result.spec_attrs:  # if not spec_attrs this cache is invalid
+            result.refinalize()
+        else:
             problem_repr = "\n".join(problem)
             result = self._run_clingo(specs, setup, problem_repr, control_file_paths, timer)
             if conc_cache_enabled and self._conc_cache:
