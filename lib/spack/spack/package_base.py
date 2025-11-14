@@ -2574,7 +2574,7 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
     return details is not None and details.get("deprecated", False)
 
 
-def preferred_version(pkg: PackageBase):
+def preferred_version(pkg: Union[PackageBase, Type[PackageBase]]):
     """
     Returns a sorted list of the preferred versions of the package.
 
