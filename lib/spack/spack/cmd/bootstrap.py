@@ -29,7 +29,7 @@ level = "long"
 
 
 # Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.6/bootstrap-buildcache-v3.tar.gz"
+BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v2.2/bootstrap-buildcache.tar.gz"
 
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
@@ -400,6 +400,8 @@ def _mirror(args):
         spack.llnl.util.tty.set_msg_enabled(False)
         spec = spack.concretize.concretize_one(spec_str)
         for node in spec.traverse():
+            if node.external:
+                continue
             spack.cmd.mirror.create(mirror_dir, [node])
         spack.llnl.util.tty.set_msg_enabled(True)
 
