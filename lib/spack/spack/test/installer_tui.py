@@ -5,7 +5,13 @@
 
 import io
 import os
+import sys
 from typing import List, Tuple
+
+import pytest
+
+if sys.platform == "win32":
+    pytest.skip("No Windows support", allow_module_level=True)
 
 import spack.new_installer as inst
 from spack.new_installer import BuildStatus
