@@ -73,7 +73,7 @@ jobs:
           spack bootstrap disable github-actions-v0.6
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
           spack -d solve zlib
-          tree $HOME/.spack/bootstrap/store/
+          tree ~/.spack/bootstrap/store/
 
   gnupg-sources:
     if: github.repository == 'spack/spack'
@@ -151,13 +151,13 @@ jobs:
               exit 1
             fi
             spack solve zlib
-            tree ~/.spack/bootstrap/store
           done
+          tree ~/.spack/bootstrap/store
       - name: Bootstrap GnuPG
         run: |
           source share/spack/setup-env.sh
           spack -d gpg list
-          tree $HOME/.spack/bootstrap/store/
+          tree ~/.spack/bootstrap/store/
 
   windows:
     if: github.repository == 'spack/spack'
