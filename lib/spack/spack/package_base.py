@@ -19,7 +19,6 @@ import sys
 import textwrap
 import time
 import traceback
-from collections.abc import Sequence
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 from spack.vendor.typing_extensions import Literal
@@ -2592,7 +2591,7 @@ def preferred_version(pkg: Union[PackageBase, Type[PackageBase]]):
 
 
 def sort_by_pkg_preference(
-    versions: Sequence[Union[GitVersion, StandardVersion]],
+    versions: Iterable[Union[GitVersion, StandardVersion]],
     *,
     pkg: Union[PackageBase, Type[PackageBase]],
 ) -> List[Union[GitVersion, StandardVersion]]:

@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
-from typing import NamedTuple, Tuple, Union
+from typing import Tuple, Union
 
 from spack.version import GitVersion, StandardVersion
 
@@ -39,19 +39,10 @@ class Provenance(enum.IntEnum):
     INSTALLED = enum.auto()
     # lower provenance for installed git refs so concretizer prefers StandardVersion installs
     INSTALLED_GIT_VERSION = enum.auto()
+    # Synthetic versions for virtual packages
+    VIRTUAL_CONSTRAINT = enum.auto()
     # A runtime injected from another package (e.g. a compiler)
     RUNTIME = enum.auto()
 
     def __str__(self):
         return f"{self._name_.lower()}"
-
-
-class DeclaredVersion(NamedTuple):
-    """Data class to contain information on declared versions used in the solve"""
-
-    #: String representation of the version
-    version: Union[GitVersion, StandardVersion]
-    #: Unique index assigned to this version
-    idx: int
-    #: Provenance of the version
-    origin: Provenance
