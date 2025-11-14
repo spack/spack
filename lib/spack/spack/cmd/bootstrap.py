@@ -400,6 +400,8 @@ def _mirror(args):
         spack.llnl.util.tty.set_msg_enabled(False)
         spec = spack.concretize.concretize_one(spec_str)
         for node in spec.traverse():
+            if node.external:
+                continue
             spack.cmd.mirror.create(mirror_dir, [node])
         spack.llnl.util.tty.set_msg_enabled(True)
 
