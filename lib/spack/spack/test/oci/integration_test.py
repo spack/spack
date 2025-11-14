@@ -415,13 +415,12 @@ def test_oci_config_created_timestamp(mutable_database):
         # Parse the timestamp (RFC 3339 format)
         # The format should be like: 2015-10-31T22:22:56.015925234Z
         try:
-            # Remove the Z and parse
-            if created_str.endswith("Z"):
-                created_dt = datetime.datetime.strptime(
-                    created_str[:-1], "%Y-%m-%dT%H:%M:%S.%f"
-                ).replace(tzinfo=datetime.timezone.utc)
-            else:
-                created_dt = datetime.datetime.fromisoformat(created_str)
+            # Parse RFC 3339 timestamp with Z suffix
+            if not created_str.endswith("Z"):
+                pytest.fail(f"Timestamp should end with 'Z': {created_str}")
+            created_dt = datetime.datetime.strptime(
+                created_str[:-1], "%Y-%m-%dT%H:%M:%S.%f"
+            ).replace(tzinfo=datetime.timezone.utc)
         except ValueError as e:
             pytest.fail(f"Invalid timestamp format '{created_str}': {e}")
 
