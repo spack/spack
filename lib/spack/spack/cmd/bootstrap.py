@@ -51,9 +51,9 @@ BINARY_METADATA = {
     },
 }
 
-CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v0.6/clingo.json"
-GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v0.6/gnupg.json"
-PATCHELF_JSON = "$spack/share/spack/bootstrap/github-actions-v0.6/patchelf.json"
+CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v2/clingo.json"
+GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v2/gnupg.json"
+PATCHELF_JSON = "$spack/share/spack/bootstrap/github-actions-v2/patchelf.json"
 
 # Metadata for a generated source mirror
 SOURCE_METADATA = {
