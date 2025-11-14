@@ -86,6 +86,13 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
 
 #defined choose_version/2.
 
+dont_just_choose_a_version(1).
+
+{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
+ :- attr("node", node(ID, Package)).
+
+attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
+
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(10000, "Cannot satisfy '{0}@{1}' 3({2})", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)

@@ -318,18 +318,20 @@ pkg_fact(Package, version_declared(Version, Weight)) :- pkg_fact(Package, versio
 % versions are declared w/priority -- declared with priority implies declared
 pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declared(Version, _)).
 
+#defined compiler_package/1.
+
 % If something is a package, it has only one version and that must be a
 % declared version.
 % We allow clingo to choose any version(s), and infer an error if there
 % is not precisely one version chosen. Error facts are heavily optimized
 % against to ensure they cannot be inferred when a non-error solution is
 % possible
-{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
- :- attr("node", node(ID, Package)).
 
-#defined compiler_package/1.
+{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
+ :- attr("node", node(ID, Package)),
+    not dont_just_choose_a_version(1).
 
-attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
+#defined dont_just_choose_a_version/1.
 
 % A virtual package may or may not have a version, but never has more than one
 error(100, "Cannot select a single version for virtual '{0}'", Virtual)
@@ -392,13 +394,15 @@ error(10000, "Cannot satisfy '{0}@{1}' 1({2})", Package, Constraint, Version)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     choose_version(node(ID, Package), Version).
+     choose_version(node(ID, Package), Version),
+     not dont_just_choose_a_version(1).
 
 error(100, "Cannot satisfy '{0}@{1}' 2({2})", Package, Constraint, Version)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     not choose_version(node(ID, Package), _).
+     not choose_version(node(ID, Package), _),
+     not dont_just_choose_a_version(1).
 
 error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
