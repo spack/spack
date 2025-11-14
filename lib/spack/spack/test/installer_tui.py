@@ -43,21 +43,19 @@ class MockSpec:
 class SimpleTextIOWrapper(io.TextIOWrapper):
     """TextIOWrapper around a BytesIO buffer for testing of stdout behavior"""
 
-    def __init__(self, buffer: io.BytesIO, tty: bool) -> None:
-        super().__init__(buffer, encoding="utf-8", line_buffering=True)
+    def __init__(self, tty: bool) -> None:
+        self._buffer = io.BytesIO()
         self._tty = tty
-        self._buffer = buffer
+        super().__init__(self._buffer, encoding="utf-8", line_buffering=True)
 
     def isatty(self) -> bool:
         return self._tty
 
     def getvalue(self) -> str:
-        """Get the text content from the buffer"""
         self.flush()
         return self._buffer.getvalue().decode("utf-8")
 
     def clear(self):
-        """Clear the buffer"""
         self.flush()
         self._buffer.truncate(0)
         self._buffer.seek(0)
@@ -67,8 +65,7 @@ def create_build_status(
     is_tty=False, terminal_cols=80, terminal_rows=24, initial_time=0.0, total=0
 ) -> Tuple[BuildStatus, List[float], SimpleTextIOWrapper]:
     """Helper function to create BuildStatus with mocked dependencies"""
-    binary_buffer = io.BytesIO()
-    fake_stdout = SimpleTextIOWrapper(binary_buffer, tty=is_tty)
+    fake_stdout = SimpleTextIOWrapper(tty=is_tty)
 
     # List to track time values
     time_values = [initial_time]
