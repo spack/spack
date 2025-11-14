@@ -7,8 +7,8 @@
    :description lang=en:
       An overview of the Spack Package API, a stable interface for package authors to interact with the Spack framework.
 
-Spack Package API v2.2
-======================
+Spack Package API
+=================
 
 This document describes the Spack Package API (:mod:`spack.package`), the stable interface for Spack package authors.
 It is assumed you have already read the :doc:`Spack Packaging Guide <packaging_guide_creation>`.
