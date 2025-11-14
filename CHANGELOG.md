@@ -1,3 +1,176 @@
+# v1.1.0 (2025-11-14)
+
+`v1.1.0` features major improvements to **compiler handling** and **configuration management**, a significant refactoring of **externals**, and exciting new **experimental features** like a console UI for parallel installations and concretization caching.
+
+## Major new features
+
+1. **Enhanced Compiler Control and Unmixing**
+
+   * Compiler unmixing (#51135)
+   * Propagated compiler preferences (#51383)
+
+   In Spack v1.0, support for compilers as nodes made it much easier to mix compilers for the same language on different packages in a Spec. This increased flexibility, but did not offer  options to constrain compiler selection when needed.
+
+   * #51135 introduces the `concretizer:compiler_mixing` config option. When disabled, all specs in the "root unification set" (root specs and their transitive link/run deps) will be assigned a single compiler for each language. You can also specify a list of packages to be excepted from the restriction.
+
+   * #51383 introduces the `%%` sigil in the spec syntax. While `%` specifies a direct dependency for a single node, `%%` specifies a dependency for that node and a preference for its transitive link/run dependencies (at the same priority as the `prefer` key in `packages.yaml` config).
+
+2. **Customizable configuration** (#51162)
+
+   All configuration now stems from `$spack/etc/spack` and `$spack/etc/spack/defaults`, so the owner of a Spack instance can have full control over what configuration scopes exist.
+
+   * Scopes included in configuration can be named, and the builtin `site`, `user`, `system`, etc. scopes are now defined in configuration rather than hard-coded.
+   * `$spack/etc/spack/defaults` is the lowest priority.
+   * `$spack/etc/spack` *includes* the other scopes at lower precedence than itself.
+   * You can override with any scopes *except* the defaults with `include::`. e.g., `include::[]` in an environment allows you to ignore everything but defaults entirely.
+
+   Here is `$spack/etc/spack/include.yaml`:
+
+   ```yaml
+   include:
+     # user configuration scope
+     - name: "user"
+       path: "~/.spack"
+       optional: true
+       when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+
+     # site configuration scope
+     - name: "site"
+       path: "$spack/etc/spack/site"
+       optional: true
+
+     # system configuration scope
+     - name: "system"
+       path: "/etc/spack"
+       optional: true
+       when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+   ```
+
+   NOTE: This change inverts the priority order of configuration in `$spack/etc/spack` and `~/.spack`.
+
+   See the [configuration docs](https://spack.readthedocs.io/en/latest/configuration.html) and
+   [include docs](https://spack.readthedocs.io/en/latest/include_yaml.html) for
+   more information.
+
+3. **Git includes** (#51191)
+
+   Configuration files can now be included directly from a **remote Git repository**. This allows for easier sharing and versioning of complex configurations across teams or projects. These entries accept the same syntax as remote repository configuration, and can likewise be conditional with `when:`.
+
+   ```yaml
+   include:
+   - git: https://github.com/spack/spack-configs
+     branch: main
+     when: os == "centos7"
+     paths:
+     - USC/config/config.yaml
+     - USC/config/packages.yaml
+   ```
+
+   See [the docs](https://spack.readthedocs.io/en/latest/include_yaml.html#git-repository-files) for details.
+
+4. **Externals Can Now Have Dependencies** (#51118)
+
+   Externals are treated as concrete specs, so there is a 1:1 mapping between an entry in `packages.yaml` and any installed external spec (for a fixed repository).
+
+   Their YAML specification has been extended to allow modeling dependencies of external specs. This might be quite useful to better capture e.g. ROCm installations that are already installed on a given system, or in similar cases.
+
+   To be backward compatible with external specs specifying a compiler, for instance `mpich %gcc@9`, Spack will match the compiler specification to an existing external. It will fail when the specification is ambiguous, or if it does not match any other externals.
+
+
+## Experimental Features
+
+5. **New installer UI** (experimental, see #51434)
+
+   New, experimental console UI for the Spack installer that allows:
+
+   * Spack to show progress on multiple parallel processes concurrently;
+   * Users to view logs for different installations independently; and
+   * Spack to share a jobserver among multiple parallel builds.
+
+   Demo: https://asciinema.org/a/755827
+
+   Usage:
+
+   * Run this to enable by default (and persist across runs):
+     ```
+     spack config add config:installer:new
+     ```
+     or use:
+     ```
+     spack -c config:installer:new install ...
+     ```
+     to try one run with the new UI.
+   * The `-j` flag in spack install `-j <N> ...` is all you need, it will build packages in parallel. There is no need to set `-p`; the installer spawns as many builds as it can and shares work by default.
+   * Use `n` for next logs and `p/N` for previous logs
+   * Use `v` to toggle between logs and overview
+   * Use `q` or `Esc` to go from logs back to overview.
+   * Use `/` to enter search mode: filters the overview as you type; press `Enter` to follow logs or `Esc` to exit search mode.
+
+   > [!WARNING]
+   > This feature is experimental because it is not feature-complete to match the existing installer. See the issue #51515 for a list of features that are not completed. Particularly note that the new installer locks the entire database, and other spack instances will not install concurrently while it is running.
+
+6. **Concretization Caching** (experimental, see #50905, #51448)
+
+   Spack can cache concretization outputs for performance. With caching, Spack will still set up the concretization problem, but it can look up the solve result and avoid long solve times. This feature is currently off by default, but you can enable it with:
+
+   ```
+   spack config add concretizer:concretization_cache:enable:true
+   ```
+
+   > [!WARNING]
+   > Currently there is a bug that the cache will return results that do not properly reflect changes in the `package_hash` (that is, changes in the `package.py` source code). We will enable caching by default in a future release, when this bug is fixed.
+
+## Potentially breaking changes
+* Configurable configuration changes the precedence of the `site` scope.
+    * The `spack` scope (in `/etc/spack` within the Spack installation) is now the highest precedence scope
+    * The `site` scope is now *lower* precedence than `spack` and `user`.
+    * If you previously had configuration files in in `$spack/etc/spack`, they will take precedence over configuration in `~/.spack`. If you do not want that, move them to `$spack/etc/spack/site`.
+    * See #51162 for details.
+* Fixed a bug with command-line and environment scope ordering. The environment scope could previously override custom command-line scopes. Now, the active environment is *always* lower precedence than any configuration scopes provided on the command line. (#51461)
+
+## Other notable improvements
+
+### Improved error messages
+* solver: catch invalid dependencies during concretization (#51176)
+* improved errors for requirements (#45800)
+
+### Performance Improvements
+* `spack mirror create --all` now runs in parallel (#50901)
+* `spack develop`: fast automatic reconcretization (#51140)
+* Don't spawn a process for `--fake` installs (#51491)
+* Use `gethostname` instead of `getfqdn` (#51481)
+* Check for `commit` variant only if not developing (#51507)
+* Concretization performance improvements (#51160, #51152, #51416)
+* spack diff: fix performance bug (#51270)
+
+### Concretizer improvements
+* concretizer: fix direct dep w/ virtuals issue (#51037)
+* solver: reduce items in edge optimizations (#51503)
+
+### UI and Commands
+* Managed environments can now be organized into folders (#50994)
+* `spack info` shows full info about conditional dependencies and can filter by spec. (#51137)
+* `spack help` is now reorganized and has color sections (#51484)
+* `spack clean --all` means all (no exception for bootstrap cache) (#50984)
+* `--variants-by-name` no longer used (#51450)
+* `spack env create`: allow creation from env or env dir (#51433)
+
+## Notable Bugfixes
+* mirror: clean up stage when retrying (#43519)
+* Many smaller concretization fixes (#51361, #51355, #51341, #51347, #51282, #51190, #51226, #51065, #51064, #51074)
+* Bugfix for failed multi-node parallel installations (#50933)
+
+## Spack community stats
+
+* 1,681 commits
+* 8,611 packages in the 2025.11.0 release, 112 new since 2025.07.0
+* 276 people contributed to this release
+* 265 committers to packages
+* 31 committers to core
+
+See the [2025.11.0 release](https://github.com/spack/spack-packages/releases/tag/v2025.11.0) of [spack-packages](https://github.com/spack/spack-packages/) for more details.
+
+
 # v1.0.2 (2025-09-11)
 
 ## Bug Fixes
@@ -10,10 +183,10 @@
   * Build the preferred compiler with itself by default. (#51201)
   * Fixed a performance regression when using `unify:when_possible`. (#51226)
   * Fixed an issue with strong preferences, when provider details are given. (#51263)
-  * Fixed an issue when specifying flags on a package that appears multiple times in the DAG. (#51218) 
+  * Fixed an issue when specifying flags on a package that appears multiple times in the DAG. (#51218)
 * Fixed a regression for `zsh` in `spack env activate --prompt`. (#51258)
 * Fix a few cases where the `when` context manager was not dealing with direct dependencies correctly. (#51259)
-* Various fixes to string representations of specs. (#51207) 
+* Various fixes to string representations of specs. (#51207)
 
 ## Enhancements
 
