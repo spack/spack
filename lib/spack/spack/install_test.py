@@ -299,7 +299,9 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with spack.llnl.util.tty.log.log_output(self.test_log_file, verbose) as self._logger:
+        with spack.llnl.util.tty.log.log_output(
+            self.test_log_file, verbose, append=True
+        ) as self._logger:
             with self.logger.force_echo():  # type: ignore[union-attr]
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
 

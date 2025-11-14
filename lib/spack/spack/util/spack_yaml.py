@@ -63,14 +63,42 @@ def syaml_type(obj):
     return obj
 
 
-def deepcopy_as_builtin(obj: Any) -> Any:
-    """Deep copy a YAML object as built-in types (dict, list, str, int, ...)."""
+class DictWithLineInfo(dict):
+    """A dictionary that preserves YAML line information."""
+
+    __slots__ = ("line_info",)
+
+    def __init__(self, *args, line_info: str = "", **kwargs):
+        super().__init__(*args, **kwargs)
+        self.line_info = line_info
+
+
+def _represent_dict_with_line_info(dumper, data):
+    return dumper.represent_dict(data)
+
+
+def deepcopy_as_builtin(obj: Any, *, line_info: bool = False) -> Any:
+    """Deep copies a YAML object as built-in types (dict, list, str, int, ...).
+
+    Args:
+        obj: object to be copied
+        line_info: if ``True``, add line information to the copied object
+    """
     if isinstance(obj, str):
         return str(obj)
     elif isinstance(obj, dict):
-        return {deepcopy_as_builtin(k): deepcopy_as_builtin(v) for k, v in obj.items()}
+        result = DictWithLineInfo()
+        result.update(
+            {
+                deepcopy_as_builtin(k): deepcopy_as_builtin(v, line_info=line_info)
+                for k, v in obj.items()
+            }
+        )
+        if line_info:
+            result.line_info = _line_info(obj)
+        return result
     elif isinstance(obj, list):
-        return [deepcopy_as_builtin(x) for x in obj]
+        return [deepcopy_as_builtin(x, line_info=line_info) for x in obj]
     elif isinstance(obj, bool):
         return bool(obj)
     elif isinstance(obj, int):
@@ -248,12 +276,14 @@ def dump(data, stream=None, default_flow_style=False):
     return handler.dump(data, stream=stream)
 
 
-def file_line(mark):
+def _line_info(obj):
     """Format a mark as <file>:<line> information."""
-    result = mark.name
-    if mark.line:
-        result += ":" + str(mark.line)
-    return result
+    m = get_mark_from_yaml_data(obj)
+    if m is None:
+        return ""
+    if m.line:
+        return f"{m.name}:{m.line:d}"
+    return m.name
 
 
 #: Global for interactions between LineAnnotationDumper and dump_annotated().
@@ -359,6 +389,7 @@ class ConfigYAML:
         else:
             self.yaml.Representer = OrderedLineRepresenter
             self.yaml.Constructor = OrderedLineConstructor
+        self.yaml.Representer.add_representer(DictWithLineInfo, _represent_dict_with_line_info)
 
     def load(self, stream: IO):
         """Loads the YAML data from a stream and returns it.

@@ -6,15 +6,18 @@
 /var/spack/cache
 /var/spack/environments
 /opt
-# Ignore everything in /etc/spack except /etc/spack/defaults
-/etc/spack/*
-!/etc/spack/defaults
 /share/spack/modules
 /share/spack/lmod
 # Debug logs
 spack-db.*
 *.in.log
 *.out.log
+
+# Configuration: Ignore everything in /etc/spack,
+# except spack and site scopes that ship with spack
+/etc/spack/*
+!/etc/spack/defaults
+!/etc/spack/site
 
 ###########################
 # Python-specific ignores #

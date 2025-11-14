@@ -4,6 +4,7 @@
 import copy
 import os
 import shutil
+import urllib
 from typing import List, Optional
 
 import spack.vendor.ruamel.yaml
@@ -142,6 +143,13 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
         def _rewrite_include(path, orig_root, new_root):
             expanded_path = path_util.substitute_path_variables(path)
+
+            # Skip non-local paths
+            parsed = urllib.parse.urlparse(expanded_path)
+            file_schemes = ["", "file"]
+            if parsed.scheme not in file_schemes:
+                return path
+
             if os.path.isabs(expanded_path):
                 return path
             abs_path = path_util.canonicalize_path(path, orig_root)

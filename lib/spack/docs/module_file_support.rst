@@ -141,7 +141,7 @@ The ``modules.yaml`` config file and module sets
 The configuration files that control module generation behavior are named ``modules.yaml``.
 The default configuration looks like this:
 
-.. literalinclude:: _spack_root/etc/spack/defaults/modules.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/base/modules.yaml
    :language: yaml
 
 You can define one or more **module sets**, each of which can be configured separately with regard to install location, naming scheme, inclusion and exclusion, autoloading, et cetera.

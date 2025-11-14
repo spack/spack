@@ -254,7 +254,7 @@ contains 'unify: when_possible' spack -C $QA_DIR/scopes/wp config get concretize
 contains 'unify: false' \
          spack -C $QA_DIR/scopes/wp -C $QA_DIR/scopes/false config get concretizer
 
-contains 'unify: true' \
+contains 'unify: false' \
          spack -C $QA_DIR/scopes/wp \
                -C $QA_DIR/scopes/false \
                -e $QA_DIR/scopes/true \
@@ -272,7 +272,7 @@ contains 'unify: false' \
                -C $QA_DIR/scopes/false \
          config get concretizer
 
-contains 'unify: true' \
+contains 'unify: false' \
          spack -C $QA_DIR/scopes/wp \
                -C $QA_DIR/scopes/false \
                -D $QA_DIR/scopes/true \
@@ -289,3 +289,9 @@ contains 'unify: false' \
                -C $QA_DIR/scopes/wp \
                -C $QA_DIR/scopes/false \
               config get concretizer
+
+contains 'SUCCESS' spack -C $QA_DIR/scopes/wp -e $QA_DIR/scopes/true python "$SHARE_DIR/qa/environment_activation.py"
+contains 'SUCCESS' spack -e $QA_DIR/scopes/true -C $QA_DIR/scopes/wp python "$SHARE_DIR/qa/environment_activation.py"
+contains 'SUCCESS' spack -C $QA_DIR/scopes/false -e $QA_DIR/scopes/true -C $QA_DIR/scopes/wp python "$SHARE_DIR/qa/environment_activation.py"
+contains 'SUCCESS' spack -C $QA_DIR/scopes/false -C $QA_DIR/scopes/wp -e $QA_DIR/scopes/true python "$SHARE_DIR/qa/environment_activation.py"
+contains 'SUCCESS' spack -C $QA_DIR/scopes/wp -C $QA_DIR/scopes/false -e $QA_DIR/scopes/true python "$SHARE_DIR/qa/environment_activation.py"

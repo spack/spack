@@ -223,11 +223,13 @@ def installed_environment(
         spack_yaml.write_text(content)
         with fs.working_dir(tmp_path):
             env("create", "test", "./spack.yaml")
-            with ev.read("test"):
-                install("--fake")
+            with ev.read("test") as current_environment:
+                current_environment.concretize()
+                current_environment.install_all(fake=True)
+                current_environment.write(regenerate=True)
 
-            test = ev.read("test")
-            yield test
+            with ev.read("test") as current_environment:
+                yield current_environment
 
     return _installed_environment
 
@@ -578,7 +580,7 @@ def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch, mu
 
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand("install")
-    install("dependent-install")
+    install("--fake", "dependent-install")
 
     # Check one explicit, one implicit install
     dependent = spack.store.STORE.db.query(explicit=True)
@@ -624,7 +626,7 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
 
     e = ev.read("test")
     with e:
-        install("--add", "depends-on-run-env")
+        install("--add", "--fake", "depends-on-run-env")
 
     env_variables = {}
     spack.environment.shell.activate(e).apply_modifications(env_variables)
@@ -865,7 +867,7 @@ def test_env_status_broken_view(
     tmp_path: pathlib.Path,
 ):
     with ev.create_in_dir(tmp_path):
-        install("--add", "trivial-install-test-package")
+        install("--add", "--fake", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and warns the user
@@ -884,7 +886,7 @@ def test_env_activate_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_custom_repository, install_mockery
 ):
     with ev.create("test"):
-        install("--add", "trivial-install-test-package")
+        install("--add", "--fake", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
@@ -1041,6 +1043,54 @@ spack:
     assert not e2.concretized_order
     assert not e2.concretized_user_specs
     assert not e2.specs_by_hash
+
+
+@pytest.mark.parametrize("use_name", (True, False))
+def test_init_from_env(use_name, environment_from_manifest):
+    """Test that an environment can be instantiated from an environment dir"""
+    e1 = environment_from_manifest(
+        """
+spack:
+  specs:
+  - mpileaks
+  - hypre
+  - libelf
+"""
+    )
+
+    with e1:
+        # Test that relative paths in the env are not rewritten
+        # Test that relative paths outside the env are
+        dev_config = {
+            "libelf": {"spec": "libelf", "path": "./libelf"},
+            "mpileaks": {"spec": "mpileaks", "path": "../mpileaks"},
+        }
+        spack.config.set("develop", dev_config)
+        fs.touch(os.path.join(e1.path, "libelf"))
+
+    e1.concretize()
+    e1.write()
+
+    e2 = _env_create("test2", init_file="test" if use_name else e1.path)
+
+    for s1, s2 in zip(e1.user_specs, e2.user_specs):
+        assert s1 == s2
+
+    assert e2.concretized_order == e1.concretized_order
+    assert e2.concretized_user_specs == e1.concretized_user_specs
+    assert e2.specs_by_hash == e1.specs_by_hash
+
+    assert os.path.exists(os.path.join(e2.path, "libelf"))
+    with e2:
+        assert e2.dev_specs["libelf"]["path"] == "./libelf"
+        assert e2.dev_specs["mpileaks"]["path"] == os.path.join(
+            os.path.dirname(e1.path), "mpileaks"
+        )
+
+
+def test_init_from_env_no_spackfile(tmp_path):
+    with pytest.raises(ev.SpackEnvironmentError, match="not a valid environment"):
+        _env_create("test", init_file=str(tmp_path))
 
 
 def test_init_from_yaml_relative_includes(tmp_path: pathlib.Path):
@@ -3034,7 +3084,7 @@ spack:
         )
 
     with ev.Environment(envdir):
-        install()
+        install("--fake")
 
     # make sure transitive run type deps are in the view
     for pkg in ("dtrun1", "dtrun3"):
@@ -3579,7 +3629,7 @@ spack:
     )
 
     with ev.read("test") as e:
-        install()
+        install("--fake")
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)
@@ -4342,7 +4392,7 @@ def test_env_include_packages_url(
     """Test inclusion of a (GitHub) URL."""
     develop_url = "https://github.com/fake/fake/blob/develop/"
     default_packages = develop_url + "etc/fake/defaults/packages.yaml"
-    sha256 = "6a1b26c857ca7e5bcd7342092e2f218da43d64b78bd72771f603027ea3c8b4af"
+    sha256 = "8d428c600b215e3b4a207a08236659dfc2c9ae2782c35943a00ee4204a135702"
     spack_yaml = tmp_path / "spack.yaml"
     with open(spack_yaml, "w", encoding="utf-8") as f:
         f.write(

@@ -5,9 +5,7 @@
 import spack.cmd.common.env_utility as env_utility
 from spack.context import Context
 
-description = (
-    "run a command in a spec's install environment, or dump its environment to screen or file"
-)
+description = "dump the install environment for a spec,\nor run a command in that environment"
 section = "build"
 level = "long"
 

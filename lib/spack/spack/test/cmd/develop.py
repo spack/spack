@@ -17,6 +17,7 @@ import spack.stage
 import spack.util.git
 import spack.util.path
 from spack.error import SpackError
+from spack.fetch_strategy import URLFetchStrategy
 from spack.main import SpackCommand
 
 add = SpackCommand("add")
@@ -367,3 +368,51 @@ def test_concretize_dev_path_with_at_symbol_in_env(
         assert cspec.satisfies(spec_like), cspec
         assert cspec.is_develop, cspec
         assert str(develop_dir) in cspec.variants["dev_path"], cspec
+
+
+def _failing_fn(*args, **kwargs):
+    # This stands in for a function that should never be called as
+    # part of a test.
+    assert False
+
+
+@pytest.mark.parametrize("_devpath_should_exist", [True, False])
+@pytest.mark.disable_clean_stage_check
+def test_develop_with_devpath_staging(
+    monkeypatch,
+    mutable_mock_env_path,
+    mock_packages,
+    tmp_path: pathlib.Path,
+    mock_archive,
+    install_mockery,
+    mock_fetch,
+    mock_resource_fetch,
+    mock_stage,
+    _devpath_should_exist,
+):
+    # If the specified develop path exists, a resource should not be
+    # downloaded at all at install time. Otherwise, it should be.
+
+    env("create", "test")
+
+    develop_dir = tmp_path / "build@location"
+    if _devpath_should_exist:
+        develop_dir.mkdir()
+        monkeypatch.setattr(URLFetchStrategy, "fetch", _failing_fn)
+
+    spec_like = "simple-resource@1.0"
+
+    with ev.read("test") as e:
+        e.add(spec_like)
+        e.concretize()
+        e.write()
+        develop(f"--path={develop_dir}", spec_like)
+
+        e.install_all()
+
+        expected_resource_path = develop_dir / "resource.tgz"
+        if _devpath_should_exist:
+            # If we made it here, we didn't try to download anything.
+            pass
+        else:
+            assert os.path.exists(expected_resource_path)

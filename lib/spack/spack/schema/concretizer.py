@@ -61,6 +61,10 @@ properties: Dict[str, Any] = {
             "unify": {
                 "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["when_possible"]}]
             },
+            "compiler_mixing": {
+                "oneOf": [{"type": "boolean"}, {"type": "array"}],
+                "description": "Whether to allow compiler mixing between link/run dependencies",
+            },
             "splice": {
                 "type": "object",
                 "additionalProperties": False,
@@ -96,6 +100,23 @@ properties: Dict[str, Any] = {
             "timeout": {"type": "integer", "minimum": 0},
             "error_on_timeout": {"type": "boolean"},
             "os_compatible": {"type": "object", "additionalProperties": {"type": "array"}},
+            "concretization_cache": {
+                "type": "object",
+                "properties": {
+                    "enable": {"type": "boolean"},
+                    "url": {"type": "string"},
+                    "entry_limit": {"type": "integer", "minimum": 0},
+                },
+            },
+            "externals": {
+                "type": "object",
+                "properties": {
+                    "completion": {
+                        "type": "string",
+                        "enum": ["architecture_only", "default_variants"],
+                    }
+                },
+            },
         },
     }
 }

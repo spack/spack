@@ -133,6 +133,23 @@ def test_log_output_with_filter(capfd, tmp_path: pathlib.Path):
     assert capfd.readouterr()[0] == "bar blah\nblah bar\nbar bar\n"
 
 
+def test_log_output_with_filter_and_append(capfd, tmp_path: pathlib.Path):
+    with working_dir(str(tmp_path)):
+        with log.log_output("foo.txt", filter_fn=_log_filter_fn):
+            print("foo blah")
+            print("blah foo")
+            print("foo foo")
+
+        with open("foo.txt", encoding="utf-8") as f:
+            assert f.read() == "foo blah\nblah foo\nfoo foo\n"
+
+        with log.log_output("foo.txt", filter_fn=_log_filter_fn, append=True):
+            print("more foo more blah")
+
+        with open("foo.txt", encoding="utf-8") as f:
+            assert f.read() == "foo blah\nblah foo\nfoo foo\nmore foo more blah\n"
+
+
 @pytest.mark.skipif(not which("echo"), reason="needs echo command")
 def test_log_subproc_and_echo_output_no_capfd(capfd, tmp_path: pathlib.Path):
     echo = which("echo", required=True)

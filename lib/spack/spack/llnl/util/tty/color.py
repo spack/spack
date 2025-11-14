@@ -61,8 +61,9 @@ To output an ``@``, use ``@@``.  To output a ``}`` inside braces, use ``}}``.
 import os
 import re
 import sys
+import textwrap
 from contextlib import contextmanager
-from typing import Optional
+from typing import List, NamedTuple, Optional, Tuple
 
 
 class ColorParseError(Exception):
@@ -269,9 +270,96 @@ def colorize(
     return COLOR_RE.sub(match_to_ansi, string).replace("}}", "}")
 
 
+#: matches a standard ANSI color code
+ANSI_CODE_RE = re.compile(r"\033[^m]*m")
+
+
+def csub(string: str):
+    """Return the string with ANSI color sequences removed."""
+    return ANSI_CODE_RE.sub("", string)
+
+
+class ColorMapping(NamedTuple):
+    color: str  #: color string
+    colors: List[str]  #: ANSI color codes in the color string, in order
+    offsets: List[Tuple[int, int]]  #: map indices in plain string to offsets in color string
+
+    def plain_to_color(self, index: int) -> int:
+        """Convert plain string index to color index."""
+        offset = 0
+        for i, off in self.offsets:
+            if i > index:
+                break
+            offset = off
+        return index + offset
+
+
+def cmapping(string: str) -> ColorMapping:
+    """Return a mapping for translating indices in a plain string to indices in colored text.
+
+    The returned dictionary maps indices in the plain string to the offset of the cooresponding
+    indices in the colored string.
+
+    """
+    colors = []
+    offsets = []
+    color_offset = 0
+
+    for m in ANSI_CODE_RE.finditer(string):
+        start, end = m.start(), m.end()
+        start_offset = color_offset
+        color_offset += end - start
+        offsets.append((start - start_offset, color_offset))
+        colors.append(m.group())
+
+    return ColorMapping(string, colors, offsets)
+
+
+def cwrap(
+    string: str, *args, initial_indent: str = "", subsequent_indent: str = "", **kwargs
+) -> List[str]:
+    """Wrapper around ``textwrap.wrap()`` that handles ANSI color codes."""
+    plain = csub(string)
+    lines = textwrap.wrap(
+        plain, *args, initial_indent=initial_indent, subsequent_indent=subsequent_indent, **kwargs
+    )
+
+    # do nothing if string has no ANSI codes
+    if plain == string:
+        return lines
+
+    # otherwise add colors back to lines after wrapping plain text
+    cmap = cmapping(string)
+
+    clines = []
+    start = 0
+    for i, line in enumerate(lines):
+        # scan to find the actual start, skipping any whitespace from a prior line break
+        # can assume this b/c textwrap only collapses whitespace at line breaks
+        while start < len(plain) and plain[start].isspace():
+            start += 1
+
+        # map the start and end positions in the plain string to the color string
+        cstart = cmap.plain_to_color(start)
+
+        # rewind to include any color codes before cstart
+        while cstart and string[cstart - 1] == "m":
+            cstart = string.rfind("\033", 0, cstart - 1)
+
+        indent = initial_indent if i == 0 else subsequent_indent
+        end = start + len(line) - len(indent)
+        cend = cmap.plain_to_color(end)
+
+        # append the color line to the result
+        clines.append(indent + string[cstart:cend])
+        start = end
+
+    return clines
+
+
 def clen(string):
     """Return the length of a string, excluding ansi color sequences."""
-    return len(re.sub(r"\033[^m]*m", "", string))
+    return len(csub(string))
 
 
 def cextra(string):

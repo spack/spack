@@ -278,9 +278,6 @@ class SpackPaths:
         self.default_misc_cache_path = os.path.join(
             self.spack_state_home, self.spack_instance_id, "cache"
         )
-        #: concretization cache for Spack concretizations
-        #: overridden by `config:concretization_cache:url`
-        self.default_conc_cache_path = os.path.join(self.default_misc_cache_path, "concretization")
 
     def data_home_for_small_data(self):
         return self.spack_data_home
@@ -345,7 +342,6 @@ user_config_path = locations.user_config_path
 system_config_path = locations.system_config_path
 end_user_cfg_path = locations.end_user_cfg_path
 default_misc_cache_path = locations.default_misc_cache_path
-default_conc_cache_path = locations.default_conc_cache_path
 
 
 #: Recorded directory where spack command was originally invoked

@@ -176,6 +176,133 @@ In cases where the concretizer is configured to reuse specs, and other ``mpi`` p
 This configuration prevents any spec using MPI and originating from stores or buildcaches to be reused, unless it matches the requirements under ``packages:mpi:require``.
 For more information on requirements see :ref:`package-requirements`.
 
+Specifying dependencies among external packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+External packages frequently have dependencies on other software components.
+Explicitly modeling these relationships provides Spack with a more complete representation of the software stack.
+This ensures that:
+
+- Runtime environments include all necessary components.
+- Build-time dependencies are accurately represented.
+
+This comprehensive view, in turn, enables Spack to more reliably build software that depends on these externals.
+
+Spack provides two methods for configuring dependency relationships among externals, each offering different trade-offs between conciseness and explicit control:
+
+- An "inline" spec syntax.
+- A structured YAML configuration that is more verbose but also more explicit.
+
+The following sections will detail both approaches.
+
+Dependencies using inline spec syntax
+"""""""""""""""""""""""""""""""""""""
+
+Spack allows you to define external package dependencies using the standard spec syntax directly within your package configuration.
+This approach is concise and leverages the familiar spec syntax that you already use elsewhere in Spack.
+
+When configuring an external package with dependencies using the spec syntax, you can include dependency specifications directly in the main ``spec:`` field:
+
+.. code-block:: yaml
+
+   # Specification for the following DAG:
+   #
+   # o mpileaks@2.3
+   # |\
+   # | o callpath@1.0
+   # |/
+   # o mpich@3.0.4
+   packages:
+     mpileaks:
+       externals:
+       - spec: "mpileaks@2.3~debug+opt %mpich@3 %callpath"
+         prefix: /user/path
+     callpath:
+       externals:
+       - spec: "callpath@1.0 %mpi=mpich"
+         prefix: /user/path
+     mpich:
+       externals:
+       - spec: "mpich@3.0.4"
+         prefix: /user/path
+
+In this example ``mpileaks`` depends on both ``mpich`` and ``callpath``.
+Spack will parse the ``mpileaks`` spec string, and create the appropriate dependency relationships automatically.
+
+Users *need* to ensure that each dependency maps exactly to a single other external package.
+In case multiple externals can satisfy the same dependency, or in case no external can satisfy a dependency, Spack will error and point to the configuration line causing the issue.
+
+Whenever no information is given about the dependency type, Spack will infer it from the current package recipe.
+For instance, the dependencies in the configuration above are inferred to be of ``build,link`` type from the recipe of ``mpileaks`` and ``callpath``:
+
+.. code-block:: console
+
+   $ spack -m spec --types -l --cover edges mpileaks
+   [e]  oelprl6  [    ]  mpileaks@2.3~debug+opt+shared+static build_system=generic platform=linux os=ubuntu20.04 target=icelake
+   [e]  jdhzy2t  [bl  ]      ^callpath@1.0 build_system=generic platform=linux os=ubuntu20.04 target=icelake
+   [e]  pgem3yp  [bl  ]          ^mpich@3.0.4~debug build_system=generic platform=linux os=ubuntu20.04 target=icelake
+   [e]  pgem3yp  [bl  ]      ^mpich@3.0.4~debug build_system=generic platform=linux os=ubuntu20.04 target=icelake
+
+When inferring the dependency types, Spack will also infer virtuals if they are not already specified.
+
+This method's conciseness comes with a strict requirement: each dependency must resolve to a single, unambiguous external package.
+This makes the approach suitable for simple or temporary configurations.
+In larger, more dynamic environments, however, it can become a maintenance challenge, as adding new external packages over time may require frequent updates to existing specs to preserve their uniqueness.
+
+Dependencies using YAML configuration
+"""""""""""""""""""""""""""""""""""""
+
+While the spec syntax offers a concise way to specify dependencies, Spack's YAML-based explicit dependency configuration provides more control and clarity, especially for complex dependency relationships.
+This approach uses the ``dependencies:`` field to precisely define each dependency relationship.
+The example in the previous section, written using the YAML configuration, becomes:
+
+.. code-block:: yaml
+
+   # Specification for the following DAG:
+   #
+   # o mpileaks@2.3
+   # |\
+   # | o callpath@1.0
+   # |/
+   # o mpich@3.0.4
+   packages:
+     mpileaks:
+       externals:
+       - spec: "mpileaks@2.3~debug+opt"
+         prefix: /user/path
+         dependencies:
+         - id: callpath_id
+           deptypes: link
+         - spec: mpich
+           deptypes:
+           - "build"
+           - "link"
+           virtuals: "mpi"
+     callpath:
+       externals:
+       - spec: "callpath@1.0"
+         prefix: /user/path
+         id: callpath_id
+         dependencies:
+         - spec: mpich
+           deptypes:
+           - "build"
+           - "link"
+           virtuals: "mpi"
+     mpich:
+       externals:
+       - spec: "mpich@3.0.4"
+         prefix: /user/path
+
+Each dependency can be specified either by:
+
+- A ``spec:`` that matches an available external package, like in the previous case, or by
+- An ``id`` that explicitly references another external package.
+
+Using the ``id`` provides an unambiguous reference to a specific external package, which is essential for differentiating between externals that have similar specs but differ, for example, only by their installation prefix.
+
+The dependency types can be specified in the optional ``deptypes`` field, while virtuals can be specified in the optional ``virtuals`` field.
+As before, when the dependency types are not specified, Spack will infer them from the package recipe.
 
 .. _extra-attributes-for-externals:
 

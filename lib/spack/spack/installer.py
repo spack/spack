@@ -40,6 +40,8 @@ from collections import defaultdict
 from gzip import GzipFile
 from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
+from spack.vendor.typing_extensions import Literal
+
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
 import spack.builder
@@ -48,7 +50,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.jobserver
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as lk
 import spack.llnl.util.tty as tty
@@ -76,6 +77,9 @@ from spack.util.executable import which
 _counter = itertools.count(0)
 
 _FAIL_FAST_ERR = "Terminating after first install failure"
+
+#: Type for specifying installation source modes
+InstallPolicy = Literal["auto", "cache_only", "source_only"]
 
 
 class BuildStatus(enum.Enum):
@@ -447,7 +451,7 @@ def _process_binary_cache_tarball(
         pkg: the package being installed
         explicit: the package was explicitly requested by the user
         unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
-        mirrors_for_spec: Optional list of concrete specs and mirrors
+        mirrors_for_spec: Optional list of mirrors to look for the spec.
         obtained by calling binary_distribution.get_mirrors_for_spec().
         timer: timer to keep track of binary install phases.
 
@@ -503,10 +507,10 @@ def _try_install_from_binary_cache(
     tty.debug(f"Searching for binary cache of {package_id(pkg.spec)}")
 
     with timer.measure("search"):
-        matches = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
+        mirrors = binary_distribution.get_mirrors_for_spec(pkg.spec, index_only=True)
 
     return _process_binary_cache_tarball(
-        pkg, explicit, unsigned, mirrors_for_spec=matches, timer=timer
+        pkg, explicit, unsigned, mirrors_for_spec=mirrors, timer=timer
     )
 
 
@@ -782,16 +786,14 @@ class BuildRequest:
         """Ensure standard install options are set to at least the default."""
         for arg, default in [
             ("context", "build"),  # installs *always* build
-            ("dependencies_cache_only", False),
-            ("dependencies_use_cache", True),
+            ("dependencies_policy", "auto"),
             ("dirty", False),
             ("fail_fast", False),
             ("fake", False),
             ("install_deps", True),
             ("install_package", True),
             ("install_source", False),
-            ("package_cache_only", False),
-            ("package_use_cache", True),
+            ("root_policy", "auto"),
             ("keep_prefix", False),
             ("keep_stage", False),
             ("restage", False),
@@ -815,14 +817,16 @@ class BuildRequest:
         include_build_deps = self.install_args.get("include_build_deps")
 
         if self.pkg_id == package_id(pkg.spec):
-            cache_only = self.install_args.get("package_cache_only")
+            policy = self.install_args.get("root_policy", "auto")
         else:
-            cache_only = self.install_args.get("dependencies_cache_only")
+            policy = self.install_args.get("dependencies_policy", "auto")
 
         # Include build dependencies if pkg is going to be built from sources, or
         # if build deps are explicitly requested.
         if include_build_deps or not (
-            cache_only or pkg.spec.installed and pkg.spec.dag_hash() not in self.overwrite
+            policy == "cache_only"
+            or pkg.spec.installed
+            and pkg.spec.dag_hash() not in self.overwrite
         ):
             depflag |= dt.BUILD
         if self.run_tests(pkg):
@@ -1165,20 +1169,11 @@ class Task:
         return self.pkg == self.request.pkg
 
     @property
-    def use_cache(self) -> bool:
-        _use_cache = True
+    def install_policy(self) -> InstallPolicy:
         if self.is_build_request:
-            return self.request.install_args.get("package_use_cache", _use_cache)
+            return self.request.install_args.get("root_policy", "auto")
         else:
-            return self.request.install_args.get("dependencies_use_cache", _use_cache)
-
-    @property
-    def cache_only(self) -> bool:
-        _cache_only = False
-        if self.is_build_request:
-            return self.request.install_args.get("package_cache_only", _cache_only)
-        else:
-            return self.request.install_args.get("dependencies_cache_only", _cache_only)
+            return self.request.install_args.get("dependencies_policy", "auto")
 
     @property
     def key(self) -> Tuple[int, int]:
@@ -1262,11 +1257,12 @@ class BuildTask(Task):
         # Use the binary cache to install if requested,
         # save result to be handled in BuildTask.complete()
         # TODO: change binary installs to occur in subprocesses rather than the main Spack process
-        if self.use_cache:
+        policy = self.install_policy
+        if policy != "source_only":
             if _install_from_cache(pkg, self.explicit, unsigned):
                 self.success_result = ExecuteResult.SUCCESS
                 return
-            elif self.cache_only:
+            elif policy == "cache_only":
                 self.error_result = spack.error.InstallError(
                     "No binary found when cache-only was specified", pkg=pkg
                 )
@@ -1284,6 +1280,9 @@ class BuildTask(Task):
         self._setup_install_dir(pkg)
 
         # Create a child process to do the actual installation.
+        self._start_build_process()
+
+    def _start_build_process(self):
         self.process_handle = spack.build_environment.start_build_process(
             self.pkg, build_process, self.request.install_args
         )
@@ -1385,6 +1384,26 @@ class BuildTask(Task):
             self.process_handle.terminate()
 
 
+class MockBuildProcess:
+    def complete(self) -> bool:
+        return True
+
+    def terminate(self) -> None:
+        pass
+
+
+class FakeBuildTask(BuildTask):
+    """Blocking BuildTask executed directly in the main thread. Used for --fake installs."""
+
+    process_handle = MockBuildProcess()  # type: ignore[assignment]
+
+    def _start_build_process(self):
+        build_process(self.pkg, self.request.install_args)
+
+    def poll(self):
+        return True
+
+
 class RewireTask(Task):
     """Class for representing a rewire task for a package."""
 
@@ -1439,9 +1458,6 @@ class PackageInstaller:
         self,
         packages: List["spack.package_base.PackageBase"],
         *,
-        cache_only: bool = False,
-        dependencies_cache_only: bool = False,
-        dependencies_use_cache: bool = True,
         dirty: bool = False,
         explicit: Union[Set[str], bool] = False,
         overwrite: Optional[Union[List[str], Set[str]]] = None,
@@ -1453,17 +1469,16 @@ class PackageInstaller:
         install_source: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
-        package_cache_only: bool = False,
-        package_use_cache: bool = True,
         restage: bool = False,
         skip_patch: bool = False,
         stop_at: Optional[str] = None,
         stop_before: Optional[str] = None,
         tests: Union[bool, List[str], Set[str]] = False,
         unsigned: Optional[bool] = None,
-        use_cache: bool = False,
         verbose: bool = False,
         concurrent_packages: Optional[int] = None,
+        root_policy: InstallPolicy = "auto",
+        dependencies_policy: InstallPolicy = "auto",
     ) -> None:
         """
         Arguments:
@@ -1485,9 +1500,10 @@ class PackageInstaller:
             stop_at: last installation phase to be executed (or None)
             tests: False to run no tests, True to test all packages, or a list of package names to
                 run tests for some
-            use_cache: Install from binary package, if available.
             verbose: Display verbose build output (by default, suppresses it)
             concurrent_packages: Max packages to be built concurrently
+            root_policy: ``"auto"``, ``"cache_only"``, ``"source_only"``.
+            dependencies_policy: ``"auto"``, ``"cache_only"``, ``"source_only"``.
         """
         if sys.platform == "win32":
             # No locks on Windows, we should always use 1 process
@@ -1503,9 +1519,7 @@ class PackageInstaller:
         self.concurrent_packages = concurrent_packages
 
         install_args = {
-            "cache_only": cache_only,
-            "dependencies_cache_only": dependencies_cache_only,
-            "dependencies_use_cache": dependencies_use_cache,
+            "dependencies_policy": dependencies_policy,
             "dirty": dirty,
             "explicit": explicit,
             "fail_fast": fail_fast,
@@ -1517,15 +1531,13 @@ class PackageInstaller:
             "keep_prefix": keep_prefix,
             "keep_stage": keep_stage,
             "overwrite": overwrite or [],
-            "package_cache_only": package_cache_only,
-            "package_use_cache": package_use_cache,
+            "root_policy": root_policy,
             "restage": restage,
             "skip_patch": skip_patch,
             "stop_at": stop_at,
             "stop_before": stop_before,
             "tests": tests,
             "unsigned": unsigned,
-            "use_cache": use_cache,
             "verbose": verbose,
             "concurrent_packages": self.concurrent_packages,
         }
@@ -1601,7 +1613,12 @@ class PackageInstaller:
             request: the associated install request
             all_deps: dictionary of all dependencies and associated dependents
         """
-        cls = RewireTask if pkg.spec.spliced else BuildTask
+        cls: type[Task] = BuildTask
+        if pkg.spec.spliced:
+            cls = RewireTask
+        elif request.install_args.get("fake"):
+            cls = FakeBuildTask
+
         task = cls(pkg, request=request, status=BuildStatus.QUEUED, installed=self.installed)
         for dep_id in task.dependencies:
             all_deps[dep_id].add(package_id(pkg.spec))
@@ -2000,6 +2017,10 @@ class PackageInstaller:
         task = self.build_pq[0][1]
         return task if task.priority == 0 else None
 
+    def _tasks_installing_in_other_spack(self) -> bool:
+        """Whether any tasks in the build queue are installing in other spack processes."""
+        return any(task.status == BuildStatus.INSTALLING for _, task in self.build_pq)
+
     def _pop_task(self) -> Task:
         """Pop the first task off the queue and return it.
 
@@ -2343,7 +2364,7 @@ class PackageInstaller:
             raise
 
         except BuildcacheEntryError as exc:
-            if task.cache_only:
+            if task.install_policy == "cache_only":
                 raise
 
             # Checking hash on downloaded binary failed.
@@ -2352,7 +2373,7 @@ class PackageInstaller:
                 f"to {str(exc)}: Requeuing to install from source."
             )
             # this overrides a full method, which is ugly.
-            task.use_cache = False  # type: ignore[misc]
+            task.install_policy = "source_only"  # type: ignore[misc]
             self._requeue_task(task, install_status)
             return None
 
@@ -2402,6 +2423,8 @@ class PackageInstaller:
         # include downgrading the write to a read lock
         if pkg.spec.installed:
             self._cleanup_task(pkg)
+            # mark installed if we haven't yet - may be discovering installed for the first time
+            self._update_installed(task)
 
         return None
 
@@ -2424,11 +2447,6 @@ class PackageInstaller:
         install_status = InstallStatus(len(self.build_pq))
         active_tasks: List[Task] = []
 
-        # Determine which type of jobserver to set up and then enable it
-        packages = [task.pkg for _, task in self.build_pq]
-        jobserver = spack.jobserver.Jobserver.determine_type(packages)
-        jobserver.enable()
-
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
         term_status = TermStatusLine(
@@ -2436,7 +2454,7 @@ class PackageInstaller:
         )
 
         # While a task is ready or tasks are running
-        while self._peek_ready_task() or active_tasks:
+        while self._peek_ready_task() or active_tasks or self._tasks_installing_in_other_spack():
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()
@@ -2453,7 +2471,8 @@ class PackageInstaller:
                     # handled in complete_task()
                     task.error_result = e
 
-            time.sleep(0.1)
+            # 10 ms to avoid busy waiting
+            time.sleep(0.01)
             # Check if any tasks have completed and add to list
             done = [task for task in active_tasks if task.poll()]
             try:
@@ -2469,12 +2488,7 @@ class PackageInstaller:
                 for task in active_tasks:
                     task.terminate()
                 active_tasks.clear()  # they're all done now
-                # Close and cleanup the jobserver if an installation error occurs
-                jobserver.cleanup()
                 raise
-
-        # Close and cleanup the jobserver
-        jobserver.cleanup()
 
         self._clear_removed_tasks()
         if self.build_pq:

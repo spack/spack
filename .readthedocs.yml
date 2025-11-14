@@ -41,8 +41,10 @@ search:
     config_yaml.html: 5
     configuring_compilers.html: 5
     containers.html: 5
+    roles_and_responsibilities.html: 5
     contribution_guide.html: 5
     developer_guide.html: 5
+    package_review_guide.html: 5
     env_vars_yaml.html: 5
     environments.html: 5
     extensions.html: 5
