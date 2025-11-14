@@ -13,8 +13,6 @@ bootstrap:
     metadata: $spack/share/spack/bootstrap/github-actions-v2
   - name: github-actions-v0.6
     metadata: $spack/share/spack/bootstrap/github-actions-v0.6
-  - name: github-actions-v0.5
-    metadata: $spack/share/spack/bootstrap/github-actions-v0.5
   - name: spack-install
     metadata: $spack/share/spack/bootstrap/spack-install
   trusted:
@@ -22,5 +20,4 @@ bootstrap:
     # produced on Github via the workflow
     github-actions-v2: true
     github-actions-v0.6: true
-    github-actions-v0.5: true
     spack-install: true
