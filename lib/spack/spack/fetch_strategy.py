@@ -923,17 +923,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug(f"Already fetched {self.stage.source_path}")
             return
 
-        ref = self.commit or self.tag or self.branch
-
-        depth = None if self.get_full_repo else 1
-        spack.util.git.git_fetch_by_ref(
-            self.git,
-            self.url,
-            ref,
-            sparse_paths=self.git_sparse_paths,
-            debug=spac.config.get("config:debug"), 
-            depth=depth,
-        )
+        self._clone_src()
         self.submodule_operations()
 
     def bare_clone(self, dest: str) -> None:
@@ -964,6 +954,29 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         git = self.git
         debug = spack.config.get("config:debug")
+        ref = self.commit or self.tag or self.branch
+        depth = None if self.get_full_repo else 1
+        with temp_cwd():
+            spack.util.git.git_fetch_by_ref(
+                self.git,
+                self.url,
+                ref,
+                sparse_paths=self.git_sparse_paths,
+                debug=spack.config.get("config:debug"), 
+                depth=depth,
+                dest=self.package.name
+            )
+            repo_name = get_single_file(".")
+            if self.stage:
+                self.stage.srcdir = repo_name
+            shutil.copytree(repo_name, dest, symlinks=True)
+            shutil.rmtree(
+                repo_name,
+                ignore_errors=False,
+                onerror=fs.readonly_file_handler(ignore_errors=True),
+            )
+        return
+
 
         if self.commit:
             # Need to do a regular clone and check out everything if

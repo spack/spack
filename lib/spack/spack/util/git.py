@@ -179,7 +179,7 @@ class GitCommandArgumentAssembler:
 
     @staticmethod
     def extract_git_version(git_exe):
-        v_string = git_exe("--version").strip()
+        v_string = git_exe("--version", output=str).strip().split()[-1]
         return tuple(int(i) for i in v_string.split("."))
 
     def add_arguments(self, *args, min_version=(1, 0, 0)):
@@ -194,7 +194,7 @@ class GitCommandArgumentAssembler:
             return self.git_exe(*cmd, **exe_args)
 
 
-def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, clone_dir="."):
+def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, dest="."):
     if is_git_commit_sha(ref) and GitCommandArgumentAssembler.extract_git_version(git_exe) < (
         2,
         5,
@@ -206,10 +206,14 @@ def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, c
     init = GitCommandArgumentAssembler("init", git_exe)
     fetch = GitCommandArgumentAssembler("fetch", git_exe)
     checkout = GitCommandArgumentAssembler("checkout", git_exe)
+    # technically sparse-checkout was added in 2.25, but we go forward since the model we implemented assumes `--cone` is a valid arument
+    sparse_checkout = GitCommandArgumentAssembler(
+        "sparse-checkout", git_exe, min_version=(2, 34, 0)
+    )
 
-    init.add_arguments(clone_dir)
+    init.add_arguments(dest)
     checkout.add_arguments("FETCH_HEAD")
-    if debug:
+    if not debug:
         fetch.add_arguments("--quiet")
         checkout.add_arguments("--quiet")
 
@@ -218,19 +222,17 @@ def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, c
     fetch.add_arguments("--filter=blob:none", min_version=(2, 19, 0))
     fetch.add_arguments(url, ref)
 
+    if dest:
+        git_exe.add_default_arg("-C", dest)
     init()
     fetch()
 
     if sparse_paths:
-        # technically sparse-checkout was added in 2.25, but we go forward since the model we implemented assumes `--cone` is a valid arument
-        sparse_checkout = GitCommandArgumentAssembler(
-            "sparse-checkout", git_exe, min_version=(2, 34, 0)
-        )
         sparse_checkout.add_arguments(*sparse_paths)
         sparse_checkout.add_arguments("--cone")
         sparse_checkout()
 
-    if debug:
+    if not debug:
         checkout(error=str)
     else:
         checkout()
