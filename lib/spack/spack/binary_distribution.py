@@ -1311,6 +1311,23 @@ def _oci_put_manifest(
 
     # Create an oci.image.config file
     config = copy.deepcopy(base_config)
+    
+    # Set the created timestamp from the spec's installation time if available
+    if "created" not in config:
+        # Try to get installation time from the database
+        db = spack.store.STORE.db
+        record = db.get_record(specs[0])
+        if record and record.installation_time:
+            # Convert Unix timestamp to RFC 3339 format
+            install_datetime = datetime.datetime.fromtimestamp(
+                record.installation_time, tz=datetime.timezone.utc
+            )
+            config["created"] = install_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        else:
+            # Fallback to current time
+            config["created"] = datetime.datetime.now(
+                datetime.timezone.utc
+            ).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
     # Add the diff ids of the blobs
     for s in expected_blobs:

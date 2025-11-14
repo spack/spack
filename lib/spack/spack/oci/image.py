@@ -230,8 +230,24 @@ def ensure_valid_tag(tag: str) -> str:
     return sanitized
 
 
-def default_config(architecture: str, os: str):
+def default_config(architecture: str, os: str, created: Optional[str] = None):
+    """Create a default OCI image config.
+
+    Args:
+        architecture: The architecture of the image (e.g., "amd64", "arm64")
+        os: The operating system of the image (e.g., "linux")
+        created: Optional RFC 3339 timestamp string. If not provided, current time is used.
+
+    Returns:
+        A dictionary representing the OCI image config
+    """
+    import datetime
+
+    if created is None:
+        created = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
     return {
+        "created": created,
         "architecture": architecture,
         "os": os,
         "rootfs": {"type": "layers", "diff_ids": []},

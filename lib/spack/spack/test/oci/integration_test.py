@@ -383,3 +383,58 @@ def test_best_effort_upload(mutable_database: spack.database.Database, monkeypat
 
             # Test with issubset, cause we don't have the blob of libdwarf as it has no manifest.
             assert expected_digests and expected_digests.issubset(pkg_to_all_digests[s.name])
+
+
+def test_oci_config_created_timestamp(mutable_database):
+    """Test that OCI images have a valid 'created' timestamp instead of epoch time."""
+    import datetime
+
+    registry = InMemoryOCIRegistry("example.com")
+
+    with oci_servers(registry):
+        mirror("add", "oci-test", "oci://example.com/image")
+
+        # Push a package to the OCI registry
+        buildcache("push", "oci-test", "mpileaks^mpich")
+
+        # Get the tag for the pushed image
+        spec = mutable_database.query_local("mpileaks^mpich")[0]
+        tag = spack.binary_distribution._oci_default_tag(spec)
+        image_ref = ImageReference.from_string(f"example.com/image:{tag}")
+
+        # Fetch the manifest and config
+        manifest, config = get_manifest_and_config(image_ref)
+
+        # Verify that the config has a 'created' field
+        assert "created" in config, "Config should have a 'created' field"
+
+        # Verify that the created timestamp is valid and not the Unix epoch
+        created_str = config["created"]
+        assert created_str is not None, "Created timestamp should not be None"
+
+        # Parse the timestamp (RFC 3339 format)
+        # The format should be like: 2015-10-31T22:22:56.015925234Z
+        try:
+            # Remove the Z and parse
+            if created_str.endswith("Z"):
+                created_dt = datetime.datetime.strptime(
+                    created_str[:-1], "%Y-%m-%dT%H:%M:%S.%f"
+                ).replace(tzinfo=datetime.timezone.utc)
+            else:
+                created_dt = datetime.datetime.fromisoformat(created_str)
+        except ValueError as e:
+            pytest.fail(f"Invalid timestamp format '{created_str}': {e}")
+
+        # Verify it's not the Unix epoch (1970-01-01)
+        epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        assert created_dt > epoch, (
+            f"Created timestamp {created_str} should not be Unix epoch time "
+            f"(which displays as Dec 31, 1969 in some time zones)"
+        )
+
+        # Verify it's a reasonable timestamp (between 2020 and now + 1 day)
+        year_2020 = datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc)
+        tomorrow = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+        assert (
+            year_2020 < created_dt < tomorrow
+        ), f"Created timestamp {created_str} should be between 2020 and now"
