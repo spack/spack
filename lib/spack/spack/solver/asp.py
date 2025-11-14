@@ -3204,9 +3204,9 @@ class SpackSolverSetup:
             for language in ("c", "cxx", "fortran"):
                 recorder("*").depends_on(
                     "compiler-wrapper",
-                    when=f"%[deptypes=build virtuals={language}] {compiler_str}",
+                    when=f"%[deptypes=build virtuals={language}] {compiler.name}",
                     type="build",
-                    description=f"Add the compiler wrapper when using {compiler} for {language}",
+                    description=f"Add compiler wrapper when using {compiler.name} for {language}",
                 )
 
             if not using_libc_compatibility():
@@ -3224,9 +3224,9 @@ class SpackSolverSetup:
             if current_libc:
                 recorder("*").depends_on(
                     "libc",
-                    when=f"%[deptypes=build] {compiler_str}",
+                    when=f"%[deptypes=build] {compiler.name}",
                     type="link",
-                    description=f"Add libc when using {compiler}",
+                    description=f"Add libc when using {compiler.name}",
                 )
                 recorder("*").depends_on(
                     f"{current_libc.name}@={current_libc.version}",
