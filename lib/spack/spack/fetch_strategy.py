@@ -1768,7 +1768,10 @@ def _for_package_version(pkg, version=None):
             kwargs["git"] = pkg.version_or_package_attr("git", ref_version)
             kwargs["submodules"] = pkg.version_or_package_attr("submodules", ref_version, False)
 
-        fetcher = GitFetchStrategy(**kwargs)
+        try:
+            fetcher = GitFetchStrategy(**kwargs)
+        except ValueError as exc:
+            raise ValueError(f"failed to fetch pkg {pkg}") from exc
         return fetcher
 
     # If it's not a known version, try to extrapolate one by URL
