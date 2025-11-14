@@ -179,7 +179,7 @@ jobs:
       run: |
         . share/spack/setup-env.sh
         spack bootstrap disable spack-install
-        spack bootstrap disable github-actions-v0.5
+        spack bootstrap disable github-actions-v2
         spack bootstrap disable github-actions-v0.6
         spack bootstrap status
         spack solve zlib
