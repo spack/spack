@@ -6,7 +6,7 @@
 import io
 import os
 import sys
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import pytest
 
@@ -27,14 +27,16 @@ class MockConnection:
 class MockSpec:
     """Minimal mock for spack.spec.Spec"""
 
-    def __init__(self, name, version="1.0", explicit=False, external=False, prefix=None):
+    def __init__(
+        self, name: str, version: str = "1.0", external: bool = False, prefix: Optional[str] = None
+    ) -> None:
         self.name = name
         self.version = version
         self.external = external
         self.prefix = prefix or f"/fake/prefix/{name}"
         self._hash = name  # Simple hash based on name
 
-    def dag_hash(self, length=None):
+    def dag_hash(self, length: Optional[int] = None) -> str:
         if length:
             return self._hash[:length]
         return self._hash
@@ -62,13 +64,12 @@ class SimpleTextIOWrapper(io.TextIOWrapper):
 
 
 def create_build_status(
-    is_tty=False, terminal_cols=80, terminal_rows=24, initial_time=0.0, total=0
+    is_tty: bool = True, terminal_cols: int = 80, terminal_rows: int = 24, total: int = 0
 ) -> Tuple[BuildStatus, List[float], SimpleTextIOWrapper]:
     """Helper function to create BuildStatus with mocked dependencies"""
     fake_stdout = SimpleTextIOWrapper(tty=is_tty)
-
-    # List to track time values
-    time_values = [initial_time]
+    # Easy way to set the current time in tests before running UI updates
+    time_values = [0.0]
 
     def mock_get_time():
         return time_values[-1]
@@ -212,7 +213,7 @@ class TestOutputRendering:
 
     def test_tty_output_contains_ansi(self):
         """Test that TTY mode produces ANSI codes"""
-        status, _, fake_stdout = create_build_status(is_tty=True)
+        status, _, fake_stdout = create_build_status()
         spec = MockSpec("mypackage", "1.0")
         conn = MockConnection()
 
@@ -229,7 +230,7 @@ class TestOutputRendering:
 
     def test_no_output_when_not_dirty(self):
         """Test that update() skips rendering when not dirty"""
-        status, _, fake_stdout = create_build_status(is_tty=True)
+        status, _, fake_stdout = create_build_status()
         spec = MockSpec("mypackage", "1.0")
         conn = MockConnection()
 
@@ -246,7 +247,7 @@ class TestOutputRendering:
 
     def test_update_throttling(self):
         """Test that update() throttles redraws"""
-        status, fake_time, fake_stdout = create_build_status(is_tty=True)
+        status, fake_time, fake_stdout = create_build_status()
         spec = MockSpec("mypackage", "1.0")
         conn = MockConnection()
 
@@ -274,7 +275,7 @@ class TestOutputRendering:
 
     def test_cursor_movement_vs_newlines(self):
         """Test that finished builds get newlines, active builds get cursor movements"""
-        status, fake_time, fake_stdout = create_build_status(is_tty=True, total=5)
+        status, fake_time, fake_stdout = create_build_status(total=5)
         conn = MockConnection()
 
         # Add 3 builds
@@ -328,7 +329,7 @@ class TestTimeBasedBehavior:
 
     def test_spinner_updates(self):
         """Test that spinner advances over time"""
-        status, fake_time, _ = create_build_status(is_tty=True)
+        status, fake_time, _ = create_build_status()
         spec = MockSpec("mypackage", "1.0")
         conn = MockConnection()
 
@@ -346,7 +347,7 @@ class TestTimeBasedBehavior:
 
     def test_finished_package_cleanup(self):
         """Test that finished packages are cleaned up after timeout"""
-        status, fake_time, _ = create_build_status(is_tty=True)
+        status, fake_time, _ = create_build_status()
         spec = MockSpec("mypackage", "1.0")
         conn = MockConnection()
 
@@ -372,7 +373,7 @@ class TestTimeBasedBehavior:
 
     def test_failed_packages_not_cleaned_up(self):
         """Test that failed packages stay in active builds"""
-        status, fake_time, _ = create_build_status(is_tty=True)
+        status, fake_time, _ = create_build_status()
         spec = MockSpec("mypackage", "1.0")
         conn = MockConnection()
 
@@ -575,16 +576,16 @@ class TestNavigation:
 
         # Should only navigate through matching builds
         first_id = status._get_next(1)
-        assert first_id == specs[0].dag_hash()
+        assert first_id and first_id == specs[0].dag_hash()
 
         status.tracked_build_id = first_id
         next_id = status._get_next(1)
-        assert next_id == specs[1].dag_hash()
+        assert next_id and next_id == specs[1].dag_hash()
 
         status.tracked_build_id = next_id
         next_id = status._get_next(1)
         # Should skip "other-c" and go to "package-d"
-        assert next_id == specs[3].dag_hash()
+        assert next_id and next_id == specs[3].dag_hash()
 
     def test_get_next_skips_finished(self):
         """Test that navigation skips finished builds"""
@@ -655,9 +656,7 @@ class TestTerminalSizes:
 
     def test_small_terminal_truncation(self):
         """Test that output is truncated for small terminals"""
-        status, _, fake_stdout = create_build_status(
-            total=10, is_tty=True, terminal_cols=80, terminal_rows=10
-        )
+        status, _, fake_stdout = create_build_status(total=10, terminal_cols=80, terminal_rows=10)
         conn = MockConnection()
 
         # Add more builds than can fit on screen
@@ -673,7 +672,7 @@ class TestTerminalSizes:
 
     def test_large_terminal_no_truncation(self):
         """Test that all builds shown on large terminal"""
-        status, _, fake_stdout = create_build_status(total=3, is_tty=True, terminal_cols=120)
+        status, _, fake_stdout = create_build_status(total=3, terminal_cols=120)
         conn = MockConnection()
 
         for i in range(3):
@@ -691,7 +690,7 @@ class TestTerminalSizes:
 
     def test_narrow_terminal_short_header(self):
         """Test that narrow terminals get shortened header"""
-        status, _, fake_stdout = create_build_status(total=1, is_tty=True, terminal_cols=40)
+        status, _, fake_stdout = create_build_status(total=1, terminal_cols=40)
         conn = MockConnection()
 
         spec = MockSpec("pkg", "1.0")
@@ -711,7 +710,7 @@ class TestBuildInfo:
 
     def test_build_info_creation(self):
         """Test that BuildInfo is created correctly"""
-        spec = MockSpec("mypackage", "1.0", explicit=True, external=False)
+        spec = MockSpec("mypackage", "1.0")
         conn = MockConnection()
 
         build_info = inst.BuildInfo(spec, explicit=True, control_w_conn=conn)
@@ -739,7 +738,7 @@ class TestLogFollowing:
 
     def test_print_logs_when_following(self):
         """Test that logs are printed when following a specific build"""
-        status, _, fake_stdout = create_build_status(is_tty=True)
+        status, _, fake_stdout = create_build_status()
         spec = MockSpec("mypackage", "1.0")
         conn = MockConnection()
 
@@ -754,13 +753,12 @@ class TestLogFollowing:
         log_data = b"Building package...\nRunning tests...\n"
         status.print_logs(build_id, log_data)
 
-        # Check that logs were written to stdout.buffer (binary)
-        fake_stdout.flush()
-        assert fake_stdout.buffer.getvalue() == log_data
+        # Check that logs were echoed to stdout
+        assert fake_stdout._buffer.getvalue() == log_data
 
     def test_print_logs_discarded_when_in_overview_mode(self):
         """Test that logs are discarded when in overview mode"""
-        status, _, fake_stdout = create_build_status(is_tty=True)
+        status, _, fake_stdout = create_build_status()
         spec = MockSpec("mypackage", "1.0")
         conn = MockConnection()
 
@@ -779,7 +777,7 @@ class TestLogFollowing:
 
     def test_print_logs_discarded_when_not_tracked(self):
         """Test that logs from non-tracked builds are discarded"""
-        status, _, fake_stdout = create_build_status(total=2, is_tty=True)
+        status, _, fake_stdout = create_build_status(total=2)
         conn = MockConnection()
 
         spec1 = MockSpec("pkg1", "1.0")
@@ -801,7 +799,7 @@ class TestLogFollowing:
 
     def test_cannot_follow_failed_build(self):
         """Test that navigation skips failed builds"""
-        status, _, _ = create_build_status(total=3, is_tty=True)
+        status, _, _ = create_build_status(total=3)
         conn = MockConnection()
 
         specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(3)]
@@ -827,7 +825,7 @@ class TestNavigationIntegration:
 
     def test_next_switches_from_overview_to_logs(self):
         """Test that next() switches from overview mode to log-following mode"""
-        status, _, fake_stdout = create_build_status(total=2, is_tty=True)
+        status, _, fake_stdout = create_build_status(total=2)
         conn = MockConnection()
 
         specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(2)]
@@ -852,7 +850,7 @@ class TestNavigationIntegration:
 
     def test_next_cycles_through_builds(self):
         """Test that next() cycles through multiple builds"""
-        status, _, fake_stdout = create_build_status(total=3, is_tty=True)
+        status, _, fake_stdout = create_build_status(total=3)
         conn = MockConnection()
 
         specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(3)]
@@ -886,7 +884,7 @@ class TestNavigationIntegration:
 
     def test_next_backward_navigation(self):
         """Test that next(-1) navigates backward"""
-        status, _, _ = create_build_status(total=3, is_tty=True)
+        status, _, _ = create_build_status(total=3)
         conn = MockConnection()
 
         specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(3)]
@@ -907,7 +905,7 @@ class TestNavigationIntegration:
 
     def test_next_does_nothing_when_no_builds(self):
         """Test that next() does nothing when no unfinished builds exist"""
-        status, _, _ = create_build_status(total=1, is_tty=True)
+        status, _, _ = create_build_status(total=1)
         conn = MockConnection()
 
         spec = MockSpec("pkg", "1.0")
@@ -928,7 +926,7 @@ class TestNavigationIntegration:
 
     def test_next_does_nothing_when_same_build(self):
         """Test that next() doesn't re-print when already on the same build"""
-        status, _, fake_stdout = create_build_status(total=1, is_tty=True)
+        status, _, fake_stdout = create_build_status(total=1)
         conn = MockConnection()
 
         spec = MockSpec("pkg", "1.0")
@@ -953,7 +951,7 @@ class TestToggle:
 
     def test_toggle_from_overview_calls_next(self):
         """Test that toggle() from overview mode calls next()"""
-        status, _, fake_stdout = create_build_status(total=2, is_tty=True)
+        status, _, fake_stdout = create_build_status(total=2)
         conn = MockConnection()
 
         specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(2)]
@@ -973,7 +971,7 @@ class TestToggle:
 
     def test_toggle_from_logs_returns_to_overview(self):
         """Test that toggle() from log-following mode returns to overview"""
-        status, _, _ = create_build_status(total=2, is_tty=True)
+        status, _, _ = create_build_status(total=2)
         conn = MockConnection()
 
         specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(2)]
@@ -1004,7 +1002,7 @@ class TestToggle:
 
     def test_update_state_finished_triggers_toggle_when_tracking(self):
         """Test that finishing a tracked build triggers toggle back to overview"""
-        status, _, _ = create_build_status(total=2, is_tty=True)
+        status, _, _ = create_build_status(total=2)
         conn = MockConnection()
 
         specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(2)]
@@ -1029,7 +1027,7 @@ class TestSearchFilteringIntegration:
 
     def test_search_mode_filters_displayed_builds(self):
         """Test that search mode actually filters what's displayed"""
-        status, _, fake_stdout = create_build_status(total=4, is_tty=True)
+        status, _, fake_stdout = create_build_status(total=4)
         conn = MockConnection()
 
         specs = [
@@ -1045,13 +1043,8 @@ class TestSearchFilteringIntegration:
         status.enter_search()
         assert status.search_mode is True
 
-        status.search_input("p")
-        status.search_input("a")
-        status.search_input("c")
-        status.search_input("k")
-        status.search_input("a")
-        status.search_input("g")
-        status.search_input("e")
+        for character in "package":
+            status.search_input(character)
 
         assert status.search_term == "package"
 
@@ -1072,7 +1065,7 @@ class TestSearchFilteringIntegration:
 
     def test_search_mode_with_navigation(self):
         """Test that navigation respects search filter"""
-        status, _, _ = create_build_status(total=4, is_tty=True)
+        status, _, _ = create_build_status(total=4)
         conn = MockConnection()
 
         specs = [
@@ -1101,7 +1094,7 @@ class TestSearchFilteringIntegration:
 
     def test_search_input_enter_navigates_to_next(self):
         """Test that pressing enter in search mode navigates to next match"""
-        status, _, _ = create_build_status(total=3, is_tty=True)
+        status, _, _ = create_build_status(total=3)
         conn = MockConnection()
 
         specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(3)]
@@ -1110,9 +1103,8 @@ class TestSearchFilteringIntegration:
 
         # Enter search mode
         status.enter_search()
-        status.search_input("p")
-        status.search_input("k")
-        status.search_input("g")
+        for character in "pkg":
+            status.search_input(character)
 
         # Press enter (should navigate to first match)
         status.search_input("\r")
@@ -1123,7 +1115,7 @@ class TestSearchFilteringIntegration:
 
     def test_clearing_search_shows_all_builds(self):
         """Test that clearing search term shows all builds again"""
-        status, _, fake_stdout = create_build_status(total=3, is_tty=True)
+        status, _, fake_stdout = create_build_status(total=3)
         conn = MockConnection()
 
         specs = [
@@ -1162,7 +1154,7 @@ class TestEdgeCases:
 
     def test_empty_build_list(self):
         """Test update with no builds"""
-        status, _, fake_stdout = create_build_status(total=0, is_tty=True)
+        status, _, fake_stdout = create_build_status(total=0)
 
         status.update()
         output = fake_stdout.getvalue()
@@ -1173,7 +1165,7 @@ class TestEdgeCases:
 
     def test_all_builds_finished(self):
         """Test when all builds are finished"""
-        status, fake_time, _ = create_build_status(total=2, is_tty=True)
+        status, fake_time, _ = create_build_status(total=2)
         conn = MockConnection()
 
         specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(2)]
