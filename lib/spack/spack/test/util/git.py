@@ -80,3 +80,46 @@ def test_pull_checkout_branch(git, tmp_path: pathlib.Path, mock_git_version_info
 
         with pytest.raises(exe.ProcessError):
             spack.util.git.pull_checkout_branch("main")
+
+
+def test_mock_git(mock_util_executable):
+    log, should_fail, _ = mock_util_executable
+    should_fail.append("clone")
+    git = exe.Executable("git")
+    git("clone")
+    assert git.returncode == 1
+    git("status")
+    assert git.returncode == 0
+    assert "clone" in "\n".join(log)
+    assert "status" in "\n".join(log)
+
+
+@pytest.mark.parametrize(
+    "git_version,ommitted_opts",
+    (("2.18.0", ["--filter=blob:none"]), ("1.8.0", ["--filter=blob:none", "--depth"])),
+)
+def test_git_fetch_by_ref_ommissions(mock_util_executable, git_version, ommitted_opts):
+    log, _, registered_responses = mock_util_executable
+    registered_responses["git --version"] = git_version
+    git = exe.Executable("git")
+    url = "https://foo.git"
+    ref = "v1.2.3"
+    spack.util.git.git_fetch_by_ref(git, url, ref)
+    for opt in ommitted_opts:
+        assert all(opt not in call for call in log)
+
+
+@pytest.mark.parametrize("git_version,too_old", (("2.5.0", False), ("1.8.0", True)))
+def test_git_fetch_by_ref_respect_commit_version_limits(
+    mock_util_executable, git_version, too_old
+):
+    _, _, registered_responses = mock_util_executable
+    registered_responses["git --version"] = git_version
+    git = exe.Executable("git")
+    url = "https://foo.git"
+    ref = "a" * 40
+    if too_old:
+        with pytest.raises(exe.ProcessError):
+            spack.util.git.git_fetch_by_ref(git, url, ref)
+    else:
+        spack.util.git.git_fetch_by_ref(git, url, ref)

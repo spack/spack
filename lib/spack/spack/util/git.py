@@ -164,3 +164,73 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
             continue
 
     return None
+
+
+class GitCommandArgumentAssembler:
+    def __init__(self, cmd_name, git_exe=None, min_version=(1, 0, 0)):
+        self.git_exe = git_exe or git(required=True)
+        self.version = self.extract_git_version(self.git_exe)
+        self.cmd_min_version = min_version
+        self.name = cmd_name
+        self.args = []
+        # make command unusable for invalid git versions
+        if self.cmd_min_version <= self.version:
+            self.args.append(self.name)
+
+    @staticmethod
+    def extract_git_version(git_exe):
+        v_string = git_exe("--version").strip()
+        return tuple(int(i) for i in v_string.split("."))
+
+    def add_arguments(self, *args, min_version=(1, 0, 0)):
+        if min_version < self.cmd_min_version:
+            return
+        if self.version >= min_version:
+            self.args.extend(args)
+
+    def __call__(self, *args, **exe_args):
+        if self.args:
+            cmd = self.args + list(args)
+            return self.git_exe(*cmd, **exe_args)
+
+
+def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, clone_dir="."):
+    if is_git_commit_sha(ref) and GitCommandArgumentAssembler.extract_git_version(git_exe) < (
+        2,
+        5,
+        0,
+    ):
+        raise spack.util.executable.ProcessError(
+            "Git version older than 2.5 and fetch by ref for commit can't be used"
+        )
+    init = GitCommandArgumentAssembler("init", git_exe)
+    fetch = GitCommandArgumentAssembler("fetch", git_exe)
+    checkout = GitCommandArgumentAssembler("checkout", git_exe)
+
+    init.add_arguments(clone_dir)
+    checkout.add_arguments("FETCH_HEAD")
+    if debug:
+        fetch.add_arguments("--quiet")
+        checkout.add_arguments("--quiet")
+
+    if depth:
+        fetch.add_arguments("--depth", str(depth), min_version=(1, 9, 0))
+    fetch.add_arguments("--filter=blob:none", min_version=(2, 19, 0))
+    fetch.add_arguments(url, ref)
+
+    init()
+    fetch()
+
+    if sparse_paths:
+        # technically sparse-checkout was added in 2.25, but we go forward since the model we implemented assumes `--cone` is a valid arument
+        sparse_checkout = GitCommandArgumentAssembler(
+            "sparse-checkout", git_exe, min_version=(2, 34, 0)
+        )
+        sparse_checkout.add_arguments(*sparse_paths)
+        sparse_checkout.add_arguments("--cone")
+        sparse_checkout()
+
+    if debug:
+        checkout(error=str)
+    else:
+        checkout()

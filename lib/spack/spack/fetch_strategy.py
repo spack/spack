@@ -923,10 +923,17 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug(f"Already fetched {self.stage.source_path}")
             return
 
-        if self.git_sparse_paths:
-            self._sparse_clone_src()
-        else:
-            self._clone_src()
+        ref = self.commit or self.tag or self.branch
+
+        depth = None if self.get_full_repo else 1
+        spack.util.git.git_fetch_by_ref(
+            self.git,
+            self.url,
+            ref,
+            sparse_paths=self.git_sparse_paths,
+            debug=spac.config.get("config:debug"), 
+            depth=depth,
+        )
         self.submodule_operations()
 
     def bare_clone(self, dest: str) -> None:

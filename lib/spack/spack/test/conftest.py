@@ -2430,3 +2430,26 @@ def config_two_gccs(mutable_config):
             },
         ],
     )
+
+
+@pytest.fixture(scope="function")
+def mock_util_executable(monkeypatch):
+    logger = []
+    should_fail = []
+    registered_reponses = {}
+
+    def mock_call(self, *args, **kwargs):
+        cmd = self.exe + list(args)
+        str_cmd = " ".join(cmd)
+        logger.append(str_cmd)
+        for failure_key in should_fail:
+            if failure_key in str_cmd:
+                self.returncode = 1
+                return
+        for key, value in registered_reponses.items():
+            if str_cmd == key:
+                return value
+        self.returncode = 0
+
+    monkeypatch.setattr(spack.util.executable.Executable, "__call__", mock_call)
+    yield logger, should_fail, registered_reponses
