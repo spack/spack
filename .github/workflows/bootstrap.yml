@@ -43,7 +43,7 @@ jobs:
           fetch-depth: 0
       - name: Bootstrap clingo
         run: |
-          source share/spack/setup-env.sh
+          . share/spack/setup-env.sh
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           spack -d solve zlib
@@ -68,7 +68,7 @@ jobs:
           python-version: "3.12"
       - name: Bootstrap clingo
         run: |
-          source share/spack/setup-env.sh
+          . share/spack/setup-env.sh
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
@@ -96,7 +96,7 @@ jobs:
           fetch-depth: 0
       - name: Bootstrap GnuPG
         run: |
-          source share/spack/setup-env.sh
+          . share/spack/setup-env.sh
           spack solve zlib
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
@@ -134,15 +134,12 @@ jobs:
             3.14
       - name: Set bootstrap sources
         run: |
-          source share/spack/setup-env.sh
+          . share/spack/setup-env.sh
           spack bootstrap disable github-actions-v0.6
           spack bootstrap disable spack-install
       - name: Bootstrap clingo
         run: |
-          set -e
           . share/spack/setup-env.sh
-          spack bootstrap disable github-actions-v0.6
-          spack bootstrap disable spack-install
           for ver in 3.8 3.9 3.10 3.11 3.12 3.13 3.14; do
             ver_dir="$(find "$RUNNER_TOOL_CACHE/Python" -wholename "*/${ver}.*/*/bin" | grep . || true)"
             export SPACK_PYTHON="$ver_dir/python3"
@@ -155,7 +152,7 @@ jobs:
           tree ~/.spack/bootstrap/store
       - name: Bootstrap GnuPG
         run: |
-          source share/spack/setup-env.sh
+          . share/spack/setup-env.sh
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
