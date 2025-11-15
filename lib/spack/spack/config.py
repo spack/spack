@@ -1333,6 +1333,21 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # line scopes go above this.
     configuration_paths = [("spack", os.path.join(spack.paths.etc_path))]
 
+    # Site admin scope has two uses: (a) admins can share config with one
+    # another, but not with end users (b) pip/apt-installed spack can
+    # change the default install root
+    site_admin_path = os.path.join(spack.paths.etc_path, "site-admin")
+    site_admin_accessible = False
+    try:
+        if os.path.isdir(site_admin_path):
+            os.listdir(site_admin_path)
+            site_admin_accessible = True
+    except PermissionError:
+        pass
+    if site_admin_accessible:
+        # TODO: list this as an available scope, but not a writable one
+        configuration_paths.append(("site-admin", site_admin_path))
+
     # Python packages can register configuration scopes via entry_points
     configuration_paths.extend(config_paths_from_entry_points())
 
