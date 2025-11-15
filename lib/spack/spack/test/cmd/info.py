@@ -128,6 +128,17 @@ def test_info_fields(pkg_query, extra_args):
             [r"when\s*build_system=cmake"],
             [r"when\s*build_system=autotools"],
         ),
+        (
+            ["optional-dep-test"],
+            [
+                r"when \^pkg-g",
+                r"when \%intel",
+                r"when \%intel\@64\.1",
+                r"when \%clang@34\:40",
+                r"when \^pkg\-f",
+            ],
+            [],
+        ),
     ],
 )
 @pytest.mark.parametrize("by_name", [True, False])
