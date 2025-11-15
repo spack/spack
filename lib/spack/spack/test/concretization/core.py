@@ -34,7 +34,6 @@ import spack.solver.asp
 import spack.solver.core
 import spack.solver.reuse
 import spack.solver.runtimes
-import spack.solver.versions
 import spack.spec
 import spack.test.conftest
 import spack.util.file_cache
@@ -3123,7 +3122,7 @@ def test_concretization_version_order():
     result = [
         v
         for v, _ in sorted(
-            versions, key=spack.solver.versions.concretization_version_order, reverse=True
+            versions, key=spack.package_base.concretization_version_order, reverse=True
         )
     ]
     assert result == [

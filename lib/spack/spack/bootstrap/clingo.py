@@ -21,7 +21,6 @@ import spack.config
 import spack.package_base
 import spack.platforms
 import spack.repo
-import spack.solver.versions
 import spack.spec
 import spack.traverse
 import spack.version
@@ -39,7 +38,7 @@ def _select_best_version(
     ]
     try:
         best_version, _ = max(
-            allowed_versions, key=spack.solver.versions.concretization_version_order
+            allowed_versions, key=spack.package_base.concretization_version_order
         )
     except (KeyError, ValueError):
         return
