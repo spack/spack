@@ -3202,6 +3202,8 @@ class SpackSolverSetup:
             # Add a dependency on the compiler wrapper
             compiler_str = f"{compiler.name} /{compiler.dag_hash()}"
             for language in ("c", "cxx", "fortran"):
+                # Using compiler.name causes a bit of duplication, but that is taken care of by
+                # clingo during grounding.
                 recorder("*").depends_on(
                     "compiler-wrapper",
                     when=f"%[deptypes=build virtuals={language}] {compiler.name}",
