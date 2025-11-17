@@ -37,7 +37,7 @@ import tty
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
-from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
 
 from spack.vendor.typing_extensions import Literal
 
@@ -591,7 +591,14 @@ class BuildInfo:
 class BuildStatus:
     """Tracks the build status display for terminal output."""
 
-    def __init__(self, total: int) -> None:
+    def __init__(
+        self,
+        total: int,
+        stdout: io.TextIOWrapper = sys.stdout,  # type: ignore[assignment]
+        get_terminal_size: Callable[[], Tuple[int, int]] = os.get_terminal_size,
+        get_time: Callable[[], float] = time.monotonic,
+        is_tty: Optional[bool] = None,
+    ) -> None:
         #: Ordered dict of build ID -> info
         self.total = total
         self.completed = 0
@@ -606,9 +613,13 @@ class BuildStatus:
         self.next_update = 0.0
         self.overview_mode = True  # Whether to draw the package overview
         self.tracked_build_id = ""  # identifier of the package whose logs we follow
-        self.is_tty = sys.stdout.isatty()  # Whether stdout is a terminal
         self.search_term = ""
         self.search_mode = False
+
+        self.stdout = stdout
+        self.get_terminal_size = get_terminal_size
+        self.get_time = get_time
+        self.is_tty = is_tty if is_tty is not None else self.stdout.isatty()
 
     def add_build(self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Connection) -> None:
         """Add a new build to the display and mark the display as dirty."""
@@ -694,10 +705,10 @@ class BuildStatus:
         self.tracked_build_id = new_build_id
 
         # Tell the user we're following new logs, and instruct the child to start sending them.
-        print(
-            f"\n==> Following logs of {new_build.name}" f"\033[0;36m@{new_build.version}\033[0m",
-            flush=True,
+        self.stdout.write(
+            f"\n==> Following logs of {new_build.name}" f"\033[0;36m@{new_build.version}\033[0m\n"
         )
+        self.stdout.flush()
         try:
             os.write(new_build.control_w_conn.fileno(), b"1")
         except (KeyError, OSError):
@@ -711,7 +722,7 @@ class BuildStatus:
 
         if state in ("finished", "failed"):
             self.completed += 1
-            build_info.finished_time = time.monotonic() + CLEANUP_TIMEOUT
+            build_info.finished_time = self.get_time() + CLEANUP_TIMEOUT
 
             if build_id == self.tracked_build_id and not self.overview_mode:
                 self.toggle()
@@ -720,7 +731,10 @@ class BuildStatus:
 
         # For non-TTY output, print state changes immediately without colors
         if not self.is_tty:
-            print(f"{build_info.hash} {build_info.name}@{build_info.version}: {state}")
+            self.stdout.write(
+                f"{build_info.hash} {build_info.name}@{build_info.version}: {state}\n"
+            )
+            self.stdout.flush()
 
     def update_progress(self, build_id: str, current: int, total: int) -> None:
         """Update the progress of a package and mark the display as dirty."""
@@ -735,7 +749,7 @@ class BuildStatus:
         if not self.is_tty or not self.overview_mode:
             return
 
-        now = time.monotonic()
+        now = self.get_time()
 
         # Avoid excessive redraws
         if not finalize and now < self.next_update:
@@ -769,7 +783,7 @@ class BuildStatus:
         if self.active_area_rows > 0:
             buffer.write(f"\033[{self.active_area_rows}F")
 
-        max_width, max_height = os.get_terminal_size()
+        max_width, max_height = self.get_terminal_size()
 
         self.total_lines = 0
         total_finished = len(self.finished_builds)
@@ -817,8 +831,8 @@ class BuildStatus:
         buffer.write("\033[0J")
 
         # Print everything at once to avoid flickering
-        sys.stdout.write(buffer.getvalue())
-        sys.stdout.flush()
+        self.stdout.write(buffer.getvalue())
+        self.stdout.flush()
 
         # Update the number of lines drawn for next time. It reflects the number of active builds.
         self.active_area_rows = self.total_lines - total_finished
@@ -844,8 +858,8 @@ class BuildStatus:
         if self.overview_mode or build_id != self.tracked_build_id:
             return
         # TODO: drop initial bytes from data until first newline (?)
-        sys.stdout.buffer.write(data)
-        sys.stdout.flush()
+        self.stdout.buffer.write(data)
+        self.stdout.flush()
 
     def _render_build(self, build_info: BuildInfo, buffer: io.StringIO, max_width: int) -> None:
         line_width = 0
