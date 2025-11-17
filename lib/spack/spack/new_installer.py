@@ -938,80 +938,117 @@ Nodes = Dict[str, spack.spec.Spec]
 Edges = Dict[str, Set[str]]
 
 
-def _init_build_graph(
-    specs: List[spack.spec.Spec],
-    root_policy: InstallPolicy,
-    dependencies_policy: InstallPolicy,
-    include_build_deps: bool,
-    install_package: bool,
-    db: spack.database.Database,
-) -> Tuple[Nodes, Edges, Edges]:
-    """Construct a build graph from the given specs. This includes only packages that need to be
-    installed. Installed packages are pruned from the graph, and build dependencies are only
-    included when necessary."""
-    nodes = {s.dag_hash(): s for s in specs}
-    parent_to_child: Dict[str, Set[str]] = {}
-    child_to_parent: Dict[str, Set[str]] = {}
-    specs_to_prune: Set[str] = set()
-    db = spack.store.STORE.db
-    stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [(s, root_policy) for s in nodes.values()]
+class BuildGraph:
+    """Represents the dependency graph for package installation."""
 
-    with db.read_transaction():
-        while stack:
-            spec, install_policy = stack.pop()
-            key = spec.dag_hash()
-            _, record = db.query_by_spec_hash(key)
+    def __init__(
+        self,
+        specs: List[spack.spec.Spec],
+        root_policy: InstallPolicy,
+        dependencies_policy: InstallPolicy,
+        include_build_deps: bool,
+        install_package: bool,
+        install_deps: bool,
+        database: spack.database.Database,
+    ):
+        """Construct a build graph from the given specs. This includes only packages that need to
+        be installed. Installed packages are pruned from the graph, and build dependencies are only
+        included when necessary."""
+        self.roots = {s.dag_hash() for s in specs}
+        self.nodes = {s.dag_hash(): s for s in specs}
+        self.parent_to_child: Dict[str, Set[str]] = {}
+        self.child_to_parent: Dict[str, Set[str]] = {}
+        specs_to_prune: Set[str] = set()
+        stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [
+            (s, root_policy) for s in self.nodes.values()
+        ]
 
-            # Set the install prefix for each spec based on the db record or store layout
-            if record and record.path:
-                spec.set_prefix(record.path)
-            else:
-                spec.set_prefix(spack.store.STORE.layout.path_for_spec(spec))
+        with database.read_transaction():
+            while stack:
+                spec, install_policy = stack.pop()
+                key = spec.dag_hash()
+                _, record = database.query_by_spec_hash(key)
 
-            # Conditionally include build dependencies based on policy and install status
-            if record and record.installed:
-                specs_to_prune.add(key)
-                dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
-            elif install_policy == "cache_only" and not include_build_deps:
-                dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
-            else:
-                dependencies = spec.dependencies(deptype=dt.BUILD | dt.LINK | dt.RUN)
+                # Set the install prefix for each spec based on the db record or store layout
+                if record and record.path:
+                    spec.set_prefix(record.path)
+                else:
+                    spec.set_prefix(spack.store.STORE.layout.path_for_spec(spec))
 
-            parent_to_child[key] = {d.dag_hash() for d in dependencies}
+                # Conditionally include build dependencies based on policy and install status
+                if record and record.installed:
+                    specs_to_prune.add(key)
+                    dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
+                elif install_policy == "cache_only" and not include_build_deps:
+                    dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
+                else:
+                    dependencies = spec.dependencies(deptype=dt.BUILD | dt.LINK | dt.RUN)
 
-            # Enqueue new dependencies
-            for d in dependencies:
-                if d.dag_hash() in nodes:
-                    continue
-                nodes[d.dag_hash()] = d
-                stack.append((d, dependencies_policy))
+                self.parent_to_child[key] = {d.dag_hash() for d in dependencies}
 
-    # Construct reverse lookup from child to parent
-    for parent, children in parent_to_child.items():
-        for child in children:
-            if child in child_to_parent:
-                child_to_parent[child].add(parent)
-            else:
-                child_to_parent[child] = {parent}
+                # Enqueue new dependencies
+                for d in dependencies:
+                    if d.dag_hash() in self.nodes:
+                        continue
+                    self.nodes[d.dag_hash()] = d
+                    stack.append((d, dependencies_policy))
 
-    # If we're not installing the package itself, mark root specs for pruning too
-    if not install_package:
-        specs_to_prune.update(s.dag_hash() for s in specs)
+        # Construct reverse lookup from child to parent
+        for parent, children in self.parent_to_child.items():
+            for child in children:
+                if child in self.child_to_parent:
+                    self.child_to_parent[child].add(parent)
+                else:
+                    self.child_to_parent[child] = {parent}
 
-    # Prune specs from the build graph. Their parents become parents of their children,
-    # and their children become children of their parents.
-    for key in specs_to_prune:
-        for parent in child_to_parent.get(key, ()):
-            parent_to_child[parent].remove(key)
-            parent_to_child[parent].update(parent_to_child.get(key, ()))
-        for child in parent_to_child.get(key, ()):
-            child_to_parent[child].remove(key)
-            child_to_parent[child].update(child_to_parent.get(key, ()))
-        parent_to_child.pop(key, None)
-        child_to_parent.pop(key, None)
-        nodes.pop(key, None)
+        # If we're not installing the package itself, mark root specs for pruning too
+        if not install_package:
+            specs_to_prune.update(s.dag_hash() for s in specs)
 
-    return nodes, parent_to_child, child_to_parent
+        # Prune specs from the build graph. Their parents become parents of their children and
+        # their children become children of their parents.
+        for key in specs_to_prune:
+            for parent in self.child_to_parent.get(key, ()):
+                self.parent_to_child[parent].remove(key)
+                self.parent_to_child[parent].update(self.parent_to_child.get(key, ()))
+            for child in self.parent_to_child.get(key, ()):
+                self.child_to_parent[child].remove(key)
+                self.child_to_parent[child].update(self.child_to_parent.get(key, ()))
+            self.parent_to_child.pop(key, None)
+            self.child_to_parent.pop(key, None)
+            self.nodes.pop(key, None)
+
+        # If we're not installing dependencies, verify that all remaining nodes in the build graph
+        # after pruning are roots. If there are any non-root nodes, it means there are uninstalled
+        # dependencies that we're not supposed to install.
+        if not install_deps:
+            non_root_spec = next((v for k, v in self.nodes.items() if k not in self.roots), None)
+            if non_root_spec is not None:
+                raise spack.error.InstallError(
+                    f"Failed to install in package only mode: dependency {non_root_spec} is not "
+                    "installed"
+                )
+
+    def enqueue_parents(self, dag_hash: str, pending_builds: List[str]) -> None:
+        """After a spec is installed, remove it from the graph and enqueue any parents that are
+        now ready to install.
+
+        Args:
+            dag_hash: The dag_hash of the spec that was just installed
+            pending_builds: List to append parent specs that are ready to build
+        """
+        # Remove the finished job from the mappings
+        self.parent_to_child.pop(dag_hash, None)
+        parents = self.child_to_parent.get(dag_hash)
+
+        if not parents:
+            return
+
+        for parent in parents:
+            children = self.parent_to_child[parent]
+            children.remove(dag_hash)
+            if not children:
+                pending_builds.append(parent)
 
 
 class PackageInstaller:
@@ -1065,7 +1102,6 @@ class PackageInstaller:
         # verbose and concurrent_packages are not worth erroring out for
 
         specs = [pkg.spec for pkg in packages]
-        self.roots = {s.dag_hash() for s in specs}
 
         self.root_policy: InstallPolicy = root_policy
         self.dependencies_policy: InstallPolicy = dependencies_policy
@@ -1074,31 +1110,22 @@ class PackageInstaller:
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
 
-        self.nodes, self.parent_to_child, self.child_to_parent = _init_build_graph(
+        # Build the dependency graph
+        self.build_graph = BuildGraph(
             specs,
             root_policy,
             dependencies_policy,
             include_build_deps,
             install_package,
+            install_deps,
             spack.store.STORE.db,
         )
-
-        # If we're not installing dependencies, verify that all remaining nodes in the build graph
-        # after pruning are roots. If there are any non-root nodes, it means there are uninstalled
-        # dependencies that we're not supposed to install.
-        if not install_deps:
-            non_root_spec = next((v for k, v in self.nodes.items() if k not in self.roots), None)
-            if non_root_spec is not None:
-                raise spack.error.InstallError(
-                    f"Failed to install in package only mode: dependency {non_root_spec} is not "
-                    "installed"
-                )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
         spack.binary_distribution.BINARY_INDEX.update()
         self.binary_cache_for_spec = {
             s.dag_hash(): spack.binary_distribution.BINARY_INDEX.find_by_hash(s.dag_hash())
-            for s in self.nodes.values()
+            for s in self.build_graph.nodes.values()
         }
         self.unsigned = unsigned
         self.dirty = dirty
@@ -1107,7 +1134,7 @@ class PackageInstaller:
 
         #: queue of packages ready to install (no children)
         self.pending_builds = [
-            parent for parent, children in self.parent_to_child.items() if not children
+            parent for parent, children in self.build_graph.parent_to_child.items() if not children
         ]
 
         if explicit is True:
@@ -1118,23 +1145,9 @@ class PackageInstaller:
             self.explicit = explicit
 
         self.running_builds: Dict[int, ChildInfo] = {}
-        self.build_status = BuildStatus(len(self.nodes))
+        self.build_status = BuildStatus(len(self.build_graph.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         self.reports: Dict[str, spack.report.RequestRecord] = {}
-
-    def _enqueue_parents(self, dag_hash: str) -> None:
-        # the job dag_hash has finished, so remove it from the mappings
-        # and enqueue any parents that are now ready to install
-        self.parent_to_child.pop(dag_hash, None)
-        parents = self.child_to_parent.get(dag_hash)
-
-        if not parents:
-            return
-        for parent in parents:
-            children = self.parent_to_child[parent]
-            children.remove(dag_hash)
-            if not children:
-                self.pending_builds.append(parent)
 
     def install(self) -> None:
         # This installer has not implemented the per-spec exclusive locks during installation.
@@ -1246,7 +1259,9 @@ class PackageInstaller:
                 # ready.
                 if to_insert_in_database and self._save_to_db(to_insert_in_database):
                     for entry in to_insert_in_database:
-                        self._enqueue_parents(entry.spec.dag_hash())
+                        self.build_graph.enqueue_parents(
+                            entry.spec.dag_hash(), self.pending_builds
+                        )
                     to_insert_in_database.clear()
 
                 # Again, the first job should start immediately and does not require a token.
@@ -1311,9 +1326,11 @@ class PackageInstaller:
         dag_hash = self.pending_builds.pop()
         explicit = dag_hash in self.explicit
         mirrors = self.binary_cache_for_spec[dag_hash]
-        install_policy = self.root_policy if dag_hash in self.roots else self.dependencies_policy
+        install_policy = (
+            self.root_policy if dag_hash in self.build_graph.roots else self.dependencies_policy
+        )
         child_info = start_build(
-            self.nodes[dag_hash],
+            self.build_graph.nodes[dag_hash],
             explicit,
             mirrors,
             self.unsigned,
