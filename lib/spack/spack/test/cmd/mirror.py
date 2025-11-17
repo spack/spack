@@ -291,7 +291,7 @@ def test_mirror_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
     mirror("add", "--scope=system", "mock", str(tmp_path / "mock_mirror"))
 
     # Confirm that it is not removed when the scope is incorrect
-    with pytest.raises(spack.main.SpackCommandError):
+    with pytest.raises(SpackCommandError):
         mirror("remove", "--scope=user", "mock")
     output = mirror("list", output=str)
     assert "mock" in output
