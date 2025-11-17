@@ -5,6 +5,7 @@
 import argparse
 import os
 import tempfile
+import urllib
 
 import spack.binary_distribution
 import spack.mirrors.mirror
@@ -12,6 +13,7 @@ import spack.paths
 import spack.stage
 import spack.util.gpg
 import spack.util.url
+import spack.util.web as web_util
 from spack.cmd.common import arguments
 
 description = "handle GPG actions for spack"
@@ -29,7 +31,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     verify.set_defaults(func=gpg_verify, subparser=verify)
 
     trust = subparsers.add_parser("trust", help=gpg_trust.__doc__)
-    trust.add_argument("keyfile", type=str, help="add a key to the trust store")
+    trust.add_argument(
+        "keyfile", type=str, help="add a keyfile from path or url to the trust store"
+    )
     trust.set_defaults(func=gpg_trust, subparser=trust)
 
     untrust = subparsers.add_parser("untrust", help=gpg_untrust.__doc__)
@@ -180,7 +184,12 @@ def gpg_sign(args):
 
 def gpg_trust(args):
     """add a key to the keyring"""
-    spack.util.gpg.trust(args.keyfile)
+    url = urllib.parse.urlparse(args.keyfile)
+    if url.scheme in ["", "file"]:
+        spack.util.gpg.trust(args.keyfile)
+    else:
+        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+            spack.util.gpg.trust(web_util.fetch_url_text(args.keyfile, dest_dir=tmpdir))
 
 
 def gpg_init(args):
