@@ -13,7 +13,7 @@ import spack.util.libc
 import spack.version
 
 from .core import SourceContext, fn, using_libc_compatibility
-from .versions import DeclaredVersion, Provenance
+from .versions import Provenance
 
 
 class RuntimePropertyRecorder:
@@ -174,10 +174,7 @@ class RuntimePropertyRecorder:
         for s in (imposed_spec, when_spec):
             if not s.versions.concrete:
                 continue
-            self._setup.possible_versions[s.name].add(s.version)
-            self._setup.declared_versions[s.name].append(
-                DeclaredVersion(version=s.version, idx=0, origin=Provenance.RUNTIME)
-            )
+            self._setup.possible_versions[s.name][s.version].append(Provenance.RUNTIME)
 
         self.runtime_conditions.add((imposed_spec, when_spec))
         self.reset()
