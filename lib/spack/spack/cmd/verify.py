@@ -70,7 +70,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
     versions_subparser = sp.add_parser(
         "versions", help=verify_versions.__doc__, description=verify_versions.__doc__
     )
-    versions_subparser.add_argument("-a", "--all", help="verify versions for all packages")
     arguments.add_common_arguments(versions_subparser, ["constraint"])
 
 
@@ -86,7 +85,14 @@ def verify(parser, args):
 
 
 def verify_versions(args):
-    """Check that all versions are known to Spack and non-deprecated."""
+    """Check that all versions of installed packages are known to Spack and non-deprecated.
+
+    Reports errors for any of the following:
+
+    1. Installed package not loadable from the repo
+    2. Installed package version not known by the package recipe
+    3. Installed package version deprecated in the package recipe
+    """
     if not args.specs and not args.all:
         tty.die("spack verify versions requires either a spec or the --all argument.")
     if args.all:
