@@ -67,6 +67,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     arguments.add_common_arguments(libraries_subparser, ["constraint"])
 
+    versions_subparser = sp.add_parser(
+        "versions", help=verify_versions.__doc__, description=verify_versions.__doc__
+    )
+    versions_subparser.add_argument("-a", "--all", help="verify versions for all packages")
+    arguments.add_common_arguments(versions_subparser, ["constraint"])
+
 
 def verify(parser, args):
     cmd = args.verify_command
@@ -74,7 +80,50 @@ def verify(parser, args):
         return verify_libraries(args)
     elif cmd == "manifest":
         return verify_manifest(args)
+    elif cmd == "versions":
+        return verify_versions(args)
     parser.error("invalid verify subcommand")
+
+
+def verify_versions(args):
+    """Check that all versions are known to Spack and non-deprecated."""
+    if not args.specs and not args.all:
+        tty.die("spack verify versions requires either a spec or the --all argument.")
+    if args.all:
+        specs = spack.store.db.query(installed=True)
+    else:
+        specs = args.specs(installed=True)
+
+    missing_package = []
+    unknown_version = []
+    deprecated_version = []
+
+    for spec in specs:
+        try:
+            pkg = spec.package
+        except Exception:
+            missing_package.append(spec)
+
+        if spec.version not in pkg.versions:
+            unknown_version.append(spec)
+            continue
+
+        if pkg.versions[spec.version].get("deprecated", False):
+            deprecated_version.append(spec)
+
+    if missing_package or unknown_version or deprecated_version:
+        msg = ""
+        for spec in missing_package:
+            msg += f"Cannot verify version for {spec} at {spec.prefix}. Cannot load package.\n"
+        for spec in unknown_version:
+            msg += f"Spec {spec} at {spec.prefix} has version {spec.version} unknown to Spack.\n"
+        for spec in deprecated_version:
+            msg += f"Spec {spec} at {spec.prefix} has deprecated version {spec.version}.\n"
+
+        errors = len(missing_package) + len(unknown_version) + len(deprecated_version)
+        msg += f"{errors} installed packages fail version validation"
+
+        tty.die(msg)
 
 
 def verify_libraries(args):
