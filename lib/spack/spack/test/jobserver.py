@@ -6,8 +6,13 @@ import fcntl
 import os
 import pathlib
 import stat
+import sys
 
 import pytest
+
+if sys.platform == "win32":
+    pytest.skip("Jobserver tests are not supported on Windows", allow_module_level=True)
+
 
 from spack.new_installer import (
     JobServer,
