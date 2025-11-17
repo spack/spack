@@ -489,9 +489,13 @@ def reap_children(
     return to_delete
 
 
-def get_jobserver_config() -> Optional[Union[str, Tuple[int, int]]]:
-    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors."""
-    makeflags = os.environ.get("MAKEFLAGS", "")
+def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
+    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors.
+
+    Args:
+        makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
+    """
+    makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
     if not makeflags:
         return None
     # We can have the following flags:
