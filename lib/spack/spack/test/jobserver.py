@@ -2,10 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import fcntl
-import os
-import pathlib
-import stat
 import sys
 
 import pytest
@@ -13,6 +9,10 @@ import pytest
 if sys.platform == "win32":
     pytest.skip("Jobserver tests are not supported on Windows", allow_module_level=True)
 
+import fcntl
+import os
+import pathlib
+import stat
 
 from spack.new_installer import (
     JobServer,
