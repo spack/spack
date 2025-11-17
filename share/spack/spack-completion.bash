@@ -2095,7 +2095,7 @@ _spack_verify() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="manifest libraries"
+        SPACK_COMPREPLY="manifest libraries versions"
     fi
 }
 
@@ -2112,6 +2112,15 @@ _spack_verify_libraries() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help"
+    else
+        _installed_packages
+    fi
+}
+
+_spack_verify_versions() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -a --all"
     else
         _installed_packages
     fi

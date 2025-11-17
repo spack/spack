@@ -3297,6 +3297,7 @@ complete -c spack -n '__fish_spack_using_command url stats' -l show-issues -d 's
 set -g __fish_spack_optspecs_spack_verify h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 verify' -f -a manifest -d 'verify that install directories have not been modified since installation'
 complete -c spack -n '__fish_spack_using_command_pos 0 verify' -f -a libraries -d 'verify that shared libraries of install packages can be located in rpaths (Linux only)'
+complete -c spack -n '__fish_spack_using_command_pos 0 verify' -f -a versions -d 'Check that all versions are known to Spack and non-deprecated.'
 complete -c spack -n '__fish_spack_using_command verify' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command verify' -s h -l help -d 'show this help message and exit'
 
@@ -3321,6 +3322,14 @@ set -g __fish_spack_optspecs_spack_verify_libraries h/help
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 verify libraries' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command verify libraries' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command verify libraries' -s h -l help -d 'show this help message and exit'
+
+# spack verify versions
+set -g __fish_spack_optspecs_spack_verify_versions h/help a/all=
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 verify versions' -f -a '(__fish_spack_installed_specs)'
+complete -c spack -n '__fish_spack_using_command verify versions' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command verify versions' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command verify versions' -s a -l all -r -f -a all
+complete -c spack -n '__fish_spack_using_command verify versions' -s a -l all -r -d 'verify versions for all packages'
 
 # spack versions
 set -g __fish_spack_optspecs_spack_versions h/help s/safe r/remote n/new j/jobs=
