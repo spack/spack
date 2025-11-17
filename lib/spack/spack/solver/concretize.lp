@@ -1995,23 +1995,6 @@ build_priority(PackageNode, 200) :- build(PackageNode), attr("node", PackageNode
 build_priority(PackageNode, 0)   :- build(PackageNode), attr("node", PackageNode), treat_node_as_concrete(PackageNode).
 build_priority(PackageNode, 0)   :- concrete(PackageNode), attr("node", PackageNode).
 
-% don't assign versions from installed packages unless reuse is enabled
-% NOTE: that "installed" means the declared version was only included because
-% that package happens to be installed, NOT because it was asked for on the
-% command line.  If the user specifies a hash, the origin will be "spec".
-%
-% TODO: There's a slight inconsistency with this: if the user concretizes
-% and installs `foo ^bar`, for some build dependency `bar`, and then later
-% does a `spack install --fresh foo ^bar/abcde` (i.e.,the hash of `bar`, it
-% currently *won't* force versions for `bar`'s build dependencies -- `--fresh`
-% will instead build the latest bar. When we actually include transitive
-% build deps in the solve, consider using them as a preference to resolve this.
-%:- attr("version", node(ID, Package), Version),
-%   version_weight(node(ID, Package), Weight),
-%   pkg_fact(Package, version_declared(Version, Weight, "installed")),
-%   not optimize_for_reuse().
-
-
 % This statement, which is a hidden feature of clingo, let us avoid cycles in the DAG
 #edge (A, B) : depends_on(A, B).
 
