@@ -271,9 +271,7 @@ class TestJobServer:
         js = JobServer(4)
 
         try:
-            assert js.r_conn is not None
-            assert js.w_conn is not None
-            assert js.r_conn.fileno() == js.r
-            assert js.w_conn.fileno() == js.w
+            assert js.r_conn is not None and js.r_conn.fileno() == js.r
+            assert js.w_conn is not None and js.w_conn.fileno() == js.w
         finally:
             js.close()
