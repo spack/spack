@@ -943,6 +943,7 @@ def _init_build_graph(
     root_policy: InstallPolicy,
     dependencies_policy: InstallPolicy,
     include_build_deps: bool,
+    install_package: bool,
     db: spack.database.Database,
 ) -> Tuple[Nodes, Edges, Edges]:
     """Construct a build graph from the given specs. This includes only packages that need to be
@@ -951,7 +952,7 @@ def _init_build_graph(
     nodes = {s.dag_hash(): s for s in specs}
     parent_to_child: Dict[str, Set[str]] = {}
     child_to_parent: Dict[str, Set[str]] = {}
-    installed_specs: Set[str] = set()
+    specs_to_prune: Set[str] = set()
     db = spack.store.STORE.db
     stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [(s, root_policy) for s in nodes.values()]
 
@@ -969,7 +970,7 @@ def _init_build_graph(
 
             # Conditionally include build dependencies based on policy and install status
             if record and record.installed:
-                installed_specs.add(key)
+                specs_to_prune.add(key)
                 dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
             elif install_policy == "cache_only" and not include_build_deps:
                 dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
@@ -993,9 +994,13 @@ def _init_build_graph(
             else:
                 child_to_parent[child] = {parent}
 
-    # Prune installed specs from the build graph. Their parents become parents of their children,
+    # If we're not installing the package itself, mark root specs for pruning too
+    if not install_package:
+        specs_to_prune.update(s.dag_hash() for s in specs)
+
+    # Prune specs from the build graph. Their parents become parents of their children,
     # and their children become children of their parents.
-    for key in installed_specs:
+    for key in specs_to_prune:
         for parent in child_to_parent.get(key, ()):
             parent_to_child[parent].remove(key)
             parent_to_child[parent].update(parent_to_child.get(key, ()))
@@ -1004,7 +1009,7 @@ def _init_build_graph(
             child_to_parent[child].update(child_to_parent.get(key, ()))
         parent_to_child.pop(key, None)
         child_to_parent.pop(key, None)
-        del nodes[key]
+        nodes.pop(key, None)
 
     return nodes, parent_to_child, child_to_parent
 
@@ -1037,6 +1042,7 @@ class PackageInstaller:
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
     ) -> None:
+        assert install_package or install_deps, "Must install package, dependencies or both"
 
         if overwrite:
             raise NotImplementedError("Overwrite installs are not implemented")
@@ -1044,10 +1050,6 @@ class PackageInstaller:
             raise NotImplementedError("Fail-fast installs are not implemented")
         elif fake:
             raise NotImplementedError("Fake installs are not implemented")
-        elif not install_deps:
-            raise NotImplementedError("Not installing dependencies is not implemented")
-        elif not install_package:
-            raise NotImplementedError("Not installing the specified package is not implemented")
         elif install_source:
             raise NotImplementedError("Installing sources is not implemented")
         elif keep_prefix:
@@ -1073,8 +1075,24 @@ class PackageInstaller:
         self.state_buffers: Dict[int, str] = {}
 
         self.nodes, self.parent_to_child, self.child_to_parent = _init_build_graph(
-            specs, root_policy, dependencies_policy, include_build_deps, spack.store.STORE.db
+            specs,
+            root_policy,
+            dependencies_policy,
+            include_build_deps,
+            install_package,
+            spack.store.STORE.db,
         )
+
+        # If we're not installing dependencies, verify that all remaining nodes in the build graph
+        # after pruning are roots. If there are any non-root nodes, it means there are uninstalled
+        # dependencies that we're not supposed to install.
+        if not install_deps:
+            non_root_spec = next((v for k, v in self.nodes.items() if k not in self.roots), None)
+            if non_root_spec is not None:
+                raise spack.error.InstallError(
+                    f"Failed to install in package only mode: dependency {non_root_spec} is not "
+                    "installed"
+                )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
         spack.binary_distribution.BINARY_INDEX.update()
