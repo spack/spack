@@ -22,6 +22,7 @@ import spack.util.parallel
 import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.llnl.string import plural, comma_or
 
 description = "manage mirrors (source and binary)"
 section = "config"
@@ -147,10 +148,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     remove_parser = sp.add_parser("remove", aliases=["rm"], help=mirror_remove.__doc__)
     remove_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
     remove_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
-        help="configuration scope to modify",
+        "--scope", action=arguments.ConfigScope, default=None, help="configuration scope to modify"
     )
 
     # Set-Url
@@ -349,7 +347,15 @@ def mirror_add(args):
 
 def mirror_remove(args):
     """remove a mirror by name"""
-    spack.mirrors.utils.remove(args.name, args.scope)
+    name = args.name
+    scopes = [args.scope] if args.scope else list(spack.config.CONFIG.scopes.keys())
+
+    removed = False
+    for scope in scopes:
+        removed |= spack.mirrors.utils.remove(name, scope)
+
+    if not removed:
+        tty.die(f"No mirror with name {name} in {comma_or(scopes)} scope")
 
 
 def _configure_mirror(args):
