@@ -32,6 +32,7 @@ class Mpich(Package):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("fortran", type="build")
+    depends_on("make", type="build")
 
     @classmethod
     def determine_version(cls, exe):

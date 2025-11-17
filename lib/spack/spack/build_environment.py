@@ -587,13 +587,7 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
 
-    module.make = DeprecatedExecutable(pkg.name, "make", "gmake")
-    module.gmake = DeprecatedExecutable(pkg.name, "gmake", "gmake")
-    module.ninja = DeprecatedExecutable(pkg.name, "ninja", "ninja")
-
     if sys.platform == "win32":
-        module.nmake = DeprecatedExecutable(pkg.name, "nmake", "msvc")
-        module.msbuild = DeprecatedExecutable(pkg.name, "msbuild", "msvc")
         # analog to configure for win32
         module.cscript = Executable("cscript")
 
