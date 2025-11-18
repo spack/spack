@@ -2120,7 +2120,7 @@ _spack_verify_libraries() {
 _spack_verify_versions() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --all"
+        SPACK_COMPREPLY="-h --help"
     else
         _installed_packages
     fi
