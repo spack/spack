@@ -3199,15 +3199,16 @@ class SpackSolverSetup:
                 # Inject default flags for compilers
                 recorder("*").default_flags(compiler)
 
-            # FIXME (compiler as nodes): think of using isinstance(compiler_cls, WrappedCompiler)
             # Add a dependency on the compiler wrapper
+            compiler_str = f"{compiler.name} /{compiler.dag_hash()}"
             for language in ("c", "cxx", "fortran"):
-                compiler_str = f"{compiler.name}@{compiler.versions}"
+                # Using compiler.name causes a bit of duplication, but that is taken care of by
+                # clingo during grounding.
                 recorder("*").depends_on(
                     "compiler-wrapper",
-                    when=f"%[deptypes=build virtuals={language}] {compiler_str}",
+                    when=f"%[deptypes=build virtuals={language}] {compiler.name}",
                     type="build",
-                    description=f"Add the compiler wrapper when using {compiler} for {language}",
+                    description=f"Add compiler wrapper when using {compiler.name} for {language}",
                 )
 
             if not using_libc_compatibility():
@@ -3225,9 +3226,9 @@ class SpackSolverSetup:
             if current_libc:
                 recorder("*").depends_on(
                     "libc",
-                    when=f"%[deptypes=build] {compiler_str}",
+                    when=f"%[deptypes=build] {compiler.name}",
                     type="link",
-                    description=f"Add libc when using {compiler}",
+                    description=f"Add libc when using {compiler.name}",
                 )
                 recorder("*").depends_on(
                     f"{current_libc.name}@={current_libc.version}",

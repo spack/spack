@@ -18,6 +18,7 @@ import spack.archspec
 import spack.binary_distribution
 import spack.cmd
 import spack.compilers.config
+import spack.compilers.libraries
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
@@ -4653,3 +4654,47 @@ def test_external_inline_equivalent_to_yaml(spec_str, inline, yaml, mutable_conf
     yaml_spec = spack.concretize.concretize_one(spec_str)
 
     assert inline_spec == yaml_spec
+
+
+@pytest.mark.regression("51556")
+def test_reusing_gcc_same_version_different_libcs(monkeypatch, mutable_config, mock_packages):
+    """Tests that Spack can solve for specs when it reuses 2 GCCs at the same version,
+    but injecting different libcs.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@12.3.0 languages='c,c++,fortran' os=debian6"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+          fortran: /path/bin/gfortran
+    - spec: "gcc@12.3.0 languages='c,c++,fortran' os=redhat6"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+          fortran: /path/bin/gfortran
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    mutable_config.set("concretizer:reuse", True)
+
+    def _mock_libc(self):
+        if self.spec.satisfies("os=debian6"):
+            return spack.spec.Spec("glibc@=2.31", external_path="/rocky9/path")
+        return spack.spec.Spec("glibc@=2.28", external_path="/rocky8/path")
+
+    monkeypatch.setattr(
+        spack.compilers.libraries.CompilerPropertyDetector, "default_libc", _mock_libc
+    )
+
+    # This should not raise
+    mpileaks = spack.concretize.concretize_one("mpileaks %c=gcc@12")
+
+    assert mpileaks.satisfies("%c=gcc@12")
