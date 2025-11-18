@@ -745,3 +745,18 @@ Attributes set this way will be accessible to any method executed in the package
 Values for these attributes may be any value parseable by yaml.
 
 These can only be applied to specific packages, not "all" or virtual packages.
+
+A possible use case is to control whether source code should be installed alongside the package for debugging purposes:
+
+.. code-block:: yaml
+
+   packages:
+     cmake:
+       package_attributes:
+         install_source: true
+
+The ``install_source`` attribute, when set to ``true``, will cause Spack to copy the package source code to ``<prefix>/share/<package-name>/src/`` before building.
+This is equivalent to using the ``--source`` flag with ``spack install``, but allows you to configure it on a per-package basis.
+The command-line ``--source`` flag will override package-level settings.
+
+Note that source installation is automatically skipped for packages installed with ``spack develop``, since the source is already available at the development path and copying it would be redundant.

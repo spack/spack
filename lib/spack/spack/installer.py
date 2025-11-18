@@ -2575,7 +2575,14 @@ class BuildProcessInstaller:
         self.fake = install_args.get("fake", False)
 
         # whether to install source code with the package
-        self.install_source = install_args.get("install_source", False)
+        # Priority: command-line flag > package attribute > default (False)
+        if install_args.get("install_source", False):
+            # Command-line --source flag takes precedence
+            self.install_source = True
+        else:
+            # Check package attribute, fall back to False
+            pkg_attr_source = getattr(pkg, "install_source", None)
+            self.install_source = pkg_attr_source if pkg_attr_source is not None else False
 
         is_develop = pkg.spec.is_develop
         # whether to keep the build stage after installation
@@ -2631,6 +2638,9 @@ class BuildProcessInstaller:
                 else:
                     self.pkg.do_stage()
 
+                if self.install_source:
+                    self._install_source()
+
             self.timer.stop("stage")
 
             tty.debug(
@@ -2648,9 +2658,6 @@ class BuildProcessInstaller:
             if self.fake:
                 _do_fake_install(self.pkg)
             else:
-                if self.install_source:
-                    self._install_source()
-
                 self._real_install()
 
             # Run post install hooks before build stage is removed.
@@ -2672,6 +2679,15 @@ class BuildProcessInstaller:
     def _install_source(self) -> None:
         """Install source code from stage into share/pkg/src if necessary."""
         pkg = self.pkg
+
+        # Skip for develop specs - source is already at dev_path
+        if pkg.spec.is_develop:
+            tty.debug(
+                f"{self.pre} Skipping source installation for develop spec "
+                f"(source at {pkg.stage.source_path})"
+            )
+            return
+
         if not os.path.isdir(pkg.stage.source_path):
             return
 
@@ -2679,6 +2695,11 @@ class BuildProcessInstaller:
         tty.debug(f"{self.pre} Copying source to {src_target}")
 
         fs.install_tree(pkg.stage.source_path, src_target)
+
+        if hasattr(pkg, "build_directory"):
+            if pkg.stage.source_path != pkg.build_directory:
+                tty.warn(f"{self.pre} Using copied source for out-of-source build")
+                pkg.stage.source_path = src_target
 
     def _real_install(self) -> None:
 

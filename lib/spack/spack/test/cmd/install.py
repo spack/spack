@@ -26,6 +26,7 @@ import spack.installer
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.package_base
+import spack.repo
 import spack.store
 from spack.error import SpackError, SpecSyntaxError
 from spack.installer import PackageInstaller
@@ -35,6 +36,7 @@ from spack.spec import Spec
 install = SpackCommand("install")
 env = SpackCommand("env")
 add = SpackCommand("add")
+develop = SpackCommand("develop")
 mirror = SpackCommand("mirror")
 uninstall = SpackCommand("uninstall")
 buildcache = SpackCommand("buildcache")
@@ -195,6 +197,102 @@ def test_install_with_source(mock_packages, mock_archive, mock_fetch, install_mo
     assert filecmp.cmp(
         os.path.join(mock_archive.path, "configure"), os.path.join(src, "configure")
     )
+
+
+@pytest.mark.disable_clean_stage_check
+def test_install_with_source_from_package_attribute(
+    mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config
+):
+    """Verify that source installation can be configured via package_attributes."""
+    # Configure package to install source via package_attributes
+    conf = {"trivial-install-test-package": {"package_attributes": {"install_source": True}}}
+    spack.config.set("packages", conf, scope="command_line")
+
+    # Reinitialize the repository to pick up package attributes
+    spack.repo.PATH = spack.repo.RepoPath.from_config(spack.config.CONFIG)
+
+    # Install without --source flag (should still install source due to package attribute)
+    install("--keep-stage", "trivial-install-test-package")
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    src = os.path.join(spec.prefix.share, "trivial-install-test-package", "src")
+
+    # Verify source was installed
+    assert os.path.exists(src), "Source directory should exist"
+    assert filecmp.cmp(
+        os.path.join(mock_archive.path, "configure"), os.path.join(src, "configure")
+    )
+
+
+@pytest.mark.disable_clean_stage_check
+def test_install_source_command_overrides_package_attribute(
+    mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config
+):
+    """Verify that --source flag overrides package_attributes setting."""
+    # Configure package to NOT install source
+    conf = {"trivial-install-test-package": {"package_attributes": {"install_source": False}}}
+    spack.config.set("packages", conf, scope="command_line")
+
+    # Reinitialize the repository to pick up package attributes
+    spack.repo.PATH = spack.repo.RepoPath.from_config(spack.config.CONFIG)
+
+    # Install WITH --source flag (should override package attribute)
+    install("--source", "--keep-stage", "trivial-install-test-package")
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    src = os.path.join(spec.prefix.share, "trivial-install-test-package", "src")
+
+    # Verify source was installed despite package attribute saying false
+    assert os.path.exists(src), "Source directory should exist (--source overrides config)"
+    assert filecmp.cmp(
+        os.path.join(mock_archive.path, "configure"), os.path.join(src, "configure")
+    )
+
+
+@pytest.mark.disable_clean_stage_check
+def test_install_source_skipped_for_develop_specs(
+    tmp_path, mock_packages, mock_archive, mock_fetch, install_mockery, mutable_mock_env_path
+):
+    """Verify that source installation is skipped for develop specs."""
+    env("create", "test")
+
+    # Create a fake development directory with package files
+    dev_path = tmp_path / "dev-source"
+    dev_path.mkdir()
+    (dev_path / "configure").write_text("#!/bin/sh\necho 'configure from dev'")
+
+    with ev.read("test") as e:
+        # Configure to install source (should be ignored for develop specs)
+        conf = {"trivial-install-test-package": {"package_attributes": {"install_source": True}}}
+        spack.config.set("packages", conf, scope="command_line")
+        spack.repo.PATH = spack.repo.RepoPath.from_config(spack.config.CONFIG)
+
+        # Add and develop the package
+        add("trivial-install-test-package@develop")
+        develop("--no-clone", "--path", str(dev_path), "trivial-install-test-package@develop")
+
+        # Concretize and install
+        e.concretize()
+        e.write()
+        e.install_specs()
+
+        # Get the installed spec
+        specs = e.all_specs()
+        develop_specs = [s for s in specs if s.name == "trivial-install-test-package"]
+        assert len(develop_specs) >= 1
+        spec = develop_specs[0]
+
+        # Verify it's a develop spec
+        assert spec.is_develop, "Spec should be a develop spec"
+
+        # Verify source was NOT copied to prefix (develop specs should skip this)
+        src = os.path.join(spec.prefix.share, "trivial-install-test-package", "src")
+        assert not os.path.exists(src), (
+            "Source should NOT be installed for develop specs " "(source remains at dev_path)"
+        )
+
+        # Verify the development path still exists
+        assert os.path.exists(str(dev_path)), "Development directory should still exist"
 
 
 def test_install_env_variables(mock_packages, mock_archive, mock_fetch, install_mockery):
