@@ -20,7 +20,7 @@ def create_dag(
     Create a DAG of concrete specs, as a mapping from package name to Spec.
 
     Arguments:
-        nodes: list of package names
+        nodes: list of unique package names
         edges: list of tuples (parent, child, deptype)
     """
     specs = {name: spack.spec.Spec(name) for name in nodes}
