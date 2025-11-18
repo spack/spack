@@ -12,14 +12,14 @@ if sys.platform == "win32":
 
 import spack.deptypes as dt
 import spack.error
-import spack.spec
-import spack.store
 from spack.new_installer import BuildGraph
+from spack.spec import Spec
+from spack.store import Store
 
 
 def create_dag(
     nodes: List[str], edges: List[Tuple[str, str, Union[dt.DepType, Tuple[dt.DepType, ...]]]]
-) -> Dict[str, spack.spec.Spec]:
+) -> Dict[str, Spec]:
     """
     Create a DAG of concrete specs, as a mapping from package name to Spec.
 
@@ -27,7 +27,7 @@ def create_dag(
         nodes: list of unique package names
         edges: list of tuples (parent, child, deptype)
     """
-    specs = {name: spack.spec.Spec(name) for name in nodes}
+    specs = {name: Spec(name) for name in nodes}
     for parent, child, deptypes in edges:
         depflag = deptypes if isinstance(deptypes, dt.DepFlag) else dt.canonicalize(deptypes)
         specs[parent].add_dependency_edge(specs[child], depflag=depflag, virtuals=())
@@ -39,7 +39,7 @@ def create_dag(
     return specs
 
 
-def install_spec_in_db(spec: spack.spec.Spec, store: spack.store.Store):
+def install_spec_in_db(spec: Spec, store: Store):
     """Helper to install a spec in the database for testing."""
     prefix = store.layout.path_for_spec(spec)
     spec.set_prefix(prefix)
@@ -129,14 +129,10 @@ def complex_pruning_dag():
 class TestBuildGraph:
     """Tests for the BuildGraph class."""
 
-    def test_basic_graph_construction(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
-    ):
+    def test_basic_graph_construction(self, mock_specs: Dict[str, Spec], temporary_store: Store):
         """Test basic graph construction with all specs to be installed."""
-        specs = [mock_specs["root"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[mock_specs["root"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -152,14 +148,10 @@ class TestBuildGraph:
         # Root should have 2 children (dep1, dep3)
         assert len(graph.parent_to_child[mock_specs["root"].dag_hash()]) == 2
 
-    def test_install_package_only_mode(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
-    ):
+    def test_install_package_only_mode(self, mock_specs: Dict[str, Spec], temporary_store: Store):
         """Test that install_package=False removes root specs from graph."""
-        specs = [mock_specs["root"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[mock_specs["root"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -174,17 +166,15 @@ class TestBuildGraph:
         assert mock_specs["dep1"].dag_hash() in graph.nodes
 
     def test_install_deps_false_with_uninstalled_deps(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+        self, mock_specs: Dict[str, Spec], temporary_store: Store
     ):
         """Test that install_deps=False raises error when dependencies are not installed."""
-        specs = [mock_specs["root"]]
-
         # Should raise error because dependencies are not installed
         with pytest.raises(
             spack.error.InstallError, match="package only mode.*dependency.*not installed"
         ):
             BuildGraph(
-                specs=specs,
+                specs=[mock_specs["root"]],
                 root_policy="auto",
                 dependencies_policy="auto",
                 include_build_deps=False,
@@ -193,14 +183,10 @@ class TestBuildGraph:
                 database=temporary_store.db,
             )
 
-    def test_multiple_roots(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
-    ):
+    def test_multiple_roots(self, mock_specs: Dict[str, Spec], temporary_store: Store):
         """Test graph construction with multiple root specs."""
-        specs = [mock_specs["root"], mock_specs["dep1"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[mock_specs["root"], mock_specs["dep1"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -213,15 +199,11 @@ class TestBuildGraph:
         assert mock_specs["root"].dag_hash() in graph.roots
         assert mock_specs["dep1"].dag_hash() in graph.roots
 
-    def test_parent_child_mappings(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
-    ):
+    def test_parent_child_mappings(self, mock_specs: Dict[str, Spec], temporary_store: Store):
         """Test that parent-child mappings are correctly constructed."""
         spec_root = mock_specs["root"]
-        specs = [spec_root]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[spec_root],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -237,13 +219,11 @@ class TestBuildGraph:
                 assert parent in graph.child_to_parent[child]
 
     def test_diamond_dag_with_shared_dependency(
-        self, diamond_dag: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+        self, diamond_dag: Dict[str, Spec], temporary_store: Store
     ):
         """Test graph construction with a diamond DAG where a dependency has multiple parents."""
-        specs = [diamond_dag["root"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[diamond_dag["root"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -259,18 +239,14 @@ class TestBuildGraph:
         assert diamond_dag["dep1"].dag_hash() in graph.child_to_parent[shared_hash]
         assert diamond_dag["dep2"].dag_hash() in graph.child_to_parent[shared_hash]
 
-    def test_pruning_installed_specs(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
-    ):
+    def test_pruning_installed_specs(self, mock_specs: Dict[str, Spec], temporary_store: Store):
         """Test that installed specs are correctly pruned from the graph."""
         # Install dep2 in the database
         dep2 = mock_specs["dep2"]
         install_spec_in_db(dep2, temporary_store)
 
-        specs = [mock_specs["root"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[mock_specs["root"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -287,17 +263,14 @@ class TestBuildGraph:
         assert len(graph.parent_to_child[mock_specs["dep1"].dag_hash()]) == 0
 
     def test_pruning_with_shared_dependency_partially_installed(
-        self, diamond_dag: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+        self, diamond_dag: Dict[str, Spec], temporary_store: Store
     ):
         """Test that pruning a shared dependency correctly updates all parents."""
         # Install the shared dependency
         shared = diamond_dag["shared"]
         install_spec_in_db(shared, temporary_store)
-
-        specs = [diamond_dag["root"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[diamond_dag["root"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -312,95 +285,78 @@ class TestBuildGraph:
         assert len(graph.parent_to_child[diamond_dag["dep1"].dag_hash()]) == 0
         assert len(graph.parent_to_child[diamond_dag["dep2"].dag_hash()]) == 0
 
-    def test_include_build_deps_false_installed_root(self, specs_with_build_deps, temporary_store):
-        """Test that build dependencies are excluded for an installed root package.
-
-        When a root spec is already installed, build deps are excluded regardless of
-        include_build_deps setting, because installed packages only need link/run deps.
-        """
-        # Install the root so build deps are excluded
-        root = specs_with_build_deps["root"]
-        root.set_prefix(temporary_store.layout.path_for_spec(root))
-        temporary_store.db.add(root, explicit=True)
-
-        specs = [root]
-
-        graph = BuildGraph(
-            specs=specs,
-            root_policy="cache_only",  # Use cache_only to exclude build deps
-            dependencies_policy="auto",
-            include_build_deps=False,
-            install_package=False,  # Only install dependencies
-            install_deps=True,
-            database=temporary_store.db,
-        )
-
-        # build_dep should NOT be in the graph (build-only dependency)
-        assert specs_with_build_deps["build_dep"].dag_hash() not in graph.nodes
-        # link_dep and all_dep should be in the graph
-        assert specs_with_build_deps["link_dep"].dag_hash() in graph.nodes
-        assert specs_with_build_deps["all_dep"].dag_hash() in graph.nodes
-
-    def test_cache_only_policy_excludes_build_deps_for_uninstalled_package(
-        self, specs_with_build_deps: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+    def test_installed_root_excludes_build_deps_even_when_requested(
+        self, specs_with_build_deps: Dict[str, Spec], temporary_store: Store
     ):
-        """Test that cache_only policy excludes build deps even for uninstalled packages."""
-        # Do NOT install the root - it's uninstalled
+        """Test that installed root specs never include build deps, even with
+        include_build_deps=True."""
         root = specs_with_build_deps["root"]
-        specs = [root]
+        install_spec_in_db(root, temporary_store)
 
         graph = BuildGraph(
-            specs=specs,
-            root_policy="cache_only",  # cache_only policy
+            specs=[root],
+            root_policy="auto",
             dependencies_policy="auto",
-            include_build_deps=False,  # Don't include build deps
+            include_build_deps=True,  # Should be ignored for installed root
             install_package=True,
             install_deps=True,
             database=temporary_store.db,
         )
 
-        # build_dep should NOT be in the graph (build-only dependency excluded by cache_only)
+        # build_dep should NOT be in the graph (installed root never needs build deps)
         assert specs_with_build_deps["build_dep"].dag_hash() not in graph.nodes
-        # link_dep and all_dep should be in the graph
+        # link_dep and all_dep should be in the graph (link/run deps)
         assert specs_with_build_deps["link_dep"].dag_hash() in graph.nodes
         assert specs_with_build_deps["all_dep"].dag_hash() in graph.nodes
-        # root should be in the graph
-        assert root.dag_hash() in graph.nodes
 
-    def test_include_build_deps_true(
-        self, specs_with_build_deps: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+    def test_cache_only_excludes_build_deps(
+        self, specs_with_build_deps: Dict[str, Spec], temporary_store: Store
     ):
-        """Test that build dependencies are included when include_build_deps=True."""
-        specs = [specs_with_build_deps["root"]]
-
+        """Test that cache_only policy excludes build deps when include_build_deps=False."""
         graph = BuildGraph(
-            specs=specs,
-            root_policy="auto",
+            specs=[specs_with_build_deps["root"]],
+            root_policy="cache_only",
             dependencies_policy="auto",
+            include_build_deps=False,  # exclude build deps when possible
+            install_package=True,
+            install_deps=True,
+            database=temporary_store.db,
+        )
+
+        assert specs_with_build_deps["build_dep"].dag_hash() not in graph.nodes
+        assert specs_with_build_deps["link_dep"].dag_hash() in graph.nodes
+        assert specs_with_build_deps["all_dep"].dag_hash() in graph.nodes
+
+    def test_cache_only_includes_build_deps_when_requested(
+        self, specs_with_build_deps: Dict[str, Spec], temporary_store: Store
+    ):
+        """Test that cache_only policy includes build deps when include_build_deps=True."""
+        graph = BuildGraph(
+            specs=[specs_with_build_deps["root"]],
+            root_policy="cache_only",
+            dependencies_policy="cache_only",
             include_build_deps=True,
             install_package=True,
             install_deps=True,
             database=temporary_store.db,
         )
 
-        # All dependencies should be in the graph
+        # All dependencies should be in the graph, including build_dep
         assert specs_with_build_deps["build_dep"].dag_hash() in graph.nodes
         assert specs_with_build_deps["link_dep"].dag_hash() in graph.nodes
         assert specs_with_build_deps["all_dep"].dag_hash() in graph.nodes
 
     def test_install_deps_false_with_all_deps_installed(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+        self, mock_specs: Dict[str, Spec], temporary_store: Store
     ):
         """Test successful package-only install when all dependencies are already installed."""
         # Install all dependencies
         for dep_name in ["dep1", "dep2", "dep3"]:
             install_spec_in_db(mock_specs[dep_name], temporary_store)
 
-        specs = [mock_specs["root"]]
-
         # Should succeed since all dependencies are installed
         graph = BuildGraph(
-            specs=specs,
+            specs=[mock_specs["root"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -415,39 +371,13 @@ class TestBuildGraph:
         # Root should have no children (all deps pruned)
         assert len(graph.parent_to_child.get(mock_specs["root"].dag_hash(), [])) == 0
 
-    def test_build_deps_excluded_for_installed_packages(
-        self, specs_with_build_deps: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
-    ):
-        """Test that build deps are excluded for installed packages even if include_build_deps."""
-        # Install link_dep
-        link_dep = specs_with_build_deps["link_dep"]
-        install_spec_in_db(link_dep, temporary_store)
-
-        specs = [specs_with_build_deps["root"]]
-
-        graph = BuildGraph(
-            specs=specs,
-            root_policy="auto",
-            dependencies_policy="auto",
-            include_build_deps=True,  # Even with this set to True
-            install_package=True,
-            install_deps=True,
-            database=temporary_store.db,
-        )
-
-        # link_dep should be pruned (it's installed)
-        assert link_dep.dag_hash() not in graph.nodes
-        # build_dep and all_dep should be in the graph
-        assert specs_with_build_deps["build_dep"].dag_hash() in graph.nodes
-        assert specs_with_build_deps["all_dep"].dag_hash() in graph.nodes
-
     def test_pruning_creates_cartesian_product_of_connections(
-        self, complex_pruning_dag: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+        self, complex_pruning_dag: Dict[str, Spec], temporary_store: Store
     ):
         """Test that pruning creates full Cartesian product of parent-child connections.
 
         When a node with multiple parents and multiple children is pruned,
-        all parents should be connected to all children (parents × children).
+        all parents should be connected to all children (parents x children).
 
         DAG structure:
             parent1 -> middle -> child1
@@ -464,10 +394,8 @@ class TestBuildGraph:
         install_spec_in_db(middle, temporary_store)
 
         # Use parent1 as the root to build the graph
-        specs = [complex_pruning_dag["parent1"], complex_pruning_dag["parent2"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[complex_pruning_dag["parent1"], complex_pruning_dag["parent2"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -514,17 +442,15 @@ class TestBuildGraph:
         assert middle_hash not in graph.child_to_parent
 
     def test_empty_graph_all_specs_installed(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+        self, mock_specs: Dict[str, Spec], temporary_store: Store
     ):
         """Test that the graph is empty when all specs are already installed."""
         # Install all specs in the DAG
         for spec_name in ["root", "dep1", "dep2", "dep3"]:
             install_spec_in_db(mock_specs[spec_name], temporary_store)
 
-        specs = [mock_specs["root"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[mock_specs["root"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -539,17 +465,15 @@ class TestBuildGraph:
         assert len(graph.child_to_parent) == 0
 
     def test_empty_graph_install_package_false_all_deps_installed(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+        self, mock_specs: Dict[str, Spec], temporary_store: Store
     ):
         """Test empty graph when install_package=False and all dependencies are installed."""
         # Install all dependencies (but not the root)
         for dep_name in ["dep1", "dep2", "dep3"]:
             install_spec_in_db(mock_specs[dep_name], temporary_store)
 
-        specs = [mock_specs["root"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[mock_specs["root"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -565,9 +489,7 @@ class TestBuildGraph:
         assert len(graph.parent_to_child) == 0
         assert len(graph.child_to_parent) == 0
 
-    def test_pruning_leaf_node(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
-    ):
+    def test_pruning_leaf_node(self, mock_specs: Dict[str, Spec], temporary_store: Store):
         """Test that pruning a leaf node (no children) works correctly.
 
         This ensures the pruning logic handles the boundary condition where
@@ -577,10 +499,8 @@ class TestBuildGraph:
         dep2 = mock_specs["dep2"]
         install_spec_in_db(dep2, temporary_store)
 
-        specs = [mock_specs["root"]]
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[mock_specs["root"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -601,17 +521,15 @@ class TestBuildGraph:
         assert dep2_hash not in graph.child_to_parent
 
     def test_pruning_root_node_with_install_package_false(
-        self, mock_specs: Dict[str, spack.spec.Spec], temporary_store: spack.store.Store
+        self, mock_specs: Dict[str, Spec], temporary_store: Store
     ):
         """Test that pruning a root node (no parents in the context) works correctly.
 
         When install_package=False, root nodes are marked for pruning. This ensures
         the pruning logic handles the boundary condition where a node has no parents.
         """
-        specs = [mock_specs["dep1"]]  # Use dep1 as the "root" for this test
-
         graph = BuildGraph(
-            specs=specs,
+            specs=[mock_specs["dep1"]],
             root_policy="auto",
             dependencies_policy="auto",
             include_build_deps=False,
@@ -628,7 +546,7 @@ class TestBuildGraph:
         # dep2 (child of dep1) should still be in the graph
         assert dep2_hash in graph.nodes
         # dep2 should have no parents now (its only parent was pruned)
-        assert dep2_hash not in graph.child_to_parent or len(graph.child_to_parent[dep2_hash]) == 0
+        assert not graph.child_to_parent.get(dep2_hash)
         # dep1 should not appear in any mappings
         assert dep1_hash not in graph.parent_to_child
         assert dep1_hash not in graph.child_to_parent

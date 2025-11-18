@@ -299,6 +299,7 @@ def worker_function(
     if os.path.exists(spec.prefix):
         shutil.rmtree(spec.prefix)
 
+    # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
         if mirrors and install_from_buildcache(mirrors, spec, unsigned, state_stream):
             spack.hooks.post_install(spec, explicit)
@@ -1037,13 +1038,15 @@ class BuildGraph:
             dag_hash: The dag_hash of the spec that was just installed
             pending_builds: List to append parent specs that are ready to build
         """
-        # Remove the finished job from the mappings
+        # Remove node and edges from the node in the build graph
         self.parent_to_child.pop(dag_hash, None)
-        parents = self.child_to_parent.get(dag_hash)
+        self.nodes.pop(dag_hash, None)
+        parents = self.child_to_parent.pop(dag_hash, None)
 
         if not parents:
             return
 
+        # Enqueue any parents and remove edges to the installed child
         for parent in parents:
             children = self.parent_to_child[parent]
             children.remove(dag_hash)
