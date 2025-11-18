@@ -166,6 +166,14 @@ def _get_unimported_public_keys(output):
     return keys
 
 
+def _get_key_uids(output):
+    uids = []
+    for line in output.split("\n"):
+        if line.startswith("uid"):
+            uids.append(line.split(":")[-2])
+    return uids
+
+
 class SpackGPGError(spack.error.SpackError):
     """Class raised when GPG errors are detected."""
 
@@ -228,6 +236,18 @@ def export_keys(location, keys, secret=False):
         GPG("--export-secret-keys", "--armor", "--output", location, *keys)
     else:
         GPG("--batch", "--yes", "--armor", "--export", "--output", location, *keys)
+
+
+@_autoinit
+def extract_public_keys(keyfile):
+    """Extract the public key ids from a file
+
+    Args:
+        keyfile (str): file with the public key
+    """
+    # Get the public keys we are about to import
+    output = GPG("--with-colons", keyfile, output=str, error=str)
+    return zip(_get_unimported_public_keys(output), _get_key_uids(output))
 
 
 @_autoinit

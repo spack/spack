@@ -15,6 +15,7 @@ import spack.util.gpg
 import spack.util.url
 import spack.util.web as web_util
 from spack.cmd.common import arguments
+from spack.llnl.util import tty
 
 description = "handle GPG actions for spack"
 section = "packaging"
@@ -34,6 +35,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     trust.add_argument(
         "keyfile", type=str, help="add a keyfile from path or url to the trust store"
     )
+    arguments.add_common_arguments(trust, ["yes_to_all"])
     trust.set_defaults(func=gpg_trust, subparser=trust)
 
     untrust = subparsers.add_parser("untrust", help=gpg_untrust.__doc__)
@@ -185,11 +187,23 @@ def gpg_sign(args):
 def gpg_trust(args):
     """add a key to the keyring"""
     url = urllib.parse.urlparse(args.keyfile)
-    if url.scheme in ["", "file"]:
-        spack.util.gpg.trust(args.keyfile)
-    else:
-        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-            spack.util.gpg.trust(web_util.fetch_url_text(args.keyfile, dest_dir=tmpdir))
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        if url.scheme in ["", "file"]:
+            keyfile = args.keyfile
+        else:
+            keyfile = web_util.fetch_url_text(args.keyfile, dest_dir=tmpdir)
+
+        if not args.yes_to_all:
+            keys = spack.util.gpg.extract_public_keys(keyfile)
+            tty.msg(f"Keys to be imported from {args.keyfile}")
+            for key in keys:
+                tty.msg(f"  {key[0]} ({key[1]})")
+
+            answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
+            if not answer:
+                tty.die("Aborting trust keys")
+
+        spack.util.gpg.trust(keyfile)
 
 
 def gpg_init(args):
