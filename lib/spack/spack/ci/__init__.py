@@ -581,7 +581,7 @@ def import_signing_key(base64_signing_key: str) -> None:
         with open(sign_key_path, "w", encoding="utf-8") as fd:
             fd.write(decoded_key)
 
-        key_import_output = spack_gpg("trust", sign_key_path)
+        key_import_output = spack_gpg("trust", "-y", sign_key_path)
         tty.debug(f"spack gpg trust {sign_key_path}")
         tty.debug(key_import_output)
 
@@ -1053,7 +1053,11 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
                 f"share/spack/setup-env.{platform_script_ext}",
             ),
         ],
-        ["spack", "gpg", "trust", mounted_gpg_path if job_image else gpg_path] if gpg_path else [],
+        (
+            ["spack", "gpg", "trust", "-y", mounted_gpg_path if job_image else gpg_path]
+            if gpg_path
+            else []
+        ),
         ["spack", "env", "activate", mounted_env_dir if job_image else repro_dir],
         [
             (
