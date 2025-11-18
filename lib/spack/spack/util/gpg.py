@@ -162,7 +162,6 @@ class GpgKeyType(enum.Flag):
             for mem in cls:
                 if mem.value == value:
                     return mem
-            print(value)
 
         kname = value.strip().lower()
         if kname == "pub":
@@ -287,18 +286,6 @@ class GpgKey:
         self.uid: List[GpgUserId] = []
         self.subkey: List[GpgKey] = []
 
-    @staticmethod
-    def from_colons(colons: str) -> Optional["GpgKey"]:
-        keys = _parse_gpg_output(colons)
-        if len(keys) > 1:
-            tty.warn("Multiple primary keys detected while parsing. Returning first key.")
-            return keys[0]
-
-        if len(keys) == 1:
-            return keys[0]
-
-        return None
-
     def add(self, data: Dict[str, str]):
         """Add metadata to a key"""
 
@@ -323,11 +310,8 @@ class GpgKey:
         if isinstance(otherkey, str):
             return self.fpr == otherkey
         elif isinstance(otherkey, GpgKey):
-            return f"{self:c}" == f"{otherkey:c}"
-            # return (
-            #     self.fpr == otherkey.fpr and
-            #     _subkey_fpr_list(self) == _subkey_fpr_list(otherkey
-            # )
+            # return f"{self:c}" == f"{otherkey:c}"
+            return self.fpr == otherkey.fpr
         else:
             return NotImplemented
 
@@ -352,13 +336,14 @@ class GpgKey:
             data["updated_at"] = int(self.updated_at.timestamp())
 
         data["owner_trust"] = self.owner_trust.value
-        data["capabilities"] = ""
+        cap_list = set()
         if self.subkey:
-            data["capabilities"] += "".join([c.value.upper() for c in self.capabilities])
+            cap_list.update([c.value.upper() for c in self.capabilities])
             for k in self.subkey:
-                data["capabilities"] += "".join([c.value.lower() for c in k.capabilities])
+                cap_list.update([c.value.lower() for c in k.capabilities])
         else:
-            data["capabilities"] += "".join([c.value.lower() for c in self.capabilities])
+            cap_list.update([c.value.lower() for c in self.capabilities])
+        data["capabilities"] = "".join(sorted(cap_list))
 
         data["compliance"] = self.compliance.value
 
@@ -487,27 +472,7 @@ class Gpg:
 
         return self._socket_dir
 
-    @overload
-    def list_keys(self, *fprs, ktype: GpgKeyType = GpgKeyType.PUBLIC) -> List[GpgKey]: ...
-
-    @overload
-    def list_keys(self, *fprs, fmt: str, ktype: GpgKeyType = GpgKeyType.PUBLIC) -> None: ...
-
-    def list_keys(
-        self, *fprs, ktype: GpgKeyType = GpgKeyType.PUBLIC, fmt: str = "keys", output=sys.stdout
-    ) -> Optional[Union[str, List[GpgKey]]]:
-        """List known keys.
-
-        Args:
-            fprs: list of key fingerprints
-            ktype: Type of dey to list (default: PUBLIC)
-            fmt: format to print/return keys (default: None)
-                "default" (or None) -> return default output from gpg
-                "keys"              -> return list of GpgKey objects
-                "colons"            -> return output from gpg --with-colons
-                GpgKey format       ->  See GpgKey __format__
-            output: stream to send string output to (str or stream passed to print(output))
-        """
+    def _list_keys(self, *fprs, colons: bool = True, ktype: GpgKeyType = GpgKeyType.PUBLIC) -> str:
         gpg_args = []
 
         # Determine the list option
@@ -520,32 +485,38 @@ class Gpg:
 
         # Determine output format
         # colons or a spack abbreviated format
-        if fmt == "colons" or fmt != "default":
+        if colons:
             gpg_args.append("--with-colons")
 
         # Get list of keys from keyring
-        out = self.gpg(*gpg_args, "--fingerprint", *fprs, output=str)
+        return self.gpg(*gpg_args, "--fingerprint", *fprs, output=str)
 
-        buffer = ""
-        if fmt not in ("colons", "default"):
+    def keys(self, *fprs, ktype: GpgKeyType = GpgKeyType.PUBLIC):
+        return _parse_gpg_output(self._list_keys(*fprs, colons = True, ktype=ktype))
+
+    def list_keys(
+            self, *fprs, ktype: GpgKeyType = GpgKeyType.PUBLIC, fmt: str = ""
+    ) -> Union[str, List[GpgKey]]:
+        """List known keys.
+
+        Args:
+            fprs: list of key fingerprints
+            ktype: Type of dey to list (default: PUBLIC)
+            fmt: format to print/return keys (default: None)
+                default (aka "") -> return default output from gpg
+                GpgKey format string->  See GpgKey __format__
+        """
+
+        # Get list of keys from keyring
+        out = self._list_keys(*fprs, colons=bool(fmt), ktype=ktype)
+        if fmt:
+            buffer = ""
             keys = _parse_gpg_output(out)
-            if fmt == "keys":
-                return keys
-
             for key in keys:
                 buffer += f"{{key:{fmt}}}".format(key=key)
-        else:
-            buffer = out
-
-        if not buffer:
-            return None
-
-        if output == str:
             return buffer
         else:
-            print(buffer.strip(), file=output, flush=True)
-
-        return None
+            return out
 
     def trust(self, keyfile: str, ultimate: bool = True):
         """Import a public key from a file and trust it.
@@ -562,7 +533,7 @@ class Gpg:
             return
 
         # Set trust to ultimate
-        known_keys = self.list_keys()
+        known_keys = self.keys()
         for key in keys:
             # Skip over keys we cannot find a fingerprint for.
             if known_keys and key not in known_keys:
@@ -818,14 +789,14 @@ Expire-Date: %(expires)s
 def signing_keys(*args) -> List[GpgKey]:
     """Return the keys that can be used to sign binaries."""
     assert GPG
-    return GPG.list_keys(*args, ktype=GpgKeyType.SECRET)
+    return GPG.keys(*args, ktype=GpgKeyType.SECRET)
 
 
 @_autoinit
 def public_keys(*args) -> List[GpgKey]:
     """Return a list of fingerprints"""
     assert GPG
-    return GPG.list_keys(*args, ktype=GpgKeyType.PUBLIC)
+    return GPG.keys(*args, ktype=GpgKeyType.PUBLIC)
 
 
 @_autoinit
@@ -876,9 +847,9 @@ def untrust(signing: bool, *keys):
     """
     assert GPG
     if signing:
-        GPG.untrust(GPG.list_keys(*keys, ktype=GpgKeyType.SECRET))
+        GPG.untrust(GPG.keys(*keys, ktype=GpgKeyType.SECRET))
 
-    untrust_keys = GPG.list_keys(*keys, ktype=GpgKeyType.PUBLIC)
+    untrust_keys = GPG.keys(*keys, ktype=GpgKeyType.PUBLIC)
     GPG.untrust(untrust_keys)
 
 
@@ -927,11 +898,11 @@ def list(trusted: bool, signing: bool, fmt: str = "default"):
 
     if trusted:
         tty.msg("Trusted keys")
-        GPG.list_keys(ktype=GpgKeyType.PUBLIC, fmt=fmt)
+        print(GPG.list_keys(ktype=GpgKeyType.PUBLIC, fmt=fmt))
 
     if signing:
         tty.msg("Signing keys")
-        GPG.list_keys(ktype=GpgKeyType.SECRET, fmt=fmt)
+        print(GPG.list_keys(ktype=GpgKeyType.SECRET, fmt=fmt))
 
 
 def _verify_exe_or_raise(exe):

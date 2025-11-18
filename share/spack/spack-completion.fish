@@ -1982,10 +1982,12 @@ complete -c spack -n '__fish_spack_using_command gpg verify' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command gpg verify' -s h -l help -d 'show this help message and exit'
 
 # spack gpg trust
-set -g __fish_spack_optspecs_spack_gpg_trust h/help
+set -g __fish_spack_optspecs_spack_gpg_trust h/help y/yes-to-all
 
 complete -c spack -n '__fish_spack_using_command gpg trust' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gpg trust' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command gpg trust' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command gpg trust' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack gpg untrust
 set -g __fish_spack_optspecs_spack_gpg_untrust h/help signing
@@ -2022,9 +2024,11 @@ complete -c spack -n '__fish_spack_using_command gpg create' -l export-secret -r
 complete -c spack -n '__fish_spack_using_command gpg create' -l export-secret -r -d 'export the private key to a file'
 
 # spack gpg list
-set -g __fish_spack_optspecs_spack_gpg_list h/help trusted signing
+set -g __fish_spack_optspecs_spack_gpg_list h/help f/fmt= trusted signing
 complete -c spack -n '__fish_spack_using_command gpg list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gpg list' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command gpg list' -l fmt -s f -r -f -a fmt
+complete -c spack -n '__fish_spack_using_command gpg list' -l fmt -s f -r -d 'Format to list keys with (default (gpg), colons, keys, <key format string>)'
 complete -c spack -n '__fish_spack_using_command gpg list' -l trusted -f -a trusted
 complete -c spack -n '__fish_spack_using_command gpg list' -l trusted -d 'list trusted keys'
 complete -c spack -n '__fish_spack_using_command gpg list' -l signing -f -a signing
