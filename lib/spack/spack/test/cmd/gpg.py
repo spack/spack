@@ -167,7 +167,7 @@ def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
         gpg("verify", str(test_path))
 
     # Trust the exported key.
-    gpg("trust", str(export_path))
+    gpg("trust", "-y", str(export_path))
 
     # Verification should now succeed again.
     gpg("verify", str(test_path))
