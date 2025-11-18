@@ -93,12 +93,10 @@ def verify_versions(args):
     2. Installed package version not known by the package recipe
     3. Installed package version deprecated in the package recipe
     """
-    if not args.specs and not args.all:
-        tty.die("spack verify versions requires either a spec or the --all argument.")
-    if args.all:
-        specs = spack.store.db.query(installed=True)
-    else:
+    if args.specs:
         specs = args.specs(installed=True)
+    else:
+        specs = spack.store.db.query(installed=True)
 
     missing_package = []
     unknown_version = []
@@ -118,18 +116,23 @@ def verify_versions(args):
             deprecated_version.append(spec)
 
     if missing_package or unknown_version or deprecated_version:
-        msg = ""
-        for spec in missing_package:
-            msg += f"Cannot verify version for {spec} at {spec.prefix}. Cannot load package.\n"
-        for spec in unknown_version:
-            msg += f"Spec {spec} at {spec.prefix} has version {spec.version} unknown to Spack.\n"
-        for spec in deprecated_version:
-            msg += f"Spec {spec} at {spec.prefix} has deprecated version {spec.version}.\n"
-
         errors = len(missing_package) + len(unknown_version) + len(deprecated_version)
-        msg += f"{errors} installed packages fail version validation"
+        msg_lines = [f"{errors} installed packages have unknown/deprecated versions\n"]
 
-        tty.die(msg)
+        msg_lines += [
+            f"    Cannot check version for {spec} at {spec.prefix}. Cannot load package."
+            for spec in missing_package
+        ]
+        msg_lines += [
+            f"    Spec {spec} at {spec.prefix} has version {spec.version} unknown to Spack."
+            for spec in unknown_version
+        ]
+        msg_lines += [
+            f"    Spec {spec} at {spec.prefix} has deprecated version {spec.version}."
+            for spec in deprecated_version
+        ]
+
+        tty.die("\n".join(msg_lines))
 
 
 def verify_libraries(args):
