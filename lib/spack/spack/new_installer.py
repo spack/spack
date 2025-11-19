@@ -1085,7 +1085,6 @@ class PackageInstaller:
         install_source: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
-        restage: bool = True,
         skip_patch: bool = False,
         stop_at: Optional[str] = None,
         stop_before: Optional[str] = None,
@@ -1108,8 +1107,6 @@ class PackageInstaller:
             raise NotImplementedError("Installing sources is not implemented")
         elif keep_prefix:
             raise NotImplementedError("Keeping install prefixes is not implemented")
-        elif not restage:
-            raise NotImplementedError("Restaging builds is not implemented")
         elif stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
         elif stop_before is not None:

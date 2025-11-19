@@ -796,7 +796,6 @@ class BuildRequest:
             ("root_policy", "auto"),
             ("keep_prefix", False),
             ("keep_stage", False),
-            ("restage", False),
             ("skip_patch", False),
             ("tests", False),
             ("unsigned", None),
@@ -1469,7 +1468,6 @@ class PackageInstaller:
         install_source: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
-        restage: bool = False,
         skip_patch: bool = False,
         stop_at: Optional[str] = None,
         stop_before: Optional[str] = None,
@@ -1494,7 +1492,6 @@ class PackageInstaller:
             keep_prefix: Keep install prefix on failure. By default, destroys it.
             keep_stage: By default, stage is destroyed only if there are no exceptions during
                 build. Set to True to keep the stage even with exceptions.
-            restage: Force spack to restage the package source.
             skip_patch: Skip patch stage of build if True.
             stop_before: stop execution before this installation phase (or None)
             stop_at: last installation phase to be executed (or None)
@@ -1532,7 +1529,6 @@ class PackageInstaller:
             "keep_stage": keep_stage,
             "overwrite": overwrite or [],
             "root_policy": root_policy,
-            "restage": restage,
             "skip_patch": skip_patch,
             "stop_at": stop_at,
             "stop_before": stop_before,
@@ -2584,8 +2580,7 @@ class BuildProcessInstaller:
         # a --destroy-stage option), so we can override a default choice
         # to destroy
         self.keep_stage = is_develop or install_args.get("keep_stage", False)
-        # whether to restage
-        self.restage = (not is_develop) and install_args.get("restage", False)
+        self.restage = not is_develop
 
         # whether to skip the patch phase
         self.skip_patch = install_args.get("skip_patch", False)

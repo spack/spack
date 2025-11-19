@@ -50,7 +50,6 @@ def install_kwargs_from_args(args):
         "fail_fast": args.fail_fast,
         "keep_prefix": args.keep_prefix,
         "keep_stage": args.keep_stage,
-        "restage": not args.dont_restage,
         "install_source": args.install_source,
         "verbose": args.verbose or args.install_verbose,
         "fake": args.fake,
@@ -109,7 +108,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--dont-restage",
         action="store_true",
-        help="if a partial install is detected, don't delete prior state",
+        help="deprecated option (no longer has any effect; restaging is always performed)",
     )
 
     cache_group = subparser.add_mutually_exclusive_group()
@@ -306,6 +305,13 @@ def _die_require_env():
 def install(parser, args):
     # TODO: unify args.verbose?
     tty.set_verbose(args.verbose or args.install_verbose)
+
+    if args.dont_restage:
+        tty.warn(
+            "The '--dont-restage' option is deprecated and will be removed in Spack v1.3.0. "
+            "Use 'spack develop' for packages where you want to preserve manual modifications to "
+            "source code."
+        )
 
     if args.help_cdash:
         arguments.print_cdash_help()
