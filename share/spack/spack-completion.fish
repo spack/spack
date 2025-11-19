@@ -2103,7 +2103,7 @@ complete -c spack -n '__fish_spack_using_command install' -l keep-prefix -d 'don
 complete -c spack -n '__fish_spack_using_command install' -l keep-stage -f -a keep_stage
 complete -c spack -n '__fish_spack_using_command install' -l keep-stage -d 'don'"'"'t remove the build stage if installation succeeds'
 complete -c spack -n '__fish_spack_using_command install' -l dont-restage -f -a dont_restage
-complete -c spack -n '__fish_spack_using_command install' -l dont-restage -d 'if a partial install is detected, don'"'"'t delete prior state'
+complete -c spack -n '__fish_spack_using_command install' -l dont-restage -d 'deprecated option (no longer has any effect; restaging is always performed)'
 complete -c spack -n '__fish_spack_using_command install' -l use-cache -f -a use_cache
 complete -c spack -n '__fish_spack_using_command install' -l use-cache -d 'check for pre-built Spack packages in mirrors (default)'
 complete -c spack -n '__fish_spack_using_command install' -l no-cache -f -a use_cache
