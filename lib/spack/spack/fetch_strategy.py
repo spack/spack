@@ -127,12 +127,6 @@ class FetchStrategy:
     def expand(self):
         """Expand the downloaded archive into the stage source path."""
 
-    def reset(self):
-        """Revert to freshly downloaded state.
-
-        For archive files, this may just re-expand the archive.
-        """
-
     def archive(self, destination):
         """Create an archive of the downloaded data for a mirror.
 
@@ -583,26 +577,6 @@ class URLFetchStrategy(FetchStrategy):
 
         verify_checksum(self.archive_file, self.digest, self.url, self._effective_url)
 
-    @_needs_stage
-    def reset(self):
-        """
-        Removes the source path if it exists, then re-expands the archive.
-        """
-        if not self.archive_file:
-            raise NoArchiveFileError(
-                f"Tried to reset {self.__class__.__name__} before fetching",
-                f"Failed on reset() for URL{self.url}",
-            )
-
-        # Remove everything but the archive from the stage
-        for filename in os.listdir(self.stage.path):
-            abspath = os.path.join(self.stage.path, filename)
-            if abspath != self.archive_file:
-                shutil.rmtree(abspath, ignore_errors=True)
-
-        # Expand the archive again
-        self.expand()
-
     def __repr__(self):
         return f"{self.__class__.__name__}<{self.url}>"
 
@@ -785,11 +759,6 @@ class GoFetchStrategy(VCSFetchStrategy):
         # Move the directory to the well-known stage source path
         repo_root = _ensure_one_stage_entry(self.stage.path)
         shutil.move(repo_root, self.stage.source_path)
-
-    @_needs_stage
-    def reset(self):
-        with working_dir(self.stage.source_path):
-            self.go("clean")
 
     def __str__(self):
         return "[go] %s" % self.url
@@ -1140,18 +1109,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                     args.insert(1, "--quiet")
                 git(*args)
 
-    @_needs_stage
-    def reset(self):
-        with working_dir(self.stage.source_path):
-            co_args = ["checkout", "."]
-            clean_args = ["clean", "-f"]
-            if spack.config.get("config:debug"):
-                co_args.insert(1, "--quiet")
-                clean_args.insert(1, "--quiet")
-
-            self.git(*co_args)
-            self.git(*clean_args)
-
     def protocol_supports_shallow_clone(self):
         """Shallow clone operations (``--depth #``) are not supported by the basic
         HTTP protocol or by no-protocol file specifications.
@@ -1270,12 +1227,6 @@ class CvsFetchStrategy(VCSFetchStrategy):
     def archive(self, destination):
         super().archive(destination, exclude="CVS")
 
-    @_needs_stage
-    def reset(self):
-        self._remove_untracked_files()
-        with working_dir(self.stage.source_path):
-            self.cvs("update", "-C", ".")
-
     def __str__(self):
         return "[cvs] %s" % self.url
 
@@ -1362,12 +1313,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     def archive(self, destination):
         super().archive(destination, exclude=".svn")
-
-    @_needs_stage
-    def reset(self):
-        self._remove_untracked_files()
-        with working_dir(self.stage.source_path):
-            self.svn("revert", ".", "-R")
 
     def __str__(self):
         return "[svn] %s" % self.url
@@ -1465,21 +1410,6 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     def archive(self, destination):
         super().archive(destination, exclude=".hg")
-
-    @_needs_stage
-    def reset(self):
-        with working_dir(self.stage.path):
-            source_path = self.stage.source_path
-            scrubbed = "scrubbed-source-tmp"
-
-            args = ["clone"]
-            if self.revision:
-                args += ["-r", self.revision]
-            args += [source_path, scrubbed]
-            self.hg(*args)
-
-            shutil.rmtree(source_path, ignore_errors=True)
-            shutil.move(scrubbed, source_path)
 
     def __str__(self):
         return f"[hg] {self.url}"

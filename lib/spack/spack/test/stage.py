@@ -587,8 +587,13 @@ class TestStage:
 
             assert "foobar" in os.listdir(stage.source_path)
 
-            # Make sure the file is not there after restage.
+            # Make sure the stage is completely cleared after restage.
             stage.restage()
+            # After restage (destroy + create), the stage is empty
+            assert not stage.expanded
+            # Need to fetch and expand again
+            stage.fetch()
+            stage.expand_archive()
             check_fetch(stage, self.stage_name)
             assert "foobar" not in os.listdir(stage.source_path)
         check_destroy(stage, self.stage_name)

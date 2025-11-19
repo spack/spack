@@ -142,8 +142,6 @@ def test_archive_file_errors(tmp_path: pathlib.Path, mutable_config, mock_archiv
                 fetcher.archive(str(tmp_path))
             with pytest.raises(fs.NoArchiveFileError):
                 fetcher.expand()
-            with pytest.raises(fs.NoArchiveFileError):
-                fetcher.reset()
             stage.fetch()
             with pytest.raises(fs.NoDigestError):
                 fetcher.check()

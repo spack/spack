@@ -662,10 +662,9 @@ class Stage(LockableStagingDir):
             tty.debug(f"Already staged {self.name} in {self.path}")
 
     def restage(self):
-        """Removes the expanded archive path if it exists, then re-expands
-        the archive.
-        """
-        self.fetcher.reset()
+        """Removes the stage directory and recreates it from scratch."""
+        self.destroy()
+        self.create()
 
     def destroy(self):
         """Removes this stage directory."""
@@ -880,7 +879,7 @@ class DevelopStage(LockableStagingDir):
         self.created = False
 
     def restage(self):
-        self.destroy()
+        """Recreate the development stage link."""
         self.create()
 
     def cache_local(self):
