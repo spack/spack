@@ -311,19 +311,15 @@ pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declar
 % Pick a single version among the possible ones
 1 { choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) } 1 :- attr("node", node(ID, Package)).
 
-% To choose the "fake" version of virtual packages, we need a separate rule
-{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) }
+% To choose the "fake" version of virtual packages, we need a separate rule.
+% Note that a virtual node may or may not have a version, but cannot have more than one.
+{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) } 1
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("virtual_node", node(ID, Package)).
 
 #defined compiler_package/1.
 
 attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
-
-% A virtual package may or may not have a version, but never has more than one
-error(100, "Cannot select a single version for virtual '{0}'", Virtual)
-  :- attr("virtual_node", node(ID, Virtual)),
-     2 { attr("version", node(ID, Virtual), Version) }.
 
 % If we select a deprecated version, mark the package as deprecated
 attr("deprecated", node(ID, Package), Version) :-
