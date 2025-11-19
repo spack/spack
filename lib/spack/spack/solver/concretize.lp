@@ -572,47 +572,12 @@ impose(EffectID, node(X, Package))
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
-%error(1, "No version satisfies {0}", VersionConstraint) :- 
-%    impose(EffectID, node(PackageID, PackageName)),
-%    imposed_constraint(EffectID, "version", VersionConstraint),
-%    not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
-
-%error(1, "No versions! {0}", VersionConstraint) :- 
-%    impose(EffectID, node(PackageID, PackageName)),
-%    imposed_constraint(EffectID, "version", PackageName, VersionConstraint).
-
-%This hangs
-%error(0, "No versions! {0}", VersionConstraint) :- 
-%    imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint).
-
-%This resolves quickly
-%:- imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint).
-
-%This resolves quickly
-%:- imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
-%   not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
-
-%This resolves quickly
-%:- build(node(PackageID, PackageName)), 
-%  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
-%  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
-
-%pkg_fact(PackageName, version_declared(VersionConstraint, 200)) :- 
-%  build(node(PackageID, PackageName)), 
-%  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
-%  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
-
 pkg_fact(PackageName, version_origin(VersionConstraint, "BadVersion")) :- 
   build(node(PackageID, PackageName)), 
   imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
   not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
 
 attr("version", node(PackageID, PackageName), VersionConstraint) :-
-  build(node(PackageID, PackageName)), 
-  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
-  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
-
-error(1, "Impossible version mandated on {0} - {1}", PackageName, VersionConstraint) :-
   build(node(PackageID, PackageName)), 
   imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
   not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
