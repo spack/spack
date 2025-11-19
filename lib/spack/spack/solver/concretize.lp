@@ -1053,20 +1053,15 @@ do_not_impose(EffectID, node(X, Package))
 % Virtual dependency weights
 %-----------------------------------------------------------------------------
 
-% A provider has different possible weights depending on its preference. This rule ensures that
-% we select the weight, among the possible ones, that minimizes the overall objective function.
-1 { provider_weight(DependencyNode, VirtualNode, Weight) :
-    possible_provider_weight(DependencyNode, VirtualNode, Weight, _) } 1
- :- provider(DependencyNode, VirtualNode), internal_error("Package provider weights must be unique").
-
 % Any configured provider has a weight based on index in the preference list
-possible_provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), Weight, "default")
+provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), Weight)
   :- provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
      provider_weight_from_config(Virtual, Provider, Weight).
 
 % Any non-configured provider has a default weight of 100
-possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback")
-  :- provider(node(ProviderID, Provider), VirtualNode).
+provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), 100)
+  :- provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
+     not provider_weight_from_config(Virtual, Provider, _).
 
 % do not warn if generated program contains none of these.
 #defined virtual/1.
