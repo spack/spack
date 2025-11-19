@@ -24,13 +24,14 @@ duplicate_penalty(node(ID1, Package), 1, "version")
   :- attr("node", node(ID1, Package)), attr("node", node(ID2, Package)),
      version_weight(node(ID1, Package), Weight1), version_weight(node(ID2, Package), Weight2),
      multiple_unification_sets(Package),
-     ID1 < ID2, Weight2 < Weight1.
+     ID2 = ID1 + 1, Weight2 < Weight1,
+     max_dupes(Package, X), X > 1, ID2 < X.
 
 % We can enforce this, and hope the grounder generates fewer rules
 :- provider_weight(ProviderNode1, node(ID1, Virtual), Weight1),
    provider_weight(ProviderNode2, node(ID2, Virtual), Weight2),
-   ID1 < ID2, Weight2 < Weight1,
-   max_dupes(Virtual, X), X > 1.
+   ID2 = ID1 + 1, Weight2 < Weight1,
+   max_dupes(Virtual, X), X > 1, ID2 < X.
 
 % Integrity constraints on DAG nodes
 :- attr("root", PackageNode),
