@@ -925,15 +925,33 @@ error(100, "{0} and {1} must depend on the same {2}", ExtensionParent, Extension
 %-----------------------------------------------------------------------------
 % Conflicts
 %-----------------------------------------------------------------------------
-error(1, Msg)
-  :- attr("node", node(ID, Package)),
-     pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
-     % node(ID1, TriggerPackage) is node(ID2, Package) in most, but not all, cases
-     condition_holds(TriggerID, node(ID1, TriggerPackage)),
-     condition_holds(ConstraintID, node(ID2, Package)),
-     unification_set(X, node(ID2, Package)),
-     unification_set(X, node(ID1, TriggerPackage)),
-     build(node(ID, Package)).  % ignore conflicts for installed packages
+
+% Most conflicts are internal to the same package
+conflict_is_cross_package(Package, TriggerID) :-
+   pkg_fact(Package, conflict(TriggerID, _, _)),
+   pkg_fact(TriggerPackage, condition_trigger(TriggerID, _)),
+   TriggerPackage != Package.
+
+conflict_internal(Package, TriggerID, ConstraintID, Msg) :-
+   pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
+   not conflict_is_cross_package(Package, TriggerID).
+
+% Case 1: conflict is within the same package
+error(1, Msg) :-
+   conflict_internal(Package, TriggerID, ConstraintID, Msg),
+   condition_holds(TriggerID, node(ID, Package)),
+   condition_holds(ConstraintID, node(ID, Package)),
+   build(node(ID, Package)).  % ignore conflicts for installed packages
+
+% Case 2: Cross-package conflicts (Rare case - slower)
+error(1, Msg) :-
+   build(node(ID, Package)),
+   conflict_is_cross_package(Package, TriggerID),
+   pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
+   condition_holds(TriggerID, node(ID1, TriggerPackage)),
+   condition_holds(ConstraintID, node(ID, Package)),
+   unification_set(X, node(ID, Package)),
+   unification_set(X, node(ID1, TriggerPackage)).
 
 %-----------------------------------------------------------------------------
 % Virtual dependencies
