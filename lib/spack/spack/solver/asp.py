@@ -3595,11 +3595,7 @@ class SpecBuilder:
             variant.append(value)
 
     def version(self, node, version):
-        try:
-            self._specs[node].versions = vn.VersionList([vn.Version(version)])
-        except:
-            import pdb; pdb.set_trace()
-            raise
+        self._specs[node].versions = vn.VersionList([vn.Version(version)])
 
     def node_flag(self, node, node_flag):
         self._specs[node].compiler_flags.add_flag(
