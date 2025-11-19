@@ -575,13 +575,13 @@ impose(EffectID, node(X, Package))
 pkg_fact(PackageName, version_origin(VersionConstraint, "BadVersion")) :- 
   build(node(PackageID, PackageName)), 
   imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
-  impose(EffectID, _),
+  impose(EffectID, node(PackageID, PackageName)),
   not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
 
 attr("version", node(PackageID, PackageName), VersionConstraint) :-
   build(node(PackageID, PackageName)), 
   imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
-  impose(EffectID, _),
+  impose(EffectID, node(PackageID, PackageName)),
   not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
 
 % Effects of subconditions hold if the trigger holds and the
