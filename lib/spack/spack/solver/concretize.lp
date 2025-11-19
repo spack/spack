@@ -311,6 +311,11 @@ pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declar
 % Pick a single version among the possible ones
 1 { choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) } 1 :- attr("node", node(ID, Package)).
 
+% To choose the "fake" version of virtual packages, we need a separate rule
+{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) }
+  :- attr("node_version_satisfies", node(ID, Package), Constraint),
+     attr("virtual_node", node(ID, Package)).
+
 #defined compiler_package/1.
 
 attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
@@ -352,14 +357,6 @@ version_weight(node(ID, Package), Weight)
      attr("node", node(ID, Package)),
      pkg_fact(Package, version_declared(Version, Weight)),
      internal_error("version weights must exist and be unique").
-
-% node_version_satisfies implies that exactly one of the satisfying versions
-% is the package's version, and vice versa.
-% While this choice rule appears redundant with the initial choice rule for
-% versions, virtual nodes with version constraints require this rule to be
-% able to choose versions
-{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) }
-  :- attr("node_version_satisfies", node(ID, Package), Constraint).
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
