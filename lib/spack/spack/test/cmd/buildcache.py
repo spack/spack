@@ -1040,19 +1040,25 @@ def test_buildcache_create_view_failure(tmp_path, mutable_config, mutable_mock_e
 
     # No spec sources should raise an exception
     with pytest.raises(spack.main.SpackCommandError):
-        command_args = ["create-view", "--name", "test_view", "my-mirror"]
+        command_args = ["update-index", "--name", "test_view", "my-mirror"]
         buildcache(*command_args)
 
     # spec sources should raise an exception
     expect = "Could not determine spec source type of DEADBEEF"
     with pytest.raises(spack.error.SpackError, match=expect):
-        command_args = ["create-view", "--name", "test_view", "my-mirror", "DEADBEEF"]
+        command_args = ["update-index", "--name", "test_view", "my-mirror", "DEADBEEF"]
         buildcache(*command_args)
 
     invalid_field_json = tmp_path / "invalid_field_json.json"
     invalid_field_json.write_text('{"DEADBEEF": []}')
     with pytest.raises(spack.error.SpackError, match=str(invalid_field_json)):
-        command_args = ["create-view", "--name", "test_view", "my-mirror", str(invalid_field_json)]
+        command_args = [
+            "update-index",
+            "--name",
+            "test_view",
+            "my-mirror",
+            str(invalid_field_json),
+        ]
         buildcache(*command_args)
 
 
@@ -1075,7 +1081,7 @@ def test_buildcache_create_view_empty(
     )
     # Create a view with now specs
     command_args = [
-        "create-view",
+        "update-index",
         "--force",
         "--name",
         "test_view",
@@ -1110,7 +1116,7 @@ def test_buildcache_create_view(
 
     # Create a view using a parametrized source that contains one of the mpileaks
     with globals()[f"spec_{sources}"](mpileaks_specs[0], tmp_path / "source_stage") as source_args:
-        command_args = ["create-view", "--name", "test_view", "my-mirror"]
+        command_args = ["update-index", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
@@ -1123,7 +1129,7 @@ def test_buildcache_create_view(
     expect = "Index already exists. To overwrite or update pass --force or --append respectively"
     with pytest.raises(spack.error.SpackError, match=expect):
         command_args = [
-            "update-view",
+            "update-index",
             "--name",
             "test_view",
             "my-mirror",
@@ -1160,7 +1166,7 @@ def test_buildcache_create_view_append(
 
     # Test append to empty index view
     with globals()[f"spec_{sources}"](mpileaks_specs[0], tmp_path / "source_stage") as source_args:
-        command_args = ["update-view", "--append", "--name", "test_view", "my-mirror"]
+        command_args = ["update-index", "--append", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
@@ -1171,7 +1177,7 @@ def test_buildcache_create_view_append(
 
     # Test append to existing index view
     with globals()[f"spec_{sources}"](mpileaks_specs[1], tmp_path / "source_stage") as source_args:
-        command_args = ["update-view", "--append", "--name", "test_view", "my-mirror"]
+        command_args = ["update-index", "--append", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
@@ -1203,7 +1209,7 @@ def test_buildcache_create_view_overwrite(
 
     # Create a view using a parametrized source that contains one of the mpileaks
     with globals()[f"spec_{sources}"](mpileaks_specs[0], tmp_path / "source_stage") as source_args:
-        command_args = ["create-view", "--name", "test_view", "my-mirror"]
+        command_args = ["update-index", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
@@ -1214,7 +1220,7 @@ def test_buildcache_create_view_overwrite(
 
     # Override a view with force
     with globals()[f"spec_{sources}"](mpileaks_specs[1], tmp_path / "source_stage") as source_args:
-        command_args = ["create-view", "--force", "--name", "test_view", "my-mirror"]
+        command_args = ["update-index", "--force", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)

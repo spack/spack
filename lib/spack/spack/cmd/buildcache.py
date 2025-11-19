@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
+import enum
 import glob
 import json
 import os
@@ -47,6 +48,12 @@ from ..url_buildcache import (
 description = "create, download and install binary packages"
 section = "packaging"
 level = "long"
+
+
+class ViewMode(enum.Enum):
+    CREATE = enum.auto()
+    OVERWRITE = enum.auto()
+    APPEND = enum.auto()
 
 
 def setup_parser(subparser: argparse.ArgumentParser):
@@ -289,6 +296,27 @@ def setup_parser(subparser: argparse.ArgumentParser):
     update_index.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="destination mirror name, path, or URL"
     )
+    update_index_view_args = update_index.add_argument_group("view arguments")
+    update_index_view_args.add_argument(
+        "sources", nargs="*", help="Sources to use for updating the index"
+    )
+    update_index_view_args.add_argument(
+        "--name", "-n", action="store", help="Name of the view index to update"
+    )
+    update_index_view_args.add_argument(
+        "--append",
+        "-a",
+        action="store_true",
+        help="Append the listed specs to the current view index if it already exists. "
+        "This operation does not guarentee atomic write and should be run with care.",
+    )
+    update_index_view_args.add_argument(
+        "--force",
+        "-f",
+        action="store_true",
+        help="If an view index already exists, overwrite it and "
+        "suppress warnings (this is the default for non-view indices)",
+    )
     update_index.add_argument(
         "-k",
         "--keys",
@@ -297,35 +325,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="if provided, key index will be updated as well as package index",
     )
     update_index.set_defaults(func=update_index_fn)
-    update_view = subparsers.add_parser(
-        "update-view", aliases=["create-view"], help=update_view_fn.__doc__
-    )
-    update_view.add_argument(
-        "mirror", type=arguments.mirror_name_or_url, help="destination mirror name, path, or URL"
-    )
-    update_view.add_argument(
-        "sources",
-        nargs=argparse.REMAINDER,
-        help="one or more of the specified source type to use for generating the view index",
-    )
-    update_view.add_argument(
-        "--name", "-n", action="store", help="Name of the view index to update"
-    )
-    update_view.add_argument(
-        "--append",
-        "-a",
-        action="store_true",
-        help="Append the listed specs to the current view index if it already exists. "
-        "This operation does not guarentee atomic write and should be run with care.",
-    )
-    update_view.add_argument(
-        "--force",
-        "-f",
-        action="store_true",
-        help="If an view index already exists, overwrite it and "
-        "suppress warnings (this is the default for non-view indices)",
-    )
-    update_view.set_defaults(func=update_view_fn)
 
     # Migrate a buildcache from layout_version 2 to version 3
     migrate = subparsers.add_parser("migrate", help=migrate_fn.__doc__)
@@ -821,18 +820,18 @@ def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
         spack.binary_distribution._url_generate_package_index(url, tmpdir)
 
     if update_keys:
-        try:
-            with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-                spack.binary_distribution.generate_key_index(url, tmpdir)
-        except spack.binary_distribution.CannotListKeys as e:
-            # Do not error out if listing keys went wrong. This usually means that the _gpg path
-            # does not exist. TODO: distinguish between this and other errors.
-            tty.warn(f"did not update the key index: {e}")
+        mirror_update_keys(mirror)
 
 
-def update_index_fn(args):
-    """update a buildcache index"""
-    return update_index(args.mirror, update_keys=args.keys)
+def mirror_update_keys(mirror: spack.mirrors.mirror.Mirror):
+    url = mirror.push_url
+    try:
+        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+            spack.binary_distribution.generate_key_index(url, tmpdir)
+    except spack.binary_distribution.CannotListKeys as e:
+        # Do not error out if listing keys went wrong. This usually means that the _gpg path
+        # does not exist. TODO: distinguish between this and other errors.
+        tty.warn(f"did not update the key index: {e}")
 
 
 def read_concrete_hashes(source: str) -> List[str]:
@@ -862,17 +861,28 @@ def read_concrete_hashes(source: str) -> List[str]:
         raise spack.error.SpackError(f"Could not determine spec source type of {source}") from e
 
 
-def update_view_fn(args):
+def update_view(
+    mirror: spack.mirrors.mirror.Mirror,
+    update_mode: int,
+    *sources: str,
+    name: Optional[str] = None,
+    update_keys: bool = False,
+):
     """update a buildcache view index"""
-    mirror = args.mirror
     # OCI images do not support views.
+    print(f"mirror: {mirror.name}")
+    print(f"mode: {update_mode}")
+    print(f"name: {name}")
+    for source in sources:
+        print(f"source: {source}")
+
     try:
         spack.oci.oci.image_from_mirror(mirror)
         raise spack.error.SpackError("OCI build caches do not support index views")
     except ValueError:
         pass
 
-    if args.append:
+    if update_mode == ViewMode.APPEND:
         tty.warn(
             "Appending to a view index does not guarantee idempotent write when contending "
             "with multiple writers. This feature is meant to be used by a single process."
@@ -881,8 +891,15 @@ def update_view_fn(args):
     # Otherwise, assume a normal mirror.
     url = mirror.push_url
 
-    name = args.name or mirror.push_view
+    if (name and mirror.push_view) and not name == mirror.push_view:
+        tty.warn(
+            (
+                f"Updating index view with name ({name}), which is different than "
+                f"the configured name ({mirror.push_view}) for the mirror {mirror.name}"
+            )
+        )
 
+    name = name or mirror.push_view
     assert name
 
     url_and_version = spack.binary_distribution.MirrorURLAndVersion(
@@ -897,14 +914,15 @@ def update_view_fn(args):
     except spack.binary_distribution.BuildcacheIndexNotExists:
         index_exists = False
 
-    if index_exists and (not args.force and not args.append):
+    if index_exists and update_mode == ViewMode.CREATE:
         raise spack.error.SpackError(
             "Index already exists. To overwrite or update pass --force or --append respectively"
         )
 
     hashes = []
-    if args.sources:
-        for source in args.sources:
+    if sources:
+        for source in sources:
+            print(f"Source... {source}")
             hashes.extend(read_concrete_hashes(source))
     else:
         # Get hashes in the current active environment
@@ -921,7 +939,7 @@ def update_view_fn(args):
         db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
         db._write()
 
-        if args.append:
+        if update_mode == ViewMode.APPEND:
             # Load the current state of the view index from the cache into the database
             cache_index = BINARY_INDEX._local_index_cache.get(str(url_and_version))
             if cache_index:
@@ -929,6 +947,30 @@ def update_view_fn(args):
                 db._read_from_file(BINARY_INDEX._index_file_cache.cache_path(cache_key))
 
         spack.binary_distribution._url_generate_package_index(url, tmpdir, db, name, filter_fn)
+
+    if update_keys:
+        mirror_update_keys(mirror)
+
+
+def update_index_fn(args):
+    """update a buildcache index or index view if extra arguments are provided."""
+
+    update_view_index = (
+        args.append or args.force or args.name or args.sources or args.mirror.push_view
+    )
+
+    if update_view_index:
+        update_mode = ViewMode.CREATE
+        if args.force:
+            update_mode = ViewMode.OVERWRITE
+        elif args.append:
+            update_mode = ViewMode.APPEND
+
+        return update_view(
+            args.mirror, update_mode, *args.sources, name=args.name, update_keys=args.keys
+        )
+    else:
+        return update_index(args.mirror, update_keys=args.keys)
 
 
 def migrate_fn(args):
@@ -994,4 +1036,9 @@ def prune_fn(args):
 
 
 def buildcache(parser, args):
+    try:
+        # update-index supports unkwown_args for view extension
+        return args.func(args)
+    except Exception:
+        pass
     return args.func(args)
