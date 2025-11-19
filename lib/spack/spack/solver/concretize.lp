@@ -1396,14 +1396,13 @@ attr("variant_selected", node(ID, Package), Variant, Value, VariantType, Variant
   build(node(ID, Package)).
 
 % we can choose variant values from all the possible values for the node
-{
-  attr("variant_selected", node(ID, Package), Variant, Value, VariantType, VariantID)
-  : variant_possible_value(node(ID, Package), Variant, Value)
+1 {
+  attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID)
+  : variant_possible_value(PackageNode, Variant, Value)
 } :-
-  attr("node", node(ID, Package)),
-  node_has_variant(node(ID, Package), Variant, VariantID),
+  node_has_variant(PackageNode, Variant, VariantID),
   variant_type(VariantID, VariantType),
-  build(node(ID, Package)).
+  build(PackageNode).
 
 % variant_selected is only needed for reconstruction on the python side, so we can ignore it here
 attr("variant_value", PackageNode, Variant, Value) :-
