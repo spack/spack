@@ -325,6 +325,8 @@ attr("deprecated", node(ID, Package), Version) :-
      not external(node(ID, Package)),
      pkg_fact(Package, deprecated_version(Version)).
 
+% I don't think this can be hit: deprecated versions are not declared if
+% they are not allowed
 error(100, "Package '{0}' needs the deprecated version '{1}', and this is not allowed", Package, Version)
   :- deprecated_versions_not_allowed(),
      attr("version", node(ID, Package), Version),
