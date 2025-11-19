@@ -327,11 +327,11 @@ attr("deprecated", node(ID, Package), Version) :-
 
 % I don't think this can be hit: deprecated versions are not declared if
 % they are not allowed
-error(100, "Package '{0}' needs the deprecated version '{1}', and this is not allowed", Package, Version)
-  :- deprecated_versions_not_allowed(),
-     attr("version", node(ID, Package), Version),
-     build(node(ID, Package)),
-     pkg_fact(Package, deprecated_version(Version)).
+%error(100, "Package '{0}' needs the deprecated version '{1}', and this is not allowed", Package, Version)
+%  :- deprecated_versions_not_allowed(),
+%     attr("version", node(ID, Package), Version),
+%     build(node(ID, Package)),
+%     pkg_fact(Package, deprecated_version(Version)).
 
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
@@ -602,10 +602,15 @@ impose(EffectID, node(X, Package))
 %  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
 %  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
 
-%attr("version", node(PackageID, PackageName), VersionConstraint) :-
-%  build(node(PackageID, PackageName)), 
-%  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
-%  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
+pkg_fact(PackageName, version_origin(VersionConstraint, "madeup")) :- 
+  build(node(PackageID, PackageName)), 
+  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
+  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
+
+attr("version", node(PackageID, PackageName), VersionConstraint) :-
+  build(node(PackageID, PackageName)), 
+  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
+  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
 
 %error(1, "Impossible version mandated on {0} - {1}", PackageName, VersionConstraint) :- 
 %  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
