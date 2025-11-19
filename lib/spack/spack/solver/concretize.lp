@@ -336,7 +336,7 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
 
-1 { allowed_versions(Version): pkg_fact(Package, version_origin(Version, Origin)),
+1 { allowed_origins(Origin): pkg_fact(Package, version_origin(Version, Origin)),
     Origin != "installed"}
   :- attr("version", node(ID, Package), Version),
      build(node(ID, Package)).
@@ -359,14 +359,7 @@ version_weight(node(ID, Package), Weight)
 error(10000, "Cannot satisfy '{0}@{1}' 1({2})", Package, Constraint, Version)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     choose_version(node(ID, Package), Version).
-
-error(100, "Cannot satisfy '{0}@{1}' 2({2})", Package, Constraint, Version)
-  :- attr("node_version_satisfies", node(ID, Package), Constraint),
-     attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     not choose_version(node(ID, Package), _).
+     not pkg_fact(Package, version_satisfies(Constraint, Version)).
 
 error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
