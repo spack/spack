@@ -3619,8 +3619,8 @@ class Spec:
                     except spack.error.PatchLookupError as e:
                         raise spack.error.SpecError(
                             f"{e}. This usually means the patch was modified or removed. "
-                            "To fix this, either reconcretize or use the original package "
-                            "repository"
+                            "To fix this, either reconcretize, use the original package "
+                            "repository, or clear the misc cache with spack clean -m."
                         ) from e
 
                     self._patches.append(patch)
