@@ -423,11 +423,14 @@ trigger_real_node(ID, PackageNode) :- trigger_node(ID, PackageNode, _).
 % This is the requestor node, which may be a "real" or a "virtual" node
 trigger_requestor_node(ID, RequestorNode) :- trigger_node(ID, _, RequestorNode).
 
-condition_nodes(TriggerID, PackageNode, node(X, A1))
-  :- condition_packages(TriggerID, A1),
+trigger_package_requirement(TriggerNode, A1) :-
+  trigger_real_node(ID, TriggerNode),
+  condition_packages(ID, A1).
+
+condition_nodes(PackageNode, node(X, A1))
+  :- trigger_package_requirement(PackageNode, A1),
      condition_set(PackageNode, node(X, A1)),
-     not self_build_requirement(PackageNode, node(X, A1)),
-     trigger_real_node(TriggerID, PackageNode).
+     not self_build_requirement(PackageNode, node(X, A1)).
 
 cannot_hold(TriggerID, PackageNode)
   :- condition_packages(TriggerID, A1),
@@ -451,38 +454,38 @@ trigger_condition_holds(ID, RequestorNode) :-
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1)) :-
   attr(Name, node(X, A1)),
   condition_requirement(ID, Name, A1),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2)) :-
   attr(Name, node(X, A1), A2),
   condition_requirement(ID, Name, A1, A2),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3)) :-
   attr(Name, node(X, A1), A2, A3),
   condition_requirement(ID, Name, A1, A2, A3),
-  condition_nodes(ID, PackageNode, node(X, A1)),
+  condition_nodes(PackageNode, node(X, A1)),
   not node_attributes_with_custom_rules(Name).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3, A4)) :-
   attr(Name, node(X, A1), A2, A3, A4),
   condition_requirement(ID, Name, A1, A2, A3, A4),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "depends_on", A1, A2, A3)) :-
   attr("depends_on", node(X, A1), node(Y, A2), A3),
   condition_requirement(ID, "depends_on", A1, A2, A3),
-  condition_nodes(ID, PackageNode, node(X, A1)),
-  condition_nodes(ID, PackageNode, node(Y, A2)).
+  condition_nodes(PackageNode, node(X, A1)),
+  condition_nodes(PackageNode, node(Y, A2)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "concrete_variant_request", A1, A2, A3)) :-
   condition_requirement(ID, "concrete_variant_request", A1, A2, A3),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "closure", A1, A2, A3)) :-
   attr("closure", node(X, A1), node(_, A2), A3),
   condition_requirement(ID, "closure", A1, A2, A3),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 %%%%
 % Conditions verified on pure build deps of reused nodes
@@ -529,13 +532,13 @@ cannot_hold(ID, PackageNode) :-
   not attr("variant_value", node(X, A1), Variant, Value),
   condition_with_concrete_variant(ID, A1, Variant),
   condition_requirement(ID, "concrete_variant_request", A1, Variant, Value),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 cannot_hold(ID, PackageNode) :-
   attr("variant_value", node(X, A1), Variant, Value),
   condition_with_concrete_variant(ID, A1, Variant),
   not condition_requirement(ID, "concrete_variant_request", A1, Variant, Value),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 condition_holds(ConditionID, node(X, Package))
   :- pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
