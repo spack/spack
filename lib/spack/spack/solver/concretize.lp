@@ -1381,7 +1381,8 @@ variant_value_from_disjoint_sets(node(NodeID, Package), VariantName, Value1, Set
 % -- Associate definition's arity with the node
 variant_single_value(node(NodeID, Package), VariantName) :-
   node_has_variant(node(NodeID, Package), VariantName, VariantID),
-  not variant_type(VariantID, "multi").
+  variant_type(VariantID, VariantType),
+  VariantType != "multi".
 
 % C: Determining variant values on each node
 
@@ -1519,7 +1520,8 @@ node_has_variant(PackageNode, Variant, VariantID)
 variant_single_value(PackageNode, Variant)
   :- node_has_variant(PackageNode, Variant, VariantID),
      auto_variant(Variant, VariantID),
-     not variant_type(VariantID, "multi").
+     variant_type(VariantID, VariantType),
+     VariantType != "multi".
 
 % to respect requirements/preferences we need to define that an auto_variant is set
 { attr("variant_set", node(ID, Package), Variant, VariantValue)}
