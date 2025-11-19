@@ -307,8 +307,9 @@ pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declar
 % is not precisely one version chosen. Error facts are heavily optimized
 % against to ensure they cannot be inferred when a non-error solution is
 % possible
-{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
- :- attr("node", node(ID, Package)).
+
+% Pick a single version among the possible ones
+1 { choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) } 1 :- attr("node", node(ID, Package)).
 
 #defined compiler_package/1.
 
