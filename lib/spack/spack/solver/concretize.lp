@@ -449,39 +449,33 @@ trigger_condition_holds(ID, RequestorNode) :-
 %%%%
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1)) :-
-  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1)),
   condition_requirement(ID, Name, A1),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2)) :-
-  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2),
   condition_requirement(ID, Name, A1, A2),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3)) :-
-  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2, A3),
   condition_requirement(ID, Name, A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)),
   not node_attributes_with_custom_rules(Name).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3, A4)) :-
-  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2, A3, A4),
   condition_requirement(ID, Name, A1, A2, A3, A4),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "depends_on", A1, A2, A3)) :-
-  trigger_real_node(ID, PackageNode),
   attr("depends_on", node(X, A1), node(Y, A2), A3),
   condition_requirement(ID, "depends_on", A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)),
   condition_nodes(ID, PackageNode, node(Y, A2)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "concrete_variant_request", A1, A2, A3)) :-
-  trigger_real_node(ID, PackageNode),
   condition_requirement(ID, "concrete_variant_request", A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
