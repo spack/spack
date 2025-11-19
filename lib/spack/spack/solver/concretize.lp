@@ -602,7 +602,7 @@ impose(EffectID, node(X, Package))
 %  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
 %  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
 
-pkg_fact(PackageName, version_origin(VersionConstraint, "madeup")) :- 
+pkg_fact(PackageName, version_origin(VersionConstraint, "BadVersion")) :- 
   build(node(PackageID, PackageName)), 
   imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
   not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
@@ -612,12 +612,10 @@ attr("version", node(PackageID, PackageName), VersionConstraint) :-
   imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
   not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
 
-%error(1, "Impossible version mandated on {0} - {1}", PackageName, VersionConstraint) :- 
-%  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
-%  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
-
-%{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) }
-%  :- attr("node_version_satisfies", node(ID, Package), Constraint).
+error(1, "Impossible version mandated on {0} - {1}", PackageName, VersionConstraint) :-
+  build(node(PackageID, PackageName)), 
+  imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
+  not pkg_fact(PackageName, version_satisfies(VersionConstraint, _)).
 
 % Effects of subconditions hold if the trigger holds and the
 % primary condition holds
