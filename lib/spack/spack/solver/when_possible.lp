@@ -27,7 +27,7 @@ do_not_impose(EffectID, node(X, Package)) :-
   subcondition(SubconditionID, ParentConditionID),
   pkg_fact(Package, condition_effect(SubconditionID, EffectID)),
   trigger_and_effect(_, TriggerID, EffectID),
-  trigger_node(TriggerID, _, node(X, Package)).
+  trigger_requestor_node(TriggerID, node(X, Package)).
 
 opt_criterion(320, "number of input specs not concretized").
 #minimize{ 0@320: #true }.

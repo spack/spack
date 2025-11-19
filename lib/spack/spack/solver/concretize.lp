@@ -429,16 +429,22 @@ condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _, _, _).
 trigger_node(ID, node(PackageID, Package), node(PackageID, Package)) :- pkg_fact(Package, trigger_id(ID)), attr("node", node(PackageID, Package)).
 trigger_node(ID, node(PackageID, Package), node(VirtualID, Virtual)) :- pkg_fact(Virtual, trigger_id(ID)), provider(node(PackageID, Package), node(VirtualID, Virtual)).
 
+% This is the "real node" that triggers the request, e.g. if the request started from "mpi" this is the mpi provider
+trigger_real_node(ID, PackageNode) :- trigger_node(ID, PackageNode, _).
+
+% This is the requestor node, which may be a "real" or a "virtual" node
+trigger_requestor_node(ID, RequestorNode) :- trigger_node(ID, _, RequestorNode).
+
 condition_nodes(TriggerID, PackageNode, node(X, A1))
   :- condition_packages(TriggerID, A1),
      condition_set(PackageNode, node(X, A1)),
      not self_build_requirement(PackageNode, node(X, A1)),
-     trigger_node(TriggerID, PackageNode, _).
+     trigger_real_node(TriggerID, PackageNode).
 
 cannot_hold(TriggerID, PackageNode)
   :- condition_packages(TriggerID, A1),
      not condition_set(PackageNode, node(_, A1)),
-     trigger_node(TriggerID, PackageNode, _),
+     trigger_real_node(TriggerID, PackageNode),
      attr("node", PackageNode).
 
 trigger_condition_holds(ID, RequestorNode) :-
@@ -455,39 +461,39 @@ trigger_condition_holds(ID, RequestorNode) :-
 %%%%
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1)),
   condition_requirement(ID, Name, A1),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2),
   condition_requirement(ID, Name, A1, A2),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2, A3),
   condition_requirement(ID, Name, A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)),
   not node_attributes_with_custom_rules(Name).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3, A4)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2, A3, A4),
   condition_requirement(ID, Name, A1, A2, A3, A4),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "depends_on", A1, A2, A3)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr("depends_on", node(X, A1), node(Y, A2), A3),
   condition_requirement(ID, "depends_on", A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)),
   condition_nodes(ID, PackageNode, node(Y, A2)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "concrete_variant_request", A1, A2, A3)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   condition_requirement(ID, "concrete_variant_request", A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
@@ -501,35 +507,35 @@ satisfied(trigger(PackageNode), condition_requirement(ID, "closure", A1, A2, A3)
 %%%%
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "node", A1)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   reused_provider(PackageNode, _),
   condition_requirement(ID, "node", A1).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "virtual_node", A1)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   reused_provider(PackageNode, node(_, A1)),
   condition_requirement(ID, "virtual_node", A1).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "virtual_on_incoming_edges", A1, A2)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   reused_provider(node(Hash, A1), node(Hash, A2)),
   condition_requirement(ID, "virtual_on_incoming_edges", A1, A2).
 
 satisfied(trigger(node(Hash, Package)), condition_requirement(ID, Name, Package, A1)) :-
-  trigger_node(ID, node(Hash, Package), _),
+  trigger_real_node(ID, node(Hash, Package)),
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, Name, Package, A1),
   condition_requirement(ID, Name, Package, A1).
 
 satisfied(trigger(node(Hash, Package)), condition_requirement(ID, "node_version_satisfies", Package, VersionConstraint)) :-
-  trigger_node(ID, node(Hash, Package), _),
+  trigger_real_node(ID, node(Hash, Package)),
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, "version", Package, Version),
   condition_requirement(ID, "node_version_satisfies", Package, VersionConstraint),
   pkg_fact(Package, version_satisfies(VersionConstraint, Version)).
 
 satisfied(trigger(node(Hash, Package)), condition_requirement(ID, Name, Package, A1, A2)) :-
-  trigger_node(ID, node(Hash, Package), _),
+  trigger_real_node(ID, node(Hash, Package)),
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, Name, Package, A1, A2),
   condition_requirement(ID, Name, Package, A1, A2).
@@ -566,7 +572,7 @@ trigger_and_effect(Package, TriggerID, EffectID) :- trigger_and_effect(Package, 
 impose(EffectID, node(X, Package))
   :- not subcondition(ConditionID, _),
      trigger_and_effect(Package, ConditionID, TriggerID, EffectID),
-     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_requestor_node(TriggerID, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
@@ -577,7 +583,7 @@ impose(EffectID, node(X, Package))
      condition_holds(ConditionID, ConditionNode),
      condition_set(ConditionNode, node(X, Package)),
      trigger_and_effect(Package, SubconditionID, TriggerID, EffectID),
-     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_requestor_node(TriggerID, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
@@ -591,7 +597,7 @@ imposed_nodes(EffectID, node(NodeID, Package), node(X, A1))
   :- trigger_and_effect(Package, TriggerID, EffectID),
      imposed_packages(EffectID, A1),
      condition_set(node(NodeID, Package), node(X, A1)),
-     trigger_node(TriggerID, _, node(NodeID, Package)),
+     trigger_requestor_node(TriggerID, node(NodeID, Package)),
      % We don't want to add build requirements to imposed nodes, to avoid
      % unsat problems when we deal with self-dependencies: gcc@14 %gcc@10
      not self_build_requirement(node(NodeID, Package), node(X, A1)).
