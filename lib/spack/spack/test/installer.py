@@ -625,7 +625,7 @@ def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
     installer = create_installer(["dependent-install"], {})
     request = installer.build_requests[0]
 
-    install_args = {"keep_prefix": True, "keep_stage": True}
+    install_args = {"keep_prefix": True, "keep_stage": True, "restage": False}
     task = create_build_task(request.pkg, install_args)
     installer.installed.add(task.pkg_id)
 
