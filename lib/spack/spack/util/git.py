@@ -189,13 +189,13 @@ class VersionConditionalOption:
         self.min_version=min_version
         self.max_version=max_version
 
-    def __call__(self, exe_version, value=None):
+    def __call__(self, exe_version, value=None)->List:
         if (self.min_version <= exe_version) and (self.max_version >= exe_version):
             option = [self.key]
             if value:
-                return option.append(value)
+                option.append(value)
             elif self.value:
-                return option.append(self.value)
+                option.append(self.value)
             return option
         else:
             return []
