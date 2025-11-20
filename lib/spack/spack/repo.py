@@ -1722,20 +1722,22 @@ class RemoteRepoDescriptor(RepoDescriptor):
                                 try:
                                     head_ref = git("ls-remote", remote, "HEAD", output=str)
                                     head_sha = head_ref.split()[0] if head_ref else None
-                                    
+
                                     if head_sha:
                                         # List all branches and find the one matching HEAD
                                         all_refs = git("ls-remote", remote, output=str)
                                         for line in all_refs.split("\n"):
                                             parts = line.split()
                                             if len(parts) == 2 and parts[0] == head_sha:
-                                                branch_match = re.match(r"refs/heads/(\S+)", parts[1])
+                                                branch_match = re.match(
+                                                    r"refs/heads/(\S+)", parts[1]
+                                                )
                                                 if branch_match:
                                                     self.branch = branch_match.group(1)
                                                     break
                                 except spack.util.executable.ProcessError:
                                     pass
-                            
+
                             if not self.branch:
                                 self.error = (
                                     f"Unable to locate a default branch for {self.repository}"
