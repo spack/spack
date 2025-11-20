@@ -716,7 +716,16 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
             action = args[0]
 
             if action == "ls-remote":
-                return "refs/heads/develop"
+                # Support different ls-remote argument patterns
+                if "--symref" in args:
+                    # Modern git with --symref support
+                    return "ref: refs/heads/develop\tHEAD\nabc123\tHEAD"
+                elif "HEAD" in args:
+                    # Old git without --symref, requesting HEAD
+                    return "abc123\tHEAD"
+                else:
+                    # Old git without --symref, listing all refs (for fallback)
+                    return "abc123\tHEAD\nabc123\trefs/heads/develop"
 
             elif action == "rev-parse":
                 return "develop"
@@ -804,7 +813,16 @@ def test_repo_descriptors_update(tmp_path: pathlib.Path):
             action = args[0]
 
             if action == "ls-remote":
-                return "refs/heads/develop"
+                # Support different ls-remote argument patterns
+                if "--symref" in args:
+                    # Modern git with --symref support
+                    return "ref: refs/heads/develop\tHEAD\nabc123\tHEAD"
+                elif "HEAD" in args:
+                    # Old git without --symref, requesting HEAD
+                    return "abc123\tHEAD"
+                else:
+                    # Old git without --symref, listing all refs (for fallback)
+                    return "abc123\tHEAD\nabc123\trefs/heads/develop"
 
             elif action == "rev-parse":
                 return "develop"

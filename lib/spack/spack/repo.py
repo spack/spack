@@ -1709,14 +1709,38 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         # determine the default branch from ls-remote
                         # (if no branch, tag, or commit is specified)
                         if not (self.commit or self.tag or self.branch):
-                            refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
-                            ref_match = re.search(r"refs/heads/(\S+)", refs)
-                            if not ref_match:
+                            # Try with --symref first (requires git >= 1.8.5)
+                            # Fall back to alternative method for older git versions (e.g., RHEL 7)
+                            try:
+                                refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
+                                ref_match = re.search(r"refs/heads/(\S+)", refs)
+                                if ref_match:
+                                    self.branch = ref_match.group(1)
+                            except spack.util.executable.ProcessError:
+                                # Fallback for git < 1.8.5 (e.g., git 1.8.3.1 on RHEL 7)
+                                # Get HEAD SHA and find matching branch
+                                try:
+                                    head_ref = git("ls-remote", remote, "HEAD", output=str)
+                                    head_sha = head_ref.split()[0] if head_ref else None
+                                    
+                                    if head_sha:
+                                        # List all branches and find the one matching HEAD
+                                        all_refs = git("ls-remote", remote, output=str)
+                                        for line in all_refs.split("\n"):
+                                            parts = line.split()
+                                            if len(parts) == 2 and parts[0] == head_sha:
+                                                branch_match = re.match(r"refs/heads/(\S+)", parts[1])
+                                                if branch_match:
+                                                    self.branch = branch_match.group(1)
+                                                    break
+                                except spack.util.executable.ProcessError:
+                                    pass
+                            
+                            if not self.branch:
                                 self.error = (
                                     f"Unable to locate a default branch for {self.repository}"
                                 )
                                 return
-                            self.branch = ref_match.group(1)
 
                     # determine the branch and remote if no config values exist
                     elif not (self.commit or self.tag or self.branch):
