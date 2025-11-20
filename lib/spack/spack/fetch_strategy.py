@@ -953,23 +953,30 @@ class GitFetchStrategy(VCSFetchStrategy):
         dest = self.stage.source_path
         tty.debug(f"Cloning git repository: {self._repo_info()}")
         depth = None if self.get_full_repo else 1
+        name = "src"
+        if self.package:
+            name = self.package.name
 
         with temp_cwd():
-            destination = (os.path.join(os.getcwd(), self.package.name),)
+            destination = (os.path.join(os.getcwd(), name),)
             for ref in [self.commit, self.tag, self.branch]:
-                try:
-                    spack.util.git.git_fetch_by_ref(
-                        self.git,
-                        self.url,
-                        ref,
-                        sparse_paths=self.git_sparse_paths,
-                        debug=spack.config.get("config:debug"),
-                        depth=depth,
-                        dest=destination,
-                    )
-                except spack.util.executable.ProcessError:
-                    continue
-            repo_name = get_single_file(".")
+                if ref:
+                    try:
+                        spack.util.git.git_fetch_by_ref(
+                            self.git,
+                            self.url,
+                            ref,
+                            sparse_paths=self.git_sparse_paths,
+                            debug=spack.config.get("config:debug"),
+                            depth=depth,
+                            dest=destination,
+                        )
+                    except spack.util.executable.ProcessError:
+                        continue
+            try:
+                repo_name = get_single_file(".")
+            except ValueError:
+                raise spack.error.SpackError("Git fetcher failed")
             if self.stage:
                 self.stage.srcdir = repo_name
             shutil.copytree(repo_name, dest, symlinks=True)

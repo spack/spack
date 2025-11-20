@@ -166,6 +166,36 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
 
     return None
 
+class VersionConditionalOption:
+    def __init__(self, key, value=None, min_version=(0,0,0), max_version=(99,99,99)):
+        self.key=key
+        self.value=value
+        self.min_version=min_version
+        self.max_version=max_version
+
+    def __call__(self, exe_version, value=None):
+        if (self.min_version >= exe_version) and (self.max_version <= exe_version):
+            option = [self.key]
+            if value:
+                return option.append(value)
+            elif self.value:
+                return option.append(self.value)
+            return option
+        else:
+            return []
+
+DEPTH = VersionConditionalOption("--depth", 1, min_version=(1,9,0))
+FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2,19,0))
+NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2,34,0))
+
+class GitCommandExecutor(exe.Executable):
+    def __init__(self, name):
+        super().__init__(name)
+
+    def _extract_git_version(self):
+        v_string = self.__call__("--version", output=str).strip().split()[-1]
+        self.version tuple(int(i) for i in v_string.split("."))
+
 
 class GitCommandArgumentAssembler:
     def __init__(self, cmd_name, git_exe=None, min_version=(1, 0, 0)):
@@ -178,11 +208,6 @@ class GitCommandArgumentAssembler:
         if self.cmd_min_version <= self.version:
             self.args.append(self.name)
 
-    @staticmethod
-    def extract_git_version(git_exe):
-        v_string = git_exe("--version", output=str).strip().split()[-1]
-        return tuple(int(i) for i in v_string.split("."))
-
     def add_arguments(self, *args, min_version=(1, 0, 0)):
         if min_version < self.cmd_min_version:
             return
@@ -193,6 +218,26 @@ class GitCommandArgumentAssembler:
         if self.args:
             cmd = self.args + list(args)
             return self.git_exe(*cmd, **exe_args)
+
+def _git_add_dest(git_exe, dest):
+    if os.path.isdir(dest):
+        shutil.rmtree(dest)
+    os.mkdir(dest)
+    git_exe.add_default_arg("-C", dest)
+
+
+def git_fetch_full_repo(git_exe, url, ref=None, bare = False, debug=False, dest=None):
+    clone = GitCommandArgumentAssembler("clone", git_exe)
+    if debug:
+        clone.add_arguments("--quiet")
+    if bare:
+        clone.add_arguments("--bare")
+    if ref or bare:
+        clone.add_arguments("--filter=blob:none", min_version=(2, 19, 0))
+    if dest:
+        _git_add_dest(git_exe, dest)
+    clone()
+
 
 
 def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, dest="."):
@@ -207,7 +252,8 @@ def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, d
     init = GitCommandArgumentAssembler("init", git_exe)
     fetch = GitCommandArgumentAssembler("fetch", git_exe)
     checkout = GitCommandArgumentAssembler("checkout", git_exe)
-    # technically sparse-checkout was added in 2.25, but we go forward since the model we implemented assumes `--cone` is a valid arument
+    # technically sparse-checkout was added in 2.25, but we go forward since the model while 
+    # condition: pass assumes `--cone` is a valid arument
     sparse_checkout = GitCommandArgumentAssembler(
         "sparse-checkout", git_exe, min_version=(2, 34, 0)
     )
@@ -224,10 +270,7 @@ def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, d
     fetch.add_arguments(url, ref)
 
     if dest:
-        if os.path.isdir(dest):
-            shutil.rmtree(dest)
-        os.mkdir(dest)
-        git_exe.add_default_arg("-C", dest)
+        _git_add_dest(git_exe, dest)
     init()
     fetch()
 
