@@ -1709,14 +1709,26 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         # determine the default branch from ls-remote
                         # (if no branch, tag, or commit is specified)
                         if not (self.commit or self.tag or self.branch):
-                            refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
-                            ref_match = re.search(r"refs/heads/(\S+)", refs)
-                            if not ref_match:
+                            # Get HEAD and all branches. On more recent versions of git, this can
+                            # be done with a single call to `git ls-remote --symref remote HEAD`.
+                            refs = git("ls-remote", remote, "HEAD", "refs/heads/*", output=str)
+                            head_match = re.search(r"^([0-9a-f]+)\s+HEAD$", refs, re.MULTILINE)
+                            if not head_match:
+                                self.error = f"Unable to locate HEAD for {self.repository}"
+                                return
+
+                            head_sha = head_match.group(1)
+
+                            # Find the first branch that matches this SHA
+                            branch_match = re.search(
+                                rf"^{re.escape(head_sha)}\s+refs/heads/(\S+)$", refs, re.MULTILINE
+                            )
+                            if not branch_match:
                                 self.error = (
                                     f"Unable to locate a default branch for {self.repository}"
                                 )
                                 return
-                            self.branch = ref_match.group(1)
+                            self.branch = branch_match.group(1)
 
                     # determine the branch and remote if no config values exist
                     elif not (self.commit or self.tag or self.branch):
