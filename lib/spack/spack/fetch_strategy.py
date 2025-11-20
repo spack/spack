@@ -47,6 +47,7 @@ import spack.llnl.util.tty as tty
 import spack.oci.opener
 import spack.util.archive
 import spack.util.crypto as crypto
+import spack.util.executable
 import spack.util.git
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -951,21 +952,23 @@ class GitFetchStrategy(VCSFetchStrategy):
         # Default to spack source path
         dest = self.stage.source_path
         tty.debug(f"Cloning git repository: {self._repo_info()}")
-
-        git = self.git
-        debug = spack.config.get("config:debug")
-        ref = self.commit or self.tag or self.branch
         depth = None if self.get_full_repo else 1
+
         with temp_cwd():
-            spack.util.git.git_fetch_by_ref(
-                self.git,
-                self.url,
-                ref,
-                sparse_paths=self.git_sparse_paths,
-                debug=spack.config.get("config:debug"), 
-                depth=depth,
-                dest=self.package.name
-            )
+            destination = (os.path.join(os.getcwd(), self.package.name),)
+            for ref in [self.commit, self.tag, self.branch]:
+                try:
+                    spack.util.git.git_fetch_by_ref(
+                        self.git,
+                        self.url,
+                        ref,
+                        sparse_paths=self.git_sparse_paths,
+                        debug=spack.config.get("config:debug"),
+                        depth=depth,
+                        dest=destination,
+                    )
+                except spack.util.executable.ProcessError:
+                    continue
             repo_name = get_single_file(".")
             if self.stage:
                 self.stage.srcdir = repo_name
@@ -976,86 +979,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                 onerror=fs.readonly_file_handler(ignore_errors=True),
             )
         return
-
-
-        if self.commit:
-            # Need to do a regular clone and check out everything if
-            # they asked for a particular commit.
-            clone_args = ["clone", self.url]
-            if not debug:
-                clone_args.insert(1, "--quiet")
-            with temp_cwd():
-                git(*clone_args)
-                repo_name = get_single_file(".")
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.copytree(repo_name, dest, symlinks=True)
-                shutil.rmtree(
-                    repo_name,
-                    ignore_errors=False,
-                    onerror=fs.readonly_file_handler(ignore_errors=True),
-                )
-
-            with working_dir(dest):
-                checkout_args = ["checkout", self.commit]
-                if not debug:
-                    checkout_args.insert(1, "--quiet")
-                git(*checkout_args)
-
-        else:
-            # Can be more efficient if not checking out a specific commit.
-            args = ["clone"]
-            if not debug:
-                args.append("--quiet")
-
-            # If we want a particular branch ask for it.
-            if self.branch:
-                args.extend(["--branch", self.branch])
-            elif self.tag and self.git_version >= spack.version.Version("1.8.5.2"):
-                args.extend(["--branch", self.tag])
-
-            # Try to be efficient if we're using a new enough git.
-            # This checks out only one branch's history
-            if self.git_version >= spack.version.Version("1.7.10"):
-                if self.get_full_repo:
-                    args.append("--no-single-branch")
-                else:
-                    args.append("--single-branch")
-
-            with temp_cwd():
-                # Yet more efficiency: only download a 1-commit deep
-                # tree, if the in-use git and protocol permit it.
-                if (
-                    (not self.get_full_repo)
-                    and self.git_version >= spack.version.Version("1.7.1")
-                    and self.protocol_supports_shallow_clone()
-                ):
-                    args.extend(["--depth", "1"])
-
-                args.extend([self.url])
-                git(*args)
-
-                repo_name = get_single_file(".")
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
-
-            with working_dir(dest):
-                # For tags, be conservative and check them out AFTER
-                # cloning.  Later git versions can do this with clone
-                # --branch, but older ones fail.
-                if self.tag and self.git_version < spack.version.Version("1.8.5.2"):
-                    # pull --tags returns a "special" error code of 1 in
-                    # older versions that we have to ignore.
-                    # see: https://github.com/git/git/commit/19d122b
-                    pull_args = ["pull", "--tags"]
-                    co_args = ["checkout", self.tag]
-                    if not spack.config.get("config:debug"):
-                        pull_args.insert(1, "--quiet")
-                        co_args.insert(1, "--quiet")
-
-                    git(*pull_args, ignore_errors=1)
-                    git(*co_args)
 
     def _sparse_clone_src(self, **kwargs):
         """Use git's sparse checkout feature to clone portions of a git repository"""

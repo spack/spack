@@ -5,6 +5,7 @@
 
 import os
 import re
+import shutil
 import sys
 from typing import List, Optional, overload
 
@@ -223,6 +224,9 @@ def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, d
     fetch.add_arguments(url, ref)
 
     if dest:
+        if os.path.isdir(dest):
+            shutil.rmtree(dest)
+        os.mkdir(dest)
         git_exe.add_default_arg("-C", dest)
     init()
     fetch()
