@@ -82,10 +82,10 @@ def test_pull_checkout_branch(git, tmp_path: pathlib.Path, mock_git_version_info
             spack.util.git.pull_checkout_branch("main")
 
 
-def test_mock_git(mock_util_executable):
+def test_mock_git_exe(mock_util_executable):
     log, should_fail, _ = mock_util_executable
     should_fail.append("clone")
-    git = exe.Executable("git")
+    git = spack.util.git.GitExecutable()
     git("clone")
     assert git.returncode == 1
     git("status")
@@ -95,13 +95,29 @@ def test_mock_git(mock_util_executable):
 
 
 @pytest.mark.parametrize(
+    "git_version", ("1.5.0", "1.3.0")
+)
+def test_git_exe_conditional_option(mock_util_executable, git_version):
+    log, _, registered_responses = mock_util_executable
+    min_version = (1,4,1)
+    registered_responses["git --version"] = git_version
+    git = spack.util.git.GitExecutable("git")
+    mock_opt = spack.util.git.VersionConditionalOption("--maybe", min_version=min_version)
+    args = mock_opt(git.version)
+    if git.version >= min_version:
+        assert "--maybe" in args
+    else:
+        assert not args
+
+
+@pytest.mark.parametrize(
     "git_version,ommitted_opts",
     (("2.18.0", ["--filter=blob:none"]), ("1.8.0", ["--filter=blob:none", "--depth"])),
 )
 def test_git_fetch_by_ref_ommissions(mock_util_executable, git_version, ommitted_opts):
     log, _, registered_responses = mock_util_executable
     registered_responses["git --version"] = git_version
-    git = exe.Executable("git")
+    git = spack.util.git.GitExecutable("git")
     url = "https://foo.git"
     ref = "v1.2.3"
     spack.util.git.git_fetch_by_ref(git, url, ref)
@@ -115,7 +131,7 @@ def test_git_fetch_by_ref_respect_commit_version_limits(
 ):
     _, _, registered_responses = mock_util_executable
     registered_responses["git --version"] = git_version
-    git = exe.Executable("git")
+    git = spack.util.git.GitExecutable("git")
     url = "https://foo.git"
     ref = "a" * 40
     if too_old:

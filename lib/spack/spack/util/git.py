@@ -22,6 +22,22 @@ def is_git_commit_sha(string: str) -> bool:
     return len(string) == 40 and bool(COMMIT_VERSION.match(string))
 
 
+class GitExecutable(exe.Executable):
+    def __init__(self, name=None):
+        if not name:
+            name = "git"
+        super().__init__(name)
+        self._version = None
+
+    @property
+    def version(self):
+        # lazy init git version
+        if not self._version:
+            v_string = self.__call__("--version", output=str).strip().split()[-1]
+            self._version = tuple(int(i) for i in v_string.split("."))
+        return self._version
+
+
 @spack.llnl.util.lang.memoized
 def _find_git() -> Optional[str]:
     """Find the git executable in the system path."""
@@ -174,7 +190,7 @@ class VersionConditionalOption:
         self.max_version=max_version
 
     def __call__(self, exe_version, value=None):
-        if (self.min_version >= exe_version) and (self.max_version <= exe_version):
+        if (self.min_version <= exe_version) and (self.max_version >= exe_version):
             option = [self.key]
             if value:
                 return option.append(value)
@@ -187,61 +203,12 @@ class VersionConditionalOption:
 DEPTH = VersionConditionalOption("--depth", 1, min_version=(1,9,0))
 FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2,19,0))
 NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2,34,0))
-
-class GitCommandExecutor(exe.Executable):
-    def __init__(self, name):
-        super().__init__(name)
-
-    def _extract_git_version(self):
-        v_string = self.__call__("--version", output=str).strip().split()[-1]
-        self.version tuple(int(i) for i in v_string.split("."))
+# technically sparse-checkout was added in 2.25, but we go forward since the model we use only works with the `--cone` option
+SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", min_version=(2,34,0))
 
 
-class GitCommandArgumentAssembler:
-    def __init__(self, cmd_name, git_exe=None, min_version=(1, 0, 0)):
-        self.git_exe = git_exe or git(required=True)
-        self.version = self.extract_git_version(self.git_exe)
-        self.cmd_min_version = min_version
-        self.name = cmd_name
-        self.args = []
-        # make command unusable for invalid git versions
-        if self.cmd_min_version <= self.version:
-            self.args.append(self.name)
-
-    def add_arguments(self, *args, min_version=(1, 0, 0)):
-        if min_version < self.cmd_min_version:
-            return
-        if self.version >= min_version:
-            self.args.extend(args)
-
-    def __call__(self, *args, **exe_args):
-        if self.args:
-            cmd = self.args + list(args)
-            return self.git_exe(*cmd, **exe_args)
-
-def _git_add_dest(git_exe, dest):
-    if os.path.isdir(dest):
-        shutil.rmtree(dest)
-    os.mkdir(dest)
-    git_exe.add_default_arg("-C", dest)
-
-
-def git_fetch_full_repo(git_exe, url, ref=None, bare = False, debug=False, dest=None):
-    clone = GitCommandArgumentAssembler("clone", git_exe)
-    if debug:
-        clone.add_arguments("--quiet")
-    if bare:
-        clone.add_arguments("--bare")
-    if ref or bare:
-        clone.add_arguments("--filter=blob:none", min_version=(2, 19, 0))
-    if dest:
-        _git_add_dest(git_exe, dest)
-    clone()
-
-
-
-def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, dest="."):
-    if is_git_commit_sha(ref) and GitCommandArgumentAssembler.extract_git_version(git_exe) < (
+def git_fetch_by_ref(git_exe: GitExecutable, url, ref, depth=1, sparse_paths=[], debug=False, dest=None):
+    if is_git_commit_sha(ref) and git_exe.version < (
         2,
         5,
         0,
@@ -249,37 +216,37 @@ def git_fetch_by_ref(git_exe, url, ref, depth=1, sparse_paths=[], debug=False, d
         raise spack.util.executable.ProcessError(
             "Git version older than 2.5 and fetch by ref for commit can't be used"
         )
-    init = GitCommandArgumentAssembler("init", git_exe)
-    fetch = GitCommandArgumentAssembler("fetch", git_exe)
-    checkout = GitCommandArgumentAssembler("checkout", git_exe)
-    # technically sparse-checkout was added in 2.25, but we go forward since the model while 
-    # condition: pass assumes `--cone` is a valid arument
-    sparse_checkout = GitCommandArgumentAssembler(
-        "sparse-checkout", git_exe, min_version=(2, 34, 0)
-    )
-
-    init.add_arguments(dest)
-    checkout.add_arguments("FETCH_HEAD")
-    if not debug:
-        fetch.add_arguments("--quiet")
-        checkout.add_arguments("--quiet")
-
-    if depth:
-        fetch.add_arguments("--depth", str(depth), min_version=(1, 9, 0))
-    fetch.add_arguments("--filter=blob:none", min_version=(2, 19, 0))
-    fetch.add_arguments(url, ref)
+    init = ["init"]
+    fetch = ["fetch"]
+    checkout = ["checkout"]
+    sparse_checkout = SPARSE_CHECKOUT(git_exe.version)
+    if sparse_paths and sparse_checkout:
+        sparse_checkout.extend([*sparse_paths, "--cone"])
 
     if dest:
-        _git_add_dest(git_exe, dest)
-    init()
-    fetch()
-
-    if sparse_paths:
-        sparse_checkout.add_arguments(*sparse_paths)
-        sparse_checkout.add_arguments("--cone")
-        sparse_checkout()
-
+        init.append(dest)
     if not debug:
-        checkout(error=str)
-    else:
-        checkout()
+        fetch.append("--quiet")
+        checkout.append("--quiet")
+    checkout.append("FETCH_HEAD")
+
+    if depth:
+        fetch.extend(DEPTH(git_exe.version, str(depth)))
+
+    fetch.extend([*FILTER_BLOB_NONE(git_exe.version), url, ref])
+
+    cmds = [init, fetch]
+    if sparse_checkout:
+        cmds.append(sparse_checkout)
+    cmds.append(checkout)
+
+    if dest:
+        dest_cmd = ["-C", dest]
+        cmds = [ dest_cmd + cmd for cmd in cmds]
+
+    for cmd in cmds:
+        if not debug:
+            # swallow extra output that leasks to str for non-debug case
+            git_exe(*cmd, error=str)
+        else:
+            git_exe(*cmd)
