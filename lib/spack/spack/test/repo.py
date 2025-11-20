@@ -716,7 +716,11 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
             action = args[0]
 
             if action == "ls-remote":
-                return "refs/heads/develop"
+                return """\
+a8eff4da7aab59bbf5996ac1720954bf82443247        HEAD
+165c479984b94051c982a6be1bd850f8bae02858        refs/heads/feature-branch
+a8eff4da7aab59bbf5996ac1720954bf82443247        refs/heads/develop
+3bd0276ab0491552247fa055921a23d2ffd9443c        refs/heads/releases/v0.20"""
 
             elif action == "rev-parse":
                 return "develop"
@@ -750,6 +754,8 @@ repo_index:
     assert len(errors_1) == 1
     assert all("No repo.yaml" in str(err) for err in errors_1.values()), errors_1
     assert descriptors_1["foo"].relative_paths == ["spack_repo/foo"]
+    # Verify that the default branch was detected from ls-remote
+    assert descriptors_1["foo"].branch == "develop"
 
     # Do the same test with another instance: it should *not* clone a second time.
     repo_path_2, errors_2 = repos_2.construct(cache=cache, find_git=MockGit)
@@ -804,7 +810,11 @@ def test_repo_descriptors_update(tmp_path: pathlib.Path):
             action = args[0]
 
             if action == "ls-remote":
-                return "refs/heads/develop"
+                return """\
+a8eff4da7aab59bbf5996ac1720954bf82443247        HEAD
+165c479984b94051c982a6be1bd850f8bae02858        refs/heads/feature-branch
+a8eff4da7aab59bbf5996ac1720954bf82443247        refs/heads/develop
+3bd0276ab0491552247fa055921a23d2ffd9443c        refs/heads/releases/v0.20"""
 
             elif action == "rev-parse":
                 return "develop"
@@ -892,7 +902,10 @@ def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
             action = args[0]
 
             if action == "ls-remote":
-                return "bad string"
+                # HEAD ref exists, but no default branch (i.e. no refs/heads/*)
+                return "a8eff4da7aab59bbf5996ac1720954bf82443247        HEAD"
+
+            return ""
 
     class MockGitFailed(spack.util.executable.Executable):
         def __init__(self):
