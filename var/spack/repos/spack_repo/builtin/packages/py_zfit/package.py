@@ -21,6 +21,9 @@ class PyZfit(PythonPackage):
 
     tags = ["likelihood", "statistics", "inference", "fitting", "hep"]
 
+    version("0.28.0", sha256="80fb7b0ef5700a38f8dd4e592f3fdf5adb2fe828b1df42ebfba49c22625af55c")
+    version("0.27.1", sha256="27b16be9ed4619fe437c3f533a671e44329a1172231d87f94ed93d958b7691b9")
+    version("0.27.0", sha256="2e8a906d56ab33949a241b02002ea1517d515a402e8b9680b6b7d38d75c99fc8")
     version("0.26.0", sha256="c61e55177055e775fefb6d985b643a7db8e8eb16e872d8dc66434b36f15c0b36")
     version("0.25.0", sha256="ac5a92bc284094eae55dd9afe1fe2c8f3f67a402dfc7a8ad6087a9ea29ff2b41")
     version("0.24.3", sha256="0efe47a5c597f7c730ac25495625f8bb4460f2fa4a0f4c387f503339ac8e91b5")
@@ -45,7 +48,9 @@ class PyZfit(PythonPackage):
 
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("python@:3.11", type=("build", "run"), when="@:0.18")
-    depends_on("python@:3.12", type=("build", "run"), when="@0.20:")
+    depends_on("python@:3.12", type=("build", "run"), when="@0.20:0.26")
+    depends_on("python@3.10:", type=("build", "run"), when="@0.27:")
+    depends_on("python@:3.13", type=("build", "run"), when="@0.27:")
 
     depends_on("py-hatchling@42:", type="build", when="@0.26:")
     depends_on("py-hatch-vcs", type="build", when="@0.26:")
@@ -62,8 +67,11 @@ class PyZfit(PythonPackage):
         depends_on("py-tensorflow")
         depends_on("py-tensorflow-probability")
 
-        depends_on("py-tensorflow@2.16.2:2.19", when="@0.25.0:")
-        depends_on("py-tensorflow-probability@0.25:0.26", when="@0.25.0:")
+        depends_on("py-tensorflow@2.16:2", when="@0.28:")
+        depends_on("py-tensorflow-probability@0.25:0", when="@0.28:")
+
+        depends_on("py-tensorflow@2.16.2:2.19", when="@0.25.0:0.27")
+        depends_on("py-tensorflow-probability@0.25:0.26", when="@0.25.0:0.27")
 
         depends_on("py-tensorflow@2.16.2:2.18", when="@0.24.3:0.24")
         depends_on("py-tensorflow@2.18", when="@0.24:0.24.2")
