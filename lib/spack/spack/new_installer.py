@@ -331,6 +331,7 @@ def worker_function(
     install_policy: InstallPolicy,
     dirty: bool,
     keep_stage: bool,
+    restage: bool,
     overwrite: bool,
     keep_prefix: bool,
     skip_patch: bool,
@@ -355,6 +356,7 @@ def worker_function(
         install_policy: ``"auto"``, ``"cache_only"``, or ``"source_only"``
         dirty: Whether to preserve user environment in the build environment
         keep_stage: Whether to keep the build stage after installation
+        restage: Whether to restage the source before building
         overwrite: Whether to overwrite the existing install prefix
         keep_prefix: Whether to keep a failed installation prefix
         skip_patch: Whether to skip the patch phase
@@ -393,6 +395,7 @@ def worker_function(
                 install_policy,
                 dirty,
                 keep_stage,
+                restage,
                 skip_patch,
                 state_stream,
                 tee,
@@ -416,6 +419,7 @@ def _install(
     install_policy: InstallPolicy,
     dirty: bool,
     keep_stage: bool,
+    restage: bool,
     skip_patch: bool,
     state_stream: io.TextIOWrapper,
     tee: Tee,
@@ -440,13 +444,12 @@ def _install(
     store.layout.create_install_directory(spec)
 
     stage = pkg.stage
+    stage.keep = keep_stage
 
     # Then try a source build.
     with stage:
-        # Set whether to keep the stage after installation
-        stage.keep = keep_stage
-
-        stage.destroy()
+        if restage:
+            stage.destroy()
         stage.create()
 
         # Start collecting logs.
@@ -570,6 +573,7 @@ def start_build(
     install_policy: InstallPolicy,
     dirty: bool,
     keep_stage: bool,
+    restage: bool,
     overwrite: bool,
     keep_prefix: bool,
     skip_patch: bool,
@@ -597,6 +601,7 @@ def start_build(
             install_policy,
             dirty,
             keep_stage,
+            restage,
             overwrite,
             keep_prefix,
             skip_patch,
@@ -1230,8 +1235,6 @@ class PackageInstaller:
             raise NotImplementedError("Fake installs are not implemented")
         elif install_source:
             raise NotImplementedError("Installing sources is not implemented")
-        elif not restage:
-            raise NotImplementedError("Restaging builds is not implemented")
         elif stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
         elif stop_before is not None:
@@ -1272,6 +1275,7 @@ class PackageInstaller:
         }
         self.unsigned = unsigned
         self.dirty = dirty
+        self.restage = restage
         self.keep_stage = keep_stage
         self.skip_patch = skip_patch
 
@@ -1464,8 +1468,10 @@ class PackageInstaller:
     def _start(self, selector: selectors.BaseSelector, jobserver: JobServer) -> None:
         dag_hash = self.pending_builds.pop()
         explicit = dag_hash in self.explicit
+        spec = self.build_graph.nodes[dag_hash]
+        is_develop = spec.is_develop
         child_info = start_build(
-            self.build_graph.nodes[dag_hash],
+            spec,
             explicit=explicit,
             mirrors=self.binary_cache_for_spec[dag_hash],
             unsigned=self.unsigned,
@@ -1475,7 +1481,9 @@ class PackageInstaller:
                 else self.dependencies_policy
             ),
             dirty=self.dirty,
-            keep_stage=self.keep_stage,
+            # keep_stage/restage logic taken from installer.py
+            keep_stage=self.keep_stage or is_develop,
+            restage=self.restage and not is_develop,
             overwrite=dag_hash in self.overwrite,
             keep_prefix=self.keep_prefix,
             skip_patch=self.skip_patch,
