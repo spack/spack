@@ -98,6 +98,13 @@ def verify_versions(args):
     else:
         specs = spack.store.db.query(installed=True)
 
+    msg_lines = _verify_version(specs)
+    if msg_lines:
+        tty.die("\n".join(msg_lines))
+
+
+def _verify_version(specs):
+    """Helper method for verify_versions."""
     missing_package = []
     unknown_version = []
     deprecated_version = []
@@ -105,8 +112,10 @@ def verify_versions(args):
     for spec in specs:
         try:
             pkg = spec.package
-        except Exception:
+        except Exception as e:
+            tty.debug(str(e))
             missing_package.append(spec)
+            continue
 
         if spec.version not in pkg.versions:
             unknown_version.append(spec)
@@ -115,6 +124,7 @@ def verify_versions(args):
         if pkg.versions[spec.version].get("deprecated", False):
             deprecated_version.append(spec)
 
+    msg_lines = []
     if missing_package or unknown_version or deprecated_version:
         errors = len(missing_package) + len(unknown_version) + len(deprecated_version)
         msg_lines = [f"{errors} installed packages have unknown/deprecated versions\n"]
@@ -132,7 +142,7 @@ def verify_versions(args):
             for spec in deprecated_version
         ]
 
-        tty.die("\n".join(msg_lines))
+    return msg_lines
 
 
 def verify_libraries(args):
