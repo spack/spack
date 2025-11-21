@@ -1139,6 +1139,12 @@ class PriorityOrderedMapping(Mapping[KT, VT]):
         """Iterates over values from the highest priority, to the lowest."""
         yield from (self._data[key] for _, key in reversed(self._priorities))
 
+    def priority_values(self, priority: int):
+        """Iterate over values of a given priority."""
+        if not any(p == priority for p, _ in self._priorities):
+            raise KeyError(f"No such priority in PriorityOrderedMapping: {priority}")
+        yield from (self._data[k] for p, k in self._priorities if p == priority)
+
     def _highest_priority(self) -> int:
         if not self._priorities:
             return 0

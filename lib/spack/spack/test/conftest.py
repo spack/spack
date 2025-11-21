@@ -928,7 +928,7 @@ def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
         (
-            ConfigScopePriority.BUILTIN,
+            ConfigScopePriority.DEFAULTS,
             spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
         ),
         (
@@ -1209,32 +1209,11 @@ def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_pac
     temporary_store.failure_tracker.clear_all()
 
 
-@pytest.fixture(scope="module")
-def temporary_mirror_dir(tmp_path_factory: pytest.TempPathFactory):
-    dir = tmp_path_factory.mktemp("mirror")
-    yield str(dir)
-
-
 @pytest.fixture(scope="function")
-def temporary_mirror(temporary_mirror_dir):
-    mirror_url = url_util.path_to_file_url(temporary_mirror_dir)
-    mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
-    yield temporary_mirror_dir
-    mirror_cmd("rm", "--scope=site", "test-mirror-func")
-
-
-@pytest.fixture(scope="function")
-def mutable_temporary_mirror_dir(tmp_path_factory: pytest.TempPathFactory):
-    dir = tmp_path_factory.mktemp("mirror")
-    yield str(dir)
-
-
-@pytest.fixture(scope="function")
-def mutable_temporary_mirror(mutable_temporary_mirror_dir):
-    mirror_url = url_util.path_to_file_url(mutable_temporary_mirror_dir)
-    mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
-    yield mutable_temporary_mirror_dir
-    mirror_cmd("rm", "--scope=site", "test-mirror-func")
+def temporary_mirror(mutable_config, tmp_path_factory):
+    mirror_dir = tmp_path_factory.mktemp("mirror")
+    mirror_cmd("add", "test-mirror-func", mirror_dir.as_uri())
+    yield str(mirror_dir)
 
 
 @pytest.fixture(scope="function")
@@ -1254,6 +1233,21 @@ def mock_fetch(mock_archive, monkeypatch):
     monkeypatch.setattr(
         spack.package_base.PackageBase, "fetcher", URLFetchStrategy(url=mock_archive.url)
     )
+
+
+class MockResourceFetcherGenerator:
+    def __init__(self, url):
+        self.url = url
+
+    def _generate_fetchers(self, *args, **kwargs):
+        return [URLFetchStrategy(url=self.url)]
+
+
+@pytest.fixture()
+def mock_resource_fetch(mock_archive, monkeypatch):
+    """Fake fetcher generator that works with resource stages to redirect to a file."""
+    mfg = MockResourceFetcherGenerator(mock_archive.url)
+    monkeypatch.setattr(spack.stage.ResourceStage, "_generate_fetchers", mfg._generate_fetchers)
 
 
 class MockLayout:
@@ -1665,6 +1659,10 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
         rev_hash = lambda x: git("rev-parse", x, output=str).strip()
         r2 = rev_hash(default_branch)
 
+        # annotated tag
+        a_tag = "annotated-tag"
+        git("tag", "-a", a_tag, "-m", "annotated tag")
+
         # Record the commit hash of the (only) commit from test-branch and
         # the file added by that commit
         r1 = rev_hash(branch)
@@ -1703,6 +1701,7 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
         ),
         "tag": Bunch(revision=tag, file=tag_file, args={"git": url, "tag": tag}),
         "commit": Bunch(revision=r1, file=r1_file, args={"git": url, "commit": r1}),
+        "annotated-tag": Bunch(revision=a_tag, file=r2_file, args={"git": url, "tag": a_tag}),
         # In this case, the version() args do not include a 'git' key:
         # this is the norm for packages, so this tests how the fetching logic
         # would most-commonly assemble a Git fetcher

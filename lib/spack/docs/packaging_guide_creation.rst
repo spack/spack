@@ -337,7 +337,7 @@ The remaining tasks to complete are as follows:
 #. Add a comma-separated list of maintainers.
 
    Add a list of GitHub accounts of people who want to be notified any time the package is modified.
-   See :ref:`package_maintainers`.
+   See :ref:`maintainers`.
 
 #. Change the ``license`` to the correct license.
 
@@ -2563,24 +2563,26 @@ These mixins should be used as additional base classes for your package, in addi
 
 In the example above ``Cp2k`` inherits the variants and conflicts defined by ``CudaPackage``.
 
-.. _package_maintainers:
+.. _maintainers:
 
 Maintainers
 -----------
 
-Each package in Spack may have one or more maintainers, i.e. one or more GitHub accounts of people who want to be notified any time the package is modified.
+Each package in Spack may have one or more GitHub accounts for people who want to be notified whenever the package is modified.
+The list also provides contacts for people needing help with build errors.
 
-When a pull request is submitted that updates the package, these people will be requested to review the PR.
-This is useful for developers who maintain a Spack package for their own software, as well as users who rely on a piece of software and want to ensure that the package doesn't break.
-It also gives users a list of people to contact for help when someone reports a build error with the package.
-
-To add maintainers to a package, simply declare them with the ``maintainers`` directive:
+Adding maintainers is easy.
+After familiarizing yourself with the responsibilities of the :ref:`Package Maintainers <package-maintainers>` role, you simply need to declare their GitHub accounts in the ``maintainers`` directive:
 
 .. code-block:: python
 
-   maintainers("user1", "user2")
+   maintainers("github_user1", "github_user2")
 
-The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
+.. warning::
+
+   Please do not add accounts without consent of the owner.
+
+The final list of maintainers includes accounts declared in the package's base classes.
 
 .. _package_license:
 

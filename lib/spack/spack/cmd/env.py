@@ -88,7 +88,7 @@ def env_create_setup_parser(subparser):
         "envfile",
         nargs="?",
         default=None,
-        help="manifest or lock file (ends with '.json' or '.lock')",
+        help="manifest or lock file (ends with '.json' or '.lock') or an environment name or path",
     )
     subparser.add_argument(
         "--include-concrete",
@@ -143,7 +143,7 @@ def _env_create(
     Arguments:
         name_or_path (str): name of the environment to create, or path to it
         init_file (str or file): optional initialization file -- can be
-            a JSON lockfile (*.lock, *.json) or YAML manifest file
+            a JSON lockfile (*.lock, *.json), YAML manifest file, or env dir
         dir (bool): if True, create an environment in a directory instead
             of a named environment
         keep_relative (bool): if True, develop paths are copied verbatim into
@@ -290,7 +290,7 @@ def create_temp_env_directory():
 
 def _tty_info(msg):
     """tty.info like function that prints the equivalent printf statement for eval."""
-    decorated = f'{colorize("@*b{==>}")} {msg}\n'
+    decorated = f"{colorize('@*b{==>}')} {msg}\n"
     executor = "echo" if sys.platform == "win32" else "printf"
     print(f"{executor} {shlex.quote(decorated)};")
 
@@ -609,7 +609,7 @@ def _env_untrack_or_remove(
             spack.environment.environment.environment_dir_from_name(bad_env_name, exists_ok=True)
         )
         tty.msg(f"Successfully removed environment '{bad_env_name}'")
-        removed_env_names.append(env.name)
+        removed_env_names.append(bad_env_name)
 
     # Following the design of linux rm we should exit with a status of 1
     # anytime we cannot delete every environment the user asks for.
@@ -623,7 +623,7 @@ def _env_untrack_or_remove(
 # env untrack
 #
 def env_untrack_setup_parser(subparser):
-    """track an environment from a directory in Spack"""
+    """untrack an environment from a directory in Spack"""
     subparser.add_argument("env", nargs="+", help="tracked environment name")
     subparser.add_argument(
         "-f", "--force", action="store_true", help="force unlink even when environment is active"

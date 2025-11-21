@@ -106,8 +106,10 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    packaging_guide_testing
    packaging_guide_advanced
    build_systems
+   roles_and_responsibilities
    contribution_guide
    developer_guide
+   package_review_guide
 
 .. toctree::
    :maxdepth: 2

@@ -190,7 +190,7 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
             first_newline = result.index("\n")
             header, rest = result[:first_newline], result[first_newline:]
 
-        return color.colorize(f"@c{{{color.cescape(header)}}}{rest}")
+        return color.colorize(f"@c{{{color.cescape(header)}}}{color.cescape(rest)}")
 
     def add_arguments(self, actions):
         actions = sorted(actions, key=operator.attrgetter("option_strings"))
@@ -548,6 +548,7 @@ def make_argument_parser(**kwargs):
         dest="spack_profile",
         help="profile execution using cProfile",
     )
+    profile.add_argument("--profile-file", default=None, help="Filename to save profile data to.")
     profile.add_argument(
         "--sorted-profile",
         default=None,
@@ -751,20 +752,20 @@ class SpackCommand:
                     tty.verbose(fmt.format(ln.replace("==> ", "")))
 
 
-def _profile_wrapper(command, parser, args, unknown_args):
+def _profile_wrapper(command, main_args, parser, args, unknown_args):
     import cProfile
 
     try:
-        nlines = int(args.lines)
+        nlines = int(main_args.lines)
     except ValueError:
-        if args.lines != "all":
-            tty.die("Invalid number for --lines: %s" % args.lines)
+        if main_args.lines != "all":
+            tty.die("Invalid number for --lines: %s" % main_args.lines)
         nlines = -1
 
     # allow comma-separated list of fields
     sortby = ["time"]
-    if args.sorted_profile:
-        sortby = args.sorted_profile.split(",")
+    if main_args.sorted_profile:
+        sortby = main_args.sorted_profile.split(",")
         for stat in sortby:
             if stat not in stat_names:
                 tty.die("Invalid sort field: %s" % stat)
@@ -777,6 +778,9 @@ def _profile_wrapper(command, parser, args, unknown_args):
 
     finally:
         pr.disable()
+
+        if main_args.profile_file:
+            pr.dump_stats(main_args.profile_file)
 
         # print out profile stats.
         stats = pstats.Stats(pr, stream=sys.stderr)
@@ -1096,8 +1100,8 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
     spack.paths.set_working_dir()
 
     # now we can actually execute the command.
-    if main_args.spack_profile or main_args.sorted_profile:
-        _profile_wrapper(command, parser, args, unknown)
+    if main_args.spack_profile or main_args.sorted_profile or main_args.profile_file:
+        _profile_wrapper(command, main_args, parser, args, unknown)
     elif main_args.pdb:
         import pdb
 

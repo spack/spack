@@ -12,15 +12,21 @@
 
 #program error_messages.
 
-% Create a causal tree between trigger conditions by locating the effect conditions
-% that are triggers for another condition. Condition2 is caused by Condition1
+% The following "condition_cause" rules create a causal tree between trigger
+% conditions by locating the effect conditions that are triggers for another
+% condition. In all these rules, Condition2 is caused by Condition1
+
+% For condition_cause rules, it is not necessary to confirm that the attr is present
+% on the node because `condition_holds` and `impose_constraint` collectively
+% guarantee it.
+% We omit those facts to reduce the burden on the grounder/solver.
+
 condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
   pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package),
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  attr(Name, node(ID, Package)),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package),
@@ -32,7 +38,6 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_requirement(Trigger, Name, Package, A1),
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  attr(Name, node(ID, Package), A1),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1),
@@ -44,7 +49,6 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_requirement(Trigger, Name, Package, A1, A2),
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  attr(Name, node(ID, Package), A1, A2),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1, A2),
@@ -56,7 +60,6 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_requirement(Trigger, Name, Package, A1, A2, A3),
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  attr(Name, node(ID, Package), A1, A2, A3),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1, A2, A3),
@@ -71,7 +74,6 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_requirement(Trigger, "node", Package),
   condition_nodes(Trigger, TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
-  attr("node", node(ID, Package)),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, "dependency_holds", Parent, Package, Type),
@@ -82,15 +84,27 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
 % ones describing the causal tree of the error. After startcauses, each successive pair must be
 % a condition and a condition_set id for which it holds.
 
+#defined choose_version/2.
+
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(1, "Cannot satisfy '{0}@{1}'", Package, Constraint, startcauses, ConstraintCause, CauseID)
+error(10000, "Cannot satisfy '{0}@{1}' 3({2})", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
      imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
      condition_holds(ConstraintCause, node(CauseID, TriggerPkg)),
      attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)).
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     choose_version(node(ID, Package), Version).
+
+error(100, "Cannot satisfy '{0}@{1}' 4({2})", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
+  :- attr("node_version_satisfies", node(ID, Package), Constraint),
+     pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
+     imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
+     condition_holds(ConstraintCause, node(CauseID, TriggerPkg)),
+     attr("version", node(ID, Package), Version),
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     not choose_version(node(ID, Package), Version).
 
 error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}'", Package, Constraint1, Constraint2, startcauses, Cause1, C1ID, Cause2, C2ID)
   :- attr("node_version_satisfies", node(ID, Package), Constraint1),
@@ -106,7 +120,8 @@ error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}'", Package, Constraint1, Constra
      attr("version", node(ID, Package), Version),
      % version satisfies one but not the other
      pkg_fact(Package, version_satisfies(Constraint1, Version)),
-     not pkg_fact(Package, version_satisfies(Constraint2, Version)).
+     not pkg_fact(Package, version_satisfies(Constraint2, Version)),
+     Cause1 < Cause2.
 
 % causation tracking error for no or multiple virtual providers
 error(0, "Cannot find a valid provider for virtual {0}", Virtual, startcauses, Cause, CID)

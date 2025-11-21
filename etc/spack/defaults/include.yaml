@@ -1,4 +1,7 @@
 include:
+  # default platform-specific configuration
   - path: "${platform}"
     optional: true
+
+  # base packages.yaml overridable by platform-specific settings
   - path: base

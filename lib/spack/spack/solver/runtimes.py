@@ -13,7 +13,7 @@ import spack.util.libc
 import spack.version
 
 from .core import SourceContext, fn, using_libc_compatibility
-from .versions import DeclaredVersion, Provenance
+from .versions import Provenance
 
 
 class RuntimePropertyRecorder:
@@ -143,6 +143,12 @@ class RuntimePropertyRecorder:
                 # (avoid adding virtuals everywhere, if a single edge needs it)
                 _, provider, virtual = clause.args
                 clause.args = "virtual_on_edge", node_placeholder, provider, virtual
+
+        # Check for abstract hashes in the body
+        for s in when_spec.traverse(root=False):
+            if s.abstract_hash:
+                body_clauses.append(fn.attr("hash", s.name, s.abstract_hash))
+
         body_str = ",\n".join(f"  {x}" for x in body_clauses)
         body_str = body_str.replace(f'"{node_placeholder}"', f"{node_variable}")
         for old, replacement in when_substitutions.items():
@@ -168,10 +174,7 @@ class RuntimePropertyRecorder:
         for s in (imposed_spec, when_spec):
             if not s.versions.concrete:
                 continue
-            self._setup.possible_versions[s.name].add(s.version)
-            self._setup.declared_versions[s.name].append(
-                DeclaredVersion(version=s.version, idx=0, origin=Provenance.RUNTIME)
-            )
+            self._setup.possible_versions[s.name][s.version].append(Provenance.RUNTIME)
 
         self.runtime_conditions.add((imposed_spec, when_spec))
         self.reset()

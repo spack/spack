@@ -18,6 +18,7 @@ import spack.spec_parser
 import spack.store
 import spack.variant
 import spack.version as vn
+from spack.enums import PropagationPolicy
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import (
@@ -2380,6 +2381,34 @@ def test_constrain_symbolically(constraints, expected):
             {"virtuals": ("mpi", "lapack"), "direct": True},
             " %[virtuals=lapack,mpi] callpath",
             "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True)",
+        ),
+        (
+            "",
+            "callpath",
+            {
+                "virtuals": ("mpi", "lapack"),
+                "direct": True,
+                "propagation": PropagationPolicy.PREFERENCE,
+            },
+            " %%[virtuals=lapack,mpi] callpath",
+            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True,"
+            " propagation=PropagationPolicy.PREFERENCE)",
+        ),
+        (
+            "",
+            "callpath",
+            {"virtuals": (), "direct": True, "propagation": PropagationPolicy.PREFERENCE},
+            " %%callpath",
+            "DependencySpec('', 'callpath', depflag=0, virtuals=(), direct=True,"
+            " propagation=PropagationPolicy.PREFERENCE)",
+        ),
+        (
+            "mpileaks+foo",
+            "callpath+bar",
+            {"virtuals": (), "direct": True, "propagation": PropagationPolicy.PREFERENCE},
+            "mpileaks+foo %%callpath+bar",
+            "DependencySpec('mpileaks+foo', 'callpath+bar', depflag=0, virtuals=(), direct=True,"
+            " propagation=PropagationPolicy.PREFERENCE)",
         ),
     ],
 )

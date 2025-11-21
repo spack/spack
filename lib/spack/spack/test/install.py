@@ -142,7 +142,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
     spack.store.STORE.failure_tracker.clear(s, True)
 
     s.package.set_install_succeed()
-    PackageInstaller([s.package], explicit=True, restage=True).install()
+    PackageInstaller([s.package], explicit=True).install()
     assert rm_prefix_checker.removed
     assert s.package.spec.installed
 
@@ -594,8 +594,8 @@ def test_install_from_binary_with_missing_patch_succeeds(
     PackageInstaller(
         [s.package],
         explicit=True,
-        package_cache_only=True,
-        dependencies_cache_only=True,
+        root_policy="cache_only",
+        dependencies_policy="cache_only",
         unsigned=True,
     ).install()
 

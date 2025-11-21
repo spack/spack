@@ -125,6 +125,38 @@ unification_set(SetID, VirtualNode)
   :- provider(PackageNode, VirtualNode),
      unification_set(SetID, PackageNode).
 
+% Compute sub-sets of the nodes, if requested. These can be either the nodes connected
+% to another node by "link" edges, or the nodes connected to another node by "link and
+% "run" edges.
+
+compute_closure(node(ID, Package), "linkrun")  :-
+  condition_requirement(_, "closure", Package, _, "linkrun"),
+  attr("node", node(ID, Package)).
+
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", PackageNode, DependencyNode, "link"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  compute_closure(PackageNode, "linkrun").
+
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", PackageNode, DependencyNode, "run"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  compute_closure(PackageNode, "linkrun").
+
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", ParentNode, DependencyNode, "link"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  attr("closure", PackageNode, ParentNode, "linkrun"),
+  compute_closure(PackageNode, "linkrun").
+
+attr("closure", PackageNode, DependencyNode, "linkrun") :-
+  attr("depends_on", ParentNode, DependencyNode, "run"),
+  not provider(DependencyNode, node(_, Language)) : language(Language);
+  attr("closure", PackageNode, ParentNode, "linkrun"),
+  compute_closure(PackageNode, "linkrun").
+
+related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "linkrun").
+
 % Do not allow split dependencies, for now. This ensures that we don't construct graphs where e.g.
 % a python extension depends on setuptools@63.4 as a run dependency, but uses e.g. setuptools@68
 % as a build dependency.
@@ -182,6 +214,7 @@ node_attributes_with_custom_rules("virtual_on_edge").
 node_attributes_with_custom_rules("provider_set").
 node_attributes_with_custom_rules("concrete_variant_set").
 node_attributes_with_custom_rules("concrete_variant_request").
+node_attributes_with_custom_rules("closure").
 
 trigger_condition_holds(TriggerID, node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
@@ -250,7 +283,7 @@ attr_single_value("node_os").
 attr_single_value("node_target").
 
 % Error when no attribute is selected
-error(100, no_value_error, Attribute, Package)
+error(10000, no_value_error, Attribute, Package)
   :- attr("node", node(ID, Package)),
      attr_single_value(Attribute),
      not attr(Attribute, node(ID, Package), _).
@@ -265,23 +298,6 @@ error(100, multiple_values_error, Attribute, Package)
 % Version semantics
 %-----------------------------------------------------------------------------
 
-% Versions are declared with a weight and an origin, which indicates where the
-% version was declared (e.g. "package_py" or "external").
-pkg_fact(Package, version_declared(Version, Weight)) :- pkg_fact(Package, version_declared(Version, Weight, _)).
-
-% We can't emit the same version **with the same weight** from two different sources
-:- pkg_fact(Package, version_declared(Version, Weight, Origin1)),
-   pkg_fact(Package, version_declared(Version, Weight, Origin2)),
-   Origin1 < Origin2,
-   internal_error("Two versions with identical weights").
-
-% We cannot use a version declared for an installed package if we end up building it
-:- pkg_fact(Package, version_declared(Version, Weight, "installed")),
-   attr("version", node(ID, Package), Version),
-   version_weight(node(ID, Package), Weight),
-   not attr("hash", node(ID, Package), _),
-   internal_error("Reuse version weight used for built package").
-
 % versions are declared w/priority -- declared with priority implies declared
 pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declared(Version, _)).
 
@@ -291,8 +307,12 @@ pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declar
 % is not precisely one version chosen. Error facts are heavily optimized
 % against to ensure they cannot be inferred when a non-error solution is
 % possible
-{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
+{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
  :- attr("node", node(ID, Package)).
+
+#defined compiler_package/1.
+
+attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
 
 % A virtual package may or may not have a version, but never has more than one
 error(100, "Cannot select a single version for virtual '{0}'", Virtual)
@@ -313,22 +333,23 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
-:- attr("version", node(ID, Package), Version),
-   version_weight(node(ID, Package), Weight),
-   pkg_fact(Package, version_declared(Version, Weight, "installed")),
-   build(node(ID, Package)),
-   internal_error("Reuse version weight used for build package").
 
-:- attr("version", node(ID, Package), Version),
-   version_weight(node(ID, Package), Weight),
-   not pkg_fact(Package, version_declared(Version, Weight, "installed")),
-   not pkg_fact(Package, version_declared(Version, Weight, "installed_git_version")),
+1 { allowed_versions(Version): pkg_fact(Package, version_origin(Version, Origin)),
+    Origin != "installed"}
+  :- attr("version", node(ID, Package), Version),
+     build(node(ID, Package)).
+
+% We cannot use a version declared for an installed package if we end up building it
+:- not pkg_fact(Package, version_origin(Version, "installed")),
+   not pkg_fact(Package, version_origin(Version, "installed_git_version")),
+   attr("version", node(ID, Package), Version),
    concrete(node(ID, Package)),
-   internal_error("Build version weight used for reused package").
+   internal_error("Reuse version weight used for built package").
 
-1 { version_weight(node(ID, Package), Weight) : pkg_fact(Package, version_declared(Version, Weight)) } 1
+version_weight(node(ID, Package), Weight)
   :- attr("version", node(ID, Package), Version),
      attr("node", node(ID, Package)),
+     pkg_fact(Package, version_declared(Version, Weight)),
      internal_error("version weights must exist and be unique").
 
 % node_version_satisfies implies that exactly one of the satisfying versions
@@ -341,12 +362,19 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
+error(10000, "Cannot satisfy '{0}@{1}' 1({2})", Package, Constraint, Version)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)).
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     choose_version(node(ID, Package), Version).
 
-error(10, "Cannot satisfy '{0}@{1}'", Package, Constraint)
+error(100, "Cannot satisfy '{0}@{1}' 2({2})", Package, Constraint, Version)
+  :- attr("node_version_satisfies", node(ID, Package), Constraint),
+     attr("version", node(ID, Package), Version),
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     not choose_version(node(ID, Package), _).
+
+error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      not attr("version", node(ID, Package), _).
 
@@ -401,16 +429,22 @@ condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _, _, _).
 trigger_node(ID, node(PackageID, Package), node(PackageID, Package)) :- pkg_fact(Package, trigger_id(ID)), attr("node", node(PackageID, Package)).
 trigger_node(ID, node(PackageID, Package), node(VirtualID, Virtual)) :- pkg_fact(Virtual, trigger_id(ID)), provider(node(PackageID, Package), node(VirtualID, Virtual)).
 
+% This is the "real node" that triggers the request, e.g. if the request started from "mpi" this is the mpi provider
+trigger_real_node(ID, PackageNode) :- trigger_node(ID, PackageNode, _).
+
+% This is the requestor node, which may be a "real" or a "virtual" node
+trigger_requestor_node(ID, RequestorNode) :- trigger_node(ID, _, RequestorNode).
+
 condition_nodes(TriggerID, PackageNode, node(X, A1))
   :- condition_packages(TriggerID, A1),
      condition_set(PackageNode, node(X, A1)),
      not self_build_requirement(PackageNode, node(X, A1)),
-     trigger_node(TriggerID, PackageNode, _).
+     trigger_real_node(TriggerID, PackageNode).
 
 cannot_hold(TriggerID, PackageNode)
   :- condition_packages(TriggerID, A1),
      not condition_set(PackageNode, node(_, A1)),
-     trigger_node(TriggerID, PackageNode, _),
+     trigger_real_node(TriggerID, PackageNode),
      attr("node", PackageNode).
 
 trigger_condition_holds(ID, RequestorNode) :-
@@ -427,40 +461,45 @@ trigger_condition_holds(ID, RequestorNode) :-
 %%%%
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1)),
   condition_requirement(ID, Name, A1),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2),
   condition_requirement(ID, Name, A1, A2),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2, A3),
   condition_requirement(ID, Name, A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)),
   not node_attributes_with_custom_rules(Name).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3, A4)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2, A3, A4),
   condition_requirement(ID, Name, A1, A2, A3, A4),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "depends_on", A1, A2, A3)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   attr("depends_on", node(X, A1), node(Y, A2), A3),
   condition_requirement(ID, "depends_on", A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)),
   condition_nodes(ID, PackageNode, node(Y, A2)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "concrete_variant_request", A1, A2, A3)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   condition_requirement(ID, "concrete_variant_request", A1, A2, A3),
+  condition_nodes(ID, PackageNode, node(X, A1)).
+
+satisfied(trigger(PackageNode), condition_requirement(ID, "closure", A1, A2, A3)) :-
+  attr("closure", node(X, A1), node(_, A2), A3),
+  condition_requirement(ID, "closure", A1, A2, A3),
   condition_nodes(ID, PackageNode, node(X, A1)).
 
 %%%%
@@ -468,35 +507,35 @@ satisfied(trigger(PackageNode), condition_requirement(ID, "concrete_variant_requ
 %%%%
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "node", A1)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   reused_provider(PackageNode, _),
   condition_requirement(ID, "node", A1).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "virtual_node", A1)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   reused_provider(PackageNode, node(_, A1)),
   condition_requirement(ID, "virtual_node", A1).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "virtual_on_incoming_edges", A1, A2)) :-
-  trigger_node(ID, PackageNode, _),
+  trigger_real_node(ID, PackageNode),
   reused_provider(node(Hash, A1), node(Hash, A2)),
   condition_requirement(ID, "virtual_on_incoming_edges", A1, A2).
 
 satisfied(trigger(node(Hash, Package)), condition_requirement(ID, Name, Package, A1)) :-
-  trigger_node(ID, node(Hash, Package), _),
+  trigger_real_node(ID, node(Hash, Package)),
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, Name, Package, A1),
   condition_requirement(ID, Name, Package, A1).
 
 satisfied(trigger(node(Hash, Package)), condition_requirement(ID, "node_version_satisfies", Package, VersionConstraint)) :-
-  trigger_node(ID, node(Hash, Package), _),
+  trigger_real_node(ID, node(Hash, Package)),
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, "version", Package, Version),
   condition_requirement(ID, "node_version_satisfies", Package, VersionConstraint),
   pkg_fact(Package, version_satisfies(VersionConstraint, Version)).
 
 satisfied(trigger(node(Hash, Package)), condition_requirement(ID, Name, Package, A1, A2)) :-
-  trigger_node(ID, node(Hash, Package), _),
+  trigger_real_node(ID, node(Hash, Package)),
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, Name, Package, A1, A2),
   condition_requirement(ID, Name, Package, A1, A2).
@@ -533,7 +572,7 @@ trigger_and_effect(Package, TriggerID, EffectID) :- trigger_and_effect(Package, 
 impose(EffectID, node(X, Package))
   :- not subcondition(ConditionID, _),
      trigger_and_effect(Package, ConditionID, TriggerID, EffectID),
-     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_requestor_node(TriggerID, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
@@ -544,7 +583,7 @@ impose(EffectID, node(X, Package))
      condition_holds(ConditionID, ConditionNode),
      condition_set(ConditionNode, node(X, Package)),
      trigger_and_effect(Package, SubconditionID, TriggerID, EffectID),
-     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_requestor_node(TriggerID, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
@@ -558,7 +597,7 @@ imposed_nodes(EffectID, node(NodeID, Package), node(X, A1))
   :- trigger_and_effect(Package, TriggerID, EffectID),
      imposed_packages(EffectID, A1),
      condition_set(node(NodeID, Package), node(X, A1)),
-     trigger_node(TriggerID, _, node(NodeID, Package)),
+     trigger_requestor_node(TriggerID, node(NodeID, Package)),
      % We don't want to add build requirements to imposed nodes, to avoid
      % unsat problems when we deal with self-dependencies: gcc@14 %gcc@10
      not self_build_requirement(node(NodeID, Package), node(X, A1)).
@@ -1056,7 +1095,7 @@ possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback
 external(PackageNode) :- attr("external", PackageNode).
 
 % if a package is not buildable, only concrete specs are allowed
-error(100, "Cannot build {0}, since it is configured `buildable:false` and no externals satisfy the request", Package)
+error(1000, "Cannot build {0}, since it is configured `buildable:false` and no externals satisfy the request", Package)
   :- buildable_false(Package),
      attr("node", node(ID, Package)),
      build(node(ID, Package)).
@@ -1101,6 +1140,16 @@ activate_requirement(node(ID, Package), X) :-
   condition_holds(Y, node(ID, Package)),
   requirement_conditional(Package, X, Y).
 
+activate_requirement(node(ID, Package), X) :-
+  package_in_dag(node(ID, Package)),
+  package_in_dag(node(CID, ConditionPackage)),
+  requirement_group(Package, X),
+  pkg_fact(ConditionPackage, condition(Y)),
+  related(node(CID, ConditionPackage), node(ID, Package)),
+  condition_holds(Y, node(CID, ConditionPackage)),
+  requirement_conditional(Package, X, Y),
+  ConditionPackage != Package.
+
 requirement_group_satisfied(node(ID, Package), GroupID) :-
   1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } 1,
   requirement_policy(Package, GroupID, "one_of"),
@@ -1142,6 +1191,15 @@ requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
   requirement_group_member(ConditionID, Package, GroupID),
   condition_holds(ConditionID, node(X, Package)),
   subcondition(SubconditionID, ConditionID),
+  pkg_fact(Package, condition_effect(SubconditionID, EffectID)).
+
+% clingo decided not to impose a condition for a subcondition that holds
+exclude_requirement_weight(ConditionID, Package, GroupID) :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  subcondition(SubconditionID, ConditionID),
+  condition_holds(SubconditionID, node(X, Package)),
+  do_not_impose(EffectID, node(X, Package)),
   pkg_fact(Package, condition_effect(SubconditionID, EffectID)).
 
 % Do not impose requirements, if the conditional requirement is not active
@@ -1192,10 +1250,12 @@ error(1, "Cannot use {1} for the {0} virtual, but that is required", Virtual, Pr
   pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
   imposed_constraint(EffectID, "node_flag_set", Package, NodeFlag).
 
-
 requirement_weight(node(ID, Package), Group, W) :-
   W = #min {
-    Z : requirement_has_weight(Y, Z), condition_holds(Y, node(ID, Package)), requirement_group_member(Y, Package, Group);
+    Z : requirement_has_weight(Y, Z),
+        condition_holds(Y, node(ID, Package)),
+        requirement_group_member(Y, Package, Group),
+        not exclude_requirement_weight(Y, Package, Group);
     % We need this to avoid an annoying warning during the solve
     %   concretize.lp:1151:5-11: info: tuple ignored:
     %   #sup@73
@@ -1221,14 +1281,14 @@ requirement_penalty(PackageNode, Language, Group, W) :-
   attr("concrete_build_dependency", PackageNode, CompilerName, CompilerHash),
   attr("virtual_on_build_edge", PackageNode, CompilerName, Language).
 
-error(100, "cannot satisfy a requirement for package '{0}'.", Package) :-
+error(60000, "cannot satisfy a requirement for package '{0}'.", Package) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   not requirement_message(Package, X, _),
   not requirement_group_satisfied(node(ID, Package), X).
 
 
-error(10, Message) :-
+error(50000, Message) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   requirement_message(Package, X, Message),
@@ -1941,23 +2001,6 @@ build_priority(PackageNode, 200) :- build(PackageNode), attr("node", PackageNode
 build_priority(PackageNode, 0)   :- build(PackageNode), attr("node", PackageNode), treat_node_as_concrete(PackageNode).
 build_priority(PackageNode, 0)   :- concrete(PackageNode), attr("node", PackageNode).
 
-% don't assign versions from installed packages unless reuse is enabled
-% NOTE: that "installed" means the declared version was only included because
-% that package happens to be installed, NOT because it was asked for on the
-% command line.  If the user specifies a hash, the origin will be "spec".
-%
-% TODO: There's a slight inconsistency with this: if the user concretizes
-% and installs `foo ^bar`, for some build dependency `bar`, and then later
-% does a `spack install --fresh foo ^bar/abcde` (i.e.,the hash of `bar`, it
-% currently *won't* force versions for `bar`'s build dependencies -- `--fresh`
-% will instead build the latest bar. When we actually include transitive
-% build deps in the solve, consider using them as a preference to resolve this.
-:- attr("version", node(ID, Package), Version),
-   version_weight(node(ID, Package), Weight),
-   pkg_fact(Package, version_declared(Version, Weight, "installed")),
-   not optimize_for_reuse().
-
-
 % This statement, which is a hidden feature of clingo, let us avoid cycles in the DAG
 #edge (A, B) : depends_on(A, B).
 
@@ -2099,16 +2142,6 @@ opt_criterion(46, "number of compilers used on the same node").
     : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
 }.
 
-% Minimize the ids of the providers, i.e. use as much as
-% possible the first providers
-opt_criterion(45, "number of duplicate virtuals needed").
-#minimize{ 0@245: #true }.
-#minimize{ 0@45: #true }.
-#minimize{
-    Weight@45+Priority,ProviderNode,Virtual
-    : provider(ProviderNode, node(Weight, Virtual)),
-      build_priority(ProviderNode, Priority)
-}.
 
 opt_criterion(40, "preferred compilers").
 #minimize{ 0@240: #true }.
@@ -2214,9 +2247,11 @@ opt_criterion(2, "providers on edges").
 #minimize{ 0@202: #true }.
 #minimize{ 0@2: #true }.
 #minimize{
-    Weight@2,ParentNode,ProviderNode,Virtual
-    : provider_weight(ProviderNode, Virtual, Weight),
+    Weight@2,ParentNode,ProviderNode,node(X, Virtual)
+    : provider_weight(ProviderNode, node(X, Virtual), Weight),
+      max_dupes(Virtual, MaxDupes), MaxDupes > 1,
       not attr("root", ProviderNode),
+      language(Virtual),
       depends_on(ParentNode, ProviderNode)
 }.
 
@@ -2225,10 +2260,11 @@ opt_criterion(1, "version badness on edges").
 #minimize{ 0@201: #true }.
 #minimize{ 0@1: #true }.
 #minimize{
-    Weight@1,ParentNode,PackageNode
-    : version_weight(PackageNode, Weight),
-      not attr("root", PackageNode),
-      depends_on(ParentNode, PackageNode)
+    Weight@1,ParentNode,node(X, Package)
+    : version_weight(node(X, Package), Weight),
+      multiple_unification_sets(Package),
+      not attr("root", node(X, Package)),
+      depends_on(ParentNode, node(X, Package))
 }.
 
 % Reduce symmetry on duplicates

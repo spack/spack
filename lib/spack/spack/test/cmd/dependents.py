@@ -31,21 +31,20 @@ def test_immediate_dependents(mock_packages):
 def test_transitive_dependents(mock_packages):
     out = dependents("--transitive", "libelf")
     actual = set(re.split(r"\s+", out.strip()))
-    assert actual == set(
-        [
-            "callpath",
-            "dyninst",
-            "libdwarf",
-            "mixing-parent",
-            "mpileaks",
-            "multivalue-variant",
-            "singlevalue-variant-dependent",
-            "patch-a-dependency",
-            "patch-several-dependencies",
-            "quantum-espresso",
-            "conditionally-patch-dependency",
-        ]
-    )
+    assert actual == {
+        "callpath",
+        "dyninst",
+        "libdwarf",
+        "mixing-parent",
+        "mpileaks",
+        "multivalue-variant",
+        "singlevalue-variant-dependent",
+        "trilinos",
+        "patch-a-dependency",
+        "patch-several-dependencies",
+        "quantum-espresso",
+        "conditionally-patch-dependency",
+    }
 
 
 @pytest.mark.db

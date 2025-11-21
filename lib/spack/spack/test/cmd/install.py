@@ -1084,7 +1084,7 @@ def test_padded_install_runtests_root(install_mockery, mock_fetch):
     output = install(
         "--verbose", "--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False
     )
-    assert output.count("method not implemented") == 1
+    assert "method not implemented [undefined-build-test]" in output
 
 
 @pytest.mark.regression("35337")

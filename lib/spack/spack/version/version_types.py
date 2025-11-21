@@ -10,13 +10,13 @@ from spack.util.typing import SupportsRichComparison
 
 from .common import (
     ALPHA,
-    COMMIT_VERSION,
     FINAL,
     PRERELEASE_TO_STRING,
     STRING_TO_PRERELEASE,
     EmptyRangeError,
     VersionLookupError,
     infinity_versions,
+    is_git_commit_sha,
     is_git_version,
     iv_min_len,
 )
@@ -583,7 +583,7 @@ class GitVersion(ConcreteVersion):
             self.ref = normalized_string
 
         # Used by fetcher
-        self.is_commit: bool = len(self.ref) == 40 and bool(COMMIT_VERSION.match(self.ref))
+        self.is_commit: bool = is_git_commit_sha(self.ref)
 
         # translations
         if self.is_commit:

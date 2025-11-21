@@ -96,8 +96,10 @@ concretizer:
 
   # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
   # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.
+  # Feature is experimental: enabling may result in potentially invalid concretizations
+  # if package recipes are changed, see: https://github.com/spack/spack/issues/51553
   concretization_cache:
-    enable: true
+    enable: false
 
   # Options to control the behavior of the concretizer with external specs
   externals:

@@ -182,7 +182,8 @@ def test_built_spec_cache(install_mockery, tmp_path: pathlib.Path):
 
     for s in [gspec, cspec]:
         results = spack.binary_distribution.get_mirrors_for_spec(s)
-        assert any([r.spec == s for r in results])
+        assert len(results) == 1
+        assert results[0].url == url_util.path_to_file_url(str(tmp_path))
 
 
 def fake_dag_hash(spec, length=None):
@@ -370,7 +371,9 @@ def test_update_sbang(tmp_path: pathlib.Path, temporary_mirror, mock_fetch, inst
         new_prefix, new_sbang_shebang = s.prefix, sbang.sbang_shebang_line()
         assert old_prefix != new_prefix
         assert old_sbang_shebang != new_sbang_shebang
-        PackageInstaller([s.package], cache_only=True, unsigned=True).install()
+        PackageInstaller(
+            [s.package], root_policy="cache_only", dependencies_policy="cache_only", unsigned=True
+        ).install()
 
         # Check that the sbang line refers to the new install tree
         new_contents = f"""\

@@ -6,12 +6,12 @@
 This implements Spack's configuration system, which handles merging
 multiple scopes with different levels of precedence.  See the
 documentation on :ref:`configuration-scopes` for details on how Spack's
-configuration system behaves.  The scopes are:
+configuration system behaves.  The scopes set up here are:
 
-#. ``default``
-#. ``system``
-#. ``site``
-#. ``user``
+#. ``spack`` in ``$spack/etc/spack`` - controls all built-in spack scopes,
+   except default
+#. ``defaults`` in ``$spack/etc/spack/defaults``  - defaults that Spack
+   needs to function
 
 Important functions in this module are:
 
@@ -36,7 +36,7 @@ import re
 import sys
 from collections import defaultdict
 from itertools import chain
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
 
 from spack.vendor import jsonschema
 
@@ -100,7 +100,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
 _ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
 _ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
 
-#: Path to the default configuration
+#: Path to the main configuration scope
 CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
 
 #: Hard-coded default values for some key configuration options.
@@ -144,6 +144,7 @@ class ConfigScope:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
+        self.prefer_modify = False
 
         #: names of any included scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -157,7 +158,6 @@ class ConfigScope:
             includes = self.get_section("include")
             if includes:
                 include_paths = [included_path(data) for data in includes["include"]]
-
                 included_scopes = chain(*[include.scopes(self) for include in include_paths])
 
                 # Do not include duplicate scopes
@@ -170,6 +170,25 @@ class ConfigScope:
                         self._included_scopes.append(included_scope)
 
         return self._included_scopes
+
+    def override_include(self):
+        """Whether the ``include::`` section of this scope should override lower scopes."""
+        include = self.sections.get("include")
+        if not include:
+            return False
+
+        # override if this has an include section and there is an override attribute on
+        # the include key in the dict and it is set to True.
+        return getattr(next(iter(include.keys()), None), "override", False)
+
+    def transitive_includes(self, _names: Optional[Set[str]] = None) -> Set[str]:
+        """Get name of this scope and names of its transitively included scopes."""
+        if _names is None:
+            _names = _set()
+        _names.add(self.name)
+        for scope in self.included_scopes:
+            _names |= scope.transitive_includes(_names=_names)
+        return _names
 
     def get_section_filename(self, section: str) -> str:
         raise NotImplementedError
@@ -191,10 +210,13 @@ class ConfigScope:
 class DirectoryConfigScope(ConfigScope):
     """Config scope backed by a directory containing one file per section."""
 
-    def __init__(self, name: str, path: str, *, writable: bool = True) -> None:
+    def __init__(
+        self, name: str, path: str, *, writable: bool = True, prefer_modify: bool = True
+    ) -> None:
         super().__init__(name)
         self.path = path
         self.writable = writable
+        self.prefer_modify = prefer_modify
 
     def get_section_filename(self, section: str) -> str:
         """Returns the filename associated with a given section"""
@@ -240,6 +262,7 @@ class SingleFileScope(ConfigScope):
         *,
         yaml_path: Optional[List[str]] = None,
         writable: bool = True,
+        prefer_modify: bool = True,
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -263,6 +286,7 @@ class SingleFileScope(ConfigScope):
         self.schema = schema
         self.path = path
         self.writable = writable
+        self.prefer_modify = prefer_modify
         self.yaml_path = yaml_path or []
 
     def get_section_filename(self, section) -> str:
@@ -467,16 +491,22 @@ class Configuration:
         return next(self.scopes.reversed_values())  # type: ignore
 
     @_config_mutator
-    def push_scope(
+    def push_scope_incremental(
         self, scope: ConfigScope, priority: Optional[int] = None, _depth: int = 0
-    ) -> None:
+    ) -> Generator["Configuration", None, None]:
         """Adds a scope to the Configuration, at a given priority.
+
+        ``push_scope_incremental`` yields included scopes incrementally, so that their
+        data can be used by higher priority scopes during config initialization. If you
+        push a scope that includes other, low-priority scopes, they will be pushed on
+        first, before the scope that included them.
 
         If a priority is not given, it is assumed to be the current highest priority.
 
         Args:
             scope: scope to be added
             priority: priority of the scope
+
         """
         # TODO: As a follow on to #48784, change this to create a graph of the
         # TODO: includes AND ensure properly sorted such that the order included
@@ -494,9 +524,31 @@ class Configuration:
 
             # record this inclusion so that remove_scope() can use it
             self.push_scope(included_scope, priority=priority, _depth=_depth + 1)
+            yield self
 
         tty.debug(f"[CONFIGURATION: PUSH SCOPE]: {str(scope)}, priority={priority}", level=2)
         self.scopes.add(scope.name, value=scope, priority=priority)
+        yield self
+
+    @_config_mutator
+    def push_scope(
+        self, scope: ConfigScope, priority: Optional[int] = None, _depth: int = 0
+    ) -> None:
+        """Add a scope to the Configuration, at a given priority.
+
+        If a priority is not given, it is assumed to be the current highest priority.
+
+        Args:
+            scope: scope to be added
+            priority: priority of the scope
+
+        """
+        # Use push_scope_incremental to do the real work. It returns a generator, which needs
+        # to be consumed to get each of the yielded scopes added to the scope stack.
+        # It will usually yield one scope, but if there are includes it will yield those first,
+        # before the scope we're actually pushing.
+        for _ in self.push_scope_incremental(scope=scope, priority=priority, _depth=_depth):
+            pass
 
     @_config_mutator
     def remove_scope(self, scope_name: str) -> Optional[ConfigScope]:
@@ -525,7 +577,16 @@ class Configuration:
 
     def highest_precedence_scope(self) -> ConfigScope:
         """Writable scope with the highest precedence."""
-        return next(s for s in self.scopes.reversed_values() if s.writable)
+        scope = next(s for s in self.scopes.reversed_values() if s.writable)
+
+        # if a scope prefers that we edit another, respect that.
+        while scope:
+            preferred = scope
+            scope = next(
+                (s for s in scope.included_scopes if s.writable and s.prefer_modify), None
+            )
+
+        return preferred
 
     def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
@@ -660,10 +721,38 @@ class Configuration:
             self.get_config(section, scope=scope), line_info=line_info
         )
 
+    def _filter_overridden(self, scopes: List[ConfigScope]):
+        """Filter out overridden scopes.
+
+        NOTE: this does not yet handle diamonds or nested `include::` in lists. It is
+        sufficient for include::[] in an env, which allows isolation.
+        """
+        # find last override in scopes
+        i = next((i for i, s in reversed(list(enumerate(scopes))) if s.override_include()), -1)
+        if i < 0:
+            return scopes  # no overrides
+
+        keep = scopes[i].transitive_includes()
+        keep |= _set(s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS))
+        keep |= _set(s.name for s in scopes[i:])
+
+        # return scopes to keep, with order preserved
+        return [s for s in scopes if s.name in keep]
+
+    @property
+    def active_scopes(self) -> List[ConfigScope]:
+        """Return a list of scopes that have not been overridden by include::."""
+        return self._filter_overridden([s for s in self.scopes.values()])
+
     @lang.memoized
     def _get_config_memoized(
         self, section: str, scope: Optional[str], _merged_scope: Optional[str]
     ) -> YamlConfigDict:
+        """Memoized helper for ``get_config()``.
+
+        Note that the memoization cache for this function is cleared whenever
+        any function decorated with ``@_config_mutator`` is called.
+        """
         _validate_section_name(section)
 
         if scope is not None and _merged_scope is not None:
@@ -677,11 +766,22 @@ class Configuration:
         else:
             scopes = list(self.scopes.values())
 
+        # filter any scopes overridden by `include::`
+        scopes = self._filter_overridden(scopes)
+
         merged_section: Dict[str, Any] = syaml.syaml_dict()
         updated_scopes = []
         for config_scope in scopes:
             # read potentially cached data from the scope.
             data = config_scope.get_section(section)
+            if data and section == "include":
+                # Include overrides are handled by `_filter_overridden` above. Any remaining
+                # includes at this point are *not* actually overridden -- they're scopes with
+                # ConfigScopePriority.DEFAULT, which we currently do *not* remove with
+                # `include::`, because these scopes are needed for Spack to function correctly.
+                # So, we ignore :: here.
+                data = data.copy()
+                data["include"] = data.pop("include")  # strip override
 
             # Skip empty configs
             if not isinstance(data, dict) or section not in data:
@@ -851,13 +951,17 @@ def override(
 class OptionalInclude:
     """Base properties for all includes."""
 
+    name: str
     when: str
     optional: bool
+    prefer_modify: bool
     _scopes: List[ConfigScope]
 
     def __init__(self, entry: dict):
+        self.name = entry.get("name", "")
         self.when = entry.get("when", "")
         self.optional = entry.get("optional", False)
+        self.prefer_modify = entry.get("prefer_modify", False)
         self._scopes = []
 
     def _scope(
@@ -875,31 +979,41 @@ class OptionalInclude:
         Raises:
             ValueError: the required configuration path does not exist
         """
-        # Try to use the relative path to create the included scope name
-        parent_path = getattr(parent_scope, "path", None)
-        if parent_path and str(parent_path) == os.path.commonprefix([parent_path, config_path]):
-            included_name = os.path.relpath(config_path, parent_path)
-        else:
-            included_name = config_path
+        # use specified name if there is one
+        config_name = self.name
+        if not config_name:
+            # Try to use the relative path to create the included scope name
+            parent_path = getattr(parent_scope, "path", None)
+            if parent_path and str(parent_path) == os.path.commonprefix(
+                [parent_path, config_path]
+            ):
+                included_name = os.path.relpath(config_path, parent_path)
+            else:
+                included_name = config_path
 
-        if sys.platform == "win32":
-            # Clean windows path for use in config name that looks nicer
-            # ie. The path: C:\\some\\path\\to\\a\\file
-            # becomes C/some/path/to/a/file
-            included_name = included_name.replace("\\", "/")
-            included_name = included_name.replace(":", "")
+            if sys.platform == "win32":
+                # Clean windows path for use in config name that looks nicer
+                # ie. The path: C:\\some\\path\\to\\a\\file
+                # becomes C/some/path/to/a/file
+                included_name = included_name.replace("\\", "/")
+                included_name = included_name.replace(":", "")
+
+            config_name = f"{parent_scope.name}:{included_name}"
 
         if os.path.isdir(config_path):
             # directories are treated as regular ConfigScopes
-            config_name = f"{parent_scope.name}:{included_name}"
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-            return DirectoryConfigScope(config_name, config_path)
+            return DirectoryConfigScope(config_name, config_path, prefer_modify=self.prefer_modify)
 
         if os.path.exists(config_path):
             # files are assumed to be SingleFileScopes
-            config_name = f"{parent_scope.name}:{included_name}"
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
-            return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
+            return SingleFileScope(
+                config_name,
+                config_path,
+                spack.schema.merged.schema,
+                prefer_modify=self.prefer_modify,
+            )
 
         if not self.optional:
             dest = f" at ({config_path})" if config_path != path else ""
@@ -941,7 +1055,11 @@ class IncludePath(OptionalInclude):
 
     def __init__(self, entry: dict):
         super().__init__(entry)
-        self.path = entry.get("path", "")
+        path_override_env_var = entry.get("path_override_env_var", "")
+        if path_override_env_var and path_override_env_var in os.environ:
+            self.path = os.environ[path_override_env_var]
+        else:
+            self.path = entry.get("path", "")
         self.sha256 = entry.get("sha256", "")
         self.destination = None
 
@@ -1199,40 +1317,24 @@ def create_incremental() -> Generator[Configuration, None, None]:
     it. It is bundled inside a function so that configuration can be
     initialized lazily.
     """
-    # first do the builtin, hardcoded defaults
+    # Default scopes are builtins and the default scope within the Spack instance.
+    # These are versioned with Spack and can be overridden by systems, sites or user scopes.
     cfg = create_from(
-        (ConfigScopePriority.BUILTIN, InternalConfigScope("_builtin", CONFIG_DEFAULTS))
+        (ConfigScopePriority.DEFAULTS, InternalConfigScope("_builtin", CONFIG_DEFAULTS)),
+        (ConfigScopePriority.DEFAULTS, DirectoryConfigScope(*CONFIGURATION_DEFAULTS_PATH)),
     )
+    yield cfg
 
-    # Builtin paths to configuration files in Spack
-    configuration_paths = [
-        # Default configuration scope is the lowest-level scope. These are
-        # versioned with Spack and can be overridden by systems, sites or users
-        CONFIGURATION_DEFAULTS_PATH
-    ]
+    # Initial topmost scope is spack (the config scope in the spack instance).
+    # It includes the user, site, and system scopes. Environments and command
+    # line scopes go above this.
+    configuration_paths = [("spack", os.path.join(spack.paths.etc_path))]
 
-    disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
-
-    # System configuration is per machine.
-    # This is disabled if user asks for no local configuration.
-    if not disable_local_config:
-        configuration_paths.append(("system", spack.paths.system_config_path))
-
-    # Site configuration is per spack instance, for sites or projects
-    # No site-level configs should be checked into spack by default.
-    configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
-
-    # Python package's can register configuration scopes via entry_points
+    # Python packages can register configuration scopes via entry_points
     configuration_paths.extend(config_paths_from_entry_points())
-
-    # User configuration can override both spack defaults and site config
-    # This is disabled if user asks for no local configuration.
-    if not disable_local_config:
-        configuration_paths.append(("user", spack.paths.user_config_path))
 
     # add each scope
     for name, path in configuration_paths:
-        cfg.push_scope(DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES)
         # yield the config incrementally so that each config level's init code can get
         # data from the one below. This can be tricky, but it enables us to have a
         # single unified config system.
@@ -1242,7 +1344,9 @@ def create_incremental() -> Generator[Configuration, None, None]:
         #     config (which uses ssl and other config options) for some of the scopes,
         #     to make the bootstrap issues more explicit, even if allowing config scope
         #     init to reference lower scopes is more flexible.
-        yield cfg
+        yield from cfg.push_scope_incremental(
+            DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
+        )
 
 
 def create() -> Configuration:
@@ -1340,6 +1444,9 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
 def get(path: str, default: Optional[Any] = None, scope: Optional[str] = None) -> Any:
     """Module-level wrapper for ``Configuration.get()``."""
     return CONFIG.get(path, default, scope)
+
+
+_set = set  #: save this before defining set -- maybe config.set was ill-advised :)
 
 
 def set(path: str, value: Any, scope: Optional[str] = None) -> None:
