@@ -27,7 +27,7 @@ class RemoveDocstrings(ast.NodeTransformer):
     def remove_docstring(self, node):
         def unused_string(node):
             """Criteria for unassigned body strings."""
-            return isinstance(node, ast.Expr) and isinstance(node.value, ast.Str)
+            return isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
 
         if node.body:
             node.body = [child for child in node.body if not unused_string(child)]
