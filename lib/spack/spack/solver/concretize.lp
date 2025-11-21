@@ -438,12 +438,13 @@ cannot_hold(TriggerID, PackageNode)
      trigger_real_node(TriggerID, PackageNode),
      attr("node", PackageNode).
 
+% Aggregates generic condition requirements with TriggerID, to see if a condition holds
 trigger_condition_holds(ID, RequestorNode) :-
   trigger_node(ID, PackageNode, RequestorNode);
-  satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1))         : condition_requirement(ID, Name, A1);
-  satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2))     : condition_requirement(ID, Name, A1, A2);
-  satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3)) : condition_requirement(ID, Name, A1, A2, A3);
-  satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3, A4)) : condition_requirement(ID, Name, A1, A2, A3, A4);
+  satisfied(trigger(PackageNode), condition_requirement(Name, A1))         : condition_requirement(ID, Name, A1);
+  satisfied(trigger(PackageNode), condition_requirement(Name, A1, A2))     : condition_requirement(ID, Name, A1, A2);
+  satisfied(trigger(PackageNode), condition_requirement(Name, A1, A2, A3)) : condition_requirement(ID, Name, A1, A2, A3);
+  satisfied(trigger(PackageNode), condition_requirement(Name, A1, A2, A3, A4)) : condition_requirement(ID, Name, A1, A2, A3, A4);
   not cannot_hold(ID, PackageNode).
 
 
@@ -451,75 +452,83 @@ trigger_condition_holds(ID, RequestorNode) :-
 % Conditions verified on actual nodes in the DAG
 %%%%
 
-satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1)) :-
+% Here we project out the trigger ID from condition requirements, so that we can reduce the space
+% of satisfied facts below. All we care about below is if a condition is met (e.g. a node exists
+% in the DAG), we don't care instead about *which* rule is requesting that.
+generic_condition_requirement(Name, A1)             :- condition_requirement(ID, Name, A1).
+generic_condition_requirement(Name, A1, A2)         :- condition_requirement(ID, Name, A1, A2).
+generic_condition_requirement(Name, A1, A2, A3)     :- condition_requirement(ID, Name, A1, A2, A3).
+generic_condition_requirement(Name, A1, A2, A3, A4) :- condition_requirement(ID, Name, A1, A2, A3, A4).
+
+satisfied(trigger(PackageNode), condition_requirement(Name, A1)) :-
   attr(Name, node(X, A1)),
-  condition_requirement(ID, Name, A1),
+  generic_condition_requirement(Name, A1),
   condition_nodes(PackageNode, node(X, A1)).
 
-satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2)) :-
+satisfied(trigger(PackageNode), condition_requirement(Name, A1, A2)) :-
   attr(Name, node(X, A1), A2),
-  condition_requirement(ID, Name, A1, A2),
+  generic_condition_requirement(Name, A1, A2),
   condition_nodes(PackageNode, node(X, A1)).
 
-satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3)) :-
+satisfied(trigger(PackageNode), condition_requirement(Name, A1, A2, A3)) :-
   attr(Name, node(X, A1), A2, A3),
-  condition_requirement(ID, Name, A1, A2, A3),
+  generic_condition_requirement(Name, A1, A2, A3),
   condition_nodes(PackageNode, node(X, A1)),
   not node_attributes_with_custom_rules(Name).
 
-satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3, A4)) :-
+satisfied(trigger(PackageNode), condition_requirement(Name, A1, A2, A3, A4)) :-
   attr(Name, node(X, A1), A2, A3, A4),
-  condition_requirement(ID, Name, A1, A2, A3, A4),
+  generic_condition_requirement(Name, A1, A2, A3, A4),
   condition_nodes(PackageNode, node(X, A1)).
 
-satisfied(trigger(PackageNode), condition_requirement(ID, "depends_on", A1, A2, A3)) :-
+satisfied(trigger(PackageNode), condition_requirement("depends_on", A1, A2, A3)) :-
   attr("depends_on", node(X, A1), node(Y, A2), A3),
-  condition_requirement(ID, "depends_on", A1, A2, A3),
+  generic_condition_requirement("depends_on", A1, A2, A3),
   condition_nodes(PackageNode, node(X, A1)),
   condition_nodes(PackageNode, node(Y, A2)).
 
-satisfied(trigger(PackageNode), condition_requirement(ID, "concrete_variant_request", A1, A2, A3)) :-
-  condition_requirement(ID, "concrete_variant_request", A1, A2, A3),
+satisfied(trigger(PackageNode), condition_requirement("concrete_variant_request", A1, A2, A3)) :-
+  generic_condition_requirement("concrete_variant_request", A1, A2, A3),
   condition_nodes(PackageNode, node(X, A1)).
 
-satisfied(trigger(PackageNode), condition_requirement(ID, "closure", A1, A2, A3)) :-
+satisfied(trigger(PackageNode), condition_requirement("closure", A1, A2, A3)) :-
   attr("closure", node(X, A1), node(_, A2), A3),
-  condition_requirement(ID, "closure", A1, A2, A3),
+  generic_condition_requirement("closure", A1, A2, A3),
   condition_nodes(PackageNode, node(X, A1)).
 
 %%%%
 % Conditions verified on pure build deps of reused nodes
 %%%%
 
-satisfied(trigger(PackageNode), condition_requirement(ID, "node", A1)) :-
+satisfied(trigger(PackageNode), condition_requirement("node", A1)) :-
   trigger_real_node(ID, PackageNode),
   reused_provider(PackageNode, _),
   condition_requirement(ID, "node", A1).
 
-satisfied(trigger(PackageNode), condition_requirement(ID, "virtual_node", A1)) :-
+satisfied(trigger(PackageNode), condition_requirement("virtual_node", A1)) :-
   trigger_real_node(ID, PackageNode),
   reused_provider(PackageNode, node(_, A1)),
   condition_requirement(ID, "virtual_node", A1).
 
-satisfied(trigger(PackageNode), condition_requirement(ID, "virtual_on_incoming_edges", A1, A2)) :-
+satisfied(trigger(PackageNode), condition_requirement("virtual_on_incoming_edges", A1, A2)) :-
   trigger_real_node(ID, PackageNode),
   reused_provider(node(Hash, A1), node(Hash, A2)),
   condition_requirement(ID, "virtual_on_incoming_edges", A1, A2).
 
-satisfied(trigger(node(Hash, Package)), condition_requirement(ID, Name, Package, A1)) :-
+satisfied(trigger(node(Hash, Package)), condition_requirement(Name, Package, A1)) :-
   trigger_real_node(ID, node(Hash, Package)),
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, Name, Package, A1),
   condition_requirement(ID, Name, Package, A1).
 
-satisfied(trigger(node(Hash, Package)), condition_requirement(ID, "node_version_satisfies", Package, VersionConstraint)) :-
+satisfied(trigger(node(Hash, Package)), condition_requirement("node_version_satisfies", Package, VersionConstraint)) :-
   trigger_real_node(ID, node(Hash, Package)),
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, "version", Package, Version),
   condition_requirement(ID, "node_version_satisfies", Package, VersionConstraint),
   pkg_fact(Package, version_satisfies(VersionConstraint, Version)).
 
-satisfied(trigger(node(Hash, Package)), condition_requirement(ID, Name, Package, A1, A2)) :-
+satisfied(trigger(node(Hash, Package)), condition_requirement(Name, Package, A1, A2)) :-
   trigger_real_node(ID, node(Hash, Package)),
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, Name, Package, A1, A2),
