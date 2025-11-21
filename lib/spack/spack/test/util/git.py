@@ -118,7 +118,7 @@ def test_git_init_fetch_ommissions(mock_util_executable, git_version, ommitted_o
     git = spack.util.git.GitExecutable("git")
     url = "https://foo.git"
     ref = "v1.2.3"
-    spack.util.git.git_init_fetch(git, url, ref)
+    spack.util.git.git_init_fetch(url, ref, git_exe=git)
     for opt in ommitted_opts:
         assert all(opt not in call for call in log)
 

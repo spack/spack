@@ -5,6 +5,7 @@
 
 import os
 import re
+import shutil
 import sys
 from typing import List, Optional, overload
 
@@ -206,46 +207,59 @@ FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2
 NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2, 34, 0))
 # technically sparse-checkout was added in 2.25, but we go forward since the model we use only works with the `--cone` option
 SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", min_version=(2, 34, 0))
+# This is when branch could also accept tag
+BRANCH = VersionConditionalOption("--branch", min_version=(1, 8, 5))
+SINGLE_BRANCH = VersionConditionalOption("--single-branch", min_version=(1, 7, 10))
+NO_SINGLE_BRANCH = VersionConditionalOption("--no-single-branch", min_version=(1, 7, 10))
 
 
 def _exec_git_commands(git_exe, cmds, debug, dest=None):
-    def _exec(git_exe, cmds, debug):
-        for cmd in cmds:
-            if not debug:
-                # swallow extra output that leasks to str for non-debug case
-                git_exe(*cmd, error=str)
-            else:
-                git_exe(*cmd)
-
     if dest:
-        assert not os.path.isdir(dest)
         dest_cmd = ["-C", dest]
         cmds = [dest_cmd + cmd for cmd in cmds]
-        # TODO(psakiev) what to do about cleaning up stale directories?
-        # clean up ?
-        _exec(git_exe, cmds, debug)
-    else:
-        _exec(git_exe, cmds, debug)
+    for cmd in cmds:
+        if not debug:
+            # swallow extra output that leasks to str for non-debug case
+            git_exe(*cmd, error=str)
+        else:
+            git_exe(*cmd)
 
 
 def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
     git_exe = git_exe or git(required=True)
+    version = git_exe.version
+    if ref and is_git_commit_sha(ref) and version < (2, 5, 0):
+        raise exe.ProcessError("Git older than 2.5 detected, can't fetch commit directly")
     init = ["init"]
-    remote = ["remote", "add", "origin", url]
     fetch = ["fetch"]
 
     if not debug:
         fetch.append("--quiet")
     if depth:
-        fetch.extend(DEPTH(git_exe.version, str(depth)))
+        fetch.extend(DEPTH(version, str(depth)))
 
-    fetch.extend([*FILTER_BLOB_NONE(git_exe.version)])
-    fetch.extend(["origin", ref])
-    cmds = [init, remote, fetch]
-    _exec_git_commands(git_exe, cmds, debug, dest)
+    fetch.extend([*FILTER_BLOB_NONE(version), ref])
+    cmds = [init, fetch]
+    if dest:
+        # mimic creating a dir and clean up if there is a failure like git clone
+        assert not os.path.isdir(dest)
+        os.mkdir(dest)
+        try:
+            _exec_git_commands(git_exe, cmds, debug, dest)
+        except exe.ProcessError:
+            shutil.rmdir(dest)
+            raise
+    else:
+        _exec_git_commands(git_exe, cmds, debug, dest)
 
 
-def git_checkout(ref=None, sparse_paths=[], debug=False, dest=None, git_exe=None):
+def git_checkout(
+    ref: Optional[str] = None,
+    sparse_paths: List[str] = [],
+    debug: bool = False,
+    dest: Optional[str] = None,
+    git_exe: Optional[GitExecutable] = None,
+):
     git_exe = git_exe or git(required=True)
     checkout = ["checkout"]
     sparse_checkout = SPARSE_CHECKOUT(git_exe.version)
@@ -257,12 +271,41 @@ def git_checkout(ref=None, sparse_paths=[], debug=False, dest=None, git_exe=None
         checkout.append("--quiet")
     checkout.append(ref or "FETCH_HEAD")
 
-    if not ref:
-        # TODO(psakiev) what to do if there is no checkout ref?
-        raise Exception()
-
     cmds = []
     if sparse_checkout:
         cmds.append(sparse_checkout)
     cmds.append(checkout)
     _exec_git_commands(git_exe, cmds, debug, dest)
+
+
+def git_clone(
+    url: str,
+    ref: Optional[str] = None,
+    full_repo: bool = False,
+    depth: Optional[int] = None,
+    debug: bool = False,
+    dest: Optional[str] = None,
+    git_exe: Optional[GitExecutable] = None,
+):
+    git_exe = git_exe or git(required=True)
+    version = git_exe.version
+    clone = ["clone"]
+    if not debug:
+        clone.append("--quiet")
+    if depth:
+        clone.extend(DEPTH(version, str(depth)))
+
+    if ref:
+        clone.extend([*BRANCH(version, ref)])
+    if full_repo:
+        clone.extend(NO_SINGLE_BRANCH(version))
+    else:
+        clone.extend(SINGLE_BRANCH(version))
+
+    clone.extend([*FILTER_BLOB_NONE(version), *NO_CHECKOUT(version), ref])
+
+    if dest:
+        clone.append(dest)
+
+    cmds = [clone]
+    _exec_git_commands(git_exe, cmds, debug)

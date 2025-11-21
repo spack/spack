@@ -956,19 +956,22 @@ class GitFetchStrategy(VCSFetchStrategy):
         depth = None if self.get_full_repo else 1
         name = self.package.name if self.package else "spack-clone"
         checkout_ref = self.commit or self.tag or self.branch
-        fetch_ref = self.tag or self.branch or "--all"
+        fetch_ref = self.tag or self.branch
         full_clone = self.get_full_repo or not fetch_ref
 
         kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
 
         with temp_cwd():
-            try:
-                # try to first fetch via highest precdent i.e. commit > tag > branch
-                spack.util.git.git_init_fetch(url, checkout_ref, **kwargs)
-            except spack.util.executable.ProcessError:
-                # if something failed with git then try again but add "--all"
-                spack.util.git.git_init_fetch(url, fetch_ref, **kwargs)
-            finally:
+            if self.commit:
+                try:
+                    spack.util.git.git_init_fetch(self.url, self.commit, **kwargs)
+                except spack.util.executable.ProcessError:
+                    # TODO(psakeiv) debug message?
+                    spack.util.git.git_clone(self.url, fetch_ref, full_clone, **kwargs)
+                finally:
+                    spack.util.git.git_checkout(self.commit, self.git_sparse_paths, **kwargs)
+            else:
+                spack.util.git.git_clone(self.url, fetch_ref, full_clone, **kwargs)
                 spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
 
             repo_name = get_single_file(".")
