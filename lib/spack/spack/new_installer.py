@@ -298,9 +298,8 @@ class PrefixPivoter:
             try:
                 self._rename(self.prefix, garbage)
                 has_failed_prefix = True
-            except FileNotFoundError:
+            except FileNotFoundError:  # prefix dir does not exist, so we don't have to delete it.
                 has_failed_prefix = False
-                pass  # prefix dir was never created, that's fine.
             self._rename(self.tmp_prefix, self.prefix)
             if has_failed_prefix:
                 self._rmtree_ignore_errors(garbage)
