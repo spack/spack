@@ -5,7 +5,6 @@
 
 import os
 import re
-import shutil
 import sys
 from typing import List, Optional, overload
 
@@ -22,10 +21,16 @@ def is_git_commit_sha(string: str) -> bool:
     return len(string) == 40 and bool(COMMIT_VERSION.match(string))
 
 
+@spack.llnl.util.lang.memoized
+def _find_git() -> Optional[str]:
+    """Find the git executable in the system path."""
+    return exe.which_string("git", required=False)
+
+
 class GitExecutable(exe.Executable):
     def __init__(self, name=None):
         if not name:
-            name = "git"
+            name = _find_git()
         super().__init__(name)
         self._version = None
 
@@ -36,12 +41,6 @@ class GitExecutable(exe.Executable):
             v_string = self.__call__("--version", output=str).strip().split()[-1]
             self._version = tuple(int(i) for i in v_string.split("."))
         return self._version
-
-
-@spack.llnl.util.lang.memoized
-def _find_git() -> Optional[str]:
-    """Find the git executable in the system path."""
-    return exe.which_string("git", required=False)
 
 
 @overload
@@ -61,7 +60,7 @@ def git(required: bool = False) -> Optional[exe.Executable]:
             raise exe.CommandNotFoundError("spack requires 'git'. Make sure it is in your path.")
         return None
 
-    git = exe.Executable(git_path)
+    git = GitExecutable(git_path)
 
     # If we're running under pytest, add this to ignore the fix for CVE-2022-39253 in
     # git 2.38.1+. Do this in one place; we need git to do this in all parts of Spack.
@@ -182,14 +181,15 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
 
     return None
 
-class VersionConditionalOption:
-    def __init__(self, key, value=None, min_version=(0,0,0), max_version=(99,99,99)):
-        self.key=key
-        self.value=value
-        self.min_version=min_version
-        self.max_version=max_version
 
-    def __call__(self, exe_version, value=None)->List:
+class VersionConditionalOption:
+    def __init__(self, key, value=None, min_version=(0, 0, 0), max_version=(99, 99, 99)):
+        self.key = key
+        self.value = value
+        self.min_version = min_version
+        self.max_version = max_version
+
+    def __call__(self, exe_version, value=None) -> List:
         if (self.min_version <= exe_version) and (self.max_version >= exe_version):
             option = [self.key]
             if value:
@@ -200,53 +200,69 @@ class VersionConditionalOption:
         else:
             return []
 
-DEPTH = VersionConditionalOption("--depth", 1, min_version=(1,9,0))
-FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2,19,0))
-NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2,34,0))
+
+DEPTH = VersionConditionalOption("--depth", 1, min_version=(1, 9, 0))
+FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2, 19, 0))
+NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2, 34, 0))
 # technically sparse-checkout was added in 2.25, but we go forward since the model we use only works with the `--cone` option
-SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", min_version=(2,34,0))
+SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", min_version=(2, 34, 0))
 
 
-def git_fetch_by_ref(git_exe: GitExecutable, url, ref, depth=1, sparse_paths=[], debug=False, dest=None):
-    if is_git_commit_sha(ref) and git_exe.version < (
-        2,
-        5,
-        0,
-    ):
-        raise spack.util.executable.ProcessError(
-            "Git version older than 2.5 and fetch by ref for commit can't be used"
-        )
-    init = ["init"]
-    fetch = ["fetch"]
-    checkout = ["checkout"]
-    sparse_checkout = SPARSE_CHECKOUT(git_exe.version)
-    if sparse_paths and sparse_checkout:
-        sparse_checkout.extend([*sparse_paths, "--cone"])
+def _exec_git_commands(git_exe, cmds, debug, dest=None):
+    def _exec(git_exe, cmds, debug):
+        for cmd in cmds:
+            if not debug:
+                # swallow extra output that leasks to str for non-debug case
+                git_exe(*cmd, error=str)
+            else:
+                git_exe(*cmd)
 
     if dest:
-        init.append(dest)
+        assert not os.path.isdir(dest)
+        dest_cmd = ["-C", dest]
+        cmds = [dest_cmd + cmd for cmd in cmds]
+        # TODO(psakiev) what to do about cleaning up stale directories?
+        # clean up ?
+        _exec(git_exe, cmds, debug)
+    else:
+        _exec(git_exe, cmds, debug)
+
+
+def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
+    git_exe = git_exe or git(required=True)
+    init = ["init"]
+    remote = ["remote", "add", "origin", url]
+    fetch = ["fetch"]
+
     if not debug:
         fetch.append("--quiet")
-        checkout.append("--quiet")
-    checkout.append("FETCH_HEAD")
-
     if depth:
         fetch.extend(DEPTH(git_exe.version, str(depth)))
 
-    fetch.extend([*FILTER_BLOB_NONE(git_exe.version), url, ref])
+    fetch.extend([*FILTER_BLOB_NONE(git_exe.version)])
+    fetch.extend(["origin", ref])
+    cmds = [init, remote, fetch]
+    _exec_git_commands(git_exe, cmds, debug, dest)
 
-    cmds = [init, fetch]
+
+def git_checkout(ref=None, sparse_paths=[], debug=False, dest=None, git_exe=None):
+    git_exe = git_exe or git(required=True)
+    checkout = ["checkout"]
+    sparse_checkout = SPARSE_CHECKOUT(git_exe.version)
+
+    if sparse_paths and sparse_checkout:
+        sparse_checkout.extend([*sparse_paths, "--cone"])
+
+    if not debug:
+        checkout.append("--quiet")
+    checkout.append(ref or "FETCH_HEAD")
+
+    if not ref:
+        # TODO(psakiev) what to do if there is no checkout ref?
+        raise Exception()
+
+    cmds = []
     if sparse_checkout:
         cmds.append(sparse_checkout)
     cmds.append(checkout)
-
-    if dest:
-        dest_cmd = ["-C", dest]
-        cmds = [ dest_cmd + cmd for cmd in cmds]
-
-    for cmd in cmds:
-        if not debug:
-            # swallow extra output that leasks to str for non-debug case
-            git_exe(*cmd, error=str)
-        else:
-            git_exe(*cmd)
+    _exec_git_commands(git_exe, cmds, debug, dest)

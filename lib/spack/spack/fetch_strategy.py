@@ -952,31 +952,26 @@ class GitFetchStrategy(VCSFetchStrategy):
         # Default to spack source path
         dest = self.stage.source_path
         tty.debug(f"Cloning git repository: {self._repo_info()}")
+
         depth = None if self.get_full_repo else 1
-        name = "src"
-        if self.package:
-            name = self.package.name
+        name = self.package.name if self.package else "spack-clone"
+        checkout_ref = self.commit or self.tag or self.branch
+        fetch_ref = self.tag or self.branch or "--all"
+        full_clone = self.get_full_repo or not fetch_ref
+
+        kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
 
         with temp_cwd():
-            destination = (os.path.join(os.getcwd(), name),)
-            for ref in [self.commit, self.tag, self.branch]:
-                if ref:
-                    try:
-                        spack.util.git.git_fetch_by_ref(
-                            self.git,
-                            self.url,
-                            ref,
-                            sparse_paths=self.git_sparse_paths,
-                            debug=spack.config.get("config:debug"),
-                            depth=depth,
-                            dest=destination,
-                        )
-                    except spack.util.executable.ProcessError:
-                        continue
             try:
-                repo_name = get_single_file(".")
-            except ValueError:
-                raise spack.error.SpackError("Git fetcher failed")
+                # try to first fetch via highest precdent i.e. commit > tag > branch
+                spack.util.git.git_init_fetch(url, checkout_ref, **kwargs)
+            except spack.util.executable.ProcessError:
+                # if something failed with git then try again but add "--all"
+                spack.util.git.git_init_fetch(url, fetch_ref, **kwargs)
+            finally:
+                spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
+
+            repo_name = get_single_file(".")
             if self.stage:
                 self.stage.srcdir = repo_name
             shutil.copytree(repo_name, dest, symlinks=True)

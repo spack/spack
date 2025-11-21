@@ -94,12 +94,10 @@ def test_mock_git_exe(mock_util_executable):
     assert "status" in "\n".join(log)
 
 
-@pytest.mark.parametrize(
-    "git_version", ("1.5.0", "1.3.0")
-)
+@pytest.mark.parametrize("git_version", ("1.5.0", "1.3.0"))
 def test_git_exe_conditional_option(mock_util_executable, git_version):
     log, _, registered_responses = mock_util_executable
-    min_version = (1,4,1)
+    min_version = (1, 4, 1)
     registered_responses["git --version"] = git_version
     git = spack.util.git.GitExecutable("git")
     mock_opt = spack.util.git.VersionConditionalOption("--maybe", min_version=min_version)
@@ -114,28 +112,16 @@ def test_git_exe_conditional_option(mock_util_executable, git_version):
     "git_version,ommitted_opts",
     (("2.18.0", ["--filter=blob:none"]), ("1.8.0", ["--filter=blob:none", "--depth"])),
 )
-def test_git_fetch_by_ref_ommissions(mock_util_executable, git_version, ommitted_opts):
+def test_git_init_fetch_ommissions(mock_util_executable, git_version, ommitted_opts):
     log, _, registered_responses = mock_util_executable
     registered_responses["git --version"] = git_version
     git = spack.util.git.GitExecutable("git")
     url = "https://foo.git"
     ref = "v1.2.3"
-    spack.util.git.git_fetch_by_ref(git, url, ref)
+    spack.util.git.git_init_fetch(git, url, ref)
     for opt in ommitted_opts:
         assert all(opt not in call for call in log)
 
 
-@pytest.mark.parametrize("git_version,too_old", (("2.5.0", False), ("1.8.0", True)))
-def test_git_fetch_by_ref_respect_commit_version_limits(
-    mock_util_executable, git_version, too_old
-):
-    _, _, registered_responses = mock_util_executable
-    registered_responses["git --version"] = git_version
-    git = spack.util.git.GitExecutable("git")
-    url = "https://foo.git"
-    ref = "a" * 40
-    if too_old:
-        with pytest.raises(exe.ProcessError):
-            spack.util.git.git_fetch_by_ref(git, url, ref)
-    else:
-        spack.util.git.git_fetch_by_ref(git, url, ref)
+# test url only
+# test git fetch commit but git too old or fails so fall back
