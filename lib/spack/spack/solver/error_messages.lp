@@ -25,7 +25,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
   pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package),
-  condition_nodes(Trigger, TriggerNode, node(ID, Package)),
+  condition_nodes(TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
@@ -36,7 +36,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
   pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package, A1),
-  condition_nodes(Trigger, TriggerNode, node(ID, Package)),
+  condition_nodes(TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
@@ -47,7 +47,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
   pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package, A1, A2),
-  condition_nodes(Trigger, TriggerNode, node(ID, Package)),
+  condition_nodes(TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
@@ -58,7 +58,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
   pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, Name, Package, A1, A2, A3),
-  condition_nodes(Trigger, TriggerNode, node(ID, Package)),
+  condition_nodes(TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
@@ -72,7 +72,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
   pkg_fact(Package2, condition_trigger(Condition2, Trigger)),
   condition_requirement(Trigger, "node", Package),
-  condition_nodes(Trigger, TriggerNode, node(ID, Package)),
+  condition_nodes(TriggerNode, node(ID, Package)),
   trigger_node(Trigger, TriggerNode, node(ID2, Package2)),
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
@@ -194,7 +194,7 @@ error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
 #defined imposed_constraint/5.
 #defined imposed_constraint/6.
 #defined condition_cause/4.
-#defined condition_nodes/3.
+#defined condition_nodes/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
 #defined condition_requirement/5.

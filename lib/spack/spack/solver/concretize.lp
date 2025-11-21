@@ -24,13 +24,14 @@ duplicate_penalty(node(ID1, Package), 1, "version")
   :- attr("node", node(ID1, Package)), attr("node", node(ID2, Package)),
      version_weight(node(ID1, Package), Weight1), version_weight(node(ID2, Package), Weight2),
      multiple_unification_sets(Package),
-     ID1 < ID2, Weight2 < Weight1.
+     ID2 = ID1 + 1, Weight2 < Weight1,
+     max_dupes(Package, X), X > 1, ID2 < X.
 
 % We can enforce this, and hope the grounder generates fewer rules
 :- provider_weight(ProviderNode1, node(ID1, Virtual), Weight1),
    provider_weight(ProviderNode2, node(ID2, Virtual), Weight2),
-   ID1 < ID2, Weight2 < Weight1,
-   max_dupes(Virtual, X), X > 1.
+   ID2 = ID1 + 1, Weight2 < Weight1,
+   max_dupes(Virtual, X), X > 1, ID2 < X.
 
 % Integrity constraints on DAG nodes
 :- attr("root", PackageNode),
@@ -307,17 +308,19 @@ pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declar
 % is not precisely one version chosen. Error facts are heavily optimized
 % against to ensure they cannot be inferred when a non-error solution is
 % possible
-{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) }
- :- attr("node", node(ID, Package)).
+
+% Pick a single version among the possible ones
+1 { choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) } 1 :- attr("node", node(ID, Package)).
+
+% To choose the "fake" version of virtual packages, we need a separate rule.
+% Note that a virtual node may or may not have a version, but cannot have more than one.
+{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) } 1
+  :- attr("node_version_satisfies", node(ID, Package), Constraint),
+     attr("virtual_node", node(ID, Package)).
 
 #defined compiler_package/1.
 
 attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
-
-% A virtual package may or may not have a version, but never has more than one
-error(100, "Cannot select a single version for virtual '{0}'", Virtual)
-  :- attr("virtual_node", node(ID, Virtual)),
-     2 { attr("version", node(ID, Virtual), Version) }.
 
 % If we select a deprecated version, mark the package as deprecated
 attr("deprecated", node(ID, Package), Version) :-
@@ -334,7 +337,7 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
 
-1 { allowed_versions(Version): pkg_fact(Package, version_origin(Version, Origin)),
+1 { allowed_origins(Origin): pkg_fact(Package, version_origin(Version, Origin)),
     Origin != "installed"}
   :- attr("version", node(ID, Package), Version),
      build(node(ID, Package)).
@@ -352,27 +355,12 @@ version_weight(node(ID, Package), Weight)
      pkg_fact(Package, version_declared(Version, Weight)),
      internal_error("version weights must exist and be unique").
 
-% node_version_satisfies implies that exactly one of the satisfying versions
-% is the package's version, and vice versa.
-% While this choice rule appears redundant with the initial choice rule for
-% versions, virtual nodes with version constraints require this rule to be
-% able to choose versions
-{ attr("version", node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) }
-  :- attr("node_version_satisfies", node(ID, Package), Constraint).
-
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
 error(10000, "Cannot satisfy '{0}@{1}' 1({2})", Package, Constraint, Version)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     choose_version(node(ID, Package), Version).
-
-error(100, "Cannot satisfy '{0}@{1}' 2({2})", Package, Constraint, Version)
-  :- attr("node_version_satisfies", node(ID, Package), Constraint),
-     attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     not choose_version(node(ID, Package), _).
+     not pkg_fact(Package, version_satisfies(Constraint, Version)).
 
 error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
@@ -435,11 +423,14 @@ trigger_real_node(ID, PackageNode) :- trigger_node(ID, PackageNode, _).
 % This is the requestor node, which may be a "real" or a "virtual" node
 trigger_requestor_node(ID, RequestorNode) :- trigger_node(ID, _, RequestorNode).
 
-condition_nodes(TriggerID, PackageNode, node(X, A1))
-  :- condition_packages(TriggerID, A1),
+trigger_package_requirement(TriggerNode, A1) :-
+  trigger_real_node(ID, TriggerNode),
+  condition_packages(ID, A1).
+
+condition_nodes(PackageNode, node(X, A1))
+  :- trigger_package_requirement(PackageNode, A1),
      condition_set(PackageNode, node(X, A1)),
-     not self_build_requirement(PackageNode, node(X, A1)),
-     trigger_real_node(TriggerID, PackageNode).
+     not self_build_requirement(PackageNode, node(X, A1)).
 
 cannot_hold(TriggerID, PackageNode)
   :- condition_packages(TriggerID, A1),
@@ -461,46 +452,40 @@ trigger_condition_holds(ID, RequestorNode) :-
 %%%%
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1)) :-
-  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1)),
   condition_requirement(ID, Name, A1),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2)) :-
-  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2),
   condition_requirement(ID, Name, A1, A2),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3)) :-
-  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2, A3),
   condition_requirement(ID, Name, A1, A2, A3),
-  condition_nodes(ID, PackageNode, node(X, A1)),
+  condition_nodes(PackageNode, node(X, A1)),
   not node_attributes_with_custom_rules(Name).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, Name, A1, A2, A3, A4)) :-
-  trigger_real_node(ID, PackageNode),
   attr(Name, node(X, A1), A2, A3, A4),
   condition_requirement(ID, Name, A1, A2, A3, A4),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "depends_on", A1, A2, A3)) :-
-  trigger_real_node(ID, PackageNode),
   attr("depends_on", node(X, A1), node(Y, A2), A3),
   condition_requirement(ID, "depends_on", A1, A2, A3),
-  condition_nodes(ID, PackageNode, node(X, A1)),
-  condition_nodes(ID, PackageNode, node(Y, A2)).
+  condition_nodes(PackageNode, node(X, A1)),
+  condition_nodes(PackageNode, node(Y, A2)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "concrete_variant_request", A1, A2, A3)) :-
-  trigger_real_node(ID, PackageNode),
   condition_requirement(ID, "concrete_variant_request", A1, A2, A3),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 satisfied(trigger(PackageNode), condition_requirement(ID, "closure", A1, A2, A3)) :-
   attr("closure", node(X, A1), node(_, A2), A3),
   condition_requirement(ID, "closure", A1, A2, A3),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 %%%%
 % Conditions verified on pure build deps of reused nodes
@@ -547,13 +532,13 @@ cannot_hold(ID, PackageNode) :-
   not attr("variant_value", node(X, A1), Variant, Value),
   condition_with_concrete_variant(ID, A1, Variant),
   condition_requirement(ID, "concrete_variant_request", A1, Variant, Value),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 cannot_hold(ID, PackageNode) :-
   attr("variant_value", node(X, A1), Variant, Value),
   condition_with_concrete_variant(ID, A1, Variant),
   not condition_requirement(ID, "concrete_variant_request", A1, Variant, Value),
-  condition_nodes(ID, PackageNode, node(X, A1)).
+  condition_nodes(PackageNode, node(X, A1)).
 
 condition_holds(ConditionID, node(X, Package))
   :- pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
@@ -952,15 +937,33 @@ error(100, "{0} and {1} must depend on the same {2}", ExtensionParent, Extension
 %-----------------------------------------------------------------------------
 % Conflicts
 %-----------------------------------------------------------------------------
-error(1, Msg)
-  :- attr("node", node(ID, Package)),
-     pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
-     % node(ID1, TriggerPackage) is node(ID2, Package) in most, but not all, cases
-     condition_holds(TriggerID, node(ID1, TriggerPackage)),
-     condition_holds(ConstraintID, node(ID2, Package)),
-     unification_set(X, node(ID2, Package)),
-     unification_set(X, node(ID1, TriggerPackage)),
-     build(node(ID, Package)).  % ignore conflicts for installed packages
+
+% Most conflicts are internal to the same package
+conflict_is_cross_package(Package, TriggerID) :-
+   pkg_fact(Package, conflict(TriggerID, _, _)),
+   pkg_fact(TriggerPackage, condition_trigger(TriggerID, _)),
+   TriggerPackage != Package.
+
+conflict_internal(Package, TriggerID, ConstraintID, Msg) :-
+   pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
+   not conflict_is_cross_package(Package, TriggerID).
+
+% Case 1: conflict is within the same package
+error(1, Msg) :-
+   conflict_internal(Package, TriggerID, ConstraintID, Msg),
+   condition_holds(TriggerID, node(ID, Package)),
+   condition_holds(ConstraintID, node(ID, Package)),
+   build(node(ID, Package)).  % ignore conflicts for installed packages
+
+% Case 2: Cross-package conflicts (Rare case - slower)
+error(1, Msg) :-
+   build(node(ID, Package)),
+   conflict_is_cross_package(Package, TriggerID),
+   pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
+   condition_holds(TriggerID, node(ID1, TriggerPackage)),
+   condition_holds(ConstraintID, node(ID, Package)),
+   unification_set(X, node(ID, Package)),
+   unification_set(X, node(ID1, TriggerPackage)).
 
 %-----------------------------------------------------------------------------
 % Virtual dependencies
@@ -1080,20 +1083,15 @@ do_not_impose(EffectID, node(X, Package))
 % Virtual dependency weights
 %-----------------------------------------------------------------------------
 
-% A provider has different possible weights depending on its preference. This rule ensures that
-% we select the weight, among the possible ones, that minimizes the overall objective function.
-1 { provider_weight(DependencyNode, VirtualNode, Weight) :
-    possible_provider_weight(DependencyNode, VirtualNode, Weight, _) } 1
- :- provider(DependencyNode, VirtualNode), internal_error("Package provider weights must be unique").
-
 % Any configured provider has a weight based on index in the preference list
-possible_provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), Weight, "default")
+provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), Weight)
   :- provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
      provider_weight_from_config(Virtual, Provider, Weight).
 
 % Any non-configured provider has a default weight of 100
-possible_provider_weight(node(ProviderID, Provider), VirtualNode, 100, "fallback")
-  :- provider(node(ProviderID, Provider), VirtualNode).
+provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), 100)
+  :- provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
+     not provider_weight_from_config(Virtual, Provider, _).
 
 % do not warn if generated program contains none of these.
 #defined virtual/1.
@@ -1392,7 +1390,8 @@ variant_value_from_disjoint_sets(node(NodeID, Package), VariantName, Value1, Set
 % -- Associate definition's arity with the node
 variant_single_value(node(NodeID, Package), VariantName) :-
   node_has_variant(node(NodeID, Package), VariantName, VariantID),
-  not variant_type(VariantID, "multi").
+  variant_type(VariantID, VariantType),
+  VariantType != "multi".
 
 % C: Determining variant values on each node
 
@@ -1406,14 +1405,13 @@ attr("variant_selected", node(ID, Package), Variant, Value, VariantType, Variant
   build(node(ID, Package)).
 
 % we can choose variant values from all the possible values for the node
-{
-  attr("variant_selected", node(ID, Package), Variant, Value, VariantType, VariantID)
-  : variant_possible_value(node(ID, Package), Variant, Value)
+1 {
+  attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID)
+  : variant_possible_value(PackageNode, Variant, Value)
 } :-
-  attr("node", node(ID, Package)),
-  node_has_variant(node(ID, Package), Variant, VariantID),
+  node_has_variant(PackageNode, Variant, VariantID),
   variant_type(VariantID, VariantType),
-  build(node(ID, Package)).
+  build(PackageNode).
 
 % variant_selected is only needed for reconstruction on the python side, so we can ignore it here
 attr("variant_value", PackageNode, Variant, Value) :-
@@ -1530,7 +1528,8 @@ node_has_variant(PackageNode, Variant, VariantID)
 variant_single_value(PackageNode, Variant)
   :- node_has_variant(PackageNode, Variant, VariantID),
      auto_variant(Variant, VariantID),
-     not variant_type(VariantID, "multi").
+     variant_type(VariantID, VariantType),
+     VariantType != "multi".
 
 % to respect requirements/preferences we need to define that an auto_variant is set
 { attr("variant_set", node(ID, Package), Variant, VariantValue)}
