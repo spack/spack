@@ -1940,6 +1940,20 @@ class SpackSolverSetup:
 
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
+
+        def track_dependencies(input_spec, requirements):
+            return requirements + [fn.attr("track_dependencies", input_spec.name)]
+
+        def dependency_holds(input_spec, requirements):
+            result = remove_facts("node", "virtual_node")(input_spec, requirements) + [
+                fn.attr("dependency_holds", pkg.name, input_spec.name, dt.flag_to_string(t))
+                for t in dt.ALL_FLAGS
+                if t & depflag
+            ]
+            if input_spec.name not in pkg.extendees:
+                return result
+            return result + [fn.attr("extends", pkg.name, input_spec.name)]
+
         for cond, deps_by_name in sorted(pkg.dependencies.items()):
             for _, dep in sorted(deps_by_name.items()):
                 depflag = dep.depflag
@@ -1961,21 +1975,6 @@ class SpackSolverSetup:
                     msg += f" when {cond}"
                 else:
                     pass
-
-                def track_dependencies(input_spec, requirements):
-                    return requirements + [fn.attr("track_dependencies", input_spec.name)]
-
-                def dependency_holds(input_spec, requirements):
-                    result = remove_facts("node", "virtual_node")(input_spec, requirements) + [
-                        fn.attr(
-                            "dependency_holds", pkg.name, input_spec.name, dt.flag_to_string(t)
-                        )
-                        for t in dt.ALL_FLAGS
-                        if t & depflag
-                    ]
-                    if input_spec.name not in pkg.extendees:
-                        return result
-                    return result + [fn.attr("extends", pkg.name, input_spec.name)]
 
                 context = ConditionContext()
                 context.source = ConstraintOrigin.append_type_suffix(
