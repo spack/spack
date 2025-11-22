@@ -1564,19 +1564,22 @@ class SpackSolverSetup:
         for when_spec, conflict_specs in pkg.conflicts.items():
             when_spec_msg = f"conflict constraint {when_spec}"
             when_spec_id = self.condition(when_spec, required_name=pkg.name, msg=when_spec_msg)
+            when_spec_str = str(when_spec)
 
             for conflict_spec, conflict_msg in conflict_specs:
+                conflict_spec_str = str(conflict_spec)
                 if conflict_msg is None:
                     conflict_msg = f"{pkg.name}: "
-                    if when_spec == EMPTY_SPEC:
-                        conflict_msg += f"conflicts with '{conflict_spec}'"
+                    if not when_spec_str:
+                        conflict_msg += f"conflicts with '{conflict_spec_str}'"
                     else:
-                        conflict_msg += f"'{conflict_spec}' conflicts with '{when_spec}'"
+                        conflict_msg += f"'{conflict_spec_str}' conflicts with '{when_spec_str}'"
 
-                spec_for_msg = conflict_spec
-                if conflict_spec == EMPTY_SPEC:
-                    spec_for_msg = spack.spec.Spec(pkg.name)
-                conflict_spec_msg = f"conflict is triggered when {spec_for_msg}"
+                if not conflict_spec_str:
+                    conflict_spec_msg = f"conflict is triggered when {pkg.name}"
+                else:
+                    conflict_spec_msg = f"conflict is triggered when {conflict_spec_str}"
+
                 conflict_spec_id = self.condition(
                     conflict_spec,
                     required_name=conflict_spec.name or pkg.name,
