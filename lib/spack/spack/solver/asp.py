@@ -97,6 +97,8 @@ TransformFunction = Callable[[spack.spec.Spec, List[AspFunction]], List[AspFunct
 _STRIP_COMMENTS_RE = re.compile(r"\%[^\n]*\n")
 _STRIP_NEWLINES_RE = re.compile(r"\s*\n\s*")
 
+EMPTY_SPEC = spack.spec.Spec()
+
 
 class OutputConfiguration(NamedTuple):
     """Data class that contains configuration on what a clingo solve should output."""
@@ -1560,22 +1562,21 @@ class SpackSolverSetup:
 
     def conflict_rules(self, pkg):
         for when_spec, conflict_specs in pkg.conflicts.items():
-            when_spec_msg = f"conflict constraint {str(when_spec)}"
+            when_spec_msg = f"conflict constraint {when_spec}"
             when_spec_id = self.condition(when_spec, required_name=pkg.name, msg=when_spec_msg)
 
             for conflict_spec, conflict_msg in conflict_specs:
-                conflict_spec = spack.spec.Spec(conflict_spec)
                 if conflict_msg is None:
                     conflict_msg = f"{pkg.name}: "
-                    if when_spec == spack.spec.Spec():
+                    if when_spec == EMPTY_SPEC:
                         conflict_msg += f"conflicts with '{conflict_spec}'"
                     else:
                         conflict_msg += f"'{conflict_spec}' conflicts with '{when_spec}'"
 
                 spec_for_msg = conflict_spec
-                if conflict_spec == spack.spec.Spec():
+                if conflict_spec == EMPTY_SPEC:
                     spec_for_msg = spack.spec.Spec(pkg.name)
-                conflict_spec_msg = f"conflict is triggered when {str(spec_for_msg)}"
+                conflict_spec_msg = f"conflict is triggered when {spec_for_msg}"
                 conflict_spec_id = self.condition(
                     conflict_spec,
                     required_name=conflict_spec.name or pkg.name,
@@ -1680,7 +1681,7 @@ class SpackSolverSetup:
         # used to find a variant id from its variant definition (for variant values on specs)
         self.variant_ids_by_def_id[id(variant_def)] = vid
 
-        if when == spack.spec.Spec():
+        if when == EMPTY_SPEC:
             # unconditional variant
             pkg_fact(fn.variant_definition(name, vid))
         else:
@@ -1755,9 +1756,7 @@ class SpackSolverSetup:
                     msg=f"invalid variant value: {vstring}",
                 )
                 constraint_id = self.condition(
-                    spack.spec.Spec(),
-                    required_name=pkg.name,
-                    msg="empty (total) conflict constraint",
+                    EMPTY_SPEC, required_name=pkg.name, msg="empty (total) conflict constraint"
                 )
                 msg = f"variant value {vstring} is conditionally disabled"
                 pkg_fact(fn.conflict(trigger_id, constraint_id, msg))
@@ -1958,7 +1957,7 @@ class SpackSolverSetup:
                     continue
 
                 msg = f"{pkg.name} depends on {dep.spec}"
-                if cond != spack.spec.Spec():
+                if cond != EMPTY_SPEC:
                     msg += f" when {cond}"
                 else:
                     pass
@@ -2093,7 +2092,7 @@ class SpackSolverSetup:
             required, preferred, removed = [], [], set()
             for rule in rules:
                 # We don't deal with conditional requirements
-                if rule.condition != spack.spec.Spec():
+                if rule.condition != EMPTY_SPEC:
                     continue
 
                 if rule.origin == RequirementOrigin.PREFER_YAML:
@@ -2132,7 +2131,7 @@ class SpackSolverSetup:
             # Propagated preferences have a higher penalty that normal preferences
             weight_multiplier = 2 if rule.origin == RequirementOrigin.INPUT_SPECS else 1
             # Write explicitly if a requirement is conditional or not
-            if rule.condition != spack.spec.Spec():
+            if rule.condition != EMPTY_SPEC:
                 msg = f"activate requirement {requirement_grp_id} if {rule.condition} holds"
                 context = ConditionContext()
                 context.transform_required = dag_closure_by_deptype
@@ -2183,7 +2182,7 @@ class SpackSolverSetup:
                     # "virtual_node" in imposed specs
 
                     info_msg = f"{input_spec} is a requirement for package {pkg_name}"
-                    if rule.condition != spack.spec.Spec():
+                    if rule.condition != EMPTY_SPEC:
                         info_msg += f" when {rule.condition}"
                     if rule.message:
                         info_msg += f" ({rule.message})"
@@ -2465,7 +2464,7 @@ class SpackSolverSetup:
         edge_clauses = []
         for dspec in spec.edges_to_dependencies():
             # Ignore conditional dependencies, they are handled by caller
-            if dspec.when != spack.spec.Spec():
+            if dspec.when != EMPTY_SPEC:
                 continue
 
             dep = dspec.spec
@@ -3271,7 +3270,7 @@ class SpackSolverSetup:
         """
         for dspec in spec.traverse_edges():
             # Ignore unconditional deps
-            if dspec.when == spack.spec.Spec():
+            if dspec.when == EMPTY_SPEC:
                 continue
 
             # Cannot use "virtual_node" attr as key for condition
@@ -3989,7 +3988,7 @@ class Solver:
                     deps = {
                         edge.spec.name
                         for edge in s.edges_to_dependencies()
-                        if edge.direct and edge.when == spack.spec.Spec()
+                        if edge.direct and edge.when == EMPTY_SPEC
                     }
                     if deps:
                         graph = analyzer.possible_dependencies(
