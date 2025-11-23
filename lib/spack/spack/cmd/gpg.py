@@ -146,6 +146,7 @@ def gpg_create(args):
     if args.export or args.secret:
         new_sec_keys = set(spack.util.gpg.signing_keys())
         new_keys = new_sec_keys.difference(old_sec_keys)
+        new_keys = [str(k) for k in new_keys]
 
     if args.export:
         spack.util.gpg.export_keys(args.export, new_keys)
@@ -157,7 +158,7 @@ def gpg_export(args):
     """export a gpg key, optionally including secret key"""
     keys = args.keys
     if not keys:
-        keys = spack.util.gpg.signing_keys()
+        keys = [str(k) for k in spack.util.gpg.signing_keys()]
     spack.util.gpg.export_keys(args.location, keys, args.secret)
 
 
@@ -181,7 +182,7 @@ def gpg_sign(args):
     if not output:
         output = args.spec[0] + ".asc"
     # TODO: Support the package format Spack creates.
-    spack.util.gpg.sign(key, " ".join(args.spec), output, args.clearsign)
+    spack.util.gpg.sign(str(key), " ".join(args.spec), output, args.clearsign)
 
 
 def gpg_trust(args):
@@ -197,7 +198,7 @@ def gpg_trust(args):
             keys = spack.util.gpg.extract_public_keys(keyfile)
             tty.msg(f"Keys to be imported from {args.keyfile}")
             for key in keys:
-                tty.msg(f"  {key[0]} ({key[1]})")
+                tty.msg(f"{key:short}")
 
             answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
             if not answer:

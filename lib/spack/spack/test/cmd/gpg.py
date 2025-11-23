@@ -103,7 +103,7 @@ def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
         "Spack testing 1",
         "spack@googlegroups.com",
     )
-    keyfp = spack.util.gpg.signing_keys()[0]
+    keyfp = spack.util.gpg.signing_keys()[0].fpr
 
     # List the keys.
     # TODO: Test the output here.

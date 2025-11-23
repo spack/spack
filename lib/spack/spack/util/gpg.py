@@ -2,11 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
+import datetime
+import enum
 import errno
 import functools
 import os
 import re
-from typing import List
+from typing import Any, Callable, Dict, List, Optional
 
 import spack.error
 import spack.llnl.util.filesystem
@@ -24,13 +26,223 @@ SOCKET_DIR = None
 GNUPGHOME = None
 
 
+class GpgKeyCapability(enum.Enum):
+    """Gpg Capabilities"""
+
+    ENCRYPT = "e"
+    SIGN = "s"
+    CERTIFY = "c"
+    AUTHENTICATE = "a"
+    DISABLED = "D"
+    UNKNOWN = "?"
+
+    @classmethod
+    def _missing_(cls, value):
+        for cap in cls:
+            if value.lower() == cap.value:
+                return cap
+        return GpgKeyCapability.UNKNOWN
+
+
+class GpgKeyTrust(enum.Enum):
+    """Gpg Trust normalized for Field 1 and Field 9"""
+
+    INVALID = "i"
+    REVOKED = "r"
+    EXPIRED = "e"
+    UNKNOWN = "q"  # - o
+    NEVER = "n"
+    MARGINAL = "m"
+    FULL = "f"
+    ULTIMATE = "u"
+    KNOWN = "w"
+    SPECIAL = "s"
+
+    @classmethod
+    def _missing_(cls, value):
+        # If it is not found, then it is unknown
+        return GpgKeyTrust.UNKNOWN
+
+
+class GpgKeyAlgorithm(enum.Enum):
+    """Gpg Algormithms"""
+
+    RSA = 1
+    RSA_SO = 2
+    RSA_EO = 3
+    ELGAMAL_EO = 16
+    DSA = 17
+    EC = 18
+    ECDSA = 19
+    ELGAMAL = 20
+    DH = 21
+    LIBGCRYPT = 256
+
+    @classmethod
+    def _missing_(cls, value):
+        if value > 255:
+            return GpgKeyAlgorithm.LIBGCRYPT
+        return None
+
+    def __str__(cls):
+        name = cls.name.lower()
+        name = name.replace("_so", " (Signing only)")
+        name = name.replace("_eo", " (Encryption only)")
+        return name
+
+    def __format__(cls, fspec):
+        """Format type with length
+        ex. f"{gpg_algo:{gpg_len}}"
+        """
+        int(fspec)
+        name = cls.name.lower()
+        name = name.replace("_so", f"{fspec} (Signing only)")
+        name = name.replace("_eo", f"{fspec} (Encryption only)")
+        return name
+
+
+class GpgKeyCompliance(enum.Enum):
+    """Gpg compliance codes"""
+
+    RFC4880BIS = 8
+    DE_VS = 23
+    DE_VS_EXP = 2023
+    VULN = 6001
+    UNKNOWN = 0
+
+
+class GpgKeyType(enum.Enum):
+    """Gpg Key types"""
+
+    PUBLIC = "pub"
+    SUBKEY = "sub"
+    SECRET = "sec"
+    SECRET_SUBKEY = "ssb"
+    REVOCATION = "rvk"
+
+
+class GpgSigType(enum.Enum):
+    """Gpg Key signature types"""
+
+    SIGNATURE = "sig"
+    REVOCATION = "rev"
+    REVOCATION_SO = "rvs"
+
+
+class GpgUserId:
+    def __init__(self, data: Dict[str, str]):
+        assert data["type"] in ("uid", "uat")
+
+        self.type = data["type"]
+        self.trust = GpgKeyTrust(data["trust"])
+        self.hash = data["misc"]
+        self.uid = data["uid"]
+
+
+class GpgSignature:
+    def __init__(self, data: Dict[str, str]):
+        assert data["type"] in ("sig", "rev", "rvs")
+
+        self.algo = GpgKeyAlgorithm(int(data["key_algo"]))
+        self.id = data["key_id"]
+        self.created_at = datetime.datetime.fromtimestamp(int(data["created_at"]))
+        self.uid = data["uid"]
+        self.sig_class = data["sig_class"]
+
+
+class GpgKey:
+    def __init__(self, data: Dict[str, str]):
+        assert data["type"] in ("pub", "sec", "sub", "ssb")
+
+        self.type = GpgKeyType(data["type"])
+
+        self.trust = GpgKeyTrust(data["trust"])
+        self.key_len = data["len"]
+        self.key_algorithm = GpgKeyAlgorithm(int(data["key_algo"]))
+        self.key_id = data["key_id"]
+        self.created_at = datetime.datetime.fromtimestamp(int(data["created_at"]))
+        self.expires_at: Optional[datetime.datetime] = None
+        if data.get("expired_at"):
+            self.expires_at = datetime.datetime.fromtimestamp(int(data["expired_at"]))
+
+        self.owner_trust = GpgKeyTrust(data["owner_trust"])
+
+        self.capabilities = set()
+        for cap in data.get("capabilities", []):
+            self.capabilities.add(GpgKeyCapability(cap))
+
+        self.compliance = GpgKeyCompliance(int(data.get("compliance") or 0))
+
+        self.updated_at: Optional[datetime.datetime] = None
+        if data.get("updated_at"):
+            self.updated_at = datetime.datetime.fromtimestamp(int(data["updated_at"]))
+        self.origin = data.get("origin")
+        self.comment = data.get("comment", "")
+
+        self.fpr: str = ""
+        self.rev: List[GpgSignature] = []
+        self.sig: List[GpgSignature] = []
+        self.uid: List[GpgUserId] = []
+        self.subkey: List[GpgKey] = []
+
+    def add(self, data: Dict[str, str]):
+        """Add metadata to a key"""
+
+        if data["type"] in ("fpr", "fp2"):
+            self.fpr = data["uid"]
+
+        elif data["type"] in ("uid", "uat"):
+            self.uid.append(GpgUserId(data))
+
+        elif data["type"] == "sig":
+            self.sig.append(GpgSignature(data))
+
+        elif data["type"] == "rev":
+            assert self.trust == GpgKeyTrust.REVOKED
+            self.rev.append(GpgSignature(data))
+
+    def __eq__(self, otherkey):
+        if isinstance(otherkey, str):
+            return self.fpr == otherkey
+        elif isinstance(otherkey, GpgKey):
+            return self.fpr == otherkey.fpr
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        return hash(self.fpr)
+
+    def __str__(self):
+        return self.fpr
+
+    def __format__(self, fspec):
+        """Formatted output for GPG key
+
+        Default:
+            <fingerprint>
+
+        g[pg] - GPG style output (without colons)
+        c[olons] - GPG style output (with colons)
+        s[hort] - Shortened output ie. <fingerprint> (<uid>)
+        """
+
+        if fspec.startswith("g"):
+            return GPG("--list-keys", "--fingerprint", self.fpr, output=str)
+        elif fspec.startswith("c"):
+            return GPG("--list-keys", "--fingerprint", "--with-colons", self.fpr, output=str)
+        elif fspec.startswith("s"):
+            return f"{self.fpr} ({self.uid[0].uid})"
+        else:
+            return self.fpr
+
+
 def clear():
     """Reset the global state to uninitialized."""
     global GPG, GPGCONF, SOCKET_DIR, GNUPGHOME
     GPG, GPGCONF, SOCKET_DIR, GNUPGHOME = None, None, None, None
 
 
-def init(gnupghome=None, force=False):
+def init(gnupghome: Optional[str] = None, force: bool = False):
     """Initialize the global objects in the module, if not set.
 
     When calling any gpg executable, the GNUPGHOME environment
@@ -41,9 +253,9 @@ def init(gnupghome=None, force=False):
     3. The default gpg path for Spack otherwise
 
     Args:
-        gnupghome (str): value to be used for GNUPGHOME when calling
+        gnupghome: value to be used for GNUPGHOME when calling
             GnuPG executables
-        force (bool): if True forces the re-initialization even if the
+        force: if True forces the re-initialization even if the
             global objects are set already
     """
     global GPG, GPGCONF, SOCKET_DIR, GNUPGHOME
@@ -83,12 +295,12 @@ def init(gnupghome=None, force=False):
         GPGCONF("--create-socketdir")
 
 
-def _autoinit(func):
+def _autoinit(func: Callable[..., Any]):
     """Decorator to ensure that global variables have been initialized before
     running the decorated function.
 
     Args:
-        func (callable): decorated function
+        func: decorated function
     """
 
     @functools.wraps(func)
@@ -100,11 +312,11 @@ def _autoinit(func):
 
 
 @contextlib.contextmanager
-def gnupghome_override(dir):
+def gnupghome_override(dir: str):
     """Set the GNUPGHOME to a new location for this context.
 
     Args:
-        dir (str): new value for GNUPGHOME
+        dir: new value for GNUPGHOME
     """
     global GPG, GPGCONF, SOCKET_DIR, GNUPGHOME
 
@@ -123,55 +335,90 @@ def gnupghome_override(dir):
     SOCKET_DIR, GNUPGHOME = _SOCKET_DIR, _GNUPGHOME
 
 
-def _parse_secret_keys_output(output: str) -> List[str]:
-    keys: List[str] = []
-    found_sec = False
-    for line in output.split("\n"):
-        if found_sec:
-            if line.startswith("fpr"):
-                keys.append(line.split(":")[9])
-                found_sec = False
-            elif line.startswith("ssb"):
-                found_sec = False
-        elif line.startswith("sec"):
-            found_sec = True
-    return keys
+def _parse_gpg_fields(karray: List[str]):
+    """Parse gpg line into a dict"""
+    fields = [
+        "type",
+        "trust",
+        "len",
+        "key_algo",
+        "key_id",
+        "created_at",
+        "expire_at",
+        "misc",
+        "owner_trust",
+        "uid",
+        "sig_class",
+        "capabilities",
+        "issuer_cert",
+        "flag",
+        "token",
+        "hash_algo",
+        "curve_name",
+        "compliance",
+        "updated_at",
+        "origin",
+        "comment",
+    ]
+    data = {}
+    for key, value in zip(fields, karray):
+        data[key] = value
+
+    return data
 
 
-def _parse_public_keys_output(output):
-    """
-    Returns a list of public keys with their fingerprints
-    """
+def _parse_gpg_output(output: str):
+    current_key: Optional[GpgKey] = None
+    current_subkey: Optional[GpgKey] = None
     keys = []
-    found_pub = False
-    current_pub_key = ""
     for line in output.split("\n"):
-        if found_pub:
-            if line.startswith("fpr"):
-                keys.append((current_pub_key, line.split(":")[9]))
-                found_pub = False
-            elif line.startswith("ssb"):
-                found_pub = False
-        elif line.startswith("pub"):
-            current_pub_key = line.split(":")[4]
-            found_pub = True
+        # Only parse lines with colons
+        if ":" not in line:
+            continue
+
+        data = _parse_gpg_fields(line.split(":"))
+        # Skip special fields, Spack doesn't use them
+        if data["type"] in ("cfg", "pfc", "pkd", "tfs", "tru", "spk"):
+            continue
+
+        # Start of a new key
+        if data["type"] in ("pub", "sec"):
+            if current_subkey:
+                assert current_key
+                current_key.subkey.append(current_subkey)
+                current_subkey = None
+            if current_key:
+                keys.append(current_key)
+            current_key = GpgKey(data)
+
+        # This should never happen, but in case it does continue
+        # as spack doesn't care about lines before the first key
+        # is found.
+        if not current_key:
+            continue
+
+        # Start of a new subkey
+        if data["type"] in ("sub", "ssb"):
+            if current_subkey:
+                current_key.subkey.append(current_subkey)
+            current_subkey = GpgKey(data)
+
+        # For the fields that can be in both key and subkey
+        if data["type"] in ("sig", "fpr", "fp2"):
+            if current_subkey:
+                current_subkey.add(data)
+            else:
+                current_key.add(data)
+        else:
+            current_key.add(data)
+
+    # Append the last keys
+    if current_key:
+        if current_subkey:
+            current_key.subkey.append(current_subkey)
+        keys.append(current_key)
+
     return keys
-
-
-def _get_unimported_public_keys(output):
-    keys = []
-    for line in output.split("\n"):
-        if line.startswith("pub"):
-            keys.append(line.split(":")[4])
-    return keys
-
-
-def _get_key_uids(output):
-    uids = []
-    for line in output.split("\n"):
-        if line.startswith("uid"):
-            uids.append(line.split(":")[-2])
-    return uids
 
 
 class SpackGPGError(spack.error.SpackError):
@@ -206,122 +453,120 @@ def signing_keys(*args) -> List[str]:
     """Return the keys that can be used to sign binaries."""
     assert GPG
     output: str = GPG("--list-secret-keys", "--with-colons", "--fingerprint", *args, output=str)
-    return _parse_secret_keys_output(output)
-
-
-@_autoinit
-def public_keys_to_fingerprint(*args):
-    """Return the keys that can be used to verify binaries."""
-    output = GPG("--list-public-keys", "--with-colons", "--fingerprint", *args, output=str)
-    return _parse_public_keys_output(output)
+    return _parse_gpg_output(output)
 
 
 @_autoinit
 def public_keys(*args):
     """Return a list of fingerprints"""
-    keys_and_fpr = public_keys_to_fingerprint(*args)
-    return [key_and_fpr[1] for key_and_fpr in keys_and_fpr]
+    assert GPG
+    output = GPG("--list-public-keys", "--with-colons", "--fingerprint", *args, output=str)
+    return _parse_gpg_output(output)
 
 
 @_autoinit
-def export_keys(location, keys, secret=False):
+def export_keys(location: str, keys: List[GpgKey], secret: bool = False):
     """Export public keys to a location passed as argument.
 
     Args:
-        location (str): where to export the keys
-        keys (list): keys to be exported
-        secret (bool): whether to export secret keys or not
+        location: where to export the keys
+        keys: keys to be exported
+        secret: whether to export secret keys or not
     """
+    assert GPG
+    fprs = [str(k) for k in keys]
     if secret:
-        GPG("--export-secret-keys", "--armor", "--output", location, *keys)
+        GPG("--export-secret-keys", "--armor", "--output", location, *fprs)
     else:
-        GPG("--batch", "--yes", "--armor", "--export", "--output", location, *keys)
+        GPG("--batch", "--yes", "--armor", "--export", "--output", location, *fprs)
 
 
 @_autoinit
-def extract_public_keys(keyfile):
+def extract_public_keys(keyfile: str):
     """Extract the public key ids from a file
 
     Args:
-        keyfile (str): file with the public key
+        keyfile: file with the public key
     """
+    assert GPG
     # Get the public keys we are about to import
-    output = GPG("--with-colons", keyfile, output=str, error=str)
-    return zip(_get_unimported_public_keys(output), _get_key_uids(output))
+    output = GPG("--with-colons", "--with-fingerprint", keyfile, output=str, error=str)
+    return [k for k in _parse_gpg_output(output) if k.type == GpgKeyType.PUBLIC]
 
 
 @_autoinit
-def trust(keyfile):
+def trust(keyfile: str):
     """Import a public key from a file and trust it.
 
     Args:
-        keyfile (str): file with the public key
+        keyfile: file with the public key
     """
-    # Get the public keys we are about to import
-    output = GPG("--with-colons", keyfile, output=str, error=str)
-    keys = _get_unimported_public_keys(output)
+    assert GPG
+    keys = extract_public_keys(keyfile)
 
     # Import them
     GPG("--batch", "--import", keyfile)
 
     # Set trust to ultimate
-    key_to_fpr = dict(public_keys_to_fingerprint())
+    known_keys = public_keys()
     for key in keys:
         # Skip over keys we cannot find a fingerprint for.
-        if key not in key_to_fpr:
+        if key not in known_keys:
             continue
 
-        fpr = key_to_fpr[key]
         r, w = os.pipe()
-        with contextlib.closing(os.fdopen(r, "r")) as r:
-            with contextlib.closing(os.fdopen(w, "w")) as w:
-                w.write("{0}:6:\n".format(fpr))
-            GPG("--import-ownertrust", input=r)
+        with contextlib.closing(os.fdopen(r, "r")) as rc:
+            with contextlib.closing(os.fdopen(w, "w")) as wc:
+                wc.write("{0}:6:\n".format(str(key)))
+            GPG("--import-ownertrust", input=rc)
 
 
 @_autoinit
-def untrust(signing, *keys):
+def untrust(signing: bool, *keys):
     """Delete known keys.
 
     Args:
-        signing (bool): if True deletes the secret keys
+        signing: if True deletes the secret keys
         *keys: keys to be deleted
     """
+    assert GPG
     if signing:
-        skeys = signing_keys(*keys)
+        skeys = [str(k) for k in signing_keys(*keys)]
         GPG("--batch", "--yes", "--delete-secret-keys", *skeys)
 
-    pkeys = public_keys(*keys)
+    pkeys = [str(k) for k in public_keys(*keys)]
     GPG("--batch", "--yes", "--delete-keys", *pkeys)
 
 
 @_autoinit
-def sign(key, file, output, clearsign=False):
+def sign(key: str, file: str, output: str, clearsign: bool = False):
     """Sign a file with a key.
 
     Args:
         key: key to be used to sign
-        file (str): file to be signed
-        output (str): output file (either the clearsigned file or
+        file: file to be signed
+        output: output file (either the clearsigned file or
             the detached signature)
-        clearsign (bool): if True wraps the document in an ASCII-armored
+        clearsign: if True wraps the document in an ASCII-armored
             signature, if False creates a detached signature
     """
+    assert GPG
     signopt = "--clearsign" if clearsign else "--detach-sign"
     GPG(signopt, "--armor", "--local-user", key, "--output", output, file)
 
 
 @_autoinit
-def verify(signature, file=None, suppress_warnings=False):
+def verify(signature: str, file: Optional[str] = None, suppress_warnings: bool = False):
     """Verify the signature on a file.
 
     Args:
-        signature (str): signature of the file (or clearsigned file)
-        file (str): file to be verified.  If None, then signature is
+        signature: signature of the file (or clearsigned file)
+        file: file to be verified.  If None, then signature is
             assumed to be a clearsigned file.
-        suppress_warnings (bool): whether or not to suppress warnings
+        suppress_warnings: whether or not to suppress warnings
             from GnuPG
     """
+    assert GPG
     args = [signature]
     if file:
         args.append(file)
@@ -330,13 +575,14 @@ def verify(signature, file=None, suppress_warnings=False):
 
 
 @_autoinit
-def list(trusted, signing):
+def list(trusted: bool, signing: bool):
     """List known keys.
 
     Args:
-        trusted (bool): if True list public keys
-        signing (bool): if True list private keys
+        trusted: if True list public keys
+        signing: if True list private keys
     """
+    assert GPG
     if trusted:
         GPG("--list-public-keys")
 

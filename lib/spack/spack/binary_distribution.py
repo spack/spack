@@ -648,7 +648,7 @@ def select_signing_key() -> str:
             "Use spack gpg init and spack gpg create"
             " to create a default key."
         )
-    return keys[0]
+    return str(keys[0])
 
 
 def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: str = ""):
