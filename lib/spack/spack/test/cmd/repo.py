@@ -67,9 +67,17 @@ def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
     assert "mockrepo" not in site_output
     assert "mockrepo" in system_output
 
-    # Confirm that when the scope is not specified, it is removed from all scopes
+    # Confirm that when the scope is not specified, it is removed from top scope with it present
     repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
     repo("remove", "mockrepo")
+    site_output = repo("list", "--scope=site", output=str)
+    system_output = repo("list", "--scope=system", output=str)
+    assert "mockrepo" not in site_output
+    assert "mockrepo" in system_output
+
+    # Check that the `--all-scopes` option removes from all scopes
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
+    repo("remove", "--all-scopes", "mockrepo")
     output = repo("list", output=str)
     assert "mockrepo" not in output
 

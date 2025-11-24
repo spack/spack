@@ -150,7 +150,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     remove_parser.add_argument(
         "--scope", action=arguments.ConfigScope, default=None, help="configuration scope to modify"
     )
-
+    remove_parser.add_argument(
+        "--all-scopes",
+        action="store_true",
+        default=False,
+        help="remove from all config scopes (default: highest scope with matching mirror)",
+    )
     # Set-Url
     set_url_parser = sp.add_parser("set-url", help=mirror_set_url.__doc__)
     set_url_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
@@ -353,6 +358,8 @@ def mirror_remove(args):
     removed = False
     for scope in scopes:
         removed |= spack.mirrors.utils.remove(name, scope)
+        if removed and not args.all_scopes:
+            return
 
     if not removed:
         tty.die(f"No mirror with name {name} in {comma_or(scopes)} scope")

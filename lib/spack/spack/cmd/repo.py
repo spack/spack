@@ -115,6 +115,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
     remove_parser.add_argument(
         "--scope", action=arguments.ConfigScope, default=None, help="configuration scope to modify"
     )
+    remove_parser.add_argument(
+        "--all-scopes",
+        action="store_true",
+        default=False,
+        help="remove from all config scopes (default: highest scope with matching repo)",
+    )
 
     # Migrate
     migrate_parser = sp.add_parser("migrate", help=repo_migrate.__doc__)
@@ -253,6 +259,8 @@ def repo_remove(args):
     found_and_removed = False
     for scope in scopes:
         found_and_removed |= _remove_repo(args.namespace_or_path, scope)
+        if found_and_removed and not args.all_scopes:
+            return
     if not found_and_removed:
         tty.die(f"No repository with path or namespace: {args.namespace_or_path}")
 
