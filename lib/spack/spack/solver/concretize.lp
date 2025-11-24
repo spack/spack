@@ -1804,7 +1804,7 @@ attr("node_os", PackageNode, OS) :- attr("node_os_set", PackageNode, OS), attr("
 %-----------------------------------------------------------------------------
 
 % Each node has only one target chosen among the known targets
-{ attr("node_target", PackageNode, Target) : target(Target) } :- attr("node", PackageNode).
+1 { attr("node_target", PackageNode, Target) : target(Target) } 1 :- attr("node", PackageNode).
 
 % If a node must satisfy a target constraint, enforce it
 error(10, "'{0} target={1}' cannot satisfy constraint 'target={2}'", Package, Target, Constraint)
