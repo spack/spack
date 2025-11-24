@@ -1064,6 +1064,9 @@ def test_buildcache_create_view_failure(tmp_path, mutable_config, mutable_mock_e
 
 def test_buildcache_create_view_empty(
     tmp_path, mutable_config, mutable_database, mutable_mock_env_path
+):
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
 
     # Push a spec to the cache
     mpileaks_specs = mutable_database.query_local("mpileaks")

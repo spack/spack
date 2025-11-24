@@ -1358,7 +1358,7 @@ class MirrorURLAndVersion:
     track of downloaded/processed buildcache index files from remote mirrors
     in some layout version."""
 
-    __slots__ = ("url", "version")
+    __slots__ = ("url", "version", "view")
 
     def __init__(self, url: str, version: int, view: Optional[str] = None):
         self.url = url

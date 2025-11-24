@@ -342,7 +342,7 @@ class BinaryCacheIndex:
         # Otherwise the concrete spec cache should not need to be updated at
         # all.
 
-        fetch_errors = []
+        fetch_errors: List[Exception] = []
         all_methods_failed = True
         ttl = spack.config.get("config:binary_index_ttl", 600)
         now = time.time()
@@ -2186,7 +2186,9 @@ def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorURLAndVersion]:
             fetched_spec = spack.spec.Spec.from_dict(spec_dict)
             fetched_spec._mark_concrete()
 
-            found_specs.append(MirrorURLAndVersion(mirror.fetch_url, layout_version, mirror.fetch_view))
+            found_specs.append(
+                MirrorURLAndVersion(mirror.fetch_url, layout_version, mirror.fetch_view)
+            )
 
     return found_specs
 

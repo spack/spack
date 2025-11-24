@@ -50,7 +50,7 @@ section = "packaging"
 level = "long"
 
 
-class ViewMode(enum.Enum):
+class ViewUpdateMode(enum.Enum):
     CREATE = enum.auto()
     OVERWRITE = enum.auto()
     APPEND = enum.auto()
@@ -863,7 +863,7 @@ def read_concrete_hashes(source: str) -> List[str]:
 
 def update_view(
     mirror: spack.mirrors.mirror.Mirror,
-    update_mode: int,
+    update_mode: ViewUpdateMode,
     *sources: str,
     name: Optional[str] = None,
     update_keys: bool = False,
@@ -882,7 +882,7 @@ def update_view(
     except ValueError:
         pass
 
-    if update_mode == ViewMode.APPEND:
+    if update_mode == ViewUpdateMode.APPEND:
         tty.warn(
             "Appending to a view index does not guarantee idempotent write when contending "
             "with multiple writers. This feature is meant to be used by a single process."
@@ -914,7 +914,7 @@ def update_view(
     except spack.binary_distribution.BuildcacheIndexNotExists:
         index_exists = False
 
-    if index_exists and update_mode == ViewMode.CREATE:
+    if index_exists and update_mode == ViewUpdateMode.CREATE:
         raise spack.error.SpackError(
             "Index already exists. To overwrite or update pass --force or --append respectively"
         )
@@ -939,7 +939,7 @@ def update_view(
         db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
         db._write()
 
-        if update_mode == ViewMode.APPEND:
+        if update_mode == ViewUpdateMode.APPEND:
             # Load the current state of the view index from the cache into the database
             cache_index = BINARY_INDEX._local_index_cache.get(str(url_and_version))
             if cache_index:
@@ -960,11 +960,11 @@ def update_index_fn(args):
     )
 
     if update_view_index:
-        update_mode = ViewMode.CREATE
+        update_mode = ViewUpdateMode.CREATE
         if args.force:
-            update_mode = ViewMode.OVERWRITE
+            update_mode = ViewUpdateMode.OVERWRITE
         elif args.append:
-            update_mode = ViewMode.APPEND
+            update_mode = ViewUpdateMode.APPEND
 
         return update_view(
             args.mirror, update_mode, *args.sources, name=args.name, update_keys=args.keys
