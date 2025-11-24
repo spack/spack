@@ -1957,8 +1957,8 @@ class SpackSolverSetup:
                 return result
             return result + [fn.attr("extends", pkg.name, input_spec.name)]
 
-        for cond, deps_by_name in sorted(pkg.dependencies.items()):
-            for _, dep in sorted(deps_by_name.items()):
+        for cond, deps_by_name in pkg.dependencies.items():
+            for _, dep in deps_by_name.items():
                 depflag = dep.depflag
                 # Skip test dependencies if they're not requested
                 if not self.tests:
