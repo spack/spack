@@ -588,10 +588,7 @@ imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, "depends_on", _, A1, _).
 
 imposed_nodes(node(NodeID, Package), node(X, A1))
-  :- trigger_and_effect(Package, TriggerID, EffectID),
-     imposed_packages(EffectID, A1),
-     condition_set(node(NodeID, Package), node(X, A1)),
-     trigger_requestor_node(TriggerID, node(NodeID, Package)),
+  :- condition_set(node(NodeID, Package), node(X, A1)),
      % We don't want to add build requirements to imposed nodes, to avoid
      % unsat problems when we deal with self-dependencies: gcc@14 %gcc@10
      not self_build_requirement(node(NodeID, Package), node(X, A1)).
