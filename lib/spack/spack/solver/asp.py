@@ -2782,8 +2782,8 @@ class SpackSolverSetup:
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
 
-        for pkg_name, versions in sorted(self.possible_versions.items()):
-            for v in sorted(versions):
+        for pkg_name, versions in self.possible_versions.items():
+            for v in versions:
                 if v in self.git_commit_versions[pkg_name]:
                     sha = self.git_commit_versions[pkg_name].get(v)
                     if sha:
@@ -2792,11 +2792,12 @@ class SpackSolverSetup:
                         self.gen.fact(fn.pkg_fact(pkg_name, fn.version_needs_commit(v)))
         self.gen.newline()
 
-        for pkg_name, versions in sorted(self.version_constraints):
+        for pkg_name, versions in self.version_constraints:
             # generate facts for each package constraint and the version
             # that satisfies it
-            for v in sorted(v for v in self.possible_versions[pkg_name] if v.satisfies(versions)):
-                self.gen.fact(fn.pkg_fact(pkg_name, fn.version_satisfies(versions, v)))
+            for v in self.possible_versions[pkg_name]:
+                if v.satisfies(versions):
+                    self.gen.fact(fn.pkg_fact(pkg_name, fn.version_satisfies(versions, v)))
             self.gen.newline()
 
     def collect_virtual_constraints(self):
