@@ -16,6 +16,7 @@ import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
 import spack.repo
+import spack.util.git
 from spack.fetch_strategy import GitFetchStrategy
 from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.package_base import PackageBase
@@ -36,7 +37,7 @@ def git_version(git, request, monkeypatch):
     paths for old versions still work, we fake it out here and make it
     use the backward-compatibility code paths with newer git versions.
     """
-    real_git_version = spack.fetch_strategy.GitFetchStrategy.version_from_git(git)
+    real_git_version = Version(spack.util.git.extract_git_version_str(git))
 
     if request.param is None:
         # Don't patch; run with the real git_version method.
@@ -49,7 +50,7 @@ def git_version(git, request, monkeypatch):
         # Patch the fetch strategy to think it's using a lower git version.
         # we use this to test what we'd need to do with older git versions
         # using a newer git installation.
-        monkeypatch.setattr(GitFetchStrategy, "git_version", test_git_version)
+        monkeypatch.setattr(spack.util.git, "extract_git_version_str", lambda _: request.param)
         yield test_git_version
 
 
@@ -61,11 +62,8 @@ def mock_bad_git(mock_util_executable):
     """
 
     _, should_fail, registered_respones = mock_util_executable
-    should_fail.extend([
-        "clone",
-        "fetch"
-    ])
-    registered_respones["git --version"] = "1.7.1"
+    should_fail.extend(["clone", "fetch"])
+    registered_respones["--version"] = "1.7.1"
 
 
 def test_bad_git(tmp_path: pathlib.Path, mock_bad_git):

@@ -11,6 +11,7 @@ from typing import List, Optional, overload
 
 from spack.vendor.typing_extensions import Literal
 
+import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.util.executable as exe
 
@@ -28,6 +29,11 @@ def _find_git() -> Optional[str]:
     return exe.which_string("git", required=False)
 
 
+def extract_git_version_str(git_exe):
+    v_str = git_exe("--version", output=str).strip().split()[-1]
+    return v_str
+
+
 class GitExecutable(exe.Executable):
     def __init__(self, name=None):
         if not name:
@@ -39,7 +45,7 @@ class GitExecutable(exe.Executable):
     def version(self):
         # lazy init git version
         if not self._version:
-            v_string = self.__call__("--version", output=str).strip().split()[-1]
+            v_string = extract_git_version_str(self)
             self._version = tuple(int(i) for i in v_string.split("."))
         return self._version
 
@@ -206,7 +212,7 @@ DEPTH = VersionConditionalOption("--depth", 1, min_version=(1, 9, 0))
 FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2, 19, 0))
 NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2, 34, 0))
 # technically sparse-checkout was added in 2.25, but we go forward since the model we use only works with the `--cone` option
-SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", min_version=(2, 34, 0))
+SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", "set", min_version=(2, 34, 0))
 # This is when branch could also accept tag
 BRANCH = VersionConditionalOption("--branch", min_version=(1, 8, 5))
 SINGLE_BRANCH = VersionConditionalOption("--single-branch", min_version=(1, 7, 10))
@@ -247,7 +253,9 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
         try:
             _exec_git_commands(git_exe, cmds, debug, dest)
         except exe.ProcessError:
-            shutil.rmdir(dest)
+            shutil.rmtree(
+                dest, ignore_errors=False, onerror=fs.readonly_file_handler(ignore_errors=True)
+            )
             raise
     else:
         _exec_git_commands(git_exe, cmds, debug, dest)
@@ -264,16 +272,16 @@ def git_checkout(
     checkout = ["checkout"]
     sparse_checkout = SPARSE_CHECKOUT(git_exe.version)
 
-    if sparse_paths and sparse_checkout:
-        sparse_checkout.extend([*sparse_paths, "--cone"])
-
     if not debug:
         checkout.append("--quiet")
-    checkout.append(ref or "FETCH_HEAD")
+    if ref:
+        checkout.append(ref)
 
     cmds = []
-    if sparse_checkout:
+    if sparse_paths and sparse_checkout:
+        sparse_checkout.extend([*sparse_paths, "--cone"])
         cmds.append(sparse_checkout)
+
     cmds.append(checkout)
     _exec_git_commands(git_exe, cmds, debug, dest)
 
@@ -302,7 +310,7 @@ def git_clone(
     else:
         clone.extend(SINGLE_BRANCH(version))
 
-    clone.extend([*FILTER_BLOB_NONE(version), *NO_CHECKOUT(version), ref])
+    clone.extend([*FILTER_BLOB_NONE(version), *NO_CHECKOUT(version), url])
 
     if dest:
         clone.append(dest)

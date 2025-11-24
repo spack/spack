@@ -2440,14 +2440,16 @@ def mock_util_executable(monkeypatch):
 
     def mock_call(self, *args, **kwargs):
         cmd = self.exe + list(args)
-        str_cmd = " ".join(cmd)
+        str_cmd = " ".join(map(str, cmd))
         logger.append(str_cmd)
         for failure_key in should_fail:
             if failure_key in str_cmd:
                 self.returncode = 1
+                if kwargs.get("fail_on_error", True):
+                    raise spack.util.executable.ProcessError(f"Failed: {str_cmd}")
                 return
         for key, value in registered_reponses.items():
-            if str_cmd == key:
+            if key in str_cmd:
                 return value
         self.returncode = 0
 

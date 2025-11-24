@@ -857,9 +857,8 @@ class GitFetchStrategy(VCSFetchStrategy):
         """Given a git executable, return the Version (this will fail if
         the output cannot be parsed into a valid Version).
         """
-        version_output = git_exe("--version", output=str)
-        m = re.search(GitFetchStrategy.git_version_re, version_output)
-        return spack.version.Version(m.group(1))
+        version_string = ".".join(map(str, git_exe.version))
+        return spack.version.Version(version_string)
 
     @property
     def git(self):
@@ -957,22 +956,26 @@ class GitFetchStrategy(VCSFetchStrategy):
         name = self.package.name if self.package else "spack-clone"
         checkout_ref = self.commit or self.tag or self.branch
         fetch_ref = self.tag or self.branch
-        full_clone = self.get_full_repo or not fetch_ref
 
         kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
 
         with temp_cwd():
             if self.commit:
                 try:
-                    spack.util.git.git_init_fetch(self.url, self.commit, **kwargs)
+                    tty.msg("calling init")
+                    spack.util.git.git_init_fetch(self.url, self.commit, depth, **kwargs)
                 except spack.util.executable.ProcessError:
                     # TODO(psakeiv) debug message?
-                    spack.util.git.git_clone(self.url, fetch_ref, full_clone, **kwargs)
-                finally:
-                    spack.util.git.git_checkout(self.commit, self.git_sparse_paths, **kwargs)
+                    tty.msg("calling clone")
+                    spack.util.git.git_clone(
+                        self.url, fetch_ref, self.get_full_repo, depth, **kwargs
+                    )
             else:
-                spack.util.git.git_clone(self.url, fetch_ref, full_clone, **kwargs)
-                spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
+                tty.msg("calling clone")
+                spack.util.git.git_clone(self.url, fetch_ref, self.get_full_repo, depth, **kwargs)
+            # if checkout_ref:
+            tty.msg("calling checkout")
+            spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
 
             repo_name = get_single_file(".")
             if self.stage:
