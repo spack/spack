@@ -39,7 +39,7 @@ class Dependency:
 
     """
 
-    __slots__ = ["pkg", "spec", "patches", "depflag"]
+    __slots__ = "pkg", "spec", "patches", "depflag"
 
     def __init__(
         self,

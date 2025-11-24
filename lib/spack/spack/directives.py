@@ -314,7 +314,7 @@ def _depends_on(
         dependency = Dependency(pkg, spec, depflag=depflag)
         deps_by_name[spec.name] = dependency
     else:
-        copy = spec.copy()
+        copy = dependency.spec.copy()
         copy.constrain(spec, deps=False)
         dependency.spec = copy
         dependency.depflag |= depflag

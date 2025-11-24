@@ -12,6 +12,7 @@ import sys
 import pytest
 
 import spack.concretize
+import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
 import spack.patch
@@ -220,25 +221,42 @@ def test_nested_directives(mock_packages):
     """Ensure pkg data structures are set up properly by nested directives."""
     # this ensures that the patch() directive results were removed
     # properly from the DirectiveMeta._directives_to_be_executed list
-    patcher = spack.repo.PATH.get_pkg_class("patch-several-dependencies")
-    assert len(patcher.patches) == 0
+    package = spack.repo.PATH.get_pkg_class("patch-several-dependencies")
+    assert len(package.patches) == 0
 
     # this ensures that results of dependency patches were properly added
     # to Dependency objects.
-    deps_by_name = patcher.dependencies_by_name()
 
-    libelf_dep = deps_by_name["libelf"][0]
-    assert len(libelf_dep.patches) == 1
-    assert len(libelf_dep.patches[Spec()]) == 1
+    # package.dependencies is keyed by three when clauses
+    assert package.dependencies.keys() == {Spec(), Spec("+foo"), Spec("@1.0")}
 
-    libdwarf_dep = deps_by_name["libdwarf"][0]
-    assert len(libdwarf_dep.patches) == 2
-    assert len(libdwarf_dep.patches[Spec()]) == 1
-    assert len(libdwarf_dep.patches[Spec("@20111030")]) == 1
+    # fake and libelf are unconditional dependencies
+    when_unconditional = package.dependencies[Spec()]
+    assert when_unconditional.keys() == {"fake", "libelf"}
+    # fake has two unconditional URL patches
+    assert when_unconditional["fake"].patches.keys() == {Spec()}
+    assert len(when_unconditional["fake"].patches[Spec()]) == 2
+    # libelf has one unconditional patch
+    assert when_unconditional["libelf"].patches.keys() == {Spec()}
+    assert len(when_unconditional["libelf"].patches[Spec()]) == 1
 
-    fake_dep = deps_by_name["fake"][0]
-    assert len(fake_dep.patches) == 1
-    assert len(fake_dep.patches[Spec()]) == 2
+    # there are multiple depends_on directives for libelf under the +foo when clause; these must be
+    # reduced to a single Dependency object.
+    when_foo = package.dependencies[Spec("+foo")]
+    assert when_foo.keys() == {"libelf"}
+    assert when_foo["libelf"].spec == Spec("libelf@0.8.10")
+    assert when_foo["libelf"].depflag == dt.BUILD | dt.LINK
+    # there is one unconditional patch for libelf under the +foo when clause
+    assert len(when_foo["libelf"].patches) == 1
+    assert len(when_foo["libelf"].patches[Spec()]) == 1
+
+    # libdwarf is a dependency when @1.0 with two patches applied from a single depends_on
+    # statement, one conditional on the libdwarf version
+    when_1_0 = package.dependencies[Spec("@1.0")]
+    assert when_1_0.keys() == {"libdwarf"}
+    assert when_1_0["libdwarf"].patches.keys() == {Spec(), Spec("@20111030")}
+    assert len(when_1_0["libdwarf"].patches[Spec()]) == 1
+    assert len(when_1_0["libdwarf"].patches[Spec("@20111030")]) == 1
 
 
 @pytest.mark.not_on_windows("Test requires Autotools")
