@@ -2405,20 +2405,24 @@ complete -c spack -n '__fish_spack_using_command mirror add' -l oci-password-var
 complete -c spack -n '__fish_spack_using_command mirror add' -l oci-password-variable -r -d 'environment variable containing password to use to connect to this OCI mirror'
 
 # spack mirror remove
-set -g __fish_spack_optspecs_spack_mirror_remove h/help scope=
+set -g __fish_spack_optspecs_spack_mirror_remove h/help scope= all-scopes
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror remove' -f -a '(__fish_spack_mirrors)'
 complete -c spack -n '__fish_spack_using_command mirror remove' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror remove' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command mirror remove' -l scope -r -f -a '_builtin defaults:base defaults site user spack command_line'
 complete -c spack -n '__fish_spack_using_command mirror remove' -l scope -r -d 'configuration scope to modify'
+complete -c spack -n '__fish_spack_using_command mirror remove' -l all-scopes -f -a all_scopes
+complete -c spack -n '__fish_spack_using_command mirror remove' -l all-scopes -d 'remove from all config scopes (default: highest scope with matching mirror)'
 
 # spack mirror rm
-set -g __fish_spack_optspecs_spack_mirror_rm h/help scope=
+set -g __fish_spack_optspecs_spack_mirror_rm h/help scope= all-scopes
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror rm' -f -a '(__fish_spack_mirrors)'
 complete -c spack -n '__fish_spack_using_command mirror rm' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror rm' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command mirror rm' -l scope -r -f -a '_builtin defaults:base defaults site user spack command_line'
 complete -c spack -n '__fish_spack_using_command mirror rm' -l scope -r -d 'configuration scope to modify'
+complete -c spack -n '__fish_spack_using_command mirror rm' -l all-scopes -f -a all_scopes
+complete -c spack -n '__fish_spack_using_command mirror rm' -l all-scopes -d 'remove from all config scopes (default: highest scope with matching mirror)'
 
 # spack mirror set-url
 set -g __fish_spack_optspecs_spack_mirror_set_url h/help push fetch scope= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
@@ -2859,20 +2863,24 @@ complete -c spack -n '__fish_spack_using_command repo set' -l scope -r -f -a '_b
 complete -c spack -n '__fish_spack_using_command repo set' -l scope -r -d 'configuration scope to modify'
 
 # spack repo remove
-set -g __fish_spack_optspecs_spack_repo_remove h/help scope=
+set -g __fish_spack_optspecs_spack_repo_remove h/help scope= all-scopes
 complete -c spack -n '__fish_spack_using_command_pos 0 repo remove' $__fish_spack_force_files -a '(__fish_spack_repos)'
 complete -c spack -n '__fish_spack_using_command repo remove' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo remove' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo remove' -l scope -r -f -a '_builtin defaults:base defaults site user spack command_line'
 complete -c spack -n '__fish_spack_using_command repo remove' -l scope -r -d 'configuration scope to modify'
+complete -c spack -n '__fish_spack_using_command repo remove' -l all-scopes -f -a all_scopes
+complete -c spack -n '__fish_spack_using_command repo remove' -l all-scopes -d 'remove from all config scopes (default: highest scope with matching repo)'
 
 # spack repo rm
-set -g __fish_spack_optspecs_spack_repo_rm h/help scope=
+set -g __fish_spack_optspecs_spack_repo_rm h/help scope= all-scopes
 complete -c spack -n '__fish_spack_using_command_pos 0 repo rm' $__fish_spack_force_files -a '(__fish_spack_repos)'
 complete -c spack -n '__fish_spack_using_command repo rm' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo rm' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo rm' -l scope -r -f -a '_builtin defaults:base defaults site user spack command_line'
 complete -c spack -n '__fish_spack_using_command repo rm' -l scope -r -d 'configuration scope to modify'
+complete -c spack -n '__fish_spack_using_command repo rm' -l all-scopes -f -a all_scopes
+complete -c spack -n '__fish_spack_using_command repo rm' -l all-scopes -d 'remove from all config scopes (default: highest scope with matching repo)'
 
 # spack repo migrate
 set -g __fish_spack_optspecs_spack_repo_migrate h/help dry-run fix
