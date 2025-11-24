@@ -135,8 +135,6 @@ def remove(name, scope):
 
     removed = mirrors.pop(name, False)
     spack.config.set("mirrors", mirrors, scope=scope)
-    if removed:
-        tty.msg(f"Removed mirror {name} from {scope} scope")
     return bool(removed)
 
 

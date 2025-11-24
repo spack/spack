@@ -357,7 +357,11 @@ def mirror_remove(args):
 
     removed = False
     for scope in scopes:
-        removed |= spack.mirrors.utils.remove(name, scope)
+        removed_from_this_scope = spack.mirrors.utils.remove(name, scope)
+        if removed_from_this_scope:
+            tty.msg(f"Removed mirror {name} from {scope} scope")
+
+        removed |= removed_from_this_scope
         if removed and not args.all_scopes:
             return
 
