@@ -1388,6 +1388,9 @@ class MirrorURLAndVersion:
         url, version, view = m.groups()
         return cls(url, int(version), view)
 
+    def strip_view(self) -> "MirrorURLAndVersion":
+        return MirrorURLAndVersion(self.url, self.version)
+
 
 class InvalidMetadataFile(spack.error.SpackError):
     """Raised when spack encounters a spec file it cannot understand or process"""

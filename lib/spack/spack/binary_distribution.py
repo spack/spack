@@ -25,6 +25,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import warnings
+from collections import defaultdict
 from contextlib import closing
 from typing import IO, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
@@ -183,7 +184,7 @@ class BinaryCacheIndex:
         #: Dictionary mapping DAG hashes of specs to Spec objects
         self._known_specs: Dict[str, spack.spec.Spec] = {}
         #: Dictionary mapping DAG hashes of specs to a list of mirrors where they can be found
-        self._mirrors_for_spec: Dict[str, List[MirrorURLAndVersion]] = {}
+        self._mirrors_for_spec: Dict[str, Set[MirrorURLAndVersion]] = defaultdict(set)
 
     def _init_local_index_cache(self):
         if not self._index_file_cache_initialized:
@@ -214,7 +215,7 @@ class BinaryCacheIndex:
 
         if clear_existing:
             self._specs_already_associated = set()
-            self._mirrors_for_spec = {}
+            self._mirrors_for_spec = defaultdict(set)
             self._known_specs = {}
 
         for url_and_version in self._local_index_cache:
@@ -253,13 +254,11 @@ class BinaryCacheIndex:
 
             for spec in spec_list:
                 dag_hash = spec.dag_hash()
-                mirrors = self._mirrors_for_spec.get(dag_hash)
+                mirrors = self._mirrors_for_spec[dag_hash]
 
-                if mirrors is None:
-                    self._mirrors_for_spec[dag_hash] = [url_and_version]
+                mirrors.add(url_and_version.strip_view())
+                if dag_hash not in self._known_specs:
                     self._known_specs[dag_hash] = spec
-                elif url_and_version not in mirrors:
-                    mirrors.append(url_and_version)
 
     def get_all_built_specs(self) -> List[spack.spec.Spec]:
         """Returns a list of all concrete specs known to be available in a binary cache."""
@@ -285,20 +284,19 @@ class BinaryCacheIndex:
         Args:
             dag_hash: hash of the spec to search
         """
-        return self._mirrors_for_spec.get(dag_hash, [])
+        return list(self._mirrors_for_spec.get(dag_hash, []))
 
     def update_spec(self, spec: spack.spec.Spec, found_list: List[MirrorURLAndVersion]) -> None:
         """Update the cache with a new list of mirrors for a given spec."""
         spec_dag_hash = spec.dag_hash()
 
         if spec_dag_hash not in self._mirrors_for_spec:
-            self._mirrors_for_spec[spec_dag_hash] = found_list
+            self._mirrors_for_spec[spec_dag_hash] = set(found_list)
             self._known_specs[spec_dag_hash] = spec
         else:
             current_list = self._mirrors_for_spec[spec_dag_hash]
             for new_entry in found_list:
-                if new_entry not in current_list:
-                    current_list.append(new_entry)
+                current_list.add(new_entry.strip_view())
 
     def update(self, with_cooldown: bool = False) -> None:
         """Make sure local cache of buildcache index files is up to date.

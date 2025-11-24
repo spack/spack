@@ -310,7 +310,7 @@ def test_use_bin_index_with_view(monkeypatch, tmp_path: pathlib.Path, mutable_co
     s = spack.concretize.concretize_one("libdwarf")
     install_cmd("--fake", "--no-cache", s.name)
     buildcache_cmd("push", "-u", "test", s.name)
-    buildcache_cmd("create-view", "test", s.format("{/hash}"))
+    buildcache_cmd("update-index", "test", s.format("{/hash}"))
 
     # Now the test
     buildcache_cmd("list", "-al")
