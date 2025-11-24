@@ -2249,7 +2249,7 @@ spack:
         """
         # Add a conflict to "mpich" that match an already installed "mpich~debug"
         pkg_cls = spack.repo.PATH.get_pkg_class("mpich")
-        monkeypatch.setitem(pkg_cls.conflicts, Spec(), [("~debug", None)])
+        monkeypatch.setitem(pkg_cls.conflicts, Spec(), [(Spec("~debug"), None)])
 
         # If we concretize with --fresh the conflict is taken into account
         with spack.config.override("concretizer:reuse", False):

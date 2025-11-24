@@ -4064,6 +4064,44 @@ class Spec:
 
         return STORE.layout.root
 
+    def _format_default(self) -> str:
+        """Fast path for formatting with DEFAULT_FORMAT and no color.
+
+        This method manually concatenates the string representation of spec attributes,
+        avoiding the regex parsing overhead of the general format() method.
+        """
+        parts = []
+
+        if self.name:
+            parts.append(self.name)
+
+        if self.versions and self.versions != vn.any_version:
+            parts.append(f"@{self.versions}")
+
+        compiler_flags_str = str(self.compiler_flags)
+        if compiler_flags_str:
+            parts.append(compiler_flags_str)
+
+        variants_str = str(self.variants)
+        if variants_str:
+            parts.append(variants_str)
+
+        if not self.name and self.namespace:
+            parts.append(f" namespace={self.namespace}")
+
+        if self.architecture:
+            if self.architecture.platform:
+                parts.append(f" platform={self.architecture.platform}")
+            if self.architecture.os:
+                parts.append(f" os={self.architecture.os}")
+            if self.architecture.target:
+                parts.append(f" target={self.architecture.target}")
+
+        if self.abstract_hash:
+            parts.append(f"/{self.abstract_hash}")
+
+        return "".join(parts).strip()
+
     def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out attributes of a spec according to a format string.
 
@@ -4147,6 +4185,10 @@ class Spec:
             color: True for colorized result; False for no color; None for auto color.
 
         """
+        # Fast path for the common case: default format with no color
+        if format_string == DEFAULT_FORMAT and color is False:
+            return self._format_default()
+
         ensure_modern_format_string(format_string)
 
         def safe_color(sigil: str, string: str, color_fmt: Optional[str]) -> str:

@@ -518,9 +518,13 @@ def reap_children(
     return to_delete
 
 
-def get_jobserver_config() -> Optional[Union[str, Tuple[int, int]]]:
-    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors."""
-    makeflags = os.environ.get("MAKEFLAGS", "")
+def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
+    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors.
+
+    Args:
+        makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
+    """
+    makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
     if not makeflags:
         return None
     # We can have the following flags:
@@ -1085,6 +1089,7 @@ class PackageInstaller:
         install_source: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
+        restage: bool = True,
         skip_patch: bool = False,
         stop_at: Optional[str] = None,
         stop_before: Optional[str] = None,
@@ -1107,6 +1112,8 @@ class PackageInstaller:
             raise NotImplementedError("Installing sources is not implemented")
         elif keep_prefix:
             raise NotImplementedError("Keeping install prefixes is not implemented")
+        elif not restage:
+            raise NotImplementedError("Restaging builds is not implemented")
         elif stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
         elif stop_before is not None:

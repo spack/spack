@@ -44,7 +44,7 @@
 #show trigger_and_effect/3.
 #show unification_set/2.
 #show provider/2.
-#show condition_nodes/3.
+#show condition_nodes/2.
 #show trigger_node/3.
 #show imposed_nodes/3.
 #show variant_single_value/2.
