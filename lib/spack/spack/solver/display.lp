@@ -46,7 +46,7 @@
 #show provider/2.
 #show condition_nodes/2.
 #show trigger_node/3.
-#show imposed_nodes/3.
+#show imposed_nodes/2.
 #show variant_single_value/2.
 
 % debug

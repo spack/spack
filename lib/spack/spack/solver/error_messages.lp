@@ -30,7 +30,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package),
-  imposed_nodes(Effect, node(ID1, Package1), node(ID, Package)).
+  imposed_nodes(node(ID1, Package1), node(ID, Package)).
 
 condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
@@ -41,7 +41,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1),
-  imposed_nodes(Effect, node(ID1, Package1), node(ID, Package)).
+  imposed_nodes(node(ID1, Package1), node(ID, Package)).
 
 condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
@@ -52,7 +52,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1, A2),
-  imposed_nodes(Effect, node(ID1, Package1), node(ID, Package)).
+  imposed_nodes(node(ID1, Package1), node(ID, Package)).
 
 condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition2, node(ID2, Package2)),
@@ -63,7 +63,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, Name, Package, A1, A2, A3),
-  imposed_nodes(Effect, node(ID1, Package1), node(ID, Package)).
+  imposed_nodes(node(ID1, Package1), node(ID, Package)).
 
 % special condition cause for dependency conditions
 % we can't simply impose the existence of the node for dependency conditions
@@ -77,7 +77,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   condition_holds(Condition1, node(ID1, Package1)),
   pkg_fact(Package1, condition_effect(Condition1, Effect)),
   imposed_constraint(Effect, "dependency_holds", Parent, Package, Type),
-  imposed_nodes(Effect, node(ID1, Package1), node(ID, Package)),
+  imposed_nodes(node(ID1, Package1), node(ID, Package)),
   attr("depends_on", node(X, Parent), node(ID, Package), Type).
 
 % The literal startcauses is used to separate the variables that are part of the error from the

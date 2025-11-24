@@ -587,7 +587,7 @@ imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, "depends_on", _, A1, _).
 
-imposed_nodes(EffectID, node(NodeID, Package), node(X, A1))
+imposed_nodes(node(NodeID, Package), node(X, A1))
   :- trigger_and_effect(Package, TriggerID, EffectID),
      imposed_packages(EffectID, A1),
      condition_set(node(NodeID, Package), node(X, A1)),
@@ -598,21 +598,21 @@ imposed_nodes(EffectID, node(NodeID, Package), node(X, A1))
 
 self_build_requirement(node(X, Package), node(Y, Package)) :- build_requirement(node(X, Package), node(Y, Package)).
 
-imposed_nodes(ConditionID, PackageNode, node(X, A1))
+imposed_nodes(PackageNode, node(X, A1))
   :- imposed_packages(ConditionID, A1),
      condition_set(PackageNode, node(X, A1)),
      attr("hash", PackageNode, ConditionID).
 
 :- imposed_packages(ID, A1), impose(ID, PackageNode), not condition_set(PackageNode, node(_, A1)),
    internal_error("Imposing constraint outside of condition set").
-:- imposed_packages(ID, A1), impose(ID, PackageNode), not imposed_nodes(ID, PackageNode, node(_, A1)),
+:- imposed_packages(ID, A1), impose(ID, PackageNode), not imposed_nodes(PackageNode, node(_, A1)),
    internal_error("Imposing constraint outside of imposed_nodes").
 
 % Conditions that hold impose may impose constraints on other specs
-attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(ID, PackageNode, node(X, A1)).
-attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(ID, PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
-attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
-attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)).
+attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(PackageNode, node(X, A1)).
+attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
+attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
+attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(PackageNode, node(X, A1)).
 
 % Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
 % might appear in the HEAD of a rule
@@ -637,7 +637,7 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
 % should not make foo:=a,b,c possible
 attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
   :- impose(ID, PackageNode),
-     imposed_nodes(ID, PackageNode, node(X, A1)),
+     imposed_nodes(PackageNode, node(X, A1)),
      imposed_constraint(ID, "concrete_variant_set", A1, Variant, Value).
 
 
