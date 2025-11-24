@@ -1958,6 +1958,8 @@ class SpackSolverSetup:
             return result + [fn.attr("extends", pkg.name, input_spec.name)]
 
         for cond, deps_by_name in pkg.dependencies.items():
+            cond_str = str(cond)
+            cond_str_suffix = f" when {cond_str}" if cond_str else ""
             for _, dep in deps_by_name.items():
                 depflag = dep.depflag
                 # Skip test dependencies if they're not requested
@@ -1973,11 +1975,7 @@ class SpackSolverSetup:
                 if not depflag:
                     continue
 
-                msg = f"{pkg.name} depends on {dep.spec}"
-                if cond != EMPTY_SPEC:
-                    msg += f" when {cond}"
-                else:
-                    pass
+                msg = f"{pkg.name} depends on {dep.spec}{cond_str_suffix}"
 
                 context = ConditionContext()
                 context.source = ConstraintOrigin.append_type_suffix(
