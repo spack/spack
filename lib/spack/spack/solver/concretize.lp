@@ -2137,7 +2137,7 @@ opt_criterion(48, "preferred providers (non-roots)").
 
 compiler_penalty(PackageNode, C-1) :-
    C = #count { CompilerNode : node_compiler(PackageNode, CompilerNode) },
-   node_compiler(PackageNode, _).
+   node_compiler(PackageNode, _), C > 0.
 
 opt_criterion(46, "number of compilers used on the same node").
 #minimize{ 0@246: #true }.
