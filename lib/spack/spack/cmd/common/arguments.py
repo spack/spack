@@ -5,7 +5,7 @@
 import argparse
 import os
 import textwrap
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import spack.cmd
 import spack.config
@@ -200,6 +200,13 @@ class ConfigScope(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, values)
+
+
+def config_scope_readable_validator(value):
+    if value not in spack.config.readable_scope_names():
+        raise ValueError(f"Invalid scope argument {value} "
+                        "for config read operation, scope context does not exist") 
+    return value
 
 
 def _cdash_reporter(namespace):
