@@ -213,17 +213,17 @@ class NoStaticAnalysis(PossibleDependencyGraph):
         return PossibleGraph(real_pkgs=real_packages, virtuals=virtuals, edges=edges)
 
     def _package_list(self, specs: Tuple[Union[spack.spec.Spec, str], ...]) -> List[str]:
-        stack = []
-        for current_spec in specs:
-            if isinstance(current_spec, str):
-                current_spec = spack.spec.Spec(current_spec)
+        stack: Set[str] = set()
+        for pkg_name in specs:
+            if isinstance(pkg_name, spack.spec.Spec):
+                pkg_name = pkg_name.name
 
-            if self.repo.is_virtual(current_spec.name):
-                stack.extend([p.name for p in self.providers_for(current_spec.name)])
+            if self.repo.is_virtual(pkg_name):
+                stack.update(p.name for p in self.providers_for(pkg_name))
                 continue
 
-            stack.append(current_spec.name)
-        return sorted(set(stack))
+            stack.add(pkg_name)
+        return sorted(stack)
 
     def _has_deptypes(self, dependencies, *, allowed_deps: dt.DepFlag, strict: bool) -> bool:
         if strict is True:
