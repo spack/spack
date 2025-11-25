@@ -471,7 +471,7 @@ The ``--concrete`` option allows ``spack change`` to modify the concrete specs o
 Multiple concrete specs may be modified, even for a change that modifies only a single abstract spec.
 The concrete specs are modified without any constraints from the packages, so this may create invalid specs that will not build properly if applied without caution.
 
-The ``--no-abstract`` option allows for modifying concrete specs without modifying abstract specs.
+The ``--concrete-only`` option allows for modifying concrete specs without modifying abstract specs.
 It allows changes to be applied to non-root nodes in the environment, and other changes that do not modify any root specs.
 
 Loading

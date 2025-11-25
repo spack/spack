@@ -135,7 +135,7 @@ def test_mutate_from_cli_no_abstract():
     with pytest.raises(ValueError, match="Cannot change abstract spec"):
         _ = _test_mutate_from_cli(args)
 
-    args.insert(0, "--no-abstract")
+    args = ["--concrete-only"] + args[1:]
     roots = _test_mutate_from_cli(args, create=False)
 
     for root in roots:

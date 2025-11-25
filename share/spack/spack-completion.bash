@@ -681,7 +681,7 @@ _spack_cd() {
 _spack_change() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --list-name --match-spec -a --all --no-abstract --concrete"
+        SPACK_COMPREPLY="-h --help -l --list-name --match-spec -a --all --concrete -C --concrete-only"
     else
         _all_packages
     fi

@@ -35,27 +35,26 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="change all matching abstract specs (allow changing more than one abstract spec)",
     )
     subparser.add_argument(
-        "--no-abstract",
-        action="store_false",
-        default=True,
-        dest="abstract",
-        help="do not change abstract specs in the environment",
-    )
-    subparser.add_argument(
         "--concrete",
         action="store_true",
         default=False,
         help="change concrete specs in the environment",
     )
-
+    subparser.add_argument(
+        "-C",
+        "--concrete-only",
+        action="store_true",
+        default=False,
+        help="change only concrete specs in the environment",
+    )
     arguments.add_common_arguments(subparser, ["specs"])
 
 
 def change(parser, args):
-    if args.all and not args.abstract:
-        warnings.warn("'spack change --all' argument is ignored with '--no-abstract'")
-    if args.list_name and not args.abstract:
-        warnings.warn("'spack change --list-name' argument is ignored with '--no-abstract'")
+    if args.all and args.concrete_only:
+        warnings.warn("'spack change --all' argument is ignored with '--concrete-only'")
+    if args.list_name and args.concrete_only:
+        warnings.warn("'spack change --list-name' argument is ignored with '--concrete-only'")
 
     env = spack.cmd.require_active_env(cmd_name="change")
 
@@ -65,7 +64,7 @@ def change(parser, args):
     specs = spack.cmd.parse_specs(args.specs)
 
     with env.write_transaction():
-        if args.abstract:
+        if not args.concrete_only:
             try:
                 for spec in specs:
                     env.change_existing_spec(
@@ -76,10 +75,10 @@ def change(parser, args):
                     )
             except (ValueError, spack.environment.SpackEnvironmentError) as e:
                 msg = "Cannot change abstract specs."
-                msg += " Try again with '--no-abstract' to change concrete specs only."
+                msg += " Try again with '--concrete-only' to change concrete specs only."
                 raise ValueError(msg) from e
 
-        if args.concrete:
+        if args.concrete or args.concrete_only:
             for spec in specs:
                 env.mutate(selector=match_spec or spack.spec.Spec(spec.name), mutator=spec)
 
