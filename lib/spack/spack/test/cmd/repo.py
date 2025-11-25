@@ -17,11 +17,10 @@ import spack.repo
 import spack.repo_migrate
 from spack.error import SpackError
 from spack.llnl.util.filesystem import working_dir
-from spack.main import SpackCommand
 from spack.util.executable import Executable
 
 repo = spack.main.SpackCommand("repo")
-env = SpackCommand("env")
+env = spack.main.SpackCommand("env")
 
 
 def test_help_option():
@@ -46,6 +45,40 @@ def test_create_add_list_remove(mutable_config, tmp_path: pathlib.Path):
     # Then remove it and check it's not there
     repo("remove", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
     output = repo("list", "--scope=site", output=str)
+    assert "mockrepo" not in output
+
+
+def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
+    # Create and add a new repo
+    repo("create", str(tmp_path), "mockrepo")
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
+    repo("add", "--scope=system", str(tmp_path / "spack_repo" / "mockrepo"))
+
+    # Confirm that it is not removed when the scope is incorrect
+    with pytest.raises(spack.main.SpackCommandError):
+        repo("remove", "--scope=user", "mockrepo")
+    output = repo("list", output=str)
+    assert "mockrepo" in output
+
+    # Confirm that when the scope is specified, it is only removed from that scope
+    repo("remove", "--scope=site", "mockrepo")
+    site_output = repo("list", "--scope=site", output=str)
+    system_output = repo("list", "--scope=system", output=str)
+    assert "mockrepo" not in site_output
+    assert "mockrepo" in system_output
+
+    # Confirm that when the scope is not specified, it is removed from top scope with it present
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
+    repo("remove", "mockrepo")
+    site_output = repo("list", "--scope=site", output=str)
+    system_output = repo("list", "--scope=system", output=str)
+    assert "mockrepo" not in site_output
+    assert "mockrepo" in system_output
+
+    # Check that the `--all-scopes` option removes from all scopes
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
+    repo("remove", "--all-scopes", "mockrepo")
+    output = repo("list", output=str)
     assert "mockrepo" not in output
 
 
