@@ -42,7 +42,7 @@ tree root with the following layout:
 
 .. code-block:: text
 
-   {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
+   {architecture.platform}-{architecture.target}/{name}-{version}-{hash}
 
 In very rare cases, it may be necessary to reduce the length of this path. For example,
 very old versions of the Intel compiler are known to segfault when input paths are too long:
