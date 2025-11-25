@@ -222,7 +222,8 @@ DEPTH = VersionConditionalOption("--depth", 1, min_version=MIN_OPT_VERSION)
 
 FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2, 19, 0))
 NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2, 34, 0))
-# technically sparse-checkout was added in 2.25, but we go forward since the model we use only works with the `--cone` option
+# technically sparse-checkout was added in 2.25, but we go forward since the model we use only
+# works with the `--cone` option
 SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", "set", min_version=(2, 34, 0))
 
 
