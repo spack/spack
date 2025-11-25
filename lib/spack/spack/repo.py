@@ -813,7 +813,7 @@ class RepoPath:
             if spec.name in all_packages
         ]
         if not providers:
-            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.name)
+            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.fullname)
         return providers
 
     @autospec
@@ -1278,11 +1278,10 @@ class Repo:
         """Index of patches and packages they're defined on."""
         return self.index["patches"]
 
-    @autospec
-    def providers_for(self, vpkg_spec: "spack.spec.Spec") -> List["spack.spec.Spec"]:
-        providers = self.provider_index.providers_for(vpkg_spec)
+    def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
+        providers = self.provider_index.providers_for(virtual)
         if not providers:
-            raise UnknownPackageError(vpkg_spec.fullname)
+            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.fullname)
         return providers
 
     @autospec
