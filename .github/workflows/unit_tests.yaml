@@ -68,15 +68,6 @@ jobs:
           # Need this for the git tests to succeed.
           git --version
           . .github/workflows/bin/setup_git.sh
-    - name: Bootstrap clingo
-      if: ${{ matrix.concretizer == 'clingo' }}
-      env:
-          SPACK_PYTHON: python
-      run: |
-          . share/spack/setup-env.sh
-          spack bootstrap disable spack-install
-          spack bootstrap now
-          spack -v solve zlib
     - name: Run unit tests
       env:
           SPACK_PYTHON: python
