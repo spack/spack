@@ -30,7 +30,7 @@ def _find_git() -> Optional[str]:
 
 
 def extract_git_version_str(git_exe):
-    v_str = git_exe("--version", output=str).strip().split()[-1]
+    v_str = git_exe("--version", output=str).strip().split()[-1].replace("windows.", "")
     return v_str
 
 

@@ -82,6 +82,17 @@ def test_pull_checkout_branch(git, tmp_path: pathlib.Path, mock_git_version_info
             spack.util.git.pull_checkout_branch("main")
 
 
+@pytest.mark.parametrize(
+    "input,answer",
+    (["git version 1.7.1", (1, 7, 1)], ["git version 2.34.1.windows.2", (2, 34, 1, 2)]),
+)
+def test_extract_git_version(mock_util_executable, input, answer):
+    log, _, registered_responses = mock_util_executable
+    registered_responses["git --version"] = input
+    git = spack.util.git.GitExecutable()
+    assert git.version == answer
+
+
 def test_mock_git_exe(mock_util_executable):
     log, should_fail, _ = mock_util_executable
     should_fail.append("clone")
