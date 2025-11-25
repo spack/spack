@@ -285,6 +285,33 @@ class TestBuildGraph:
         assert len(graph.parent_to_child[diamond_dag["dep1"].dag_hash()]) == 0
         assert len(graph.parent_to_child[diamond_dag["dep2"].dag_hash()]) == 0
 
+    def test_overwrite_set_prevents_pruning(
+        self, mock_specs: Dict[str, Spec], temporary_store: Store
+    ):
+        """Test that specs in overwrite_set are not pruned even if installed."""
+        # Install dep2 in the database
+        dep2 = mock_specs["dep2"]
+        install_spec_in_db(dep2, temporary_store)
+
+        # Create graph with dep2 in the overwrite set
+        graph = BuildGraph(
+            specs=[mock_specs["root"]],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=False,
+            install_package=True,
+            install_deps=True,
+            database=temporary_store.db,
+            overwrite_set={dep2.dag_hash()},
+        )
+
+        # dep2 should NOT be pruned since it's in overwrite_set
+        assert dep2.dag_hash() in graph.nodes
+        # dep1 should still have dep2 as a child
+        assert dep2.dag_hash() in graph.parent_to_child[mock_specs["dep1"].dag_hash()]
+        # dep2 should have dep1 as a parent
+        assert mock_specs["dep1"].dag_hash() in graph.child_to_parent[dep2.dag_hash()]
+
     def test_installed_root_excludes_build_deps_even_when_requested(
         self, specs_with_build_deps: Dict[str, Spec], temporary_store: Store
     ):
