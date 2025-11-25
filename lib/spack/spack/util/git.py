@@ -290,8 +290,8 @@ def git_checkout(
     checkout = ["checkout"]
     sparse_checkout = SPARSE_CHECKOUT(git_exe.version)
 
-    # if not debug:
-    # checkout.append("--quiet")
+    if not debug:
+        checkout.append("--quiet")
     if ref:
         checkout.append(ref)
 
