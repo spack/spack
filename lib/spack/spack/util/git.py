@@ -51,14 +51,14 @@ class GitExecutable(exe.Executable):
 
 
 @overload
-def git(required: Literal[True]) -> exe.Executable: ...
+def git(required: Literal[True]) -> GitExecutable: ...
 
 
 @overload
-def git(required: bool = ...) -> Optional[exe.Executable]: ...
+def git(required: bool = ...) -> Optional[GitExecutable]: ...
 
 
-def git(required: bool = False) -> Optional[exe.Executable]:
+def git(required: bool = False) -> Optional[GitExecutable]:
     """Get a git executable. Raises CommandNotFoundError if ``required`` and git is not found."""
     git_path = _find_git()
 
