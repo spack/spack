@@ -220,9 +220,8 @@ class NoStaticAnalysis(PossibleDependencyGraph):
 
             if self.repo.is_virtual(pkg_name):
                 stack.update(p.name for p in self.providers_for(pkg_name))
-                continue
-
-            stack.add(pkg_name)
+            else:
+                stack.add(pkg_name)
         return sorted(stack)
 
     def _has_deptypes(self, dependencies, *, allowed_deps: dt.DepFlag, strict: bool) -> bool:
