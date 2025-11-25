@@ -34,54 +34,29 @@ duplicate_penalty(node(ID1, Package), 1, "version")
    max_dupes(Virtual, X), X > 1, ID2 < X.
 
 % Integrity constraints on DAG nodes
-:- attr("root", PackageNode),
-   not attr("node", PackageNode),
-   internal_error("Every root must be a node").
-:- attr("version", PackageNode, _),
-   not attr("node", PackageNode),
-   not attr("virtual_node", PackageNode),
-   internal_error("Only nodes and virtual_nodes can have versions").
-:- attr("node_version_satisfies", PackageNode, _),
-   not attr("node", PackageNode),
-   not attr("virtual_node", PackageNode),
-   internal_error("Only nodes and virtual_nodes can have version satisfaction").
-:- attr("hash", PackageNode, _),
-   not attr("node", PackageNode),
-   internal_error("Only nodes can have hashes").
-:- attr("node_platform", PackageNode, _),
-   not attr("node", PackageNode),
-   internal_error("Only nodes can have platforms").
-:- attr("node_os", PackageNode, _), not attr("node", PackageNode),
-   internal_error("Only nodes can have node_os").
-:- attr("node_target", PackageNode, _), not attr("node", PackageNode),
-   internal_error("Only nodes can have node_target").
-:- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode),
-   internal_error("variant_value true for a non-node").
-:- attr("node_flag", PackageNode, _), not attr("node", PackageNode),
-   internal_error("node_flag assigned for non-node").
-:- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode),
-   internal_error("non-node depends on something").
-:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode),
-   internal_error("something depends_on a non-node").
-:- attr("virtual_node", VirtualNode), not provider(_, VirtualNode),
-   internal_error("virtual node with no provider").
-:- provider(_, VirtualNode), not attr("virtual_node", VirtualNode),
-   internal_error("provider with no virtual node").
-:- provider(PackageNode, _), not attr("node", PackageNode),
-   internal_error("provider with no real node").
-:- node_has_variant(PackageNode, _, _), not attr("node", PackageNode),
-   internal_error("node has variant for a non-node").
-:- attr("variant_set", PackageNode, _, _), not attr("node", PackageNode),
-   internal_error("variant_set for a non-node").
-:- variant_is_propagated(PackageNode, _), not attr("node", PackageNode),
-   internal_error("variant_is_propagated for a non-node").
+:- attr("root", PackageNode), not attr("node", PackageNode).
+:- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
+:- attr("node_version_satisfies", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
+:- attr("hash", PackageNode, _), not attr("node", PackageNode).
+:- attr("node_platform", PackageNode, _), not attr("node", PackageNode).
+:- attr("node_os", PackageNode, _), not attr("node", PackageNode).
+:- attr("node_target", PackageNode, _), not attr("node", PackageNode).
+:- attr("variant_value", PackageNode, _, _), not attr("node", PackageNode).
+:- attr("node_flag", PackageNode, _), not attr("node", PackageNode).
+:- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
+:- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
+:- attr("virtual_node", VirtualNode), not provider(_, VirtualNode).
+:- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
+:- provider(PackageNode, _), not attr("node", PackageNode).
+:- node_has_variant(PackageNode, _, _), not attr("node", PackageNode).
+:- attr("variant_set", PackageNode, _, _), not attr("node", PackageNode).
+:- variant_is_propagated(PackageNode, _), not attr("node", PackageNode).
 
-:- attr("root", node(ID, PackageNode)), ID > min_dupe_id,
-   internal_error("root with a non-minimal duplicate ID").
+:- attr("root", node(ID, PackageNode)), ID > min_dupe_id.
 
 % Nodes in the "root" unification set cannot depend on non-root nodes if the dependency is "link" or "run"
-:- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("link dependency out of the root unification set").
-:- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "run"),  ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)), internal_error("run dependency out of the root unification set").
+:- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "link"), ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)).
+:- attr("depends_on", node(min_dupe_id, Package), node(ID, _), "run"),  ID != min_dupe_id, unification_set("root", node(min_dupe_id, Package)).
 
 % Namespaces are statically assigned by a package fact if not otherwise set
 error(100, "{0} does not have a namespace", Package) :- attr("node", node(ID, Package)),
@@ -163,9 +138,7 @@ related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "linkrun").
 % as a build dependency.
 %
 % We'll need to relax the rule before we get to actual cross-compilation
-:- depends_on(ParentNode, node(X, Dependency)), depends_on(ParentNode, node(Y, Dependency)), X < Y,
-   internal_error("Cannot split link/build deptypes for a single edge (yet)").
-
+:- depends_on(ParentNode, node(X, Dependency)), depends_on(ParentNode, node(Y, Dependency)), X < Y.
 
 #defined multiple_unification_sets/1.
 #defined runtime/1.
@@ -175,24 +148,22 @@ related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "linkrun").
 %----
 
 % In the "root" unification set only ID = 0 are allowed
-:- unification_set("root", node(ID, _)), ID != 0, internal_error("root unification set has node with non-zero unification set ID").
+:- unification_set("root", node(ID, _)), ID != 0.
 
 % In the "root" unification set we allow only packages from the link-run possible subDAG
-:- unification_set("root", node(_, Package)), not possible_in_link_run(Package), not virtual(Package), internal_error("package outside possible link/run graph in root unification set").
+:- unification_set("root", node(_, Package)), not possible_in_link_run(Package), not virtual(Package).
 
 % Each node must belong to at least one unification set
-:- attr("node", PackageNode), not unification_set(_, PackageNode), internal_error("node belongs to no unification set").
+:- attr("node", PackageNode), not unification_set(_, PackageNode).
 
 % Cannot have a node with an ID, if lower ID of the same package are not used
 :- attr("node", node(ID1, Package)),
    not attr("node", node(ID2, Package)),
-   max_dupes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1,
-   internal_error("node skipped id number").
+   max_dupes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1.
 
 :- attr("virtual_node", node(ID1, Package)),
    not attr("virtual_node", node(ID2, Package)),
-   max_dupes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1,
-   internal_error("virtual node skipped id number").
+   max_dupes(Package, X), ID1=0..X-1, ID2=0..X-1, ID2 < ID1.
 
 % Prefer to assign lower ID to virtuals associated with a lower penalty provider
 :- not unification_set("root", node(X, Virtual)),
@@ -231,8 +202,7 @@ mentioned_in_literal(Root, Mentioned) :- mentioned_in_literal(TriggerID, Root, M
 literal_node(Root, node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root).
 
 1 { literal_node(Root, node(0..Y-1, Mentioned)) : max_dupes(Mentioned, Y) } 1 :-
-  mentioned_in_literal(Root, Mentioned), Mentioned != Root,
-  internal_error("must have exactly one condition_set for literals").
+  mentioned_in_literal(Root, Mentioned), Mentioned != Root.
 
 build_dependency_of_literal_node(LiteralNode, node(X, BuildDependency)) :-
   literal_node(Root, LiteralNode),
@@ -271,8 +241,7 @@ associated_with_root(RootNode, ChildNode) :-
 :- attr("root", RootNode),
    condition_set(RootNode, node(X, Package)),
    not virtual(Package),
-   not associated_with_root(RootNode, node(X, Package)),
-   internal_error("nodes in root condition set must be associated with root").
+   not associated_with_root(RootNode, node(X, Package)).
 
 #defined concretize_everything/0.
 #defined literal/1.
@@ -346,14 +315,12 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 :- not pkg_fact(Package, version_origin(Version, "installed")),
    not pkg_fact(Package, version_origin(Version, "installed_git_version")),
    attr("version", node(ID, Package), Version),
-   concrete(node(ID, Package)),
-   internal_error("Reuse version weight used for built package").
+   concrete(node(ID, Package)).
 
 version_weight(node(ID, Package), Weight)
   :- attr("version", node(ID, Package), Version),
      attr("node", node(ID, Package)),
-     pkg_fact(Package, version_declared(Version, Weight)),
-     internal_error("version weights must exist and be unique").
+     pkg_fact(Package, version_declared(Version, Weight)).
 
 version_deprecation_penalty(node(ID, Package), Penalty)
   :- pkg_fact(Package, deprecated_version(Version)),
@@ -607,10 +574,8 @@ imposed_nodes(PackageNode, node(X, A1))
      condition_set(PackageNode, node(X, A1)),
      attr("hash", PackageNode, ConditionID).
 
-:- imposed_packages(ID, A1), impose(ID, PackageNode), not condition_set(PackageNode, node(_, A1)),
-   internal_error("Imposing constraint outside of condition set").
-:- imposed_packages(ID, A1), impose(ID, PackageNode), not imposed_nodes(PackageNode, node(_, A1)),
-   internal_error("Imposing constraint outside of imposed_nodes").
+:- imposed_packages(ID, A1), impose(ID, PackageNode), not condition_set(PackageNode, node(_, A1)).
+:- imposed_packages(ID, A1), impose(ID, PackageNode), not imposed_nodes(PackageNode, node(_, A1)).
 
 % Conditions that hold impose may impose constraints on other specs
 attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(PackageNode, node(X, A1)).
@@ -633,8 +598,7 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
 % satisfy the dependency.
 1 { attr("depends_on", node(X, A1), node(0..Y-1, A2), A3) : max_dupes(A2, Y) } 1
   :- impose(ID, node(X, A1)),
-     imposed_constraint(ID, "depends_on", A1, A2, A3),
-     internal_error("Build deps must land in exactly one duplicate").
+     imposed_constraint(ID, "depends_on", A1, A2, A3).
 
 % For := we must keep track of the origin of the fact, since we need to check
 % each condition separately, i.e. foo:=a,b in one place and foo:=c in another
@@ -655,8 +619,7 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
      unification_set("root", RootNode),
      condition_set(RootNode, node(A1_DUPE_ID, A1)),
      not self_build_requirement(RootNode, node(A1_DUPE_ID, A1)),
-     imposed_constraint(ID, "depends_on", A1, A2, A3),
-     internal_error("Build deps must land in exactly one duplicate").
+     imposed_constraint(ID, "depends_on", A1, A2, A3).
 
 :- attr("direct_dependency", ParentNode, node_requirement("virtual_on_incoming_edges", ChildPkg, Virtual)),
    not attr("virtual_on_edge", ParentNode, node(_, ChildPkg), Virtual).
@@ -839,15 +802,13 @@ attr("uses_virtual", PackageNode, Virtual) :-
 :- attr("node", node(ID, Package)),
    attr("hash", node(ID, Package), Hash),
    attr("variant_value", node(ID, Package), Variant, Value),
-   not imposed_constraint(Hash, "variant_value", Package, Variant, Value),
-   internal_error("imposed hash without imposing all variant values").
+   not imposed_constraint(Hash, "variant_value", Package, Variant, Value).
 
 % we cannot have additional flag values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
    attr("hash", node(ID, Package), Hash),
    attr("node_flag", node(ID, Package), node_flag(FlagType, Flag, _, _)),
-   not imposed_constraint(Hash, "node_flag", Package, node_flag(FlagType, Flag, _, _)),
-   internal_error("imposed hash without imposing all flag values").
+   not imposed_constraint(Hash, "node_flag", Package, node_flag(FlagType, Flag, _, _)).
 
 #defined condition/1.
 #defined subcondition/2.
@@ -1017,8 +978,7 @@ attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
 % or used somewhere
 :- attr("virtual_node", node(_, Virtual)),
    not attr("virtual_on_incoming_edges", _, Virtual),
-   not attr("virtual_root", node(_, Virtual)),
-   internal_error("virtual node does not match incoming edge").
+   not attr("virtual_root", node(_, Virtual)).
 
 attr("virtual_on_incoming_edges", ProviderNode, Virtual)
   :- attr("virtual_on_edge", _, ProviderNode, Virtual).
@@ -1081,14 +1041,12 @@ do_not_impose(EffectID, node(X, Package))
    explicitly_requested_root(PossibleProvider),
    not self_build_requirement(PossibleProvider, ProviderNode),
    not explicitly_requested_root(ProviderNode),
-   not language(Virtual),
-   internal_error("If a root can provide a virtual, it must be the provider").
+   not language(Virtual).
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
 :- provider(PackageNode, node(VirtualID, Virtual)),
-   not virtual_condition_holds(PackageNode, Virtual),
-   internal_error("Virtual when provides not respected").
+   not virtual_condition_holds(PackageNode, Virtual).
 
 #defined provided_together/3.
 
@@ -1361,8 +1319,7 @@ variant_defined(PackageNode, Name) :- variant_definition(PackageNode, Name, _).
 % for two or more variant definitions, this prefers the last one defined.
 :- node_has_variant(node(NodeID, Package), Name, SelectedVariantID),
    variant_definition(node(NodeID, Package), Name, VariantID),
-   VariantID > SelectedVariantID,
-   internal_error("If the solver picks a variant descriptor it must use that variant descriptor").
+   VariantID > SelectedVariantID.
 
 % B: Associating applicable package rules with nodes
 
@@ -1497,7 +1454,6 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
 
 :- attr("variant_set", node(ID, Package), Variant, Value),
    not attr("variant_value", node(ID, Package), Variant, Value).
-   internal_error("If a variant is set to a value it must have that value").
 
 % The rules below allow us to prefer default values for variants
 % whenever possible. If a variant is set in a spec, or if it is
@@ -1774,7 +1730,7 @@ will_build_packages() :- build(X).
 % NOTE: Currently we have a single allowed platform per DAG, therefore there is no
 % need to have additional optimization criteria. If we ever add cross-platform dags,
 % this needs to be changed.
-:- 2 { allowed_platform(Platform) }, internal_error("More than one allowed platform detected").
+:- 2 { allowed_platform(Platform) }.
 
 1 { attr("node_platform", PackageNode, Platform) : allowed_platform(Platform) } 1
   :- attr("node", PackageNode).
@@ -1930,8 +1886,7 @@ error(100, "Cannot set multiple {0} values for {1} from cli", FlagType, Package)
 #defined hash_attr/7.
 
 { attr("hash", node(ID, PackageName), Hash): installed_hash(PackageName, Hash) } 1 :-
-  attr("node", node(ID, PackageName)),
-  internal_error("Package must resolve to at most 1 hash").
+  attr("node", node(ID, PackageName)).
 % you can't choose an installed hash for a dev spec
 :- attr("hash", PackageNode, Hash), attr("variant_value", PackageNode, "dev_path", _).
 % You can't install a hash, if it is not installed

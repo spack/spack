@@ -73,14 +73,9 @@ from .core import (
     AspVar,
     NodeArgument,
     SourceContext,
-    ast_sym,
-    ast_type,
     clingo,
-    clingo_cffi,
     extract_args,
     fn,
-    parse_files,
-    parse_term,
     using_libc_compatibility,
 )
 from .input_analysis import create_counter, create_graph_analyzer
@@ -326,12 +321,8 @@ class Result:
         self.warnings = None
         self.nmodels = 0
 
-        # Saved control object for reruns when necessary
-        self.control = None
-
         # specs ordered by optimization level
         self.answers = []
-        self.cores = []
 
         # names of optimization criteria
         self.criteria = []
@@ -347,91 +338,8 @@ class Result:
         self._concrete_specs = None
         self._unsolved_specs = None
 
-    def format_core(self, core):
-        """
-        Format an unsatisfiable core for human readability
-
-        Returns a list of strings, where each string is the human readable
-        representation of a single fact in the core, including a newline.
-
-        Modeled after traceback.format_stack.
-        """
-        error_msg = (
-            "Internal Error: ASP Result.control not populated. Please report to the spack"
-            " maintainers"
-        )
-        assert self.control, error_msg
-
-        symbols = dict((a.literal, a.symbol) for a in self.control.symbolic_atoms)
-
-        core_symbols = []
-        for atom in core:
-            sym = symbols[atom]
-            core_symbols.append(sym)
-
-        return sorted(str(symbol) for symbol in core_symbols)
-
-    def minimize_core(self, core):
-        """
-        Return a subset-minimal subset of the core.
-
-        Clingo cores may be thousands of lines when two facts are sufficient to
-        ensure unsatisfiability. This algorithm reduces the core to only those
-        essential facts.
-        """
-        error_msg = (
-            "Internal Error: ASP Result.control not populated. Please report to the spack"
-            " maintainers"
-        )
-        assert self.control, error_msg
-
-        min_core = core[:]
-        for fact in core:
-            # Try solving without this fact
-            min_core.remove(fact)
-            ret = self.control.solve(assumptions=min_core)
-            if not ret.unsatisfiable:
-                min_core.append(fact)
-        return min_core
-
-    def minimal_cores(self):
-        """
-        Return a list of subset-minimal unsatisfiable cores.
-        """
-        return [self.minimize_core(core) for core in self.cores]
-
-    def format_minimal_cores(self):
-        """List of facts for each core
-
-        Separate cores are separated by an empty line
-        """
-        string_list = []
-        for core in self.minimal_cores():
-            if string_list:
-                string_list.append("\n")
-            string_list.extend(self.format_core(core))
-        return string_list
-
-    def format_cores(self):
-        """List of facts for each core
-
-        Separate cores are separated by an empty line
-        Cores are not minimized
-        """
-        string_list = []
-        for core in self.cores:
-            if string_list:
-                string_list.append("\n")
-            string_list.extend(self.format_core(core))
-        return string_list
-
     def raise_if_unsat(self):
-        """
-        Raise an appropriate error if the result is unsatisfiable.
-
-        The error is an SolverError, and includes the minimized cores
-        resulting from the solve, formatted to be human readable.
-        """
+        """Raise a generic internal error if the result is unsatisfiable."""
         if self.satisfiable:
             return
 
@@ -439,8 +347,7 @@ class Result:
         if len(constraints) == 1:
             constraints = constraints[0]
 
-        conflicts = self.format_minimal_cores()
-        raise SolverError(constraints, conflicts=conflicts)
+        raise SolverError(constraints)
 
     @property
     def specs(self):
@@ -616,7 +523,6 @@ class Result:
             # Not considered for equality
             # self.control
             # self.possible_dependencies
-            # self.cores
             # self.possible_dependencies
         )
         return all(eq)
@@ -998,15 +904,12 @@ class ErrorHandler:
 
 
 class PyclingoDriver:
-    def __init__(self, cores=True, conc_cache: Optional[ConcretizationCache] = None):
+    def __init__(self, conc_cache: Optional[ConcretizationCache] = None) -> None:
         """Driver for the Python clingo interface.
 
-        Arguments:
-            cores (bool): whether to generate unsatisfiable cores for better
-                error reporting.
-            conc_cache (ConcretizationCache)
+        Args:
+            conc_cache: concretization cache
         """
-        self.cores = cores
         # This attribute will be reset at each call to solve
         self.control: Any = None  # TODO: fix typing of dynamic clingo import
         self._conc_cache = conc_cache
@@ -1070,26 +973,16 @@ class PyclingoDriver:
 
         # With a grounded program, we can run the solve.
         models = []  # stable models if things go well
-        cores: List = []  # unsatisfiable cores if they do not
 
         def on_model(model):
             models.append((model.cost, model.symbols(shown=True, terms=True)))
-
-        solve_kwargs = {
-            "assumptions": setup.assumptions,
-            "on_model": on_model,
-            "on_core": cores.append,
-        }
-
-        if clingo_cffi():
-            solve_kwargs["on_unsat"] = cores.append
 
         timer.start("solve")
         # A timeout of 0 means no timeout
         time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
         timeout_end = time.monotonic() + time_limit if time_limit > 0 else float("inf")
         error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
-        with self.control.solve(**solve_kwargs, async_=True) as handle:
+        with self.control.solve(on_model=on_model, async_=True) as handle:
             # Allow handling of interrupts every second.
             #
             # pyclingo's `SolveHandle` blocks the calling thread for the duration of each
@@ -1143,10 +1036,6 @@ class PyclingoDriver:
             result.possible_dependencies = setup.pkgs
             timer.stop("construct_specs")
             timer.stop()
-
-        elif cores:
-            result.control = self.control
-            result.cores.extend(cores)
 
         result.raise_if_unsat()
 
@@ -1211,7 +1100,6 @@ class PyclingoDriver:
             reuse=reuse,
             packages_with_externals=packages_with_externals,
             allow_deprecated=allow_deprecated,
-            _use_unsat_cores=output.out is None,
         )
         timer.stop("setup")
 
@@ -1457,7 +1345,6 @@ class SpackSolverSetup:
         self.requirement_parser = RequirementParser(spack.config.CONFIG)
         self.possible_virtuals: Set[str] = set()
 
-        self.assumptions: List[Tuple["clingo.Symbol", bool]] = []  # type: ignore[name-defined]
         # pkg_name -> version -> list of possible origins (package.py, installed, etc.)
         self.possible_versions = collections.defaultdict(lambda: collections.defaultdict(list))
         self.versions_from_yaml: Dict[str, List[GitOrStandardVersion]] = {}
@@ -3003,7 +2890,6 @@ class SpackSolverSetup:
         reuse: Optional[List[spack.spec.Spec]] = None,
         packages_with_externals=None,
         allow_deprecated: bool = False,
-        _use_unsat_cores: bool = True,
     ) -> "ProblemInstanceBuilder":
         """Generate an ASP program with relevant constraints for specs.
 
@@ -3016,7 +2902,6 @@ class SpackSolverSetup:
             reuse: list of concrete specs that can be reused
             packages_with_externals: precomputed packages config with implicit externals
             allow_deprecated: if True adds deprecated versions into the solve
-            _use_unsat_cores: if True, use unsat cores for internal errors
 
         Return:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
@@ -3174,9 +3059,6 @@ class SpackSolverSetup:
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
 
-        self.gen.h1("Internal errors")
-        self.internal_errors(_use_unsat_cores=_use_unsat_cores)
-
         # once we've done a full traversal and know possible versions, check that the
         # requested solve is at least consistent.
         self.impossible_dependencies_check(specs)
@@ -3195,27 +3077,6 @@ class SpackSolverSetup:
         if isinstance(should_mix, list):
             for pkg_name in should_mix:
                 self.gen.fact(fn.allow_mixing(pkg_name))
-
-    def internal_errors(self, *, _use_unsat_cores: bool):
-        parent_dir = os.path.dirname(__file__)
-
-        def visit(node):
-            if ast_type(node) == clingo().ast.ASTType.Rule:
-                for term in node.body:
-                    if ast_type(term) == clingo().ast.ASTType.Literal:
-                        if ast_type(term.atom) == clingo().ast.ASTType.SymbolicAtom:
-                            name = ast_sym(term.atom).name
-                            if name == "internal_error":
-                                arg = ast_sym(ast_sym(term.atom).arguments[0])
-                                symbol = AspFunction(name)(arg.string)
-                                if _use_unsat_cores:
-                                    self.assumptions.append((parse_term(str(symbol)), True))
-                                    self.gen.asp_problem.append(f"{{{symbol}}}.")
-                                else:
-                                    self.gen.asp_problem.append(f"{symbol}.")
-
-        path = os.path.join(parent_dir, "concretize.lp")
-        parse_files([path], visit)
 
     def define_runtime_constraints(self) -> List[spack.spec.Spec]:
         """Define the constraints to be imposed on the runtimes, and returns a list of
@@ -4235,15 +4096,13 @@ class SolverError(InternalConcretizerError):
     get a solution.
     """
 
-    def __init__(self, provided, conflicts):
+    def __init__(self, provided):
         msg = (
-            "Spack concretizer internal error. Please submit a bug report and include the "
-            "command, environment if applicable and the following error message."
+            "Spack concretizer internal error. Please submit a bug report at "
+            "https://github.com/spack/spack and include the command and environment "
+            "if applicable."
             f"\n    {provided} is unsatisfiable"
         )
-
-        if conflicts:
-            msg += ", errors are:" + "".join([f"\n    {conflict}" for conflict in conflicts])
 
         super().__init__(msg)
 
