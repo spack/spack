@@ -3789,15 +3789,11 @@ class SpecBuilder:
                 if spack.repo.PATH.is_virtual(pkg):
                     continue
 
-                # if we've already gotten a concrete spec for this pkg,
-                # do not bother calling actions on it except for node_flag_source,
-                # since node_flag_source is tracking information not in the spec itself
-                # we also need to keep track of splicing information.
+                # if we've already gotten a concrete spec for this pkg, we're done, unless
+                # we're splicing. `splice_at_hash()` is the only action we call on concrete specs.
                 spec = self._specs.get(node)
-                if spec and spec.concrete:
-                    do_not_ignore_attrs = ["node_flag_source", "splice_at_hash"]
-                    if name not in do_not_ignore_attrs:
-                        continue
+                if spec and spec.concrete and name != "splice_at_hash":
+                    continue
 
             action(*args)
 
