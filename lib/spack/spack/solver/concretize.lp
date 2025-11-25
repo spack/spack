@@ -1826,9 +1826,9 @@ error(100, "Cannot find compatible targets for {0} and {1}", Package, Dependency
 % Intermediate step for performance reasons
 % When the integrity constraint above was formulated including this logic
 % we suffered a substantial performance penalty
-node_target_compatible(PackageNode, Target)
- :- attr("node_target", PackageNode, MyTarget),
-    target_compatible(Target, MyTarget).
+node_target_compatible(ChildNode, ParentTarget)
+ :- attr("node_target", ChildNode, ChildTarget),
+    target_compatible(ParentTarget, ChildTarget).
 
 #defined target_satisfies/2.
 compiler(Compiler) :- target_supported(Compiler, _, _).
