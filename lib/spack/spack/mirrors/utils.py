@@ -133,12 +133,9 @@ def remove(name, scope):
     if not mirrors:
         mirrors = syaml.syaml_dict()
 
-    if name not in mirrors:
-        tty.die("No mirror with name %s" % name)
-
-    mirrors.pop(name)
+    removed = mirrors.pop(name, False)
     spack.config.set("mirrors", mirrors, scope=scope)
-    tty.msg("Removed mirror %s." % name)
+    return bool(removed)
 
 
 class MirrorStatsForOneSpec:
