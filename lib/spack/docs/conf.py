@@ -360,7 +360,6 @@ nitpick_ignore = [
     ("py:class", "concurrent.futures._base.Executor"),
     ("py:class", "multiprocessing.context.Process"),
     # Spack classes that are private and we don't want to expose
-    ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
     ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
     # Spack classes that intersphinx is unable to resolve

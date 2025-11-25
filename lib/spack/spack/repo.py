@@ -805,15 +805,15 @@ class RepoPath:
                 self._patch_index.update(repo.patch_index)
         return self._patch_index
 
-    @autospec
-    def providers_for(self, virtual_spec: "spack.spec.Spec") -> List["spack.spec.Spec"]:
+    def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
+        all_packages = self._all_package_names_set(include_virtuals=False)
         providers = [
             spec
-            for spec in self.provider_index.providers_for(virtual_spec)
-            if spec.name in self._all_package_names_set(include_virtuals=False)
+            for spec in self.provider_index.providers_for(virtual)
+            if spec.name in all_packages
         ]
         if not providers:
-            raise UnknownPackageError(virtual_spec.fullname)
+            raise UnknownPackageError(virtual if isinstance(virtual, str) else virtual.name)
         return providers
 
     @autospec
