@@ -208,15 +208,22 @@ class VersionConditionalOption:
             return []
 
 
-DEPTH = VersionConditionalOption("--depth", 1, min_version=(1, 9, 0))
+# The earliest git version where we start trying to optimizie clones
+# git@1.8.5 is when branch could also accept tag so we don't have to track ref types as closely
+MIN_OPT_VERSION = (1, 8, 5, 2)
+
+
+# Technically the flags existed earlier but we are pruning our logic to 1.8.5 or greater
+BRANCH = VersionConditionalOption("--branch", min_version=MIN_OPT_VERSION)
+SINGLE_BRANCH = VersionConditionalOption("--single-branch", min_version=MIN_OPT_VERSION)
+NO_SINGLE_BRANCH = VersionConditionalOption("--no-single-branch", min_version=MIN_OPT_VERSION)
+# Depth was introduced in 1.7.11 but isn't worth much without the --branch options
+DEPTH = VersionConditionalOption("--depth", 1, min_version=MIN_OPT_VERSION)
+
 FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2, 19, 0))
 NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2, 34, 0))
 # technically sparse-checkout was added in 2.25, but we go forward since the model we use only works with the `--cone` option
 SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", "set", min_version=(2, 34, 0))
-# This is when branch could also accept tag
-BRANCH = VersionConditionalOption("--branch", min_version=(1, 8, 5))
-SINGLE_BRANCH = VersionConditionalOption("--single-branch", min_version=(1, 7, 10))
-NO_SINGLE_BRANCH = VersionConditionalOption("--no-single-branch", min_version=(1, 7, 10))
 
 
 def _exec_git_commands(git_exe, cmds, debug, dest=None):
@@ -231,21 +238,7 @@ def _exec_git_commands(git_exe, cmds, debug, dest=None):
             git_exe(*cmd)
 
 
-def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
-    git_exe = git_exe or git(required=True)
-    version = git_exe.version
-    if ref and is_git_commit_sha(ref) and version < (2, 5, 0):
-        raise exe.ProcessError("Git older than 2.5 detected, can't fetch commit directly")
-    init = ["init"]
-    fetch = ["fetch"]
-
-    if not debug:
-        fetch.append("--quiet")
-    if depth:
-        fetch.extend(DEPTH(version, str(depth)))
-
-    fetch.extend([*FILTER_BLOB_NONE(version), ref])
-    cmds = [init, fetch]
+def _exec_git_commands_unique_dir(git_exe, cmds, debug, dest=None):
     if dest:
         # mimic creating a dir and clean up if there is a failure like git clone
         assert not os.path.isdir(dest)
@@ -261,6 +254,31 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
         _exec_git_commands(git_exe, cmds, debug, dest)
 
 
+def protocol_supports_shallow_clone(url):
+    """Shallow clone operations (``--depth #``) are not supported by the basic
+    HTTP protocol or by no-protocol file specifications.
+    Use (e.g.) ``https://`` or ``file://`` instead."""
+    return not (url.startswith("http://") or url.startswith("/"))
+
+
+def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
+    git_exe = git_exe or git(required=True)
+    version = git_exe.version
+    if ref and is_git_commit_sha(ref) and version < (2, 5, 0):
+        raise exe.ProcessError("Git older than 2.5 detected, can't fetch commit directly")
+    init = ["init"]
+    fetch = ["fetch"]
+
+    if not debug:
+        fetch.append("--quiet")
+    if depth and protocol_supports_shallow_clone(url):
+        fetch.extend(DEPTH(version, str(depth)))
+
+    fetch.extend([*FILTER_BLOB_NONE(version), ref])
+    cmds = [init, fetch]
+    _exec_git_commands_unique_dir(git_exe, cmds, debug, dest)
+
+
 def git_checkout(
     ref: Optional[str] = None,
     sparse_paths: List[str] = [],
@@ -272,8 +290,8 @@ def git_checkout(
     checkout = ["checkout"]
     sparse_checkout = SPARSE_CHECKOUT(git_exe.version)
 
-    if not debug:
-        checkout.append("--quiet")
+    # if not debug:
+    # checkout.append("--quiet")
     if ref:
         checkout.append(ref)
 
@@ -298,22 +316,32 @@ def git_clone(
     git_exe = git_exe or git(required=True)
     version = git_exe.version
     clone = ["clone"]
+    # only need fetch if it's a really old git so we don't fail a checkout
+    old = version < MIN_OPT_VERSION
+    fetch = ["fetch"]
+
     if not debug:
         clone.append("--quiet")
-    if depth:
+        fetch.append("--quiet")
+
+    if not old and depth and not full_repo and protocol_supports_shallow_clone(url):
         clone.extend(DEPTH(version, str(depth)))
 
-    if ref:
-        clone.extend([*BRANCH(version, ref)])
     if full_repo:
-        clone.extend(NO_SINGLE_BRANCH(version))
-    else:
-        clone.extend(SINGLE_BRANCH(version))
+        if old:
+            fetch.extend(["--all"])
+        else:
+            clone.extend(NO_SINGLE_BRANCH(version))
+    elif ref and not is_git_commit_sha(ref):
+        if old:
+            fetch.extend(["origin", ref])
+        else:
+            clone.extend([*SINGLE_BRANCH(version), *BRANCH(version, ref)])
 
     clone.extend([*FILTER_BLOB_NONE(version), *NO_CHECKOUT(version), url])
 
     if dest:
         clone.append(dest)
-
-    cmds = [clone]
-    _exec_git_commands(git_exe, cmds, debug)
+    _exec_git_commands(git_exe, [clone], debug)
+    if old:
+        _exec_git_commands(git_exe, [fetch], debug, dest)

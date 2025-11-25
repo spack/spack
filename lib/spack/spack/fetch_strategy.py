@@ -962,19 +962,13 @@ class GitFetchStrategy(VCSFetchStrategy):
         with temp_cwd():
             if self.commit:
                 try:
-                    tty.msg("calling init")
                     spack.util.git.git_init_fetch(self.url, self.commit, depth, **kwargs)
                 except spack.util.executable.ProcessError:
                     # TODO(psakeiv) debug message?
-                    tty.msg("calling clone")
-                    spack.util.git.git_clone(
-                        self.url, fetch_ref, self.get_full_repo, depth, **kwargs
-                    )
+                    spack.util.git.git_clone(self.url, fetch_ref, True, depth, **kwargs)
             else:
-                tty.msg("calling clone")
                 spack.util.git.git_clone(self.url, fetch_ref, self.get_full_repo, depth, **kwargs)
             # if checkout_ref:
-            tty.msg("calling checkout")
             spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
 
             repo_name = get_single_file(".")

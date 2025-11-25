@@ -86,7 +86,8 @@ def test_mock_git_exe(mock_util_executable):
     log, should_fail, _ = mock_util_executable
     should_fail.append("clone")
     git = spack.util.git.GitExecutable()
-    git("clone")
+    with pytest.raises(exe.ProcessError):
+        git("clone")
     assert git.returncode == 1
     git("status")
     assert git.returncode == 0
@@ -121,7 +122,3 @@ def test_git_init_fetch_ommissions(mock_util_executable, git_version, ommitted_o
     spack.util.git.git_init_fetch(url, ref, git_exe=git)
     for opt in ommitted_opts:
         assert all(opt not in call for call in log)
-
-
-# test url only
-# test git fetch commit but git too old or fails so fall back

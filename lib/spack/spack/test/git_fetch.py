@@ -26,6 +26,7 @@ from spack.variant import SingleValuedVariant
 from spack.version import Version
 
 _mock_transport_error = "Mock HTTP transport error"
+min_opt_string = ".".join(map(str, spack.util.git.MIN_OPT_VERSION))
 
 
 @pytest.fixture(params=[None, "1.8.5.2", "1.8.5.1", "1.7.10", "1.7.1", "1.7.0"])
@@ -245,7 +246,7 @@ def test_get_full_repo(
 ):
     """Ensure that we can clone a full repository."""
 
-    if git_version < Version("1.7.1"):
+    if git_version < Version(min_opt_string):
         pytest.skip("Not testing get_full_repo for older git {0}".format(git_version))
 
     secure = True
