@@ -285,6 +285,39 @@ mpich@1.0
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 
 
+def test_mirror_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
+    # add a new mirror to two scopes
+    mirror("add", "--scope=site", "mock", str(tmp_path / "mock_mirror"))
+    mirror("add", "--scope=system", "mock", str(tmp_path / "mock_mirror"))
+
+    # Confirm that it is not removed when the scope is incorrect
+    with pytest.raises(SpackCommandError):
+        mirror("remove", "--scope=user", "mock")
+    output = mirror("list", output=str)
+    assert "mock" in output
+
+    # Confirm that when the scope is specified, it is only removed from that scope
+    mirror("remove", "--scope=site", "mock")
+    site_output = mirror("list", "--scope=site", output=str)
+    system_output = mirror("list", "--scope=system", output=str)
+    assert "mock" not in site_output
+    assert "mock" in system_output
+
+    # Confirm that when the scope is not specified, it is removed from top scope
+    mirror("add", "--scope=site", "mock", str(tmp_path / "mockrepo"))
+    mirror("remove", "mock")
+    site_output = mirror("list", "--scope=site", output=str)
+    system_output = mirror("list", "--scope=system", output=str)
+    assert "mock" not in site_output
+    assert "mock" in system_output
+
+    # Check that the `--all-scopes` option works
+    mirror("add", "--scope=site", "mock", str(tmp_path / "mockrepo"))
+    mirror("remove", "--all-scopes", "mock")
+    output = mirror("list", output=str)
+    assert "mock" not in output
+
+
 def test_mirror_crud(mutable_config, capsys):
     with capsys.disabled():
         mirror("add", "mirror", "http://spack.io")
