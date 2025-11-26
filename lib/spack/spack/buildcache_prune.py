@@ -45,7 +45,7 @@ def _fetch_manifests(
              callable to read each manifest, and a list of blobs in the mirror.
     """
     manifest_file_to_mtime_mapping, read_fn = get_entries_from_cache(
-        url=mirror.fetch_url, tmpspecsdir=tmpspecsdir
+        mirror.fetch_url, tmpspecsdir, BuildcacheComponent.MANIFEST
     )
     url_to_list = url_util.join(
         mirror.fetch_url, spack.binary_distribution.buildcache_relative_blobs_path()
@@ -74,7 +74,9 @@ def _delete_manifests_from_cache_aws(
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
-    include_pattern = cache_class.get_buildcache_component_include_pattern()
+    include_pattern = cache_class.get_buildcache_component_include_pattern(
+        BuildcacheComponent.MANIFEST
+    )
 
     file_count_before_deletion = len(list(pathlib.Path(tmpspecsdir).rglob(include_pattern)))
 
