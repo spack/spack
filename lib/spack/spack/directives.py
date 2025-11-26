@@ -249,7 +249,7 @@ def _execute_version(pkg: Type[spack.package_base.PackageBase], ver: Union[str, 
         )
 
     # Store kwargs for the package to later with a fetch_strategy.
-    pkg.versions[version] = kwargs
+    pkg.versions[version] = kwargs #ANGI DEBUG
 
 
 def _depends_on(
