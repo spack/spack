@@ -29,6 +29,8 @@ schemas are in submodules of :py:mod:`spack.schema`.
 import contextlib
 import copy
 import functools
+import hashlib
+import json
 import os
 import os.path
 import pathlib
@@ -720,6 +722,25 @@ class Configuration:
         return syaml.deepcopy_as_builtin(
             self.get_config(section, scope=scope), line_info=line_info
         )
+
+    def content_hash(
+        self, *, sections: Optional[List[str]] = None, scope: Optional[str] = None
+    ) -> bytes:
+        """Return the hash of the current config content.
+
+        Args:
+            sections: list of sections to include in the hash. If None or empty,
+                all sections are included.
+            scope: scope to include in the hash. If None, the entire merged config is considered.
+        """
+        hasher = hashlib.sha256()
+        selected = [x for x in SECTION_SCHEMAS if x in sections] if sections else SECTION_SCHEMAS
+        for config_section in selected:
+            part = json.dumps(
+                self.deepcopy_as_builtin(config_section, scope=scope), sort_keys=True
+            )
+            hasher.update(part.encode("utf-8"))
+        return hasher.digest()
 
     def _filter_overridden(self, scopes: List[ConfigScope]):
         """Filter out overridden scopes.
