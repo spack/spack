@@ -57,6 +57,8 @@ class BuildcacheComponent(enum.Enum):
     they're used to map buildcache objects to their respective media types.
     """
 
+    # manifest files
+    MANIFEST = enum.auto()
     # metadata file for a binary package
     SPEC = enum.auto()
     # things that live in the blobs directory
@@ -195,6 +197,7 @@ class URLBuildcacheEntry:
     PUBLIC_KEY_INDEX_MEDIATYPE = "application/vnd.spack.keyindex.v1+json"
     BUILDCACHE_INDEX_FILE = "index.manifest.json"
     COMPONENT_PATHS = {
+        BuildcacheComponent.MANIFEST: [f"v{LAYOUT_VERSION}", "manifests"],
         BuildcacheComponent.BLOB: ["blobs"],
         BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "manifests", "index"],
         BuildcacheComponent.KEY: [f"v{LAYOUT_VERSION}", "manifests", "key"],
@@ -287,12 +290,12 @@ class URLBuildcacheEntry:
 
     @classmethod
     def get_buildcache_component_include_pattern(
-        cls, buildcache_component: Optional[BuildcacheComponent] = None
+        cls, buildcache_component: BuildcacheComponent
     ) -> str:
         """Given a buildcache component, return the glob pattern that can be used
         to match it in a directory listing.  If None is provided, return a catch-all
         pattern that will match all buildcache components."""
-        if buildcache_component is None:
+        if buildcache_component is BuildcacheComponent.MANIFEST:
             return "*.manifest.json"
         elif buildcache_component == BuildcacheComponent.SPEC:
             return "*.spec.manifest.json"
@@ -749,6 +752,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
     LAYOUT_VERSION = 2
     BUILDCACHE_INDEX_FILE = "index.json"
     COMPONENT_PATHS = {
+        BuildcacheComponent.MANIFEST: ["build_cache"],
         BuildcacheComponent.BLOB: ["build_cache"],
         BuildcacheComponent.INDEX: ["build_cache"],
         BuildcacheComponent.KEY: ["build_cache", "_pgp"],
@@ -969,7 +973,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
     @classmethod
     def get_buildcache_component_include_pattern(
-        cls, buildcache_component: Optional[BuildcacheComponent] = None
+        cls, buildcache_component: BuildcacheComponent
     ) -> str:
         raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
 
@@ -1078,9 +1082,7 @@ def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
         tty.warn(msg)
 
 
-def _entries_from_cache_aws_cli(
-    url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
-):
+def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: BuildcacheComponent):
     """Use aws cli to sync all manifests into a local temporary directory.
 
     Args:
@@ -1099,7 +1101,6 @@ def _entries_from_cache_aws_cli(
     aws = which("aws")
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-
     if not aws:
         tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
         return file_list, read_fn
@@ -1110,6 +1111,7 @@ def _entries_from_cache_aws_cli(
         return cache_entry
 
     include_pattern = cache_class.get_buildcache_component_include_pattern(component_type)
+    component_prefix = cache_class.get_relative_path_components(component_type)
 
     sync_command_args = [
         "s3",
@@ -1118,7 +1120,7 @@ def _entries_from_cache_aws_cli(
         "*",
         "--include",
         include_pattern,
-        url,
+        url_util.join(url, *component_prefix),
         tmpspecsdir,
     ]
 
@@ -1159,9 +1161,7 @@ def _entries_from_cache_aws_cli(
     return filename_to_mtime, read_fn
 
 
-def _entries_from_cache_fallback(
-    url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
-):
+def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: BuildcacheComponent):
     """Use spack.util.web module to get a list of all the manifests at the remote url.
 
     Args:
@@ -1187,12 +1187,12 @@ def _entries_from_cache_fallback(
 
     try:
         filename_to_mtime = {}
-
-        for entry in web_util.list_url(url, recursive=True):
-            if fnmatch.fnmatch(
-                entry, cache_class.get_buildcache_component_include_pattern(component_type)
-            ):
-                entry_url = url_util.join(url, entry)
+        component_path_parts = cache_class.get_relative_path_components(component_type)
+        component_prefix: str = url_util.join(url, *component_path_parts)
+        component_pattern = cache_class.get_buildcache_component_include_pattern(component_type)
+        for entry in web_util.list_url(component_prefix, recursive=True):
+            if fnmatch.fnmatch(entry, component_pattern):
+                entry_url = url_util.join(component_prefix, entry)
                 stat_result = web_util.stat_url(entry_url)
                 if stat_result is not None:
                     filename_to_mtime[entry_url] = stat_result[1]  # mtime is second element
@@ -1205,9 +1205,7 @@ def _entries_from_cache_fallback(
     return filename_to_mtime, read_fn
 
 
-def get_entries_from_cache(
-    url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
-):
+def get_entries_from_cache(url: str, tmpspecsdir: str, component_type: BuildcacheComponent):
     """Get a list of all the manifests in the mirror and a function to read them.
 
     Args:
