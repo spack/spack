@@ -254,14 +254,30 @@ def name_os_target(spec: spack.spec.Spec) -> Tuple[str, str, str]:
 class CompilerFactory:
     """Class aggregating all ways of constructing a list of compiler specs from config entries."""
 
+    # Cache of compilers parsed from packages.yaml
+    _packages_yaml_cache: Dict[bytes, List[spack.spec.Spec]] = {}
+
+    @staticmethod
+    def clear_cache() -> None:
+        CompilerFactory._packages_yaml_cache.clear()
+
     @staticmethod
     def from_packages_yaml(
         configuration: spack.config.Configuration, *, scope: Optional[str] = None
     ) -> List[spack.spec.Spec]:
         """Returns the compiler specs defined in the "packages" section of the configuration"""
+        key = None
+        # Fast path for the most common case of retrieving the compilers from the merged scopes
+        if scope is None:
+            key = configuration.ensure_unwrapped().content_hash(
+                sections=["packages", "concretizer", "repos"]
+            )
+            if key in CompilerFactory._packages_yaml_cache:
+                return CompilerFactory._packages_yaml_cache[key]
+
         externals_dicts = []
         compiler_package_names = supported_compilers()
-        packages_yaml = configuration.get("packages", scope=scope)
+        packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
         for name, entry in packages_yaml.items():
             if name not in compiler_package_names:
                 continue
@@ -280,6 +296,8 @@ class CompilerFactory:
                 externals_dicts.append(current)
 
         external_parser = ExternalSpecsParser(externals_dicts)
+        if key is not None:
+            CompilerFactory._packages_yaml_cache[key] = external_parser.all_specs()
         return external_parser.all_specs()
 
     @staticmethod
