@@ -175,6 +175,7 @@ def test_env_aware_spec(mutable_mock_env_path):
         ("develop-branch-version", "git.foo=0.2.15", None),
     ],
 )
+@pytest.mark.use_package_hash
 def test_spec_version_assigned_git_ref_as_version(name, version, error):
     if error:
         with pytest.raises(error):
