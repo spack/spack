@@ -284,26 +284,32 @@ def _normalize_packages_yaml(packages_yaml: Dict[str, Any]) -> None:
             entry.setdefault("externals", []).extend(specs)
 
 
+_CACHE_IMPLICIT_EXTERNALS = {}
+
+
 def external_config_with_implicit_externals(
     configuration: spack.config.Configuration,
 ) -> Dict[str, Any]:
-    # Read packages.yaml and normalize it so that it will not contain entries referring to
-    # virtual packages.
-    packages_yaml = configuration.deepcopy_as_builtin("packages", line_info=True)
-    _normalize_packages_yaml(packages_yaml)
+    key = configuration.content_hash(sections=["packages", "repos", "concretizer"])
+    if key not in _CACHE_IMPLICIT_EXTERNALS:
+        # Read packages.yaml and normalize it so that it will not contain entries referring to
+        # virtual packages. Do a fast buil-tin deepcopy so that we don't modify the cached result.
+        packages_yaml = configuration.deepcopy_as_builtin("packages", line_info=True)
+        _normalize_packages_yaml(packages_yaml)
 
-    # Add externals for libc from compilers on Linux
-    if not using_libc_compatibility():
-        return packages_yaml
+        # Add externals for libc from compilers on Linux
+        if not using_libc_compatibility():
+            return packages_yaml
 
-    seen = set()
-    for compiler in spack.compilers.config.all_compilers_from(configuration):
-        libc = spack.compilers.libraries.CompilerPropertyDetector(compiler).default_libc()
-        if libc and libc not in seen:
-            seen.add(libc)
-            entry = {"spec": f"{libc}", "prefix": libc.external_path}
-            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
-    return packages_yaml
+        seen = set()
+        for compiler in spack.compilers.config.all_compilers_from(configuration):
+            libc = spack.compilers.libraries.CompilerPropertyDetector(compiler).default_libc()
+            if libc and libc not in seen:
+                seen.add(libc)
+                entry = {"spec": f"{libc}", "prefix": libc.external_path}
+                packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
+        _CACHE_IMPLICIT_EXTERNALS[key] = packages_yaml
+    return _CACHE_IMPLICIT_EXTERNALS[key]
 
 
 def all_libcs() -> Set[spack.spec.Spec]:

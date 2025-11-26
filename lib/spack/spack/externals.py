@@ -25,6 +25,7 @@ import spack.archspec
 import spack.deptypes
 import spack.repo
 import spack.spec
+import spack.util.spack_yaml as syaml
 from spack.error import SpackError
 from spack.llnl.util import tty
 
@@ -128,7 +129,11 @@ def extract_dicts_from_configuration(packages_yaml) -> List[ExternalDict]:
     if "all" in packages_yaml:
         default_required_target = _required_target(packages_yaml["all"])
 
-    for name, entry in packages_yaml.items():
+    for pkg_name in packages_yaml:
+        if "externals" not in packages_yaml[pkg_name]:
+            continue
+
+        entry = syaml.deepcopy_as_builtin(packages_yaml[pkg_name])
         pkg_required_target = _required_target(entry) or default_required_target
         partial_result = [current for current in entry.get("externals", [])]
         if pkg_required_target:
