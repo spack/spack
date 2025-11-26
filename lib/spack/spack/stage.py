@@ -717,7 +717,8 @@ class Stage(AbstractStage):
             mirror.store(self.fetcher, self.mirror_layout.path)
             stats.added(absolute_storage_path)
 
-        self.mirror_layout.make_alias(mirror.root)
+        if not spack.mirrors.utils.get_mirror_all_mode():
+            self.mirror_layout.make_alias(mirror.root)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
