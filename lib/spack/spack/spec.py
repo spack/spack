@@ -1109,7 +1109,8 @@ class _EdgeMap(collections.abc.Mapping):
             selected = (d for d in selected if d.spec.name == child)
 
         # Filter by allowed dependency types
-        selected = (dep for dep in selected if not dep.depflag or (depflag & dep.depflag))
+        if depflag != dt.ALL:
+            selected = (dep for dep in selected if not dep.depflag or (depflag & dep.depflag))
 
         # Filter by virtuals
         if virtuals is not None:
