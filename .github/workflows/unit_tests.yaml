@@ -215,6 +215,8 @@ jobs:
         SPACK_TEST_PARALLEL: 4
         COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
       run: |
+        sudo defaults -currentHost write /Library/Preferences/com.apple.powerlogd SMCMonitorCadence 0
+        sudo killall PerfPowerServices || true
         git --version
         . .github/workflows/bin/setup_git.sh
         . share/spack/setup-env.sh
