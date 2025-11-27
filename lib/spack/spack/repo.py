@@ -673,7 +673,7 @@ class RepoPath:
         """Create a RepoPath from a configuration object."""
         overrides = {
             pkg_name: data["package_attributes"]
-            for pkg_name, data in config.get("packages").items()
+            for pkg_name, data in config.get_config("packages").items()
             if pkg_name != "all" and "package_attributes" in data
         }
 
@@ -1886,7 +1886,7 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
         return RepoDescriptors(
             {
                 name: parse_config_descriptor(name, cfg, lock)
-                for name, cfg in config.get("repos", scope=scope).items()
+                for name, cfg in config.get_config("repos", scope=scope).items()
             }
         )
 

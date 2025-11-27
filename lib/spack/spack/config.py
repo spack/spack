@@ -1812,7 +1812,7 @@ class ConfigPath:
                 quoted = True
             element = element.strip("'\"")
 
-            if any([append, prepend, override, quoted]):
+            if append or prepend or override or quoted:
                 element = syaml.syaml_str(element)
                 if append:
                     element.append = True

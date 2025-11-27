@@ -330,7 +330,7 @@ class SpecParser:
         self.toolchains = {}
         configuration = getattr(spack.config, "CONFIG", None)
         if configuration is not None:
-            self.toolchains = configuration.get("toolchains", {})
+            self.toolchains = configuration.get_config("toolchains")
         self.parsed_toolchains: Dict[str, "spack.spec.Spec"] = {}
 
     def tokens(self) -> List[Token]:
