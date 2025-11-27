@@ -93,10 +93,6 @@ GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVer
 
 TransformFunction = Callable[[spack.spec.Spec, List[AspFunction]], List[AspFunction]]
 
-#: strip comments and whitespace from ASP code
-_STRIP_COMMENTS_RE = re.compile(r"\%[^\n]*\n")
-_STRIP_NEWLINES_RE = re.compile(r"\s*\n\s*")
-
 EMPTY_SPEC = spack.spec.Spec()
 
 

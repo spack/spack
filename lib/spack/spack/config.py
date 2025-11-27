@@ -97,8 +97,10 @@ SECTION_SCHEMAS: Dict[str, Any] = {
 
 # Same as above, but including keys for environments
 # this allows us to unify config reading between configs and environments
-_ALL_SCHEMAS: Dict[str, Any] = copy.deepcopy(SECTION_SCHEMAS)
-_ALL_SCHEMAS.update({spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema})
+_ALL_SCHEMAS: Dict[str, Any] = {
+    **SECTION_SCHEMAS,
+    spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema,
+}
 
 #: Path to the main configuration scope
 CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
@@ -1765,7 +1767,7 @@ class ConfigPath:
                 # value (if it's valid).
                 try:
                     syaml.load_config(path)
-                except spack.util.spack_yaml.SpackYAMLError as e:
+                except syaml.SpackYAMLError as e:
                     raise ValueError(
                         "Remainder of path is not a valid key"
                         f" and does not parse as a value {path}"
