@@ -9,6 +9,7 @@ import platform
 import re
 import struct
 import subprocess
+import functools
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
@@ -344,6 +345,7 @@ def compatible_microarchitectures(info: Microarchitecture) -> List[Microarchitec
     ]
 
 
+@functools.lru_cache(maxsize=None)
 def host() -> Microarchitecture:
     """Detects the host micro-architecture and returns it."""
     # Retrieve information on the host's cpu
