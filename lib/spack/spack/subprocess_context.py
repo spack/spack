@@ -131,6 +131,7 @@ class TestPatches:
     def restore(self):
         if not self.module_patches and not self.class_patches:
             return
+        # this code path is only followed in tests, so use inline imports
         from pydoc import locate
 
         for module_name, attr_name, value in self.module_patches:
