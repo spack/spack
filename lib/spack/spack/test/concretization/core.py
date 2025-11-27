@@ -43,7 +43,8 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.externals import ExternalDependencyError
 from spack.installer import PackageInstaller
-from spack.solver.reuse import SpecFilter
+from spack.solver.reuse import SpecFilter, create_external_parser
+from spack.solver.runtimes import external_config_with_implicit_externals
 from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
 from spack.version import Version, VersionList, ver
@@ -1988,8 +1989,13 @@ spack:
         ]
         root_spec = Spec("pkg-a foobar=bar")
 
+        packages_with_externals = external_config_with_implicit_externals(mutable_config)
+        completion_mode = mutable_config.get("concretizer:externals:completion")
         external_specs = SpecFilter.from_packages_yaml(
-            mutable_config, include=[], exclude=[]
+            external_parser=create_external_parser(packages_with_externals, completion_mode),
+            packages_with_externals=packages_with_externals,
+            include=[],
+            exclude=[],
         ).selected_specs()
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
@@ -2316,8 +2322,13 @@ packages:
         know a concretization exists.
         """
         specs = [Spec(s) for s in specs]
+        packages_with_externals = external_config_with_implicit_externals(mutable_config)
+        completion_mode = mutable_config.get("concretizer:externals:completion")
         external_specs = SpecFilter.from_packages_yaml(
-            mutable_config, include=[], exclude=[]
+            external_parser=create_external_parser(packages_with_externals, completion_mode),
+            packages_with_externals=packages_with_externals,
+            include=[],
+            exclude=[],
         ).selected_specs()
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
@@ -3165,7 +3176,15 @@ def test_filtering_reused_specs(
     """Tests that we can select which specs are to be reused, using constraints as filters"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
-    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    packages_with_externals = spack.solver.runtimes.external_config_with_implicit_externals(
+        mutable_config
+    )
+    completion_mode = mutable_config.get("concretizer:externals:completion")
+    selector = spack.solver.asp.ReusableSpecsSelector(
+        mutable_config,
+        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        packages_with_externals=packages_with_externals,
+    )
     specs = selector.reusable_specs(roots)
 
     assert len(specs) == expected_length
@@ -3200,7 +3219,15 @@ def test_selecting_reused_sources(
     """Tests that we can turn on/off sources of reusable specs"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
-    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    packages_with_externals = spack.solver.runtimes.external_config_with_implicit_externals(
+        mutable_config
+    )
+    completion_mode = mutable_config.get("concretizer:externals:completion")
+    selector = spack.solver.asp.ReusableSpecsSelector(
+        mutable_config,
+        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        packages_with_externals=packages_with_externals,
+    )
     specs = selector.reusable_specs(["mpileaks"])
     assert len(specs) == expected_length
 
