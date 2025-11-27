@@ -4075,8 +4075,10 @@ class Spec:
         if self.name:
             parts.append(self.name)
 
-        if self.versions and self.versions != vn.any_version:
-            parts.append(f"@{self.versions}")
+        if self.versions:
+            version_str = str(self.versions)
+            if version_str and version_str != ":":  # only include if not full range
+                parts.append(f"@{version_str}")
 
         compiler_flags_str = str(self.compiler_flags)
         if compiler_flags_str:
