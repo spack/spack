@@ -86,7 +86,14 @@ end
 unsetenv _sp_initializing
 
 # Set shell being used
-setenv SPACK_SHELL="csh"
+setenv SPACK_SHELL "csh"
 
 # These are needed for environment modifications in spack load & spack unload
-. $_spack_share_dir/environment-mods.csh
+alias _spack_env_set "source $_spack_share_dir/environment-mods.csh _spack_env_set"
+alias _spack_env_unset "source $_spack_share_dir/environment-mods.csh _spack_env_unset"
+alias _spack_env_prepend "source $_spack_share_dir/environment-mods.csh _spack_env_prepend"
+alias _spack_env_append "source $_spack_share_dir/environment-mods.csh _spack_env_append"
+alias _spack_env_remove_value "source $_spack_share_dir/environment-mods.csh _spack_env_remove_value"
+alias _spack_env_remove_first "source $_spack_share_dir/environment-mods.csh _spack_env_remove_first"
+alias _spack_env_remove_last "source $_spack_share_dir/environment-mods.csh _spack_env_remove_last"
+alias _spack_env_prune_duplicates "source $_spack_share_dir/environment-mods.csh _spack_env_prune_duplicates"

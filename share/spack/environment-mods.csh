@@ -30,10 +30,7 @@ case _spack_env_append:
         setenv $varname $value
     else
         set var = `printenv $varname`
-
-        if ( ! ("$var" =~ *"$value"*) ) then
-            set result = $var$sep$value
-            setenv $varname $result
+        setenv $varname $var$sep$value
         endif
     endif
     breaksw
@@ -42,10 +39,7 @@ case _spack_env_prepend:
         setenv $varname $value
     else
         set var = `printenv $varname`
-
-        if ( ! ("$var" =~ *"$value"*) ) then
-            set result = $value$sep$var
-            setenv $varname $result
+        setenv $varname $value$sep$var
         endif
     endif
     breaksw
@@ -53,61 +47,40 @@ case _spack_env_remove_value:
     if ( ! $?varname || "$varname" == "") then
         set result = ""
     else
-        set var = `printenv $varname`
-
-        if ( "$var" == "$value" ) then
-            set result = ""
-        else if ( "$var" =~ "$value$sep"* ) then
-            set result = `echo $var | sed "s#$value$sep##g"`
-        else
-            set result = `echo $var | sed "s#$sep$value##g"`
-        endif
+        set var = $sep`printenv $varname`$sep
+        set result = `echo $var | sed "s/$sep$value$sep/$sep/g" | rev | cut -c 2- | rev | cut -c 2-`
     endif
 
     setenv $varname $result
+    breaksw
 case _spack_env_remove_first:
     if ( ! $?varname || "$varname" == "") then
         set result = ""
     else
-        set var = `printenv $varname`
-
-        if ( "$var" == "$value" ) then
-            set result = ""
-        else if ( "$var" =~ "$value$sep"* ) then
-            set result = `echo $var | sed "s#$value$sep##g"`
-        else
-            set result = `echo $var | sed "s#$sep$value##g"`
-        endif
+        set var = $sep`printenv $varname`$sep
+        set result = `echo $var | sed "s/$sep$value$sep/$sep/" | rev | cut -c 2- | rev | cut -c 2-`
     endif
 
     setenv $varname $result
+    breaksw
 case _spack_env_remove_last:
     if ( ! $?varname || "$varname" == "") then
         set result = ""
     else
-        set var = `printenv $varname`
-
-        if ( "$var" == "$value" ) then
-            set result = ""
-        else
-            echo "var: $var"
-            echo "value: $value"
-            set result = `echo $var | sed "s#\(.*\)$value#\1#"`
-            echo $result
-            # if ( "$var" =~ ^"$sep"* ) then: TODO: get the if working
-            set result = `echo $result | sed "s#^$sep##1"`
-            # else if ( "$var" =~ *"$sep" ) then
-            set result = `echo $result | sed "s#\(.*\)$sep#\1#"`
-            # else
-            set result = `echo $result | sed "s#$sep$sep##g"`
-            # endif
-        endif
+        set var = $sep`printenv $varname`$sep
+        set result = `echo $var | sed "s/\(.*\)$sep$value$sep/\1$sep/" | rev | cut -c 2- | rev | cut -c 2-`
     endif
 
     setenv $varname $result
+    breaksw
 case _spack_env_prune_duplicates:
-    # TODO: actually write this
-    echo
+    # Only command that takes sep at position 3
+    set sep = $value
+
+    # This is heinous awk magic and I hate it...     for each field       print         if new       sep if not 1st field to print else ""
+    set result = `printenv $varname | awk -F"$sep" '{for(i=1; i<=NF; i++) printf "%s", (\\!seen[$i]++? (i==1?"":FS) $i: "")}'`
+    setenv $varname $result
+    breaksw
 endsw
 
 unset command varname value sep var result
