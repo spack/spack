@@ -793,6 +793,8 @@ if test $fish_version[1] -gt 3
     source $sp_share_dir/spack-completion.fish
 end
 
+source $sp_share_dir/environment-mods.fish
+
 #
 # NOTES
 #
