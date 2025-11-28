@@ -1119,7 +1119,7 @@ class PyclingoDriver:
         if result.satisfiable:
             timer.start("construct_specs")
             # get the best model
-            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+            builder = SpecBuilder(specs, setup=setup)
             min_cost, best_model = min(models)
 
             # first check for errors
@@ -2988,6 +2988,10 @@ class SpackSolverSetup:
         self.gen.h1("Runtimes")
         injected_dependencies = self.define_runtime_constraints()
 
+        for node in traverse.traverse_nodes(specs):
+            if node.namespace is not None:
+                self.explicitly_required_namespaces[node.name] = node.namespace
+
         node_counter = create_counter(
             list(specs) + injected_dependencies,
             tests=self.tests,
@@ -2996,10 +3000,6 @@ class SpackSolverSetup:
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
-
-        for node in traverse.traverse_nodes(specs):
-            if node.namespace is not None:
-                self.explicitly_required_namespaces[node.name] = node.namespace
 
         self.requirement_parser.parse_rules_from_input_specs(specs)
         self.gen.h1("Generic information")
@@ -3155,7 +3155,7 @@ class SpackSolverSetup:
 
         for compiler in self.possible_compilers:
             try:
-                compiler_cls = spack.repo.PATH.get_pkg_class(compiler.name)
+                compiler_cls = self.pkg_class(compiler.name)
             except spack.repo.UnknownPackageError:
                 pass
             else:
@@ -3535,7 +3535,7 @@ class SpecBuilder:
         """
         return NodeArgument(id="0", pkg=pkg)
 
-    def __init__(self, specs, hash_lookup=None):
+    def __init__(self, specs, setup: Optional[SpackSolverSetup] = None) -> None:
         self._specs: Dict[NodeArgument, spack.spec.Spec] = {}
 
         # Matches parent nodes to splice node
@@ -3546,9 +3546,9 @@ class SpecBuilder:
             lambda: set()
         )
 
-        # Pass in as arguments reusable specs and plug them in
-        # from this dictionary during reconstruction
-        self._hash_lookup = hash_lookup or ConcreteSpecsByHash()
+        self.setup = setup or SpackSolverSetup()
+        # Use setup dictionary during reconstruction
+        self._hash_lookup = setup.reusable_and_possible if setup else ConcreteSpecsByHash()
 
     def hash(self, node, h):
         if node not in self._specs:
@@ -3805,14 +3805,14 @@ class SpecBuilder:
 
         # Add external paths to specs with just external modules
         for s in self._specs.values():
-            _ensure_external_path_if_external(s)
+            _ensure_external_path_if_external(s, setup=self.setup)
 
         for s in self._specs.values():
             _develop_specs_from_env(s, ev.active_environment())
 
         # check for commits must happen after all version adaptations are complete
         for s in self._specs.values():
-            _specs_with_commits(s)
+            _specs_with_commits(s, self.setup.pkg_class(s.fullname))
 
         # mark concrete and assign hashes to all specs in the solve
         for root in roots.values():
@@ -3889,8 +3889,7 @@ class SpecBuilder:
         return specs
 
 
-def _specs_with_commits(spec):
-    pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
+def _specs_with_commits(spec, pkg_class):
     if not pkg_class.needs_commit(spec.version):
         return
 
@@ -3916,13 +3915,16 @@ def _specs_with_commits(spec):
     assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
 
 
-def _ensure_external_path_if_external(spec: spack.spec.Spec) -> None:
+def _ensure_external_path_if_external(
+    spec: spack.spec.Spec, *, setup: Optional[SpackSolverSetup] = None
+) -> None:
     if not spec.external_modules or spec.external_path:
         return
 
+    setup = setup or SpackSolverSetup()
     # Get the path from the module the package can override the default
     # (this is mostly needed for Cray)
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = setup.pkg_class(spec.name)
     package = pkg_cls(spec)
     spec.external_path = getattr(package, "external_prefix", None) or md.path_from_modules(
         spec.external_modules
@@ -3967,9 +3969,10 @@ class Solver:
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(
-        specs: Sequence[spack.spec.Spec],
+        specs: Sequence[spack.spec.Spec], *, setup: Optional[SpackSolverSetup] = None
     ) -> List[spack.spec.Spec]:
         reusable: List[spack.spec.Spec] = []
+        setup = setup or SpackSolverSetup()
         analyzer = create_graph_analyzer()
         for root in specs:
             for s in root.traverse():
@@ -3996,7 +3999,7 @@ class Solver:
                             )
 
                 try:
-                    spack.repo.PATH.get_pkg_class(s.fullname)
+                    setup.pkg_class(s.fullname)
                 except spack.repo.UnknownPackageError:
                     raise UnsatisfiableSpecError(
                         f"cannot concretize '{root}', since '{s.name}' does not exist"
@@ -4030,9 +4033,9 @@ class Solver:
           allow_deprecated: allow deprecated version in the solve
         """
         specs = [s.lookup_hash() for s in specs]
+        setup = SpackSolverSetup(tests=tests)
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
         result = self.driver.solve(
@@ -4076,9 +4079,9 @@ class Solver:
             allow_deprecated (bool): allow deprecated version in the solve
         """
         specs = [s.lookup_hash() for s in specs]
+        setup = SpackSolverSetup(tests=tests)
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False
