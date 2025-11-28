@@ -1582,7 +1582,12 @@ def read_config_file(
     try:
         with open(path, encoding="utf-8") as f:
             tty.debug(f"Reading config from file {path}")
-            data = syaml.load_config(f)
+            is_json = f.read(1) == "{"
+            f.seek(0)
+            if is_json:
+                data = sjson.load(f)
+            else:
+                data = syaml.load_config(f)
 
         if data:
             if schema is None:

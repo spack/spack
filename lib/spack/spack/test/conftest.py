@@ -921,6 +921,15 @@ def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
     modules = tmp_path / "site" / "modules.yaml"
     modules_template = test_config / "modules.yaml"
     modules.write_text(modules_template.read_text().format(tcl_root, lmod_root))
+
+    # Convert all YAML files to JSON, while keeping their original names.
+    for yaml_file in tmp_path.rglob("*.yaml"):
+        json_file = yaml_file.with_suffix(".json")
+        with open(yaml_file, encoding="utf-8") as f:
+            data = syaml.load(f)
+        with open(json_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        os.rename(json_file, yaml_file)
     yield tmp_path
 
 
