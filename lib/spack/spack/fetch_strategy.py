@@ -826,9 +826,8 @@ class GitFetchStrategy(VCSFetchStrategy):
         "get_full_repo",
         "submodules_delete",
         "git_sparse_paths",
+        "skip_checkout",
     ]
-
-    git_version_re = r"git version (\S+)"
 
     def __init__(self, **kwargs):
 
@@ -847,6 +846,9 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.submodules_delete = kwargs.get("submodules_delete", False)
         self.get_full_repo = kwargs.get("get_full_repo", False)
         self.git_sparse_paths = kwargs.get("git_sparse_paths", None)
+        # skipping checkout with a blobless clone is an efficient way to traverse meta-data
+        # see https://bhupesh.me/minimalist-guide-git-clone/
+        self.skip_checkout = kwargs.get("skip_checkout", False)
 
     @property
     def git_version(self):
@@ -968,8 +970,8 @@ class GitFetchStrategy(VCSFetchStrategy):
                     spack.util.git.git_clone(self.url, fetch_ref, True, depth, **kwargs)
             else:
                 spack.util.git.git_clone(self.url, fetch_ref, self.get_full_repo, depth, **kwargs)
-            # if checkout_ref:
-            spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
+            if not self.skip_checkout:
+                spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
 
             repo_name = get_single_file(".")
             if self.stage:
@@ -981,75 +983,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                 onerror=fs.readonly_file_handler(ignore_errors=True),
             )
         return
-
-    def _sparse_clone_src(self, **kwargs):
-        """Use git's sparse checkout feature to clone portions of a git repository"""
-        dest = self.stage.source_path
-        git = self.git
-
-        if self.git_version < spack.version.Version("2.26.0"):
-            # technically this should be supported for 2.25, but bumping for OS issues
-            # see https://github.com/spack/spack/issues/45771
-            # code paths exist where the package is not set.  Assure some indentifier for the
-            # package that was configured  for sparse checkout exists in the error message
-            identifier = str(self.url)
-            if self.package:
-                identifier += f" ({self.package.name})"
-            tty.warn(
-                (
-                    f"{identifier} is configured for git sparse-checkout "
-                    "but the git version is too old to support sparse cloning. "
-                    "Cloning the full repository instead."
-                )
-            )
-            self._clone_src()
-        else:
-            # default to depth=2 to allow for retention of some git properties
-            depth = kwargs.get("depth", 2)
-            needs_fetch = self.branch or self.tag
-            git_ref = self.branch or self.tag or self.commit
-
-            assert git_ref
-
-            clone_args = ["clone"]
-
-            if needs_fetch:
-                clone_args.extend(["--branch", git_ref])
-
-            if self.get_full_repo:
-                clone_args.append("--no-single-branch")
-            else:
-                clone_args.append("--single-branch")
-
-            clone_args.extend(
-                [f"--depth={depth}", "--no-checkout", "--filter=blob:none", self.url]
-            )
-
-            sparse_args = ["sparse-checkout", "set"]
-
-            if callable(self.git_sparse_paths):
-                sparse_args.extend(self.git_sparse_paths())
-            else:
-                sparse_args.extend([p for p in self.git_sparse_paths])
-
-            sparse_args.append("--cone")
-
-            checkout_args = ["checkout", git_ref]
-
-            if not spack.config.get("config:debug"):
-                clone_args.insert(1, "--quiet")
-                checkout_args.insert(1, "--quiet")
-
-            with temp_cwd():
-                git(*clone_args)
-                repo_name = get_single_file(".")
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
-
-            with working_dir(dest):
-                git(*sparse_args)
-                git(*checkout_args)
 
     def submodule_operations(self):
         dest = self.stage.source_path
@@ -1096,12 +1029,6 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             self.git(*co_args)
             self.git(*clean_args)
-
-    def protocol_supports_shallow_clone(self):
-        """Shallow clone operations (``--depth #``) are not supported by the basic
-        HTTP protocol or by no-protocol file specifications.
-        Use (e.g.) ``https://`` or ``file://`` instead."""
-        return not (self.url.startswith("http://") or self.url.startswith("/"))
 
     def __str__(self):
         return f"[git] {self._repo_info()}"

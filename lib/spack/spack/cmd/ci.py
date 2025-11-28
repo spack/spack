@@ -782,6 +782,8 @@ def validate_git_versions(
         with spack.stage.Stage(fetcher) as stage:
             known_commit = pkg.versions[version]["commit"]
             try:
+                # TODO(psakiev) we should be able to get all this validation from a single clone
+                # that has the metadata rather than fetching each version
                 stage.fetch()
             except spack.error.FetchError:
                 tty.error(
