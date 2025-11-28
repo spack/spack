@@ -3366,6 +3366,7 @@ class SpackSolverSetup:
             for s in spec_group[key]:
                 yield _spec_with_default_name(s, pkg_name)
 
+    @spack.llnl.util.lang.memoized
     def pkg_class(self, pkg_name: str) -> Type[spack.package_base.PackageBase]:
         request = pkg_name
         if pkg_name in self.explicitly_required_namespaces:
