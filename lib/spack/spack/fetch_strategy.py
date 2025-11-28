@@ -1619,7 +1619,6 @@ def _for_package_version(pkg, version=None):
         else:
             version_meta_data = pkg.versions.get(version)
 
-
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
         # handled slightly more conservatively for older versions of git.
