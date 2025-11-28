@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.14']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
         include:
@@ -58,7 +58,8 @@ jobs:
       run: "brew install kcov"
     - name: Install Python packages
       run: |
-          pip install --upgrade pip pytest pytest-xdist pytest-cov
+          # See https://github.com/coveragepy/coveragepy/issues/2082
+          pip install --upgrade pip pytest pytest-xdist pytest-cov "coverage<=7.11.0"
           pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Setup git configuration
       run: |
@@ -80,7 +81,7 @@ jobs:
           SPACK_TEST_PARALLEL: 4
           COVERAGE: true
           COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
-          UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
+          UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
       run: |
           share/spack/qa/run-unit-tests
     - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
@@ -197,7 +198,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-15-intel, macos-latest]
-        python-version: ["3.11"]
+        python-version: ["3.14"]
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:
@@ -208,7 +209,8 @@ jobs:
     - name: Install Python packages
       run: |
           pip install --upgrade pip
-          pip install --upgrade pytest coverage[toml] pytest-xdist pytest-cov
+          # See https://github.com/coveragepy/coveragepy/issues/2082
+          pip install --upgrade pytest coverage[toml] pytest-xdist pytest-cov "coverage<=7.11.0"
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
