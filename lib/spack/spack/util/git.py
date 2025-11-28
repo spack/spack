@@ -228,15 +228,10 @@ SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", "set", min_version
 
 
 def _exec_git_commands(git_exe, cmds, debug, dest=None):
-    if dest:
-        dest_cmd = ["-C", dest]
-        cmds = [dest_cmd + cmd for cmd in cmds]
+    dest_args = ["-C", dest] if dest else []
+    error_stream = sys.stdout if debug else os.devnull  # swallow extra output for non-debug
     for cmd in cmds:
-        if not debug:
-            # swallow extra output that leasks to str for non-debug case
-            git_exe(*cmd, error=str)
-        else:
-            git_exe(*cmd)
+        git_exe(*dest_args, *cmd, error=error_stream)
 
 
 def _exec_git_commands_unique_dir(git_exe, cmds, debug, dest=None):
