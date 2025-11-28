@@ -713,6 +713,7 @@ def test_repo_set_git_config(mutable_config):
     repo("set", "--scope=user", "--path", "subdir1", "--path", "subdir2", "test-repo")
 
     # Check that the user config has the updated entry
+    spack.config.CONFIG.clear_caches()  # todo: fix.
     user_repos = spack.config.get("repos", scope="user")
     assert user_repos["test-repo"]["paths"] == ["subdir1", "subdir2"]
     assert user_repos["test-repo"]["destination"] == "/custom/path"

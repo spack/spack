@@ -131,15 +131,12 @@ def merge_yaml(dest, source, prepend=False, append=False):
     ``-:`` will change the merge strategy to append, it also includes string concatentation
     """
 
-    def they_are(t):
-        return isinstance(dest, t) and isinstance(source, t)
-
     # If source is None, overwrite with source.
     if source is None:
         return None
 
     # Source list is prepended (for precedence)
-    if they_are(list):
+    if isinstance(dest, list) and isinstance(source, list):
         if append:
             # Make sure to copy ruamel comments
             dest[:] = [x for x in dest if x not in source] + source
@@ -149,12 +146,12 @@ def merge_yaml(dest, source, prepend=False, append=False):
         return dest
 
     # Source dict is merged into dest.
-    elif they_are(dict):
+    elif isinstance(dest, dict) and isinstance(source, dict):
         # save dest keys to reinsert later -- this ensures that  source items
         # come *before* dest in OrderdDicts
         dest_keys = [dk for dk in dest.keys() if dk not in source]
 
-        for sk, sv in source.items():
+        for sk, sv in list(source.items()):
             # always remove the dest items. Python dicts do not overwrite
             # keys on insert, so this ensures that source keys are copied
             # into dest along with mark provenance (i.e., file/line info).
@@ -165,7 +162,7 @@ def merge_yaml(dest, source, prepend=False, append=False):
                 dest[sk] = merge_yaml(old_dest_value, sv, _prepend(sk), _append(sk))
             else:
                 # if sk ended with ::, or if it's new, completely override
-                dest[sk] = copy.deepcopy(sv)
+                dest[sk] = copy.copy(sv)
 
         # reinsert dest keys so they are last in the result
         for dk in dest_keys:
@@ -173,7 +170,7 @@ def merge_yaml(dest, source, prepend=False, append=False):
 
         return dest
 
-    elif they_are(str):
+    elif isinstance(dest, str) and isinstance(source, str):
         # Concatenate strings in prepend mode
         if prepend:
             return source + dest
