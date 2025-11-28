@@ -118,7 +118,7 @@ _spack_shell_wrapper() {
             else
                 case $_sp_arg in
                     activate)
-                        # Get --sh, --csh, or -h/--help arguments.
+                        # Get --sh, --csh, etc, or -h/--help arguments.
                         # Space needed here because regexes start with a space
                         # and `-h` may be the only argument.
                         _a=" $@"
@@ -127,10 +127,13 @@ _spack_shell_wrapper() {
                         # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
                         if [ "${_a#* --sh}" != "$_a" ] || \
                            [ "${_a#* --csh}" != "$_a" ] || \
+                           [ "${_a#* --fish}" != "$_a" ] || \
+                           [ "${_a#* --bat}" != "$_a" ] || \
+                           [ "${_a#* --pwsh}" != "$_a" ] || \
                            [ "${_a#* -h}" != "$_a" ] || \
                            [ "${_a#* --help}" != "$_a" ];
                         then
-                            # No args or args contain --sh, --csh, or -h/--help: just execute.
+                            # No args or args contain --sh, --csh, etc, or -h/--help: just execute.
                             command spack env activate "$@"
                         else
                             # Actual call to activate: source the output.
@@ -139,7 +142,7 @@ _spack_shell_wrapper() {
                         fi
                         ;;
                     deactivate)
-                        # Get --sh, --csh, or -h/--help arguments.
+                        # Get --sh, --csh, etc, or -h/--help arguments.
                         # Space needed here because regexes start with a space
                         # and `-h` may be the only argument.
                         _a=" $@"
@@ -147,9 +150,12 @@ _spack_shell_wrapper() {
                         # argument and environments with "--sh" in the name.
                         # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
                         if [ "${_a#* --sh}" != "$_a" ] || \
-                           [ "${_a#* --csh}" != "$_a" ];
+                           [ "${_a#* --csh}" != "$_a" ] || \
+                           [ "${_a#* --fish}" != "$_a" ] || \
+                           [ "${_a#* --bat}" != "$_a" ] || \
+                           [ "${_a#* --pwsh}" != "$_a" ];
                         then
-                            # Args contain --sh or --csh: just execute.
+                            # Args contain --sh or --csh, etc: just execute.
                             command spack env deactivate "$@"
                         elif [ -n "$*" ]; then
                             # Any other arguments are an error or -h/--help: just run help.
@@ -168,7 +174,7 @@ _spack_shell_wrapper() {
             return
             ;;
         "load"|"unload")
-            # Get --sh, --csh, -h, or --help arguments.
+            # Get --sh, --csh, etc, or -h, or --help arguments.
             # Space needed here because regexes start with a space
             # and `-h` may be the only argument.
             _a=" $@"
@@ -177,6 +183,9 @@ _spack_shell_wrapper() {
             # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
             if [ "${_a#* --sh}" != "$_a" ] || \
                 [ "${_a#* --csh}" != "$_a" ] || \
+                [ "${_a#* --fish}" != "$_a" ] || \
+                [ "${_a#* --bat}" != "$_a" ] || \
+                [ "${_a#* --pwsh}" != "$_a" ] || \
                 [ "${_a#* -h}" != "$_a" ] || \
                 [ "${_a#* --list}" != "$_a" ] || \
                 [ "${_a#* --help}" != "$_a" ];
