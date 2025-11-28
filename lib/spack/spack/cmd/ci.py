@@ -784,6 +784,11 @@ def validate_git_versions(
             try:
                 # TODO(psakiev) we should be able to get all this validation from a single clone
                 # that has the metadata rather than fetching each version
+                # We probably want 
+                #    - git init
+                #    - git fetch --tags --filter=blob:none (for all trilinos tags this is 118 MB)
+                #    for v in versions:
+                #        found_commit = git rev-parse v["tag"]^{}
                 stage.fetch()
             except spack.error.FetchError:
                 tty.error(
