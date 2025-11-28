@@ -282,9 +282,9 @@ end
 
 
 
-function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, or --fish"
+function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, --fish, --bat, or --pwsh"
     #
-    # Check if inputs contain -h/--help, --sh, --csh, or --fish
+    # Check if inputs contain -h/--help, --sh, --csh, --fish, --bat, or --pwsh
     #
 
     # combine argument array into single string (space separated), to be passed
@@ -319,6 +319,16 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
             return 0
         end
 
+        # looks for a single `--bat`
+        if match_flag $_a "--bat"
+            return 0
+        end
+
+        # looks for a single `--pwsh`
+        if match_flag $_a "--pwsh"
+            return 0
+        end
+
         # looks for a single `--list`
         if match_flag $_a "--list"
             return 0
@@ -330,9 +340,9 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
 end
 
 
-function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, or --fish"
+function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, --fish, --bat, or --pwsh"
     #
-    # Check if inputs contain --sh, --csh, or --fish
+    # Check if inputs contain --sh, --csh, --fish, --bat, or --pwsh
     #
 
     # combine argument array into single string (space separated), to be passed
@@ -354,6 +364,16 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
 
         # looks for a single `--fish`
         if match_flag $_a "--fish"
+            return 0
+        end
+
+        # looks for a single `--bat`
+        if match_flag $_a "--bat"
+            return 0
+        end
+
+        # looks for a single `--pwsh`
+        if match_flag $_a "--pwsh"
             return 0
         end
 
@@ -479,7 +499,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         set -l _a (stream_args $__sp_remaining_args)
 
                         if check_env_activate_flags $_a
-                            # no args or args contain -h/--help, --sh, or --csh: just execute
+                            # no args or args contain -h/--help or shell name: just execute
                             command spack env activate $_a
                             return
                         else
@@ -497,7 +517,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                         set -l _a (stream_args $__sp_remaining_args)
 
                         if check_env_deactivate_flags $_a
-                            # just  execute the command if --sh, --csh, or --fish are provided
+                            # just  execute the command if shell name is provided
                             command spack env deactivate $_a
                             return
 
@@ -547,7 +567,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
             set -l _a (stream_args $__sp_remaining_args)
 
             if check_env_activate_flags $_a
-                # no args or args contain -h/--help, --sh, or --csh: just execute
+                # no args or args contain -h/--help, or shell name: just execute
                 command spack $sp_flags $sp_subcommand $__sp_remaining_args
                 return
             else
