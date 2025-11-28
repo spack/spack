@@ -100,9 +100,12 @@ case env:
                 if ( "$_sp_env_arg" == "" || \
                      "$_sp_args" =~ "* --sh*" || \
                      "$_sp_args" =~ "* --csh*" || \
+                     "$_sp_args" =~ "* --fish*" || \
+                     "$_sp_args" =~ "* --bat*" || \
+                     "$_sp_args" =~ "* --pwsh*" || \
                      "$_sp_args" =~ "* -h*" || \
                      "$_sp_args" =~ "* --help*" ) then
-                    # No args or args contain --sh, --csh, or -h/--help: just execute.
+                    # No args or args contain a shell, nor -h/--help: just execute.
                     \spack $_sp_flags env $_sp_args
                 else
                     shift _sp_args  # consume 'activate' or 'deactivate'
@@ -119,8 +122,11 @@ case env:
                 # Space needed here to differentiate between `--sh`
                 # argument and environments with "--sh" in the name.
                 if ( "$_sp_args" =~ "* --sh*" || \
-                     "$_sp_args" =~ "* --csh*" ) then
-                    # Args contain --sh or --csh: just execute.
+                     "$_sp_args" =~ "* --csh*" || \
+                     "$_sp_args" =~ "* --fish*" || \
+                     "$_sp_args" =~ "* --bat*" || \
+                     "$_sp_args" =~ "* --pwsh*" ) then
+                    # Args contain shell name: just execute.
                     \spack $_sp_flags env $_sp_args
                 else if ( "$_sp_env_arg" != "" ) then
                     # Any other arguments are an error or -h/--help: just run help.
@@ -139,15 +145,18 @@ case env:
 
 case load:
 case unload:
-    # Get --sh, --csh, -h, or --help arguments.
+    # Get --sh, --csh, --fish, --bat, --pwsh, -h, or --help arguments.
     # Space needed here to differentiate between `-h`
     # argument and specs with "-h" in the name.
     if ( " $_sp_spec" =~ "* --sh*" || \
          " $_sp_spec" =~ "* --csh*" || \
+         " $_sp_spec" =~ "* --fish*" || \
+         " $_sp_spec" =~ "* --bat*" || \
+         " $_sp_spec" =~ "* --pwsh*" || \
          " $_sp_spec" =~ "* --list*" || \
          " $_sp_spec" =~ "* -h*" || \
          " $_sp_spec" =~ "* --help*") then
-        # Args contain --sh, --csh, or -h/--help: just execute.
+        # Args contain shell name, or -h/--help: just execute.
         \spack $_sp_flags $_sp_subcommand $_sp_spec
     else
         # Otherwise, eval with csh.
