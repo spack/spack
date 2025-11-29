@@ -54,7 +54,7 @@ from spack.version import Version
 pytestmark = [
     pytest.mark.usefixtures("mutable_config", "mutable_mock_env_path", "mutable_mock_repo"),
     pytest.mark.maybeslow,
-    pytest.mark.not_on_windows("Envs unsupported on Window"),
+    pytest.mark.not_on_windows("Envs unsupported on Windows"),
 ]
 
 env = SpackCommand("env")
@@ -119,7 +119,7 @@ def check_viewdir_removal(viewdir: pathlib.Path):
     ]
 
 
-def test_env_track_nonexistant_path_fails(capfd):
+def test_env_track_nonexistent_path_fails(capfd):
     with pytest.raises(spack.main.SpackCommandError):
         env("track", "path/does/not/exist")
 
@@ -160,14 +160,14 @@ def test_env_untrack_valid(tmp_path: pathlib.Path):
         env("track", "--name", "test_untrack", ".")
         env("untrack", "--yes-to-all", "test_untrack")
 
-        # check that environment was sucessfully untracked
+        # check that environment was successfully untracked
         out = env("ls")
         assert "test_untrack" not in out
 
 
 def test_env_untrack_invalid_name():
     # test untracking an environment that doesn't exist
-    env_name = "invalid_enviornment_untrack"
+    env_name = "invalid_environment_untrack"
 
     out = env("untrack", env_name)
 
@@ -308,7 +308,7 @@ def test_env_add_virtual():
     assert spec.intersects("mpi")
 
 
-def test_env_add_nonexistant_fails():
+def test_env_add_nonexistent_fails():
     env("create", "test")
 
     e = ev.read("test")
@@ -2086,7 +2086,7 @@ def test_env_include_concrete_old_env(format):
 
 def test_env_bad_include_concrete_env():
     with pytest.raises(ev.SpackEnvironmentError):
-        env("create", "--include-concrete", "nonexistant_env", "combined_env")
+        env("create", "--include-concrete", "nonexistent_env", "combined_env")
 
 
 def test_env_not_concrete_include_concrete_env():
@@ -2291,7 +2291,7 @@ def test_env_include_concrete_reuse(do_not_check_runtimes_on_reuse, reuse_mode):
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
 def test_env_include_concrete_env_reconcretized(unify):
     """Double check to make sure that concrete_specs for the local specs is empty
-    after recocnretizing.
+    after reconcretizing.
     """
     _, _, combined = setup_combined_multiple_env()
 
@@ -3756,7 +3756,7 @@ def test_query_develop_specs(tmp_path: pathlib.Path):
 @pytest.mark.parametrize(
     "env,no_env,env_dir", [("b", False, None), (None, True, None), (None, False, "path/")]
 )
-def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
+def test_activation_and_deactivation_ambiguities(method, env, no_env, env_dir, capsys):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
     args = Namespace(
         shell="sh", env_name="a", env=env, no_env=no_env, env_dir=env_dir, keep_relative=False
