@@ -11,7 +11,6 @@ import pytest
 
 import spack.vendor.jsonschema
 
-import spack
 import spack.binary_distribution
 import spack.ci as ci
 import spack.cmd
@@ -126,12 +125,7 @@ def ci_generate_test(
         outputfile = tmp_path / ".gitlab-ci.yml"
         with ev.read("test"):
             output = ci_cmd(
-                "generate",
-                "--output-file",
-                str(outputfile),
-                *args,
-                output=str,
-                fail_on_error=fail_on_error,
+                "generate", "--output-file", str(outputfile), *args, fail_on_error=fail_on_error
             )
 
         return spack_yaml, outputfile, output
@@ -658,9 +652,9 @@ def test_ci_rebuild_mock_failure_to_push(
     with working_dir(rebuild_env.env_dir):
         activate_rebuild_env(tmp_path, pkg_name, rebuild_env)
 
-        expect = f"Command exited with code {FAILED_CREATE_BUILDCACHE_CODE}"
-        with pytest.raises(spack.main.SpackCommandError, match=expect):
-            ci_cmd("rebuild", fail_on_error=True)
+        with pytest.raises(spack.main.SpackCommandError) as e:
+            ci_cmd("rebuild")
+        assert e.value.code == FAILED_CREATE_BUILDCACHE_CODE
 
 
 def test_ci_require_signing(
@@ -693,12 +687,12 @@ spack:
     env_cmd("activate", "--without-view", "--sh", "-d", str(spack_yaml.parent))
 
     # Run without the variable to make sure we don't accidentally require signing
-    output = ci_cmd("rebuild", output=str, fail_on_error=False)
+    output = ci_cmd("rebuild", fail_on_error=False)
     assert "spack must have exactly one signing key" not in output
 
     # Now run with the variable to make sure it works
     monkeypatch.setenv("SPACK_REQUIRE_SIGNING", "True")
-    output = ci_cmd("rebuild", output=str, fail_on_error=False)
+    output = ci_cmd("rebuild", fail_on_error=False)
     assert "spack must have exactly one signing key" in output
     env_cmd("deactivate")
 
@@ -761,7 +755,7 @@ spack:
                 }
             )
 
-            ci_out = ci_cmd("rebuild", output=str)
+            ci_out = ci_cmd("rebuild")
 
             assert "No need to rebuild archive-files" in ci_out
 
@@ -888,7 +882,7 @@ spack:
             spack.vendor.jsonschema.validate(json.loads(result.data), db_idx_schema)
 
             # Now that index is regenerated, validate "buildcache list" output
-            assert "patchelf" in buildcache_cmd("list", output=str)
+            assert "patchelf" in buildcache_cmd("list")
 
             logs_dir = scratch / "logs_dir"
             logs_dir.mkdir()
@@ -896,7 +890,7 @@ spack:
             assert "spack-build-out.txt.gz" in os.listdir(logs_dir)
 
 
-def test_push_to_build_cache_exceptions(monkeypatch, tmp_path: pathlib.Path, capsys):
+def test_push_to_build_cache_exceptions(monkeypatch, tmp_path: pathlib.Path, capfd):
     def push_or_raise(*args, **kwargs):
         raise spack.binary_distribution.PushToBuildCacheError("Error: Access Denied")
 
@@ -905,7 +899,7 @@ def test_push_to_build_cache_exceptions(monkeypatch, tmp_path: pathlib.Path, cap
     # Input doesn't matter, as we are faking exceptional output
     url = tmp_path.as_uri()
     ci.push_to_build_cache(spack.spec.Spec(), url, False)
-    assert f"Problem writing to {url}: Error: Access Denied" in capsys.readouterr().err
+    assert f"Problem writing to {url}: Error: Access Denied" in capfd.readouterr().err
 
 
 @pytest.mark.parametrize("match_behavior", ["first", "merge"])
@@ -1054,7 +1048,7 @@ spack:
 
 
 def test_ci_rebuild_index(
-    tmp_path: pathlib.Path, working_env, mutable_mock_env_path, install_mockery, mock_fetch, capsys
+    tmp_path: pathlib.Path, working_env, mutable_mock_env_path, install_mockery, mock_fetch
 ):
     scratch = tmp_path / "working_dir"
     mirror_dir = scratch / "mirror"
@@ -1091,9 +1085,8 @@ spack:
             buildcache_cmd("push", "-u", "-f", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
-            with capsys.disabled():
-                output = buildcache_cmd("list", "-L", "--allarch")
-                assert concrete_spec.dag_hash() + " callpath" in output
+            output = buildcache_cmd("list", "-L", "--allarch")
+            assert concrete_spec.dag_hash() + " callpath" in output
 
 
 def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
@@ -1222,7 +1215,7 @@ spack:
                 ci_cmd("generate", "--output-file", str(tmp_path / ".gitlab-ci.yml"))
 
             # Also check the 'rebuild-index' subcommand
-            output = ci_cmd("rebuild-index", output=str, fail_on_error=False)
+            output = ci_cmd("rebuild-index", fail_on_error=False)
             assert "spack ci rebuild-index requires an env containing a mirror" in output
 
 
@@ -1281,7 +1274,7 @@ spack:
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test"):
             # Check output of the 'generate' subcommand
-            output = ci_cmd("generate", output=str, fail_on_error=False)
+            output = ci_cmd("generate", fail_on_error=False)
             assert "known to be broken" in output
 
             expected = (
@@ -1431,7 +1424,6 @@ spack:
         "https://example.com/api/v1/projects/1/jobs/2/artifacts",
         "--working-dir",
         str(repro_dir),
-        output=str,
     )
     # Make sure the script was generated
     assert (repro_dir / "start.sh").exists()
@@ -1450,7 +1442,6 @@ spack:
             "https://example.com/api/v1/projects/1/jobs/2/artifacts",
             "--working-dir",
             str(repro_dir),
-            output=str,
         )
 
     # Cleanup between  tests
@@ -1463,7 +1454,6 @@ spack:
         "--use-local-head",
         "--working-dir",
         str(repro_dir),
-        output=str,
     )
 
     # Make sure we are checkout out the HEAD commit without a merge commit
@@ -1485,7 +1475,6 @@ spack:
         "https://example.com/api/v1/projects/1/jobs/2/artifacts",
         "--working-dir",
         str(repro_dir),
-        output=str,
     )
     # Make sure the script was generated
     assert (repro_dir / "start.sh").exists()
@@ -1525,24 +1514,24 @@ def test_reproduce_build_url_validation(url_in, url_out):
 
 def test_reproduce_build_url_validation_fails():
     """Wrong URLs should cause an exception"""
-    with pytest.raises(SystemExit):
+    with pytest.raises(spack.main.SpackCommandError):
         ci_cmd("reproduce-build", "example.com/spack/spack/-/jobs/123456/artifacts/download")
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(spack.main.SpackCommandError):
         ci_cmd("reproduce-build", "https://example.com/spack/spack/-/issues")
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(spack.main.SpackCommandError):
         ci_cmd("reproduce-build", "https://example.com/spack/spack/-")
 
 
 @pytest.mark.parametrize(
     "subcmd", [(""), ("generate"), ("rebuild-index"), ("rebuild"), ("reproduce-build")]
 )
-def test_ci_help(subcmd, capsys):
+def test_ci_help(subcmd):
     """Make sure `spack ci` --help describes the (sub)command help."""
-    out = spack.main.SpackCommand("ci", subprocess=True)(subcmd, "--help")
+    out = spack.main.SpackCommand("ci")(subcmd, "--help", fail_on_error=False)
 
-    usage = "usage: spack ci {0}{1}[".format(subcmd, " " if subcmd else "")
+    usage = " ci {0}{1}[".format(subcmd, " " if subcmd else "")
     assert usage in out
 
 

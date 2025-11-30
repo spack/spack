@@ -1628,7 +1628,7 @@ def test_included_optional_include_scopes():
 
 
 def test_included_path_string(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capsys
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capfd
 ):
     path = tmp_path / "local" / "config.yaml"
     path.parent.mkdir()
@@ -1653,7 +1653,7 @@ def test_included_path_string(
     # Second pass uses the scopes previously built
     assert include._scopes is not None
     scopes = include.scopes(parent_scope)
-    captured = capsys.readouterr()[1]
+    captured = capfd.readouterr()[1]
     assert "Using existing scopes" in captured
 
 
@@ -1674,7 +1674,7 @@ def test_included_path_string_no_parent_path(
 
 
 def test_included_path_conditional_bad_when(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, capsys
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, capfd
 ):
     path = tmp_path / "local"
     path.mkdir()
@@ -1687,7 +1687,7 @@ def test_included_path_conditional_bad_when(
     assert not include.evaluate_condition()
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
-    captured = capsys.readouterr()[1]
+    captured = capfd.readouterr()[1]
     assert "condition is not satisfied" in captured
     assert not scopes
 
@@ -1722,7 +1722,7 @@ def test_included_path_git_missing_args():
 
 
 def test_included_path_git_unsat(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capsys
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capfd
 ):
     paths = ["config.yaml", "packages.yaml"]
     entry = {
@@ -1740,7 +1740,7 @@ def test_included_path_git_unsat(
     assert not include.optional and not include.evaluate_condition()
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
-    captured = capsys.readouterr()[1]
+    captured = capfd.readouterr()[1]
     assert "condition is not satisfied" in captured
     assert not scopes
 
@@ -1749,7 +1749,7 @@ def test_included_path_git_unsat(
     "key,value", [("branch", "main"), ("commit", "abcdef123456"), ("tag", "v1.0")]
 )
 def test_included_path_git(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capsys
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capfd
 ):
     monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
 
@@ -1807,14 +1807,14 @@ def test_included_path_git(
     if key == "branch":
         assert include._scopes is not None
         scopes = include.scopes(parent_scope)
-        captured = capsys.readouterr()[1]
+        captured = capfd.readouterr()[1]
         assert "Using existing scopes" in captured
 
     # A direct clone now returns already cloned destination and debug message.
     # Again only need to run this test once.
     if key == "tag":
         assert include._clone() == include.destination
-        captured = capsys.readouterr()[1]
+        captured = capfd.readouterr()[1]
         assert "already cloned" in captured
 
 

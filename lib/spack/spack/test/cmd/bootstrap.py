@@ -40,7 +40,7 @@ def test_root_get_and_set(mutable_config, scope):
         scope_args = ["--scope={0}".format(scope)]
 
     _bootstrap("root", path, *scope_args)
-    out = _bootstrap("root", *scope_args, output=str)
+    out = _bootstrap("root", *scope_args)
     if sys.platform == "win32":
         out = convert_to_posix_path(out)
     assert out.strip() == path
@@ -101,15 +101,13 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     assert os.path.exists(backup_file)
 
 
-def test_list_sources(config, capsys):
+def test_list_sources(config):
     # Get the merged list and ensure we get our defaults
-    with capsys.disabled():
-        output = _bootstrap("list")
+    output = _bootstrap("list")
     assert "github-actions" in output
 
     # Ask for a specific scope and check that the list of sources is empty
-    with capsys.disabled():
-        output = _bootstrap("list", "--scope", "user")
+    output = _bootstrap("list", "--scope", "user")
     assert "No method available" in output
 
 

@@ -180,7 +180,7 @@ def test_multi_extension_search(hello_world_extension, extension_creator):
         assert ("Hello world") in spack.main.SpackCommand("hello-world")()
 
 
-def test_duplicate_module_load(hello_world_cmd, capsys):
+def test_duplicate_module_load(hello_world_cmd, capfd):
     """Ensure duplicate module load attempts are successful.
 
     The command module will already have been loaded once by the
@@ -190,7 +190,7 @@ def test_duplicate_module_load(hello_world_cmd, capsys):
     args = []
     hw_cmd = spack.cmd.get_command(hello_world_cmd.command_name)
     hw_cmd(parser, args)
-    captured = capsys.readouterr()
+    captured = capfd.readouterr()
     assert captured == ("Hello world!\n", "")
 
 
@@ -245,7 +245,7 @@ def test_extension_naming(tmp_path: pathlib.Path, extension_path, expected_excep
                 spack.cmd.get_module("no-such-command")
 
 
-def test_missing_command_function(extension_creator, capsys):
+def test_missing_command_function(extension_creator, capfd):
     """Ensure we die as expected if a command module does not have the
     expected command function defined.
     """
@@ -253,7 +253,7 @@ def test_missing_command_function(extension_creator, capsys):
         extension.add_command("bad-cmd", """\ndescription = "Empty command implementation"\n""")
         with pytest.raises(SystemExit):
             spack.cmd.get_module("bad-cmd")
-        capture = capsys.readouterr()
+        capture = capfd.readouterr()
         assert "must define function 'bad_cmd'." in capture[1]
 
 

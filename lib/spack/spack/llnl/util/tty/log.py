@@ -306,74 +306,6 @@ class Unbuffered:
         return getattr(self.stream, attr)
 
 
-def _file_descriptors_work(*streams):
-    """Whether we can get file descriptors for the streams specified.
-
-    This tries to call ``fileno()`` on all streams in the argument list,
-    and returns ``False`` if anything goes wrong.
-
-    This can happen, when, e.g., the test framework replaces stdout with
-    a ``StringIO`` object.
-
-    We have to actually try this to see whether it works, rather than
-    checking for the fileno attribute, because frameworks like pytest add
-    dummy fileno methods on their dummy file objects that return
-    ``UnsupportedOperationErrors``.
-
-    """
-    # test whether we can get fds for out and error
-    try:
-        for stream in streams:
-            stream.fileno()
-        return True
-    except BaseException:
-        return False
-
-
-class FileWrapper:
-    """Represents a file. Can be an open stream, a path to a file (not opened
-    yet), or neither. When unwrapped, it returns an open file (or file-like)
-    object.
-    """
-
-    def __init__(self, file_like, append=False):
-        # This records whether the file-like object returned by "unwrap" is
-        # purely in-memory. In that case a subprocess will need to explicitly
-        # transmit the contents to the parent.
-        self.write_in_parent = False
-
-        self.file_like = file_like
-        self.append = append
-
-        if isinstance(file_like, str):
-            self.open = True
-        elif _file_descriptors_work(file_like):
-            self.open = False
-        else:
-            self.file_like = None
-            self.open = True
-            self.write_in_parent = True
-
-        self.file = None
-
-    def unwrap(self):
-        if self.open:
-            if self.file_like:
-                mode = "a" if self.append else "w"
-                self.file = open(self.file_like, mode, encoding="utf-8")
-            else:
-                self.file = io.StringIO()
-            return self.file
-        else:
-            # We were handed an already-open file object. In this case we also
-            # will not actually close the object when requested to.
-            return self.file_like
-
-    def close(self):
-        if self.file:
-            self.file.close()
-
-
 def log_output(*args, **kwargs):
     """Context manager that logs its output to a file.
 
@@ -419,15 +351,13 @@ class nixlog:
     with the daemon to tell it when and when not to echo; this is what
     force_echo does.  You can also enable/disable echoing by typing ``v``.
 
-    We try to use OS-level file descriptors to do the redirection, but if
-    stdout or stderr has been set to some Python-level file object, we
-    use Python-level redirection instead.  This allows the redirection to
-    work within test frameworks like nose and pytest.
+    We use OS-level file descriptors to do the redirection, which
+    redirects output for subprocesses and system calls.
     """
 
     def __init__(
         self,
-        file_like=None,
+        filename: str,
         echo=False,
         debug=0,
         buffer=False,
@@ -438,8 +368,7 @@ class nixlog:
         """Create a new output log context manager.
 
         Args:
-            file_like (str or stream): open file object or name of file where
-                output should be logged
+            filename (str): path to file where output should be logged
             echo (bool): whether to echo output in addition to logging it
             debug (int): positive to enable tty debug mode during logging
             buffer (bool): pass buffer=True to skip unbuffering output; note
@@ -448,10 +377,8 @@ class nixlog:
                 line of output
             append (bool): whether to append to file ('a' mode)
 
-        log_output can take either a file object or a filename. If a
-        filename is passed, the file will be opened and closed entirely
-        within ``__enter__`` and ``__exit__``. If a file object is passed,
-        this assumes the caller owns it and will close it.
+        The filename will be opened and closed entirely within ``__enter__``
+        and ``__exit__``.
 
         By default, we unbuffer sys.stdout and sys.stderr because the
         logger will include output from executed programs and from python
@@ -461,7 +388,7 @@ class nixlog:
         Logger daemon is not started until ``__enter__()``.
 
         """
-        self.file_like = file_like
+        self.filename = filename
         self.echo = echo
         self.debug = debug
         self.buffer = buffer
@@ -473,12 +400,6 @@ class nixlog:
     def __enter__(self):
         if self._active:
             raise RuntimeError("Can't re-enter the same log_output!")
-
-        if self.file_like is None:
-            raise RuntimeError("file argument must be set by either __init__ or __call__")
-
-        # set up a stream for the daemon to write to
-        self.log_file = FileWrapper(self.file_like, append=self.append)
 
         # record parent color settings before redirecting.  We do this
         # because color output depends on whether the *original* stdout
@@ -515,7 +436,8 @@ class nixlog:
                     read_fd,
                     self.write_fd,
                     self.echo,
-                    self.log_file,
+                    self.filename,
+                    self.append,
                     child_pipe,
                     self.filter_fn,
                 ),
@@ -534,34 +456,18 @@ class nixlog:
         sys.stderr.flush()
 
         # Now do the actual output redirection.
-        self.use_fds = _file_descriptors_work(sys.stdout, sys.stderr)
-        if self.use_fds:
-            # We try first to use OS-level file descriptors, as this
-            # redirects output for subprocesses and system calls.
+        # We use OS-level file descriptors, as this
+        # redirects output for subprocesses and system calls.
+        self._redirected_fds = {}
 
-            # Save old stdout and stderr file descriptors
-            self._saved_stdout = os.dup(sys.stdout.fileno())
-            self._saved_stderr = os.dup(sys.stderr.fileno())
+        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
+        # redirect their file descriptors in addition to the original fds 1 and 2.
+        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
+        for fd in fds:
+            self._redirected_fds[fd] = os.dup(fd)
+            os.dup2(self.write_fd.fileno(), fd)
 
-            # redirect to the pipe we created above
-            os.dup2(self.write_fd.fileno(), sys.stdout.fileno())
-            os.dup2(self.write_fd.fileno(), sys.stderr.fileno())
-            self.write_fd.close()
-
-        else:
-            # Handle I/O the Python way. This won't redirect lower-level
-            # output, but it's the best we can do, and the caller
-            # shouldn't expect any better, since *they* have apparently
-            # redirected I/O the Python way.
-
-            # Save old stdout and stderr file objects
-            self._saved_stdout = sys.stdout
-            self._saved_stderr = sys.stderr
-
-            # create a file object for the pipe; redirect to it.
-            pipe_fd_out = os.fdopen(self.write_fd.fileno(), "w", closefd=False)
-            sys.stdout = pipe_fd_out
-            sys.stderr = pipe_fd_out
+        self.write_fd.close()
 
         # Unbuffer stdout and stderr at the Python level
         if not self.buffer:
@@ -584,23 +490,10 @@ class nixlog:
         sys.stdout.flush()
         sys.stderr.flush()
 
-        # restore previous output settings, either the low-level way or
-        # the python way
-        if self.use_fds:
-            os.dup2(self._saved_stdout, sys.stdout.fileno())
-            os.close(self._saved_stdout)
-
-            os.dup2(self._saved_stderr, sys.stderr.fileno())
-            os.close(self._saved_stderr)
-        else:
-            sys.stdout = self._saved_stdout
-            sys.stderr = self._saved_stderr
-            self.write_fd.close()
-
-        # print log contents in parent if needed.
-        if self.log_file.write_in_parent:
-            string = self.parent_pipe.recv()
-            self.file_like.write(string)
+        # restore previous output settings using the OS-level way
+        for fd, saved_fd in self._redirected_fds.items():
+            os.dup2(saved_fd, fd)
+            os.close(saved_fd)
 
         # recover and store echo settings from the child before it dies
         try:
@@ -718,15 +611,14 @@ class winlog:
     """
 
     def __init__(
-        self, file_like=None, echo=False, debug=0, buffer=False, filter_fn=None, append=False
+        self, filename: str, echo=False, debug=0, buffer=False, filter_fn=None, append=False
     ):
         self.debug = debug
         self.echo = echo
-        self.logfile = file_like
+        self.logfile = filename
         self.stdout = StreamWrapper("stdout")
         self.stderr = StreamWrapper("stderr")
         self._active = False
-        self._ioflag = False
         self.old_stdout = sys.stdout
         self.old_stderr = sys.stderr
         self.append = append
@@ -735,69 +627,55 @@ class winlog:
         if self._active:
             raise RuntimeError("Can't re-enter the same log_output!")
 
-        if self.logfile is None:
-            raise RuntimeError("file argument must be set by __init__ ")
-
         # Open both write and reading on logfile
-        if isinstance(self.logfile, io.StringIO):
-            self._ioflag = True
-            # cannot have two streams on tempfile, so we must make our own
-            sys.stdout = self.logfile
-            sys.stderr = self.logfile
-        else:
-            write_mode = "ab+" if self.append else "wb+"
-            self.writer = open(self.logfile, mode=write_mode)
-            self.reader = open(self.logfile, mode="rb+")
+        write_mode = "ab+" if self.append else "wb+"
+        self.writer = open(self.logfile, mode=write_mode)
+        self.reader = open(self.logfile, mode="rb+")
 
-            # Dup stdout so we can still write to it after redirection
-            self.echo_writer = open(os.dup(sys.stdout.fileno()), "w", encoding=sys.stdout.encoding)
-            # Redirect stdout and stderr to write to logfile
-            self.stderr.redirect_stream(self.writer.fileno())
-            self.stdout.redirect_stream(self.writer.fileno())
-            self._kill = threading.Event()
+        # Dup stdout so we can still write to it after redirection
+        self.echo_writer = open(os.dup(sys.stdout.fileno()), "w", encoding=sys.stdout.encoding)
+        # Redirect stdout and stderr to write to logfile
+        self.stderr.redirect_stream(self.writer.fileno())
+        self.stdout.redirect_stream(self.writer.fileno())
+        self._kill = threading.Event()
 
-            def background_reader(reader, echo_writer, _kill):
-                # for each line printed to logfile, read it
-                # if echo: write line to user
-                try:
-                    while True:
-                        is_killed = _kill.wait(0.1)
-                        # Flush buffered build output to file
-                        # stdout/err fds refer to log file
-                        self.stderr.flush()
-                        self.stdout.flush()
+        def background_reader(reader, echo_writer, _kill):
+            # for each line printed to logfile, read it
+            # if echo: write line to user
+            try:
+                while True:
+                    is_killed = _kill.wait(0.1)
+                    # Flush buffered build output to file
+                    # stdout/err fds refer to log file
+                    self.stderr.flush()
+                    self.stdout.flush()
 
-                        line = reader.readline()
-                        if self.echo and line:
-                            echo_writer.write("{0}".format(line.decode()))
-                            echo_writer.flush()
+                    line = reader.readline()
+                    if self.echo and line:
+                        echo_writer.write("{0}".format(line.decode()))
+                        echo_writer.flush()
 
-                        if is_killed:
-                            break
-                finally:
-                    reader.close()
+                    if is_killed:
+                        break
+            finally:
+                reader.close()
 
-            self._active = True
-            self._thread = Thread(
-                target=background_reader, args=(self.reader, self.echo_writer, self._kill)
-            )
-            self._thread.start()
+        self._active = True
+        self._thread = Thread(
+            target=background_reader, args=(self.reader, self.echo_writer, self._kill)
+        )
+        self._thread.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._ioflag:
-            sys.stdout = self.old_stdout
-            sys.stderr = self.old_stderr
-            self._ioflag = False
-        else:
-            self.writer.close()
-            self.echo_writer.flush()
-            self.stdout.flush()
-            self.stderr.flush()
-            self._kill.set()
-            self._thread.join()
-            self.stdout.close()
-            self.stderr.close()
+        self.writer.close()
+        self.echo_writer.flush()
+        self.stdout.flush()
+        self.stderr.flush()
+        self._kill.set()
+        self._thread.join()
+        self.stdout.close()
+        self.stderr.close()
         self._active = False
 
     @contextmanager
@@ -813,7 +691,8 @@ def _writer_daemon(
     read_fd: Connection,
     write_fd: Connection,
     echo: bool,
-    log_file_wrapper: FileWrapper,
+    log_filename: str,
+    append: bool,
     control_fd: Connection,
     filter_fn: Optional[Callable[[str], str]],
 ) -> None:
@@ -847,17 +726,15 @@ def _writer_daemon(
 
     In addition to the input and output file descriptors, the daemon
     interacts with the parent via ``control_pipe``.  It reports whether
-    ``stdout`` was enabled or disabled when it finished and, if the
-    ``log_file`` is a ``StringIO`` object, then the daemon also sends the
-    logged output back to the parent as a string, to be written to the
-    ``StringIO`` in the parent. This is mainly for testing.
+    ``stdout`` was enabled or disabled when it finished.
 
     Arguments:
         stdin_fd: optional input from the terminal
         read_fd: pipe for reading from parent's redirected stdout
         echo: initial echo setting -- controlled by user and preserved across multiple writer
             daemons
-        log_file_wrapper: file to log all output
+        log_filename: filename where output should be logged
+        append: whether to append to the file or overwrite it
         control_pipe: multiprocessing pipe on which to send control information to the parent
         filter_fn: optional function to filter each line of output
 
@@ -882,8 +759,7 @@ def _writer_daemon(
     # list of streams to select from
     istreams = [read_file, stdin_file] if stdin_file else [read_file]
     force_echo = False  # parent can force echo for certain output
-
-    log_file = log_file_wrapper.unwrap()
+    log_file = open(log_filename, mode="a" if append else "w", encoding="utf-8")
 
     try:
         with keyboard_input(stdin_file) as kb:
@@ -964,10 +840,7 @@ def _writer_daemon(
         traceback.print_exc()
 
     finally:
-        # send written data back to parent if we used a StringIO
-        if isinstance(log_file, io.StringIO):
-            control_fd.send(log_file.getvalue())
-        log_file_wrapper.close()
+        log_file.close()
         read_fd.close()
         if stdin_fd:
             stdin_fd.close()

@@ -319,7 +319,7 @@ def test_installer_ensure_ready_errors(install_mockery, monkeypatch):
         installer._ensure_install_ready(spec.package)
 
 
-def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path, capsys):
+def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path, capfd):
     """Test _ensure_locked when a non-lock exception is raised."""
     mock_err_msg = "Mock exception error"
 
@@ -334,12 +334,12 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path,
         with pytest.raises(RuntimeError):
             installer._ensure_locked("read", spec.package)
 
-        out = str(capsys.readouterr()[1])
+        out = str(capfd.readouterr()[1])
         assert "Failed to acquire a read lock" in out
         assert mock_err_msg in out
 
 
-def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capsys):
+def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capfd):
     """Test _ensure_locked when already have lock."""
     installer = create_installer(["trivial-install-test-package"], {})
     spec = installer.build_requests[0].pkg.spec
@@ -359,7 +359,7 @@ def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capsys):
         with pytest.raises(ulk.LockUpgradeError, match=err):
             installer._ensure_locked(lock_type, spec.package)
 
-        out = str(capsys.readouterr()[1])
+        out = str(capfd.readouterr()[1])
         assert "Failed to upgrade to a write lock" in out
         assert "exception when releasing read lock" in out
 
@@ -386,7 +386,7 @@ def test_ensure_locked_new_lock(install_mockery, tmp_path: pathlib.Path, lock_ty
         assert lock._writes == writes
 
 
-def test_ensure_locked_new_warn(install_mockery, monkeypatch, capsys):
+def test_ensure_locked_new_warn(install_mockery, monkeypatch, capfd):
     orig_pl = spack.database.SpecLocker.lock
 
     def _pl(db, spec, timeout):
@@ -404,7 +404,7 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, capsys):
     assert ltype == lock_type
     assert lock is not None
 
-    out = str(capsys.readouterr()[1])
+    out = str(capfd.readouterr()[1])
     assert "Expected prefix lock timeout" in out
 
 
@@ -441,7 +441,7 @@ def test_dump_packages_deps_ok(install_mockery, tmp_path: pathlib.Path, mock_pac
     assert os.path.isfile(dest_pkg)
 
 
-def test_dump_packages_deps_errs(install_mockery, tmp_path: pathlib.Path, monkeypatch, capsys):
+def test_dump_packages_deps_errs(install_mockery, tmp_path: pathlib.Path, monkeypatch, capfd):
     """Test error paths for dump_packages with dependencies."""
     orig_bpp = spack.store.STORE.layout.build_packages_path
     orig_dirname = spack.repo.Repo.dirname_for_package_name
@@ -478,7 +478,7 @@ def test_dump_packages_deps_errs(install_mockery, tmp_path: pathlib.Path, monkey
     with pytest.raises(spack.repo.RepoError, match=repo_err_msg):
         inst.dump_packages(spec, path)
 
-    out = str(capsys.readouterr()[1])
+    out = str(capfd.readouterr()[1])
     assert "Couldn't copy in provenance for cmake" in out
 
 
@@ -509,7 +509,7 @@ def test_clear_failures_success(tmp_path: pathlib.Path):
 
 
 @pytest.mark.not_on_windows("chmod does not prevent removal on Win")
-def test_clear_failures_errs(tmp_path: pathlib.Path, capsys):
+def test_clear_failures_errs(tmp_path: pathlib.Path, capfd):
     """Test the clear_failures exception paths."""
     failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
     spec = spack.spec.Spec("pkg-a")
@@ -523,7 +523,7 @@ def test_clear_failures_errs(tmp_path: pathlib.Path, capsys):
     failures.clear_all()
 
     # Ensure expected warning generated
-    out = str(capsys.readouterr()[1])
+    out = str(capfd.readouterr()[1])
     assert "Unable to remove failure" in out
     failures.dir.chmod(0o750)
 
@@ -645,7 +645,7 @@ def test_installer_init_requests(install_mockery):
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_spliced(install_mockery, mock_fetch, monkeypatch, capsys, transitive):
+def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive):
     """Test installing a spliced spec"""
     spec = spack.concretize.concretize_one("splice-t")
     dep = spack.concretize.concretize_one("splice-h+foo")
@@ -660,7 +660,7 @@ def test_install_spliced(install_mockery, mock_fetch, monkeypatch, capsys, trans
 
 
 @pytest.mark.parametrize("transitive", [True, False])
-def test_install_spliced_build_spec_installed(install_mockery, capfd, mock_fetch, transitive):
+def test_install_spliced_build_spec_installed(install_mockery, mock_fetch, transitive):
     """Test installing a spliced spec with the build spec already installed"""
     spec = spack.concretize.concretize_one("splice-t")
     dep = spack.concretize.concretize_one("splice-h+foo")
@@ -747,7 +747,7 @@ def test_installing_task_use_cache(install_mockery, monkeypatch):
     assert request.pkg_id in installer.installed
 
 
-def test_install_task_requeue_build_specs(install_mockery, monkeypatch, capfd):
+def test_install_task_requeue_build_specs(install_mockery, monkeypatch):
     """Check that a missing build_spec spec is added by _complete_task."""
 
     # This test also ensures coverage of most of the new
@@ -773,7 +773,7 @@ def test_install_task_requeue_build_specs(install_mockery, monkeypatch, capfd):
     assert inst.package_id(popped_task.pkg.spec) in installer.build_tasks
 
 
-def test_release_lock_write_n_exception(install_mockery, tmp_path: pathlib.Path, capsys):
+def test_release_lock_write_n_exception(install_mockery, tmp_path: pathlib.Path, capfd):
     """Test _release_lock for supposed write lock with exception."""
     installer = create_installer(["trivial-install-test-package"], {})
 
@@ -784,7 +784,7 @@ def test_release_lock_write_n_exception(install_mockery, tmp_path: pathlib.Path,
         assert lock._writes == 0
 
         installer._release_lock(pkg_id)
-        out = str(capsys.readouterr()[1])
+        out = str(capfd.readouterr()[1])
         msg = "exception when releasing write lock for {0}".format(pkg_id)
         assert msg in out
 
@@ -889,7 +889,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     assert expected_msg in out
 
 
-def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch, capsys):
+def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch, capfd):
     """Test _cleanup_failed exception path."""
     msg = "Fake release_write exception"
 
@@ -905,7 +905,7 @@ def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch
         installer.failed[pkg_id] = lock
 
         installer._cleanup_failed(pkg_id)
-        out = str(capsys.readouterr()[1])
+        out = str(capfd.readouterr()[1])
         assert "exception when removing failure tracking" in out
         assert msg in out
 
@@ -921,7 +921,7 @@ def test_update_failed_no_dependent_task(install_mockery):
         assert installer.failed[task.pkg_id] is None
 
 
-def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
+def test_install_uninstalled_deps(install_mockery, monkeypatch, capfd):
     """Test install with uninstalled dependencies."""
     installer = create_installer(["parallel-package-a"], {})
 
@@ -936,11 +936,11 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     with pytest.raises(spack.error.InstallError, match=msg):
         installer.install()
 
-    out = str(capsys.readouterr())
+    out = str(capfd.readouterr())
     assert "Detected uninstalled dependencies for" in out
 
 
-def test_install_failed(install_mockery, monkeypatch, capsys):
+def test_install_failed(install_mockery, monkeypatch, capfd):
     """Test install with failed install."""
     installer = create_installer(["parallel-package-a"], {})
 
@@ -950,12 +950,12 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     with pytest.raises(spack.error.InstallError, match="request failed"):
         installer.install()
 
-    out = str(capsys.readouterr())
+    out = str(capfd.readouterr())
     assert installer.build_requests[0].pkg_id in out
     assert "failed to install" in out
 
 
-def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
+def test_install_failed_not_fast(install_mockery, monkeypatch, capfd):
     """Test install with failed install."""
     installer = create_installer(["parallel-package-a"], {"fail_fast": False})
 
@@ -965,7 +965,7 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     with pytest.raises(spack.error.InstallError, match="request failed"):
         installer.install()
 
-    out = str(capsys.readouterr())
+    out = str(capfd.readouterr())
     assert "failed to install" in out
     assert "Skipping build of parallel-package-a" in out
 
@@ -1045,7 +1045,7 @@ def test_install_fail_multi(install_mockery, mock_fetch, monkeypatch):
     assert not any(pkg_id.startswith("pkg-a-") for pkg_id in installer.installed)
 
 
-def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
+def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capfd):
     """Test fail_fast install when an install failure is detected."""
     a = spack.concretize.concretize_one("parallel-package-a")
 
@@ -1070,7 +1070,7 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     ), "Package a cannot install due to its dependencies failing"
     # check that b's active process got killed when c failed
 
-    assert f"{b_id} failed to install" in capsys.readouterr().err
+    assert f"{b_id} failed to install" in capfd.readouterr().err
 
 
 def _test_install_fail_fast_on_except_patch(installer, **kwargs):
@@ -1081,7 +1081,7 @@ def _test_install_fail_fast_on_except_patch(installer, **kwargs):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
+def test_install_fail_fast_on_except(install_mockery, monkeypatch, capfd):
     """Test fail_fast install when an install failure results from an error."""
     installer = create_installer(["pkg-a"], {"fail_fast": True})
 
@@ -1096,7 +1096,7 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     with pytest.raises(spack.error.InstallError, match="mock patch failure"):
         installer.install()
 
-    out = str(capsys.readouterr())
+    out = str(capfd.readouterr())
     assert "Skipping build of pkg-a" in out
 
 

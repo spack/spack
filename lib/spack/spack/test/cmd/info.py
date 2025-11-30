@@ -13,10 +13,9 @@ pytestmark = [pytest.mark.usefixtures("mock_packages")]
 info = SpackCommand("info")
 
 
-def test_deprecated_option_warns(capfd):
+def test_deprecated_option_warns():
     info("--variants-by-name", "vtk-m")
-    output = capfd.readouterr()
-    assert "--variants-by-name is deprecated" in output.err
+    assert "--variants-by-name is deprecated" in info.output
 
 
 # no specs, more than one spec

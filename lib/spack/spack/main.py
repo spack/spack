@@ -8,23 +8,20 @@ In a normal Spack installation, this is invoked from the bin/spack script
 after the system path is set up.
 """
 import argparse
-
-# import spack.modules.common
 import inspect
-import io
 import operator
 import os
 import pstats
 import re
 import shlex
 import signal
-import subprocess as sp
 import sys
 import tempfile
 import textwrap
 import traceback
 import warnings
-from typing import List, Tuple
+from contextlib import contextmanager
+from typing import Any, List, Optional, Set, Tuple
 
 import spack.vendor.archspec.cpu
 
@@ -47,7 +44,6 @@ import spack.store
 import spack.util.debug
 import spack.util.environment
 import spack.util.lock
-from spack.llnl.util.tty.log import log_output
 
 from .enums import ConfigScopePriority
 
@@ -398,6 +394,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
 def make_argument_parser(**kwargs):
     """Create an basic argument parser without any subcommands added."""
     parser = SpackArgumentParser(
+        prog="spack",
         formatter_class=SpackHelpFormatter,
         add_help=False,
         description=(
@@ -656,100 +653,98 @@ def _invoke_command(command, parser, args, unknown_args):
 
 
 class SpackCommand:
-    """Callable object that invokes a spack command (for testing).
+    """Callable object that invokes a Spack command (for testing).
 
     Example usage::
 
-        install = SpackCommand('install')
-        install('-v', 'mpich')
+        install = SpackCommand("install")
+        install("-v", "mpich")
 
-    Use this to invoke Spack commands directly from Python and check
-    their output.
-    """
+    Use this to invoke Spack commands directly from Python and check their output."""
 
-    def __init__(self, command_name, subprocess=False):
+    def __init__(self, command_name: str) -> None:
         """Create a new SpackCommand that invokes ``command_name`` when called.
 
         Args:
-            command_name (str): name of the command to invoke
-            subprocess (bool): whether to fork a subprocess or not. Currently not supported on
-                Windows, where it is always False.
+            command_name: name of the command to invoke
         """
         self.parser = make_argument_parser()
         self.command_name = command_name
-        # TODO: figure out how to support this on windows
-        self.subprocess = subprocess if sys.platform != "win32" else False
+        #: Return code of the last command invocation
+        self.returncode: Any = None
+        #: Error raised during the last command invocation, if any
+        self.error: Optional[BaseException] = None
+        #: Binary output captured from the last command invocation
+        self.binary_output = b""
+        #: Decoded output captured from the last command invocation
+        self.output = ""
 
-    def __call__(self, *argv, **kwargs):
-        """Invoke this SpackCommand.
+    def __call__(self, *argv: str, capture: bool = True, fail_on_error: bool = True) -> str:
+        """Invoke this SpackCommand. Returns the combined stdout/stderr.
 
         Args:
-            argv (list): command line arguments.
+            argv: command line arguments.
 
         Keyword Args:
-            fail_on_error (optional bool): Don't raise an exception on error
-            global_args (optional list): List of global spack arguments:
-                simulates ``spack [global_args] [command] [*argv]``
+            capture: Capture output from the command
+            fail_on_error: Don't raise an exception on error
 
-        Returns:
-            (str): combined output and error as a string
-
-        On return, if ``fail_on_error`` is False, return value of command
-        is set in ``returncode`` property, and the error is set in the
-        ``error`` property.  Otherwise, raise an error.
-        """
-        # set these before every call to clear them out
+        On return, if ``fail_on_error`` is False, return value of command is set in ``returncode``
+        property, and the error is set in the ``error`` property.  Otherwise, raise an error."""
         self.returncode = None
         self.error = None
+        self.binary_output = b""
+        self.output = ""
 
-        prepend = kwargs["global_args"] if "global_args" in kwargs else []
-        fail_on_error = kwargs.get("fail_on_error", True)
+        try:
+            with self.capture_output(enable=capture):
+                command = self.parser.add_command(self.command_name)
+                args, unknown = self.parser.parse_known_args([self.command_name, *argv])
+                setup_main_options(args)
+                self.returncode = _invoke_command(command, self.parser, args, unknown)
+        except SystemExit as e:
+            # When the command calls sys.exit instead of returning an exit code
+            self.error = e
+            self.returncode = e.code
+        except BaseException as e:
+            # For other exceptions, raise the original exception if fail_on_error is True
+            self.error = e
+            if fail_on_error:
+                raise
+        finally:
+            self.output = self.binary_output.decode("utf-8", errors="replace")
 
-        if self.subprocess:
-            p = sp.Popen(
-                [spack.paths.spack_script] + prepend + [self.command_name] + list(argv),
-                stdout=sp.PIPE,
-                stderr=sp.STDOUT,
-            )
-            out, self.returncode = p.communicate()
-            out = out.decode()
-        else:
-            command = self.parser.add_command(self.command_name)
-            args, unknown = self.parser.parse_known_args(
-                prepend + [self.command_name] + list(argv)
-            )
+        if fail_on_error and self.returncode not in (0, None):
+            raise SpackCommandError(self.returncode, self.output) from self.error
 
-            out = io.StringIO()
+        return self.output
+
+    @contextmanager
+    def capture_output(self, enable: bool = True):
+        """Captures stdout and stderr from the current process and all subprocesses. This uses a
+        temporary file and os.dup2 to redirect file descriptors."""
+        if not enable:
+            yield self
+            return
+        with tempfile.TemporaryFile(mode="w+b") as tmp_file:
+            # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
+            # redirect their file descriptors in addition to the original fds 1 and 2.
+            fds: Set[int] = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
+            saved_fds = {fd: os.dup(fd) for fd in fds}
+            sys.stdout.flush()
+            sys.stderr.flush()
+            for fd in fds:
+                os.dup2(tmp_file.fileno(), fd)
             try:
-                with log_output(out, echo=True):
-                    self.returncode = _invoke_command(command, self.parser, args, unknown)
-
-            except SystemExit as e:
-                self.returncode = e.code
-
-            except BaseException as e:
-                tty.debug(e)
-                self.error = e
-                if fail_on_error:
-                    self._log_command_output(out)
-                    raise
-            out = out.getvalue()
-
-        if fail_on_error and self.returncode not in (None, 0):
-            self._log_command_output(out)
-            raise SpackCommandError(
-                "Command exited with code %d: %s(%s)"
-                % (self.returncode, self.command_name, ", ".join("'%s'" % a for a in argv))
-            )
-
-        return out
-
-    def _log_command_output(self, out):
-        if tty.is_verbose():
-            fmt = self.command_name + ": {0}"
-            for ln in out.getvalue().split("\n"):
-                if len(ln) > 0:
-                    tty.verbose(fmt.format(ln.replace("==> ", "")))
+                yield self
+            finally:
+                sys.stdout.flush()
+                sys.stderr.flush()
+                for fd, saved_fd in saved_fds.items():
+                    os.dup2(saved_fd, fd)
+                    os.close(saved_fd)
+                tmp_file.seek(0)
+                self.binary_output = tmp_file.read()
 
 
 def _profile_wrapper(command, main_args, parser, args, unknown_args):
@@ -815,7 +810,7 @@ def print_setup_info(*info):
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
     """
-    import spack.modules.common
+    from spack.modules.common import root_path
 
     shell = "csh" if "csh" in info else "sh"
 
@@ -833,7 +828,7 @@ def print_setup_info(*info):
     # print roots for all module systems
     module_to_roots = {"tcl": list(), "lmod": list()}
     for name in module_to_roots.keys():
-        path = spack.modules.common.root_path(name, "default")
+        path = root_path(name, "default")
         module_to_roots[name].append(path)
 
     other_spack_instances = spack.config.get("upstreams") or {}
@@ -1196,4 +1191,9 @@ def _handle_solver_bug(
 
 
 class SpackCommandError(Exception):
-    """Raised when SpackCommand execution fails."""
+    """Raised when SpackCommand execution fails, replacing SystemExit."""
+
+    def __init__(self, code, output):
+        self.code = code
+        self.output = output
+        super().__init__(f"Spack command failed with exit code {code}")

@@ -26,8 +26,7 @@ env = spack.main.SpackCommand("env")
 def test_help_option():
     # Test 'spack repo --help' to check basic import works
     # and the command exits successfully
-    with pytest.raises(SystemExit):
-        repo("--help")
+    repo("--help")
     assert repo.returncode in (None, 0)
 
 
@@ -39,12 +38,12 @@ def test_create_add_list_remove(mutable_config, tmp_path: pathlib.Path):
 
     # Add the new repository and check it appears in the list output
     repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
-    output = repo("list", "--scope=site", output=str)
+    output = repo("list", "--scope=site")
     assert "mockrepo" in output
 
     # Then remove it and check it's not there
     repo("remove", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
-    output = repo("list", "--scope=site", output=str)
+    output = repo("list", "--scope=site")
     assert "mockrepo" not in output
 
 
@@ -57,28 +56,28 @@ def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
     # Confirm that it is not removed when the scope is incorrect
     with pytest.raises(spack.main.SpackCommandError):
         repo("remove", "--scope=user", "mockrepo")
-    output = repo("list", output=str)
+    output = repo("list")
     assert "mockrepo" in output
 
     # Confirm that when the scope is specified, it is only removed from that scope
     repo("remove", "--scope=site", "mockrepo")
-    site_output = repo("list", "--scope=site", output=str)
-    system_output = repo("list", "--scope=system", output=str)
+    site_output = repo("list", "--scope=site")
+    system_output = repo("list", "--scope=system")
     assert "mockrepo" not in site_output
     assert "mockrepo" in system_output
 
     # Confirm that when the scope is not specified, it is removed from top scope with it present
     repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
     repo("remove", "mockrepo")
-    site_output = repo("list", "--scope=site", output=str)
-    system_output = repo("list", "--scope=system", output=str)
+    site_output = repo("list", "--scope=site")
+    system_output = repo("list", "--scope=system")
     assert "mockrepo" not in site_output
     assert "mockrepo" in system_output
 
     # Check that the `--all-scopes` option removes from all scopes
     repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
     repo("remove", "--all-scopes", "mockrepo")
-    output = repo("list", output=str)
+    output = repo("list")
     assert "mockrepo" not in output
 
 
@@ -638,7 +637,7 @@ def test_add_repo_auto_name_from_namespace(monkeypatch, tmp_path: pathlib.Path):
     assert repos_config["auto_name_repo"] == str(tmp_path)
 
 
-def test_add_repo_partial_repo_construction_warning(monkeypatch, capsys):
+def test_add_repo_partial_repo_construction_warning(monkeypatch, capfd):
     """Test that _add_repo issues warnings for repos that can't be constructed but
     succeeds if at least one can be."""
 
@@ -664,7 +663,7 @@ def test_add_repo_partial_repo_construction_warning(monkeypatch, capsys):
     assert key == "test_mixed_repo"
 
     # Check that a warning was issued for the failed repo
-    captured = capsys.readouterr()
+    captured = capfd.readouterr()
     assert "Skipping package repository" in captured.err
 
 
@@ -798,18 +797,18 @@ def test_repo_list_format_flags(
     )
 
     # Test default table format, which shows one line per package repository
-    table_output = repo("list", output=str)
+    table_output = repo("list")
     assert "[+] repo_one" in table_output
     assert "[+] repo_two" in table_output
     assert " -  uninitialized" in table_output
     assert "[-] misconfigured" in table_output
 
     # Test --namespaces flag
-    namespaces_output = repo("list", "--namespaces", output=str)
+    namespaces_output = repo("list", "--namespaces")
     assert namespaces_output.strip().split("\n") == ["repo_one", "repo_two"]
 
     # Test --names flag
-    config_names_output = repo("list", "--names", output=str)
+    config_names_output = repo("list", "--names")
     config_names_lines = config_names_output.strip().split("\n")
     assert config_names_lines == ["monorepo", "uninitialized", "misconfigured"]
 

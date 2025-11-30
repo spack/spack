@@ -334,7 +334,7 @@ def test_store(install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_failing_build(install_mockery, mock_fetch, capfd):
+def test_failing_build(install_mockery, mock_fetch):
     spec = spack.concretize.concretize_one("failing-build")
     pkg = spec.package
 
