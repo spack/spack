@@ -27,7 +27,7 @@ import spack.package_base
 import spack.repo
 import spack.spec
 import spack.stage
-import spack.util.executable
+import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
@@ -782,13 +782,6 @@ def validate_git_versions(
         with spack.stage.Stage(fetcher) as stage:
             known_commit = pkg.versions[version]["commit"]
             try:
-                # TODO(psakiev) we should be able to get all this validation from a single clone
-                # that has the metadata rather than fetching each version
-                # We probably want 
-                #    - git init
-                #    - git fetch --tags --filter=blob:none (for all trilinos tags this is 118 MB)
-                #    for v in versions:
-                #        found_commit = git rev-parse v["tag"]^{}
                 stage.fetch()
             except spack.error.FetchError:
                 tty.error(
@@ -803,12 +796,9 @@ def validate_git_versions(
             # commit that is located in the package.py file.
             if "tag" in pkg.versions[version]:
                 tag = pkg.versions[version]["tag"]
-                try:
-                    with fs.working_dir(stage.source_path):
-                        found_commit = fetcher.git(
-                            "rev-list", "-n", "1", tag, output=str, error=str
-                        ).strip()
-                except spack.util.executable.ProcessError:
+                url = pkg.version_or_package_attr("git", version)
+                found_commit = spack.util.git.get_commit_sha(url, tag)
+                if not found_commit:
                     tty.error(
                         f"Invalid tag for {pkg.name}@{version}\n"
                         f"    {tag} could not be found in the git repository."
