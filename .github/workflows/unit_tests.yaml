@@ -77,7 +77,7 @@ jobs:
     - name: Run unit tests
       env:
           SPACK_PYTHON: python
-          SPACK_TEST_PARALLEL: 2
+          SPACK_TEST_PARALLEL: 4
           COVERAGE: true
           COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
