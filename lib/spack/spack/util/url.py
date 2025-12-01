@@ -12,7 +12,7 @@ import re
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from spack.util.path import sanitize_filename, substitute_path_variables
 import spack.util.spack_yaml as syaml
@@ -196,6 +196,14 @@ def handle_windows_file_urls(url: str) -> str:
     # special handling w.r.t. Windows
     return url
 
+
+def make_file_url(path: Union[str, pathlib.Path]) -> str:
+    """Create properly formatted file url"""
+    check_path = pathlib.PureWindowsPath(str(path))
+    url_path = str(path)
+    if check_path.drive:
+        url_path = "/" + url_path
+    return urllib.parse.urlunparse(("file", "", url_path, "", "", ""))
     
 
 
