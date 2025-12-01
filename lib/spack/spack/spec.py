@@ -3534,9 +3534,7 @@ class Spec:
                         lhs_edge.spec
                         for lhs_edge in candidate_edges
                         if ((lhs_edge.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
-                        and rhs_edge.when._satisfies(
-                            lhs_edge.when, resolve_virtuals=resolve_virtuals
-                        )
+                        and rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=False)
                     ]
                     if not candidates or not any(
                         x._satisfies(rhs_edge.spec, resolve_virtuals=resolve_virtuals)
@@ -3579,7 +3577,7 @@ class Spec:
                 candidate_edges = [
                     lhs_edge
                     for lhs_edge in lhs_edges[current_dependency_name]
-                    if rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
+                    if rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=False)
                 ]
 
             if not candidate_edges:

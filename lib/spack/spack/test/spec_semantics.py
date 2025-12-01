@@ -621,6 +621,11 @@ class TestSpecSemantics:
         assert concrete.satisfies("^[when='^notapackage'] zmpi")
         assert not concrete.satisfies("^[when='^mpi'] zmpi")
 
+    def test_abstract_satisfies_conditional_dep(self):
+        assert Spec("pkg-a ^[when=%c] gcc").satisfies("pkg-a ^[when=%c] gcc")
+        assert Spec("pkg-a %[when=%c] gcc").satisfies("pkg-a %[when=%c] gcc")
+        assert Spec("pkg-a ^[when=^c] gcc").satisfies("pkg-a ^[when=^c] gcc")
+
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
