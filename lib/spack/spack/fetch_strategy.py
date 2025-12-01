@@ -961,12 +961,11 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
 
-        with temp_cwd():
+        with temp_cwd(ignore_cleanup_errors=True):
             if self.commit:
                 try:
                     spack.util.git.git_init_fetch(self.url, self.commit, depth, **kwargs)
                 except spack.util.executable.ProcessError:
-                    # TODO(psakeiv) debug message?
                     spack.util.git.git_clone(self.url, fetch_ref, True, depth, **kwargs)
             else:
                 spack.util.git.git_clone(self.url, fetch_ref, self.get_full_repo, depth, **kwargs)
@@ -977,11 +976,6 @@ class GitFetchStrategy(VCSFetchStrategy):
             if self.stage:
                 self.stage.srcdir = repo_name
             shutil.copytree(repo_name, dest, symlinks=True)
-            shutil.rmtree(
-                repo_name,
-                ignore_errors=False,
-                onerror=fs.readonly_file_handler(ignore_errors=True),
-            )
         return
 
     def submodule_operations(self):
