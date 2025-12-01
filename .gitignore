@@ -17,7 +17,7 @@ spack-db.*
 # except spack and site scopes that ship with spack
 /etc/spack/*
 !/etc/spack/defaults
-!/etc/spack/site
+!/etc/spack/site/README.md
 
 ###########################
 # Python-specific ignores #
