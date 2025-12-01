@@ -467,11 +467,6 @@ def make_argument_parser(**kwargs):
         metavar="DIR|ENV",
         help="add directory or environment as read-only config scope",
     )
-    config.add_argument(
-        "--disable-end-user-config",
-        action="store_true",
-        help="Disable system config scope for end users",
-    )
     envs = config  # parser.add_argument_group("environments")
     env_mutex = envs.add_mutually_exclusive_group()
     env_mutex.add_argument(
@@ -638,9 +633,6 @@ def setup_main_options(args):
     # when to use color (takes always, auto, or never)
     if args.color is not None:
         color.set_color_when(args.color)
-
-    if args.disable_end_user_config:
-        spack.config.end_user_system_scope = False
 
 
 def allows_unknown_args(command):

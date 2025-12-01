@@ -1310,9 +1310,6 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     return config_paths
 
 
-end_user_system_scope = True
-
-
 def create_incremental() -> Generator[Configuration, None, None]:
     """Singleton Configuration instance.
 
