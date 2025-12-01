@@ -156,6 +156,48 @@ def parse_link_rel_next(link_value: str) -> Optional[str]:
 
     return None
 
+def handle_windows_file_urls(url: str) -> str:
+    """Handles file urls with Windows style paths.
+    Colons are present in both network paths as well as
+    Windows drive separators.
+    A proper Windows file url will have any drive
+    delineators prefixed with a forward slash to prevent
+    the file path component of the url from being interpreted
+    a network location.
+
+    Many file urls with Windows style paths are naively and inccorectly
+    composed as 'file://' + path, which results in incorrect parsing
+    
+    This method contains some heuristics to detect a Windows file url,
+    and marshall it so it's properly formed and thus can be reasoned about
+
+    Arguments:
+        url: url being evalulated as a potential Windows file url
+
+    Returns: url if url is not a Windows file url, a properly formated
+    Windows file url if it is.
+    """
+    processed_url = urllib.parse.urlparse(url)
+    if not processed_url.scheme:
+        # definitely not a url, file or otherwise
+        return url
+    is_file_url = processed_url.scheme == "file"
+    if not is_file_url:
+        # not a file url, no need to process
+        return url
+    if processed_url.path and pathlib.PureWindowsPath(processed_url.path.lstrip("/")).drive:
+        # url was actually properly formed
+        return url
+    if processed_url.netloc and pathlib.PureWindowsPath(processed_url.netloc):
+        # A file url shouldn't have a netloc, but a poorly formed Windows url will
+        return "file:///" + processed_url.netloc
+
+    # if the above didn't catch this, this is likely a relative path, and requires no
+    # special handling w.r.t. Windows
+    return url
+
+    
+
 
 def canonicalize_url(url: str, default_wd: Optional[pathlib.Path] = None) -> str:
     """Same as substitute_path_variables, but for urls.
