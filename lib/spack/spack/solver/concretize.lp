@@ -336,7 +336,7 @@ attr("deprecated", node(ID, Package), Version) :-
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
 
-1 { allowed_versions(Version): pkg_fact(Package, version_origin(Version, Origin)),
+1 { allowed_versions(Version): real_or_simulated_version_origin(Package, Version, Origin),
     Origin != "installed"}
   :- attr("version", node(ID, Package), Version),
      build(node(ID, Package)).
@@ -572,7 +572,9 @@ impose(EffectID, node(X, Package))
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
-pkg_fact(PackageName, version_origin(VersionConstraint, "BadVersion")) :- 
+real_or_simulated_version_origin(Package, Version, Origin) :- pkg_fact(Package, version_origin(Version, Origin)).
+
+real_or_simulated_version_origin(PackageName, VersionConstraint, "BadVersion") :-
   build(node(PackageID, PackageName)), 
   imposed_constraint(EffectID, "node_version_satisfies", PackageName, VersionConstraint),
   impose(EffectID, node(PackageID, PackageName)),
