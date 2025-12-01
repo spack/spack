@@ -7,13 +7,17 @@ Utility functions for parsing, formatting, and manipulating URLs.
 """
 
 import posixpath
+import pathlib
 import re
 import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Optional
 
-from spack.util.path import sanitize_filename
+from spack.util.path import sanitize_filename, substitute_path_variables
+import spack.util.spack_yaml as syaml
+
+from llnl.util import tty
 
 
 def validate_scheme(scheme):
@@ -153,58 +157,52 @@ def parse_link_rel_next(link_value: str) -> Optional[str]:
     return None
 
 
-def canonicalize_url(url: str, default_wd: Optional[str] = None) -> str:
+def canonicalize_url(url: str, default_wd: Optional[pathlib.Path] = None) -> str:
     """Same as substitute_path_variables, but for urls.
 
-    If the url is a yaml object with file annotations, make absolute paths
-    relative to that file's directory.
-    Otherwise, use ``default_wd`` if specified, otherwise ``os.getcwd()``
+    If the url is a file url:
+        If represented by a yaml object with file annotations,
+        make absolute paths relative to that file's directory.
+        Otherwise, use ``default_wd`` if specified, otherwise
+        ``os.getcwd()``
 
     Arguments:
         url: url being converted as needed
-        default_wd: optional working directory/root for non-yaml urls
+        default_wd: optional working directory/root for non-yaml file urls
 
-    Returns: An absolute path or non-file URL with path variable substitution
+    Returns: A canonicalized url. File urls are returned as absolute file urls.
     """
+    c_url = substitute_path_variables(url)
+
+    # Now process linux-like paths and remote URLs
+    p_url = urllib.parse.urlparse(c_url)
+    path = pathlib.PurePath(urllib.request.url2pathname(p_url.path))
+
+    if not p_url.scheme:
+        # url argument is not a valid url
+        raise RuntimeError("Attempting to canonicalize a non url object from url canonicalization")
+    
+    if p_url.scheme != "file":
+        # Have a remote URL so simply return it with substitutions
+        return c_url
 
     # Get file in which path was written in case we need to make it absolute
     # relative to that path.
     
     filename = None
-    if isinstance(path, syaml.syaml_str):
-        filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
-        assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
+    if isinstance(url, syaml.syaml_str):
+        filename = pathlib.Path(os.path.dirname(url._start_mark.name))  # type: ignore[attr-defined]
+        assert url._start_mark.name == url._end_mark.name  # type: ignore[attr-defined]
 
-    path = substitute_path_variables(path)
-
-    # Ensure properly process a Windows path
-    win_path = pathlib.PureWindowsPath(path)
-    if win_path.drive:
-        # Assume only absolute paths are supported with a Windows drive
-        # (though DOS does allow drive-relative paths).
-        return os.path.normpath(str(win_path))
-
-    # Now process linux-like paths and remote URLs
-    url = urllib.parse.urlparse(path)
-    url_path = urllib.request.url2pathname(url.path)
-    if url.scheme:
-        if url.scheme != "file":
-            # Have a remote URL so simply return it with substitutions
-            return path
-
-        # Drop the URL scheme from the local path
-        path = url_path
-
-    if os.path.isabs(path):
-        return os.path.normpath(path)
+    if path.is_absolute():
+        return urllib.parse.urlunparse(("file", "", os.path.normpath(path), "", "", ""))
 
     # Have a relative path so prepend the appropriate dir to make it absolute
     if filename:
         # Prepend the directory of the syaml path
-        return os.path.normpath(os.path.join(filename, path))
+        return urllib.parse.urlunparse(("file", "", os.path.normpath(filename / path), "", "", ""))
 
     # Prepend the default, if provided, or current working directory.
-    base = default_wd or os.getcwd()
+    base = default_wd or pathlib.Path.cwd()
     tty.debug(f"Using working directory {base} as base for abspath")
-    return os.path.normpath(os.path.join(base, path))
-
+    return urllib.parse.urlunparse(("file", "", os.path.normpath(base / path), "", "", ""))
