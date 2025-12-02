@@ -208,8 +208,9 @@ class VersionConditionalOption:
             return []
 
 
-# The earliest git version where we start trying to optimizie clones
+# The earliest git version where we start trying to optimize clones
 # git@1.8.5 is when branch could also accept tag so we don't have to track ref types as closely
+# This also corresponds to system git on RHEL7
 MIN_OPT_VERSION = (1, 8, 5, 2)
 
 # Technically the flags existed earlier but we are pruning our logic to 1.8.5 or greater
@@ -257,8 +258,22 @@ def protocol_supports_shallow_clone(url):
 
 
 def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
+    """Utilize ``git init`` and then ``git fetch`` for a targeted, minimal clone of a single git ref
+    This method runs git init, repo add, fetch to get a minimal set of source data.
+    Profiling has shown this method can be 10-20% less storage than purely using sparse-checkout,
+    and is even smaller than git clone --depth 1. This makes it the preferred method for single
+    commit checkouts and source mirror population.
+
+    There is a trade off since less git data means less flexibility with additional git operations.
+    Technically adding the remote is not necessary, but we do it since there are test cases where we may want to fetch additional data.
+
+    Checkout is explicitly deferred to a second method so we can intercept and add sparse-checkout options uniformly whether we use `git clone` or `init fetch`
+    """
     git_exe = git_exe or git(required=True)
     version = git_exe.version
+    # minimum criteria for fetching a single commit, but also requires server to be configured
+    # fall-back to a process error so an old git version or a fetch failure from an nonsupporting
+    # server can be caught the same way.
     if ref and is_git_commit_sha(ref) and version < (2, 5, 0):
         raise exe.ProcessError("Git older than 2.5 detected, can't fetch commit directly")
     init = ["init"]
@@ -282,6 +297,12 @@ def git_checkout(
     dest: Optional[str] = None,
     git_exe: Optional[GitExecutable] = None,
 ):
+    """A generic method for running ``git checkout`` that integrates sparse-checkout
+    Several methods in this module explicitly delay checkout so sparse-checkout can be called.
+    It is intended to be used with ``git clone --no-checkout`` or ``git init && git fetch``.
+    There is minimal impact to performance since the initial clone operation filters blobs and
+    has to download a minimal subset of git data.
+    """
     git_exe = git_exe or git(required=True)
     checkout = ["checkout"]
     sparse_checkout = SPARSE_CHECKOUT(git_exe.version)
@@ -309,6 +330,11 @@ def git_clone(
     dest: Optional[str] = None,
     git_exe: Optional[GitExecutable] = None,
 ):
+    """A git clone that prefers deferring expensive blob fetching for modern git installations
+    This is our fallback method for capturing more git data than the ``init && fetch`` model.
+    It is still optimized to capture a minimal set of ``./.git`` data and expects to be paired with
+    a call to ``git checkout`` to fully download the source code.
+    """
     git_exe = git_exe or git(required=True)
     version = git_exe.version
     clone = ["clone"]
