@@ -5,6 +5,6 @@ isort==7.0.0
 mypy==1.18.2
 types-six==1.17.0.20251009
 vermin==1.8.0
-pylint==4.0.3
+pylint==4.0.4
 docutils==0.22.2
 ruamel.yaml==0.18.16
