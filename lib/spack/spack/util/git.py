@@ -35,6 +35,8 @@ def extract_git_version_str(git_exe):
 
 
 class GitExecutable(exe.Executable):
+    """Specialized executable that encodes the git version for optimized option selection"""
+
     def __init__(self, name=None):
         if not name:
             name = _find_git()
@@ -48,6 +50,44 @@ class GitExecutable(exe.Executable):
             v_string = extract_git_version_str(self)
             self._version = tuple(int(i) for i in v_string.split("."))
         return self._version
+
+
+class VersionConditionalOption:
+    def __init__(self, key, value=None, min_version=(0, 0, 0), max_version=(99, 99, 99)):
+        self.key = key
+        self.value = value
+        self.min_version = min_version
+        self.max_version = max_version
+
+    def __call__(self, exe_version, value=None) -> List:
+        if (self.min_version <= exe_version) and (self.max_version >= exe_version):
+            option = [self.key]
+            if value:
+                option.append(value)
+            elif self.value:
+                option.append(self.value)
+            return option
+        else:
+            return []
+
+
+# The earliest git version where we start trying to optimize clones
+# git@1.8.5 is when branch could also accept tag so we don't have to track ref types as closely
+# This also corresponds to system git on RHEL7
+MIN_OPT_VERSION = (1, 8, 5, 2)
+
+# Technically the flags existed earlier but we are pruning our logic to 1.8.5 or greater
+BRANCH = VersionConditionalOption("--branch", min_version=MIN_OPT_VERSION)
+SINGLE_BRANCH = VersionConditionalOption("--single-branch", min_version=MIN_OPT_VERSION)
+NO_SINGLE_BRANCH = VersionConditionalOption("--no-single-branch", min_version=MIN_OPT_VERSION)
+# Depth was introduced in 1.7.11 but isn't worth much without the --branch options
+DEPTH = VersionConditionalOption("--depth", 1, min_version=MIN_OPT_VERSION)
+
+FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2, 19, 0))
+NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2, 34, 0))
+# technically sparse-checkout was added in 2.25, but we go forward since the model we use only
+# works with the `--cone` option
+SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", "set", min_version=(2, 34, 0))
 
 
 @overload
@@ -189,44 +229,6 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
     return None
 
 
-class VersionConditionalOption:
-    def __init__(self, key, value=None, min_version=(0, 0, 0), max_version=(99, 99, 99)):
-        self.key = key
-        self.value = value
-        self.min_version = min_version
-        self.max_version = max_version
-
-    def __call__(self, exe_version, value=None) -> List:
-        if (self.min_version <= exe_version) and (self.max_version >= exe_version):
-            option = [self.key]
-            if value:
-                option.append(value)
-            elif self.value:
-                option.append(self.value)
-            return option
-        else:
-            return []
-
-
-# The earliest git version where we start trying to optimize clones
-# git@1.8.5 is when branch could also accept tag so we don't have to track ref types as closely
-# This also corresponds to system git on RHEL7
-MIN_OPT_VERSION = (1, 8, 5, 2)
-
-# Technically the flags existed earlier but we are pruning our logic to 1.8.5 or greater
-BRANCH = VersionConditionalOption("--branch", min_version=MIN_OPT_VERSION)
-SINGLE_BRANCH = VersionConditionalOption("--single-branch", min_version=MIN_OPT_VERSION)
-NO_SINGLE_BRANCH = VersionConditionalOption("--no-single-branch", min_version=MIN_OPT_VERSION)
-# Depth was introduced in 1.7.11 but isn't worth much without the --branch options
-DEPTH = VersionConditionalOption("--depth", 1, min_version=MIN_OPT_VERSION)
-
-FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2, 19, 0))
-NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2, 34, 0))
-# technically sparse-checkout was added in 2.25, but we go forward since the model we use only
-# works with the `--cone` option
-SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", "set", min_version=(2, 34, 0))
-
-
 def _exec_git_commands(git_exe, cmds, debug, dest=None):
     dest_args = ["-C", dest] if dest else []
     error_stream = sys.stdout if debug else os.devnull  # swallow extra output for non-debug
@@ -258,16 +260,18 @@ def protocol_supports_shallow_clone(url):
 
 
 def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
-    """Utilize ``git init`` and then ``git fetch`` for a targeted, minimal clone of a single git ref
+    """Utilize ``git init`` and then ``git fetch`` for a minimal clone of a single git ref
     This method runs git init, repo add, fetch to get a minimal set of source data.
     Profiling has shown this method can be 10-20% less storage than purely using sparse-checkout,
     and is even smaller than git clone --depth 1. This makes it the preferred method for single
     commit checkouts and source mirror population.
 
     There is a trade off since less git data means less flexibility with additional git operations.
-    Technically adding the remote is not necessary, but we do it since there are test cases where we may want to fetch additional data.
+    Technically adding the remote is not necessary, but we do it since there are test cases where
+    we may want to fetch additional data.
 
-    Checkout is explicitly deferred to a second method so we can intercept and add sparse-checkout options uniformly whether we use `git clone` or `init fetch`
+    Checkout is explicitly deferred to a second method so we can intercept and add sparse-checkout
+    options uniformly whether we use `git clone` or `init fetch`
     """
     git_exe = git_exe or git(required=True)
     version = git_exe.version
