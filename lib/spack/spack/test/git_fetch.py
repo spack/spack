@@ -181,13 +181,18 @@ def test_fetch_pkg_attr_submodule_init(
 )
 @pytest.mark.disable_clean_stage_check
 def test_adhoc_version_submodules(
-    mock_git_repository, config, mutable_mock_repo, monkeypatch, mock_stage
+    mock_git_repository,
+    config,
+    mutable_mock_repo,
+    monkeypatch,
+    mock_stage,
+    override_git_repos_cache_path,
 ):
     t = mock_git_repository.checks["tag"]
     # Construct the package under test
     pkg_class = spack.repo.PATH.get_pkg_class("git-test")
     monkeypatch.setitem(pkg_class.versions, Version("git"), t.args)
-    monkeypatch.setattr(pkg_class, "git", "file://%s" % mock_git_repository.path, raising=False)
+    monkeypatch.setattr(pkg_class, "git", mock_git_repository.url, raising=False)
 
     spec = spack.concretize.concretize_one(
         Spec("git-test@{0}".format(mock_git_repository.unversioned_commit))
