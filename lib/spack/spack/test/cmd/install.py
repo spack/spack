@@ -626,18 +626,22 @@ def test_cdash_install_from_spec_json(
 
 @pytest.mark.disable_clean_stage_check
 def test_build_error_output(capfd, mock_fetch, install_mockery):
-    with pytest.raises(spack.build_environment.ChildError):
+    with pytest.raises(spack.build_environment.ChildError) as e:
         install("build-error")
     assert "configure: error: in /path/to/some/file:" in install.output
+    assert "configure: error: in /path/to/some/file:" in e.value.long_message
     assert "configure: error: cannot run C compiled programs." in install.output
+    assert "configure: error: cannot run C compiled programs." in e.value.long_message
 
 
 @pytest.mark.disable_clean_stage_check
 def test_build_warning_output(mock_fetch, install_mockery):
-    with pytest.raises(spack.build_environment.ChildError):
+    with pytest.raises(spack.build_environment.ChildError) as e:
         install("build-warnings")
     assert "WARNING: ALL CAPITAL WARNING!" in install.output
+    assert "WARNING: ALL CAPITAL WARNING!" in e.value.long_message
     assert "foo.c:89: warning: some weird warning!" in install.output
+    assert "foo.c:89: warning: some weird warning!" in e.value.long_message
 
 
 def test_cache_only_fails(mock_fetch, install_mockery):
