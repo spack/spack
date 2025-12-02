@@ -15,6 +15,7 @@ import spack.error
 import spack.modules
 import spack.modules.common
 import spack.repo
+import spack.tengine
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
 from spack.llnl.util import filesystem, tty
@@ -137,6 +138,7 @@ def loads(module_type, specs, args, out=None):
     """Prompt the list of modules associated with a list of specs"""
     check_module_set_name(args.module_set_name)
     out = sys.stdout if out is None else out
+    template_env = spack.tengine.make_environment()
 
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
@@ -166,6 +168,7 @@ def loads(module_type, specs, args, out=None):
                 get_full_path=False,
                 module_set_name=args.module_set_name,
                 required=False,
+                template_env=template_env,
             ),
         )
         for spec in specs
@@ -199,6 +202,7 @@ def find(module_type, specs, args):
     check_module_set_name(args.module_set_name)
 
     single_spec = one_spec_or_raise(specs)
+    template_env = spack.tengine.make_environment()
 
     if args.recurse_dependencies:
         dependency_specs_to_retrieve = list(
@@ -215,6 +219,7 @@ def find(module_type, specs, args):
                 args.full_path,
                 module_set_name=args.module_set_name,
                 required=False,
+                template_env=template_env,
             )
             for spec in dependency_specs_to_retrieve
         ]
@@ -226,6 +231,7 @@ def find(module_type, specs, args):
                 args.full_path,
                 module_set_name=args.module_set_name,
                 required=True,
+                template_env=template_env,
             )
         )
     except spack.modules.common.ModuleNotFoundError as e:
@@ -244,11 +250,11 @@ def rm(module_type, specs, args):
     check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
-    module_exist = lambda x: os.path.exists(module_cls(x, args.module_set_name).layout.filename)
 
-    specs_with_modules = [spec for spec in specs if module_exist(spec)]
+    template_env = spack.tengine.make_environment()
 
-    modules = [module_cls(spec, args.module_set_name) for spec in specs_with_modules]
+    modules = [module_cls(spec, args.module_set_name, template_env=template_env) for spec in specs]
+    modules = [m for m in modules if os.path.exists(m.layout.filename)]
 
     if not modules:
         tty.die("No module file matches your query")
@@ -257,7 +263,7 @@ def rm(module_type, specs, args):
     if not args.yes_to_all:
         msg = "You are about to remove {0} module files for:\n"
         tty.msg(msg.format(module_type))
-        spack.cmd.display_specs(specs_with_modules, long=True)
+        spack.cmd.display_specs([m.spec for m in modules], long=True)
         print("")
         answer = tty.get_yes_or_no("Do you want to proceed?")
         if not answer:
@@ -295,9 +301,13 @@ def refresh(module_type, specs, args):
 
     cls = spack.modules.module_types[module_type]
 
+    template_env = spack.tengine.make_environment()
+
     # Skip unknown packages.
     writers = [
-        cls(spec, args.module_set_name) for spec in specs if spack.repo.PATH.exists(spec.name)
+        cls(spec, args.module_set_name, template_env=template_env)
+        for spec in specs
+        if spack.repo.PATH.exists(spec.name)
     ]
 
     # Filter excluded packages early

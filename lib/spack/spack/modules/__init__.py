@@ -28,7 +28,13 @@ module_types: Dict[str, Type[BaseModuleFileWriter]] = {
 
 
 def get_module(
-    module_type, spec: spack.spec.Spec, get_full_path, module_set_name="default", required=True
+    module_type,
+    spec: spack.spec.Spec,
+    get_full_path,
+    module_set_name="default",
+    required=True,
+    *,
+    template_env=None,
 ):
     """Retrieve the module file for a given spec and module type.
 
@@ -47,6 +53,8 @@ def get_module(
             Otherwise, this returns the module name.
         module_set_name: the named module configuration set from modules.yaml
             for which to retrieve the module.
+        template_env: Optional template environment to use when generating module
+            files.
 
     Returns:
         The module name or path. May return ``None`` if the module is not
@@ -66,7 +74,7 @@ def get_module(
         else:
             return module.use_name
     else:
-        writer = module_types[module_type](spec, module_set_name)
+        writer = module_types[module_type](spec, module_set_name, template_env=template_env)
         if not os.path.isfile(writer.layout.filename):
             fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:

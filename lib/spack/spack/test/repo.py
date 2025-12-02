@@ -171,7 +171,7 @@ def test_repo_dump_virtuals(
 
 @pytest.mark.parametrize("repos", [["mock"], ["extra"], ["mock", "extra"], ["extra", "mock"]])
 def test_repository_construction_doesnt_use_globals(
-    nullify_globals, tmp_path: pathlib.Path, repos, repo_builder: RepoBuilder
+    repo_builder: RepoBuilder, nullify_globals, tmp_path: pathlib.Path, repos
 ):
     def _repo_descriptors(repos):
         descriptors = {}

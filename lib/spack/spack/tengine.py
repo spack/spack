@@ -64,11 +64,10 @@ class Context(metaclass=ContextMeta):
         return dict(d)
 
 
-@spack.llnl.util.lang.memoized
 def make_environment(dirs: Optional[Tuple[str, ...]] = None):
     """Returns a configured environment for template rendering."""
     # Import at this scope to avoid slowing Spack startup down
-    import spack.vendor.jinja2
+    from spack.vendor.jinja2 import Environment, FileSystemLoader
 
     if dirs is None:
         # Default directories where to search for templates
@@ -77,9 +76,9 @@ def make_environment(dirs: Optional[Tuple[str, ...]] = None):
         dirs = tuple(canonicalize_path(d) for d in itertools.chain(builtins, extensions))
 
     # Loader for the templates
-    loader = spack.vendor.jinja2.FileSystemLoader(dirs)
+    loader = FileSystemLoader(dirs)
     # Environment of the template engine
-    env = spack.vendor.jinja2.Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
+    env = Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
     # Custom filters
     _set_filters(env)
     return env

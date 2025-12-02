@@ -33,8 +33,6 @@ import re
 import string
 from typing import List, Optional
 
-import spack.vendor.jinja2
-
 import spack.build_environment
 import spack.config
 import spack.deptypes as dt
@@ -774,9 +772,15 @@ class BaseModuleFileWriter:
     modulerc_header: List[str]
 
     def __init__(
-        self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+        self,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: Optional[bool] = None,
+        *,
+        template_env=None,
     ) -> None:
         self.spec = spec
+        self.template_env = template_env or tengine.make_environment()
 
         m = self.module
 
@@ -872,15 +876,14 @@ class BaseModuleFileWriter:
         template_name = self._get_template()
 
         try:
-            env = tengine.make_environment()
-            template = env.get_template(template_name)
-        except spack.vendor.jinja2.TemplateNotFound:
+            template = self.template_env.get_template(template_name)
+        except LookupError as e:
             # If the template was not found raise an exception with a little
             # more information
             msg = "template '{0}' was not found for '{1}'"
             name = type(self).__name__
             msg = msg.format(template_name, name)
-            raise ModulesTemplateNotFoundError(msg)
+            raise ModulesTemplateNotFoundError(msg) from e
 
         # Construct the context following the usual hierarchy of updates:
         # 1. start with the default context from the module writer class

@@ -7,6 +7,7 @@ from typing import Optional, Set
 import spack.config
 import spack.modules
 import spack.spec
+import spack.tengine
 from spack.llnl.util import tty
 
 
@@ -15,6 +16,7 @@ def _for_each_enabled(
 ) -> None:
     """Calls a method for each enabled module"""
     set_names: Set[str] = set(spack.config.get("modules", {}).keys())
+    template_env = spack.tengine.make_environment()
     for name in set_names:
         enabled = spack.config.get(f"modules:{name}:enable")
         if not enabled:
@@ -22,7 +24,9 @@ def _for_each_enabled(
             continue
 
         for module_type in enabled:
-            generator = spack.modules.module_types[module_type](spec, name, explicit)
+            generator = spack.modules.module_types[module_type](
+                spec, name, explicit, template_env=template_env
+            )
             try:
                 getattr(generator, method_name)()
             except RuntimeError as e:
