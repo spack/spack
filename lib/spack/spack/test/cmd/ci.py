@@ -24,6 +24,7 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.spack_yaml as syaml
+import spack.util.web
 import spack.version
 from spack.ci import gitlab as gitlab_generator
 from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
@@ -2001,6 +2002,7 @@ def fetch_versions_match(monkeypatch):
         return {v: pkg_cls.versions[v]["sha256"] for v in url_by_version}
 
     monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url: True)
 
 
 @pytest.fixture
@@ -2014,6 +2016,7 @@ def fetch_versions_invalid(monkeypatch):
         }
 
     monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url: True)
 
 
 @pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
