@@ -5,7 +5,7 @@
 """This package contains directives that can be used within a package.
 
 Directives are functions that can be called inside a package
-definition to modify the package, for example:
+definition to modify the package, for example::
 
     class OpenMpi(Package):
         depends_on("hwloc")
@@ -16,18 +16,18 @@ definition to modify the package, for example:
 
 The available directives are:
 
-  * ``build_system``
-  * ``conflicts``
-  * ``depends_on``
-  * ``extends``
-  * ``license``
-  * ``patch``
-  * ``provides``
-  * ``resource``
-  * ``variant``
-  * ``version``
-  * ``requires``
-  * ``redistribute``
+* ``build_system``
+* ``conflicts``
+* ``depends_on``
+* ``extends``
+* ``license``
+* ``patch``
+* ``provides``
+* ``resource``
+* ``variant``
+* ``version``
+* ``requires``
+* ``redistribute``
 
 """
 import collections
@@ -163,6 +163,9 @@ def version(
     tag: Optional[str] = None,
     branch: Optional[str] = None,
     get_full_repo: Optional[bool] = None,
+    git_sparse_paths: Optional[
+        Union[List[str], Callable[[spack.package_base.PackageBase], List[str]]]
+    ] = None,
     submodules: Union[SubmoduleCallback, Optional[bool]] = None,
     submodules_delete: Optional[bool] = None,
     # other version control
@@ -178,6 +181,10 @@ def version(
 
         version("2.1", sha256="...")
         version("2.0", sha256="...", preferred=True)
+
+    .. versionchanged:: v2.3
+
+       The ``git_sparse_paths`` parameter was added.
     """
     kwargs = {
         key: value
@@ -197,6 +204,7 @@ def version(
             ("hg", hg),
             ("cvs", cvs),
             ("get_full_repo", get_full_repo),
+            ("git_sparse_paths", git_sparse_paths),
             ("branch", branch),
             ("submodules", submodules),
             ("submodules_delete", submodules_delete),
@@ -257,7 +265,9 @@ def _depends_on(
         return
 
     if not spec.name:
-        raise DependencyError(f"Invalid dependency specification in package '{pkg.name}':", spec)
+        raise DependencyError(
+            f"Invalid dependency specification in package '{pkg.name}':", str(spec)
+        )
     if pkg.name == spec.name:
         raise CircularReferenceError(f"Package '{pkg.name}' cannot depend on itself.")
 
@@ -304,7 +314,9 @@ def _depends_on(
         dependency = Dependency(pkg, spec, depflag=depflag)
         deps_by_name[spec.name] = dependency
     else:
-        dependency.spec.constrain(spec, deps=False)
+        copy = dependency.spec.copy()
+        copy.constrain(spec, deps=False)
+        dependency.spec = copy
         dependency.depflag |= depflag
 
     # apply patches to the dependency
@@ -363,7 +375,7 @@ def depends_on(
         when: condition when this dependency applies
         type: One or more of ``"build"``, ``"run"``, ``"test"``, or ``"link"`` (either a string or
             tuple). Defaults to ``("build", "link")``.
-        patches: single result of ``patch()`` directive, a
+        patches: single result of :py:func:`patch` directive, a
             ``str`` to be passed to ``patch``, or a list of these
     """
     dep_spec = spack.spec.Spec(spec)
@@ -505,10 +517,10 @@ def can_splice(
             target.
 
         match_variants: A list of variants that must match between target spec and current package,
-            with special value '*' which matches all variants. Example: a ``json`` variant is
+            with special value ``*`` which matches all variants. Example: a ``json`` variant is
             defined on two packages, and they are ABI-compatible whenever they agree on
             the json variant (regardless of whether it is turned on or off). Note that this cannot
-            be applied to multi-valued variants and multi-valued variants will be skipped by '*'.
+            be applied to multi-valued variants and multi-valued variants will be skipped by ``*``.
     """
 
     def _execute_can_splice(pkg: Type[spack.package_base.PackageBase]):
@@ -889,7 +901,9 @@ def license(
 
 
 @directive("requirements")
-def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
+def requires(
+    *requirement_specs: str, policy="one_of", when: Optional[str] = None, msg: Optional[str] = None
+):
     """Declare that a spec must be satisfied for a package.
 
     For instance, a package whose Fortran code can only be compiled with GCC can declare::
@@ -902,9 +916,11 @@ def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
 
     Args:
         requirement_specs: spec expressing the requirement
+        policy: either ``"one_of"`` or ``"any_of"``. If ``"one_of"``, exactly one of the
+            requirements must be satisfied. If ``"any_of"``, at least one of the requirements must
+            be satisfied. Defaults to ``"one_of"``.
         when: optional constraint that triggers the requirement. If None the requirement
             is applied unconditionally.
-
         msg: optional user defined message
     """
 

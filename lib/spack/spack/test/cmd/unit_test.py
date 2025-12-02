@@ -30,9 +30,8 @@ def test_list_with_keywords():
     assert cmd_test_py in output.strip()
 
 
-def test_list_long(capsys):
-    with capsys.disabled():
-        output = spack_test("--list-long")
+def test_list_long():
+    output = spack_test("--list-long")
     assert "unit_test.py::\n" in output
     assert "test_list" in output
     assert "test_list_with_pytest_arg" in output
@@ -47,9 +46,8 @@ def test_list_long(capsys):
     assert "test_test_deptype" in output
 
 
-def test_list_long_with_pytest_arg(capsys):
-    with capsys.disabled():
-        output = spack_test("--list-long", cmd_test_py)
+def test_list_long_with_pytest_arg():
+    output = spack_test("--list-long", cmd_test_py)
 
     assert "unit_test.py::\n" in output
     assert "test_list" in output

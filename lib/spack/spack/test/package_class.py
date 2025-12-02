@@ -273,7 +273,7 @@ def test_package_license():
 
 
 class BaseTestPackage(PackageBase):
-    extendees = None  # currently a required attribute for is_extension()
+    extendees = {}  # currently a required attribute for is_extension()
 
 
 def test_package_version_fails():
@@ -331,16 +331,16 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 
 
 @pytest.mark.require_provenance
-def test_binary_provenance_commit_version(mock_packages):
-    spec = spack.concretize.concretize_one("git-ref-package@stable")
+def test_git_provenance_commit_version(default_mock_concretization):
+    spec = default_mock_concretization("git-ref-package@stable")
     assert spec.satisfies(f"commit={'c' * 40}")
 
 
-@pytest.mark.parametrize("version", ("main", "tag"))
+@pytest.mark.parametrize("version", ("main", "tag", "annotated-tag"))
 @pytest.mark.parametrize("pre_stage", (True, False))
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
-def test_binary_provenance_find_commit_ls_remote(
+def test_git_provenance_find_commit_ls_remote(
     git, mock_git_repository, mock_packages, config, monkeypatch, version, pre_stage
 ):
     repo_path = mock_git_repository.path
@@ -366,16 +366,22 @@ def test_binary_provenance_find_commit_ls_remote(
 
     vattrs = spec.package.versions[spec.version]
     git_ref = vattrs.get("tag") or vattrs.get("branch")
-    actual_commit = git("-C", repo_path, "rev-parse", git_ref, output=str, error=str).strip()
+    # add the ^{} suffix to the ref so it redirects to the first parent git object
+    # for branches and lightweight tags the suffix makes no difference since it is
+    # always a commit SHA, but for annotated tags the SHA shifts from the tag SHA
+    # back to the commit SHA, which is what we want
+    actual_commit = git(
+        "-C", repo_path, "rev-parse", f"{git_ref}^{{}}", output=str, error=str
+    ).strip()
     assert spec.variants["commit"].value == actual_commit
 
 
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
-def test_binary_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capsys):
+def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capfd):
     """Fail all attempts to resolve git commits"""
     monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)
     spec = spack.concretize.concretize_one("git-ref-package@develop")
-    captured = capsys.readouterr()
+    captured = capfd.readouterr()
     assert "commit" not in spec.variants
     assert "Warning: Unable to resolve the git commit" in captured.err

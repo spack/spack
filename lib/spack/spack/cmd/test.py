@@ -20,8 +20,10 @@ from spack.cmd.common import arguments
 from spack.llnl.util import tty
 from spack.llnl.util.tty import colify
 
+from . import doc_dedented, doc_first_line
+
 description = "run spack's tests for an install"
-section = "admin"
+section = "build"
 level = "long"
 
 
@@ -30,7 +32,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # Run
     run_parser = sp.add_parser(
-        "run", description=test_run.__doc__, help=spack.cmd.first_line(test_run.__doc__)
+        "run", description=doc_dedented(test_run), help=doc_first_line(test_run)
     )
 
     run_parser.add_argument(
@@ -77,7 +79,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # List
     list_parser = sp.add_parser(
-        "list", description=test_list.__doc__, help=spack.cmd.first_line(test_list.__doc__)
+        "list", description=doc_dedented(test_list), help=doc_first_line(test_list)
     )
     list_parser.add_argument(
         "-a",
@@ -91,7 +93,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # Find
     find_parser = sp.add_parser(
-        "find", description=test_find.__doc__, help=spack.cmd.first_line(test_find.__doc__)
+        "find", description=doc_dedented(test_find), help=doc_first_line(test_find)
     )
     find_parser.add_argument(
         "filter",
@@ -101,7 +103,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # Status
     status_parser = sp.add_parser(
-        "status", description=test_status.__doc__, help=spack.cmd.first_line(test_status.__doc__)
+        "status", description=doc_dedented(test_status), help=doc_first_line(test_status)
     )
     status_parser.add_argument(
         "names", nargs=argparse.REMAINDER, help="test suites for which to print status"
@@ -109,9 +111,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # Results
     results_parser = sp.add_parser(
-        "results",
-        description=test_results.__doc__,
-        help=spack.cmd.first_line(test_results.__doc__),
+        "results", description=doc_dedented(test_results), help=doc_first_line(test_results)
     )
     results_parser.add_argument(
         "-l", "--logs", action="store_true", help="print the test log for each matching package"
@@ -138,7 +138,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     # Remove
     remove_parser = sp.add_parser(
-        "remove", description=test_remove.__doc__, help=spack.cmd.first_line(test_remove.__doc__)
+        "remove", description=doc_dedented(test_remove), help=doc_first_line(test_remove)
     )
     arguments.add_common_arguments(remove_parser, ["yes_to_all"])
     remove_parser.add_argument(
@@ -147,7 +147,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def test_run(args):
-    """run tests for the specified installed packages
+    """\
+    run tests for the specified installed packages
 
     if no specs are listed, run tests for all packages in the current
     environment or all installed packages if there is no active environment
@@ -253,7 +254,8 @@ def test_list(args):
 
 
 def test_find(args):  # TODO: merge with status (noargs)
-    """find tests that are running or have available results
+    """\
+    find tests that are running or have available results
 
     displays aliases for tests that have them, otherwise test suite content hashes
     """
@@ -404,12 +406,13 @@ def test_results(args):
 
 
 def test_remove(args):
-    """remove results from Spack test suite(s) (default all)
+    """\
+    remove results from Spack test suite(s) (default all)
 
     if no test suite is listed, remove results for all suites.
 
     removed tests can no longer be accessed for results or status, and will not
-    appear in `spack test list` results
+    appear in ``spack test list`` results
     """
     if args.names:
         test_suites = []

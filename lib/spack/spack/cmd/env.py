@@ -27,12 +27,12 @@ from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
 
-description = "manage virtual environments"
+description = "manage environments"
 section = "environments"
 level = "short"
 
 
-#: List of subcommands of `spack env`
+#: List of subcommands of ``spack env``
 subcommands: List[Tuple[str, ...]] = [
     ("activate",),
     ("deactivate",),
@@ -55,7 +55,8 @@ subcommands: List[Tuple[str, ...]] = [
 # env create
 #
 def env_create_setup_parser(subparser):
-    """create a new environment
+    """\
+    create a new environment
 
     create a new environment or, optionally, copy an existing environment
 
@@ -84,7 +85,7 @@ def env_create_setup_parser(subparser):
         "envfile",
         nargs="?",
         default=None,
-        help="manifest or lock file (ends with '.json' or '.lock')",
+        help="manifest or lock file (ends with '.json' or '.lock') or an environment name or path",
     )
     subparser.add_argument(
         "--include-concrete",
@@ -139,7 +140,7 @@ def _env_create(
     Arguments:
         name_or_path (str): name of the environment to create, or path to it
         init_file (str or file): optional initialization file -- can be
-            a JSON lockfile (*.lock, *.json) or YAML manifest file
+            a JSON lockfile (*.lock, *.json), YAML manifest file, or env dir
         dir (bool): if True, create an environment in a directory instead
             of a named environment
         keep_relative (bool): if True, develop paths are copied verbatim into
@@ -286,7 +287,7 @@ def create_temp_env_directory():
 
 def _tty_info(msg):
     """tty.info like function that prints the equivalent printf statement for eval."""
-    decorated = f'{colorize("@*b{==>}")} {msg}\n'
+    decorated = f"{colorize('@*b{==>}')} {msg}\n"
     executor = "echo" if sys.platform == "win32" else "printf"
     print(f"{executor} {shlex.quote(decorated)};")
 
@@ -578,7 +579,8 @@ def _env_untrack_or_remove(
             f"Really {'remove' if remove else 'untrack'} {environments} {envs}?", default=False
         )
         if not answer:
-            tty.die("Will not remove any environments")
+            tty.msg(f"Will not remove environment(s) {envs}")
+            return
 
     # keep track of the environments we remove for later printing the exit code
     removed_env_names = []
@@ -610,7 +612,7 @@ def _env_untrack_or_remove(
             spack.environment.environment.environment_dir_from_name(bad_env_name, exists_ok=True)
         )
         tty.msg(f"Successfully removed environment '{bad_env_name}'")
-        removed_env_names.append(env.name)
+        removed_env_names.append(bad_env_name)
 
     # Following the design of linux rm we should exit with a status of 1
     # anytime we cannot delete every environment the user asks for.
@@ -624,7 +626,7 @@ def _env_untrack_or_remove(
 # env untrack
 #
 def env_untrack_setup_parser(subparser):
-    """track an environment from a directory in Spack"""
+    """untrack an environment from a directory in Spack"""
     subparser.add_argument("env", nargs="+", help="tracked environment name")
     subparser.add_argument(
         "-f", "--force", action="store_true", help="force unlink even when environment is active"
@@ -642,7 +644,8 @@ def env_untrack(args):
 # env remove
 #
 def env_remove_setup_parser(subparser):
-    """remove managed environment(s)
+    """\
+    remove managed environment(s)
 
     remove existing environment(s) managed by Spack
 
@@ -672,7 +675,8 @@ def env_remove(args):
 # env rename
 #
 def env_rename_setup_parser(subparser):
-    """rename an existing environment
+    """\
+    rename an existing environment
 
     rename a managed environment or move an independent/directory environment
 
@@ -788,7 +792,8 @@ class ViewAction:
 # env view
 #
 def env_view_setup_parser(subparser):
-    """manage the environment's view
+    """\
+    manage the environment's view
 
     provide the path when enabling a view with a non-default path
     """
@@ -885,7 +890,8 @@ def env_loads(args):
 
 
 def env_update_setup_parser(subparser):
-    """update the environment manifest to the latest schema format
+    """\
+    update the environment manifest to the latest schema format
 
     update the environment to the latest schema format, which may not be
     readable by older versions of spack
@@ -930,7 +936,8 @@ def env_update(args):
 
 
 def env_revert_setup_parser(subparser):
-    """restore the environment manifest to its previous format
+    """\
+    restore the environment manifest to its previous format
 
     revert the environment's manifest to the schema format from its last
     'spack env update'
@@ -977,7 +984,8 @@ def env_revert(args):
 
 
 def env_depfile_setup_parser(subparser):
-    """generate a depfile to exploit parallel builds across specs
+    """\
+    generate a depfile to exploit parallel builds across specs
 
     requires the active environment to be concrete
     """
@@ -1094,8 +1102,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         subsubparser = sp.add_parser(
             name,
             aliases=aliases,
-            description=setup_parser_cmd.__doc__,
-            help=spack.cmd.first_line(setup_parser_cmd.__doc__),
+            description=spack.cmd.doc_dedented(setup_parser_cmd),
+            help=spack.cmd.doc_first_line(setup_parser_cmd),
         )
         setup_parser_cmd(subsubparser)
 

@@ -259,7 +259,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
     when we know that they will not affect package behavior.
 
     If we're at version 4.0, we know that implementation 1 will win, because some @when
-    for 2, 3, and 4 will be `False`. We should only include implementation 1.
+    for 2, 3, and 4 will be ``False``. We should only include implementation 1.
 
     If we're at version 1.0, we know that implementation 2 will win, because it
     overrides implementation 1.  We should only include implementation 2.

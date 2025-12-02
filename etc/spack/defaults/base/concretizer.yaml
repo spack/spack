@@ -60,6 +60,7 @@ concretizer:
       py-flit-core: 2
       py-pip: 2
       py-setuptools: 2
+      py-versioneer: 2
       py-wheel: 2
       xcb-proto: 2
       # Compilers
@@ -70,7 +71,10 @@ concretizer:
   # it can reuse. Note this is a directional compatibility so mutual compatibility between two OS's
   # requires two entries i.e. os_compatible: {sonoma: [monterey], monterey: [sonoma]}
   os_compatible: {}
-
+  # If false, force all link/run dependencies of root to match c/c++/Fortran compiler. If this is
+  # a list, then the listed packages are allowed to use a different compiler, but all others must
+  # match.
+  compiler_mixing: true
   # Option to specify whether to support splicing. Splicing allows for
   # the relinking of concrete package dependencies in order to better
   # reuse already built packages with ABI compatible dependencies
@@ -89,3 +93,17 @@ concretizer:
   # Static analysis may reduce the concretization time by generating smaller ASP problems, in
   # cases where there are requirements that prevent part of the search space to be explored.
   static_analysis: false
+
+  # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
+  # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.
+  # Feature is experimental: enabling may result in potentially invalid concretizations
+  # if package recipes are changed, see: https://github.com/spack/spack/issues/51553
+  concretization_cache:
+    enable: false
+
+  # Options to control the behavior of the concretizer with external specs
+  externals:
+    # Either 'architecture_only', to complete external specs with just the architecture of the
+    # current host, or 'default_variants' to complete external specs also with missing variants,
+    # using their default value.
+    completion: default_variants

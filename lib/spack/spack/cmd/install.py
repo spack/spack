@@ -17,7 +17,7 @@ import spack.spec
 import spack.store
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
-from spack.installer import PackageInstaller
+from spack.installer import InstallPolicy
 from spack.llnl.string import plural
 from spack.llnl.util import tty
 
@@ -26,14 +26,12 @@ section = "build"
 level = "short"
 
 
-# Determine value of cache flag
-def cache_opt(default_opt, use_buildcache):
-    if use_buildcache == "auto":
-        return default_opt
-    elif use_buildcache == "only":
-        return True
+def cache_opt(use_buildcache: str, default: InstallPolicy) -> InstallPolicy:
+    if use_buildcache == "only":
+        return "cache_only"
     elif use_buildcache == "never":
-        return False
+        return "source_only"
+    return default
 
 
 def install_kwargs_from_args(args):
@@ -41,6 +39,12 @@ def install_kwargs_from_args(args):
     to the package installer.
     """
     pkg_use_bc, dep_use_bc = args.use_buildcache
+    if args.cache_only:
+        default = "cache_only"
+    elif args.use_cache:
+        default = "auto"
+    else:
+        default = "source_only"
 
     return {
         "fail_fast": args.fail_fast,
@@ -51,10 +55,8 @@ def install_kwargs_from_args(args):
         "verbose": args.verbose or args.install_verbose,
         "fake": args.fake,
         "dirty": args.dirty,
-        "package_use_cache": cache_opt(args.use_cache, pkg_use_bc),
-        "package_cache_only": cache_opt(args.cache_only, pkg_use_bc),
-        "dependencies_use_cache": cache_opt(args.use_cache, dep_use_bc),
-        "dependencies_cache_only": cache_opt(args.cache_only, dep_use_bc),
+        "root_policy": cache_opt(pkg_use_bc, default),
+        "dependencies_policy": cache_opt(dep_use_bc, default),
         "include_build_deps": args.include_build_deps,
         "stop_at": args.until,
         "unsigned": args.unsigned,
@@ -384,9 +386,9 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter)
         specs_to_install = env.all_matching_specs(*specs)
         if not specs_to_install:
             msg = (
-                "Cannot install '{0}' because no matching specs are in the current environment."
-                " You can add specs to the environment with 'spack add {0}', or as part"
-                " of the install command with 'spack install --add {0}'"
+                "Cannot install '{0}' because no matching specs are in the current environment.\n"
+                " Specs can be added to the environment with 'spack add {0}',\n"
+                " or as part of the install command with 'spack install --add {0}'"
             ).format(" ".join(args.spec))
             tty.die(msg)
 
@@ -436,6 +438,11 @@ def install_without_active_env(args, install_kwargs, reporter):
 
     installs = [s.package for s in concrete_specs]
     install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
+
+    if spack.config.get("config:installer", "old") == "new":
+        from spack.new_installer import PackageInstaller
+    else:
+        from spack.installer import PackageInstaller
 
     try:
         builder = PackageInstaller(installs, **install_kwargs)

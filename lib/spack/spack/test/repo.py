@@ -6,7 +6,6 @@ import pathlib
 
 import pytest
 
-import spack
 import spack.environment
 import spack.package_base
 import spack.paths
@@ -154,18 +153,18 @@ def test_repo_path_handles_package_removal(mock_packages, repo_builder: RepoBuil
 
 
 def test_repo_dump_virtuals(
-    tmp_path: pathlib.Path, mutable_mock_repo, mock_packages, ensure_debug, capsys
+    tmp_path: pathlib.Path, mutable_mock_repo, mock_packages, ensure_debug, capfd
 ):
     # Start with a package-less virtual
     vspec = spack.spec.Spec("something")
     mutable_mock_repo.dump_provenance(vspec, str(tmp_path))
-    captured = capsys.readouterr()[1]
+    captured = capfd.readouterr()[1]
     assert "does not have a package" in captured
 
     # Now with a virtual with a package
     vspec = spack.spec.Spec("externalvirtual")
     mutable_mock_repo.dump_provenance(vspec, str(tmp_path))
-    captured = capsys.readouterr()[1]
+    captured = capfd.readouterr()[1]
     assert "Installing" in captured
     assert "package.py" in os.listdir(str(tmp_path)), "Expected the virtual's package to be copied"
 
@@ -425,7 +424,7 @@ def test_mod_to_pkg_name_and_reverse():
     assert spack.util.naming.pkg_name_to_pkg_dir("none", package_api=(2, 0)) == "none"
 
 
-def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
+def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capfd):
     # Create a repo with a v2 structure
     root, _ = spack.repo.create_repo(str(tmp_path), namespace="repo_1", package_api=(2, 0))
     repo_dir = pathlib.Path(root)
@@ -453,12 +452,12 @@ class Uppercase(PackageBase):
     with spack.repo.use_repositories(str(repo_dir)) as repo:
         assert len(repo.all_package_names()) == 0
 
-    stderr = capsys.readouterr().err
+    stderr = capfd.readouterr().err
     assert "cannot be used because `zlib-ng` is not a valid Spack package module name" in stderr
     assert "cannot be used because `UPPERCASE` is not a valid Spack package module name" in stderr
 
 
-def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path, capsys):
+def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path):
     # Create a repo with a v2 structure
     root, _ = spack.repo.create_repo(str(tmp_path), namespace="repo_2", package_api=(2, 0))
     repo_dir = pathlib.Path(root)
@@ -716,7 +715,11 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
             action = args[0]
 
             if action == "ls-remote":
-                return "refs/heads/develop"
+                return """\
+a8eff4da7aab59bbf5996ac1720954bf82443247        HEAD
+165c479984b94051c982a6be1bd850f8bae02858        refs/heads/feature-branch
+a8eff4da7aab59bbf5996ac1720954bf82443247        refs/heads/develop
+3bd0276ab0491552247fa055921a23d2ffd9443c        refs/heads/releases/v0.20"""
 
             elif action == "rev-parse":
                 return "develop"
@@ -750,6 +753,8 @@ repo_index:
     assert len(errors_1) == 1
     assert all("No repo.yaml" in str(err) for err in errors_1.values()), errors_1
     assert descriptors_1["foo"].relative_paths == ["spack_repo/foo"]
+    # Verify that the default branch was detected from ls-remote
+    assert descriptors_1["foo"].branch == "develop"
 
     # Do the same test with another instance: it should *not* clone a second time.
     repo_path_2, errors_2 = repos_2.construct(cache=cache, find_git=MockGit)
@@ -804,7 +809,11 @@ def test_repo_descriptors_update(tmp_path: pathlib.Path):
             action = args[0]
 
             if action == "ls-remote":
-                return "refs/heads/develop"
+                return """\
+a8eff4da7aab59bbf5996ac1720954bf82443247        HEAD
+165c479984b94051c982a6be1bd850f8bae02858        refs/heads/feature-branch
+a8eff4da7aab59bbf5996ac1720954bf82443247        refs/heads/develop
+3bd0276ab0491552247fa055921a23d2ffd9443c        refs/heads/releases/v0.20"""
 
             elif action == "rev-parse":
                 return "develop"
@@ -892,7 +901,10 @@ def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
             action = args[0]
 
             if action == "ls-remote":
-                return "bad string"
+                # HEAD ref exists, but no default branch (i.e. no refs/heads/*)
+                return "a8eff4da7aab59bbf5996ac1720954bf82443247        HEAD"
+
+            return ""
 
     class MockGitFailed(spack.util.executable.Executable):
         def __init__(self):

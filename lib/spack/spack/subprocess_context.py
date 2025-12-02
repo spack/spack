@@ -4,7 +4,7 @@
 
 """
 This module handles transmission of Spack state to child processes started
-using the 'spawn' start method. Notably, installations are performed in a
+using the ``"spawn"`` start method. Notably, installations are performed in a
 subprocess and require transmitting the Package object (in such a way
 that the repository is available for importing when it is deserialized);
 installations performed in Spack unit tests may include additional
@@ -15,12 +15,10 @@ import importlib
 import io
 import multiprocessing
 import pickle
-import pydoc
 from types import ModuleType
 from typing import Any
 
 import spack.config
-import spack.environment
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -72,16 +70,18 @@ class PackageInstallContext:
     def __init__(self, pkg, *, ctx=None):
         ctx = ctx or multiprocessing.get_context()
         self.serialize = ctx.get_start_method() != "fork"
+        from spack.environment import active_environment
+
         if self.serialize:
             self.serialized_pkg = serialize(pkg)
             self.global_state = GlobalStateMarshaler()
             self.test_patches = store_patches()
-            self.serialized_env = serialize(spack.environment.active_environment())
+            self.serialized_env = serialize(active_environment())
         else:
             self.pkg = pkg
             self.global_state = None
             self.test_patches = None
-            self.env = spack.environment.active_environment()
+            self.env = active_environment()
         self.spack_working_dir = spack.paths.spack_working_dir
 
     def restore(self):
@@ -95,7 +95,9 @@ class PackageInstallContext:
 
         env = pickle.load(self.serialized_env) if self.serialize else self.env
         if env:
-            spack.environment.activate(env)
+            from spack.environment import activate
+
+            activate(env)
 
         # Order of operation is important, since the package might be retrieved
         # from a repo defined within the environment configuration
@@ -127,13 +129,18 @@ class TestPatches:
         self.class_patches = list((x, y, serialize(z)) for (x, y, z) in class_patches)
 
     def restore(self):
+        if not self.module_patches and not self.class_patches:
+            return
+        # this code path is only followed in tests, so use inline imports
+        from pydoc import locate
+
         for module_name, attr_name, value in self.module_patches:
             value = pickle.load(value)
             module = importlib.import_module(module_name)
             setattr(module, attr_name, value)
         for class_fqn, attr_name, value in self.class_patches:
             value = pickle.load(value)
-            cls = pydoc.locate(class_fqn)
+            cls = locate(class_fqn)
             setattr(cls, attr_name, value)
 
 

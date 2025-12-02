@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import abc
 import errno
 import getpass
 import glob
@@ -11,7 +12,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, Generator, Iterable, List, Optional, Set
+from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Optional, Set, Union
 
 import spack.caches
 import spack.config
@@ -19,15 +20,13 @@ import spack.error
 import spack.llnl.string
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
-import spack.mirrors.layout
-import spack.mirrors.utils
+import spack.oci.image
 import spack.resource
 import spack.spec
 import spack.util.crypto
 import spack.util.lock
 import spack.util.parallel
 import spack.util.path as sup
-import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
 from spack.llnl.util.filesystem import (
@@ -48,6 +47,12 @@ from spack.util.crypto import bit_length, prefix_bits
 from spack.util.editor import editor, executable
 from spack.version import StandardVersion, VersionList
 
+if TYPE_CHECKING:
+    import spack.mirrors.layout
+    import spack.mirrors.mirror
+    import spack.mirrors.utils
+
+
 # The well-known stage source subdirectory name.
 _source_path_subdir = "spack-src"
 
@@ -57,8 +62,14 @@ stage_prefix = "spack-stage-"
 
 def compute_stage_name(spec):
     """Determine stage name given a spec"""
-    default_stage_structure = stage_prefix + "{name}-{version}-{hash}"
-    stage_name_structure = spack.config.get("config:stage_name", default=default_stage_structure)
+    spec_stage_structure = stage_prefix
+    if spec.concrete:
+        spec_stage_structure += "{name}-{version}-{hash}"
+    else:
+        spec_stage_structure += "{name}-{version}"
+    # TODO (psakiev, scheibelp) Technically a user could still reintroduce a hash via
+    # config:stage_name. This is a fix for how to handle staging an abstact spec (see #51305)
+    stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
     return spec.format_path(format_string=stage_name_structure)
 
 
@@ -208,12 +219,19 @@ def _mirror_roots():
     ]
 
 
-class LockableStagingDir:
-    """A directory whose lifetime can be managed with a context
+class AbstractStage(abc.ABC):
+    """Abstract base class for all stage types.
+
+    A stage is a directory whose lifetime can be managed with a context
     manager (but persists if the user requests it). Instances can have
     a specified name and if they do, then for all instances that have
     the same name, only one can enter the context manager at a time.
+
+    This class defines the interface that all stage types must implement.
     """
+
+    #: Set to True to error out if patches fail
+    requires_patch_success = True
 
     def __init__(self, name, path, keep, lock):
         # TODO: This uses a protected member of tempfile, but seemed the only
@@ -300,11 +318,68 @@ class LockableStagingDir:
         ensure_access(self.path)
         self.created = True
 
+    @abc.abstractmethod
     def destroy(self):
-        raise NotImplementedError(f"{self.__class__.__name__} is abstract")
+        """Remove the stage directory and its contents."""
+        ...
+
+    @abc.abstractmethod
+    def fetch(self, mirror_only: bool = False, err_msg: Optional[str] = None) -> None:
+        """Fetch the source code or resources for this stage."""
+        ...
+
+    @abc.abstractmethod
+    def check(self):
+        """Check the integrity of the fetched resources."""
+        ...
+
+    @abc.abstractmethod
+    def expand_archive(self):
+        """Expand any downloaded archives."""
+        ...
+
+    @abc.abstractmethod
+    def restage(self):
+        """Remove the expanded source and re-expand it."""
+        ...
+
+    @abc.abstractmethod
+    def cache_local(self):
+        """Cache the resources locally."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def source_path(self) -> str:
+        """Return the path to the expanded source code."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def expanded(self) -> bool:
+        """Return True if the source has been expanded."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def archive_file(self) -> Optional[str]:
+        """Return the path to the archive file, or None."""
+        ...
+
+    def cache_mirror(
+        self,
+        mirror: "spack.caches.MirrorCache",
+        stats: "spack.mirrors.utils.MirrorStatsForOneSpec",
+    ) -> None:
+        """Cache the resources to a mirror (can be no-op)."""
+        pass
+
+    def steal_source(self, dest: str) -> None:
+        """Copy source to another location (can be no-op)."""
+        pass
 
 
-class Stage(LockableStagingDir):
+class Stage(AbstractStage):
     """Manages a temporary stage directory for building.
 
     A Stage object is a context manager that handles a directory where
@@ -418,9 +493,9 @@ class Stage(LockableStagingDir):
         self.default_fetcher_only = False
 
     @property
-    def expected_archive_files(self):
+    def expected_archive_files(self) -> List[str]:
         """Possible archive file paths."""
-        fnames = []
+        fnames: List[str] = []
         expanded = True
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             expanded = self.default_fetcher.expand_archive
@@ -447,7 +522,7 @@ class Stage(LockableStagingDir):
             return possible_filenames[0]
 
     @property
-    def archive_file(self):
+    def archive_file(self) -> Optional[str]:
         """Path to the source archive within this stage directory."""
         for path in self.expected_archive_files:
             if os.path.exists(path):
@@ -501,7 +576,7 @@ class Stage(LockableStagingDir):
                     extension=extension,
                 )
                 for mirror in self.mirrors
-                if not mirror.fetch_url.startswith("oci://")  # no support for mirrors yet
+                if not spack.oci.image.is_oci_url(mirror.fetch_url)  # no support for mirrors yet
             )
 
         if not self.default_fetcher_only and self.mirror_layout and self.default_fetcher.cachable:
@@ -608,7 +683,9 @@ class Stage(LockableStagingDir):
         spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_layout.path)
 
     def cache_mirror(
-        self, mirror: "spack.caches.MirrorCache", stats: "spack.mirrors.utils.MirrorStats"
+        self,
+        mirror: "spack.caches.MirrorCache",
+        stats: "spack.mirrors.utils.MirrorStatsForOneSpec",
     ) -> None:
         """Perform a fetch if the resource is not already cached
 
@@ -679,9 +756,25 @@ class ResourceStage(Stage):
         fetch_strategy: "fs.FetchStrategy",
         root: Stage,
         resource: spack.resource.Resource,
-        **kwargs,
+        *,
+        name=None,
+        mirror_paths: Optional["spack.mirrors.layout.MirrorLayout"] = None,
+        mirrors: Optional[Iterable["spack.mirrors.mirror.Mirror"]] = None,
+        keep=False,
+        path=None,
+        lock=True,
+        search_fn=None,
     ):
-        super().__init__(fetch_strategy, **kwargs)
+        super().__init__(
+            fetch_strategy,
+            name=name,
+            mirror_paths=mirror_paths,
+            mirrors=mirrors,
+            keep=keep,
+            path=path,
+            lock=lock,
+            search_fn=search_fn,
+        )
         self.root_stage = root
         self.resource = resource
 
@@ -741,103 +834,165 @@ class ResourceStage(Stage):
                     install(src, destination_path)
 
 
-class StageComposite(pattern.Composite):
+class StageComposite:
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
     forwarded to it."""
 
-    #
-    # __enter__ and __exit__ delegate to all stages in the composite.
-    #
-
     def __init__(self):
-        super().__init__(
-            [
-                "fetch",
-                "create",
-                "created",
-                "check",
-                "expand_archive",
-                "restage",
-                "destroy",
-                "cache_local",
-                "cache_mirror",
-                "steal_source",
-                "disable_mirrors",
-            ]
-        )
+        self._stages: List[AbstractStage] = []
 
     @classmethod
-    def from_iterable(cls, iterable: Iterable[Stage]) -> "StageComposite":
+    def from_iterable(cls, iterable: Iterable[AbstractStage]) -> "StageComposite":
         """Create a new composite from an iterable of stages."""
         composite = cls()
         composite.extend(iterable)
         return composite
 
+    def append(self, stage: AbstractStage) -> None:
+        """Add a stage to the composite."""
+        self._stages.append(stage)
+
+    def extend(self, stages: Iterable[AbstractStage]) -> None:
+        """Add multiple stages to the composite."""
+        self._stages.extend(stages)
+
+    def __iter__(self):
+        """Iterate over stages."""
+        return iter(self._stages)
+
+    def __len__(self):
+        """Return the number of stages."""
+        return len(self._stages)
+
+    def __getitem__(self, index):
+        """Get a stage by index."""
+        return self._stages[index]
+
+    # Context manager methods - delegate to all stages
     def __enter__(self):
-        for item in self:
-            item.__enter__()
+        for stage in self._stages:
+            stage.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        for item in reversed(self):
-            item.__exit__(exc_type, exc_val, exc_tb)
+        for stage in reversed(self._stages):
+            stage.__exit__(exc_type, exc_val, exc_tb)
 
-    #
-    # Below functions act only on the *first* stage in the composite.
-    #
+    # Methods that delegate to all stages
+    def fetch(self, mirror_only: bool = False, err_msg: Optional[str] = None) -> None:
+        """Fetch all stages."""
+        for stage in self._stages:
+            stage.fetch(mirror_only, err_msg)
+
+    def create(self) -> None:
+        """Create all stages."""
+        for stage in self._stages:
+            stage.create()
+
+    def check(self) -> None:
+        """Check all stages."""
+        for stage in self._stages:
+            stage.check()
+
+    def expand_archive(self) -> None:
+        """Expand archives for all stages."""
+        for stage in self._stages:
+            stage.expand_archive()
+
+    def restage(self) -> None:
+        """Restage all stages."""
+        for stage in self._stages:
+            stage.restage()
+
+    def destroy(self) -> None:
+        """Destroy all stages."""
+        for stage in self._stages:
+            stage.destroy()
+
+    def cache_local(self) -> None:
+        """Cache all stages locally."""
+        for stage in self._stages:
+            stage.cache_local()
+
+    def cache_mirror(
+        self,
+        mirror: "spack.caches.MirrorCache",
+        stats: "spack.mirrors.utils.MirrorStatsForOneSpec",
+    ) -> None:
+        """Cache all stages to mirror."""
+        for stage in self._stages:
+            stage.cache_mirror(mirror, stats)
+
+    def steal_source(self, dest: str) -> None:
+        """Steal source from all stages."""
+        for stage in self._stages:
+            stage.steal_source(dest)
+
+    def disable_mirrors(self) -> None:
+        """Disable mirrors for all stages that support it."""
+        for stage in self._stages:
+            if isinstance(stage, Stage):
+                stage.default_fetcher_only = True
+
+    # Properties that act only on the *first* stage in the composite
     @property
     def source_path(self):
-        return self[0].source_path
+        return self._stages[0].source_path
 
     @property
     def expanded(self):
-        return self[0].expanded
+        return self._stages[0].expanded
 
     @property
     def path(self):
-        return self[0].path
+        return self._stages[0].path
 
     @property
     def archive_file(self):
-        return self[0].archive_file
+        return self._stages[0].archive_file
 
     @property
     def requires_patch_success(self):
-        return self[0].requires_patch_success
+        return self._stages[0].requires_patch_success
 
     @property
     def keep(self):
-        return self[0].keep
+        return self._stages[0].keep
 
     @keep.setter
     def keep(self, value):
-        for item in self:
-            item.keep = value
+        for stage in self._stages:
+            stage.keep = value
 
 
-class DevelopStage(LockableStagingDir):
+class DevelopStage(AbstractStage):
     requires_patch_success = False
 
     def __init__(self, name, dev_path, reference_link):
         super().__init__(name=name, path=None, keep=False, lock=True)
         self.dev_path = dev_path
-        self.source_path = dev_path
+        self._source_path = dev_path
 
         # The path of a link that will point to this stage
         if os.path.isabs(reference_link):
             link_path = reference_link
         else:
-            link_path = os.path.join(self.source_path, reference_link)
+            link_path = os.path.join(self._source_path, reference_link)
         if not os.path.isdir(os.path.dirname(link_path)):
             raise StageError(f"The directory containing {link_path} must exist")
         self.reference_link = link_path
 
     @property
+    def source_path(self):
+        """Returns the development source path."""
+        return self._source_path
+
+    @property
     def archive_file(self):
         return None
 
-    def fetch(self, *args, **kwargs):
+    def fetch(self, mirror_only: bool = False, err_msg: Optional[str] = None) -> None:
         tty.debug("No fetching needed for develop stage.")
 
     def check(self):
@@ -1092,7 +1247,7 @@ def get_checksums_for_versions(
     url_by_version: Dict[StandardVersion, str],
     package_name: str,
     *,
-    first_stage_function: Optional[Callable[[Stage, str], None]] = None,
+    first_stage_function: Optional[Callable[[str, str], None]] = None,
     keep_stage: bool = False,
     concurrency: Optional[int] = None,
     fetch_options: Optional[Dict[str, str]] = None,
@@ -1107,8 +1262,8 @@ def get_checksums_for_versions(
     Args:
         url_by_version: URL keyed by version
         package_name: name of the package
-        first_stage_function: function that takes a Stage and a URL; this is run on the stage
-            of the first URL downloaded
+        first_stage_function: function that takes an archive file and a URL; this is run on the
+            stage of the first URL downloaded
         keep_stage: whether to keep staging area when command completes
         batch: whether to ask user how many versions to fetch (false) or fetch all versions (true)
         fetch_options: options used for the fetcher (such as timeout or cookies)
@@ -1120,7 +1275,8 @@ def get_checksums_for_versions(
     versions = sorted(url_by_version.keys(), reverse=True)
     search_arguments = [(url_by_version[v], v) for v in versions]
 
-    version_hashes, errors = {}, []
+    version_hashes: Dict[StandardVersion, str] = {}
+    errors: List[str] = []
 
     # Don't spawn 16 processes when we need to fetch 2 urls
     if concurrency is not None:
@@ -1133,25 +1289,24 @@ def get_checksums_for_versions(
     # can move this function call *after* having distributed the work to executors.
     if first_stage_function is not None:
         (url, version), search_arguments = search_arguments[0], search_arguments[1:]
-        checksum, error = _fetch_and_checksum(url, fetch_options, keep_stage, first_stage_function)
-        if error is not None:
-            errors.append(error)
-
-        if checksum is not None:
-            version_hashes[version] = checksum
+        result = _fetch_and_checksum(url, fetch_options, keep_stage, first_stage_function)
+        if isinstance(result, Exception):
+            errors.append(str(result))
+        else:
+            version_hashes[version] = result
 
     with spack.util.parallel.make_concurrent_executor(concurrency, require_fork=False) as executor:
-        results = []
-        for url, version in search_arguments:
-            future = executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage)
-            results.append((version, future))
+        results = [
+            (version, executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage))
+            for url, version in search_arguments
+        ]
 
         for version, future in results:
-            checksum, error = future.result()
-            if error is not None:
-                errors.append(error)
-                continue
-            version_hashes[version] = checksum
+            result = future.result()
+            if isinstance(result, Exception):
+                errors.append(str(result))
+            else:
+                version_hashes[version] = result
 
         for msg in errors:
             tty.debug(msg)
@@ -1165,13 +1320,14 @@ def get_checksums_for_versions(
     return version_hashes
 
 
-def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
+def _fetch_and_checksum(
+    url: str,
+    options: Optional[dict],
+    keep_stage: bool,
+    action_fn: Optional[Callable[[str, str], None]] = None,
+) -> Union[str, Exception]:
     try:
-        url_or_fs = url
-        if options:
-            url_or_fs = fs.URLFetchStrategy(url=url, fetch_options=options)
-
-        with Stage(url_or_fs, keep=keep_stage) as stage:
+        with Stage(fs.URLFetchStrategy(url=url, fetch_options=options), keep=keep_stage) as stage:
             # Fetch the archive
             stage.fetch()
             archive = stage.archive_file
@@ -1183,23 +1339,21 @@ def _fetch_and_checksum(url, options, keep_stage, action_fn=None):
 
             # Checksum the archive and add it to the list
             checksum = spack.util.crypto.checksum(hashlib.sha256, archive)
-        return checksum, None
-    except fs.FailedDownloadError:
-        return None, f"[WORKER] Failed to fetch {url}"
+        return checksum
     except Exception as e:
-        return None, f"[WORKER] Something failed on {url}, skipping.  ({e})"
+        return Exception(f"[WORKER] Failed to fetch {url}: {e}")
 
 
 class StageError(spack.error.SpackError):
-    """ "Superclass for all errors encountered during staging."""
+    """Superclass for all errors encountered during staging."""
 
 
 class StagePathError(StageError):
-    """ "Error encountered with stage path."""
+    """Error encountered with stage path."""
 
 
 class RestageError(StageError):
-    """ "Error encountered during restaging."""
+    """Error encountered during restaging."""
 
 
 class VersionFetchError(StageError):

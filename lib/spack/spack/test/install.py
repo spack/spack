@@ -334,7 +334,7 @@ def test_store(install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_failing_build(install_mockery, mock_fetch, capfd):
+def test_failing_build(install_mockery, mock_fetch):
     spec = spack.concretize.concretize_one("failing-build")
     pkg = spec.package
 
@@ -594,8 +594,8 @@ def test_install_from_binary_with_missing_patch_succeeds(
     PackageInstaller(
         [s.package],
         explicit=True,
-        package_cache_only=True,
-        dependencies_cache_only=True,
+        root_policy="cache_only",
+        dependencies_policy="cache_only",
         unsigned=True,
     ).install()
 

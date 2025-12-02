@@ -315,7 +315,7 @@ class ArgparseRstWriter(ArgparseWriter):
             Positional argument description.
         """
         return """\
-{0}
+``{0}``
   {1}
 
 """.format(

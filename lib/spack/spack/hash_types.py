@@ -3,10 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Definitions that control how Spack creates Spec hashes."""
 
+from typing import Any, Callable, List, Optional
+
 import spack.deptypes as dt
 import spack.repo
 
-HASHES = []
+HASHES: List["SpecHashDescriptor"] = []
 
 
 class SpecHashDescriptor:
@@ -19,18 +21,22 @@ class SpecHashDescriptor:
 
     We currently use different hashes for different use cases."""
 
-    def __init__(self, depflag: dt.DepFlag, package_hash, name, override=None):
+    __slots__ = "depflag", "package_hash", "name", "attr", "override"
+
+    def __init__(
+        self,
+        depflag: dt.DepFlag,
+        package_hash: bool,
+        name: str,
+        override: Optional[Callable[[Any], str]] = None,
+    ):
         self.depflag = depflag
         self.package_hash = package_hash
         self.name = name
+        self.attr = f"_{name}"
         HASHES.append(self)
         # Allow spec hashes to have an alternate computation method
         self.override = override
-
-    @property
-    def attr(self):
-        """Private attribute stored on spec"""
-        return "_" + self.name
 
     def __call__(self, spec):
         """Run this hash on the provided spec."""

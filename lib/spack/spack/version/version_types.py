@@ -10,13 +10,13 @@ from spack.util.typing import SupportsRichComparison
 
 from .common import (
     ALPHA,
-    COMMIT_VERSION,
     FINAL,
     PRERELEASE_TO_STRING,
     STRING_TO_PRERELEASE,
     EmptyRangeError,
     VersionLookupError,
     infinity_versions,
+    is_git_commit_sha,
     is_git_version,
     iv_min_len,
 )
@@ -386,7 +386,7 @@ class StandardVersion(ConcreteVersion):
         return other.intersection(self)
 
     def isdevelop(self) -> bool:
-        """Triggers on the special case of the `@develop-like` version."""
+        """Triggers on the special case of the ``@develop-like`` version."""
         return any(
             isinstance(p, VersionStrComponent) and isinstance(p.data, int) for p in self.version[0]
         )
@@ -410,6 +410,7 @@ class StandardVersion(ConcreteVersion):
         """The dotted representation of the version.
 
         Example:
+
         >>> version = Version('1-2-3b')
         >>> version.dotted
         Version('1.2.3b')
@@ -424,13 +425,13 @@ class StandardVersion(ConcreteVersion):
         """The underscored representation of the version.
 
         Example:
-        >>> version = Version('1.2.3b')
+
+        >>> version = Version("1.2.3b")
         >>> version.underscored
-        Version('1_2_3b')
+        Version("1_2_3b")
 
         Returns:
-            Version: The version with separator characters replaced by
-                underscores
+            Version: The version with separator characters replaced by underscores
         """
         return type(self).from_string(self.string.replace(".", "_").replace("-", "_"))
 
@@ -439,9 +440,10 @@ class StandardVersion(ConcreteVersion):
         """The dashed representation of the version.
 
         Example:
-        >>> version = Version('1.2.3b')
+
+        >>> version = Version("1.2.3b")
         >>> version.dashed
-        Version('1-2-3b')
+        Version("1-2-3b")
 
         Returns:
             Version: The version with separator characters replaced by dashes
@@ -453,9 +455,10 @@ class StandardVersion(ConcreteVersion):
         """The joined representation of the version.
 
         Example:
-        >>> version = Version('1.2.3b')
+
+        >>> version = Version("1.2.3b")
         >>> version.joined
-        Version('123b')
+        Version("123b")
 
         Returns:
             Version: The version with separator characters removed
@@ -468,21 +471,22 @@ class StandardVersion(ConcreteVersion):
         """The version up to the specified component.
 
         Examples:
-        >>> version = Version('1.23-4b')
+
+        >>> version = Version("1.23-4b")
         >>> version.up_to(1)
-        Version('1')
+        Version("1")
         >>> version.up_to(2)
-        Version('1.23')
+        Version("1.23")
         >>> version.up_to(3)
-        Version('1.23-4')
+        Version("1.23-4")
         >>> version.up_to(4)
-        Version('1.23-4b')
+        Version("1.23-4b")
         >>> version.up_to(-1)
-        Version('1.23-4')
+        Version("1.23-4")
         >>> version.up_to(-2)
-        Version('1.23')
+        Version("1.23")
         >>> version.up_to(-3)
-        Version('1')
+        Version("1")
 
         Returns:
             Version: The first index components of the version
@@ -517,7 +521,7 @@ class GitVersion(ConcreteVersion):
 
     There are two distinct categories of git versions:
 
-    1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
+    1) GitVersions instantiated with an associated reference version (e.g. ``git.foo=1.2``)
     2) GitVersions requiring commit lookups
 
     Git ref versions that are not paired with a known version are handled separately from
@@ -579,7 +583,7 @@ class GitVersion(ConcreteVersion):
             self.ref = normalized_string
 
         # Used by fetcher
-        self.is_commit: bool = len(self.ref) == 40 and bool(COMMIT_VERSION.match(self.ref))
+        self.is_commit: bool = is_git_commit_sha(self.ref)
 
         # translations
         if self.is_commit:
@@ -1161,9 +1165,7 @@ class VersionList(VersionType):
         if not self.versions:
             return ""
 
-        return ",".join(
-            f"={v}" if isinstance(v, StandardVersion) else str(v) for v in self.versions
-        )
+        return ",".join(f"={v}" if type(v) is StandardVersion else str(v) for v in self.versions)
 
     def __repr__(self) -> str:
         return str(self.versions)

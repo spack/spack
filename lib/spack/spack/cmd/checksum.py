@@ -7,7 +7,6 @@ import re
 import sys
 from typing import Dict, Optional, Tuple
 
-import spack.cmd
 import spack.llnl.string
 import spack.llnl.util.lang
 import spack.repo
@@ -70,7 +69,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     modes_parser.add_argument(
         "--verify", action="store_true", default=False, help="verify known package checksums"
     )
-    subparser.add_argument("package", help="name or spec (e.g. `cmake` or `cmake@3.18`)")
+    subparser.add_argument("package", help="name or spec (e.g. ``cmake`` or ``cmake@3.18``)")
     subparser.add_argument(
         "versions",
         nargs="*",
@@ -175,7 +174,7 @@ def checksum(parser, args):
         sys.exit(0)
 
     # convert dict into package.py version statements
-    version_lines = get_version_lines(version_hashes, url_dict)
+    version_lines = get_version_lines(version_hashes)
     print()
     print(version_lines)
     print()

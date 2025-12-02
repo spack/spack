@@ -9,11 +9,11 @@ import pathlib
 import tarfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, Generator, List, Tuple
 
 from spack.llnl.util import tty
 from spack.llnl.util.filesystem import readlink
-from spack.util.executable import ProcessError, which
+from spack.util.git import is_git_commit_sha
 
 
 class ChecksumWriter(io.BufferedIOBase):
@@ -97,15 +97,19 @@ class ChecksumWriter(io.BufferedIOBase):
 
 
 @contextmanager
-def gzip_compressed_tarfile(path):
+def gzip_compressed_tarfile(
+    path: str,
+) -> Generator[Tuple[tarfile.TarFile, ChecksumWriter, ChecksumWriter], None, None]:
     """Create a reproducible, gzip compressed tarfile, and keep track of shasums of both the
     compressed and uncompressed tarfile. Reproduciblity is achived by normalizing the gzip header
     (no file name and zero mtime).
 
-    Yields a tuple of the following:
-        tarfile.TarFile: tarfile object
-        ChecksumWriter: checksum of the gzip compressed tarfile
-        ChecksumWriter: checksum of the uncompressed tarfile
+    Yields:
+        A tuple of three elements
+
+        * :class:`tarfile.TarFile`: tarfile object
+        * :class:`ChecksumWriter`: checksum of the gzip compressed tarfile
+        * :class:`ChecksumWriter`: checksum of the uncompressed tarfile
     """
     # Create gzip compressed tarball of the install prefix
     # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
@@ -242,35 +246,38 @@ def reproducible_tarfile_from_prefix(
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
 
 
-def _git_prefix(archive_path, tar):
-    # This is an annoying method, but since we always have a prefix and can't gaurantee what
-    # it is we need this.
-    paths = tar("-tf", archive_path, output=str, error=str, fail_on_error=False)
-    if paths:
-        paths = paths.strip().split()
-        for p in paths:
-            if p.endswith(".git/"):
-                return p[:-5]
-    return ""
-
-
 def retrieve_commit_from_archive(archive_path, ref):
-    """extract git data from an archive with out expanding it"""
+    """Extract git data from an archive with out expanding it
+
+    Open the archive and searches for .git/HEAD. Return if HEAD is a commit (detached head or tag)
+    Otherwise attempt to read the ref that .git/HEAD is pointing to and return the commit
+    associated with it.
+    """
     if not os.path.isfile(archive_path):
         raise FileNotFoundError(f"The file {archive_path} does not exist")
 
-    tar = which("tar", required=True)
-    prefix = _git_prefix(archive_path, tar)
-    # try branch, tags then detached states
-    for ref_path in [f"refs/heads/{ref}/", f"refs/tags/{ref}/", "HEAD"]:
-        try:
-            commit = tar(
-                "-Oxzf", archive_path, f"{prefix}.git/{ref_path}", output=str, error=str
-            ).strip()
-            if commit and len(commit) == 40:
-                return commit
-        except ProcessError:
-            pass
-
-    tty.warn(f"Archive {archive_path} does not appear to contain git data")
-    return None
+    try:
+        with tarfile.open(archive_path, "r") as tar:
+            names = tar.getnames()
+            # since we always have a prefix and can't gaurantee the value we need this lookup.
+            prefix = ""
+            for name in names:
+                if name.endswith(".git"):
+                    prefix = name[:-4]
+                    break
+            if f"{prefix}.git/HEAD" in names:
+                head = tar.extractfile(f"{prefix}.git/HEAD").read().decode("utf-8").strip()
+                if is_git_commit_sha(head):
+                    # detached HEAD/ lightweight tag
+                    return head
+                else:
+                    # refs in had have the format "ref <relative path to ref>"
+                    ref = head.split()[1]
+                    contents = (
+                        tar.extractfile(f"{prefix}.git/{ref}").read().decode("utf-8").strip()
+                    )
+                    if is_git_commit_sha(contents):
+                        return contents
+    except tarfile.ReadError:
+        tty.warn(f"Archive {archive_path} does not appear to contain git data")
+    return

@@ -56,7 +56,7 @@ from spack.version import Version
 pytestmark = [
     pytest.mark.usefixtures("mutable_config", "mutable_mock_env_path", "mutable_mock_repo"),
     pytest.mark.maybeslow,
-    pytest.mark.not_on_windows("Envs unsupported on Window"),
+    pytest.mark.not_on_windows("Envs unsupported on Windows"),
 ]
 
 env = SpackCommand("env")
@@ -121,12 +121,11 @@ def check_viewdir_removal(viewdir: pathlib.Path):
     ]
 
 
-def test_env_track_nonexistant_path_fails(capfd):
+def test_env_track_nonexistent_path_fails():
     with pytest.raises(spack.main.SpackCommandError):
         env("track", "path/does/not/exist")
 
-    out, _ = capfd.readouterr()
-    assert "doesn't contain an environment" in out
+    assert "doesn't contain an environment" in env.output
 
 
 @pytest.mark.parametrize(
@@ -161,14 +160,12 @@ def test_env_sh_shell_script_content():
     assert "alias despacktivate='spack env deactivate';" in out
 
 
-def test_env_track_existing_env_fails(capfd):
-    env("create", "track_test")
+def test_env_track_existing_env_fails():    env("create", "track_test")
 
     with pytest.raises(spack.main.SpackCommandError):
         env("track", "--name", "track_test", ev.environment_dir_from_name("track_test"))
 
-    out, _ = capfd.readouterr()
-    assert "environment named track_test already exists" in out
+    assert "environment named track_test already exists" in env.output
 
 
 def test_env_track_valid(tmp_path: pathlib.Path):
@@ -194,21 +191,21 @@ def test_env_untrack_valid(tmp_path: pathlib.Path):
         env("track", "--name", "test_untrack", ".")
         env("untrack", "--yes-to-all", "test_untrack")
 
-        # check that environment was sucessfully untracked
+        # check that environment was successfully untracked
         out = env("ls")
         assert "test_untrack" not in out
 
 
 def test_env_untrack_invalid_name():
     # test untracking an environment that doesn't exist
-    env_name = "invalid_enviornment_untrack"
+    env_name = "invalid_environment_untrack"
 
     out = env("untrack", env_name)
 
     assert f"Environment '{env_name}' does not exist" in out
 
 
-def test_env_untrack_when_active(tmp_path: pathlib.Path, capfd):
+def test_env_untrack_when_active(tmp_path: pathlib.Path):
     env_name = "test_untrack_active"
 
     with fs.working_dir(str(tmp_path)):
@@ -220,19 +217,18 @@ def test_env_untrack_when_active(tmp_path: pathlib.Path, capfd):
 
         active_env = ev.read(env_name)
         with active_env:
-            with pytest.raises(spack.main.SpackCommandError):
-                env("untrack", "--yes-to-all", env_name)
+            output = env("untrack", "--yes-to-all", env_name, fail_on_error=False)
+            assert env.error is not None
 
         # check that environment could not be untracked while active
-        out, _ = capfd.readouterr()
-        assert f"'{env_name}' can't be untracked while activated" in out
+        assert f"'{env_name}' can't be untracked while activated" in output
 
         env("untrack", "-f", env_name)
         out = env("ls")
         assert env_name not in out
 
 
-def test_env_untrack_managed(capfd):
+def test_env_untrack_managed():
     env_name = "test_untrack_managed"
 
     # create an managed environment
@@ -242,8 +238,7 @@ def test_env_untrack_managed(capfd):
         env("untrack", env_name)
 
     # check that environment could not be untracked while active
-    out, _ = capfd.readouterr()
-    assert f"'{env_name}' is not a tracked env" in out
+    assert f"'{env_name}' is not a tracked env" in env.output
 
 
 @pytest.fixture()
@@ -257,11 +252,13 @@ def installed_environment(
         spack_yaml.write_text(content)
         with fs.working_dir(tmp_path):
             env("create", "test", "./spack.yaml")
-            with ev.read("test"):
-                install("--fake")
+            with ev.read("test") as current_environment:
+                current_environment.concretize()
+                current_environment.install_all(fake=True)
+                current_environment.write(regenerate=True)
 
-            test = ev.read("test")
-            yield test
+            with ev.read("test") as current_environment:
+                yield current_environment
 
     return _installed_environment
 
@@ -340,7 +337,7 @@ def test_env_add_virtual():
     assert spec.intersects("mpi")
 
 
-def test_env_add_nonexistant_fails():
+def test_env_add_nonexistent_fails():
     env("create", "test")
 
     e = ev.read("test")
@@ -369,7 +366,7 @@ def test_env_list(mutable_mock_env_path):
     assert ".DS_Store" not in out
 
 
-def test_env_remove(capfd):
+def test_env_remove():
     env("create", "foo")
     env("create", "bar")
 
@@ -380,8 +377,7 @@ def test_env_remove(capfd):
     foo = ev.read("foo")
     with foo:
         with pytest.raises(SpackCommandError):
-            with capfd.disabled():
-                env("remove", "-y", "foo")
+            env("remove", "-y", "foo")
         assert "foo" in env("list")
 
     env("remove", "-y", "foo")
@@ -395,14 +391,11 @@ def test_env_remove(capfd):
     assert "bar" not in out
 
 
-def test_env_rename_managed(capfd):
+def test_env_rename_managed():
     # Need real environment
     with pytest.raises(spack.main.SpackCommandError):
         env("rename", "foo", "bar")
-    assert (
-        "The specified name does not correspond to a managed spack environment"
-        in capfd.readouterr()[0]
-    )
+    assert "The specified name does not correspond to a managed spack environment" in env.output
 
     env("create", "foo")
 
@@ -421,14 +414,14 @@ def test_env_rename_managed(capfd):
         # Cannot rename active environment
         with pytest.raises(spack.main.SpackCommandError):
             env("rename", "bar", "baz")
-        assert "Cannot rename active environment" in capfd.readouterr()[0]
+        assert "Cannot rename active environment" in env.output
 
         env("create", "qux")
 
         # Cannot rename to an active environment (even with force flag)
         with pytest.raises(spack.main.SpackCommandError):
             env("rename", "-f", "qux", "bar")
-        assert "bar is an active environment" in capfd.readouterr()[0]
+        assert "bar is an active environment" in env.output
 
         # Can rename inactive environment when another's active
         out = env("rename", "qux", "quux")
@@ -447,7 +440,7 @@ def test_env_rename_managed(capfd):
         "The new name corresponds to an existing environment;"
         " specify the --force flag to overwrite it."
     )
-    assert errmsg in capfd.readouterr()[0]
+    assert errmsg in env.output
 
     env("rename", "-f", "bar", "baz")
     out = env("list")
@@ -455,14 +448,11 @@ def test_env_rename_managed(capfd):
     assert "baz" in out
 
 
-def test_env_rename_independent(capfd, tmp_path: pathlib.Path):
+def test_env_rename_independent(tmp_path: pathlib.Path):
     # Need real environment
     with pytest.raises(spack.main.SpackCommandError):
         env("rename", "-d", "./non-existing", "./also-non-existing")
-    assert (
-        "The specified path does not correspond to a valid spack environment"
-        in capfd.readouterr()[0]
-    )
+    assert "The specified path does not correspond to a valid spack environment" in env.output
 
     anon_foo = str(tmp_path / "foo")
     env("create", "-d", anon_foo)
@@ -478,7 +468,7 @@ def test_env_rename_independent(capfd, tmp_path: pathlib.Path):
     env("activate", "--sh", "-d", anon_bar)
     with pytest.raises(spack.main.SpackCommandError):
         env("rename", "-d", anon_bar, anon_baz)
-    assert "Cannot rename active environment" in capfd.readouterr()[0]
+    assert "Cannot rename active environment" in env.output
     env("deactivate", "--sh")
 
     assert ev.is_env_dir(anon_bar)
@@ -492,7 +482,7 @@ def test_env_rename_independent(capfd, tmp_path: pathlib.Path):
         "The new path corresponds to an existing environment;"
         " specify the --force flag to overwrite it."
     )
-    assert errmsg in capfd.readouterr()[0]
+    assert errmsg in env.output
     assert ev.is_env_dir(anon_bar)
     assert ev.is_env_dir(anon_baz)
 
@@ -509,7 +499,7 @@ def test_env_rename_independent(capfd, tmp_path: pathlib.Path):
     with pytest.raises(spack.main.SpackCommandError):
         env("rename", "-d", anon_baz, anon_qux)
     errmsg = "The new path already exists; specify the --force flag to overwrite it."
-    assert errmsg in capfd.readouterr()[0]
+    assert errmsg in env.output
 
     env("rename", "-f", "-d", anon_baz, anon_qux)
     assert not ev.is_env_dir(anon_baz)
@@ -612,7 +602,7 @@ def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch, mu
 
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     install = SpackCommand("install")
-    install("dependent-install")
+    install("--fake", "dependent-install")
 
     # Check one explicit, one implicit install
     dependent = spack.store.STORE.db.query(explicit=True)
@@ -658,7 +648,7 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
 
     e = ev.read("test")
     with e:
-        install("--add", "depends-on-run-env")
+        install("--add", "--fake", "depends-on-run-env")
 
     env_variables = {}
     spack.environment.shell.activate(e).apply_modifications(env_variables)
@@ -685,7 +675,7 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.P
 
 
 def test_env_install_two_specs_same_dep(
-    install_mockery, mock_fetch, tmp_path: pathlib.Path, capsys, monkeypatch
+    install_mockery, mock_fetch, tmp_path: pathlib.Path, monkeypatch
 ):
     """Test installation of two packages that share a dependency with no
     connection and the second specifying the dependency as a 'build'
@@ -707,8 +697,7 @@ spack:
         env("create", "test", "spack.yaml")
 
     with ev.read("test"):
-        with capsys.disabled():
-            out = install("--fake")
+        out = install("--fake")
 
     # Ensure both packages reach install phase processing and are installed
     out = str(out)
@@ -869,25 +858,21 @@ def test_force_remove_included_env():
     assert "test" not in list_output
 
 
-def test_environment_status(capsys, tmp_path: pathlib.Path, monkeypatch):
+def test_environment_status(tmp_path: pathlib.Path, monkeypatch):
     with fs.working_dir(str(tmp_path)):
-        with capsys.disabled():
-            assert "No active environment" in env("status")
+        assert "No active environment" in env("status")
 
         with ev.create("test"):
-            with capsys.disabled():
-                assert "In environment test" in env("status")
+            assert "In environment test" in env("status")
 
         with ev.create_in_dir("local_dir"):
-            with capsys.disabled():
-                assert os.path.join(os.getcwd(), "local_dir") in env("status")
+            assert os.path.join(os.getcwd(), "local_dir") in env("status")
 
             e = ev.create_in_dir("myproject")
             e.write()
             with fs.working_dir(str(tmp_path / "myproject")):
                 with e:
-                    with capsys.disabled():
-                        assert "in current directory" in env("status")
+                    assert "in current directory" in env("status")
 
 
 def test_env_status_broken_view(
@@ -899,7 +884,7 @@ def test_env_status_broken_view(
     tmp_path: pathlib.Path,
 ):
     with ev.create_in_dir(tmp_path):
-        install("--add", "trivial-install-test-package")
+        install("--add", "--fake", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and warns the user
@@ -918,7 +903,7 @@ def test_env_activate_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_custom_repository, install_mockery
 ):
     with ev.create("test"):
-        install("--add", "trivial-install-test-package")
+        install("--add", "--fake", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
@@ -1075,6 +1060,54 @@ spack:
     assert not e2.concretized_order
     assert not e2.concretized_user_specs
     assert not e2.specs_by_hash
+
+
+@pytest.mark.parametrize("use_name", (True, False))
+def test_init_from_env(use_name, environment_from_manifest):
+    """Test that an environment can be instantiated from an environment dir"""
+    e1 = environment_from_manifest(
+        """
+spack:
+  specs:
+  - mpileaks
+  - hypre
+  - libelf
+"""
+    )
+
+    with e1:
+        # Test that relative paths in the env are not rewritten
+        # Test that relative paths outside the env are
+        dev_config = {
+            "libelf": {"spec": "libelf", "path": "./libelf"},
+            "mpileaks": {"spec": "mpileaks", "path": "../mpileaks"},
+        }
+        spack.config.set("develop", dev_config)
+        fs.touch(os.path.join(e1.path, "libelf"))
+
+    e1.concretize()
+    e1.write()
+
+    e2 = _env_create("test2", init_file="test" if use_name else e1.path)
+
+    for s1, s2 in zip(e1.user_specs, e2.user_specs):
+        assert s1 == s2
+
+    assert e2.concretized_order == e1.concretized_order
+    assert e2.concretized_user_specs == e1.concretized_user_specs
+    assert e2.specs_by_hash == e1.specs_by_hash
+
+    assert os.path.exists(os.path.join(e2.path, "libelf"))
+    with e2:
+        assert e2.dev_specs["libelf"]["path"] == "./libelf"
+        assert e2.dev_specs["mpileaks"]["path"] == os.path.join(
+            os.path.dirname(e1.path), "mpileaks"
+        )
+
+
+def test_init_from_env_no_spackfile(tmp_path):
+    with pytest.raises(ev.SpackEnvironmentError, match="not a valid environment"):
+        _env_create("test", init_file=str(tmp_path))
 
 
 def test_init_from_yaml_relative_includes(tmp_path: pathlib.Path):
@@ -1801,9 +1834,9 @@ def test_stage(mock_stage, mock_fetch, install_mockery):
 
 def test_env_commands_die_with_no_env_arg():
     # these fail in argparse when given no arg
-    with pytest.raises(SystemExit):
+    with pytest.raises(SpackCommandError):
         env("create")
-    with pytest.raises(SystemExit):
+    with pytest.raises(SpackCommandError):
         env("remove")
 
     # these have an optional env arg and raise errors via tty.die
@@ -1832,7 +1865,7 @@ def test_roots_display_with_variants():
         add("boost+shared")
 
     with ev.read("test"):
-        out = find(output=str)
+        out = find()
 
     assert "boost+shared" in out
 
@@ -2070,7 +2103,7 @@ def test_env_include_concrete_old_env(format):
 
 def test_env_bad_include_concrete_env():
     with pytest.raises(ev.SpackEnvironmentError):
-        env("create", "--include-concrete", "nonexistant_env", "combined_env")
+        env("create", "--include-concrete", "nonexistent_env", "combined_env")
 
 
 def test_env_not_concrete_include_concrete_env():
@@ -2275,7 +2308,7 @@ def test_env_include_concrete_reuse(do_not_check_runtimes_on_reuse, reuse_mode):
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
 def test_env_include_concrete_env_reconcretized(unify):
     """Double check to make sure that concrete_specs for the local specs is empty
-    after recocnretizing.
+    after reconcretizing.
     """
     _, _, combined = setup_combined_multiple_env()
 
@@ -3068,7 +3101,7 @@ spack:
         )
 
     with ev.Environment(envdir):
-        install()
+        install("--fake")
 
     # make sure transitive run type deps are in the view
     for pkg in ("dtrun1", "dtrun3"):
@@ -3671,7 +3704,7 @@ spack:
     )
 
     with ev.read("test") as e:
-        install()
+        install("--fake")
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.get_projection_for_spec(spec)
@@ -3798,14 +3831,14 @@ def test_query_develop_specs(tmp_path: pathlib.Path):
 @pytest.mark.parametrize(
     "env,no_env,env_dir", [("b", False, None), (None, True, None), (None, False, "path/")]
 )
-def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, capsys):
+def test_activation_and_deactivation_ambiguities(method, env, no_env, env_dir, capfd):
     """spack [-e x | -E | -D x/]  env [activate | deactivate] y are ambiguous"""
     args = Namespace(
         shell="sh", env_name="a", env=env, no_env=no_env, env_dir=env_dir, keep_relative=False
     )
     with pytest.raises(SystemExit):
         method(args)
-    _, err = capsys.readouterr()
+    _, err = capfd.readouterr()
     assert "is ambiguous" in err
 
 
@@ -4463,7 +4496,7 @@ def test_env_include_packages_url(
     """Test inclusion of a (GitHub) URL."""
     develop_url = "https://github.com/fake/fake/blob/develop/"
     default_packages = develop_url + "etc/fake/defaults/packages.yaml"
-    sha256 = "6a1b26c857ca7e5bcd7342092e2f218da43d64b78bd72771f603027ea3c8b4af"
+    sha256 = "8d428c600b215e3b4a207a08236659dfc2c9ae2782c35943a00ee4204a135702"
     spack_yaml = tmp_path / "spack.yaml"
     with open(spack_yaml, "w", encoding="utf-8") as f:
         f.write(

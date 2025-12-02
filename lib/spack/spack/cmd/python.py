@@ -17,6 +17,8 @@ description = "launch an interpreter as spack would launch a command"
 section = "developer"
 level = "long"
 
+IS_WINDOWS = sys.platform == "win32"
+
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
@@ -134,12 +136,14 @@ def python_interpreter(args):
             propagate_exceptions_from(console)
             console.runsource(args.python_command)
         else:
-            # Provides readline support, allowing user to use arrow keys
-            console.push("import readline")
-            # Provide tabcompletion
-            console.push("from rlcompleter import Completer")
-            console.push("readline.set_completer(Completer(locals()).complete)")
-            console.push('readline.parse_and_bind("tab: complete")')
+            # no readline module on Windows
+            if not IS_WINDOWS:
+                # Provides readline support, allowing user to use arrow keys
+                console.push("import readline")
+                # Provide tabcompletion
+                console.push("from rlcompleter import Completer")
+                console.push("readline.set_completer(Completer(locals()).complete)")
+                console.push('readline.parse_and_bind("tab: complete")')
 
             console.interact(
                 "Spack version %s\nPython %s, %s %s"

@@ -40,6 +40,7 @@ import spack.error
 import spack.llnl.util.lang
 import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -430,15 +431,16 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="function")
-def use_concretization_cache(mutable_config, tmp_path: Path):
+def use_concretization_cache(mock_packages, mutable_config, tmp_path: Path):
     """Enables the use of the concretization cache"""
-    spack.config.set("config:concretization_cache:enable", True)
-    # ensure we have an isolated concretization cache
     conc_cache_dir = tmp_path / "concretization"
     conc_cache_dir.mkdir()
-    new_conc_cache_loc = str(conc_cache_dir)
-    spack.config.set("config:concretization_cache:path", new_conc_cache_loc)
-    yield
+
+    # ensure we have an isolated concretization cache while using fixture
+    with spack.config.override(
+        "concretizer:concretization_cache", {"enable": True, "url": str(conc_cache_dir)}
+    ):
+        yield conc_cache_dir
 
 
 #
@@ -492,6 +494,25 @@ def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
     source_path.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr(spack.stage, "_stage_root", str(new_stage))
+
+    yield str(new_stage)
+
+    # Clean up the test stage directory
+    if new_stage.is_dir():
+        shutil.rmtree(new_stage, onerror=onerror)
+
+
+@pytest.fixture(scope="session")
+def mock_stage_for_database(tmp_path_factory: pytest.TempPathFactory, monkeypatch_session):
+    """A session-scoped analog of mock_stage, so that the mock_store
+    fixture uses its own stage vs. the global stage root for spack.
+    """
+    new_stage = tmp_path_factory.mktemp("mock-stage")
+
+    source_path = new_stage / spack.stage._source_path_subdir
+    source_path.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch_session.setattr(spack.stage, "_stage_root", str(new_stage))
 
     yield str(new_stage)
 
@@ -677,6 +698,28 @@ def _pkg_install_fn(pkg, spec, prefix):
 @pytest.fixture
 def mock_pkg_install(monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "install", _pkg_install_fn, raising=False)
+
+
+@pytest.fixture(scope="function")
+def fake_db_install(tmp_path):
+    """This fakes "enough" of the installation process to make Spack
+    think of a spec as being installed as far as the concretizer
+    and parser are concerned. It does not run any build phase defined
+    in the package, simply acting as though the installation had
+    completed successfully.
+
+    It allows doing things like
+
+    ``spack.concretize.concretize_one(f"x ^/hash-of-y")``
+
+    after doing something like ``fake_db_install(y)``
+    """
+    with spack.store.use_store(str(tmp_path)) as the_store:
+
+        def _install(a_spec):
+            the_store.db.add(a_spec)
+
+        yield _install
 
 
 @pytest.fixture(scope="function")
@@ -886,7 +929,7 @@ def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
         (
-            ConfigScopePriority.BUILTIN,
+            ConfigScopePriority.DEFAULTS,
             spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
         ),
         (
@@ -1051,6 +1094,7 @@ def mock_store(
     mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache: Tuple[Path, Path],
+    mock_stage_for_database,
 ):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled
@@ -1166,32 +1210,11 @@ def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_pac
     temporary_store.failure_tracker.clear_all()
 
 
-@pytest.fixture(scope="module")
-def temporary_mirror_dir(tmp_path_factory: pytest.TempPathFactory):
-    dir = tmp_path_factory.mktemp("mirror")
-    yield str(dir)
-
-
 @pytest.fixture(scope="function")
-def temporary_mirror(temporary_mirror_dir):
-    mirror_url = url_util.path_to_file_url(temporary_mirror_dir)
-    mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
-    yield temporary_mirror_dir
-    mirror_cmd("rm", "--scope=site", "test-mirror-func")
-
-
-@pytest.fixture(scope="function")
-def mutable_temporary_mirror_dir(tmp_path_factory: pytest.TempPathFactory):
-    dir = tmp_path_factory.mktemp("mirror")
-    yield str(dir)
-
-
-@pytest.fixture(scope="function")
-def mutable_temporary_mirror(mutable_temporary_mirror_dir):
-    mirror_url = url_util.path_to_file_url(mutable_temporary_mirror_dir)
-    mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
-    yield mutable_temporary_mirror_dir
-    mirror_cmd("rm", "--scope=site", "test-mirror-func")
+def temporary_mirror(mutable_config, tmp_path_factory):
+    mirror_dir = tmp_path_factory.mktemp("mirror")
+    mirror_cmd("add", "test-mirror-func", mirror_dir.as_uri())
+    yield str(mirror_dir)
 
 
 @pytest.fixture(scope="function")
@@ -1211,6 +1234,21 @@ def mock_fetch(mock_archive, monkeypatch):
     monkeypatch.setattr(
         spack.package_base.PackageBase, "fetcher", URLFetchStrategy(url=mock_archive.url)
     )
+
+
+class MockResourceFetcherGenerator:
+    def __init__(self, url):
+        self.url = url
+
+    def _generate_fetchers(self, *args, **kwargs):
+        return [URLFetchStrategy(url=self.url)]
+
+
+@pytest.fixture()
+def mock_resource_fetch(mock_archive, monkeypatch):
+    """Fake fetcher generator that works with resource stages to redirect to a file."""
+    mfg = MockResourceFetcherGenerator(mock_archive.url)
+    monkeypatch.setattr(spack.stage.ResourceStage, "_generate_fetchers", mfg._generate_fetchers)
 
 
 class MockLayout:
@@ -1622,6 +1660,10 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
         rev_hash = lambda x: git("rev-parse", x, output=str).strip()
         r2 = rev_hash(default_branch)
 
+        # annotated tag
+        a_tag = "annotated-tag"
+        git("tag", "-a", a_tag, "-m", "annotated tag")
+
         # Record the commit hash of the (only) commit from test-branch and
         # the file added by that commit
         r1 = rev_hash(branch)
@@ -1660,6 +1702,7 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
         ),
         "tag": Bunch(revision=tag, file=tag_file, args={"git": url, "tag": tag}),
         "commit": Bunch(revision=r1, file=r1_file, args={"git": url, "commit": r1}),
+        "annotated-tag": Bunch(revision=a_tag, file=r2_file, args={"git": url, "tag": a_tag}),
         # In this case, the version() args do not include a 'git' key:
         # this is the norm for packages, so this tests how the fetching logic
         # would most-commonly assemble a Git fetcher
@@ -2074,7 +2117,10 @@ def mock_fetch_url_text(mock_config_data, monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_tty_stdout(monkeypatch):
+    """Make sys.stdout.isatty() return True, while forcing no color output."""
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+    with spack.llnl.util.tty.color.color_when("never"):
+        yield
 
 
 @pytest.fixture
@@ -2237,7 +2283,7 @@ def _true(x):
 
 
 def _libc_from_python(self):
-    return spack.spec.Spec("glibc@=2.28")
+    return spack.spec.Spec("glibc@=2.28", external_path="/some/path")
 
 
 @pytest.fixture()
@@ -2364,7 +2410,7 @@ def skip_provenance_check(monkeypatch, request):
     @pytest.mark.require_provenance decorator
     """
     if "require_provenance" not in request.keywords:
-        monkeypatch.setattr(spack.package_base.PackageBase, "resolve_binary_provenance", _noop)
+        monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _noop)
 
 
 @pytest.fixture(scope="function")

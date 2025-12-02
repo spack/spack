@@ -11,8 +11,8 @@ object:
 .. code-block:: python
 
    audit_cfgcmp = AuditClass(
-       tag='CFG-COMPILER',
-       description='Sanity checks on compilers.yaml',
+       tag="CFG-COMPILER",
+       description="Sanity checks on compilers.yaml",
        kwargs=()
    )
 
@@ -667,7 +667,7 @@ def _ensure_docstring_and_no_fixme(pkgs, error_cls):
 
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         if not pkg_cls.__doc__:
-            error_msg = "Package '{}' miss a docstring"
+            error_msg = "Package '{}' is missing a docstring"
             errors.append(error_cls(error_msg.format(pkg_name), []))
 
     return errors
@@ -1224,7 +1224,7 @@ def _named_specs_in_when_arguments(pkgs, error_cls):
 
         def _refers_to_pkg(when):
             when_spec = spack.spec.Spec(when)
-            return when_spec.name is None or when_spec.name == pkg_name
+            return not when_spec.name or when_spec.name == pkg_name
 
         def _error_items(when_dict):
             for when, elts in when_dict.items():

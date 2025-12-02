@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
+import json
 import os
 import pathlib
 import re
@@ -80,20 +81,105 @@ def test_config_scopes(path, types, mutable_mock_env_path):
         assert all(os.sep in x for x in paths)
 
 
-def test_config_scopes_include():
-    scopes_cmd = ["scopes", "-t", "include"]
-    output = config(*scopes_cmd).split()
-    assert not output or all(":" in x for x in output)
+@pytest.mark.parametrize("type", ["path", "include", "internal", "env"])
+def test_config_scopes_include(type):
+    """Ensure that `spack config scopes -vt TYPE outputs only scopes of that type."""
+    scopes_cmd = ["scopes", "-vt", type]
+    output = config(*scopes_cmd).strip()
+    lines = output.split("\n")
+    assert not output or all([type in line for line in lines[1:]])
 
 
-def test_config_scopes_path_section():
-    output = config("scopes", "-t", "include", "-p", "modules")
-    assert "_builtin" not in output
-    assert "site" not in output
+def test_config_scopes_section(mutable_config):
+    scopes_cmd = ["scopes", "-v", "packages"]
+    output = config(*scopes_cmd).strip()
+    lines = output.split("\n")
+
+    lines_by_scope_name = {line.split()[0]: line for line in lines}
+    assert "absent" in lines_by_scope_name["command_line"]
+    assert "absent" in lines_by_scope_name["_builtin"]
+    assert "active" in lines_by_scope_name["site"]
+
+
+def test_include_overrides(mutable_config):
+    output = config("scopes").strip()
+    lines = output.split("\n")
+    assert "user" in lines
+    assert "system" in lines
+    assert "site" in lines
+    assert "_builtin" in lines
+
+    mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
+
+    # overridden scopes are not shown wtihout `-v`
+    output = config("scopes").strip()
+    lines = output.split("\n")
+    assert "user" not in lines
+    assert "system" not in lines
+    assert "site" not in lines
+
+    # scopes with ConfigScopePriority.DEFAULTS remain
+    assert "_builtin" in lines
+
+    # overridden scopes are shown wtih `-v` and marked 'override'
+    output = config("scopes", "-v").strip()
+    lines = output.split("\n")
+    assert "override" in next(line for line in lines if line.startswith("user"))
+    assert "override" in next(line for line in lines if line.startswith("system"))
+    assert "override" in next(line for line in lines if line.startswith("site"))
+
+
+def test_blame_override(mutable_config):
+    # includes are present when section is specified
+    output = config("blame", "include").strip()
+    include_path = re.escape(os.path.join(mutable_config.scopes["site"].path, "include.yaml"))
+    assert re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+
+    # includes are also present when section is NOT specified
+    output = config("blame").strip()
+    assert re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+
+    mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
+
+    # site includes are not present when overridden
+    output = config("blame", "include").strip()
+    assert not re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+    assert "include: []" in output
+
+    output = config("blame").strip()
+    assert not re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+    assert "include: []" in output
+
+
+def test_config_scopes_path(mutable_config):
+    scopes_cmd = ["scopes", "-p"]
+    output = config(*scopes_cmd).strip()
+    lines = output.split("\n")
+
+    lines_by_scope_name = {line.split()[0]: line for line in lines}
+    assert f"{os.sep}user{os.sep}" in lines_by_scope_name["user"]
+    assert f"{os.sep}system{os.sep}" in lines_by_scope_name["system"]
+    assert f"{os.sep}site{os.sep}" in lines_by_scope_name["site"]
 
 
 def test_get_config_scope(mock_low_high_config):
     assert config("get", "compilers").strip() == "compilers: {}"
+
+
+def test_get_config_roundtrip(mutable_config):
+    """Test that ``spack config get [--json] <section>`` roundtrips correctly."""
+    json_roundtrip = json.loads(config("get", "--json", "config"))
+    yaml_roundtrip = syaml.load(config("get", "config"))
+    assert json_roundtrip["config"] == yaml_roundtrip["config"] == mutable_config.get("config")
+
+
+def test_get_all_config_roundtrip(mutable_config):
+    """Test that ``spack config get [--json]`` roundtrips correctly."""
+    json_roundtrip = json.loads(config("get", "--json"))
+    yaml_roundtrip = syaml.load(config("get"))
+    assert json_roundtrip == yaml_roundtrip
+    for section in spack.config.SECTION_SCHEMAS:
+        assert json_roundtrip["spack"][section] == mutable_config.get(section)
 
 
 def test_get_config_scope_merged(mock_low_high_config):
@@ -273,7 +359,7 @@ def test_config_with_c_argument(mutable_empty_config):
     assert config_file in args.config_vars
 
     # Add the path to the config
-    config("add", args.config_vars[0], scope="command_line")
+    config("add", args.config_vars[0])
     output = config("get", "config")
     assert "config:\n  install_tree:\n    root: /path/to/config.yaml" in output
 
@@ -558,76 +644,11 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
     assert "dirty: true" not in output
 
 
-def test_config_update_config(config_yaml_v015):
-    config_yaml_v015()
-    config("update", "-y", "config")
-
-    # Check the entires have been transformed
-    data = spack.config.get("config")
-    check_config_updated(data)
-
-
 def test_config_update_not_needed(mutable_config):
     data_before = spack.config.get("repos")
     config("update", "-y", "repos")
     data_after = spack.config.get("repos")
     assert data_before == data_after
-
-
-@pytest.mark.regression("18031")
-def test_config_update_can_handle_comments(mutable_config):
-    # Create an outdated config file with comments
-    scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
-    with open(cfg_file, mode="w", encoding="utf-8") as f:
-        f.write(
-            """
-config:
-  # system cmake in /usr
-  install_tree: './foo'
-  # Another comment after the outdated section
-  install_hash_length: 7
-"""
-        )
-
-    # Try to update it, it should not raise errors
-    config("update", "-y", "config")
-
-    # Check data
-    data = spack.config.get("config", scope=scope)
-    assert "root" in data["install_tree"]
-
-    # Check the comment is there
-    with open(cfg_file, encoding="utf-8") as f:
-        text = "".join(f.readlines())
-
-    assert "# system cmake in /usr" in text
-    assert "# Another comment after the outdated section" in text
-
-
-@pytest.mark.regression("18050")
-def test_config_update_works_for_empty_paths(mutable_config):
-    scope = spack.config.default_modify_scope()
-    cfg_file = spack.config.CONFIG.get_config_filename(scope, "config")
-    with open(cfg_file, mode="w", encoding="utf-8") as f:
-        f.write(
-            """
-config:
-    install_tree: ''
-"""
-        )
-
-    # Try to update it, it should not raise errors
-    output = config("update", "-y", "config")
-
-    # This ensures that we updated the configuration
-    assert "[backup=" in output
-
-
-def check_config_updated(data):
-    assert isinstance(data["install_tree"], dict)
-    assert data["install_tree"]["root"] == "/fake/path"
-    assert data["install_tree"]["projections"] == {"all": "{name}-{version}"}
 
 
 def test_config_update_shared_linking(mutable_config):

@@ -9,8 +9,8 @@ import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.repo
 
-description = "list downloadable resources (tarballs, repos, patches, etc.)"
-section = "basic"
+description = "list downloadable resources (tarballs, repos, patches)"
+section = "query"
 level = "long"
 
 

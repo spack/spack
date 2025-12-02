@@ -16,18 +16,38 @@ properties: Dict[str, Any] = {
         "additionalProperties": False,
         "items": {
             "anyOf": [
+                # local, required path
+                {"type": "string"},
+                # local or remote paths that may be optional or conditional
                 {
                     "type": "object",
                     "properties": {
                         "when": {"type": "string"},
+                        "name": {"type": "string"},
+                        "path_override_env_var": {"type": "string"},
                         "path": {"type": "string"},
                         "sha256": {"type": "string"},
                         "optional": {"type": "boolean"},
+                        "prefer_modify": {"type": "boolean"},
                     },
                     "required": ["path"],
                     "additionalProperties": False,
                 },
-                {"type": "string"},
+                # remote git paths that may be optional or conditional
+                {
+                    "type": "object",
+                    "properties": {
+                        "git": {"type": "string"},
+                        "branch": {"type": "string"},
+                        "commit": {"type": "string"},
+                        "tag": {"type": "string"},
+                        "paths": {"type": "array", "items": {"type": "string"}},
+                        "when": {"type": "string"},
+                        "optional": {"type": "boolean"},
+                    },
+                    "required": ["git", "paths"],
+                    "additionalProperties": False,
+                },
             ]
         },
     }
@@ -37,5 +57,7 @@ properties: Dict[str, Any] = {
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Spack include configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
     "properties": properties,
 }

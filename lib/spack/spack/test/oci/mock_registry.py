@@ -291,8 +291,8 @@ class DummyServerUrllibHandler(urllib.request.BaseHandler):
         return self.servers[domain].handle(req)
 
 
-class InMemoryOCIRegistryWithAuth(InMemoryOCIRegistry):
-    """This is another in-memory OCI registry, but it requires authentication."""
+class InMemoryOCIRegistryWithBearerAuth(InMemoryOCIRegistry):
+    """This is another in-memory OCI registry requiring bearer token authentication."""
 
     def __init__(
         self, domain, token: Optional[str], realm: str, allow_single_post: bool = True
@@ -330,6 +330,41 @@ class InMemoryOCIRegistryWithAuth(InMemoryOCIRegistry):
         )
 
 
+class InMemoryOCIRegistryWithBasicAuth(InMemoryOCIRegistry):
+    """This is another in-memory OCI registry requiring basic authentication."""
+
+    def __init__(
+        self, domain, username: str, password: str, realm: str, allow_single_post: bool = True
+    ) -> None:
+        super().__init__(domain, allow_single_post)
+        self.username = username
+        self.password = password
+        self.realm = realm
+        self.router.add_middleware(self.authenticate)
+
+    def authenticate(self, req: Request):
+        # Any request needs an Authorization header
+        authorization = req.get_header("Authorization")
+
+        if authorization is None:
+            raise MiddlewareError(self.unauthorized())
+
+        # Ensure that the username and password are correct
+        assert authorization.startswith("Basic ")
+        auth = base64.b64decode(authorization[6:]).decode("utf-8")
+        username, password = auth.split(":", 1)
+
+        if username != self.username or password != self.password:
+            raise MiddlewareError(self.unauthorized())
+
+        return req
+
+    def unauthorized(self):
+        return MockHTTPResponse(
+            401, "Unauthorized", {"www-authenticate": f'Basic realm="{self.realm}"'}
+        )
+
+
 class MockBearerTokenServer(DummyServer):
     """Simulates a basic server that hands out bearer tokens
     at the /login endpoint for the following services:
@@ -356,6 +391,8 @@ class MockBearerTokenServer(DummyServer):
             return self.public_auth(req)
         elif service == "private.example.com":
             return self.private_auth(req)
+        elif service == "oauth.example.com":
+            return self.oauth_auth(req)
 
         return MockHTTPResponse(404, "Not found")
 
@@ -363,6 +400,10 @@ class MockBearerTokenServer(DummyServer):
         # No need to login with username and password for the public registry
         assert req.get_header("Authorization") is None
         return MockHTTPResponse.with_json(200, "OK", body={"token": "public_token"})
+
+    def oauth_auth(self, req: Request):
+        assert req.get_header("Authorization") is None
+        return MockHTTPResponse.with_json(200, "OK", body={"access_token": "oauth_token"})
 
     def private_auth(self, req: Request):
         # For the private registry we need to login with username and password

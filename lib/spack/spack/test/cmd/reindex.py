@@ -69,6 +69,7 @@ def test_reindex_with_deprecated_packages(
     new_libelf = db.query_local_by_spec_hash(
         db.query_local("libelf@0.8.13", installed=True)[0].dag_hash()
     )
+    assert old_libelf is not None and new_libelf is not None
     assert old_libelf.deprecated_for == new_libelf.spec.dag_hash()
     assert new_libelf.deprecated_for is None
     assert new_libelf.ref_count == 1

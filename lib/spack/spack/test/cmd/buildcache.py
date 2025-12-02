@@ -7,12 +7,15 @@ import json
 import os
 import pathlib
 import shutil
+import urllib.parse
+from datetime import datetime, timedelta
 from typing import Dict, List
 
 import pytest
 
 import spack.binary_distribution
 import spack.buildcache_migrate as migrate
+import spack.buildcache_prune
 import spack.cmd.buildcache
 import spack.concretize
 import spack.environment as ev
@@ -65,24 +68,19 @@ def mock_get_specs_multiarch(database, monkeypatch):
 
 @pytest.mark.db
 @pytest.mark.regression("13757")
-def test_buildcache_list_duplicates(mock_get_specs, capsys):
-    with capsys.disabled():
-        output = buildcache("list", "mpileaks", "@2.3")
+def test_buildcache_list_duplicates(mock_get_specs):
+    output = buildcache("list", "mpileaks", "@2.3")
 
     assert output.count("mpileaks") == 3
 
 
 @pytest.mark.db
 @pytest.mark.regression("17827")
-def test_buildcache_list_allarch(database, mock_get_specs_multiarch, capsys):
-    with capsys.disabled():
-        output = buildcache("list", "--allarch")
-
+def test_buildcache_list_allarch(database, mock_get_specs_multiarch):
+    output = buildcache("list", "--allarch")
     assert output.count("mpileaks") == 3
 
-    with capsys.disabled():
-        output = buildcache("list")
-
+    output = buildcache("list")
     assert output.count("mpileaks") == 2
 
 
@@ -188,7 +186,6 @@ def test_buildcache_autopush(tmp_path: pathlib.Path, install_mockery, mock_fetch
     # Install and generate build cache index
     PackageInstaller([s.package], fake=True, explicit=True).install()
 
-    assert s.name is not None
     manifest_file = URLBuildcacheEntry.get_manifest_filename(s)
     specs_dirs = os.path.join(
         *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPEC), s.name
@@ -337,7 +334,6 @@ def test_buildcache_create_install(
         layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
     cache_entry = cache_class(mirror_url, spec, allow_unsigned=True)
-    assert spec.name is not None
     manifest_path = os.path.join(
         str(tmp_path),
         *cache_class.get_relative_path_components(BuildcacheComponent.SPEC),
@@ -471,7 +467,11 @@ def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_fla
 
     spec.package.do_uninstall(force=True)
     PackageInstaller(
-        [spec.package], explicit=True, cache_only=True, unsigned=True if signed else None
+        [spec.package],
+        explicit=True,
+        root_policy="cache_only",
+        dependencies_policy="cache_only",
+        unsigned=True if signed else None,
     ).install()
 
 
@@ -546,18 +546,16 @@ def v2_buildcache_layout(tmp_path: pathlib.Path):
     return _layout
 
 
-def test_check_mirror_for_layout(v2_buildcache_layout, mutable_config, capsys):
+def test_check_mirror_for_layout(v2_buildcache_layout, mutable_config, capfd):
     """Check printed warning in the presence of v2 layout binary mirrors"""
     test_mirror_path = v2_buildcache_layout("unsigned")
 
     check_mirror_for_layout(spack.mirrors.mirror.Mirror.from_local_path(str(test_mirror_path)))
-    err = str(capsys.readouterr()[1])
+    err = str(capfd.readouterr()[1])
     assert all([word in err for word in ["Warning", "missing", "layout"]])
 
 
-def test_url_buildcache_entry_v2_exists(
-    capsys, v2_buildcache_layout, mock_packages, mutable_config
-):
+def test_url_buildcache_entry_v2_exists(v2_buildcache_layout, mock_packages, mutable_config):
     """Test existence check for v2 buildcache entries"""
     test_mirror_path = v2_buildcache_layout("unsigned")
     mirror_url = pathlib.Path(test_mirror_path).as_uri()
@@ -598,7 +596,6 @@ def test_url_buildcache_entry_v2_exists(
 @pytest.mark.parametrize("signing", ["unsigned", "signed"])
 def test_install_v2_layout(
     signing,
-    capsys,
     v2_buildcache_layout,
     mock_packages,
     mutable_config,
@@ -614,8 +611,7 @@ def test_install_v2_layout(
     # Trust original signing key (no-op if this is the unsigned pass)
     buildcache("keys", "--install", "--trust")
 
-    with capsys.disabled():
-        output = install("--fake", "--no-check-signature", "libdwarf")
+    output = install("--fake", "--no-check-signature", "libdwarf")
 
     assert "Extracting libelf" in output
     assert "libelf: Successfully installed" in output
@@ -626,7 +622,7 @@ def test_install_v2_layout(
     assert "deprecated" in output
 
 
-def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):
+def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
     """Make sure first unsigned migration results in usable buildcache,
     leaving the previous layout in place. Also test that a subsequent one
     doesn't need to migrate anything, and that using --delete-existing
@@ -635,8 +631,7 @@ def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):
     test_mirror_path = v2_buildcache_layout("unsigned")
     mirror("add", "my-mirror", str(test_mirror_path))
 
-    with capsys.disabled():
-        output = buildcache("migrate", "--unsigned", "my-mirror")
+    output = buildcache("migrate", "--unsigned", "my-mirror")
 
     # The output indicates both specs were migrated
     assert output.count("Successfully migrated") == 6
@@ -649,15 +644,11 @@ def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):
     assert os.path.isdir(build_cache_path)
 
     # Now list the specs available under the new layout
-    with capsys.disabled():
-        output = buildcache("list", "--allarch")
+    output = buildcache("list", "--allarch")
 
     assert "libdwarf" in output and "libelf" in output
 
-    with capsys.disabled():
-        output = buildcache(
-            "migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror"
-        )
+    output = buildcache("migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror")
 
     # A second migration of the same mirror indicates neither spec
     # needs to be migrated
@@ -668,9 +659,7 @@ def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):
     assert not os.path.exists(build_cache_path)
 
 
-def test_basic_migrate_signed(
-    capsys, v2_buildcache_layout, monkeypatch, mock_gnupghome, mutable_config
-):
+def test_basic_migrate_signed(v2_buildcache_layout, monkeypatch, mock_gnupghome, mutable_config):
     """Test a signed migration requires a signing key, requires the public
     key originally used to sign the pkgs, fails and prints reasonable messages
     if those requirements are unmet, and eventually succeeds when they are met."""
@@ -686,8 +675,7 @@ def test_basic_migrate_signed(
     # Create a signing key and trust the key used to sign the pkgs originally
     gpg("create", "New Test Signing Key", "noone@nowhere.org")
 
-    with capsys.disabled():
-        output = buildcache("migrate", "my-mirror")
+    output = buildcache("migrate", "my-mirror")
 
     # Without trusting the original signing key, spack fails with an explanation
     assert "Failed to verify signature of libelf" in output
@@ -696,38 +684,31 @@ def test_basic_migrate_signed(
 
     # Trust original signing key (since it's in the original layout location,
     # this is where the monkeypatched attribute is used)
-    with capsys.disabled():
-        output = buildcache("keys", "--install", "--trust")
+    output = buildcache("keys", "--install", "--trust")
 
-    with capsys.disabled():
-        output = buildcache("migrate", "my-mirror")
+    output = buildcache("migrate", "my-mirror")
 
     # Once we have the proper keys, migration should succeed
     assert "Successfully migrated libelf" in output
     assert "Successfully migrated libelf" in output
 
     # Now list the specs available under the new layout
-    with capsys.disabled():
-        output = buildcache("list", "--allarch")
+    output = buildcache("list", "--allarch")
 
     assert "libdwarf" in output and "libelf" in output
 
 
-def test_unsigned_migrate_of_signed_mirror(capsys, v2_buildcache_layout, mutable_config):
+def test_unsigned_migrate_of_signed_mirror(v2_buildcache_layout, mutable_config):
     """Test spack can do an unsigned migration of a signed buildcache by
     ignoring signatures and skipping re-signing."""
 
     test_mirror_path = v2_buildcache_layout("signed")
     mirror("add", "my-mirror", str(test_mirror_path))
 
-    with capsys.disabled():
-        output = buildcache(
-            "migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror"
-        )
+    output = buildcache("migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror")
 
     # Now list the specs available under the new layout
-    with capsys.disabled():
-        output = buildcache("list", "--allarch")
+    output = buildcache("list", "--allarch")
 
     assert "libdwarf" in output and "libelf" in output
 
@@ -743,7 +724,7 @@ def test_unsigned_migrate_of_signed_mirror(capsys, v2_buildcache_layout, mutable
             assert json.load(fd)
 
 
-def test_migrate_requires_index(capsys, v2_buildcache_layout, mutable_config):
+def test_migrate_requires_index(v2_buildcache_layout, mutable_config):
     """Test spack fails with a reasonable error message when mirror does
     not have an index"""
 
@@ -850,3 +831,147 @@ def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnu
     assert "Found 1 manifest(s) that are missing blobs" in output
 
     cache_entry.destroy()
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_direct_with_keeplist(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
+):
+    """Test direct pruning functionality with a keeplist file"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Install and push multiple packages
+    specs = mutable_database.query_local("libelf", installed=True)
+    spec1 = specs[0]
+
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
+    )
+    manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
+
+    # Push the first spec (package only, no dependencies)
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec1.dag_hash()}")
+
+    # Create a keeplist file that includes only spec1
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text(f"{spec1.dag_hash()}\n")
+
+    # Run direct pruning
+    cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
+    if dry_run:
+        cmd_args.append("--dry-run")
+    output = buildcache(*cmd_args)
+
+    # Since all packages are in the keeplist, nothing should be pruned
+    assert web_util.url_exists(manifest_url)
+    assert "No specs to prune - all specs are in the keeplist" in output
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_direct_removes_unlisted(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
+):
+    """Test that direct pruning removes specs not in the keeplist"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Install and push a package (package only, no dependencies)
+    specs = mutable_database.query_local("libelf", installed=True)
+    spec1 = specs[0]
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec1.dag_hash()}")
+
+    # Create a keeplist file that excludes the pushed package
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text("0" * 32)
+
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
+    )
+    manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
+
+    assert web_util.url_exists(manifest_url)
+
+    # Run direct pruning
+    cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
+    if dry_run:
+        cmd_args.append("--dry-run")
+    buildcache(*cmd_args)
+
+    assert web_util.url_exists(manifest_url) == dry_run
+
+
+def test_buildcache_prune_direct_empty_keeplist_fails(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome
+):
+    """Test that direct pruning fails with an empty keeplist file"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Create empty keeplist file
+    keeplist_file = tmp_path / "empty_keeplist.txt"
+    keeplist_file.write_text("")
+
+    # Should fail with empty keeplist
+    with pytest.raises(spack.buildcache_prune.BuildcachePruningException):
+        buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_with_invalid_keep_hash(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run: bool
+):
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Create a keeplist file that includes an invalid hash
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text("this_is_an_invalid_hash")
+
+    cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
+    if dry_run:
+        cmd_args.append("--dry-run")
+
+    with pytest.raises(spack.buildcache_prune.BuildcachePruningException):
+        buildcache(*cmd_args)
+
+
+def test_buildcache_prune_new_specs_race_condition(
+    tmp_path: pathlib.Path, mutable_database, mock_gnupghome, monkeypatch: pytest.MonkeyPatch
+):
+    """Test that specs uploaded after pruning begins are protected"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+
+    buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
+    )
+    manifest_url = cache_entry.get_manifest_url(spec, f"file://{mirror_directory}")
+
+    def mock_stat_url(url: str):
+        """
+        Mock the stat_url function for testing.
+
+        For the specific spec created in this test, fake its mtime so that it appears to
+        have been created after the pruning started.
+        """
+        if url == manifest_url:
+            return 1, datetime.now().timestamp() + timedelta(minutes=10).total_seconds()
+        parsed_url = urllib.parse.urlparse(url)
+        stat_result = pathlib.Path(parsed_url.path).stat()
+        return stat_result.st_size, stat_result.st_mtime
+
+    monkeypatch.setattr(web_util, "stat_url", mock_stat_url)
+
+    keeplist_file = tmp_path / "keeplist.txt"
+    keeplist_file.write_text("0" * 32)
+
+    # Run end-to-end buildcache prune - this should not delete `libelf`, despite it
+    # not being in the keeplist, because its mtime is after the pruning started
+    assert web_util.url_exists(manifest_url)
+    buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
+    assert web_util.url_exists(manifest_url)

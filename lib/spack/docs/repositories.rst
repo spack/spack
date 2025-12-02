@@ -1,4 +1,5 @@
-.. Copyright Spack Project Developers. See COPYRIGHT file for details.
+..
+   Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +12,8 @@
 Package Repositories (repos.yaml)
 =================================
 
-Spack comes with thousands of built-in package recipes. As of Spack v1.0, these are hosted in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_.
+Spack comes with thousands of built-in package recipes.
+As of Spack v1.0, these are hosted in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_.
 
 A **package repository** is a directory that Spack searches when it needs to find a package by name.
 You may need to maintain packages for restricted, proprietary, or experimental software separately from the built-in repository.
@@ -22,30 +24,32 @@ This document describes how to set up and manage these package repositories.
 Structure of an Individual Package Repository
 ---------------------------------------------
 
-An individual Spack package repository is a directory structured as follows::
+An individual Spack package repository is a directory structured as follows:
 
-  /path/to/repos/                   # the top-level dir is added to the Python search path
-    spack_repo/                     # every package repository is part of the spack_repo Python module
-      myrepo/                       # directory for the 'myrepo' repository (matches namespace)
-        repo.yaml                   # configuration file for this package repository
-        packages/                   # directory containing package directories
-          hdf5/                     # directory for the hdf5 package
-            package.py              # the package recipe file
-          mpich/                    # directory for the mpich package
-            package.py              # the package recipe file
-            mpich-1.9-bugfix.patch  # example patch file
-          trilinos/
-            package.py
-      ...
+.. code-block:: text
+
+   /path/to/repos/                   # the top-level dir is added to the Python search path
+     spack_repo/                     # every package repository is part of the spack_repo Python module
+       myrepo/                       # directory for the 'myrepo' repository (matches namespace)
+         repo.yaml                   # configuration file for this package repository
+         packages/                   # directory containing package directories
+           hdf5/                     # directory for the hdf5 package
+             package.py              # the package recipe file
+           mpich/                    # directory for the mpich package
+             package.py              # the package recipe file
+             mpich-1.9-bugfix.patch  # example patch file
+           trilinos/
+             package.py
+       ...
 
 * ``repo.yaml``.
   This file contains metadata for this specific repository, for example:
 
   .. code-block:: yaml
 
-    repo:
-      namespace: myrepo
-      api: v2.0
+     repo:
+       namespace: myrepo
+       api: v2.0
 
   It defines primarily:
 
@@ -86,7 +90,8 @@ Package names can only contain lowercase characters ``a-z``, digits ``0-9`` and 
 Configuring Repositories with ``repos.yaml``
 --------------------------------------------
 
-Spack uses ``repos.yaml`` files found in its :ref:`configuration scopes <configuration>` (e.g., ``~/.spack/``, ``etc/spack/``) to discover and prioritize package repositories. Note that this ``repos.yaml`` (plural) configuration file is distinct from the ``repo.yaml`` (singular) file within each individual package repository.
+Spack uses ``repos.yaml`` files found in its :ref:`configuration scopes <configuration>` (e.g., ``~/.spack/``, ``etc/spack/``) to discover and prioritize package repositories.
+Note that this ``repos.yaml`` (plural) configuration file is distinct from the ``repo.yaml`` (singular) file within each individual package repository.
 
 Spack supports two main types of repository configurations:
 
@@ -96,10 +101,11 @@ Local Repositories (Path-based)
 You can point Spack to a repository on your local filesystem:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
+   :name: code-example-local-repo
 
-  # Example: ~/.spack/repos.yaml
-  repos:
-    my_local_packages: /path/to/my_repository_root
+   repos:
+     my_local_packages: /path/to/my_repository_root
 
 Here, ``/path/to/my_repository_root`` should be the directory containing that repository's ``repo.yaml`` and ``packages/`` subdirectory.
 
@@ -110,42 +116,57 @@ Spack can clone and use repositories directly from Git URLs:
 
 .. code-block:: yaml
 
-  repos:
-    my_remote_repo: https://github.com/myorg/spack-custom-pkgs.git
+   repos:
+     my_remote_repo: https://github.com/myorg/spack-custom-pkgs.git
 
-**Automatic Cloning.**
-When Spack first encounters a Git-based repository configuration, it automatically clones it. By default, these repositories are cloned into a subdirectory within ``~/.spack/package_repos/``, named with a hash of the repository URL.
+Automatic Cloning
+"""""""""""""""""
 
-To change directories to the package repository, you can use ``spack cd --repo [name]``. To find where a repository is cloned, you can use ``spack location --repo [name]`` or ``spack repo list``. The ``name`` argument is optional; if omitted, Spack will use the first package repository in configuration order.
+When Spack first encounters a Git-based repository configuration, it automatically clones it.
+By default, these repositories are cloned into a subdirectory within ``~/.spack/package_repos/``, named with a hash of the repository URL.
 
-**Customizing Clone Location.**
-The default clone location (``~/.spack/package_repos/<hashed_name>``) might not be convenient for package maintainers who want to make changes to packages. You can specify a custom local directory for Spack to clone a Git repository into, or to use if the repository is already cloned there. This is done using the ``destination`` key in ``repos.yaml`` or via the ``spack repo set --destination`` command (see :ref:`cmd-spack-repo-set-destination`).
+To change directories to the package repository, you can use ``spack cd --repo [name]``.
+To find where a repository is cloned, you can use ``spack location --repo [name]`` or ``spack repo list``.
+The ``name`` argument is optional; if omitted, Spack will use the first package repository in configuration order.
+
+Customizing Clone Location
+""""""""""""""""""""""""""
+
+The default clone location (``~/.spack/package_repos/<hashed_name>``) might not be convenient for package maintainers who want to make changes to packages.
+You can specify a custom local directory for Spack to clone a Git repository into, or to use if the repository is already cloned there.
+This is done using the ``destination`` key in ``repos.yaml`` or via the ``spack repo set --destination`` command (see :ref:`cmd-spack-repo-set-destination`).
 
 For example, to use ``~/custom_packages_clone`` for ``my_remote_repo``:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
+   :name: code-example-location
 
-  # ~/.spack/repos.yaml
-  repos:
-    my_remote_repo:
-      git: https://github.com/myorg/spack-custom-pkgs.git
-      destination: ~/custom_packages_clone
+   repos:
+     my_remote_repo:
+       git: https://github.com/myorg/spack-custom-pkgs.git
+       destination: ~/custom_packages_clone
 
-If the ``git`` URL is defined in a lower-precedence configuration (like Spack's defaults for ``builtin``), you only need to specify the ``destination`` in your user-level ``repos.yaml``. Spack can make the configuration changes for you using ``spack repo set --destination ~/spack-packages builtin``, or you can directly edit your ``repos.yaml`` file:
+If the ``git`` URL is defined in a lower-precedence configuration (like Spack's defaults for ``builtin``), you only need to specify the ``destination`` in your user-level ``repos.yaml``.
+Spack can make the configuration changes for you using ``spack repo set --destination ~/spack-packages builtin``, or you can directly edit your ``repos.yaml`` file:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
+   :name: code-example-builtin
 
-  # ~/.spack/repos.yaml
-  repos:
-    builtin:
-      destination: ~/spack-packages
+   repos:
+     builtin:
+       destination: ~/spack-packages
 
-**Updating and pinning.**
+Updating and pinning
+""""""""""""""""""""
+
 Repos can be pinned to a git branch, tag, or commit.
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
+   :name: code-example-branch
 
-   # ~/.spack/repos.yaml
    repos:
      builtin:
        branch: releases/v2025.07
@@ -156,55 +177,67 @@ The ``spack repo update`` command will update the repo on disk to match the curr
 If the repo is pinned to a commit or tag, it will ensure the repo on disk reflects that commit or tag.
 If the repo is pinned to a branch or unpinned, ``spack repo update`` will pull the most recent state of the branch (the default branch if unpinned).
 
-**Git repositories need a package repo index.**
-A single Git repository can contain one or more Spack package repositories. To enable Spack to discover these, the root of the Git repository should contain a ``spack-repo-index.yaml`` file. This file lists the relative paths to package repository roots within the git repo.
+Git repositories need a package repo index
+""""""""""""""""""""""""""""""""""""""""""
 
-For example, assume a Git repository at ``https://example.com/my_org/my_pkgs.git`` has the following structure::
+A single Git repository can contain one or more Spack package repositories.
+To enable Spack to discover these, the root of the Git repository should contain a ``spack-repo-index.yaml`` file.
+This file lists the relative paths to package repository roots within the git repo.
 
-  my_pkgs.git/
-    spack-repo-index.yaml     # metadata file at the root of the Git repo
-    ...
-    spack_pkgs/
-      spack_repo/
-        my_org/
-          comp_sci_packages/  # package repository for computer science packages
-            repo.yaml
-            packages/
-              hdf5/
-                package.py
-              mpich/
-                package.py
-          physics_packages/   # package repository for physics packages
-            repo.yaml
-            packages/
-              gromacs/
-                package.py
+For example, assume a Git repository at ``https://example.com/my_org/my_pkgs.git`` has the following structure
+
+.. code-block:: text
+
+   my_pkgs.git/
+     spack-repo-index.yaml     # metadata file at the root of the Git repo
+     ...
+     spack_pkgs/
+       spack_repo/
+         my_org/
+           comp_sci_packages/  # package repository for computer science packages
+             repo.yaml
+             packages/
+               hdf5/
+                 package.py
+               mpich/
+                 package.py
+           physics_packages/   # package repository for physics packages
+             repo.yaml
+             packages/
+               gromacs/
+                 package.py
 
 The ``spack-repo-index.yaml`` in the root of ``https://example.com/my_org/my_pkgs.git`` should look like this:
 
 .. code-block:: yaml
+   :caption: ``my_pkgs.git/spack-repo-index.yaml``
+   :name: code-example-repo-index
 
-  # my_pkgs.git/spack-repo-index.yaml
-  repo_index:
-    paths:
-    - spack_pkgs/spack_repo/my_org/comp_sci_packages
-    - spack_pkgs/spack_repo/my_org/physics_packages
+   repo_index:
+     paths:
+     - spack_pkgs/spack_repo/my_org/comp_sci_packages
+     - spack_pkgs/spack_repo/my_org/physics_packages
 
 If ``my_pkgs.git`` is configured in ``repos.yaml`` as follows:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
+   :name: code-example-git-repo
 
-  # ~/.spack/repos.yaml
-  repos:
-    example_mono_repo: https://example.com/my_org/my_pkgs.git
+   repos:
+     example_mono_repo: https://example.com/my_org/my_pkgs.git
 
-Spack will clone ``my_pkgs.git`` and look for ``spack-repo-index.yaml``. It will then register two separate repositories based on the paths found (e.g., ``<clone_dir>/spack_pkgs/spack_repo/my_org/comp_sci_packages`` and ``<clone_dir>/spack_pkgs/spack_repo/my_org/physics_packages``), each with its own namespace defined in its respective ``repo.yaml`` file. Thus, one ``repos.yaml`` entry for a Git mono-repo can lead to *multiple repositories* being available to Spack.
+Spack will clone ``my_pkgs.git`` and look for ``spack-repo-index.yaml``.
+It will then register two separate repositories based on the paths found (e.g., ``<clone_dir>/spack_pkgs/spack_repo/my_org/comp_sci_packages`` and ``<clone_dir>/spack_pkgs/spack_repo/my_org/physics_packages``), each with its own namespace defined in its respective ``repo.yaml`` file.
+Thus, one ``repos.yaml`` entry for a Git mono-repo can lead to *multiple repositories* being available to Spack.
 
-If you want only one of the package repositories from a Git mono-repo, you can override the paths in your user-level ``repos.yaml``. For example, if you only want the computer science packages:
+If you want only one of the package repositories from a Git mono-repo, you can override the paths in your user-level ``repos.yaml``.
+For example, if you only want the computer science packages:
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml``
+   :name: code-example-specific-repo
 
-   # ~/.spack/repos.yaml
    repos:
      example_mono_repo:
        git: https://example.com/my_org/my_pkgs.git
@@ -217,13 +250,14 @@ The ``builtin`` Repository
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spack's extensive collection of built-in packages resides at `spack/spack-packages <https://github.com/spack/spack-packages>`_.
-By default, Spack is configured to use this as a Git-based repository. The default configuration in ``$spack/etc/spack/defaults/repos.yaml`` looks something like this:
+By default, Spack is configured to use this as a Git-based repository.
+The default configuration in ``$spack/etc/spack/defaults/repos.yaml`` looks something like this:
 
 .. code-block:: yaml
 
-  repos:
-    builtin:
-      git: https://github.com/spack/spack-packages.git
+   repos:
+     builtin:
+       git: https://github.com/spack/spack-packages.git
 
 .. _namespaces:
 
@@ -234,69 +268,78 @@ Every repository in Spack has an associated **namespace** defined in the ``names
 For example, the built-in repository (from ``spack/spack-packages``) has its namespace defined as ``builtin``:
 
 .. code-block:: yaml
+   :caption: ``repo.yaml`` of ``spack/spack-packages``
+   :name: code-example-repo-yaml
 
-  # In spack/spack-packages repository's repo.yaml
-  repo:
-    namespace: builtin
-    api: v2.0 # Or newer
+   repo:
+     namespace: builtin
+     api: v2.0 # Or newer
 
-Spack records the repository namespace of each installed package. For example, if you install the ``mpich`` package from the ``builtin`` repo, Spack records its fully qualified name as ``builtin.mpich``. This accomplishes two things:
+Spack records the repository namespace of each installed package.
+For example, if you install the ``mpich`` package from the ``builtin`` repo, Spack records its fully qualified name as ``builtin.mpich``.
+This accomplishes two things:
 
 1.  You can have packages with the same name from different namespaces installed simultaneously.
 2.  You can easily determine which repository a package came from after it is installed (more :ref:`below <namespace-example>`).
 
 .. note::
 
-   The ``namespace`` defined in the package repository's ``repo.yaml`` is the **authoritative source** for the namespace. It is *not* derived from the local configuration in ``repos.yaml``. This means that the namespace is determined by the repository maintainer, not by the user or local configuration.
+   The ``namespace`` defined in the package repository's ``repo.yaml`` is the **authoritative source** for the namespace.
+   It is *not* derived from the local configuration in ``repos.yaml``.
+   This means that the namespace is determined by the repository maintainer, not by the user or local configuration.
 
 Nested Namespaces for Organizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As we have already seen in the Git-based package repositories example above, you can create nested namespaces by using periods in the namespace name.
 For example, a repository for packages related to computation at LLNL might have the namespace ``llnl.comp``, while one for physical and life sciences could be ``llnl.pls``.
-On the file system, this requires a directory structure like this::
+On the file system, this requires a directory structure like this:
 
-  /path/to/repos/
-    spack_repo/
-      llnl/
-        comp/
-          repo.yaml  # Contains namespace: llnl.comp
-          packages/
-            mpich/
-              package.py
-        pls/
-          repo.yaml  # Contains namespace: llnl.pls
-          packages/
-            hdf5/
-              package.py
+.. code-block:: text
+
+   /path/to/repos/
+     spack_repo/
+       llnl/
+         comp/
+           repo.yaml  # Contains namespace: llnl.comp
+           packages/
+             mpich/
+               package.py
+         pls/
+           repo.yaml  # Contains namespace: llnl.pls
+           packages/
+             hdf5/
+               package.py
 
 Uniqueness
 ^^^^^^^^^^
 
-Spack cannot ensure global uniqueness of all namespaces, but it will prevent you from registering two repositories with the same namespace *at the same time* in your current configuration. If you try to add a repository that has the same namespace as an already registered one, Spack will print a warning and may ignore the new addition or apply specific override logic depending on the configuration.
+Spack cannot ensure global uniqueness of all namespaces, but it will prevent you from registering two repositories with the same namespace *at the same time* in your current configuration.
+If you try to add a repository that has the same namespace as an already registered one, Spack will print a warning and may ignore the new addition or apply specific override logic depending on the configuration.
 
 .. _namespace-example:
 
 Namespace Example
 ^^^^^^^^^^^^^^^^^
 
-Suppose LLNL maintains its own version of ``mpich`` (in a repository with namespace ``llnl.comp``), separate from Spack's built-in ``mpich`` package (namespace ``builtin``). If you've installed both, ``spack find`` alone might be ambiguous:
+Suppose LLNL maintains its own version of ``mpich`` (in a repository with namespace ``llnl.comp``), separate from Spack's built-in ``mpich`` package (namespace ``builtin``).
+If you've installed both, ``spack find`` alone might be ambiguous:
 
 .. code-block:: console
 
-  $ spack find
-  ==> 2 installed packages.
-  -- linux-rhel6-x86_64 / gcc@4.4.7 -------------
-  mpich@3.2  mpich@3.2
+   $ spack find
+   ==> 2 installed packages.
+   -- linux-rhel6-x86_64 / gcc@4.4.7 -------------
+   mpich@3.2  mpich@3.2
 
 Using ``spack find -N`` displays packages with their namespaces:
 
 .. code-block:: console
 
-  $ spack find -N
-  ==> 2 installed packages.
-  -- linux-rhel6-x86_64 / gcc@4.4.7 -------------
-  builtin.mpich@3.2  llnl.comp.mpich@3.2
+   $ spack find -N
+   ==> 2 installed packages.
+   -- linux-rhel6-x86_64 / gcc@4.4.7 -------------
+   builtin.mpich@3.2  llnl.comp.mpich@3.2
 
 Now you can distinguish them.
 Packages differing only by namespace will have different hashes:
@@ -325,9 +368,10 @@ This search order allows you to override built-in packages.
 If you have your own ``mpich`` in a repository ``my_custom_repo``, and ``my_custom_repo`` is listed before ``builtin`` in your ``repos.yaml``, Spack will use your version of ``mpich`` by default.
 
 Suppose your effective (merged) ``repos.yaml`` implies the following order:
-1.  ``proto`` (local repo at ``~/my_spack_repos/spack_repo/proto_repo``)
-2.  ``llnl`` (local repo at ``/usr/local/repos/spack_repo/llnl_repo``)
-3.  ``builtin`` (Spack's default packages from `spack/spack-packages`)
+
+1. ``proto`` (local repo at ``~/my_spack_repos/spack_repo/proto_repo``)
+2. ``llnl`` (local repo at ``/usr/local/repos/spack_repo/llnl_repo``)
+3. ``builtin`` (Spack's default packages from ``spack/spack-packages``)
 
 And the packages are:
 
@@ -383,11 +427,11 @@ This command shows all repositories Spack currently knows about, including their
 
 .. code-block:: console
 
-  $ spack repo list
-  [+] my_local           v2.0    /path/to/spack_repo/my_local_packages
-  [+] comp_sci_packages  v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/comp_sci_packages
-  [+] physics_packages   v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/physics_packages  # From the same git repo
-  [+] builtin            v2.0    ~/.spack/package_repos/<hash 2>/repos/spack_repo/builtin
+   $ spack repo list
+   [+] my_local           v2.0    /path/to/spack_repo/my_local_packages
+   [+] comp_sci_packages  v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/comp_sci_packages
+   [+] physics_packages   v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/physics_packages  # From the same git repo
+   [+] builtin            v2.0    ~/.spack/package_repos/<hash 2>/repos/spack_repo/builtin
 
 Spack shows a green ``[+]`` next to each repository that is available for use.
 It shows a red ``[-]`` to indicate that package repositories cannot be used due to an error (e.g., unsupported API version, missing ``repo.yaml``, etc.).
@@ -415,19 +459,21 @@ To create the directory structure for a new, empty local repository:
 
 .. code-block:: console
 
-  $ spack repo create ~/my_spack_projects myorg.projectx
-  ==> Created repo with namespace 'myorg.projectx'.
-  ==> To register it with spack, run this command:
-    spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
+   $ spack repo create ~/my_spack_projects myorg.projectx
+   ==> Created repo with namespace 'myorg.projectx'.
+   ==> To register it with spack, run this command:
+     spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
 
-This command creates the following structure::
+This command creates the following structure:
 
-  ~/my_spack_projects/
-    spack_repo/
-      myorg/
-        projectx/
-          repo.yaml      # Contains namespace: myorg.projectx
-          packages/      # Empty directory for new package.py files
+.. code-block:: text
+
+   ~/my_spack_projects/
+     spack_repo/
+       myorg/
+         projectx/
+           repo.yaml      # Contains namespace: myorg.projectx
+           packages/      # Empty directory for new package.py files
 
 The ``<target_dir>`` is where the ``spack_repo/<namespace_parts>`` hierarchy will be created.
 The ``<namespace>`` can be simple (e.g., ``myrepo``) or nested (e.g., ``myorg.projectx``), and Spack will create the corresponding directory structure.
@@ -439,16 +485,14 @@ The ``<namespace>`` can be simple (e.g., ``myrepo``) or nested (e.g., ``myorg.pr
 
 To register package repositories from local paths or a remote Git repositories with Spack:
 
-* **For a local path:**
-  Provide the path to the repository's root directory (the one containing ``repo.yaml`` and ``packages/``).
+* **For a local path:** Provide the path to the repository's root directory (the one containing ``repo.yaml`` and ``packages/``).
 
   .. code-block:: console
 
      $ spack repo add ~/my_spack_projects/spack_repo/myorg/projectx
      ==> Added repo to config with name 'myorg.projectx'.
 
-* **For a Git repository:**
-  Provide the Git URL.
+* **For a Git repository:** Provide the Git URL.
 
   .. code-block:: console
 
@@ -473,15 +517,15 @@ By configuration name (e.g., ``projectx`` from the add example):
 
 .. code-block:: console
 
-  $ spack repo remove projectx
-  ==> Removed repository 'projectx'.
+   $ spack repo remove projectx
+   ==> Removed repository 'projectx'.
 
 By path (for a local repo):
 
 .. code-block:: console
 
-  $ spack repo remove ~/my_spack_projects/spack_repo/myorg/projectx
-  ==> Removed repository '/home/user/my_spack_projects/spack_repo/myorg/projectx'.
+   $ spack repo remove ~/my_spack_projects/spack_repo/myorg/projectx
+   ==> Removed repository '/home/user/my_spack_projects/spack_repo/myorg/projectx'.
 
 This command removes the corresponding entry from your ``repos.yaml`` configuration.
 It does *not* delete the local repository files or any cloned Git repositories.
@@ -496,18 +540,19 @@ The ``<config_name>`` is the key used in your ``repos.yaml`` file for that Git r
 
 .. code-block:: console
 
-  $ spack repo set --destination /my/custom/path/for/spack-packages builtin
-  ==> Updated repo 'builtin'
+   $ spack repo set --destination /my/custom/path/for/spack-packages builtin
+   ==> Updated repo 'builtin'
 
 This updates your user-level ``repos.yaml``, adding or modifying the ``destination:`` key for the specified repository configuration name.
 
 .. code-block:: yaml
+   :caption: ``~/.spack/repos.yaml`` after ``spack repo set``
+   :name: code-example-specific-destination
 
-  # ~/.spack/repos.yaml after the command
-  repos:
-    builtin:
-      destination: /my/custom/path/for/spack-packages
-      # The 'git:' URL is typically inherited from Spack's default configuration for 'builtin'
+   repos:
+     builtin:
+       destination: /my/custom/path/for/spack-packages
+       # The 'git:' URL is typically inherited from Spack's default configuration for 'builtin'
 
 Spack will then use ``/my/custom/path/for/spack-packages`` for the ``builtin`` repository.
 If the directory doesn't exist, Spack will clone into it.
@@ -530,6 +575,7 @@ This allows you to easily extend or subclass package classes from other reposito
    # Import the original Mpich class from the 'builtin' repository
    from spack_repo.builtin.packages.mpich.package import Mpich as BuiltinMpich
 
+
    class MyCustomMpich(BuiltinMpich):
        # Override versions, variants, or methods from BuiltinMpich
        version("3.5-custom", sha256="...")
@@ -541,7 +587,7 @@ This allows you to easily extend or subclass package classes from other reposito
            if "+custom_feature" in spec:
                # Do custom things
                pass
-           super().install(spec, prefix) # Call parent install method
+           super().install(spec, prefix)  # Call parent install method
 
 Spack manages Python's ``sys.path`` at runtime to make these imports discoverable across all registered repositories.
 This capability is powerful for creating derivative packages or slightly modifying existing ones without copying entire package files.

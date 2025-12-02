@@ -43,17 +43,17 @@ Here is the EBNF grammar for a spec::
     vid           = [a-zA-Z0-9_][a-zA-Z_0-9-.]*
     id            = [a-zA-Z0-9_][a-zA-Z_0-9-]*
 
-Identifiers using the <name>=<value> command, such as architectures and
+Identifiers using the ``<name>=<value>`` command, such as architectures and
 compiler flags, require a space before the name.
 
-There is one context-sensitive part: ids in versions may contain '.', while
+There is one context-sensitive part: ids in versions may contain ``.``, while
 other ids may not.
 
-There is one ambiguity: since '-' is allowed in an id, you need to put
-whitespace space before -variant for it to be tokenized properly.  You can
-either use whitespace, or you can just use ~variant since it means the same
-thing.  Spack uses ~variant in directory names and in the canonical form of
-specs to avoid ambiguity.  Both are provided because ~ can cause shell
+There is one ambiguity: since ``-`` is allowed in an id, you need to put
+whitespace space before ``-variant`` for it to be tokenized properly.  You can
+either use whitespace, or you can just use ``~variant`` since it means the same
+thing.  Spack uses ``~variant`` in directory names and in the canonical form of
+specs to avoid ambiguity.  Both are provided because ``~`` can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import json
@@ -62,26 +62,29 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Union
 
 import spack.config
 import spack.deptypes
 import spack.error
 import spack.paths
-import spack.spec
 import spack.util.spack_yaml
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
+from spack.enums import PropagationPolicy
 from spack.llnl.util.tty import color
 from spack.tokenize import Token, TokenBase, Tokenizer
 
+if TYPE_CHECKING:
+    import spack.spec
+
 #: Valid name for specs and variants. Here we are not using
-#: the previous "w[\w.-]*" since that would match most
+#: the previous ``w[\w.-]*`` since that would match most
 #: characters that can be part of a word in any language
 IDENTIFIER = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9\-]*)"
 DOTTED_IDENTIFIER = rf"(?:{IDENTIFIER}(?:\.{IDENTIFIER})+)"
 GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
-#: Git refs include branch names, and can contain "." and "/"
+#: Git refs include branch names, and can contain ``.`` and ``/``
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 
@@ -112,8 +115,8 @@ VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VER
 
 SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 
-#: A filename starts either with a "." or a "/" or a "{name}/, or on Windows, a drive letter
-#: followed by a colon and "\" or "." or {name}\
+#: A filename starts either with a ``.`` or a ``/`` or a ``{name}/``, or on Windows, a drive letter
+#: followed by a colon and ``\`` or ``.`` or ``{name}\``
 WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?:\.json|\.yaml)"
 UNIX_FILENAME = r"(?:\.|\/|[a-zA-Z0-9-_]*\/)(?:[a-zA-Z0-9-_\.\/]*)(?:\.json|\.yaml)"
 FILENAME = WINDOWS_FILENAME if sys.platform == "win32" else UNIX_FILENAME
@@ -133,9 +136,9 @@ class SpecTokens(TokenBase):
     """
 
     # Dependency, with optional virtual assignment specifier
-    START_EDGE_PROPERTIES = r"(?:[\^%]\[)"
+    START_EDGE_PROPERTIES = r"(?:(?:\^|\%\%|\%)\[)"
     END_EDGE_PROPERTIES = rf"(?:\](?:\s*{VIRTUAL_ASSIGNMENT})?)"
-    DEPENDENCY = rf"(?:[\^\%](?:\s*{VIRTUAL_ASSIGNMENT})?)"
+    DEPENDENCY = rf"(?:(?:\^|\%\%|\%)(?:\s*{VIRTUAL_ASSIGNMENT})?)"
 
     # Version
     VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
@@ -276,18 +279,20 @@ def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
     """Look at subvalues and, if present, extract virtual and a push a substitute token.
 
     This handles things like:
-        * ^c=gcc
-        * ^c,cxx=gcc
-        * %[when=+bar] c=gcc
-        * %[when=+bar] c,cxx=gcc
+
+    * ``^c=gcc``
+    * ``^c,cxx=gcc``
+    * ``%[when=+bar] c=gcc``
+    * ``%[when=+bar] c,cxx=gcc``
 
     Virtual assignment can happen anywhere a dependency node can appear. It is
-    shorthand for %[virtuals=c,cxx] gcc.
+    shorthand for ``%[virtuals=c,cxx] gcc``.
 
-    The virtuals=substitute key value pair appears in the subvalues of DEPENDENCY
-    and END_EDGE_PROPERTIES tokens. We extract the virutals and create a token from
-    the substitute, which is then pushed back on the parser stream so that the head
-    of the stream can be parsed like a regular node.
+    The ``virtuals=substitute`` key value pair appears in the subvalues of
+    :attr:`~spack.spec_parser.SpecTokens.DEPENDENCY` and
+    :attr:`~spack.spec_parser.SpecTokens.END_EDGE_PROPERTIES` tokens. We extract the virtuals and
+    create a token from the substitute, which is then pushed back on the parser stream so that the
+    head of the stream can be parsed like a regular node.
 
     Returns:
         the virtuals assigned, or None if there aren't any
@@ -325,7 +330,7 @@ class SpecParser:
         self.toolchains = {}
         configuration = getattr(spack.config, "CONFIG", None)
         if configuration is not None:
-            self.toolchains = configuration.get("toolchains", {})
+            self.toolchains = configuration.get_config("toolchains")
         self.parsed_toolchains: Dict[str, "spack.spec.Spec"] = {}
 
     def tokens(self) -> List[Token]:
@@ -343,7 +348,7 @@ class SpecParser:
             initial_spec: object where to parse the spec. If None a new one
                 will be created.
 
-        Return
+        Return:
             The spec that was parsed
         """
         if not self.ctx.next_token:
@@ -356,17 +361,25 @@ class SpecParser:
             except spack.error.SpecError as e:
                 raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
 
-        initial_spec = initial_spec or spack.spec.Spec()
+        if not initial_spec:
+            from spack.spec import Spec
+
+            initial_spec = Spec()
         root_spec, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
         current_spec = root_spec
         while True:
             if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
                 is_direct = self.ctx.current_token.value[0] == "%"
 
+                propagation = PropagationPolicy.NONE
+                if is_direct and self.ctx.current_token.value.startswith("%%"):
+                    propagation = PropagationPolicy.PREFERENCE
+
                 edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
                 edge_properties.setdefault("virtuals", ())
                 edge_properties["direct"] = is_direct
                 edge_properties.setdefault("depflag", 0)
+                edge_properties["propagation"] = propagation
 
                 dependency, warnings = self._parse_node(root_spec)
 
@@ -383,6 +396,11 @@ class SpecParser:
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
                 is_direct = self.ctx.current_token.value[0] == "%"
+                propagation = PropagationPolicy.NONE
+
+                if is_direct and self.ctx.current_token.value.startswith("%%"):
+                    propagation = PropagationPolicy.PREFERENCE
+
                 virtuals = parse_virtual_assignment(self.ctx)
 
                 # if no virtual assignment, check for a toolchain - look ahead to find the
@@ -390,12 +408,19 @@ class SpecParser:
                 if not virtuals and is_direct and self.ctx.next_token.value in self.toolchains:
                     assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
                     try:
-                        self._apply_toolchain(current_spec, self.ctx.current_token.value)
+                        self._apply_toolchain(
+                            current_spec, self.ctx.current_token.value, propagation=propagation
+                        )
                     except spack.error.SpecError as e:
                         raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
                     continue
 
-                edge_properties = {"direct": is_direct, "virtuals": virtuals, "depflag": 0}
+                edge_properties = {
+                    "direct": is_direct,
+                    "virtuals": virtuals,
+                    "depflag": 0,
+                    "propagation": propagation,
+                }
                 dependency, warnings = self._parse_node(root_spec)
 
                 if is_direct:
@@ -426,15 +451,20 @@ class SpecParser:
             )
             raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
         if root_spec.concrete:
-            raise spack.error.SpecError(root_spec, "^" + str(dependency))
+            raise spack.error.SpecError(str(root_spec), "^" + str(dependency))
         return dependency, parser_warnings
 
-    def _apply_toolchain(self, spec: "spack.spec.Spec", name: str) -> None:
+    def _apply_toolchain(
+        self, spec: "spack.spec.Spec", name: str, *, propagation: PropagationPolicy
+    ) -> None:
         if name not in self.parsed_toolchains:
             toolchain = self._parse_toolchain(name)
             self.parsed_toolchains[name] = toolchain
 
         toolchain = self.parsed_toolchains[name]
+        if propagation == PropagationPolicy.PREFERENCE:
+            toolchain = toolchain.copy(propagation=propagation)
+
         spec.constrain(toolchain)
 
     def _parse_toolchain(self, name: str) -> "spack.spec.Spec":
@@ -443,7 +473,9 @@ class SpecParser:
             toolchain = parse_one_or_raise(toolchain_config)
             self._ensure_all_direct_edges(toolchain)
         else:
-            toolchain = spack.spec.Spec()
+            from spack.spec import Spec
+
+            toolchain = Spec()
             for entry in toolchain_config:
                 toolchain_part = parse_one_or_raise(entry["spec"])
                 when = entry.get("when", "")
@@ -487,14 +519,16 @@ class SpecNodeParser:
             initial_spec: object to be constructed
             root: True if we're parsing a root, False if dependency after ^ or %
 
-        Return
+        Return:
             The object passed as argument
         """
         parser_warnings: List[str] = []
         last_compiler = None
 
         if initial_spec is None:
-            initial_spec = spack.spec.Spec()
+            from spack.spec import Spec
+
+            initial_spec = Spec()
 
         if not self.ctx.next_token or self.ctx.expect(SpecTokens.DEPENDENCY):
             return initial_spec, parser_warnings
@@ -607,19 +641,21 @@ class FileParser:
         Args:
             initial_spec: object where to parse the spec
 
-        Return
+        Return:
             The initial_spec passed as argument, once constructed
         """
         file = pathlib.Path(self.ctx.current_token.value)
 
         if not file.exists():
-            raise spack.spec.NoSuchSpecFileError(f"No such spec file: '{file}'")
+            raise spack.error.NoSuchSpecFileError(f"No such spec file: '{file}'")
+
+        from spack.spec import Spec
 
         with file.open("r", encoding="utf-8") as stream:
             if str(file).endswith(".json"):
-                spec_from_file = spack.spec.Spec.from_json(stream)
+                spec_from_file = Spec.from_json(stream)
             else:
-                spec_from_file = spack.spec.Spec.from_yaml(stream)
+                spec_from_file = Spec.from_yaml(stream)
         initial_spec._dup(spec_from_file)
         return initial_spec
 
@@ -730,9 +766,10 @@ def strip_quotes_and_unescape(string: str) -> str:
 def quote_if_needed(value: str) -> str:
     """Add quotes around the value if it requires quotes.
 
-    This will add quotes around the value unless it matches ``NO_QUOTES_NEEDED``.
+    This will add quotes around the value unless it matches :data:`NO_QUOTES_NEEDED`.
 
     This adds:
+
     * single quotes by default
     * double quotes around any value that contains single quotes
 

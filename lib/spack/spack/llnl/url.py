@@ -32,16 +32,16 @@ def find_list_urls(url: str) -> Set[str]:
     unique list URL different from the dirname of the download URL:
 
     =========  =======================================================
-    GitHub     https://github.com/<repo>/<name>/releases
-    GitLab     https://gitlab.\*/<repo>/<name>/tags
-    BitBucket  https://bitbucket.org/<repo>/<name>/downloads/?tab=tags
-    CRAN       https://\*.r-project.org/src/contrib/Archive/<name>
-    PyPI       https://pypi.org/simple/<name>/
-    LuaRocks   https://luarocks.org/modules/<repo>/<name>
+    GitHub     ``https://github.com/<repo>/<name>/releases``
+    GitLab     ``https://gitlab.\*/<repo>/<name>/tags``
+    BitBucket  ``https://bitbucket.org/<repo>/<name>/downloads/?tab=tags``
+    CRAN       ``https://\*.r-project.org/src/contrib/Archive/<name>``
+    PyPI       ``https://pypi.org/simple/<name>/``
+    LuaRocks   ``https://luarocks.org/modules/<repo>/<name>``
     =========  =======================================================
 
-    Note: this function is called by `spack versions`, `spack checksum`,
-    and `spack create`, but not by `spack fetch` or `spack install`.
+    Note: this function is called by ``spack versions``, ``spack checksum``,
+    and ``spack create``, but not by ``spack fetch`` or ``spack install``.
 
     Parameters:
         url (str): The download URL for the package
@@ -134,7 +134,7 @@ SOURCEFORGE_RE = re.compile(r"(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$")
 
 
 def split_url_on_sourceforge_suffix(url: str) -> Tuple[str, ...]:
-    """If the input is a sourceforge URL, returns base URL and "/download" suffix. Otherwise,
+    """If the input is a sourceforge URL, returns base URL and ``/download`` suffix. Otherwise,
     returns the input URL and an empty string.
     """
     match = SOURCEFORGE_RE.search(url)
@@ -206,9 +206,9 @@ def strip_extension(path_or_url: str, *, extension: Optional[str] = None) -> str
 def split_url_extension(url: str) -> Tuple[str, ...]:
     """Some URLs have a query string, e.g.:
 
-    1. https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true
-    2. http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz
-    3. https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
+    1. ``https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true``
+    2. ``http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz``
+    3. ``https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0``
 
     In (1), the query string needs to be stripped to get at the
     extension, but in (2) & (3), the filename is IN a single final query
@@ -371,7 +371,7 @@ def strip_version_suffixes(path_or_url: str) -> str:
 def expand_contracted_extension(extension: str) -> str:
     """Returns the expanded version of a known contracted extension.
 
-    This function maps extensions like ".tgz" to ".tar.gz". On unknown extensions,
+    This function maps extensions like ``.tgz`` to ``.tar.gz``. On unknown extensions,
     return the input unmodified.
     """
     extension = extension.strip(".")
@@ -408,7 +408,7 @@ def compression_ext_from_compressed_archive(extension: str) -> Optional[str]:
 
 def strip_compression_extension(path_or_url: str, ext: Optional[str] = None) -> str:
     """Strips the compression extension from the input, and returns it. For instance,
-    "foo.tgz" becomes "foo.tar".
+    ``"foo.tgz"`` becomes ``"foo.tar"``.
 
     If no extension is given, try a default list of extensions.
 
@@ -439,7 +439,7 @@ def determine_url_file_extension(path: str) -> str:
     """This returns the type of archive a URL refers to.  This is
     sometimes confusing because of URLs like:
 
-    (1) https://github.com/petdance/ack/tarball/1.93_02
+    (1) ``https://github.com/petdance/ack/tarball/1.93_02``
 
     Where the URL doesn't actually contain the filename.  We need
     to know what type it is so that we can appropriately name files

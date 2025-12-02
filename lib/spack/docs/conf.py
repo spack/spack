@@ -23,12 +23,12 @@ from glob import glob
 from typing import List
 
 from docutils.statemachine import StringList
-
-# ... other imports at the top of the file
+from pygments.formatters.html import HtmlFormatter
 from pygments.lexer import RegexLexer, default
 from pygments.token import *
 from sphinx.domains.python import PythonDomain
 from sphinx.ext.apidoc import main as sphinx_apidoc
+from sphinx.highlighting import PygmentsBridge
 from sphinx.parsers import RSTParser
 
 # -- Spack customizations -----------------------------------------------------
@@ -54,9 +54,17 @@ sys.path[0:0] = [
     os.path.abspath(".spack/spack-packages/repos"),
 ]
 
-subprocess.call(["spack", "list"], stdout=subprocess.DEVNULL)
+# Init the package repo with all git history, so "Last updated on" is accurate.
+subprocess.call(["spack", "repo", "update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+if os.path.exists(".spack/spack-packages/.git/shallow"):
+    subprocess.call(
+        ["git", "fetch", "--unshallow"],
+        cwd=".spack/spack-packages",
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
-# Generate a command index if an update is needed -- this also clones the package repository.
+# Generate a command index if an update is needed
 subprocess.call(
     [
         "spack",
@@ -100,7 +108,31 @@ sphinx_apidoc(
 )
 
 
+class NoWhitespaceHtmlFormatter(HtmlFormatter):
+    """HTML formatter that suppresses redundant span elements for Text.Whitespace tokens."""
+
+    def _get_css_classes(self, ttype):
+        # For Text.Whitespace return an empty string, which avoids <span class="w"> </span>
+        # elements from being generated.
+        return "" if ttype is Text.Whitespace else super()._get_css_classes(ttype)
+
+
+class CustomPygmentsBridge(PygmentsBridge):
+    def get_formatter(self, **options):
+        return NoWhitespaceHtmlFormatter(**options)
+
+
+# Use custom HTML formatter to avoid redundant <span class="w"> </span> elements.
+# See https://github.com/pygments/pygments/issues/1905#issuecomment-3170486995.
+PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
+
+
+from spack.llnl.util.lang import classproperty
 from spack.spec_parser import SpecTokens
+
+# replace classproperty.__get__ to return `self` so Sphinx can document it correctly. Otherwise
+# it evaluates the callback, and it documents the result, which is not what we want.
+classproperty.__get__ = lambda self, instance, owner: self
 
 
 class SpecLexer(RegexLexer):
@@ -239,7 +271,9 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
-    "sphinx_design",
+    "sphinx_last_updated_by_git",
+    "sphinx_sitemap",
+    "sphinxcontrib.inkscapeconverter",
     "sphinxcontrib.programoutput",
 ]
 
@@ -307,6 +341,7 @@ gettext_uuid = False
 exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack", ".venv"]
 
 autodoc_mock_imports = ["llnl"]
+autodoc_default_options = {"no-value": True}
 
 nitpicky = True
 nitpick_ignore = [
@@ -325,7 +360,6 @@ nitpick_ignore = [
     ("py:class", "concurrent.futures._base.Executor"),
     ("py:class", "multiprocessing.context.Process"),
     # Spack classes that are private and we don't want to expose
-    ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
     ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
     # Spack classes that intersphinx is unable to resolve
@@ -450,10 +484,20 @@ html_show_sphinx = False
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
 
+# Base URL for the documentation, used to generate <link rel="canonical"/> for better indexing
+html_baseurl = "https://spack.readthedocs.io/en/latest/"
+
 # Output file base name for HTML help builder.
 htmlhelp_basename = "Spackdoc"
 
+# Sitemap settings
+sitemap_show_lastmod = True
+sitemap_url_scheme = "{link}"
+sitemap_excludes = ["search.html", "_modules/*"]
+
 # -- Options for LaTeX output --------------------------------------------------
+
+latex_engine = "lualatex"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
@@ -466,7 +510,7 @@ latex_elements = {
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [("index", "Spack.tex", "Spack Documentation", "Todd Gamblin", "manual")]
+latex_documents = [("index", "Spack.tex", "Spack Documentation", "", "manual")]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.

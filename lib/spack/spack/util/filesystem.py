@@ -19,13 +19,13 @@ def fix_darwin_install_name(path: str) -> None:
 
     There are two parts of this task:
 
-    1. Use ``install_name("-id", ...)`` to change install name of a single lib
-    2. Use ``install_name("-change", ...)`` to change the cross linking between libs.
+    1. Use ``install_name -id  ...`` to change install name of a single lib
+    2. Use ``install_name -change  ...`` to change the cross linking between libs.
        The function assumes that all libraries are in one folder and currently won't follow
        subfolders.
 
     Parameters:
-        path: directory in which .dylib files are located
+        path: directory in which ``.dylib`` files are located
     """
     libs = glob.glob(os.path.join(path, "*.dylib"))
     install_name_tool = Executable("install_name_tool")

@@ -44,6 +44,7 @@ from spack.url_buildcache import (
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
     compression_writer,
+    get_entries_from_cache,
     get_url_buildcache_class,
     get_valid_spec_file,
 )
@@ -182,7 +183,8 @@ def test_built_spec_cache(install_mockery, tmp_path: pathlib.Path):
 
     for s in [gspec, cspec]:
         results = spack.binary_distribution.get_mirrors_for_spec(s)
-        assert any([r.spec == s for r in results])
+        assert len(results) == 1
+        assert results[0].url == url_util.path_to_file_url(str(tmp_path))
 
 
 def fake_dag_hash(spec, length=None):
@@ -370,7 +372,9 @@ def test_update_sbang(tmp_path: pathlib.Path, temporary_mirror, mock_fetch, inst
         new_prefix, new_sbang_shebang = s.prefix, sbang.sbang_shebang_line()
         assert old_prefix != new_prefix
         assert old_sbang_shebang != new_sbang_shebang
-        PackageInstaller([s.package], cache_only=True, unsigned=True).install()
+        PackageInstaller(
+            [s.package], root_policy="cache_only", dependencies_policy="cache_only", unsigned=True
+        ).install()
 
         # Check that the sbang line refers to the new install tree
         new_contents = f"""\
@@ -1317,3 +1321,41 @@ def test_default_index_not_modified(mock_index):
 
     assert fetcher.conditional_fetch().fresh
     assert not mock_index.fetched_blob()
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages")
+def test_get_entries_from_cache_nested_mirrors(monkeypatch, tmp_path: pathlib.Path):
+    """Make sure URLBuildcacheEntry behaves as expected"""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmp_path / "mirror_dir"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
+
+    # Install and push libdwarf to the root mirror
+    s = spack.concretize.concretize_one("libdwarf")
+    install_cmd("--fake", s.name)
+    buildcache_cmd("push", "-u", str(mirror_dir), s.name)
+
+    # Install and push libzlib to the nested mirror
+    s = spack.concretize.concretize_one("zlib")
+    install_cmd("--fake", s.name)
+    buildcache_cmd("push", "-u", str(mirror_dir / "nested"), s.name)
+
+    spec_manifests, _ = get_entries_from_cache(
+        str(mirror_url), str(tmp_path / "stage"), BuildcacheComponent.SPEC
+    )
+
+    nested_mirror_url = url_util.path_to_file_url(str(mirror_dir / "nested"))
+    spec_manifests_nested, _ = get_entries_from_cache(
+        str(nested_mirror_url), str(tmp_path / "stage"), BuildcacheComponent.SPEC
+    )
+
+    # Expected specs in root mirror
+    #   - gcc-runtime
+    #   - compiler-wrapper
+    #   - libelf
+    #   - libdwarf
+    assert len(spec_manifests) == 4
+    # Expected specs in nested mirror
+    #   - zlib
+    assert len(spec_manifests_nested) == 1

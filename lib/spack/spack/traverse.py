@@ -4,6 +4,7 @@
 
 from collections import defaultdict, deque
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Iterable,
@@ -20,7 +21,9 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 import spack.deptypes as dt
-import spack.spec
+
+if TYPE_CHECKING:
+    import spack.spec
 
 # Export only the high-level API.
 __all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
@@ -227,10 +230,10 @@ def get_visitor_from_args(
 
 def with_artificial_edges(specs):
     """Initialize a deque of edges from an artificial root node to the root specs."""
+    from spack.spec import DependencySpec
+
     return deque(
-        EdgeAndDepth(
-            edge=spack.spec.DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0
-        )
+        EdgeAndDepth(edge=DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0)
         for s in specs
     )
 

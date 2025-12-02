@@ -17,6 +17,7 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.oci.image
 import spack.oci.oci
 import spack.spec
 import spack.stage
@@ -31,7 +32,7 @@ from spack.llnl.util.lang import elide_list, stable_partition
 from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
-from ..buildcache_prune import prune
+from ..buildcache_prune import prune_buildcache
 from ..enums import InstallRecordStatus
 from ..url_buildcache import (
     BuildcacheComponent,
@@ -214,6 +215,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
     prune = subparsers.add_parser("prune", help=prune_fn.__doc__)
     prune.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
+    )
+    prune.add_argument(
+        "-k",
+        "--keeplist",
+        default=None,
+        help="file containing newline-delimited list of package hashes to keep (optional)",
     )
     prune.add_argument(
         "--dry-run",
@@ -399,7 +406,7 @@ def push_fn(args):
         unsigned = not (args.key or args.signed)
 
     # For OCI images, we require dependencies to be pushed for now.
-    if mirror.push_url.startswith("oci://") and not unsigned:
+    if spack.oci.image.is_oci_url(mirror.push_url) and not unsigned:
         tty.warn(
             "Code signing is currently not supported for OCI images. "
             "Use --unsigned to silence this warning."
@@ -437,7 +444,7 @@ def push_fn(args):
                 )
 
     # Warn about possible old binary mirror layout
-    if not mirror.push_url.startswith("oci://"):
+    if not spack.oci.image.is_oci_url(mirror.push_url):
         check_mirror_for_layout(mirror)
 
     with spack.binary_distribution.make_uploader(
@@ -449,39 +456,43 @@ def push_fn(args):
     ) as uploader:
         skipped, upload_errors = uploader.push(specs=specs)
         failed.extend(upload_errors)
-        if not upload_errors and args.tag:
-            uploader.tag(args.tag, roots)
 
-    if skipped:
-        if len(specs) == 1:
-            tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
-        elif len(skipped) == len(specs):
-            tty.info("All specs are already in the buildcache. Use --force to overwrite them.")
-        else:
-            tty.info(
-                "The following {} specs were skipped as they already exist in the buildcache:\n"
-                "    {}\n"
-                "    Use --force to overwrite them.".format(
-                    len(skipped), ", ".join(elide_list([_format_spec(s) for s in skipped], 5))
+        if skipped:
+            if len(specs) == 1:
+                tty.info("The spec is already in the buildcache. Use --force to overwrite it.")
+            elif len(skipped) == len(specs):
+                tty.info("All specs are already in the buildcache. Use --force to overwrite them.")
+            else:
+                tty.info(
+                    "The following {} specs were skipped as they already exist in the "
+                    "buildcache:\n"
+                    "    {}\n"
+                    "    Use --force to overwrite them.".format(
+                        len(skipped), ", ".join(elide_list([_format_spec(s) for s in skipped], 5))
+                    )
                 )
+
+        if failed:
+            if len(failed) == 1:
+                raise failed[0][1]
+
+            raise spack.error.SpackError(
+                f"The following {len(failed)} errors occurred while pushing specs to the "
+                "buildcache",
+                "\n".join(
+                    elide_list(
+                        [
+                            f"    {_format_spec(spec)}: {e.__class__.__name__}: {e}"
+                            for spec, e in failed
+                        ],
+                        5,
+                    )
+                ),
             )
 
-    if failed:
-        if len(failed) == 1:
-            raise failed[0][1]
-
-        raise spack.error.SpackError(
-            f"The following {len(failed)} errors occurred while pushing specs to the buildcache",
-            "\n".join(
-                elide_list(
-                    [
-                        f"    {_format_spec(spec)}: {e.__class__.__name__}: {e}"
-                        for spec, e in failed
-                    ],
-                    5,
-                )
-            ),
-        )
+        # Finally tag all roots as a single image if requested.
+        if args.tag:
+            uploader.tag(args.tag, roots)
 
 
 def install_fn(args):
@@ -806,15 +817,15 @@ def migrate_fn(args):
     will attempt to verify the signatures on specs, and then re-sign them before
     migration, using whatever keys are already installed in your key ring.  You can
     migrate a mirror of unsigned binaries (or convert a mirror of signed binaries
-    to unsigned) by providing the --unsigned argument.
+    to unsigned) by providing the ``--unsigned`` argument.
 
     By default spack will leave the original mirror contents (in the old layout) in
     place after migration. You can have spack remove the old contents by providing
-    the --delete-existing argument.  Because migrating a mostly-already-migrated
+    the ``--delete-existing`` argument.  Because migrating a mostly-already-migrated
     mirror should be fast, consider a workflow where you perform a default migration,
     (i.e. preserve the existing layout rather than deleting it) then evaluate the
     state of the migrated mirror by attempting to install from it, and finally
-    running the migration again with --delete-existing."""
+    running the migration again with ``--delete-existing``."""
     target_mirror = args.mirror
     unsigned = args.unsigned
     assert isinstance(target_mirror, spack.mirrors.mirror.Mirror)
@@ -841,12 +852,17 @@ def migrate_fn(args):
 
 
 def prune_fn(args):
-    """prune stale buildcache entries from the mirror"""
+    """prune buildcache entries from the mirror
+
+    If a keeplist file is provided, performs direct pruning (deletes packages not in keeplist)
+    followed by orphan pruning. If no keeplist is provided, only performs orphan pruning.
+    """
     mirror: spack.mirrors.mirror.Mirror = args.mirror
+    keeplist: Optional[str] = args.keeplist
     dry_run: bool = args.dry_run
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
 
-    prune(mirror, dry_run)
+    prune_buildcache(mirror=mirror, keeplist=keeplist, dry_run=dry_run)
 
 
 def buildcache(parser, args):

@@ -12,7 +12,7 @@ from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_do
 from spack.llnl.util import tty
 
 description = "generate graphs of package dependency relationships"
-section = "basic"
+section = "query"
 level = "long"
 
 
@@ -38,7 +38,7 @@ in the lockfile.
         "-s",
         "--static",
         action="store_true",
-        help="graph static (possible) deps, don't concretize (implies --dot)",
+        help="graph static (possible) deps, don't concretize (implies ``--dot``)",
     )
     subparser.add_argument(
         "-c",

@@ -63,6 +63,53 @@ def syaml_type(obj):
     return obj
 
 
+class DictWithLineInfo(dict):
+    """A dictionary that preserves YAML line information."""
+
+    __slots__ = ("line_info",)
+
+    def __init__(self, *args, line_info: str = "", **kwargs):
+        super().__init__(*args, **kwargs)
+        self.line_info = line_info
+
+
+def _represent_dict_with_line_info(dumper, data):
+    return dumper.represent_dict(data)
+
+
+def deepcopy_as_builtin(obj: Any, *, line_info: bool = False) -> Any:
+    """Deep copies a YAML object as built-in types (dict, list, str, int, ...).
+
+    Args:
+        obj: object to be copied
+        line_info: if ``True``, add line information to the copied object
+    """
+    if isinstance(obj, str):
+        return str(obj)
+    elif isinstance(obj, dict):
+        result = DictWithLineInfo()
+        result.update(
+            {
+                deepcopy_as_builtin(k): deepcopy_as_builtin(v, line_info=line_info)
+                for k, v in obj.items()
+            }
+        )
+        if line_info:
+            result.line_info = _line_info(obj)
+        return result
+    elif isinstance(obj, list):
+        return [deepcopy_as_builtin(x, line_info=line_info) for x in obj]
+    elif isinstance(obj, bool):
+        return bool(obj)
+    elif isinstance(obj, int):
+        return int(obj)
+    elif isinstance(obj, float):
+        return float(obj)
+    elif obj is None:
+        return obj
+    raise ValueError(f"cannot convert {type(obj)} to built-in type")
+
+
 def markable(obj):
     """Whether an object can be marked."""
     return type(obj) in markable_types
@@ -229,12 +276,14 @@ def dump(data, stream=None, default_flow_style=False):
     return handler.dump(data, stream=stream)
 
 
-def file_line(mark):
+def _line_info(obj):
     """Format a mark as <file>:<line> information."""
-    result = mark.name
-    if mark.line:
-        result += ":" + str(mark.line)
-    return result
+    m = get_mark_from_yaml_data(obj)
+    if m is None:
+        return ""
+    if m.line:
+        return f"{m.name}:{m.line:d}"
+    return m.name
 
 
 #: Global for interactions between LineAnnotationDumper and dump_annotated().
@@ -340,6 +389,7 @@ class ConfigYAML:
         else:
             self.yaml.Representer = OrderedLineRepresenter
             self.yaml.Constructor = OrderedLineConstructor
+        self.yaml.Representer.add_representer(DictWithLineInfo, _represent_dict_with_line_info)
 
     def load(self, stream: IO):
         """Loads the YAML data from a stream and returns it.
@@ -358,15 +408,19 @@ class ConfigYAML:
             error_mark = e.context_mark if e.context_mark else e.problem_mark
             if error_mark:
                 line, column = error_mark.line, error_mark.column
-                msg += f": near {error_mark.name}, {str(line)}, {str(column)}"
+                filename = error_mark.name
+                msg += f": near {filename}, {str(line)}, {str(column)}"
             else:
+                filename = stream.name
                 msg += f": {stream.name}"
             msg += f": {e.problem}"
-            raise SpackYAMLError(msg, e) from e
+
+            raise SpackYAMLError(msg, e, filename) from e
 
         except Exception as e:
             msg = "cannot load Spack YAML configuration"
-            raise SpackYAMLError(msg, e) from e
+            filename = stream.name
+            raise SpackYAMLError(msg, e, filename) from e
 
     def dump(self, data, stream: Optional[IO] = None, *, transform=None) -> None:
         """Dumps the YAML data to a stream.
@@ -382,7 +436,8 @@ class ConfigYAML:
             return self.yaml.dump(data, stream=stream, transform=transform)
         except Exception as e:
             msg = "cannot dump Spack YAML configuration"
-            raise SpackYAMLError(msg, str(e)) from e
+            filename = stream.name if stream else None
+            raise SpackYAMLError(msg, str(e), filename) from e
 
     def as_string(self, data) -> str:
         """Returns a string representing the YAML data passed as input."""
@@ -491,7 +546,8 @@ def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) 
 class SpackYAMLError(spack.error.SpackError):
     """Raised when there are issues with YAML parsing."""
 
-    def __init__(self, msg, yaml_error):
+    def __init__(self, msg, yaml_error, filename=None):
+        self.filename = filename
         super().__init__(msg, str(yaml_error))
 
 

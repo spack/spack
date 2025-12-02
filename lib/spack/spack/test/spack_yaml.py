@@ -8,6 +8,7 @@ import pathlib
 import pytest
 
 import spack.util.spack_yaml as syaml
+from spack.util.spack_yaml import DictWithLineInfo
 
 
 @pytest.fixture()
@@ -154,3 +155,36 @@ def test_sorted_dict():
         "y": [{"w": [2, 1, 0], "x": 0}, 0],
         "z": 0,
     }
+
+
+def test_deepcopy_to_native():
+    yaml = """\
+a:
+  b: 1
+  c: 1.0
+  d:
+  - e: false
+  - f: null
+  - "string"
+  2.0: "float key"
+  1: "int key"
+"""
+    allowed_types = {str, int, float, bool, type(None), DictWithLineInfo, list}
+    original = syaml.load(yaml)
+    copied = syaml.deepcopy_as_builtin(original)
+    assert original == copied
+    assert type(copied["a"]["b"]) is int
+    assert type(copied["a"]["c"]) is float
+    assert type(copied["a"]["d"][0]["e"]) is bool  # edge case: bool is subclass of int
+    assert type(copied["a"]["d"][1]["f"]) is type(None)
+    assert type(copied["a"]["d"][2]) is str
+
+    stack = [copied]
+    while stack:
+        obj = stack.pop()
+        assert type(obj) in allowed_types
+        if type(obj) is DictWithLineInfo:
+            stack.extend(obj.keys())
+            stack.extend(obj.values())
+        elif type(obj) is list:
+            stack.extend(obj)

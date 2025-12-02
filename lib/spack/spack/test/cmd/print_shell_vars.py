@@ -5,9 +5,9 @@
 from spack.main import print_setup_info
 
 
-def test_print_shell_vars_sh(capsys):
+def test_print_shell_vars_sh(capfd):
     print_setup_info("sh")
-    out, _ = capsys.readouterr()
+    out, _ = capfd.readouterr()
 
     assert "_sp_sys_type=" in out
     assert "_sp_tcl_roots=" in out
@@ -15,9 +15,9 @@ def test_print_shell_vars_sh(capsys):
     assert "_sp_module_prefix" not in out
 
 
-def test_print_shell_vars_csh(capsys):
+def test_print_shell_vars_csh(capfd):
     print_setup_info("csh")
-    out, _ = capsys.readouterr()
+    out, _ = capfd.readouterr()
 
     assert "set _sp_sys_type = " in out
     assert "set _sp_tcl_roots = " in out
@@ -25,9 +25,9 @@ def test_print_shell_vars_csh(capsys):
     assert "set _sp_module_prefix = " not in out
 
 
-def test_print_shell_vars_sh_modules(capsys):
+def test_print_shell_vars_sh_modules(capfd):
     print_setup_info("sh", "modules")
-    out, _ = capsys.readouterr()
+    out, _ = capfd.readouterr()
 
     assert "_sp_sys_type=" in out
     assert "_sp_tcl_roots=" in out
@@ -35,9 +35,9 @@ def test_print_shell_vars_sh_modules(capsys):
     assert "_sp_module_prefix=" in out
 
 
-def test_print_shell_vars_csh_modules(capsys):
+def test_print_shell_vars_csh_modules(capfd):
     print_setup_info("csh", "modules")
-    out, _ = capsys.readouterr()
+    out, _ = capfd.readouterr()
 
     assert "set _sp_sys_type = " in out
     assert "set _sp_tcl_roots = " in out

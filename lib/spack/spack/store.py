@@ -6,9 +6,8 @@
 
 An install tree, or "build store" consists of two parts:
 
-  1. A package database that tracks what is installed.
-  2. A directory layout that determines how the installations
-     are laid out.
+1. A package database that tracks what is installed.
+2. A directory layout that determines how the installations are laid out.
 
 The store contains all the install prefixes for packages installed by
 Spack.  The simplest store could just contain prefixes named by DAG hash,
@@ -21,7 +20,7 @@ import os
 import pathlib
 import re
 import uuid
-from typing import Any, Callable, Dict, Generator, List, Optional, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import spack.config
 import spack.database
@@ -37,17 +36,16 @@ from spack.llnl.util import tty
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
 
 
-def parse_install_tree(config_dict):
+def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     """Parse config settings and return values relevant to the store object.
 
     Arguments:
-        config_dict (dict): dictionary of config values, as returned from
-            spack.config.get('config')
+        config_dict: dictionary of config values, as returned from ``spack.config.get("config")``
 
     Returns:
-        (tuple): triple of the install tree root, the unpadded install tree
-            root (before padding was applied), and the projections for the
-            install tree
+        triple of the install tree root, the unpadded install tree
+        root (before padding was applied), and the projections for the
+        install tree
 
     Encapsulate backwards compatibility capabilities for install_tree
     and deprecated values that are now parsed as part of install_tree.
@@ -68,7 +66,7 @@ def parse_install_tree(config_dict):
 
     install_tree = config_dict.get("install_tree", {})
 
-    padded_length = False
+    padded_length: Union[bool, int] = False
     if isinstance(install_tree, str):
         tty.warn("Using deprecated format for configuring install_tree")
         unpadded_root = install_tree
@@ -209,13 +207,13 @@ def create(configuration: spack.config.Configuration) -> Store:
         configuration: configuration to create a store.
     """
     configuration = configuration or spack.config.CONFIG
-    config_dict = configuration.get("config")
+    config_dict = configuration.get_config("config")
     root, unpadded_root, projections = parse_install_tree(config_dict)
-    hash_length = configuration.get("config:install_hash_length")
+    hash_length = config_dict.get("install_hash_length")
 
     install_roots = [
         install_properties["install_tree"]
-        for install_properties in configuration.get("upstreams", {}).values()
+        for install_properties in configuration.get_config("upstreams").values()
     ]
     upstreams = _construct_upstream_dbs_from_install_roots(install_roots)
 
@@ -332,7 +330,7 @@ def specfile_matches(filename: str, **kwargs) -> List["spack.spec.Spec"]:
 
     Args:
         filename: YAML or JSON file from which to read the query.
-        **kwargs: keyword arguments forwarded to "find"
+        **kwargs: keyword arguments forwarded to :func:`find`
     """
     query = [spack.spec.Spec.from_specfile(filename)]
     return find(query, **kwargs)
@@ -351,7 +349,7 @@ def use_store(
 
     Args:
         path: path to the store.
-        extra_data: extra configuration under "config:install_tree" to be
+        extra_data: extra configuration under ``config:install_tree`` to be
             taken into account.
 
     Yields:

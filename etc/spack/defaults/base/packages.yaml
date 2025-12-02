@@ -21,7 +21,6 @@ packages:
       blas: [openblas, amdblis]
       c: [gcc, llvm, intel-oneapi-compilers]
       cxx: [gcc, llvm, intel-oneapi-compilers]
-      D: [ldc]
       daal: [intel-oneapi-daal]
       elf: [elfutils]
       fftw-api: [fftw, amdfftw]
