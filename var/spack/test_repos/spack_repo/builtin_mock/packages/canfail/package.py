@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import sys
 
 from spack_repo.builtin_mock.build_systems.generic import Package
 
@@ -28,6 +29,8 @@ class Canfail(Package):
         return result
 
     def install(self, spec, prefix):
+        sys.stdout.write("Inside canfail install method")
         if not self.succeed:
+            sys.stderr.write("[in canfail install process] 'succeed' was false")
             raise InstallError("'succeed' was false")
         touch(join_path(prefix, "an_installation_file"))

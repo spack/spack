@@ -14,6 +14,8 @@ import pytest
 import spack
 import spack.cmd.logs
 import spack.concretize
+import spack.environment as ev
+import spack.error
 import spack.main
 import spack.spec
 from spack.main import SpackCommand
@@ -120,3 +122,28 @@ def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages, dis
         with stdout_as_buffered_text_stream() as redirected_stdout:
             spack.cmd.logs._logs(cmdline_spec, concrete_spec)
             assert _rewind_collect_and_decode(redirected_stdout) == installed_log_content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_dump_logs_failure(
+    install_mockery,
+    mock_fetch,
+    mock_archive,
+    mock_packages,
+    disable_capture,
+    mutable_mock_env_path,
+):
+    env = SpackCommand("env")
+    env("create", "test")
+    e = ev.read("test")
+    e.add("canfail")
+    e.concretize()
+
+    with e:
+        with pytest.raises(spack.error.InstallError):
+            e.install_all()
+
+        with stdout_as_buffered_text_stream() as redirected_stdout:
+            ((cmdline_spec, concrete_spec),) = e.concretized_specs()
+            spack.cmd.logs._logs(cmdline_spec, concrete_spec)
+            assert "'succeed' was false" in _rewind_collect_and_decode(redirected_stdout)
