@@ -118,6 +118,7 @@ def solve(parser, args):
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,
         "hashes": args.long or args.very_long,
+        "highlight_non_defaults": args.show_non_defaults,
     }
 
     # process output options

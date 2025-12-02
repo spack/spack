@@ -159,6 +159,7 @@ VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
+NONDEFAULT_COLOR = "@_R"  #: color for highlighting suboptimal choices in specs
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -1351,6 +1352,7 @@ def tree(
     status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
     prefix: Optional[Callable[["Spec"], str]] = None,
     key: Callable[["Spec"], Any] = id,
+    highlight_non_defaults: bool = False,
 ) -> str:
     """Prints out specs and their dependencies, tree-formatted with indentation.
 
@@ -1428,7 +1430,9 @@ def tree(
         out += "    " * d
         if d > 0:
             out += "^"
-        out += node.format(format, color=color) + "\n"
+        out += (
+            node.format(format, color=color, highlight_non_defaults=highlight_non_defaults) + "\n"
+        )
 
         # Check if we wanted just the first line
         if not recurse_dependencies:
@@ -4085,7 +4089,13 @@ class Spec:
 
         return "".join(parts).strip()
 
-    def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
+    def format(
+        self,
+        format_string: str = DEFAULT_FORMAT,
+        color: Optional[bool] = False,
+        *,
+        highlight_non_defaults: bool = False,
+    ) -> str:
         r"""Prints out attributes of a spec according to a format string.
 
         Using an ``{attribute}`` format specifier, any field of the spec can be
@@ -4166,8 +4176,10 @@ class Spec:
         Args:
             format_string: string containing the format to be expanded
             color: True for colorized result; False for no color; None for auto color.
-
+            highlight_non_defaults: if True non-default versions and variants are highlighted.
         """
+        from spack.package_base import preferred_version
+
         # Fast path for the common case: default format with no color
         if format_string == DEFAULT_FORMAT and color is False:
             return self._format_default()
@@ -4194,7 +4206,8 @@ class Spec:
             elif not close_brace:
                 raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
 
-            current = self if dep is None else self[dep]
+            current_node = self if dep is None else self[dep]
+            current = current_node
 
             # Hash attributes can return early.
             # NOTE: we currently treat abstract_hash like an attribute and ignore
@@ -4281,10 +4294,54 @@ class Spec:
                 color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
                 color = VERSION_COLOR
+                if highlight_non_defaults and current_node.versions.concrete:
+                    try:
+                        use_non_default_color = current_node.version != preferred_version(
+                            current_node.package
+                        )
+                    except ValueError:
+                        use_non_default_color = False
+                    color = NONDEFAULT_COLOR if use_non_default_color else color
 
             # return empty string if the value of the attribute is None.
             if current is None:
                 return ""
+
+            # Override the color for single variants, if need be
+            if color and highlight_non_defaults and isinstance(current, VariantMap):
+                bool_keys, kv_keys = current.partition_keys()
+                result = ""
+
+                for key in bool_keys:
+                    try:
+                        default_variant = current_node.package.get_variant(key).make_default()
+                        current_color = (
+                            color
+                            if current_node.satisfies(str(default_variant))
+                            else NONDEFAULT_COLOR
+                        )
+                    except ValueError:
+                        # This is the case for special variants like "patches" etc.
+                        current_color = color
+
+                    result += safe_color(sig, str(current[key]), current_color)
+
+                for key in kv_keys:
+                    try:
+                        default_variant = current_node.package.get_variant(key).make_default()
+                        current_color = (
+                            color
+                            if current_node.satisfies(str(default_variant))
+                            else NONDEFAULT_COLOR
+                        )
+                    except ValueError:
+                        # This is the case for special variants like "patches" etc.
+                        current_color = color
+
+                    # Don't highlight the space before the key/value pair
+                    result += " " + safe_color(sig, f"{current[key]}", current_color)
+
+                return result
 
             # return colored output
             return safe_color(sig, str(current), color)
@@ -4557,6 +4614,7 @@ class Spec:
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
         key=id,
+        highlight_non_defaults: bool = False,
     ) -> str:
         """Prints out this spec and its dependencies, tree-formatted with indentation.
 
@@ -4597,6 +4655,7 @@ class Spec:
             status_fn=status_fn,
             prefix=prefix,
             key=key,
+            highlight_non_defaults=highlight_non_defaults,
         )
 
     def __repr__(self):
@@ -5106,19 +5165,10 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         if not self:
             return ""
 
-        # print keys in order
-        sorted_keys = sorted(self.keys())
-
         # Separate boolean variants from key-value pairs as they print
         # differently. All booleans go first to avoid ' ~foo' strings that
         # break spec reuse in zsh.
-        bool_keys = []
-        kv_keys = []
-        for key in sorted_keys:
-            if self[key].type == vt.VariantType.BOOL:
-                bool_keys.append(key)
-            else:
-                kv_keys.append(key)
+        bool_keys, kv_keys = self.partition_keys()
 
         # add spaces before and after key/value variants.
         string = io.StringIO()
@@ -5131,6 +5181,13 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
             string.write(str(self[key]))
 
         return string.getvalue()
+
+    def partition_keys(self) -> Tuple[List[str], List[str]]:
+        """Partition the keys of the map into two lists: booleans and key-value pairs."""
+        bool_keys, kv_keys = lang.stable_partition(
+            sorted(self.keys()), lambda x: self[x].type == vt.VariantType.BOOL
+        )
+        return bool_keys, kv_keys
 
 
 def substitute_abstract_variants(spec: Spec):

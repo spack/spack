@@ -2929,7 +2929,7 @@ complete -c spack -n '__fish_spack_using_command restage' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -d 'show this help message and exit'
 
 # spack solve
-set -g __fish_spack_optspecs_spack_solve h/help show= timers stats l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_solve h/help show= timers stats l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= show-non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 solve' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -d 'show this help message and exit'
@@ -2955,6 +2955,8 @@ complete -c spack -n '__fish_spack_using_command solve' -s j -l json -f -a forma
 complete -c spack -n '__fish_spack_using_command solve' -s j -l json -d 'print concrete spec as JSON'
 complete -c spack -n '__fish_spack_using_command solve' -l format -r -f -a format
 complete -c spack -n '__fish_spack_using_command solve' -l format -r -d 'print concrete spec with the specified format string'
+complete -c spack -n '__fish_spack_using_command solve' -l show-non-defaults -f -a show_non_defaults
+complete -c spack -n '__fish_spack_using_command solve' -l show-non-defaults -d 'highlight non-default versions or variants'
 complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -f -a 'nodes edges paths'
 complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
 complete -c spack -n '__fish_spack_using_command solve' -s t -l types -f -a types
@@ -2971,7 +2973,7 @@ complete -c spack -n '__fish_spack_using_command solve' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack spec
-set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= show-non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 spec' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -d 'show this help message and exit'
@@ -2991,6 +2993,8 @@ complete -c spack -n '__fish_spack_using_command spec' -s j -l json -f -a format
 complete -c spack -n '__fish_spack_using_command spec' -s j -l json -d 'print concrete spec as JSON'
 complete -c spack -n '__fish_spack_using_command spec' -l format -r -f -a format
 complete -c spack -n '__fish_spack_using_command spec' -l format -r -d 'print concrete spec with the specified format string'
+complete -c spack -n '__fish_spack_using_command spec' -l show-non-defaults -f -a show_non_defaults
+complete -c spack -n '__fish_spack_using_command spec' -l show-non-defaults -d 'highlight non-default versions or variants'
 complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -f -a 'nodes edges paths'
 complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
 complete -c spack -n '__fish_spack_using_command spec' -s t -l types -f -a types

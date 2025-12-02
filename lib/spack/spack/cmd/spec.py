@@ -59,6 +59,8 @@ for further documentation regarding the spec syntax, see:
         default=None,
         help="print concrete spec with the specified format string",
     )
+    arguments.add_common_arguments(format_group, ["show_non_defaults"])
+
     subparser.add_argument(
         "-c",
         "--cover",
@@ -120,5 +122,6 @@ def spec(parser, args):
                 status_fn=install_status_fn if args.install_status else None,
                 hashes=args.long or args.very_long,
                 key=spack.traverse.by_dag_hash,
+                highlight_non_defaults=args.show_non_defaults,
             )
         )

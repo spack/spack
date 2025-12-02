@@ -42,6 +42,7 @@ import spack.util.file_cache
 import spack.util.hash
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
+import spack.version
 from spack.externals import ExternalDependencyError
 from spack.installer import PackageInstaller
 from spack.solver.reuse import SpecFilter, create_external_parser
@@ -3138,9 +3139,7 @@ def test_concretization_version_order():
     ]
     result = [
         v
-        for v, _ in sorted(
-            versions, key=spack.package_base.concretization_version_order, reverse=True
-        )
+        for v, _ in sorted(versions, key=spack.version.concretization_version_order, reverse=True)
     ]
     assert result == [
         Version("0.9"),  # preferred
