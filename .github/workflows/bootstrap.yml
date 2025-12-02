@@ -148,7 +148,7 @@ jobs:
             fi
             spack solve zlib
           done
-          tree ~/.spack/bootstrap/store
+          tree ~/.local/share/spack/bootstrap/store
       - name: Bootstrap GnuPG
         run: |
           . share/spack/setup-env.sh
