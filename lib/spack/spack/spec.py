@@ -4178,8 +4178,6 @@ class Spec:
             color: True for colorized result; False for no color; None for auto color.
             highlight_non_defaults: if True non-default versions and variants are highlighted.
         """
-        from spack.package_base import preferred_version
-
         # Fast path for the common case: default format with no color
         if format_string == DEFAULT_FORMAT and color is False:
             return self._format_default()
@@ -4296,9 +4294,11 @@ class Spec:
                 color = VERSION_COLOR
                 if highlight_non_defaults and current_node.versions.concrete:
                     try:
-                        use_non_default_color = current_node.version != preferred_version(
-                            current_node.package
+                        preferred_version, _ = max(
+                            current_node.package.versions.items(),
+                            key=vn.concretization_version_order,
                         )
+                        use_non_default_color = current_node.version != preferred_version
                     except ValueError:
                         use_non_default_color = False
                     color = NONDEFAULT_COLOR if use_non_default_color else color
