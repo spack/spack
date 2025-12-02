@@ -160,7 +160,8 @@ def test_env_sh_shell_script_content():
     assert "alias despacktivate='spack env deactivate';" in out
 
 
-def test_env_track_existing_env_fails():    env("create", "track_test")
+def test_env_track_existing_env_fails():
+    env("create", "track_test")
 
     with pytest.raises(spack.main.SpackCommandError):
         env("track", "--name", "track_test", ev.environment_dir_from_name("track_test"))

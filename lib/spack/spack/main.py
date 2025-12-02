@@ -603,7 +603,7 @@ def setup_main_options(args):
         import spack.util.spack_yaml as syaml
 
         key = syaml.syaml_str("repos")
-        key.override = False # TODO: Remove after done!!!
+        key.override = False  # TODO: Remove after done!!!
         spack.config.CONFIG.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
             [(key, [spack.paths.mock_packages_path])]
         )

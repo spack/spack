@@ -20,6 +20,8 @@ import spack.environment as ev
 import spack.environment.cache_shell_script as shell_script
 import spack.environment.depfile as depfile
 import spack.environment.environment
+import spack.llnl.string as string
+import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.tengine
 from spack.cmd.common import arguments
