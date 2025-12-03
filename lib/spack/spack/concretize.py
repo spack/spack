@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """High-level functions to concretize list of specs"""
 import importlib
-import multiprocessing
 import sys
 import time
 from typing import Iterable, List, Optional, Sequence, Tuple, Union
@@ -147,11 +146,10 @@ def concretize_separately(
         ]
 
     # Solve the environment in parallel on Linux
-    # TODO: support parallel concretization on macOS and Windows
     num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
     msg = "Starting concretization"
-    if multiprocessing.get_start_method() == "fork" and num_procs > 1:
+    if num_procs > 1:
         msg += f" pool with {num_procs} processes"
     tty.msg(msg)
 

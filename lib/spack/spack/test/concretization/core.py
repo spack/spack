@@ -84,6 +84,10 @@ def check_concretize(abstract_spec):
     return concrete
 
 
+def _true():
+    return True
+
+
 @pytest.fixture(scope="function", autouse=True)
 def binary_compatibility(monkeypatch, request):
     """Selects whether we use OS compatibility for binaries, or libc compatibility."""
@@ -98,9 +102,9 @@ def binary_compatibility(monkeypatch, request):
         # Databases have been created without glibc support
         return
 
-    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", lambda: True)
-    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", lambda: True)
-    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", lambda: True)
+    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", _true)
+    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", _true)
+    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", _true)
 
 
 @pytest.fixture(
@@ -3285,6 +3289,14 @@ def test_spec_unification(unify, mutable_config, mock_packages):
     maybe_fails = pytest.raises if unify is True else spack.llnl.util.lang.nullcontext
     with maybe_fails(spack.solver.asp.UnsatisfiableSpecError):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
+
+
+@pytest.mark.enable_parallelism
+def test_parallel_concretization(mutable_config, mock_packages):
+    """Test whether parallel unify-false style concretization works."""
+    specs = [(Spec("pkg-a"), None), (Spec("pkg-b"), None)]
+    result = spack.concretize.concretize_separately(specs)
+    assert {s.name for s, _ in result} == {"pkg-a", "pkg-b"}
 
 
 @pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")

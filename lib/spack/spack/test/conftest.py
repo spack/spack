@@ -343,7 +343,7 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 @pytest.fixture(autouse=True)
 def clear_recorded_monkeypatches():
     yield
-    spack.subprocess_context.clear_patches()
+    spack.subprocess_context.MONKEYPATCHES.clear()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -353,7 +353,7 @@ def record_monkeypatch_setattr():
     saved_setattr = _pytest.monkeypatch.MonkeyPatch.setattr
 
     def record_setattr(cls, target, name, value, *args, **kwargs):
-        spack.subprocess_context.append_patch((target, name, value))
+        spack.subprocess_context.MONKEYPATCHES.append((target, name))
         saved_setattr(cls, target, name, value, *args, **kwargs)
 
     _pytest.monkeypatch.MonkeyPatch.setattr = record_setattr
@@ -2239,14 +2239,12 @@ def pytest_runtest_setup(item):
         pytest.skip(*only_windows_marker.args)
 
 
-def _sequential_executor(*args, **kwargs):
-    return spack.util.parallel.SequentialExecutor()
-
-
 @pytest.fixture(autouse=True)
-def disable_parallel_buildcache_push(monkeypatch):
-    """Disable process pools in tests."""
-    monkeypatch.setattr(spack.util.parallel, "make_concurrent_executor", _sequential_executor)
+def disable_parallelism(monkeypatch, request):
+    """Disable process pools in tests. Enabled by default to avoid oversubscription when running
+    under pytest-xdist. Can be overridden with `@pytest.mark.enable_parallelism`."""
+    if "enable_parallelism" not in request.keywords:
+        monkeypatch.setattr(spack.util.parallel, "ENABLE_PARALLELISM", False)
 
 
 def _root_path(x, y, *, path):
