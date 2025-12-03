@@ -2,7 +2,7 @@ black==25.11.0
 clingo==5.8.0
 flake8==7.3.0
 isort==7.0.0
-mypy==1.18.2
+mypy==1.19.0
 types-six==1.17.0.20251009
 vermin==1.8.0
 pylint==4.0.4
