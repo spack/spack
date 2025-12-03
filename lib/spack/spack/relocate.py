@@ -102,14 +102,8 @@ def relocate_msvc_pe_files(targets, prefixes: dict):
                 new_root = match.group()
                 dll_name = os.path.relpath(target, new_root)
                 if dll_name in dll_lib_map:
-                    args.extend([
-                        "--coff",
-                        dll_lib_map[dll_name]
-                    ])
-            _msvc_relocate()(
-                *args,
-                extra_env=ev,
-            )
+                    args.extend(["--coff", dll_lib_map[dll_name]])
+            _msvc_relocate()(*args, extra_env=ev)
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
