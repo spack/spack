@@ -4,6 +4,7 @@
 import collections
 import collections.abc
 import ctypes
+import ctypes.wintypes
 import errno
 import fnmatch
 import glob
@@ -3425,8 +3426,9 @@ def dumpbin(pkg) -> Executable:
 
 def relocate_win_rpath(package):
 
-    def get_binary_file_from_prefix(ext):
-        return glob.glob(os.path.join(package.spec.prefix, f"**\\*.{ext}"), recursive=True)
+    get_binary_file_from_prefix = lambda x: glob.glob(
+        os.path.join(package.spec.prefix, f"**\\*.{x}"), recursive=True
+    )
 
     # populate environment with required paths to perform relocation
     # relocate relies on finding the dll an import library
@@ -3447,8 +3449,8 @@ def relocate_win_rpath(package):
             # we have an import lib, determine symbols
             dll_name = get_importlib_target(lib, package=package)
             if dll_name:
-                dll_name = os.path.basename(dll_name)                
-            lib_map[dll_name] = lib
+                dll_basename = os.path.basename(dll_name)
+                lib_map[dll_basename] = (lib, dll_name)
     dlls = get_binary_file_from_prefix("dll")
     exes = get_binary_file_from_prefix("exe")
     pes = dlls + exes
@@ -3461,18 +3463,49 @@ def relocate_win_rpath(package):
         # we still need to relocate the references to other PE files
         # inside those PE files
         if name in lib_map and is_imp_lib_for_pe(package, lib_map[name], pe):
-            args.extend([
-                "--coff",
-                lib_map[name],
-            ])
-        reloc(
-            *args,
-            extra_env=ev,
-            output=sys.stdout,
-            error=sys.stderr,
-            fail_on_error=True,
-        )
-            
+            args.extend(["--coff", lib_map[name][0]])
+        reloc(*args, extra_env=ev, output=sys.stdout, error=sys.stderr, fail_on_error=True)
+
+
+def extract_spack_id(lib: str) -> Optional[str]:
+    """Extracts the string at ID 59673 from the string table in a given dll
+    Arguments:
+        lib: the dll to extract the string resource from
+    Returns the string at ID 59673 if one is present, None otherwise
+    """
+    user32 = ctypes.windll.user32
+    kernel32 = ctypes.windll.kernel32
+
+    LOAD_LIBRARY_AS_DATAFILE = 0x00000002
+    kernel32.LoadLibraryExW.restype = ctypes.wintypes.HMODULE
+    kernel32.LoadLibraryExW.argtypes = [
+        ctypes.wintypes.LPCWSTR,
+        ctypes.wintypes.HANDLE,
+        ctypes.wintypes.DWORD,
+    ]
+
+    kernel32.FreeLibrary.restype = ctypes.wintypes.BOOL
+    kernel32.FreeLibrary.argtypes = [ctypes.wintypes.HMODULE]
+
+    user32.LoadStringW.argtypes = [
+        ctypes.wintypes.HMODULE,
+        ctypes.wintypes.UINT,
+        ctypes.wintypes.LPWSTR,
+        ctypes.c_int,
+    ]
+    user32.LoadStringW.restype = ctypes.c_int
+
+    STRING_RESOURCE_ID = 59673
+    module_handle = kernel32.LoadLibraryExW(lib, None, LOAD_LIBRARY_AS_DATAFILE)
+    if not module_handle:
+        tty.debug(f"Unable to acquire handle for {lib}")
+        kernel32.FreeLibrary(module_handle)
+        return None
+    BUFFER_SIZE = 512
+    buffer = ctypes.create_unicode_buffer(BUFFER_SIZE)
+    length = user32.LoadStringW(module_handle, STRING_RESOURCE_ID, buffer, BUFFER_SIZE)
+    kernel32.FreeLibrary(module_handle)
+    return buffer.value if length else None
 
 
 def get_importlib_target(lib, package=None):
@@ -3540,14 +3573,5 @@ def collect_pe_api(pkg, pe):
 
 
 def is_imp_lib_for_pe(pkg, imp_lib, pe):
-    lib_exports = collect_import_exports(pkg, imp_lib)
-    pe_exports = collect_pe_api(pkg, pe)
-    assert lib_exports, f"Lib exports in {imp_lib} should not be empty"
-    if not pe_exports:
-        tty.debug(f"PE exports in {pe} are empty.")
-        return False
-    # values should be ordered already, no need for sorting
-    for lib_line, pe_line in zip(lib_exports, pe_exports):
-        if lib_line not in pe_line:
-            return False
-    return True
+    pe_name = extract_spack_id(pe)
+    return imp_lib[1] == pe_name
