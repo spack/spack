@@ -3367,6 +3367,9 @@ class SymlinkError(OSError):
 class AlreadyExistsError(SymlinkError):
     """Link path already exists."""
 
+if sys.platform == "win32":
+    import ctypes.wintypes
+
 
 def fix_darwin_install_name(path: str) -> None:
     """Fix install name of dynamic libraries on Darwin to have full path.
@@ -3406,12 +3409,12 @@ def fix_darwin_install_name(path: str) -> None:
 
 @memoized
 def relocate(package=None) -> Executable:
+    make_wrapper_executable = lambda x: Executable(str(x.package.bin_dir() / "relocate.exe"))
     if package:
-        return Executable(str(package.spec["compiler-wrapper"].package.bin_dir() / "relocate.exe"))
-    import spack.bootstrap
-
-    with spack.bootstrap.ensure_bootstrap_configuration():
-        return spack.bootstrap.ensure_msvc_relocate_or_raise()  # type: ignore
+        spec = package.spec["compiler-wrapper"]
+    else:
+        spec = spack.store.STORE.db.query_local("compiler-wrapper", installed=True)[0]
+    return make_wrapper_executable(spec)
 
 
 @memoized
@@ -3455,6 +3458,7 @@ def relocate_win_rpath(package):
     exes = get_binary_file_from_prefix("exe")
     pes = dlls + exes
     reloc = relocate(package)
+
     for pe in pes:
         name = os.path.basename(pe)
         args = ["--pe", pe, "--full", "--export"]
@@ -3473,7 +3477,8 @@ def extract_spack_id(lib: str) -> Optional[str]:
         lib: the dll to extract the string resource from
     Returns the string at ID 59673 if one is present, None otherwise
     """
-    user32 = ctypes.windll.user32
+    if not sys.platform == "win32":
+        return None
     kernel32 = ctypes.windll.kernel32
 
     LOAD_LIBRARY_AS_DATAFILE = 0x00000002
@@ -3487,25 +3492,54 @@ def extract_spack_id(lib: str) -> Optional[str]:
     kernel32.FreeLibrary.restype = ctypes.wintypes.BOOL
     kernel32.FreeLibrary.argtypes = [ctypes.wintypes.HMODULE]
 
-    user32.LoadStringW.argtypes = [
+    kernel32.FindResourceW.restype = ctypes.wintypes.HRSRC
+    kernel32.FindResourceW.argtypes = [
         ctypes.wintypes.HMODULE,
-        ctypes.wintypes.UINT,
-        ctypes.wintypes.LPWSTR,
-        ctypes.c_int,
+        ctypes.wintypes.LPCWSTR,
+        ctypes.wintypes.LPCWSTR,
     ]
-    user32.LoadStringW.restype = ctypes.c_int
 
-    STRING_RESOURCE_ID = 59673
+    kernel32.LoadResource.restype = ctypes.wintypes.HGLOBAL
+    kernel32.LoadResource.argtypes = [ctypes.wintypes.HMODULE, ctypes.wintypes.HRSRC]
+
+    kernel32.LockResource.restype = ctypes.wintypes.LPVOID
+    kernel32.LockResource.argtypes = [ctypes.wintypes.HGLOBAL]
+
+    kernel32.SizeofResource.restype = ctypes.wintypes.DWORD
+    kernel32.SizeofResource.argtypes = [ctypes.wintypes.HMODULE, ctypes.wintypes.HRSRC]
+
+    RESOURCE_ID = "spack"
+    RESOURCE_TYPE = "SPACKRESOURCE"
     module_handle = kernel32.LoadLibraryExW(lib, None, LOAD_LIBRARY_AS_DATAFILE)
     if not module_handle:
-        tty.debug(f"Unable to acquire handle for {lib}")
+        tty.debug(f"Unable to acquire handle for {lib}: {ctypes.get_last_error()}")
         kernel32.FreeLibrary(module_handle)
         return None
-    BUFFER_SIZE = 512
-    buffer = ctypes.create_unicode_buffer(BUFFER_SIZE)
-    length = user32.LoadStringW(module_handle, STRING_RESOURCE_ID, buffer, BUFFER_SIZE)
+
+    res_info_handle = kernel32.FindResourceW(module_handle, RESOURCE_ID, RESOURCE_TYPE)
+    if not res_info_handle:
+        tty.debug(
+            f"Unable to acquire resource info handle for \
+{lib}:{RESOURCE_ID}:{RESOURCE_TYPE}: {ctypes.get_last_error()}"
+        )
+        kernel32.FreeLibrary(module_handle)
+        return None
+
+    resource_data_handle = kernel32.LoadResource(module_handle, res_info_handle)
+    if not resource_data_handle:
+        tty.debug(
+            f"Unable to acquire resource {res_info_handle} \
+handle for {lib}: {ctypes.get_last_error()}"
+        )
+        kernel32.FreeLibrary(module_handle)
+        return None
+    data_pointer = kernel32.LockResource(resource_data_handle)
+    res_size = kernel32.SizeofResource(module_handle, res_info_handle)
+
+    raw_id_data = ctypes.string_at(data_pointer, res_size)
+    str_id_data = raw_id_data.decode(encoding="utf-8").strip("\x00")  # strip null terminator
     kernel32.FreeLibrary(module_handle)
-    return buffer.value if length else None
+    return str_id_data if res_size else None
 
 
 def get_importlib_target(lib, package=None):
@@ -3574,4 +3608,7 @@ def collect_pe_api(pkg, pe):
 
 def is_imp_lib_for_pe(pkg, imp_lib, pe):
     pe_name = extract_spack_id(pe)
-    return imp_lib[1] == pe_name
+
+    if not pe_name:
+        return False
+    return os.path.normpath(imp_lib[1]) == os.path.normpath(pe_name)
