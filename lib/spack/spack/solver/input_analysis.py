@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes to analyze the input of a solve, and provide information to set up the ASP problem"""
+
 import collections
 from typing import Dict, List, NamedTuple, Set, Tuple, Union
 
@@ -119,6 +120,9 @@ class NoStaticAnalysis(PossibleDependencyGraph):
         candidate_targets = [default_target] + default_target.ancestors
         granularity = self.configuration.get("concretizer:targets:granularity")
         host_compatible = self.configuration.get("concretizer:targets:host_compatible")
+
+        if granularity == "family":
+            return [default_target.family]
 
         # Add targets which are not compatible with the current host
         if not host_compatible:

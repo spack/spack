@@ -1761,7 +1761,15 @@ spack:
         s = spack.concretize.concretize_one("conditional-values-in-variant@1.60.0")
         assert "cxxstd" in s.variants
 
-    def test_target_granularity(self):
+    def test_target_granularity_family(self):
+        default_target = spack.platforms.test.Test.default
+        family_target = archspec.cpu.TARGETS[default_target].family.name
+        s = Spec("python")
+        assert spack.concretize.concretize_one(s).satisfies("target=%s" % default_target)
+        with spack.config.override("concretizer:targets", {"granularity": "family"}):
+            assert spack.concretize.concretize_one(s).satisfies("target=%s" % family_target)
+
+    def test_target_granularity_generic(self):
         # The test architecture uses core2 as the default target. Check that when
         # we configure Spack for "generic" granularity we concretize for x86_64
         default_target = spack.platforms.test.Test.default
