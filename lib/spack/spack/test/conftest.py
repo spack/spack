@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
+import contextlib
 import datetime
 import email.message
 import errno
@@ -12,6 +13,7 @@ import io
 import itertools
 import json
 import os
+import pickle
 import re
 import shutil
 import stat
@@ -954,21 +956,67 @@ def mock_configuration_scopes(configuration_dir):
     yield _create_mock_configuration_scopes(configuration_dir)
 
 
+@contextlib.contextmanager
+def use_pickled_configuration(configuration):
+    """Context manager to use a pickled configuration object. This avoids clearing caches which
+    spack.config.use_configuration does."""
+    saved_config = spack.config.CONFIG
+    spack.config.CONFIG = configuration
+    try:
+        yield configuration
+    finally:
+        spack.config.CONFIG = saved_config
+
+
+@pytest.fixture(scope="session")
+def pickled_mock_config(configuration_dir):
+    """Returns a pickled Configuration object with all sections loaded. This is used to speed up
+    configuration fixtures by avoiding repeated parsing."""
+    # Create scopes pointing to the session-scoped configuration_dir
+    scopes = _create_mock_configuration_scopes(configuration_dir)
+
+    # Create a temporary configuration to populate caches
+    cfg = spack.config.Configuration()
+    for priority, scope in scopes:
+        cfg.push_scope(scope, priority)
+
+    # Populate caches for all known sections to ensure they are pickled
+    for section in spack.config.SECTION_SCHEMAS:
+        try:
+            cfg.get_config(section)
+        except Exception:
+            pass
+
+    # Pickle the configuration
+    return pickle.dumps(cfg)
+
+
 @pytest.fixture(scope="function")
-def config(mock_configuration_scopes):
+def config(pickled_mock_config):
     """This fixture activates/deactivates the mock configuration."""
-    with spack.config.use_configuration(*mock_configuration_scopes) as config:
+    cfg = pickle.loads(pickled_mock_config)
+    with use_pickled_configuration(cfg) as config:
         yield config
 
 
 @pytest.fixture(scope="function")
-def mutable_config(tmp_path_factory: pytest.TempPathFactory, configuration_dir):
+def mutable_config(
+    tmp_path_factory: pytest.TempPathFactory, configuration_dir, pickled_mock_config
+):
     """Like config, but tests can modify the configuration."""
     mutable_dir = tmp_path_factory.mktemp("mutable_config") / "tmp"
     shutil.copytree(configuration_dir, mutable_dir)
 
-    scopes = _create_mock_configuration_scopes(mutable_dir)
-    with spack.config.use_configuration(*scopes) as cfg:
+    # Unpickle the configuration
+    cfg: spack.config.Configuration = pickle.loads(pickled_mock_config)
+
+    # Update paths in DirectoryConfigScopes to point to the mutable directory
+    # The scopes are "site", "system", "user" which match the directory names
+    for scope in cfg.scopes.values():
+        if isinstance(scope, spack.config.DirectoryConfigScope):
+            scope.path = str(mutable_dir / scope.name)
+
+    with use_pickled_configuration(cfg) as cfg:
         yield cfg
 
 
