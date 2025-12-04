@@ -14,6 +14,7 @@ import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 import spack.traverse
+import spack.version
 from spack.cmd.common import arguments
 
 description = "show what would be installed, given a spec"
@@ -76,6 +77,28 @@ for further documentation regarding the spec syntax, see:
     arguments.add_concretizer_args(subparser)
 
 
+def _highlight_version(node: spack.spec.Spec) -> bool:
+    if not node.versions.concrete:
+        return False
+
+    try:
+        preferred_version, _ = max(
+            node.package.versions.items(), key=spack.version.concretization_version_order
+        )
+        return node.version != preferred_version
+    except ValueError:
+        return False
+
+
+def _highlight_variant(node: spack.spec.Spec, variant_name: str) -> bool:
+    try:
+        default_variant = node.package.get_variant(variant_name).make_default()
+        return not node.satisfies(str(default_variant))
+    except ValueError:
+        # This is the case for special variants like "patches" etc.
+        return False
+
+
 def spec(parser, args):
     install_status_fn = spack.spec.Spec.install_status
 
@@ -122,6 +145,7 @@ def spec(parser, args):
                 status_fn=install_status_fn if args.install_status else None,
                 hashes=args.long or args.very_long,
                 key=spack.traverse.by_dag_hash,
-                highlight_non_defaults=args.show_non_defaults,
+                highlight_version_fn=_highlight_version if args.show_non_defaults else None,
+                highlight_variant_fn=_highlight_variant if args.show_non_defaults else None,
             )
         )

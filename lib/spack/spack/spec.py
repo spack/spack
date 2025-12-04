@@ -159,7 +159,7 @@ VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
-NONDEFAULT_COLOR = "@_R"  #: color for highlighting suboptimal choices in specs
+HIGHLIGHT_COLOR = "@_R"  #: color for highlighting spec parts on demand
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -1352,7 +1352,8 @@ def tree(
     status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
     prefix: Optional[Callable[["Spec"], str]] = None,
     key: Callable[["Spec"], Any] = id,
-    highlight_non_defaults: bool = False,
+    highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
+    highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
 ) -> str:
     """Prints out specs and their dependencies, tree-formatted with indentation.
 
@@ -1375,6 +1376,10 @@ def tree(
             installation status
         prefix: optional callable that takes a node as an argument and return its
             installation prefix
+        highlight_version_fn: optional callable that returns true on nodes where the version
+            needs to be highlighted
+        highlight_variant_fn: optional callable that returns true on variants that needs
+            to be highlighted
     """
     out = ""
 
@@ -1431,7 +1436,13 @@ def tree(
         if d > 0:
             out += "^"
         out += (
-            node.format(format, color=color, highlight_non_defaults=highlight_non_defaults) + "\n"
+            node.format(
+                format,
+                color=color,
+                highlight_version_fn=highlight_version_fn,
+                highlight_variant_fn=highlight_variant_fn,
+            )
+            + "\n"
         )
 
         # Check if we wanted just the first line
@@ -4094,7 +4105,8 @@ class Spec:
         format_string: str = DEFAULT_FORMAT,
         color: Optional[bool] = False,
         *,
-        highlight_non_defaults: bool = False,
+        highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
+        highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
     ) -> str:
         r"""Prints out attributes of a spec according to a format string.
 
@@ -4176,7 +4188,10 @@ class Spec:
         Args:
             format_string: string containing the format to be expanded
             color: True for colorized result; False for no color; None for auto color.
-            highlight_non_defaults: if True non-default versions and variants are highlighted.
+            highlight_version_fn: optional callable that returns true on nodes where the version
+                needs to be highlighted
+            highlight_variant_fn: optional callable that returns true on variants that needs
+                to be highlighted
         """
         # Fast path for the common case: default format with no color
         if format_string == DEFAULT_FORMAT and color is False:
@@ -4292,51 +4307,29 @@ class Spec:
                 color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
                 color = VERSION_COLOR
-                if highlight_non_defaults and current_node.versions.concrete:
-                    try:
-                        preferred_version, _ = max(
-                            current_node.package.versions.items(),
-                            key=vn.concretization_version_order,
-                        )
-                        use_non_default_color = current_node.version != preferred_version
-                    except ValueError:
-                        use_non_default_color = False
-                    color = NONDEFAULT_COLOR if use_non_default_color else color
+                if highlight_version_fn and highlight_version_fn(current_node):
+                    color = HIGHLIGHT_COLOR
 
             # return empty string if the value of the attribute is None.
             if current is None:
                 return ""
 
             # Override the color for single variants, if need be
-            if color and highlight_non_defaults and isinstance(current, VariantMap):
+            if color and highlight_variant_fn and isinstance(current, VariantMap):
                 bool_keys, kv_keys = current.partition_keys()
                 result = ""
 
                 for key in bool_keys:
-                    try:
-                        default_variant = current_node.package.get_variant(key).make_default()
-                        current_color = (
-                            color
-                            if current_node.satisfies(str(default_variant))
-                            else NONDEFAULT_COLOR
-                        )
-                    except ValueError:
-                        # This is the case for special variants like "patches" etc.
-                        current_color = color
+                    current_color = color
+                    if highlight_variant_fn(current_node, key):
+                        current_color = HIGHLIGHT_COLOR
 
                     result += safe_color(sig, str(current[key]), current_color)
 
                 for key in kv_keys:
-                    try:
-                        default_variant = current_node.package.get_variant(key).make_default()
-                        current_color = (
-                            color
-                            if current_node.satisfies(str(default_variant))
-                            else NONDEFAULT_COLOR
-                        )
-                    except ValueError:
-                        # This is the case for special variants like "patches" etc.
-                        current_color = color
+                    current_color = color
+                    if highlight_variant_fn(current_node, key):
+                        current_color = HIGHLIGHT_COLOR
 
                     # Don't highlight the space before the key/value pair
                     result += " " + safe_color(sig, f"{current[key]}", current_color)
@@ -4614,7 +4607,8 @@ class Spec:
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
         key=id,
-        highlight_non_defaults: bool = False,
+        highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
+        highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
     ) -> str:
         """Prints out this spec and its dependencies, tree-formatted with indentation.
 
@@ -4638,6 +4632,10 @@ class Spec:
                 installation status
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
+            highlight_version_fn: optional callable that returns true on nodes where the version
+                needs to be highlighted
+            highlight_variant_fn: optional callable that returns true on variants that needs
+                to be highlighted
         """
         return tree(
             [self],
@@ -4655,7 +4653,8 @@ class Spec:
             status_fn=status_fn,
             prefix=prefix,
             key=key,
-            highlight_non_defaults=highlight_non_defaults,
+            highlight_version_fn=highlight_version_fn,
+            highlight_variant_fn=highlight_variant_fn,
         )
 
     def __repr__(self):

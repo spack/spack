@@ -118,7 +118,12 @@ def solve(parser, args):
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,
         "hashes": args.long or args.very_long,
-        "highlight_non_defaults": args.show_non_defaults,
+        "highlight_version_fn": (
+            spack.cmd.spec._highlight_version if args.show_non_defaults else None
+        ),
+        "highlight_variant_fn": (
+            spack.cmd.spec._highlight_variant if args.show_non_defaults else None
+        ),
     }
 
     # process output options
