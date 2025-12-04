@@ -20,7 +20,7 @@ import sys
 import tempfile
 import xml.etree.ElementTree
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import pytest
 
@@ -2251,7 +2251,9 @@ def concretized_specs_cache():
 
 
 @pytest.fixture
-def default_mock_concretization(config, mock_packages, concretized_specs_cache):
+def default_mock_concretization(
+    config, mock_packages, concretized_specs_cache
+) -> Callable[[str], spack.spec.Spec]:
     """Return the default mock concretization of a spec literal, obtained using the mock
     repository and the mock configuration.
 

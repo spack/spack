@@ -5761,6 +5761,30 @@ def _inject_patches_variant(root: Spec) -> None:
         )
 
 
+def non_preferred_version(node: Spec) -> bool:
+    """Returns True if the spec version is not the preferred one, according to the package.py"""
+    if not node.versions.concrete:
+        return False
+
+    try:
+        preferred_version, _ = max(
+            node.package.versions.items(), key=spack.version.concretization_version_order
+        )
+        return node.version != preferred_version
+    except ValueError:
+        return False
+
+
+def non_default_variant(node: Spec, variant_name: str) -> bool:
+    """Returns True if the variant in the spec has a non-default value."""
+    try:
+        default_variant = node.package.get_variant(variant_name).make_default()
+        return not node.satisfies(str(default_variant))
+    except ValueError:
+        # This is the case for special variants like "patches" etc.
+        return False
+
+
 class InvalidVariantForSpecError(spack.error.SpecError):
     """Raised when an invalid conditional variant is specified."""
 
