@@ -269,10 +269,6 @@ class SpackPaths:
             os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
         )
 
-        #: When Spack is provided by an admin to a user, the admin can
-        #: provide a config that only applies for the end-users
-        self.end_user_cfg_path = os.path.join(self.system_config_path, "end-user")
-
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
         #: overridden by `config:misc_cache`
         self.default_misc_cache_path = os.path.join(
@@ -340,7 +336,6 @@ gpg_keys_path = locations.gpg_keys_path
 modules_base = locations.modules_base
 user_config_path = locations.user_config_path
 system_config_path = locations.system_config_path
-end_user_cfg_path = locations.end_user_cfg_path
 default_misc_cache_path = locations.default_misc_cache_path
 
 
