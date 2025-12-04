@@ -547,3 +547,24 @@ def test_direct_edges_and_round_tripping_to_dict(spec_str, default_mock_concreti
             continue
         for dependency_data in node["dependencies"]:
             assert "direct" not in dependency_data["parameters"]
+
+
+def test_pickle_preserves_identity_and_prefix(default_mock_concretization):
+    """When pickling multiple specs that share dependencies, the identity of those dependencies
+    should be preserved when unpickling."""
+    mpileaks: Spec = default_mock_concretization("mpileaks")
+    callpath = mpileaks.dependencies("callpath")[0]
+    callpath.set_prefix("/fake/prefix/callpath")
+    specs_before = [mpileaks, callpath]
+    specs_after = pickle.loads(pickle.dumps(specs_before))
+
+    # Ensure prefixes are preserved (they should simply be pickled).
+    assert specs_after[1].prefix == callpath.prefix
+
+    # Test whether the mpileaks<->callpath link is preserved and corresponds to the same object
+    assert specs_after[0] is specs_after[1].dependents("mpileaks")[0]
+    assert specs_after[1] is specs_after[0].dependencies("callpath")[0]
+
+    # Test that we have the exact same number of unique Spec objects before and after pickling
+    num_unique_specs = lambda specs: len({id(s) for r in specs for s in r.traverse()})
+    assert num_unique_specs(specs_before) == num_unique_specs(specs_after)

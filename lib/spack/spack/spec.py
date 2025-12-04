@@ -4927,8 +4927,27 @@ class Spec:
         # so we hope it only runs on abstract specs, which are small.
         return hash(lang.tuplify(self._cmp_iter))
 
-    def __reduce__(self):
-        return Spec.from_dict, (self.to_dict(hash=ht.dag_hash),)
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # The package is lazily loaded upon demand.
+        state.pop("_package", None)
+        # As with to_dict, do not include dependents. This avoids serializing more than intended.
+        state.pop("_dependents", None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._package = None
+
+        # Reconstruct dependents map
+        if not hasattr(self, "_dependents"):
+            self._dependents = _EdgeMap(store_by_child=False)
+
+        for edges in self._dependencies.edges.values():
+            for edge in edges:
+                if not hasattr(edge.spec, "_dependents"):
+                    edge.spec._dependents = _EdgeMap(store_by_child=False)
+                edge.spec._dependents.add(edge)
 
     def attach_git_version_lookup(self):
         # Add a git lookup method for GitVersions
