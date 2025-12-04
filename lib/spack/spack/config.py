@@ -1909,8 +1909,6 @@ def use_configuration(
 ) -> Generator[Configuration, None, None]:
     """Use the configuration scopes passed as arguments within the context manager.
 
-    This function invalidates caches, and is therefore very slow.
-
     Args:
         *scopes_or_paths: scope objects or paths to be used
 
@@ -1921,7 +1919,7 @@ def use_configuration(
 
     # Normalize input and construct a Configuration object
     configuration = create_from(*scopes_or_paths)
-    CONFIG.clear_caches(), configuration.clear_caches()
+    configuration.clear_caches()
 
     saved_config, CONFIG = CONFIG, configuration
 
