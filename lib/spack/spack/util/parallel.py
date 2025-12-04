@@ -73,11 +73,12 @@ def imap_unordered(
     Raises:
         RuntimeError: if any error occurred in the worker processes
     """
-    from spack.subprocess_context import GlobalStateMarshaler
 
-    if sys.platform in ("darwin", "win32") or len(list_of_args) == 1:
+    if multiprocessing.get_start_method() != "fork" or len(list_of_args) == 1:
         yield from map(f, list_of_args)
         return
+
+    from spack.subprocess_context import GlobalStateMarshaler
 
     marshaler = GlobalStateMarshaler()
     with multiprocessing.Pool(
