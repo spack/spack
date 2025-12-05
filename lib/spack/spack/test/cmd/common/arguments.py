@@ -153,3 +153,14 @@ def test_use_buildcache_type():
 
     with pytest.raises(argparse.ArgumentTypeError):
         assert arguments.use_buildcache("sometimes")
+
+def test_missing_config_scopes_are_valid_scope_arguments(mutable_config):
+    """Test that if an included scope does not have a directory or file,
+    we can still specify it as a scope as an argument"""
+
+
+
+def test_missing_config_scopes_not_valid_read_scope(mutable_config):
+    """Ensures that if a missing include scope is the subject of a read
+    operation, we fail at the argparse level"""
+

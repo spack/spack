@@ -230,7 +230,7 @@ class DirectoryConfigScope(ConfigScope):
     def get_section(self, section: str) -> Optional[YamlConfigDict]:
         """Returns the data associated with a given section"""
         if not self.readable:
-            tty.debug(f"Attempting to read from missing scope {self}")
+            tty.warn(f"Attempting to read from missing scope: {self}")
             return {}
         if section not in self.sections:
             path = self.get_section_filename(section)
@@ -1032,7 +1032,6 @@ class OptionalInclude:
         tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
         return DirectoryConfigScope(config_name, config_path, readable=exists, prefer_modify=self.prefer_modify)
 
-
     def evaluate_condition(self) -> bool:
         # circular dependencies
         import spack.spec
@@ -1473,6 +1472,7 @@ def set(path: str, value: Any, scope: Optional[str] = None) -> None:
 def scopes() -> lang.PriorityOrderedMapping[str, ConfigScope]:
     """Convenience function to get list of configuration scopes."""
     return CONFIG.scopes
+
 
 def writable_scopes() -> List[ConfigScope]:
     """Return list of writable scopes. Higher-priority scopes come first in the list."""

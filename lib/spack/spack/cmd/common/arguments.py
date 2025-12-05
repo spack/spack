@@ -5,7 +5,7 @@
 import argparse
 import os
 import textwrap
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 import spack.cmd
 import spack.config
@@ -204,8 +204,10 @@ class ConfigScope(argparse.Action):
 
 def config_scope_readable_validator(value):
     if value not in spack.config.readable_scope_names():
-        raise ValueError(f"Invalid scope argument {value} "
-                        "for config read operation, scope context does not exist") 
+        raise ValueError(
+            f"Invalid scope argument {value} "
+            "for config read operation, scope context does not exist"
+        )
     return value
 
 

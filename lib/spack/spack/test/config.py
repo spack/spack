@@ -1861,3 +1861,22 @@ def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, mo
     include.branch = ""  # type: ignore[union-attr]
     with pytest.raises(spack.error.ConfigError, match="Missing or unsupported options"):
         include.scopes(parent_scope)
+
+
+def test_list_missing_include_scopes(mutable_config):
+    """Tests that an included scope with a non existent file/directory
+    is still listed as a scope under spack.config.CONFIG.scopes"""
+
+
+def test_missing_include_scope_writeable(mutable_config):
+    """Tests that an included scope with a non existent file/directory
+    can be written to (and created)"""
+
+
+def test_missing_include_scope_not_readable(mutable_config):
+    """"""
+
+
+def test_missing_include_scope_empty_read(mutable_config):
+    """Tests than an included scope with a non existent file/directory
+    returns an empty dict on read and has "readable" set to false"""

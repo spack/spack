@@ -1039,6 +1039,15 @@ def mock_low_high_config(tmp_path: Path):
         yield config
 
 
+@pytest.fixture()
+def mock_missing_include_scopes(tmp_path: Path):
+    scope = spack.config.DirectoryConfigScope("", str(tmp_path / ""))
+
+    with spack.config.use_configuration(scope) as config:
+        yield config
+
+
+
 def _populate(mock_db):
     r"""Populate a mock database with packages.
 

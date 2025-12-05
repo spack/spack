@@ -48,7 +48,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     find_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        type=arguments.config_scope_readable_validator
+        type=arguments.config_scope_readable_validator,
         default=lambda: spack.config.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
@@ -67,7 +67,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # List
     list_parser = sp.add_parser("list", aliases=["ls"], help="list available compilers")
     list_parser.add_argument(
-        "--scope", action=arguments.ConfigScope, type=arguments.config_scope_readable_validator, help="configuration scope to read from"
+        "--scope",
+        action=arguments.ConfigScope,
+        type=arguments.config_scope_readable_validator,
+        help="configuration scope to read from",
     )
     list_parser.add_argument(
         "--remote", action="store_true", help="list also compilers from registered buildcaches"
@@ -77,7 +80,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     info_parser = sp.add_parser("info", help="show compiler paths")
     info_parser.add_argument("compiler_spec")
     info_parser.add_argument(
-        "--scope", action=arguments.ConfigScope, type=arguments.config_scope_readable_validator, help="configuration scope to read from"
+        "--scope",
+        action=arguments.ConfigScope,
+        type=arguments.config_scope_readable_validator,
+        help="configuration scope to read from",
     )
 
 

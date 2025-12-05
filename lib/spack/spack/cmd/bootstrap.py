@@ -72,10 +72,15 @@ def _add_scope_option(parser):
         "--scope", action=arguments.ConfigScope, help="configuration scope to read/modify"
     )
 
+
 def _add_read_scope_option(parser):
     parser.add_argument(
-        "--scope", action=arguments.ConfigScope, type=arguments.config_scope_readable_validator, help="configuration scope to read/modify"
+        "--scope",
+        action=arguments.ConfigScope,
+        type=arguments.config_scope_readable_validator,
+        help="configuration scope to read/modify",
     )
+
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(dest="subcommand")
