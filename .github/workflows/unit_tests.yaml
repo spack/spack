@@ -82,7 +82,6 @@ jobs:
           COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
-          mkdir ~/.config/spack
           share/spack/qa/run-unit-tests
     - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
       with:
@@ -152,6 +151,7 @@ jobs:
     - name: Run unit tests
       shell: runuser -u spack-test -- bash {0}
       run: |
+          mkdir ~/.config/spack
           source share/spack/setup-env.sh
           spack -d bootstrap now --dev
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
