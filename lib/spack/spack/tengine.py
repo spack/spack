@@ -3,18 +3,19 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import textwrap
-from typing import List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import spack.config
 import spack.extensions
 import spack.llnl.util.lang
 from spack.util.path import canonicalize_path
 
+if TYPE_CHECKING:
+    import spack.vendor.jinja2
+
 
 class ContextMeta(type):
-    """Meta class for Context. It helps reducing the boilerplate in
-    client code.
-    """
+    """Metaclass for Context. It helps reduce the boilerplate in client code."""
 
     #: Keeps track of the context properties that have been added
     #: by the class that is being defined
@@ -54,27 +55,28 @@ context_property = ContextMeta.context_property
 
 
 class Context(metaclass=ContextMeta):
-    """Base class for context classes that are used with the template
-    engine.
-    """
+    """Base class for context classes that are used with the template engine."""
 
-    def to_dict(self):
+    context_properties: List[str]
+
+    def to_dict(self) -> Dict[str, Any]:
         """Returns a dictionary containing all the context properties."""
-        d = [(name, getattr(self, name)) for name in self.context_properties]
-        return dict(d)
+        return {name: getattr(self, name) for name in self.context_properties}
+
+
+def make_environment(dirs: Optional[Tuple[str, ...]] = None) -> "spack.vendor.jinja2.Environment":
+    """Returns a configured environment for template rendering."""
+    if dirs is None:
+        # Default directories where to search for templates
+        dirs = default_template_dirs(spack.config.CONFIG)
+
+    return make_environment_from_dirs(dirs)
 
 
 @spack.llnl.util.lang.memoized
-def make_environment(dirs: Optional[Tuple[str, ...]] = None):
-    """Returns a configured environment for template rendering."""
+def make_environment_from_dirs(dirs: Tuple[str, ...]) -> "spack.vendor.jinja2.Environment":
     # Import at this scope to avoid slowing Spack startup down
     import spack.vendor.jinja2
-
-    if dirs is None:
-        # Default directories where to search for templates
-        builtins = spack.config.get("config:template_dirs", ["$spack/share/spack/templates"])
-        extensions = spack.extensions.get_template_dirs()
-        dirs = tuple(canonicalize_path(d) for d in itertools.chain(builtins, extensions))
 
     # Loader for the templates
     loader = spack.vendor.jinja2.FileSystemLoader(dirs)
@@ -85,7 +87,14 @@ def make_environment(dirs: Optional[Tuple[str, ...]] = None):
     return env
 
 
-# Extra filters for template engine environment
+def default_template_dirs(configuration: spack.config.Configuration) -> Tuple[str, ...]:
+    config_yaml = configuration.get_config("config")
+    builtins = config_yaml.get("template_dirs", ["$spack/share/spack/templates"])
+    extensions = spack.extensions.get_template_dirs()
+    return tuple(canonicalize_path(d) for d in itertools.chain(builtins, extensions))
+
+
+# Extra filters for the template engine environment
 
 
 def prepend_to_line(text, token):

@@ -750,6 +750,7 @@ class RepoBuilder:
         namespace = f"test_namespace_{RepoBuilder._counter}"
         repo_root = os.path.join(root_directory, namespace)
         os.makedirs(repo_root, exist_ok=True)
+        self.template_dirs = (os.path.join(spack.paths.share_path, "templates"),)
         self.root, self.namespace = spack.repo.create_repo(repo_root, namespace)
         self.build_system_name = f"test_build_system_{self.namespace}"
         self._add_build_system()
@@ -772,7 +773,9 @@ class RepoBuilder:
             "cls_name": spack.util.naming.pkg_name_to_class_name(name),
             "dependencies": dependencies,
         }
-        template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
+        template = spack.tengine.make_environment_from_dirs(self.template_dirs).get_template(
+            "mock-repository/package.pyt"
+        )
         package_py = self._recipe_filename(name)
         os.makedirs(os.path.dirname(package_py), exist_ok=True)
         with open(package_py, "w", encoding="utf-8") as f:
@@ -785,7 +788,7 @@ class RepoBuilder:
     def _add_build_system(self) -> None:
         """Add spack_repo.<namespace>.build_systems.test_build_system with
         build_system=test_build_system_<namespace>."""
-        template = spack.tengine.make_environment().get_template(
+        template = spack.tengine.make_environment_from_dirs(self.template_dirs).get_template(
             "mock-repository/build_system.pyt"
         )
         text = template.render({"build_system_name": self.build_system_name})
