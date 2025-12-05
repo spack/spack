@@ -555,6 +555,20 @@ def test_match_literal(literal):
     check_ast_roundtrip(literal)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 14), reason="Not supported < 3.14")
+def test_tstrings():
+    check_ast_roundtrip("t'foo'")
+    check_ast_roundtrip("t'foo {bar}'")
+    check_ast_roundtrip("t'foo {bar!s:.2f}'")
+    check_ast_roundtrip("t'{a +    b}'")
+    check_ast_roundtrip("t'{a +    b:x}'")
+    check_ast_roundtrip("t'{a +    b!s}'")
+    check_ast_roundtrip("t'{ {a}}'")
+    check_ast_roundtrip("t'{ {a}=}'")
+    check_ast_roundtrip("t'{{a}}'")
+    check_ast_roundtrip("t''")
+
+
 def test_subscript_with_tuple():
     """Test change in visit_Subscript/visit_Index is_non_empty_tuple."""
     check_ast_roundtrip("a[()]")

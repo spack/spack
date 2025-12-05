@@ -4700,3 +4700,17 @@ packages:
     mpileaks = spack.concretize.concretize_one("mpileaks %c=gcc@12")
 
     assert mpileaks.satisfies("%c=gcc@12")
+
+
+@pytest.mark.regression("51683")
+def test_activating_variant_for_conditional_language_dependency(default_mock_concretization):
+    """Tests that a dependency on a conditional language can be concretized, and that the solver
+    turn on the correct variant to enable the language dependency
+    """
+    # To trigger the bug, we need at least another node needing fortran, in this case mpich
+    s = default_mock_concretization("mpileaks %fortran=gcc %mpi=mpich")
+    assert s.satisfies("+fortran")
+
+    # Try just asking for fortran, without the provider
+    s = default_mock_concretization("mpileaks %fortran %mpi=mpich")
+    assert s.satisfies("+fortran")

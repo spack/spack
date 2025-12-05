@@ -789,10 +789,22 @@ attr("hash", node(X, BuildDependency), BuildHash) :-
   attr("direct_dependency", ParentNode, node_requirement("hash", BuildDependency, BuildHash)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
-
+% For a spec like `hdf5 %cxx=gcc` we need to ensure that
+% 1. gcc is a provider for cxx
+% 2. hdf5 depends on that provider for cxx
 1 { attr("provider_set", node(X, BuildDependency), node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1 :-
   attr("direct_dependency", ParentNode, node_requirement("provider_set", BuildDependency, Virtual)),
   direct_dependency(ParentNode, node(X, BuildDependency)).
+
+error(10, "{0} cannot have a dependency on {1}", Package, Virtual)
+  :- attr("direct_dependency", node(ID, Package), node_requirement("provider_set", BuildDependency, Virtual)),
+     direct_dependency(node(ID, Package), node(X, BuildDependency)),
+     not attr("virtual_on_edge", node(ID, Package), node(X, BuildDependency), Virtual).
+
+% For a spec like `hdf5 %cxx` we need to ensure that the virtual is needed on a direct edge
+error(10, "{0} cannot have a dependency on {1}", Package, Virtual)
+  :- attr("direct_dependency", node(ID, Package), node_requirement("virtual_node", Virtual)),
+     not attr("virtual_on_edge", node(ID, Package), _, Virtual).
 
 % Reconstruct virtual dependencies for reused specs
 attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual)
