@@ -73,15 +73,6 @@ def _add_scope_option(parser):
     )
 
 
-def _add_read_scope_option(parser):
-    parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        type=arguments.config_scope_readable_validator,
-        help="configuration scope to read/modify",
-    )
-
-
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(dest="subcommand")
 
@@ -120,7 +111,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
     list = sp.add_parser("list", help="list all the sources of software to bootstrap Spack")
-    _add_read_scope_option(list)
+    list.add_argument(
+        "--scope",
+        action=arguments.ConfigScope,
+        type=arguments.config_scope_readable_validator,
+        help="configuration scope to read/modify",
+    )
 
     add = sp.add_parser("add", help="add a new source for bootstrapping")
     _add_scope_option(add)
@@ -198,8 +194,8 @@ def _root(args):
     if args.path:
         spack.config.set("bootstrap:root", args.path, scope=args.scope)
     elif args.scope:
-        # validate
-        pass
+        if args.scope not in spack.config.readable_scope_names():
+            raise RuntimeError(f"Scope {args.scope} is not readable, cannot report root")
 
     root = spack.config.get("bootstrap:root", default=None, scope=args.scope)
     if root:
