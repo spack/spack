@@ -48,7 +48,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     find_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        type=arguments.config_scope_readable_validator,
         default=lambda: spack.config.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
