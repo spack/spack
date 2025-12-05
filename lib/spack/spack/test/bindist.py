@@ -1040,6 +1040,9 @@ def test_tarball_common_prefix(dummy_prefix, tmp_path: pathlib.Path):
             common_prefix = bindist._ensure_common_prefix(tar)
             assert common_prefix == expected_prefix
 
+            # For consistent behavior across all supported Python versions
+            tar.extraction_filter = lambda member, path: member
+
             # Extract into prefix2
             tar.extractall(
                 path="prefix2", members=bindist._tar_strip_component(tar, common_prefix)
