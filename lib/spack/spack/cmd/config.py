@@ -178,7 +178,7 @@ def _get_scope_and_section(args):
 
 
 def print_configuration(args, *, blame: bool) -> None:
-    if args.scope and args.scope not in spack.config.readable_scope_names():
+    if args.scope and args.scope not in spack.config.existing_scope_names():
         tty.die(f"the argument --scope={args.scope} must refer to an existing scope.")
     if args.scope and args.section is None:
         tty.die(f"the argument --scope={args.scope} requires specifying a section.")

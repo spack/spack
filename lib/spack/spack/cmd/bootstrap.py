@@ -194,7 +194,7 @@ def _root(args):
     if args.path:
         spack.config.set("bootstrap:root", args.path, scope=args.scope)
     elif args.scope:
-        if args.scope not in spack.config.readable_scope_names():
+        if args.scope not in spack.config.existing_scope_names():
             spack.llnl.util.tty.die(
                 f"The argument --scope={args.scope} must refer to an existing scope."
             )

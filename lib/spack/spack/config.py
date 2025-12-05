@@ -174,7 +174,7 @@ class ConfigScope:
         return self._included_scopes
 
     @property
-    def readable(self) -> bool:
+    def exists(self) -> bool:
         """Whether the config object indicated by the scope can be read"""
         return True
 
@@ -226,7 +226,7 @@ class DirectoryConfigScope(ConfigScope):
         self.prefer_modify = prefer_modify
 
     @property
-    def readable(self) -> bool:
+    def exists(self) -> bool:
         return os.path.exists(self.path)
 
     def get_section_filename(self, section: str) -> str:
@@ -236,7 +236,7 @@ class DirectoryConfigScope(ConfigScope):
 
     def get_section(self, section: str) -> Optional[YamlConfigDict]:
         """Returns the data associated with a given section"""
-        if not self.readable:
+        if not self.exists:
             tty.debug(f"Attempting to read from missing scope: {self} at {self.path}")
             return {}
         if section not in self.sections:
@@ -304,7 +304,7 @@ class SingleFileScope(ConfigScope):
         self.yaml_path = yaml_path or []
 
     @property
-    def readable(self) -> bool:
+    def exists(self) -> bool:
         return os.path.exists(self.path)
 
     def get_section_filename(self, section) -> str:
@@ -337,7 +337,7 @@ class SingleFileScope(ConfigScope):
         #   }
         # }
 
-        if not self.readable:
+        if not self.exists:
             tty.debug(f"Attempting to read from missing scope: {self} at {self.path}")
             return {}
 
@@ -598,9 +598,10 @@ class Configuration:
         return (s for s in self.scopes.values() if s.writable)
 
     @property
-    def readable_scopes(self) -> Generator[ConfigScope, None, None]:
-        """Generator of readable scopes."""
-        return (s for s in self.scopes.values() if s.readable)
+    def existing_scopes(self) -> Generator[ConfigScope, None, None]:
+        """Generator of existing scopes. These are self.scopes where the
+        scope has a representation on the filesystem"""
+        return (s for s in self.scopes.values() if s.exists)
 
     def highest_precedence_scope(self) -> ConfigScope:
         """Writable scope with the highest precedence."""
@@ -1499,9 +1500,12 @@ def writable_scopes() -> List[ConfigScope]:
     return scopes
 
 
-def readable_scopes() -> List[ConfigScope]:
-    """Return list of readable scopes. Higher-priority scopes come first in the list."""
-    scopes = [x for x in CONFIG.scopes.values() if x.readable]
+def existing_scopes() -> List[ConfigScope]:
+    """Return list of existing scopes. Scopes where Spack is
+    aware of said scope, and the scope has a representation
+    on the filesystem.
+    Higher-priority scopes come first in the list."""
+    scopes = [x for x in CONFIG.scopes.values() if x.exists]
     scopes.reverse()
     return scopes
 
@@ -1510,8 +1514,8 @@ def writable_scope_names() -> List[str]:
     return list(x.name for x in writable_scopes())
 
 
-def readable_scope_names() -> List[str]:
-    return list(x.name for x in readable_scopes())
+def existing_scope_names() -> List[str]:
+    return list(x.name for x in existing_scopes())
 
 
 def matched_config(cfg_path: str) -> List[Tuple[str, Any]]:

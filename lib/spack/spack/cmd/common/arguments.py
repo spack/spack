@@ -203,7 +203,7 @@ class ConfigScope(argparse.Action):
 
 
 def config_scope_readable_validator(value):
-    if value not in spack.config.readable_scope_names():
+    if value not in spack.config.existing_scope_names():
         raise ValueError(
             f"Invalid scope argument {value} "
             "for config read operation, scope context does not exist"

@@ -1878,9 +1878,9 @@ def test_missing_include_scope_writable_list(mock_missing_dir_include_scopes):
 
 def test_missing_include_scope_not_readable_list(mock_missing_dir_include_scopes):
     """Tests that missing include scopes are not included in readable config lists"""
-    readable_scopes = [x for x in spack.config.CONFIG.readable_scopes if x.name != "sub_base"]
-    assert len(readable_scopes) == 1
-    assert readable_scopes[0].name != "sub_base"
+    existing_scopes = [x for x in spack.config.CONFIG.existing_scopes if x.name != "sub_base"]
+    assert len(existing_scopes) == 1
+    assert existing_scopes[0].name != "sub_base"
 
 
 def test_missing_include_scope_default_created_as_dir_scope(mock_missing_dir_include_scopes):
