@@ -82,6 +82,7 @@ jobs:
           COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
+          mkdir ~/.config/spack
           share/spack/qa/run-unit-tests
     - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
       with:
