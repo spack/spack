@@ -1029,6 +1029,7 @@ class OptionalInclude:
 
         is_dir = os.path.isdir(config_path)
         exists = os.path.exists(config_path)
+        # notably naive
         is_file = config_path.endswith(".yaml") or config_path.endswith(".yml")
 
         if not exists and not self.optional:
