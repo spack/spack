@@ -230,7 +230,9 @@ class DirectoryConfigScope(ConfigScope):
     def get_section(self, section: str) -> Optional[YamlConfigDict]:
         """Returns the data associated with a given section"""
         if not self.readable:
-            tty.warn(f"Attempting to read from missing scope: {self}")
+            # warn appears more reasonable but produces way too much output
+            # in a normal Spack run
+            tty.debug(f"Attempting to read from missing scope: {self}")
             return {}
         if section not in self.sections:
             path = self.get_section_filename(section)
@@ -588,6 +590,11 @@ class Configuration:
     def writable_scopes(self) -> Generator[ConfigScope, None, None]:
         """Generator of writable scopes with an associated file."""
         return (s for s in self.scopes.values() if s.writable)
+    
+    @property
+    def readable_scopes(self) -> Generator[ConfigScope, None, None]:
+        """Generator of readable scopes."""
+        return (s for s in self.scopes.values() if s.readable)
 
     def highest_precedence_scope(self) -> ConfigScope:
         """Writable scope with the highest precedence."""

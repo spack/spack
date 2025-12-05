@@ -1041,7 +1041,16 @@ def mock_low_high_config(tmp_path: Path):
 
 @pytest.fixture()
 def mock_missing_include_scopes(tmp_path: Path):
-    scope = spack.config.DirectoryConfigScope("", str(tmp_path / ""))
+    base_scope_dir = tmp_path / "base"
+    scope = spack.config.DirectoryConfigScope("base", str(base_scope_dir))
+    scope.sections["include"] = syaml.syaml_dict({"include" : [{
+            "name" : "sub_base",
+            "path" : str(tmp_path / "sub"),
+            "optional" : True,
+            "prefer_modify": True
+        }]
+    })
+    scope._write_section("include")
 
     with spack.config.use_configuration(scope) as config:
         yield config
