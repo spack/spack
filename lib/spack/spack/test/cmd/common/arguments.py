@@ -172,7 +172,7 @@ def test_missing_config_scopes_are_valid_scope_arguments(mock_missing_include_sc
 def test_missing_config_scopes_not_valid_read_scope(mock_missing_include_scopes):
     """Ensures that if a missing include scope is the subject of a read
     operation, we fail at the argparse level"""
-    a = argparse.ArgumentParser(exit_on_error=False)
+    a = argparse.ArgumentParser()
     a.add_argument(
         "--scope",
         action=arguments.ConfigScope,
@@ -180,5 +180,5 @@ def test_missing_config_scopes_not_valid_read_scope(mock_missing_include_scopes)
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
     )
-    with pytest.raises(argparse.ArgumentError):
+    with pytest.raises(SystemExit):
         a.parse_args(["--scope", "sub_base"])
