@@ -214,7 +214,13 @@ class DirectoryConfigScope(ConfigScope):
     """Config scope backed by a directory containing one file per section."""
 
     def __init__(
-        self, name: str, path: str, *, writable: bool = True, readable: bool = True, prefer_modify: bool = True
+        self,
+        name: str,
+        path: str,
+        *,
+        writable: bool = True,
+        readable: bool = True,
+        prefer_modify: bool = True,
     ) -> None:
         super().__init__(name)
         self.path = path
@@ -590,7 +596,7 @@ class Configuration:
     def writable_scopes(self) -> Generator[ConfigScope, None, None]:
         """Generator of writable scopes with an associated file."""
         return (s for s in self.scopes.values() if s.writable)
-    
+
     @property
     def readable_scopes(self) -> Generator[ConfigScope, None, None]:
         """Generator of readable scopes."""
@@ -1032,12 +1038,20 @@ class OptionalInclude:
         if (not is_dir and exists) or is_file:
             # files are assumed to be SingleFileScopes
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
-            return SingleFileScope(config_name, config_path, spack.schema.merged.schema, readable=exists, prefer_modify=self.prefer_modify)
+            return SingleFileScope(
+                config_name,
+                config_path,
+                spack.schema.merged.schema,
+                readable=exists,
+                prefer_modify=self.prefer_modify,
+            )
 
         # directories are treated as regular ConfigScopes
         # assign by "default"
         tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-        return DirectoryConfigScope(config_name, config_path, readable=exists, prefer_modify=self.prefer_modify)
+        return DirectoryConfigScope(
+            config_name, config_path, readable=exists, prefer_modify=self.prefer_modify
+        )
 
     def evaluate_condition(self) -> bool:
         # circular dependencies

@@ -1866,8 +1866,9 @@ def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, mo
 def test_missing_include_scope_list(mock_missing_include_scopes):
     """Tests that an included scope with a non existent file/directory
     is still listed as a scope under spack.config.CONFIG.scopes"""
-    assert "sub_base" in list(spack.config.CONFIG.scopes), \
-        "Missing Optional Scope Missing from Config Scopes"
+    assert "sub_base" in list(
+        spack.config.CONFIG.scopes
+    ), "Missing Optional Scope Missing from Config Scopes"
 
 
 def test_missing_include_scope_writable_list(mock_missing_include_scopes):
@@ -1894,13 +1895,18 @@ def test_missing_include_scope_yaml_ext_is_file_scope(tmp_path):
     yaml extension is created as a file scope"""
     base_scope_dir = tmp_path / "base"
     scope = spack.config.DirectoryConfigScope("base", str(base_scope_dir))
-    scope.sections["include"] = syaml.syaml_dict({"include" : [{
-            "name" : "sub_base",
-            "path" : str(tmp_path / "sub.yaml"),
-            "optional" : True,
-            "prefer_modify": True
-        }]
-    })
+    scope.sections["include"] = syaml.syaml_dict(
+        {
+            "include": [
+                {
+                    "name": "sub_base",
+                    "path": str(tmp_path / "sub.yaml"),
+                    "optional": True,
+                    "prefer_modify": True,
+                }
+            ]
+        }
+    )
     scope._write_section("include")
 
     with spack.config.use_configuration(scope):
@@ -1911,27 +1917,29 @@ def test_missing_include_scope_yaml_ext_is_file_scope(tmp_path):
 def test_missing_include_scope_writeable_not_readable(mock_missing_include_scopes):
     """Tests that an included scope with a non existent file/directory
     can be written to (and created)"""
-    assert spack.config.CONFIG.scopes["sub_base"].writable, \
-        "Missing Optional Scope should be writable"
-    assert not spack.config.CONFIG.scopes["sub_base"].readable, \
-        "Missing Optional Scope should be readable"
+    assert spack.config.CONFIG.scopes[
+        "sub_base"
+    ].writable, "Missing Optional Scope should be writable"
+    assert not spack.config.CONFIG.scopes[
+        "sub_base"
+    ].readable, "Missing Optional Scope should be readable"
 
 
 def test_missing_include_scope_empty_read(mock_missing_include_scopes):
     """Tests that an included scope with a non existent file/directory
     returns an empty dict on read and has "readable" set to false"""
-    assert spack.config.CONFIG.get("config", scope="sub_base") == {}, \
-        "Missing optional include scope does not return an empty value."
-    assert not os.path.exists(spack.config.CONFIG.scopes["sub_base"].path), \
-        "Missing optional include should not be created on read"
+    assert (
+        spack.config.CONFIG.get("config", scope="sub_base") == {}
+    ), "Missing optional include scope does not return an empty value."
+    assert not os.path.exists(
+        spack.config.CONFIG.scopes["sub_base"].path
+    ), "Missing optional include should not be created on read"
 
 
 def test_missing_include_scope_write_directory(mock_missing_include_scopes):
     """Tests that an include scope with a non existent directory
     creates said directory and the appropriate section file on write"""
-    install_tree = syaml.syaml_dict({"install_tree" : {
-        "root": "$spack/tmp/spack"
-    }})
+    install_tree = syaml.syaml_dict({"install_tree": {"root": "$spack/tmp/spack"}})
     spack.config.CONFIG.set("config", install_tree, scope="sub_base")
     assert os.path.exists(spack.config.CONFIG.scopes["sub_base"].path)
     install_root = spack.config.CONFIG.get("config:install_tree:root", scope="sub_base")
@@ -1943,21 +1951,23 @@ def test_missing_include_scope_read_directory(tmp_path):
     with the appropriate section entry"""
     base_scope_dir = tmp_path / "base"
     scope = spack.config.DirectoryConfigScope("base", str(base_scope_dir))
-    scope.sections["include"] = syaml.syaml_dict({"include" : [{
-            "name" : "sub_base",
-            "path" : str(tmp_path / "sub.yaml"),
-            "optional" : True,
-            "prefer_modify": True
-        }]
-    })
+    scope.sections["include"] = syaml.syaml_dict(
+        {
+            "include": [
+                {
+                    "name": "sub_base",
+                    "path": str(tmp_path / "sub.yaml"),
+                    "optional": True,
+                    "prefer_modify": True,
+                }
+            ]
+        }
+    )
     scope._write_section("include")
 
     with spack.config.use_configuration(scope):
-        install_tree = syaml.syaml_dict({"install_tree" : {
-            "root": "$spack/tmp/spack"
-        }})
+        install_tree = syaml.syaml_dict({"install_tree": {"root": "$spack/tmp/spack"}})
         spack.config.CONFIG.set("config", install_tree, scope="sub_base")
         assert os.path.exists(spack.config.CONFIG.scopes["sub_base"].path)
         install_root = spack.config.CONFIG.get("config:install_tree:root", scope="sub_base")
         assert install_root == "$spack/tmp/spack"
-

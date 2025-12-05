@@ -169,7 +169,6 @@ def test_missing_config_scopes_are_valid_scope_arguments(mock_missing_include_sc
     assert namespace.scope == "sub_base"
 
 
-
 def test_missing_config_scopes_not_valid_read_scope(mock_missing_include_scopes):
     """Ensures that if a missing include scope is the subject of a read
     operation, we fail at the argparse level"""
