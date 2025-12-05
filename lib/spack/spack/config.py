@@ -145,7 +145,6 @@ class ConfigScope:
     def __init__(self, name: str) -> None:
         self.name = name
         self.writable = False
-        self.readable = False
         self.sections = syaml.syaml_dict()
         self.prefer_modify = False
 
@@ -173,6 +172,11 @@ class ConfigScope:
                         self._included_scopes.append(included_scope)
 
         return self._included_scopes
+
+    @property
+    def readable(self) -> bool:
+        """Whether the config object indicated by the scope can be read"""
+        return True
 
     def override_include(self):
         """Whether the ``include::`` section of this scope should override lower scopes."""
@@ -214,19 +218,16 @@ class DirectoryConfigScope(ConfigScope):
     """Config scope backed by a directory containing one file per section."""
 
     def __init__(
-        self,
-        name: str,
-        path: str,
-        *,
-        writable: bool = True,
-        readable: bool = True,
-        prefer_modify: bool = True,
+        self, name: str, path: str, *, writable: bool = True, prefer_modify: bool = True
     ) -> None:
         super().__init__(name)
         self.path = path
         self.writable = writable
-        self.readable = readable
         self.prefer_modify = prefer_modify
+
+    @property
+    def readable(self) -> bool:
+        return os.path.exists(self.path)
 
     def get_section_filename(self, section: str) -> str:
         """Returns the filename associated with a given section"""
@@ -236,9 +237,7 @@ class DirectoryConfigScope(ConfigScope):
     def get_section(self, section: str) -> Optional[YamlConfigDict]:
         """Returns the data associated with a given section"""
         if not self.readable:
-            # warn appears more reasonable but produces way too much output
-            # in a normal Spack run
-            tty.debug(f"Attempting to read from missing scope: {self}")
+            tty.debug(f"Attempting to read from missing scope: {self} at {self.path}")
             return {}
         if section not in self.sections:
             path = self.get_section_filename(section)
@@ -262,7 +261,6 @@ class DirectoryConfigScope(ConfigScope):
             filesystem.mkdirp(self.path)
             with open(filename, "w", encoding="utf-8") as f:
                 syaml.dump_config(data, stream=f, default_flow_style=False)
-                self.readable = True
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
 
@@ -279,7 +277,6 @@ class SingleFileScope(ConfigScope):
         yaml_path: Optional[List[str]] = None,
         writable: bool = True,
         prefer_modify: bool = True,
-        readable: bool = True,
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -304,8 +301,11 @@ class SingleFileScope(ConfigScope):
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
-        self.readable = readable
         self.yaml_path = yaml_path or []
+
+    @property
+    def readable(self) -> bool:
+        return os.path.exists(self.path)
 
     def get_section_filename(self, section) -> str:
         return self.path
@@ -338,6 +338,7 @@ class SingleFileScope(ConfigScope):
         # }
 
         if not self.readable:
+            tty.debug(f"Attempting to read from missing scope: {self} at {self.path}")
             return {}
 
         # This bit ensures we have read the file and have
@@ -400,7 +401,6 @@ class SingleFileScope(ConfigScope):
             tmp = os.path.join(parent, f".{os.path.basename(self.path)}.tmp")
             with open(tmp, "w", encoding="utf-8") as f:
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
-                self.readable = True
             filesystem.rename(tmp, self.path)
 
         except (syaml.SpackYAMLError, OSError) as e:
@@ -1029,7 +1029,6 @@ class OptionalInclude:
 
         is_dir = os.path.isdir(config_path)
         exists = os.path.exists(config_path)
-        # notably naive
         is_file = config_path.endswith(".yaml") or config_path.endswith(".yml")
 
         if not exists and not self.optional:
@@ -1043,16 +1042,13 @@ class OptionalInclude:
                 config_name,
                 config_path,
                 spack.schema.merged.schema,
-                readable=exists,
                 prefer_modify=self.prefer_modify,
             )
 
         # directories are treated as regular ConfigScopes
         # assign by "default"
         tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-        return DirectoryConfigScope(
-            config_name, config_path, readable=exists, prefer_modify=self.prefer_modify
-        )
+        return DirectoryConfigScope(config_name, config_path, prefer_modify=self.prefer_modify)
 
     def evaluate_condition(self) -> bool:
         # circular dependencies

@@ -1039,16 +1039,17 @@ def mock_low_high_config(tmp_path: Path):
         yield config
 
 
-@pytest.fixture()
-def mock_missing_include_scopes(tmp_path: Path):
-    base_scope_dir = tmp_path / "base"
+def create_config_scope(path: Path, name: str) -> spack.config.DirectoryConfigScope:
+    """helper for creating config scopes with included file/directory scopes
+    that do not have existing representation on the filesystem"""
+    base_scope_dir = path / "base"
     scope = spack.config.DirectoryConfigScope("base", str(base_scope_dir))
     scope.sections["include"] = syaml.syaml_dict(
         {
             "include": [
                 {
                     "name": "sub_base",
-                    "path": str(tmp_path / "sub"),
+                    "path": str(path / name),
                     "optional": True,
                     "prefer_modify": True,
                 }
@@ -1056,6 +1057,24 @@ def mock_missing_include_scopes(tmp_path: Path):
         }
     )
     scope._write_section("include")
+    return scope
+
+
+@pytest.fixture()
+def mock_missing_dir_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional directory scope
+    includes that do not have represetation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub")
+
+    with spack.config.use_configuration(scope) as config:
+        yield config
+
+
+@pytest.fixture
+def mock_missing_file_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional file scope
+    includes that do not have represetation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub.yaml")
 
     with spack.config.use_configuration(scope) as config:
         yield config
