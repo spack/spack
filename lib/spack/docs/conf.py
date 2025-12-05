@@ -359,6 +359,7 @@ nitpick_ignore = [
     ("py:class", "hashlib._Hash"),
     ("py:class", "concurrent.futures._base.Executor"),
     ("py:class", "multiprocessing.context.Process"),
+    ("py:class", "spack.vendor.jinja2.Environment"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.repo._PrependFileLoader"),
     ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
