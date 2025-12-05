@@ -195,7 +195,9 @@ def _root(args):
         spack.config.set("bootstrap:root", args.path, scope=args.scope)
     elif args.scope:
         if args.scope not in spack.config.readable_scope_names():
-            raise RuntimeError(f"Scope {args.scope} is not readable, cannot report root")
+            spack.llnl.util.tty.die(
+                f"The argument --scope={args.scope} must refer to an existing scope."
+            )
 
     root = spack.config.get("bootstrap:root", default=None, scope=args.scope)
     if root:
