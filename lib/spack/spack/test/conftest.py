@@ -37,6 +37,7 @@ import spack.config
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
+import spack.extensions
 import spack.llnl.util.lang
 import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
@@ -2459,3 +2460,13 @@ def mock_util_executable(monkeypatch):
 
     monkeypatch.setattr(spack.util.executable.Executable, "__call__", mock_call)
     yield logger, should_fail, registered_reponses
+
+
+@pytest.fixture()
+def reset_extension_paths():
+    """Clears the cache used for entry points, both in setup and tear-down.
+    Needed if a test stresses parts related to computing paths for Spack extensions
+    """
+    spack.extensions.extension_paths_from_entry_points.cache_clear()
+    yield
+    spack.extensions.extension_paths_from_entry_points.cache_clear()
