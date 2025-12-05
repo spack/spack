@@ -103,7 +103,11 @@ def concretize_separately(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
     """
-    from spack.bootstrap import ensure_bootstrap_configuration, ensure_clingo_importable_or_raise
+    from spack.bootstrap import (
+        ensure_bootstrap_configuration,
+        ensure_clingo_importable_or_raise,
+        ensure_winsdk_external_or_raise,
+    )
 
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
     args = [
@@ -118,6 +122,10 @@ def concretize_separately(
     except ImportError:
         with ensure_bootstrap_configuration():
             ensure_clingo_importable_or_raise()
+
+    # ensure we don't try to detect winsdk in parallel
+    if sys.platform == "win32":
+        ensure_winsdk_external_or_raise()
 
     # Ensure all the indexes have been built or updated, since
     # otherwise the processes in the pool may timeout on waiting

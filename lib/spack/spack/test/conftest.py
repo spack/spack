@@ -28,7 +28,7 @@ import spack.vendor.archspec.cpu.microarchitecture
 import spack.vendor.archspec.cpu.schema
 
 import spack.binary_distribution
-import spack.bootstrap.core
+import spack.bootstrap
 import spack.caches
 import spack.compilers.config
 import spack.compilers.libraries
@@ -995,16 +995,10 @@ def monkeypatch_session():
         yield monkeypatch
 
 
-@pytest.fixture(scope="session", autouse=True)
-def mock_wsdk_externals(monkeypatch_session):
-    """Skip check for required external packages on Windows during testing
-    Note: In general this should cover this behavior for all tests,
-    however any session scoped fixture involving concretization should
-    include this fixture
-    """
-    monkeypatch_session.setattr(
-        spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none
-    )
+@pytest.fixture(autouse=True)
+def mock_wsdk_externals(monkeypatch):
+    """Skip check for required external packages on Windows during testing."""
+    monkeypatch.setattr(spack.bootstrap, "ensure_winsdk_external_or_raise", _return_none)
 
 
 @pytest.fixture(scope="function")
@@ -1090,7 +1084,6 @@ def _store_dir_and_cache(tmp_path_factory: pytest.TempPathFactory):
 @pytest.fixture(scope="session")
 def mock_store(
     tmp_path_factory: pytest.TempPathFactory,
-    mock_wsdk_externals,
     mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache: Tuple[Path, Path],
@@ -1105,6 +1098,7 @@ def mock_store(
 
     """
     store_path, store_cache = _store_dir_and_cache
+    _mock_wsdk_externals = spack.bootstrap.ensure_winsdk_external_or_raise
 
     # Make the DB filesystem read-only to ensure constructors don't modify anything in it.
     # We want Spack to be able to point to a DB on a read-only filesystem easily.
@@ -1117,7 +1111,11 @@ def mock_store(
                 with spack.repo.use_repositories(mock_packages_repo):
                     # make the DB filesystem writable only while we populate it
                     _recursive_chmod(store_path, 0o755)
-                    _populate(store.db)
+                    try:
+                        spack.bootstrap.ensure_winsdk_external_or_raise = _return_none
+                        _populate(store.db)
+                    finally:
+                        spack.bootstrap.ensure_winsdk_external_or_raise = _mock_wsdk_externals
                     _recursive_chmod(store_path, 0o555)
 
         _recursive_chmod(store_cache, 0o755)

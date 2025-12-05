@@ -1179,8 +1179,7 @@ class PyclingoDriver:
             A tuple of the solve result, the timer for the different phases of the
             solve, and the internal statistics from clingo.
         """
-        # avoid circular import
-        from spack.bootstrap.core import ensure_winsdk_external_or_raise
+        from spack.bootstrap import ensure_winsdk_external_or_raise
 
         output = output or DEFAULT_OUTPUT_CONFIGURATION
         timer = spack.util.timer.Timer()
@@ -1192,7 +1191,6 @@ class PyclingoDriver:
         # needs to modify active config scope, so cannot be run within
         # bootstrap config scope
         if sys.platform == "win32":
-            tty.debug("Ensuring basic dependencies {win-sdk, wgl} available")
             ensure_winsdk_external_or_raise()
 
         # assemble a list of the control files needed for this problem. Some are conditionally
