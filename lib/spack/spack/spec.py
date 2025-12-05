@@ -1071,7 +1071,7 @@ def _select_edges(
         return []
 
     # Start from all the edges we store
-    selected = (d for d in itertools.chain.from_iterable(edge_map.values()))
+    selected = (d for lst in edge_map.values() for d in lst)
 
     # Filter by parent name
     if parent:
