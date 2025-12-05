@@ -54,6 +54,26 @@ def test_pull_checkout_commit(git, tmp_path: pathlib.Path, mock_git_version_info
         assert commits[0] in git("rev-parse", "HEAD", output=str)
 
 
+def test_pull_checkout_commit_from_remote(git, tmp_path: pathlib.Path, mock_git_version_info):
+    """Test fetching a specific commit from a specific remote.
+
+    This tests the branch where we fetch a commit directly from a remote
+    when the commit is not available locally. The test initializes an empty
+    git repo with only a remote configured, so the local checkout will fail
+    and trigger the remote fetch path.
+    """
+    repo, _, commits = mock_git_version_info
+    destination = tmp_path / "test_git_checkout_commit_from_remote"
+
+    with working_dir(destination, create=True):
+        spack.util.git.init_git_repo(repo)
+        # Pass remote="origin" to trigger the remote fetch branch (lines 151-158 in git.py)
+        # The depth parameter exercises line 153
+        spack.util.git.pull_checkout_commit(commits[0], remote="origin", depth=1)
+
+        assert commits[0] in git("rev-parse", "HEAD", output=str)
+
+
 def test_pull_checkout_tag(git, tmp_path: pathlib.Path, mock_git_version_info):
     repo, _, _ = mock_git_version_info
     destination = tmp_path / "test_git_checkout_tag"
