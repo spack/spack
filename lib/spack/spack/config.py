@@ -235,10 +235,14 @@ class DirectoryConfigScope(ConfigScope):
         return os.path.join(self.path, f"{section}.yaml")
 
     def get_section(self, section: str) -> Optional[YamlConfigDict]:
-        """Returns the data associated with a given section"""
+        """Returns the data associated with a given section if the scope exists"""
         if not self.exists:
             tty.debug(f"Attempting to read from missing scope: {self} at {self.path}")
             return {}
+        return self._get_section(section)
+
+    def _get_section(self, section: str) -> Optional[YamlConfigDict]:
+        """get_section but without the existence check"""
         if section not in self.sections:
             path = self.get_section_filename(section)
             schema = SECTION_SCHEMAS[section]
@@ -251,7 +255,7 @@ class DirectoryConfigScope(ConfigScope):
             raise spack.error.ConfigError(f"Cannot write to immutable scope {self}")
 
         filename = self.get_section_filename(section)
-        data = self.get_section(section)
+        data = self._get_section(section)
         if data is None:
             return
 
