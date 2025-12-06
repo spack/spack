@@ -1044,17 +1044,17 @@ def create_config_scope(path: Path, name: str) -> spack.config.DirectoryConfigSc
     that do not have existing representation on the filesystem"""
     base_scope_dir = path / "base"
     config_data = syaml.syaml_dict(
-            {
-                "include": [
-                    {
-                        "name": "sub_base",
-                        "path": str(path / name),
-                        "optional": True,
-                        "prefer_modify": True,
-                    }
-                ]
-            }
-        )
+        {
+            "include": [
+                {
+                    "name": "sub_base",
+                    "path": str(path / name),
+                    "optional": True,
+                    "prefer_modify": True,
+                }
+            ]
+        }
+    )
     base_scope_dir.mkdir()
     with open(str(base_scope_dir / "include.yaml"), "w+", encoding="utf-8") as f:
         syaml.dump_config(config_data, stream=f, default_flow_style=False)

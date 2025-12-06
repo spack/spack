@@ -1032,15 +1032,16 @@ class OptionalInclude:
 
             config_name = f"{parent_scope.name}:{included_name}"
 
+        _, ext = os.path.splitext(config_path)
+        ext_is_yaml = ext == ".yaml" or ext == ".yml"
         is_dir = os.path.isdir(config_path)
         exists = os.path.exists(config_path)
-        is_file = config_path.endswith(".yaml") or config_path.endswith(".yml")
 
         if not exists and not self.optional:
             dest = f" at ({config_path})" if config_path != path else ""
             raise ValueError(f"Required path ({path}) does not exist{dest}")
 
-        if (not is_dir and exists) or is_file:
+        if (exists and not is_dir) or ext_is_yaml:
             # files are assumed to be SingleFileScopes
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(
@@ -1049,6 +1050,9 @@ class OptionalInclude:
                 spack.schema.merged.schema,
                 prefer_modify=self.prefer_modify,
             )
+
+        if ext:
+            raise ValueError(f"Attempting to create a config scope with invalid extension {ext}")
 
         # directories are treated as regular ConfigScopes
         # assign by "default"
