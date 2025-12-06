@@ -1051,7 +1051,7 @@ class OptionalInclude:
                 prefer_modify=self.prefer_modify,
             )
 
-        if ext:
+        if ext and not is_dir:
             raise ValueError(f"Attempting to create a config scope with invalid extension {ext}")
 
         # directories are treated as regular ConfigScopes
