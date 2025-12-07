@@ -588,11 +588,11 @@ imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, "depends_on", _, A1, _).
 
-imposed_nodes(node(NodeID, Package), node(X, A1))
-  :- condition_set(node(NodeID, Package), node(X, A1)),
+imposed_nodes(node(ID, Package), node(X, A1))
+  :- condition_set(node(ID, Package), node(X, A1)),
      % We don't want to add build requirements to imposed nodes, to avoid
      % unsat problems when we deal with self-dependencies: gcc@14 %gcc@10
-     not self_build_requirement(node(NodeID, Package), node(X, A1)).
+     not self_build_requirement(node(ID, Package), node(X, A1)).
 
 self_build_requirement(node(X, Package), node(Y, Package)) :- build_requirement(node(X, Package), node(Y, Package)).
 
@@ -1336,14 +1336,14 @@ error(50000, Message) :-
 
 % Variant definitions come from package facts in two ways:
 % 1. unconditional variants are always defined on all nodes for a given package
-variant_definition(node(NodeID, Package), Name, VariantID) :-
+variant_definition(node(ID, Package), Name, VariantID) :-
   pkg_fact(Package, variant_definition(Name, VariantID)),
-  attr("node", node(NodeID, Package)).
+  attr("node", node(ID, Package)).
 
 % 2. conditional variants are only defined if the conditions hold for the node
-variant_definition(node(NodeID, Package), Name, VariantID) :-
+variant_definition(node(ID, Package), Name, VariantID) :-
   pkg_fact(Package, variant_condition(Name, VariantID, ConditionID)),
-  condition_holds(ConditionID, node(NodeID, Package)).
+  condition_holds(ConditionID, node(ID, Package)).
 
 % If there are any definitions for a variant on a node, the variant is "defined".
 variant_defined(PackageNode, Name) :- variant_definition(PackageNode, Name, _).
@@ -1366,19 +1366,19 @@ node_has_variant(PackageNode, Name, SelectedVariantID) :-
 % packages.yaml and CLI are associated with just the variant name.
 % Also, settings specified on the CLI apply to all duplicates, but always have
 % `min_dupe_id` as their node id.
-variant_default_value(node(NodeID, Package), VariantName, Value) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_default_value(node(ID, Package), VariantName, Value) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_default_value_from_package_py(VariantID, Value)),
   not variant_default_value_from_packages_yaml(Package, VariantName, _),
   not attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, _).
 
-variant_default_value(node(NodeID, Package), VariantName, Value) :-
-  node_has_variant(node(NodeID, Package), VariantName, _),
+variant_default_value(node(ID, Package), VariantName, Value) :-
+  node_has_variant(node(ID, Package), VariantName, _),
   variant_default_value_from_packages_yaml(Package, VariantName, Value),
   not attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, _).
 
-variant_default_value(node(NodeID, Package), VariantName, Value) :-
-    node_has_variant(node(NodeID, Package), VariantName, _),
+variant_default_value(node(ID, Package), VariantName, Value) :-
+    node_has_variant(node(ID, Package), VariantName, _),
     attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, Value).
 
 % Penalty from the variant definition
@@ -1401,21 +1401,21 @@ variant_penalty(node(NodeID, Package), Variant, Value, Penalty) :-
     not propagate(node(NodeID, Package), variant_value(Variant, Value, _)).
 
 % -- Associate the definition's possible values with the node
-variant_possible_value(node(NodeID, Package), VariantName, Value) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_possible_value(node(ID, Package), VariantName, Value) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_possible_value(VariantID, Value)).
 
-variant_possible_value(node(NodeID, Package), VariantName, Value) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_possible_value(node(ID, Package), VariantName, Value) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_penalty(VariantID, Value, _)).
 
-variant_value_from_disjoint_sets(node(NodeID, Package), VariantName, Value1, Set1) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_value_from_disjoint_sets(node(ID, Package), VariantName, Value1, Set1) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_value_from_disjoint_sets(VariantID, Value1, Set1)).
 
 % -- Associate definition's arity with the node
-variant_single_value(node(NodeID, Package), VariantName) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_single_value(node(ID, Package), VariantName) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   variant_type(VariantID, VariantType),
   VariantType != "multi".
 

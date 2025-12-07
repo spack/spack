@@ -71,7 +71,7 @@ from spack.util.compression import GZipFileType
 from .core import (
     AspFunction,
     AspVar,
-    NodeArgument,
+    NodeId,
     SourceContext,
     clingo,
     extract_args,
@@ -472,7 +472,7 @@ class Result:
         def _dict_to_node_argument(dict):
             id = dict["id"]
             pkg = dict["pkg"]
-            return NodeArgument(id=id, pkg=pkg)
+            return NodeId(id=id, pkg=pkg)
 
         def _str_to_spec(spec_str):
             return spack.spec.Spec(spec_str)
@@ -3434,7 +3434,7 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
     return result, rejected
 
 
-FunctionTupleT = Tuple[str, Tuple[Union[str, NodeArgument], ...]]
+FunctionTupleT = Tuple[str, Tuple[Union[str, NodeId], ...]]
 
 
 class SpecBuilder:
@@ -3461,23 +3461,23 @@ class SpecBuilder:
     )
 
     @staticmethod
-    def make_node(*, pkg: str) -> NodeArgument:
+    def make_node(*, pkg: str) -> NodeId:
         """Given a package name, returns the string representation of the "min_dupe_id" node in
         the ASP encoding.
 
         Args:
             pkg: name of a package
         """
-        return NodeArgument(id="0", pkg=pkg)
+        return NodeId(id="0", pkg=pkg)
 
     def __init__(self, specs, hash_lookup=None):
-        self._specs: Dict[NodeArgument, spack.spec.Spec] = {}
+        self._specs: Dict[NodeId, spack.spec.Spec] = {}
 
         # Matches parent nodes to splice node
         self._splices: Dict[spack.spec.Spec, List[spack.solver.splicing.Splice]] = {}
         self._result = None
         self._command_line_specs = specs
-        self._flag_sources: Dict[Tuple[NodeArgument, str], Set[str]] = collections.defaultdict(
+        self._flag_sources: Dict[Tuple[NodeId, str], Set[str]] = collections.defaultdict(
             lambda: set()
         )
 
@@ -3656,15 +3656,11 @@ class SpecBuilder:
 
                 spec.compiler_flags.update({flag_type: ordered_flags})
 
-    def deprecated(self, node: NodeArgument, version: str) -> None:
+    def deprecated(self, node: NodeId, version: str) -> None:
         tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
 
     def splice_at_hash(
-        self,
-        parent_node: NodeArgument,
-        splice_node: NodeArgument,
-        child_name: str,
-        child_hash: str,
+        self, parent_node: NodeId, splice_node: NodeId, child_name: str, child_hash: str
     ):
         parent_spec = self._specs[parent_node]
         splice_spec = self._specs[splice_node]
@@ -3712,7 +3708,7 @@ class SpecBuilder:
             # predicates on virtual packages.
             if name != "error":
                 node = args[0]
-                assert isinstance(node, NodeArgument), (
+                assert isinstance(node, NodeId), (
                     f"internal solver error: expected a node, but got a {type(args[0])}. "
                     "Please report a bug at https://github.com/spack/spack/issues"
                 )
@@ -3820,7 +3816,7 @@ class SpecBuilder:
                     if not replacement.concrete:
                         replacement.replace_hash()
                     current_spec = current_spec.splice(replacement, transitive)
-            new_key = NodeArgument(id=key.id, pkg=current_spec.name)
+            new_key = NodeId(id=key.id, pkg=current_spec.name)
             specs[new_key] = current_spec
 
         return specs
