@@ -1095,30 +1095,35 @@ class PyclingoDriver:
         timer.stop("ordering")
 
         timer.start("cache-check")
+        use_cache = spack.config.get("concretizer:concretization_cache:enable", False)
+        cache = self._conc_cache if use_cache else None
+
         # load control files to add to the input representation
         control_file_paths = self._control_file_paths(control_files)
         cache_key = self._make_cache_key(problem, control_file_paths)
 
-        result, concretization_stats = None, None
-        conc_cache_enabled = spack.config.get("concretizer:concretization_cache:enable", False)
-        if conc_cache_enabled and self._conc_cache:
-            result, concretization_stats = self._conc_cache.fetch(cache_key)
+        # try to fetch from the cache
+        result = None
+        if cache:
+            result, concretization_stats = cache.fetch(cache_key)
+
         timer.stop("cache-check")
 
         tty.debug("Starting concretizer")
 
-        # run the solver and store the result, if it wasn't cached already
+        # run the solver
         if not result:
-            problem_repr = "\n".join(problem)
-            result = self._run_clingo(specs, setup, problem_repr, control_file_paths, timer)
-            if conc_cache_enabled and self._conc_cache:
-                self._conc_cache.store(cache_key, result, self.control.statistics)
+            result = self._run_clingo(specs, setup, "\n".join(problem), control_file_paths, timer)
+            concretization_stats = self.control.statistics
+
+            # write result back to the cache
+            if cache:
+                cache.store(cache_key, result, self.control.statistics)
 
         if output.timers:
             timer.write_tty()
             print()
 
-        concretization_stats = concretization_stats or self.control.statistics
         if output.stats:
             print("Statistics:")
             pprint.pprint(concretization_stats)
