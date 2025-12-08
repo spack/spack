@@ -48,7 +48,10 @@ def setup_parser(subparser: argparse.ArgumentParser):
     # List
     list_parser = sp.add_parser("list", aliases=["ls"], help=repo_list.__doc__)
     list_parser.add_argument(
-        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
+        "--scope",
+        action=arguments.ConfigScope,
+        type=arguments.config_scope_readable_validator,
+        help="configuration scope to read from",
     )
     output_group = list_parser.add_mutually_exclusive_group()
     output_group.add_argument("--names", action="store_true", help="show configuration names only")
