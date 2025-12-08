@@ -343,17 +343,27 @@ class SpackNamespace(types.ModuleType):
         return getattr(self, name)
 
 
-class FastPackageChecker(Mapping[str, os.stat_result]):
-    """Cache that maps package names to the stats obtained on the
-    ``package.py`` files associated with them.
+@contextlib.contextmanager
+def _directory_fd(path: str) -> Generator[Optional[int], None, None]:
+    if sys.platform == "win32":
+        yield None
+        return
 
-    For each repository a cache is maintained at class level, and shared among
-    all instances referring to it. Update of the global cache is done lazily
-    during instance initialization.
-    """
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        yield fd
+    finally:
+        os.close(fd)
+
+
+class FastPackageChecker(Mapping[str, float]):
+    """Cache that maps package names to the modification times of their ``package.py`` files.
+
+    For each repository a cache is maintained at class level, and shared among all instances
+    referring to it. Update of the global cache is done lazily during instance initialization."""
 
     #: Global cache, reused by every instance
-    _paths_cache: Dict[str, Dict[str, os.stat_result]] = {}
+    _paths_cache: Dict[str, Dict[str, float]] = {}
 
     def __init__(self, packages_path: str, package_api: Tuple[int, int]) -> None:
         # The path of the repository managed by this instance
@@ -365,39 +375,45 @@ class FastPackageChecker(Mapping[str, os.stat_result]):
             self._paths_cache[packages_path] = self._create_new_cache()
 
         #: Reference to the appropriate entry in the global cache
-        self._packages_to_stats = self._paths_cache[packages_path]
+        self._packages_to_mtime = self._paths_cache[packages_path]
 
     def invalidate(self) -> None:
         """Regenerate cache for this checker."""
         self._paths_cache[self.packages_path] = self._create_new_cache()
-        self._packages_to_stats = self._paths_cache[self.packages_path]
+        self._packages_to_mtime = self._paths_cache[self.packages_path]
 
-    def _create_new_cache(self) -> Dict[str, os.stat_result]:
+    def _create_new_cache(self) -> Dict[str, float]:
         """Create a new cache for packages in a repo.
 
-        The implementation here should try to minimize filesystem
-        calls.  At the moment, it is O(number of packages) and makes
-        about one stat call per package.  This is reasonably fast, and
-        avoids actually importing packages in Spack, which is slow.
-        """
+        The implementation here should try to minimize filesystem calls. At the moment, it makes
+        one stat call per package. This is reasonably fast, and avoids actually importing packages
+        in Spack, which is slow."""
         # Create a dictionary that will store the mapping between a
-        # package name and its stat info
-        cache: Dict[str, os.stat_result] = {}
-        with os.scandir(self.packages_path) as entries:
+        # package name and its mtime
+        cache: Dict[str, float] = {}
+        # Don't use os.path.join in the loop cause it's slow and redundant.
+        package_py_suffix = f"{os.path.sep}{package_file_name}"
+
+        # Use a file descriptor for the packages directory to avoid repeated path resolution.
+        with _directory_fd(self.packages_path) as fd, os.scandir(self.packages_path) as entries:
             for entry in entries:
                 # Construct the file name from the directory
-                pkg_file = os.path.join(entry.path, package_file_name)
+                if sys.platform == "win32":
+                    pkg_file = f"{entry.path}{package_py_suffix}"
+                else:
+                    pkg_file = f"{entry.name}{package_py_suffix}"
 
                 try:
-                    sinfo = os.stat(pkg_file)
+                    sinfo = os.stat(pkg_file, dir_fd=fd)
                 except OSError as e:
                     if e.errno in (errno.ENOENT, errno.ENOTDIR):
                         # No package.py file here.
                         continue
                     elif e.errno == errno.EACCES:
+                        pkg_file = os.path.join(self.packages_path, entry.name, package_file_name)
                         tty.warn(f"Can't read package file {pkg_file}.")
                         continue
-                    raise e
+                    raise
 
                 # If it's not a file, skip it.
                 if not stat.S_ISREG(sinfo.st_mode):
@@ -407,31 +423,32 @@ class FastPackageChecker(Mapping[str, os.stat_result]):
                 # the current package API
                 if not nm.valid_module_name(entry.name, self.package_api):
                     x, y = self.package_api
+                    pkg_file = os.path.join(self.packages_path, entry.name, package_file_name)
                     tty.warn(
                         f"Package {pkg_file} cannot be used because `{entry.name}` is not a valid "
                         f"Spack package module name for Package API v{x}.{y}."
                     )
                     continue
 
-                # Store the stat info by package name.
-                cache[nm.pkg_dir_to_pkg_name(entry.name, self.package_api)] = sinfo
+                # Store the mtime by package name.
+                cache[nm.pkg_dir_to_pkg_name(entry.name, self.package_api)] = sinfo.st_mtime
 
         return cache
 
     def last_mtime(self) -> float:
-        return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
+        return max(self._packages_to_mtime.values())
 
     def modified_since(self, since: float) -> List[str]:
-        return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime > since]
+        return [name for name, mtime in self._packages_to_mtime.items() if mtime > since]
 
-    def __getitem__(self, item: str) -> os.stat_result:
-        return self._packages_to_stats[item]
+    def __getitem__(self, item: str) -> float:
+        return self._packages_to_mtime[item]
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self._packages_to_stats)
+        return iter(self._packages_to_mtime)
 
     def __len__(self) -> int:
-        return len(self._packages_to_stats)
+        return len(self._packages_to_mtime)
 
 
 class Indexer(metaclass=abc.ABCMeta):
