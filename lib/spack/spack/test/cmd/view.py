@@ -219,7 +219,7 @@ def test_view_files_not_ignored(
     spec = spack.concretize.concretize_one("view-not-ignored")
     pkg = spec.package
     PackageInstaller([pkg], explicit=True).install()
-    pkg.assert_installed(spec.prefix)
+    pkg.assert_installed(spec.prefix)  # type: ignore[attr-defined]
 
     install("view-file")  # Arbitrary package to add noise
 
@@ -237,7 +237,7 @@ def test_view_files_not_ignored(
         args = []
 
     view(cmd, *(args + [viewpath, "view-not-ignored", "view-file"]))
-    pkg.assert_installed(prefix_in_view)
+    pkg.assert_installed(prefix_in_view)  # type: ignore[attr-defined]
 
     view("remove", viewpath, "view-not-ignored")
-    pkg.assert_not_installed(prefix_in_view)
+    pkg.assert_not_installed(prefix_in_view)  # type: ignore[attr-defined]

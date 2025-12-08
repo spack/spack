@@ -60,7 +60,7 @@ def test_view_with_spec_not_contributing_files(mock_packages, tmp_path: pathlib.
     def pkg_a_add_files_to_view(view, merge_map, skip_if_exists=True):
         assert False, "There shouldn't be files to add"
 
-    a.package.add_files_to_view = pkg_a_add_files_to_view
+    setattr(a.package, "add_files_to_view", pkg_a_add_files_to_view)
 
     # Create view and see if files are linked.
     view.add_specs(a, b)

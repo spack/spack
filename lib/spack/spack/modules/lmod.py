@@ -73,7 +73,7 @@ def guess_core_compilers(name, store=False) -> List[spack.spec.Spec]:
     core_compilers = []
     for compiler in spack.compilers.config.all_compilers(init_config=False):
         try:
-            cc_dir = pathlib.Path(compiler.package.cc).parent
+            cc_dir = pathlib.Path(compiler.package.cc).parent  # type: ignore[attr-defined]
             is_system_compiler = str(cc_dir) in spack.util.environment.SYSTEM_DIRS
             if is_system_compiler:
                 core_compilers.append(compiler)

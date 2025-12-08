@@ -47,7 +47,6 @@ line is a spec for a particular installation of the mpileaks package.
 6. The architecture to build with.
 """
 import collections
-import collections.abc
 import enum
 import io
 import itertools
@@ -59,6 +58,7 @@ import re
 import socket
 import warnings
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -104,6 +104,9 @@ import spack.version as vn
 import spack.version.git_ref_lookup
 
 from .enums import InstallRecordStatus, PropagationPolicy
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 __all__ = [
     "CompilerSpec",
@@ -1979,16 +1982,14 @@ class Spec:
         return edges_by_package[0].parent.root
 
     @property
-    def package(self):
-        assert self.concrete, "{0}: Spec.package can only be called on concrete specs".format(
-            self.name
-        )
+    def package(self) -> "spack.package_base.PackageBase":
+        assert self.concrete, f"{self.name}: Spec.package can only be called on concrete specs"
         if not self._package:
             self._package = spack.repo.PATH.get(self)
         return self._package
 
     @property
-    def concrete(self):
+    def concrete(self) -> bool:
         """A spec is concrete if it describes a single build of a package.
 
         More formally, a spec is concrete if concretize() has been called
@@ -2002,14 +2003,14 @@ class Spec:
         return self._concrete
 
     @property
-    def spliced(self):
+    def spliced(self) -> bool:
         """Returns whether or not this Spec is being deployed as built i.e.
         whether or not this Spec has ever been spliced.
         """
         return any(s.build_spec is not s for s in self.traverse(root=True))
 
     @property
-    def installed(self):
+    def installed(self) -> bool:
         """Installation status of a package.
 
         Returns:
@@ -2030,7 +2031,7 @@ class Spec:
             return False
 
     @property
-    def installed_upstream(self):
+    def installed_upstream(self) -> bool:
         """Whether the spec is installed in an upstream repository.
 
         Returns:
@@ -2042,7 +2043,7 @@ class Spec:
         from spack.store import STORE
 
         upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
-        return upstream and record and record.installed
+        return upstream and record is not None and record.installed
 
     @overload
     def traverse(
