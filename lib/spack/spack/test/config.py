@@ -1664,10 +1664,12 @@ def test_included_path_string_no_parent_path(
     will be rooted in the current working directory (usually SPACK_ROOT)."""
     entry = {"path": "config.yaml", "optional": True}
     include = spack.config.included_path(entry)
-    FakeScope = collections.namedtuple("FakeScope", ["path", "name"])
-    parent_scope = FakeScope("", "")
-
-    assert include.scopes(parent_scope)  # type: ignore[arg-type]
+    parent_scope = spack.config.InternalConfigScope("parent-scope")
+    included_scopes = include.scopes(parent_scope)
+    # ensure scope is returned even if there is no parent path
+    assert len(included_scopes) == 1
+    # ensure scope for include is singlefile as it ends in .yaml
+    assert isinstance(included_scopes[0], spack.config.SingleFileScope)
     destination = include.destination
     curr_dir = os.getcwd()
     assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]
