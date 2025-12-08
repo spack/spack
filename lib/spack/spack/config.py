@@ -1056,7 +1056,10 @@ class OptionalInclude:
             )
 
         if ext and not is_dir:
-            raise ValueError(f"Attempting to create a config scope with invalid extension {ext}")
+            raise ValueError(
+                f"File-based scope does not exist yet: should have a .yaml/.yml extension \
+for file scopes, or no extension for directory scopes (currently {ext})"
+            )
 
         # directories are treated as regular ConfigScopes
         # assign by "default"
