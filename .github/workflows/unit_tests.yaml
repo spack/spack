@@ -148,11 +148,13 @@ jobs:
           . .github/workflows/bin/setup_git.sh
           useradd spack-test
           chown -R spack-test .
-    - name: Run unit tests
+    - name: Bootstrap Spack development environment and run unit tests
       shell: runuser -u spack-test -- bash {0}
       run: |
           source share/spack/setup-env.sh
+          spack debug report
           spack -d bootstrap now --dev
+          spack -d style -t black
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
@@ -264,34 +266,6 @@ jobs:
         name: coverage-windows
         path: coverage
         include-hidden-files: true
-
-  # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
-  bootstrap-dev-rhel8:
-    runs-on: ubuntu-latest
-    container: registry.access.redhat.com/ubi8/ubi
-    steps:
-      - name: Install dependencies
-        run: |
-          dnf install -y \
-              bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
-              make patch tcl unzip which xz
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - name: Setup repo and non-root user
-        run: |
-          git --version
-          git config --global --add safe.directory '*'
-          git fetch --unshallow
-          . .github/workflows/bin/setup_git.sh
-          useradd spack-test
-          chown -R spack-test .
-      - name: Bootstrap Spack development environment
-        shell: runuser -u spack-test -- bash {0}
-        run: |
-          source share/spack/setup-env.sh
-          spack debug report
-          spack -d bootstrap now --dev
-          spack -d style -t black
-          spack unit-test -V
 
   canonicalization:
     name: package.py canonicalization
