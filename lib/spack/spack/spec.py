@@ -1071,7 +1071,7 @@ def _select_edges(
         return []
 
     # Start from all the edges we store
-    selected = (d for lst in edge_map.values() for d in lst)
+    selected: Iterable[DependencySpec] = itertools.chain.from_iterable(edge_map.values())
 
     # Filter by parent name
     if parent:
@@ -1082,7 +1082,8 @@ def _select_edges(
         selected = (d for d in selected if d.spec.name == child)
 
     # Filter by allowed dependency types
-    selected = (dep for dep in selected if not dep.depflag or (depflag & dep.depflag))
+    if depflag != dt.ALL:
+        selected = (dep for dep in selected if not dep.depflag or (depflag & dep.depflag))
 
     # Filter by virtuals
     if virtuals is not None:
