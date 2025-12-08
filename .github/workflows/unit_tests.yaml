@@ -58,7 +58,7 @@ jobs:
       run: "brew install kcov"
     - name: Install Python packages
       run: |
-          pip install --upgrade pip setuptools pytest pytest-xdist pytest-cov
+          pip install --upgrade pip pytest pytest-xdist pytest-cov
           pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Setup git configuration
       run: |
@@ -111,7 +111,7 @@ jobs:
       run: "brew install kcov"
     - name: Install Python packages
       run: |
-          pip install --upgrade pip setuptools pytest coverage[toml] pytest-xdist
+          pip install --upgrade pip pytest coverage[toml] pytest-xdist
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -170,7 +170,7 @@ jobs:
           sudo apt-get -y install coreutils gfortran graphviz gnupg2
     - name: Install Python packages
       run: |
-          pip install --upgrade pip setuptools pytest coverage[toml] pytest-cov clingo
+          pip install --upgrade pip pytest coverage[toml] pytest-cov clingo
           pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
     - name: Run unit tests (full suite with coverage)
       env:
@@ -205,7 +205,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
       run: |
-          pip install --upgrade pip setuptools
+          pip install --upgrade pip
           pip install --upgrade pytest coverage[toml] pytest-xdist pytest-cov
     - name: Setup Homebrew packages
       run: |
@@ -249,7 +249,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip pywin32 setuptools pytest-cov clingo
+          python -m pip install --upgrade pip pywin32 pytest-cov clingo
     - name: Create local develop
       run: |
         ./.github/workflows/bin/setup_git.ps1
