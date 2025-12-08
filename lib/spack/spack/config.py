@@ -604,7 +604,7 @@ class Configuration:
     @property
     def existing_scopes(self) -> Generator[ConfigScope, None, None]:
         """Generator of existing scopes. These are self.scopes where the
-        scope has a representation on the filesystem"""
+        scope has a representation on the filesystem or is internal"""
         return (s for s in self.scopes.values() if s.exists)
 
     def highest_precedence_scope(self) -> ConfigScope:
@@ -1525,7 +1525,7 @@ def writable_scopes() -> List[ConfigScope]:
 def existing_scopes() -> List[ConfigScope]:
     """Return list of existing scopes. Scopes where Spack is
     aware of said scope, and the scope has a representation
-    on the filesystem.
+    on the filesystem or are internal scopes.
     Higher-priority scopes come first in the list."""
     scopes = [x for x in CONFIG.scopes.values() if x.exists]
     scopes.reverse()
