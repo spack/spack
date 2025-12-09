@@ -476,7 +476,7 @@ def no_install_status():
 @arg
 def show_non_defaults():
     return Args(
-        "--show-non-defaults",
+        "--non-defaults",
         action="store_true",
         default=False,
         help="highlight non-default versions or variants",
