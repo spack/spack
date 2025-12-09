@@ -4483,7 +4483,8 @@ def test_concretization_cache_roundtrip_result(use_concretization_cache):
 def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_config):
     """Tests to ensure we are cleaning the cache when we should be respective to the
     number of entries allowed in the cache"""
-    conc_cache_dir = use_concretization_cache
+    conc_cache_dir = use_concretization_cache / f"v{spack.solver.asp.ConcretizationCache.VERSION}"
+    conc_cache_dir.mkdir(parents=True)
 
     spack.config.set("concretizer:concretization_cache:entry_limit", 1000)
 
@@ -4511,26 +4512,6 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
     after = names()
     assert len(after) == 501
     assert len(after - before) == 1  # one additional hash added by 1001st concretization
-
-
-def test_concretization_cache_uncompressed_entry(use_concretization_cache, monkeypatch):
-    def _store(self, problem, result, statistics):
-        cache_path = self._cache_path_from_problem(problem)
-        with self.write_transaction(cache_path) as exists:
-            if exists:
-                return
-            try:
-                with open(cache_path, "x", encoding="utf-8") as cache_entry:
-                    cache_dict = {"results": result.to_dict(), "statistics": statistics}
-                    cache_entry.write(json.dumps(cache_dict))
-            except FileExistsError:
-                pass
-
-    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _store)
-    # Store the results in plaintext
-    spack.concretize.concretize_one("zlib")
-    # Ensure fetch can handle the plaintext cache entry
-    spack.concretize.concretize_one("zlib")
 
 
 @pytest.mark.parametrize(

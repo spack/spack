@@ -445,7 +445,6 @@ def pytest_collection_modifyitems(config, items):
 def use_concretization_cache(mock_packages, mutable_config, tmp_path: Path):
     """Enables the use of the concretization cache"""
     conc_cache_dir = tmp_path / "concretization"
-    conc_cache_dir.mkdir()
 
     # ensure we have an isolated concretization cache while using fixture
     with spack.config.override(
