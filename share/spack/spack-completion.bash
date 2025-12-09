@@ -809,7 +809,7 @@ _spack_compiler_ls() {
 _spack_compiler_info() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --scope --remote"
     else
         _installed_compilers
     fi
