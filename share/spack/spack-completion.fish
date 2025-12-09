@@ -1155,12 +1155,14 @@ complete -c spack -n '__fish_spack_using_command compiler ls' -l remote -f -a re
 complete -c spack -n '__fish_spack_using_command compiler ls' -l remote -d 'list also compilers from registered buildcaches'
 
 # spack compiler info
-set -g __fish_spack_optspecs_spack_compiler_info h/help scope=
+set -g __fish_spack_optspecs_spack_compiler_info h/help scope= remote
 complete -c spack -n '__fish_spack_using_command_pos 0 compiler info' -f -a '(__fish_spack_installed_compilers)'
 complete -c spack -n '__fish_spack_using_command compiler info' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command compiler info' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command compiler info' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
 complete -c spack -n '__fish_spack_using_command compiler info' -l scope -r -d 'configuration scope to read from'
+complete -c spack -n '__fish_spack_using_command compiler info' -l remote -f -a remote
+complete -c spack -n '__fish_spack_using_command compiler info' -l remote -d 'list also compilers from registered buildcaches'
 
 # spack compilers
 set -g __fish_spack_optspecs_spack_compilers h/help scope= remote
