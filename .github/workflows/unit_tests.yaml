@@ -152,7 +152,6 @@ jobs:
     - name: Bootstrap Spack development environment and run unit tests
       shell: runuser -u spack-test -- bash {0}
       run: |
-          mkdir ~/.config/spack
           source share/spack/setup-env.sh
           spack debug report
           spack -d bootstrap now --dev
