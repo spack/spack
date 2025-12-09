@@ -1417,6 +1417,46 @@ class GCSFetchStrategy(URLFetchStrategy):
 
 
 @fetcher
+class SCPFetchStrategy(URLFetchStrategy):
+    """FetchStrategy that pulls from an SSH/SCP server."""
+
+    url_attr = "scp"
+
+    @_needs_stage
+    def fetch(self):
+        if not (self.url.startswith("scp://") or self.url.startswith("ssh://")):
+            raise spack.error.FetchError(
+                f"{self.__class__.__name__} can only fetch from scp:// or ssh:// urls."
+            )
+        if self.archive_file:
+            tty.debug(f"Already downloaded {self.archive_file}")
+            return
+        self._fetch_scp(self.url)
+        if not self.archive_file:
+            raise FailedDownloadError(
+                RuntimeError(f"Missing archive {self.archive_file} after fetching")
+            )
+
+    @_needs_stage
+    def _fetch_scp(self, url):
+        save_file = self.stage.save_filename
+
+        if os.path.lexists(save_file):
+            os.remove(save_file)
+
+        try:
+            tty.msg(f"Fetching {url}")
+            web_util.fetch_from_ssh_url(url, save_file)
+        except Exception as e:
+            # clean up archive on failure.
+            if self.archive_file:
+                os.remove(self.archive_file)
+            if os.path.lexists(save_file):
+                os.remove(save_file)
+            raise FailedDownloadError(e) from e
+
+
+@fetcher
 class FetchAndVerifyExpandedFile(URLFetchStrategy):
     """Fetch strategy that verifies the content digest during fetching,
     as well as after expanding it."""
@@ -1712,6 +1752,7 @@ def from_url_scheme(url: str, **kwargs) -> FetchStrategy:
         "https": "url",
         "ftp": "url",
         "ftps": "url",
+        "ssh": "scp",
     }
 
     scheme = parsed_url.scheme

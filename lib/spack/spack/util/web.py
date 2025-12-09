@@ -15,6 +15,7 @@ import ssl
 import stat
 import sys
 import time
+import tempfile
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
@@ -274,9 +275,30 @@ class ExtractMetadataParser(HTMLParser):
                     self.base_url = val
 
 
+def fetch_from_ssh_url(url, dest):
+    if isinstance(url, str):
+        url = urllib.parse.urlparse(url)
+
+    scp = spack.util.executable.which("scp", required=True)
+    scp_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
+    scp(*scp_args, f"{url.netloc}:{url.path}", dest, fail_on_error=True)
+
+
+def read_from_ssh_url(url):
+    with tempfile.NamedTemporaryFile("rb") as tmp:
+        try:
+            fetch_from_ssh_url(url, tmp.name)
+            return url, {}, io.BytesIO(tmp.read())
+        except Exception as e:
+            raise SpackWebError(f"Download of {url.geturl()} failed: {e.__class__.__name__}: {e}")
+
+
 def read_from_url(url, accept_content_type=None):
     if isinstance(url, str):
         url = urllib.parse.urlparse(url)
+
+    if url.scheme in ("ssh", "scp"):
+        return read_from_ssh_url(url)
 
     # Timeout in seconds for web requests
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
@@ -374,6 +396,25 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
     elif remote_url.scheme == "gs":
         gcs = GCSBlob(remote_url)
         gcs.upload_to_blob(local_file_path)
+        if not keep_original:
+            os.remove(local_file_path)
+
+    elif remote_url.scheme in ("ssh", "scp"):
+        ssh = spack.util.executable.which("ssh", required=True)
+        scp = spack.util.executable.which("scp", required=True)
+        common_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
+        ssh(
+            *common_args,
+            remote_url.netloc,
+            f'mkdir -p "{os.path.dirname(remote_url.path)}"',
+            fail_on_error=True,
+        )
+        scp(
+            *common_args,
+            local_file_path,
+            f"{remote_url.netloc}:{remote_url.path}",
+            fail_on_error=True,
+        )
         if not keep_original:
             os.remove(local_file_path)
 
@@ -551,6 +592,12 @@ def url_exists(url, curl=None):
     tty.debug("Checking existence of {0}".format(url))
     url_result = urllib.parse.urlparse(url)
 
+    if url_result.scheme in ("ssh", "scp"):
+        ssh = spack.util.executable.which("ssh", required=True)
+        ssh_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
+        ssh(*ssh_args, url_result.netloc, f"test -e {url_result.path}", fail_on_error=False)
+        return ssh.returncode == 0
+
     # Use curl if configured to do so
     fetch_method = spack.config.get("config:url_fetch_method", "urllib")
     use_curl = fetch_method.startswith("curl") and url_result.scheme not in ("gs", "s3")
@@ -717,6 +764,19 @@ def list_url(url, recursive=False):
         gcs = GCSBucket(url)
         return gcs.get_all_blobs(recursive=recursive)
 
+    elif url.scheme in ("ssh", "scp"):
+        ssh = spack.util.executable.which("ssh", required=True)
+        ssh_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
+        if recursive:
+            output = ssh(*ssh_args, url.netloc, f"find {url.path} -type f", output=str)
+        else:
+            output = ssh(*ssh_args, url.netloc, f"find {url.path} -maxdepth 1 -type f", output=str)
+        return (
+            [str(Path(p.strip()).relative_to(url.path)) for p in output.splitlines()]
+            if output
+            else []
+        )
+
 
 def stat_url(url: str) -> Optional[Tuple[int, float]]:
     """Get stat result for a URL.
@@ -752,6 +812,20 @@ def stat_url(url: str) -> Optional[Tuple[int, float]]:
 
         mtime = head_request["LastModified"].timestamp()
         size = head_request["ContentLength"]
+        return size, mtime
+
+    elif parsed_url.scheme in ("ssh", "scp"):
+        ssh = spack.util.executable.which("ssh", required=True)
+        ssh_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
+        output = (
+            ssh(*ssh_args, parsed_url.netloc, f'stat -c "%s %Y" "{parsed_url.path}"', output=str)
+            .strip()
+            .split()
+        )
+        if ssh.returncode != 0:
+            return None
+        size = int(output[0])
+        mtime = float(output[1])
         return size, mtime
 
     else:

@@ -16,7 +16,19 @@ from spack.error import MirrorError
 from spack.oci.image import is_oci_url
 
 #: What schemes do we support
-supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
+supported_url_schemes = (
+    "file",
+    "http",
+    "https",
+    "sftp",
+    "ftp",
+    "s3",
+    "gs",
+    "oci",
+    "oci+http",
+    "ssh",
+    "scp",
+)
 
 #: The layout version spack can current install
 SUPPORTED_LAYOUT_VERSIONS = (3, 2)
