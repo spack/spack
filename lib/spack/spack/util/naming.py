@@ -62,6 +62,67 @@ _VALID_MODULE_RE_V1 = re.compile(r"^\w[\w-]*$")
 _VALID_MODULE_RE_V2 = re.compile(r"^[a-z_][a-z0-9_]*$")
 
 
+class NamingScheme:
+    """Base class for package naming schemes."""
+
+    def pkg_dir_to_pkg_name(self, dirname: str) -> str:
+        """Translate a package dir (pkg_dir/package.py) to its corresponding package name"""
+        raise NotImplementedError
+
+    def pkg_name_to_pkg_dir(self, name: str) -> str:
+        """Translate a package name to its corresponding package dir (pkg_dir/package.py)"""
+        raise NotImplementedError
+
+    def valid_module_name(self, mod_name: str) -> bool:
+        """Return whether mod_name is valid for use in Spack."""
+        raise NotImplementedError
+
+
+class NamingSchemeV1(NamingScheme):
+    """Naming scheme for Package API v1.x where directory names are package names."""
+
+    def pkg_dir_to_pkg_name(self, dirname: str) -> str:
+        return dirname
+
+    def pkg_name_to_pkg_dir(self, name: str) -> str:
+        return name
+
+    def valid_module_name(self, mod_name: str) -> bool:
+        return bool(_VALID_MODULE_RE_V1.match(mod_name))
+
+
+class NamingSchemeV2(NamingScheme):
+    """Naming scheme for Package API v2.x where directory names are Python submodule names."""
+
+    def pkg_dir_to_pkg_name(self, dirname: str) -> str:
+        return dirname.lstrip("_").replace("_", "-")
+
+    def pkg_name_to_pkg_dir(self, name: str) -> str:
+        name = name.replace("-", "_")
+        if re.match(r"^[0-9]", name) or name in RESERVED_NAMES_ONLY_LOWERCASE:
+            name = f"_{name}"
+        return name
+
+    def valid_module_name(self, mod_name: str) -> bool:
+        if not _VALID_MODULE_RE_V2.match(mod_name) or "__" in mod_name:
+            return False
+        elif mod_name.startswith("_"):
+            # it can only start with an underscore if followed by digit or reserved name
+            return mod_name[1:] in RESERVED_NAMES_ONLY_LOWERCASE or mod_name[1].isdigit()
+        else:
+            return mod_name not in RESERVED_NAMES_ONLY_LOWERCASE
+
+
+# Cache naming scheme instances
+_NAMING_SCHEME_V1 = NamingSchemeV1()
+_NAMING_SCHEME_V2 = NamingSchemeV2()
+
+
+def get_naming_scheme(package_api: Tuple[int, int]) -> NamingScheme:
+    """Get the appropriate naming scheme for the given package API version."""
+    return _NAMING_SCHEME_V1 if package_api < (2, 0) else _NAMING_SCHEME_V2
+
+
 def pkg_name_to_class_name(pkg_name: str):
     """Convert a Spack package name to a class name, based on
     `PEP-8 <http://legacy.python.org/dev/peps/pep-0008/>`_:
@@ -91,19 +152,12 @@ def pkg_name_to_class_name(pkg_name: str):
 
 def pkg_dir_to_pkg_name(dirname: str, package_api: Tuple[int, int]) -> str:
     """Translate a package dir (pkg_dir/package.py) to its corresponding package name"""
-    if package_api < (2, 0):
-        return dirname
-    return dirname.lstrip("_").replace("_", "-")
+    return get_naming_scheme(package_api).pkg_dir_to_pkg_name(dirname)
 
 
 def pkg_name_to_pkg_dir(name: str, package_api: Tuple[int, int]) -> str:
     """Translate a package name to its corresponding package dir (pkg_dir/package.py)"""
-    if package_api < (2, 0):
-        return name
-    name = name.replace("-", "_")
-    if re.match(r"^[0-9]", name) or name in RESERVED_NAMES_ONLY_LOWERCASE:
-        name = f"_{name}"
-    return name
+    return get_naming_scheme(package_api).pkg_name_to_pkg_dir(name)
 
 
 def possible_spack_module_names(python_mod_name: str) -> List[str]:
@@ -173,15 +227,7 @@ def simplify_name(name: str) -> str:
 
 def valid_module_name(mod_name: str, package_api: Tuple[int, int]) -> bool:
     """Return whether mod_name is valid for use in Spack."""
-    if package_api < (2, 0):
-        return bool(_VALID_MODULE_RE_V1.match(mod_name))
-    elif not _VALID_MODULE_RE_V2.match(mod_name) or "__" in mod_name:
-        return False
-    elif mod_name.startswith("_"):
-        # it can only start with an underscore if followed by digit or reserved name
-        return mod_name[1:] in RESERVED_NAMES_ONLY_LOWERCASE or mod_name[1].isdigit()
-    else:
-        return mod_name not in RESERVED_NAMES_ONLY_LOWERCASE
+    return get_naming_scheme(package_api).valid_module_name(mod_name)
 
 
 class NamespaceTrie:
