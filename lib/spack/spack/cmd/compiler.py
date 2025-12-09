@@ -5,7 +5,7 @@
 import argparse
 import sys
 import warnings
-from typing import List
+from typing import List, Optional
 
 import spack.binary_distribution
 import spack.compilers.config
@@ -146,7 +146,7 @@ def compiler_remove(args):
 
 def compiler_info(args):
     """Print info about all compilers matching a spec."""
-    all_compilers = _all_available_compilers(args)
+    all_compilers = _all_available_compilers(scope=args.scope, remote=args.remote)
     query = spack.spec.Spec(args.compiler_spec)
     compilers = [x for x in all_compilers if x.satisfies(query)]
 
@@ -198,7 +198,7 @@ def compiler_info(args):
 
 
 def compiler_list(args):
-    compilers = _all_available_compilers(args)
+    compilers = _all_available_compilers(scope=args.scope, remote=args.remote)
 
     # If there are no compilers in any scope, and we're outputting to a tty, give a
     # hint to the user.
@@ -239,17 +239,17 @@ def compiler_list(args):
         colify(reversed(sorted(result)))
 
 
-def _all_available_compilers(args: argparse.Namespace) -> List[Spec]:
+def _all_available_compilers(scope: Optional[str], remote: bool) -> List[Spec]:
     supported_compilers = spack.compilers.config.supported_compilers()
 
     def _is_compiler(x):
         return x.name in supported_compilers and x.package.supported_languages and not x.external
 
     compilers_from_store = [x for x in spack.store.STORE.db.query() if _is_compiler(x)]
-    compilers_from_yaml = spack.compilers.config.all_compilers(scope=args.scope, init_config=False)
+    compilers_from_yaml = spack.compilers.config.all_compilers(scope=scope, init_config=False)
     compilers = compilers_from_yaml + compilers_from_store
 
-    if args.remote:
+    if remote:
         compilers.extend(
             [x for x in spack.binary_distribution.update_cache_and_get_specs() if _is_compiler(x)]
         )
