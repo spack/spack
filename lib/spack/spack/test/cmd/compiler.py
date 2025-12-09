@@ -246,3 +246,133 @@ def test_compilers_shows_packages_yaml(
 
     out = compiler("list", fail_on_error=True)
     assert out.count("gcc@7.7.7") == 1
+
+
+@pytest.mark.not_on_windows("path format conflict")
+@pytest.mark.parametrize(
+    "externals",
+    [
+        (
+            {
+                "spec": "gcc@=7.7.7 languages=c,cxx,fortran os=foobar target=x86_64",
+                "prefix": "/path/to/fake",
+                "modules": ["gcc/7.7.7", "foobar"],
+                "extra_attributes": {
+                    "compilers": {
+                        "c": "/path/to/fake/gcc",
+                        "cxx": "/path/to/fake/g++",
+                        "fortran": "/path/to/fake/gfortran",
+                    },
+                    "flags": {"fflags": "-ffree-form"},
+                },
+            },
+            {
+                "spec": "llvm@=14.0.2 languages=c,cxx os=foobar target=x86_64",
+                "prefix": "/path/to/fake",
+                "modules": ["llvm/14.0.2", "foobar"],
+                "extra_attributes": {
+                    "compilers": {"c": "/path/to/fake/clang", "cxx": "/path/to/fake/clang++"},
+                    "flags": {"fflags": "-ffree-form"},
+                },
+            },
+        )
+    ],
+)
+def test_compilers_list_outputs_alias(externals, no_packages_yaml, working_env, compilers_dir):
+    """Spack should list bultin and legacy (alias) compilers"""
+    gcc_spec = externals[0]
+    llvm_spec = externals[1]
+    gcc_entry = {"externals": [gcc_spec]}
+    llvm_entry = {"externals": [llvm_spec]}
+
+    packages = spack.config.get("packages")
+    packages["gcc"] = gcc_entry
+    packages["llvm"] = llvm_entry
+    spack.config.set("packages", packages)
+
+    out = compiler("list", fail_on_error=True)
+    assert out.count("gcc@7.7.7") == 1
+    assert out.count("llvm@14.0.2") == 1
+    assert out.count("clang@14.0.2") == 1
+
+
+@pytest.mark.not_on_windows("path format conflict")
+@pytest.mark.parametrize(
+    "externals, expected",
+    [
+        (
+            (
+                {
+                    "spec": "gcc@=7.7.7 languages=c,cxx,fortran os=foobar target=x86_64",
+                    "prefix": "/path/to/fake",
+                    "modules": ["gcc/7.7.7", "foobar"],
+                    "extra_attributes": {
+                        "compilers": {
+                            "c": "/path/to/fake/gcc",
+                            "cxx": "/path/to/fake/g++",
+                            "fortran": "/path/to/fake/gfortran",
+                        },
+                        "flags": {"fflags": "-ffree-form"},
+                    },
+                },
+                {
+                    "spec": "llvm@=14.0.2 languages=c,cxx os=foobar target=x86_64",
+                    "prefix": "/path/to/fake",
+                    "modules": ["llvm/14.0.2", "foobar"],
+                    "extra_attributes": {
+                        "compilers": {"c": "/path/to/fake/clang", "cxx": "/path/to/fake/clang++"},
+                        "flags": {"fflags": "-ffree-form"},
+                    },
+                },
+            ),
+            (
+                """gcc@=7.7.7 build_system=generic languages:=c,cxx,fortran platform=test os=foobar target=x86_64:\n"""  # noqa: E501
+                """  prefix: /path/to/fake\n"""
+                """  compilers:\n"""
+                """    c: /path/to/fake/gcc\n"""
+                """    cxx: /path/to/fake/g++\n"""
+                """    fortran: /path/to/fake/gfortran\n"""
+                """  flags:\n"""
+                """    fflags = -ffree-form\n"""
+                """  modules: \n"""
+                """    gcc/7.7.7\n"""
+                """    foobar\n"""
+                """\n""",
+                """llvm@=14.0.2+clang~flang+lld build_system=generic languages:=c,cxx platform=test os=foobar target=x86_64:\n"""  # noqa: E501
+                """  prefix: /path/to/fake\n"""
+                """  compilers:\n"""
+                """    c: /path/to/fake/clang\n"""
+                """    cxx: /path/to/fake/clang++\n"""
+                """  flags:\n"""
+                """    fflags = -ffree-form\n"""
+                """  modules: \n"""
+                """    llvm/14.0.2\n"""
+                """    foobar\n"""
+                """\n""",
+            ),
+        )
+    ],
+)
+def test_compilers_info_accepts_alias(
+    externals, expected, no_packages_yaml, working_env, compilers_dir
+):
+    """Spack compiler info command shoud accept bultin and legacy (alias) argument"""
+    gcc_spec = externals[0]
+    llvm_spec = externals[1]
+    gcc_entry = {"externals": [gcc_spec]}
+    llvm_entry = {"externals": [llvm_spec]}
+
+    packages = spack.config.get("packages")
+    packages["gcc"] = gcc_entry
+    packages["llvm"] = llvm_entry
+    spack.config.set("packages", packages)
+
+    out_gcc = compiler("info", "gcc", fail_on_error=True)
+    out_llvm = compiler("info", "llvm", fail_on_error=True)
+    out_clang = compiler("info", "clang", fail_on_error=True)
+
+    expected_gcc, expected_llvm = expected
+
+    assert expected_gcc == out_gcc
+    assert expected_llvm == out_llvm
+    assert expected_llvm == out_clang
