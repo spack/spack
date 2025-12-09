@@ -920,12 +920,6 @@ class RepoPath:
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
-    def _have_name(self, pkg_name: str) -> bool:
-        have_name = pkg_name is not None
-        if have_name and not isinstance(pkg_name, str):
-            raise ValueError(f"is_virtual(): expected package name, got {type(pkg_name)}")
-        return have_name
-
     def is_virtual(self, pkg_name: str) -> bool:
         """Return True if the package with this name is virtual, False otherwise.
 
@@ -933,9 +927,9 @@ class RepoPath:
         is used to construct the provider index use the ``is_virtual_safe`` function.
 
         Args:
-            pkg_name (str): name of the package we want to check
+            pkg_name: name of the package we want to check
         """
-        have_name = self._have_name(pkg_name)
+        have_name = bool(pkg_name)
         return have_name and pkg_name in self.provider_index
 
     def is_virtual_safe(self, pkg_name: str) -> bool:
@@ -944,9 +938,9 @@ class RepoPath:
         This function doesn't use the provider index.
 
         Args:
-            pkg_name (str): name of the package we want to check
+            pkg_name: name of the package we want to check
         """
-        have_name = self._have_name(pkg_name)
+        have_name = bool(pkg_name)
         return have_name and (not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual)
 
     def __contains__(self, pkg_name):
