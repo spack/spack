@@ -1128,6 +1128,8 @@ def _setup_pkg_and_run(
     input_pipe: Optional[Connection],
     jsfd1: Optional[Connection],
     jsfd2: Optional[Connection],
+    stdout_pipe: Optional[Connection] = None,
+    stderr_pipe: Optional[Connection] = None,
 ):
     """Main entry point in the child process for Spack builds.
 
@@ -1163,7 +1165,8 @@ def _setup_pkg_and_run(
         input_multiprocess_fd: stdin from the parent (not passed currently on Windows)
         jsfd1: gmake Jobserver file descriptor 1.
         jsfd2: gmake Jobserver file descriptor 2.
-
+        stdout_pipe: pipe to redirect stdout to
+        stderr_pipe: pipe to redirect stderr to
     """
 
     context: str = kwargs.get("context", "build")
@@ -1175,6 +1178,12 @@ def _setup_pkg_and_run(
         # child, so we undo Python's precaution. closefd=False since Connection has ownership.
         if input_pipe is not None:
             sys.stdin = os.fdopen(input_pipe.fileno(), closefd=False)
+        if stdout_pipe is not None:
+            os.dup2(stdout_pipe.fileno(), sys.stdout.fileno())
+            stdout_pipe.close()
+        if stderr_pipe is not None:
+            os.dup2(stderr_pipe.fileno(), sys.stderr.fileno())
+            stderr_pipe.close()
 
         pkg = serialized_pkg.restore()
 
@@ -1345,6 +1354,8 @@ def start_build_process(
     """
     read_pipe, write_pipe = multiprocessing.Pipe(duplex=False)
     input_fd = None
+    stdout_fd = None
+    stderr_fd = None
     jobserver_fd1 = None
     jobserver_fd2 = None
 
@@ -1354,6 +1365,16 @@ def start_build_process(
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, "fileno"):
             input_fd = Connection(os.dup(sys.stdin.fileno()))
+
+        # If our process has redirected stdout/stderr after the forkserver was started, we need to
+        # make the forked processes use the new file descriptors.
+        if multiprocessing.get_start_method() == "forkserver":
+            try:
+                stdout_fd = Connection(os.dup(sys.stdout.fileno()))
+                stderr_fd = Connection(os.dup(sys.stderr.fileno()))
+            except Exception:
+                pass
+
         mflags = os.environ.get("MAKEFLAGS")
         if mflags is not None:
             m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
@@ -1371,6 +1392,8 @@ def start_build_process(
                 input_fd,
                 jobserver_fd1,
                 jobserver_fd2,
+                stdout_fd,
+                stderr_fd,
             ),
             read_pipe=read_pipe,
             timeout=timeout,
@@ -1393,6 +1416,10 @@ def start_build_process(
         # Close the input stream in the parent process
         if input_fd is not None:
             input_fd.close()
+        if stdout_fd is not None:
+            stdout_fd.close()
+        if stderr_fd is not None:
+            stderr_fd.close()
 
     return p
 

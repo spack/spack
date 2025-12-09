@@ -418,21 +418,27 @@ class nixlog:
         # Currently only used to save echo value between uses
         self.parent_pipe, child_pipe = multiprocessing.Pipe(duplex=False)
 
-        # Sets a daemon that writes to file what it reads from a pipe
+        stdin_fd = None
+        stdout_fd = None
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
-            input_fd = None
             try:
                 if sys.stdin.isatty():
-                    input_fd = Connection(os.dup(sys.stdin.fileno()))
+                    stdin_fd = Connection(os.dup(sys.stdin.fileno()))
             except BaseException:
                 # just don't forward input if this fails
                 pass
 
+            # If our process has redirected stdout after the forkserver was started, we need to
+            # make the forked processes use the new file descriptors.
+            if multiprocessing.get_start_method() == "forkserver":
+                stdout_fd = Connection(os.dup(sys.stdout.fileno()))
+
             self.process = multiprocessing.Process(
                 target=_writer_daemon,
                 args=(
-                    input_fd,
+                    stdin_fd,
+                    stdout_fd,
                     read_fd,
                     self.write_fd,
                     self.echo,
@@ -446,8 +452,10 @@ class nixlog:
             self.process.start()
 
         finally:
-            if input_fd:
-                input_fd.close()
+            if stdin_fd:
+                stdin_fd.close()
+            if stdout_fd:
+                stdout_fd.close()
             read_fd.close()
 
         # Flush immediately before redirecting so that anything buffered
@@ -688,6 +696,7 @@ class winlog:
 
 def _writer_daemon(
     stdin_fd: Optional[Connection],
+    stdout_fd: Optional[Connection],
     read_fd: Connection,
     write_fd: Connection,
     echo: bool,
@@ -755,6 +764,10 @@ def _writer_daemon(
         stdin_file = os.fdopen(stdin_fd.fileno(), closefd=False)
     else:
         stdin_file = None
+
+    if stdout_fd:
+        os.dup2(stdout_fd.fileno(), sys.stdout.fileno())
+        stdout_fd.close()
 
     # list of streams to select from
     istreams = [read_file, stdin_file] if stdin_file else [read_file]

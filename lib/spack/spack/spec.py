@@ -1030,98 +1030,69 @@ def _sort_by_dep_types(dspec: DependencySpec):
     return dspec.depflag
 
 
-class _EdgeMap(collections.abc.Mapping):
-    """Represent a collection of edges (DependencySpec objects) in the DAG.
+EdgeMap = Dict[str, List[DependencySpec]]
 
-    Objects of this class are used in Specs to track edges that are
-    outgoing towards direct dependencies, or edges that are incoming
-    from direct dependents.
 
-    Edges are stored in a dictionary and keyed by package name.
+def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
+    if key in edge_map:
+        lst = edge_map[key]
+        lst.append(edge)
+        lst.sort(key=_sort_by_dep_types)
+    else:
+        edge_map[key] = [edge]
+
+
+def _select_edges(
+    edge_map: EdgeMap,
+    *,
+    parent: Optional[str] = None,
+    child: Optional[str] = None,
+    depflag: dt.DepFlag = dt.ALL,
+    virtuals: Optional[Union[str, Sequence[str]]] = None,
+) -> List[DependencySpec]:
+    """Selects a list of edges and returns them.
+
+    If an edge:
+
+    - Has *any* of the dependency types passed as argument,
+    - Matches the parent and/or child name
+    - Provides *any* of the virtuals passed as argument
+
+    then it is selected.
+
+    Args:
+        edge_map: map of edges to select from
+        parent: name of the parent package
+        child: name of the child package
+        depflag: allowed dependency types in flag form
+        virtuals: list of virtuals or specific virtual on the edge
     """
+    if not depflag:
+        return []
 
-    __slots__ = "edges", "store_by_child"
+    # Start from all the edges we store
+    selected: Iterable[DependencySpec] = itertools.chain.from_iterable(edge_map.values())
 
-    def __init__(self, store_by_child: bool = True) -> None:
-        self.edges: Dict[str, List[DependencySpec]] = {}
-        self.store_by_child = store_by_child
+    # Filter by parent name
+    if parent:
+        selected = (d for d in selected if d.parent.name == parent)
 
-    def __getitem__(self, key: str) -> List[DependencySpec]:
-        return self.edges[key]
+    # Filter by child name
+    if child:
+        selected = (d for d in selected if d.spec.name == child)
 
-    def __iter__(self):
-        return iter(self.edges)
-
-    def __len__(self) -> int:
-        return len(self.edges)
-
-    def add(self, edge: DependencySpec) -> None:
-        key = edge.spec.name if self.store_by_child else edge.parent.name
-        if key in self.edges:
-            lst = self.edges[key]
-            lst.append(edge)
-            lst.sort(key=_sort_by_dep_types)
-        else:
-            self.edges[key] = [edge]
-
-    def __str__(self) -> str:
-        return f"{{deps: {', '.join(str(d) for d in sorted(self.values()))}}}"
-
-    def select(
-        self,
-        *,
-        parent: Optional[str] = None,
-        child: Optional[str] = None,
-        depflag: dt.DepFlag = dt.ALL,
-        virtuals: Optional[Union[str, Sequence[str]]] = None,
-    ) -> List[DependencySpec]:
-        """Selects a list of edges and returns them.
-
-        If an edge:
-
-        - Has *any* of the dependency types passed as argument,
-        - Matches the parent and/or child name
-        - Provides *any* of the virtuals passed as argument
-
-        then it is selected.
-
-        The deptypes argument needs to be a flag, since the method won't
-        convert it for performance reason.
-
-        Args:
-            parent: name of the parent package
-            child: name of the child package
-            depflag: allowed dependency types in flag form
-            virtuals: list of virtuals or specific virtual on the edge
-        """
-        if not depflag:
-            return []
-
-        # Start from all the edges we store
-        selected = (d for d in itertools.chain.from_iterable(self.values()))
-
-        # Filter by parent name
-        if parent:
-            selected = (d for d in selected if d.parent.name == parent)
-
-        # Filter by child name
-        if child:
-            selected = (d for d in selected if d.spec.name == child)
-
-        # Filter by allowed dependency types
+    # Filter by allowed dependency types
+    if depflag != dt.ALL:
         selected = (dep for dep in selected if not dep.depflag or (depflag & dep.depflag))
 
-        # Filter by virtuals
-        if virtuals is not None:
-            if isinstance(virtuals, str):
-                selected = (dep for dep in selected if virtuals in dep.virtuals)
-            else:
-                selected = (dep for dep in selected if any(v in dep.virtuals for v in virtuals))
+    # Filter by virtuals
+    if virtuals is not None:
+        if isinstance(virtuals, str):
+            selected = (dep for dep in selected if virtuals in dep.virtuals)
+        else:
+            selected = (dep for dep in selected if any(v in dep.virtuals for v in virtuals))
 
-        return list(selected)
-
-    def clear(self):
-        self.edges.clear()
+    return list(selected)
 
 
 def _headers_default_handler(spec: "Spec"):
@@ -1551,8 +1522,8 @@ class Spec:
         self.variants = VariantMap(self)
         self.architecture = None
         self.compiler_flags = FlagMap(self)
-        self._dependents = _EdgeMap(store_by_child=False)
-        self._dependencies = _EdgeMap(store_by_child=True)
+        self._dependents = {}
+        self._dependencies = {}
         self.namespace = None
         self.abstract_hash = None
 
@@ -1651,12 +1622,12 @@ class Spec:
         for dep in self.dependencies(deptype=deptype):
             # Remove the spec from dependents
             if self.name in dep._dependents:
-                dependents_copy = dep._dependents.edges[self.name]
-                del dep._dependents.edges[self.name]
+                dependents_copy = dep._dependents[self.name]
+                del dep._dependents[self.name]
                 for edge in dependents_copy:
                     if edge.parent.dag_hash() == key:
                         continue
-                    dep._dependents.add(edge)
+                    _add_edge_to_map(dep._dependents, edge.parent.name, edge)
 
     def _get_dependency(self, name):
         # WARNING: This function is an implementation detail of the
@@ -1686,9 +1657,7 @@ class Spec:
             depflag: allowed dependency types
             virtuals: allowed virtuals
         """
-        return [
-            d for d in self._dependents.select(parent=name, depflag=depflag, virtuals=virtuals)
-        ]
+        return _select_edges(self._dependents, parent=name, depflag=depflag, virtuals=virtuals)
 
     def edges_to_dependencies(
         self,
@@ -1704,9 +1673,7 @@ class Spec:
             depflag: allowed dependency types
             virtuals: allowed virtuals
         """
-        return [
-            d for d in self._dependencies.select(child=name, depflag=depflag, virtuals=virtuals)
-        ]
+        return _select_edges(self._dependencies, child=name, depflag=depflag, virtuals=virtuals)
 
     @property
     def edge_attributes(self) -> str:
@@ -1782,7 +1749,7 @@ class Spec:
         """
         _sort_fn = lambda x: (x.spec.name, _sort_by_dep_types(x))
         _group_fn = lambda x: x.spec.name
-        selected_edges = self._dependencies.select(depflag=depflag)
+        selected_edges = _select_edges(self._dependencies, depflag=depflag)
         result = {}
         for key, group in itertools.groupby(sorted(selected_edges, key=_sort_fn), key=_group_fn):
             result[key] = list(group)
@@ -1935,7 +1902,7 @@ class Spec:
             when = Spec()
 
         # Check if we need to update edges that are already present
-        selected = self._dependencies.select(child=dependency_spec.name)
+        selected = self._dependencies.get(dependency_spec.name, [])
         for edge in selected:
             has_errors, details = False, []
             msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
@@ -1983,8 +1950,8 @@ class Spec:
             propagation=propagation,
             when=when,
         )
-        self._dependencies.add(edge)
-        dependency_spec._dependents.add(edge)
+        _add_edge_to_map(self._dependencies, edge.spec.name, edge)
+        _add_edge_to_map(dependency_spec._dependents, edge.parent.name, edge)
 
     #
     # Public interface
@@ -3675,8 +3642,8 @@ class Spec:
         self._build_spec = other._build_spec
 
         # Clear dependencies
-        self._dependents = _EdgeMap(store_by_child=False)
-        self._dependencies = _EdgeMap(store_by_child=True)
+        self._dependents = {}
+        self._dependencies = {}
 
         # FIXME: we manage _patches_in_order_of_appearance specially here
         # to keep it from leaking out of spec.py, but we should figure
@@ -4648,11 +4615,11 @@ class Spec:
         they are only present because of ``dep_name``.
         """
         for spec in list(self.traverse()):
-            new_dependencies = _EdgeMap()  # A new _EdgeMap
+            new_dependencies = {}
             for pkg_name, edge_list in spec._dependencies.items():
                 for edge in edge_list:
                     if (dep_name not in edge.virtuals) and (not dep_name == edge.spec.name):
-                        new_dependencies.add(edge)
+                        _add_edge_to_map(new_dependencies, edge.spec.name, edge)
             spec._dependencies = new_dependencies
 
     def _virtuals_provided(self, root):
@@ -4715,8 +4682,8 @@ class Spec:
             if edge.parent not in ancestors_in_context:
                 continue
 
-            edge.parent._dependencies.edges[self.name].remove(edge)
-            self._dependents.edges[edge.parent.name].remove(edge)
+            edge.parent._dependencies[self.name].remove(edge)
+            self._dependents[edge.parent.name].remove(edge)
             edge.parent._add_dependency(replacement, depflag=edge.depflag, virtuals=edge.virtuals)
 
     def _splice_helper(self, replacement):
@@ -4933,21 +4900,40 @@ class Spec:
         state.pop("_package", None)
         # As with to_dict, do not include dependents. This avoids serializing more than intended.
         state.pop("_dependents", None)
+
+        # Optimize variants and compiler_flags serialization
+        variants = state.pop("variants", None)
+        if variants:
+            state["_variants_data"] = variants.dict
+        flags = state.pop("compiler_flags", None)
+        if flags:
+            state["_compiler_flags_data"] = flags.dict
+
         return state
 
     def __setstate__(self, state):
+        variants_data = state.pop("_variants_data", None)
+        compiler_flags_data = state.pop("_compiler_flags_data", None)
         self.__dict__.update(state)
         self._package = None
 
+        # Reconstruct variants and compiler_flags
+        self.variants = VariantMap(self)
+        self.compiler_flags = FlagMap(self)
+        if variants_data is not None:
+            self.variants.dict = variants_data
+        if compiler_flags_data is not None:
+            self.compiler_flags.dict = compiler_flags_data
+
         # Reconstruct dependents map
         if not hasattr(self, "_dependents"):
-            self._dependents = _EdgeMap(store_by_child=False)
+            self._dependents = {}
 
-        for edges in self._dependencies.edges.values():
+        for edges in self._dependencies.values():
             for edge in edges:
                 if not hasattr(edge.spec, "_dependents"):
-                    edge.spec._dependents = _EdgeMap(store_by_child=False)
-                edge.spec._dependents.add(edge)
+                    edge.spec._dependents = {}
+                _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
 
     def attach_git_version_lookup(self):
         # Add a git lookup method for GitVersions

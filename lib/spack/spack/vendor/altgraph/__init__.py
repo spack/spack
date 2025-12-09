@@ -139,9 +139,8 @@ To display the graph we can use the GraphViz backend::
   @contributor: U{Reka Albert <http://www.phys.psu.edu/~ralbert/>}
 
 """
-import pkg_resources
 
-__version__ = pkg_resources.require("spack.vendor.altgraph")[0].version
+__version__ = "0.17.3"
 
 
 class GraphError(ValueError):
