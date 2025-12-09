@@ -15,7 +15,6 @@ import importlib
 import io
 import multiprocessing
 import pickle
-import pydoc
 from types import ModuleType
 from typing import Any
 
@@ -130,13 +129,18 @@ class TestPatches:
         self.class_patches = list((x, y, serialize(z)) for (x, y, z) in class_patches)
 
     def restore(self):
+        if not self.module_patches and not self.class_patches:
+            return
+        # this code path is only followed in tests, so use inline imports
+        from pydoc import locate
+
         for module_name, attr_name, value in self.module_patches:
             value = pickle.load(value)
             module = importlib.import_module(module_name)
             setattr(module, attr_name, value)
         for class_fqn, attr_name, value in self.class_patches:
             value = pickle.load(value)
-            cls = pydoc.locate(class_fqn)
+            cls = locate(class_fqn)
             setattr(cls, attr_name, value)
 
 

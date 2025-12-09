@@ -209,7 +209,7 @@ class RequirementParser:
         return spec, condition, message
 
     def _raw_yaml_data(self, pkg_name: str, *, section: str, virtual: bool = False):
-        config = self.config.get("packages")
+        config = self.config.get_config("packages")
         data = config.get(pkg_name, {}).get(section, [])
         kind = RequirementKind.PACKAGE
 

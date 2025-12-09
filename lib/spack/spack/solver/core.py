@@ -34,7 +34,7 @@ class AspObject:
 
 def _id(thing: Any) -> Union[str, int, AspObject]:
     """Quote string if needed for it to be a valid identifier."""
-    if isinstance(thing, bool):
+    if thing is True or thing is False:
         return f'"{thing}"'
     elif isinstance(thing, (AspObject, int)):
         return thing

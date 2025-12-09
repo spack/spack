@@ -22,7 +22,11 @@ class PatchSeveralDependencies(Package):
 
     # single patch file in repo
     depends_on("libelf", patches="foo.patch")
-    depends_on("libelf@0.8.10", patches="foo.patch", when="+foo")
+    # The following 3 directives are all under the same when clause, to be combined in
+    # the metadata for this package class
+    depends_on("libelf@0.8.10", patches="foo.patch", type="link", when="+foo")
+    depends_on("libelf", type="build", when="+foo")
+    depends_on("libelf@0.8:", when="+foo")
 
     # using a list of patches in one depends_on
     depends_on(
@@ -31,8 +35,8 @@ class PatchSeveralDependencies(Package):
             patch("bar.patch"),  # nested patch directive
             patch("baz.patch", when="@20111030"),  # and with a conditional
         ],
-        when="@1.0",
-    )  # with a depends_on conditional
+        when="@1.0",  # with a depends_on conditional
+    )
 
     # URL patches
     depends_on(

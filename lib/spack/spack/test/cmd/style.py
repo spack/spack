@@ -80,7 +80,7 @@ def flake8_package_with_errors(scope="function"):
     yield tmp
 
 
-def test_changed_files_from_git_rev_base(git, tmp_path: pathlib.Path, capfd):
+def test_changed_files_from_git_rev_base(git, tmp_path: pathlib.Path):
     """Test arbitrary git ref as base."""
     with working_dir(str(tmp_path)):
         git("init")
@@ -229,7 +229,7 @@ def test_fix_style(external_style_root):
 @pytest.mark.skipif(not ISORT, reason="isort is not installed.")
 @pytest.mark.skipif(not MYPY, reason="mypy is not installed.")
 @pytest.mark.skipif(not BLACK, reason="black is not installed.")
-def test_external_root(external_style_root, capfd):
+def test_external_root(external_style_root):
     """Ensure we can run in a separate root directory w/o configuration files."""
     tmp_path, py_file = external_style_root
 

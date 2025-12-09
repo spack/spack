@@ -21,7 +21,6 @@ import spack.config
 import spack.package_base
 import spack.platforms
 import spack.repo
-import spack.solver.versions
 import spack.spec
 import spack.traverse
 import spack.version
@@ -34,20 +33,23 @@ def _select_best_version(
 ) -> None:
     """Try to attach the best known version to a node"""
     constraint = spack.version.from_string(valid_versions)
-    allowed_versions = [
-        (v, info) for v, info in pkg_cls.versions.items() if v.satisfies(constraint)
-    ]
+    allowed_versions = [v for v in pkg_cls.versions if v.satisfies(constraint)]
     try:
-        best_version, _ = max(
-            allowed_versions, key=spack.solver.versions.concretization_version_order
-        )
-    except (KeyError, ValueError):
+        best_version = spack.package_base.sort_by_pkg_preference(allowed_versions, pkg=pkg_cls)[0]
+    except (KeyError, ValueError, IndexError):
         return
     node.versions.versions = [spack.version.from_string(f"={best_version}")]
 
 
+def _add_compilers_if_missing() -> None:
+    arch = spack.spec.ArchSpec.default_arch()
+    if not spack.compilers.config.compilers_for_arch(arch):
+        spack.compilers.config.find_compilers()
+
+
 class ClingoBootstrapConcretizer:
     def __init__(self, configuration):
+        _add_compilers_if_missing()
         self.host_platform = spack.platforms.host()
         self.host_os = self.host_platform.default_operating_system()
         self.host_target = spack.vendor.archspec.cpu.host().family

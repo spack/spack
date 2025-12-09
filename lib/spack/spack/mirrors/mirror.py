@@ -388,7 +388,7 @@ class MirrorCollection(Mapping[str, Mirror]):
         mirrors_data = (
             mirrors.items()
             if mirrors is not None
-            else spack.config.get("mirrors", scope=scope).items()
+            else spack.config.CONFIG.get_config("mirrors", scope=scope).items()
         )
         mirrors = (Mirror(data=mirror, name=name) for name, mirror in mirrors_data)
 

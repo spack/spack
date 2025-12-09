@@ -9,6 +9,7 @@ import sys
 import pytest
 
 import spack.concretize
+import spack.main
 import spack.util.spack_yaml as s_yaml
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import _windows_can_symlink
@@ -200,7 +201,7 @@ def test_view_fails_with_missing_projections_file(tmp_path: pathlib.Path):
     viewpath = str(tmp_path / "view")
     (tmp_path / "view").mkdir()
     projection_file = str(tmp_path / "nonexistent")
-    with pytest.raises(SystemExit):
+    with pytest.raises(spack.main.SpackCommandError):
         view("symlink", "--projection-file", projection_file, viewpath, "foo")
 
 

@@ -59,9 +59,8 @@ from spack.llnl.util.filesystem import (
     islink,
     symlink,
 )
-from spack.llnl.util.lang import ClassProperty, classproperty, memoized
+from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
-from spack.solver.versions import concretization_version_order
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
@@ -2588,6 +2587,33 @@ def preferred_version(pkg: Union[PackageBase, Type[PackageBase]]):
 
     version, _ = max(pkg.versions.items(), key=concretization_version_order)
     return version
+
+
+def sort_by_pkg_preference(
+    versions: Iterable[Union[GitVersion, StandardVersion]],
+    *,
+    pkg: Union[PackageBase, Type[PackageBase]],
+) -> List[Union[GitVersion, StandardVersion]]:
+    """Sorts the list of versions passed in input according to the preferences in the package. The
+    return value does not contain duplicate versions. Most preferred versions first.
+    """
+    s = [(v, pkg.versions.get(v, {})) for v in dedupe(versions)]
+    return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
+
+
+def concretization_version_order(version_info: Tuple[Union[GitVersion, StandardVersion], dict]):
+    """Version order key for concretization, where preferred > not preferred,
+    not deprecated > deprecated, finite > any infinite component; only if all are
+    the same, do we use default version ordering."""
+    version, info = version_info
+    return (
+        info.get("preferred", False),
+        not info.get("deprecated", False),
+        not isinstance(version, GitVersion),
+        not version.isdevelop(),
+        not version.is_prerelease(),
+        version,
+    )
 
 
 class PackageStillNeededError(InstallError):

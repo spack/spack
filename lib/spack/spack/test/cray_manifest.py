@@ -15,7 +15,6 @@ import pytest
 
 import spack.vendor.archspec.cpu
 
-import spack
 import spack.cmd
 import spack.cmd.external
 import spack.compilers.config

@@ -1034,8 +1034,16 @@ class Environment:
     def unify(self, value):
         self._unify = value
 
-    def __reduce__(self):
-        return _create_environment, (self.path,)
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.pop("txlock", None)
+        state.pop("_repo", None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.txlock = lk.Lock(self._transaction_lock_path)
+        self._repo = None
 
     def _re_read(self):
         """Reinitialize the environment object."""

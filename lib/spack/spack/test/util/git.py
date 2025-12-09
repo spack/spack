@@ -80,3 +80,56 @@ def test_pull_checkout_branch(git, tmp_path: pathlib.Path, mock_git_version_info
 
         with pytest.raises(exe.ProcessError):
             spack.util.git.pull_checkout_branch("main")
+
+
+@pytest.mark.parametrize(
+    "input,answer",
+    (["git version 1.7.1", (1, 7, 1)], ["git version 2.34.1.windows.2", (2, 34, 1, 2)]),
+)
+def test_extract_git_version(mock_util_executable, input, answer):
+    _, _, registered_responses = mock_util_executable
+    registered_responses["--version"] = input
+    git = spack.util.git.GitExecutable()
+    assert git.version == answer
+
+
+def test_mock_git_exe(mock_util_executable):
+    log, should_fail, _ = mock_util_executable
+    should_fail.append("clone")
+    git = spack.util.git.GitExecutable()
+    with pytest.raises(exe.ProcessError):
+        git("clone")
+    assert git.returncode == 1
+    git("status")
+    assert git.returncode == 0
+    assert "clone" in "\n".join(log)
+    assert "status" in "\n".join(log)
+
+
+@pytest.mark.parametrize("git_version", ("1.5.0", "1.3.0"))
+def test_git_exe_conditional_option(mock_util_executable, git_version):
+    log, _, registered_responses = mock_util_executable
+    min_version = (1, 4, 1)
+    registered_responses["git --version"] = git_version
+    git = spack.util.git.GitExecutable("git")
+    mock_opt = spack.util.git.VersionConditionalOption("--maybe", min_version=min_version)
+    args = mock_opt(git.version)
+    if git.version >= min_version:
+        assert "--maybe" in args
+    else:
+        assert not args
+
+
+@pytest.mark.parametrize(
+    "git_version,ommitted_opts",
+    (("2.18.0", ["--filter=blob:none"]), ("1.8.0", ["--filter=blob:none", "--depth"])),
+)
+def test_git_init_fetch_ommissions(mock_util_executable, git_version, ommitted_opts):
+    log, _, registered_responses = mock_util_executable
+    registered_responses["git --version"] = git_version
+    git = spack.util.git.GitExecutable("git")
+    url = "https://foo.git"
+    ref = "v1.2.3"
+    spack.util.git.git_init_fetch(url, ref, git_exe=git)
+    for opt in ommitted_opts:
+        assert all(opt not in call for call in log)

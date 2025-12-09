@@ -29,7 +29,7 @@ level = "long"
 
 
 # Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.6/bootstrap-buildcache-v3.tar.gz"
+BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v2.2/bootstrap-buildcache.tar.gz"
 
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
@@ -111,7 +111,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
     list = sp.add_parser("list", help="list all the sources of software to bootstrap Spack")
-    _add_scope_option(list)
+    list.add_argument(
+        "--scope",
+        action=arguments.ConfigScope,
+        type=arguments.config_scope_readable_validator,
+        help="configuration scope to read/modify",
+    )
 
     add = sp.add_parser("add", help="add a new source for bootstrapping")
     _add_scope_option(add)
@@ -188,6 +193,11 @@ def _reset(args):
 def _root(args):
     if args.path:
         spack.config.set("bootstrap:root", args.path, scope=args.scope)
+    elif args.scope:
+        if args.scope not in spack.config.existing_scope_names():
+            spack.llnl.util.tty.die(
+                f"The argument --scope={args.scope} must refer to an existing scope."
+            )
 
     root = spack.config.get("bootstrap:root", default=None, scope=args.scope)
     if root:
@@ -400,6 +410,8 @@ def _mirror(args):
         spack.llnl.util.tty.set_msg_enabled(False)
         spec = spack.concretize.concretize_one(spec_str)
         for node in spec.traverse():
+            if node.external:
+                continue
             spack.cmd.mirror.create(mirror_dir, [node])
         spack.llnl.util.tty.set_msg_enabled(True)
 

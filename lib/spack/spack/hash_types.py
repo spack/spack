@@ -21,6 +21,8 @@ class SpecHashDescriptor:
 
     We currently use different hashes for different use cases."""
 
+    __slots__ = "depflag", "package_hash", "name", "attr", "override"
+
     def __init__(
         self,
         depflag: dt.DepFlag,
@@ -31,14 +33,10 @@ class SpecHashDescriptor:
         self.depflag = depflag
         self.package_hash = package_hash
         self.name = name
+        self.attr = f"_{name}"
         HASHES.append(self)
         # Allow spec hashes to have an alternate computation method
         self.override = override
-
-    @property
-    def attr(self):
-        """Private attribute stored on spec"""
-        return "_" + self.name
 
     def __call__(self, spec):
         """Run this hash on the provided spec."""

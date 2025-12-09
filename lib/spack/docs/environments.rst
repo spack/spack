@@ -1082,6 +1082,13 @@ Generating Depfiles from Environments
 ------------------------------------------
 
 Spack can generate ``Makefile``\s to make it easier to build multiple packages in an environment in parallel.
+
+.. note::
+
+   Since Spack v1.1, there is a new experimental installer that supports package-level parallelism out of the box with POSIX jobserver support.
+   You can enable it with ``spack config add config:installer:new``.
+   This new installer may provide a simpler alternative to the ``spack env depfile`` workflow described in this section for users primarily interested in speeding up environment installations.
+
 Generated ``Makefile``\s expose targets that can be included in existing ``Makefile``\s, to allow other targets to depend on the environment installation.
 
 A typical workflow is as follows:

@@ -6,8 +6,6 @@ import argparse
 import json
 import os
 import pathlib
-import sys
-from textwrap import dedent
 
 import pytest
 
@@ -137,28 +135,12 @@ def test_namespaces_shown_correctly(args, with_namespace, database):
 
 @pytest.mark.db
 def test_find_cli_output_format(database, mock_tty_stdout):
-    # Currently logging on Windows detaches stdout
-    # from the terminal so we miss some output during tests
-    # TODO: (johnwparent): Once logging is amended on Windows,
-    # restore this test
-    out = find("zmpi")
-    if not sys.platform == "win32":
-        assert out.endswith(
-            dedent(
-                """\
-      zmpi@1.0
-      ==> 1 installed package
-      """
-            )
-        )
-    else:
-        assert out.endswith(
-            dedent(
-                """\
-      zmpi@1.0
-      """
-            )
-        )
+    assert find("zmpi").endswith(
+        """\
+zmpi@1.0
+==> 1 installed package
+"""
+    )
 
 
 def _check_json_output(spec_list):
@@ -202,34 +184,34 @@ def test_find_json_deps(database):
 
 
 @pytest.mark.db
-def test_display_json(database, capsys):
+def test_display_json(database, capfd):
     specs = [
         spack.concretize.concretize_one(s)
         for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output(spec_list)
 
     cmd.display_specs_as_json(specs + specs + specs)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output(spec_list)
 
 
 @pytest.mark.db
-def test_display_json_deps(database, capsys):
+def test_display_json_deps(database, capfd):
     specs = [
         spack.concretize.concretize_one(s)
         for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
     cmd.display_specs_as_json(specs, deps=True)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output_deps(spec_list)
 
     cmd.display_specs_as_json(specs + specs + specs, deps=True)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output_deps(spec_list)
 
 
@@ -322,9 +304,8 @@ def test_find_very_long(database, config):
 
 
 @pytest.mark.db
-def test_find_not_found(database, config, capsys):
-    with capsys.disabled():
-        output = find("foobarbaz", fail_on_error=False)
+def test_find_not_found(database, config):
+    output = find("foobarbaz", fail_on_error=False)
     assert "No package matches the query: foobarbaz" in output
     assert find.returncode == 1
 

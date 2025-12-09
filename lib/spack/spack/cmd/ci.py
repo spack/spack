@@ -27,7 +27,7 @@ import spack.package_base
 import spack.repo
 import spack.spec
 import spack.stage
-import spack.util.executable
+import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
@@ -796,12 +796,9 @@ def validate_git_versions(
             # commit that is located in the package.py file.
             if "tag" in pkg.versions[version]:
                 tag = pkg.versions[version]["tag"]
-                try:
-                    with fs.working_dir(stage.source_path):
-                        found_commit = fetcher.git(
-                            "rev-list", "-n", "1", tag, output=str, error=str
-                        ).strip()
-                except spack.util.executable.ProcessError:
+                url = pkg.version_or_package_attr("git", version)
+                found_commit = spack.util.git.get_commit_sha(url, tag)
+                if not found_commit:
                     tty.error(
                         f"Invalid tag for {pkg.name}@{version}\n"
                         f"    {tag} could not be found in the git repository."

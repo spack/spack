@@ -1595,7 +1595,7 @@ def test_included_optional_include_scopes():
 
 
 def test_included_path_string(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capsys
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capfd
 ):
     path = tmp_path / "local" / "config.yaml"
     path.parent.mkdir()
@@ -1620,7 +1620,7 @@ def test_included_path_string(
     # Second pass uses the scopes previously built
     assert include._scopes is not None
     scopes = include.scopes(parent_scope)
-    captured = capsys.readouterr()[1]
+    captured = capfd.readouterr()[1]
     assert "Using existing scopes" in captured
 
 
@@ -1631,17 +1631,19 @@ def test_included_path_string_no_parent_path(
     will be rooted in the current working directory (usually SPACK_ROOT)."""
     entry = {"path": "config.yaml", "optional": True}
     include = spack.config.included_path(entry)
-    FakeScope = collections.namedtuple("FakeScope", ["path", "name"])
-    parent_scope = FakeScope("", "")
-
-    assert not include.scopes(parent_scope)  # type: ignore[arg-type]
+    parent_scope = spack.config.InternalConfigScope("parent-scope")
+    included_scopes = include.scopes(parent_scope)
+    # ensure scope is returned even if there is no parent path
+    assert len(included_scopes) == 1
+    # ensure scope for include is singlefile as it ends in .yaml
+    assert isinstance(included_scopes[0], spack.config.SingleFileScope)
     destination = include.destination
     curr_dir = os.getcwd()
     assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]
 
 
 def test_included_path_conditional_bad_when(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, capsys
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, capfd
 ):
     path = tmp_path / "local"
     path.mkdir()
@@ -1654,7 +1656,7 @@ def test_included_path_conditional_bad_when(
     assert not include.evaluate_condition()
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
-    captured = capsys.readouterr()[1]
+    captured = capfd.readouterr()[1]
     assert "condition is not satisfied" in captured
     assert not scopes
 
@@ -1689,7 +1691,7 @@ def test_included_path_git_missing_args():
 
 
 def test_included_path_git_unsat(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capsys
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capfd
 ):
     paths = ["config.yaml", "packages.yaml"]
     entry = {
@@ -1707,7 +1709,7 @@ def test_included_path_git_unsat(
     assert not include.optional and not include.evaluate_condition()
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
-    captured = capsys.readouterr()[1]
+    captured = capfd.readouterr()[1]
     assert "condition is not satisfied" in captured
     assert not scopes
 
@@ -1716,7 +1718,7 @@ def test_included_path_git_unsat(
     "key,value", [("branch", "main"), ("commit", "abcdef123456"), ("tag", "v1.0")]
 )
 def test_included_path_git(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capsys
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capfd
 ):
     monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
 
@@ -1774,14 +1776,14 @@ def test_included_path_git(
     if key == "branch":
         assert include._scopes is not None
         scopes = include.scopes(parent_scope)
-        captured = capsys.readouterr()[1]
+        captured = capfd.readouterr()[1]
         assert "Using existing scopes" in captured
 
     # A direct clone now returns already cloned destination and debug message.
     # Again only need to run this test once.
     if key == "tag":
         assert include._clone() == include.destination
-        captured = capsys.readouterr()[1]
+        captured = capfd.readouterr()[1]
         assert "already cloned" in captured
 
 
@@ -1828,3 +1830,90 @@ def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, mo
     include.branch = ""  # type: ignore[union-attr]
     with pytest.raises(spack.error.ConfigError, match="Missing or unsupported options"):
         include.scopes(parent_scope)
+
+
+def test_missing_include_scope_list(mock_missing_dir_include_scopes):
+    """Tests that an included scope with a non existent file/directory
+    is still listed as a scope under spack.config.CONFIG.scopes"""
+    assert "sub_base" in list(
+        spack.config.CONFIG.scopes
+    ), "Missing Optional Scope Missing from Config Scopes"
+
+
+def test_missing_include_scope_writable_list(mock_missing_dir_include_scopes):
+    """Tests that missing include scopes are included in writeable config lists"""
+    assert [x for x in spack.config.CONFIG.writable_scopes if x.name == "sub_base"]
+
+
+def test_missing_include_scope_not_readable_list(mock_missing_dir_include_scopes):
+    """Tests that missing include scopes are not included in existing config lists"""
+    existing_scopes = [x for x in spack.config.CONFIG.existing_scopes if x.name != "sub_base"]
+    assert len(existing_scopes) == 1
+    assert existing_scopes[0].name != "sub_base"
+
+
+def test_missing_include_scope_default_created_as_dir_scope(mock_missing_dir_include_scopes):
+    """Tests that an optional include with no existing file/directory and no yaml extention
+    is created as a directoryscope object"""
+    missing_inc_scope = spack.config.CONFIG.scopes["sub_base"]
+    assert isinstance(missing_inc_scope, spack.config.DirectoryConfigScope)
+
+
+def test_missing_include_scope_yaml_ext_is_file_scope(mock_missing_file_include_scopes):
+    """Tests that an optional include scope with no existing file/directory and a
+    yaml extension is created as a file scope"""
+    missing_inc_scope = spack.config.CONFIG.scopes["sub_base"]
+    assert isinstance(missing_inc_scope, spack.config.SingleFileScope)
+
+
+def test_missing_include_scope_writeable_not_readable(mock_missing_dir_include_scopes):
+    """Tests that an included scope with a non existent file/directory
+    can be written to (and created)"""
+    assert spack.config.CONFIG.scopes[
+        "sub_base"
+    ].writable, "Missing Optional Scope should be writable"
+    assert not spack.config.CONFIG.scopes[
+        "sub_base"
+    ].exists, "Missing Optional Scope should not exist"
+
+
+def test_missing_include_scope_empty_read(mock_missing_dir_include_scopes):
+    """Tests that an included scope with a non existent file/directory
+    returns an empty dict on read and has "exists" set to false"""
+    assert (
+        spack.config.CONFIG.get("config", scope="sub_base") == {}
+    ), "Missing optional include scope does not return an empty value."
+    assert not spack.config.CONFIG.scopes[
+        "sub_base"
+    ].exists, "Missing optional include should not be created on read"
+
+
+def test_missing_include_scope_file_empty_read(mock_missing_file_include_scopes):
+    """Tests that an include scope with a non existent file returns an empty
+    dict and has exists set to false"""
+    assert (
+        spack.config.CONFIG.get("config", scope="sub_base") == {}
+    ), "Missing optional include scope does not return an empty value."
+    assert not spack.config.CONFIG.scopes[
+        "sub_base"
+    ].exists, "Missing optional include should not be created on read"
+
+
+def test_missing_include_scope_write_directory(mock_missing_dir_include_scopes):
+    """Tests that an include scope with a non existent directory
+    creates said directory and the appropriate section file on write"""
+    install_tree = syaml.syaml_dict({"install_tree": {"root": "$spack/tmp/spack"}})
+    spack.config.CONFIG.set("config", install_tree, scope="sub_base")
+    assert os.path.exists(spack.config.CONFIG.scopes["sub_base"].path)
+    install_root = spack.config.CONFIG.get("config:install_tree:root", scope="sub_base")
+    assert install_root == "$spack/tmp/spack"
+
+
+def test_missing_include_scope_write_file(mock_missing_file_include_scopes):
+    """Tests that an include scope with a non existent file creates said file
+    with the appropriate section entry"""
+    install_tree = syaml.syaml_dict({"install_tree": {"root": "$spack/tmp/spack"}})
+    spack.config.CONFIG.set("config", install_tree, scope="sub_base")
+    assert os.path.exists(spack.config.CONFIG.scopes["sub_base"].path)
+    install_root = spack.config.CONFIG.get("config:install_tree:root", scope="sub_base")
+    assert install_root == "$spack/tmp/spack"

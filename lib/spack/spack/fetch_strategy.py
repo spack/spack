@@ -47,6 +47,7 @@ import spack.llnl.util.tty as tty
 import spack.oci.opener
 import spack.util.archive
 import spack.util.crypto as crypto
+import spack.util.executable
 import spack.util.git
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -825,9 +826,8 @@ class GitFetchStrategy(VCSFetchStrategy):
         "get_full_repo",
         "submodules_delete",
         "git_sparse_paths",
+        "skip_checkout",
     ]
-
-    git_version_re = r"git version (\S+)"
 
     def __init__(self, **kwargs):
 
@@ -846,6 +846,9 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.submodules_delete = kwargs.get("submodules_delete", False)
         self.get_full_repo = kwargs.get("get_full_repo", False)
         self.git_sparse_paths = kwargs.get("git_sparse_paths", None)
+        # skipping checkout with a blobless clone is an efficient way to traverse meta-data
+        # see https://bhupesh.me/minimalist-guide-git-clone/
+        self.skip_checkout = kwargs.get("skip_checkout", False)
 
     @property
     def git_version(self):
@@ -856,9 +859,8 @@ class GitFetchStrategy(VCSFetchStrategy):
         """Given a git executable, return the Version (this will fail if
         the output cannot be parsed into a valid Version).
         """
-        version_output = git_exe("--version", output=str)
-        m = re.search(GitFetchStrategy.git_version_re, version_output)
-        return spack.version.Version(m.group(1))
+        version_string = ".".join(map(str, git_exe.version))
+        return spack.version.Version(version_string)
 
     @property
     def git(self):
@@ -923,10 +925,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.debug(f"Already fetched {self.stage.source_path}")
             return
 
-        if self.git_sparse_paths:
-            self._sparse_clone_src()
-        else:
-            self._clone_src()
+        self._clone_src()
         self.submodule_operations()
 
     def bare_clone(self, dest: str) -> None:
@@ -955,156 +954,29 @@ class GitFetchStrategy(VCSFetchStrategy):
         dest = self.stage.source_path
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
-        git = self.git
-        debug = spack.config.get("config:debug")
+        depth = None if self.get_full_repo else 1
+        name = self.package.name if self.package else "spack-clone"
+        checkout_ref = self.commit or self.tag or self.branch
+        fetch_ref = self.tag or self.branch
 
-        if self.commit:
-            # Need to do a regular clone and check out everything if
-            # they asked for a particular commit.
-            clone_args = ["clone", self.url]
-            if not debug:
-                clone_args.insert(1, "--quiet")
-            with temp_cwd():
-                git(*clone_args)
-                repo_name = get_single_file(".")
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.copytree(repo_name, dest, symlinks=True)
-                shutil.rmtree(
-                    repo_name,
-                    ignore_errors=False,
-                    onerror=fs.readonly_file_handler(ignore_errors=True),
-                )
+        kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
 
-            with working_dir(dest):
-                checkout_args = ["checkout", self.commit]
-                if not debug:
-                    checkout_args.insert(1, "--quiet")
-                git(*checkout_args)
-
-        else:
-            # Can be more efficient if not checking out a specific commit.
-            args = ["clone"]
-            if not debug:
-                args.append("--quiet")
-
-            # If we want a particular branch ask for it.
-            if self.branch:
-                args.extend(["--branch", self.branch])
-            elif self.tag and self.git_version >= spack.version.Version("1.8.5.2"):
-                args.extend(["--branch", self.tag])
-
-            # Try to be efficient if we're using a new enough git.
-            # This checks out only one branch's history
-            if self.git_version >= spack.version.Version("1.7.10"):
-                if self.get_full_repo:
-                    args.append("--no-single-branch")
-                else:
-                    args.append("--single-branch")
-
-            with temp_cwd():
-                # Yet more efficiency: only download a 1-commit deep
-                # tree, if the in-use git and protocol permit it.
-                if (
-                    (not self.get_full_repo)
-                    and self.git_version >= spack.version.Version("1.7.1")
-                    and self.protocol_supports_shallow_clone()
-                ):
-                    args.extend(["--depth", "1"])
-
-                args.extend([self.url])
-                git(*args)
-
-                repo_name = get_single_file(".")
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
-
-            with working_dir(dest):
-                # For tags, be conservative and check them out AFTER
-                # cloning.  Later git versions can do this with clone
-                # --branch, but older ones fail.
-                if self.tag and self.git_version < spack.version.Version("1.8.5.2"):
-                    # pull --tags returns a "special" error code of 1 in
-                    # older versions that we have to ignore.
-                    # see: https://github.com/git/git/commit/19d122b
-                    pull_args = ["pull", "--tags"]
-                    co_args = ["checkout", self.tag]
-                    if not spack.config.get("config:debug"):
-                        pull_args.insert(1, "--quiet")
-                        co_args.insert(1, "--quiet")
-
-                    git(*pull_args, ignore_errors=1)
-                    git(*co_args)
-
-    def _sparse_clone_src(self, **kwargs):
-        """Use git's sparse checkout feature to clone portions of a git repository"""
-        dest = self.stage.source_path
-        git = self.git
-
-        if self.git_version < spack.version.Version("2.26.0"):
-            # technically this should be supported for 2.25, but bumping for OS issues
-            # see https://github.com/spack/spack/issues/45771
-            # code paths exist where the package is not set.  Assure some indentifier for the
-            # package that was configured  for sparse checkout exists in the error message
-            identifier = str(self.url)
-            if self.package:
-                identifier += f" ({self.package.name})"
-            tty.warn(
-                (
-                    f"{identifier} is configured for git sparse-checkout "
-                    "but the git version is too old to support sparse cloning. "
-                    "Cloning the full repository instead."
-                )
-            )
-            self._clone_src()
-        else:
-            # default to depth=2 to allow for retention of some git properties
-            depth = kwargs.get("depth", 2)
-            needs_fetch = self.branch or self.tag
-            git_ref = self.branch or self.tag or self.commit
-
-            assert git_ref
-
-            clone_args = ["clone"]
-
-            if needs_fetch:
-                clone_args.extend(["--branch", git_ref])
-
-            if self.get_full_repo:
-                clone_args.append("--no-single-branch")
+        with temp_cwd(ignore_cleanup_errors=True):
+            if self.commit:
+                try:
+                    spack.util.git.git_init_fetch(self.url, self.commit, depth, **kwargs)
+                except spack.util.executable.ProcessError:
+                    spack.util.git.git_clone(self.url, fetch_ref, True, depth, **kwargs)
             else:
-                clone_args.append("--single-branch")
+                spack.util.git.git_clone(self.url, fetch_ref, self.get_full_repo, depth, **kwargs)
+            if not self.skip_checkout:
+                spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
 
-            clone_args.extend(
-                [f"--depth={depth}", "--no-checkout", "--filter=blob:none", self.url]
-            )
-
-            sparse_args = ["sparse-checkout", "set"]
-
-            if callable(self.git_sparse_paths):
-                sparse_args.extend(self.git_sparse_paths())
-            else:
-                sparse_args.extend([p for p in self.git_sparse_paths])
-
-            sparse_args.append("--cone")
-
-            checkout_args = ["checkout", git_ref]
-
-            if not spack.config.get("config:debug"):
-                clone_args.insert(1, "--quiet")
-                checkout_args.insert(1, "--quiet")
-
-            with temp_cwd():
-                git(*clone_args)
-                repo_name = get_single_file(".")
-                if self.stage:
-                    self.stage.srcdir = repo_name
-                shutil.move(repo_name, dest)
-
-            with working_dir(dest):
-                git(*sparse_args)
-                git(*checkout_args)
+            repo_name = get_single_file(".")
+            if self.stage:
+                self.stage.srcdir = repo_name
+            shutil.copytree(repo_name, dest, symlinks=True)
+        return
 
     def submodule_operations(self):
         dest = self.stage.source_path
@@ -1151,12 +1023,6 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             self.git(*co_args)
             self.git(*clean_args)
-
-    def protocol_supports_shallow_clone(self):
-        """Shallow clone operations (``--depth #``) are not supported by the basic
-        HTTP protocol or by no-protocol file specifications.
-        Use (e.g.) ``https://`` or ``file://`` instead."""
-        return not (self.url.startswith("http://") or self.url.startswith("/"))
 
     def __str__(self):
         return f"[git] {self._repo_info()}"
@@ -1727,17 +1593,25 @@ def _for_package_version(pkg, version=None):
         version = pkg.version
 
     # if it's a commit, we must use a GitFetchStrategy
-    commit_sha = pkg.spec.variants.get("commit", None)
-    if isinstance(version, spack.version.GitVersion) or commit_sha:
+    commit_var = pkg.spec.variants.get("commit", None)
+    commit = commit_var.value if commit_var else None
+    tag = None
+    if isinstance(version, spack.version.GitVersion) or commit:
         if not hasattr(pkg, "git"):
             raise spack.error.FetchError(
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
-        # Populate the version with comparisons to other commits
         if isinstance(version, spack.version.GitVersion):
+            # Populate the version with comparisons to other commits
             from spack.version.git_ref_lookup import GitRefLookup
 
             version.attach_lookup(GitRefLookup(pkg.name))
+
+            if not commit and version.is_commit:
+                commit = version.ref
+            version_meta_data = pkg.versions.get(version.std_version)
+        else:
+            version_meta_data = pkg.versions.get(version)
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
@@ -1747,16 +1621,14 @@ def _for_package_version(pkg, version=None):
         # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
 
         # TODO(psakiev) eventually we should  only need to clone based on the commit
-        ref_type = None
-        ref_value = None
-        if commit_sha:
-            ref_type = "commit"
-            ref_value = commit_sha.value
-        else:
-            ref_type = "commit" if version.is_commit else "tag"
-            ref_value = version.ref
 
-        kwargs = {ref_type: ref_value, "no_cache": ref_type != "commit"}
+        # commit stashed on version
+        if version_meta_data:
+            if not commit:
+                commit = version_meta_data.get("commit")
+            tag = version_meta_data.get("tag") or version_meta_data.get("branch")
+
+        kwargs = {"commit": commit, "tag": tag, "no_cache": bool(not commit)}
         kwargs["git"] = pkg.version_or_package_attr("git", version)
         kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
         kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)

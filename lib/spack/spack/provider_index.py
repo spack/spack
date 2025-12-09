@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
-from typing import TYPE_CHECKING, Dict, Iterable, Optional, Set
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Union
 
 import spack.error
 import spack.util.spack_json as sjson
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     import spack.spec
 
 
-class _IndexBase:
+class ProviderIndex:
     #: This is a dict of dicts used for finding providers of particular
     #: virtual dependencies. The dict of dicts looks like:
     #:
@@ -29,59 +29,8 @@ class _IndexBase:
     #: Calling providers_for(spec) will find specs that provide a
     #: matching implementation of MPI. Derived class need to construct
     #: this attribute according to the semantics above.
-    providers: Dict[str, Dict[str, Set[str]]]
+    providers: Dict[str, Dict["spack.spec.Spec", Set["spack.spec.Spec"]]]
 
-    def providers_for(self, virtual_spec):
-        """Return a list of specs of all packages that provide virtual
-        packages with the supplied spec.
-
-        Args:
-            virtual_spec: virtual spec to be provided
-        """
-        result = set()
-        # Allow string names to be passed as input, as well as specs
-        if isinstance(virtual_spec, str):
-            from spack.spec import Spec
-
-            virtual_spec = Spec(virtual_spec)
-
-        # Add all the providers that satisfy the vpkg spec.
-        if virtual_spec.name in self.providers:
-            for p_spec, spec_set in self.providers[virtual_spec.name].items():
-                if p_spec.intersects(virtual_spec, deps=False):
-                    result.update(spec_set)
-
-        # Return providers in order. Defensively copy.
-        return sorted(s.copy() for s in result)
-
-    def __contains__(self, name):
-        return name in self.providers
-
-    def __eq__(self, other):
-        return self.providers == other.providers
-
-    def _transform(self, transform_fun, out_mapping_type=dict):
-        """Transform this provider index dictionary and return it.
-
-        Args:
-            transform_fun: transform_fun takes a (vpkg, pset) mapping and runs
-                it on each pair in nested dicts.
-            out_mapping_type: type to be used internally on the
-                transformed (vpkg, pset)
-
-        Returns:
-            Transformed mapping
-        """
-        return _transform(self.providers, transform_fun, out_mapping_type)
-
-    def __str__(self):
-        return str(self.providers)
-
-    def __repr__(self):
-        return repr(self.providers)
-
-
-class ProviderIndex(_IndexBase):
     def __init__(
         self,
         repository: "spack.repo.RepoType",
@@ -117,7 +66,63 @@ class ProviderIndex(_IndexBase):
 
             self.update(spec)
 
-    def update(self, spec):
+    def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
+        """Return a list of specs of all packages that provide virtual packages with the supplied
+        spec.
+
+        Args:
+            virtual: either a Spec or a string name of a virtual package
+        """
+        result: Set["spack.spec.Spec"] = set()
+
+        if isinstance(virtual, str):
+            # In the common case where just a package name is passed, we can avoid running the
+            # spec parser and intersects, since intersects is always true.
+            if virtual.isalnum():
+                if virtual in self.providers:
+                    for p_spec, spec_set in self.providers[virtual].items():
+                        result.update(spec_set)
+                return list(result)
+
+            from spack.spec import Spec
+
+            virtual = Spec(virtual)
+
+        # Add all the providers that satisfy the vpkg spec.
+        if virtual.name in self.providers:
+            for p_spec, spec_set in self.providers[virtual.name].items():
+                if p_spec.intersects(virtual, deps=False):
+                    result.update(spec_set)
+
+        return list(result)
+
+    def __contains__(self, name):
+        return name in self.providers
+
+    def __eq__(self, other):
+        return self.providers == other.providers
+
+    def _transform(self, transform_fun, out_mapping_type=dict):
+        """Transform this provider index dictionary and return it.
+
+        Args:
+            transform_fun: transform_fun takes a (vpkg, pset) mapping and runs
+                it on each pair in nested dicts.
+            out_mapping_type: type to be used internally on the
+                transformed (vpkg, pset)
+
+        Returns:
+            Transformed mapping
+        """
+        return _transform(self.providers, transform_fun, out_mapping_type)
+
+    def __str__(self):
+        return str(self.providers)
+
+    def __repr__(self):
+        return repr(self.providers)
+
+    def update(self, spec: Union[str, "spack.spec.Spec"]) -> None:
         """Update the provider index with additional virtual specs.
 
         Args:
@@ -135,8 +140,8 @@ class ProviderIndex(_IndexBase):
         msg = "cannot update an index passing the virtual spec '{}'".format(spec.name)
         assert not self.repository.is_virtual_safe(spec.name), msg
 
-        pkg_provided = self.repository.get_pkg_class(spec.name).provided
-        for provider_spec_readonly, provided_specs in pkg_provided.items():
+        pkg_cls = self.repository.get_pkg_class(spec.name)
+        for provider_spec_readonly, provided_specs in pkg_cls.provided.items():
             for provided_spec in provided_specs:
                 # TODO: fix this comment.
                 # We want satisfaction other than flags

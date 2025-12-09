@@ -28,7 +28,7 @@ import spack.vendor.archspec.cpu.microarchitecture
 import spack.vendor.archspec.cpu.schema
 
 import spack.binary_distribution
-import spack.bootstrap.core
+import spack.bootstrap
 import spack.caches
 import spack.compilers.config
 import spack.compilers.libraries
@@ -37,9 +37,11 @@ import spack.config
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
+import spack.extensions
 import spack.llnl.util.lang
 import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -755,6 +757,7 @@ class RepoBuilder:
         namespace = f"test_namespace_{RepoBuilder._counter}"
         repo_root = os.path.join(root_directory, namespace)
         os.makedirs(repo_root, exist_ok=True)
+        self.template_dirs = (os.path.join(spack.paths.share_path, "templates"),)
         self.root, self.namespace = spack.repo.create_repo(repo_root, namespace)
         self.build_system_name = f"test_build_system_{self.namespace}"
         self._add_build_system()
@@ -777,7 +780,9 @@ class RepoBuilder:
             "cls_name": spack.util.naming.pkg_name_to_class_name(name),
             "dependencies": dependencies,
         }
-        template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
+        template = spack.tengine.make_environment_from_dirs(self.template_dirs).get_template(
+            "mock-repository/package.pyt"
+        )
         package_py = self._recipe_filename(name)
         os.makedirs(os.path.dirname(package_py), exist_ok=True)
         with open(package_py, "w", encoding="utf-8") as f:
@@ -790,7 +795,7 @@ class RepoBuilder:
     def _add_build_system(self) -> None:
         """Add spack_repo.<namespace>.build_systems.test_build_system with
         build_system=test_build_system_<namespace>."""
-        template = spack.tengine.make_environment().get_template(
+        template = spack.tengine.make_environment_from_dirs(self.template_dirs).get_template(
             "mock-repository/build_system.pyt"
         )
         text = template.render({"build_system_name": self.build_system_name})
@@ -1001,16 +1006,10 @@ def monkeypatch_session():
         yield monkeypatch
 
 
-@pytest.fixture(scope="session", autouse=True)
-def mock_wsdk_externals(monkeypatch_session):
-    """Skip check for required external packages on Windows during testing
-    Note: In general this should cover this behavior for all tests,
-    however any session scoped fixture involving concretization should
-    include this fixture
-    """
-    monkeypatch_session.setattr(
-        spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none
-    )
+@pytest.fixture(autouse=True)
+def mock_wsdk_externals(monkeypatch):
+    """Skip check for required external packages on Windows during testing."""
+    monkeypatch.setattr(spack.bootstrap, "ensure_winsdk_external_or_raise", _return_none)
 
 
 @pytest.fixture(scope="function")
@@ -1047,6 +1046,49 @@ def mock_low_high_config(tmp_path: Path):
     ]
 
     with spack.config.use_configuration(*scopes) as config:
+        yield config
+
+
+def create_config_scope(path: Path, name: str) -> spack.config.DirectoryConfigScope:
+    """helper for creating config scopes with included file/directory scopes
+    that do not have existing representation on the filesystem"""
+    base_scope_dir = path / "base"
+    config_data = syaml.syaml_dict(
+        {
+            "include": [
+                {
+                    "name": "sub_base",
+                    "path": str(path / name),
+                    "optional": True,
+                    "prefer_modify": True,
+                }
+            ]
+        }
+    )
+    base_scope_dir.mkdir()
+    with open(str(base_scope_dir / "include.yaml"), "w+", encoding="utf-8") as f:
+        syaml.dump_config(config_data, stream=f, default_flow_style=False)
+    scope = spack.config.DirectoryConfigScope("base", str(base_scope_dir))
+    return scope
+
+
+@pytest.fixture()
+def mock_missing_dir_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional directory scope
+    includes that do not have represetation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub")
+
+    with spack.config.use_configuration(scope) as config:
+        yield config
+
+
+@pytest.fixture
+def mock_missing_file_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional file scope
+    includes that do not have represetation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub.yaml")
+
+    with spack.config.use_configuration(scope) as config:
         yield config
 
 
@@ -1096,7 +1138,6 @@ def _store_dir_and_cache(tmp_path_factory: pytest.TempPathFactory):
 @pytest.fixture(scope="session")
 def mock_store(
     tmp_path_factory: pytest.TempPathFactory,
-    mock_wsdk_externals,
     mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache: Tuple[Path, Path],
@@ -1111,6 +1152,7 @@ def mock_store(
 
     """
     store_path, store_cache = _store_dir_and_cache
+    _mock_wsdk_externals = spack.bootstrap.ensure_winsdk_external_or_raise
 
     # Make the DB filesystem read-only to ensure constructors don't modify anything in it.
     # We want Spack to be able to point to a DB on a read-only filesystem easily.
@@ -1123,7 +1165,11 @@ def mock_store(
                 with spack.repo.use_repositories(mock_packages_repo):
                     # make the DB filesystem writable only while we populate it
                     _recursive_chmod(store_path, 0o755)
-                    _populate(store.db)
+                    try:
+                        spack.bootstrap.ensure_winsdk_external_or_raise = _return_none
+                        _populate(store.db)
+                    finally:
+                        spack.bootstrap.ensure_winsdk_external_or_raise = _mock_wsdk_externals
                     _recursive_chmod(store_path, 0o555)
 
         _recursive_chmod(store_cache, 0o755)
@@ -2123,7 +2169,10 @@ def mock_fetch_url_text(mock_config_data, monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_tty_stdout(monkeypatch):
+    """Make sys.stdout.isatty() return True, while forcing no color output."""
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+    with spack.llnl.util.tty.color.color_when("never"):
+        yield
 
 
 @pytest.fixture
@@ -2437,3 +2486,38 @@ def config_two_gccs(mutable_config):
             },
         ],
     )
+
+
+@pytest.fixture(scope="function")
+def mock_util_executable(monkeypatch):
+    logger = []
+    should_fail = []
+    registered_reponses = {}
+
+    def mock_call(self, *args, **kwargs):
+        cmd = self.exe + list(args)
+        str_cmd = " ".join(map(str, cmd))
+        logger.append(str_cmd)
+        for failure_key in should_fail:
+            if failure_key in str_cmd:
+                self.returncode = 1
+                if kwargs.get("fail_on_error", True):
+                    raise spack.util.executable.ProcessError(f"Failed: {str_cmd}")
+                return
+        for key, value in registered_reponses.items():
+            if key in str_cmd:
+                return value
+        self.returncode = 0
+
+    monkeypatch.setattr(spack.util.executable.Executable, "__call__", mock_call)
+    yield logger, should_fail, registered_reponses
+
+
+@pytest.fixture()
+def reset_extension_paths():
+    """Clears the cache used for entry points, both in setup and tear-down.
+    Needed if a test stresses parts related to computing paths for Spack extensions
+    """
+    spack.extensions.extension_paths_from_entry_points.cache_clear()
+    yield
+    spack.extensions.extension_paths_from_entry_points.cache_clear()

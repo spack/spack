@@ -16,6 +16,7 @@ class Callpath(Package):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
     depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("dyninst")
     depends_on("mpi")
