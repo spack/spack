@@ -5,6 +5,7 @@
 import argparse
 import sys
 import warnings
+from typing import List, Optional
 
 import spack.binary_distribution
 import spack.compilers.config
@@ -16,6 +17,7 @@ from spack.cmd.common import arguments
 from spack.llnl.util.lang import index_by
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
+from spack.spec import Spec
 
 description = "manage compilers"
 section = "config"
@@ -78,6 +80,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     info_parser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
+    info_parser.add_argument(
+        "--remote", action="store_true", help="list also compilers from registered buildcaches"
+    )
 
 
 def compiler_find(args):
@@ -135,58 +140,59 @@ def compiler_remove(args):
 
 def compiler_info(args):
     """Print info about all compilers matching a spec."""
+    all_compilers = _all_available_compilers(scope=args.scope, remote=args.remote)
     query = spack.spec.Spec(args.compiler_spec)
-    all_compilers = spack.compilers.config.all_compilers(scope=args.scope, init_config=False)
-
     compilers = [x for x in all_compilers if x.satisfies(query)]
 
     if not compilers:
         tty.die(f"No compilers match spec {query.cformat()}")
-    else:
-        for c in compilers:
-            print(f"{c.cformat()}:")
-            print(f"  prefix: {c.external_path}")
-            extra_attributes = getattr(c, "extra_attributes", {})
-            if "compilers" in extra_attributes:
-                print("  compilers:")
-                for language, exe in extra_attributes.get("compilers", {}).items():
-                    print(f"    {language}: {exe}")
-            if "flags" in extra_attributes:
-                print("  flags:")
-                for flag, flag_value in extra_attributes["flags"].items():
-                    print(f"    {flag} = {flag_value}")
-            if "environment" in extra_attributes:
-                environment = extra_attributes["environment"]
-                if len(environment.get("set", {})) != 0:
-                    print("\tenvironment:")
-                    print("\t    set:")
-                    for key, value in environment["set"].items():
-                        print(f"\t        {key} = {value}")
-            if "extra_rpaths" in extra_attributes:
-                print("  extra rpaths:")
-                for extra_rpath in extra_attributes["extra_rpaths"]:
-                    print(f"    {extra_rpath}")
-            if getattr(c, "external_modules", []):
-                print("  modules: ")
-                for module in c.external_modules:
-                    print(f"    {module}")
-            print()
+
+    compilers.sort(key=lambda x: (not x.external, x.name, x.version))
+
+    for c in compilers:
+        exes = {
+            cname: getattr(c.package, cname)
+            for cname in ("cc", "cxx", "fortran")
+            if hasattr(c.package, cname)
+        }
+        if not exes:
+            tty.debug(
+                f"{__name__}: skipping {c.format()} from compiler list, "
+                f"since it has no executables"
+            )
+            continue
+
+        print(f"{c.tree(recurse_dependencies=False, status_fn=spack.spec.Spec.install_status)}")
+        print(f"  prefix: {c.prefix}")
+        print("  compilers:")
+        for language, exe in exes.items():
+            print(f"    {language}: {exe}")
+
+        extra_attributes = getattr(c, "extra_attributes", {})
+        if "flags" in extra_attributes:
+            print("  flags:")
+            for flag, flag_value in extra_attributes["flags"].items():
+                print(f"    {flag} = {flag_value}")
+        if "environment" in extra_attributes:
+            environment = extra_attributes["environment"]
+            if len(environment.get("set", {})) != 0:
+                print("\tenvironment:")
+                print("\t    set:")
+                for key, value in environment["set"].items():
+                    print(f"\t        {key} = {value}")
+        if "extra_rpaths" in extra_attributes:
+            print("  extra rpaths:")
+            for extra_rpath in extra_attributes["extra_rpaths"]:
+                print(f"    {extra_rpath}")
+        if getattr(c, "external_modules", []):
+            print("  modules: ")
+            for module in c.external_modules:
+                print(f"    {module}")
+        print()
 
 
 def compiler_list(args):
-    supported_compilers = spack.compilers.config.supported_compilers()
-
-    def _is_compiler(x):
-        return x.name in supported_compilers and x.package.supported_languages and not x.external
-
-    compilers_from_store = [x for x in spack.store.STORE.db.query() if _is_compiler(x)]
-    compilers_from_yaml = spack.compilers.config.all_compilers(scope=args.scope, init_config=False)
-    compilers = compilers_from_yaml + compilers_from_store
-
-    if args.remote:
-        compilers.extend(
-            [x for x in spack.binary_distribution.update_cache_and_get_specs() if _is_compiler(x)]
-        )
+    compilers = _all_available_compilers(scope=args.scope, remote=args.remote)
 
     # If there are no compilers in any scope, and we're outputting to a tty, give a
     # hint to the user.
@@ -225,6 +231,23 @@ def compiler_list(args):
             colorize(c.install_status().value) + c.format("{name}@{version}") for c in compilers
         }
         colify(reversed(sorted(result)))
+
+
+def _all_available_compilers(scope: Optional[str], remote: bool) -> List[Spec]:
+    supported_compilers = spack.compilers.config.supported_compilers()
+
+    def _is_compiler(x):
+        return x.name in supported_compilers and x.package.supported_languages and not x.external
+
+    compilers_from_store = [x for x in spack.store.STORE.db.query() if _is_compiler(x)]
+    compilers_from_yaml = spack.compilers.config.all_compilers(scope=scope, init_config=False)
+    compilers = compilers_from_yaml + compilers_from_store
+
+    if remote:
+        compilers.extend(
+            [x for x in spack.binary_distribution.update_cache_and_get_specs() if _is_compiler(x)]
+        )
+    return compilers
 
 
 def compiler(parser, args):
