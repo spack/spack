@@ -214,12 +214,6 @@ jobs:
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
-    # See https://github.com/actions/runner-images/issues/13358
-    - name: Unlock another CPU core on x86_64 MacOS
-      if: matrix.os == 'macos-15-intel'
-      run: |
-        sudo defaults -currentHost write /Library/Preferences/com.apple.powerlogd SMCMonitorCadence 0
-        sudo killall PerfPowerServices || true
     - name: Run unit tests
       env:
         COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
