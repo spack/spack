@@ -153,14 +153,28 @@ def compiler_info(args):
     if not compilers:
         tty.die(f"No compilers match spec {query.cformat()}")
 
+    compilers.sort(key=lambda x: (not x.external, x.name, x.version))
+
     for c in compilers:
-        print(f"{c.cformat()}:")
+        exes = {
+            cname: getattr(c.package, cname)
+            for cname in ("cc", "cxx", "fortran")
+            if hasattr(c.package, cname)
+        }
+        if not exes:
+            tty.debug(
+                f"{__name__}: skipping {c.format()} from compiler list, "
+                f"since it has no executables"
+            )
+            continue
+
+        print(f"{c.tree(recurse_dependencies=False, status_fn=spack.spec.Spec.install_status)}")
         print(f"  prefix: {c.prefix}")
+        print("  compilers:")
+        for language, exe in exes.items():
+            print(f"    {language}: {exe}")
+
         extra_attributes = getattr(c, "extra_attributes", {})
-        if "compilers" in extra_attributes:
-            print("  compilers:")
-            for language, exe in extra_attributes.get("compilers", {}).items():
-                print(f"    {language}: {exe}")
         if "flags" in extra_attributes:
             print("  flags:")
             for flag, flag_value in extra_attributes["flags"].items():
