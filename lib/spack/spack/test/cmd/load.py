@@ -8,7 +8,6 @@ import pytest
 
 import spack.concretize
 import spack.hooks.cache_shell_script as shell_script
-import spack.spec
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 
@@ -101,7 +100,7 @@ def test_load_includes_run_env(
     `setup_run_environment` method are added to the user environment in
     addition to the prefix inspections"""
     install("--fake", "mpileaks")
-    mpileaks_spec = spack.spec.Spec("mpileaks").concretized()
+    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
     load(shell, "mpileaks")
     load_script_file = shell_script.path_to_load_shell_script(mpileaks_spec, shell[2:])

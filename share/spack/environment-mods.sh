@@ -15,18 +15,6 @@ _separator_exists() {
     return 0
 }
 
-# _value_in_varname varname value sep
-#
-# Return whether the variable value is found in varname
-_value_in_varname () {
-    varname="$1"
-    value="$2"
-
-    eval "var=\"\${${varname}}\""
-
-    test "${var#*$value}" != "$var"
-}
-
 # _spack_env_varname_is_empty varname
 #
 # Return whether the variable varname is unset or set to the empty string.
