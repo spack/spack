@@ -99,7 +99,7 @@ class NamingSchemeV2(NamingScheme):
 
     def pkg_name_to_pkg_dir(self, name: str) -> str:
         name = name.replace("-", "_")
-        if re.match(r"^[0-9]", name) or name in RESERVED_NAMES_ONLY_LOWERCASE:
+        if name[0].isdigit() or name in RESERVED_NAMES_ONLY_LOWERCASE:
             name = f"_{name}"
         return name
 
