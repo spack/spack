@@ -18,6 +18,9 @@ import spack.util.executable as exe
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
 
+# regex for (git) version
+GIT_VERSION = re.compile(r"(\d+(?:\.\d+)*(?:[-+a-zA-Z0-9.]*))")
+
 
 def is_git_commit_sha(string: str) -> bool:
     return len(string) == 40 and bool(COMMIT_VERSION.match(string))
@@ -30,8 +33,8 @@ def _find_git() -> Optional[str]:
 
 
 def extract_git_version_str(git_exe):
-    v_str = re.sub(r"\(.*", "", git_exe("--version", output=str)).strip().split()[-1]
-    return v_str.replace("windows.", "")
+    match = re.search(GIT_VERSION, git_exe("--version", output=str))
+    return match.group(1).replace("windows.", "") if match else None
 
 
 class GitExecutable(exe.Executable):
