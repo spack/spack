@@ -10,7 +10,7 @@ python-levenshtein==0.27.3
 docutils==0.21.2
 pygments==2.19.2
 urllib3==2.6.1
-pytest==9.0.1
+pytest==9.0.2
 isort==7.0.0
 black==25.12.0
 flake8==7.3.0
