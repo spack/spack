@@ -41,6 +41,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
 import spack.llnl.util.tty.color
+import spack.mirrors.utils
 import spack.package_base
 import spack.patch
 import spack.spec
@@ -250,6 +251,12 @@ def _execute_version(pkg: Type[spack.package_base.PackageBase], ver: Union[str, 
 
     # Store kwargs for the package to later with a fetch_strategy.
     pkg.versions[version] = kwargs #ANGI DEBUG
+
+    if spack.mirrors.utils.get_mirror_all_mode() and kwargs.get("url"):
+        hash_val = (next(kwargs[s] for s in spack.util.crypto.hashes if s in kwargs), None)
+        if hash_val:
+            version_obj = Version(f"{version}.{hash_val[:16]}")
+            pkg.versions[version_obj] = kwargs
 
 
 def _depends_on(
