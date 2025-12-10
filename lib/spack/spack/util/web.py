@@ -834,7 +834,8 @@ def stat_url(url: str) -> Optional[Tuple[int, float]]:
             ssh(
                 *ssh_args,
                 parsed_url.netloc,
-                f'stat -c "%s %Y" {shlex.quote(parsed_url.path)}',
+                f'stat -c "%s %Y" {shlex.quote(parsed_url.path)} 2>/dev/null || '  # Linux
+                f'stat -f "%z %m" {shlex.quote(parsed_url.path)} 2>/dev/null',  # MacOS / BSD
                 output=str,
             )
             .strip()
