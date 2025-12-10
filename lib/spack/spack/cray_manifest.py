@@ -182,6 +182,7 @@ def spec_from_entry(entry):
     spec._hashes_final = True
     spec.external_path = entry["prefix"]
     spec.origin = "external-db"
+    spec.namespace = pkg_cls.namespace
     spack.spec.Spec.ensure_valid_variants(spec)
 
     return spec
