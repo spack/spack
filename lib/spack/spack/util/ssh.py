@@ -18,7 +18,7 @@ from spack.util.executable import which
 
 class SSHConnection(object):
     # used to cache connection objects and avoid checking SSH config multiple times
-    _connections = {}
+    _connections: dict[str, "SSHConnection"] = {}
 
     @classmethod
     def from_url(cls, url):
