@@ -19,7 +19,7 @@ import spack.util.executable as exe
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
 
 # regex for a git version to extract only the numeric parts
-GIT_VERSION = re.compile(r"(\d+(?:\.\d+)*(?:[0-9]*))")
+GIT_VERSION = re.compile(r"(\d+(?:\.\d+)*)")
 
 
 def is_git_commit_sha(string: str) -> bool:
