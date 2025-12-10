@@ -11,6 +11,7 @@ import warnings
 from pathlib import Path
 
 import spack.error
+import spack.stage
 from spack.llnl.util import tty
 from spack.util.executable import which
 
@@ -80,7 +81,7 @@ class SSHConnection(object):
         self.scp(shlex.quote(f"{self.netloc}:{remote_path}"), dest, fail_on_error=True)
 
     def read(self, remote_path):
-        with tempfile.NamedTemporaryFile("rb") as tmp:
+        with tempfile.NamedTemporaryFile("rb", dir=spack.stage.get_stage_root()) as tmp:
             try:
                 self.fetch(remote_path, tmp.name)
                 return io.BytesIO(tmp.read())
