@@ -248,10 +248,10 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
       with:
-        python-version: 3.9
+        python-version: '3.14'
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip pywin32 pytest-cov clingo
+          python -m pip install --upgrade pip pywin32 pytest-cov clingo "coverage<=7.11.0"
     - name: Create local develop
       run: |
         ./.github/workflows/bin/setup_git.ps1
