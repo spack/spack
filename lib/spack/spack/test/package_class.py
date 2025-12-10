@@ -9,6 +9,7 @@ static DSL metadata for packages.
 """
 
 import os
+import pathlib
 import shutil
 
 import pytest
@@ -225,14 +226,14 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     shutil.rmtree(os.path.dirname(source_path))
 
 
-def test_cache_extra_sources_fails(install_mockery):
+def test_cache_extra_sources_fails(install_mockery, tmp_path: pathlib.Path):
     s = spack.concretize.concretize_one("pkg-a")
 
     with pytest.raises(InstallError) as exc_info:
-        spack.install_test.cache_extra_test_sources(s.package, ["/a/b", "no-such-file"])
+        spack.install_test.cache_extra_test_sources(s.package, [str(tmp_path), "no-such-file"])
 
     errors = str(exc_info.value)
-    assert "'/a/b') must be relative" in errors
+    assert f"'{tmp_path}') must be relative" in errors
     assert "'no-such-file') for the copy does not exist" in errors
 
 
