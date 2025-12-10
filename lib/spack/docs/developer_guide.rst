@@ -354,23 +354,22 @@ These hooks are currently used for cleaning up module files after uninstall.
 Adding a New Hook Type
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Adding a new hook type is very simple!  In ``lib/spack/spack/hooks/__init__.py``
-you can simply add your new hook to the ``HOOK_ORDER`` list.
-.. TODO: This example needs to be changed
-For example, let's say you want to add a new hook called ``post_log_write``
-to trigger after anything is written to a logger. You would add it as follows:
+Adding a new hook type is very simple!
+In ``lib/spack/spack/hooks/__init__.py`` you can simply add your new hook to the ``HOOK_ORDER`` list. ..
+For example, let's say you want to add a new hook called ``post_log_write`` to trigger after anything is written to a logger.
+You would add it as follows:
 
 .. code-block:: python
 
     class _HookRunner:
-      #: Order in which hooks are executed
-      HOOK_ORDER = [
+   #: Order in which hooks are executed
+    HOOK_ORDER = [
         "spack.hooks.module_file_generation",
         "spack.hooks.licensing",
         "spack.hooks.sbang",
         "spack.hooks.windows_runtime_linkage",
-        "spack.hooks.post_log_write"  # <- here is my new hook!
-      ]
+        "spack.hooks.post_log_write",  # <- here is my new hook!
+    ]
 
     # pre/post install and run by the install subprocess
     pre_install = _HookRunner("pre_install")
