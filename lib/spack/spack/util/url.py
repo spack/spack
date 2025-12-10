@@ -16,26 +16,6 @@ from typing import Optional
 from spack.util.path import sanitize_filename
 
 
-def validate_scheme(scheme):
-    """Returns true if the URL scheme is generally known to Spack. This function
-    helps mostly in validation of paths vs urls, as Windows paths such as
-    C:/x/y/z (with backward not forward slash) may parse as a URL with scheme
-    C and path /x/y/z."""
-    return scheme in (
-        "file",
-        "http",
-        "https",
-        "ftp",
-        "s3",
-        "gs",
-        "ssh",
-        "git",
-        "oci",
-        "ssh",
-        "scp",
-    )
-
-
 def local_file_path(url):
     """Get a local file path from a url.
 
@@ -63,7 +43,10 @@ def is_path_instead_of_url(path_or_url):
     """Historically some config files and spack commands used paths
     where urls should be used. This utility can be used to validate
     and promote paths to urls."""
-    return not validate_scheme(urllib.parse.urlparse(path_or_url).scheme)
+    return (
+        bool(re.match(r"^[a-zA-Z]:[\\/]", path_or_url)) # for Windows paths
+        or not urllib.parse.urlparse(path_or_url).scheme
+    )
 
 
 def format(parsed_url):

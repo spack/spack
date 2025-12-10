@@ -15,7 +15,6 @@ import spack.llnl.util.tty as tty
 import spack.util.crypto
 from spack.llnl.util.filesystem import copy, join_path, mkdirp
 from spack.util.path import canonicalize_path
-from spack.util.url import validate_scheme
 
 
 def raw_github_gitlab_url(url: str) -> str:
@@ -94,55 +93,50 @@ def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
     if url.scheme in file_schemes:
         return os.path.normpath(path)
 
-    # If scheme is not valid, path is not a supported url.
-    if validate_scheme(url.scheme):
-        # Fetch files from supported URL schemes.
-        if url.scheme in ("http", "https", "ftp"):
-            if not dest:
-                raise ValueError("Requires the destination argument to cache remote files")
-            assert os.path.isabs(dest), (
-                f"Remote file destination '{dest}' must be an absolute path"
-            )
-
-            # Stage the remote configuration file
-            tmpdir = tempfile.mkdtemp()
-            try:
-                staged_path = fetch_remote_text_file(path, tmpdir)
-
-                # Ensure the sha256 is expected.
-                checksum = spack.util.crypto.checksum(hashlib.sha256, staged_path)
-                if sha256 and checksum != sha256:
-                    raise ValueError(
-                        f"Actual sha256 ('{checksum}') does not match expected ('{sha256}')"
-                    )
-
-                # Help the user by reporting the required checksum.
-                if not sha256:
-                    raise ValueError(f"Requires sha256 ('{checksum}') to cache remote files.")
-
-                # Copy the file to the destination directory
-                dest_dir = join_path(dest, checksum)
-                if not os.path.exists(dest_dir):
-                    mkdirp(dest_dir)
-
-                cache_path = join_path(dest_dir, os.path.basename(staged_path))
-                copy(staged_path, cache_path)
-                tty.debug(f"Cached {raw_path} in {cache_path}")
-
-                # Stash the associated URL to aid with debugging
-                with open(join_path(dest_dir, "source_url.txt"), "w", encoding="utf-8") as f:
-                    f.write(f"{raw_path}\n")
-
-                return cache_path
-
-            except ValueError as err:
-                tty.warn(f"Unable to cache {raw_path}: {str(err)}")
-                raise
-
-            finally:
-                shutil.rmtree(tmpdir)
-
+    # Fetch files from supported URL schemes.
+    if url.scheme not in ("http", "https", "ftp"):
         raise ValueError(f"Unsupported URL scheme ({url.scheme}) in {raw_path}")
 
-    else:
-        raise ValueError(f"Invalid URL scheme ({url.scheme}) in {raw_path}")
+    if not dest:
+        raise ValueError("Requires the destination argument to cache remote files")
+    assert os.path.isabs(dest), (
+        f"Remote file destination '{dest}' must be an absolute path"
+    )
+
+    # Stage the remote configuration file
+    tmpdir = tempfile.mkdtemp()
+    try:
+        staged_path = fetch_remote_text_file(path, tmpdir)
+
+        # Ensure the sha256 is expected.
+        checksum = spack.util.crypto.checksum(hashlib.sha256, staged_path)
+        if sha256 and checksum != sha256:
+            raise ValueError(
+                f"Actual sha256 ('{checksum}') does not match expected ('{sha256}')"
+            )
+
+        # Help the user by reporting the required checksum.
+        if not sha256:
+            raise ValueError(f"Requires sha256 ('{checksum}') to cache remote files.")
+
+        # Copy the file to the destination directory
+        dest_dir = join_path(dest, checksum)
+        if not os.path.exists(dest_dir):
+            mkdirp(dest_dir)
+
+        cache_path = join_path(dest_dir, os.path.basename(staged_path))
+        copy(staged_path, cache_path)
+        tty.debug(f"Cached {raw_path} in {cache_path}")
+
+        # Stash the associated URL to aid with debugging
+        with open(join_path(dest_dir, "source_url.txt"), "w", encoding="utf-8") as f:
+            f.write(f"{raw_path}\n")
+
+        return cache_path
+
+    except ValueError as err:
+        tty.warn(f"Unable to cache {raw_path}: {str(err)}")
+        raise
+
+    finally:
+        shutil.rmtree(tmpdir)
