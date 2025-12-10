@@ -32,9 +32,9 @@ def _find_git() -> Optional[str]:
     return exe.which_string("git", required=False)
 
 
-def extract_git_version_str(git_exe):
+def extract_git_version_str(git_exe: exe.Executable) -> str:
     match = re.search(GIT_VERSION, git_exe("--version", output=str))
-    return match.group(1) if match else None
+    return match.group(1) if match else ""
 
 
 class GitExecutable(exe.Executable):
