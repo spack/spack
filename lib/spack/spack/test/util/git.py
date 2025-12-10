@@ -84,7 +84,12 @@ def test_pull_checkout_branch(git, tmp_path: pathlib.Path, mock_git_version_info
 
 @pytest.mark.parametrize(
     "input,answer",
-    (["git version 1.7.1", (1, 7, 1)], ["git version 2.34.1.windows.2", (2, 34, 1, 2)]),
+    (
+        ["git version 1.7.1", (1, 7, 1)],
+        ["git version 2.34.1.windows.2", (2, 34, 1)],
+        ["git version 2.50.1 (Apple Git-155)", (2, 50, 1)],
+        ["git version 1.2.3.4.150.abcd10", (1, 2, 3, 4, 150)],
+    ),
 )
 def test_extract_git_version(mock_util_executable, input, answer):
     _, _, registered_responses = mock_util_executable
