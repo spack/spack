@@ -9,6 +9,7 @@ import io
 import json
 import os
 import re
+import shlex
 import shutil
 import socket
 import ssl
@@ -281,7 +282,7 @@ def fetch_from_ssh_url(url, dest):
 
     scp = spack.util.executable.which("scp", required=True)
     scp_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
-    scp(*scp_args, f"{url.netloc}:{url.path}", dest, fail_on_error=True)
+    scp(*scp_args, shlex.quote(f"{url.netloc}:{url.path}"), dest, fail_on_error=True)
 
 
 def read_from_ssh_url(url):
@@ -406,13 +407,13 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         ssh(
             *common_args,
             remote_url.netloc,
-            f'mkdir -p "{os.path.dirname(remote_url.path)}"',
+            f"mkdir -p {shlex.quote(os.path.dirname(remote_url.path))}",
             fail_on_error=True,
         )
         scp(
             *common_args,
             local_file_path,
-            f"{remote_url.netloc}:{remote_url.path}",
+            shlex.quote(f"{remote_url.netloc}:{remote_url.path}"),
             fail_on_error=True,
         )
         if not keep_original:
@@ -595,7 +596,12 @@ def url_exists(url, curl=None):
     if url_result.scheme in ("ssh", "scp"):
         ssh = spack.util.executable.which("ssh", required=True)
         ssh_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
-        ssh(*ssh_args, url_result.netloc, f"test -e {url_result.path}", fail_on_error=False)
+        ssh(
+            *ssh_args,
+            url_result.netloc,
+            f"test -e {shlex.quote(url_result.path)}",
+            fail_on_error=False,
+        )
         return ssh.returncode == 0
 
     # Use curl if configured to do so
@@ -768,9 +774,16 @@ def list_url(url, recursive=False):
         ssh = spack.util.executable.which("ssh", required=True)
         ssh_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
         if recursive:
-            output = ssh(*ssh_args, url.netloc, f"find {url.path} -type f", output=str)
+            output = ssh(
+                *ssh_args, url.netloc, f"find {shlex.quote(url.path)} -type f", output=str
+            )
         else:
-            output = ssh(*ssh_args, url.netloc, f"find {url.path} -maxdepth 1 -type f", output=str)
+            output = ssh(
+                *ssh_args,
+                url.netloc,
+                f"find {shlex.quote(url.path)} -maxdepth 1 -type f",
+                output=str,
+            )
         return (
             [str(Path(p.strip()).relative_to(url.path)) for p in output.splitlines()]
             if output
@@ -818,7 +831,12 @@ def stat_url(url: str) -> Optional[Tuple[int, float]]:
         ssh = spack.util.executable.which("ssh", required=True)
         ssh_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
         output = (
-            ssh(*ssh_args, parsed_url.netloc, f'stat -c "%s %Y" "{parsed_url.path}"', output=str)
+            ssh(
+                *ssh_args,
+                parsed_url.netloc,
+                f'stat -c "%s %Y" {shlex.quote(parsed_url.path)}',
+                output=str,
+            )
             .strip()
             .split()
         )
