@@ -165,44 +165,51 @@ class NoStaticAnalysis(PossibleDependencyGraph):
                 continue
 
             pkg_cls = self.repo.get_pkg_class(pkg_name=pkg_name)
-            for name, conditions in pkg_cls.dependencies_by_name(when=True).items():
-                if all(self.unreachable(pkg_name=pkg_name, when_spec=x) for x in conditions):
-                    tty.debug(
-                        f"[{__name__}] Not adding {name} as a dep of {pkg_name}, because "
-                        f"conditions cannot be met"
-                    )
-                    continue
-
-                if not self._has_deptypes(
-                    conditions, allowed_deps=allowed_deps, strict=strict_depflag
-                ):
-                    continue
-
-                if name in virtuals:
-                    continue
-
-                dep_names = set()
-                if self.is_virtual(name):
-                    virtuals.add(name)
-                    if expand_virtuals:
-                        providers = self.providers_for(name)
-                        dep_names = {spec.name for spec in providers}
-                else:
-                    dep_names = {name}
-
-                edges[pkg_name].update(dep_names)
-
-                if not transitive:
-                    continue
-
-                for dep_name in dep_names:
-                    if dep_name in edges:
+            for when_spec, dependencies in pkg_cls.dependencies.items():
+                # Check if we need to process this condition at all. We can skip the unreachable
+                # check if all dependencies in this condition are already accounted for.
+                new_dependencies: List[str] = []
+                for name, dep in dependencies.items():
+                    if strict_depflag:
+                        if dep.depflag != allowed_deps:
+                            continue
+                    elif not (dep.depflag & allowed_deps):
                         continue
 
-                    if not self._is_possible(pkg_name=dep_name):
+                    if name in edges[pkg_name] or name in virtuals:
                         continue
 
-                    stack.append(dep_name)
+                    new_dependencies.append(name)
+
+                if not new_dependencies:
+                    continue
+
+                if self.unreachable(pkg_name=pkg_name, when_spec=when_spec):
+                    continue
+
+                for name in new_dependencies:
+                    dep_names: Set[str] = set()
+                    if self.is_virtual(name):
+                        virtuals.add(name)
+                        if expand_virtuals:
+                            providers = self.providers_for(name)
+                            dep_names = {spec.name for spec in providers}
+                    else:
+                        dep_names = {name}
+
+                    edges[pkg_name].update(dep_names)
+
+                    if not transitive:
+                        continue
+
+                    for dep_name in dep_names:
+                        if dep_name in edges:
+                            continue
+
+                        if not self._is_possible(pkg_name=dep_name):
+                            continue
+
+                        stack.append(dep_name)
 
         real_packages = set(edges)
         if not transitive:
