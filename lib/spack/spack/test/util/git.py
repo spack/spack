@@ -33,13 +33,14 @@ def test_modified_files(mock_git_package_changes):
         assert files[0] == filename
 
 
-def test_init_git_repo(git, tmp_path: pathlib.Path):
-    repo_url = "https://github.com/spack/spack.git"
-    destination = str(tmp_path / "test_git_init")
+def test_init_git_repo(git, mock_git_version_info, tmp_path: pathlib.Path):
+    """Test that init_git_repo creates a new repo with remote but doesn't checkout."""
+    repo, _, _ = mock_git_version_info
 
-    with working_dir(destination, create=True):
-        spack.util.git.init_git_repo(repo_url)
+    with working_dir(str(tmp_path / "test_git_init_repo"), create=True):
+        spack.util.git.init_git_repo(repo)
 
+        # Verify repo was initialized but no commits checked out yet
         assert "No commits yet" in git("status", output=str)
 
 
