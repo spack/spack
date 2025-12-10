@@ -1730,11 +1730,13 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         remote = git("config", f"branch.{self.branch}.remote", output=str).strip()
 
                     if self.commit:
-                        spack.util.git.pull_checkout_commit(self.commit, git_exe=git)
+                        spack.util.git.pull_checkout_commit(
+                            self.commit, remote=remote, depth=depth, git_exe=git
+                        )
 
                     elif self.tag:
                         spack.util.git.pull_checkout_tag(
-                            self.tag, remote, depth=depth, git_exe=git
+                            self.tag, remote=remote, depth=depth, git_exe=git
                         )
 
                     elif self.branch:
