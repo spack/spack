@@ -9,14 +9,12 @@ import io
 import json
 import os
 import re
-import shlex
 import shutil
 import socket
 import ssl
 import stat
 import sys
 import time
-import tempfile
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
@@ -42,6 +40,7 @@ from spack.llnl.util.filesystem import mkdirp, rename, working_dir
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
+from .ssh import SSHConnection
 
 
 def is_transient_error(e: Exception) -> bool:
@@ -276,30 +275,13 @@ class ExtractMetadataParser(HTMLParser):
                     self.base_url = val
 
 
-def fetch_from_ssh_url(url, dest):
-    if isinstance(url, str):
-        url = urllib.parse.urlparse(url)
-
-    scp = spack.util.executable.which("scp", required=True)
-    scp_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
-    scp(*scp_args, shlex.quote(f"{url.netloc}:{url.path}"), dest, fail_on_error=True)
-
-
-def read_from_ssh_url(url):
-    with tempfile.NamedTemporaryFile("rb") as tmp:
-        try:
-            fetch_from_ssh_url(url, tmp.name)
-            return url, {}, io.BytesIO(tmp.read())
-        except Exception as e:
-            raise SpackWebError(f"Download of {url.geturl()} failed: {e.__class__.__name__}: {e}")
-
-
 def read_from_url(url, accept_content_type=None):
     if isinstance(url, str):
         url = urllib.parse.urlparse(url)
 
     if url.scheme in ("ssh", "scp"):
-        return read_from_ssh_url(url)
+        ssh = SSHConnection.from_url(url)
+        return url, {}, ssh.read(url.path)
 
     # Timeout in seconds for web requests
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
@@ -401,23 +383,8 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             os.remove(local_file_path)
 
     elif remote_url.scheme in ("ssh", "scp"):
-        ssh = spack.util.executable.which("ssh", required=True)
-        scp = spack.util.executable.which("scp", required=True)
-        common_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
-        ssh(
-            *common_args,
-            remote_url.netloc,
-            f"mkdir -p {shlex.quote(os.path.dirname(remote_url.path))}",
-            fail_on_error=True,
-        )
-        scp(
-            *common_args,
-            local_file_path,
-            shlex.quote(f"{remote_url.netloc}:{remote_url.path}"),
-            fail_on_error=True,
-        )
-        if not keep_original:
-            os.remove(local_file_path)
+        ssh = SSHConnection.from_url(remote_url)
+        ssh.push(local_file_path, remote_url.path, keep_original=keep_original)
 
     else:
         raise NotImplementedError(f"Unrecognized URL scheme: {remote_url.scheme}")
@@ -594,15 +561,8 @@ def url_exists(url, curl=None):
     url_result = urllib.parse.urlparse(url)
 
     if url_result.scheme in ("ssh", "scp"):
-        ssh = spack.util.executable.which("ssh", required=True)
-        ssh_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
-        ssh(
-            *ssh_args,
-            url_result.netloc,
-            f"test -e {shlex.quote(url_result.path)}",
-            fail_on_error=False,
-        )
-        return ssh.returncode == 0
+        ssh = SSHConnection.from_url(url_result)
+        return ssh.exists(url_result.path)
 
     # Use curl if configured to do so
     fetch_method = spack.config.get("config:url_fetch_method", "urllib")
@@ -771,24 +731,8 @@ def list_url(url, recursive=False):
         return gcs.get_all_blobs(recursive=recursive)
 
     elif url.scheme in ("ssh", "scp"):
-        ssh = spack.util.executable.which("ssh", required=True)
-        ssh_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
-        if recursive:
-            output = ssh(
-                *ssh_args, url.netloc, f"find {shlex.quote(url.path)} -type f", output=str
-            )
-        else:
-            output = ssh(
-                *ssh_args,
-                url.netloc,
-                f"find {shlex.quote(url.path)} -maxdepth 1 -type f",
-                output=str,
-            )
-        return (
-            [str(Path(p.strip()).relative_to(url.path)) for p in output.splitlines()]
-            if output
-            else []
-        )
+        ssh = SSHConnection.from_url(url)
+        return ssh.list_path(url.path, recursive=recursive)
 
 
 def stat_url(url: str) -> Optional[Tuple[int, float]]:
@@ -828,24 +772,8 @@ def stat_url(url: str) -> Optional[Tuple[int, float]]:
         return size, mtime
 
     elif parsed_url.scheme in ("ssh", "scp"):
-        ssh = spack.util.executable.which("ssh", required=True)
-        ssh_args = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
-        output = (
-            ssh(
-                *ssh_args,
-                parsed_url.netloc,
-                f'stat -c "%s %Y" {shlex.quote(parsed_url.path)} 2>/dev/null || '  # Linux
-                f'stat -f "%z %m" {shlex.quote(parsed_url.path)} 2>/dev/null',  # MacOS / BSD
-                output=str,
-            )
-            .strip()
-            .split()
-        )
-        if ssh.returncode != 0:
-            return None
-        size = int(output[0])
-        mtime = float(output[1])
-        return size, mtime
+        ssh = SSHConnection.from_url(parsed_url)
+        return ssh.stat_path(parsed_url.path)
 
     else:
         raise NotImplementedError(f"Unrecognized URL scheme: {parsed_url.scheme}")

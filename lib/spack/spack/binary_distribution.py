@@ -58,6 +58,7 @@ import spack.util.parallel
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.ssh as ssh_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -2894,13 +2895,14 @@ class SCPIndexFetcher(IndexFetcher):
 
     def conditional_fetch(self) -> FetchIndexResult:
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
-        url_index_manifest = cache_class.get_index_url(self.url)
+        url_index_manifest = urllib.parse.urlparse(cache_class.get_index_url(self.url))
 
         try:
-            _, _, response = web_util.read_from_ssh_url(url_index_manifest)
+            ssh = ssh_util.SSHConnection.from_url(url_index_manifest)
+            response = ssh.read(url_index_manifest.path)
         except Exception as e:
             raise FetchIndexError(
-                f"Could not read index manifest from {url_index_manifest}"
+                f"Could not read index manifest from {url_index_manifest.geturl()}"
             ) from e
 
         index_blob_record = self.get_index_manifest(response)

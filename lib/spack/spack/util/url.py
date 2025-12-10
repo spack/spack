@@ -44,7 +44,7 @@ def is_path_instead_of_url(path_or_url):
     where urls should be used. This utility can be used to validate
     and promote paths to urls."""
     return (
-        bool(re.match(r"^[a-zA-Z]:[\\/]", path_or_url)) # for Windows paths
+        bool(re.match(r"^[a-zA-Z]:[\\/]", path_or_url))  # for Windows paths
         or not urllib.parse.urlparse(path_or_url).scheme
     )
 
