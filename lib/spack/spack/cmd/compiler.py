@@ -4,7 +4,6 @@
 
 import argparse
 import sys
-import warnings
 from typing import List, Optional
 
 import spack.binary_distribution
@@ -32,19 +31,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "find",
         aliases=["add"],
         help="search the system for compilers to add to Spack configuration",
-    )
-    mixed_toolchain_group = find_parser.add_mutually_exclusive_group()
-    mixed_toolchain_group.add_argument(
-        "--mixed-toolchain",
-        action="store_true",
-        default=False,
-        help="(DEPRECATED) Allow mixed toolchains (for example: clang, clang++, gfortran)",
-    )
-    mixed_toolchain_group.add_argument(
-        "--no-mixed-toolchain",
-        action="store_false",
-        dest="mixed_toolchain",
-        help="(DEPRECATED) Do not allow mixed toolchains (for example: clang, clang++, gfortran)",
     )
     find_parser.add_argument("add_paths", nargs=argparse.REMAINDER)
     find_parser.add_argument(
@@ -95,12 +81,6 @@ def compiler_find(args):
     """Search either $PATH or a list of paths OR MODULES for compilers and
     add them to Spack's configuration.
     """
-    if args.mixed_toolchain:
-        warnings.warn(
-            "The '--mixed-toolchain' option has been deprecated in Spack v0.23, and currently "
-            "has no effect. The option will be removed in Spack v1.1"
-        )
-
     paths = args.add_paths or None
     new_compilers = spack.compilers.config.find_compilers(
         path_hints=paths, scope=args.scope, max_workers=args.jobs
