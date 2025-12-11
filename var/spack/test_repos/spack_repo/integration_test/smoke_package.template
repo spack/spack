@@ -1,0 +1,25 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
+{package_class_import}
+from spack.package import *
+
+
+class {class_name}({builder_class_name}):
+    """FIXME: Put a proper description of your test package here."""
+
+    homepage = "https://spack.io"
+    url = os.path.join(os.path.dirname(__file__), "{class_name}-{version}.tgz")
+
+
+    maintainers("spack")
+
+    license("MIT")
+
+    version("{version}", sha256={hash})
+
+#################################################################
+### Custom Install logic should be inserted below (if needed) ###
+#################################################################
