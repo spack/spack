@@ -342,6 +342,7 @@ exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack", ".venv"]
 
 autodoc_mock_imports = ["llnl"]
 autodoc_default_options = {"no-value": True}
+autodoc_preserve_defaults = True
 
 nitpicky = True
 nitpick_ignore = [
@@ -359,6 +360,7 @@ nitpick_ignore = [
     ("py:class", "hashlib._Hash"),
     ("py:class", "concurrent.futures._base.Executor"),
     ("py:class", "multiprocessing.context.Process"),
+    ("py:class", "posix.DirEntry"),
     ("py:class", "spack.vendor.jinja2.Environment"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.repo._PrependFileLoader"),
