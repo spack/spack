@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-import getpass
 import io
 import os
 import pathlib
@@ -36,7 +35,7 @@ import spack.util.git
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 from spack.enums import ConfigScopePriority
-from spack.llnl.util.filesystem import join_path, touch
+from spack.llnl.util.filesystem import getuid, join_path, touch
 from spack.util.spack_yaml import DictWithLineInfo
 
 # sample config data
@@ -437,7 +436,7 @@ def test_merge_with_defaults(mock_low_high_config, write_config_file):
 
 
 def test_substitute_user(mock_low_high_config):
-    user = getpass.getuser()
+    user = spack_path.get_user()
     assert os.sep + os.path.join(
         "foo", "bar"
     ) + os.sep + user + os.sep + "baz" == spack_path.canonicalize_path(
@@ -1462,6 +1461,7 @@ def test_config_file_dir_failure(tmp_path: pathlib.Path, mutable_empty_config):
 
 
 @pytest.mark.not_on_windows("chmod not supported on Windows")
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_config_file_read_perms_failure(tmp_path: pathlib.Path, mutable_empty_config):
     """Test reading a configuration file without permissions to ensure
     ConfigFileError is raised."""

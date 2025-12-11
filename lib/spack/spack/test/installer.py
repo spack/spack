@@ -509,6 +509,7 @@ def test_clear_failures_success(tmp_path: pathlib.Path):
 
 
 @pytest.mark.not_on_windows("chmod does not prevent removal on Win")
+@pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
 def test_clear_failures_errs(tmp_path: pathlib.Path, capfd):
     """Test the clear_failures exception paths."""
     failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)

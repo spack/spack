@@ -26,7 +26,7 @@ import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import copy_tree, find
+from spack.llnl.util.filesystem import copy_tree, find, getuid
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
@@ -116,6 +116,7 @@ def test_buildcache_create_fails_on_noargs(tmp_path: pathlib.Path):
         buildcache("push", "--unsigned", str(tmp_path))
 
 
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_buildcache_create_fail_on_perm_denied(
     install_mockery, mock_fetch, monkeypatch, tmp_path: pathlib.Path
 ):
