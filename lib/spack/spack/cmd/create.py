@@ -64,6 +64,10 @@ class {class_name}({base_class_name}):
     homepage = "https://www.example.com"
 {url_def}
 
+    # FIXME: Add the upstream supplier (organization or author).
+    # If unknown or inapplicable, you may leave this as "NOASSERTION".
+    supplier = "{supplier}"
+
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
     # maintainers("github_user1", "github_user2")
@@ -96,11 +100,12 @@ class BundlePackageTemplate:
     url_def = "    # There is no URL since there is no code to download."
     body_def = "    # There is no need for install() since there is no code."
 
-    def __init__(self, name: str, versions, languages: List[str]):
+    def __init__(self, name: str, versions, languages: List[str], supplier: str = "NOASSERTION"):
         self.name = name
         self.class_name = pkg_name_to_class_name(name)
         self.versions = versions
         self.languages = languages
+        self.supplier = supplier
 
     def write(self, pkg_path):
         """Writes the new package file."""
@@ -118,6 +123,7 @@ class BundlePackageTemplate:
                     class_name=self.class_name,
                     base_class_name=self.base_class_name,
                     package_class_import=self.package_class_import,
+                    supplier=self.supplier,
                     url_def=self.url_def,
                     versions=self.versions,
                     dependencies="\n".join(all_deps),
@@ -140,8 +146,8 @@ class PackageTemplate(BundlePackageTemplate):
 
     url_line = '    url = "{url}"'
 
-    def __init__(self, name, url, versions, languages: List[str]):
-        super().__init__(name, versions, languages)
+    def __init__(self, name, url, versions, languages: List[str], supplier: str = "NOASSERTION"):
+        super().__init__(name, versions, languages, supplier=supplier)
 
         self.url_def = self.url_line.format(url=url)
 
@@ -251,7 +257,7 @@ class LuaPackageTemplate(PackageTemplate):
 
 class MesonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for meson-based packages"""
-
+ 
     base_class_name = "MesonPackage"
     package_class_import = "from spack_repo.builtin.build_systems.meson import MesonPackage"
 
