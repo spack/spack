@@ -1036,9 +1036,4 @@ def prune_fn(args):
 
 
 def buildcache(parser, args):
-    try:
-        # update-index supports unkwown_args for view extension
-        return args.func(args)
-    except Exception:
-        pass
     return args.func(args)

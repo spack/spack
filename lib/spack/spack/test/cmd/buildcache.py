@@ -1082,7 +1082,7 @@ def test_buildcache_create_view_empty(
     empty_lockfile.write_text(
         '{"_meta": {"lockfile-version": 1}, "roots": [], "concrete_specs": {}}', encoding="utf-8"
     )
-    # Create a view with now specs
+    # Create a view with no specs
     command_args = [
         "update-index",
         "--force",

@@ -140,29 +140,31 @@ The ``--install`` and ``--trust`` flags install keys to the keyring and trust al
 Build Cache Index Views
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Introduced in Spack v1.1
+Introduced in Spack v1.2. The addition of this feature does not increment the build cache version.
+
+.. note::
+   Build cache index views are not supported in OCI build caches.
 
 Build caches can quickly become large and inefficient to search as binaries are added over time.
 A common work around to this problem is to break the build cache into stacks that target specific applications or workflows.
-This allows for curation of binaries as smaller collections of packages that push a their own mirrors that each maintain a smaller search area.
+This allows for curation of binaries as smaller collections of packages that push to their own mirrors that each maintain a smaller search area.
 However, this approach comes with the tradeoff of requiring much larger storage and computational footprints due to duplication of common dependencies between stacks.
 Splitting build caches can also reduce direct fetch hits by reducing the breadth of binaries availabe in a single mirror.
 
-
 To better address the issues with large search areas, build cache index views (or just "views" in this section) were introduced.
-A view is a named index which provides a curated view into a larger buildcache.
+A view is a named index which provides a curated view into a larger build cache.
 This allows build cache maintainers to provide the same granularity of build caches split by stacks without having to pay for the extra storage and compute required for the duplicated dependencies.
 
-Views can be created or updated using an active environment, environment lockfile(s), specfile(s), or specifying a spec hash(es) indexed in the local database.
+Views can be created or updated using an active environment, environment lockfile(s), specfile(s), or by specifying one or more spec hashes indexed in the local database.
 
-View indices are stored similarly to the top level build cache index, but use an additional prefix of the view name ``<build cache prefix>/v3/manifests/index/my-stack-view/index.manifest.json``.
+View indices are stored similarly to the top level build cache index, but use an additional prefix of the view name ``<build cache prefix>/v3/manifests/index/my-stack/index.manifest.json``.
 
 .. _cmd-spack-buildcache-create-view:
 
 ``spack buildcache create-view``
 """"""""""""""""""""""""""""""""
 
-Here is an example of creating a view using from an active environent.
+Here is an example of creating a view using an active environent.
 
 .. code-block:: console
 
@@ -177,11 +179,10 @@ Here is an example of creating a view using from an active environent.
 ``spack buildcache update-view``
 """"""""""""""""""""""""""""""""
 
-Updating the existing view using appending as the stack moves forward.
-To prevent accidently overwriting an existing view it is required to specify how a view should be handled by update.
+To prevent accidently overwriting an existing view, it is required to specify how a view should be updated.
 The two options for handling updates are ``--force`` and ``--append``.
 Using the force option will replace the index as if the previous one did not exist.
-The append option will first read the existing index, and then add the specs specified the command.
+The append option will first read the existing index, and then add the new specs to it.
 
 .. code-block:: console
 
@@ -191,7 +192,7 @@ The append option will first read the existing index, and then add the specs spe
 
 .. warning::
 
-   Using the ``--append`` option with build cache index views is a non-synchonous operation.
+   Using the ``--append`` option with build cache index views is a non-atomic operation.
    In the case where multiple writers are appending to the same view, the result will only include the state of the last to write.
    When using ``--append`` for build cache workflows it is up to the user to correctly serialize the update operations.
 
@@ -200,8 +201,8 @@ The append option will first read the existing index, and then add the specs spe
 List of Popular Build Caches
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* `Spack Public Build Cache <https://spack.io/>`_: `build cache <https://cache.spack.io/>`_
-* `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
+* `Spack Public Build Cache <https://spack.io/>`_: `spack build cache <https://cache.spack.io/>`_
+* `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `e4s build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
 
 
 Creating and Trusting GPG keys
