@@ -20,6 +20,7 @@ import spack.error
 from spack.llnl.path import path_to_os_path, system_path_filter
 from spack.llnl.util import tty
 from spack.llnl.util.lang import dedupe
+from spack.util.path import substitute_path_variables
 
 # List is invariant, so List[str] is not a subtype of List[Union[str, pathlib.PurePath]].
 # Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exlude it
@@ -804,6 +805,7 @@ class EnvironmentModifications:
                 else:
                     value = new_env[name]
                     if shell not in ("bat", "pwsh"):
+                        value = substitute_path_variables(value)
                         value = shlex.quote(value)
                     cmd = _SHELL_SET_STRINGS[shell].format(name, value)
                     cmds += cmd
