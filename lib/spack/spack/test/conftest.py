@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import base64
 import collections
 import datetime
 import email.message
@@ -38,6 +39,7 @@ import spack.directives_meta
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.hash_types
 import spack.llnl.util.lang
 import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
@@ -1042,6 +1044,49 @@ def mock_low_high_config(tmp_path: Path):
         yield config
 
 
+def create_config_scope(path: Path, name: str) -> spack.config.DirectoryConfigScope:
+    """helper for creating config scopes with included file/directory scopes
+    that do not have existing representation on the filesystem"""
+    base_scope_dir = path / "base"
+    config_data = syaml.syaml_dict(
+        {
+            "include": [
+                {
+                    "name": "sub_base",
+                    "path": str(path / name),
+                    "optional": True,
+                    "prefer_modify": True,
+                }
+            ]
+        }
+    )
+    base_scope_dir.mkdir()
+    with open(str(base_scope_dir / "include.yaml"), "w+", encoding="utf-8") as f:
+        syaml.dump_config(config_data, stream=f, default_flow_style=False)
+    scope = spack.config.DirectoryConfigScope("base", str(base_scope_dir))
+    return scope
+
+
+@pytest.fixture()
+def mock_missing_dir_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional directory scope
+    includes that do not have represetation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub")
+
+    with spack.config.use_configuration(scope) as config:
+        yield config
+
+
+@pytest.fixture
+def mock_missing_file_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional file scope
+    includes that do not have represetation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub.yaml")
+
+    with spack.config.use_configuration(scope) as config:
+        yield config
+
+
 def _populate(mock_db):
     r"""Populate a mock database with packages.
 
@@ -2016,6 +2061,32 @@ def brand_new_binary_cache():
     spack.binary_distribution.BINARY_INDEX = spack.llnl.util.lang.Singleton(
         spack.binary_distribution.BinaryCacheIndex
     )
+
+
+def _trivial_package_hash(spec: spack.spec.Spec) -> str:
+    """Return a trivial package hash for tests to avoid expensive AST parsing."""
+    # Pad package name to consistent length and cap at 32 chars for realistic hash length
+    return base64.b32encode(f"{spec.name:<32}".encode()[:32]).decode().lower()
+
+
+@pytest.fixture(autouse=True)
+def mock_package_hash_for_tests(request, monkeypatch):
+    """Replace expensive package hash computation with trivial one for tests.
+    Tests can force the real package hash by using the @pytest.mark.use_package_hash marker."""
+    if "use_package_hash" in request.keywords:
+        yield
+        return
+    pkg_hash = spack.hash_types.package_hash
+    idx = spack.hash_types.HASHES.index(pkg_hash)
+    mock_pkg_hash = spack.hash_types.SpecHashDescriptor(
+        depflag=0, package_hash=True, name="package_hash", override=_trivial_package_hash
+    )
+    monkeypatch.setattr(spack.hash_types, "package_hash", mock_pkg_hash)
+    try:
+        spack.hash_types.HASHES[idx] = mock_pkg_hash
+        yield
+    finally:
+        spack.hash_types.HASHES[idx] = pkg_hash
 
 
 @pytest.fixture()

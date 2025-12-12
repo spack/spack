@@ -455,7 +455,7 @@ def test_reusable_externals_cray_manifest(temporary_store, manifest_file):
     spec = temporary_store.db.query_local()[0]
 
     # Reusable if imported locally
-    assert spack.solver.reuse._is_reusable(spec, packages={}, local=True)
+    assert spack.solver.reuse._is_reusable(spec, packages_with_externals={}, local=True)
 
     # If cray manifest entries end up in a build cache somehow, they are not reusable
-    assert not spack.solver.reuse._is_reusable(spec, packages={}, local=False)
+    assert not spack.solver.reuse._is_reusable(spec, packages_with_externals={}, local=False)

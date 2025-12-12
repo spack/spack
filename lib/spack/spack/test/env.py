@@ -1558,3 +1558,30 @@ def test_static_analysis_in_environments(spack_yaml, tmp_path, mutable_config):
         static_analysis = {x.dag_hash() for x in e.concrete_roots()}
 
     assert no_static_analysis == static_analysis
+
+
+@pytest.mark.regression("51606")
+def test_ids_when_using_toolchain_twice_in_a_spec(tmp_path, mutable_config):
+    """Tests that using the same toolchain twice in a spec constructs different objects"""
+    spack_yaml = """
+spack:
+  toolchains:
+    llvmtc:
+    - spec: "%c=llvm"
+      when: "%c"
+    - spec: "%cxx=llvm"
+      when: "%cxx"
+    gnu:
+    - spec: "%c=gcc@10"
+      when: "%c"
+    - spec: "%cxx=gcc@10"
+      when: "%cxx"
+    # This is missing the conditional when= on purpose
+    - spec: "%fortran=gcc@10"
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path):
+        # We rely on this behavior when emitting facts for the solver
+        s = spack.spec.Spec("mpileaks %gnu ^callpath %gnu")
+        assert id(s["gcc"]) != id(s["callpath"]["gcc"])

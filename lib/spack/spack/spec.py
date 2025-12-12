@@ -1071,7 +1071,7 @@ def _select_edges(
         return []
 
     # Start from all the edges we store
-    selected = (d for lst in edge_map.values() for d in lst)
+    selected: Iterable[DependencySpec] = itertools.chain.from_iterable(edge_map.values())
 
     # Filter by parent name
     if parent:
@@ -1082,7 +1082,8 @@ def _select_edges(
         selected = (d for d in selected if d.spec.name == child)
 
     # Filter by allowed dependency types
-    selected = (dep for dep in selected if not dep.depflag or (depflag & dep.depflag))
+    if depflag != dt.ALL:
+        selected = (dep for dep in selected if not dep.depflag or (depflag & dep.depflag))
 
     # Filter by virtuals
     if virtuals is not None:
@@ -5628,16 +5629,10 @@ def _inject_patches_variant(root: Spec) -> None:
     # since the Spec __hash__ will change as patches are added to them
     spec_to_patches: Dict[int, Set[spack.patch.Patch]] = {}
     for s in root.traverse():
-        # After concretizing, assign namespaces to anything left.
-        # Note that this doesn't count as a "change".  The repository
-        # configuration is constant throughout a spack run, and
-        # normalize and concretize evaluate Packages using Repo.get(),
-        # which respects precedence.  So, a namespace assignment isn't
-        # changing how a package name would have been interpreted and
-        # we can do it as late as possible to allow as much
-        # compatibility across repositories as possible.
-        if s.namespace is None:
-            s.namespace = spack.repo.PATH.repo_for_pkg(s.name).namespace
+        assert s.namespace is not None, (
+            f"internal error: {s.name} has no namespace after concretization. "
+            f"Please report a bug at https://github.com/spack/spack/issues"
+        )
 
         if s.concrete:
             continue

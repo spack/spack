@@ -461,10 +461,11 @@ class SpecParser:
             toolchain = self._parse_toolchain(name)
             self.parsed_toolchains[name] = toolchain
 
-        toolchain = self.parsed_toolchains[name]
-        if propagation == PropagationPolicy.PREFERENCE:
-            toolchain = toolchain.copy(propagation=propagation)
-
+        propagation_arg = None if propagation != PropagationPolicy.PREFERENCE else propagation
+        # Here we need to copy because we want "foo %toolc ^bar %toolc" to generate different
+        # objects for the toolc attached to foo and bar, since the solver depends on that to
+        # generate facts
+        toolchain = self.parsed_toolchains[name].copy(propagation=propagation_arg)
         spec.constrain(toolchain)
 
     def _parse_toolchain(self, name: str) -> "spack.spec.Spec":

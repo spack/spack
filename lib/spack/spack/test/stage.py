@@ -19,6 +19,7 @@ import spack.error
 import spack.fetch_strategy
 import spack.stage
 import spack.util.executable
+import spack.util.path
 import spack.util.url as url_util
 from spack.llnl.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
 from spack.resource import Resource
@@ -707,14 +708,15 @@ class TestStage:
             except OSError:
                 pass
 
-    def test_resolve_paths(self):
+    def test_resolve_paths(self, monkeypatch):
         """Test _resolve_paths."""
         assert spack.stage._resolve_paths([]) == []
 
         # resolved path without user appends user
         paths = [os.path.join(os.path.sep, "a", "b", "c")]
         can_paths = [paths[0]]
-        user = getpass.getuser()
+        user = "testuser"
+        monkeypatch.setattr(spack.util.path, "get_user", lambda: user)
 
         if sys.platform != "win32":
             can_paths = [os.path.join(paths[0], user)]
@@ -766,16 +768,14 @@ class TestStage:
     )
     def test_stage_purge(self, tmp_path: pathlib.Path, clear_stage_root, path, purged):
         """Test purging of stage directories."""
-        stage_dir = tmp_path / "stage"
-        stage_path = str(stage_dir)
+        stage_config_path = str(tmp_path / "stage")
 
-        test_dir = stage_dir / path
-        test_dir.mkdir(parents=True)
-        test_path = str(test_dir)
-
-        with spack.config.override("config:build_stage", stage_path):
+        with spack.config.override("config:build_stage", stage_config_path):
             stage_root = spack.stage.get_stage_root()
-            assert stage_path == stage_root
+
+            test_dir = pathlib.Path(stage_root) / path
+            test_dir.mkdir(parents=True)
+            test_path = str(test_dir)
 
             spack.stage.purge()
 

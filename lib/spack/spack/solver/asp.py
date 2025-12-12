@@ -85,7 +85,7 @@ from .core import (
 )
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
-from .reuse import ReusableSpecsSelector
+from .reuse import ReusableSpecsSelector, create_external_parser
 from .runtimes import RuntimePropertyRecorder, all_libcs, external_config_with_implicit_externals
 from .versions import Provenance
 
@@ -1161,6 +1161,7 @@ class PyclingoDriver:
         setup: "SpackSolverSetup",
         specs: List[spack.spec.Spec],
         reuse: Optional[List[spack.spec.Spec]] = None,
+        packages_with_externals=None,
         output: Optional[OutputConfiguration] = None,
         control: Optional[Any] = None,  # TODO: figure out how to annotate clingo.Control
         allow_deprecated: bool = False,
@@ -1209,6 +1210,7 @@ class PyclingoDriver:
         problem_builder = setup.setup(
             specs,
             reuse=reuse,
+            packages_with_externals=packages_with_externals,
             allow_deprecated=allow_deprecated,
             _use_unsat_cores=output.out is None,
         )
@@ -2208,11 +2210,10 @@ class SpackSolverSetup:
                 self.gen.newline()
                 requirement_weight += 1
 
-    def external_packages(self):
+    def external_packages(self, packages_with_externals):
         """Facts on external packages, from packages.yaml and implicit externals."""
         self.gen.h1("External packages")
-        packages_yaml = external_config_with_implicit_externals(spack.config.CONFIG)
-        for pkg_name, data in packages_yaml.items():
+        for pkg_name, data in packages_with_externals.items():
             if pkg_name == "all":
                 continue
 
@@ -2938,6 +2939,7 @@ class SpackSolverSetup:
         specs: Sequence[spack.spec.Spec],
         *,
         reuse: Optional[List[spack.spec.Spec]] = None,
+        packages_with_externals=None,
         allow_deprecated: bool = False,
         _use_unsat_cores: bool = True,
     ) -> "ProblemInstanceBuilder":
@@ -2950,6 +2952,7 @@ class SpackSolverSetup:
         Arguments:
             specs: list of Specs to solve
             reuse: list of concrete specs that can be reused
+            packages_with_externals: precomputed packages config with implicit externals
             allow_deprecated: if True adds deprecated versions into the solve
             _use_unsat_cores: if True, use unsat cores for internal errors
 
@@ -2957,6 +2960,8 @@ class SpackSolverSetup:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
         """
         reuse = reuse or []
+        if packages_with_externals is None:
+            packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
         check_packages_exist(specs)
         self.gen = ProblemInstanceBuilder()
 
@@ -3053,7 +3058,7 @@ class SpackSolverSetup:
         self.target_defaults(specs + dev_specs)
 
         self.virtual_requirements_and_weights()
-        self.external_packages()
+        self.external_packages(packages_with_externals)
 
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
@@ -3960,7 +3965,15 @@ class Solver:
 
         self._conc_cache = ConcretizationCache()
         self.driver = PyclingoDriver(conc_cache=self._conc_cache)
-        self.selector = ReusableSpecsSelector(configuration=spack.config.CONFIG)
+
+        # Compute packages configuration with implicit externals once and reuse it
+        self.packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
+        completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
+        self.selector = ReusableSpecsSelector(
+            configuration=spack.config.CONFIG,
+            external_parser=create_external_parser(self.packages_with_externals, completion_mode),
+            packages_with_externals=self.packages_with_externals,
+        )
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(
@@ -4033,7 +4046,12 @@ class Solver:
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
         result = self.driver.solve(
-            setup, specs, reuse=reusable_specs, output=output, allow_deprecated=allow_deprecated
+            setup,
+            specs,
+            reuse=reusable_specs,
+            packages_with_externals=self.packages_with_externals,
+            output=output,
+            allow_deprecated=allow_deprecated,
         )
         self._conc_cache.cleanup()
         return result
@@ -4087,6 +4105,7 @@ class Solver:
                 setup,
                 input_specs,
                 reuse=reusable_specs,
+                packages_with_externals=self.packages_with_externals,
                 output=output,
                 allow_deprecated=allow_deprecated,
             )

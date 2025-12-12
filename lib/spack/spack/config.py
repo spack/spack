@@ -173,6 +173,11 @@ class ConfigScope:
 
         return self._included_scopes
 
+    @property
+    def exists(self) -> bool:
+        """Whether the config object indicated by the scope can be read"""
+        return True
+
     def override_include(self):
         """Whether the ``include::`` section of this scope should override lower scopes."""
         include = self.sections.get("include")
@@ -220,13 +225,24 @@ class DirectoryConfigScope(ConfigScope):
         self.writable = writable
         self.prefer_modify = prefer_modify
 
+    @property
+    def exists(self) -> bool:
+        return os.path.exists(self.path)
+
     def get_section_filename(self, section: str) -> str:
         """Returns the filename associated with a given section"""
         _validate_section_name(section)
         return os.path.join(self.path, f"{section}.yaml")
 
     def get_section(self, section: str) -> Optional[YamlConfigDict]:
-        """Returns the data associated with a given section"""
+        """Returns the data associated with a given section if the scope exists"""
+        if not self.exists:
+            tty.debug(f"Attempting to read from missing scope: {self} at {self.path}")
+            return {}
+        return self._get_section(section)
+
+    def _get_section(self, section: str) -> Optional[YamlConfigDict]:
+        """get_section but without the existence check"""
         if section not in self.sections:
             path = self.get_section_filename(section)
             schema = SECTION_SCHEMAS[section]
@@ -239,7 +255,7 @@ class DirectoryConfigScope(ConfigScope):
             raise spack.error.ConfigError(f"Cannot write to immutable scope {self}")
 
         filename = self.get_section_filename(section)
-        data = self.get_section(section)
+        data = self._get_section(section)
         if data is None:
             return
 
@@ -291,6 +307,10 @@ class SingleFileScope(ConfigScope):
         self.prefer_modify = prefer_modify
         self.yaml_path = yaml_path or []
 
+    @property
+    def exists(self) -> bool:
+        return os.path.exists(self.path)
+
     def get_section_filename(self, section) -> str:
         return self.path
 
@@ -320,6 +340,10 @@ class SingleFileScope(ConfigScope):
         #      }
         #   }
         # }
+
+        if not self.exists:
+            tty.debug(f"Attempting to read from missing scope: {self} at {self.path}")
+            return {}
 
         # This bit ensures we have read the file and have
         # the raw data in memory
@@ -576,6 +600,12 @@ class Configuration:
     def writable_scopes(self) -> Generator[ConfigScope, None, None]:
         """Generator of writable scopes with an associated file."""
         return (s for s in self.scopes.values() if s.writable)
+
+    @property
+    def existing_scopes(self) -> Generator[ConfigScope, None, None]:
+        """Generator of existing scopes. These are self.scopes where the
+        scope has a representation on the filesystem or is internal"""
+        return (s for s in self.scopes.values() if s.exists)
 
     def highest_precedence_scope(self) -> ConfigScope:
         """Writable scope with the highest precedence."""
@@ -981,6 +1011,10 @@ class OptionalInclude:
         Raises:
             ValueError: the required configuration path does not exist
         """
+        assert self._valid_parent_scope(
+            parent_scope
+        ), "Optional includes must have valid parent_scope object"
+
         # use specified name if there is one
         config_name = self.name
         if not config_name:
@@ -1002,12 +1036,16 @@ class OptionalInclude:
 
             config_name = f"{parent_scope.name}:{included_name}"
 
-        if os.path.isdir(config_path):
-            # directories are treated as regular ConfigScopes
-            tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-            return DirectoryConfigScope(config_name, config_path, prefer_modify=self.prefer_modify)
+        _, ext = os.path.splitext(config_path)
+        ext_is_yaml = ext == ".yaml" or ext == ".yml"
+        is_dir = os.path.isdir(config_path)
+        exists = os.path.exists(config_path)
 
-        if os.path.exists(config_path):
+        if not exists and not self.optional:
+            dest = f" at ({config_path})" if config_path != path else ""
+            raise ValueError(f"Required path ({path}) does not exist{dest}")
+
+        if (exists and not is_dir) or ext_is_yaml:
             # files are assumed to be SingleFileScopes
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(
@@ -1017,11 +1055,26 @@ class OptionalInclude:
                 prefer_modify=self.prefer_modify,
             )
 
-        if not self.optional:
-            dest = f" at ({config_path})" if config_path != path else ""
-            raise ValueError(f"Required path ({path}) does not exist{dest}")
+        if ext and not is_dir:
+            raise ValueError(
+                f"File-based scope does not exist yet: should have a .yaml/.yml extension \
+for file scopes, or no extension for directory scopes (currently {ext})"
+            )
 
-        return None
+        # directories are treated as regular ConfigScopes
+        # assign by "default"
+        tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
+        return DirectoryConfigScope(config_name, config_path, prefer_modify=self.prefer_modify)
+
+    def _valid_parent_scope(self, parent_scope: ConfigScope) -> bool:
+        """Validates that a parent scope is a valid configuration object"""
+        # enforced by type checking but those can always be # type: ignore'd
+        assert isinstance(
+            parent_scope, ConfigScope
+        ), f"Optional include must have valid parent scope,\
+ of type ConfigScope; Type:{type(parent_scope)} is not valid."
+        # naive check that parent scope name isn't empty or just whitespace
+        return bool(re.sub(r"\s", "", parent_scope.name))
 
     def evaluate_condition(self) -> bool:
         # circular dependencies
@@ -1472,8 +1525,22 @@ def writable_scopes() -> List[ConfigScope]:
     return scopes
 
 
+def existing_scopes() -> List[ConfigScope]:
+    """Return list of existing scopes. Scopes where Spack is
+    aware of said scope, and the scope has a representation
+    on the filesystem or are internal scopes.
+    Higher-priority scopes come first in the list."""
+    scopes = [x for x in CONFIG.scopes.values() if x.exists]
+    scopes.reverse()
+    return scopes
+
+
 def writable_scope_names() -> List[str]:
     return list(x.name for x in writable_scopes())
+
+
+def existing_scope_names() -> List[str]:
+    return list(x.name for x in existing_scopes())
 
 
 def matched_config(cfg_path: str) -> List[Tuple[str, Any]]:
