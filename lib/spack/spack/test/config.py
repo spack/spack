@@ -1255,7 +1255,7 @@ def mock_include_scope(tmp_path):
 @pytest.fixture
 def include_config_factory(mock_include_scope):
     def make_config():
-        cfg = spack.config.create()
+        cfg = spack.config.Configuration()
         cfg.push_scope(
             spack.config.DirectoryConfigScope("defaults", str(mock_include_scope / "defaults")),
             priority=ConfigScopePriority.DEFAULTS,
@@ -1380,6 +1380,8 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
     include_yaml = override_scope / "include.yaml"
     subdir = override_scope / "subdir"
     subdir.mkdir()
+    anotherdir = override_scope / "anotherdir"
+    anotherdir.mkdir()
 
     with include_yaml.open("w", encoding="utf-8") as f:
         f.write(
@@ -1392,19 +1394,39 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
             )
         )
 
+    with (subdir / "include.yaml").open("w", encoding="utf-8") as f:
+        f.write(
+            textwrap.dedent(
+                """\
+                include:
+                  - name: "anotherdir"
+                    path: "../anotherdir"
+                """
+            )
+        )
+
     # check the mock config is correct
     cfg = include_config_factory()
 
     assert "defaults" in cfg.scopes
+    assert "tmp_path" in cfg.scopes
     assert "test1" in cfg.scopes
     assert "test2" in cfg.scopes
     assert "test3" in cfg.scopes
 
     active_names = [s.name for s in cfg.active_scopes]
     assert "defaults" in active_names
+    assert "tmp_path" in active_names
     assert "test1" in active_names
     assert "test2" in active_names
     assert "test3" in active_names
+
+    includes = str(cfg.get("include"))
+    assert "subdir" not in includes
+    assert "anotherdir" not in includes
+    assert "test1" in includes
+    assert "test2" in includes
+    assert "test3" in includes
 
     # push a scope that overrides everything under it but includes a subdir.
     # its included subdir should be active, but scopes *not* included by the overriding
@@ -1415,33 +1437,53 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
     )
 
     assert "defaults" in cfg.scopes
+    assert "tmp_path" in cfg.scopes
     assert "test1" in cfg.scopes
     assert "test2" in cfg.scopes
     assert "test3" in cfg.scopes
     assert "override" in cfg.scopes
     assert "subdir" in cfg.scopes
+    assert "anotherdir" in cfg.scopes
 
     active_names = [s.name for s in cfg.active_scopes]
     assert "defaults" in active_names
+    assert "tmp_path" in active_names
     assert "test1" not in active_names
     assert "test2" not in active_names
     assert "test3" not in active_names
     assert "override" in active_names
     assert "subdir" in active_names
+    assert "anotherdir" not in active_names
+
+    includes = str(cfg.get("include"))
+    assert "subdir" in includes
+    assert "anotherdir" not in includes
+    assert "test1" not in includes
+    assert "test2" not in includes
+    assert "test3" not in includes
 
     # remove the override and ensure everything is back to normal
     cfg.remove_scope("override")
 
     assert "defaults" in cfg.scopes
+    assert "tmp_path" in cfg.scopes
     assert "test1" in cfg.scopes
     assert "test2" in cfg.scopes
     assert "test3" in cfg.scopes
 
     active_names = [s.name for s in cfg.active_scopes]
     assert "defaults" in active_names
+    assert "tmp_path" in active_names
     assert "test1" in active_names
     assert "test2" in active_names
     assert "test3" in active_names
+
+    includes = str(cfg.get("include"))
+    assert "subdir" not in includes
+    assert "anotherdir" not in includes
+    assert "test1" in includes
+    assert "test2" in includes
+    assert "test3" in includes
 
 
 def test_user_cache_path_is_overridable(working_env):
