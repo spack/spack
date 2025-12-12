@@ -142,11 +142,12 @@ def _include_cache_location():
 
 
 class ConfigScope:
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, included: bool = False) -> None:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
         self.prefer_modify = False
+        self.included = included
 
         #: names of any included scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -218,9 +219,15 @@ class DirectoryConfigScope(ConfigScope):
     """Config scope backed by a directory containing one file per section."""
 
     def __init__(
-        self, name: str, path: str, *, writable: bool = True, prefer_modify: bool = True
+        self,
+        name: str,
+        path: str,
+        *,
+        writable: bool = True,
+        prefer_modify: bool = True,
+        included: bool = False,
     ) -> None:
-        super().__init__(name)
+        super().__init__(name, included)
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
@@ -281,6 +288,7 @@ class SingleFileScope(ConfigScope):
         yaml_path: Optional[List[str]] = None,
         writable: bool = True,
         prefer_modify: bool = True,
+        included: bool = False,
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -299,7 +307,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super().__init__(name)
+        super().__init__(name, included)
         self._raw_data: Optional[YamlConfigDict] = None
         self.schema = schema
         self.path = path
@@ -1053,6 +1061,7 @@ class OptionalInclude:
                 config_path,
                 spack.schema.merged.schema,
                 prefer_modify=self.prefer_modify,
+                included=True,
             )
 
         if ext and not is_dir:
@@ -1064,7 +1073,9 @@ for file scopes, or no extension for directory scopes (currently {ext})"
         # directories are treated as regular ConfigScopes
         # assign by "default"
         tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-        return DirectoryConfigScope(config_name, config_path, prefer_modify=self.prefer_modify)
+        return DirectoryConfigScope(
+            config_name, config_path, prefer_modify=self.prefer_modify, included=True
+        )
 
     def _valid_parent_scope(self, parent_scope: ConfigScope) -> bool:
         """Validates that a parent scope is a valid configuration object"""
