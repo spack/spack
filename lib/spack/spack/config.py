@@ -761,23 +761,42 @@ class Configuration:
             self.get_config(section, scope=scope), line_info=line_info
         )
 
-    def _filter_overridden(self, scopes: List[ConfigScope]):
+    def _filter_overridden(self, scopes: List[ConfigScope], includes: bool = False):
         """Filter out overridden scopes.
 
         NOTE: this does not yet handle diamonds or nested `include::` in lists. It is
         sufficient for include::[] in an env, which allows isolation.
+
+        The ``includes`` option controls whether to return all active scopes (``includes=False``)
+        or all scopes whose includes have not been overridden (``includes=True``).
         """
         # find last override in scopes
         i = next((i for i, s in reversed(list(enumerate(scopes))) if s.override_include()), -1)
         if i < 0:
             return scopes  # no overrides
 
-        keep = scopes[i].transitive_includes()
+        keep = _set(s.name for s in scopes[i:])
         keep |= _set(s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS))
-        keep |= _set(s.name for s in scopes[i:])
+
+        if not includes:
+            # For all sections except for the include section:
+            # non-included scopes are still active, as are scopes included
+            # from the overriding scope
+            # Transitive scopes from the overriding scope are not included
+            keep |= _set([s.name for s in scopes[i].included_scopes])
+            keep |= _set([s.name for s in scopes if not s.included])
 
         # return scopes to keep, with order preserved
         return [s for s in scopes if s.name in keep]
+
+    @property
+    def active_include_section_scopes(self) -> List[ConfigScope]:
+        """Return a list of all scopes whose includes have not been overridden by include::.
+
+        This is different from the active scopes because the ``spack`` scope can be active
+        while its includes are overwritten, as can the transitive includes from the overriding
+        scope."""
+        return self._filter_overridden([s for s in self.scopes.values()], includes=True)
 
     @property
     def active_scopes(self) -> List[ConfigScope]:
@@ -812,8 +831,12 @@ class Configuration:
         merged_section: Dict[str, Any] = syaml.syaml_dict()
         updated_scopes = []
         for config_scope in scopes:
+            if section == "include" and config_scope not in self.active_include_section_scopes:
+                continue
+
             # read potentially cached data from the scope.
             data = config_scope.get_section(section)
+
             if data and section == "include":
                 # Include overrides are handled by `_filter_overridden` above. Any remaining
                 # includes at this point are *not* actually overridden -- they're scopes with
