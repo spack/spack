@@ -6,7 +6,7 @@ import os
 import re
 from typing import Optional
 
-import spack.paths
+import spack.paths_base
 import spack.util.git
 
 #: PEP440 canonical <major>.<minor>.<micro>.<devN> string
@@ -43,7 +43,7 @@ def get_spack_commit() -> Optional[str]:
     Returns:
         (str or None) the commit sha if available, otherwise None
     """
-    git_path = os.path.join(spack.paths.prefix, ".git")
+    git_path = os.path.join(spack.paths_base.prefix, ".git")
     if not os.path.exists(git_path):
         return None
 
@@ -53,7 +53,7 @@ def get_spack_commit() -> Optional[str]:
 
     rev = git(
         "-C",
-        spack.paths.prefix,
+        spack.paths_base.prefix,
         "rev-parse",
         "HEAD",
         output=str,

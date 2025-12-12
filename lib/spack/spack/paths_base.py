@@ -57,8 +57,21 @@ class SpackPathsBase:
         self.old_install_path = os.path.join(self.prefix, "opt", "spack")
         self.old_envs_path = os.path.join(self.var_path, "environments")
         self.old_fetch_cache_path = os.path.join(self.var_path, "cache")
+        self.old_gpg_path = os.path.join(self.prefix, "opt", "spack", "gpg")
+        self.old_gpg_keys_path = os.path.join(self.var_path, "gpg")
 
         self.default_xdg_cache_home = os.path.join("~", ".cache", "spack")
+
+        #: User configuration location
+        self.user_config_path = os.path.expanduser(
+            os.getenv("SPACK_USER_CONFIG_PATH") or os.path.join("~", ".config", "spack")
+        )
+
+        #: System configuration location
+        self.system_config_path = os.path.expanduser(
+            os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
+        )
+
 
 locations = SpackPathsBase()
 prefix = locations.prefix
@@ -87,6 +100,8 @@ mock_packages_path = locations.mock_packages_path
 mock_gpg_data_path = locations.mock_gpg_data_path
 mock_gpg_keys_path = locations.mock_gpg_keys_path
 default_xdg_cache_home = locations.default_xdg_cache_home
+system_config_path = locations.system_config_path
+user_config_path = locations.user_config_path
 
 
 #: Recorded directory where spack command was originally invoked

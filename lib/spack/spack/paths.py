@@ -100,102 +100,109 @@ class SpackPaths:
         #: not be shared between those instances.
         self.spack_instance_id = hash.b32_hash(base.prefix)[:7]
 
-        # Resolved XDG_x_HOME variables, with additional "spack" subdirectory.
-        # Resolves to default value from XDG spec if unset.
-        self.spack_state_home = _spack_xdg_or_backup(XDG_mappings.state_home.value)
-        self.spack_config_home = _spack_xdg_or_backup(XDG_mappings.config_home.value)
-        self.spack_cache_home = _spack_xdg_or_backup(XDG_mappings.cache_home.value)
-        self.spack_data_home = _spack_xdg_or_backup(XDG_mappings.data_home.value)
+        self.state_home = self.resolve_a_home(["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME"], "XDG_STATE_HOME", "state", ".local/state/spack")
+        self.cache_home = self.resolve_a_home("SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache/spack")
+        self.data_home = self.resolve_a_home("SPACK_DATA_HOME", "XDG_DATA_HOME", "data", ".local/share/spack")
+        self.user_cache_path = self.state_home
 
-        self.default_install_location = self.large_data_component("installs", base.old_install_path)
-        self.default_envs_path = self.large_data_component("environments", base.old_envs_path)
-        self.default_fetch_cache_path = self.large_data_component(
-            "downloads", base.old_fetch_cache_path
-        )
-
-        self.user_cache_path = str(
-            PurePath(
-                os.path.expanduser(
-                    os.getenv("SPACK_USER_CACHE_PATH") or self.data_home_for_small_data()
-                )
-            )
-        )
+        self.default_install_location = self.prefer_old_location(base.old_install_path, os.path.join(self.data_home, "installs"))
+        self.default_envs_path = self.prefer_old_location(base.old_envs_path, os.path.join(self.data_home, "envs"))
+        self.default_fetch_cache_path = self.prefer_old_location(base.old_fetch_cache_path, os.path.join(self.data_home, "downloads"))
 
         #: junit, cdash, etc. reports about builds
-        self.reports_path = os.path.join(self.user_cache_path, "reports")
+        self.reports_path = os.path.join(self.state_home, "reports")
 
         #: installation test (spack test) output
-        self.default_test_path = os.path.join(self.user_cache_path, "test")
+        self.default_test_path = os.path.join(self.state_home, "test")
 
         #: spack monitor analysis directories
         self.default_monitor_path = os.path.join(self.reports_path, "monitor")
 
         #: git repositories fetched to compare commits to versions
-        self.user_repos_cache_path = os.path.join(self.user_cache_path, "git_repos")
+        self.user_repos_cache_path = os.path.join(self.state_home, "git_repos")
 
         #: default location where remote package repositories are cloned
-        self.package_repos_path = os.path.join(self.user_cache_path, "package_repos")
+        self.package_repos_path = os.path.join(self.state_home, "package_repos")
 
         #: bootstrap store for bootstrapping clingo and other tools
         #: overridden by `bootstrap:root`
-        self.default_user_bootstrap_path = os.path.join(self.user_cache_path, "bootstrap")
+        self.default_user_bootstrap_path = os.path.join(self.state_home, "bootstrap")
 
-        old_gpg_path = os.path.join(base.prefix, "opt", "spack", "gpg")
-        if dir_is_occupied(old_gpg_path):
-            self.gpg_path = old_gpg_path
-        else:
-            self.gpg_path = os.path.join(self.user_cache_path, "gpg")
-
-        old_gpg_keys_path = os.path.join(base.var_path, "gpg")
-        if dir_is_occupied(old_gpg_keys_path):
-            self.gpg_keys_path = old_gpg_keys_path
-        else:
-            self.gpg_keys_path = os.path.join(self.user_cache_path, "gpg-keys")
+        self.gpg_path = self.prefer_old_location(base.old_gpg_path, os.path.join(self.data_home, "gpg"))
+        self.gpg_keys_path = self.prefer_old_location(base.old_gpg_keys_path, os.path.join(self.data_home, "gpg-keys"))
 
         self.modules_base = None
         for module_dir in ["lmod", "modules"]:
             if dir_is_occupied(os.path.join(base.share_path, module_dir)):
                 self.modules_base = base.share_path
         if not self.modules_base:
-            self.modules_base = self.user_cache_path
-
-        #: User configuration location
-        self.user_config_path = os.path.expanduser(
-            os.getenv("SPACK_USER_CONFIG_PATH") or self.spack_config_home
-        )
-
-        #: System configuration location
-        self.system_config_path = os.path.expanduser(
-            os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
-        )
+            self.modules_base = self.data_home
 
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
         #: overridden by `config:misc_cache`
         self.default_misc_cache_path = os.path.join(
-            self.spack_state_home, self.spack_instance_id, "cache"
+            self.state_home, self.spack_instance_id, "cache"
         )
 
-    def data_home_for_small_data(self):
-        return self.spack_data_home
+    def resolve_a_home(self, env_vars, xdg_var, config_var, home_rel):
+        disable_env = config.get("config:locations:disable_env", False)
 
-    def large_data_component(self, subdir, old_location):
-        if XDG_overrides.data_home.value in os.environ:
-            return os.path.join(os.environ[XDG_overrides.data_home.value], subdir)
-        elif XDG_vars.data_home.value in os.environ:
-            return os.path.expanduser(
-                os.path.join(os.environ[XDG_vars.data_home.value], "spack", subdir)
-            )
-        else:
+        def spack_env_check():
+            if disable_env:
+                return
+            if isinstance(env_vars, str):
+                x = [env_vars]
+            else:
+                x = env_vars
+            for n in x:
+                if n in os.environ:
+                    return os.environ[n]
+
+        def xdg_env_check():
+            if disable_env:
+                return
+            return os.environ.get(xdg_var, None)
+
+        def spack_home_env_check():
+            if disable_env:
+                return
+            if "SPACK_HOME" in os.environ:
+                return os.path.join(os.environ["SPACK_HOME"], home_rel)
+
+        def cfg_check():
+            return config.get(f"config:locations:{config_var}", None)
+
+        def spack_home_cfg_check():
+            h = config.get("config:locations:home", None)
+            if h:
+                return os.path.join(h, home_rel)
+
+        for check in [spack_env_check, xdg_env_check, spack_home_env_check, cfg_check, spack_home_cfg_check]:
+            possible_resolution = check()
+            if possible_resolution:
+                return possible_resolution
+
+        return os.path.join("~", home_rel)
+
+    def prefer_old_location(self, old_location, new_location):
+        # TODO: perhaps it should be configurable whether old locations
+        # are used. Other option is to relocate downloads & gpg keys.
+        # TODO: if user sets SPACK/XDG_DATA_HOME, should we move installs
+        # there even if old dir is occupied? (right now that's what is
+        # happening here)
+        if dir_is_occupied(old_location):
             return old_location
+        else:
+            return new_location
 
 
 locations = SpackPaths(paths_base.locations)
 
 spack_instance_id = locations.spack_instance_id
-spack_state_home = locations.spack_state_home
-spack_config_home = locations.spack_config_home
-spack_cache_home = locations.spack_cache_home
-spack_data_home = locations.spack_data_home
+spack_state_home = locations.state_home
+#spack_config_home = locations.spack_config_home
+spack_cache_home = locations.cache_home
+spack_data_home = locations.data_home
 default_install_location = locations.default_install_location
 default_envs_path = locations.default_envs_path
 default_fetch_cache_path = locations.default_fetch_cache_path
@@ -210,7 +217,6 @@ gpg_path = locations.gpg_path
 gpg_keys_path = locations.gpg_keys_path
 modules_base = locations.modules_base
 user_config_path = locations.user_config_path
-system_config_path = locations.system_config_path
 default_misc_cache_path = locations.default_misc_cache_path
 
 # Copy from paths_base
@@ -240,3 +246,4 @@ mock_packages_path = paths_base.mock_packages_path
 mock_gpg_data_path = paths_base.mock_gpg_data_path
 mock_gpg_keys_path = paths_base.mock_gpg_keys_path
 default_xdg_cache_home = paths_base.default_xdg_cache_home
+system_config_path = paths_base.system_config_path

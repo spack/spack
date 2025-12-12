@@ -46,6 +46,15 @@ properties: Dict[str, Any] = {
                     **spack.schema.projections.properties,
                 },
             },
+            "locations": {
+                "type": "object",
+                "properties": {
+                    "home": {"type": "string"},
+                    "cache": {"type": "string"},
+                    "state": {"type": "string"},
+                    "disable_env": {"type": "boolean"},
+                },
+            },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "build_stage": {
                 "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]

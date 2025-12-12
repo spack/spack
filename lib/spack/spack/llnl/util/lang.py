@@ -734,6 +734,9 @@ class Singleton:
                     # if not, just assign the result like a normal singleton
                     self._instance = instance
             except AttributeError as e:
+                import traceback
+                import pdb; pdb.set_trace()
+                traceback.print_exc()
                 raise Exception("AttrbuteError during creation of Singleton instance") from e
         return self._instance
 
