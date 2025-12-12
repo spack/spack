@@ -652,10 +652,12 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not attr("virtual_on_build_edge", ParentNode, BuildDependency, Virtual).
 
-% Give a penalty if reuse introduces a node compiled with a compiler that is not used otherwise
+% Give a penalty if reuse introduces a node compiled with a compiler that is not used otherwise.
+% The only exception is if the current node is a compiler itself.
 compiler_from_reuse(Hash, DependencyPackage) :-
   attr("concrete_build_dependency", ParentNode, DependencyPackage, Hash),
   attr("virtual_on_build_edge", ParentNode, DependencyPackage, Virtual),
+  not node_compiler(_, ParentNode),
   language(Virtual).
 
 compiler_penalty_from_reuse(Hash) :-
