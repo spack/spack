@@ -6,7 +6,7 @@ import os
 import pathlib
 import warnings
 
-import spack.paths as paths
+import spack.paths_base as paths_base
 
 
 def _most_recent_internal_call():
@@ -17,7 +17,7 @@ def _most_recent_internal_call():
 
     stack = inspect.stack()
     this_file = str(pathlib.Path(__file__).resolve())
-    spack_prefix = pathlib.Path(paths.prefix).resolve()
+    spack_prefix = pathlib.Path(paths_base.prefix).resolve()
     for frame in stack:
         frame_loc = pathlib.Path(frame.filename).resolve()
         if str(frame_loc) != this_file and spack_prefix in frame_loc.parents:
@@ -58,17 +58,17 @@ def _guard_writes(event, args):
             return
         abs_path = os.path.abspath(path)
         intent_to_modify = bool((set(mode) & set("wax")) or "r+" in mode)
-        if abs_path.startswith(paths.prefix) and intent_to_modify:
+        if abs_path.startswith(paths_base.prefix) and intent_to_modify:
             _attempted_modify_internal(f"Open {path} in mode [{mode}]")
     elif event in ["shutil.copyfile", "os.rename", "shutil.move"]:
         _, dst = args[:2]
         abs_dst = os.path.abspath(dst)
-        if abs_dst.startswith(paths.prefix):
+        if abs_dst.startswith(paths_base.prefix):
             _attempted_modify_internal(f"copy dst {abs_dst}")
     elif event == "os.mkdir":
         path = args[0]
         abs_path = os.path.abspath(path)
-        if abs_path.startswith(paths.prefix):
+        if abs_path.startswith(paths_base.prefix):
             _attempted_modify_internal(f"mkdir {abs_path}")
 
 

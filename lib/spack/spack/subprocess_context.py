@@ -19,7 +19,7 @@ from types import ModuleType
 from typing import Any
 
 import spack.config
-import spack.paths
+import spack.paths_base
 import spack.platforms
 import spack.repo
 import spack.store
@@ -82,10 +82,10 @@ class PackageInstallContext:
             self.global_state = None
             self.test_patches = None
             self.env = active_environment()
-        self.spack_working_dir = spack.paths.spack_working_dir
+        self.spack_working_dir = spack.paths_base.spack_working_dir
 
     def restore(self):
-        spack.paths.spack_working_dir = self.spack_working_dir
+        spack.paths_base.spack_working_dir = self.spack_working_dir
         # Activating the environment modifies the global configuration, so globals have to
         # be restored afterward, in case other modifications were applied on top (e.g. from
         # command line)

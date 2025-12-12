@@ -15,8 +15,9 @@ from collections import namedtuple
 from enum import Enum
 from pathlib import PurePath
 
-import spack.llnl.util.filesystem
 import spack.util.hash as hash
+import spack.paths_base as paths_base
+import spack.config as config
 
 
 class XDG_vars(Enum):
@@ -93,52 +94,11 @@ def dir_is_occupied(x, except_for=None):
 
 
 class SpackPaths:
-    def __init__(self, _prefix=None):
-        #: This file lives in $prefix/lib/spack/spack/__file__
-        self.prefix = _prefix or str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
-
-        #: synonym for prefix
-        self.spack_root = self.prefix
-
-        #: bin directory in the spack prefix
-        self.bin_path = os.path.join(self.prefix, "bin")
-
-        #: The spack script itself
-        self.spack_script = os.path.join(self.bin_path, "spack")
-
-        #: The sbang script in the spack installation
-        self.sbang_script = os.path.join(self.bin_path, "sbang")
-
-        # spack directory hierarchy
-        self.lib_path = os.path.join(self.prefix, "lib", "spack")
-        self.external_path = os.path.join(self.lib_path, "external")
-        self.module_path = os.path.join(self.lib_path, "spack")
-        self.vendor_path = os.path.join(self.module_path, "vendor")
-        self.command_path = os.path.join(self.module_path, "cmd")
-        self.analyzers_path = os.path.join(self.module_path, "analyzers")
-        self.platform_path = os.path.join(self.module_path, "platforms")
-        self.compilers_path = os.path.join(self.module_path, "compilers")
-        self.operating_system_path = os.path.join(self.module_path, "operating_systems")
-        self.test_path = os.path.join(self.module_path, "test")
-        self.hooks_path = os.path.join(self.module_path, "hooks")
-        self.share_path = os.path.join(self.prefix, "share", "spack")
-        self.etc_path = os.path.join(self.prefix, "etc", "spack")
-        self.default_license_dir = os.path.join(self.etc_path, "licenses")
-        self.var_path = os.path.join(self.prefix, "var", "spack")
-
-        # $spack/var/spack is generally read-only. Older instances may
-        # write gpg keys or environments into ...var/
-        self.repos_path = os.path.join(self.var_path, "repos")
-        self.test_repos_path = os.path.join(self.var_path, "test_repos")
-        self.mock_packages_path = os.path.join(self.test_repos_path, "spack_repo", "builtin_mock")
-
-        self.mock_gpg_data_path = os.path.join(self.var_path, "gpg.mock", "data")
-        self.mock_gpg_keys_path = os.path.join(self.var_path, "gpg.mock", "keys")
-
+    def __init__(self, base):
         #: Not a location itself, but used for when Spack instances
         #: share the same cache base directory for caches that should
         #: not be shared between those instances.
-        self.spack_instance_id = hash.b32_hash(self.prefix)[:7]
+        self.spack_instance_id = hash.b32_hash(base.prefix)[:7]
 
         # Resolved XDG_x_HOME variables, with additional "spack" subdirectory.
         # Resolves to default value from XDG spec if unset.
@@ -147,50 +107,12 @@ class SpackPaths:
         self.spack_cache_home = _spack_xdg_or_backup(XDG_mappings.cache_home.value)
         self.spack_data_home = _spack_xdg_or_backup(XDG_mappings.data_home.value)
 
-        # ------ Next section
-        # Spack can write a lot of data into the next 3 locations, and
-        # they used to be inside of Spack by default. They can be set
-        # to any location with `config:` settings, and those have priority.
-        # They can also be redirected by setting the SPACK_DATA_HOME or
-        # XDG_DATA_HOME environment variables. If none of those are
-        # set, then they point to inside of the Spack prefix.
-        #
-        # Precedence:
-        # 1. config: setting (code consults the config before this
-        #    module)
-        # 2. explicitly defined SPACK_DATA_HOME
-        # 3. explicitly defined XDG_DATA_HOME
-        # 4. old default path, if occupied (inside spack prefix)
-        # 5. inside spack prefix (slightly different compared to old
-        #    install path)
-        old_install_path = os.path.join(self.prefix, "opt", "spack")
-        self.default_install_location = self.large_data_component("installs", old_install_path)
-
-        old_envs_path = os.path.join(self.var_path, "environments")
-        self.default_envs_path = self.large_data_component("environments", old_envs_path)
-
-        old_fetch_cache_path = os.path.join(self.var_path, "cache")
+        self.default_install_location = self.large_data_component("installs", base.old_install_path)
+        self.default_envs_path = self.large_data_component("environments", base.old_envs_path)
         self.default_fetch_cache_path = self.large_data_component(
-            "downloads", old_fetch_cache_path
+            "downloads", base.old_fetch_cache_path
         )
 
-        # ------ Next section
-        # Spack can write data into the following locations, but it
-        # isn't expected to be substantial, so Spack can choose to set
-        # "~" as a default. They are all organized under a single
-        # directory that users can refer to in config as $user_cache_path
-        #
-        # You can override the top-level directory (the user cache path) by
-        # setting `SPACK_USER_CACHE_PATH`, `SPACK_DATA_HOME`, or
-        # `XDG_DATA_HOME`; if none of those are set, then the default for
-        # `XDG_DATA_HOME` is used (~/.local/share).
-        #
-        # Precedence:
-        # 1. Config setting (not available for all of these)
-        # 2. SPACK_USER_CACHE_PATH
-        # 3. explicitly defined SPACK_DATA_HOME
-        # 4. explicitly defined XDG_DATA_HOME
-        # 5. default for XDG_DATA_HOME
         self.user_cache_path = str(
             PurePath(
                 os.path.expanduser(
@@ -218,21 +140,13 @@ class SpackPaths:
         #: overridden by `bootstrap:root`
         self.default_user_bootstrap_path = os.path.join(self.user_cache_path, "bootstrap")
 
-        # ------ Next section
-        # The next three locations used to be written inside of the
-        # Spack prefix, and are now organized under $user_cache_path
-        # by default, *except* for old installs of Spack that have
-        # data written into the old locations (in which case, when
-        # they pull this update, they will continue to use those
-        # locations)
-
-        old_gpg_path = os.path.join(self.prefix, "opt", "spack", "gpg")
+        old_gpg_path = os.path.join(base.prefix, "opt", "spack", "gpg")
         if dir_is_occupied(old_gpg_path):
             self.gpg_path = old_gpg_path
         else:
             self.gpg_path = os.path.join(self.user_cache_path, "gpg")
 
-        old_gpg_keys_path = os.path.join(self.var_path, "gpg")
+        old_gpg_keys_path = os.path.join(base.var_path, "gpg")
         if dir_is_occupied(old_gpg_keys_path):
             self.gpg_keys_path = old_gpg_keys_path
         else:
@@ -240,24 +154,10 @@ class SpackPaths:
 
         self.modules_base = None
         for module_dir in ["lmod", "modules"]:
-            if dir_is_occupied(os.path.join(self.share_path, module_dir)):
-                self.modules_base = self.share_path
+            if dir_is_occupied(os.path.join(base.share_path, module_dir)):
+                self.modules_base = base.share_path
         if not self.modules_base:
             self.modules_base = self.user_cache_path
-
-        # ------ Next section
-        # Spack can also write data into the following locations, and their
-        # defaults are not controlled by SPACK/XDG_DATA_HOME or
-        # SPACK_USER_CACHE_PATH. Like the prior section, the data written
-        # into these locations isn't expected to take up much space, so in
-        # some cases defaults to "~" (in those cases in compliance with
-        # XDG defaults).
-
-        # There are three environment variables you can use to isolate spack from
-        # the host environment:
-        # - `SPACK_USER_CONFIG_PATH`: override `~/.spack` location (for config and caches)
-        # - `SPACK_SYSTEM_CONFIG_PATH`: override `/etc/spack` configuration scope.
-        # - `SPACK_DISABLE_LOCAL_CONFIG`: disable both of these locations.
 
         #: User configuration location
         self.user_config_path = os.path.expanduser(
@@ -289,33 +189,8 @@ class SpackPaths:
             return old_location
 
 
-locations = SpackPaths()
+locations = SpackPaths(paths_base.locations)
 
-prefix = locations.prefix
-spack_root = locations.spack_root
-bin_path = locations.bin_path
-spack_script = locations.spack_script
-sbang_script = locations.sbang_script
-lib_path = locations.lib_path
-external_path = locations.external_path
-module_path = locations.module_path
-vendor_path = locations.vendor_path
-command_path = locations.command_path
-analyzers_path = locations.analyzers_path
-platform_path = locations.platform_path
-compilers_path = locations.compilers_path
-operating_system_path = locations.operating_system_path
-test_path = locations.test_path
-hooks_path = locations.hooks_path
-share_path = locations.share_path
-etc_path = locations.etc_path
-default_license_dir = locations.default_license_dir
-var_path = locations.var_path
-repos_path = locations.repos_path
-test_repos_path = locations.test_repos_path
-mock_packages_path = locations.mock_packages_path
-mock_gpg_data_path = locations.mock_gpg_data_path
-mock_gpg_keys_path = locations.mock_gpg_keys_path
 spack_instance_id = locations.spack_instance_id
 spack_state_home = locations.spack_state_home
 spack_config_home = locations.spack_config_home
@@ -338,16 +213,30 @@ user_config_path = locations.user_config_path
 system_config_path = locations.system_config_path
 default_misc_cache_path = locations.default_misc_cache_path
 
-
-#: Recorded directory where spack command was originally invoked
-spack_working_dir = None
-
-
-def set_working_dir():
-    """Change the working directory to getcwd, or spack prefix if no cwd."""
-    global spack_working_dir
-    try:
-        spack_working_dir = os.getcwd()
-    except OSError:
-        os.chdir(prefix)
-        spack_working_dir = prefix
+# Copy from paths_base
+prefix = paths_base.prefix
+spack_root = paths_base.spack_root
+bin_path = paths_base.bin_path
+spack_script = paths_base.spack_script
+sbang_script = paths_base.sbang_script
+lib_path = paths_base.lib_path
+external_path = paths_base.external_path
+module_path = paths_base.module_path
+vendor_path = paths_base.vendor_path
+command_path = paths_base.command_path
+analyzers_path = paths_base.analyzers_path
+platform_path = paths_base.platform_path
+compilers_path = paths_base.compilers_path
+operating_system_path = paths_base.operating_system_path
+test_path = paths_base.test_path
+hooks_path = paths_base.hooks_path
+share_path = paths_base.share_path
+etc_path = paths_base.etc_path
+default_license_dir = paths_base.default_license_dir
+var_path = paths_base.var_path
+repos_path = paths_base.repos_path
+test_repos_path = paths_base.test_repos_path
+mock_packages_path = paths_base.mock_packages_path
+mock_gpg_data_path = paths_base.mock_gpg_data_path
+mock_gpg_keys_path = paths_base.mock_gpg_keys_path
+default_xdg_cache_home = paths_base.default_xdg_cache_home

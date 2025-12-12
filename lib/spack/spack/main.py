@@ -36,7 +36,7 @@ import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.colify
 import spack.llnl.util.tty.color as color
-import spack.paths
+import spack.paths_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
@@ -602,7 +602,7 @@ def setup_main_options(args):
     # override lock configuration if passed on command line
     if args.locks is not None:
         if args.locks is False:
-            spack.util.lock.check_lock_safety(spack.paths.prefix)
+            spack.util.lock.check_lock_safety(spack.paths_base.prefix)
         spack.config.set("config:locks", args.locks, scope="command_line")
 
     if args.mock:
@@ -611,7 +611,7 @@ def setup_main_options(args):
         key = syaml.syaml_str("repos")
         key.override = True
         spack.config.CONFIG.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
-            [(key, [spack.paths.mock_packages_path])]
+            [(key, [spack.paths_base.mock_packages_path])]
         )
 
     # If the user asked for it, don't check ssl certs.
@@ -1101,7 +1101,7 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
             raise env_format_error
 
     # many operations will fail without a working directory.
-    spack.paths.set_working_dir()
+    spack.paths_base.set_working_dir()
 
     # now we can actually execute the command.
     if main_args.spack_profile or main_args.sorted_profile or main_args.profile_file:

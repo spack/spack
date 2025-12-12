@@ -20,7 +20,7 @@ import spack.error
 import spack.extensions
 import spack.llnl.string
 import spack.llnl.util.tty as tty
-import spack.paths
+import spack.paths_base
 import spack.repo
 import spack.spec
 import spack.spec_parser
@@ -87,7 +87,7 @@ def all_commands():
     global _all_commands
     if _all_commands is None:
         _all_commands = []
-        command_paths = [spack.paths.command_path]  # Built-in commands
+        command_paths = [spack.paths_base.command_path]  # Built-in commands
         command_paths += spack.extensions.get_command_paths()  # Extensions
         for path in command_paths:
             for file in os.listdir(path):

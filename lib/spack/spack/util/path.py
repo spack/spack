@@ -58,11 +58,12 @@ def replacements():
     import spack
     import spack.environment as ev
     import spack.paths
+    import spack.paths_base
 
     arch = architecture()
 
     return {
-        "spack": lambda: spack.paths.prefix,
+        "spack": lambda: spack.paths_base.prefix,
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
         "user_cache_path": lambda: spack.paths.user_cache_path,

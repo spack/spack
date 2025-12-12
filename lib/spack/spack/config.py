@@ -41,7 +41,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, U
 from spack.vendor import jsonschema
 
 import spack.error
-import spack.paths
+import spack.paths_base
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.cdash
@@ -103,7 +103,7 @@ _ALL_SCHEMAS: Dict[str, Any] = {
 }
 
 #: Path to the main configuration scope
-CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
+CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths_base.etc_path, "defaults"))
 
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
@@ -117,7 +117,7 @@ CONFIG_DEFAULTS = {
         "dirty": False,
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
-        "license_dir": spack.paths.default_license_dir,
+        "license_dir": spack.paths_base.default_license_dir,
     },
     "concretizer": {"externals": {"completion": "default_variants"}},
 }
@@ -138,7 +138,7 @@ MAX_RECURSIVE_INCLUDES = 100
 
 def _include_cache_location():
     """Location to cache included configuration files."""
-    return os.path.join(spack.paths.user_cache_path, "includes")
+    return os.path.join(spack.paths_base.default_xdg_cache_home, "includes")
 
 
 class ConfigScope:
@@ -1383,12 +1383,12 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # Initial topmost scope is spack (the config scope in the spack instance).
     # It includes the user, site, and system scopes. Environments and command
     # line scopes go above this.
-    configuration_paths = [("spack", os.path.join(spack.paths.etc_path))]
+    configuration_paths = [("spack", os.path.join(spack.paths_base.etc_path))]
 
     # Site admin scope has two uses: (a) admins can share config with one
     # another, but not with end users (b) pip/apt-installed spack can
     # change the default install root
-    site_admin_path = os.path.join(spack.paths.etc_path, "site-admin")
+    site_admin_path = os.path.join(spack.paths_base.etc_path, "site-admin")
     site_admin_accessible = False
     try:
         if os.path.isdir(site_admin_path):

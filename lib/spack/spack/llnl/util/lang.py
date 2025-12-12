@@ -723,16 +723,18 @@ class Singleton:
     @property
     def instance(self):
         if self._instance is None:
-            instance = self.factory()
+            try:
+                instance = self.factory()
 
-            if isinstance(instance, types.GeneratorType):
-                # if it's a generator, assign every value
-                for value in instance:
-                    self._instance = value
-            else:
-                # if not, just assign the result like a normal singleton
-                self._instance = instance
-
+                if isinstance(instance, types.GeneratorType):
+                    # if it's a generator, assign every value
+                    for value in instance:
+                        self._instance = value
+                else:
+                    # if not, just assign the result like a normal singleton
+                    self._instance = instance
+            except AttributeError as e:
+                raise Exception("AttrbuteError during creation of Singleton instance") from e
         return self._instance
 
     def __getattr__(self, name):
