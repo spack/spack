@@ -230,7 +230,7 @@ class SpackPaths:
             if possible_resolution:
                 return possible_resolution
 
-        return os.path.join("~", home_rel)
+        return os.path.join(os.path.expanduser("~"), home_rel)
 
     def prefer_old_location(self, old_location, new_location):
         # TODO: perhaps it should be configurable whether old locations
