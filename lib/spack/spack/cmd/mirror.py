@@ -353,7 +353,7 @@ def mirror_add(args):
 def mirror_remove(args):
     """remove a mirror by name"""
     name = args.name
-    scopes = [args.scope] if args.scope else list(spack.config.CONFIG.scopes.keys())
+    scopes = [args.scope] if args.scope else reversed(list(spack.config.CONFIG.scopes.keys()))
 
     removed = False
     for scope in scopes:

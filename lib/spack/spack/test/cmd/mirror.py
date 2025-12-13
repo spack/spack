@@ -303,7 +303,7 @@ def test_mirror_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
     assert "mock" in system_output
 
     # Confirm that when the scope is not specified, it is removed from top scope
-    mirror("add", "--scope=site", "mock", str(tmp_path / "mockrepo"))
+    mirror("add", "--scope=site", "mock", str(tmp_path / "mock_mirror"))
     mirror("remove", "mock")
     site_output = mirror("list", "--scope=site")
     system_output = mirror("list", "--scope=system")
