@@ -34,36 +34,6 @@ class XDG_overrides(Enum):
     cache_home = "SPACK_CACHE_HOME"
 
 
-xdg_mapping = namedtuple("xdg_mapping", ["spack", "xdg", "xdg_default"])
-
-
-class XDG_mappings(Enum):
-    config_home = xdg_mapping(
-        spack=XDG_overrides.config_home.value,
-        xdg=XDG_vars.config_home.value,
-        xdg_default=os.path.join("~", ".config"),
-    )
-    state_home = xdg_mapping(
-        spack=XDG_overrides.state_home.value,
-        xdg=XDG_vars.state_home.value,
-        xdg_default=os.path.join("~", ".local", "state"),
-    )
-    data_home = xdg_mapping(
-        spack=XDG_overrides.data_home.value,
-        xdg=XDG_vars.data_home.value,
-        xdg_default=os.path.join("~", ".local", "share"),
-    )
-    cache_home = xdg_mapping(
-        spack=XDG_overrides.cache_home.value,
-        xdg=XDG_vars.cache_home.value,
-        xdg_default=os.path.join("~", ".cache"),
-    )
-
-
-class Location_vars(Enum):
-    user_cache_path = "USER_CACHE_PATH"
-
-
 # This is for tests that want to clean the environment of XDG_ variables that
 # affect spack behavior (and the corresponding SPACK_ overrides). Note that
 # these vars will affect .default_test_path for the running instance, but
