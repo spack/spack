@@ -258,7 +258,7 @@ def repo_add(args):
 
 def repo_remove(args):
     """remove a repository from Spack's configuration"""
-    scopes = [args.scope] if args.scope else list(spack.config.CONFIG.scopes.keys())
+    scopes = [args.scope] if args.scope else reversed(list(spack.config.CONFIG.scopes.keys()))
     found_and_removed = False
     for scope in scopes:
         found_and_removed |= _remove_repo(args.namespace_or_path, scope)
