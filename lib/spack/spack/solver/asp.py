@@ -1441,6 +1441,10 @@ class ConditionContext(SourceContext):
         return ctxt
 
 
+def _track_dependencies(input_spec, requirements):
+    return requirements + [fn.attr("track_dependencies", input_spec.name)]
+
+
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
@@ -1940,19 +1944,6 @@ class SpackSolverSetup:
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
 
-        def track_dependencies(input_spec, requirements):
-            return requirements + [fn.attr("track_dependencies", input_spec.name)]
-
-        def dependency_holds(input_spec, requirements):
-            result = remove_facts("node", "virtual_node")(input_spec, requirements) + [
-                fn.attr("dependency_holds", pkg.name, input_spec.name, dt.flag_to_string(t))
-                for t in dt.ALL_FLAGS
-                if t & depflag
-            ]
-            if input_spec.name not in pkg.extendees:
-                return result
-            return result + [fn.attr("extends", pkg.name, input_spec.name)]
-
         for cond, deps_by_name in pkg.dependencies.items():
             cond_str = str(cond)
             cond_str_suffix = f" when {cond_str}" if cond_str else ""
@@ -1973,11 +1964,28 @@ class SpackSolverSetup:
 
                 msg = f"{pkg.name} depends on {dep.spec}{cond_str_suffix}"
 
+                def dependency_holds(input_spec, requirements):
+                    # TODO: `dependency_holds` is used as a cache key, and is a unique object in
+                    # every iteration of the loop. This prevents deduplication of identical
+                    # "effects" when unique when specs impose the same dependency. We cannot move
+                    # this out of the loop, because the effect cache is keyed only by a spec, and
+                    # not by the dependency type.
+                    result = remove_facts("node", "virtual_node")(input_spec, requirements) + [
+                        fn.attr(
+                            "dependency_holds", pkg.name, input_spec.name, dt.flag_to_string(t)
+                        )
+                        for t in dt.ALL_FLAGS
+                        if t & depflag
+                    ]
+                    if input_spec.name not in pkg.extendees:
+                        return result
+                    return result + [fn.attr("extends", pkg.name, input_spec.name)]
+
                 context = ConditionContext()
                 context.source = ConstraintOrigin.append_type_suffix(
                     pkg.name, ConstraintOrigin.DEPENDS_ON
                 )
-                context.transform_required = track_dependencies
+                context.transform_required = _track_dependencies
                 context.transform_imposed = dependency_holds
 
                 self.condition(cond, dep.spec, required_name=pkg.name, msg=msg, context=context)

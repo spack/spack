@@ -6,6 +6,7 @@ import json
 import os
 import pathlib
 import platform
+import re
 import sys
 from typing import Any, Dict
 
@@ -4753,3 +4754,27 @@ def test_activating_variant_for_conditional_language_dependency(default_mock_con
     # Try just asking for fortran, without the provider
     s = default_mock_concretization("mpileaks %fortran %mpi=mpich")
     assert s.satisfies("+fortran")
+
+
+def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
+    """Tests that imposed dependenies triggered by identical conditions are grouped together,
+    and that imposed dependencies that differ on a deptype are not grouped together."""
+    # The trigger-and-effect-deps pkg has 4 conditions, 2 triggers, and 4 effects in total:
+    # +x -> depends on pkg-a with deptype link
+    # +x -> depends on pkg-b with deptype link
+    # +y -> depends on pkg-a with deptype run
+    # +y -> depends on pkg-b with deptype run
+    pkg = mock_packages.get_pkg_class("trigger-and-effect-deps")
+    setup = spack.solver.asp.SpackSolverSetup()
+    setup.gen = spack.solver.asp.ProblemInstanceBuilder()
+    setup.package_dependencies_rules(pkg)
+    setup.trigger_rules()
+    setup.effect_rules()
+    asp = setup.gen.asp_problem
+
+    # There should be 4 conditions total
+    assert len([line for line in asp if re.search(r"condition\(\d+\)", line)]) == 4
+    # There should be 2 triggers total
+    assert len([line for line in asp if re.search(r"trigger_id\(\d+\)", line)]) == 2
+    # There should be 4 effects total
+    assert len([line for line in asp if re.search(r"effect_id\(\d+\)", line)]) == 4
