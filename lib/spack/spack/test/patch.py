@@ -16,7 +16,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.fetch_strategy
 import spack.patch
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.spec
 import spack.stage
@@ -73,7 +73,7 @@ def mock_patch_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch):
     return mock_path
 
 
-data_path = os.path.join(spack.paths.test_path, "data", "patch")
+data_path = os.path.join(paths.test_path, "data", "patch")
 
 
 @pytest.mark.not_on_windows("Line ending conflict on Windows")

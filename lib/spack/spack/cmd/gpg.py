@@ -8,7 +8,7 @@ import tempfile
 
 import spack.binary_distribution
 import spack.mirrors.mirror
-import spack.paths
+from spack.paths import locations as paths
 import spack.stage
 import spack.util.gpg
 import spack.util.url
@@ -187,7 +187,7 @@ def gpg_init(args):
     """add the default keys to the keyring"""
     import_dir = args.import_dir
     if import_dir is None:
-        import_dir = spack.paths.gpg_keys_path
+        import_dir = paths.gpg_keys_path
 
     for root, _, filenames in os.walk(import_dir):
         for filename in filenames:

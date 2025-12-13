@@ -27,7 +27,7 @@ import spack.database
 import spack.directory_layout
 import spack.error
 import spack.llnl.util.lang
-import spack.paths
+from spack.paths import locations as paths
 import spack.spec
 import spack.util.path
 from spack.llnl.util import tty
@@ -75,7 +75,7 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
 
         projections = {"all": all_projection}
     else:
-        unpadded_root = install_tree.get("root", spack.paths.default_install_location)
+        unpadded_root = install_tree.get("root", paths.default_install_location)
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
         padded_length = install_tree.get("padded_length", False)

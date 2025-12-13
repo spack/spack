@@ -23,7 +23,7 @@ import spack.vendor.ruamel.yaml
 import spack.concretize
 import spack.config
 import spack.hash_types as ht
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.spec
 import spack.test.conftest
@@ -47,7 +47,7 @@ def check_json_round_trip(spec):
 
 
 def test_read_spec_from_signed_json():
-    spec_dir = os.path.join(spack.paths.test_path, "data", "mirrors", "signed_json")
+    spec_dir = os.path.join(paths.test_path, "data", "mirrors", "signed_json")
     file_name = (
         "linux-ubuntu18.04-haswell-gcc-8.4.0-"
         "zlib-1.2.12-g7otk5dra3hifqxej36m5qzm7uyghqgb.spec.json.sig"
@@ -411,7 +411,7 @@ ordered_spec = collections.OrderedDict(
     ],
 )
 def test_load_json_specfiles(specfile, expected_hash, reader_cls):
-    fullpath = os.path.join(spack.paths.test_path, "data", specfile)
+    fullpath = os.path.join(paths.test_path, "data", specfile)
     with gzip.open(fullpath, "rt", encoding="utf-8") as f:
         data = json.load(f)
 

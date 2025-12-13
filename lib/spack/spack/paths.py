@@ -95,54 +95,102 @@ def dir_is_occupied(x, except_for=None):
 
 class SpackPaths:
     def __init__(self, base):
+        self.base = base
+
         #: Not a location itself, but used for when Spack instances
         #: share the same cache base directory for caches that should
         #: not be shared between those instances.
         self.spack_instance_id = hash.b32_hash(base.prefix)[:7]
 
-        self.state_home = self.resolve_a_home(["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME"], "XDG_STATE_HOME", "state", ".local/state/spack")
-        self.cache_home = self.resolve_a_home("SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache/spack")
-        self.data_home = self.resolve_a_home("SPACK_DATA_HOME", "XDG_DATA_HOME", "data", ".local/share/spack")
-        self.user_cache_path = self.state_home
+    @property
+    def state_home(self):
+        return self.resolve_a_home(["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME"], "XDG_STATE_HOME", "state", ".local/state/spack")
 
-        self.default_install_location = self.prefer_old_location(base.old_install_path, os.path.join(self.data_home, "installs"))
-        self.default_envs_path = self.prefer_old_location(base.old_envs_path, os.path.join(self.data_home, "envs"))
-        self.default_fetch_cache_path = self.prefer_old_location(base.old_fetch_cache_path, os.path.join(self.data_home, "downloads"))
+    @property
+    def cache_home(self):
+        return self.resolve_a_home("SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache/spack")
 
+    @property
+    def data_home(self):
+        return self.resolve_a_home("SPACK_DATA_HOME", "XDG_DATA_HOME", "data", ".local/share/spack")
+
+    @property
+    def user_cache_path(self):
+        return self.state_home
+
+    @property
+    def default_install_location(self):
+        return self.prefer_old_location(self.base.old_install_path, os.path.join(self.data_home, "installs"))
+
+    @property
+    def default_envs_path(self):
+        return self.prefer_old_location(self.base.old_envs_path, os.path.join(self.data_home, "envs"))
+
+    @property
+    def default_fetch_cache_path(self):
+        return self.prefer_old_location(self.base.old_fetch_cache_path, os.path.join(self.data_home, "downloads"))
+
+    @property
+    def reports_path(self):
         #: junit, cdash, etc. reports about builds
-        self.reports_path = os.path.join(self.state_home, "reports")
+        return os.path.join(self.state_home, "reports")
 
+    @property
+    def default_test_path(self):
         #: installation test (spack test) output
-        self.default_test_path = os.path.join(self.state_home, "test")
+        return os.path.join(self.state_home, "test")
 
+    @property
+    def default_monitor_path(self):
         #: spack monitor analysis directories
-        self.default_monitor_path = os.path.join(self.reports_path, "monitor")
+        return os.path.join(self.reports_path, "monitor")
 
+    @property
+    def user_repos_cache_path(self):
         #: git repositories fetched to compare commits to versions
-        self.user_repos_cache_path = os.path.join(self.state_home, "git_repos")
+        return os.path.join(self.state_home, "git_repos")
 
+    @property
+    def package_repos_path(self):
         #: default location where remote package repositories are cloned
-        self.package_repos_path = os.path.join(self.state_home, "package_repos")
+        return os.path.join(self.state_home, "package_repos")
 
+    @property
+    def default_user_bootstrap_path(self):
         #: bootstrap store for bootstrapping clingo and other tools
         #: overridden by `bootstrap:root`
-        self.default_user_bootstrap_path = os.path.join(self.state_home, "bootstrap")
+        return os.path.join(self.state_home, "bootstrap")
 
-        self.gpg_path = self.prefer_old_location(base.old_gpg_path, os.path.join(self.data_home, "gpg"))
-        self.gpg_keys_path = self.prefer_old_location(base.old_gpg_keys_path, os.path.join(self.data_home, "gpg-keys"))
+    @property
+    def gpg_path(self):
+        return self.prefer_old_location(self.base.old_gpg_path, os.path.join(self.data_home, "gpg"))
 
-        self.modules_base = None
+    @property
+    def gpg_keys_path(self):
+        return self.prefer_old_location(self.base.old_gpg_keys_path, os.path.join(self.data_home, "gpg-keys"))
+
+    @property
+    def modules_base(self):
+        modules_base = None
         for module_dir in ["lmod", "modules"]:
-            if dir_is_occupied(os.path.join(base.share_path, module_dir)):
-                self.modules_base = base.share_path
-        if not self.modules_base:
-            self.modules_base = self.data_home
+            if dir_is_occupied(os.path.join(self.base.share_path, module_dir)):
+                modules_base = self.base.share_path
+        if not modules_base:
+            modules_base = self.data_home
+        return modules_base
 
+    @property
+    def default_misc_cache_path(self):
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
         #: overridden by `config:misc_cache`
-        self.default_misc_cache_path = os.path.join(
+        return os.path.join(
             self.state_home, self.spack_instance_id, "cache"
         )
+
+    def __getattr__(self, name):
+        # Things that aren't sensitive to import cycles can import the
+        # paths module and access all items from it
+        return getattr(self.base, name)
 
     def resolve_a_home(self, env_vars, xdg_var, config_var, home_rel):
         disable_env = config.get("config:locations:disable_env", False)
@@ -197,53 +245,3 @@ class SpackPaths:
 
 
 locations = SpackPaths(paths_base.locations)
-
-spack_instance_id = locations.spack_instance_id
-spack_state_home = locations.state_home
-#spack_config_home = locations.spack_config_home
-spack_cache_home = locations.cache_home
-spack_data_home = locations.data_home
-default_install_location = locations.default_install_location
-default_envs_path = locations.default_envs_path
-default_fetch_cache_path = locations.default_fetch_cache_path
-user_cache_path = locations.user_cache_path
-reports_path = locations.reports_path
-default_test_path = locations.default_test_path
-default_monitor_path = locations.default_monitor_path
-user_repos_cache_path = locations.user_repos_cache_path
-package_repos_path = locations.package_repos_path
-default_user_bootstrap_path = locations.default_user_bootstrap_path
-gpg_path = locations.gpg_path
-gpg_keys_path = locations.gpg_keys_path
-modules_base = locations.modules_base
-user_config_path = locations.user_config_path
-default_misc_cache_path = locations.default_misc_cache_path
-
-# Copy from paths_base
-prefix = paths_base.prefix
-spack_root = paths_base.spack_root
-bin_path = paths_base.bin_path
-spack_script = paths_base.spack_script
-sbang_script = paths_base.sbang_script
-lib_path = paths_base.lib_path
-external_path = paths_base.external_path
-module_path = paths_base.module_path
-vendor_path = paths_base.vendor_path
-command_path = paths_base.command_path
-analyzers_path = paths_base.analyzers_path
-platform_path = paths_base.platform_path
-compilers_path = paths_base.compilers_path
-operating_system_path = paths_base.operating_system_path
-test_path = paths_base.test_path
-hooks_path = paths_base.hooks_path
-share_path = paths_base.share_path
-etc_path = paths_base.etc_path
-default_license_dir = paths_base.default_license_dir
-var_path = paths_base.var_path
-repos_path = paths_base.repos_path
-test_repos_path = paths_base.test_repos_path
-mock_packages_path = paths_base.mock_packages_path
-mock_gpg_data_path = paths_base.mock_gpg_data_path
-mock_gpg_keys_path = paths_base.mock_gpg_keys_path
-default_xdg_cache_home = paths_base.default_xdg_cache_home
-system_config_path = paths_base.system_config_path

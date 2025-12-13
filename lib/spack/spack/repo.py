@@ -45,7 +45,7 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.patch
-import spack.paths
+from spack.paths import locations as paths
 import spack.provider_index
 import spack.tag
 import spack.util.executable
@@ -73,7 +73,7 @@ SPACK_REPO_INDEX_FILE_NAME = "spack-repo-index.yaml"
 def package_repository_lock() -> spack.util.lock.Lock:
     """Lock for process safety when cloning remote package repositories"""
     return spack.util.lock.Lock(
-        os.path.join(spack.paths.user_cache_path, "package-repository.lock")
+        os.path.join(paths.user_cache_path, "package-repository.lock")
     )
 
 
@@ -1983,7 +1983,7 @@ def parse_config_descriptor(
 
     if destination is None:  # use a default destination
         dir_name = spack.util.hash.b32_hash(repository)[-7:]
-        destination = os.path.join(spack.paths.package_repos_path, dir_name)
+        destination = os.path.join(paths.package_repos_path, dir_name)
     else:
         destination = spack.util.path.canonicalize_path(destination)
 

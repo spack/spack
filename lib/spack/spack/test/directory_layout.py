@@ -13,7 +13,7 @@ import pytest
 
 import spack.concretize
 import spack.hash_types
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.spec
 import spack.util.file_cache
@@ -158,7 +158,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path
     layout = temporary_store.layout
 
     repo_cache = spack.util.file_cache.FileCache(tmp_path / "cache")
-    mock_db = spack.repo.Repo(spack.paths.mock_packages_path, cache=repo_cache)
+    mock_db = spack.repo.Repo(paths.mock_packages_path, cache=repo_cache)
 
     not_in_mock = set.difference(
         set(spack.repo.all_package_names()), set(mock_db.all_package_names())
@@ -178,7 +178,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages, tmp_path
         layout.create_install_directory(spec)
         installed_specs[spec] = layout.path_for_spec(spec)
 
-    with spack.repo.use_repositories(spack.paths.mock_packages_path):
+    with spack.repo.use_repositories(paths.mock_packages_path):
         # Now check that even without the package files, we know
         # enough to read a spec from the spec file.
         for spec, path in installed_specs.items():

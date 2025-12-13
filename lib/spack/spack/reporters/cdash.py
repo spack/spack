@@ -18,7 +18,7 @@ from urllib.request import Request
 
 import spack
 import spack.llnl.util.tty as tty
-import spack.paths
+from spack.paths import locations as paths
 import spack.platforms
 import spack.spec
 import spack.tengine
@@ -117,7 +117,7 @@ class CDash(Reporter):
         self.buildIds: Dict[str, str] = {}
         self.revision = ""
         git = spack.util.git.git(required=True)
-        with working_dir(spack.paths.spack_root):
+        with working_dir(paths.spack_root):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
         self.generator = "spack-{0}".format(spack.get_version())
         self.multiple_packages = False

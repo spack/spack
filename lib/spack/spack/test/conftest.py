@@ -45,6 +45,7 @@ import spack.llnl.util.tty.color
 import spack.modules.common
 import spack.package_base
 import spack.paths
+from spack.paths import locations as paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
@@ -132,7 +133,7 @@ def git():
 #
 @pytest.fixture(scope="session")
 def last_two_git_commits(git):
-    spack_git_path = spack.paths.prefix
+    spack_git_path = paths.prefix
     with working_dir(spack_git_path):
         git_log_out = git("log", "-n", "2", output=str, error=os.devnull)
 
@@ -150,12 +151,12 @@ commit_counter = 0
 
 @pytest.fixture
 def override_git_repos_cache_path(tmp_path: Path):
-    saved = spack.paths.user_repos_cache_path
+    saved = paths.user_repos_cache_path
     tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
     tmp_git_path.mkdir()
-    spack.paths.user_repos_cache_path = str(tmp_git_path)
+    paths.user_repos_cache_path = str(tmp_git_path)
     yield
-    spack.paths.user_repos_cache_path = saved
+    paths.user_repos_cache_path = saved
 
 
 @pytest.fixture
@@ -316,19 +317,19 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
         os.makedirs(os.path.dirname(filename))
 
         # add pkg-a as a new package to the repository
-        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-0.txt", filename)
+        shutil.copy2(f"{paths.test_path}/data/conftest/diff-test/package-0.txt", filename)
         git("add", filename)
         commit("diff-test: new package")
         commits.append(latest_commit())
 
         # add v2.1.5 to pkg-a
-        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-1.txt", filename)
+        shutil.copy2(f"{paths.test_path}/data/conftest/diff-test/package-1.txt", filename)
         git("add", filename)
         commit("diff-test: add v2.1.5")
         commits.append(latest_commit())
 
         # add v2.1.6 to pkg-a
-        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-2.txt", filename)
+        shutil.copy2(f"{paths.test_path}/data/conftest/diff-test/package-2.txt", filename)
         git("add", filename)
         commit("diff-test: add v2.1.6")
         commits.append(latest_commit())
@@ -693,7 +694,7 @@ def _use_test_platform(test_platform):
 #
 @pytest.fixture(scope="session")
 def mock_packages_repo():
-    yield spack.repo.from_path(spack.paths.mock_packages_path)
+    yield spack.repo.from_path(paths.mock_packages_path)
 
 
 def _pkg_install_fn(pkg, spec, prefix):
@@ -742,7 +743,7 @@ def mock_packages(mock_packages_repo, mock_pkg_install, request):
 def mutable_mock_repo(mock_packages_repo, request):
     """Function-scoped mock packages, for tests that need to modify them."""
     ensure_configuration_fixture_run_before(request)
-    mock_repo = spack.repo.from_path(spack.paths.mock_packages_path)
+    mock_repo = spack.repo.from_path(paths.mock_packages_path)
     with spack.repo.use_repositories(mock_repo) as mock_packages_repo:
         yield mock_packages_repo
 
@@ -757,7 +758,7 @@ class RepoBuilder:
         namespace = f"test_namespace_{RepoBuilder._counter}"
         repo_root = os.path.join(root_directory, namespace)
         os.makedirs(repo_root, exist_ok=True)
-        self.template_dirs = (os.path.join(spack.paths.share_path, "templates"),)
+        self.template_dirs = (os.path.join(paths.share_path, "templates"),)
         self.root, self.namespace = spack.repo.create_repo(repo_root, namespace)
         self.build_system_name = f"test_build_system_{self.namespace}"
         self._add_build_system()
@@ -856,7 +857,7 @@ def default_config():
 
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
-    defaults_path = os.path.join(spack.paths.etc_path, "defaults")
+    defaults_path = os.path.join(paths.etc_path, "defaults")
     if sys.platform == "win32":
         defaults_path = os.path.join(defaults_path, "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:
@@ -869,7 +870,7 @@ def mock_uarch_json(tmp_path_factory: pytest.TempPathFactory):
     tmpdir = tmp_path_factory.mktemp("microarchitectures")
 
     uarch_json_source = (
-        Path(spack.paths.test_path) / "data" / "microarchitectures" / "microarchitectures.json"
+        Path(paths.test_path) / "data" / "microarchitectures" / "microarchitectures.json"
     )
     uarch_json_dest = tmpdir / "microarchitectures.json"
     shutil.copy2(uarch_json_source, uarch_json_dest)
@@ -913,7 +914,7 @@ def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
 
     # <test_path>/data/config has mock config yaml files in it
     # copy these to the site config.
-    test_config = Path(spack.paths.test_path) / "data" / "config"
+    test_config = Path(paths.test_path) / "data" / "config"
     shutil.copytree(test_config, tmp_path / "site")
 
     # Create temporary 'defaults', 'site' and 'user' folders
@@ -1372,7 +1373,7 @@ def module_configuration(monkeypatch, request, mutable_config):
     # Key for specific settings relative to this module type
     writer_key = str(writer_mod.__name__).split(".")[-1]
     # Root folder for configuration
-    root_for_conf = os.path.join(spack.paths.test_path, "data", "modules", writer_key)
+    root_for_conf = os.path.join(paths.test_path, "data", "modules", writer_key)
 
     # ConfigUpdate, when called, will modify configuration, so we need to use
     # the mutable_config fixture
@@ -1975,7 +1976,7 @@ repo:
     )
 
     shutil.copytree(
-        os.path.join(spack.paths.mock_packages_path, spack.repo.packages_dir_name),
+        os.path.join(paths.mock_packages_path, spack.repo.packages_dir_name),
         os.path.join(str(repodir), spack.repo.packages_dir_name),
     )
 
@@ -2109,7 +2110,7 @@ def noncyclical_dir_structure(tmp_path: Path):
 
 @pytest.fixture(scope="function")
 def mock_config_data():
-    config_data_dir = os.path.join(spack.paths.test_path, "data", "config")
+    config_data_dir = os.path.join(paths.test_path, "data", "config")
     return config_data_dir, os.listdir(config_data_dir)
 
 

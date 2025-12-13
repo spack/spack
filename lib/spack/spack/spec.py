@@ -89,7 +89,7 @@ import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
 import spack.patch
-import spack.paths
+from spack.paths import locations as paths
 import spack.platforms
 import spack.provider_index
 import spack.repo
@@ -4022,7 +4022,7 @@ class Spec:
     @property
     def spack_root(self):
         """Special field for using ``{spack_root}`` in :meth:`format`."""
-        return spack.paths.spack_root
+        return paths.spack_root
 
     @property
     def spack_install(self):

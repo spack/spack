@@ -52,7 +52,7 @@ import spack.error
 import spack.hooks
 import spack.llnl.util.lock
 import spack.llnl.util.tty
-import spack.paths
+import spack.paths_base
 import spack.report
 import spack.spec
 import spack.store
@@ -379,7 +379,7 @@ def worker_function(
     os.environ["MAKEFLAGS"] = makeflags
     spack.store.STORE = store
     spack.config.CONFIG = config
-    spack.paths.set_working_dir()
+    spack.paths_base.set_working_dir()
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)

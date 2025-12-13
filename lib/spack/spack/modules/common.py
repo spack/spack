@@ -42,7 +42,7 @@ import spack.environment
 import spack.error
 import spack.llnl.util.filesystem
 import spack.llnl.util.tty as tty
-import spack.paths
+from spack.paths import locations as paths
 import spack.projections as proj
 import spack.schema
 import spack.schema.environment
@@ -212,7 +212,7 @@ def root_path(name, module_set_name):
     # Root folders where the various module files should be written
     roots = spack.config.get(f"modules:{module_set_name}:roots", {})
 
-    path = roots.get(name, os.path.join(spack.paths.modules_base, name))
+    path = roots.get(name, os.path.join(paths.modules_base, name))
 
     return spack.util.path.canonicalize_path(path)
 

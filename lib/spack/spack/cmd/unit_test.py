@@ -19,7 +19,7 @@ except ImportError:
 import spack.llnl.util.filesystem
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
-import spack.paths
+from spack.paths import locations as paths
 from spack.llnl.util.tty.colify import colify
 
 description = "run spack's unit tests (wrapper around pytest)"
@@ -121,10 +121,10 @@ def do_list(args, extra_args):
     # which doesn't need to wait for pytest collection and doesn't
     # require parsing pytest output
     files = spack.llnl.util.filesystem.find(
-        root=spack.paths.test_path, files="*.py", recursive=True
+        root=paths.test_path, files="*.py", recursive=True
     )
     files = [
-        os.path.relpath(f, start=spack.paths.spack_root)
+        os.path.relpath(f, start=paths.spack_root)
         for f in files
         if not f.endswith(("conftest.py", "__init__.py"))
     ]
@@ -154,7 +154,7 @@ def do_list(args, extra_args):
 
         len_indent = len(indent)
         if os.path.isabs(name):
-            name = os.path.relpath(name, start=spack.paths.spack_root)
+            name = os.path.relpath(name, start=paths.spack_root)
 
         item = (len_indent, name, nodetype)
 
@@ -233,7 +233,7 @@ def unit_test(parser, args, unknown_args):
 
     # The default is to test the core of Spack. If the option `--extension`
     # has been used, then test that extension.
-    pytest_root = spack.paths.spack_root
+    pytest_root = paths.spack_root
     if args.extension:
         pytest_root = spack.extensions.load_extension(args.extension)
 

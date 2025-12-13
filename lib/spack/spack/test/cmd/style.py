@@ -13,14 +13,14 @@ import pytest
 
 import spack.cmd.style
 import spack.main
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 from spack.cmd.style import _run_import_check, changed_files
 from spack.llnl.util.filesystem import FileFilter, working_dir
 from spack.util.executable import which
 
 #: directory with sample style files
-style_data = os.path.join(spack.paths.test_path, "data", "style")
+style_data = os.path.join(paths.test_path, "data", "style")
 
 
 style = spack.main.SpackCommand("style")
@@ -46,9 +46,9 @@ def flake8_package(tmp_path: pathlib.Path):
     change to the ``flake8`` mock package, yields the filename, then undoes the
     change on cleanup.
     """
-    repo = spack.repo.from_path(spack.paths.mock_packages_path)
+    repo = spack.repo.from_path(paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
-    rel_path = os.path.dirname(os.path.relpath(filename, spack.paths.prefix))
+    rel_path = os.path.dirname(os.path.relpath(filename, paths.prefix))
     tmp = tmp_path / rel_path / "flake8-ci-package.py"
     tmp.parent.mkdir(parents=True, exist_ok=True)
     tmp.touch()
@@ -63,7 +63,7 @@ def flake8_package(tmp_path: pathlib.Path):
 @pytest.fixture
 def flake8_package_with_errors(scope="function"):
     """A flake8 package with errors."""
-    repo = spack.repo.from_path(spack.paths.mock_packages_path)
+    repo = spack.repo.from_path(paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
     tmp = filename + ".tmp"
 
@@ -121,7 +121,7 @@ def test_changed_no_base(git, tmp_path: pathlib.Path, capfd):
 def test_changed_files_all_files(mock_packages):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = {
-        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        os.path.join(paths.prefix, os.path.normpath(path))
         for path in changed_files(all_files=True)
     }
 
@@ -136,10 +136,10 @@ def test_changed_files_all_files(mock_packages):
     assert zlib_file in files
 
     # a core spack file
-    assert os.path.join(spack.paths.module_path, "spec.py") in files
+    assert os.path.join(paths.module_path, "spec.py") in files
 
     # a mock package
-    repo = spack.repo.from_path(spack.paths.mock_packages_path)
+    repo = spack.repo.from_path(paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
     assert filename in files
 
@@ -147,7 +147,7 @@ def test_changed_files_all_files(mock_packages):
     assert __file__ in files
 
     # ensure externals are excluded
-    assert not any(f.startswith(spack.paths.vendor_path) for f in files)
+    assert not any(f.startswith(paths.vendor_path) for f in files)
 
 
 def test_bad_root(tmp_path: pathlib.Path):
@@ -256,7 +256,7 @@ def test_external_root(external_style_root):
 
 @pytest.mark.skipif(not FLAKE8, reason="flake8 is not installed.")
 def test_style(flake8_package, tmp_path: pathlib.Path):
-    root_relative = os.path.relpath(flake8_package, spack.paths.prefix)
+    root_relative = os.path.relpath(flake8_package, paths.prefix)
 
     # use a working directory to test cwd-relative paths, as tests run in
     # the spack prefix by default
@@ -282,7 +282,7 @@ def test_style(flake8_package, tmp_path: pathlib.Path):
 
 @pytest.mark.skipif(not FLAKE8, reason="flake8 is not installed.")
 def test_style_with_errors(flake8_package_with_errors):
-    root_relative = os.path.relpath(flake8_package_with_errors, spack.paths.prefix)
+    root_relative = os.path.relpath(flake8_package_with_errors, paths.prefix)
     output = style(
         "--tool", "flake8", "--root-relative", flake8_package_with_errors, fail_on_error=False
     )
@@ -335,7 +335,7 @@ def foo(config: "spack.error.SpackError"):
         fix=False,
         out=output_buf,
         root_relative=False,
-        root=spack.paths.prefix,
+        root=paths.prefix,
         working_dir=root,
     )
     output = output_buf.getvalue()
@@ -356,7 +356,7 @@ def foo(config: "spack.error.SpackError"):
         fix=True,
         out=output_buf,
         root_relative=False,
-        root=spack.paths.prefix,
+        root=paths.prefix,
         working_dir=root,
     )
     output = output_buf.getvalue()
@@ -372,7 +372,7 @@ def foo(config: "spack.error.SpackError"):
         fix=True,
         out=output_buf,
         root_relative=False,
-        root=spack.paths.prefix,
+        root=paths.prefix,
         working_dir=root,
     )
     output = output_buf.getvalue()
@@ -413,8 +413,8 @@ def test_case_sensitive_imports(tmp_path: pathlib.Path):
 
 
 def test_pkg_imports():
-    assert spack.cmd.style._module_part(spack.paths.prefix, "spack.pkg.builtin.boost") is None
-    assert spack.cmd.style._module_part(spack.paths.prefix, "spack.pkg") is None
+    assert spack.cmd.style._module_part(paths.prefix, "spack.pkg.builtin.boost") is None
+    assert spack.cmd.style._module_part(paths.prefix, "spack.pkg") is None
 
 
 def test_spec_strings(tmp_path: pathlib.Path):

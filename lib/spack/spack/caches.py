@@ -11,7 +11,7 @@ import spack.llnl.util.lang
 import spack.util.file_cache
 import spack.util.path
 from spack.llnl.util.filesystem import mkdirp
-
+from spack.paths import locations as paths
 
 def misc_cache_location():
     """The ``MISC_CACHE`` is Spack's cache for small data.
@@ -21,7 +21,7 @@ def misc_cache_location():
     """
     import spack.paths
 
-    path = spack.config.get("config:misc_cache", spack.paths.default_misc_cache_path)
+    path = spack.config.get("config:misc_cache", paths.default_misc_cache_path)
     return spack.util.path.canonicalize_path(path)
 
 
@@ -42,11 +42,9 @@ def fetch_cache_location():
     This prevents Spack from repeatedly fetch the same files when
     building the same package different ways or multiple times.
     """
-    import spack.paths
-
     path = spack.config.get("config:source_cache")
     if not path:
-        path = spack.paths.default_fetch_cache_path
+        path = paths.default_fetch_cache_path
     path = spack.util.path.canonicalize_path(path)
     return path
 

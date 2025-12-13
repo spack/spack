@@ -20,7 +20,7 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.log
 import spack.package_base
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.report
 import spack.spec
@@ -97,7 +97,7 @@ def get_test_stage_dir() -> str:
         absolute path to the configured test stage root or, if none, the default test stage path
     """
     return spack.util.path.canonicalize_path(
-        spack.config.get("config:test_stage", spack.paths.default_test_path)
+        spack.config.get("config:test_stage", paths.default_test_path)
     )
 
 

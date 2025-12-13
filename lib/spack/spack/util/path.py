@@ -62,19 +62,21 @@ def replacements():
 
     arch = architecture()
 
+    paths = spack.paths.locations
+
     return {
         "spack": lambda: spack.paths_base.prefix,
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
-        "user_cache_path": lambda: spack.paths.user_cache_path,
-        "default_install_root": lambda: spack.paths.default_install_location,
-        "default_envs_root": lambda: spack.paths.default_envs_path,
-        "default_download_root": lambda: spack.paths.default_fetch_cache_path,
-        "spack_data_home": lambda: spack.paths.spack_data_home,
-        "spack_cache_home": lambda: spack.paths.spack_cache_home,
-        "spack_state_home": lambda: spack.paths.spack_state_home,
-        "spack_config_home": lambda: spack.paths.spack_config_home,
-        "spack_instance_id": lambda: spack.paths.spack_instance_id,
+        "user_cache_path": lambda: paths.user_cache_path,
+        "default_install_root": lambda: paths.default_install_location,
+        "default_envs_root": lambda: paths.default_envs_path,
+        "default_download_root": lambda: paths.default_fetch_cache_path,
+        "data_home": lambda: paths.spack_data_home,
+        "cache_home": lambda: paths.spack_cache_home,
+        "state_home": lambda: paths.spack_state_home,
+        #"spack_config_home": lambda: paths.spack_config_home,
+        "spack_instance_id": lambda: paths.spack_instance_id,
         "architecture": lambda: arch,
         "arch": lambda: arch,
         "platform": lambda: arch.platform,

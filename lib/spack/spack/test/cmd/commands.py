@@ -15,7 +15,7 @@ import spack.cmd
 import spack.cmd.commands
 import spack.config
 import spack.main
-import spack.paths
+from spack.paths import locations as paths
 from spack.cmd.commands import _dest_to_fish_complete, _positional_to_subroutine
 from spack.util.executable import Executable
 
@@ -24,7 +24,7 @@ def commands(*args: str) -> str:
     """Run `spack commands args...` and return output as a string. It's a separate process so that
     we run through the main Spack command logic and avoid caching issues."""
     python = Executable(sys.executable)
-    return python(spack.paths.spack_script, "commands", *args, output=str)
+    return python(paths.spack_script, "commands", *args, output=str)
 
 
 def test_names():
@@ -290,9 +290,9 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path, mutable_confi
     )
     msg = "\n".join(lines)
 
-    header = os.path.join(spack.paths.share_path, shell, f"spack-completion.{shell}")
+    header = os.path.join(paths.share_path, shell, f"spack-completion.{shell}")
     script = f"spack-completion.{shell}"
-    old_script = os.path.join(spack.paths.share_path, script)
+    old_script = os.path.join(paths.share_path, script)
     new_script = str(tmp_path / script)
 
     commands("--aliases", "--format", shell, "--header", header, "--update", new_script)

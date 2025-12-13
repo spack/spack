@@ -12,7 +12,7 @@ import spack.cmd.clean
 import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.package_base
-import spack.paths
+from spack.paths import locations as paths
 import spack.stage
 import spack.store
 
@@ -101,8 +101,8 @@ def test_remove_python_cache(tmp_path: pathlib.Path, monkeypatch):
 
     # spack.cmd.clean references paths from spack.paths: we want to
     # update them for the duration of this test.
-    monkeypatch.setattr(spack.paths, "lib_path", source_dir)
-    monkeypatch.setattr(spack.paths, "repos_path", repos_dir)
+    monkeypatch.setattr(paths, "lib_path", source_dir)
+    monkeypatch.setattr(paths, "repos_path", repos_dir)
 
     spack.cmd.clean.remove_python_cache()
 

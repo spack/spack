@@ -8,14 +8,14 @@ import pytest
 
 import spack.builder
 import spack.concretize
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 from spack.llnl.util.filesystem import touch
 
 
 @pytest.fixture()
 def builder_test_repository(config):
-    builder_test_path = os.path.join(spack.paths.test_repos_path, "spack_repo", "builder_test")
+    builder_test_path = os.path.join(paths.test_repos_path, "spack_repo", "builder_test")
     with spack.repo.use_repositories(builder_test_path) as mock_repo:
         yield mock_repo
 

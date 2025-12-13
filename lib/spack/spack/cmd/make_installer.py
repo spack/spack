@@ -7,7 +7,7 @@ import posixpath
 import sys
 
 import spack.concretize
-import spack.paths
+from spack.paths import locations as paths
 import spack.util.executable
 from spack.llnl.path import convert_to_posix_path
 
@@ -86,7 +86,7 @@ def make_installer(parser, args):
 
         here = os.path.dirname(os.path.abspath(__file__))
         source_dir = os.path.join(here, "installer")
-        posix_root = convert_to_posix_path(spack.paths.spack_root)
+        posix_root = convert_to_posix_path(paths.spack_root)
         spack_license = posixpath.join(posix_root, "LICENSE-APACHE")
         rtf_spack_license = txt_to_rtf(spack_license)
         spack_license = posixpath.join(source_dir, "LICENSE.rtf")

@@ -15,7 +15,7 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.main
-import spack.paths
+from spack.paths import locations as paths
 import spack.platforms
 import spack.util.executable as exe
 import spack.util.git
@@ -74,7 +74,7 @@ echo {0}
 
 
 def test_get_version_no_repo(tmp_path: pathlib.Path, monkeypatch):
-    monkeypatch.setattr(spack.paths, "prefix", str(tmp_path))
+    monkeypatch.setattr(paths, "prefix", str(tmp_path))
     assert spack.spack_version == spack.get_version()
 
 

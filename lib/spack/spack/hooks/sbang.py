@@ -14,7 +14,7 @@ import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.package_prefs
-import spack.paths
+from spack.paths import locations as paths
 import spack.spec
 import spack.store
 from spack.util.socket import _gethostname
@@ -186,7 +186,7 @@ def install_sbang():
     """
     # copy in a new version of sbang if it differs from what's in spack
     sbang_path = sbang_install_path()
-    if os.path.exists(sbang_path) and filecmp.cmp(spack.paths.sbang_script, sbang_path):
+    if os.path.exists(sbang_path) and filecmp.cmp(paths.sbang_script, sbang_path):
         return
 
     # make $install_tree/bin
@@ -210,7 +210,7 @@ def install_sbang():
 
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(sbang_bin_dir, f".sbang.{_gethostname()}.{os.getpid()}.tmp")
-    shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
+    shutil.copy(paths.sbang_script, sbang_tmp_path)
 
     # set permissions on `sbang` (including group if set in configuration)
     os.chmod(sbang_tmp_path, config_mode)

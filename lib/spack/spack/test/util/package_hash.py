@@ -9,13 +9,13 @@ import pytest
 
 import spack.concretize
 import spack.directives_meta
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.util.package_hash as ph
 from spack.spec import Spec
 from spack.util.unparse import unparse
 
-datadir = os.path.join(spack.paths.test_path, "data", "unparse")
+datadir = os.path.join(paths.test_path, "data", "unparse")
 
 
 def compare_sans_name(eq, spec1, spec2):

@@ -12,7 +12,7 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.llnl.util.filesystem as fs
-import spack.paths
+from spack.paths import locations as paths
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
@@ -229,7 +229,7 @@ def default_log_file(spec):
     the corresponding directory if not present
     """
     basename = spec.format_path("test-{name}-{version}-{hash}.xml")
-    dirname = fs.os.path.join(spack.paths.reports_path, "junit")
+    dirname = fs.os.path.join(paths.reports_path, "junit")
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)
 

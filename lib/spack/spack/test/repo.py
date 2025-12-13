@@ -8,7 +8,7 @@ import pytest
 
 import spack.environment
 import spack.package_base
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.schema.repos
 import spack.spec
@@ -178,7 +178,7 @@ def test_repository_construction_doesnt_use_globals(
         for entry in repos:
             if entry == "mock":
                 descriptors["builtin_mock"] = spack.repo.LocalRepoDescriptor(
-                    "builtin_mock", spack.paths.mock_packages_path
+                    "builtin_mock", paths.mock_packages_path
                 )
             if entry == "extra":
                 repo_dir = tmp_path / "extra_mock"
@@ -210,9 +210,7 @@ def test_path_computation_with_names(method_name, mock_packages_repo):
 
 def test_use_repositories_and_import():
     """Tests that use_repositories changes the import search too"""
-    import spack.paths
-
-    repo_dir = pathlib.Path(spack.paths.test_repos_path)
+    repo_dir = pathlib.Path(paths.test_repos_path)
     with spack.repo.use_repositories(str(repo_dir / "spack_repo" / "compiler_runtime_test")):
         import spack_repo.compiler_runtime_test.packages.gcc_runtime.package  # type: ignore[import]  # noqa: E501
 
@@ -227,7 +225,7 @@ class TestRepo:
     """
 
     def test_creation(self, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.Repo(paths.mock_packages_path, cache=mock_test_cache)
         assert repo.config_file.endswith("repo.yaml")
         assert repo.namespace == "builtin_mock"
 
@@ -235,7 +233,7 @@ class TestRepo:
         "name,expected", [("mpi", True), ("mpich", False), ("mpileaks", False)]
     )
     def test_is_virtual(self, name, expected, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.Repo(paths.mock_packages_path, cache=mock_test_cache)
         assert repo.is_virtual(name) is expected
         assert repo.is_virtual_safe(name) is expected
 
@@ -268,7 +266,7 @@ class TestRepo:
 
     @pytest.mark.parametrize("name", ["mpileaks", "7zip", "dla-future"])
     def test_get(self, name, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.Repo(paths.mock_packages_path, cache=mock_test_cache)
         mock_spec = spack.spec.Spec(name)
         mock_spec._mark_concrete()
         pkg = repo.get(mock_spec)
@@ -276,7 +274,7 @@ class TestRepo:
 
     @pytest.mark.parametrize("virtual_name,expected", [("mpi", ["mpich", "zmpi"])])
     def test_providers(self, virtual_name, expected, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.Repo(paths.mock_packages_path, cache=mock_test_cache)
         provider_names = {x.name for x in repo.providers_for(virtual_name)}
         assert provider_names.issuperset(expected)
 
@@ -285,14 +283,14 @@ class TestRepo:
         [("python", ["py-extension1", "python-venv"]), ("perl", ["perl-extension"])],
     )
     def test_extensions(self, extended, expected, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.Repo(paths.mock_packages_path, cache=mock_test_cache)
         repo_path = spack.repo.RepoPath(repo)
         for instance in (repo, repo_path):
             provider_names = {x.name for x in instance.extensions_for(extended)}
             assert provider_names.issuperset(expected)
 
     def test_all_package_names(self, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.Repo(paths.mock_packages_path, cache=mock_test_cache)
         repo_path = spack.repo.RepoPath(repo)
 
         for instance in (repo, repo_path):
@@ -304,7 +302,7 @@ class TestRepo:
                 assert instance.is_virtual_safe(name)
 
     def test_packages_with_tags(self, mock_test_cache):
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.Repo(paths.mock_packages_path, cache=mock_test_cache)
         repo_path = spack.repo.RepoPath(repo)
 
         for instance in (repo, repo_path):
@@ -322,7 +320,7 @@ class TestRepoPath:
             spack.repo.RepoDescriptors(
                 {
                     "builtin_mock": spack.repo.LocalRepoDescriptor(
-                        "builtin_mock", spack.paths.mock_packages_path
+                        "builtin_mock", paths.mock_packages_path
                     )
                 }
             ),
@@ -336,7 +334,7 @@ class TestRepoPath:
             spack.repo.RepoDescriptors(
                 {
                     "builtin_mock": spack.repo.LocalRepoDescriptor(
-                        "builtin_mock", spack.paths.mock_packages_path
+                        "builtin_mock", paths.mock_packages_path
                     )
                 }
             ),

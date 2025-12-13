@@ -20,7 +20,7 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.package_base
-import spack.paths
+from spack.paths import locations as paths
 import spack.platforms
 import spack.repo
 import spack.schema.compilers
@@ -340,13 +340,13 @@ class MockEnv:
 
 
 def test_substitute_config_variables(mock_low_high_config, monkeypatch):
-    prefix = spack.paths.prefix.lstrip("/")
+    prefix = paths.prefix.lstrip("/")
     assert cross_plat_join(
         os.sep + os.path.join("foo", "bar", "baz"), prefix
     ) == spack_path.canonicalize_path("/foo/bar/baz/$spack")
 
     assert cross_plat_join(
-        spack.paths.prefix, os.path.join("foo", "bar", "baz")
+        paths.prefix, os.path.join("foo", "bar", "baz")
     ) == spack_path.canonicalize_path("$spack/foo/bar/baz/")
 
     assert cross_plat_join(
@@ -358,7 +358,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     ) == spack_path.canonicalize_path("/foo/bar/baz/${spack}")
 
     assert cross_plat_join(
-        spack.paths.prefix, os.path.join("foo", "bar", "baz")
+        paths.prefix, os.path.join("foo", "bar", "baz")
     ) == spack_path.canonicalize_path("${spack}/foo/bar/baz/")
 
     assert cross_plat_join(
@@ -446,7 +446,7 @@ def test_substitute_user(mock_low_high_config):
 
 
 def test_substitute_user_cache(mock_low_high_config):
-    user_cache_path = spack.paths.user_cache_path
+    user_cache_path = paths.user_cache_path
     assert user_cache_path + os.sep + "baz" == spack_path.canonicalize_path(
         os.path.join("$user_cache_path", "baz")
     )
@@ -1149,7 +1149,7 @@ def test_bad_path_double_override(config):
 
 def test_license_dir_config(mutable_config, mock_packages):
     """Ensure license directory is customizable"""
-    expected_dir = spack.paths.default_license_dir
+    expected_dir = paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
     assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == expected_dir
@@ -1720,7 +1720,7 @@ def test_included_path_git_unsat(
 def test_included_path_git(
     tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capfd
 ):
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+    monkeypatch.setattr(paths, "user_cache_path", str(tmp_path))
 
     class MockIncludeGit(spack.util.executable.Executable):
         def __init__(self, required: bool):
@@ -1788,7 +1788,7 @@ def test_included_path_git(
 
 
 def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+    monkeypatch.setattr(paths, "user_cache_path", str(tmp_path))
 
     paths = ["concretizer.yaml"]
     entry = {

@@ -9,7 +9,7 @@ import spack.builder
 import spack.cmd
 import spack.environment as ev
 import spack.llnl.util.tty as tty
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.stage
 from spack.cmd.common import arguments
@@ -93,11 +93,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def location(parser, args):
     if args.module_dir:
-        print(spack.paths.module_path)
+        print(paths.module_path)
         return
 
     if args.spack_root:
-        print(spack.paths.prefix)
+        print(paths.prefix)
         return
 
     # no -e corresponds to False, -e without arg to None, -e name to the string name.

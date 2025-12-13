@@ -43,7 +43,7 @@ import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
-import spack.paths
+from spack.paths import locations as paths
 import spack.platforms
 import spack.relocate as relocate
 import spack.spec
@@ -549,7 +549,7 @@ def get_buildinfo_dict(spec):
     return {
         "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
         "buildpath": spack.store.STORE.layout.root,
-        "spackprefix": spack.paths.prefix,
+        "spackprefix": paths.prefix,
         "relative_prefix": os.path.relpath(spec.prefix, spack.store.STORE.layout.root),
         # "relocate_textfiles": [],
         # "relocate_binaries": [],

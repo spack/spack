@@ -24,7 +24,7 @@ import spack.hash_types as ht
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.schema.env
 import spack.spec
@@ -64,7 +64,7 @@ _active_environment: Optional["Environment"] = None
 _active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
 #: default path where environments are stored in the spack tree
-default_env_path = spack.paths.default_envs_path
+default_env_path = paths.default_envs_path
 
 
 #: Name of the input yaml file for an environment

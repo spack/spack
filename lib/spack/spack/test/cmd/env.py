@@ -28,7 +28,7 @@ import spack.main
 import spack.modules
 import spack.modules.tcl
 import spack.package_base
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.solver.asp
 import spack.spec
@@ -2060,7 +2060,7 @@ def test_env_include_concrete_env_yaml(env_name):
 @pytest.mark.regression("45766")
 @pytest.mark.parametrize("format", ["v1", "v2", "v3"])
 def test_env_include_concrete_old_env(format):
-    lockfile = os.path.join(spack.paths.test_path, "data", "legacy_env", f"{format}.lock")
+    lockfile = os.path.join(paths.test_path, "data", "legacy_env", f"{format}.lock")
     # create an env from old .lock file -- this does not update the format
     env("create", "old-env", lockfile)
     env("create", "--include-concrete", "old-env", "test")
@@ -3941,7 +3941,7 @@ def test_read_old_lock_and_write_new(tmp_path: pathlib.Path, lockfile):
     # the environment, anyway.
     #
     # This test ensures the behavior described above.
-    lockfile_path = os.path.join(spack.paths.test_path, "data", "legacy_env", "%s.lock" % lockfile)
+    lockfile_path = os.path.join(paths.test_path, "data", "legacy_env", "%s.lock" % lockfile)
 
     # read in the JSON from a legacy lockfile
     with open(lockfile_path, encoding="utf-8") as f:
@@ -3992,7 +3992,7 @@ def test_read_v1_lock_creates_backup(tmp_path: pathlib.Path):
     """When reading a version-1 lockfile, make sure that a backup of that file
     is created.
     """
-    v1_lockfile_path = pathlib.Path(spack.paths.test_path) / "data" / "legacy_env" / "v1.lock"
+    v1_lockfile_path = pathlib.Path(paths.test_path) / "data" / "legacy_env" / "v1.lock"
     test_lockfile_path = tmp_path / "init" / ev.lockfile_name
     test_lockfile_path.parent.mkdir(parents=True, exist_ok=False)
     shutil.copy(v1_lockfile_path, test_lockfile_path)
@@ -4015,7 +4015,7 @@ def test_read_legacy_lockfile_and_reconcretize(
     # After reconcretization with the *new*, finer-grained DAG hash, there should no
     # longer be conflicts, and the previously conflicting specs can coexist in the
     # same environment.
-    test_path = pathlib.Path(spack.paths.test_path)
+    test_path = pathlib.Path(paths.test_path)
     lockfile_content = test_path / "data" / "legacy_env" / f"{lockfile}.lock"
     legacy_lockfile_path = tmp_path / ev.lockfile_name
     shutil.copy(lockfile_content, legacy_lockfile_path)

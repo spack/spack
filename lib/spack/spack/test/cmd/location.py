@@ -10,7 +10,7 @@ import pytest
 import spack.concretize
 import spack.environment as ev
 import spack.main
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.stage
 from spack.llnl.util.filesystem import mkdirp
@@ -123,9 +123,9 @@ def test_location_package_dir(mock_spec):
 @pytest.mark.parametrize(
     "option,expected",
     [
-        ("--module-dir", spack.paths.module_path),
-        ("--packages", spack.paths.mock_packages_path),
-        ("--spack-root", spack.paths.prefix),
+        ("--module-dir", paths.module_path),
+        ("--packages", paths.mock_packages_path),
+        ("--spack-root", paths.prefix),
     ],
 )
 def test_location_paths_options(option, expected):
@@ -159,8 +159,8 @@ def test_location_stages(mock_spec):
 def test_location_specified_repo():
     """Tests spack location --repo <repo>."""
     with spack.repo.use_repositories(
-        os.path.join(spack.paths.test_repos_path, "spack_repo", "builtin_mock"),
-        os.path.join(spack.paths.test_repos_path, "spack_repo", "builder_test"),
+        os.path.join(paths.test_repos_path, "spack_repo", "builtin_mock"),
+        os.path.join(paths.test_repos_path, "spack_repo", "builder_test"),
     ):
         assert location("--repo").strip() == spack.repo.PATH.get_repo("builtin_mock").root
         assert (

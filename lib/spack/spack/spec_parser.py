@@ -67,7 +67,7 @@ from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Union
 import spack.config
 import spack.deptypes
 import spack.error
-import spack.paths
+from spack.paths import locations as paths
 import spack.util.spack_yaml
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
@@ -253,7 +253,7 @@ def _warn_about_variant_after_compiler(literal_str: str, issues: List[str]):
     """Issue a warning if variant or other token is preceded by a compiler token. The warning is
     only issued if it's actionable: either we know the config file it originates from, or we have
     call site that's not internal to Spack."""
-    ignore = [spack.paths.lib_path, spack.paths.bin_path]
+    ignore = [paths.lib_path, paths.bin_path]
     mark = spack.util.spack_yaml.get_mark_from_yaml_data(literal_str)
     issue_str = ", ".join(issues)
     error = f"{issue_str} in `{literal_str}`"

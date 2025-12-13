@@ -11,7 +11,7 @@ import spack.deptypes as dt
 import spack.directives
 import spack.error
 import spack.llnl.util.lang
-import spack.paths
+from spack.paths import locations as paths
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
@@ -926,7 +926,7 @@ class TestSpecSemantics:
         ]
 
         other_segments = [
-            ("{spack_root}", spack.paths.spack_root),
+            ("{spack_root}", paths.spack_root),
             ("{spack_install}", spack.store.STORE.layout.root),
         ]
 

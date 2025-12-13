@@ -10,7 +10,7 @@ from typing import Optional, Union
 
 import spack.cmd
 import spack.llnl.util.tty as tty
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.util.editor
 
@@ -38,7 +38,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--command",
         dest="path",
         action="store_const",
-        const=spack.paths.command_path,
+        const=paths.command_path,
         help="edit the command with the supplied name",
     )
     excl_args.add_argument(
@@ -46,7 +46,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--docs",
         dest="path",
         action="store_const",
-        const=os.path.join(spack.paths.lib_path, "docs"),
+        const=os.path.join(paths.lib_path, "docs"),
         help="edit the docs with the supplied name",
     )
     excl_args.add_argument(
@@ -54,7 +54,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--test",
         dest="path",
         action="store_const",
-        const=spack.paths.test_path,
+        const=paths.test_path,
         help="edit the test with the supplied name",
     )
     excl_args.add_argument(
@@ -62,7 +62,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--module",
         dest="path",
         action="store_const",
-        const=spack.paths.module_path,
+        const=paths.module_path,
         help="edit the main spack module with the supplied name",
     )
 
@@ -117,7 +117,7 @@ def locate_build_system(name: str, repo: Optional[spack.repo.Repo]) -> str:
 
 def locate_file(name: str, path: str) -> str:
     # convert command names to python module name
-    if path == spack.paths.command_path:
+    if path == paths.command_path:
         name = spack.cmd.python_name(name)
 
     file_path = os.path.join(path, name)

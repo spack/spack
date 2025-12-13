@@ -11,7 +11,7 @@ from typing import Any, Dict, Generator, MutableSequence, Sequence
 import spack.config
 import spack.environment
 import spack.modules
-import spack.paths
+from spack.paths import locations as paths
 import spack.platforms
 import spack.repo
 import spack.store
@@ -43,7 +43,7 @@ def spec_for_current_python() -> str:
 def root_path() -> str:
     """Root of all the bootstrap related folders"""
     return spack.util.path.canonicalize_path(
-        spack.config.get("bootstrap:root", spack.paths.default_user_bootstrap_path)
+        spack.config.get("bootstrap:root", paths.default_user_bootstrap_path)
     )
 
 

@@ -10,7 +10,7 @@ import pytest
 import spack.cmd
 import spack.cmd.pkg
 import spack.main
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo
 import spack.util.executable
 import spack.util.file_cache
@@ -43,7 +43,7 @@ def _builtin_mock_copy(
     # create spack_repo subdir
     (root_dir / "spack_repo").mkdir()
     repo_dir = root_dir / "spack_repo" / "builtin_mock"
-    shutil.copytree(spack.paths.mock_packages_path, str(repo_dir))
+    shutil.copytree(paths.mock_packages_path, str(repo_dir))
 
     repo_cache = spack.util.file_cache.FileCache(root_dir / "cache")
     mock_repo = spack.repo.Repo(str(repo_dir), cache=repo_cache)

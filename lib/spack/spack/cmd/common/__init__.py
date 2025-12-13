@@ -4,7 +4,7 @@
 
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
-import spack.paths
+import spack.paths_base
 
 
 def shell_init_instructions(cmd, equivalent):
@@ -25,19 +25,19 @@ def shell_init_instructions(cmd, equivalent):
         "To set up shell support, run the command below for your shell.",
         "",
         color.colorize("@*c{For bash/zsh/sh:}"),
-        "  . %s/setup-env.sh" % spack.paths.share_path,
+        "  . %s/setup-env.sh" % spack.paths_base.share_path,
         "",
         color.colorize("@*c{For csh/tcsh:}"),
-        "  source %s/setup-env.csh" % spack.paths.share_path,
+        "  source %s/setup-env.csh" % spack.paths_base.share_path,
         "",
         color.colorize("@*c{For fish:}"),
-        "  source %s/setup-env.fish" % spack.paths.share_path,
+        "  source %s/setup-env.fish" % spack.paths_base.share_path,
         "",
         color.colorize("@*c{For Windows batch:}"),
-        "  %s\\spack_cmd.bat" % spack.paths.bin_path,
+        "  %s\\spack_cmd.bat" % spack.paths_base.bin_path,
         "",
         color.colorize("@*c{For PowerShell:}"),
-        "  %s\\setup-env.ps1" % spack.paths.share_path,
+        "  %s\\setup-env.ps1" % spack.paths_base.share_path,
         "",
         "Or, if you do not want to use shell support, run "
         + ("one of these" if shell_specific else "this")

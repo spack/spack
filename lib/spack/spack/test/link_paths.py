@@ -8,18 +8,18 @@ import sys
 import pytest
 
 import spack.compilers.libraries
-import spack.paths
+from spack.paths import locations as paths
 from spack.compilers.libraries import parse_non_system_link_dirs
 
 drive = ""
 if sys.platform == "win32":
-    match = re.search(r"[A-Za-z]:", spack.paths.test_path)
+    match = re.search(r"[A-Za-z]:", paths.test_path)
     if match:
         drive = match.group()
 root = drive + os.sep
 
 #: directory with sample compiler data
-datadir = os.path.join(spack.paths.test_path, "data", "compiler_verbose_output")
+datadir = os.path.join(paths.test_path, "data", "compiler_verbose_output")
 
 
 @pytest.fixture(autouse=True)

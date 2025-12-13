@@ -10,7 +10,7 @@ from collections import defaultdict
 from typing import Dict, Generator
 
 import spack.llnl.util.tty as tty
-import spack.paths
+from spack.paths import locations as paths
 
 description = "list and check license headers on files in spack"
 section = "query"
@@ -62,7 +62,7 @@ licensed_files_patterns = [
 ]
 
 
-def _licensed_files(root: str = spack.paths.prefix) -> Generator[str, None, None]:
+def _licensed_files(root: str = paths.prefix) -> Generator[str, None, None]:
     """Generates paths of licensed files."""
     licensed_files = re.compile("|".join(f"(?:{pattern})" for pattern in licensed_files_patterns))
     dirs = [
@@ -85,7 +85,7 @@ def _licensed_files(root: str = spack.paths.prefix) -> Generator[str, None, None
 def list_files(args):
     """list files in spack that should have license headers"""
     for relpath in sorted(_licensed_files(args.root)):
-        print(os.path.join(spack.paths.spack_root, relpath))
+        print(os.path.join(paths.spack_root, relpath))
 
 
 # Error codes for license verification. All values are chosen such that
@@ -190,7 +190,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--root",
         action="store",
-        default=spack.paths.prefix,
+        default=paths.prefix,
         help="scan a different prefix for license issues",
     )
 

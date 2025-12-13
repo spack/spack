@@ -8,7 +8,7 @@ import re
 
 import pytest
 
-import spack.paths
+from spack.paths import locations as paths
 from spack.llnl.util.filesystem import mkdirp, touch
 from spack.main import SpackCommand
 
@@ -19,8 +19,8 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 def test_list_files():
     files = license("list-files").strip().split("\n")
-    assert all(f.startswith(spack.paths.prefix) for f in files)
-    assert os.path.join(spack.paths.bin_path, "spack") in files
+    assert all(f.startswith(paths.prefix) for f in files)
+    assert os.path.join(paths.bin_path, "spack") in files
     assert os.path.abspath(__file__) in files
 
 
