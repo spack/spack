@@ -955,24 +955,25 @@ class GitFetchStrategy(VCSFetchStrategy):
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         depth = None if self.get_full_repo else 1
-        name = self.package.name if self.package else "spack-clone"
+        name = self.package.name if self.package else None
         checkout_ref = self.commit or self.tag or self.branch
         fetch_ref = self.tag or self.branch
 
         kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
 
         with temp_cwd(ignore_cleanup_errors=True):
-            if self.commit:
+            if self.commit and name:
                 try:
                     spack.util.git.git_init_fetch(self.url, self.commit, depth, **kwargs)
                 except spack.util.executable.ProcessError:
                     spack.util.git.git_clone(self.url, fetch_ref, True, depth, **kwargs)
             else:
                 spack.util.git.git_clone(self.url, fetch_ref, self.get_full_repo, depth, **kwargs)
+            repo_name = get_single_file(".")
+            kwargs["dest"] = repo_name
             if not self.skip_checkout:
                 spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
 
-            repo_name = get_single_file(".")
             if self.stage:
                 self.stage.srcdir = repo_name
             shutil.copytree(repo_name, dest, symlinks=True)
