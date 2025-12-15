@@ -30,7 +30,7 @@ from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.llnl.util import filesystem as fs
 from spack.llnl.util.filesystem import readlink, symlink
-from spack.paths import mock_gpg_keys_path
+from spack.paths import locations as paths
 from spack.relocate import _macho_find_paths, relocate_links, relocate_text
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
@@ -109,7 +109,7 @@ def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_c
         buildcache.buildcache(parser, args)
 
         # Copy a key to the mirror to have something to download
-        shutil.copyfile(mock_gpg_keys_path + "/external.key", mirror_path + "/external.key")
+        shutil.copyfile(paths.mock_gpg_keys_path + "/external.key", mirror_path + "/external.key")
 
         args = parser.parse_args(["keys"])
         buildcache.buildcache(parser, args)

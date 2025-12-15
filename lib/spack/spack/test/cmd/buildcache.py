@@ -27,7 +27,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import copy_tree, find
-from spack.paths import test_path
+from spack.paths import locations as paths
 from spack.url_buildcache import (
     BuildcacheComponent,
     URLBuildcacheEntry,
@@ -538,7 +538,7 @@ def test_push_without_build_deps(
 @pytest.fixture(scope="function")
 def v2_buildcache_layout(tmp_path: pathlib.Path):
     def _layout(signedness: str = "signed"):
-        source_path = str(pathlib.Path(test_path) / "data" / "mirrors" / "v2_layout" / signedness)
+        source_path = str(pathlib.Path(paths.test_path) / "data" / "mirrors" / "v2_layout" / signedness)
         test_mirror_path = tmp_path / "mirror"
         copy_tree(source_path, test_mirror_path)
         return test_mirror_path

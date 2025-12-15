@@ -14,7 +14,7 @@ from contextlib import contextmanager
 import pytest
 
 import spack.llnl.util.filesystem as fs
-from spack.paths import locations as paths
+from spack.paths import locations as spack_paths
 
 
 @pytest.fixture()
@@ -504,7 +504,7 @@ def test_filter_files_with_different_encodings(
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
     # that there's at least one match for the regex
-    original_file = os.path.join(paths.test_path, "data", "filter_file", filename)
+    original_file = os.path.join(spack_paths.test_path, "data", "filter_file", filename)
     target_file = os.path.join(str(tmp_path), filename)
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
@@ -552,7 +552,7 @@ def test_filter_files_multiple(tmp_path: pathlib.Path):
     # All files given as input to this test must satisfy the pre-requisite
     # that the 'replacement' string is not present in the file initially and
     # that there's at least one match for the regex
-    original_file = os.path.join(paths.test_path, "data", "filter_file", "x86_cpuid_info.c")
+    original_file = os.path.join(spack_paths.test_path, "data", "filter_file", "x86_cpuid_info.c")
     target_file = os.path.join(str(tmp_path), "x86_cpuid_info.c")
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
@@ -567,7 +567,7 @@ def test_filter_files_multiple(tmp_path: pathlib.Path):
 
 
 def test_filter_files_start_stop(tmp_path: pathlib.Path):
-    original_file = os.path.join(paths.test_path, "data", "filter_file", "start_stop.txt")
+    original_file = os.path.join(spack_paths.test_path, "data", "filter_file", "start_stop.txt")
     target_file = os.path.join(str(tmp_path), "start_stop.txt")
     shutil.copy(original_file, target_file)
     # None of the following should happen:

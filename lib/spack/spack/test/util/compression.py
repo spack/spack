@@ -13,11 +13,11 @@ import pytest
 
 import spack.llnl.url
 from spack.llnl.util.filesystem import working_dir
-from spack.paths import spack_root
+from spack.paths import locations as paths
 from spack.util import compression
 from spack.util.executable import CommandNotFoundError
 
-datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data", "compression")
+datadir = os.path.join(paths.spack_root, "lib", "spack", "spack", "test", "data", "compression")
 
 ext_archive = {
     ext: f"Foo.{ext}" for ext in spack.llnl.url.ALLOWED_ARCHIVE_TYPES if "TAR" not in ext
