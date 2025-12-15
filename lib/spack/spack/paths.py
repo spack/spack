@@ -129,7 +129,14 @@ class SpackPaths:
     @property
     def user_repos_cache_path(self):
         #: git repositories fetched to compare commits to versions
+        if hasattr(self, "_user_repos_cache_path"):
+            return self._user_repos_cache_path
         return os.path.join(self.state_home, "git_repos")
+
+    @user_repos_cache_path.setter
+    def user_repos_cache_path(self, val):
+        # setter for tests
+        self._user_repos_cache_path = val
 
     @property
     def package_repos_path(self):
