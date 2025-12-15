@@ -257,7 +257,7 @@ class LuaPackageTemplate(PackageTemplate):
 
 class MesonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for meson-based packages"""
- 
+
     base_class_name = "MesonPackage"
     package_class_import = "from spack_repo.builtin.build_systems.meson import MesonPackage"
 

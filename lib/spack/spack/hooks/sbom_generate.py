@@ -1,7 +1,6 @@
 import hashlib
 import os
 import time
-import spack
 
 import spack.util.spack_json as sjson
 from spack.llnl.util import tty
@@ -35,10 +34,10 @@ def post_install(spec, explicit=None):
         if isinstance(lic, dict):
             lic = list(lic.values())[0] if lic else "NOASSERTION"
         return lic
-    
+
     # Get the supplier
     # Either explicitly labeled by the package creator, ..
-    # TODO fill all the docs for the methods 
+    # TODO fill all the docs for the methods
     def get_supplier(pkg):
         supplier = getattr(pkg, "supplier", None)
         if supplier:
@@ -62,18 +61,18 @@ def post_install(spec, explicit=None):
 
         return "NOASSERTION"
 
-    
     # Document information
     t = time.gmtime()
     created_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", t)
 
     # Create path and dir for sbom
-    sbom_path = os.path.join(spack.store.STORE.layout.metadata_path(spec), "sbom.json")
+    sbom_path = os.path.join(STORE.layout.metadata_path(spec), "sbom.json")
     os.makedirs(os.path.dirname(sbom_path), exist_ok=True)
 
     unique_str = f"{spec.name}-{spec.version}-{spec.dag_hash()}"
     unique_hash = hashlib.sha256(unique_str.encode("utf-8")).hexdigest()
-    document_namespace = f"https://spack.io/sbom/unique-str"
+    document_namespace = f"https://spack.io/sbom/{unique_hash}"
+    # document_namespace = f"https://spack.io/sbom/unique-str"
 
     # Package entry for each installation.
     # Represents the top-level component in the SBOM (the package being installed).
@@ -132,7 +131,10 @@ def post_install(spec, explicit=None):
         "dataLicense": "CC0-1.0",
         "SPDXID": f"SPDXRef-DOCUMENT-{spec.name}-{str(spec.version)}",
         "documentNamespace": document_namespace,
-        "creationInfo": {"created": created_time, "creators": ["Organization: Spack Project", "Tool: Spack"]},
+        "creationInfo": {
+            "created": created_time,
+            "creators": ["Organization: Spack Project", "Tool: Spack"],
+        },
         "name": unique_str,
         "packages": [pkg_entry] + deps,
         "relationships": relationships,
