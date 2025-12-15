@@ -1,9 +1,11 @@
 import hashlib
 import os
 import time
+import spack
 
 import spack.util.spack_json as sjson
 from spack.llnl.util import tty
+from spack.store import STORE
 
 """Generate a Software Bill of Materials (SBOM) for each successful Spack installation."""
 
@@ -66,7 +68,7 @@ def post_install(spec, explicit=None):
     created_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", t)
 
     # Create path and dir for sbom
-    sbom_path = os.path.join(spec.prefix, "sbom.json")
+    sbom_path = os.path.join(spack.store.STORE.layout.metadata_path(spec), "sbom.json")
     os.makedirs(os.path.dirname(sbom_path), exist_ok=True)
 
     unique_str = f"{spec.name}-{spec.version}-{spec.dag_hash()}"
