@@ -135,13 +135,13 @@ def test_path_debug_padded_filter(debug, monkeypatch):
         assert expected == sup.debug_padded_filter(string)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Unix path")
+@pytest.mark.not_on_windows("Unix path")
 def test_canonicalize_file_unix():
     assert sup.canonicalize_path("/home/spack/path/to/file.txt") == "/home/spack/path/to/file.txt"
     assert sup.canonicalize_path("file:///home/another/config.yaml") == "/home/another/config.yaml"
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows path")
+@pytest.mark.only_windows("Windows path")
 def test_canonicalize_file_windows():
     assert sup.canonicalize_path(r"C:\Files (x86)\Windows\10") == r"C:\Files (x86)\Windows\10"
     assert sup.canonicalize_path(r"E:/spack stage") == r"E:\spack stage"

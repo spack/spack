@@ -28,7 +28,7 @@ def test_rfc_local_path_bad_scheme(path, err):
         _ = rfc_util.local_path(path, "")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Unix path")
+@pytest.mark.not_on_windows("Unix path")
 def test_rfc_local_file_unix():
     assert rfc_util.local_path("/a/b/c/d/e/config.py", "") == "/a/b/c/d/e/config.py"
     assert (
@@ -37,7 +37,7 @@ def test_rfc_local_file_unix():
     )
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows path")
+@pytest.mark.only_windows("Windows path")
 def test_rfc_local_file_windows():
     assert rfc_util.local_path(r"C:\Files (x86)\Windows\10", "") == r"C:\Files (x86)\Windows\10"
     assert rfc_util.local_path(r"D:/spack stage", "") == r"D:\spack stage"
