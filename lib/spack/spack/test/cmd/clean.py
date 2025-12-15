@@ -14,7 +14,6 @@ import spack.main
 import spack.package_base
 import spack.stage
 import spack.store
-from spack.paths import locations as paths
 
 clean = spack.main.SpackCommand("clean")
 

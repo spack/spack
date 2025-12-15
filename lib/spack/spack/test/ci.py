@@ -14,7 +14,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
-import spack.paths
+from spack.paths import locations as paths
 import spack.repo as repo
 import spack.util.git
 from spack.spec import Spec
@@ -267,7 +267,7 @@ def test_setup_spack_repro_version(
     spack_dir = repro_dir / "spack"
     spack_dir.mkdir(parents=True)
 
-    prefix_save = spack.paths.locations.prefix
+    prefix_save = paths.prefix
     override_path("prefix", "/garbage")
 
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)

@@ -19,7 +19,6 @@ import spack.platforms
 import spack.util.executable as exe
 import spack.util.git
 import spack.util.spack_yaml as syaml
-from spack.paths import locations as paths
 
 pytestmark = pytest.mark.not_on_windows(
     "Test functionality supported but tests are failing on Win"

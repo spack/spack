@@ -11,9 +11,7 @@ dependencies.
 import itertools
 import os
 import pathlib
-from collections import namedtuple
 from enum import Enum
-from pathlib import PurePath
 
 import spack.config as config
 import spack.paths_base as paths_base
