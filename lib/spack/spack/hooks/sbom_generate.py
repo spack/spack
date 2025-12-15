@@ -1,3 +1,8 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+"""Generate a Software Bill of Materials (SBOM) for each successful Spack installation."""
+
 import hashlib
 import os
 import time
@@ -5,8 +10,6 @@ import time
 import spack.util.spack_json as sjson
 from spack.llnl.util import tty
 from spack.store import STORE
-
-"""Generate a Software Bill of Materials (SBOM) for each successful Spack installation."""
 
 
 # SPDX 2.3 Generation
@@ -142,6 +145,6 @@ def post_install(spec, explicit=None):
     print("sbom:", sbom)
 
     # Write to SBOM file
-    with open(sbom_path, "w") as f:
+    with open(sbom_path, "w", encoding="utf-8") as f:
         sjson.dump(sbom, f)
     tty.msg(f"[SBOM] Wrote SPDX 2.3 SBOM to {sbom_path}")
