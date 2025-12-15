@@ -299,6 +299,23 @@ error(100, multiple_values_error, Attribute, Package)
 % Version semantics
 %-----------------------------------------------------------------------------
 
+% Versions are declared with a weight and an origin, which indicates where the
+% version was declared (e.g. "package_py" or "external").
+pkg_fact(Package, version_declared(Version, Weight)) :- pkg_fact(Package, version_declared(Version, Weight, _)).
+
+% We can't emit the same version **with the same weight** from two different sources
+:- pkg_fact(Package, version_declared(Version, Weight, Origin1)),
+   pkg_fact(Package, version_declared(Version, Weight, Origin2)),
+   Origin1 < Origin2,
+   internal_error("Two versions with identical weights").
+
+% We cannot use a version declared for an installed package if we end up building it
+:- pkg_fact(Package, version_declared(Version, Weight, "installed")),
+   attr("version", node(ID, Package), Version),
+   version_weight(node(ID, Package), Weight),
+   not attr("hash", node(ID, Package), _),
+   internal_error("Reuse version weight used for built package").
+
 % versions are declared w/priority -- declared with priority implies declared
 pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declared(Version, _)).
 
@@ -336,23 +353,22 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
+:- attr("version", node(ID, Package), Version),
+   version_weight(node(ID, Package), Weight),
+   pkg_fact(Package, version_declared(Version, Weight, "installed")),
+   build(node(ID, Package)),
+   internal_error("Reuse version weight used for build package").
 
-1 { allowed_origins(Origin): pkg_fact(Package, version_origin(Version, Origin)),
-    Origin != "installed"}
-  :- attr("version", node(ID, Package), Version),
-     build(node(ID, Package)).
-
-% We cannot use a version declared for an installed package if we end up building it
-:- not pkg_fact(Package, version_origin(Version, "installed")),
-   not pkg_fact(Package, version_origin(Version, "installed_git_version")),
-   attr("version", node(ID, Package), Version),
+:- attr("version", node(ID, Package), Version),
+   version_weight(node(ID, Package), Weight),
+   not pkg_fact(Package, version_declared(Version, Weight, "installed")),
+   not pkg_fact(Package, version_declared(Version, Weight, "installed_git_version")),
    concrete(node(ID, Package)),
-   internal_error("Reuse version weight used for built package").
+   internal_error("Build version weight used for reused package").
 
-version_weight(node(ID, Package), Weight)
+1 { version_weight(node(ID, Package), Weight) : pkg_fact(Package, version_declared(Version, Weight)) } 1
   :- attr("version", node(ID, Package), Version),
      attr("node", node(ID, Package)),
-     pkg_fact(Package, version_declared(Version, Weight)),
      internal_error("version weights must exist and be unique").
 
 % More specific error message if the version cannot satisfy some constraint
@@ -2017,6 +2033,23 @@ treat_node_as_concrete(node(X, Package)) :- attr("node", node(X, Package)), runt
 build_priority(PackageNode, 200) :- build(PackageNode), attr("node", PackageNode), not treat_node_as_concrete(PackageNode).
 build_priority(PackageNode, 0)   :- build(PackageNode), attr("node", PackageNode), treat_node_as_concrete(PackageNode).
 build_priority(PackageNode, 0)   :- concrete(PackageNode), attr("node", PackageNode).
+
+% don't assign versions from installed packages unless reuse is enabled
+% NOTE: that "installed" means the declared version was only included because
+% that package happens to be installed, NOT because it was asked for on the
+% command line.  If the user specifies a hash, the origin will be "spec".
+%
+% TODO: There's a slight inconsistency with this: if the user concretizes
+% and installs `foo ^bar`, for some build dependency `bar`, and then later
+% does a `spack install --fresh foo ^bar/abcde` (i.e.,the hash of `bar`, it
+% currently *won't* force versions for `bar`'s build dependencies -- `--fresh`
+% will instead build the latest bar. When we actually include transitive
+% build deps in the solve, consider using them as a preference to resolve this.
+:- attr("version", node(ID, Package), Version),
+   version_weight(node(ID, Package), Weight),
+   pkg_fact(Package, version_declared(Version, Weight, "installed")),
+   not optimize_for_reuse().
+
 
 % This statement, which is a hidden feature of clingo, let us avoid cycles in the DAG
 #edge (A, B) : depends_on(A, B).
