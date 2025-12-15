@@ -2597,7 +2597,8 @@ def sort_by_pkg_preference(
     """Sorts the list of versions passed in input according to the preferences in the package. The
     return value does not contain duplicate versions. Most preferred versions first.
     """
-    s = [(v, pkg.versions.get(v, {})) for v in dedupe(versions)]
+    # For safety, consider versions we don't know about as "deprecated"
+    s = [(v, pkg.versions.get(v, {"deprecated": True})) for v in dedupe(versions)]
     return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
 
 

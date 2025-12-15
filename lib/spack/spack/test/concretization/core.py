@@ -1410,7 +1410,7 @@ spack:
             # This external package is buildable, has a custom version
             # in packages.yaml that is greater than the ones in package.py
             # and specifies a variant
-            ("external-buildable-with-variant +baz", True, "@1.1.special +baz"),
+            ("external-buildable-with-variant@1: +baz", True, "@1.1.special +baz"),
             ("external-buildable-with-variant ~baz", False, "@1.0 ~baz"),
             ("external-buildable-with-variant@1.0: ~baz", False, "@1.0 ~baz"),
             # This uses an external version that meets the condition for
@@ -2025,7 +2025,7 @@ spack:
                 else:
                     weights["built"] = x.value
 
-            assert weights["reused"] == 1 and weights["built"] == 0
+            assert weights["reused"] == 3 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
