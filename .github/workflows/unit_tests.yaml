@@ -222,16 +222,14 @@ jobs:
         sudo killall PerfPowerServices || true
     - name: Run unit tests
       env:
-        SPACK_TEST_PARALLEL: 4
         COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
       run: |
         git --version
         . .github/workflows/bin/setup_git.sh
         . share/spack/setup-env.sh
-        $(which spack) bootstrap disable spack-install
-        $(which spack) solve zlib
-        common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
-        $(which spack) unit-test --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
+        spack bootstrap disable spack-install
+        spack solve zlib
+        python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist loadfile -x -n4
     - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
