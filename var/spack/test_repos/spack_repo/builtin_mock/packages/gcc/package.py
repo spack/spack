@@ -20,6 +20,9 @@ class Gcc(CompilerPackage, Package):
     version("2.0", md5="abcdef0123456789abcdef0123456789")
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
+    with default_args(deprecated=True):
+        version("12.4.0", md5="abcdef0123456789abcdef0123456789")
+
     variant(
         "languages",
         default="c,c++,fortran",
