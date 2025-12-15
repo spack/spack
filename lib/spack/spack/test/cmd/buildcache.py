@@ -538,7 +538,9 @@ def test_push_without_build_deps(
 @pytest.fixture(scope="function")
 def v2_buildcache_layout(tmp_path: pathlib.Path):
     def _layout(signedness: str = "signed"):
-        source_path = str(pathlib.Path(paths.test_path) / "data" / "mirrors" / "v2_layout" / signedness)
+        source_path = str(
+            pathlib.Path(paths.test_path) / "data" / "mirrors" / "v2_layout" / signedness
+        )
         test_mirror_path = tmp_path / "mirror"
         copy_tree(source_path, test_mirror_path)
         return test_mirror_path

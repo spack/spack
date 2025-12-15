@@ -260,8 +260,7 @@ def test_ci_copy_test_logs_to_artifacts_fail(tmp_path: pathlib.Path, capfd):
 
 
 def test_setup_spack_repro_version(
-    tmp_path: pathlib.Path, capfd, last_two_git_commits, monkeypatch,
-    override_path
+    tmp_path: pathlib.Path, capfd, last_two_git_commits, monkeypatch, override_path
 ):
     c1, c2 = last_two_git_commits
     repro_dir = tmp_path / "repro"
