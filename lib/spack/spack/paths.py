@@ -215,3 +215,5 @@ class SpackPaths:
 
 
 locations = SpackPaths(paths_base.locations)
+
+spack_script = locations.spack_script
