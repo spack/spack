@@ -16,7 +16,7 @@ import spack.fetch_strategy
 import spack.package
 import spack.package_base
 import spack.repo
-from spack.paths import mock_packages_path
+from spack.paths import locations as paths
 from spack.spec import Spec
 from spack.util.naming import pkg_name_to_class_name
 from spack.version import VersionChecksumError
@@ -46,15 +46,17 @@ class TestPackage:
         assert pkg_cls.name == "mpich"
 
     def test_package_filename(self):
-        repo = spack.repo.from_path(mock_packages_path)
+        repo = spack.repo.from_path(paths.mock_packages_path)
         filename = repo.filename_for_package_name("mpich")
-        assert filename == os.path.join(mock_packages_path, "packages", "mpich", "package.py")
+        assert filename == os.path.join(
+            paths.mock_packages_path, "packages", "mpich", "package.py"
+        )
 
     def test_nonexisting_package_filename(self):
-        repo = spack.repo.from_path(mock_packages_path)
+        repo = spack.repo.from_path(paths.mock_packages_path)
         filename = repo.filename_for_package_name("some-nonexisting-package")
         assert filename == os.path.join(
-            mock_packages_path, "packages", "some_nonexisting_package", "package.py"
+            paths.mock_packages_path, "packages", "some_nonexisting_package", "package.py"
         )
 
     def test_package_class_names(self):
