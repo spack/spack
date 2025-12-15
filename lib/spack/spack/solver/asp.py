@@ -1513,9 +1513,13 @@ class SpackSolverSetup:
         )
         # Account for preferences in packages.yaml, if any
         if pkg.name in self.versions_from_yaml:
-            ordered_versions = spack.llnl.util.lang.dedupe(
-                self.versions_from_yaml[pkg.name] + ordered_versions
+            ordered_versions = list(
+                spack.llnl.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
             )
+
+        # Set the deprecation penalty, according to the package. This should be enough to move the
+        # first version last if deprecated.
+        self.gen.fact(fn.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions))))
 
         for weight, declared_version in enumerate(ordered_versions):
             self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))

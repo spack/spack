@@ -2597,8 +2597,7 @@ def sort_by_pkg_preference(
     """Sorts the list of versions passed in input according to the preferences in the package. The
     return value does not contain duplicate versions. Most preferred versions first.
     """
-    # For safety, consider versions we don't know about as "deprecated"
-    s = [(v, pkg.versions.get(v, {"deprecated": True})) for v in dedupe(versions)]
+    s = [(v, pkg.versions.get(v, {})) for v in dedupe(versions)]
     return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
 
 
@@ -2609,7 +2608,6 @@ def concretization_version_order(version_info: Tuple[Union[GitVersion, StandardV
     version, info = version_info
     return (
         info.get("preferred", False),
-        not info.get("deprecated", False),
         not isinstance(version, GitVersion),
         not version.isdevelop(),
         not version.is_prerelease(),
