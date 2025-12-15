@@ -4,7 +4,7 @@ stages:
   - packages
 
 variables:
-  SPACK_PACKAGES_CHECKOUT_VERSION: develop
+  SPACK_PACKAGES_CHECKOUT_VERSION: 546fccb9d13b92c8cd633cc3af1a479f5c977826
 
 .clone_packages: &clone_packages
   - mkdir -p ${REPO_DESTINATION}
