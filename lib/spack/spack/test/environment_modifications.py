@@ -9,7 +9,7 @@ import sys
 import pytest
 
 import spack.util.environment as environment
-from spack.paths import spack_root
+from spack.paths import locations as paths
 from spack.util.environment import (
     AppendPath,
     EnvironmentModifications,
@@ -21,7 +21,7 @@ from spack.util.environment import (
     is_system_path,
 )
 
-datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data")
+datadir = os.path.join(paths.spack_root, "lib", "spack", "spack", "test", "data")
 
 shell_extension = ".bat" if sys.platform == "win32" else ".sh"
 
