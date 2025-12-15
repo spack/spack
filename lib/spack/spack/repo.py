@@ -1392,7 +1392,6 @@ class Repo:
         """
         return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
-    @spack.llnl.util.lang.memoized
     def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Get the class for the package out of its module.
 
