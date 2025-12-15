@@ -2492,9 +2492,7 @@ packages:
         from cli.
         """
         # 'builtin_mock" and "duplicates_test" share a 'gmake' package
-        additional_repo = os.path.join(
-            paths.test_repos_path, "spack_repo", "duplicates_test"
-        )
+        additional_repo = os.path.join(paths.test_repos_path, "spack_repo", "duplicates_test")
         with spack.repo.use_repositories(additional_repo, override=False):
             s = spack.concretize.concretize_one(spec_str)
 

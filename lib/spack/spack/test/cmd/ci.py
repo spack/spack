@@ -1094,9 +1094,7 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
     """Test that we can detect the change to .gitlab-ci.yml in a
     mock spack git repo."""
     monkeypatch.setattr(paths, "prefix", mock_git_repo)
-    fake_env_path = os.path.join(
-        paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
-    )
+    fake_env_path = os.path.join(paths.prefix, os.path.sep.join(("no", "such", "env", "path")))
     assert ci.stack_changed(fake_env_path) is True
 
 

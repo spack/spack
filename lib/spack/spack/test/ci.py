@@ -204,9 +204,7 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
 
     url = "https://www.nosuchurlexists.itsfake/artifacts.zip"
     working_dir = tmp_path / "repro"
-    test_artifacts_path = os.path.join(
-        paths.test_path, "data", "ci", "gitlab", "artifacts.zip"
-    )
+    test_artifacts_path = os.path.join(paths.test_path, "data", "ci", "gitlab", "artifacts.zip")
 
     def _urlopen_OK(*args, **kwargs):
         with open(test_artifacts_path, "rb") as f:

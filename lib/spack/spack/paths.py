@@ -74,7 +74,12 @@ class SpackPaths:
 
     @property
     def state_home(self):
-        return self.resolve_a_home(["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME"], "XDG_STATE_HOME", "state", ".local/state/spack")
+        return self.resolve_a_home(
+            ["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME"],
+            "XDG_STATE_HOME",
+            "state",
+            ".local/state/spack",
+        )
 
     @property
     def cache_home(self):
@@ -82,7 +87,9 @@ class SpackPaths:
 
     @property
     def data_home(self):
-        return self.resolve_a_home("SPACK_DATA_HOME", "XDG_DATA_HOME", "data", ".local/share/spack")
+        return self.resolve_a_home(
+            "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", ".local/share/spack"
+        )
 
     @property
     def user_cache_path(self):
@@ -90,15 +97,21 @@ class SpackPaths:
 
     @property
     def default_install_location(self):
-        return self.prefer_old_location(self.base.old_install_path, os.path.join(self.data_home, "installs"))
+        return self.prefer_old_location(
+            self.base.old_install_path, os.path.join(self.data_home, "installs")
+        )
 
     @property
     def default_envs_path(self):
-        return self.prefer_old_location(self.base.old_envs_path, os.path.join(self.data_home, "envs"))
+        return self.prefer_old_location(
+            self.base.old_envs_path, os.path.join(self.data_home, "envs")
+        )
 
     @property
     def default_fetch_cache_path(self):
-        return self.prefer_old_location(self.base.old_fetch_cache_path, os.path.join(self.data_home, "downloads"))
+        return self.prefer_old_location(
+            self.base.old_fetch_cache_path, os.path.join(self.data_home, "downloads")
+        )
 
     @property
     def reports_path(self):
@@ -133,11 +146,15 @@ class SpackPaths:
 
     @property
     def gpg_path(self):
-        return self.prefer_old_location(self.base.old_gpg_path, os.path.join(self.data_home, "gpg"))
+        return self.prefer_old_location(
+            self.base.old_gpg_path, os.path.join(self.data_home, "gpg")
+        )
 
     @property
     def gpg_keys_path(self):
-        return self.prefer_old_location(self.base.old_gpg_keys_path, os.path.join(self.data_home, "gpg-keys"))
+        return self.prefer_old_location(
+            self.base.old_gpg_keys_path, os.path.join(self.data_home, "gpg-keys")
+        )
 
     @property
     def modules_base(self):
@@ -153,9 +170,7 @@ class SpackPaths:
     def default_misc_cache_path(self):
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
         #: overridden by `config:misc_cache`
-        return os.path.join(
-            self.state_home, self.spack_instance_id, "cache"
-        )
+        return os.path.join(self.state_home, self.spack_instance_id, "cache")
 
     def __getattr__(self, name):
         # Things that aren't sensitive to import cycles can import the
@@ -195,7 +210,13 @@ class SpackPaths:
             if h:
                 return os.path.join(h, home_rel)
 
-        for check in [spack_env_check, xdg_env_check, spack_home_env_check, cfg_check, spack_home_cfg_check]:
+        for check in [
+            spack_env_check,
+            xdg_env_check,
+            spack_home_env_check,
+            cfg_check,
+            spack_home_cfg_check,
+        ]:
             possible_resolution = check()
             if possible_resolution:
                 return possible_resolution

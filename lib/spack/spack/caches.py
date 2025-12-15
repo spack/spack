@@ -13,6 +13,7 @@ import spack.util.path
 from spack.llnl.util.filesystem import mkdirp
 from spack.paths import locations as paths
 
+
 def misc_cache_location():
     """The ``MISC_CACHE`` is Spack's cache for small data.
 

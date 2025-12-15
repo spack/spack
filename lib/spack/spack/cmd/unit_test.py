@@ -120,9 +120,7 @@ def do_list(args, extra_args):
     # To list the files we just need to inspect the filesystem,
     # which doesn't need to wait for pytest collection and doesn't
     # require parsing pytest output
-    files = spack.llnl.util.filesystem.find(
-        root=paths.test_path, files="*.py", recursive=True
-    )
+    files = spack.llnl.util.filesystem.find(root=paths.test_path, files="*.py", recursive=True)
     files = [
         os.path.relpath(f, start=paths.spack_root)
         for f in files
