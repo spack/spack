@@ -11,11 +11,11 @@ import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.config
-from spack.paths import locations as paths
 import spack.repo
 import spack.solver.asp
 import spack.spec
 from spack.environment.environment import ViewDescriptor
+from spack.paths import locations as paths
 from spack.solver.reuse import SpecFilter
 from spack.version import Version
 

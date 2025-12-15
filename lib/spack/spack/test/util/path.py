@@ -9,8 +9,8 @@ import pytest
 
 import spack.config
 import spack.llnl.util.tty as tty
-from spack.paths import locations as paths
 import spack.util.path as sup
+from spack.paths import locations as paths
 
 #: Some lines with lots of placeholders
 padded_lines = [

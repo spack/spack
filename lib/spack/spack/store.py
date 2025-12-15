@@ -27,10 +27,10 @@ import spack.database
 import spack.directory_layout
 import spack.error
 import spack.llnl.util.lang
-from spack.paths import locations as paths
 import spack.spec
 import spack.util.path
 from spack.llnl.util import tty
+from spack.paths import locations as paths
 
 
 def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:

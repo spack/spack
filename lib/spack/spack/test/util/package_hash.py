@@ -9,9 +9,9 @@ import pytest
 
 import spack.concretize
 import spack.directives_meta
-from spack.paths import locations as paths
 import spack.repo
 import spack.util.package_hash as ph
+from spack.paths import locations as paths
 from spack.spec import Spec
 from spack.util.unparse import unparse
 

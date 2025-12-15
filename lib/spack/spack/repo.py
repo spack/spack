@@ -45,7 +45,6 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.patch
-from spack.paths import locations as paths
 import spack.provider_index
 import spack.tag
 import spack.util.executable
@@ -57,6 +56,7 @@ import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.llnl.util.filesystem import working_dir
+from spack.paths import locations as paths
 
 if TYPE_CHECKING:
     import spack.package_base

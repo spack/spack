@@ -14,13 +14,13 @@ import spack.cmd.find
 import spack.concretize
 import spack.environment as ev
 import spack.package_base
-from spack.paths import locations as paths
 import spack.repo
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
 from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
+from spack.paths import locations as paths
 from spack.test.utilities import SpackCommandArgs
 from spack.util.pattern import Bunch
 

@@ -67,12 +67,12 @@ from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Union
 import spack.config
 import spack.deptypes
 import spack.error
-from spack.paths import locations as paths
 import spack.util.spack_yaml
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
 from spack.llnl.util.tty import color
+from spack.paths import locations as paths
 from spack.tokenize import Token, TokenBase, Tokenizer
 
 if TYPE_CHECKING:

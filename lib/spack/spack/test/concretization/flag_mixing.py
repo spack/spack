@@ -38,10 +38,10 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.environment as ev
-from spack.paths import locations as paths
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
+from spack.paths import locations as paths
 
 
 @pytest.fixture

@@ -14,9 +14,9 @@ from typing import List, Optional
 
 import spack.deptypes as dt
 import spack.environment.environment as ev
-from spack.paths import locations as paths
 import spack.spec
 import spack.traverse as traverse
+from spack.paths import locations as paths
 
 
 class UseBuildCache(Enum):

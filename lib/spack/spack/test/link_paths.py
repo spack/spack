@@ -8,8 +8,8 @@ import sys
 import pytest
 
 import spack.compilers.libraries
-from spack.paths import locations as paths
 from spack.compilers.libraries import parse_non_system_link_dirs
+from spack.paths import locations as paths
 
 drive = ""
 if sys.platform == "win32":

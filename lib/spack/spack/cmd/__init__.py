@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import spack.paths
 import difflib
 import importlib
 import os
@@ -21,6 +20,7 @@ import spack.error
 import spack.extensions
 import spack.llnl.string
 import spack.llnl.util.tty as tty
+import spack.paths
 import spack.paths_base
 import spack.repo
 import spack.spec

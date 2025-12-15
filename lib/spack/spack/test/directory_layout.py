@@ -13,12 +13,12 @@ import pytest
 
 import spack.concretize
 import spack.hash_types
-from spack.paths import locations as paths
 import spack.repo
 import spack.spec
 import spack.util.file_cache
 from spack.directory_layout import DirectoryLayout, InvalidDirectoryLayoutParametersError
 from spack.llnl.path import path_to_os_path
+from spack.paths import locations as paths
 from spack.spec import Spec
 
 # number of packages to test (to reduce test time)

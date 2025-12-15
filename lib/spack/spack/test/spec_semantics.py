@@ -11,7 +11,6 @@ import spack.deptypes as dt
 import spack.directives
 import spack.error
 import spack.llnl.util.lang
-from spack.paths import locations as paths
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
@@ -20,6 +19,7 @@ import spack.variant
 import spack.version as vn
 from spack.enums import PropagationPolicy
 from spack.error import SpecError, UnsatisfiableSpecError
+from spack.paths import locations as paths
 from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import (
     InvalidVariantValueError,

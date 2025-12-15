@@ -7,9 +7,9 @@ import pathlib
 
 import pytest
 
-from spack.paths import locations as paths
 import spack.repo
 from spack.main import SpackCommand
+from spack.paths import locations as paths
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 

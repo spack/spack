@@ -14,9 +14,9 @@ import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.package_prefs
-from spack.paths import locations as paths
 import spack.spec
 import spack.store
+from spack.paths import locations as paths
 from spack.util.socket import _gethostname
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.

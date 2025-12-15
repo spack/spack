@@ -28,7 +28,6 @@ import spack.main
 import spack.modules
 import spack.modules.tcl
 import spack.package_base
-from spack.paths import locations as paths
 import spack.repo
 import spack.solver.asp
 import spack.spec
@@ -42,6 +41,7 @@ from spack.cmd.env import _env_create
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import readlink
 from spack.main import SpackCommand, SpackCommandError
+from spack.paths import locations as paths
 from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.test.conftest import RepoBuilder

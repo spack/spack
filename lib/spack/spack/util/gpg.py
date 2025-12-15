@@ -10,9 +10,9 @@ from typing import List
 
 import spack.error
 import spack.llnl.util.filesystem
-from spack.paths import locations as paths
 import spack.util.executable
 import spack.version
+from spack.paths import locations as paths
 
 #: Executable instance for "gpg", initialized lazily
 GPG = None

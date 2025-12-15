@@ -12,9 +12,9 @@ import spack.cmd.clean
 import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.package_base
-from spack.paths import locations as paths
 import spack.stage
 import spack.store
+from spack.paths import locations as paths
 
 clean = spack.main.SpackCommand("clean")
 

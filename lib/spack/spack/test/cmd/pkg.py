@@ -10,11 +10,11 @@ import pytest
 import spack.cmd
 import spack.cmd.pkg
 import spack.main
-from spack.paths import locations as paths
 import spack.repo
 import spack.util.executable
 import spack.util.file_cache
 from spack.llnl.util.filesystem import mkdirp, working_dir
+from spack.paths import locations as paths
 
 pkg = spack.main.SpackCommand("pkg")
 

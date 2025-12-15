@@ -27,7 +27,6 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
-from spack.paths import locations as paths
 import spack.repo
 import spack.spec
 import spack.stage
@@ -40,6 +39,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.llnl.util.tty.color import cescape, colorize
+from spack.paths import locations as paths
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 
 from .common import (

@@ -8,9 +8,9 @@ import re
 
 import pytest
 
-from spack.paths import locations as paths
 from spack.llnl.util.filesystem import mkdirp, touch
 from spack.main import SpackCommand
+from spack.paths import locations as paths
 
 license = SpackCommand("license")
 

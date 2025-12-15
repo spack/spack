@@ -9,10 +9,10 @@ import pytest
 import spack.cmd.diff
 import spack.concretize
 import spack.main
-from spack.paths import locations as paths
 import spack.repo
 import spack.util.spack_json as sjson
 import spack.version
+from spack.paths import locations as paths
 
 install_cmd = spack.main.SpackCommand("install")
 diff_cmd = spack.main.SpackCommand("diff")

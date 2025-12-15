@@ -19,8 +19,8 @@ except ImportError:
 import spack.llnl.util.filesystem
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
-from spack.paths import locations as paths
 from spack.llnl.util.tty.colify import colify
+from spack.paths import locations as paths
 
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"

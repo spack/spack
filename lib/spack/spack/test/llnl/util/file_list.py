@@ -8,8 +8,8 @@ import sys
 
 import pytest
 
-from spack.paths import locations as paths
 from spack.llnl.util.filesystem import HeaderList, LibraryList, find_headers, find_libraries
+from spack.paths import locations as paths
 
 
 @pytest.fixture()

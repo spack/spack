@@ -15,8 +15,8 @@ import spack.cmd
 import spack.cmd.commands
 import spack.config
 import spack.main
-from spack.paths import locations as paths
 from spack.cmd.commands import _dest_to_fish_complete, _positional_to_subroutine
+from spack.paths import locations as paths
 from spack.util.executable import Executable
 
 

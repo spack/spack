@@ -23,12 +23,12 @@ import spack.vendor.ruamel.yaml
 import spack.concretize
 import spack.config
 import spack.hash_types as ht
-from spack.paths import locations as paths
 import spack.repo
 import spack.spec
 import spack.test.conftest
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.paths import locations as paths
 from spack.spec import Spec, save_dependency_specfiles
 from spack.test.conftest import RepoBuilder
 from spack.util.spack_yaml import SpackYAMLError, syaml_dict

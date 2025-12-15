@@ -9,12 +9,12 @@ from typing import Dict, Optional, Tuple
 
 import spack.caches
 import spack.fetch_strategy
-from spack.paths import locations as paths
 import spack.repo
 import spack.util.executable
 import spack.util.hash
 import spack.util.spack_json as sjson
 from spack.llnl.util.filesystem import mkdirp, working_dir
+from spack.paths import locations as paths
 
 from .common import VersionLookupError
 from .lookup import AbstractRefLookup

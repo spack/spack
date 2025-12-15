@@ -10,9 +10,9 @@ from typing import Optional, Union
 
 import spack.cmd
 import spack.llnl.util.tty as tty
-from spack.paths import locations as paths
 import spack.repo
 import spack.util.editor
+from spack.paths import locations as paths
 
 description = "open package files in ``$EDITOR``"
 section = "packaging"

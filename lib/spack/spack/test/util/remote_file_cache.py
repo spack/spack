@@ -9,9 +9,9 @@ import pytest
 
 import spack.config
 import spack.llnl.util.tty as tty
-from spack.paths import locations as paths
 import spack.util.remote_file_cache as rfc_util
 from spack.llnl.util.filesystem import join_path
+from spack.paths import locations as paths
 
 github_url = "https://github.com/fake/fake/{0}/develop"
 gitlab_url = "https://gitlab.fake.io/user/repo/-/blob/config/defaults"

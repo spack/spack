@@ -9,10 +9,10 @@ import spack.builder
 import spack.cmd
 import spack.environment as ev
 import spack.llnl.util.tty as tty
-from spack.paths import locations as paths
 import spack.repo
 import spack.stage
 from spack.cmd.common import arguments
+from spack.paths import locations as paths
 
 description = "print out locations of packages and spack directories"
 section = "query"

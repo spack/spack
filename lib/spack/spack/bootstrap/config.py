@@ -11,12 +11,12 @@ from typing import Any, Dict, Generator, MutableSequence, Sequence
 import spack.config
 import spack.environment
 import spack.modules
-from spack.paths import locations as paths
 import spack.platforms
 import spack.repo
 import spack.store
 import spack.util.path
 from spack.llnl.util import tty
+from spack.paths import locations as paths
 
 #: Reference counter for the bootstrapping configuration context manager
 _REF_COUNT = 0

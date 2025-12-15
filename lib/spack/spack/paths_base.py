@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from pathlib import PurePath
 import os
+from pathlib import PurePath
 
 import spack.llnl.util.filesystem
 

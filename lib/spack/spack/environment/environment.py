@@ -24,7 +24,6 @@ import spack.hash_types as ht
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
-from spack.paths import locations as paths
 import spack.repo
 import spack.schema.env
 import spack.spec
@@ -40,6 +39,7 @@ import spack.variant as vt
 from spack import traverse
 from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
 from spack.llnl.util.link_tree import ConflictingSpecsError
+from spack.paths import locations as paths
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.util.path import substitute_path_variables

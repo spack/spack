@@ -5,10 +5,10 @@
 import os
 import pathlib
 
-from spack.paths import locations as paths
 import spack.repo
 import spack.util.editor
 from spack.main import SpackCommand
+from spack.paths import locations as paths
 
 edit = SpackCommand("edit")
 

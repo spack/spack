@@ -27,7 +27,6 @@ import spack.error
 import spack.hash_types as ht
 import spack.llnl.util.lang
 import spack.package_base
-from spack.paths import locations as paths
 import spack.platforms
 import spack.platforms.test
 import spack.repo
@@ -43,6 +42,7 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.externals import ExternalDependencyError
 from spack.installer import PackageInstaller
+from spack.paths import locations as paths
 from spack.solver.reuse import SpecFilter
 from spack.spec import Spec
 from spack.test.conftest import RepoBuilder

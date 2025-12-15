@@ -8,7 +8,6 @@ import pytest
 
 import spack.environment
 import spack.package_base
-from spack.paths import locations as paths
 import spack.repo
 import spack.schema.repos
 import spack.spec
@@ -16,6 +15,7 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.lock
 import spack.util.naming
+from spack.paths import locations as paths
 from spack.test.conftest import RepoBuilder
 from spack.util.naming import valid_module_name
 

@@ -15,12 +15,12 @@ import pytest
 import spack.config
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
-from spack.paths import locations as paths
 import spack.url
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
 from spack.llnl.util.filesystem import working_dir
+from spack.paths import locations as paths
 from spack.version import Version
 
 

@@ -8,9 +8,9 @@ import pytest
 
 import spack.builder
 import spack.concretize
-from spack.paths import locations as paths
 import spack.repo
 from spack.llnl.util.filesystem import touch
+from spack.paths import locations as paths
 
 
 @pytest.fixture()

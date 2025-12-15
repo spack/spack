@@ -20,7 +20,6 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.log
 import spack.package_base
-from spack.paths import locations as paths
 import spack.repo
 import spack.report
 import spack.spec
@@ -31,6 +30,7 @@ from spack.error import InstallError
 from spack.llnl.string import plural
 from spack.llnl.util.lang import nullcontext
 from spack.llnl.util.tty.color import colorize
+from spack.paths import locations as paths
 from spack.spec import Spec
 from spack.util.prefix import Prefix
 

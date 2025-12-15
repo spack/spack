@@ -89,7 +89,6 @@ import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
 import spack.patch
-from spack.paths import locations as paths
 import spack.platforms
 import spack.provider_index
 import spack.repo
@@ -102,6 +101,7 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
+from spack.paths import locations as paths
 
 from .enums import InstallRecordStatus, PropagationPolicy
 

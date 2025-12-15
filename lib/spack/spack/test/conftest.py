@@ -45,7 +45,6 @@ import spack.llnl.util.tty.color
 import spack.modules.common
 import spack.package_base
 import spack.paths
-from spack.paths import locations as paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
@@ -78,6 +77,7 @@ from spack.llnl.util.filesystem import (
     working_dir,
 )
 from spack.main import SpackCommand
+from spack.paths import locations as paths
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
 

@@ -13,10 +13,10 @@ import pytest
 
 import spack.cmd.style
 import spack.main
-from spack.paths import locations as paths
 import spack.repo
 from spack.cmd.style import _run_import_check, changed_files
 from spack.llnl.util.filesystem import FileFilter, working_dir
+from spack.paths import locations as paths
 from spack.util.executable import which
 
 #: directory with sample style files

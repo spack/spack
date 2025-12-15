@@ -15,11 +15,11 @@ import spack.cmd
 import spack.config
 import spack.llnl.util.tty as tty
 import spack.main
-from spack.paths import locations as paths
 import spack.platforms
 from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
 from spack.llnl.util.tty.colify import colify
 from spack.main import section_descriptions
+from spack.paths import locations as paths
 
 description = "list available spack commands"
 section = "config"

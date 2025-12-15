@@ -8,11 +8,11 @@ import tempfile
 
 import spack.binary_distribution
 import spack.mirrors.mirror
-from spack.paths import locations as paths
 import spack.stage
 import spack.util.gpg
 import spack.util.url
 from spack.cmd.common import arguments
+from spack.paths import locations as paths
 
 description = "handle GPG actions for spack"
 section = "packaging"

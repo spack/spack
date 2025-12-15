@@ -14,10 +14,10 @@ import spack.concretize
 import spack.config
 import spack.install_test
 import spack.main
-from spack.paths import locations as paths
 from spack.install_test import TestStatus
 from spack.llnl.util.filesystem import copy_tree, working_dir
 from spack.main import SpackCommand
+from spack.paths import locations as paths
 
 install = SpackCommand("install")
 spack_test = SpackCommand("test")

@@ -19,7 +19,6 @@ import spack.concretize
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.main
-from spack.paths import locations as paths
 import spack.repo
 import spack.spec
 import spack.stage
@@ -32,6 +31,7 @@ from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
 from spack.llnl.util.filesystem import mkdirp, working_dir
+from spack.paths import locations as paths
 from spack.schema.database_index import schema as db_idx_schema
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 

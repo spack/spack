@@ -20,7 +20,6 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.package_base
-from spack.paths import locations as paths
 import spack.platforms
 import spack.repo
 import spack.schema.compilers
@@ -37,6 +36,7 @@ import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 from spack.enums import ConfigScopePriority
 from spack.llnl.util.filesystem import join_path, touch
+from spack.paths import locations as paths
 from spack.util.spack_yaml import DictWithLineInfo
 
 # sample config data

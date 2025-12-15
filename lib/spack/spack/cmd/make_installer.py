@@ -7,9 +7,9 @@ import posixpath
 import sys
 
 import spack.concretize
-from spack.paths import locations as paths
 import spack.util.executable
 from spack.llnl.path import convert_to_posix_path
+from spack.paths import locations as paths
 
 description = "generate Windows installer"
 section = "admin"

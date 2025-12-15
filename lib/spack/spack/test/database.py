@@ -34,7 +34,6 @@ import spack.deptypes as dt
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as lk
 import spack.package_base
-from spack.paths import locations as paths
 import spack.repo
 import spack.spec
 import spack.store
@@ -43,6 +42,7 @@ import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller
 from spack.llnl.util.tty.colify import colify
+from spack.paths import locations as paths
 from spack.schema.database_index import schema
 from spack.test.conftest import RepoBuilder
 from spack.util.executable import Executable

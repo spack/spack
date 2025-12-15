@@ -10,11 +10,11 @@ import pytest
 import spack.concretize
 import spack.environment as ev
 import spack.main
-from spack.paths import locations as paths
 import spack.repo
 import spack.stage
 from spack.llnl.util.filesystem import mkdirp
 from spack.main import SpackCommand
+from spack.paths import locations as paths
 
 # Everything here uses (or can use) the mock config and database.
 pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_database")]

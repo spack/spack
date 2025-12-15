@@ -10,7 +10,6 @@ import spack.config
 import spack.error
 import spack.installer
 import spack.package_base
-from spack.paths import locations as paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
@@ -19,6 +18,7 @@ import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
 from spack.installer import PackageInstaller
+from spack.paths import locations as paths
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.solver.reuse import SpecFilter
 from spack.spec import Spec
