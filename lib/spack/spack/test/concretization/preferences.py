@@ -504,3 +504,28 @@ mpich:
         with spack.config.override("packages:all", {"variants": "+foo"}):
             s = spack.concretize.concretize_one("pkg-a")
             assert s.satisfies("foo=bar")
+
+    def test_version_preference_cannot_generate_buildable_versions(self):
+        """Tests that a version preference not mentioned in package.py cannot be used in
+        a built spec.
+        """
+        mpileaks_external = syaml.load_config(
+            """
+    mpileaks:
+      # Version 0.9 is not mentioned in package.py
+      version: ["0.9"]
+      buildable: true
+      externals:
+      - spec: mpileaks@0.9 +debug
+        prefix: /path
+    """
+        )
+
+        with spack.config.override("packages", mpileaks_external):
+            # Asking for mpileaks+debug results in the external being chosen
+            mpileaks = spack.concretize.concretize_one("mpileaks+debug")
+            assert mpileaks.external and mpileaks.satisfies("@0.9 +debug")
+
+            # Asking for ~debug results in the highest known version being chosen
+            mpileaks = spack.concretize.concretize_one("mpileaks~debug")
+            assert not mpileaks.external and mpileaks.satisfies("@2.3 ~debug")

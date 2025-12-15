@@ -2617,7 +2617,10 @@ class SpackSolverSetup:
 
             from_packages_yaml = list(spack.llnl.util.lang.dedupe(from_packages_yaml))
             for v in from_packages_yaml:
-                self.possible_versions[pkg_name][v].append(Provenance.PACKAGES_YAML)
+                provenance = Provenance.PACKAGES_YAML
+                if isinstance(v, vn.GitVersion):
+                    provenance = Provenance.PACKAGES_YAML_GIT_VERSION
+                self.possible_versions[pkg_name][v].append(provenance)
             self.versions_from_yaml[pkg_name] = from_packages_yaml
 
     def define_ad_hoc_versions_from_specs(

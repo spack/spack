@@ -1410,7 +1410,7 @@ spack:
             # This external package is buildable, has a custom version
             # in packages.yaml that is greater than the ones in package.py
             # and specifies a variant
-            ("external-buildable-with-variant@1: +baz", True, "@1.1.special +baz"),
+            ("external-buildable-with-variant +baz", True, "@1.1.special +baz"),
             ("external-buildable-with-variant ~baz", False, "@1.0 ~baz"),
             ("external-buildable-with-variant@1.0: ~baz", False, "@1.0 ~baz"),
             # This uses an external version that meets the condition for

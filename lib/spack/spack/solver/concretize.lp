@@ -338,7 +338,7 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 % and vice-versa
 
 1 { allowed_origins(Origin): pkg_fact(Package, version_origin(Version, Origin)),
-    Origin != "installed"}
+    Origin != "installed", Origin != "packages_yaml"}
   :- attr("version", node(ID, Package), Version),
      build(node(ID, Package)).
 
