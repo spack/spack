@@ -14,9 +14,9 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
-from spack.paths import locations as paths
 import spack.repo as repo
 import spack.util.git
+from spack.paths import locations as paths
 from spack.spec import Spec
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 from spack.version import Version
