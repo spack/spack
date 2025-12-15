@@ -1718,9 +1718,10 @@ def test_included_path_git_unsat(
     "key,value", [("branch", "main"), ("commit", "abcdef123456"), ("tag", "v1.0")]
 )
 def test_included_path_git(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capfd
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capfd,
+    override_path
 ):
-    monkeypatch.setattr(spack_paths, "user_cache_path", str(tmp_path))
+    override_path("user_cache_path", str(tmp_path))
 
     class MockIncludeGit(spack.util.executable.Executable):
         def __init__(self, required: bool):
@@ -1787,8 +1788,8 @@ def test_included_path_git(
         assert "already cloned" in captured
 
 
-def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
-    monkeypatch.setattr(spack_paths, "user_cache_path", str(tmp_path))
+def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch, override_path):
+    override_path("user_cache_path", str(tmp_path))
 
     paths = ["concretizer.yaml"]
     entry = {

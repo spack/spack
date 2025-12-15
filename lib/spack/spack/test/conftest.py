@@ -45,6 +45,7 @@ import spack.llnl.util.tty.color
 import spack.modules.common
 import spack.package_base
 import spack.paths
+import spack.paths_base
 import spack.platforms
 import spack.repo
 import spack.solver.asp
@@ -150,13 +151,24 @@ commit_counter = 0
 
 
 @pytest.fixture
-def override_git_repos_cache_path(tmp_path: Path):
-    saved = paths.user_repos_cache_path
+def override_path(monkeypatch):
+    def _override(path_attr, new_path):
+        if hasattr(spack.paths_base, path_attr):
+            monkeypatch.setattr(spack.paths_base, path_attr, new_path)
+
+        if hasattr(spack.paths, path_attr):
+            monkeypatch.setattr(spack.paths, path_attr, new_path)
+
+        monkeypatch.setattr(spack.paths.locations, path_attr, new_path)
+
+    return _override
+
+
+@pytest.fixture
+def override_git_repos_cache_path(tmp_path: Path, monkeypatch, override_path):
     tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
     tmp_git_path.mkdir()
-    paths.user_repos_cache_path = str(tmp_git_path)
-    yield
-    paths.user_repos_cache_path = saved
+    override_path("user_repos_cache_path", str(tmp_git_path))
 
 
 @pytest.fixture

@@ -14,7 +14,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
-import spack.paths_base
+import spack.paths
 import spack.repo as repo
 import spack.util.git
 from spack.spec import Spec
@@ -260,15 +260,16 @@ def test_ci_copy_test_logs_to_artifacts_fail(tmp_path: pathlib.Path, capfd):
 
 
 def test_setup_spack_repro_version(
-    tmp_path: pathlib.Path, capfd, last_two_git_commits, monkeypatch
+    tmp_path: pathlib.Path, capfd, last_two_git_commits, monkeypatch,
+    override_path
 ):
     c1, c2 = last_two_git_commits
     repro_dir = tmp_path / "repro"
     spack_dir = repro_dir / "spack"
     spack_dir.mkdir(parents=True)
 
-    prefix_save = spack.paths_base.prefix
-    monkeypatch.setattr(spack.paths_base, "prefix", "/garbage")
+    prefix_save = spack.paths.locations.prefix
+    override_path("prefix", "/garbage")
 
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)
     _, err = capfd.readouterr()
@@ -276,7 +277,7 @@ def test_setup_spack_repro_version(
     assert not ret
     assert "Unable to find the path" in err
 
-    monkeypatch.setattr(spack.paths_base, "prefix", prefix_save)
+    override_path("prefix", prefix_save)
     monkeypatch.setattr(spack.util.git, "git", lambda: None)
 
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)

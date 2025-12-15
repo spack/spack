@@ -72,7 +72,7 @@ def test_function_calls(command_line, effects, mock_calls_for_clean, mutable_con
         assert mock_calls_for_clean[name] == (1 if name in effects else 0)
 
 
-def test_remove_python_cache(tmp_path: pathlib.Path, monkeypatch):
+def test_remove_python_cache(tmp_path: pathlib.Path, monkeypatch, override_path):
     cache_files = ["file1.pyo", "file2.pyc"]
     source_file = "file1.py"
 
@@ -101,8 +101,8 @@ def test_remove_python_cache(tmp_path: pathlib.Path, monkeypatch):
 
     # spack.cmd.clean references paths from spack.paths: we want to
     # update them for the duration of this test.
-    monkeypatch.setattr(paths, "lib_path", source_dir)
-    monkeypatch.setattr(paths, "repos_path", repos_dir)
+    override_path("lib_path", source_dir)
+    override_path("repos_path", repos_dir)
 
     spack.cmd.clean.remove_python_cache()
 

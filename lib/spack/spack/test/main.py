@@ -73,8 +73,8 @@ echo {0}
     assert expected == spack.get_version()
 
 
-def test_get_version_no_repo(tmp_path: pathlib.Path, monkeypatch):
-    monkeypatch.setattr(paths, "prefix", str(tmp_path))
+def test_get_version_no_repo(tmp_path: pathlib.Path, override_path):
+    override_path("prefix", str(tmp_path))
     assert spack.spack_version == spack.get_version()
 
 
