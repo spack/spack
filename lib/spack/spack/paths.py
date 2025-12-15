@@ -237,4 +237,6 @@ class SpackPaths:
 
 locations = SpackPaths(paths_base.locations)
 
+# At least one builtin spack package expects that spack.paths is
+# importable and that it has this module-level attribute
 spack_script = locations.spack_script
