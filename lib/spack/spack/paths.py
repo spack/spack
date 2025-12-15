@@ -236,5 +236,33 @@ class SpackPaths:
 locations = SpackPaths(paths_base.locations)
 
 # At least one builtin spack package expects that spack.paths is
-# importable and that it has this module-level attribute
+# importable and that it has spack_script as a module-level attribute.
+# Some test packages expect other paths (like test_path)
+prefix = locations.prefix
+spack_root = locations.spack_root
+bin_path = locations.bin_path
 spack_script = locations.spack_script
+sbang_script = locations.sbang_script
+lib_path = locations.lib_path
+external_path = locations.external_path
+module_path = locations.module_path
+vendor_path = locations.vendor_path
+command_path = locations.command_path
+analyzers_path = locations.analyzers_path
+platform_path = locations.platform_path
+compilers_path = locations.compilers_path
+operating_system_path = locations.operating_system_path
+test_path = locations.test_path
+hooks_path = locations.hooks_path
+share_path = locations.share_path
+etc_path = locations.etc_path
+default_license_dir = locations.default_license_dir
+var_path = locations.var_path
+repos_path = locations.repos_path
+test_repos_path = locations.test_repos_path
+mock_packages_path = locations.mock_packages_path
+mock_gpg_data_path = locations.mock_gpg_data_path
+mock_gpg_keys_path = locations.mock_gpg_keys_path
+default_xdg_cache_home = locations.default_xdg_cache_home
+system_config_path = locations.system_config_path
+user_config_path = locations.user_config_path
