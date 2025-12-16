@@ -461,8 +461,14 @@ Spack's source should be available already (depending on where the step was inse
 
 .. note:: If you are on Windows you'll be dropped into an MSYS shell, Spack is not supported inside MSYS, so it is strongly recommended to drop into a CMD or powershell prompt.
 
+You will have access to this ssh session for as long as Github allows a job to be alive.
 
 Once you have finished debugging, remove this action from the Github actions workflow.
+
+If you want to continue a workflow and you are inside a session, just create a empty file with the name continue either in the root directory or in the project directory.
+
+This action has a few option to configure behavior like ssh key handling, tmate server, detached mode, etc.
+For more on how to use those options, see the actions docs at https://github.com/mxschmitt/action-tmate
 
 Developer environment
 ---------------------
