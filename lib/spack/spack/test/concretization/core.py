@@ -6,6 +6,7 @@ import json
 import os
 import pathlib
 import platform
+import re
 import sys
 from typing import Any, Dict
 
@@ -43,7 +44,8 @@ import spack.variant as vt
 from spack.externals import ExternalDependencyError
 from spack.installer import PackageInstaller
 from spack.paths import locations as paths
-from spack.solver.reuse import SpecFilter
+from spack.solver.reuse import SpecFilter, create_external_parser
+from spack.solver.runtimes import external_config_with_implicit_externals
 from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
 from spack.version import Version, VersionList, ver
@@ -84,6 +86,10 @@ def check_concretize(abstract_spec):
     return concrete
 
 
+def _true():
+    return True
+
+
 @pytest.fixture(scope="function", autouse=True)
 def binary_compatibility(monkeypatch, request):
     """Selects whether we use OS compatibility for binaries, or libc compatibility."""
@@ -98,9 +104,9 @@ def binary_compatibility(monkeypatch, request):
         # Databases have been created without glibc support
         return
 
-    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", lambda: True)
-    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", lambda: True)
-    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", lambda: True)
+    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", _true)
+    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", _true)
+    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", _true)
 
 
 @pytest.fixture(
@@ -1988,8 +1994,13 @@ spack:
         ]
         root_spec = Spec("pkg-a foobar=bar")
 
+        packages_with_externals = external_config_with_implicit_externals(mutable_config)
+        completion_mode = mutable_config.get("concretizer:externals:completion")
         external_specs = SpecFilter.from_packages_yaml(
-            mutable_config, include=[], exclude=[]
+            external_parser=create_external_parser(packages_with_externals, completion_mode),
+            packages_with_externals=packages_with_externals,
+            include=[],
+            exclude=[],
         ).selected_specs()
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
@@ -2316,8 +2327,13 @@ packages:
         know a concretization exists.
         """
         specs = [Spec(s) for s in specs]
+        packages_with_externals = external_config_with_implicit_externals(mutable_config)
+        completion_mode = mutable_config.get("concretizer:externals:completion")
         external_specs = SpecFilter.from_packages_yaml(
-            mutable_config, include=[], exclude=[]
+            external_parser=create_external_parser(packages_with_externals, completion_mode),
+            packages_with_externals=packages_with_externals,
+            include=[],
+            exclude=[],
         ).selected_specs()
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
@@ -3163,7 +3179,15 @@ def test_filtering_reused_specs(
     """Tests that we can select which specs are to be reused, using constraints as filters"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
-    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    packages_with_externals = spack.solver.runtimes.external_config_with_implicit_externals(
+        mutable_config
+    )
+    completion_mode = mutable_config.get("concretizer:externals:completion")
+    selector = spack.solver.asp.ReusableSpecsSelector(
+        mutable_config,
+        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        packages_with_externals=packages_with_externals,
+    )
     specs = selector.reusable_specs(roots)
 
     assert len(specs) == expected_length
@@ -3198,7 +3222,15 @@ def test_selecting_reused_sources(
     """Tests that we can turn on/off sources of reusable specs"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
-    selector = spack.solver.asp.ReusableSpecsSelector(mutable_config)
+    packages_with_externals = spack.solver.runtimes.external_config_with_implicit_externals(
+        mutable_config
+    )
+    completion_mode = mutable_config.get("concretizer:externals:completion")
+    selector = spack.solver.asp.ReusableSpecsSelector(
+        mutable_config,
+        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        packages_with_externals=packages_with_externals,
+    )
     specs = selector.reusable_specs(["mpileaks"])
     assert len(specs) == expected_length
 
@@ -3283,6 +3315,14 @@ def test_spec_unification(unify, mutable_config, mock_packages):
     maybe_fails = pytest.raises if unify is True else spack.llnl.util.lang.nullcontext
     with maybe_fails(spack.solver.asp.UnsatisfiableSpecError):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
+
+
+@pytest.mark.enable_parallelism
+def test_parallel_concretization(mutable_config, mock_packages):
+    """Test whether parallel unify-false style concretization works."""
+    specs = [(Spec("pkg-a"), None), (Spec("pkg-b"), None)]
+    result = spack.concretize.concretize_separately(specs)
+    assert {s.name for s, _ in result} == {"pkg-a", "pkg-b"}
 
 
 @pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
@@ -4712,3 +4752,27 @@ def test_activating_variant_for_conditional_language_dependency(default_mock_con
     # Try just asking for fortran, without the provider
     s = default_mock_concretization("mpileaks %fortran %mpi=mpich")
     assert s.satisfies("+fortran")
+
+
+def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
+    """Tests that imposed dependenies triggered by identical conditions are grouped together,
+    and that imposed dependencies that differ on a deptype are not grouped together."""
+    # The trigger-and-effect-deps pkg has 4 conditions, 2 triggers, and 4 effects in total:
+    # +x -> depends on pkg-a with deptype link
+    # +x -> depends on pkg-b with deptype link
+    # +y -> depends on pkg-a with deptype run
+    # +y -> depends on pkg-b with deptype run
+    pkg = mock_packages.get_pkg_class("trigger-and-effect-deps")
+    setup = spack.solver.asp.SpackSolverSetup()
+    setup.gen = spack.solver.asp.ProblemInstanceBuilder()
+    setup.package_dependencies_rules(pkg)
+    setup.trigger_rules()
+    setup.effect_rules()
+    asp = setup.gen.asp_problem
+
+    # There should be 4 conditions total
+    assert len([line for line in asp if re.search(r"condition\(\d+\)", line)]) == 4
+    # There should be 2 triggers total
+    assert len([line for line in asp if re.search(r"trigger_id\(\d+\)", line)]) == 2
+    # There should be 4 effects total
+    assert len([line for line in asp if re.search(r"effect_id\(\d+\)", line)]) == 4

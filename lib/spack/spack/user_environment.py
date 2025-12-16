@@ -116,4 +116,21 @@ def environment_modifications_for_specs(
     if view:
         project_env_mods(*topo_ordered, view=view, env=env)
 
+        # we don't want to set PYTHONPATH to the default search path in virtual environments
+        view_python_pattern = re.compile(
+            r"^" + re.escape(os.path.join(view.root, "lib")) + r"/python[^/]+/site-packages$"
+        )
+
+        mods = [
+            mod.value
+            for mod in env.env_modifications
+            if (
+                isinstance(mod, environment.PrependPath)
+                and mod.name == "PYTHONPATH"
+                and view_python_pattern.match(mod.value)
+            )
+        ]
+
+        for modif in mods:
+            env.remove_path("PYTHONPATH", modif)
     return env

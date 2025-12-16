@@ -1221,7 +1221,10 @@ def _setup_pkg_and_run(
                 # 'pkg' is not defined yet
                 pass
         elif context == "test":
-            logfile = os.path.join(pkg.test_suite.stage, pkg.test_suite.test_log_name(pkg.spec))
+            logfile = os.path.join(
+                pkg.test_suite.stage,  # type: ignore[union-attr]
+                pkg.test_suite.test_log_name(pkg.spec),  # type: ignore[union-attr]
+            )
 
         error_msg = str(e)
         if isinstance(e, (spack.multimethod.NoSuchMethodError, AttributeError)):

@@ -36,9 +36,11 @@ if sys.platform == "win32":
         "C:\\ProgramData",
     ]
     SUFFIXES = []
+    DEFAULT_SHELL = os.environ.get("SPACK_SHELL", "bat")
 else:
     SYSTEM_PATHS = ["/", "/usr", "/usr/local"]
     SUFFIXES = ["bin", "bin64", "include", "lib", "lib64"]
+    DEFAULT_SHELL = "sh"
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
@@ -776,7 +778,7 @@ class EnvironmentModifications:
 
     def shell_modifications(
         self,
-        shell: str = "sh" if sys.platform != "win32" else os.environ.get("SPACK_SHELL", "bat"),
+        shell: str = DEFAULT_SHELL,
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
     ) -> str:

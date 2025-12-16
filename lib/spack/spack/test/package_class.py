@@ -378,8 +378,10 @@ def test_git_provenance_find_commit_ls_remote(
 
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
-def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capfd):
+def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capfd, tmp_path):
     """Fail all attempts to resolve git commits"""
+    repo_path = str(tmp_path / "non_existent")
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", repo_path, raising=False)
     monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)
     spec = spack.concretize.concretize_one("git-ref-package@develop")
     captured = capfd.readouterr()

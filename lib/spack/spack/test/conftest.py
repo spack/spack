@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import base64
 import collections
 import datetime
 import email.message
@@ -38,6 +39,7 @@ import spack.directives_meta
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.hash_types
 import spack.llnl.util.lang
 import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
@@ -357,7 +359,7 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 @pytest.fixture(autouse=True)
 def clear_recorded_monkeypatches():
     yield
-    spack.subprocess_context.clear_patches()
+    spack.subprocess_context.MONKEYPATCHES.clear()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -367,7 +369,7 @@ def record_monkeypatch_setattr():
     saved_setattr = _pytest.monkeypatch.MonkeyPatch.setattr
 
     def record_setattr(cls, target, name, value, *args, **kwargs):
-        spack.subprocess_context.append_patch((target, name, value))
+        spack.subprocess_context.MONKEYPATCHES.append((target, name))
         saved_setattr(cls, target, name, value, *args, **kwargs)
 
     _pytest.monkeypatch.MonkeyPatch.setattr = record_setattr
@@ -2082,6 +2084,32 @@ def brand_new_binary_cache():
     )
 
 
+def _trivial_package_hash(spec: spack.spec.Spec) -> str:
+    """Return a trivial package hash for tests to avoid expensive AST parsing."""
+    # Pad package name to consistent length and cap at 32 chars for realistic hash length
+    return base64.b32encode(f"{spec.name:<32}".encode()[:32]).decode().lower()
+
+
+@pytest.fixture(autouse=True)
+def mock_package_hash_for_tests(request, monkeypatch):
+    """Replace expensive package hash computation with trivial one for tests.
+    Tests can force the real package hash by using the @pytest.mark.use_package_hash marker."""
+    if "use_package_hash" in request.keywords:
+        yield
+        return
+    pkg_hash = spack.hash_types.package_hash
+    idx = spack.hash_types.HASHES.index(pkg_hash)
+    mock_pkg_hash = spack.hash_types.SpecHashDescriptor(
+        depflag=0, package_hash=True, name="package_hash", override=_trivial_package_hash
+    )
+    monkeypatch.setattr(spack.hash_types, "package_hash", mock_pkg_hash)
+    try:
+        spack.hash_types.HASHES[idx] = mock_pkg_hash
+        yield
+    finally:
+        spack.hash_types.HASHES[idx] = pkg_hash
+
+
 @pytest.fixture()
 def noncyclical_dir_structure(tmp_path: Path):
     """
@@ -2303,14 +2331,12 @@ def pytest_runtest_setup(item):
         pytest.skip(*only_windows_marker.args)
 
 
-def _sequential_executor(*args, **kwargs):
-    return spack.util.parallel.SequentialExecutor()
-
-
 @pytest.fixture(autouse=True)
-def disable_parallel_buildcache_push(monkeypatch):
-    """Disable process pools in tests."""
-    monkeypatch.setattr(spack.util.parallel, "make_concurrent_executor", _sequential_executor)
+def disable_parallelism(monkeypatch, request):
+    """Disable process pools in tests. Enabled by default to avoid oversubscription when running
+    under pytest-xdist. Can be overridden with `@pytest.mark.enable_parallelism`."""
+    if "enable_parallelism" not in request.keywords:
+        monkeypatch.setattr(spack.util.parallel, "ENABLE_PARALLELISM", False)
 
 
 def _root_path(x, y, *, path):

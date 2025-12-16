@@ -18,6 +18,9 @@ import spack.util.executable as exe
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
 
+# regex for a git version to extract only the numeric parts
+GIT_VERSION = re.compile(r"(\d+(?:\.\d+)*)")
+
 
 def is_git_commit_sha(string: str) -> bool:
     return len(string) == 40 and bool(COMMIT_VERSION.match(string))
@@ -29,9 +32,9 @@ def _find_git() -> Optional[str]:
     return exe.which_string("git", required=False)
 
 
-def extract_git_version_str(git_exe):
-    v_str = git_exe("--version", output=str).strip().split()[-1].replace("windows.", "")
-    return v_str
+def extract_git_version_str(git_exe: exe.Executable) -> str:
+    match = re.search(GIT_VERSION, git_exe("--version", output=str))
+    return match.group(1) if match else ""
 
 
 class GitExecutable(exe.Executable):
@@ -130,12 +133,39 @@ def init_git_repo(
     git_exe("config", "feature.manyFiles", "true", ignore_errors=True)
 
 
-def pull_checkout_commit(commit: str, git_exe: Optional[exe.Executable] = None):
-    """Fetch all remotes and checkout the specified commit."""
+def pull_checkout_commit(
+    commit: str,
+    remote: Optional[str] = None,
+    depth: Optional[int] = None,
+    git_exe: Optional[exe.Executable] = None,
+):
+    """Checkout the specified commit (fetched if necessary)."""
     git_exe = git_exe or git(required=True)
 
-    git_exe("fetch", "--quiet", "--progress", "--all")
-    git_exe("checkout", commit)
+    # Do not do any fetching if the commit is already present.
+    try:
+        git_exe("checkout", "--quiet", commit, error=os.devnull)
+        return
+    except exe.ProcessError:
+        pass
+
+    # First try to fetch the specific commit from a specific remote. This allows fixed depth, but
+    # the server needs to support it.
+    if remote is not None:
+        try:
+            flags = [] if depth is None else [f"--depth={depth}"]
+            git_exe("fetch", "--quiet", "--progress", *flags, remote, commit, error=os.devnull)
+            git_exe("checkout", "--quiet", commit)
+            return
+        except exe.ProcessError:
+            pass
+
+    # Fall back to fetching all while unshallowing, to guarantee we get the commit. The depth flag
+    # is equivalent to --unshallow, and needed cause git can pedantically error with
+    # "--unshallow on a complete repository does not make sense".
+    remote_flag = "--all" if remote is None else remote
+    git_exe("fetch", "--quiet", "--progress", "--depth=2147483647", remote_flag)
+    git_exe("checkout", "--quiet", commit)
 
 
 def pull_checkout_tag(

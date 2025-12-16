@@ -85,7 +85,7 @@ from .core import (
 )
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
-from .reuse import ReusableSpecsSelector
+from .reuse import ReusableSpecsSelector, create_external_parser
 from .runtimes import RuntimePropertyRecorder, all_libcs, external_config_with_implicit_externals
 from .versions import Provenance
 
@@ -1161,6 +1161,7 @@ class PyclingoDriver:
         setup: "SpackSolverSetup",
         specs: List[spack.spec.Spec],
         reuse: Optional[List[spack.spec.Spec]] = None,
+        packages_with_externals=None,
         output: Optional[OutputConfiguration] = None,
         control: Optional[Any] = None,  # TODO: figure out how to annotate clingo.Control
         allow_deprecated: bool = False,
@@ -1209,6 +1210,7 @@ class PyclingoDriver:
         problem_builder = setup.setup(
             specs,
             reuse=reuse,
+            packages_with_externals=packages_with_externals,
             allow_deprecated=allow_deprecated,
             _use_unsat_cores=output.out is None,
         )
@@ -1437,6 +1439,10 @@ class ConditionContext(SourceContext):
         ctxt.transform = self.transform_imposed
         ctxt.wrap_node_requirement = self.wrap_node_requirement
         return ctxt
+
+
+def _track_dependencies(input_spec, requirements):
+    return requirements + [fn.attr("track_dependencies", input_spec.name)]
 
 
 class SpackSolverSetup:
@@ -1938,19 +1944,6 @@ class SpackSolverSetup:
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
 
-        def track_dependencies(input_spec, requirements):
-            return requirements + [fn.attr("track_dependencies", input_spec.name)]
-
-        def dependency_holds(input_spec, requirements):
-            result = remove_facts("node", "virtual_node")(input_spec, requirements) + [
-                fn.attr("dependency_holds", pkg.name, input_spec.name, dt.flag_to_string(t))
-                for t in dt.ALL_FLAGS
-                if t & depflag
-            ]
-            if input_spec.name not in pkg.extendees:
-                return result
-            return result + [fn.attr("extends", pkg.name, input_spec.name)]
-
         for cond, deps_by_name in pkg.dependencies.items():
             cond_str = str(cond)
             cond_str_suffix = f" when {cond_str}" if cond_str else ""
@@ -1971,11 +1964,28 @@ class SpackSolverSetup:
 
                 msg = f"{pkg.name} depends on {dep.spec}{cond_str_suffix}"
 
+                def dependency_holds(input_spec, requirements):
+                    # TODO: `dependency_holds` is used as a cache key, and is a unique object in
+                    # every iteration of the loop. This prevents deduplication of identical
+                    # "effects" when unique when specs impose the same dependency. We cannot move
+                    # this out of the loop, because the effect cache is keyed only by a spec, and
+                    # not by the dependency type.
+                    result = remove_facts("node", "virtual_node")(input_spec, requirements) + [
+                        fn.attr(
+                            "dependency_holds", pkg.name, input_spec.name, dt.flag_to_string(t)
+                        )
+                        for t in dt.ALL_FLAGS
+                        if t & depflag
+                    ]
+                    if input_spec.name not in pkg.extendees:
+                        return result
+                    return result + [fn.attr("extends", pkg.name, input_spec.name)]
+
                 context = ConditionContext()
                 context.source = ConstraintOrigin.append_type_suffix(
                     pkg.name, ConstraintOrigin.DEPENDS_ON
                 )
-                context.transform_required = track_dependencies
+                context.transform_required = _track_dependencies
                 context.transform_imposed = dependency_holds
 
                 self.condition(cond, dep.spec, required_name=pkg.name, msg=msg, context=context)
@@ -2208,11 +2218,10 @@ class SpackSolverSetup:
                 self.gen.newline()
                 requirement_weight += 1
 
-    def external_packages(self):
+    def external_packages(self, packages_with_externals):
         """Facts on external packages, from packages.yaml and implicit externals."""
         self.gen.h1("External packages")
-        packages_yaml = external_config_with_implicit_externals(spack.config.CONFIG)
-        for pkg_name, data in packages_yaml.items():
+        for pkg_name, data in packages_with_externals.items():
             if pkg_name == "all":
                 continue
 
@@ -2938,6 +2947,7 @@ class SpackSolverSetup:
         specs: Sequence[spack.spec.Spec],
         *,
         reuse: Optional[List[spack.spec.Spec]] = None,
+        packages_with_externals=None,
         allow_deprecated: bool = False,
         _use_unsat_cores: bool = True,
     ) -> "ProblemInstanceBuilder":
@@ -2950,6 +2960,7 @@ class SpackSolverSetup:
         Arguments:
             specs: list of Specs to solve
             reuse: list of concrete specs that can be reused
+            packages_with_externals: precomputed packages config with implicit externals
             allow_deprecated: if True adds deprecated versions into the solve
             _use_unsat_cores: if True, use unsat cores for internal errors
 
@@ -2957,6 +2968,8 @@ class SpackSolverSetup:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
         """
         reuse = reuse or []
+        if packages_with_externals is None:
+            packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
         check_packages_exist(specs)
         self.gen = ProblemInstanceBuilder()
 
@@ -3053,7 +3066,7 @@ class SpackSolverSetup:
         self.target_defaults(specs + dev_specs)
 
         self.virtual_requirements_and_weights()
-        self.external_packages()
+        self.external_packages(packages_with_externals)
 
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
@@ -3960,7 +3973,15 @@ class Solver:
 
         self._conc_cache = ConcretizationCache()
         self.driver = PyclingoDriver(conc_cache=self._conc_cache)
-        self.selector = ReusableSpecsSelector(configuration=spack.config.CONFIG)
+
+        # Compute packages configuration with implicit externals once and reuse it
+        self.packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
+        completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
+        self.selector = ReusableSpecsSelector(
+            configuration=spack.config.CONFIG,
+            external_parser=create_external_parser(self.packages_with_externals, completion_mode),
+            packages_with_externals=self.packages_with_externals,
+        )
 
     @staticmethod
     def _check_input_and_extract_concrete_specs(
@@ -4033,7 +4054,12 @@ class Solver:
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
         result = self.driver.solve(
-            setup, specs, reuse=reusable_specs, output=output, allow_deprecated=allow_deprecated
+            setup,
+            specs,
+            reuse=reusable_specs,
+            packages_with_externals=self.packages_with_externals,
+            output=output,
+            allow_deprecated=allow_deprecated,
         )
         self._conc_cache.cleanup()
         return result
@@ -4087,6 +4113,7 @@ class Solver:
                 setup,
                 input_specs,
                 reuse=reusable_specs,
+                packages_with_externals=self.packages_with_externals,
                 output=output,
                 allow_deprecated=allow_deprecated,
             )

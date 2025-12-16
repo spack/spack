@@ -951,10 +951,6 @@ class ViewDescriptor:
         return [x for x in nodes if x.name not in all_runtimes or runtimes_by_name[x.name] == x]
 
 
-def _create_environment(path):
-    return Environment(path)
-
-
 def env_subdir_path(manifest_dir: Union[str, pathlib.Path]) -> str:
     """Path to where the environment stores repos, logs, views, configs.
 
@@ -1038,6 +1034,8 @@ class Environment:
         state = self.__dict__.copy()
         state.pop("txlock", None)
         state.pop("_repo", None)
+        state.pop("repo_token", None)
+        state.pop("store_token", None)
         return state
 
     def __setstate__(self, state):
