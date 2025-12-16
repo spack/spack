@@ -770,23 +770,17 @@ def test_evaluate_or_true_if_mirror_all(tmp_path: pathlib.Path, mock_packages, m
 
     pkg_module_name = "spack_repo.builtin_mock.packages.arch_specific_pkg.package"
 
-    # Test WITHOUT --all
-    print("\nTest WITHOUT --all")
+    # Test WITHOUT --all for only current arch version
     mirror_dir = str(tmp_path / "mirror")
     spack.mirrors.utils.set_mirror_all(False)
-    mirror("create", "-d", mirror_dir, "arch-specific-pkg")
+    with spack.config.override("config:checksum", False):
+        output = mirror("create", "-d", mirror_dir, "arch-specific-pkg")
+    assert "1    added" in output, f"Expected 1 version, got {output}"
 
-    # Test WITH --all (simulated)
-    print("Test WITH --all")
+    # Test WITH --all for all arch versions
     mirror_dir_all = str(tmp_path / "mirror-all")
     spack.mirrors.utils.set_mirror_all(True)
     importlib.reload(sys.modules[pkg_module_name])
-
-    # Debug: check versions
-    pkg_class = sys.modules[pkg_module_name].ArchSpecificPkg
-    print(f"Versions dict: {pkg_class.versions}")
-    for v, data in pkg_class.versions.items():
-        print(f"  {v}: {data}")
-
-
-    mirror("create", "-d", mirror_dir_all, "arch-specific-pkg")
+    with spack.config.override("config:checksum", False):
+        output = mirror("create", "-d", mirror_dir_all, "-n", "all", "arch-specific-pkg")
+    assert "2    added" in output, f"Expected 2 versions, got {output}"
