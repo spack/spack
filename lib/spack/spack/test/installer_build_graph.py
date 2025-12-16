@@ -12,6 +12,7 @@ if sys.platform == "win32":
 
 import spack.deptypes as dt
 import spack.error
+import spack.traverse
 from spack.new_installer import BuildGraph
 from spack.spec import Spec
 from spack.store import Store
@@ -340,8 +341,9 @@ class TestBuildGraph:
         self, specs_with_build_deps: Dict[str, Spec], temporary_store: Store
     ):
         """Test that cache_only policy excludes build deps when include_build_deps=False."""
+        specs = [specs_with_build_deps["root"]]
         graph = BuildGraph(
-            specs=[specs_with_build_deps["root"]],
+            specs=specs,
             root_policy="cache_only",
             dependencies_policy="auto",
             include_build_deps=False,  # exclude build deps when possible
@@ -353,6 +355,11 @@ class TestBuildGraph:
         assert specs_with_build_deps["build_dep"].dag_hash() not in graph.nodes
         assert specs_with_build_deps["link_dep"].dag_hash() in graph.nodes
         assert specs_with_build_deps["all_dep"].dag_hash() in graph.nodes
+
+        # Verify that the entire graph has a prefix assigned, which avoids that the subprocess has
+        # to obtain a read lock on the database.
+        for s in spack.traverse.traverse_nodes(specs):
+            assert s._prefix is not None
 
     def test_cache_only_includes_build_deps_when_requested(
         self, specs_with_build_deps: Dict[str, Spec], temporary_store: Store

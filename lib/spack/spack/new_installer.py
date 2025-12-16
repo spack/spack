@@ -56,6 +56,7 @@ import spack.paths
 import spack.report
 import spack.spec
 import spack.store
+import spack.traverse
 import spack.url_buildcache
 import spack.util.lock
 
@@ -1110,16 +1111,19 @@ class BuildGraph:
         ]
 
         with database.read_transaction():
+            # Set the install prefix for each spec based on the db record or store layout
+            for s in spack.traverse.traverse_nodes(specs):
+                _, record = database.query_by_spec_hash(s.dag_hash())
+                if record and record.path:
+                    s.set_prefix(record.path)
+                else:
+                    s.set_prefix(spack.store.STORE.layout.path_for_spec(s))
+
+            # Build the graph and determine which specs to prune
             while stack:
                 spec, install_policy = stack.pop()
                 key = spec.dag_hash()
                 _, record = database.query_by_spec_hash(key)
-
-                # Set the install prefix for each spec based on the db record or store layout
-                if record and record.path:
-                    spec.set_prefix(record.path)
-                else:
-                    spec.set_prefix(spack.store.STORE.layout.path_for_spec(spec))
 
                 # Conditionally include build dependencies
                 if record and record.installed and key not in overwrite_set:
