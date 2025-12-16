@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import base64
-import codecs
+import io
 import json
 import os
 import pathlib
@@ -1310,7 +1310,7 @@ def read_broken_spec(broken_spec_url):
         tty.warn(f"Unable to read broken spec from {broken_spec_url}")
         return None
 
-    broken_spec_contents = codecs.getreader("utf-8")(fs).read()
+    broken_spec_contents = io.TextIOWrapper(fs, encoding="utf-8").read()
     return syaml.load(broken_spec_contents)
 
 
