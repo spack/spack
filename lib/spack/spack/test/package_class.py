@@ -26,6 +26,7 @@ import spack.subprocess_context
 from spack.error import InstallError
 from spack.package_base import PackageBase
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
+from spack.version import Version
 
 
 @pytest.fixture(scope="module")
@@ -385,3 +386,20 @@ def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, 
     captured = capsys.readouterr()
     assert "commit" not in spec.variants
     assert "Warning: Unable to resolve the git commit" in captured.err
+
+
+@pytest.mark.parametrize(
+    "pkg_name,preferred_version",
+    [
+        # This package has a deprecated v1.1.0 which should not be the preferred
+        ("deprecated_versions", "1.0.0"),
+        # Python has v2.7.11 marked as preferred and newer v3 versions
+        ("python", "2.7.11"),
+        # This package has various versions, some deprecated, plus "main" and "develop"
+        ("git-ref-package", "3.0.1"),
+    ],
+)
+def test_package_preferred_version(mock_packages, config, pkg_name, preferred_version):
+    """Tests retrieving the preferred version of a package."""
+    pkg_cls = mock_packages.get_pkg_class(pkg_name)
+    assert spack.package_base.preferred_version(pkg_cls) == Version(preferred_version)
