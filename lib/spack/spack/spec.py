@@ -3487,13 +3487,23 @@ class Spec:
                         return False
 
                 else:
+                    # If the branch is %<virtual> or ^<virtual>, check if we have a corresponding
+                    # branch in the lhs
+                    candidate_edges = []
+                    if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name):
+                        candidate_edges = current_node.edges_to_dependencies(
+                            name=rhs_edge.spec.name
+                        )
+
                     name = (
                         None
                         if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name)
                         else rhs_edge.spec.name
                     )
-                    candidate_edges = current_node.edges_to_dependencies(
-                        name=name, virtuals=rhs_edge.virtuals or None
+                    candidate_edges.extend(
+                        current_node.edges_to_dependencies(
+                            name=name, virtuals=rhs_edge.virtuals or None
+                        )
                     )
                     # Select at least the deptypes on the rhs_edge, and conditional edges that
                     # constrain a bigger portion of the search space (so it's rhs.when <= lhs.when)
@@ -3553,7 +3563,11 @@ class Spec:
                 return False
 
             for virtual in rhs_edge.virtuals:
-                has_virtual = any(virtual in edge.virtuals for edge in candidate_edges)
+                # Check the name because ^mpi has the "mpi" virtual
+                has_virtual = any(
+                    virtual in edge.virtuals or virtual == edge.spec.name
+                    for edge in candidate_edges
+                )
                 if not has_virtual:
                     return False
 

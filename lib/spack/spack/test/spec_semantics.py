@@ -2464,3 +2464,12 @@ def test_attribute_existence_in_satisfies(spec_str, assertions, mock_packages, c
     s = Spec(spec_str)
     for test, expected in assertions:
         assert s.satisfies(test) is expected
+
+
+@pytest.mark.regression("51768")
+@pytest.mark.parametrize("spec_str", ["mpi", "%mpi", "^mpi", "%foo", "%c=gcc", "%[when=%c]c=gcc"])
+def test_specs_semantics_on_self(spec_str, mock_packages, config):
+    """Tests that an abstract spec satisfies and intersects with itself."""
+    s = Spec(spec_str)
+    assert s.satisfies(s)
+    assert s.intersects(s)
