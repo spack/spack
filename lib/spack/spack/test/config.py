@@ -6,6 +6,7 @@ import collections
 import io
 import os
 import pathlib
+import sys
 import tempfile
 import textwrap
 from datetime import date
@@ -78,13 +79,6 @@ spack:
 """
         )
     return env_yaml
-
-
-def cross_plat_join(*pths):
-    """os.path.join does not prepend paths to other paths
-       beginning with a Windows drive label i.e. D:\\
-    """
-    return os.sep.join([pth for pth in pths])
 
 
 def check_compiler_config(comps, *compiler_names):
@@ -338,43 +332,54 @@ class MockEnv:
         self.path = path
 
 
-def test_substitute_config_variables(mock_low_high_config, monkeypatch):
-    prefix = spack.paths.prefix.lstrip("/")
-    assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix
-    ) == spack_path.canonicalize_path("/foo/bar/baz/$spack")
+def test_substitute_config_variables(mock_low_high_config, monkeypatch, tmp_path: pathlib.Path):
+    # Test $spack substitution at the start (valid on all platforms)
+    assert os.path.join(spack.paths.prefix, "foo", "bar", "baz") == spack_path.canonicalize_path(
+        "$spack/foo/bar/baz/"
+    )
 
-    assert cross_plat_join(
-        spack.paths.prefix, os.path.join("foo", "bar", "baz")
-    ) == spack_path.canonicalize_path("$spack/foo/bar/baz/")
+    assert os.path.join(spack.paths.prefix, "foo", "bar", "baz") == spack_path.canonicalize_path(
+        "${spack}/foo/bar/baz/"
+    )
 
-    assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
-    ) == spack_path.canonicalize_path("/foo/bar/baz/$spack/foo/bar/baz/")
+    # Test $spack substitution in the middle. This only makes sense when using posix paths.
+    if sys.platform != "win32":
+        prefix = spack.paths.prefix.lstrip(os.sep)
+        base = str(tmp_path)
 
-    assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix
-    ) == spack_path.canonicalize_path("/foo/bar/baz/${spack}")
+        assert os.path.join(base, "foo", "bar", "baz", prefix) == spack_path.canonicalize_path(
+            os.path.join(base, "foo", "bar", "baz", "$spack")
+        )
 
-    assert cross_plat_join(
-        spack.paths.prefix, os.path.join("foo", "bar", "baz")
-    ) == spack_path.canonicalize_path("${spack}/foo/bar/baz/")
+        assert os.path.join(
+            base, "foo", "bar", "baz", prefix, "foo", "bar", "baz"
+        ) == spack_path.canonicalize_path(
+            os.path.join(base, "foo", "bar", "baz", "$spack", "foo", "bar", "baz")
+        )
 
-    assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
-    ) == spack_path.canonicalize_path("/foo/bar/baz/${spack}/foo/bar/baz/")
+        assert os.path.join(base, "foo", "bar", "baz", prefix) == spack_path.canonicalize_path(
+            os.path.join(base, "foo", "bar", "baz", "${spack}")
+        )
 
-    assert cross_plat_join(
-        os.sep + os.path.join("foo", "bar", "baz"), prefix, os.path.join("foo", "bar", "baz")
-    ) != spack_path.canonicalize_path("/foo/bar/baz/${spack/foo/bar/baz/")
+        assert os.path.join(
+            base, "foo", "bar", "baz", prefix, "foo", "bar", "baz"
+        ) == spack_path.canonicalize_path(
+            os.path.join(base, "foo", "bar", "baz", "${spack}", "foo", "bar", "baz")
+        )
+
+        assert os.path.join(
+            base, "foo", "bar", "baz", prefix, "foo", "bar", "baz"
+        ) != spack_path.canonicalize_path(
+            os.path.join(base, "foo", "bar", "baz", "${spack", "foo", "bar", "baz")
+        )
 
     # $env replacement is a no-op when no environment is active
     assert spack_path.canonicalize_path(
-        os.sep + os.path.join("foo", "bar", "baz", "$env")
-    ) == os.sep + os.path.join("foo", "bar", "baz", "$env")
+        os.path.join(str(tmp_path), "foo", "bar", "baz", "$env")
+    ) == os.path.join(str(tmp_path), "foo", "bar", "baz", "$env")
 
     # Fake an active environment and $env is replaced properly
-    fake_env_path = os.sep + os.path.join("quux", "quuux")
+    fake_env_path = str(tmp_path / "quux" / "quuux")
     monkeypatch.setattr(ev, "active_environment", lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path("$env/foo/bar/baz") == os.path.join(
         fake_env_path, os.path.join("foo", "bar", "baz")
@@ -435,18 +440,17 @@ def test_merge_with_defaults(mock_low_high_config, write_config_file):
     assert cfg["baz"]["version"] == ["c"]
 
 
-def test_substitute_user(mock_low_high_config):
+def test_substitute_user(mock_low_high_config, tmp_path: pathlib.Path):
     user = spack_path.get_user()
-    assert os.sep + os.path.join(
-        "foo", "bar"
-    ) + os.sep + user + os.sep + "baz" == spack_path.canonicalize_path(
-        os.sep + os.path.join("foo", "bar", "$user", "baz")
+    base = str(tmp_path)
+    assert os.path.join(base, "foo", "bar", user, "baz") == spack_path.canonicalize_path(
+        os.path.join(base, "foo", "bar", "$user", "baz")
     )
 
 
 def test_substitute_user_cache(mock_low_high_config):
     user_cache_path = spack.paths.user_cache_path
-    assert user_cache_path + os.sep + "baz" == spack_path.canonicalize_path(
+    assert os.path.join(user_cache_path, "baz") == spack_path.canonicalize_path(
         os.path.join("$user_cache_path", "baz")
     )
 
@@ -454,7 +458,7 @@ def test_substitute_user_cache(mock_low_high_config):
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
     assert tempdir == spack_path.canonicalize_path("$tempdir")
-    assert tempdir + os.sep + os.path.join("foo", "bar", "baz") == spack_path.canonicalize_path(
+    assert os.path.join(tempdir, "foo", "bar", "baz") == spack_path.canonicalize_path(
         os.path.join("$tempdir", "foo", "bar", "baz")
     )
 
@@ -481,17 +485,23 @@ full_padded_string = os.path.join(os.sep + "path", os.sep.join(reps))[:MAX_PADDE
 
 
 @pytest.mark.parametrize(
-    "config_settings,expected",
+    "config_settings_fn,expected_fn",
     [
-        ([], [None, None, None]),
-        ([["config:install_tree:root", os.sep + "path"]], [os.sep + "path", None, None]),
+        (lambda p: [], lambda p: [None, None, None]),
         (
-            [["config:install_tree:projections", {"all": "{name}"}]],
-            [None, None, {"all": "{name}"}],
+            lambda p: [["config:install_tree:root", os.path.join(str(p), "path")]],
+            lambda p: [os.path.join(str(p), "path"), None, None],
+        ),
+        (
+            lambda p: [["config:install_tree:projections", {"all": "{name}"}]],
+            lambda p: [None, None, {"all": "{name}"}],
         ),
     ],
 )
-def test_parse_install_tree(config_settings, expected, mutable_config):
+def test_parse_install_tree(config_settings_fn, expected_fn, mutable_config, tmp_path):
+    config_settings = config_settings_fn(tmp_path)
+    expected = expected_fn(tmp_path)
+
     expected_root = expected[0] or mutable_config.get("config:install_tree:root")
     expected_unpadded_root = expected[1] or expected_root
     expected_proj = expected[2] or spack.directory_layout.default_projections
@@ -1146,18 +1156,18 @@ def test_bad_path_double_override(config):
             pass
 
 
-def test_license_dir_config(mutable_config, mock_packages):
+def test_license_dir_config(mutable_config, mock_packages, tmp_path):
     """Ensure license directory is customizable"""
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
     assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == expected_dir
 
-    rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
-    spack.config.set("config:license_dir", rel_path)
-    assert spack.config.get("config:license_dir") == rel_path
-    assert spack.package_base.PackageBase.global_license_dir == rel_path
-    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == rel_path
+    abs_path = str(tmp_path / "foo" / "bar" / "baz")
+    spack.config.set("config:license_dir", abs_path)
+    assert spack.config.get("config:license_dir") == abs_path
+    assert spack.package_base.PackageBase.global_license_dir == abs_path
+    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == abs_path
 
 
 @pytest.mark.regression("22547")
