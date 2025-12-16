@@ -24,7 +24,6 @@ import spack.version
 from spack.main import SpackCommand, SpackCommandError
 from spack.mirrors.utils import MirrorStatsForAllSpecs, MirrorStatsForOneSpec
 
-
 config = SpackCommand("config")
 mirror = SpackCommand("mirror")
 env = SpackCommand("env")

@@ -25,8 +25,8 @@ def get_mirror_all_mode():
 
 
 def set_mirror_all(enable):
-   global _mirror_all_mode
-   _mirror_all_mode = enable
+    global _mirror_all_mode
+    _mirror_all_mode = enable
 
 
 def evaluate_or_true_if_mirror_all(expression):
