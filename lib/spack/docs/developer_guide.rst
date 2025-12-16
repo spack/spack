@@ -406,7 +406,7 @@ Debugging Unit Tests in CI
 
 Spack runs its CI for unit tests via Github Actions from the Spack repo.
 The unit tests are run for each platform Spack supports, Windows, Linux, and MacOS.
-It may be the case that a unit test fails or passes on one of these platforms.
+It may be the case that a unit test fails or passes on just one of these platforms.
 When the platform is one the PR author does not have access to, it can be difficult to reproduce, diagnose, and fix a CI failure.
 Thankfully, PR authors can take advantage of a Github Actions Action to gain temporary access to the failing platform from the context of their PRs.
 Simply copy the following Github actions yaml stanza into `the GHA workflow file <https://github.com/spack/spack/blob/develop/.github/workflows/unit_tests.yaml>`__ in the `steps` section of whatever unit test needs debugging.
@@ -456,8 +456,8 @@ As the action runs, you should observe output similar to:
    ssh 5RjFs7LPdtwGG8cwSPkGrdMNg@sfo2.tmate.io
    https://tmate.io/t/5RjFs7LPdtwGG8cwSPkGrdMNg
 
-The first line is the ssh command neccesary to connect to the server, the second line is a tmate web-ui that also provides access to the ssh server on the runner. .. note:: the UI has occasionally been unresponsive.
-If it does not respond within ~10s, you'll need to use your local ssh utility.
+The first line is the ssh command neccesary to connect to the server, the second line is a tmate web-ui that also provides access to the ssh server on the runner. 
+.. note:: the UI has occasionally been unresponsive. If it does not respond within ~10s, you'll need to use your local ssh utility.
 
 Once connected via SSH, you have the same level of access to the machine that the CI job's user does.
 Spack's source should be available already (depending on where the step was inserted).
