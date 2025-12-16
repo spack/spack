@@ -76,18 +76,16 @@ class SpackPaths:
             ["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME"],
             "XDG_STATE_HOME",
             "state",
-            ".local/state/spack",
+            ".local/state",
         )
 
     @property
     def cache_home(self):
-        return self.resolve_a_home("SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache/spack")
+        return self.resolve_a_home("SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache")
 
     @property
     def data_home(self):
-        return self.resolve_a_home(
-            "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", ".local/share/spack"
-        )
+        return self.resolve_a_home("SPACK_DATA_HOME", "XDG_DATA_HOME", "data", ".local/share")
 
     @property
     def user_cache_path(self):
@@ -200,13 +198,13 @@ class SpackPaths:
             if disable_env:
                 return
             if xdg_var in os.environ:
-                return os.path.join(os.environ[xdg_var], home_rel)
+                return os.path.join(os.environ[xdg_var], "spack")
 
         def spack_home_env_check():
             if disable_env:
                 return
             if "SPACK_HOME" in os.environ:
-                return os.path.join(os.environ["SPACK_HOME"], home_rel)
+                return os.path.join(os.environ["SPACK_HOME"], home_rel, "spack")
 
         def cfg_check():
             return config.get(f"config:locations:{config_var}", None)
