@@ -402,7 +402,7 @@ Unit testing
 ------------
 
 Debugging Unit Tests in CI
------------------------
+--------------------------
 
 Spack runs its CI for unit tests via Github Actions from the Spack repo.
 The unit tests are run for each platform Spack supports, Windows, Linux, and MacOS.
@@ -412,6 +412,7 @@ Thankfully, PR authors can take advantage of a Github Actions Action to gain tem
 Simply copy the following Github actions yaml stanza into the `<spack_root>/.github/workflows/unit_tests.yaml` GHA workflow file in the `steps` section of whatever unit test needs debugging.
 
 .. code-block:: yaml
+
    - name: Setup tmate session
    uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
 
@@ -421,6 +422,7 @@ You can of course put this stanza after the unit-tests, but then you'll be stuck
 For example, if you were to add this step to the Linux unit test CI, it would look something like:
 
 .. code-block:: yaml
+
    - name: Bootstrap clingo
    if: ${{ matrix.concretizer == 'clingo' }}
    env:
@@ -450,6 +452,7 @@ This action provides access to an SSH server running on the GHA runner that is h
 As the action runs, you should observe output similar to:
 
 .. code-block:: bash
+
    ssh 5RjFs7LPdtwGG8cwSPkGrdMNg@sfo2.tmate.io
    https://tmate.io/t/5RjFs7LPdtwGG8cwSPkGrdMNg
 
