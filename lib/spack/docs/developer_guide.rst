@@ -451,7 +451,7 @@ Once this step is present in the job definition, it will be triggered for each C
 This action provides access to an SSH server running on the GHA runner that is hosting a given CI run.
 As the action runs, you should observe output similar to:
 
-.. code-block:: bash
+.. code-block:: console
 
    ssh 5RjFs7LPdtwGG8cwSPkGrdMNg@sfo2.tmate.io
    https://tmate.io/t/5RjFs7LPdtwGG8cwSPkGrdMNg
