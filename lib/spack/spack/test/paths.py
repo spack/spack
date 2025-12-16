@@ -40,9 +40,7 @@ def test_install_location(working_env, tmp_path, mutable_config):
     spack_data_prefix = _ensure_dir(tmp_path / "spack-data")
     spack.config.set("config:locations:data", spack_data_prefix)
     p3 = SpackPaths(SpackPathsBase(base_prefix))
-    assert p3.default_install_location == str(
-        pathlib.Path(spack_data_prefix) / "installs"
-    )
+    assert p3.default_install_location == str(pathlib.Path(spack_data_prefix) / "installs")
 
     # $XDG_DATA_HOME overrides all the above
     xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
@@ -60,9 +58,7 @@ def test_install_location(working_env, tmp_path, mutable_config):
     # to using "config:locations:data"
     spack.config.set("config:locations:disable_env", True)
     p6 = SpackPaths(SpackPathsBase(base_prefix))
-    assert p6.default_install_location == str(
-        pathlib.Path(spack_data_prefix) / "installs"
-    )
+    assert p6.default_install_location == str(pathlib.Path(spack_data_prefix) / "installs")
 
 
 def test_system_config_path_is_overridable(working_env, tmp_path):
