@@ -2,6 +2,10 @@ bootstrap:
 - changed-files:
   - any-glob-to-any-file: lib/spack/spack/bootstrap/**
 
+binary-caches:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/binary_distribution.py
+
 ci:
 - changed-files:
   - any-glob-to-any-file: lib/spack/spack/ci/**
@@ -11,10 +15,6 @@ ci:
 commands:
 - changed-files:
   - any-glob-to-any-file: lib/spack/spack/cmd/**
-
-compilers:
-- changed-files:
-  - any-glob-to-any-file: lib/spack/spack/compilers/**
 
 config:
 - changed-files:
@@ -49,6 +49,8 @@ style:
   - any-glob-to-any-file: .flake8
   - any-glob-to-any-file: pyproject.toml
   - any-glob-to-any-file: lib/spack/spack/cmd/style.py
+  - any-glob-to-any-file: .github/workflows/prechecks.yml
+  - any-glob-to-any-file: .github/workflows/requirements/style/**
 
 unit-tests:
 - changed-files:
