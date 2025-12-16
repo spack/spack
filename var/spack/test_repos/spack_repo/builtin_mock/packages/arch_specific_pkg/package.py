@@ -1,12 +1,13 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import sys
+import platform
 
 from spack_repo.builtin_mock.build_systems.generic import Package
+
 import spack.mirrors.utils
 from spack.package import *
-import platform
+
 
 class ArchSpecificPkg(Package):
     if spack.mirrors.utils.evaluate_or_true_if_mirror_all(platform.machine() == "x86_64"):
