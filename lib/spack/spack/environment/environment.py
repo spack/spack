@@ -246,7 +246,7 @@ def activate(env, use_env_repo=False, shell="sh", prompt="", view=""):
                 yaml_update = os.stat(os.path.join(env.path, manifest_name)).st_mtime
                 activation_update = os.stat(env_activate_script).st_mtime
                 if yaml_update > activation_update or prompt or view:
-                    update_env_activate_script(env, shell, prompt, view)
+                    update_env_activate_script(env, prompt, view)
 
         tty.debug(f"Using environment '{env.name}'")
     except Exception:
@@ -1533,7 +1533,8 @@ class Environment:
             self.write()
 
     def concretize(
-        self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
+        self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False,
+
     ) -> Sequence[SpecPair]:
         """Concretize user_specs in this environment.
 

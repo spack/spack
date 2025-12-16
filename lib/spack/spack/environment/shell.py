@@ -19,12 +19,12 @@ def activate_header(env, shell, view: Optional[str] = None):
     cmds = ""
     if shell == "csh":
         # TODO: figure out how to make color work for csh
-        cmds += f"setenv SPACK_ENV {env.path};\n"
+        cmds += f"_spack_env_set SPACK_ENV {env.path};\n"
         if view:
-            cmds += f"setenv SPACK_ENV_VIEW {view};\n"
+            cmds += f"_spack_env_set SPACK_ENV_VIEW {view};\n"
         cmds += 'alias despacktivate "spack env deactivate";\n'
     elif shell == "fish":
-        cmds += f"set -gx SPACK_ENV {env.path};\n"
+        cmds += f"_spack_env_set SPACK_ENV {env.path};\n"
         cmds += "function despacktivate;\n"
         cmds += "   spack env deactivate;\n"
         cmds += "end;\n"
@@ -53,7 +53,7 @@ def activate_with_prompt(shell, prompt):
 
     if shell == "csh":
         cmds += "if (! $?SPACK_OLD_PROMPT ) "
-        cmds += f'setenv SPACK_OLD_PROMPT "${prompt}";\n'
+        cmds += f"_spack_env_set SPACK_OLD_PROMPT {prompt};\n"
         cmds += f'set prompt="${prompt}";\n'
     elif shell == "fish":
         if "color" in os.getenv("TERM", ""):
@@ -91,7 +91,7 @@ def activate_with_prompt(shell, prompt):
 def activate_with_view(shell, view):
     cmd = ""
     if shell == "csh":
-        cmd = f"setenv SPACK_ENV_VIEW {view};\n"
+        cmd = f"_spack_env_set SPACK_ENV_VIEW {view};\n"
     elif shell == "bat":
         cmd = f'set "SPACK_ENV_VIEW={view}"\n'
     elif shell == "pwsh":
@@ -104,11 +104,11 @@ def activate_with_view(shell, view):
 def deactivate_header(shell):
     cmds = ""
     if shell == "csh":
-        cmds += "unsetenv SPACK_ENV;\n"
-        cmds += "unsetenv SPACK_ENV_VIEW;\n"
+        cmds += "_spack_env_unset SPACK_ENV;\n"
+        cmds += "_spack_env_unset SPACK_ENV_VIEW;\n"
         cmds += "if ( $?SPACK_OLD_PROMPT ) "
         cmds += '    eval \'set prompt="$SPACK_OLD_PROMPT" &&'
-        cmds += "          unsetenv SPACK_OLD_PROMPT';\n"
+        cmds += "          _spack_env_unset SPACK_OLD_PROMPT';\n"
         cmds += "unalias despacktivate;\n"
     elif shell == "fish":
         cmds += "set -e SPACK_ENV;\n"
