@@ -1,0 +1,47 @@
+bootstrap:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/bootstrap/**
+ci:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/ci/**
+  - any-glob-to-any-file: .github/**
+  - any-glob-to-any-file: .ci/**
+commands:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/cmd/**
+compilers:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/compilers/**
+docs:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/docs/**
+  - any-glob-to-any-file: .readthedocs.yml
+environments:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/environment/**
+mirrors:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/mirrors/**
+modules:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/modules/**
+schema:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/schema/**
+solver:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/solver/**
+unit-tests:
+- changed-files:
+  - any-glob-to-any-file: .codecov.yml
+  - any-glob-to-any-file: .flake8
+  - any-glob-to-any-file: lib/spack/spack/test/**
+  - any-glob-to-any-file: pyproject.toml
+  - any-glob-to-any-file: pytest.ini
+  - any-glob-to-any-file: var/spack/test_repos/**
+vendor:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/vendor/**
+versions:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/version/**
