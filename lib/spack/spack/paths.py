@@ -199,7 +199,8 @@ class SpackPaths:
         def xdg_env_check():
             if disable_env:
                 return
-            return os.environ.get(xdg_var, None)
+            if xdg_var in os.environ:
+                return os.path.join(os.environ[xdg_var], home_rel)
 
         def spack_home_env_check():
             if disable_env:
