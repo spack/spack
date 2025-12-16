@@ -5,23 +5,23 @@ import copy
 import os
 import shutil
 import urllib
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import spack.vendor.ruamel.yaml
 
 import spack
 import spack.binary_distribution
 import spack.config
+import spack.environment as ev
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
-import spack.util.path as path_util
 import spack.util.spack_yaml as syaml
+from spack.util.path import canonicalize_path, substitute_path_variables
 
 from .common import (
-    SPACK_RESERVED_TAGS,
-    CIJobData,
+    CIJobData,  # TODO/TLD: Keep?
     CIScriptStage,
     PipelineDag,
     PipelineOptions,
@@ -52,15 +52,138 @@ JOB_RETRY_CONDITIONS = [
 JOB_NAME_FORMAT = "{name}{@version} {/hash}"
 
 
-class GitlabJob(CIJobData):
+class GitlabCI(SpackCIConfig):
+    """Gitlab-specific CI configuration and options handler."""
 
-    def remove_reserved_tags(self):
-        for tag in SPACK_RESERVED_TAGS:
-            try:
-                self.tags.remove(tag)
-            except ValueError:
-                # value is not in the list
-                pass
+    def __init__(self, ci_config: Dict[str, Any], options: PipelineOptions):
+        super().__init__(ci_config)
+
+        self.generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
+        self.generate_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
+
+        self.options = options
+
+        self._directory: Dict[str, str] = {}
+        self._add_directories()
+
+    def _add_directories(self):
+        ci_project_dir = os.environ.get("CI_PROJECT_DIR") or os.getcwd()
+
+        artifacts_root = self.options.artifacts_root
+        if artifacts_root.startswith(ci_project_dir):
+            artifacts_root = os.path.relpath(artifacts_root, ci_project_dir)
+
+        pipeline_artifacts_dir = os.path.join(ci_project_dir, artifacts_root)
+
+        self._directory["ci_project_dir"] = ci_project_dir
+        self._directory["relative_artifacts_root"] = artifacts_root
+
+        self._directory["pipeline_artifacts_dir"] = pipeline_artifacts_dir
+        self._directory["env_artifacts_dir"] = os.path.join(
+            pipeline_artifacts_dir, "concrete_environment"
+        )
+        self._directory["log_artifacts_dir"] = os.path.join(pipeline_artifacts_dir, "logs")
+        self._directory["reproduction_artifacts_dir"] = os.path.join(
+            pipeline_artifacts_dir, "reproduction"
+        )
+        self._directory["test_artifacts_dir"] = os.path.join(pipeline_artifacts_dir, "tests")
+        self._directory["user_artifacts_dir"] = os.path.join(pipeline_artifacts_dir, "user_data")
+
+    @classmethod
+    def from_config(cls, config: SpackCIConfig, options: PipelineOptions) -> "GitlabCI":
+        return cls(config.ci_config, options)
+
+    def directory(self, name: str, absolute: bool = True) -> str:
+        """Return the named directory.
+
+        Relative paths are used by downstream jobs to avoid issues in situations
+        where the CI_PROJECT_DIR varies between the pipeline generation job and
+        the rebuild jobs.  This can happen when gitlab checks out the project
+        into a runner-specific directory, for example, and different runners are
+        picked for generate and rebuild jobs.
+
+        Args:
+            name: name/key of the directory
+            absolute: ``True`` for the absolute directory; ``False`` for the
+                path relative to CI_PROJECT_DIR
+
+        Returns: path to the directory
+
+        Raises:
+            ValueError: unknown name/key
+        """
+        if name not in self._directory:
+            raise ValueError(f"'{name}' is not a known directory")
+
+        path = self._directory[name]
+        if absolute:
+            return path
+
+        return os.path.relpath(path, self._directory["ci_project_dir"])
+
+    def copy_manifest_file(self):
+        """Copy the manifest file to the artifacts directory.
+
+        Raises:
+            spack.config.ConfigSectionError: top level is not 'spack'
+        """
+        env_artifacts_dir = self.directory("env_artifacts_dir")
+        with open(self.options.env.manifest_path, "r", encoding="utf-8") as fin, open(
+            os.path.join(os.path.join(env_artifacts_dir, ev.manifest_name)), "w", encoding="utf-8"
+        ) as fout:
+            data = syaml.load(fin)
+            if "spack" not in data:
+                raise spack.config.ConfigSectionError(
+                    'Missing top level "spack" section in environment'
+                )
+
+            def _rewrite_include(path, orig_root, new_root):
+                expanded_path = substitute_path_variables(path)
+
+                # Skip non-local paths
+                parsed = urllib.parse.urlparse(expanded_path)
+                file_schemes = ["", "file"]
+                if parsed.scheme not in file_schemes:
+                    return path
+
+                if os.path.isabs(expanded_path):
+                    return path
+                abs_path = canonicalize_path(path, orig_root)
+                return os.path.relpath(abs_path, start=new_root)
+
+            # If there are no includes, just copy
+            if "include" in data["spack"]:
+                includes = data["spack"]["include"]
+                # If there are includes in the config, then we need to fix the relative paths
+                # to be relative from the concrete env dir used by downstream pipelines
+                env_root_path = os.path.dirname(os.path.abspath(self.options.env.manifest_path))
+                fixed_includes = []
+                for inc in includes:
+                    if isinstance(inc, dict):
+                        inc["path"] = _rewrite_include(
+                            inc["path"], env_root_path, env_artifacts_dir
+                        )
+                    else:
+                        inc = _rewrite_include(inc, env_root_path, env_artifacts_dir)
+
+                    fixed_includes.append(inc)
+
+                data["spack"]["include"] = fixed_includes
+
+            syaml.dump(data, fout)
+
+    def copy_env_artifacts(self):
+        """Copy the environment manifest and lock files to the environment
+        artifacts directory."""
+        env_artifacts_dir = self.directory("env_artifacts_dir")
+        if not os.path.exists(env_artifacts_dir):
+            os.makedirs(env_artifacts_dir)
+
+        self.copy_manifest_file()
+
+        shutil.copyfile(
+            self.options.env.lock_path, os.path.join(env_artifacts_dir, ev.lockfile_name)
+        )
 
 
 def get_job_name(spec: spack.spec.Spec, build_group: Optional[str] = None) -> str:
@@ -111,13 +234,10 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         spack_ci: An object containing the configured attributes of all jobs in the pipeline
         options: An object containing all the pipeline options gathered from yaml, env, etc...
     """
-    ci_project_dir = os.environ.get("CI_PROJECT_DIR") or os.getcwd()
-    generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
-    generate_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
-    artifacts_root = options.artifacts_root
-    if artifacts_root.startswith(ci_project_dir):
-        artifacts_root = os.path.relpath(artifacts_root, ci_project_dir)
-    pipeline_artifacts_dir = os.path.join(ci_project_dir, artifacts_root)
+    # Convert to gitlab-specific CI manager
+    gitlab_ci = GitlabCI.from_config(spack_ci, options)
+
+    # TODO/TLD: RESUME HERE
     output_file = options.output_file
 
     if not output_file:
@@ -128,83 +248,15 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)
 
-    concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
-
     # Now that we've added the mirrors we know about, they should be properly
     # reflected in the environment manifest file, so copy that into the
-    # concrete environment directory, along with the spack.lock file.
-    if not os.path.exists(concrete_env_dir):
-        os.makedirs(concrete_env_dir)
-
-    # Copy the manifest and handle relative included paths
-    with open(options.env.manifest_path, "r", encoding="utf-8") as fin, open(
-        os.path.join(concrete_env_dir, "spack.yaml"), "w", encoding="utf-8"
-    ) as fout:
-        data = syaml.load(fin)
-        if "spack" not in data:
-            raise spack.config.ConfigSectionError(
-                'Missing top level "spack" section in environment'
-            )
-
-        def _rewrite_include(path, orig_root, new_root):
-            expanded_path = path_util.substitute_path_variables(path)
-
-            # Skip non-local paths
-            parsed = urllib.parse.urlparse(expanded_path)
-            file_schemes = ["", "file"]
-            if parsed.scheme not in file_schemes:
-                return path
-
-            if os.path.isabs(expanded_path):
-                return path
-            abs_path = path_util.canonicalize_path(path, orig_root)
-            return os.path.relpath(abs_path, start=new_root)
-
-        # If there are no includes, just copy
-        if "include" in data["spack"]:
-            includes = data["spack"]["include"]
-            # If there are includes in the config, then we need to fix the relative paths
-            # to be relative from the concrete env dir used by downstream pipelines
-            env_root_path = os.path.dirname(os.path.abspath(options.env.manifest_path))
-            fixed_includes = []
-            for inc in includes:
-                if isinstance(inc, dict):
-                    inc["path"] = _rewrite_include(inc["path"], env_root_path, concrete_env_dir)
-                else:
-                    inc = _rewrite_include(inc, env_root_path, concrete_env_dir)
-
-                fixed_includes.append(inc)
-
-            data["spack"]["include"] = fixed_includes
-
-            os.makedirs(concrete_env_dir, exist_ok=True)
-        syaml.dump(data, fout)
-
-    shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
-
-    job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
-    job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
-    job_test_dir = os.path.join(pipeline_artifacts_dir, "tests")
-    user_artifacts_dir = os.path.join(pipeline_artifacts_dir, "user_data")
-
-    # We communicate relative paths to the downstream jobs to avoid issues in
-    # situations where the CI_PROJECT_DIR varies between the pipeline
-    # generation job and the rebuild jobs.  This can happen when gitlab
-    # checks out the project into a runner-specific directory, for example,
-    # and different runners are picked for generate and rebuild jobs.
-
-    rel_concrete_env_dir = os.path.relpath(concrete_env_dir, ci_project_dir)
-    rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
-    rel_job_repro_dir = os.path.relpath(job_repro_dir, ci_project_dir)
-    rel_job_test_dir = os.path.relpath(job_test_dir, ci_project_dir)
-    rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
+    # concrete environment artifacts directory, along with the spack.lock file.
+    gitlab_ci.copy_env_artifacts()
 
     # TODO/TLD: need to either pass variables in or have them extractable by
     # TODO/TLD: spack_ci
     def main_script_replacements(cmd: str):
-        return cmd.replace("{env_dir}", rel_concrete_env_dir)
-
-    spack_ci.register_script_converter(CIScriptStage("script"), main_script_replacements)
+        return cmd.replace("{env_dir}", gitlab_ci.directory("env_artifacts_dir", absolute=False))
 
     output_object = {}
     job_id = 0
@@ -215,8 +267,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     max_length_needs = 0
     max_needs_job = ""
 
-    # TODO/TLD: Why must we work with the IR?
-    spack_ci_ir = spack_ci.generate_ir()
+    # TODO/TLD: Switch this to process the jobs as GitlabJob's
+    # spack_ci_ir = spack_ci.generate_ir()
+    spack_ci_ir = gitlab_ci.generate_ir()
 
     if not options.pipeline_type == PipelineType.COPY_ONLY:
         for level, node in pipeline.traverse_nodes(direction="parents"):
@@ -232,6 +285,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             release_spec = node.spec
             release_spec_dag_hash = release_spec.dag_hash()
 
+            # TODO/TLD: Replace with custom jobs processing
             job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
 
             if not job_object:
@@ -239,8 +293,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 continue
 
             if options.pipeline_type is not None:
+                # TODO/TBD: call self.remove_reserved_tags against job object
                 # For spack pipelines "public" and "protected" are reserved tags
-                job_object["tags"] = _remove_reserved_tags(job_object.get("tags", []))
+                job_object["tags"] = gitlab_ci.remove_reserved_tags(job_object.get("tags", []))
                 if options.pipeline_type == PipelineType.PROTECTED_BRANCH:
                     job_object["tags"].extend(["protected"])
                 elif options.pipeline_type == PipelineType.PULL_REQUEST:
@@ -271,7 +326,10 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             ]
 
             job_object["needs"].append(
-                {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"}
+                {
+                    "job": gitlab_ci.generate_job_name,
+                    "pipeline": f"{gitlab_ci.generate_pipeline_id}",
+                }
             )
 
             job_vars = job_object["variables"]
@@ -294,10 +352,10 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 {
                     "when": "always",
                     "paths": [
-                        rel_job_log_dir,
-                        rel_job_repro_dir,
-                        rel_job_test_dir,
-                        rel_user_artifacts_dir,
+                        gitlab_ci.directory("log_artifacts_dir", absolute=False),
+                        gitlab_ci.directory("reproduction_artifacts_dir", absolute=False),
+                        gitlab_ci.directory("test_artifacts_dir", absolute=False),
+                        gitlab_ci.directory("user_artifacts_dir", absolute=False),
                     ],
                 },
             )
@@ -331,7 +389,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     # everything that should be copied.
     distinguish_stack = options.stack_name if options.stack_name else "rebuilt"
     manifest_path = os.path.join(
-        pipeline_artifacts_dir, "specs_to_copy", f"copy_{distinguish_stack}_specs.json"
+        gitlab_ci.directory("pipeline_artifacts_dir"),
+        "specs_to_copy",
+        f"copy_{distinguish_stack}_specs.json",
     )
     maybe_generate_manifest(pipeline, options, manifest_path)
 
@@ -340,9 +400,12 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
     if options.pipeline_type == PipelineType.COPY_ONLY:
         stage_names.append("copy")
+        # TODO/TLD: Replace with custom jobs processing
         sync_job = copy.deepcopy(spack_ci_ir["jobs"]["copy"]["attributes"])
         sync_job["stage"] = "copy"
-        sync_job["needs"] = [{"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"}]
+        sync_job["needs"] = [
+            {"job": gitlab_ci.generate_job_name, "pipeline": f"{gitlab_ci.generate_pipeline_id}"}
+        ]
 
         if "variables" not in sync_job:
             sync_job["variables"] = {}
@@ -366,12 +429,14 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         job_id += 1
 
     if job_id > 0:
+        # TODO/TLD: Replace with custom jobs processing
         if (
             "script" in spack_ci_ir["jobs"]["signing"]["attributes"]
             and options.pipeline_type == PipelineType.PROTECTED_BRANCH
         ):
             # External signing: generate a job to check and sign binary pkgs
             stage_names.append("stage-sign-pkgs")
+            # TODO/TLD: Replace with custom jobs processing
             signing_job = spack_ci_ir["jobs"]["signing"]["attributes"]
 
             signing_job["script"] = unpack_script(signing_job["script"])
@@ -396,6 +461,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         if options.rebuild_index:
             # Add a final job to regenerate the index
             stage_names.append("stage-rebuild-index")
+            # TODO/TLD: Replace with custom jobs processing
             final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
 
             final_job["stage"] = "stage-rebuild-index"
@@ -423,13 +489,13 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
         output_object["variables"] = {
-            "SPACK_ARTIFACTS_ROOT": artifacts_root,
-            "SPACK_CONCRETE_ENV_DIR": rel_concrete_env_dir,
+            "SPACK_ARTIFACTS_ROOT": gitlab_ci.directory("artifacts_root"),
+            "SPACK_CONCRETE_ENV_DIR": gitlab_ci.directory("env_artifacts_dir", absolute=False),
             "SPACK_VERSION": spack_version,
             "SPACK_CHECKOUT_VERSION": version_to_clone,
-            "SPACK_JOB_LOG_DIR": rel_job_log_dir,
-            "SPACK_JOB_REPRO_DIR": rel_job_repro_dir,
-            "SPACK_JOB_TEST_DIR": rel_job_test_dir,
+            "SPACK_JOB_LOG_DIR": gitlab_ci.directory("log_artifacts_dir", absolute=False),
+            "SPACK_JOB_REPRO_DIR": gitlab_ci.directory("reproduction_artifacts_dir"),
+            "SPACK_JOB_TEST_DIR": gitlab_ci.directory("test_artifacts_dir", absolute=False),
             "SPACK_PIPELINE_TYPE": options.pipeline_type.name if options.pipeline_type else "None",
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(options.prune_up_to_date),
@@ -449,6 +515,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
     else:
         # No jobs were generated
+        # TODO/TLD: Replace with custom jobs processing
         noop_job = spack_ci_ir["jobs"]["noop"]["attributes"]
         # If this job fails ignore the status and carry on
         noop_job["retry"] = 0

@@ -244,21 +244,21 @@ class CIDynamicMap:
         self.ignore: List[str] = mapping.get("ignore", [])
 
     @property
-    def allowed(self) -> set[str]:
+    def allowed(self) -> List[str]:
         return sorted(set(self.allow + self.require))
 
     @property
-    def ignored(self) -> set[str]:
+    def ignored(self) -> List[str]:
         return sorted(set(self.ignore))
 
     @property
-    def required(self) -> set[str]:
+    def required(self) -> List[str]:
         return sorted(set(self.require))
 
     def endpoint_url(self) -> str:
-        return urlparse(self.endpoint)
+        return str(urlparse(self.endpoint))
 
-    def request_header(self) -> str:
+    def request_header(self) -> Dict[str, str]:
         header = {"User-Agent": web_util.SPACK_USER_AGENT}
         header.update(self.header)
 
@@ -268,7 +268,7 @@ class CIDynamicMap:
 
         return header
 
-    def clean_config_attrs(self, query: str) -> Dict[str, Any]:
+    def clean_config_attrs(self, query: str) -> Optional[Dict[str, Any]]:
         """Build the clean configuration attributes for the spec query.
 
         Args:
@@ -277,7 +277,7 @@ class CIDynamicMap:
         Returns: resulting clean configuration attributes
         """
         request = Request(
-            self.endpoint_url()._replace(query=query).geturl(),
+            self.endpoint_url().replace(query=query).geturl(),
             headers=self.request_header(),
             method="GET",
         )
@@ -290,7 +290,7 @@ class CIDynamicMap:
             # This is still experimental, and failures should not stop CI
             # from running normally
             tty.warn(f"Failed to fetch dynamic mapping for query:\n\t{query}: {e}")
-            return
+            return None
 
         # Strip ignore keys
         if self.ignored:
@@ -376,10 +376,18 @@ class CIJobData:
     def __str__(self) -> str:
         return f"CIJob({self.job_name}, spec={self.spec})"
 
+    def remove_reserved_tags(self):
+        for tag in SPACK_RESERVED_TAGS:
+            try:
+                self.tags.remove(tag)
+            except ValueError:
+                # value is not in the list
+                pass
+
     def spec_query(self) -> Optional[str]:
         """Return the job's spec query."""
         if not self.spec:
-            return
+            return None
 
         query = (
             "{SPACK_JOB_SPEC_PKG_NAME}@{SPACK_JOB_SPEC_PKG_VERSION}"
@@ -457,8 +465,9 @@ class CIJobData:
             if matched and only_first:
                 break
 
+    # TODO/TLD: Fix this since removed converters
     def to_dict(self, converters: Dict[str, Callable]) -> Dict[str, Any]:
-        data = {"spec": self.spec, "attributes": self.attributes, "scripts": []}
+        data: Dict[str, Any] = {"spec": self.spec, "attributes": self.attributes, "scripts": []}
         # TODO/TLD: double-check this
         for stage in self.script:
             data["scripts"][str(stage)] = self.script[stage].convert(converters[stage])
@@ -784,6 +793,7 @@ class SpackCIConfig:
         and the staged jobs, set up meta data needed for generating Spack
         CI IR.
         """
+        # Retain the original ci_config for generator-specific customizations
         self.ci_config = ci_config
 
         self.broken_specs_url: Optional[str] = ci_config.get("broken-specs-url", None)
@@ -793,10 +803,6 @@ class SpackCIConfig:
         self.pipeline_gen: List[Dict[str, Dict]] = ci_config.get("pipeline-gen", [])
 
         self.add_tests = "test-job" in self.pipeline_gen
-
-        # TODO: Move this to GitlabConfig?
-        #: Callable methods that perform variable substitutions on script lines
-        self.converter: Dict[CIScriptStage, Callable] = {}
 
         # Prep for each possible job type
         self.jobs: Dict[str, List[CIJobData]] = {}
@@ -817,15 +823,6 @@ class SpackCIConfig:
         for level, node in pipeline.traverse_nodes():
             for i, name in enumerate(names):
                 self.jobs[name].append(CIJobData(name, level + i, node.spec))
-
-    def register_script_converter(self, stage: CIScriptStage, op: Callable):
-        """Register the function that takes and string and substitutes values.
-
-        Args:
-            stage: the stage of the scripts to be converted
-            op: the method to be used to format referenced variables
-        """
-        self.converter[stage] = op
 
     def job(self, name: str, spec: Optional[spack.spec.Spec] = None) -> Optional[CIJobData]:
         """Retrieve the matching job
