@@ -212,7 +212,7 @@ class SpackPaths:
         def spack_home_cfg_check():
             h = config.get("config:locations:home", None)
             if h:
-                return os.path.join(h, home_rel)
+                return os.path.join(h, home_rel, "spack")
 
         for check in [
             spack_env_check,
@@ -225,7 +225,7 @@ class SpackPaths:
             if possible_resolution:
                 return possible_resolution
 
-        return os.path.join(os.path.expanduser("~"), home_rel)
+        return os.path.join(os.path.expanduser("~"), home_rel, "spack")
 
     def prefer_old_location(self, old_location, new_location):
         # TODO: perhaps it should be configurable whether old locations
