@@ -18,7 +18,6 @@ import spack.fetch_strategy as fs
 import spack.llnl.util.tty as tty
 import spack.url
 import spack.util.crypto as crypto
-import spack.util.executable
 import spack.util.web as web_util
 import spack.version
 from spack.llnl.util.filesystem import is_exe, working_dir

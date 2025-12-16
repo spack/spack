@@ -89,7 +89,7 @@ from .reuse import ReusableSpecsSelector, create_external_parser
 from .runtimes import RuntimePropertyRecorder, all_libcs, external_config_with_implicit_externals
 from .versions import Provenance
 
-GitOrStandardVersion = Union[spack.version.GitVersion, spack.version.StandardVersion]
+GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 
 TransformFunction = Callable[[spack.spec.Spec, List[AspFunction]], List[AspFunction]]
 
@@ -847,7 +847,7 @@ def _is_checksummed_git_version(v):
 def _is_checksummed_version(version_info: Tuple[GitOrStandardVersion, dict]):
     """Returns true iff the version is not a moving target"""
     version, info = version_info
-    if isinstance(version, spack.version.StandardVersion):
+    if isinstance(version, vn.StandardVersion):
         if any(h in info for h in spack.util.crypto.hashes.keys()) or "checksum" in info:
             return True
         return "commit" in info and len(info["commit"]) == 40
@@ -3334,7 +3334,7 @@ class SpackSolverSetup:
             for s in traverse.traverse_nodes(self._specs_from_requires(pkg_name, d["require"])):
                 name, versions = s.name, s.versions
 
-                if name not in self.pkgs or versions == spack.version.any_version:
+                if name not in self.pkgs or versions == vn.any_version:
                     continue
 
                 s.attach_git_version_lookup()
@@ -3911,7 +3911,7 @@ def _specs_with_commits(spec):
     if not pkg_class.needs_commit(spec.version):
         return
 
-    if isinstance(spec.version, spack.version.GitVersion):
+    if isinstance(spec.version, vn.GitVersion):
         if "commit" not in spec.variants and spec.version.commit_sha:
             spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
 

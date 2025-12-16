@@ -19,7 +19,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.main
-import spack.paths as spack_paths
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.stage
@@ -474,7 +474,7 @@ def test_ci_rebuild_missing_config(tmp_path: pathlib.Path, working_env, mutable_
 
 
 def _signing_key():
-    signing_key_path = pathlib.Path(spack_paths.mock_gpg_keys_path) / "package-signing-key"
+    signing_key_path = pathlib.Path(spack.paths.mock_gpg_keys_path) / "package-signing-key"
     return signing_key_path.read_text()
 
 

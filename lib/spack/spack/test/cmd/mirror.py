@@ -13,7 +13,6 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.mirrors.utils
 import spack.package_base
 import spack.spec
 import spack.util.git

@@ -37,7 +37,6 @@ import spack.solver.core
 import spack.solver.reuse
 import spack.solver.runtimes
 import spack.spec
-import spack.test.conftest
 import spack.util.file_cache
 import spack.util.hash
 import spack.util.spack_yaml as syaml
@@ -4246,10 +4245,10 @@ def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypat
 
     def _mock_resolve(spec) -> None:
         if first_call:
-            spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'b' * 40}")
+            spec.variants["commit"] = vt.SingleValuedVariant("commit", f"{'b' * 40}")
             return
 
-        spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'a' * 40}")
+        spec.variants["commit"] = vt.SingleValuedVariant("commit", f"{'a' * 40}")
 
     monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _mock_resolve)
 
