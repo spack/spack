@@ -414,7 +414,7 @@ Simply copy the following Github actions yaml stanza into the `<spack_root>/.git
 .. code-block:: yaml
 
    - name: Setup tmate session
-   uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
+     uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
 
 Ideally this would be inserted somewhere after GHA checks out Spack and does any setup, but before the unit tests themselves are run.
 You can of course put this stanza after the unit-tests, but then you'll be stuck waiting for the unit tests to complete (potentially up to ~30m) and will need to add additional logic to the yaml in the case where the unit tests fail.
@@ -424,25 +424,25 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
 .. code-block:: yaml
 
    - name: Bootstrap clingo
-   if: ${{ matrix.concretizer == 'clingo' }}
-   env:
-         SPACK_PYTHON: python
-   run: |
-         . share/spack/setup-env.sh
-         spack bootstrap disable spack-install
-         spack bootstrap now
-         spack -v solve zlib
+     if: ${{ matrix.concretizer == 'clingo' }}
+     env:
+       SPACK_PYTHON: python
+     run: |
+       . share/spack/setup-env.sh
+       spack bootstrap disable spack-install
+       spack bootstrap now
+       spack -v solve zlib
    - name: Setup tmate session
-   uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
+     uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
    - name: Run unit tests
-   env:
-         SPACK_PYTHON: python
-         SPACK_TEST_PARALLEL: 4
-         COVERAGE: true
-         COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
-         UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
-   run: |
-         share/spack/qa/run-unit-tests
+     env:
+       SPACK_PYTHON: python
+       SPACK_TEST_PARALLEL: 4
+       COVERAGE: true
+       COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
+       UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
+     run: |-
+       share/spack/qa/run-unit-tests
 
 
 Note that the ssh session comes after Spack does its setup but before it runs the unit tests.
