@@ -1585,3 +1585,48 @@ spack:
         # We rely on this behavior when emitting facts for the solver
         s = spack.spec.Spec("mpileaks %gnu ^callpath %gnu")
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
+
+
+def test_installed_specs_disregards_deprecation(tmp_path, mutable_config):
+    """Tests that installed specs disregard deprecation. This is to avoid weird ordering issues,
+    where an old version that _is not_ declared in package.py is considered as _not_ deprecated,
+    and is preferred to a newer version that is explicitly marked as deprecated.
+    """
+    spack_yaml = """
+spack:
+  specs:
+  - mpileaks
+  packages:
+    c:
+      require:
+      - gcc
+    cxx:
+      require:
+      - gcc
+    gcc::
+      externals:
+      - spec: gcc@7.3.1 languages:='c,c++,fortran'
+        prefix: /path
+        extra_attributes:
+          compilers:
+            c: /path/bin/gcc
+            cxx: /path/bin/g++
+            fortran: /path/bin/gfortran
+      - spec: gcc@=12.4.0 languages:='c,c++,fortran'
+        prefix: /usr
+        extra_attributes:
+          compilers:
+            c: /usr/bin/gcc
+            cxx: /usr/bin/g++
+            fortran: /usr/bin/gfortran
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        mpileaks = e.concrete_roots()[0]
+
+    for node in mpileaks.traverse():
+        if node.satisfies("%c"):
+            assert node.satisfies("%c=gcc@12"), node.tree()
+            assert not node.satisfies("%c=gcc@7"), node.tree()

@@ -1510,9 +1510,13 @@ class SpackSolverSetup:
         )
         # Account for preferences in packages.yaml, if any
         if pkg.name in self.versions_from_yaml:
-            ordered_versions = spack.llnl.util.lang.dedupe(
-                self.versions_from_yaml[pkg.name] + ordered_versions
+            ordered_versions = list(
+                spack.llnl.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
             )
+
+        # Set the deprecation penalty, according to the package. This should be enough to move the
+        # first version last if deprecated.
+        self.gen.fact(fn.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions))))
 
         for weight, declared_version in enumerate(ordered_versions):
             self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))
@@ -2614,7 +2618,10 @@ class SpackSolverSetup:
 
             from_packages_yaml = list(spack.llnl.util.lang.dedupe(from_packages_yaml))
             for v in from_packages_yaml:
-                self.possible_versions[pkg_name][v].append(Provenance.PACKAGES_YAML)
+                provenance = Provenance.PACKAGES_YAML
+                if isinstance(v, vn.GitVersion):
+                    provenance = Provenance.PACKAGES_YAML_GIT_VERSION
+                self.possible_versions[pkg_name][v].append(provenance)
             self.versions_from_yaml[pkg_name] = from_packages_yaml
 
     def define_ad_hoc_versions_from_specs(

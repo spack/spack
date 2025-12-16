@@ -2014,7 +2014,7 @@ spack:
                 else:
                     weights["built"] = x.value
 
-            assert weights["reused"] == 1 and weights["built"] == 0
+            assert weights["reused"] == 3 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
@@ -3128,11 +3128,11 @@ def test_concretization_version_order():
     ]
     assert result == [
         Version("0.9"),  # preferred
+        Version("2.0"),  # deprecation is accounted for separately
         Version("1.1"),  # latest non-deprecated final version
         Version("1.0"),  # latest non-deprecated final version
         Version("1.1alpha1"),  # prereleases
         Version("develop"),  # likely development version
-        Version("2.0"),  # deprecated
     ]
 
 
