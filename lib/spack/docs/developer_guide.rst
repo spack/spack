@@ -462,6 +462,8 @@ Spack's source should be available already (depending on where the step was inse
 .. note:: If you are on Windows you'll be dropped into an MSYS shell, Spack is not supported inside MSYS, so it is strongly recommended to drop into a CMD or powershell prompt.
 
 
+Once you have finished debugging, remove this action from the Github actions workflow.
+
 Developer environment
 ---------------------
 
