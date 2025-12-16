@@ -409,7 +409,7 @@ The unit tests are run for each platform Spack supports, Windows, Linux, and Mac
 It may be the case that a unit test fails or passes on one of these platforms.
 When the platform is one the PR author does not have access to, it can be difficult to reproduce, diagnose, and fix a CI failure.
 Thankfully, PR authors can take advantage of a Github Actions Action to gain temporary access to the failing platform from the context of their PRs.
-Simply copy the following Github actions yaml stanza into the `<spack_root>/.github/workflows/unit_tests.yaml` GHA workflow file in the `steps` section of whatever unit test needs debugging.
+Simply copy the following Github actions yaml stanza into `the GHA workflow file <https://github.com/spack/spack/blob/develop/.github/workflows/unit_tests.yaml>`__ in the `steps` section of whatever unit test needs debugging.
 
 .. code-block:: yaml
 
