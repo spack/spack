@@ -12,6 +12,12 @@ commands:
 compilers:
 - changed-files:
   - any-glob-to-any-file: lib/spack/spack/compilers/**
+config:
+- changed-files:
+  - any-glob-to-any-file: etc/spack/**
+  - any-glob-to-any-file: lib/spack/spack/cmd/config.py
+  - any-glob-to-any-file: lib/spack/spack/config.py
+  - any-glob-to-any-file: lib/spack/spack/schema/**
 docs:
 - changed-files:
   - any-glob-to-any-file: lib/spack/docs/**
@@ -25,9 +31,6 @@ mirrors:
 modules:
 - changed-files:
   - any-glob-to-any-file: lib/spack/spack/modules/**
-schema:
-- changed-files:
-  - any-glob-to-any-file: lib/spack/spack/schema/**
 solver:
 - changed-files:
   - any-glob-to-any-file: lib/spack/spack/solver/**
