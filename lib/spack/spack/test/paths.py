@@ -20,13 +20,17 @@ def test_install_location(working_env, tmp_path):
     base_prefix = _ensure_dir(tmp_path / "base-prefix")
     os.environ["HOME"] = base_prefix
     p1 = SpackPaths(SpackPathsBase(base_prefix))
-    assert p1.default_install_location == str(pathlib.Path(base_prefix) / ".local" / "share" / "spack" / "installs")
+    assert p1.default_install_location == str(
+        pathlib.Path(base_prefix) / ".local" / "share" / "spack" / "installs"
+    )
 
     # XDG_DATA_HOME overrides all the above
     xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
     os.environ["XDG_DATA_HOME"] = xdg_data_home
     p1 = SpackPaths(SpackPathsBase(base_prefix))
-    assert p1.default_install_location == str(pathlib.Path(xdg_data_home) / ".local" / "share" / "spack" / "installs")
+    assert p1.default_install_location == str(
+        pathlib.Path(xdg_data_home) / ".local" / "share" / "spack" / "installs"
+    )
 
     # Check that SPACK_DATA_HOME overrides all the above
     spack_data_home = _ensure_dir(tmp_path / "spack_data_home")
