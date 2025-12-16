@@ -3319,6 +3319,7 @@ def test_spec_unification(unify, mutable_config, mock_packages):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
 
 
+@pytest.mark.not_on_windows("parallelism unsupported on Windows")
 @pytest.mark.enable_parallelism
 def test_parallel_concretization(mutable_config, mock_packages):
     """Test whether parallel unify-false style concretization works."""

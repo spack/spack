@@ -149,7 +149,8 @@ def concretize_separately(
     num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
     msg = "Starting concretization"
-    if num_procs > 1:
+    # no parallel conc on Windows
+    if not sys.platform == "win32" and num_procs > 1:
         msg += f" pool with {num_procs} processes"
     tty.msg(msg)
 

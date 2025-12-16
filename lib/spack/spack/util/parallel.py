@@ -77,7 +77,7 @@ def imap_unordered(
         RuntimeError: if any error occurred in the worker processes
     """
 
-    if not ENABLE_PARALLELISM or len(list_of_args) <= 1:
+    if not ENABLE_PARALLELISM or len(list_of_args) <= 1 or sys.platform == "win32":
         yield from map(f, list_of_args)
         return
 
@@ -118,6 +118,7 @@ def make_concurrent_executor(
         not ENABLE_PARALLELISM
         or (require_fork and multiprocessing.get_start_method() != "fork")
         or sys.version_info[:2] == (3, 6)
+        or sys.platform == "win32"
     ):
         return SequentialExecutor()
 
