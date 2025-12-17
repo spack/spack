@@ -202,7 +202,7 @@ class CIScript:
         self.contents = contents
 
     def convert(self, converter: Optional[Callable[[str], str]]) -> List[str]:
-        """Return the optionally converted commands
+        """Return the converted commands.
 
         Args:
             converter: optional function that takes a string and returns a string
@@ -328,26 +328,19 @@ class CIDynamicMap:
 class CIJobData:
     """Job data for a given job name (and spec)."""
 
-    def __init__(
-        self,
-        name: str,
-        level: int = 0,
-        release_spec: Optional[spack.spec.Spec] = None,
-        remove: bool = False,
-    ):
+    def __init__(self, name: str, spec: Optional[spack.spec.Spec] = None, remove: bool = False):
         """
         Args:
             name: standard job name
-            release_spec: release spec
+            spec: release spec
             remove: ``True`` if a remove job; otherwise, ``False``
         """
         self.name: str = name
-        self.spec: Optional[spack.spec.Spec] = release_spec
-        self.hash: str = release_spec.dag_hash() if release_spec else ""
+        self.spec: Optional[spack.spec.Spec] = spec
+        self.hash: str = spec.dag_hash() if spec else ""
         self.remove: bool = remove
         self.job_name = f"{self.name}-job{'-remove' if self.remove else ''}"
 
-        self.tags: List[str] = []
         self.attributes: Dict[str, Union[str, int]] = {}
 
         self.script: Dict[CIScriptStage, CIScript] = {}
@@ -361,25 +354,29 @@ class CIJobData:
                     except Exception as e:
                         tty.error(f"Failed to set {key} attribute with {value}: {str(e)}")
 
-        if release_spec:
+        if spec:
             job_vars = {
-                "SPACK_JOB_SPEC_DAG_HASH": release_spec.dag_hash(),
-                "SPACK_JOB_SPEC_PKG_NAME": release_spec.name,
-                "SPACK_JOB_SPEC_PKG_VERSION": release_spec.format("{version}"),
-                "SPACK_JOB_SPEC_COMPILER_NAME": release_spec.format("{compiler.name}"),
-                "SPACK_JOB_SPEC_COMPILER_VERSION": release_spec.format("{compiler.version}"),
-                "SPACK_JOB_SPEC_ARCH": release_spec.format("{architecture}"),
-                "SPACK_JOB_SPEC_VARIANTS": release_spec.format("{variants}"),
+                "SPACK_JOB_SPEC_DAG_HASH": spec.dag_hash(),
+                "SPACK_JOB_SPEC_PKG_NAME": spec.name,
+                "SPACK_JOB_SPEC_PKG_VERSION": spec.format("{version}"),
+                "SPACK_JOB_SPEC_COMPILER_NAME": spec.format("{compiler.name}"),
+                "SPACK_JOB_SPEC_COMPILER_VERSION": spec.format("{compiler.version}"),
+                "SPACK_JOB_SPEC_ARCH": spec.format("{architecture}"),
+                "SPACK_JOB_SPEC_VARIANTS": spec.format("{variants}"),
             }
             self.attributes["variables"] = job_vars
+            self.attributes["tags"] = []
 
     def __str__(self) -> str:
         return f"CIJob({self.job_name}, spec={self.spec})"
 
+    def add_tags(self, tags: List[str]):
+        self.attributes["tags"].extend(tags)
+
     def remove_reserved_tags(self):
         for tag in SPACK_RESERVED_TAGS:
             try:
-                self.tags.remove(tag)
+                self.attributes["tags"].remove(tag)
             except ValueError:
                 # value is not in the list
                 pass
@@ -391,7 +388,8 @@ class CIJobData:
 
         query = (
             "{SPACK_JOB_SPEC_PKG_NAME}@{SPACK_JOB_SPEC_PKG_VERSION}"
-            # The preceding spaces are required (ref. https://github.com/spack/spack-gantry/blob/develop/docs/api.md#allocation)
+            # The preceding spaces are required (ref.
+            # https://github.com/spack/spack-gantry/blob/develop/docs/api.md#allocation)
             " {SPACK_JOB_SPEC_VARIANTS}"
             " arch={SPACK_JOB_SPEC_ARCH}"
             "%{SPACK_JOB_SPEC_COMPILER_NAME}@{SPACK_JOB_SPEC_COMPILER_VERSION}"
@@ -402,9 +400,8 @@ class CIJobData:
         """Merge the attributes into those of the job
 
         Args:
-            attrs: attributes to be removed
+            attrs: attributes to be be merged
         """
-        # TODO/TBD: Should the result be optionally or always copied?
         self.attributes = copy.copy(spack.schema.merge_yaml(self.attributes, attrs))
 
     def remove_attributes(self, attrs: Dict[str, Any]):
@@ -465,13 +462,12 @@ class CIJobData:
             if matched and only_first:
                 break
 
-    # TODO/TLD: Fix this since removed converters
-    def to_dict(self, converters: Dict[str, Callable]) -> Dict[str, Any]:
-        data: Dict[str, Any] = {"spec": self.spec, "attributes": self.attributes, "scripts": []}
-        # TODO/TLD: double-check this
-        for stage in self.script:
-            data["scripts"][str(stage)] = self.script[stage].convert(converters[stage])
-        return data
+    def to_dict(self) -> Dict[str, Any]:
+        return {"spec": self.spec, "attributes": self.attributes, "scripts": self.script}
+
+    def convert_scripts(self):
+        """Perform conversions of script contents."""
+        pass
 
 
 class CDashHandler:
@@ -789,9 +785,8 @@ class SpackCIConfig:
     """
 
     def __init__(self, ci_config: Dict[str, Any]):
-        """Given the information from the ci section of the config
-        and the staged jobs, set up meta data needed for generating Spack
-        CI IR.
+        """Given the information from the ci section of the config and the jobs,
+        set up meta data needed for generating Spack CI IR.
         """
         # Retain the original ci_config for generator-specific customizations
         self.ci_config = ci_config
@@ -814,15 +809,15 @@ class SpackCIConfig:
             tty.debug(f"TLD: SpackCIConfig: instantiating '{name}' job")
             self.jobs[name] = [CIJobData(name)]
 
-    # Create jobs for all the pipeline specs
     def init_pipeline_jobs(self, pipeline: PipelineDag):
+        """Create jobs for all the pipeline specs"""
         names = ["build"]
         if self.add_tests:
             names.append("test")
 
-        for level, node in pipeline.traverse_nodes():
-            for i, name in enumerate(names):
-                self.jobs[name].append(CIJobData(name, level + i, node.spec))
+        for _, node in pipeline.traverse_nodes():
+            for name in enumerate(names):
+                self.jobs[name].append(CIJobData(name, node.spec))
 
     def job(self, name: str, spec: Optional[spack.spec.Spec] = None) -> Optional[CIJobData]:
         """Retrieve the matching job
@@ -859,7 +854,7 @@ class SpackCIConfig:
 
             # TODO/TLD: how should these really be keyed given build and
             # TODO/TLD: test jobs will now have the same spec?
-            all_jobs[job.name] = job.to_dict(self.converter)
+            all_jobs[job.name] = job.to_dict()
         intermediate_rep["jobs"] = all_jobs
 
         return intermediate_rep

@@ -5,6 +5,7 @@ import copy
 import os
 import shutil
 import urllib
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import spack.vendor.ruamel.yaml
@@ -21,7 +22,7 @@ import spack.util.spack_yaml as syaml
 from spack.util.path import canonicalize_path, substitute_path_variables
 
 from .common import (
-    CIJobData,  # TODO/TLD: Keep?
+    CIJobData,
     CIScriptStage,
     PipelineDag,
     PipelineOptions,
@@ -29,6 +30,7 @@ from .common import (
     SpackCIConfig,
     SpackCIError,
     ensure_expected_target_path,
+    spec_job_names,
     write_pipeline_manifest,
 )
 from .generator_registry import generator
@@ -52,8 +54,55 @@ JOB_RETRY_CONDITIONS = [
 JOB_NAME_FORMAT = "{name}{@version} {/hash}"
 
 
+class GitlabJob(CIJobData):
+    def __init__(
+        self,
+        name: str,
+        spec: Optional[spack.spec.Spec] = None,
+        remove: bool = False,
+        config: GitlabCI = None,
+    ):
+        """
+        Args:
+            name: standard job name
+            spec: release spec
+            remove: ``True`` if a remove job; otherwise, ``False``
+            config: configuration options
+        """
+        super().__init__(name, spec, remove)
+        self.config = config
+        self.stage = None
+
+    def __str__(self):
+        return f"GitlabCI({self.name}, {self.spec}, {self.remove})"
+
+    def convert_scripts(self):
+        """Perform conversions of script contents.
+
+        The only script we care about customizing is the main script.
+        """
+        # skip conversions non-spec jobs
+        if self.name not in spec_job_names:
+            tty.debug(f"{self}: skipping script conversion")
+            return
+
+        if CIScriptStage.DURING not in self.script:
+            raise AttributeError(f"{self.name} is missing the required '{CIScriptStage.DURING}'")
+
+        def _replace_env_dir(cmd: str):
+            return cmd.replace("{env_dir}", self.config.path("env_artifacts_dir", absolute=False))
+
+        self.script[CIScriptStage.DURING] = self.script[CIScriptStage.DURING].convert(
+            _replace_env_dir
+        )
+
+
 class GitlabCI(SpackCIConfig):
     """Gitlab-specific CI configuration and options handler."""
+
+    @classmethod
+    def from_config(cls, config: SpackCIConfig, options: PipelineOptions) -> "GitlabCI":
+        return cls(config.ci_config, options)
 
     def __init__(self, ci_config: Dict[str, Any], options: PipelineOptions):
         super().__init__(ci_config)
@@ -63,10 +112,11 @@ class GitlabCI(SpackCIConfig):
 
         self.options = options
 
-        self._directory: Dict[str, str] = {}
-        self._add_directories()
+        self._path: Dict[str, str] = {}
+        self._add_paths()
 
-    def _add_directories(self):
+    def _add_paths(self):
+        """Add relevant CI paths."""
         ci_project_dir = os.environ.get("CI_PROJECT_DIR") or os.getcwd()
 
         artifacts_root = self.options.artifacts_root
@@ -75,26 +125,31 @@ class GitlabCI(SpackCIConfig):
 
         pipeline_artifacts_dir = os.path.join(ci_project_dir, artifacts_root)
 
-        self._directory["ci_project_dir"] = ci_project_dir
-        self._directory["relative_artifacts_root"] = artifacts_root
+        self._path["ci_project_dir"] = ci_project_dir
+        self._path["relative_artifacts_root"] = artifacts_root
 
-        self._directory["pipeline_artifacts_dir"] = pipeline_artifacts_dir
-        self._directory["env_artifacts_dir"] = os.path.join(
+        self._path["pipeline_artifacts_dir"] = pipeline_artifacts_dir
+        self._path["env_artifacts_dir"] = os.path.join(
             pipeline_artifacts_dir, "concrete_environment"
         )
-        self._directory["log_artifacts_dir"] = os.path.join(pipeline_artifacts_dir, "logs")
-        self._directory["reproduction_artifacts_dir"] = os.path.join(
+        self._path["log_artifacts_dir"] = os.path.join(pipeline_artifacts_dir, "logs")
+        self._path["reproduction_artifacts_dir"] = os.path.join(
             pipeline_artifacts_dir, "reproduction"
         )
-        self._directory["test_artifacts_dir"] = os.path.join(pipeline_artifacts_dir, "tests")
-        self._directory["user_artifacts_dir"] = os.path.join(pipeline_artifacts_dir, "user_data")
+        self._path["test_artifacts_dir"] = os.path.join(pipeline_artifacts_dir, "tests")
+        self._path["user_artifacts_dir"] = os.path.join(pipeline_artifacts_dir, "user_data")
 
-    @classmethod
-    def from_config(cls, config: SpackCIConfig, options: PipelineOptions) -> "GitlabCI":
-        return cls(config.ci_config, options)
+        output_file = options.output_file or ".gitlab-ci.yml"
+        self._path["output_file"] = os.path.abspath(output_file)
 
-    def directory(self, name: str, absolute: bool = True) -> str:
-        """Return the named directory.
+    def customize_jobs(self):
+        gitlab_jobs: Dict[str, List[CIJobData]] = {}
+        for name, jobs in self.jobs.items():
+            gitlab_jobs[name] = [GitlabJob(job.name, job.spec, job.remove, self) for job in jobs]
+        self.jobs = gitlab_jobs
+
+    def path(self, name: str, absolute: bool = True) -> str:
+        """Return the named path.
 
         Relative paths are used by downstream jobs to avoid issues in situations
         where the CI_PROJECT_DIR varies between the pipeline generation job and
@@ -103,23 +158,23 @@ class GitlabCI(SpackCIConfig):
         picked for generate and rebuild jobs.
 
         Args:
-            name: name/key of the directory
+            name: name/key of the path
             absolute: ``True`` for the absolute directory; ``False`` for the
                 path relative to CI_PROJECT_DIR
 
-        Returns: path to the directory
+        Returns: named path
 
         Raises:
             ValueError: unknown name/key
         """
-        if name not in self._directory:
+        if name not in self._path:
             raise ValueError(f"'{name}' is not a known directory")
 
-        path = self._directory[name]
+        path = self._path[name]
         if absolute:
             return path
 
-        return os.path.relpath(path, self._directory["ci_project_dir"])
+        return os.path.relpath(path, self._path["ci_project_dir"])
 
     def copy_manifest_file(self):
         """Copy the manifest file to the artifacts directory.
@@ -127,7 +182,7 @@ class GitlabCI(SpackCIConfig):
         Raises:
             spack.config.ConfigSectionError: top level is not 'spack'
         """
-        env_artifacts_dir = self.directory("env_artifacts_dir")
+        env_artifacts_dir = self.path("env_artifacts_dir")
         with open(self.options.env.manifest_path, "r", encoding="utf-8") as fin, open(
             os.path.join(os.path.join(env_artifacts_dir, ev.manifest_name)), "w", encoding="utf-8"
         ) as fout:
@@ -175,7 +230,7 @@ class GitlabCI(SpackCIConfig):
     def copy_env_artifacts(self):
         """Copy the environment manifest and lock files to the environment
         artifacts directory."""
-        env_artifacts_dir = self.directory("env_artifacts_dir")
+        env_artifacts_dir = self.path("env_artifacts_dir")
         if not os.path.exists(env_artifacts_dir):
             os.makedirs(env_artifacts_dir)
 
@@ -234,29 +289,15 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         spack_ci: An object containing the configured attributes of all jobs in the pipeline
         options: An object containing all the pipeline options gathered from yaml, env, etc...
     """
-    # Convert to gitlab-specific CI manager
+    # Convert to gitlab-specific CI manager and jobs
     gitlab_ci = GitlabCI.from_config(spack_ci, options)
+    gitlab_ci.customize_jobs()
 
-    # TODO/TLD: RESUME HERE
-    output_file = options.output_file
-
-    if not output_file:
-        output_file = os.path.abspath(".gitlab-ci.yml")
-    else:
-        output_file_path = os.path.abspath(output_file)
-        gen_ci_dir = os.path.dirname(output_file_path)
-        if not os.path.exists(gen_ci_dir):
-            os.makedirs(gen_ci_dir)
-
+    # Ensure directory of output file exists
     # Now that we've added the mirrors we know about, they should be properly
     # reflected in the environment manifest file, so copy that into the
     # concrete environment artifacts directory, along with the spack.lock file.
     gitlab_ci.copy_env_artifacts()
-
-    # TODO/TLD: need to either pass variables in or have them extractable by
-    # TODO/TLD: spack_ci
-    def main_script_replacements(cmd: str):
-        return cmd.replace("{env_dir}", gitlab_ci.directory("env_artifacts_dir", absolute=False))
 
     output_object = {}
     job_id = 0
@@ -286,45 +327,35 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             release_spec_dag_hash = release_spec.dag_hash()
 
             # TODO/TLD: Replace with custom jobs processing
-            job_object = spack_ci_ir["jobs"][release_spec_dag_hash]["attributes"]
+            # TODO/TLD: need to process build and test?
+            job = gitlab_ci.job("build", node.spec)
 
-            if not job_object:
+            # TODO/TLD: setting below affect the ATTRIBUTES of the job
+
+            if not job:
                 tty.warn(f"No match found for {release_spec}, skipping it")
                 continue
 
             if options.pipeline_type is not None:
-                # TODO/TBD: call self.remove_reserved_tags against job object
                 # For spack pipelines "public" and "protected" are reserved tags
-                job_object["tags"] = gitlab_ci.remove_reserved_tags(job_object.get("tags", []))
+                job.remove_reserved_tags()
                 if options.pipeline_type == PipelineType.PROTECTED_BRANCH:
-                    job_object["tags"].extend(["protected"])
+                    job.add_tags(["protected"])
                 elif options.pipeline_type == PipelineType.PULL_REQUEST:
-                    job_object["tags"].extend(["public"])
+                    job.add_tags(["public"])
 
-            if "script" not in job_object:
-                raise AttributeError
-
-            # TODO/TLD: Call <CIScript>.convert for CIScriptStage.DURING with
-            # TODO/TLD:   converter=main_script_replacements
-            job_object["script"] = unpack_script(job_object["script"], op=main_script_replacements)
-
-            if "before_script" in job_object:
-                # TODO/TLD: Call <CIScript>.convert for CIScriptStage.BEFORE with NO converter
-                job_object["before_script"] = unpack_script(job_object["before_script"])
-
-            if "after_script" in job_object:
-                # TODO/TLD: Call <CIScript>.convert for CIScriptStage.AFTER with NO converter
-                job_object["after_script"] = unpack_script(job_object["after_script"])
+            # TODO/TLD: replacing unpack_script with
+            job.convert_scripts()
 
             build_group = options.cdash_handler.build_group if options.cdash_handler else None
             job_name = get_job_name(release_spec, build_group)
 
+            # TODO/TLD: add "needs" to GitlabJob
             dep_nodes = pipeline.get_dependencies(node)
             job_object["needs"] = [
                 {"job": get_job_name(dep_node.spec, build_group), "artifacts": False}
                 for dep_node in dep_nodes
             ]
-
             job_object["needs"].append(
                 {
                     "job": gitlab_ci.generate_job_name,
@@ -332,6 +363,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 }
             )
 
+            # TODO/TLD: move variable handling to GitlabJob
             job_vars = job_object["variables"]
 
             # Let downstream jobs know whether the spec needed rebuilding, regardless
@@ -347,19 +379,22 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 build_stamp = options.cdash_handler.build_stamp
                 job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
 
-            job_object["artifacts"] = spack.schema.merge_yaml(
-                job_object.get("artifacts", {}),
+            # TODO/TLD: shouldn't this be part of instantiating/converting
+            # TODO/TLD:  a build (and maybe test) GitlabJob?
+            job.merge_attributes(
                 {
                     "when": "always",
                     "paths": [
-                        gitlab_ci.directory("log_artifacts_dir", absolute=False),
-                        gitlab_ci.directory("reproduction_artifacts_dir", absolute=False),
-                        gitlab_ci.directory("test_artifacts_dir", absolute=False),
-                        gitlab_ci.directory("user_artifacts_dir", absolute=False),
+                        gitlab_ci.path("log_artifacts_dir", absolute=False),
+                        gitlab_ci.path("reproduction_artifacts_dir", absolute=False),
+                        gitlab_ci.path("test_artifacts_dir", absolute=False),
+                        gitlab_ci.path("user_artifacts_dir", absolute=False),
                     ],
-                },
+                }
             )
 
+            # TODO/TLD: Should these be part of converting a build (and test?)
+            # TODO/TLD: job?
             job_object["stage"] = stage_name
             job_object["retry"] = spack.schema.merge_yaml(
                 {"max": 2, "when": JOB_RETRY_CONDITIONS}, job_object.get("retry", {})
@@ -389,7 +424,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     # everything that should be copied.
     distinguish_stack = options.stack_name if options.stack_name else "rebuilt"
     manifest_path = os.path.join(
-        gitlab_ci.directory("pipeline_artifacts_dir"),
+        gitlab_ci.path("pipeline_artifacts_dir"),
         "specs_to_copy",
         f"copy_{distinguish_stack}_specs.json",
     )
@@ -489,13 +524,13 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
         output_object["variables"] = {
-            "SPACK_ARTIFACTS_ROOT": gitlab_ci.directory("artifacts_root"),
-            "SPACK_CONCRETE_ENV_DIR": gitlab_ci.directory("env_artifacts_dir", absolute=False),
+            "SPACK_ARTIFACTS_ROOT": gitlab_ci.path("artifacts_root"),
+            "SPACK_CONCRETE_ENV_DIR": gitlab_ci.path("env_artifacts_dir", absolute=False),
             "SPACK_VERSION": spack_version,
             "SPACK_CHECKOUT_VERSION": version_to_clone,
-            "SPACK_JOB_LOG_DIR": gitlab_ci.directory("log_artifacts_dir", absolute=False),
-            "SPACK_JOB_REPRO_DIR": gitlab_ci.directory("reproduction_artifacts_dir"),
-            "SPACK_JOB_TEST_DIR": gitlab_ci.directory("test_artifacts_dir", absolute=False),
+            "SPACK_JOB_LOG_DIR": gitlab_ci.path("log_artifacts_dir", absolute=False),
+            "SPACK_JOB_REPRO_DIR": gitlab_ci.path("reproduction_artifacts_dir"),
+            "SPACK_JOB_TEST_DIR": gitlab_ci.path("test_artifacts_dir", absolute=False),
             "SPACK_PIPELINE_TYPE": options.pipeline_type.name if options.pipeline_type else "None",
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(options.prune_up_to_date),
@@ -533,6 +568,10 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
     # Minimize yaml output size through use of anchors
     syaml.anchorify(sorted_output)
+
+    # Write the output file
+    output_file = Path(gitlab_ci.path("output_file"))
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_file, "w", encoding="utf-8") as f:
         spack.vendor.ruamel.yaml.YAML().dump(sorted_output, f)
