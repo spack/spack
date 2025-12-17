@@ -63,9 +63,6 @@ _active_environment: Optional["Environment"] = None
 #: Validation error for a currently activate environment that failed to parse
 _active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
-#: default path where environments are stored in the spack tree
-default_env_path = paths.default_envs_path
-
 
 #: Name of the input yaml file for an environment
 manifest_name = "spack.yaml"
@@ -82,7 +79,7 @@ env_subdir_name = ".spack-env"
 def env_root_path() -> str:
     """Override default root path if the user specified it"""
     return spack.util.path.canonicalize_path(
-        spack.config.get("config:environments_root", default=default_env_path)
+        spack.config.get("config:environments_root", default=paths.default_envs_path)
     )
 
 
