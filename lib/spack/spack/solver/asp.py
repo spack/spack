@@ -1591,11 +1591,17 @@ class SpackSolverSetup:
             pkg_fact(fn.variant_sticky(vid))
 
         # define defaults for this variant definition
+        default_values: Tuple[Union[bool, str], ...] = (variant_def.default,)
         if variant_def.multi:
-            for val in sorted(variant_def.make_default().values):
-                pkg_fact(fn.variant_default_value_from_package_py(vid, val))
-        else:
-            pkg_fact(fn.variant_default_value_from_package_py(vid, variant_def.default))
+            default_values = variant_def.make_default().values
+
+        for val in default_values:
+            pkg_fact(fn.variant_default_value_from_package_py(vid, val))
+
+        if variant_def.values is not None:
+            current_values = sorted(variant_def.values, key=lambda v: (v not in default_values, v))
+            for penalty, v in enumerate(current_values, 1):
+                pkg_fact(fn.variant_penalty(vid, v, penalty))
 
         # define possible values for this variant definition
         values = variant_def.values

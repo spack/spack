@@ -1348,6 +1348,16 @@ variant_default_value(node(NodeID, Package), VariantName, Value) :-
     node_has_variant(node(NodeID, Package), VariantName, _),
     attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, Value).
 
+variant_penalty(node(NodeID, Package), Variant, Value, Penalty) :-
+    node_has_variant(node(NodeID, Package), Variant, VariantID),
+    attr("variant_value", node(NodeID, Package), Variant, Value),
+    pkg_fact(Package, variant_penalty(VariantID, Value, Penalty)),
+    not variant_default_value(node(NodeID, Package), Variant, Value),
+    % variants set explicitly on the CLI don't count as non-default
+    not attr("variant_set", node(NodeID, Package), Variant, Value),
+    % variant values forced by propagation don't count as non-default
+    not propagate(node(NodeID, Package), variant_value(Variant, Value, _)).
+
 % -- Associate the definition's possible values with the node
 variant_possible_value(node(NodeID, Package), VariantName, Value) :-
   node_has_variant(node(NodeID, Package), VariantName, VariantID),
@@ -1455,22 +1465,11 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
 :- attr("variant_set", node(ID, Package), Variant, Value),
    not attr("variant_value", node(ID, Package), Variant, Value).
 
-% The rules below allow us to prefer default values for variants
-% whenever possible. If a variant is set in a spec, or if it is
-% specified in an external, we score it as if it was a default value.
-variant_not_default(node(ID, Package), Variant, Value)
- :- attr("variant_value", node(ID, Package), Variant, Value),
-    not variant_default_value(node(ID, Package), Variant, Value),
-    % variants set explicitly on the CLI don't count as non-default
-    not attr("variant_set", node(ID, Package), Variant, Value),
-    % variant values forced by propagation don't count as non-default
-    not propagate(node(ID, Package), variant_value(Variant, Value, _)),
-    attr("node", node(ID, Package)).
-
-% A default variant value that is not used
+% A default variant value that is not used, makes sense only for multi valued variants
 variant_default_not_used(node(ID, Package), Variant, Value)
   :- variant_default_value(node(ID, Package), Variant, Value),
-     node_has_variant(node(ID, Package), Variant, _),
+     node_has_variant(node(ID, Package), Variant, VariantID),
+     variant_type(VariantID, VariantType), VariantType == "multi",
      not attr("variant_value", node(ID, Package), Variant, Value),
      not propagate(node(ID, Package), variant_value(Variant, _, _)),
      % variant set explicitly don't count for this metric
@@ -2060,12 +2059,12 @@ opt_criterion(70, "version badness (roots)").
       build_priority(PackageNode, Priority)
 }.
 
-opt_criterion(65, "number of non-default variants (roots)").
+opt_criterion(65, "variant penalty (roots)").
 #minimize{ 0@265: #true }.
 #minimize{ 0@65: #true }.
 #minimize {
-    1@65+Priority,PackageNode,Variant,Value
-    : variant_not_default(PackageNode, Variant, Value),
+    Penalty@65+Priority,PackageNode,Variant,Value
+    : variant_penalty(PackageNode, Variant, Value, Penalty),
       attr("root", PackageNode),
       build_priority(PackageNode, Priority)
 }.
@@ -2091,12 +2090,12 @@ opt_criterion(55, "default values of variants not being used (roots)").
 }.
 
 % Try to use default variants or variants that have been set
-opt_criterion(50, "number of non-default variants (non-roots)").
+opt_criterion(50, "variant penalty (non-roots)").
 #minimize{ 0@250: #true }.
 #minimize{ 0@50: #true }.
 #minimize {
-    1@50+Priority,PackageNode,Variant,Value
-    : variant_not_default(PackageNode, Variant, Value),
+    Penalty@50+Priority,PackageNode,Variant,Value
+    : variant_penalty(PackageNode, Variant, Value, Penalty),
       not attr("root", PackageNode),
       build_priority(PackageNode, Priority)
 }.

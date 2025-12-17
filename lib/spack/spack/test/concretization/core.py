@@ -43,6 +43,7 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.externals import ExternalDependencyError
 from spack.installer import PackageInstaller
+from spack.solver.asp import Result
 from spack.solver.reuse import SpecFilter, create_external_parser
 from spack.solver.runtimes import external_config_with_implicit_externals
 from spack.spec import Spec
@@ -311,6 +312,16 @@ def gcc11_with_flags(compiler_factory):
     c = compiler_factory(spec="gcc@11.1.0 languages:=c,c++,fortran os=redhat6")
     c["extra_attributes"]["flags"] = {"cflags": "-O0 -g", "cxxflags": "-O0 -g", "fflags": "-O0 -g"}
     return c
+
+
+def weights_from_result(result: Result, *, name: str) -> Dict[str, int]:
+    weights = {}
+    for x in [x for x in result.criteria if x.name == name]:
+        if x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
+            weights["reused"] = x.value
+        else:
+            weights["built"] = x.value
+    return weights
 
 
 # This must use the mutable_config fixture because the test
@@ -2017,18 +2028,60 @@ spack:
             # pkg_fact("pkg-b", version_origin("0.9", "installed")).
             # pkg_fact("pkg-b", version_origin("0.9", "package_py")).
 
-            weights = {}
-            for x in [x for x in result.criteria if x.name == "version badness (non roots)"]:
-                if x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
-                    weights["reused"] = x.value
-                else:
-                    weights["built"] = x.value
-
+            weights = weights_from_result(result, name="version badness (non roots)")
             assert weights["reused"] == 3 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
             assert result_spec["pkg-b"].dag_hash() == reusable_specs[1].dag_hash()
+
+    @pytest.mark.regression("51112")
+    def test_variant_penalty(self, mutable_config):
+        """Test package preferences during concretization."""
+        packages_with_externals = external_config_with_implicit_externals(mutable_config)
+        completion_mode = mutable_config.get("concretizer:externals:completion")
+        external_specs = SpecFilter.from_packages_yaml(
+            external_parser=create_external_parser(packages_with_externals, completion_mode),
+            packages_with_externals=packages_with_externals,
+            include=[],
+            exclude=[],
+        ).selected_specs()
+
+        # The variant definition is similar to
+        #
+        # % Variant cxxstd in package trilinos
+        # pkg_fact("trilinos",variant_definition("cxxstd",195)).
+        # variant_type(195,"single").
+        # pkg_fact("trilinos",variant_default_value_from_package_py(195,"14")).
+        # pkg_fact("trilinos",variant_penalty(195,"14",1)).
+        # pkg_fact("trilinos",variant_penalty(195,"17",2)).
+        # pkg_fact("trilinos",variant_penalty(195,"20",3)).
+        # pkg_fact("trilinos",variant_possible_value(195,"14")).
+        # pkg_fact("trilinos",variant_possible_value(195,"17")).
+        # pkg_fact("trilinos",variant_possible_value(195,"20")).
+
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+
+        # Ensure that since the default value of 14 cannot be taken, we select "17"
+        result, _, _ = solver.driver.solve(setup, [Spec("trilinos")], reuse=external_specs)
+
+        weights = weights_from_result(result, name="variant penalty (roots)")
+        assert weights["reused"] == 0 and weights["built"] == 2
+
+        trilinos = result.specs[0]
+        assert trilinos.satisfies("cxxstd=17")
+
+        # If we disable "17", then "20" is next, and the penalty is higher
+        result, _, _ = solver.driver.solve(
+            setup, [Spec("trilinos+disable17")], reuse=external_specs
+        )
+
+        weights = weights_from_result(result, name="variant penalty (roots)")
+        assert weights["reused"] == 0 and weights["built"] == 3
+
+        trilinos = result.specs[0]
+        assert trilinos.satisfies("cxxstd=20")
 
     @pytest.mark.regression("51267")
     @pytest.mark.parametrize(
