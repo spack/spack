@@ -1730,7 +1730,7 @@ def test_included_path_git_unsat(
 def test_included_path_git(
     tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capfd
 ):
-    monkeypatch.setattr(spack.config, "_include_cache_location", str(tmp_path))
+    monkeypatch.setattr(spack.config, "_include_cache_location", lambda: str(tmp_path))
 
     class MockIncludeGit(spack.util.executable.Executable):
         def __init__(self, required: bool):
@@ -1800,7 +1800,7 @@ def test_included_path_git(
 def test_included_path_git_errs(
     tmp_path: pathlib.Path, mock_low_high_config, monkeypatch, override_path
 ):
-    override_path("user_cache_path", str(tmp_path))
+    monkeypatch.setattr(spack.config, "_include_cache_location", lambda: str(tmp_path))
 
     paths = ["concretizer.yaml"]
     entry = {
