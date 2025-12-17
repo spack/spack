@@ -99,10 +99,6 @@ properties: Dict[str, Any] = {
                     },
                 ],
             },
-            "enable_node_namespace": {
-                "type": "boolean",
-                "description": "Enable node namespace functionality in the concretizer",
-            },
             "targets": {
                 "type": "object",
                 "description": "Controls which target microarchitectures are considered "
