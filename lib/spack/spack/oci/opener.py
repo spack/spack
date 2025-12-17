@@ -206,7 +206,7 @@ class UsernamePassword(NamedTuple):
 
 def _get_bearer_challenge(challenges: List[Challenge]) -> Optional[RealmServiceScope]:
     """Return the realm/service/scope for a Bearer auth challenge, or None if not found."""
-    challenge = next((c for c in challenges if c.scheme == "Bearer"), None)
+    challenge = next((c for c in challenges if c.scheme.lower() == "bearer"), None)
 
     if challenge is None:
         return None
@@ -224,7 +224,7 @@ def _get_bearer_challenge(challenges: List[Challenge]) -> Optional[RealmServiceS
 
 def _get_basic_challenge(challenges: List[Challenge]) -> Optional[str]:
     """Return the realm for a Basic auth challenge, or None if not found."""
-    challenge = next((c for c in challenges if c.scheme == "Basic"), None)
+    challenge = next((c for c in challenges if c.scheme.lower() == "basic"), None)
 
     if challenge is None:
         return None
