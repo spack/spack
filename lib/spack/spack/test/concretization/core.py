@@ -2025,7 +2025,7 @@ spack:
                 else:
                     weights["built"] = x.value
 
-            assert weights["reused"] == 1 and weights["built"] == 0
+            assert weights["reused"] == 3 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
@@ -3142,11 +3142,11 @@ def test_concretization_version_order():
     ]
     assert result == [
         Version("0.9"),  # preferred
+        Version("2.0"),  # deprecation is accounted for separately
         Version("1.1"),  # latest non-deprecated final version
         Version("1.0"),  # latest non-deprecated final version
         Version("1.1alpha1"),  # prereleases
         Version("develop"),  # likely development version
-        Version("2.0"),  # deprecated
     ]
 
 
@@ -3317,6 +3317,7 @@ def test_spec_unification(unify, mutable_config, mock_packages):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
 
 
+@pytest.mark.not_on_windows("parallelism unsupported on Windows")
 @pytest.mark.enable_parallelism
 def test_parallel_concretization(mutable_config, mock_packages):
     """Test whether parallel unify-false style concretization works."""

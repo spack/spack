@@ -338,7 +338,7 @@ error(100, "Package '{0}' needs the deprecated version '{1}', and this is not al
 % and vice-versa
 
 1 { allowed_origins(Origin): pkg_fact(Package, version_origin(Version, Origin)),
-    Origin != "installed"}
+    Origin != "installed", Origin != "packages_yaml"}
   :- attr("version", node(ID, Package), Version),
      build(node(ID, Package)).
 
@@ -354,6 +354,13 @@ version_weight(node(ID, Package), Weight)
      attr("node", node(ID, Package)),
      pkg_fact(Package, version_declared(Version, Weight)),
      internal_error("version weights must exist and be unique").
+
+version_deprecation_penalty(node(ID, Package), Penalty)
+  :- pkg_fact(Package, deprecated_version(Version)),
+     pkg_fact(Package, version_deprecation_penalty(Penalty)),
+     attr("node", node(ID, Package)),
+     attr("version", node(ID, Package), Version),
+     not external(node(ID, Package)).
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
@@ -2091,6 +2098,12 @@ opt_criterion(70, "version badness (roots)").
       version_weight(PackageNode, Weight),
       build_priority(PackageNode, Priority)
 }.
+#minimize {
+    Penalty@70+Priority,PackageNode
+    : attr("root", PackageNode),
+      version_deprecation_penalty(PackageNode, Penalty),
+      build_priority(PackageNode, Priority)
+}.
 
 opt_criterion(65, "number of non-default variants (roots)").
 #minimize{ 0@265: #true }.
@@ -2195,6 +2208,14 @@ opt_criterion(25, "version badness (non roots)").
       not attr("root", node(X, Package)),
       not runtime(Package)
 }.
+#minimize {
+    Penalty@25+Priority,node(X, Package)
+    : version_deprecation_penalty(node(X, Package), Penalty),
+      build_priority(node(X, Package), Priority),
+      not attr("root", node(X, Package)),
+      not runtime(Package)
+}.
+
 
 % Try to use all the default values of variants
 opt_criterion(20, "default values of variants not being used (non-roots)").

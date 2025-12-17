@@ -257,7 +257,7 @@ def test_path_manipulation(env):
     assert os.environ["PATH_LIST_WITH_DUPLICATES"].count(make_path("duplicate")) == 1
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Skip unix path tests on Windows")
+@pytest.mark.not_on_windows("Skip unix path tests on Windows")
 def test_unix_system_path_manipulation(env):
     """Tests manipulting paths that have special meaning as system paths on Unix"""
     env.deprioritize_system_paths("PATH_LIST_WITH_SYSTEM_PATHS")

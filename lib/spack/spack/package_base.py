@@ -2578,14 +2578,21 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
 
 
 def preferred_version(pkg: Union[PackageBase, Type[PackageBase]]):
-    """
-    Returns a sorted list of the preferred versions of the package.
+    """Returns the preferred versions of the package according to package.py.
+
+    Accounts for version deprecation in the package recipe. Doesn't account for
+    any user configuration in packages.yaml.
 
     Arguments:
         pkg: The package whose versions are to be assessed.
     """
 
-    version, _ = max(pkg.versions.items(), key=concretization_version_order)
+    def _version_order(version_info):
+        version, info = version_info
+        deprecated_key = not info.get("deprecated", False)
+        return (deprecated_key, *concretization_version_order(version_info))
+
+    version, _ = max(pkg.versions.items(), key=_version_order)
     return version
 
 
@@ -2603,12 +2610,14 @@ def sort_by_pkg_preference(
 
 def concretization_version_order(version_info: Tuple[Union[GitVersion, StandardVersion], dict]):
     """Version order key for concretization, where preferred > not preferred,
-    not deprecated > deprecated, finite > any infinite component; only if all are
-    the same, do we use default version ordering."""
+    finite > any infinite component; only if all are the same, do we use default version
+    ordering.
+
+    Version deprecation needs to be accounted for separately.
+    """
     version, info = version_info
     return (
         info.get("preferred", False),
-        not info.get("deprecated", False),
         not isinstance(version, GitVersion),
         not version.isdevelop(),
         not version.is_prerelease(),

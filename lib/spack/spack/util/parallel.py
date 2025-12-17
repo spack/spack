@@ -11,7 +11,7 @@ from typing import Optional
 import spack.config
 
 #: Used in tests to disable parallelism, as tests themselves are parallelized
-ENABLE_PARALLELISM = True
+ENABLE_PARALLELISM = sys.platform != "win32"
 
 
 class ErrorFromWorker:
