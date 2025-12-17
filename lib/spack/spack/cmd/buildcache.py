@@ -870,12 +870,6 @@ def update_view(
 ):
     """update a buildcache view index"""
     # OCI images do not support views.
-    print(f"mirror: {mirror.name}")
-    print(f"mode: {update_mode}")
-    print(f"name: {name}")
-    for source in sources:
-        print(f"source: {source}")
-
     try:
         spack.oci.oci.image_from_mirror(mirror)
         raise spack.error.SpackError("OCI build caches do not support index views")
@@ -902,7 +896,7 @@ def update_view(
     name = name or mirror.push_view
     assert name
 
-    url_and_version = spack.binary_distribution.MirrorURLAndVersion(
+    url_and_version = spack.binary_distribution.MirrorMetadata(
         url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, name
     )
 

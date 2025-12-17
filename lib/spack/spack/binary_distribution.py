@@ -92,7 +92,7 @@ from .url_buildcache import (
     BuildcacheManifest,
     InvalidMetadataFile,
     ListMirrorSpecsError,
-    MirrorURLAndVersion,
+    MirrorMetadata,
     URLBuildcacheEntry,
     get_entries_from_cache,
     get_url_buildcache_class,
@@ -179,12 +179,12 @@ class BinaryCacheIndex:
 
         # mapping from mirror urls to the time.time() of the last index fetch and a bool indicating
         # whether the fetch succeeded or not.
-        self._last_fetch_times: Dict[MirrorURLAndVersion, Tuple[float, bool]] = {}
+        self._last_fetch_times: Dict[MirrorMetadata, Tuple[float, bool]] = {}
 
         #: Dictionary mapping DAG hashes of specs to Spec objects
         self._known_specs: Dict[str, spack.spec.Spec] = {}
         #: Dictionary mapping DAG hashes of specs to a list of mirrors where they can be found
-        self._mirrors_for_spec: Dict[str, Set[MirrorURLAndVersion]] = defaultdict(set)
+        self._mirrors_for_spec: Dict[str, Set[MirrorMetadata]] = defaultdict(set)
 
     def _init_local_index_cache(self):
         if not self._index_file_cache_initialized:
@@ -224,11 +224,11 @@ class BinaryCacheIndex:
             cached_index_hash = cache_entry["index_hash"]
             if cached_index_hash not in self._specs_already_associated:
                 self._associate_built_specs_with_mirror(
-                    cached_index_path, MirrorURLAndVersion.from_string(url_and_version)
+                    cached_index_path, MirrorMetadata.from_string(url_and_version)
                 )
                 self._specs_already_associated.add(cached_index_hash)
 
-    def _associate_built_specs_with_mirror(self, cache_key, url_and_version: MirrorURLAndVersion):
+    def _associate_built_specs_with_mirror(self, cache_key, url_and_version: MirrorMetadata):
         with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
             db = BuildCacheDatabase(tmpdir)
 
@@ -264,8 +264,8 @@ class BinaryCacheIndex:
         """Returns a list of all concrete specs known to be available in a binary cache."""
         return list(self._known_specs.values())
 
-    def find_built_spec(self, spec: spack.spec.Spec) -> List[MirrorURLAndVersion]:
-        """Returns a list of MirrorURLAndVersion objects indicating which mirrors have the given
+    def find_built_spec(self, spec: spack.spec.Spec) -> List[MirrorMetadata]:
+        """Returns a list of MirrorMetadata objects indicating which mirrors have the given
         concrete spec.
 
         This method does not trigger reading anything from remote mirrors, but rather just checks
@@ -278,7 +278,7 @@ class BinaryCacheIndex:
         """
         return self.find_by_hash(spec.dag_hash())
 
-    def find_by_hash(self, dag_hash: str) -> List[MirrorURLAndVersion]:
+    def find_by_hash(self, dag_hash: str) -> List[MirrorMetadata]:
         """Same as find_built_spec but uses the hash of a spec.
 
         Args:
@@ -286,7 +286,7 @@ class BinaryCacheIndex:
         """
         return list(self._mirrors_for_spec.get(dag_hash, []))
 
-    def update_spec(self, spec: spack.spec.Spec, found_list: List[MirrorURLAndVersion]) -> None:
+    def update_spec(self, spec: spack.spec.Spec, found_list: List[MirrorMetadata]) -> None:
         """Update the cache with a new list of mirrors for a given spec."""
         spec_dag_hash = spec.dag_hash()
 
@@ -309,7 +309,7 @@ class BinaryCacheIndex:
         on disk under ``_index_cache_root``)."""
         self._init_local_index_cache()
         configured_mirrors = [
-            MirrorURLAndVersion(m.fetch_url, layout_version, m.fetch_view)
+            MirrorMetadata(m.fetch_url, layout_version, m.fetch_view)
             for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
             for layout_version in m.supported_layout_versions
         ]
@@ -346,7 +346,7 @@ class BinaryCacheIndex:
         now = time.time()
 
         for local_index_cache_key in self._local_index_cache:
-            urlAndVersion = MirrorURLAndVersion.from_string(local_index_cache_key)
+            urlAndVersion = MirrorMetadata.from_string(local_index_cache_key)
             cached_mirror_url = urlAndVersion.url
             cache_entry = self._local_index_cache[local_index_cache_key]
             cached_index_path = cache_entry["index_path"]
@@ -445,7 +445,7 @@ class BinaryCacheIndex:
         if spec_cache_regenerate_needed:
             self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
 
-    def _fetch_and_cache_index(self, url_and_version: MirrorURLAndVersion, cache_entry={}):
+    def _fetch_and_cache_index(self, url_and_version: MirrorMetadata, cache_entry={}):
         """Fetch a buildcache index file from a remote mirror and cache it.
 
         If we already have a cached index from this mirror, then we first
@@ -1682,7 +1682,7 @@ def try_fetch(url_to_fetch):
 def download_tarball(
     spec: spack.spec.Spec,
     unsigned: Optional[bool] = False,
-    mirrors_for_spec: Optional[List[MirrorURLAndVersion]] = None,
+    mirrors_for_spec: Optional[List[MirrorMetadata]] = None,
 ) -> Optional[spack.stage.Stage]:
     """Download binary tarball for given package
 
@@ -1714,7 +1714,7 @@ def download_tarball(
     # mirror for the spec twice though.
     try_first = mirrors_for_spec or []
     try_next = [
-        MirrorURLAndVersion(mirror.fetch_url, layout, mirror.fetch_view)
+        MirrorMetadata(mirror.fetch_url, layout, mirror.fetch_view)
         for mirror in configured_mirrors
         for layout in mirror.supported_layout_versions
     ]
@@ -1722,7 +1722,7 @@ def download_tarball(
 
     # TODO: turn `mirrors_for_spec` into a list of Mirror instances, instead of doing that here.
     def fetch_url_to_mirror(
-        url_and_version: MirrorURLAndVersion,
+        url_and_version: MirrorMetadata,
     ) -> Tuple[spack.mirrors.mirror.Mirror, int]:
         url = url_and_version.url
         layout_version = url_and_version.version
@@ -2157,9 +2157,9 @@ def install_single_spec(spec, unsigned=False, force=False):
         install_root_node(node, unsigned=unsigned, force=force)
 
 
-def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorURLAndVersion]:
+def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorMetadata]:
     """Try to find the spec directly on the configured mirrors"""
-    found_specs: List[MirrorURLAndVersion] = []
+    found_specs: List[MirrorMetadata] = []
     binary_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True).values()
 
     for mirror in binary_mirrors:
@@ -2184,16 +2184,12 @@ def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorURLAndVersion]:
             fetched_spec = spack.spec.Spec.from_dict(spec_dict)
             fetched_spec._mark_concrete()
 
-            found_specs.append(
-                MirrorURLAndVersion(mirror.fetch_url, layout_version, mirror.fetch_view)
-            )
+            found_specs.append(MirrorMetadata(mirror.fetch_url, layout_version, mirror.fetch_view))
 
     return found_specs
 
 
-def get_mirrors_for_spec(
-    spec: spack.spec.Spec, index_only: bool = False
-) -> List[MirrorURLAndVersion]:
+def get_mirrors_for_spec(spec: spack.spec.Spec, index_only: bool = False) -> List[MirrorMetadata]:
     """
     Check if concrete spec exists on mirrors and return a list indicating the mirrors on which it
     can be found
@@ -2708,7 +2704,7 @@ class EtagIndexFetcherV2(IndexFetcher):
 
 
 class OCIIndexFetcher(IndexFetcher):
-    def __init__(self, url_and_version: MirrorURLAndVersion, local_hash, urlopen=None) -> None:
+    def __init__(self, url_and_version: MirrorMetadata, local_hash, urlopen=None) -> None:
         self.local_hash = local_hash
         self.ref = spack.oci.image.ImageReference.from_url(url_and_version.url)
         self.urlopen = urlopen or spack.oci.opener.urlopen
@@ -2763,7 +2759,7 @@ class OCIIndexFetcher(IndexFetcher):
 class DefaultIndexFetcher(IndexFetcher):
     """Fetcher for buildcache index, cache invalidation via manifest contents"""
 
-    def __init__(self, url_and_version: MirrorURLAndVersion, local_hash, urlopen=web_util.urlopen):
+    def __init__(self, url_and_version: MirrorMetadata, local_hash, urlopen=web_util.urlopen):
         self.url = url_and_version.url
         self.view = url_and_version.view
         self.layout_version = url_and_version.version
@@ -2822,7 +2818,7 @@ class EtagIndexFetcher(IndexFetcher):
     4. If it needs to actually read the manifest, it does not need to do any checks of the url
     scheme to determine whether an etag should be included in the return value."""
 
-    def __init__(self, url_and_version: MirrorURLAndVersion, etag, urlopen=web_util.urlopen):
+    def __init__(self, url_and_version: MirrorMetadata, etag, urlopen=web_util.urlopen):
         self.url = url_and_version.url
         self.view = url_and_version.view
         self.layout_version = url_and_version.version
@@ -2865,7 +2861,7 @@ class EtagIndexFetcher(IndexFetcher):
 
 
 def get_index_fetcher(
-    scheme: str, url_and_version: MirrorURLAndVersion, cache_entry: Dict[str, str]
+    scheme: str, url_and_version: MirrorMetadata, cache_entry: Dict[str, str]
 ) -> IndexFetcher:
     if scheme == "oci":
         # TODO: Actually etag and OCI are not mutually exclusive...

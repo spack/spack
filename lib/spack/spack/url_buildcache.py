@@ -1351,7 +1351,7 @@ def try_verify(specfile_path):
     return True
 
 
-class MirrorURLAndVersion:
+class MirrorMetadata:
     """Simple class to hold a mirror url and a buildcache layout version
 
     This class is used by BinaryCacheIndex to produce a key used to keep
@@ -1372,7 +1372,7 @@ class MirrorURLAndVersion:
         return s
 
     def __eq__(self, other):
-        if not isinstance(other, MirrorURLAndVersion):
+        if not isinstance(other, MirrorMetadata):
             return NotImplemented
         return self.url == other.url and self.version == other.version and self.view == other.view
 
@@ -1383,13 +1383,13 @@ class MirrorURLAndVersion:
     def from_string(cls, s: str):
         m = re.match(r"^(.*)__v([0-9]+)(?:__(.*))?$", s)
         if not m:
-            raise MirrorURLAndVersionError(f"Malformed string {s}")
+            raise MirrorMetadataError(f"Malformed string {s}")
 
         url, version, view = m.groups()
         return cls(url, int(version), view)
 
-    def strip_view(self) -> "MirrorURLAndVersion":
-        return MirrorURLAndVersion(self.url, self.version)
+    def strip_view(self) -> "MirrorMetadata":
+        return MirrorMetadata(self.url, self.version)
 
 
 class InvalidMetadataFile(spack.error.SpackError):
@@ -1416,5 +1416,5 @@ class ListMirrorSpecsError(spack.error.SpackError):
     """Raised when unable to retrieve list of specs from the mirror"""
 
 
-class MirrorURLAndVersionError(spack.error.SpackError):
-    """Raised when unable to interpret a MirrorURLAndVersion string"""
+class MirrorMetadataError(spack.error.SpackError):
+    """Raised when unable to interpret a MirrorMetadata string"""

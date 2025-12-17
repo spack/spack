@@ -1205,7 +1205,7 @@ def test_etag_fetching_304():
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.EtagIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
@@ -1232,7 +1232,7 @@ def test_etag_fetching_200(mock_index):
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.EtagIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
@@ -1260,7 +1260,7 @@ def test_etag_fetching_404():
         )
 
     fetcher = spack.binary_distribution.EtagIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
@@ -1286,7 +1286,7 @@ def test_default_index_fetch_200(mock_index):
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.DefaultIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         local_hash="outdated",
@@ -1315,7 +1315,7 @@ def test_default_index_404():
         )
 
     fetcher = spack.binary_distribution.DefaultIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         local_hash=None,
@@ -1342,7 +1342,7 @@ def test_default_index_not_modified(mock_index):
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.DefaultIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         local_hash=mock_index.index_hash,
@@ -1392,9 +1392,9 @@ def test_get_entries_from_cache_nested_mirrors(monkeypatch, tmp_path: pathlib.Pa
 
 
 def test_url_and_version():
-    url_and_version = spack.binary_distribution.MirrorURLAndVersion("https://dummy.io/__v3", 3)
+    url_and_version = spack.binary_distribution.MirrorMetadata("https://dummy.io/__v3", 3)
     as_str = str(url_and_version)
-    from_str = spack.binary_distribution.MirrorURLAndVersion.from_string(as_str)
+    from_str = spack.binary_distribution.MirrorMetadata.from_string(as_str)
 
     # Verify values
     assert url_and_version.url == "https://dummy.io/__v3"
@@ -1405,16 +1405,16 @@ def test_url_and_version():
     assert url_and_version == from_str
     assert as_str == str(from_str)
 
-    with pytest.raises(spack.url_buildcache.MirrorURLAndVersionError, match="Malformed string"):
-        spack.binary_distribution.MirrorURLAndVersion.from_string("https://dummy.io/__v3@@4")
+    with pytest.raises(spack.url_buildcache.MirrorMetadataError, match="Malformed string"):
+        spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3@@4")
 
 
 def test_url_and_version_with_view():
-    url_and_version = spack.binary_distribution.MirrorURLAndVersion(
+    url_and_version = spack.binary_distribution.MirrorMetadata(
         "https://dummy.io/__v3__@aview", 3, "aview"
     )
     as_str = str(url_and_version)
-    from_str = spack.binary_distribution.MirrorURLAndVersion.from_string(as_str)
+    from_str = spack.binary_distribution.MirrorMetadata.from_string(as_str)
 
     # Verify round trip
     assert url_and_version.url == "https://dummy.io/__v3__@aview"
@@ -1423,7 +1423,5 @@ def test_url_and_version_with_view():
     assert url_and_version == from_str
     assert as_str == str(from_str)
 
-    with pytest.raises(spack.url_buildcache.MirrorURLAndVersionError, match="Malformed string"):
-        spack.binary_distribution.MirrorURLAndVersion.from_string(
-            "https://dummy.io/__v3%asdf__@aview"
-        )
+    with pytest.raises(spack.url_buildcache.MirrorMetadataError, match="Malformed string"):
+        spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3%asdf__@aview")

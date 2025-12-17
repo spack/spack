@@ -216,7 +216,7 @@ class Tee:
 
 
 def install_from_buildcache(
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     spec: spack.spec.Spec,
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
@@ -327,7 +327,7 @@ class PrefixPivoter:
 def worker_function(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -415,7 +415,7 @@ def worker_function(
 def _install(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -569,7 +569,7 @@ class JobServer:
 def start_build(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
