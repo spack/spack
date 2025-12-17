@@ -645,7 +645,7 @@ _spack_buildcache_sync() {
 _spack_buildcache_check_index() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --verify"
+        SPACK_COMPREPLY="-h --help --verify --output -o"
     else
         _mirrors
     fi

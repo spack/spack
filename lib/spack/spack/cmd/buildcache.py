@@ -290,7 +290,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     sync.set_defaults(func=sync_fn)
 
-    # Update buildcache index without copying any additional packages
+    # Check the validity of a buildcache
     check_index = subparsers.add_parser("check-index", help=check_index_fn.__doc__)
     check_index.add_argument(
         "--verify",
@@ -299,6 +299,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
         choices=["exists", "manifests", "blobs", "all"],
         default=[["exists"]],
         help="List of items to verify along along with the index.",
+    )
+    check_index.add_argument(
+        "--output", "-o", action="store", help="File to write check details to"
     )
     check_index.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
@@ -963,7 +966,7 @@ def update_view(
 
 
 def check_index_fn(args):
-    """Check if a build cache index is valid"""
+    """Check if a build cache index, manifests, and blobs are consistent"""
     mirror = args.mirror
     verify = set()
     for v in args.verify:
@@ -1058,6 +1061,18 @@ def check_index_fn(args):
 
     if "blobs" in verify:
         summary_msg += f"\tMissing blobs: {len(missing_blobs)}\n"
+
+    if args.output:
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+        with open(args.output, "w", encoding="utf-8") as fd:
+            json.dump(
+                {
+                    "exists": index_exists,
+                    "manifests": {"missing": missing_specs, "unindexed": unindexed_specs},
+                    "blobs": {"missing": missing_blobs},
+                },
+                fd,
+            )
 
     tty.info(summary_msg)
 

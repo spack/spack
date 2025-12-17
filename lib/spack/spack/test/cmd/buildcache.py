@@ -1097,9 +1097,9 @@ def test_buildcache_create_view_empty(
     assert not hashes_in_view
 
 
-@pytest.mark.parametrize("sources", ("hash", "specfile", "env", "lockfile"))
+@pytest.mark.parametrize("source", (spec_hash, spec_specfile, spec_env, spec_lockfile))
 def test_buildcache_create_view(
-    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, sources
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
 ):
     mirror_directory = str(tmp_path)
     mirror("add", "--unsigned", "my-mirror", mirror_directory)
@@ -1118,7 +1118,7 @@ def test_buildcache_create_view(
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Create a view using a parametrized source that contains one of the mpileaks
-    with globals()[f"spec_{sources}"](mpileaks_specs[0], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[0], tmp_path / "source_stage") as source_args:
         command_args = ["update-index", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
@@ -1147,9 +1147,9 @@ def test_buildcache_create_view(
         assert h not in hashes_in_view or h in mpileaks_0_hashes
 
 
-@pytest.mark.parametrize("sources", ("hash", "specfile", "env", "lockfile"))
+@pytest.mark.parametrize("source", (spec_hash, spec_specfile, spec_env, spec_lockfile))
 def test_buildcache_create_view_append(
-    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, sources
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
 ):
     mirror_directory = str(tmp_path)
     mirror("add", "--unsigned", "my-mirror", mirror_directory)
@@ -1168,7 +1168,7 @@ def test_buildcache_create_view_append(
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Test append to empty index view
-    with globals()[f"spec_{sources}"](mpileaks_specs[0], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[0], tmp_path / "source_stage") as source_args:
         command_args = ["update-index", "--append", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
@@ -1179,7 +1179,7 @@ def test_buildcache_create_view_append(
         assert h in hashes_in_view
 
     # Test append to existing index view
-    with globals()[f"spec_{sources}"](mpileaks_specs[1], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[1], tmp_path / "source_stage") as source_args:
         command_args = ["update-index", "--append", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
@@ -1190,9 +1190,9 @@ def test_buildcache_create_view_append(
         assert h in hashes_in_view
 
 
-@pytest.mark.parametrize("sources", ("hash", "specfile", "env", "lockfile"))
+@pytest.mark.parametrize("source", (spec_hash, spec_specfile, spec_env, spec_lockfile))
 def test_buildcache_create_view_overwrite(
-    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, sources
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
 ):
     mirror_directory = str(tmp_path)
     mirror("add", "--unsigned", "my-mirror", mirror_directory)
@@ -1211,7 +1211,7 @@ def test_buildcache_create_view_overwrite(
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Create a view using a parametrized source that contains one of the mpileaks
-    with globals()[f"spec_{sources}"](mpileaks_specs[0], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[0], tmp_path / "source_stage") as source_args:
         command_args = ["update-index", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
@@ -1222,7 +1222,7 @@ def test_buildcache_create_view_overwrite(
         assert h in hashes_in_view
 
     # Override a view with force
-    with globals()[f"spec_{sources}"](mpileaks_specs[1], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[1], tmp_path / "source_stage") as source_args:
         command_args = ["update-index", "--force", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
