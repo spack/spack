@@ -6,8 +6,6 @@ import re
 from bisect import bisect_left
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
-from spack.util.typing import SupportsRichComparison
-
 from .common import (
     ALPHA,
     FINAL,
@@ -155,7 +153,7 @@ def parse_string_components(string: str) -> Tuple[VersionTuple, SeparatorTuple]:
     return (release, prerelease), separators
 
 
-class VersionType(SupportsRichComparison):
+class VersionType:
     """Base type for all versions in Spack (ranges, lists, regular versions, and git versions).
 
     Versions in Spack behave like sets, and support some basic set operations. There are

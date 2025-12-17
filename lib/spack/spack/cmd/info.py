@@ -27,7 +27,6 @@ import spack.version
 from spack.cmd.common import arguments
 from spack.llnl.util.tty.colify import colify
 from spack.package_base import PackageBase
-from spack.util.typing import SupportsRichComparison
 
 description = "get detailed information on a particular package"
 section = "query"
@@ -486,12 +485,12 @@ def print_by_name(
 
     indent = 4
 
-    def unconditional_first(definition: Any) -> SupportsRichComparison:
+    def unconditional_first(definition: Any) -> Any:
         spec = getattr(definition, "spec", None)
         if spec:
             return (spec != spack.spec.Spec(spec.name), spec)
         else:
-            return getattr(definition, "name", None)  # type: ignore[return-value]
+            return getattr(definition, "name", None)
 
     for subkey in spack.package_base._subkeys(when_indexed_dictionary):
         for when, definition in sorted(
