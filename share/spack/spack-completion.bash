@@ -563,7 +563,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="push create install list keys check download prune save-specfile sync update-index rebuild-index migrate"
+        SPACK_COMPREPLY="push create install list keys check download prune save-specfile sync check-index update-index rebuild-index migrate"
     fi
 }
 
@@ -639,6 +639,15 @@ _spack_buildcache_sync() {
         SPACK_COMPREPLY="-h --help --manifest-glob"
     else
         SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_buildcache_check_index() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --verify"
+    else
+        _mirrors
     fi
 }
 

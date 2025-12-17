@@ -42,6 +42,7 @@ from ..url_buildcache import (
     BuildcacheEntryError,
     URLBuildcacheEntry,
     check_mirror_for_layout,
+    get_entries_from_cache,
     get_url_buildcache_class,
 )
 
@@ -288,6 +289,21 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     sync.set_defaults(func=sync_fn)
+
+    # Update buildcache index without copying any additional packages
+    check_index = subparsers.add_parser("check-index", help=check_index_fn.__doc__)
+    check_index.add_argument(
+        "--verify",
+        nargs="+",
+        action="append",
+        choices=["exists", "manifests", "blobs", "all"],
+        default=[["exists"]],
+        help="List of items to verify along along with the index.",
+    )
+    check_index.add_argument(
+        "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
+    )
+    check_index.set_defaults(func=check_index_fn)
 
     # Update buildcache index without copying any additional packages
     update_index = subparsers.add_parser(
@@ -944,6 +960,106 @@ def update_view(
 
     if update_keys:
         mirror_update_keys(mirror)
+
+
+def check_index_fn(args):
+    """Check if a build cache index is valid"""
+    mirror = args.mirror
+    verify = set()
+    for v in args.verify:
+        verify.update(v)
+
+    if "all" in verify:
+        verify.update(["exists", "manifests", "blobs"])
+
+    try:
+        spack.oci.oci.image_from_mirror(mirror)
+        raise spack.error.SpackError("OCI build caches do not support index views")
+    except ValueError:
+        pass
+
+    # Check if the index exists, and cache it locally for next operations
+    url_and_version = spack.binary_distribution.MirrorMetadata(
+        mirror.fetch_url,
+        spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+        mirror.fetch_view,
+    )
+    index_exists = True
+    try:
+        BINARY_INDEX._fetch_and_cache_index(url_and_version)
+    except spack.binary_distribution.BuildcacheIndexNotExists:
+        index_exists = False
+
+    missing_specs = []
+    unindexed_specs = []
+    missing_blobs = {}
+    cache_hash_list = []
+    index_hash_list = []
+    # List the manifests and verify
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        # Get listing of spec manifests in mirror
+        manifest_files = []
+        if "manifests" in verify or "blobs" in verify:
+            manifest_files, read_fn = get_entries_from_cache(
+                mirror.fetch_url, tmpdir, BuildcacheComponent.SPEC
+            )
+        if "manifests" in verify:
+            # Read the index file
+            db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
+            cache_entry = BINARY_INDEX._local_index_cache[str(url_and_version)]
+            cache_key = cache_entry["index_path"]
+            cache_path = BINARY_INDEX._index_file_cache.cache_path(cache_key)
+            with BINARY_INDEX._index_file_cache.read_transaction(cache_key):
+                db._read_from_file(cache_path)
+
+            index_hash_list = set(
+                [
+                    s.dag_hash()
+                    for s in db.query_local(installed=InstallRecordStatus.ANY)
+                    if db._data[s.dag_hash()].in_buildcache
+                ]
+            )
+
+        for spec_manifest in manifest_files:
+            # Spec manifests have a naming format
+            # <name>-<version>-<hash>.spec.manifest.json
+            spec_hash = spec_manifest.rsplit("-", 1)[1].split(".", 1)[0]
+            cache_hash_list.append(spec_hash)
+            if spec_hash not in index_hash_list:
+                unindexed_specs.append(spec_hash)
+
+            if "blobs" in verify:
+                entry = read_fn(spec_manifest)
+                entry.read_manifest()
+                for record in entry.manifest.data:
+                    if not entry.check_blob_exists(record):
+                        blobs = missing_blobs.get(spec_hash, [])
+                        blobs.append(record)
+                        missing_blobs[spec_hash] = blobs
+
+    for h in index_hash_list:
+        if h not in cache_hash_list:
+            missing_specs.append(h)
+
+    # Print summary
+    summary_msg = "Build cache check:\n\t"
+    if "exists" in verify:
+        if index_exists:
+            summary_msg = f"Index exists in mirror: {mirror.name}"
+        else:
+            summary_msg = f"Index does not exist in mirror: {mirror.name}"
+        if mirror.fetch_view:
+            summary_msg += f"@{mirror.fetch_view}"
+        summary_msg += "\n"
+
+    if "manifests" in verify:
+        summary_msg += f"\tUnindexed specs: {len(unindexed_specs)}\n"
+        summary_msg += f"\tMissing specs: {len(missing_specs)}\n"
+
+    if "blobs" in verify:
+        summary_msg += f"\tMissing blobs: {len(missing_blobs)}\n"
+
+    tty.info(summary_msg)
 
 
 def update_index_fn(args):
