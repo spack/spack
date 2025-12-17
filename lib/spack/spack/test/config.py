@@ -1735,9 +1735,8 @@ def test_included_path_git(
     key,
     value,
     capfd,
-    override_path,
 ):
-    override_path("user_cache_path", str(tmp_path))
+    monkeypatch.setattr(spack.config, "_include_cache_location", str(tmp_path))
 
     class MockIncludeGit(spack.util.executable.Executable):
         def __init__(self, required: bool):

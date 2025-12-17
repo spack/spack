@@ -89,13 +89,7 @@ class SpackPaths:
 
     @property
     def user_cache_path(self):
-        if hasattr(self, "_user_cache_path"):
-            return self._user_cache_path
         return self.state_home
-
-    @user_cache_path.setter
-    def user_cache_path(self, val):
-        self._user_cache_path = val
 
     @property
     def default_install_location(self):
