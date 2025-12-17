@@ -1728,13 +1728,7 @@ def test_included_path_git_unsat(
     "key,value", [("branch", "main"), ("commit", "abcdef123456"), ("tag", "v1.0")]
 )
 def test_included_path_git(
-    tmp_path: pathlib.Path,
-    mock_low_high_config,
-    ensure_debug,
-    monkeypatch,
-    key,
-    value,
-    capfd,
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capfd
 ):
     monkeypatch.setattr(spack.config, "_include_cache_location", str(tmp_path))
 
