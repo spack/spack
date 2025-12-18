@@ -10,7 +10,11 @@ from spack.package import *
 
 
 class ArchSpecificPkg(Package):
-    if spack.mirrors.utils.evaluate_or_true_if_mirror_all(platform.machine() == "x86_64"):
+    if spack.mirrors.utils.evaluate_or_true_if_mirror_all(
+        platform.machine() in ("x86_64", "AMD64")
+    ):
         version("1.0", sha256="a" * 64, url="https://example.com/pkg-1.0-x86_64.tar.gz")
-    if spack.mirrors.utils.evaluate_or_true_if_mirror_all(platform.machine() == "aarch64"):
+    if spack.mirrors.utils.evaluate_or_true_if_mirror_all(
+        platform.machine() in ("aarch64", "arm64")
+    ):
         version("1.0", sha256="b" * 64, url="https://example.com/pkg-1.0-aarch64.tar.gz")
