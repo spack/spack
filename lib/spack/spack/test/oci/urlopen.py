@@ -54,7 +54,7 @@ def test_parse_www_authenticate():
     www_authenticate = 'Bearer realm="https://spack.io/authenticate",service="spack-registry",scope="repository:spack-registry:pull,push"'
     assert parse_www_authenticate(www_authenticate) == [
         Challenge(
-            "Bearer",
+            "bearer",
             [
                 ("realm", "https://spack.io/authenticate"),
                 ("service", "spack-registry"),
@@ -63,18 +63,18 @@ def test_parse_www_authenticate():
         )
     ]
 
-    assert parse_www_authenticate("Bearer") == [Challenge("Bearer")]
+    assert parse_www_authenticate("Bearer") == [Challenge("bearer")]
     assert parse_www_authenticate("MethodA, MethodB,MethodC") == [
-        Challenge("MethodA"),
-        Challenge("MethodB"),
-        Challenge("MethodC"),
+        Challenge("methoda"),
+        Challenge("methodb"),
+        Challenge("methodc"),
     ]
 
     assert parse_www_authenticate(
         'Digest realm="Digest Realm", nonce="1234567890", algorithm=MD5, qop="auth"'
     ) == [
         Challenge(
-            "Digest",
+            "digest",
             [
                 ("realm", "Digest Realm"),
                 ("nonce", "1234567890"),
@@ -87,8 +87,12 @@ def test_parse_www_authenticate():
     assert parse_www_authenticate(
         r'Newauth realm="apps", type=1, title="Login to \"apps\"", Basic realm="simple"'
     ) == [
-        Challenge("Newauth", [("realm", "apps"), ("type", "1"), ("title", 'Login to "apps"')]),
-        Challenge("Basic", [("realm", "simple")]),
+        Challenge("newauth", [("realm", "apps"), ("type", "1"), ("title", 'Login to "apps"')]),
+        Challenge("basic", [("realm", "simple")]),
+    ]
+
+    assert parse_www_authenticate(r'BASIC realm="simple"') == [
+        Challenge("basic", [("realm", "simple")])
     ]
 
 
@@ -171,6 +175,9 @@ def test_get_basic_challenge():
         == "simple"
     )
 
+    # authentication scheme written in all-caps, should match nonetheless
+    assert _get_basic_challenge([Challenge("BASIC", [("realm", "simple")])]) == "simple"
+
 
 def test_get_bearer_challenge():
     """Test extracting Bearer challenge from a list of challenges"""
@@ -214,6 +221,9 @@ def test_get_bearer_challenge():
     ) == RealmServiceScope(
         "https://spack.io/authenticate", "spack-registry", "repository:spack-registry:pull,push"
     )
+
+    # authentication scheme written in all-caps, should match nonetheless
+    assert _get_basic_challenge([Challenge("BEARER", [("realm", "simple")])]) == "simple"
 
 
 @pytest.mark.parametrize(

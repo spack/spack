@@ -132,7 +132,7 @@ def parse_www_authenticate(input: str):
             if token.kind == WwwAuthenticateTokens.EOF:
                 raise ValueError(token)
             elif token.kind == WwwAuthenticateTokens.TOKEN:
-                current_challenge.scheme = token.value
+                current_challenge.scheme = token.value.lower()
                 mode = State.AUTH_PARAM_LIST_START
             else:
                 raise ValueError(token)
