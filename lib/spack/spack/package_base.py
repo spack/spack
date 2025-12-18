@@ -2583,7 +2583,9 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
     return details is not None and details.get("deprecated", False)
 
 
-def preferred_version(pkg: Union[PackageBase, Type[PackageBase]]):
+def preferred_version(
+    pkg: Union[PackageBase, Type[PackageBase]],
+) -> Union[StandardVersion, GitVersion]:
     """Returns the preferred versions of the package according to package.py.
 
     Accounts for version deprecation in the package recipe. Doesn't account for
@@ -2600,6 +2602,27 @@ def preferred_version(pkg: Union[PackageBase, Type[PackageBase]]):
 
     version, _ = max(pkg.versions.items(), key=_version_order)
     return version
+
+
+def non_preferred_version(node: spack.spec.Spec) -> bool:
+    """Returns True if the spec version is not the preferred one, according to the package.py"""
+    if not node.versions.concrete:
+        return False
+
+    try:
+        return node.version != preferred_version(node.package)
+    except ValueError:
+        return False
+
+
+def non_default_variant(node: spack.spec.Spec, variant_name: str) -> bool:
+    """Returns True if the variant in the spec has a non-default value."""
+    try:
+        default_variant = node.package.get_variant(variant_name).make_default()
+        return not node.satisfies(str(default_variant))
+    except ValueError:
+        # This is the case for special variants like "patches" etc.
+        return False
 
 
 def sort_by_pkg_preference(

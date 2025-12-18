@@ -11,6 +11,7 @@ import spack.environment as ev
 import spack.hash_types as ht
 import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
+import spack.package_base
 import spack.spec
 import spack.store
 import spack.traverse
@@ -123,10 +124,10 @@ def spec(parser, args):
                 hashes=args.long or args.very_long,
                 key=spack.traverse.by_dag_hash,
                 highlight_version_fn=(
-                    spack.spec.non_preferred_version if args.non_defaults else None
+                    spack.package_base.non_preferred_version if args.non_defaults else None
                 ),
                 highlight_variant_fn=(
-                    spack.spec.non_default_variant if args.non_defaults else None
+                    spack.package_base.non_default_variant if args.non_defaults else None
                 ),
             )
         )

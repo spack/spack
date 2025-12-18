@@ -11,6 +11,7 @@ import spack.deptypes as dt
 import spack.directives
 import spack.error
 import spack.llnl.util.lang
+import spack.package_base
 import spack.paths
 import spack.solver.asp
 import spack.spec
@@ -2490,7 +2491,7 @@ def test_highlighting_spec_parts(spec_str, expected_fmt, default_mock_concretiza
     expected = colorize(expected_fmt, color=True)
     colorized_str = s.format(
         color=True,
-        highlight_version_fn=spack.spec.non_preferred_version,
-        highlight_variant_fn=spack.spec.non_default_variant,
+        highlight_version_fn=spack.package_base.non_preferred_version,
+        highlight_variant_fn=spack.package_base.non_default_variant,
     )
     assert expected in colorized_str

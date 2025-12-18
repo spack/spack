@@ -1336,7 +1336,7 @@ def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
 
 def concretization_version_order(
     version_info: Tuple[Union[GitVersion, StandardVersion], dict],
-) -> Tuple[bool, bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
+) -> Tuple[bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
     """Version order key for concretization, where preferred > not preferred,
     not deprecated > deprecated, standard version > git version, finite > any infinite component;
     only if all are the same, do we use default version ordering.
@@ -1344,7 +1344,6 @@ def concretization_version_order(
     version, info = version_info
     return (
         info.get("preferred", False),
-        not info.get("deprecated", False),
         not isinstance(version, GitVersion),
         not version.isdevelop(),
         not version.is_prerelease(),
