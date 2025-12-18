@@ -1599,7 +1599,8 @@ class SpackSolverSetup:
             pkg_fact(fn.variant_default_value_from_package_py(vid, val))
 
         if variant_def.values is not None:
-            current_values = sorted(variant_def.values, key=lambda v: (v not in default_values, v))
+            # Put default values first, otherwise keep the order since sort is stable
+            current_values = sorted(variant_def.values, key=lambda v: v not in default_values)
             for penalty, v in enumerate(current_values, 1):
                 pkg_fact(fn.variant_penalty(vid, v, penalty))
 
@@ -1609,9 +1610,9 @@ class SpackSolverSetup:
             values = []
 
         elif isinstance(values, vt.DisjointSetsOfValues):
-            union = set()
-            for sid, s in enumerate(sorted(values.sets)):
-                for value in sorted(s):
+            union: Set[str] = set()
+            for sid, s in enumerate(values.sets):
+                for value in s:
                     pkg_fact(fn.variant_value_from_disjoint_sets(vid, value, sid))
                 union.update(s)
             values = union

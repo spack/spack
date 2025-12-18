@@ -18,6 +18,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Set,
     Tuple,
     Type,
     Union,
@@ -519,23 +520,28 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         *sets (list): mutually exclusive sets of values
     """
 
-    _empty_set = {"none"}
+    _empty_set = ("none",)
 
     def __init__(self, *sets: Tuple[str, ...]) -> None:
-        self.sets = [set(_flatten(x)) for x in sets]
+        self.sets = [tuple(_flatten(x)) for x in sets]
 
-        # 'none' is a special value and can appear only in a set of
-        # a single element
-        if any("none" in s and s != {"none"} for s in self.sets):
+        # 'none' is a special value and can appear only in a set of a single element
+        if any("none" in s and s != self._empty_set for s in self.sets):
             raise spack.error.SpecError(
-                "The value 'none' represents the empty set,"
-                " and must appear alone in a set. Use the "
-                "method 'allow_empty_set' to add it."
+                "The value 'none' represents the empty set, and must appear alone in a set. "
+                "Use the method 'allow_empty_set' to add it."
             )
 
         # Sets should not intersect with each other
-        if any(s1 & s2 for s1, s2 in itertools.combinations(self.sets, 2)):
-            raise spack.error.SpecError("sets in input must be disjoint")
+        cumulated: Set[str] = set()
+        for current_set in self.sets:
+            intersection = cumulated.intersection(set(current_set))
+            if intersection:
+                raise spack.error.SpecError(
+                    f"sets in input must be disjoint, but {', '.join(sorted(intersection))} "
+                    f"appeared more than once"
+                )
+            cumulated.update(current_set)
 
         #: Attribute used to track values which correspond to
         #: features which can be enabled or disabled as understood by the

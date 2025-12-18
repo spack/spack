@@ -2083,6 +2083,21 @@ spack:
         trilinos = result.specs[0]
         assert trilinos.satisfies("cxxstd=20")
 
+        # Test a disjoint set of values to ensure declared package order is respected
+        result, _, _ = solver.driver.solve(setup, [Spec("mvapich2")], reuse=external_specs)
+
+        weights = weights_from_result(result, name="variant penalty (roots)")
+        assert weights["reused"] == 0 and weights["built"] == 0
+        mvapich2 = result.specs[0]
+        assert mvapich2.satisfies("file_systems=auto")
+
+        result, _, _ = solver.driver.solve(setup, [Spec("mvapich2+noauto")], reuse=external_specs)
+
+        weights = weights_from_result(result, name="variant penalty (roots)")
+        assert weights["reused"] == 0 and weights["built"] == 2
+        mvapich2 = result.specs[0]
+        assert mvapich2.satisfies("file_systems=lustre")
+
     @pytest.mark.regression("51267")
     @pytest.mark.parametrize(
         "packages_config,expected",
