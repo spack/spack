@@ -76,7 +76,7 @@ class SpackPaths:
             ["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME"],
             "XDG_STATE_HOME",
             "state",
-            ".local/state",
+            os.path.join(".local", "state"),
         )
 
     @property
@@ -85,7 +85,9 @@ class SpackPaths:
 
     @property
     def data_home(self):
-        return self.resolve_a_home("SPACK_DATA_HOME", "XDG_DATA_HOME", "data", ".local/share")
+        return self.resolve_a_home(
+            "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", os.path.join(".local", "share")
+        )
 
     @property
     def user_cache_path(self):
