@@ -14,7 +14,7 @@ import urllib.parse
 import urllib.request
 from enum import Enum, auto
 from http.client import HTTPResponse
-from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Literal, NamedTuple, Optional, Tuple
 from urllib.request import Request
 
 import spack.config
@@ -97,6 +97,10 @@ class Challenge:
             and self.params == other.params
         )
 
+    def matches_scheme(self, scheme: Literal["Bearer", "Basic"]) -> bool:
+        """Checks whether the challenge matches the given scheme, case-insensitive."""
+        return self.scheme.lower() == scheme.lower()
+
 
 def parse_www_authenticate(input: str):
     """Very basic parsing of www-authenticate parsing (RFC7235 section 4.1)
@@ -132,7 +136,7 @@ def parse_www_authenticate(input: str):
             if token.kind == WwwAuthenticateTokens.EOF:
                 raise ValueError(token)
             elif token.kind == WwwAuthenticateTokens.TOKEN:
-                current_challenge.scheme = token.value.lower()
+                current_challenge.scheme = token.value
                 mode = State.AUTH_PARAM_LIST_START
             else:
                 raise ValueError(token)
@@ -206,7 +210,7 @@ class UsernamePassword(NamedTuple):
 
 def _get_bearer_challenge(challenges: List[Challenge]) -> Optional[RealmServiceScope]:
     """Return the realm/service/scope for a Bearer auth challenge, or None if not found."""
-    challenge = next((c for c in challenges if c.scheme.lower() == "bearer"), None)
+    challenge = next((c for c in challenges if c.matches_scheme("Bearer")), None)
 
     if challenge is None:
         return None
@@ -224,7 +228,7 @@ def _get_bearer_challenge(challenges: List[Challenge]) -> Optional[RealmServiceS
 
 def _get_basic_challenge(challenges: List[Challenge]) -> Optional[str]:
     """Return the realm for a Basic auth challenge, or None if not found."""
-    challenge = next((c for c in challenges if c.scheme.lower() == "basic"), None)
+    challenge = next((c for c in challenges if c.matches_scheme("Basic")), None)
 
     if challenge is None:
         return None
