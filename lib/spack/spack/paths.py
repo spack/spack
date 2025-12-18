@@ -232,9 +232,6 @@ class SpackPaths:
     def prefer_old_location(self, old_location, new_location):
         # TODO: perhaps it should be configurable whether old locations
         # are used. Other option is to relocate downloads & gpg keys.
-        # TODO: if user sets SPACK/XDG_DATA_HOME, should we move installs
-        # there even if old dir is occupied? (right now that's what is
-        # happening here)
         if dir_is_occupied(old_location):
             return old_location
         else:
