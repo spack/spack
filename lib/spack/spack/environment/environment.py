@@ -195,7 +195,7 @@ def validate_env_name(name):
     return name
 
 
-def activate(env, use_env_repo=False, shell="sh", prompt="", view=""):
+def activate(env, use_env_repo=False, prompt="", view=""):
     """Activate an environment.
 
     To activate an environment, we add its manifest's configuration scope to the
@@ -239,14 +239,14 @@ def activate(env, use_env_repo=False, shell="sh", prompt="", view=""):
                 new_repo.put_first(env.repo)
             spack.repo.enable_repo(new_repo)
 
-        if shell:
-            env_activate_script = path_to_env_activate_shell_script(env, shell)
+        shell = os.environ.get("SPACK_SHELL", "sh")
+        env_activate_script = path_to_env_activate_shell_script(env, shell)
 
-            if os.path.isfile(env_activate_script):
-                yaml_update = os.stat(os.path.join(env.path, manifest_name)).st_mtime
-                activation_update = os.stat(env_activate_script).st_mtime
-                if yaml_update > activation_update or prompt or view:
-                    update_env_activate_script(env, prompt, view)
+        if os.path.isfile(env_activate_script):
+            yaml_update = os.stat(os.path.join(env.path, manifest_name)).st_mtime
+            activation_update = os.stat(env_activate_script).st_mtime
+            if yaml_update > activation_update or prompt or view:
+                update_env_activate_script(env, prompt, view)
 
         tty.debug(f"Using environment '{env.name}'")
     except Exception:

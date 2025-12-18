@@ -383,7 +383,7 @@ def env_activate(args):
         active_env, shell=args.shell
     )
 
-    ev.activate(active_env, shell=args.shell, prompt=env_prompt, view=view)
+    ev.activate(active_env, prompt=env_prompt, view=view)
 
     print(f"source {env_activate_script}")
 
