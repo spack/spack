@@ -99,7 +99,7 @@ class Challenge:
 
     def matches_scheme(self, scheme: str) -> bool:
         """Checks whether the challenge matches the given scheme, case-insensitive."""
-        return self.scheme.lower() == scheme.lower()
+        return self.scheme == scheme.lower()
 
 
 def parse_www_authenticate(input: str):
@@ -136,7 +136,7 @@ def parse_www_authenticate(input: str):
             if token.kind == WwwAuthenticateTokens.EOF:
                 raise ValueError(token)
             elif token.kind == WwwAuthenticateTokens.TOKEN:
-                current_challenge.scheme = token.value
+                current_challenge.scheme = token.value.lower()
                 mode = State.AUTH_PARAM_LIST_START
             else:
                 raise ValueError(token)
@@ -180,7 +180,7 @@ def parse_www_authenticate(input: str):
                 raise ValueError(token)
             elif token.kind == WwwAuthenticateTokens.TOKEN:
                 challenges.append(current_challenge)
-                current_challenge = Challenge(token.value)
+                current_challenge = Challenge(token.value.lower())
                 mode = State.AUTH_PARAM_LIST_START
             elif token.kind == WwwAuthenticateTokens.AUTH_PARAM:
                 key, value = extract_auth_param(token.value)
