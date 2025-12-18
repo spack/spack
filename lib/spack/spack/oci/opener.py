@@ -14,7 +14,7 @@ import urllib.parse
 import urllib.request
 from enum import Enum, auto
 from http.client import HTTPResponse
-from typing import Callable, Dict, Iterable, List, Literal, NamedTuple, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple
 from urllib.request import Request
 
 import spack.config
@@ -97,7 +97,7 @@ class Challenge:
             and self.params == other.params
         )
 
-    def matches_scheme(self, scheme: Literal["Bearer", "Basic"]) -> bool:
+    def matches_scheme(self, scheme: str) -> bool:
         """Checks whether the challenge matches the given scheme, case-insensitive."""
         return self.scheme.lower() == scheme.lower()
 
