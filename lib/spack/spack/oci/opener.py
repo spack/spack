@@ -101,7 +101,7 @@ class Challenge:
         """Checks whether the challenge matches the given scheme, case-insensitive."""
         return self.scheme == scheme.lower()
 
-    def get_param(self, key: str):
+    def get_param(self, key: str) -> Optional[str]:
         """Get the value of an auth param by key, or None if not found."""
         return next((v for k, v in self.params if k == key.lower()), None)
 
