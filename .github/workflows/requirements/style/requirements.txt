@@ -6,5 +6,5 @@ mypy==1.19.1
 types-six==1.17.0.20251009
 vermin==1.8.0
 pylint==4.0.4
-docutils==0.22.2
+docutils==0.22.4
 ruamel.yaml==0.18.16
