@@ -91,7 +91,7 @@ def test_parse_www_authenticate():
         Challenge("basic", [("realm", "simple")]),
     ]
 
-    assert parse_www_authenticate(r'BASIC realm="simple"') == [
+    assert parse_www_authenticate(r'BASIC REALM="simple"') == [
         Challenge("basic", [("realm", "simple")])
     ]
 
@@ -175,9 +175,6 @@ def test_get_basic_challenge():
         == "simple"
     )
 
-    # authentication scheme written in all-caps, should match nonetheless
-    assert _get_basic_challenge([Challenge("basic", [("realm", "simple")])]) == "simple"
-
 
 def test_get_bearer_challenge():
     """Test extracting Bearer challenge from a list of challenges"""
@@ -217,22 +214,6 @@ def test_get_bearer_challenge():
                     ("scope", "repository:spack-registry:pull,push"),
                 ],
             ),
-        ]
-    ) == RealmServiceScope(
-        "https://spack.io/authenticate", "spack-registry", "repository:spack-registry:pull,push"
-    )
-
-    # authentication scheme written in all-caps, should match nonetheless
-    assert _get_bearer_challenge(
-        [
-            Challenge(
-                "bearer",
-                [
-                    ("realm", "https://spack.io/authenticate"),
-                    ("service", "spack-registry"),
-                    ("scope", "repository:spack-registry:pull,push"),
-                ],
-            )
         ]
     ) == RealmServiceScope(
         "https://spack.io/authenticate", "spack-registry", "repository:spack-registry:pull,push"
