@@ -223,7 +223,20 @@ def test_get_bearer_challenge():
     )
 
     # authentication scheme written in all-caps, should match nonetheless
-    assert _get_basic_challenge([Challenge("BEARER", [("realm", "simple")])]) == "simple"
+    assert _get_bearer_challenge(
+        [
+            Challenge(
+                "BEARER",
+                [
+                    ("realm", "https://spack.io/authenticate"),
+                    ("service", "spack-registry"),
+                    ("scope", "repository:spack-registry:pull,push"),
+                ],
+            )
+        ]
+    ) == RealmServiceScope(
+        "https://spack.io/authenticate", "spack-registry", "repository:spack-registry:pull,push"
+    )
 
 
 @pytest.mark.parametrize(
