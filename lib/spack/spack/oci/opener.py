@@ -101,6 +101,10 @@ class Challenge:
         """Checks whether the challenge matches the given scheme, case-insensitive."""
         return self.scheme == scheme.lower()
 
+    def get_param(self, key: str) -> str | None:
+        """Get the value of an auth param by key, or None if not found."""
+        return next((v for k, v in self.params if k == key.lower()), None)
+
 
 def parse_www_authenticate(input: str):
     """Very basic parsing of www-authenticate parsing (RFC7235 section 4.1)
@@ -123,7 +127,7 @@ def parse_www_authenticate(input: str):
 
     def extract_auth_param(input: str) -> Tuple[str, str]:
         key, value = input.split("=", 1)
-        key = key.rstrip()
+        key = key.rstrip().lower()
         value = value.lstrip()
         if value.startswith('"'):
             value = unquote(value)
@@ -216,9 +220,9 @@ def _get_bearer_challenge(challenges: List[Challenge]) -> Optional[RealmServiceS
         return None
 
     # Get realm / service / scope from challenge
-    realm = next((v for k, v in challenge.params if k == "realm"), None)
-    service = next((v for k, v in challenge.params if k == "service"), None)
-    scope = next((v for k, v in challenge.params if k == "scope"), None)
+    realm = challenge.get_param("realm")
+    service = challenge.get_param("service")
+    scope = challenge.get_param("scope")
 
     if realm is None or service is None or scope is None:
         return None
@@ -233,7 +237,7 @@ def _get_basic_challenge(challenges: List[Challenge]) -> Optional[str]:
     if challenge is None:
         return None
 
-    return next((v for k, v in challenge.params if k == "realm"), None)
+    return challenge.get_param("realm")
 
 
 class OCIAuthHandler(urllib.request.BaseHandler):
