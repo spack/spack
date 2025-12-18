@@ -336,13 +336,12 @@ class CIJobData:
             remove: ``True`` if a remove job; otherwise, ``False``
         """
         self.name: str = name
-        self.spec: Optional[spack.spec.Spec] = spec
         self.hash: str = spec.dag_hash() if spec else ""
-        self.remove: bool = remove
         self.job_name = f"{self.name}-job{'-remove' if self.remove else ''}"
+        self.remove: bool = remove
+        self.spec: Optional[spack.spec.Spec] = spec
 
-        self.attributes: Dict[str, Union[str, int]] = {}
-
+        # TODO: These will need to be pushed to self.attributes before output
         self.script: Dict[CIScriptStage, CIScript] = {}
         if self.job_name in default_job_settings:
             for key, value in default_job_settings[self.job_name].items():
@@ -354,24 +353,31 @@ class CIJobData:
                     except Exception as e:
                         tty.error(f"Failed to set {key} attribute with {value}: {str(e)}")
 
+        self.attributes: Dict[str, Union[str, int]] = {}
         if spec:
-            job_vars = {
+            self.attributes["variables"] = {
+                "SPACK_JOB_SPEC_ARCH": spec.format("{architecture}"),
+                "SPACK_JOB_SPEC_COMPILER_NAME": spec.format("{compiler.name}"),
+                "SPACK_JOB_SPEC_COMPILER_VERSION": spec.format("{compiler.version}"),
                 "SPACK_JOB_SPEC_DAG_HASH": spec.dag_hash(),
                 "SPACK_JOB_SPEC_PKG_NAME": spec.name,
                 "SPACK_JOB_SPEC_PKG_VERSION": spec.format("{version}"),
-                "SPACK_JOB_SPEC_COMPILER_NAME": spec.format("{compiler.name}"),
-                "SPACK_JOB_SPEC_COMPILER_VERSION": spec.format("{compiler.version}"),
-                "SPACK_JOB_SPEC_ARCH": spec.format("{architecture}"),
                 "SPACK_JOB_SPEC_VARIANTS": spec.format("{variants}"),
             }
-            self.attributes["variables"] = job_vars
-            self.attributes["tags"] = []
 
     def __str__(self) -> str:
         return f"CIJob({self.job_name}, spec={self.spec})"
 
     def add_tags(self, tags: List[str]):
+        if "tags" not in self.attributes:
+            self.attributes["tags"] = []
         self.attributes["tags"].extend(tags)
+
+    def add_stage(self, stage: str):
+        self.attributes["stage"] = stage
+
+    def has_script(self, stage: CIScriptStage):
+        return stage in self.scripts
 
     def remove_reserved_tags(self):
         for tag in SPACK_RESERVED_TAGS:
@@ -422,13 +428,16 @@ class CIJobData:
             section: section possibly containing relevant job attributes
         """
         if self.job_name not in section:
+            tty.debug(f"Skipping attribute ({section}) since does not contain '{self.job_name}'")
             return
 
         attrs = section[self.job_name]
 
         if self.remove:
+            tty.debug(f"Removing {attrs} from {self.job_name} job")
             self.remove_attributes(attrs)
         else:
+            tty.debug(f"Merging {attrs} into {self.job_name} job")
             self.merge_attributes(attrs)
 
     def update_submapping_attributes(self, section: Dict[str, Any]):
@@ -438,6 +447,7 @@ class CIJobData:
             section: section possibly containing relevant job attributes
         """
         if "submapping" not in section or self.name not in spec_job_names:
+            tty.debug(f"Skipping submapping update for {self.job_name} job using '{section}'")
             return
 
         # Assumes the attributes are job name-specific.
@@ -464,10 +474,6 @@ class CIJobData:
 
     def to_dict(self) -> Dict[str, Any]:
         return {"spec": self.spec, "attributes": self.attributes, "scripts": self.script}
-
-    def convert_scripts(self):
-        """Perform conversions of script contents."""
-        pass
 
 
 class CDashHandler:
@@ -812,6 +818,8 @@ class SpackCIConfig:
     def init_pipeline_jobs(self, pipeline: PipelineDag):
         """Create jobs for all the pipeline specs"""
         names = ["build"]
+        # TODO/TLD: Do we want to add these here or should we be
+        # TODO/TLD: adding them when the spec stages are processed?
         if self.add_tests:
             names.append("test")
 
