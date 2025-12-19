@@ -6,9 +6,11 @@
 
 import atexit
 import ctypes
+import ctypes.wintypes as wintypes
 import errno
 import io
 import multiprocessing
+import multiprocessing.connection
 import os
 import re
 import select
@@ -351,6 +353,28 @@ def log_output(*args, **kwargs):
         return nixlog(*args, **kwargs)
 
 
+
+def forward_stdin(write_pipe, _kill_sig):
+    """Run in a thread, recieves stdin from parent process and forwards to child via pipe"""
+    # Loop until thread is dead
+    try:
+        while True:
+            stopped = _kill_sig.wait(0.1)
+            # ensure write pipe is writable
+            assert write_pipe.writable()
+            write_pipe.flush()
+            stdin_info = sys.stdin.read(4096)
+            # chunk stdin so to avoid ValueErrors on
+            # large stdin inputs (max is 32mib or less)
+            # need to figure out how to stream chunked data
+            # so the reader knows its chunked
+            write_pipe.send(stdin_info)
+            if stopped:
+                break
+    finally:
+        write_pipe.close()
+
+
 class nixlog:
     """
     Under the hood, we spawn a daemon and set up a pipe between this
@@ -404,6 +428,7 @@ class nixlog:
         self.append = append
 
         self._active = False  # used to prevent re-entry
+        self.input_forward_thread = None
 
     def __enter__(self):
         if self._active:
@@ -431,8 +456,13 @@ class nixlog:
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
             try:
-                if sys.stdin.isatty():
+                if sys.stdin.isatty() and not sys.platform == "win32":
                     stdin_fd = Connection(os.dup(sys.stdin.fileno()))
+                else:
+                    stdin_fd, stdin_write = multiprocessing.Pipe(duplex=True)
+                    self._in_kill = threading.Event()
+                    self.input_forward_thread = threading.Thread(target=forward_stdin, args=(stdin_write, ) )
+                    self.input_forward_thread.start()
             except BaseException:
                 # just don't forward input if this fails
                 pass
@@ -458,7 +488,8 @@ class nixlog:
             )
             self.process.daemon = True  # must set before start()
             self.process.start()
-
+        except Exception:
+            self._in_kill.set()
         finally:
             if stdin_fd:
                 stdin_fd.close()
@@ -500,11 +531,19 @@ class nixlog:
         # return this log_output object so that the user can do things
         # like temporarily echo some output.
         return self
+    
+
+    def redirect_streams(self):
+        """Redirects fds to standard buffers"""
+
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Flush any buffered output to the logger daemon.
         sys.stdout.flush()
         sys.stderr.flush()
+
+        # kill the windows stdin stream
+        self._in_kill.set()
 
         # restore previous output settings using the OS-level way
         for fd, saved_fd in self._redirected_fds.items():
@@ -910,6 +949,46 @@ def _writer_daemon(
 
         # send echo value back to the parent so it can be preserved.
         control_fd.send(echo)
+
+def dup_fh(fh:int) -> int:
+    # Define function signatures for safety
+    kernel32.DuplicateHandle.argtypes = [
+        wintypes.HANDLE, # hSourceProcessHandle
+        wintypes.HANDLE, # hSourceHandle
+        wintypes.HANDLE, # hTargetProcessHandle
+        ctypes.POINTER(wintypes.HANDLE), # lpTargetHandle
+        wintypes.DWORD,  # dwDesiredAccess
+        wintypes.BOOL,   # bInheritHandle
+        wintypes.DWORD   # dwOptions
+    ]
+    current_process = ctypes.windll.kernel32.GetCurrentProcess()
+    target_handle = wintypes.HANDLE()
+    
+    success = ctypes.windll.kernel32.DuplicateHandle(
+        current_process,
+        wintypes.HANDLE(fh),
+        current_process,
+        ctypes.byref(target_handle),
+        0,
+        True,
+        DUPLICATE_SAME_ACCESS
+    )
+    
+    if not success:
+        raise ctypes.WinError()
+    
+    if not target_handle.value:
+        raise ctypes.WinError()
+
+    return target_handle.value
+
+
+def force_echo_on(force_echo: bool, controls: List[str]):
+    if xon in controls:
+        return True
+    if xoff in controls:
+        return False
+    return force_echo
 
 
 if sys.platform == "win32":
