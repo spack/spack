@@ -22,6 +22,17 @@ def path_to_env_activate_shell_script(env, shell) -> str:
     return os.path.join(env.path, ".spack-env", f"activate.{shell}")
 
 
+def path_to_env_prompt_view_shell_script(env, shell) -> str:
+    """Returns to path to the shell script to prompt and view commands for the env
+
+    Args:
+        env: the environment whose shell script we are returning the path of
+        shell: the shell that the user is running on
+    """
+
+    return os.path.join(env.path, ".spack-env", f"prompt_view.{shell}")
+
+
 def path_to_env_deactivate_shell_script(env, shell) -> str:
     """Returns to path to the shell script to activate the specified env for the shell that
     the user is running
@@ -55,7 +66,8 @@ def write_env_activate_script(env, view):
 
         cmds += env_mods.shell_modifications(shell)
 
-        activate_script_path = os.path.join(env.path, ".spack-env", f"activate.{shell}")
+        activate_script_path = path_to_env_activate_shell_script(env, shell)
+
         with open(activate_script_path, "w", encoding="utf-8") as f:
             f.write(
                 f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
@@ -83,18 +95,25 @@ def update_env_activate_script(env, prompt, view):
 
         activate_cmds = spack.environment.shell.activate_header(env, shell)
         activate_cmds += env_mods.shell_modifications(shell)
-        prompt_cmds = spack.environment.shell.activate_with_prompt(shell, prompt)
         view_cmds = spack.environment.shell.activate_with_view(shell, view)
+        prompt_cmds = spack.environment.shell.activate_with_prompt(shell, prompt)
 
-        cmds = activate_cmds + prompt_cmds + view_cmds
-
-        activate_script_path = os.path.join(env.path, ".spack-env", f"activate.{shell}")
+        activate_script_path = path_to_env_activate_shell_script(env, shell)
+        prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
 
         with open(activate_script_path, "w", encoding="utf-8") as f:
             f.write(
                 f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
             )
-            f.write(cmds)
+            f.write(activate_cmds)
+            f.write(view_cmds)
+
+        if prompt_cmds:
+            with open(prompt_view_script_path, "w", encoding="utf-8") as f:
+                f.write(
+                    f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
+                )
+                f.write(prompt_cmds)
 
         if view:
             write_env_deactivate_script(env, view)
