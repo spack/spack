@@ -925,9 +925,11 @@ def _writer_daemon(
 
 def dup_fh(fh: int) -> int:
     if sys.platform != "win32":
-        return
+        # return impossible value
+        # since fhs are unsigned
+        return -1
     # Define function signatures for safety
-    kernel32.DuplicateHandle.argtypes = [
+    ctypes.windll.kernel32.DuplicateHandle.argtypes = [
         wintypes.HANDLE,  # hSourceProcessHandle
         wintypes.HANDLE,  # hSourceHandle
         wintypes.HANDLE,  # hTargetProcessHandle
@@ -949,10 +951,7 @@ def dup_fh(fh: int) -> int:
         DUPLICATE_SAME_ACCESS,
     )
 
-    if not success:
-        raise ctypes.WinError()
-
-    if not target_handle.value:
+    if not success or not target_handle.value:
         raise ctypes.WinError()
 
     return target_handle.value
