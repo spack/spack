@@ -709,7 +709,7 @@ class winlog:
         stdout: io.TextIOBase,
         append: bool,
         echo: bool,
-        filter_fn: Callable,
+        filter_fn: Optional[Callable],
     ):
         force_echo = False
 
