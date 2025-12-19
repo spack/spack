@@ -703,7 +703,7 @@ class winlog:
 
     @staticmethod
     def _background_reader(
-        read: multiprocessing.connection.PipeConnection,
+        read,
         logfile: str,
         stdout: io.TextIOBase,
         append: bool,
