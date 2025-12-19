@@ -925,6 +925,8 @@ def _writer_daemon(
 
 
 def dup_fh(fh: int) -> int:
+    if sys.platform != "win32":
+        return
     # Define function signatures for safety
     kernel32.DuplicateHandle.argtypes = [
         wintypes.HANDLE,  # hSourceProcessHandle
