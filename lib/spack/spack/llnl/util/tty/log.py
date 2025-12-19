@@ -5,11 +5,10 @@
 """Utility classes for logging the output of blocks of code."""
 import atexit
 import ctypes
-import ctypes.wintypes as wintypes
+
 import errno
 import io
 import multiprocessing
-import multiprocessing.connection
 import os
 import re
 import select
@@ -25,7 +24,7 @@ import spack.llnl.util.tty as tty
 
 if sys.platform == "win32":
     import msvcrt
-
+    import ctypes.wintypes as wintypes
     kernel32 = ctypes.windll.kernel32
 
 try:
