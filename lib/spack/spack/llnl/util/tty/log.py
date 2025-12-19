@@ -6,7 +6,6 @@
 
 import atexit
 import ctypes
-
 import errno
 import io
 import multiprocessing
@@ -571,7 +570,7 @@ class StreamWrapper:
 
         self.saved_stream = getattr(sys, self.sys_attr)
         self.saved_std_fd = self.saved_stream.fileno()
-        self.saved_std_handle = ctypes.windll.kernel32.GetStdHandle(self.STD_HANDLE)
+        self.saved_std_handle = kernel32.GetStdHandle(self.STD_HANDLE)
         self.saved_stream_fd = os.dup(self.saved_std_fd)
         self.redirect_fd = None
 
@@ -588,7 +587,7 @@ class StreamWrapper:
         # get the Windows FH for our directed stream
         self.redirect_fd = msvcrt.open_osfhandle(dup_redirect_h, os.O_WRONLY)
         # redirect at the os kernel level
-        ctypes.windll.kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(redirect_h))
+        kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(redirect_h))
         # redirect at C level
         os.dup2(self.redirect_fd, self.saved_std_fd)
         # get the stream for the writer connection
@@ -623,7 +622,7 @@ class StreamWrapper:
             self.flush()
             if self.saved_stream_fd is not None:
                 # restore os handle
-                ctypes.windll.kernel32.SetStdHandle(self.STD_HANDLE, self.saved_std_handle)
+                kernel32.SetStdHandle(self.STD_HANDLE, self.saved_std_handle)
                 # restore c fd
                 os.dup2(self.saved_stream_fd, self.saved_std_fd)
                 # python level
@@ -929,7 +928,7 @@ def dup_fh(fh: int) -> int:
         # since fhs are unsigned
         return -1
     # Define function signatures for safety
-    ctypes.windll.kernel32.DuplicateHandle.argtypes = [
+    kernel32.DuplicateHandle.argtypes = [
         wintypes.HANDLE,  # hSourceProcessHandle
         wintypes.HANDLE,  # hSourceHandle
         wintypes.HANDLE,  # hTargetProcessHandle
@@ -938,10 +937,10 @@ def dup_fh(fh: int) -> int:
         wintypes.BOOL,  # bInheritHandle
         wintypes.DWORD,  # dwOptions
     ]
-    current_process = ctypes.windll.kernel32.GetCurrentProcess()
+    current_process = kernel32.GetCurrentProcess()
     target_handle = wintypes.HANDLE()
 
-    success = ctypes.windll.kernel32.DuplicateHandle(
+    success = kernel32.DuplicateHandle(
         current_process,
         wintypes.HANDLE(fh),
         current_process,
