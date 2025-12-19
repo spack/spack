@@ -22,8 +22,9 @@ from typing import IO, Callable, List, Optional, Tuple
 import spack.llnl.util.tty as tty
 
 if sys.platform == "win32":
-    import msvcrt
     import ctypes.wintypes as wintypes
+    import msvcrt
+
     kernel32 = ctypes.windll.kernel32
 
 try:
@@ -921,38 +922,50 @@ def _writer_daemon(
         control_fd.send(echo)
 
 
-def dup_fh(fh: int) -> int:
-    if sys.platform != "win32":
-        # return impossible value
-        # since fhs are unsigned
-        return -1
-    # Define function signatures for safety
-    kernel32.DuplicateHandle.argtypes = [
-        wintypes.HANDLE,  # hSourceProcessHandle
-        wintypes.HANDLE,  # hSourceHandle
-        wintypes.HANDLE,  # hTargetProcessHandle
-        ctypes.POINTER(wintypes.HANDLE),  # lpTargetHandle
-        wintypes.DWORD,  # dwDesiredAccess
-        wintypes.BOOL,  # bInheritHandle
-        wintypes.DWORD,  # dwOptions
-    ]
-    current_process = kernel32.GetCurrentProcess()
-    target_handle = wintypes.HANDLE()
+if sys.platform == "win32":
+    # dont define this outside windows, otherwise mypy complains
+    # or we'd have to # type: ignore on basically every line of
+    # this method
+    def dup_fh(fh: int) -> int:
+        """Windows Only
+        Duplicates Windows file handles. Useful when
+        we need multiple references to a single file handle
+        that all can be closed independently
 
-    success = kernel32.DuplicateHandle(
-        current_process,
-        wintypes.HANDLE(fh),
-        current_process,
-        ctypes.byref(target_handle),
-        0,
-        True,
-        DUPLICATE_SAME_ACCESS,
-    )
+        uses DuplicateHandle from the win32 api
 
-    if not success or not target_handle.value:
-        raise ctypes.WinError()
+        Arguments:
+            fh: OS level file handle to be duplicated
 
-    return target_handle.value
+        Returns: integer representing the new, identical file handle
+        """
+        # Define function signatures for safety
+        kernel32.DuplicateHandle.argtypes = [
+            wintypes.HANDLE,  # hSourceProcessHandle
+            wintypes.HANDLE,  # hSourceHandle
+            wintypes.HANDLE,  # hTargetProcessHandle
+            ctypes.POINTER(wintypes.HANDLE),  # lpTargetHandle
+            wintypes.DWORD,  # dwDesiredAccess
+            wintypes.BOOL,  # bInheritHandle
+            wintypes.DWORD,  # dwOptions
+        ]
+        current_process = kernel32.GetCurrentProcess()
+        target_handle = wintypes.HANDLE()
+
+        success = kernel32.DuplicateHandle(
+            current_process,
+            wintypes.HANDLE(fh),
+            current_process,
+            ctypes.byref(target_handle),
+            0,
+            True,
+            DUPLICATE_SAME_ACCESS,
+        )
+
+        if not success or not target_handle.value:
+            raise ctypes.WinError()
+
+        return target_handle.value
 
 
 def force_echo_on(force_echo: bool, controls: List[str]):
