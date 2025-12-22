@@ -580,6 +580,28 @@ spack:
                     assert root["dt-diamond-left"].satisfies("%llvm")
                     assert root["dt-diamond-bottom"].satisfies("%llvm")
 
+    def test_disable_mixing_externals(
+        self, mutable_config
+    ):
+        mutable_config.set(
+            "packages",
+            {
+                "dt-diamond-bottom": {
+                    "buildable": False,
+                    "externals": [{
+                        "prefix": "/fake/prefix/",
+                        "spec": "dt-diamond-bottom@1.0%gcc@9.4.1"
+                    }]
+                },
+            },
+        )
+        # Sanity check, make sure the external is usable in least-constrained context
+        spack.concretize.concretize_one("dt-diamond")
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            x = spack.concretize.concretize_one("dt-diamond%clang")
+            import pdb; pdb.set_trace()
+            print('hi')
+
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")
         for x in spec.traverse(deptype=("link", "run")):
