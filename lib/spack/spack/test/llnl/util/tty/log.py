@@ -167,7 +167,7 @@ def test_log_subproc_and_echo_output(capfd, tmp_path: pathlib.Path):
         assert capfd.readouterr()[0] == f"echo{newline}"
 
 
-def test_nested_logging_contexts(tmp_path):
+def test_nested_logging_contexts(capfd, tmp_path):
     with working_dir(str(tmp_path)):
         with log.log_output("foo.txt"):
             with log.log_output("bar.txt"):
