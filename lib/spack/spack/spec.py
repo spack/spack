@@ -1387,6 +1387,7 @@ def tree(
         ):
             deptype_lookup[edge.spec.dag_hash()] |= edge.depflag
 
+    # SupportsRichComparisonT issue with List[Spec]
     sorted_specs: List["Spec"] = sorted(specs)  # type: ignore[type-var]
 
     for d, dep_spec in spack.traverse.traverse_tree(
