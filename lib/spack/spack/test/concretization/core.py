@@ -599,8 +599,9 @@ spack:
         spack.concretize.concretize_one("dt-diamond")
         with spack.config.override("concretizer", {"compiler_mixing": False}):
             x = spack.concretize.concretize_one("dt-diamond%clang")
-            import pdb; pdb.set_trace()
-            print('hi')
+            assert x["dt-diamond-bottom"].external
+            assert x["dt-diamond-bottom"].satisfies("%gcc")
+            assert x.satisfies("%clang")
 
     def test_compiler_inherited_upwards(self):
         spec = spack.concretize.concretize_one("dt-diamond ^dt-diamond-bottom%clang")
