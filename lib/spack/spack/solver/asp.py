@@ -1599,10 +1599,16 @@ class SpackSolverSetup:
             pkg_fact(fn.variant_default_value_from_package_py(vid, val))
 
         if variant_def.values is not None:
-            # Put default values first, otherwise keep the order since sort is stable
-            current_values = sorted(variant_def.values, key=lambda v: v not in default_values)
-            for penalty, v in enumerate(current_values, 1):
+            # Put default values first, otherwise keep the order
+            penalty = 1
+            for v in default_values:
                 pkg_fact(fn.variant_penalty(vid, v, penalty))
+                penalty += 1
+
+            for v in variant_def.values:
+                if v not in default_values:
+                    pkg_fact(fn.variant_penalty(vid, v, penalty))
+                    penalty += 1
 
         # define possible values for this variant definition
         values = variant_def.values
