@@ -580,19 +580,16 @@ spack:
                     assert root["dt-diamond-left"].satisfies("%llvm")
                     assert root["dt-diamond-bottom"].satisfies("%llvm")
 
-    def test_disable_mixing_externals(
-        self, mutable_config
-    ):
+    def test_disable_mixing_externals(self, mutable_config):
         mutable_config.set(
             "packages",
             {
                 "dt-diamond-bottom": {
                     "buildable": False,
-                    "externals": [{
-                        "prefix": "/fake/prefix/",
-                        "spec": "dt-diamond-bottom@1.0%gcc@9.4.1"
-                    }]
-                },
+                    "externals": [
+                        {"prefix": "/fake/prefix/", "spec": "dt-diamond-bottom@1.0%gcc@9.4.1"}
+                    ],
+                }
             },
         )
         # Sanity check, make sure the external is usable in least-constrained context
