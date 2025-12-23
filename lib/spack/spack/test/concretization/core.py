@@ -497,6 +497,10 @@ class TestConcretize:
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
 
+    def test_disable_mixing_is_per_language(self):
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            spack.concretize.concretize_one("openblas %c=llvm %fortran=gcc")
+
     def test_disable_mixing_override_by_package(self):
         with spack.config.override("concretizer", {"compiler_mixing": ["dt-diamond-bottom"]}):
             root = spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")

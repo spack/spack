@@ -1716,8 +1716,9 @@ unification_set_compiler("root", node(CompilerHash, Compiler), Language) :-
 #defined allow_mixing/1.
 
 % You can't have >1 compiler for a given language if mixing is disabled
-error(100, "Compiler mixing is disabled") :-
-    #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
+error(100, "Compiler mixing is disabled for the {0} language", Language) :-
+    language(Language),
+	  #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
 
 %-----------------------------------------------------------------------------
 % Runtimes
