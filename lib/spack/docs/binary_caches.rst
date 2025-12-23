@@ -140,7 +140,9 @@ The ``--install`` and ``--trust`` flags install keys to the keyring and trust al
 Build Cache Index Views
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Introduced in Spack v1.2. The addition of this feature does not increment the build cache version.
+.. note::
+    Introduced in Spack v1.2.
+    The addition of this feature does not increment the build cache version (v3).
 
 .. note::
    Build cache index views are not supported in OCI build caches.
