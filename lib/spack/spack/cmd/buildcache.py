@@ -317,7 +317,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     update_index_view_args = update_index.add_argument_group("view arguments")
     update_index_view_args.add_argument(
-        "sources", nargs="*", help="Sources to use for updating the index"
+        "sources", nargs="*", help="List of environments names or paths"
     )
     update_index_view_args.add_argument(
         "--name", "-n", action="store", help="Name of the view index to update"
@@ -855,29 +855,11 @@ def mirror_update_keys(mirror: spack.mirrors.mirror.Mirror):
 
 def read_concrete_hashes(source: str) -> List[str]:
     """Read all of the concrete hashes from a given source"""
-
-    # Try to read input as a spec
     try:
-        concrete_specs = spack.cmd.parse_specs(source, concretize=True)
-        return [spec.dag_hash() for spec in concrete_specs]
-    except Exception:
-        pass
-
-    # Try to read input as a lockfile
-    try:
-        if not os.path.exists(source):
-            raise FileNotFoundError(f"Expected lockfile: {source}")
-
-        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-            # Touch a dummy manifest file
-            with open(os.path.join(tmpdir, "spack.yaml"), "w", encoding="utf-8") as fd:
-                fd.write("spack: {}")
-            env = spack.environment.Environment(tmpdir)
-            with open(source, "r", encoding="utf-8") as fd:
-                env._read_lockfile(fd)
-            return list(env.specs_by_hash.keys())
-    except Exception as e:
-        raise spack.error.SpackError(f"Could not determine spec source type of {source}") from e
+        env = ev.environment_from_name_or_dir(source)
+        return list(env.all_hashes())
+    except ev.SpackEnvironmentError as e:
+        raise spack.error.SpackError(f"Failed to read specs from source: {source}") from e
 
 
 def update_view(
@@ -935,7 +917,7 @@ def update_view(
     hashes = []
     if sources:
         for source in sources:
-            print(f"Source... {source}")
+            tty.debug(f"reading specs from source: {source}")
             hashes.extend(read_concrete_hashes(source))
     else:
         # Get hashes in the current active environment

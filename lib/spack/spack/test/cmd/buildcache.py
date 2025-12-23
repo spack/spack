@@ -979,24 +979,6 @@ def test_buildcache_prune_new_specs_race_condition(
     assert web_util.url_exists(manifest_url)
 
 
-@contextlib.contextmanager
-def spec_hash(spec: spack.spec.Spec, prefix: str):
-    spec_hashes = [spec.format("{/hash}")]
-    for dep_spec in spec.traverse():
-        spec_hashes.append(dep_spec.format("{/hash}"))
-    yield spec_hashes
-
-
-@contextlib.contextmanager
-def spec_specfile(spec: spack.spec.Spec, prefix: pathlib.Path):
-    # Hash in name with format /{hash}/ tests for bad matching of single hash
-    os.makedirs(str(prefix / spec.format("{hash}")))
-    specfile = prefix / spec.format("{hash}") / "spec.json"
-    with open(specfile, "w", encoding="utf-8") as fd:
-        json.dump(spec.to_dict(), fd)
-    yield [str(specfile)]
-
-
 def spec_env_name(spec: spack.spec.Spec) -> str:
     return f"specenv-{spec.dag_hash()}"
 
@@ -1021,7 +1003,7 @@ def spec_lockfile(spec: spack.spec.Spec, prefix: str):
     env_name = spec_env_name(spec)
     with spec_env(spec, prefix):
         pass
-    yield [os.path.join(ev.environment_dir_from_name(env_name, exists_ok=True), "spack.lock")]
+    yield [ev.environment_dir_from_name(env_name, exists_ok=True)]
 
 
 def read_specs_in_index(mirror_directory, view):
@@ -1044,21 +1026,9 @@ def test_buildcache_create_view_failure(tmp_path, mutable_config, mutable_mock_e
         buildcache(*command_args)
 
     # spec sources should raise an exception
-    expect = "Could not determine spec source type of DEADBEEF"
+    expect = "Failed to read specs from source: DEADBEEF"
     with pytest.raises(spack.error.SpackError, match=expect):
         command_args = ["update-index", "--name", "test_view", "my-mirror", "DEADBEEF"]
-        buildcache(*command_args)
-
-    invalid_field_json = tmp_path / "invalid_field_json.json"
-    invalid_field_json.write_text('{"DEADBEEF": []}')
-    with pytest.raises(spack.error.SpackError, match=str(invalid_field_json)):
-        command_args = [
-            "update-index",
-            "--name",
-            "test_view",
-            "my-mirror",
-            str(invalid_field_json),
-        ]
         buildcache(*command_args)
 
 
@@ -1077,8 +1047,10 @@ def test_buildcache_create_view_empty(
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Write a minimal lockfile (this is not validated/read by an enviornment)
+    empty_manifest = tmp_path / "emptylock" / "spack.yaml"
+    empty_manifest.parent.mkdir(exist_ok=False)
+    empty_manifest.write_text("spack: {}", encoding="utf-8")
     empty_lockfile = tmp_path / "emptylock" / "spack.lock"
-    empty_lockfile.parent.mkdir()
     empty_lockfile.write_text(
         '{"_meta": {"lockfile-version": 1}, "roots": [], "concrete_specs": {}}', encoding="utf-8"
     )
@@ -1089,7 +1061,7 @@ def test_buildcache_create_view_empty(
         "--name",
         "test_view",
         "my-mirror",
-        str(empty_lockfile),
+        str(empty_lockfile.parent),
     ]
     out = buildcache(*command_args)
     assert "No specs found for view, creating an empty index" in out
@@ -1097,7 +1069,7 @@ def test_buildcache_create_view_empty(
     assert not hashes_in_view
 
 
-@pytest.mark.parametrize("source", (spec_hash, spec_specfile, spec_env, spec_lockfile))
+@pytest.mark.parametrize("source", (spec_env, spec_lockfile))
 def test_buildcache_create_view(
     tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
 ):
@@ -1147,7 +1119,7 @@ def test_buildcache_create_view(
         assert h not in hashes_in_view or h in mpileaks_0_hashes
 
 
-@pytest.mark.parametrize("source", (spec_hash, spec_specfile, spec_env, spec_lockfile))
+@pytest.mark.parametrize("source", (spec_env, spec_lockfile))
 def test_buildcache_create_view_append(
     tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
 ):
@@ -1190,7 +1162,7 @@ def test_buildcache_create_view_append(
         assert h in hashes_in_view
 
 
-@pytest.mark.parametrize("source", (spec_hash, spec_specfile, spec_env, spec_lockfile))
+@pytest.mark.parametrize("source", (spec_env, spec_lockfile))
 def test_buildcache_create_view_overwrite(
     tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
 ):
