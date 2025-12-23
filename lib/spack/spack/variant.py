@@ -153,6 +153,9 @@ class Variant:
         self.sticky = sticky
         self.precedence = precedence
 
+    def values_defined_by_validator(self) -> bool:
+        return self.values is None
+
     def validate_or_raise(self, vspec: "VariantValue", pkg_name: str):
         """Validate a variant spec against this package variant. Raises an
         exception if any error is found.
@@ -599,7 +602,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         return tuple(itertools.chain.from_iterable(self.sets))[idx]
 
     def __len__(self):
-        return len(itertools.chain.from_iterable(self.sets))
+        return len(tuple(itertools.chain.from_iterable(self.sets)))
 
     @property
     def validator(self):

@@ -1363,6 +1363,10 @@ variant_possible_value(node(NodeID, Package), VariantName, Value) :-
   node_has_variant(node(NodeID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_possible_value(VariantID, Value)).
 
+variant_possible_value(node(NodeID, Package), VariantName, Value) :-
+  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+  pkg_fact(Package, variant_penalty(VariantID, Value, _)).
+
 variant_value_from_disjoint_sets(node(NodeID, Package), VariantName, Value1, Set1) :-
   node_has_variant(node(NodeID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_value_from_disjoint_sets(VariantID, Value1, Set1)).
