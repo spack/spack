@@ -53,12 +53,7 @@ for further documentation regarding the spec syntax, see:
         const="json",
         help="print concrete spec as JSON",
     )
-    format_group.add_argument(
-        "--format",
-        action="store",
-        default=None,
-        help="print concrete spec with the specified format string",
-    )
+    arguments.add_common_arguments(subparser, ["format"])
     subparser.add_argument(
         "-c",
         "--cover",
