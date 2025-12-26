@@ -4465,7 +4465,10 @@ def test_concretization_cache_roundtrip(
     # ensure subsequent concretizations of the same spec produce the same spec
     # object
     for _ in range(5):
-        assert h == spack.concretize.concretize_one("hdf5")
+        hdf5 = spack.concretize.concretize_one("hdf5")
+
+        assert h.to_json(pretty=True) == hdf5.to_json(pretty=True)
+        assert h == hdf5
 
 
 def test_concretization_cache_roundtrip_result(use_concretization_cache):

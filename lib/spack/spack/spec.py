@@ -2550,8 +2550,8 @@ class Spec:
     def to_yaml(self, stream=None, hash=ht.dag_hash):
         return syaml.dump(self.to_dict(hash), stream=stream, default_flow_style=False)
 
-    def to_json(self, stream=None, hash=ht.dag_hash):
-        return sjson.dump(self.to_dict(hash), stream)
+    def to_json(self, stream=None, *, hash=ht.dag_hash, pretty=False):
+        return sjson.dump(self.to_dict(hash), stream=stream, pretty=pretty)
 
     @staticmethod
     def from_specfile(path):
