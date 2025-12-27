@@ -25,6 +25,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    MutableSequence,
     NamedTuple,
     Optional,
     Sequence,
@@ -45,6 +46,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.externals_config
+import spack.hash_types as ht
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.package_base
@@ -124,6 +126,10 @@ build_priority_offset = 200
 
 #: Priority offset of "fixed" criteria (those w/o build criteria)
 fixed_priority_offset = 100
+
+# type aliases for the data structures we get back from the solver
+SpecDict = Dict[NodeId, spack.spec.Spec]
+SpliceDict = Dict[spack.spec.Spec, List[spack.solver.splicing.Splice]]
 
 
 class OptimizationKind:
@@ -248,7 +254,7 @@ def c_compiler_runs(compiler) -> bool:
     return CompilerPropertyDetector(compiler).compiler_verbose_output() is not None
 
 
-def extend_flag_list(flag_list, new_flags):
+def extend_flag_list(flag_list: MutableSequence[str], new_flags: Sequence[str]) -> None:
     """Extend a list of flags, preserving order and precedence.
 
     Add new_flags at the end of flag_list.  If any flags in new_flags are
@@ -286,6 +292,59 @@ def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.
             flag_group, propagate=flag_propagate
         )
     ]
+
+
+# We have to take some care with how we serialize a `SpecDict` fresh from a solve,
+# because it contains specs that are in between concrete and abstract. The hash is not
+# yet final, because there are spec changes yet to be made in post-processing that will
+# change the hashes. We still need an identifier for the nodes in the spec DAG, though.
+# So, we use hashes as ids during serialization, but we must clear them afterwards so
+# that they are not cached, and they can be set again the final changes are made.
+
+
+def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
+    """Serialize a SpecDict to JSON, taking care to preserve node structure in serialized specs."""
+    # A SpecDict has one entry for each spec in a solution, but some are abstract and some
+    # are concrete. We need DAG hashes for the abstract specs to serialize them, so force-cache
+    # them to avoid lots of redundant computation.
+    # TODO: spec serialization was really designed for concrete and small abstract specs.
+    # This should really be handled by Spec, but it will take some work to adjust the format.
+    for spec in spec_dict.values():
+        if not spec.concrete:
+            spec._cached_hash(ht.dag_hash, force=True)
+
+    entries = []
+    for (id, pkg), spec in spec_dict.items():
+        node = spec.to_node_dict()
+        node["hash"] = spec.dag_hash()
+        entries.append((id, pkg, node))
+
+    # Clear the hashes cached above, as they will need to be recomputed after post-concretization.
+    # They're only used here as keys for reading and writing spec DAGs.
+    for spec in spec_dict.values():
+        if not spec.concrete:
+            spec.clear_caches()
+
+    return {"_meta": {"spec_version": spack.spec.SpecfileLatest.SPEC_VERSION}, "specs": entries}
+
+
+def spec_dict_from_json(data: Dict) -> SpecDict:
+    """Deserialize a SpecDict from JSON, taking care not to duplicate nodes."""
+    try:
+        spec_version = int(data["_meta"]["spec_version"])
+        entries = data["specs"]
+    except (KeyError, ValueError):
+        raise ValueError(f"Invalid spec dict data: {data}")
+
+    reader = spack.spec.specfile_reader_for_version(spec_version)
+    node_ids_by_hash = {node["hash"]: (id, pkg) for id, pkg, node in entries}
+    nodes = [node for _, _, node in entries]
+
+    specs_by_hash = spack.spec.wire_spec_nodes(nodes, "hash", reader)
+    return {
+        NodeId(id, pkg): specs_by_hash[dag_hash]
+        for dag_hash, (id, pkg) in node_ids_by_hash.items()
+    }
 
 
 class Result:
@@ -406,79 +465,39 @@ class Result:
         Does not include anything related to unsatisfiability as we
         are only interested in storing satisfiable results
         """
-        serial_node_arg = lambda node_dict: (
-            f"""{{"id": "{node_dict.id}", "pkg": "{node_dict.pkg}"}}"""
-        )
-        ret = dict()
-        ret["criteria"] = self.criteria
-        ret["optimal"] = self.optimal
-        ret["warnings"] = self.warnings
-        ret["nmodels"] = self.nmodels
-        ret["abstract_specs"] = [str(x) for x in self.abstract_specs]
-        ret["satisfiable"] = self.satisfiable
-        serial_answers = []
-        for answer in self.answers:
-            serial_answer = answer[:2]
-            serial_answer_dict = {}
-            for node, spec in answer[2].items():
-                serial_answer_dict[serial_node_arg(node)] = spec.to_dict()
-            serial_answer = serial_answer + (serial_answer_dict,)
-            serial_answers.append(serial_answer)
-        ret["answers"] = serial_answers
-        ret["specs_by_input"] = {}
-        input_specs = {} if not self.specs_by_input else self.specs_by_input
-        for input, spec in input_specs.items():
-            ret["specs_by_input"][str(input)] = spec.to_dict()
-        return ret
+
+        # NOTE: _unsolved_specs, _concrete_specs_by_input, and _concrete_specs are all
+        # computed dynamically from self.answers, so they're not serialized.
+        return {
+            "criteria": self.criteria,
+            "optimal": self.optimal,
+            "warnings": self.warnings,
+            "nmodels": self.nmodels,
+            "abstract_specs": [s.to_dict() for s in self.abstract_specs],
+            "satisfiable": self.satisfiable,
+            "answers": [
+                (opt, i, spec_dict_to_json(spec_dict)) for opt, i, spec_dict in self.answers
+            ],
+        }
 
     @staticmethod
     def from_dict(obj: dict):
         """Returns Result object from compatible dictionary"""
 
-        def _dict_to_node_argument(dict):
-            id = dict["id"]
-            pkg = dict["pkg"]
-            return NodeId(id=id, pkg=pkg)
+        abstract_specs = [spack.spec.Spec.from_dict(s) for s in obj["abstract_specs"]]
 
-        def _str_to_spec(spec_str):
-            return spack.spec.Spec(spec_str)
+        result = Result(abstract_specs)
+        result.criteria = [OptimizationCriteria(*t) for t in obj["criteria"]]
+        result.optimal = obj["optimal"]
+        result.warnings = obj["warnings"]
+        result.nmodels = obj["nmodels"]
+        result.satisfiable = obj["satisfiable"]
+        result.answers = [
+            (opt, i, spec_dict_from_json(spec_dict)) for opt, i, spec_dict in obj["answers"]
+        ]
+        # NOTE: _unsolved_specs, _concrete_specs_by_input, and _concrete_specs are all
+        # computed dynamically from self.answers, so they're not serialized.
 
-        def _dict_to_spec(spec_dict):
-            loaded_spec = spack.spec.Spec.from_dict(spec_dict)
-            _ensure_external_path_if_external(loaded_spec)
-            spack.spec.Spec.ensure_no_deprecated(loaded_spec)
-            return loaded_spec
-
-        spec_list = obj.get("abstract_specs")
-        if not spec_list:
-            raise RuntimeError("Invalid json for concretization Result object")
-        if spec_list:
-            spec_list = [_str_to_spec(x) for x in spec_list]
-        result = Result(spec_list)
-
-        criteria = obj.get("criteria")
-        result.criteria = (
-            None if criteria is None else [OptimizationCriteria(*t) for t in criteria]
-        )
-        result.optimal = obj.get("optimal")
-        result.warnings = obj.get("warnings")
-        result.nmodels = obj.get("nmodels")
-        result.satisfiable = obj.get("satisfiable")
-        result._unsolved_specs = []
-        answers = []
-        for answer in obj.get("answers", []):
-            loaded_answer = answer[:2]
-            answer_node_dict = {}
-            for node, spec in answer[2].items():
-                answer_node_dict[_dict_to_node_argument(json.loads(node))] = _dict_to_spec(spec)
-            loaded_answer.append(answer_node_dict)
-            answers.append(tuple(loaded_answer))
-        result.answers = answers
-        result._concrete_specs_by_input = {}
-        result._concrete_specs = []
-        for input, spec in obj.get("specs_by_input", {}).items():
-            result._concrete_specs_by_input[_str_to_spec(input)] = _dict_to_spec(spec)
-            result._concrete_specs.append(_dict_to_spec(spec))
         return result
 
     def __eq__(self, other):
@@ -490,12 +509,11 @@ class Result:
             self.criteria == other.criteria,
             self.answers == other.answers,
             self.abstract_specs == other.abstract_specs,
-            self._concrete_specs_by_input == other._concrete_specs_by_input,
-            self._concrete_specs == other._concrete_specs,
-            self._unsolved_specs == other._unsolved_specs,
             # Not considered for equality
-            # self.control
-            # self.possible_dependencies
+            # self._concrete_specs_by_input   # These three are computed
+            # self._concrete_specs
+            # self._unsolved_specs
+            # self.control                    # Currently we just don't serialize these
             # self.possible_dependencies
         )
         return all(eq)
@@ -917,7 +935,7 @@ class PyclingoDriver:
         problem_str: str,
         control_file_paths: List[str],
         timer: spack.util.timer.Timer,
-    ) -> Result:
+    ) -> Tuple[Result, Union[SpliceDict, None]]:
         """Actually run clingo and generate a result.
 
         This is the core solve logic once the setup is done and once we know we can't
@@ -975,41 +993,38 @@ class PyclingoDriver:
         result = Result(specs)
         result.satisfiable = solve_result.satisfiable
 
-        if result.satisfiable:
-            timer.start("construct_specs")
-            # get the best model
-            builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
-            min_cost, best_model = min(models)
+        if not result.satisfiable:
+            return result, None
 
-            # first check for errors
-            error_handler = ErrorHandler(best_model, specs)
-            error_handler.raise_if_errors()
+        timer.start("construct_specs")
+        # get the best model
+        builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+        min_cost, best_model = min(models)
 
-            # build specs from spec attributes in the model
-            spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
-            answers = builder.build_specs(spec_attrs)
+        # first check for errors
+        error_handler = ErrorHandler(best_model, specs)
+        error_handler.raise_if_errors()
 
-            # add best spec to the results
-            result.answers.append((list(min_cost), 0, answers))
+        # build specs from spec attributes in the model
+        spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
+        spec_dict, splices = builder.build_specs(spec_attrs)
 
-            # get optimization criteria
-            criteria_args = extract_args(best_model, "opt_criterion")
-            result.criteria = build_criteria_names(min_cost, criteria_args)
+        # add best spec to the results
+        result.answers.append((list(min_cost), 0, spec_dict))
 
-            # record the number of models the solver considered
-            result.nmodels = len(models)
+        # get optimization criteria
+        criteria_args = extract_args(best_model, "opt_criterion")
+        result.criteria = build_criteria_names(min_cost, criteria_args)
 
-            # record the possible dependencies in the solve
-            result.possible_dependencies = setup.pkgs
-            timer.stop("construct_specs")
-            timer.stop()
+        # record the number of models the solver considered
+        result.nmodels = len(models)
 
-        result.raise_if_unsat()
+        # record the possible dependencies in the solve
+        result.possible_dependencies = setup.pkgs
+        timer.stop("construct_specs")
+        timer.stop()
 
-        if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
-            raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
-
-        return result
+        return result, splices
 
     def solve(
         self,
@@ -1102,19 +1117,27 @@ class PyclingoDriver:
         result = None
         if cache:
             result, concretization_stats = cache.fetch(cache_key)
-
         timer.stop("cache-check")
-
-        tty.debug("Starting concretizer")
 
         # run the solver
         if not result:
-            result = self._run_clingo(specs, setup, "\n".join(problem), control_file_paths, timer)
+            tty.debug("Starting concretizer")
+            result, splices = self._run_clingo(
+                specs, setup, "\n".join(problem), control_file_paths, timer
+            )
+            result.raise_if_unsat()
             concretization_stats = self.control.statistics
 
-            # write result back to the cache
+            # write result back to the cache *before* post-processing
             if cache:
                 cache.store(cache_key, result, self.control.statistics)
+
+        # apply post-concretization transformations
+        for _, _, spec_dict in result.answers:
+            post_process_concretization_result(spec_dict)
+
+        if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
+            raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
 
         if output.timers:
             timer.write_tty()
@@ -3494,12 +3517,7 @@ class SpecBuilder:
         self._specs: Dict[NodeId, spack.spec.Spec] = {}
 
         # Matches parent nodes to splice node
-        self._splices: Dict[spack.spec.Spec, List[spack.solver.splicing.Splice]] = {}
-        self._result = None
-        self._command_line_specs = specs
-        self._flag_sources: Dict[Tuple[NodeId, str], Set[str]] = collections.defaultdict(
-            lambda: set()
-        )
+        self._splices: SpliceDict = {}
 
         # Pass in as arguments reusable specs and plug them in
         # from this dictionary during reconstruction
@@ -3566,116 +3584,6 @@ class SpecBuilder:
         assert len(dependencies) == 1, f"{virtual}: {provider_node.pkg}"
         dependencies[0].update_virtuals(virtual)
 
-    def reorder_flags(self):
-        """For each spec, determine the order of compiler flags applied to it.
-
-        The solver determines which flags are on nodes; this routine
-        imposes order afterwards. The order is:
-
-        1. Flags applied in compiler definitions should come first
-        2. Flags applied by dependents are ordered topologically (with a
-           dependency on ``traverse`` to resolve the partial order into a
-           stable total order)
-        3. Flags from requirements are then applied (requirements always
-           come from the package and never a parent)
-        4. Command-line flags should come last
-
-        Additionally, for each source (requirements, compiler, command line, and
-        dependents), flags from that source should retain their order and grouping:
-        e.g. for ``y cflags="-z -a"`` ``-z`` and ``-a`` should never have any intervening
-        flags inserted, and should always appear in that order.
-        """
-        for node, spec in self._specs.items():
-            # if bootstrapping, compiler is not in config and has no flags
-            flagmap_from_compiler = {
-                flag_type: [x for x in values if x.source == "compiler"]
-                for flag_type, values in spec.compiler_flags.items()
-            }
-
-            flagmap_from_cli = {}
-            for flag_type, values in spec.compiler_flags.items():
-                if not values:
-                    continue
-
-                flags = [x for x in values if x.source == "literal"]
-                if not flags:
-                    continue
-
-                # For compiler flags from literal specs, reorder any flags to
-                # the input order from flag.flag_group
-                flagmap_from_cli[flag_type] = _reorder_flags(flags)
-
-            for flag_type in spec.compiler_flags.valid_compiler_flags():
-                ordered_flags = []
-
-                # 1. Put compiler flags first
-                from_compiler = tuple(flagmap_from_compiler.get(flag_type, []))
-                extend_flag_list(ordered_flags, from_compiler)
-
-                # 2. Add all sources (the compiler is one of them, so skip any
-                # flag group that matches it exactly)
-                flag_groups = set()
-                for flag in self._specs[node].compiler_flags.get(flag_type, []):
-                    flag_groups.add(
-                        spack.spec.CompilerFlag(
-                            flag.flag_group,
-                            propagate=flag.propagate,
-                            flag_group=flag.flag_group,
-                            source=flag.source,
-                        )
-                    )
-
-                # For flags that are applied by dependents, put flags from parents
-                # before children; we depend on the stability of traverse() to
-                # achieve a stable flag order for flags introduced in this manner.
-                topo_order = list(s.name for s in spec.traverse(order="post", direction="parents"))
-                lex_order = list(sorted(flag_groups))
-
-                def _order_index(flag_group):
-                    source = flag_group.source
-                    # Note: if 'require: ^dependency cflags=...' is ever possible,
-                    # this will topologically sort for require as well
-                    type_index, pkg_source = ConstraintOrigin.strip_type_suffix(source)
-                    if pkg_source in topo_order:
-                        major_index = topo_order.index(pkg_source)
-                        # If for x->y, x has multiple depends_on declarations that
-                        # are activated, and each adds cflags to y, we fall back on
-                        # alphabetical ordering to maintain a total order
-                        minor_index = lex_order.index(flag_group)
-                    else:
-                        major_index = len(topo_order) + lex_order.index(flag_group)
-                        minor_index = 0
-                    return (type_index, major_index, minor_index)
-
-                prioritized_groups = sorted(flag_groups, key=lambda x: _order_index(x))
-
-                for grp in prioritized_groups:
-                    grp_flags = tuple(
-                        x for (x, y) in spack.compilers.flags.tokenize_flags(grp.flag_group)
-                    )
-                    if grp_flags == from_compiler:
-                        continue
-                    as_compiler_flags = list(
-                        spack.spec.CompilerFlag(
-                            x,
-                            propagate=grp.propagate,
-                            flag_group=grp.flag_group,
-                            source=grp.source,
-                        )
-                        for x in grp_flags
-                    )
-                    extend_flag_list(ordered_flags, as_compiler_flags)
-
-                # 3. Now put cmd-line flags last
-                if flag_type in flagmap_from_cli:
-                    extend_flag_list(ordered_flags, flagmap_from_cli[flag_type])
-
-                compiler_flags = spec.compiler_flags.get(flag_type, [])
-                msg = f"{set(compiler_flags)} does not equal {set(ordered_flags)}"
-                assert set(compiler_flags) == set(ordered_flags), msg
-
-                spec.compiler_flags.update({flag_type: ordered_flags})
-
     def deprecated(self, node: NodeId, version: str) -> None:
         tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
 
@@ -3689,9 +3597,7 @@ class SpecBuilder:
         )
         self._splices.setdefault(parent_spec, []).append(splice)
 
-    def build_specs(self, function_tuples: List[FunctionTupleT]) -> List[spack.spec.Spec]:
-        # TODO: remove this local import and get rid of dependency on globals
-        import spack.environment as ev
+    def build_specs(self, function_tuples: List[FunctionTupleT]) -> Tuple[SpecDict, SpliceDict]:
 
         attr_key = {
             # hash attributes are handled first, since they imply entire concrete specs
@@ -3745,101 +3651,243 @@ class SpecBuilder:
 
             action(*args)
 
-        # fix flags after all specs are constructed
-        self.reorder_flags()
+        # apply post-solve concretization steps to specs in the result
+        post_process_fresh_solve(self._specs, self._splices)
+        return self._specs, self._splices
 
-        # inject patches -- note that we' can't use set() to unique the
-        # roots here, because the specs aren't complete, and the hash
-        # function will loop forever.
-        roots = [spec.root for spec in self._specs.values()]
-        roots = dict((id(r), r) for r in roots)
-        for root in roots.values():
-            spack.spec._inject_patches_variant(root)
 
-        # Add external paths to specs with just external modules
-        for s in self._specs.values():
-            _ensure_external_path_if_external(s)
+def reorder_flags(specs: SpecDict) -> None:
+    """For each spec, determine the order of compiler flags applied to it.
 
-        for s in self._specs.values():
-            _develop_specs_from_env(s, ev.active_environment())
+    The solver determines which flags are on nodes; this routine
+    imposes order afterwards. The order is:
 
-        # check for commits must happen after all version adaptations are complete
-        for s in self._specs.values():
-            _specs_with_commits(s)
+    1. Flags applied in compiler definitions should come first
+    2. Flags applied by dependents are ordered topologically (with a
+       dependency on ``traverse`` to resolve the partial order into a
+       stable total order)
+    3. Flags from requirements are then applied (requirements always
+       come from the package and never a parent)
+    4. Command-line flags should come last
 
-        # mark concrete and assign hashes to all specs in the solve
-        for root in roots.values():
-            root._finalize_concretization()
+    Additionally, for each source (requirements, compiler, command line, and
+    dependents), flags from that source should retain their order and grouping:
+    e.g. for ``y cflags="-z -a"`` ``-z`` and ``-a`` should never have any intervening
+    flags inserted, and should always appear in that order.
+    """
+    for node, spec in specs.items():
+        # if bootstrapping, compiler is not in config and has no flags
+        flagmap_from_compiler = {
+            flag_type: [x for x in values if x.source == "compiler"]
+            for flag_type, values in spec.compiler_flags.items()
+        }
 
-        # Unify hashes (this is to avoid duplicates of runtimes and compilers)
-        unifier = ConcreteSpecsByHash()
-        keys = list(self._specs)
-        for key in keys:
-            current_spec = self._specs[key]
-            unifier.add(current_spec)
-            self._specs[key] = unifier[current_spec.dag_hash()]
+        flagmap_from_cli = {}
+        for flag_type, values in spec.compiler_flags.items():
+            if not values:
+                continue
 
-        # Only attempt to resolve automatic splices if the solver produced any
-        if self._splices:
-            resolved_splices = spack.solver.splicing._resolve_collected_splices(
-                list(self._specs.values()), self._splices
-            )
-            new_specs = {}
-            for node, spec in self._specs.items():
-                new_specs[node] = resolved_splices.get(spec, spec)
-            self._specs = new_specs
+            flags = [x for x in values if x.source == "literal"]
+            if not flags:
+                continue
 
-        for s in self._specs.values():
-            spack.spec.Spec.ensure_no_deprecated(s)
+            # For compiler flags from literal specs, reorder any flags to
+            # the input order from flag.flag_group
+            flagmap_from_cli[flag_type] = _reorder_flags(flags)
 
-        # Add git version lookup info to concrete Specs (this is generated for
-        # abstract specs as well but the Versions may be replaced during the
-        # concretization process)
-        for root in self._specs.values():
-            for spec in root.traverse():
-                if isinstance(spec.version, vn.GitVersion):
-                    spec.version.attach_lookup(
-                        spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
+        for flag_type in spec.compiler_flags.valid_compiler_flags():
+            ordered_flags: List[str] = []
+
+            # 1. Put compiler flags first
+            from_compiler = tuple(flagmap_from_compiler.get(flag_type, []))
+            extend_flag_list(ordered_flags, from_compiler)
+
+            # 2. Add all sources (the compiler is one of them, so skip any
+            # flag group that matches it exactly)
+            flag_groups = set()
+            for flag in specs[node].compiler_flags.get(flag_type, []):
+                flag_groups.add(
+                    spack.spec.CompilerFlag(
+                        flag.flag_group,
+                        propagate=flag.propagate,
+                        flag_group=flag.flag_group,
+                        source=flag.source,
                     )
-
-        specs = self.execute_explicit_splices()
-        return specs
-
-    def execute_explicit_splices(self):
-        splice_config = spack.config.CONFIG.get("concretizer:splice:explicit", [])
-        splice_triples = []
-        for splice_set in splice_config:
-            target = splice_set["target"]
-            replacement = spack.spec.Spec(splice_set["replacement"])
-
-            if not replacement.abstract_hash:
-                location = getattr(
-                    splice_set["replacement"], "_start_mark", " at unknown line number"
                 )
-                msg = f"Explicit splice replacement '{replacement}' does not include a hash.\n"
-                msg += f"{location}\n\n"
-                msg += "    Splice replacements must be specified by hash"
-                raise InvalidSpliceError(msg)
 
-            transitive = splice_set.get("transitive", False)
-            splice_triples.append((target, replacement, transitive))
+            # For flags that are applied by dependents, put flags from parents
+            # before children; we depend on the stability of traverse() to
+            # achieve a stable flag order for flags introduced in this manner.
+            topo_order = list(s.name for s in spec.traverse(order="post", direction="parents"))
+            lex_order = list(sorted(flag_groups))
 
-        specs = {}
-        for key, spec in self._specs.items():
-            current_spec = spec
-            for target, replacement, transitive in splice_triples:
-                if target in current_spec:
-                    # matches root or non-root
-                    # e.g. mvapich2%gcc
+            def _order_index(flag_group):
+                source = flag_group.source
+                # Note: if 'require: ^dependency cflags=...' is ever possible,
+                # this will topologically sort for require as well
+                type_index, pkg_source = ConstraintOrigin.strip_type_suffix(source)
+                if pkg_source in topo_order:
+                    major_index = topo_order.index(pkg_source)
+                    # If for x->y, x has multiple depends_on declarations that
+                    # are activated, and each adds cflags to y, we fall back on
+                    # alphabetical ordering to maintain a total order
+                    minor_index = lex_order.index(flag_group)
+                else:
+                    major_index = len(topo_order) + lex_order.index(flag_group)
+                    minor_index = 0
+                return (type_index, major_index, minor_index)
 
-                    # The first iteration, we need to replace the abstract hash
-                    if not replacement.concrete:
-                        replacement.replace_hash()
-                    current_spec = current_spec.splice(replacement, transitive)
-            new_key = NodeId(id=key.id, pkg=current_spec.name)
-            specs[new_key] = current_spec
+            prioritized_groups = sorted(flag_groups, key=lambda x: _order_index(x))
 
-        return specs
+            for grp in prioritized_groups:
+                grp_flags = tuple(
+                    x for (x, y) in spack.compilers.flags.tokenize_flags(grp.flag_group)
+                )
+                if grp_flags == from_compiler:
+                    continue
+                as_compiler_flags = list(
+                    spack.spec.CompilerFlag(
+                        x, propagate=grp.propagate, flag_group=grp.flag_group, source=grp.source
+                    )
+                    for x in grp_flags
+                )
+                extend_flag_list(ordered_flags, as_compiler_flags)
+
+            # 3. Now put cmd-line flags last
+            if flag_type in flagmap_from_cli:
+                extend_flag_list(ordered_flags, flagmap_from_cli[flag_type])
+
+            compiler_flags = spec.compiler_flags.get(flag_type, [])
+            msg = f"{set(compiler_flags)} does not equal {set(ordered_flags)}"
+            assert set(compiler_flags) == set(ordered_flags), msg
+
+            spec.compiler_flags.update({flag_type: ordered_flags})
+
+
+def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> None:
+    """Post-processing steps that need information present from a run of clingo.
+
+    These post-steps are run after solves, but not on every cached result from the
+    concretization cache. They can only depend only on solve information (e.g., flag
+    ordering info, splice data, etc.)
+
+    Post-steps that should be run on cached concretizations as well as fresh solves go
+    in post_process_concretization_result..
+
+    This method updates the SpecDict in place.
+
+    """
+    # fix flags after all specs are constructed
+    reorder_flags(specs)
+
+    # Only attempt to resolve automatic splices if the solver produced any
+    if splices:
+        resolved_splices = spack.solver.splicing._resolve_collected_splices(
+            list(specs.values()), splices
+        )
+        new_specs = {}
+        for node, spec in specs.items():
+            new_specs[node] = resolved_splices.get(spec, spec)
+
+        specs.clear()
+        specs.update(new_specs)
+
+
+def post_process_concretization_result(specs: SpecDict) -> None:
+    """Update concretization results after *every* concretization, even cached ones.
+
+    These post-steps depend on package information like patches, package hash, etc. They
+    must be run even on cached concretizations, as the information they update may have
+    changed since the original solve.
+
+    This method updates the SpecDict in place.
+
+    """
+    # TODO: remove this local import and get rid of dependency on globals
+    import spack.environment as ev
+
+    # inject patches -- note that we' can't use set() to unique the
+    # roots here, because the specs aren't complete, and the hash
+    # function will loop forever.
+    roots = [spec.root for spec in specs.values()]
+    roots = dict((id(r), r) for r in roots)
+    for root in roots.values():
+        spack.spec._inject_patches_variant(root)
+
+    # Add external paths to specs with just external modules
+    for s in specs.values():
+        _ensure_external_path_if_external(s)
+
+    for s in specs.values():
+        _develop_specs_from_env(s, ev.active_environment())
+
+    # check for commits must happen after all version adaptations are complete
+    for s in specs.values():
+        _specs_with_commits(s)
+
+    # mark concrete and assign hashes to all specs in the solve
+    for root in roots.values():
+        root._finalize_concretization()
+
+    # Unify hashes (this is to avoid duplicates of runtimes and compilers)
+    unifier = ConcreteSpecsByHash()
+    keys = list(specs)
+    for key in keys:
+        current_spec = specs[key]
+        unifier.add(current_spec)
+        specs[key] = unifier[current_spec.dag_hash()]
+
+    for s in specs.values():
+        spack.spec.Spec.ensure_no_deprecated(s)
+
+    # Add git version lookup info to concrete Specs (this is generated for
+    # abstract specs as well but the Versions may be replaced during the
+    # concretization process)
+    for root in specs.values():
+        for spec in root.traverse():
+            if isinstance(spec.version, vn.GitVersion):
+                spec.version.attach_lookup(
+                    spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
+                )
+
+    new_specs = execute_explicit_splices(specs)
+    specs.clear()
+    specs.update(new_specs)
+
+
+def execute_explicit_splices(specs: SpecDict) -> SpecDict:
+    splice_config = spack.config.CONFIG.get("concretizer:splice:explicit", [])
+    splice_triples = []
+    for splice_set in splice_config:
+        target = splice_set["target"]
+        replacement = spack.spec.Spec(splice_set["replacement"])
+
+        if not replacement.abstract_hash:
+            location = getattr(splice_set["replacement"], "_start_mark", " at unknown line number")
+            msg = f"Explicit splice replacement '{replacement}' does not include a hash.\n"
+            msg += f"{location}\n\n"
+            msg += "    Splice replacements must be specified by hash"
+            raise InvalidSpliceError(msg)
+
+        transitive = splice_set.get("transitive", False)
+        splice_triples.append((target, replacement, transitive))
+
+    new_specs = {}
+    for key, spec in specs.items():
+        current_spec = spec
+        for target, replacement, transitive in splice_triples:
+            if target in current_spec:
+                # matches root or non-root
+                # e.g. mvapich2%gcc
+
+                # The first iteration, we need to replace the abstract hash
+                if not replacement.concrete:
+                    replacement.replace_hash()
+                current_spec = current_spec.splice(replacement, transitive)
+        new_key = NodeId(id=key.id, pkg=current_spec.name)
+        new_specs[new_key] = current_spec
+
+    return new_specs
 
 
 def _specs_with_commits(spec):

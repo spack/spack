@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import difflib
-import json
 import os
 import pathlib
 import platform
@@ -39,6 +38,7 @@ import spack.solver.input_analysis
 import spack.solver.reuse
 import spack.spec
 import spack.spec_filter
+import spack.traverse
 import spack.util.file_cache
 import spack.util.hash
 import spack.util.spack_yaml as syaml
@@ -4428,6 +4428,32 @@ def test_when_possible_above_all(mutable_config, mock_packages):
     for result in solver.solve_in_rounds(specs):
         criteria = sorted(result.criteria, reverse=True)
         assert criteria[0].name == "number of input specs not concretized"
+
+
+@pytest.mark.parametrize(
+    "specs",
+    [
+        [Spec("hdf5"), Spec("mpich")],
+        [Spec("hdf5")],
+        [Spec("mpich")],
+        [Spec("pkg-a"), Spec("pkg-b"), Spec("pkg-c")],
+    ],
+)
+def test_result_roundtrip(mock_packages, config, specs):
+    """Test that a solve result can be serialized and brought back."""
+    solver = spack.solver.asp.Solver()
+    result = solver.solve(specs)
+    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict())
+
+    # ensure that we didn't duplicate spec objects during the round trip -- specs need
+    # to come back as exactly the same graph they were before.
+    assert len(result.answers) == len(roundtrip.answers)
+    for (_, _, lspecs), (_, _, rspecs) in zip(result.answers, roundtrip.answers):
+        lids = set(id(lspec) for lspec in spack.traverse.traverse_nodes(lspecs.values()))
+        rids = set(id(rspec) for rspec in spack.traverse.traverse_nodes(rspecs.values()))
+        assert len(lids) == len(rids)
+
+    assert roundtrip == result
 
 
 def test_concretization_cache_roundtrip(

@@ -70,6 +70,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    Type,
     Union,
     overload,
 )
@@ -2600,8 +2601,12 @@ class Spec:
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
     def node_dict_with_hashes(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
-        """Returns a node dict of this spec with the dag hash, and the provided hash (if not
-        the dag hash)."""
+        """Returns a dict of this spec with the dag hash, and optionally another hash or id.
+
+        Arguments:
+            hash: Optional other hash to include. If this is the dag hash, it's only included once.
+
+        """
         node = self.to_node_dict(hash)
         # All specs have at least a DAG hash
         node[ht.dag_hash.name] = self.dag_hash()
@@ -2806,19 +2811,17 @@ class Spec:
         Args:
             data: a nested dict/list data structure read from YAML or JSON.
         """
-        # Legacy specfile format
+        # Figure out the specfile format
         if isinstance(data["spec"], list):
-            spec = SpecfileV1.load(data)
-        elif int(data["spec"]["_meta"]["version"]) == 2:
-            spec = SpecfileV2.load(data)
-        elif int(data["spec"]["_meta"]["version"]) == 3:
-            spec = SpecfileV3.load(data)
-        elif int(data["spec"]["_meta"]["version"]) == 4:
-            spec = SpecfileV4.load(data)
+            version = 1
         else:
-            spec = SpecfileV5.load(data)
+            version = int(data["spec"]["_meta"]["version"])
 
-        # Any git version should
+        # get the right reader
+        reader = specfile_reader_for_version(version)
+        spec = reader.load(data)
+
+        # Handle git versions
         for s in spec.traverse():
             s.attach_git_version_lookup()
 
@@ -5372,8 +5375,48 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
             edge.update_virtuals(virtuals_to_add)
 
 
-class SpecfileReaderBase:
+DepSpecComponents = Tuple[str, str, List, str, Tuple[str, ...], bool]
+
+
+class SpecfileReaderMeta(type):
+    """Metaclass to automatically register all specfile versions.
+
+    This allows us to track available versions of SpecfileReaderBase subclasses.
+    """
+
+    def __new__(cls, name, bases, dct):
+        new_class = super().__new__(cls, name, bases, dct)
+        if hasattr(new_class, "SPEC_VERSION"):
+            new_class.versions[new_class.SPEC_VERSION] = new_class
+
+        return new_class
+
+
+class SpecfileReaderBase(metaclass=SpecfileReaderMeta):
     SPEC_VERSION: int
+
+    # all specfile versions
+    versions: Dict[int, Type["SpecfileReaderBase"]] = {}
+
+    @classmethod
+    def load(cls, data) -> Spec:
+        raise NotImplementedError
+
+    @classmethod
+    def dependencies_from_node_dict(cls, node) -> List[DepSpecComponents]:
+        raise NotImplementedError
+
+    @classmethod
+    def read_specfile_dep_specs(
+        cls, deps: Dict, hash_type: str = ht.dag_hash.name
+    ) -> List[DepSpecComponents]:
+        raise NotImplementedError
+
+    @classmethod
+    def extract_build_spec_info_from_node_dict(
+        cls, node, hash_type=ht.dag_hash.name
+    ) -> Tuple[str, str, str]:
+        raise NotImplementedError
 
     @classmethod
     def from_node_dict(cls, node):
@@ -5424,6 +5467,8 @@ class SpecfileReaderBase:
         # specs read in are concrete unless marked abstract
         if node.get("concrete", True):
             spec._mark_root_concrete()
+        else:
+            spec.clear_caches()
 
         if "patches" in node:
             patches = node["patches"]
@@ -5456,7 +5501,7 @@ class SpecfileReaderBase:
         return Spec(f"{d['name']}@{vn.VersionList.from_dict(d)}")
 
     @classmethod
-    def _load(cls, data):
+    def _load(cls, data) -> Spec:
         """Construct a spec from JSON/YAML using the format version 2.
 
         This format is used in Spack v0.17, was introduced in
@@ -5485,51 +5530,51 @@ class SpecfileReaderBase:
                 "Spec dictionary contains malformed dependencies. Old format?"
             )
 
-        hash_dict = {}
-        root_spec_hash = None
-
-        # Pass 1: Create a single lookup dictionary by hash
-        for i, node in enumerate(nodes):
-            node_hash = node[hash_type]
-            node_spec = cls.from_node_dict(node)
-            hash_dict[node_hash] = node
-            hash_dict[node_hash]["node_spec"] = node_spec
-            if i == 0:
-                root_spec_hash = node_hash
-
-        if not root_spec_hash:
+        if not nodes:
             raise spack.error.SpecError("Spec dictionary contains no nodes.")
 
-        # Pass 2: Finish construction of all DAG edges (including build specs)
-        for node_hash, node in hash_dict.items():
-            node_spec = node["node_spec"]
-            for _, dhash, dtype, _, virtuals, direct in cls.dependencies_from_node_dict(node):
-                node_spec._add_dependency(
-                    hash_dict[dhash]["node_spec"],
-                    depflag=dt.canonicalize(dtype),
-                    virtuals=virtuals,
-                    direct=direct,
-                )
-            if "build_spec" in node.keys():
-                _, bhash, _ = cls.extract_build_spec_info_from_node_dict(node, hash_type=hash_type)
-                node_spec._build_spec = hash_dict[bhash]["node_spec"]
+        specs_by_hash = wire_spec_nodes(nodes, hash_type, cls)
+        root_spec_hash = nodes[0][hash_type]
+        return specs_by_hash[root_spec_hash]
 
-        return hash_dict[root_spec_hash]["node_spec"]
 
-    @classmethod
-    def extract_build_spec_info_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
-        raise NotImplementedError("Subclasses must implement this method.")
+def wire_spec_nodes(
+    nodes: List[Dict], hash_type: str, reader: Type[SpecfileReaderBase]
+) -> Dict[str, Spec]:
+    """Given a list of spec node dicts, wire them together and return a dict keyed by hash.
 
-    @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
-        raise NotImplementedError("Subclasses must implement this method.")
+    This is the part of SpecfileV2 and onwards that wires up specs, based on hashes in
+    JSON spec data.
+
+    """
+    # Pass 1: Create a single lookup dictionary by hash
+    specs_by_hash = {node[hash_type]: reader.from_node_dict(node) for node in nodes}
+
+    # Pass 2: Finish construction of all DAG edges (including build specs)
+    for node in nodes:
+        node_hash = node[hash_type]
+        node_spec = specs_by_hash[node_hash]
+
+        for _, dhash, dtype, _, virtuals, direct in reader.dependencies_from_node_dict(node):
+            node_spec._add_dependency(
+                specs_by_hash[dhash],
+                depflag=dt.canonicalize(dtype),
+                virtuals=virtuals,
+                direct=direct,
+            )
+
+        if "build_spec" in node.keys():
+            _, bhash, _ = reader.extract_build_spec_info_from_node_dict(node, hash_type=hash_type)
+            node_spec._build_spec = specs_by_hash[bhash]
+
+    return specs_by_hash
 
 
 class SpecfileV1(SpecfileReaderBase):
     SPEC_VERSION = 1
 
     @classmethod
-    def load(cls, data):
+    def load(cls, data) -> Spec:
         """Construct a spec from JSON/YAML using the format version 1.
 
         Note: Version 1 format has no notion of a build_spec, and names are
@@ -5568,12 +5613,11 @@ class SpecfileV1(SpecfileReaderBase):
         return name, node
 
     @classmethod
-    def dependencies_from_node_dict(cls, node):
+    def dependencies_from_node_dict(cls, node) -> List[DepSpecComponents]:
         if "dependencies" not in node:
             return []
 
-        for t in cls.read_specfile_dep_specs(node["dependencies"]):
-            yield t
+        return cls.read_specfile_dep_specs(node["dependencies"])
 
     @classmethod
     def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
@@ -5600,7 +5644,7 @@ class SpecfileV2(SpecfileReaderBase):
     SPEC_VERSION = 2
 
     @classmethod
-    def load(cls, data):
+    def load(cls, data) -> Spec:
         result = cls._load(data)
         reconstruct_virtuals_on_edges(result)
         return result
@@ -5610,11 +5654,11 @@ class SpecfileV2(SpecfileReaderBase):
         return node["name"], node
 
     @classmethod
-    def dependencies_from_node_dict(cls, node):
+    def dependencies_from_node_dict(cls, node) -> List[DepSpecComponents]:
         return cls.read_specfile_dep_specs(node.get("dependencies", []))
 
     @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
+    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name) -> List[DepSpecComponents]:
         """Read the DependencySpec portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
@@ -5638,7 +5682,7 @@ class SpecfileV2(SpecfileReaderBase):
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
-            result.append((dep_name, dep_hash, list(deptypes), hash_type, list(virtuals), direct))
+            result.append((dep_name, dep_hash, list(deptypes), hash_type, tuple(virtuals), direct))
         return result
 
     @classmethod
@@ -5672,7 +5716,7 @@ class SpecfileV4(SpecfileV2):
         return dep_hash, deptypes, hash_type, virtuals, direct
 
     @classmethod
-    def load(cls, data):
+    def load(cls, data) -> Spec:
         return cls._load(data)
 
 
@@ -5695,6 +5739,16 @@ class SpecfileV5(SpecfileV4):
 
 #: Alias to the latest version of specfiles
 SpecfileLatest = SpecfileV5
+
+
+def specfile_reader_for_version(version: int) -> Type[SpecfileReaderBase]:
+    """Get a SpecfileReader for the provided version, or raise an error."""
+    reader = SpecfileReaderBase.versions.get(version)
+
+    if not reader:
+        raise ValueError(f"Unknown Specfile version: {version}")
+
+    return reader
 
 
 class LazySpecCache(collections.defaultdict):
