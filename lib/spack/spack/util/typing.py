@@ -40,4 +40,4 @@ class SupportsRichComparison(Protocol):
 
 
 if not TYPE_CHECKING:
-    SupportsRichComparison = object
+    SupportsRichComparison = object  # noqa: F811
