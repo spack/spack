@@ -16,28 +16,28 @@ from typing import TYPE_CHECKING, Any
 
 from spack.vendor.typing_extensions import Protocol
 
+if TYPE_CHECKING:
 
-class SupportsRichComparison(Protocol):
-    """Objects that support =, !=, <, <=, >, and >=."""
+    class SupportsRichComparison(Protocol):
+        """Objects that support =, !=, <, <=, >, and >=."""
 
-    def __eq__(self, other: Any) -> bool:
-        raise NotImplementedError
+        def __eq__(self, other: Any) -> bool:
+            raise NotImplementedError
 
-    def __ne__(self, other: Any) -> bool:
-        raise NotImplementedError
+        def __ne__(self, other: Any) -> bool:
+            raise NotImplementedError
 
-    def __lt__(self, other: Any) -> bool:
-        raise NotImplementedError
+        def __lt__(self, other: Any) -> bool:
+            raise NotImplementedError
 
-    def __le__(self, other: Any) -> bool:
-        raise NotImplementedError
+        def __le__(self, other: Any) -> bool:
+            raise NotImplementedError
 
-    def __gt__(self, other: Any) -> bool:
-        raise NotImplementedError
+        def __gt__(self, other: Any) -> bool:
+            raise NotImplementedError
 
-    def __ge__(self, other: Any) -> bool:
-        raise NotImplementedError
+        def __ge__(self, other: Any) -> bool:
+            raise NotImplementedError
 
-
-if not TYPE_CHECKING:
-    SupportsRichComparison = object  # noqa: F811
+else:
+    SupportsRichComparison = object
