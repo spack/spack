@@ -63,13 +63,7 @@ from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
-from spack.version import (
-    GitVersion,
-    StandardVersion,
-    VersionError,
-    concretization_version_order,
-    is_git_version,
-)
+from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -2635,6 +2629,25 @@ def sort_by_pkg_preference(
     """
     s = [(v, pkg.versions.get(v, {})) for v in dedupe(versions)]
     return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
+
+
+def concretization_version_order(
+    version_info: Tuple[Union[GitVersion, StandardVersion], dict],
+) -> Tuple[bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
+    """Version order key for concretization, where preferred > not preferred,
+    finite > any infinite component; only if all are the same, do we use default version
+    ordering.
+
+    Version deprecation needs to be accounted for separately.
+    """
+    version, info = version_info
+    return (
+        info.get("preferred", False),
+        not isinstance(version, GitVersion),
+        not version.isdevelop(),
+        not version.is_prerelease(),
+        version,
+    )
 
 
 class PackageStillNeededError(InstallError):

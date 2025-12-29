@@ -31,7 +31,6 @@ from .version_types import (
     VersionType,
     _next_version,
     _prev_version,
-    concretization_version_order,
     from_string,
     ver,
 )
@@ -55,7 +54,6 @@ __all__ = [
     "_next_version",
     "_prev_version",
     "any_version",
-    "concretization_version_order",
     "from_string",
     "infinity_versions",
     "is_git_commit_sha",

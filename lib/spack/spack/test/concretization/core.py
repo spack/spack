@@ -3139,7 +3139,9 @@ def test_concretization_version_order():
     ]
     result = [
         v
-        for v, _ in sorted(versions, key=spack.version.concretization_version_order, reverse=True)
+        for v, _ in sorted(
+            versions, key=spack.package_base.concretization_version_order, reverse=True
+        )
     ]
     assert result == [
         Version("0.9"),  # preferred
