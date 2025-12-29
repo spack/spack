@@ -16,7 +16,6 @@ concurrency:
 
 
 jobs:
-  # Validate that the code can be run on all the Python versions supported by Spack
   validate:
     runs-on: ubuntu-latest
     steps:
@@ -27,6 +26,7 @@ jobs:
     - name: Install Python Packages
       run: |
         pip install -r .github/workflows/requirements/style/requirements.txt
+    # Validate that the code can be run on all the Python versions supported by Spack
     - name: vermin
       run: |
         vermin --backport importlib \
@@ -37,6 +37,10 @@ jobs:
                -vvv \
                --exclude-regex lib/spack/spack/vendor \
                lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
+    # Check that __slots__ are used properly
+    - name: slotscheck
+      run: |
+        ./bin/spack python -m slotscheck --exclude-modules="spack.test|spack.vendor" lib/spack/spack/
 
   # Run style checks on the files that have been changed
   style:
