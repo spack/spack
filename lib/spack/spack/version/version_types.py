@@ -172,6 +172,8 @@ class VersionType(SupportsRichComparison):
 
     """
 
+    __slots__ = ()
+
     def intersection(self, other: "VersionType") -> "VersionType":
         """Any versions contained in both self and other, or empty VersionList if no overlap."""
         raise NotImplementedError
@@ -199,6 +201,8 @@ class VersionType(SupportsRichComparison):
 class ConcreteVersion(VersionType):
     """Base type for versions that represents a single (non-range or list) version."""
 
+    __slots__ = ()
+
 
 def _stringify_version(versions: VersionTuple, separators: Tuple[str, ...]) -> str:
     """Create a string representation from version components."""
@@ -217,7 +221,7 @@ def _stringify_version(versions: VersionTuple, separators: Tuple[str, ...]) -> s
 class StandardVersion(ConcreteVersion):
     """Class to represent versions"""
 
-    __slots__ = ["version", "_string", "separators"]
+    __slots__ = ("version", "_string", "separators")
 
     _string: str
     version: VersionTuple
@@ -552,7 +556,7 @@ class GitVersion(ConcreteVersion):
     sufficient.
     """
 
-    __slots__ = ["has_git_prefix", "commit_sha", "ref", "std_version", "_ref_lookup"]
+    __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "std_version", "_ref_lookup")
 
     def __init__(self, string: str):
         # TODO will be required for concrete specs when commit lookup added

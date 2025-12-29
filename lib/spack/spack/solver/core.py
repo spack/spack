@@ -31,6 +31,8 @@ ast_sym = _ast_getter("symbol", "term")
 class AspObject:
     """Object representing a piece of ASP code."""
 
+    __slots__ = ()
+
 
 def _id(thing: Any) -> Union[str, int, AspObject]:
     """Quote string if needed for it to be a valid identifier."""
@@ -51,6 +53,8 @@ class AspVar(AspObject):
     """Represents a variable in an ASP rule, allows for conditionally generating
     rules"""
 
+    __slots__ = ("name",)
+
     def __init__(self, name: str):
         self.name = name
 
@@ -62,7 +66,7 @@ class AspVar(AspObject):
 class AspFunction(AspObject):
     """A term in the ASP logic program"""
 
-    __slots__ = ["name", "args"]
+    __slots__ = ("name", "args")
 
     def __init__(self, name: str, args: Optional[Tuple[Any, ...]] = None) -> None:
         self.name = name

@@ -292,7 +292,7 @@ class NamePathModifier(NameValueModifier):
     """Base class for modifiers that modify the value of an environment variable
     that is a path."""
 
-    __slots__ = ("name", "value", "separator", "trace")
+    __slots__ = ()
 
     def __init__(
         self,
