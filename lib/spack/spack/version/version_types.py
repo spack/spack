@@ -361,17 +361,17 @@ class StandardVersion(ConcreteVersion):
         return other.intersects(self)
 
     def satisfies(self, other: VersionType) -> bool:
+        if isinstance(other, VersionList):
+            return other.intersects(self)
+
+        if isinstance(other, ClosedOpenRange):
+            return other.intersects(self)
+
         if isinstance(other, GitVersion):
             return False
 
         if isinstance(other, StandardVersion):
             return self == other
-
-        if isinstance(other, ClosedOpenRange):
-            return other.intersects(self)
-
-        if isinstance(other, VersionList):
-            return other.intersects(self)
 
         raise NotImplementedError
 
@@ -809,10 +809,10 @@ class ClosedOpenRange(VersionType):
         return hash((self.lo, _prev_version(self.hi)))
 
     def __eq__(self, other):
-        if isinstance(other, StandardVersion):
-            return False
         if isinstance(other, ClosedOpenRange):
             return (self.lo, self.hi) == (other.lo, other.hi)
+        if isinstance(other, StandardVersion):
+            return False
         return NotImplemented
 
     def __ne__(self, other):
@@ -823,10 +823,10 @@ class ClosedOpenRange(VersionType):
         return NotImplemented
 
     def __lt__(self, other):
-        if isinstance(other, StandardVersion):
-            return other > self
         if isinstance(other, ClosedOpenRange):
             return (self.lo, self.hi) < (other.lo, other.hi)
+        if isinstance(other, StandardVersion):
+            return other > self
         return NotImplemented
 
     def __le__(self, other):
@@ -858,10 +858,10 @@ class ClosedOpenRange(VersionType):
     def intersects(self, other: VersionType) -> bool:
         if isinstance(other, StandardVersion):
             return self.lo <= other < self.hi
-        if isinstance(other, GitVersion):
-            return self.lo <= other.ref_version < self.hi
         if isinstance(other, ClosedOpenRange):
             return (self.lo < other.hi) and (other.lo < self.hi)
+        if isinstance(other, GitVersion):
+            return self.lo <= other.ref_version < self.hi
         if isinstance(other, VersionList):
             return any(self.intersects(rhs) for rhs in other)
         raise TypeError(f"'intersects' not supported for instances of {type(other)}")
@@ -878,12 +878,6 @@ class ClosedOpenRange(VersionType):
     def _union_if_not_disjoint(self, other: VersionType) -> Optional["ClosedOpenRange"]:
         """Same as union, but returns None when the union is not connected. This function is not
         implemented for version lists as right-hand side, as that makes little sense."""
-        if isinstance(other, StandardVersion):
-            return self if self.lo <= other < self.hi else None
-
-        if isinstance(other, GitVersion):
-            return self if self.lo <= other.ref_version < self.hi else None
-
         if isinstance(other, ClosedOpenRange):
             # Notice <= cause we want union(1:2, 3:4) = 1:4.
             return (
@@ -891,6 +885,12 @@ class ClosedOpenRange(VersionType):
                 if self.lo <= other.hi and other.lo <= self.hi
                 else None
             )
+
+        if isinstance(other, StandardVersion):
+            return self if self.lo <= other < self.hi else None
+
+        if isinstance(other, GitVersion):
+            return self if self.lo <= other.ref_version < self.hi else None
 
         raise TypeError(f"'union()' not supported for instances of {type(other)}")
 
@@ -923,21 +923,21 @@ class VersionList(VersionType):
     versions: List[VersionType]
 
     def __init__(self, vlist: Optional[Union[str, VersionType, Iterable]] = None):
-        if vlist is None:
-            self.versions = []
-
-        elif isinstance(vlist, str):
+        if isinstance(vlist, str):
             vlist = from_string(vlist)
             if isinstance(vlist, VersionList):
                 self.versions = vlist.versions
             else:
                 self.versions = [vlist]
 
-        elif isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
-            self.versions = [vlist]
+        elif vlist is None:
+            self.versions = []
 
         elif isinstance(vlist, VersionList):
             self.versions = vlist[:]
+
+        elif isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
+            self.versions = [vlist]
 
         elif isinstance(vlist, Iterable):
             self.versions = []
@@ -948,15 +948,7 @@ class VersionList(VersionType):
             raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
 
     def add(self, item: VersionType) -> None:
-        if isinstance(item, (StandardVersion, GitVersion)):
-            i = bisect_left(self, item)
-            # Only insert when prev and next are not intersected.
-            if (i == 0 or not item.intersects(self[i - 1])) and (
-                i == len(self) or not item.intersects(self[i])
-            ):
-                self.versions.insert(i, item)
-
-        elif isinstance(item, ClosedOpenRange):
+        if isinstance(item, ClosedOpenRange):
             i = bisect_left(self, item)
 
             # Note: can span multiple concrete versions to the left (as well as to the right).
@@ -982,6 +974,14 @@ class VersionList(VersionType):
         elif isinstance(item, VersionList):
             for v in item:
                 self.add(v)
+
+        elif isinstance(item, (StandardVersion, GitVersion)):
+            i = bisect_left(self, item)
+            # Only insert when prev and next are not intersected.
+            if (i == 0 or not item.intersects(self[i - 1])) and (
+                i == len(self) or not item.intersects(self[i])
+            ):
+                self.versions.insert(i, item)
 
         else:
             raise TypeError("Can't add %s to VersionList" % type(item))
@@ -1039,6 +1039,9 @@ class VersionList(VersionType):
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
 
     def intersects(self, other: VersionType) -> bool:
+        if isinstance(other, (ClosedOpenRange, StandardVersion)):
+            return any(v.intersects(other) for v in self)
+
         if isinstance(other, VersionList):
             s = o = 0
             while s < len(self) and o < len(other):
@@ -1049,9 +1052,6 @@ class VersionList(VersionType):
                 else:
                     o += 1
             return False
-
-        if isinstance(other, (ClosedOpenRange, StandardVersion)):
-            return any(v.intersects(other) for v in self)
 
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
 
@@ -1291,13 +1291,13 @@ def from_string(string: str) -> VersionType:
 
     # VersionList
     if "," in string:
-        return VersionList(list(map(from_string, string.split(","))))
+        return VersionList([from_string(x) for x in string.split(",")])
 
     # ClosedOpenRange
     elif ":" in string:
         s, e = string.split(":")
-        lo = StandardVersion.typemin() if s == "" else StandardVersion.from_string(s)
-        hi = StandardVersion.typemax() if e == "" else StandardVersion.from_string(e)
+        lo = _STANDARD_VERSION_TYPEMIN if s == "" else StandardVersion.from_string(s)
+        hi = _STANDARD_VERSION_TYPEMAX if e == "" else StandardVersion.from_string(e)
         return VersionRange(lo, hi)
 
     # StandardVersion
