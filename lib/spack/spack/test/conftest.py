@@ -1002,6 +1002,10 @@ def mutable_config(tmp_path_factory: pytest.TempPathFactory, configuration_dir):
 
     scopes = _create_mock_configuration_scopes(mutable_dir)
     with spack.config.use_configuration(*scopes) as cfg:
+        for scope in cfg.scopes.values():
+            if hasattr(scope, "path"):
+                print(scope.path)
+        print("***")
         yield cfg
 
 
