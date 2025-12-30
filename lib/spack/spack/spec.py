@@ -1378,7 +1378,7 @@ def tree(
             installation prefix
         highlight_version_fn: optional callable that returns true on nodes where the version
             needs to be highlighted
-        highlight_variant_fn: optional callable that returns true on variants that needs
+        highlight_variant_fn: optional callable that returns true on variants that need
             to be highlighted
     """
     out = ""
@@ -4190,7 +4190,7 @@ class Spec:
             color: True for colorized result; False for no color; None for auto color.
             highlight_version_fn: optional callable that returns true on nodes where the version
                 needs to be highlighted
-            highlight_variant_fn: optional callable that returns true on variants that needs
+            highlight_variant_fn: optional callable that returns true on variants that need
                 to be highlighted
         """
         # Fast path for the common case: default format with no color
@@ -4634,7 +4634,7 @@ class Spec:
                 installation prefix
             highlight_version_fn: optional callable that returns true on nodes where the version
                 needs to be highlighted
-            highlight_variant_fn: optional callable that returns true on variants that needs
+            highlight_variant_fn: optional callable that returns true on variants that need
                 to be highlighted
         """
         return tree(
