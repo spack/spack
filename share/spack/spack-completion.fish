@@ -1166,7 +1166,7 @@ complete -c spack -n '__fish_spack_using_command compilers' -l remote -f -a remo
 complete -c spack -n '__fish_spack_using_command compilers' -l remote -d 'list also compilers from registered buildcaches'
 
 # spack concretize
-set -g __fish_spack_optspecs_spack_concretize h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_concretize h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs= non-defaults
 complete -c spack -n '__fish_spack_using_command concretize' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command concretize' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command concretize' -l test -r -f -a 'root all'
@@ -1185,9 +1185,11 @@ complete -c spack -n '__fish_spack_using_command concretize' -l deprecated -f -a
 complete -c spack -n '__fish_spack_using_command concretize' -l deprecated -d 'allow concretizer to select deprecated versions'
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
+complete -c spack -n '__fish_spack_using_command concretize' -l non-defaults -f -a non_defaults
+complete -c spack -n '__fish_spack_using_command concretize' -l non-defaults -d 'highlight non-default versions or variants'
 
 # spack concretise
-set -g __fish_spack_optspecs_spack_concretise h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_concretise h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs= non-defaults
 complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command concretise' -l test -r -f -a 'root all'
@@ -1206,6 +1208,8 @@ complete -c spack -n '__fish_spack_using_command concretise' -l deprecated -f -a
 complete -c spack -n '__fish_spack_using_command concretise' -l deprecated -d 'allow concretizer to select deprecated versions'
 complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
+complete -c spack -n '__fish_spack_using_command concretise' -l non-defaults -f -a non_defaults
+complete -c spack -n '__fish_spack_using_command concretise' -l non-defaults -d 'highlight non-default versions or variants'
 
 # spack config
 set -g __fish_spack_optspecs_spack_config h/help scope=

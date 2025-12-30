@@ -820,11 +820,11 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
-    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
+    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs --non-defaults"
 }
 
 _spack_concretise() {
-    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
+    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs --non-defaults"
 }
 
 _spack_config() {
