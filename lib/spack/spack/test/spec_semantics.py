@@ -20,8 +20,8 @@ import spack.variant
 import spack.version as vn
 from spack.enums import PropagationPolicy
 from spack.error import SpecError, UnsatisfiableSpecError
-from spack.paths import locations as paths
 from spack.llnl.util.tty.color import colorize
+from spack.paths import locations as paths
 from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import (
     InvalidVariantValueError,
