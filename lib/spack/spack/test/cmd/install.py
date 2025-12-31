@@ -332,7 +332,11 @@ def test_install_overwrite_multiple(
         spack.store.STORE.layout.manifest_file_name,
     )
 
-    cm_ignores = [cm_manifest, cmake.package.times_log_path, os.path.join(cmake.prefix, ".spack", "sbom.json")]
+    cm_ignores = [
+        cm_manifest,
+        cmake.package.times_log_path,
+        os.path.join(cmake.prefix, ".spack", "sbom.json"),
+    ]
     assert os.path.exists(cmake.prefix)
     expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 
