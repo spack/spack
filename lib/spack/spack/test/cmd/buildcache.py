@@ -1007,10 +1007,10 @@ def spec_lockfile(spec: spack.spec.Spec, prefix: str):
 
 
 def read_specs_in_index(mirror_directory, view):
-    url_and_version = spack.binary_distribution.MirrorMetadata(
+    mirror_metadata = spack.binary_distribution.MirrorMetadata(
         f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_LAYOUT_VERSIONS[0], view
     )
-    fetcher = spack.binary_distribution.DefaultIndexFetcher(url_and_version, None)
+    fetcher = spack.binary_distribution.DefaultIndexFetcher(mirror_metadata, None)
     result = fetcher.conditional_fetch()
     db_dict = json.loads(result.data)
     return [h for h in db_dict["database"]["installs"]]

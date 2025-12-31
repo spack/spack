@@ -1391,36 +1391,36 @@ def test_get_entries_from_cache_nested_mirrors(monkeypatch, tmp_path: pathlib.Pa
     assert len(spec_manifests_nested) == 1
 
 
-def test_url_and_version():
-    url_and_version = spack.binary_distribution.MirrorMetadata("https://dummy.io/__v3", 3)
-    as_str = str(url_and_version)
+def test_mirror_metadata():
+    mirror_metadata = spack.binary_distribution.MirrorMetadata("https://dummy.io/__v3", 3)
+    as_str = str(mirror_metadata)
     from_str = spack.binary_distribution.MirrorMetadata.from_string(as_str)
 
     # Verify values
-    assert url_and_version.url == "https://dummy.io/__v3"
-    assert url_and_version.version == 3
-    assert url_and_version.view is None
+    assert mirror_metadata.url == "https://dummy.io/__v3"
+    assert mirror_metadata.version == 3
+    assert mirror_metadata.view is None
 
     # Verify round trip
-    assert url_and_version == from_str
+    assert mirror_metadata == from_str
     assert as_str == str(from_str)
 
     with pytest.raises(spack.url_buildcache.MirrorMetadataError, match="Malformed string"):
         spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3@@4")
 
 
-def test_url_and_version_with_view():
-    url_and_version = spack.binary_distribution.MirrorMetadata(
+def test_mirror_metadata_with_view():
+    mirror_metadata = spack.binary_distribution.MirrorMetadata(
         "https://dummy.io/__v3__@aview", 3, "aview"
     )
-    as_str = str(url_and_version)
+    as_str = str(mirror_metadata)
     from_str = spack.binary_distribution.MirrorMetadata.from_string(as_str)
 
     # Verify round trip
-    assert url_and_version.url == "https://dummy.io/__v3__@aview"
-    assert url_and_version.version == 3
-    assert url_and_version.view == "aview"
-    assert url_and_version == from_str
+    assert mirror_metadata.url == "https://dummy.io/__v3__@aview"
+    assert mirror_metadata.version == 3
+    assert mirror_metadata.view == "aview"
+    assert mirror_metadata == from_str
     assert as_str == str(from_str)
 
     with pytest.raises(spack.url_buildcache.MirrorMetadataError, match="Malformed string"):

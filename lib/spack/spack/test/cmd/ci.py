@@ -875,8 +875,8 @@ spack:
 
             # Validate resulting buildcache (database) index
             layout_version = spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
-            url_and_version = spack.binary_distribution.MirrorMetadata(mirror_url, layout_version)
-            index_fetcher = spack.binary_distribution.DefaultIndexFetcher(url_and_version, None)
+            mirror_metadata = spack.binary_distribution.MirrorMetadata(mirror_url, layout_version)
+            index_fetcher = spack.binary_distribution.DefaultIndexFetcher(mirror_metadata, None)
             result = index_fetcher.conditional_fetch()
             spack.vendor.jsonschema.validate(json.loads(result.data), db_idx_schema)
 

@@ -857,7 +857,7 @@ def read_concrete_hashes(source: str) -> List[str]:
     """Read all of the concrete hashes from a given source"""
     try:
         env = ev.environment_from_name_or_dir(source)
-        return list(env.all_hashes())
+        return env.all_hashes()
     except ev.SpackEnvironmentError as e:
         raise spack.error.SpackError(f"Failed to read specs from source: {source}") from e
 
@@ -897,7 +897,7 @@ def update_view(
     name = name or mirror.push_view
     assert name
 
-    url_and_version = spack.binary_distribution.MirrorMetadata(
+    mirror_metadata = spack.binary_distribution.MirrorMetadata(
         url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, name
     )
 
@@ -905,7 +905,7 @@ def update_view(
     # local cache.
     index_exists = True
     try:
-        BINARY_INDEX._fetch_and_cache_index(url_and_version)
+        BINARY_INDEX._fetch_and_cache_index(mirror_metadata)
     except spack.binary_distribution.BuildcacheIndexNotExists:
         index_exists = False
 
@@ -936,7 +936,7 @@ def update_view(
 
         if update_mode == ViewUpdateMode.APPEND:
             # Load the current state of the view index from the cache into the database
-            cache_index = BINARY_INDEX._local_index_cache.get(str(url_and_version))
+            cache_index = BINARY_INDEX._local_index_cache.get(str(mirror_metadata))
             if cache_index:
                 cache_key = cache_index["index_path"]
                 db._read_from_file(BINARY_INDEX._index_file_cache.cache_path(cache_key))
@@ -950,9 +950,7 @@ def update_view(
 def check_index_fn(args):
     """Check if a build cache index, manifests, and blobs are consistent"""
     mirror = args.mirror
-    verify = set()
-    for v in args.verify:
-        verify.update(v)
+    verify = set(args.verify)
 
     if "all" in verify:
         verify.update(["exists", "manifests", "blobs"])
@@ -964,14 +962,14 @@ def check_index_fn(args):
         pass
 
     # Check if the index exists, and cache it locally for next operations
-    url_and_version = spack.binary_distribution.MirrorMetadata(
+    mirror_metadata = spack.binary_distribution.MirrorMetadata(
         mirror.fetch_url,
         spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION,
         mirror.fetch_view,
     )
     index_exists = True
     try:
-        BINARY_INDEX._fetch_and_cache_index(url_and_version)
+        BINARY_INDEX._fetch_and_cache_index(mirror_metadata)
     except spack.binary_distribution.BuildcacheIndexNotExists:
         index_exists = False
 
@@ -991,7 +989,7 @@ def check_index_fn(args):
         if "manifests" in verify:
             # Read the index file
             db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
-            cache_entry = BINARY_INDEX._local_index_cache[str(url_and_version)]
+            cache_entry = BINARY_INDEX._local_index_cache[str(mirror_metadata)]
             cache_key = cache_entry["index_path"]
             cache_path = BINARY_INDEX._index_file_cache.cache_path(cache_key)
             with BINARY_INDEX._index_file_cache.read_transaction(cache_key):
