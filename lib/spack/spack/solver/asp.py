@@ -2942,7 +2942,7 @@ class SpackSolverSetup:
                 self.possible_versions[dep.name][dep.version].append(provenance)
                 self.possible_oses.add(dep.os)
 
-    def define_concrete_input_specs(self, specs, possible):
+    def define_concrete_input_specs(self, specs: list, possible: set):
         # any concrete specs in the input spec list
         for input_spec in specs:
             for spec in input_spec.traverse():
