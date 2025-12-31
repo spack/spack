@@ -159,6 +159,7 @@ VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 VARIANT_COLOR = "@B"  #: color for highlighting variants
 HASH_COLOR = "@K"  #: color for highlighting package hashes
+HIGHLIGHT_COLOR = "@_R"  #: color for highlighting spec parts on demand
 
 #: Default format for Spec.format(). This format can be round-tripped, so that:
 #:     Spec(Spec("string").format()) == Spec("string)"
@@ -1351,6 +1352,8 @@ def tree(
     status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
     prefix: Optional[Callable[["Spec"], str]] = None,
     key: Callable[["Spec"], Any] = id,
+    highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
+    highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
 ) -> str:
     """Prints out specs and their dependencies, tree-formatted with indentation.
 
@@ -1373,6 +1376,10 @@ def tree(
             installation status
         prefix: optional callable that takes a node as an argument and return its
             installation prefix
+        highlight_version_fn: optional callable that returns true on nodes where the version
+            needs to be highlighted
+        highlight_variant_fn: optional callable that returns true on variants that need
+            to be highlighted
     """
     out = ""
 
@@ -1428,7 +1435,15 @@ def tree(
         out += "    " * d
         if d > 0:
             out += "^"
-        out += node.format(format, color=color) + "\n"
+        out += (
+            node.format(
+                format,
+                color=color,
+                highlight_version_fn=highlight_version_fn,
+                highlight_variant_fn=highlight_variant_fn,
+            )
+            + "\n"
+        )
 
         # Check if we wanted just the first line
         if not recurse_dependencies:
@@ -3487,13 +3502,23 @@ class Spec:
                         return False
 
                 else:
+                    # If the branch is %<virtual> or ^<virtual>, check if we have a corresponding
+                    # branch in the lhs
+                    candidate_edges = []
+                    if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name):
+                        candidate_edges = current_node.edges_to_dependencies(
+                            name=rhs_edge.spec.name
+                        )
+
                     name = (
                         None
                         if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name)
                         else rhs_edge.spec.name
                     )
-                    candidate_edges = current_node.edges_to_dependencies(
-                        name=name, virtuals=rhs_edge.virtuals or None
+                    candidate_edges.extend(
+                        current_node.edges_to_dependencies(
+                            name=name, virtuals=rhs_edge.virtuals or None
+                        )
                     )
                     # Select at least the deptypes on the rhs_edge, and conditional edges that
                     # constrain a bigger portion of the search space (so it's rhs.when <= lhs.when)
@@ -3553,7 +3578,11 @@ class Spec:
                 return False
 
             for virtual in rhs_edge.virtuals:
-                has_virtual = any(virtual in edge.virtuals for edge in candidate_edges)
+                # Check the name because ^mpi has the "mpi" virtual
+                has_virtual = any(
+                    virtual in edge.virtuals or virtual == edge.spec.name
+                    for edge in candidate_edges
+                )
                 if not has_virtual:
                     return False
 
@@ -4071,7 +4100,14 @@ class Spec:
 
         return "".join(parts).strip()
 
-    def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
+    def format(
+        self,
+        format_string: str = DEFAULT_FORMAT,
+        color: Optional[bool] = False,
+        *,
+        highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
+        highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
+    ) -> str:
         r"""Prints out attributes of a spec according to a format string.
 
         Using an ``{attribute}`` format specifier, any field of the spec can be
@@ -4152,7 +4188,10 @@ class Spec:
         Args:
             format_string: string containing the format to be expanded
             color: True for colorized result; False for no color; None for auto color.
-
+            highlight_version_fn: optional callable that returns true on nodes where the version
+                needs to be highlighted
+            highlight_variant_fn: optional callable that returns true on variants that need
+                to be highlighted
         """
         # Fast path for the common case: default format with no color
         if format_string == DEFAULT_FORMAT and color is False:
@@ -4180,7 +4219,8 @@ class Spec:
             elif not close_brace:
                 raise SpecFormatStringError(f"Missing close brace: '{format_string}'")
 
-            current = self if dep is None else self[dep]
+            current_node = self if dep is None else self[dep]
+            current = current_node
 
             # Hash attributes can return early.
             # NOTE: we currently treat abstract_hash like an attribute and ignore
@@ -4267,10 +4307,34 @@ class Spec:
                 color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
                 color = VERSION_COLOR
+                if highlight_version_fn and highlight_version_fn(current_node):
+                    color = HIGHLIGHT_COLOR
 
             # return empty string if the value of the attribute is None.
             if current is None:
                 return ""
+
+            # Override the color for single variants, if need be
+            if color and highlight_variant_fn and isinstance(current, VariantMap):
+                bool_keys, kv_keys = current.partition_keys()
+                result = ""
+
+                for key in bool_keys:
+                    current_color = color
+                    if highlight_variant_fn(current_node, key):
+                        current_color = HIGHLIGHT_COLOR
+
+                    result += safe_color(sig, str(current[key]), current_color)
+
+                for key in kv_keys:
+                    current_color = color
+                    if highlight_variant_fn(current_node, key):
+                        current_color = HIGHLIGHT_COLOR
+
+                    # Don't highlight the space before the key/value pair
+                    result += " " + safe_color(sig, f"{current[key]}", current_color)
+
+                return result
 
             # return colored output
             return safe_color(sig, str(current), color)
@@ -4543,6 +4607,8 @@ class Spec:
         status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
         key=id,
+        highlight_version_fn: Optional[Callable[["Spec"], bool]] = None,
+        highlight_variant_fn: Optional[Callable[["Spec", str], bool]] = None,
     ) -> str:
         """Prints out this spec and its dependencies, tree-formatted with indentation.
 
@@ -4566,6 +4632,10 @@ class Spec:
                 installation status
             prefix: optional callable that takes a node as an argument and return its
                 installation prefix
+            highlight_version_fn: optional callable that returns true on nodes where the version
+                needs to be highlighted
+            highlight_variant_fn: optional callable that returns true on variants that need
+                to be highlighted
         """
         return tree(
             [self],
@@ -4583,6 +4653,8 @@ class Spec:
             status_fn=status_fn,
             prefix=prefix,
             key=key,
+            highlight_version_fn=highlight_version_fn,
+            highlight_variant_fn=highlight_variant_fn,
         )
 
     def __repr__(self):
@@ -5092,19 +5164,10 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         if not self:
             return ""
 
-        # print keys in order
-        sorted_keys = sorted(self.keys())
-
         # Separate boolean variants from key-value pairs as they print
         # differently. All booleans go first to avoid ' ~foo' strings that
         # break spec reuse in zsh.
-        bool_keys = []
-        kv_keys = []
-        for key in sorted_keys:
-            if self[key].type == vt.VariantType.BOOL:
-                bool_keys.append(key)
-            else:
-                kv_keys.append(key)
+        bool_keys, kv_keys = self.partition_keys()
 
         # add spaces before and after key/value variants.
         string = io.StringIO()
@@ -5117,6 +5180,13 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
             string.write(str(self[key]))
 
         return string.getvalue()
+
+    def partition_keys(self) -> Tuple[List[str], List[str]]:
+        """Partition the keys of the map into two lists: booleans and key-value pairs."""
+        bool_keys, kv_keys = lang.stable_partition(
+            sorted(self.keys()), lambda x: self[x].type == vt.VariantType.BOOL
+        )
+        return bool_keys, kv_keys
 
 
 def substitute_abstract_variants(spec: Spec):

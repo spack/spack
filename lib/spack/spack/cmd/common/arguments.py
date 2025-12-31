@@ -474,6 +474,16 @@ def no_install_status():
 
 
 @arg
+def show_non_defaults():
+    return Args(
+        "--non-defaults",
+        action="store_true",
+        default=False,
+        help="highlight non-default versions or variants",
+    )
+
+
+@arg
 def no_checksum():
     return Args(
         "-n",

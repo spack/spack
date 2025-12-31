@@ -401,6 +401,82 @@ Unit tests
 Unit testing
 ------------
 
+Debugging Unit Tests in CI
+--------------------------
+
+Spack runs its CI for unit tests via Github Actions from the Spack repo.
+The unit tests are run for each platform Spack supports, Windows, Linux, and MacOS.
+It may be the case that a unit test fails or passes on just one of these platforms.
+When the platform is one the PR author does not have access to, it can be difficult to reproduce, diagnose, and fix a CI failure.
+Thankfully, PR authors can take advantage of a Github Actions Action to gain temporary access to the failing platform from the context of their PRs.
+Simply copy the following Github actions yaml stanza into `the GHA workflow file <https://github.com/spack/spack/blob/develop/.github/workflows/unit_tests.yaml>`__ in the `steps` section of whatever unit test needs debugging.
+
+.. code-block:: yaml
+
+   - name: Setup tmate session
+     uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
+
+Ideally this would be inserted somewhere after GHA checks out Spack and does any setup, but before the unit tests themselves are run.
+You can of course put this stanza after the unit-tests, but then you'll be stuck waiting for the unit tests to complete (potentially up to ~30m) and will need to add additional logic to the yaml in the case where the unit tests fail.
+
+For example, if you were to add this step to the Linux unit test CI, it would look something like:
+
+.. code-block:: yaml
+
+   - name: Bootstrap clingo
+     if: ${{ matrix.concretizer == 'clingo' }}
+     env:
+       SPACK_PYTHON: python
+     run: |
+       . share/spack/setup-env.sh
+       spack bootstrap disable spack-install
+       spack bootstrap now
+       spack -v solve zlib
+   - name: Setup tmate session
+     uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
+   - name: Run unit tests
+     env:
+       SPACK_PYTHON: python
+       SPACK_TEST_PARALLEL: 4
+       COVERAGE: true
+       COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
+       UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
+     run: |-
+       share/spack/qa/run-unit-tests
+
+
+Note that the ssh session comes after Spack does its setup but before it runs the unit tests.
+
+Once this step is present in the job definition, it will be triggered for each CI run.
+This action provides access to an SSH server running on the GHA runner that is hosting a given CI run.
+As the action runs, you should observe output similar to:
+
+.. code-block:: console
+
+   ssh 5RjFs7LPdtwGG8cwSPkGrdMNg@sfo2.tmate.io
+   https://tmate.io/t/5RjFs7LPdtwGG8cwSPkGrdMNg
+
+The first line is the ssh command neccesary to connect to the server, the second line is a tmate web-ui that also provides access to the ssh server on the runner.
+
+.. note:: The web UI has occasionally been unresponsive, if it does not respond within ~10s, you'll need to use your local ssh utility.
+
+Once connected via SSH, you have the same level of access to the machine that the CI job's user does.
+Spack's source should be available already (depending on where the step was inserted).
+So you can just setup the shell to run Spack via the setup scripts and then debug as needed.
+
+.. note:: If you have configured your Github profile with SSH keys, the action will be aware of this and require those keys to access the SSH session.
+
+.. note:: If you are on Windows you'll be dropped into an MSYS shell, Spack is not supported inside MSYS, so it is strongly recommended to drop into a CMD or powershell prompt.
+
+You will have access to this ssh session for as long as Github allows a job to be alive.
+
+Once you have finished debugging, remove this action from the Github actions workflow.
+
+If you want to continue a workflow and you are inside a session, just create a empty file with the name continue either in the root directory or in the project directory.
+
+This action has a few option to configure behavior like ssh key handling, tmate server, detached mode, etc.
+For more on how to use those options, see the actions docs at https://github.com/mxschmitt/action-tmate
+
 Developer environment
 ---------------------
 
