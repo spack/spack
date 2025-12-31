@@ -2958,7 +2958,10 @@ class SpackSolverSetup:
         only_deprecated = []
         impossible = []
 
-        for spec in specs:
+        for spec in traverse.traverse_nodes(specs):
+            if spack.repo.PATH.is_virtual(spec.name):
+                continue
+
             deprecated = self.deprecated_versions.get(spec.name, set())
             sat_deprecated = [v for v in deprecated if deprecated and v.satisfies(spec.versions)]
 
