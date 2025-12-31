@@ -21,6 +21,7 @@ import pytest
 import spack.binary_distribution
 import spack.concretize
 import spack.config
+import spack.environment as ev
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirrors.mirror
@@ -294,7 +295,9 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
-def test_use_bin_index_with_view(monkeypatch, tmp_path: pathlib.Path, mutable_config):
+def test_use_bin_index_with_view(
+    monkeypatch, tmp_path: pathlib.Path, mutable_config, mutable_mock_env_path
+):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
     """
@@ -308,9 +311,14 @@ def test_use_bin_index_with_view(monkeypatch, tmp_path: pathlib.Path, mutable_co
     mirror_url = url_util.path_to_file_url(str(mirror_dir))
     spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
     s = spack.concretize.concretize_one("libdwarf")
-    install_cmd("--fake", "--no-cache", s.name)
-    buildcache_cmd("push", "-u", "test", s.name)
-    buildcache_cmd("update-index", "test", s.format("{/hash}"))
+
+    # Create an environment and install specs for the view
+    ev.create("testenv")
+    with ev.read("testenv"):
+        install_cmd("--add", "--fake", "--no-cache", s.name)
+        buildcache_cmd("push", "-u", "test", s.name)
+
+    buildcache_cmd("update-index", "test", "testenv")
 
     # Now the test
     buildcache_cmd("list", "-al")
