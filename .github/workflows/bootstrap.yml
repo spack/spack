@@ -47,7 +47,7 @@ jobs:
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           spack -d solve zlib
-          tree ~/.local/share/spack/bootstrap/store
+          tree ~/.local/state/spack/bootstrap/store
 
   clingo-sources:
     if: github.repository == 'spack/spack'
@@ -73,7 +73,7 @@ jobs:
           spack bootstrap disable github-actions-v0.6
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
           spack -d solve zlib
-          tree ~/.local/share/spack/bootstrap/store
+          tree ~/.local/state/spack/bootstrap/store
   gnupg-sources:
     if: github.repository == 'spack/spack'
     runs-on: ${{ matrix.runner }}
@@ -100,7 +100,7 @@ jobs:
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           spack -d gpg list
-          tree ~/.local/share/spack/bootstrap/store
+          tree ~/.local/state/spack/bootstrap/store
 
   from-binaries:
     if: github.repository == 'spack/spack'
@@ -148,12 +148,12 @@ jobs:
             fi
             spack solve zlib
           done
-          tree ~/.local/share/spack/bootstrap/store
+          tree ~/.local/state/spack/bootstrap/store
       - name: Bootstrap GnuPG
         run: |
           . share/spack/setup-env.sh
           spack -d gpg list
-          tree ~/.local/share/spack/bootstrap/store
+          tree ~/.local/state/spack/bootstrap/store
 
   windows:
     if: github.repository == 'spack/spack'
@@ -177,10 +177,10 @@ jobs:
           spack bootstrap disable github-actions-v0.6
           spack -d solve zlib
           ./share/spack/qa/validate_last_exit.ps1
-          tree $env:userprofile/.local/share/spack/bootstrap/store
+          tree $env:userprofile/.local/state/spack/bootstrap/store
       - name: Bootstrap GnuPG
         run: |
           ./share/spack/setup-env.ps1
           spack -d gpg list
           ./share/spack/qa/validate_last_exit.ps1
-          tree $env:userprofile/.local/share/spack/bootstrap/store
+          tree $env:userprofile/.local/state/spack/bootstrap/store
