@@ -234,13 +234,17 @@ def test_install_overwrite(
     spec = spack.concretize.concretize_one("pkg-c")
     install("pkg-c")
 
-    # Ignore manifest, install times, and sbom 
+    # Ignore manifest, install times, and sbom
     manifest = os.path.join(
         spec.prefix,
         spack.store.STORE.layout.metadata_dir,
         spack.store.STORE.layout.manifest_file_name,
     )
-    ignores = [manifest, spec.package.times_log_path, os.path.join(spec.prefix, ".spack", "sbom.json")]
+    ignores = [
+        manifest,
+        spec.package.times_log_path,
+        os.path.join(spec.prefix, ".spack", "sbom.json"),
+    ]
 
     assert os.path.exists(spec.prefix)
     expected_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
