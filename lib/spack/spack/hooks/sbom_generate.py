@@ -75,7 +75,6 @@ def post_install(spec, explicit=None):
     unique_str = f"{spec.name}-{spec.version}-{spec.dag_hash()}"
     unique_hash = hashlib.sha256(unique_str.encode("utf-8")).hexdigest()
     document_namespace = f"https://spack.io/sbom/{unique_hash}"
-    # document_namespace = f"https://spack.io/sbom/unique-str"
 
     # Package entry for each installation.
     # Represents the top-level component in the SBOM (the package being installed).
