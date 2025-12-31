@@ -309,13 +309,19 @@ def test_install_overwrite_multiple(
     install("--fake", "libdwarf")
     install("--fake", "cmake")
 
+    # Ignore manifest, install times, and sbom
     ld_manifest = os.path.join(
         libdwarf.prefix,
         spack.store.STORE.layout.metadata_dir,
         spack.store.STORE.layout.manifest_file_name,
     )
 
-    ld_ignores = [ld_manifest, libdwarf.package.times_log_path]
+    ld_ignores = [
+        ld_manifest,
+        libdwarf.package.times_log_path,
+        os.path.join(libdwarf.prefix, ".spack", "sbom.json"),
+        os.path.join(cmake.prefix, ".spack", "sbom.json"),
+    ]
 
     assert os.path.exists(libdwarf.prefix)
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
@@ -326,7 +332,7 @@ def test_install_overwrite_multiple(
         spack.store.STORE.layout.manifest_file_name,
     )
 
-    cm_ignores = [cm_manifest, cmake.package.times_log_path]
+    cm_ignores = [cm_manifest, cmake.package.times_log_path, os.path.join(cmake.prefix, ".spack", "sbom.json")]
     assert os.path.exists(cmake.prefix)
     expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 
