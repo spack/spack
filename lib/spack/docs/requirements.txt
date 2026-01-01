@@ -1,4 +1,4 @@
-sphinx==9.0.4
+sphinx==9.1.0
 sphinxcontrib-programoutput==0.18
 sphinxcontrib-svg2pdfconverter==2.0.0
 sphinx-copybutton==0.5.2
