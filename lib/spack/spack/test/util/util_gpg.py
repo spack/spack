@@ -20,13 +20,13 @@ def has_socket_dir():
 def test_parse_gpg_output_case_one():
     now = int(time.time())
     # Two keys, fingerprint for primary keys, but not subkeys
-    output = f"""sec::2048:1:AAAAAAAAAAAAAAAA:{now}:AAAAAAAAAA:::::::::
+    output = f"""sec::2048:1:AAAAAAAAAAAAAAAA:{now}:{now}:::::::::
 fpr:::::::::XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:
-uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
+uid:::::{now}::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:{now}::::::::::
-sec::2048:1:AAAAAAAAAAAAAAAA:{now}:AAAAAAAAAA:::::::::
+sec::2048:1:AAAAAAAAAAAAAAAA:{now}:{now}:::::::::
 fpr:::::::::YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY:
-uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
+uid:::::{now}::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:{now}::::::::::
 """
     keys = spack.util.gpg._parse_gpg_output(output)
@@ -42,7 +42,7 @@ def test_parse_gpg_output_case_two():
     output = f"""sec:-:2048:1:AAAAAAAAAA:{now}:::-:::escaESCA:::+:::23::0:
 fpr:::::::::XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:
 grp:::::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:
-uid:-::::AAAAAAAAA::AAAAAAAAA::Joe (Test) <j.s@s.com>::::::::::0:
+uid:-::::{now}::AAAAAAAAA::Joe (Test) <j.s@s.com>::::::::::0:
 ssb:-:2048:1:AAAAAAAAA:{now}:::::esa:::+:::23:
 fpr:::::::::YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY:
 grp:::::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:
@@ -56,14 +56,14 @@ grp:::::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:
 def test_parse_gpg_output_case_three():
     now = int(time.time())
     # Two keys, fingerprint for primary keys as well as subkeys
-    output = f"""sec::2048:1:AAAAAAAAAAAAAAAA:{now}:AAAAAAAAAA:::::::::
+    output = f"""sec::2048:1:AAAAAAAAAAAAAAAA:{now}:{now}:::::::::
 fpr:::::::::WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW:
-uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
+uid:::::{now}::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:{now}::::::::::
 fpr:::::::::XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:
-sec::2048:1:AAAAAAAAAAAAAAAA:{now}:AAAAAAAAAA:::::::::
+sec::2048:1:AAAAAAAAAAAAAAAA:{now}:{now}:::::::::
 fpr:::::::::YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY:
-uid:::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
+uid:::::{now}::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>:
 ssb::2048:1:AAAAAAAAAAAAAAAA:{now}::::::::::
 fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
 
@@ -74,7 +74,6 @@ fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
     assert keys[1].fpr == "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
 
 
-@pytest.mark.requires_executables("gpg2")
 def test_really_long_gnupghome_dir(tmp_path: pathlib.Path, has_socket_dir):
     if not has_socket_dir:
         pytest.skip("This test requires /var/run/user/$(id -u)")

@@ -48,7 +48,6 @@ def test_find_gpg(cmd_name, version, tmp_path: pathlib.Path, mock_gnupghome, mon
     else:
         spack.util.gpg.init(force=True)
         assert spack.util.gpg.GPG is not None
-        assert spack.util.gpg.GPGCONF is not None
 
 
 def test_no_gpg_in_path(tmp_path: pathlib.Path, mock_gnupghome, monkeypatch, mutable_config):

@@ -79,12 +79,18 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     create.set_defaults(func=gpg_create, subparser=create)
 
-    list = subparsers.add_parser("list", help=gpg_list.__doc__)
-    list.add_argument("--trusted", action="store_true", default=True, help="list trusted keys")
-    list.add_argument(
+    glist = subparsers.add_parser("list", help=gpg_list.__doc__)
+    glist.add_argument(
+        "--fmt",
+        "-f",
+        action="store",
+        help="Format to list keys with (default (gpg), colons, keys, <key format string>)",
+    )
+    glist.add_argument("--trusted", action="store_true", default=True, help="list trusted keys")
+    glist.add_argument(
         "--signing", action="store_true", help="list keys which may be used for signing"
     )
-    list.set_defaults(func=gpg_list, subparser=list)
+    glist.set_defaults(func=gpg_list, subparser=glist)
 
     init = subparsers.add_parser("init", help=gpg_init.__doc__)
     init.add_argument("--from", metavar="DIR", type=str, dest="import_dir", help=argparse.SUPPRESS)
@@ -164,7 +170,7 @@ def gpg_export(args):
 
 def gpg_list(args):
     """list keys available in the keyring"""
-    spack.util.gpg.list(args.trusted, args.signing)
+    spack.util.gpg.list(args.trusted, args.signing, args.fmt)
 
 
 def gpg_sign(args):
