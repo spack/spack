@@ -173,8 +173,13 @@ Here is an example of creating a view using an active environent.
    $ spack env activate my-stack
    $ spack install
    $ spack buildcache push my-mirror
-   $ spack buildcache create-view --name my-stack my-mirror
+   $ spack buildcache create-view --name my-view my-mirror
 
+It is also possible to create a view from a list of one or more environments by passing the environment names or paths.
+
+.. code-block:: console
+
+   $ spack buildcache create-view --name my-view my-mirror my-stack # other environments...
 
 .. _cmd-spack-buildcache-update-view:
 
@@ -189,7 +194,7 @@ The append option will first read the existing index, and then add the new specs
 .. code-block:: console
 
    $ spack buildcache push my-mirror
-   $ spack buildcache update-view --append --name my-stack my-mirror
+   $ spack buildcache update-view --append --name my-view my-mirror my-stack
 
 
 .. warning::

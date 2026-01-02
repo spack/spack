@@ -343,6 +343,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="if provided, key index will be updated as well as package index",
     )
+    arguments.add_common_arguments(update_index, ["yes_to_all"])
     update_index.set_defaults(func=update_index_fn)
 
     # Migrate a buildcache from layout_version 2 to version 3
@@ -859,6 +860,7 @@ def update_view(
     *sources: str,
     name: Optional[str] = None,
     update_keys: bool = False,
+    yes_to_all: bool = False,
 ):
     """update a buildcache view index"""
     # OCI images do not support views.
@@ -868,11 +870,12 @@ def update_view(
     except ValueError:
         pass
 
-    if update_mode == ViewUpdateMode.APPEND:
+    if update_mode == ViewUpdateMode.APPEND and not yes_to_all:
         tty.warn(
             "Appending to a view index does not guarantee idempotent write when contending "
             "with multiple writers. This feature is meant to be used by a single process."
         )
+        tty.get_yes_or_no("Do you want to proceed?", default=False)
 
     # Otherwise, assume a normal mirror.
     url = mirror.push_url
@@ -886,7 +889,11 @@ def update_view(
         )
 
     name = name or mirror.push_view
-    assert name
+    if not name:
+        tty.die(
+            "Attempting to update a view but could not determine the view name.\n"
+            "    Either pass --name <view name> or configure the view name in mirrors.yaml"
+        )
 
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
         url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, name
@@ -913,8 +920,7 @@ def update_view(
             hashes.extend(env.all_hashes())
     else:
         # Get hashes in the current active environment
-        env = spack.cmd.require_active_env(cmd_name="buildcache update-view")
-        hashes = env.all_hashes()
+        hashes = spack.cmd.require_active_env(cmd_name="buildcache update-view").all_hashes()
 
     if not hashes:
         tty.warn("No specs found for view, creating an empty index")
@@ -1064,7 +1070,12 @@ def update_index_fn(args):
             update_mode = ViewUpdateMode.APPEND
 
         return update_view(
-            args.mirror, update_mode, *args.sources, name=args.name, update_keys=args.keys
+            args.mirror,
+            update_mode,
+            *args.sources,
+            name=args.name,
+            update_keys=args.keys,
+            yes_to_all=args.yes_to_all,
         )
     else:
         return update_index(args.mirror, update_keys=args.keys)

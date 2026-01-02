@@ -1026,7 +1026,7 @@ def test_buildcache_create_view_failure(tmp_path, mutable_config, mutable_mock_e
         buildcache(*command_args)
 
     # spec sources should raise an exception
-    expect = "Failed to read specs from source: DEADBEEF"
+    expect = "no such environment 'DEADBEEF'"
     with pytest.raises(spack.error.SpackError, match=expect):
         command_args = ["update-index", "--name", "test_view", "my-mirror", "DEADBEEF"]
         buildcache(*command_args)
@@ -1141,7 +1141,7 @@ def test_buildcache_create_view_append(
 
     # Test append to empty index view
     with source(mpileaks_specs[0], tmp_path / "source_stage") as source_args:
-        command_args = ["update-index", "--append", "--name", "test_view", "my-mirror"]
+        command_args = ["update-index", "-y", "--append", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
@@ -1152,7 +1152,7 @@ def test_buildcache_create_view_append(
 
     # Test append to existing index view
     with source(mpileaks_specs[1], tmp_path / "source_stage") as source_args:
-        command_args = ["update-index", "--append", "--name", "test_view", "my-mirror"]
+        command_args = ["update-index", "-y", "--append", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
