@@ -853,15 +853,6 @@ def mirror_update_keys(mirror: spack.mirrors.mirror.Mirror):
         tty.warn(f"did not update the key index: {e}")
 
 
-def read_concrete_hashes(source: str) -> List[str]:
-    """Read all of the concrete hashes from a given source"""
-    try:
-        env = ev.environment_from_name_or_dir(source)
-        return env.all_hashes()
-    except ev.SpackEnvironmentError as e:
-        raise spack.error.SpackError(f"Failed to read specs from source: {source}") from e
-
-
 def update_view(
     mirror: spack.mirrors.mirror.Mirror,
     update_mode: ViewUpdateMode,
@@ -918,7 +909,8 @@ def update_view(
     if sources:
         for source in sources:
             tty.debug(f"reading specs from source: {source}")
-            hashes.extend(read_concrete_hashes(source))
+            env = ev.environment_from_name_or_dir(source)
+            hashes.extend(env.all_hashes())
     else:
         # Get hashes in the current active environment
         env = spack.cmd.require_active_env(cmd_name="buildcache update-view")
