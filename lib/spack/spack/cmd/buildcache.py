@@ -295,10 +295,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
     check_index.add_argument(
         "--verify",
         nargs="+",
-        action="append",
         choices=["exists", "manifests", "blobs", "all"],
-        default=[["exists"]],
+        default=["exists"],
         help="List of items to verify along along with the index.",
+    )
+    check_index.add_argument(
+        "--name", "-n", action="store", help="Name of the view index to check"
     )
     check_index.add_argument(
         "--output", "-o", action="store", help="File to write check details to"
@@ -950,6 +952,8 @@ def check_index_fn(args):
     mirror = args.mirror
     verify = set(args.verify)
 
+    checking_view_index = (args.name or mirror.fetch_view) is not None
+
     if "all" in verify:
         verify.update(["exists", "manifests", "blobs"])
 
@@ -963,13 +967,19 @@ def check_index_fn(args):
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
         mirror.fetch_url,
         spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION,
-        mirror.fetch_view,
+        args.name or mirror.fetch_view,
     )
     index_exists = True
+    missing_index_blob = False
     try:
         BINARY_INDEX._fetch_and_cache_index(mirror_metadata)
     except spack.binary_distribution.BuildcacheIndexNotExists:
         index_exists = False
+    except spack.binary_distribution.FetchIndexError:
+        # Here the index manifest exists, but the index blob did not
+        # We can still run some of the other validations here, so let's try
+        index_exists = False
+        missing_index_blob = True
 
     missing_specs = []
     unindexed_specs = []
@@ -984,7 +994,7 @@ def check_index_fn(args):
             manifest_files, read_fn = get_entries_from_cache(
                 mirror.fetch_url, tmpdir, BuildcacheComponent.SPEC
             )
-        if "manifests" in verify:
+        if "manifests" in verify and index_exists:
             # Read the index file
             db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
             cache_entry = BINARY_INDEX._local_index_cache[str(mirror_metadata)]
@@ -1002,9 +1012,13 @@ def check_index_fn(args):
             )
 
         for spec_manifest in manifest_files:
+
             # Spec manifests have a naming format
             # <name>-<version>-<hash>.spec.manifest.json
             spec_hash = spec_manifest.rsplit("-", 1)[1].split(".", 1)[0]
+            if checking_view_index and spec_hash not in index_hash_list:
+                continue
+
             cache_hash_list.append(spec_hash)
             if spec_hash not in index_hash_list:
                 unindexed_specs.append(spec_hash)
@@ -1032,9 +1046,17 @@ def check_index_fn(args):
         if mirror.fetch_view:
             summary_msg += f"@{mirror.fetch_view}"
         summary_msg += "\n"
+        if missing_index_blob:
+            tty.warn("The index blob is missing")
 
     if "manifests" in verify:
-        summary_msg += f"\tUnindexed specs: {len(unindexed_specs)}\n"
+        if checking_view_index:
+            count = "n/a"
+        else:
+            count = len(unindexed_specs)
+        summary_msg += f"\tUnindexed specs: {count}\n"
+
+    if "manifests" in verify:
         summary_msg += f"\tMissing specs: {len(missing_specs)}\n"
 
     if "blobs" in verify:
