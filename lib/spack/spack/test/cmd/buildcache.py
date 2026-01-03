@@ -86,7 +86,7 @@ def test_buildcache_list_allarch(database, mock_get_specs_multiarch):
 
 
 def tests_buildcache_create_env(
-    install_mockery, mock_fetch, monkeypatch, tmp_path: pathlib.Path, mutable_mock_env_path
+    install_mockery, mock_fetch, tmp_path: pathlib.Path, mutable_mock_env_path
 ):
     """ "Ensure that buildcache create creates output files from env"""
     pkg = "trivial-install-test-package"
@@ -119,7 +119,7 @@ def test_buildcache_create_fails_on_noargs(tmp_path: pathlib.Path):
 
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_buildcache_create_fail_on_perm_denied(
-    install_mockery, mock_fetch, monkeypatch, tmp_path: pathlib.Path
+    install_mockery, mock_fetch, tmp_path: pathlib.Path
 ):
     """Ensure that buildcache create fails on permission denied error."""
     install("trivial-install-test-package")
@@ -320,7 +320,6 @@ def test_buildcache_create_install(
     mock_packages,
     mock_fetch,
     mock_stage,
-    monkeypatch,
     tmp_path: pathlib.Path,
 ):
     """ "Ensure that buildcache create creates output files"""
@@ -604,7 +603,6 @@ def test_install_v2_layout(
     mutable_mock_env_path,
     install_mockery,
     mock_gnupghome,
-    monkeypatch,
 ):
     """Ensure we can still install from signed and unsigned v2 buildcache"""
     test_mirror_path = v2_buildcache_layout(signing)
@@ -661,7 +659,7 @@ def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
     assert not os.path.exists(build_cache_path)
 
 
-def test_basic_migrate_signed(v2_buildcache_layout, monkeypatch, mock_gnupghome, mutable_config):
+def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_config):
     """Test a signed migration requires a signing key, requires the public
     key originally used to sign the pkgs, fails and prints reasonable messages
     if those requirements are unmet, and eventually succeeds when they are met."""
@@ -984,7 +982,8 @@ def spec_env_name(spec: spack.spec.Spec) -> str:
 
 
 @contextlib.contextmanager
-def spec_env(spec: spack.spec.Spec, prefix: str):
+def spec_env(spec: spack.spec.Spec):
+    """Build cache index view source is current active environment"""
     # Create a unique environment for this spec only
     env_name = spec_env_name(spec)
     if not ev.exists(env_name):
@@ -992,28 +991,45 @@ def spec_env(spec: spack.spec.Spec, prefix: str):
 
     with ev.environment_from_name_or_dir(env_name):
         add(f"{spec.name}/{spec.dag_hash()}")
-        # This should handle concretization and updating the environment
-        # to mark all packges as installed
+        # This should handle updating the environment to mark all packges as installed
         install()
+        # Empty list since we want to use the active environment
         yield []
 
 
 @contextlib.contextmanager
-def spec_lockfile(spec: spack.spec.Spec, prefix: str):
+def spec_env_path(spec: spack.spec.Spec):
+    """Build cache index view source is an environment path"""
+    # Create the environment, reuse they logic from spec_env
     env_name = spec_env_name(spec)
-    with spec_env(spec, prefix):
+    with spec_env(spec):
         pass
     yield [ev.environment_dir_from_name(env_name, exists_ok=True)]
 
 
+@contextlib.contextmanager
+def spec_env_by_name(spec: spack.spec.Spec):
+    """Build cache index view source is an managed environment name"""
+    # Create the environment, reuse they logic from spec_env
+    env_name = spec_env_name(spec)
+    with spec_env(spec):
+        pass
+    yield [env_name]
+
+
 def read_specs_in_index(mirror_directory, view):
+    """Read specs hashes from a build cache index (ie. a database file)
+
+    This assumes the layout of the database holds the spec hashes under:
+        database -> installs -> hashes...
+    """
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
         f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_LAYOUT_VERSIONS[0], view
     )
     fetcher = spack.binary_distribution.DefaultIndexFetcher(mirror_metadata, None)
     result = fetcher.conditional_fetch()
     db_dict = json.loads(result.data)
-    return [h for h in db_dict["database"]["installs"]]
+    return set([h for h in db_dict["database"]["installs"]])
 
 
 def test_buildcache_create_view_failure(tmp_path, mutable_config, mutable_mock_env_path):
@@ -1040,7 +1056,7 @@ def test_buildcache_create_view_empty(
 
     # Push a spec to the cache
     mpileaks_specs = mutable_database.query_local("mpileaks")
-    buildcache("push", "--update-index", "my-mirror", mpileaks_specs[0].format("{/hash}"))
+    buildcache("push", "my-mirror", mpileaks_specs[0].format("{/hash}"))
 
     # Make sure the view doesn't exist yet
     with pytest.raises(spack.binary_distribution.FetchIndexError):
@@ -1066,10 +1082,11 @@ def test_buildcache_create_view_empty(
     out = buildcache(*command_args)
     assert "No specs found for view, creating an empty index" in out
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+    # Assert there are no hashes in the view
     assert not hashes_in_view
 
 
-@pytest.mark.parametrize("source", (spec_env, spec_lockfile))
+@pytest.mark.parametrize("source", (spec_env, spec_env_path, spec_env_by_name))
 def test_buildcache_create_view(
     tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
 ):
@@ -1079,26 +1096,25 @@ def test_buildcache_create_view(
     # Push all of the mpileaks packages to the cache
     mpileaks_specs = mutable_database.query_local("mpileaks")
     for s in mpileaks_specs:
-        buildcache("push", "--update-index", "my-mirror", s.format("{/hash}"))
+        buildcache("push", "my-mirror", s.format("{/hash}"))
 
     # Grab all of the hashes for each mpileaks spec
-    mpileaks_0_hashes = [s.dag_hash() for s in mpileaks_specs[0].traverse()]
-    mpileaks_1_hashes = [s.dag_hash() for s in mpileaks_specs[1].traverse()]
+    mpileaks_0_hashes = set([s.dag_hash() for s in mpileaks_specs[0].traverse()])
 
     # Make sure the view doesn't exist yet
     with pytest.raises(spack.binary_distribution.FetchIndexError):
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Create a view using a parametrized source that contains one of the mpileaks
-    with source(mpileaks_specs[0], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[0]) as source_args:
         command_args = ["update-index", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
-    for h in mpileaks_0_hashes:
-        assert h in hashes_in_view
+    # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
+    assert not (hashes_in_view - mpileaks_0_hashes)
 
     # Test fail to overwrite without force
     expect = "Index already exists. To overwrite or update pass --force or --append respectively"
@@ -1113,13 +1129,11 @@ def test_buildcache_create_view(
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
-    for h in mpileaks_0_hashes:
-        assert h in hashes_in_view
-    for h in mpileaks_1_hashes:
-        assert h not in hashes_in_view or h in mpileaks_0_hashes
+    # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
+    assert not (hashes_in_view - mpileaks_0_hashes)
 
 
-@pytest.mark.parametrize("source", (spec_env, spec_lockfile))
+@pytest.mark.parametrize("source", (spec_env, spec_env_path, spec_env_by_name))
 def test_buildcache_create_view_append(
     tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
 ):
@@ -1129,40 +1143,41 @@ def test_buildcache_create_view_append(
     # Push all of the mpileaks packages to the cache
     mpileaks_specs = mutable_database.query_local("mpileaks")
     for s in mpileaks_specs:
-        buildcache("push", "--update-index", "my-mirror", s.format("{/hash}"))
+        buildcache("push", "my-mirror", s.format("{/hash}"))
 
     # Grab all of the hashes for each mpileaks spec
-    mpileaks_0_hashes = [s.dag_hash() for s in mpileaks_specs[0].traverse()]
-    mpileaks_1_hashes = [s.dag_hash() for s in mpileaks_specs[1].traverse()]
+    mpileaks_0_hashes = set([s.dag_hash() for s in mpileaks_specs[0].traverse()])
+    mpileaks_1_hashes = set([s.dag_hash() for s in mpileaks_specs[1].traverse()])
 
     # Make sure the view doesn't exist yet
     with pytest.raises(spack.binary_distribution.FetchIndexError):
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Test append to empty index view
-    with source(mpileaks_specs[0], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[0]) as source_args:
         command_args = ["update-index", "-y", "--append", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
-    for h in mpileaks_0_hashes:
-        assert h in hashes_in_view
+    # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
+    assert not (hashes_in_view - mpileaks_0_hashes)
 
     # Test append to existing index view
-    with source(mpileaks_specs[1], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[1]) as source_args:
         command_args = ["update-index", "-y", "--append", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
-    for h in mpileaks_0_hashes + mpileaks_1_hashes:
-        assert h in hashes_in_view
+    # Assert all of the hashes for mpileaks_0_hashes and mpileaks_1_hashes exist in the view,
+    # and no other hashes
+    assert not (hashes_in_view - (mpileaks_0_hashes | mpileaks_1_hashes))
 
 
-@pytest.mark.parametrize("source", (spec_env, spec_lockfile))
+@pytest.mark.parametrize("source", (spec_env, spec_env_path, spec_env_by_name))
 def test_buildcache_create_view_overwrite(
     tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
 ):
@@ -1172,36 +1187,122 @@ def test_buildcache_create_view_overwrite(
     # Push all of the mpileaks packages to the cache
     mpileaks_specs = mutable_database.query_local("mpileaks")
     for s in mpileaks_specs:
-        buildcache("push", "--update-index", "my-mirror", s.format("{/hash}"))
+        buildcache("push", "my-mirror", s.format("{/hash}"))
 
     # Grab all of the hashes for each mpileaks spec
-    mpileaks_0_hashes = [s.dag_hash() for s in mpileaks_specs[0].traverse()]
-    mpileaks_1_hashes = [s.dag_hash() for s in mpileaks_specs[1].traverse()]
+    mpileaks_0_hashes = set([s.dag_hash() for s in mpileaks_specs[0].traverse()])
+    mpileaks_1_hashes = set([s.dag_hash() for s in mpileaks_specs[1].traverse()])
 
     # Make sure the view doesn't exist yet
     with pytest.raises(spack.binary_distribution.FetchIndexError):
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Create a view using a parametrized source that contains one of the mpileaks
-    with source(mpileaks_specs[0], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[0]) as source_args:
         command_args = ["update-index", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
-    for h in mpileaks_0_hashes:
-        assert h in hashes_in_view
+    # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
+    assert not (hashes_in_view - mpileaks_0_hashes)
 
     # Override a view with force
-    with source(mpileaks_specs[1], tmp_path / "source_stage") as source_args:
+    with source(mpileaks_specs[1]) as source_args:
         command_args = ["update-index", "--force", "--name", "test_view", "my-mirror"]
         if source_args:
             command_args.extend(source_args)
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
-    for h in mpileaks_1_hashes:
-        assert h in hashes_in_view
-    for h in mpileaks_0_hashes:
-        assert h not in hashes_in_view or h in mpileaks_1_hashes
+    # Assert all of the hashes for mpileaks_1_hashes exist in the view, and no other hashes
+    assert not (hashes_in_view - mpileaks_1_hashes)
+
+
+def test_buildcache_create_view_non_active_env(
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path
+):
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    # Push all of the mpileaks packages to the cache
+    mpileaks_specs = mutable_database.query_local("mpileaks")
+    for s in mpileaks_specs:
+        buildcache("push", "my-mirror", s.format("{/hash}"))
+
+    # Grab all of the hashes for each mpileaks spec
+    mpileaks_0_hashes = set([s.dag_hash() for s in mpileaks_specs[0].traverse()])
+
+    # Make sure the view doesn't exist yet
+    with pytest.raises(spack.binary_distribution.FetchIndexError):
+        hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+
+    # Create a view from an environment name that is different from the current active environment
+    with spec_env_by_name(mpileaks_specs[0]) as source_args:
+        with spec_env(mpileaks_specs[1]) as _:
+            command_args = ["update-index", "--name", "test_view", "my-mirror"]
+            if source_args:
+                command_args.extend(source_args)
+            buildcache(*command_args)
+
+    hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+    # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
+    assert not (hashes_in_view - mpileaks_0_hashes)
+
+
+@pytest.mark.parametrize("view", (None, "test_view"))
+@pytest.mark.disable_clean_stage_check
+def test_buildcache_check_index_full(
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, view
+):
+    view_args = ["--name", view] if view is not None else []
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", *view_args, "my-mirror", mirror_directory)
+
+    # Push all of the mpileaks packages to the cache
+    mpileaks_specs = mutable_database.query_local("mpileaks")
+    for s in mpileaks_specs:
+        buildcache("push", "my-mirror", s.format("{/hash}"))
+
+    # Activate environment containing mpileaks[0]
+    with spec_env(mpileaks_specs[0]):
+        buildcache("update-index", "my-mirror")
+
+    out = buildcache("check-index", "--verify", "exists", "manifests", "blobs", "--", "my-mirror")
+    # Everything thing be good here
+    assert "Index exists in mirror: my-mirror"
+    assert "Missing specs: 0"
+    assert "Missing blobs: 0"
+    if view:
+        assert "Unindexed specs: n/a" in out
+    else:
+        assert "Unindexed specs: 0" in out
+
+    # Remove the index blob
+    # This creates index not for both view and non-view indices
+    # For non-view indices this is also a missing blob
+    index_name = "index.manifest.json"
+    if view:
+        index_name = os.path.join(view, index_name)
+    blob_path = tmp_path / "blobs" / "sha256"
+    with open(tmp_path / "v3" / "manifests" / "index" / index_name, "r", encoding="utf-8") as fd:
+        manifest = json.load(fd)
+        print(manifest)
+        digest = manifest["data"][0]["checksum"]
+        blob_path = blob_path / digest[:2] / digest
+
+    # Delete the index manifest
+    os.remove(blob_path)
+
+    out = buildcache("check-index", "--verify", "exists", "manifests", "blobs", "--", "my-mirror")
+    # Everything thing be good here
+    assert "Index does not exist in mirror: my-mirror"
+    assert "Missing specs: 0"
+    if view:
+        assert "Unindexed specs: n/a" in out
+        assert "Missing blobs: 0"
+    else:
+        assert "The index blob is missing" in out
+        assert "Unindexed specs: 15" in out
+        assert "Missing blobs: 1"
