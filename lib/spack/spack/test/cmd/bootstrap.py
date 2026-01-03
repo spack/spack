@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import json
 import os
 import pathlib
 
@@ -16,6 +17,7 @@ import spack.main
 import spack.spec
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
+_config = spack.main.SpackCommand("config")
 
 
 @pytest.mark.parametrize("scope", [None, "site", "system", "user"])
@@ -24,11 +26,25 @@ def test_enable_and_disable(mutable_config, scope):
     if scope:
         scope_args = ["--scope={0}".format(scope)]
 
-    _bootstrap("enable", *scope_args)
-    assert spack.config.get("bootstrap:enable", scope=scope) is True
+    sources = spack.config.get("bootstrap:sources", scope=scope)
 
-    _bootstrap("disable", *scope_args)
-    assert spack.config.get("bootstrap:enable", scope=scope) is False
+    if not sources:
+        pytest.skip(f"No boostrap sources for test scope {scope}")
+
+    # All should be trusted
+    out = _bootstrap("enable", *scope_args)
+    trusted = spack.config.get("bootstrap:trusted", scope=scope)
+    for source in sources:
+        assert f"\"{source['name']}\" is now enabled for bootstrapping" in out
+        assert trusted[source["name"]] is True
+
+    out = _bootstrap("disable", *scope_args)
+    trusted = spack.config.get("bootstrap:trusted", scope=scope)
+    for source in sources:
+        assert (
+            f"\"{source['name']}\" is now disabled and will not be used for bootstrapping" in out
+        )
+        assert trusted[source["name"]] is False
 
 
 @pytest.mark.parametrize("scope", [None, "site", "system", "user"])
@@ -47,7 +63,7 @@ def test_reset_in_file_scopes(mutable_config, scopes):
     # Assert files are created in the right scopes
     bootstrap_yaml_files = []
     for s in scopes:
-        _bootstrap("disable", "--scope={0}".format(s))
+        spack.config.add("bootstrap:trusted:_:False", scope=s)
         scope_path = spack.config.CONFIG.scopes[s].path
         bootstrap_yaml = os.path.join(scope_path, "bootstrap.yaml")
         assert os.path.exists(bootstrap_yaml)
@@ -64,8 +80,8 @@ def test_reset_in_environment(mutable_mock_env_path, mutable_config):
     current_environment = ev.read("bootstrap-test")
 
     with current_environment:
-        _bootstrap("disable")
-        assert spack.config.get("bootstrap:enable") is False
+        spack.config.add("bootstrap:trusted:_:False")
+        assert spack.config.get("bootstrap:trusted:_") is False
         _bootstrap("reset", "-y")
         # We have no default settings in tests
         assert spack.config.get("bootstrap:enable") is None
@@ -77,7 +93,7 @@ def test_reset_in_environment(mutable_mock_env_path, mutable_config):
 
 def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     # Create a bootstrap.yaml with some config
-    _bootstrap("disable", "--scope=site")
+    spack.config.add("bootstrap:trusted:_:False", scope="site")
     scope_path = spack.config.CONFIG.scopes["site"].path
     bootstrap_yaml = os.path.join(scope_path, "bootstrap.yaml")
     assert os.path.exists(bootstrap_yaml)
@@ -89,7 +105,7 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     assert os.path.exists(backup_file)
 
     # Iterate another time
-    _bootstrap("disable", "--scope=site")
+    spack.config.add("bootstrap:trusted:_:False", scope="site")
     assert os.path.exists(bootstrap_yaml)
     assert os.path.exists(backup_file)
     _bootstrap("reset", "-y")

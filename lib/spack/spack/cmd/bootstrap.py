@@ -4,6 +4,7 @@
 import argparse
 import os
 import pathlib
+import json
 import shutil
 import sys
 import tempfile
@@ -117,6 +118,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         type=arguments.config_scope_readable_validator,
         help="configuration scope to read/modify",
     )
+    list.add_argument(
+        "--format",
+        "-f",
+        choices=["default", "porcelain", "json", "text"],
+        default="default",
+        action="store",
+        help="output format of bootstrap sources",
+    )
 
     add = sp.add_parser("add", help="add a new source for bootstrapping")
     _add_scope_option(add)
@@ -143,20 +152,29 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def _enable_or_disable(args):
     value = args.subcommand == "enable"
-    if args.name is None:
-        # Set to True if we called "enable", otherwise set to false
-        old_value = spack.config.get("bootstrap:enable", scope=args.scope)
-        if old_value == value:
-            spack.llnl.util.tty.msg("Bootstrapping is already {}d".format(args.subcommand))
-        else:
-            spack.config.set("bootstrap:enable", value, scope=args.scope)
-            spack.llnl.util.tty.msg("Bootstrapping has been {}d".format(args.subcommand))
-        return
+    enable_or_disable_source = _disable_source
+    if value:
+        enable_or_disable_source = _enable_source
 
-    if value is True:
-        _enable_source(args)
+    if args.name is None:
+        # enable or disable all of the sources, but leave the bootstrap feature as is
+        sources = spack.bootstrap.core.bootstrapping_sources(scope=args.scope)
+        for source in sources:
+            setattr(args, "name", source["name"])
+            enable_or_disable_source(args)
     else:
-        _disable_source(args)
+        scope_value = spack.config.get("bootstrap:enable", scope=args.scope)
+        # Enabling any source in a scope also enables the scope itself as well
+        if value and not scope_value:
+            scope_message = ""
+            if args.scope:
+                scope_message = f"for scope args.scope"
+            spack.llnl.util.tty.msg(
+                "Bootstrapping has been {}d {}".format(args.subcommand, scope_message)
+            )
+            spack.config.set("bootstrap:enable", value, scope=args.scope)
+
+        enable_or_disable_source(args)
 
 
 def _reset(args):
@@ -211,7 +229,7 @@ def _list(args):
         spack.llnl.util.tty.msg("No method available for bootstrapping Spack's dependencies")
         return
 
-    def _print_method(source, trusted):
+    def _print_detailed(source, trusted):
         color = spack.llnl.util.tty.color
 
         def fmt(header, content):
@@ -242,6 +260,27 @@ def _list(args):
 
             fmt("  Description", "".join(description_lines))
 
+    def _print_porcelain(source, trusted):
+        bootstrap_name = source["name"]
+        bootstrap_trusted = "enabled" if trusted else "disabled"
+        bootstrap_type = source["type"]
+        bootstrap_info = source.get("info", {})
+
+        print(f"source {bootstrap_name} {bootstrap_type} {bootstrap_trusted}")
+        for key, value in bootstrap_info.items():
+            print(f"{key} {value}")
+
+    def _print_json(source, trusted):
+        bootstrap_source = {**source, "trusted": trusted}
+        return json.dumps(bootstrap_source) + ","
+
+    _print_methods = {
+        "porcelain": _print_porcelain,
+        "default": _print_detailed,
+        "text": _print_detailed,
+        "json": _print_json,
+    }
+
     trusted = spack.config.get("bootstrap:trusted", {})
 
     def sort_fn(x):
@@ -252,9 +291,21 @@ def _list(args):
             return 1
         return 2
 
+    _print_method = _print_methods.get(args.format)
+
     sources = sorted(sources, key=sort_fn)
+    output_buffer = ""
+    if args.format == "json":
+        output_buffer = "["
     for s in sources:
-        _print_method(s, trusted.get(s["name"], None))
+        out = _print_method(s, trusted.get(s["name"], None))
+        if out:
+            output_buffer += out
+
+    if args.format == "json":
+        output_buffer = output_buffer[:-1] + "]"
+    if output_buffer:
+        sys.stdout.write(output_buffer)
 
 
 def _write_bootstrapping_source_status(name, enabled, scope=None):
