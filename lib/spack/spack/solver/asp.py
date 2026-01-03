@@ -2965,7 +2965,7 @@ class SpackSolverSetup:
             deprecated = self.deprecated_versions.get(spec.name, set())
             sat_deprecated = [v for v in deprecated if deprecated and v.satisfies(spec.versions)]
 
-            possible = self.possible_versions.get(spec.name, set())
+            possible: Iterable = self.possible_versions.get(spec.name, set())
             sat_possible = [v for v in possible if possible and v.satisfies(spec.versions)]
 
             if sat_deprecated and not sat_possible:
