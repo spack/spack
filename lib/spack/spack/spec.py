@@ -1533,7 +1533,7 @@ class Spec:
 
         # init an empty spec that matches anything.
         self.name: str = ""
-        self.versions = vn.VersionList(":")
+        self.versions = vn.VersionList.any()
         self.variants = VariantMap(self)
         self.architecture = None
         self.compiler_flags = FlagMap(self)
