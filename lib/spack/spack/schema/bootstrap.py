@@ -49,6 +49,16 @@ properties: Dict[str, Any] = {
                 "description": "Controls which sources are enabled for automatic bootstrapping",
             },
         },
+        "deprecatedProperties": [
+            {
+                "names": ["enable"],
+                "message": "The bootstrap:enable flag has been deprecated in "
+                "Spack v1.2, and is currently ignored. Bootstrap sources may be "
+                "enabled or disable on a per-source basis. The enable flag will "
+                "be removed from config in Spack v1.3.",
+                "error": False,
+            }
+        ],
     }
 }
 
@@ -60,3 +70,22 @@ schema = {
     "additionalProperties": False,
     "properties": properties,
 }
+
+
+def update(data: dict) -> bool:
+    """Update the data in place to remove deprecated properties.
+
+    Args:
+        data: dictionary to be updated
+
+    Returns: True if data was changed, False otherwise
+    """
+    changed = False
+    data = data["bootstrap"]
+    # Translate the enabled state to a per-source state
+    enabled = data.get("enabled", None)
+    if enabled is not None:
+        for source in data.get("trusted", {}):
+            data["trusted"][source] &= enabled
+        changed = True
+    return changed

@@ -49,11 +49,6 @@ def root_path() -> str:
 
 def store_path() -> str:
     """Path to the store used for bootstrapped software"""
-    enabled = spack.config.get("bootstrap:enable", True)
-    if not enabled:
-        msg = 'bootstrapping is currently disabled. Use "spack bootstrap enable" to enable it'
-        raise RuntimeError(msg)
-
     return _store_path()
 
 

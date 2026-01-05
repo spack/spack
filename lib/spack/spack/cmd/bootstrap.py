@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
+import json
 import os
 import pathlib
-import json
 import shutil
 import sys
 import tempfile
@@ -163,15 +163,10 @@ def _enable_or_disable(args):
             setattr(args, "name", source["name"])
             enable_or_disable_source(args)
     else:
+        # TODO: Remove this once the bootstrap enable flag is dropped
         scope_value = spack.config.get("bootstrap:enable", scope=args.scope)
         # Enabling any source in a scope also enables the scope itself as well
-        if value and not scope_value:
-            scope_message = ""
-            if args.scope:
-                scope_message = f"for scope args.scope"
-            spack.llnl.util.tty.msg(
-                "Bootstrapping has been {}d {}".format(args.subcommand, scope_message)
-            )
+        if value and not scope_value and scope_value is not None:
             spack.config.set("bootstrap:enable", value, scope=args.scope)
 
         enable_or_disable_source(args)
@@ -342,12 +337,18 @@ def _write_bootstrapping_source_status(name, enabled, scope=None):
 
 
 def _enable_source(args):
+    current_value = spack.config.get("bootstrap:trusted:{0}".format(args.name), scope=args.scope)
+    if current_value:
+        return
     _write_bootstrapping_source_status(args.name, enabled=True, scope=args.scope)
     msg = '"{0}" is now enabled for bootstrapping'
     spack.llnl.util.tty.msg(msg.format(args.name))
 
 
 def _disable_source(args):
+    current_value = spack.config.get("bootstrap:trusted:{0}".format(args.name), scope=args.scope)
+    if current_value is not None and not current_value:
+        return
     _write_bootstrapping_source_status(args.name, enabled=False, scope=args.scope)
     msg = '"{0}" is now disabled and will not be used for bootstrapping'
     spack.llnl.util.tty.msg(msg.format(args.name))

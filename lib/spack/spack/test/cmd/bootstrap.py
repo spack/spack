@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import json
 import os
 import pathlib
 
@@ -28,23 +27,27 @@ def test_enable_and_disable(mutable_config, scope):
 
     sources = spack.config.get("bootstrap:sources", scope=scope)
 
-    if not sources:
-        pytest.skip(f"No boostrap sources for test scope {scope}")
-
     # All should be trusted
     out = _bootstrap("enable", *scope_args)
     trusted = spack.config.get("bootstrap:trusted", scope=scope)
-    for source in sources:
-        assert f"\"{source['name']}\" is now enabled for bootstrapping" in out
-        assert trusted[source["name"]] is True
+    if sources:
+        for source in sources:
+            assert f"\"{source['name']}\" is now enabled for bootstrapping" in out
+            assert trusted[source["name"]] is True
+    else:
+        assert trusted is None
 
     out = _bootstrap("disable", *scope_args)
     trusted = spack.config.get("bootstrap:trusted", scope=scope)
-    for source in sources:
-        assert (
-            f"\"{source['name']}\" is now disabled and will not be used for bootstrapping" in out
-        )
-        assert trusted[source["name"]] is False
+    if sources:
+        for source in sources:
+            assert (
+                f"\"{source['name']}\" is now disabled and will not be used for bootstrapping"
+                in out
+            )
+            assert trusted[source["name"]] is False
+    else:
+        assert trusted is None
 
 
 @pytest.mark.parametrize("scope", [None, "site", "system", "user"])
