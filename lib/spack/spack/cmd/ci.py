@@ -847,8 +847,8 @@ def ci_verify_versions(args):
             continue
 
         # Store versions checksums / commits for future loop
-        url_version_to_checksum: Dict[str, StandardVersion] = {}
-        git_version_to_checksum: Dict[str, StandardVersion] = {}
+        url_version_to_checksum: Dict[StandardVersion, str] = {}
+        git_version_to_checksum: Dict[StandardVersion, str] = {}
         for version in pkg.versions:
             # If the package version defines a sha256 we'll use that as the high entropy
             # string to detect which versions have been added between from_ref and to_ref
