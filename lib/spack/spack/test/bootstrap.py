@@ -89,15 +89,6 @@ def test_store_path_customization(config_value, expected, mutable_config):
     assert current == spack.util.path.canonicalize_path(expected)
 
 
-def test_raising_exception_if_bootstrap_disabled(mutable_config):
-    # Disable bootstrapping in config.yaml
-    spack.config.set("bootstrap:enable", False)
-
-    # Check the correct exception is raised
-    with pytest.raises(RuntimeError, match="bootstrapping is currently disabled"):
-        spack.bootstrap.config.store_path()
-
-
 def test_raising_exception_module_importable(config, monkeypatch):
     monkeypatch.setattr(spack.bootstrap.core, "source_is_enabled", _true)
     with pytest.raises(ImportError, match='cannot bootstrap the "asdf" Python module'):

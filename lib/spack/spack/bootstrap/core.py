@@ -334,7 +334,7 @@ def create_bootstrapper(conf: ConfigDictionary):
 
 def source_is_enabled(conf: ConfigDictionary) -> bool:
     """Returns true if the source is not enabled for bootstrapping"""
-    return spack.config.get("bootstrap:trusted").get(conf["name"], False)
+    return spack.config.get("bootstrap:trusted", {}).get(conf["name"], False)
 
 
 def ensure_module_importable_or_raise(module: str, abstract_spec: Optional[str] = None):
