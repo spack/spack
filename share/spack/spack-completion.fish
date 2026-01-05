@@ -883,7 +883,7 @@ complete -c spack -n '__fish_spack_using_command buildcache update-index' -l nam
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -l append -s a -f -a append
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarentee atomic write and should be run with care.'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -f -a force
-complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -d 'If an view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s y -l yes-to-all -f -a yes_to_all
@@ -899,7 +899,7 @@ complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l na
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l append -s a -f -a append
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarentee atomic write and should be run with care.'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -f -a force
-complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -d 'If an view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s y -l yes-to-all -f -a yes_to_all

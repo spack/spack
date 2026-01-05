@@ -338,7 +338,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--force",
         "-f",
         action="store_true",
-        help="If an view index already exists, overwrite it and "
+        help="If a view index already exists, overwrite it and "
         "suppress warnings (this is the default for non-view indices)",
     )
     update_index.add_argument(

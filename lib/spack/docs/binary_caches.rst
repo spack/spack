@@ -157,13 +157,14 @@ To better address the issues with large search areas, build cache index views (o
 A view is a named index which provides a curated view into a larger build cache.
 This allows build cache maintainers to provide the same granularity of build caches split by stacks without having to pay for the extra storage and compute required for the duplicated dependencies.
 
-Views can be created or updated using an active environment, environment lockfile(s), specfile(s), or by specifying one or more spec hashes indexed in the local database.
+Views can be created or updated using an active environment, or a list of environment names or paths.
+The ``spack buildcache`` commands for views are alias of the command ``spack buildcache update-index``.
 
 View indices are stored similarly to the top level build cache index, but use an additional prefix of the view name ``<build cache prefix>/v3/manifests/index/my-stack/index.manifest.json``.
 
 .. _cmd-spack-buildcache-create-view:
 
-``spack buildcache create-view``
+Creating a Build Cache Index View
 """"""""""""""""""""""""""""""""
 
 Here is an example of creating a view using an active environent.
@@ -173,28 +174,29 @@ Here is an example of creating a view using an active environent.
    $ spack env activate my-stack
    $ spack install
    $ spack buildcache push my-mirror
-   $ spack buildcache create-view --name my-view my-mirror
+   $ spack buildcache update-index --name my-view my-mirror
 
 It is also possible to create a view from a list of one or more environments by passing the environment names or paths.
+If a list of environments is passed while inside of an active environment, the active environment is ignored and only the passed environments are considered.
 
 .. code-block:: console
 
-   $ spack buildcache create-view --name my-view my-mirror my-stack # other environments...
+   $ spack buildcache update-index --name my-view my-mirror my-stack /path/to/environment/my-other-stack
 
 .. _cmd-spack-buildcache-update-view:
 
-``spack buildcache update-view``
+Updating a Build Cache Index View
 """"""""""""""""""""""""""""""""
 
 To prevent accidently overwriting an existing view, it is required to specify how a view should be updated.
-The two options for handling updates are ``--force`` and ``--append``.
-Using the force option will replace the index as if the previous one did not exist.
-The append option will first read the existing index, and then add the new specs to it.
+It is possible to use one of two options for updating a view index: ``--force`` or ``--append``.
+Using the ``--force`` option will replace the index as if the previous one did not exist.
+The ``--append`` option will first read the existing index, and then add the new specs to it.
 
 .. code-block:: console
 
    $ spack buildcache push my-mirror
-   $ spack buildcache update-view --append --name my-view my-mirror my-stack
+   $ spack buildcache update-index --append --name my-view my-mirror my-stack
 
 
 .. warning::
