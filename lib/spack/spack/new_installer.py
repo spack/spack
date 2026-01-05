@@ -421,7 +421,6 @@ def _install(
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
-    spack.build_environment.setup_package(pkg, dirty=dirty)
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
@@ -433,6 +432,7 @@ def _install(
             send_state("no binary available", state_stream)
             raise spack.error.InstallError(f"No binary available for {spec}")
 
+    spack.build_environment.setup_package(pkg, dirty=dirty)
     store.layout.create_install_directory(spec)
 
     stage = pkg.stage
