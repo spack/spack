@@ -2334,6 +2334,9 @@ class MockHTTPResponse(io.IOBase):
         body = io.BytesIO(json.dumps(body).encode("utf-8"))
         return cls(status, reason, headers, body)
 
+    def readable(self):
+        return True
+
     def read(self, *args, **kwargs):
         return self._body.read(*args, **kwargs)
 

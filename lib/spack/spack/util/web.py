@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import codecs
 import email.message
 import errno
+import io
 import json
 import os
 import re
@@ -427,7 +427,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
         try:
             _, _, response = read_from_url(url)
 
-            output = codecs.getreader("utf-8")(response).read()
+            output = io.TextIOWrapper(response, encoding="utf-8").read()
             if output:
                 with working_dir(dest_dir, create=True):
                     with open(filename, "w", encoding="utf-8") as f:
@@ -745,7 +745,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
         if not response_url or not response:
             return pages, links, subcalls, _visited
 
-        page = codecs.getreader("utf-8")(response).read()
+        page = io.TextIOWrapper(response, encoding="utf-8").read()
         pages[response_url] = page
 
         # Parse out the include-fragments in the page
@@ -772,7 +772,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             if not fragment_response_url or not fragment_response:
                 continue
 
-            fragment = codecs.getreader("utf-8")(fragment_response).read()
+            fragment = io.TextIOWrapper(fragment_response, encoding="utf-8").read()
             fragments.add(fragment)
 
             pages[fragment_response_url] = fragment
