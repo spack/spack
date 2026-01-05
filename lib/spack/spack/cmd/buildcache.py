@@ -324,14 +324,17 @@ def setup_parser(subparser: argparse.ArgumentParser):
     update_index_view_args.add_argument(
         "--name", "-n", action="store", help="Name of the view index to update"
     )
-    update_index_view_args.add_argument(
+    update_index_view_mode_args = update_index_view_args.add_mutually_exclusive_group(
+        required=False
+    )
+    update_index_view_mode_args.add_argument(
         "--append",
         "-a",
         action="store_true",
         help="Append the listed specs to the current view index if it already exists. "
         "This operation does not guarentee atomic write and should be run with care.",
     )
-    update_index_view_args.add_argument(
+    update_index_view_mode_args.add_argument(
         "--force",
         "-f",
         action="store_true",
