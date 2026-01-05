@@ -2199,7 +2199,7 @@ def test_ci_verify_versions_valid(
         assert "Validated diff-test@2.1.6" in out
 
 
-def test_ci_verify_versions_standard_invalid(
+def test_ci_verify_versions_invalid(
     monkeypatch,
     mock_packages,
     mock_git_package_changes,
@@ -2220,7 +2220,6 @@ def test_ci_verify_versions_standard_duplicates(
     mock_packages,
     mock_git_package_changes,
     verify_standard_versions_invalid_duplicates,
-    verify_git_versions_invalid,
 ):
     repo, _, commits = mock_git_package_changes
     with spack.repo.use_repositories(repo):
