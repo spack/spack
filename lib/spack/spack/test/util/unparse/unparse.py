@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Python-2.0
 
 import ast
-import codecs
 import os
 import sys
 import tokenize
@@ -20,7 +19,7 @@ def read_pyfile(filename):
     string), taking into account the file encoding."""
     with open(filename, "rb") as pyfile:
         encoding = tokenize.detect_encoding(pyfile.readline)[0]
-    with codecs.open(filename, "r", encoding=encoding) as pyfile:
+    with open(filename, "r", encoding=encoding) as pyfile:
         source = pyfile.read()
     return source
 
