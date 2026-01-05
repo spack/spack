@@ -31,9 +31,25 @@ class QueryInfo(TypedDict, total=False):
     command: spack.util.executable.Executable
 
 
-def _python_import(module: str) -> bool:
+def _python_import(module: str, pep420: bool = False) -> bool:
+    """Check if a python module can be imported
+
+    Args:
+        module: name of the module to import
+        pep420: Flag to check if the imported module is allowed to be an
+                implicit namespace package.
+
+    Throws:
+        ImportError
+    """
     try:
-        importlib.import_module(module)
+        m = importlib.import_module(module)
+        if not pep420 and m.__file__ is None:
+            # If this module is not supposed to be an implicit namespace module,
+            # then no __file__ is an error.
+            # This can happen if a module was pip uninstalled but __pycache__ files
+            # where left behind. https://github.com/pypa/pip/issues/11835
+            raise ImportError
     except ImportError:
         return False
     return True
