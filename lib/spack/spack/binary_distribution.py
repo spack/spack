@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import codecs
 import collections
 import concurrent.futures
 import contextlib
@@ -2522,7 +2521,7 @@ class IndexFetcher:
         """Read the response of the manifest request and return a BlobRecord"""
         cache_class = get_url_buildcache_class(CURRENT_BUILD_CACHE_LAYOUT_VERSION)
         try:
-            result = codecs.getreader("utf-8")(manifest_response).read()
+            result = io.TextIOWrapper(manifest_response, encoding="utf-8").read()
         except (ValueError, OSError) as e:
             raise FetchIndexError(f"Remote index {manifest_response.url} is invalid", e) from e
 
@@ -2600,7 +2599,7 @@ class DefaultIndexFetcherV2(IndexFetcher):
             raise FetchIndexError(f"Could not fetch index from {url_index}", e) from e
 
         try:
-            result = codecs.getreader("utf-8")(response).read()
+            result = io.TextIOWrapper(response, encoding="utf-8").read()
         except (ValueError, OSError) as e:
             raise FetchIndexError(f"Remote index {url_index} is invalid") from e
 
@@ -2652,7 +2651,7 @@ class EtagIndexFetcherV2(IndexFetcher):
             raise FetchIndexError(f"Could not fetch index {url}", e) from e
 
         try:
-            result = codecs.getreader("utf-8")(response).read()
+            result = io.TextIOWrapper(response, encoding="utf-8").read()
         except (ValueError, OSError) as e:
             raise FetchIndexError(f"Remote index {url} is invalid", e) from e
 
@@ -2710,7 +2709,7 @@ class OCIIndexFetcher(IndexFetcher):
                     headers={"Accept": "application/vnd.oci.image.layer.v1.tar+gzip"},
                 )
             )
-            result = codecs.getreader("utf-8")(response).read()
+            result = io.TextIOWrapper(response, encoding="utf-8").read()
         except (OSError, ValueError) as e:
             raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
 

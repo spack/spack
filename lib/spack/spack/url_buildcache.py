@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import codecs
 import enum
 import fnmatch
 import gzip
@@ -470,7 +469,7 @@ class URLBuildcacheEntry:
 
         try:
             _, _, manifest_file = web_util.read_from_url(manifest_url)
-            manifest_contents = codecs.getreader("utf-8")(manifest_file).read()
+            manifest_contents = io.TextIOWrapper(manifest_file, encoding="utf-8").read()
         except (web_util.SpackWebError, OSError) as e:
             raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
 
