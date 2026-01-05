@@ -862,12 +862,14 @@ complete -c spack -n '__fish_spack_using_command buildcache sync' -l manifest-gl
 complete -c spack -n '__fish_spack_using_command buildcache sync' -l manifest-glob -r -d 'a quoted glob pattern identifying CI rebuild manifest files'
 
 # spack buildcache check-index
-set -g __fish_spack_optspecs_spack_buildcache_check_index h/help verify= o/output=
+set -g __fish_spack_optspecs_spack_buildcache_check_index h/help verify= n/name= o/output=
 
 complete -c spack -n '__fish_spack_using_command buildcache check-index' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache check-index' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache check-index' -l verify -r -f -a 'exists manifests blobs all'
 complete -c spack -n '__fish_spack_using_command buildcache check-index' -l verify -r -d 'List of items to verify along along with the index.'
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l name -s n -r -f -a name
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l name -s n -r -d 'Name of the view index to check'
 complete -c spack -n '__fish_spack_using_command buildcache check-index' -l output -s o -r -f -a output
 complete -c spack -n '__fish_spack_using_command buildcache check-index' -l output -s o -r -d 'File to write check details to'
 
@@ -2396,7 +2398,7 @@ complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -
 complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -r -d 'find mirror to destroy by url'
 
 # spack mirror add
-set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
+set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed n/name= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror add' -f
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -d 'show this help message and exit'
@@ -2410,6 +2412,8 @@ complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -f -a s
 complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -d 'do not require signing and signature verification when pushing and installing from this build cache'
 complete -c spack -n '__fish_spack_using_command mirror add' -l signed -f -a signed
 complete -c spack -n '__fish_spack_using_command mirror add' -l signed -d 'require signing and signature verification when pushing and installing from this build cache'
+complete -c spack -n '__fish_spack_using_command mirror add' -l name -s n -r -f -a view_name
+complete -c spack -n '__fish_spack_using_command mirror add' -l name -s n -r -d 'Name of the index view for a binary mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id -r -f -a s3_access_key_id
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id -r -d 'ID string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id-variable -r -f -a s3_access_key_id_variable
