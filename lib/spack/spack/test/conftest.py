@@ -272,9 +272,11 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 
     The structure of commits in this repo is as follows::
 
-       o diff-test: add v1.2 (from a git ref)
+       o diff-test: add v2.1.7 and v2.1.8 (invalid duplicated checksum)
        |
-       o diff-test: add v1.1 (from source tarball)
+       o diff-test: add v2.1.6 (from a git ref)
+       |
+       o diff-test: add v2.1.5 (from source tarball)
        |
        o diff-test: new package (testing multiple added versions)
 
@@ -317,22 +319,28 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 
         os.makedirs(os.path.dirname(filename))
 
-        # add pkg-a as a new package to the repository
+        # add diff-test as a new package to the repository
         shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-0.txt", filename)
         git("add", filename)
         commit("diff-test: new package")
         commits.append(latest_commit())
 
-        # add v2.1.5 to pkg-a
+        # add v2.1.5 to diff-test
         shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-1.txt", filename)
         git("add", filename)
         commit("diff-test: add v2.1.5")
         commits.append(latest_commit())
 
-        # add v2.1.6 to pkg-a
+        # add v2.1.6 to diff-test
         shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-2.txt", filename)
         git("add", filename)
         commit("diff-test: add v2.1.6")
+        commits.append(latest_commit())
+
+        # add v2.1.7 and v2.1.8 to diff-test
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-3.txt", filename)
+        git("add", filename)
+        commit("diff-test: add v2.1.7 and v2.1.8")
         commits.append(latest_commit())
 
         # The commits are ordered with the last commit first in the list
