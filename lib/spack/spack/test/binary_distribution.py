@@ -317,7 +317,7 @@ def test_use_bin_index_active_env_with_view(
     with ev.read("testenv"):
         install_cmd("--add", "--fake", "--no-cache", s.name)
         buildcache_cmd("push", "-u", "test", s.name)
-        buildcache_cmd("update-index", "test", "testenv")
+        buildcache_cmd("update-index", "test")
 
     # Now the test
     buildcache_cmd("list", "-al")

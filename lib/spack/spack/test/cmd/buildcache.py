@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import contextlib
 import errno
 import json
 import os
@@ -28,6 +27,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import copy_tree, find, getuid
+from spack.llnl.util.lang import nullcontext
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
@@ -977,44 +977,37 @@ def test_buildcache_prune_new_specs_race_condition(
     assert web_util.url_exists(manifest_url)
 
 
-def spec_env_name(spec: spack.spec.Spec) -> str:
-    return f"specenv-{spec.dag_hash()}"
-
-
-@contextlib.contextmanager
-def spec_env(spec: spack.spec.Spec):
+def create_env_from_concrete_spec(spec: spack.spec.Spec):
     """Build cache index view source is current active environment"""
     # Create a unique environment for this spec only
-    env_name = spec_env_name(spec)
+    env_name = f"specenv-{spec.dag_hash()}"
     if not ev.exists(env_name):
         env("create", "--without-view", env_name)
 
-    with ev.environment_from_name_or_dir(env_name):
+    e = ev.environment_from_name_or_dir(env_name)
+    with e:
         add(f"{spec.name}/{spec.dag_hash()}")
         # This should handle updating the environment to mark all packges as installed
         install()
-        # Empty list since we want to use the active environment
-        yield []
+    return e
 
 
-@contextlib.contextmanager
-def spec_env_path(spec: spack.spec.Spec):
+def args_for_active_env(spec: spack.spec.Spec):
+    """Build cache index view source is an active environment"""
+    env = create_env_from_concrete_spec(spec)
+    return [env, []]
+
+
+def args_for_env_by_path(spec: spack.spec.Spec):
     """Build cache index view source is an environment path"""
-    # Create the environment, reuse they logic from spec_env
-    env_name = spec_env_name(spec)
-    with spec_env(spec):
-        pass
-    yield [ev.environment_dir_from_name(env_name, exists_ok=True)]
+    env = create_env_from_concrete_spec(spec)
+    return [nullcontext(), [env.path]]
 
 
-@contextlib.contextmanager
-def spec_env_by_name(spec: spack.spec.Spec):
-    """Build cache index view source is an managed environment name"""
-    # Create the environment, reuse they logic from spec_env
-    env_name = spec_env_name(spec)
-    with spec_env(spec):
-        pass
-    yield [env_name]
+def args_for_env_by_name(spec: spack.spec.Spec):
+    """Build cache index view source is a managed environment name"""
+    env = create_env_from_concrete_spec(spec)
+    return [nullcontext(), [env.name]]
 
 
 def read_specs_in_index(mirror_directory, view):
@@ -1086,9 +1079,11 @@ def test_buildcache_create_view_empty(
     assert not hashes_in_view
 
 
-@pytest.mark.parametrize("source", (spec_env, spec_env_path, spec_env_by_name))
+@pytest.mark.parametrize(
+    "source_args", (args_for_active_env, args_for_env_by_path, args_for_env_by_name)
+)
 def test_buildcache_create_view(
-    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source_args
 ):
     mirror_directory = str(tmp_path)
     mirror("add", "--unsigned", "my-mirror", mirror_directory)
@@ -1106,15 +1101,14 @@ def test_buildcache_create_view(
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Create a view using a parametrized source that contains one of the mpileaks
-    with source(mpileaks_specs[0]) as source_args:
-        command_args = ["update-index", "--name", "test_view", "my-mirror"]
-        if source_args:
-            command_args.extend(source_args)
+    context, extra_args = source_args(mpileaks_specs[0])
+    with context:
+        command_args = ["update-index", "--name", "test_view", "my-mirror"] + extra_args
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
     # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
-    assert not (hashes_in_view - mpileaks_0_hashes)
+    assert hashes_in_view == mpileaks_0_hashes
 
     # Test fail to overwrite without force
     expect = "Index already exists. To overwrite or update pass --force or --append respectively"
@@ -1130,12 +1124,14 @@ def test_buildcache_create_view(
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
     # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
-    assert not (hashes_in_view - mpileaks_0_hashes)
+    assert hashes_in_view == mpileaks_0_hashes
 
 
-@pytest.mark.parametrize("source", (spec_env, spec_env_path, spec_env_by_name))
+@pytest.mark.parametrize(
+    "source_args", (args_for_active_env, args_for_env_by_path, args_for_env_by_name)
+)
 def test_buildcache_create_view_append(
-    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source_args
 ):
     mirror_directory = str(tmp_path)
     mirror("add", "--unsigned", "my-mirror", mirror_directory)
@@ -1154,32 +1150,46 @@ def test_buildcache_create_view_append(
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Test append to empty index view
-    with source(mpileaks_specs[0]) as source_args:
-        command_args = ["update-index", "-y", "--append", "--name", "test_view", "my-mirror"]
-        if source_args:
-            command_args.extend(source_args)
+    context, extra_args = source_args(mpileaks_specs[0])
+    with context:
+        command_args = [
+            "update-index",
+            "-y",
+            "--append",
+            "--name",
+            "test_view",
+            "my-mirror",
+        ] + extra_args
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
     # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
-    assert not (hashes_in_view - mpileaks_0_hashes)
+    assert hashes_in_view == mpileaks_0_hashes
 
     # Test append to existing index view
-    with source(mpileaks_specs[1]) as source_args:
-        command_args = ["update-index", "-y", "--append", "--name", "test_view", "my-mirror"]
-        if source_args:
-            command_args.extend(source_args)
+    context, extra_args = source_args(mpileaks_specs[1])
+    with context:
+        command_args = [
+            "update-index",
+            "-y",
+            "--append",
+            "--name",
+            "test_view",
+            "my-mirror",
+        ] + extra_args
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
     # Assert all of the hashes for mpileaks_0_hashes and mpileaks_1_hashes exist in the view,
     # and no other hashes
-    assert not (hashes_in_view - (mpileaks_0_hashes | mpileaks_1_hashes))
+    assert hashes_in_view == (mpileaks_0_hashes | mpileaks_1_hashes)
 
 
-@pytest.mark.parametrize("source", (spec_env, spec_env_path, spec_env_by_name))
+@pytest.mark.parametrize(
+    "source_args", (args_for_active_env, args_for_env_by_path, args_for_env_by_name)
+)
 def test_buildcache_create_view_overwrite(
-    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path, source_args
 ):
     mirror_directory = str(tmp_path)
     mirror("add", "--unsigned", "my-mirror", mirror_directory)
@@ -1198,26 +1208,24 @@ def test_buildcache_create_view_overwrite(
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Create a view using a parametrized source that contains one of the mpileaks
-    with source(mpileaks_specs[0]) as source_args:
-        command_args = ["update-index", "--name", "test_view", "my-mirror"]
-        if source_args:
-            command_args.extend(source_args)
+    context, extra_args = source_args(mpileaks_specs[0])
+    with context:
+        command_args = ["update-index", "--name", "test_view", "my-mirror"] + extra_args
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
     # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
-    assert not (hashes_in_view - mpileaks_0_hashes)
+    assert hashes_in_view == mpileaks_0_hashes
 
     # Override a view with force
-    with source(mpileaks_specs[1]) as source_args:
-        command_args = ["update-index", "--force", "--name", "test_view", "my-mirror"]
-        if source_args:
-            command_args.extend(source_args)
+    context, extra_args = source_args(mpileaks_specs[1])
+    with context:
+        command_args = ["update-index", "--force", "--name", "test_view", "my-mirror"] + extra_args
         buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
     # Assert all of the hashes for mpileaks_1_hashes exist in the view, and no other hashes
-    assert not (hashes_in_view - mpileaks_1_hashes)
+    assert hashes_in_view == mpileaks_1_hashes
 
 
 def test_buildcache_create_view_non_active_env(
@@ -1239,16 +1247,19 @@ def test_buildcache_create_view_non_active_env(
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
     # Create a view from an environment name that is different from the current active environment
-    with spec_env_by_name(mpileaks_specs[0]) as source_args:
-        with spec_env(mpileaks_specs[1]) as _:
-            command_args = ["update-index", "--name", "test_view", "my-mirror"]
-            if source_args:
-                command_args.extend(source_args)
-            buildcache(*command_args)
+    _, extra_args = args_for_env_by_name(
+        mpileaks_specs[0]
+    )  # Get args for env by name using mpileaks[0]
+    context, _ = args_for_active_env(
+        mpileaks_specs[1]
+    )  # Get the context for an active env using mpileaks[1]
+    with context:
+        command_args = ["update-index", "--name", "test_view", "my-mirror"] + extra_args
+        buildcache(*command_args)
 
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
     # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
-    assert not (hashes_in_view - mpileaks_0_hashes)
+    assert hashes_in_view == mpileaks_0_hashes
 
 
 @pytest.mark.parametrize("view", (None, "test_view"))
@@ -1265,9 +1276,10 @@ def test_buildcache_check_index_full(
     for s in mpileaks_specs:
         buildcache("push", "my-mirror", s.format("{/hash}"))
 
-    # Activate environment containing mpileaks[0]
-    with spec_env(mpileaks_specs[0]):
-        buildcache("update-index", "my-mirror")
+    # Update index using and active environment containing mpileaks[0]
+    context, extra_args = args_for_active_env(mpileaks_specs[0])
+    with context:
+        buildcache("update-index", "my-mirror", *extra_args)
 
     out = buildcache("check-index", "--verify", "exists", "manifests", "blobs", "--", "my-mirror")
     # Everything thing be good here
