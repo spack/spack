@@ -519,7 +519,7 @@ _spack_bootstrap_root() {
 }
 
 _spack_bootstrap_list() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --format -f"
 }
 
 _spack_bootstrap_add() {

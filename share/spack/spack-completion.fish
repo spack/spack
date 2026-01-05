@@ -630,11 +630,13 @@ complete -c spack -n '__fish_spack_using_command bootstrap root' -l scope -r -f 
 complete -c spack -n '__fish_spack_using_command bootstrap root' -l scope -r -d 'configuration scope to read/modify'
 
 # spack bootstrap list
-set -g __fish_spack_optspecs_spack_bootstrap_list h/help scope=
+set -g __fish_spack_optspecs_spack_bootstrap_list h/help scope= f/format=
 complete -c spack -n '__fish_spack_using_command bootstrap list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command bootstrap list' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command bootstrap list' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
 complete -c spack -n '__fish_spack_using_command bootstrap list' -l scope -r -d 'configuration scope to read/modify'
+complete -c spack -n '__fish_spack_using_command bootstrap list' -l format -s f -r -f -a 'default porcelain json text'
+complete -c spack -n '__fish_spack_using_command bootstrap list' -l format -s f -r -d 'output format of bootstrap sources'
 
 # spack bootstrap add
 set -g __fish_spack_optspecs_spack_bootstrap_add h/help scope= trust
