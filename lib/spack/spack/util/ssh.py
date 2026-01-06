@@ -9,6 +9,7 @@ import tempfile
 import urllib.parse
 import warnings
 from pathlib import Path
+from typing import Dict
 
 import spack.error
 from spack.llnl.util import tty
@@ -17,7 +18,7 @@ from spack.util.executable import which
 
 class SSHConnection(object):
     # used to cache connection objects and avoid checking SSH config multiple times
-    _connections: dict[str, "SSHConnection"] = {}
+    _connections: Dict[str, "SSHConnection"] = {}
 
     @classmethod
     def from_url(cls, url):
