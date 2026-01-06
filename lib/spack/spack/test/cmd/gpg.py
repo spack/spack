@@ -18,6 +18,7 @@ from spack.util.executable import ProcessError
 #: spack command used by tests below
 gpg = SpackCommand("gpg")
 bootstrap = SpackCommand("bootstrap")
+clean = SpackCommand("clean")
 mirror = SpackCommand("mirror")
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
@@ -55,6 +56,7 @@ def test_find_gpg(cmd_name, version, tmp_path: pathlib.Path, mock_gnupghome, mon
 def test_no_gpg_in_path(tmp_path: pathlib.Path, mock_gnupghome, monkeypatch, mutable_config):
     monkeypatch.setenv("PATH", str(tmp_path))
     bootstrap("disable")
+    clean("-b")
     with pytest.raises(RuntimeError):
         spack.util.gpg.init(force=True)
 
