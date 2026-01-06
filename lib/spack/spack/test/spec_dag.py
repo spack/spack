@@ -11,6 +11,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.installer
 import spack.repo
+import spack.solver.asp
 import spack.test.conftest
 import spack.util.hash as hashutil
 import spack.version
