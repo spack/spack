@@ -70,12 +70,7 @@ def post_install(spec, explicit=None):
         if not algo:
             return []
 
-        return [
-            {
-                "algorithm": "SHA256",
-                "checksumValue": algo,
-            }
-        ]
+        return [{"algorithm": "SHA256", "checksumValue": algo}]
 
     # Document information
     t = time.gmtime()
@@ -100,7 +95,7 @@ def post_install(spec, explicit=None):
         "filesAnalyzed": False,
         "licenseDeclared": get_license(pkg),
         "licenseConcluded": "NOASSERTION",
-        "checksum": get_checksums(spec)
+        "checksum": get_checksums(spec),
     }
 
     # Package entry for each dependency of a spec.
