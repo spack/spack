@@ -20,7 +20,7 @@ gitlab_url = "https://gitlab.fake.io/user/repo/-/blob/config/defaults"
     "path,err",
     [
         ("ssh://git@github.com:spack/", "Unsupported URL scheme"),
-        ("bad:///this/is/a/file/url/include.yaml", "Invalid URL scheme"),
+        ("bad:///this/is/a/file/url/include.yaml", "Unsupported URL scheme"),
     ],
 )
 def test_rfc_local_path_bad_scheme(path, err):
