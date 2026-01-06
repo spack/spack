@@ -39,7 +39,6 @@ def post_install(spec, explicit=None):
         return lic
 
     # Get the supplier
-    # Either explicitly labeled by the package creator, ..
     # TODO fill all the docs for the methods
     def get_supplier(pkg):
         supplier = getattr(pkg, "supplier", None)
@@ -64,6 +63,20 @@ def post_install(spec, explicit=None):
 
         return "NOASSERTION"
 
+    # Get the checksums from package version metadata
+    def get_checksums(spec):
+        vmeta = spec.package.versions.get(spec.version)
+        algo = vmeta["sha256"]
+        if not algo:
+            return []
+
+        return [
+            {
+                "algorithm": "SHA256",
+                "checksumValue": algo,
+            }
+        ]
+
     # Document information
     t = time.gmtime()
     created_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", t)
@@ -87,6 +100,7 @@ def post_install(spec, explicit=None):
         "filesAnalyzed": False,
         "licenseDeclared": get_license(pkg),
         "licenseConcluded": "NOASSERTION",
+        "checksum": get_checksums(spec)
     }
 
     # Package entry for each dependency of a spec.
@@ -116,6 +130,7 @@ def post_install(spec, explicit=None):
             "filesAnalyzed": False,
             "licenseDeclared": license_declared,
             "licenseConcluded": "NOASSERTION",
+            "checksum": get_checksums(spec),
         }
         deps.append(dep_entry)
 
