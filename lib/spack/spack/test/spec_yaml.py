@@ -26,7 +26,6 @@ import spack.hash_types as ht
 import spack.paths
 import spack.repo
 import spack.spec
-import spack.test.conftest
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec, save_dependency_specfiles

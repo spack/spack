@@ -38,7 +38,7 @@ import tempfile
 import time
 from collections import defaultdict
 from gzip import GzipFile
-from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from spack.vendor.typing_extensions import Literal
 
@@ -59,7 +59,6 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.report
 import spack.rewiring
-import spack.spec
 import spack.store
 import spack.util.path
 import spack.util.timer as timer
@@ -70,6 +69,9 @@ from spack.llnl.util.tty.log import log_output, preserve_terminal_settings
 from spack.url_buildcache import BuildcacheEntryError
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
+
+if TYPE_CHECKING:
+    import spack.spec
 
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they

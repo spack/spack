@@ -9,7 +9,6 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
-import spack.error
 import spack.llnl.util.lang
 import spack.package_base
 import spack.paths

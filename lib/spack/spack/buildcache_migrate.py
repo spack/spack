@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import codecs
+import io
 import json
 import os
 import pathlib
@@ -105,7 +105,7 @@ def _migrate_spec(
     for meta_url in v2_metadata_urls:
         try:
             _, _, meta_file = web_util.read_from_url(meta_url)
-            spec_contents = codecs.getreader("utf-8")(meta_file).read()
+            spec_contents = io.TextIOWrapper(meta_file, encoding="utf-8").read()
             v2_spec_url = meta_url
             break
         except (web_util.SpackWebError, OSError):
@@ -280,7 +280,7 @@ def migrate(
 
     try:
         _, _, index_file = web_util.read_from_url(index_url)
-        contents = codecs.getreader("utf-8")(index_file).read()
+        contents = io.TextIOWrapper(index_file, encoding="utf-8").read()
     except (web_util.SpackWebError, OSError):
         raise MigrationException("Buildcache migration requires a buildcache index")
 

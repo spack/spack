@@ -216,7 +216,7 @@ class Tee:
 
 
 def install_from_buildcache(
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     spec: spack.spec.Spec,
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
@@ -327,7 +327,7 @@ class PrefixPivoter:
 def worker_function(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -415,7 +415,7 @@ def worker_function(
 def _install(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -430,7 +430,6 @@ def _install(
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
-    spack.build_environment.setup_package(pkg, dirty=dirty)
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
@@ -442,6 +441,7 @@ def _install(
             send_state("no binary available", state_stream)
             raise spack.error.InstallError(f"No binary available for {spec}")
 
+    spack.build_environment.setup_package(pkg, dirty=dirty)
     store.layout.create_install_directory(spec)
 
     stage = pkg.stage
@@ -569,7 +569,7 @@ class JobServer:
 def start_build(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,

@@ -1533,7 +1533,7 @@ class Spec:
 
         # init an empty spec that matches anything.
         self.name: str = ""
-        self.versions = vn.VersionList(":")
+        self.versions = vn.VersionList.any()
         self.variants = VariantMap(self)
         self.architecture = None
         self.compiler_flags = FlagMap(self)
@@ -4972,6 +4972,12 @@ class Spec:
         state.pop("_package", None)
         # As with to_dict, do not include dependents. This avoids serializing more than intended.
         state.pop("_dependents", None)
+
+        # Do not pickle attributes dynamically set by SpecBuildInterface
+        state.pop("wrapped_obj", None)
+        state.pop("token", None)
+        state.pop("last_query", None)
+        state.pop("indirect_spec", None)
 
         # Optimize variants and compiler_flags serialization
         variants = state.pop("variants", None)

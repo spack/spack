@@ -513,13 +513,6 @@ class StandardVersion(ConcreteVersion):
         return self.up_to(3)
 
 
-_STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
-
-_STANDARD_VERSION_TYPEMAX = StandardVersion(
-    "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
-)
-
-
 class GitVersion(ConcreteVersion):
     """Class to represent versions interpreted from git refs.
 
@@ -781,6 +774,8 @@ class GitVersion(ConcreteVersion):
 
 
 class ClosedOpenRange(VersionType):
+    __slots__ = ("lo", "hi")
+
     def __init__(self, lo: StandardVersion, hi: StandardVersion):
         if hi < lo:
             raise EmptyRangeError(f"{lo}..{hi} is an empty range")
@@ -1074,6 +1069,13 @@ class VersionList(VersionType):
             return VersionList([Version(dictionary["version"])])
         raise ValueError("Dict must have 'version' or 'versions' in it.")
 
+    @classmethod
+    def any(cls) -> "VersionList":
+        """Return a VersionList that matches any version."""
+        version_list = cls.__new__(cls)
+        version_list.versions = [_UNBOUNDED_RANGE]
+        return version_list
+
     def update(self, other: "VersionList") -> None:
         self.add(other)
 
@@ -1332,3 +1334,14 @@ def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
         return from_string(str(obj))
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
+
+
+_STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
+
+_STANDARD_VERSION_TYPEMAX = StandardVersion(
+    "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
+)
+
+_UNBOUNDED_RANGE = ClosedOpenRange.from_version_range(
+    _STANDARD_VERSION_TYPEMIN, _STANDARD_VERSION_TYPEMAX
+)

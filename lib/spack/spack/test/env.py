@@ -140,7 +140,7 @@ def test_env_change_spec_in_matrix_raises_error(tmp_path: pathlib.Path, mutable_
     e.concretize()
     e.write()
 
-    with pytest.raises(spack.environment.SpackEnvironmentError) as error:
+    with pytest.raises(ev.SpackEnvironmentError) as error:
         e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"))
     assert "Cannot directly change specs in matrices" in str(error)
 
