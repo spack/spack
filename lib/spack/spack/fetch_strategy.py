@@ -961,8 +961,13 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
 
+        # TODO(psakievich) The use of the minimal clone need clearer justification via package API
+        # or something. There is a trade space of storage minimization vs available git information
+        # that grows to non-trivial proportions for larger projects
+        minimal_clone = self.commit and name and not self.get_full_repo
+
         with temp_cwd(ignore_cleanup_errors=True):
-            if self.commit and name:
+            if minimal_clone:
                 try:
                     spack.util.git.git_init_fetch(self.url, self.commit, depth, **kwargs)
                 except spack.util.executable.ProcessError:
@@ -1633,6 +1638,7 @@ def _for_package_version(pkg, version=None):
         kwargs["git"] = pkg.version_or_package_attr("git", version)
         kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
         kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)
+        kwargs["get_full_repo"] = pkg.version_or_package_attr("get_full_repo", version, False)
 
         # if the ref_version is a known version from the package, use that version's
         # attributes
