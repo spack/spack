@@ -619,7 +619,6 @@ class Result:
             # self.cores
             # self.possible_dependencies
         )
-        print(eq)
         return all(eq)
 
 
@@ -2949,6 +2948,16 @@ class SpackSolverSetup:
                 if spec.concrete:
                     self.register_concrete_spec(spec, possible)
 
+    def impossible_dependencies_check(self, specs) -> None:
+        for edge in traverse.traverse_edges(specs):
+            possible_deps = self.pkgs
+            if spack.repo.PATH.is_virtual(edge.spec.name):
+                possible_deps = self.possible_virtuals
+            if edge.spec.name not in possible_deps and not str(edge.when):
+                raise InvalidDependencyError(
+                    f"'{edge.spec.name}' is not a valid dependency of any root spec"
+                )
+
     def input_spec_version_check(self, specs, allow_deprecated: bool) -> None:
         """Raise an error early if no versions available in the solve can satisfy the inputs.
 
@@ -2961,6 +2970,8 @@ class SpackSolverSetup:
         for spec in traverse.traverse_nodes(specs):
             if spack.repo.PATH.is_virtual(spec.name):
                 continue
+            if spec.name not in self.pkgs:
+                continue  # conditional dependency that won't be satisfied
 
             deprecated = self.deprecated_versions.get(spec.name, set())
             sat_deprecated = [v for v in deprecated if deprecated and v.satisfies(spec.versions)]
@@ -3172,6 +3183,7 @@ class SpackSolverSetup:
 
         # once we've done a full traversal and know possible versions, check that the
         # requested solve is at least consistent.
+        self.impossible_dependencies_check(specs)
         self.input_spec_version_check(specs, allow_deprecated)
 
         return self.gen
@@ -4263,3 +4275,7 @@ class DeprecatedVersionError(spack.error.SpackError):
 
 class InvalidVersionError(spack.error.SpackError):
     """Raised when a version can't be satisfied by any possible versions."""
+
+
+class InvalidDependencyError(spack.error.SpackError):
+    """Raised when an explicit dependency is not a possible dependency."""
