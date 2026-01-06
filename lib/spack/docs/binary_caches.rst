@@ -165,7 +165,7 @@ View indices are stored similarly to the top level build cache index, but use an
 .. _cmd-spack-buildcache-create-view:
 
 Creating a Build Cache Index View
-""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""
 
 Here is an example of creating a view using an active environent.
 
@@ -186,7 +186,7 @@ If a list of environments is passed while inside of an active environment, the a
 .. _cmd-spack-buildcache-update-view:
 
 Updating a Build Cache Index View
-""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""
 
 To prevent accidently overwriting an existing view, it is required to specify how a view should be updated.
 It is possible to use one of two options for updating a view index: ``--force`` or ``--append``.
