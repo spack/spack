@@ -101,6 +101,19 @@ class DirectiveMeta(type):
         return DirectiveMeta._default_args.pop()
 
     @staticmethod
+    def _remove_directives(arg):
+        directives = DirectiveMeta._directives_to_be_executed
+        if isinstance(arg, (list, tuple)):
+            # Descend into args that are lists or tuples
+            for a in arg:
+                DirectiveMeta._remove_directives(a)
+        else:
+            # Remove directives args from the exec queue
+            remove = next((d for d in directives if d is arg), None)
+            if remove is not None:
+                directives.remove(remove)
+
+    @staticmethod
     def directive(dicts: Optional[Union[Sequence[str], str]] = None) -> Callable:
         """Decorator for Spack directives.
 
@@ -195,22 +208,10 @@ class DirectiveMeta(type):
                 # lazily. Instead, let the called directive handle them.
                 # This allows nested directive calls in packages.  The
                 # caller can return the directive if it should be queued.
-                def remove_directives(arg):
-                    directives = DirectiveMeta._directives_to_be_executed
-                    if isinstance(arg, (list, tuple)):
-                        # Descend into args that are lists or tuples
-                        for a in arg:
-                            remove_directives(a)
-                    else:
-                        # Remove directives args from the exec queue
-                        remove = next((d for d in directives if d is arg), None)
-                        if remove is not None:
-                            directives.remove(remove)
-
                 # Nasty, but it's the best way I can think of to avoid
                 # side effects if directive results are passed as args
-                remove_directives(args)
-                remove_directives(list(kwargs.values()))
+                DirectiveMeta._remove_directives(args)
+                DirectiveMeta._remove_directives(list(kwargs.values()))
 
                 # A directive returns either something that is callable on a
                 # package or a sequence of them
