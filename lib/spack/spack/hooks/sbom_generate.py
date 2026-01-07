@@ -65,12 +65,11 @@ def post_install(spec, explicit=None):
 
     # Get the checksums from package version metadata
     def get_checksums(spec):
-        vmeta = spec.package.versions.get(spec.version)
-        algo = vmeta["sha256"]
-        if not algo:
+        vmeta = spec.package.versions.get(spec.version) or {}
+        sha256 = vmeta.get("sha256")
+        if not sha256:
             return []
-
-        return [{"algorithm": "SHA256", "checksumValue": algo}]
+        return [{"algorithm": "SHA256", "checksumValue": sha256}]
 
     # Document information
     t = time.gmtime()
