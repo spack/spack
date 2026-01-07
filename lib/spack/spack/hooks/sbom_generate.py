@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Generate a Software Bill of Materials (SBOM) for each successful Spack installation."""
+"""Generate a Software Bill of Materials (SBOM) for each Spack installation."""
 
 import hashlib
 import os
@@ -39,7 +39,6 @@ def post_install(spec, explicit=None):
         return lic
 
     # Get the supplier
-    # TODO fill all the docs for the methods
     def get_supplier(pkg):
         supplier = getattr(pkg, "supplier", None)
         if supplier:
@@ -150,7 +149,6 @@ def post_install(spec, explicit=None):
         "packages": [pkg_entry] + deps,
         "relationships": relationships,
     }
-    print("sbom:", sbom)
 
     # Write to SBOM file
     with open(sbom_path, "w", encoding="utf-8") as f:
