@@ -1507,7 +1507,7 @@ class Environment:
                 if not dep.satisfies(validator or selector):
                     if not msg:
                         msg = f"spec {dep} satisfies selector {selector}"
-                        msg += " but not validator {validator}"
+                        msg += f" but not validator {validator}"
                     raise SpackEnvironmentDevelopError(msg)
                 modify_specs.append(dep)
 
