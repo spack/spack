@@ -214,6 +214,7 @@ def color_when(value):
 
 _ConvertibleToStr = Union[str, int, bool, None]
 
+
 def _escape(s: _ConvertibleToStr, color: bool, enclose: bool, zsh: bool) -> str:
     """Returns a TTY escape sequence for a color"""
     if not color:
@@ -317,12 +318,12 @@ def cmapping(string: str) -> ColorMapping:
 
 
 def cwrap(
-    string: str, *args, initial_indent: str = "", subsequent_indent: str = "", **kwargs
+    string: str, *, initial_indent: str = "", subsequent_indent: str = "", **kwargs
 ) -> List[str]:
     """Wrapper around ``textwrap.wrap()`` that handles ANSI color codes."""
     plain = csub(string)
     lines = textwrap.wrap(
-        plain, *args, initial_indent=initial_indent, subsequent_indent=subsequent_indent, **kwargs
+        plain, initial_indent=initial_indent, subsequent_indent=subsequent_indent, **kwargs
     )
 
     # do nothing if string has no ANSI codes
@@ -407,7 +408,7 @@ def cescape(string: str) -> str:
 
 
 class ColorStream:
-    def __init__(self, stream: io.IOBase, color: Optional[bool]=None):
+    def __init__(self, stream: io.IOBase, color: Optional[bool] = None):
         self._stream = stream
         self._color = color
 
