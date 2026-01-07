@@ -411,7 +411,7 @@ class ColorStream:
         self._stream = stream
         self._color = color
 
-    def write(self, string: str, *, raw : bool = False) -> None:
+    def write(self, string: str, *, raw: bool = False) -> None:
         raw_write = getattr(self._stream, "write")
 
         color = self._color
