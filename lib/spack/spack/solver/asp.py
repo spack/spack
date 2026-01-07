@@ -2955,15 +2955,11 @@ class SpackSolverSetup:
                 possible_deps = self.possible_virtuals
             if edge.spec.name not in possible_deps and not str(edge.when):
                 raise InvalidDependencyError(
-                    f"'{edge.spec.name}' is not a valid dependency of any root spec"
+                    f"'{edge.spec.name}' is not a possible dependency of any root spec"
                 )
 
     def input_spec_version_check(self, specs, allow_deprecated: bool) -> None:
-        """Raise an error early if no versions available in the solve can satisfy the inputs.
-
-        If only deprecated versions can satisfy the specs
-
-        """
+        """Raise an error early if no versions available in the solve can satisfy the inputs."""
         only_deprecated = []
         impossible = []
 
