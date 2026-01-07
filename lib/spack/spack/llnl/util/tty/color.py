@@ -384,7 +384,6 @@ def cwrite(string: str, stream: Optional[io.IOBase] = None, color: Optional[bool
 
 def cprint(string: str, stream: Optional[io.IOBase] = None, color: Optional[bool] = None) -> None:
     """Same as cwrite, but writes a trailing newline to the stream."""
-    stream = sys.stdout if stream is None else stream
     cwrite(string + "\n", stream, color)
 
 
