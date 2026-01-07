@@ -407,12 +407,11 @@ def cescape(string: str) -> str:
 
 
 class ColorStream:
-    def __init__(self, stream: io.IOBase, color: Optional[bool] = None):
+    def __init__(self, stream: io.IOBase, color: Optional[bool] = None) -> None:
         self._stream = stream
         self._color = color
 
-    def write(self, string: str, **kwargs):
-        raw = kwargs.get("raw", False)
+    def write(self, string: str, *, raw : bool = False) -> None:
         raw_write = getattr(self._stream, "write")
 
         color = self._color
@@ -422,8 +421,3 @@ class ColorStream:
             else:
                 color = get_color_when()
         raw_write(colorize(string, color=color))
-
-    def writelines(self, sequence, **kwargs):
-        raw = kwargs.get("raw", False)
-        for string in sequence:
-            self.write(string, self.color, raw=raw)
