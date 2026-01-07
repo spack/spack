@@ -85,7 +85,7 @@ class NoStaticAnalysis(PossibleDependencyGraph):
     def is_allowed_on_this_platform(self, *, pkg_name: str) -> bool:
         """Returns true if a package is allowed on the current host"""
         pkg_cls = self.repo.get_pkg_class(pkg_name)
-        no_condition = spack.spec.Spec()
+        no_condition = spack.spec.EMPTY_SPEC
         for when_spec, conditions in pkg_cls.requirements.items():
             # Restrict analysis to unconditional requirements
             if when_spec != no_condition:

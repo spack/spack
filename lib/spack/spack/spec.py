@@ -758,7 +758,7 @@ class DependencySpec:
         self.virtuals = tuple(sorted(set(virtuals)))
         self.direct = direct
         self.propagation = propagation
-        self.when = when or Spec()
+        self.when = when or EMPTY_SPEC
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
@@ -1843,7 +1843,7 @@ class Spec:
             when: optional condition under which dependency holds
         """
         if when is None:
-            when = Spec()
+            when = EMPTY_SPEC
 
         if spec.name not in self._dependencies or not spec.name:
             self.add_dependency_edge(
@@ -1914,7 +1914,7 @@ class Spec:
             when: if non-None, condition under which dependency holds
         """
         if when is None:
-            when = Spec()
+            when = EMPTY_SPEC
 
         # Check if we need to update edges that are already present
         selected = self._dependencies.get(dependency_spec.name, [])
@@ -3083,7 +3083,7 @@ class Spec:
         # If we are trying to constrain a concrete spec, either the spec
         # already satisfies the constraint (and the method returns False)
         # or it raises an exception
-        if self.concrete:
+        if self.concrete or self is EMPTY_SPEC:
             if self._satisfies(other, resolve_virtuals=resolve_virtuals):
                 return False
             else:
@@ -3222,6 +3222,8 @@ class Spec:
     def _intersects(
         self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
     ) -> bool:
+        if other is EMPTY_SPEC:
+            return True
         other = self._autospec(other)
 
         if other.concrete and self.concrete:
@@ -3358,6 +3360,7 @@ class Spec:
             other: spec to be satisfied
             deps: if True, descend to dependencies, otherwise only check root node
         """
+
         return self._satisfies(other=other, deps=deps, resolve_virtuals=True)
 
     def _satisfies(
@@ -3371,6 +3374,8 @@ class Spec:
             resolve_virtuals: if True, resolve virtuals in self and other. This requires a
                 repository to be available.
         """
+        if other is EMPTY_SPEC:
+            return True
         other = self._autospec(other)
 
         if other.concrete:
@@ -4393,7 +4398,7 @@ class Spec:
             if deptypes and dep.depflag
             else ""
         )
-        when_str = f"when='{(dep.when)}'" if dep.when != Spec() else ""
+        when_str = f"when='{(dep.when)}'" if dep.when != EMPTY_SPEC else ""
         virtuals_str = f"virtuals={','.join(dep.virtuals)}" if virtuals and dep.virtuals else ""
 
         attrs = " ".join(s for s in (when_str, deptypes_str, virtuals_str) if s)
@@ -4437,7 +4442,7 @@ class Spec:
 
             edge_attributes = (
                 self._format_edge_attributes(edge, deptypes=deptypes, virtuals=False)
-                if edge.depflag or edge.when != Spec()
+                if edge.depflag or edge.when != EMPTY_SPEC
                 else ""
             )
             virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals else ""
@@ -6009,3 +6014,7 @@ class InvalidEdgeError(spack.error.SpecError):
 
 class SpecMutationError(spack.error.SpecError):
     """Raised when a mutation is attempted with invalid attributes."""
+
+
+#: Global empty spec, immutable by convention. Used for fast comparisons and reducing memory usage.
+EMPTY_SPEC = Spec()

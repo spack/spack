@@ -87,7 +87,7 @@ GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 
 TransformFunction = Callable[[str, spack.spec.Spec, List[AspFunction]], List[AspFunction]]
 
-EMPTY_SPEC = spack.spec.Spec()
+EMPTY_SPEC = spack.spec.EMPTY_SPEC
 
 
 class OutputConfiguration(NamedTuple):

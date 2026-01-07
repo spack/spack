@@ -136,7 +136,7 @@ def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
     # represent this by returning the unconstrained `Spec()`, which is
     # always satisfied.
     if value is None or value is True:
-        return spack.spec.Spec()
+        return spack.spec.EMPTY_SPEC
 
     # This is conditional on the spec
     return spack.spec.Spec(value)
@@ -496,6 +496,8 @@ def _execute_provides(pkg: PackageType, specs: Tuple[SpecType, ...], when: WhenT
     when_spec = _make_when_spec(when)
     if not when_spec:
         return
+    elif when_spec is spack.spec.EMPTY_SPEC:
+        when_spec = spack.spec.Spec()  # this function mutates, so can't use EMPTY_SPEC
 
     # ``when`` specs for ``provides()`` need a name, as they are used
     # to build the ProviderIndex.
@@ -939,10 +941,10 @@ def _execute_license(pkg: PackageType, license_identifier: str, when: Optional[U
     for other_when_spec in pkg.licenses:
         if when_spec.intersects(other_when_spec):
             when_message = ""
-            if when_spec != _make_when_spec(None):
+            if when_spec != spack.spec.EMPTY_SPEC:
                 when_message = f"when {when_spec}"
             other_when_message = ""
-            if other_when_spec != _make_when_spec(None):
+            if other_when_spec != spack.spec.EMPTY_SPEC:
                 other_when_message = f"when {other_when_spec}"
             err_msg = (
                 f"{pkg.name} is specified as being licensed as {license_identifier} "
