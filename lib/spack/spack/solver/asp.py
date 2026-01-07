@@ -621,7 +621,6 @@ class Result:
             # self.cores
             # self.possible_dependencies
         )
-        print(eq)
         return all(eq)
 
 
@@ -2896,7 +2895,7 @@ class SpackSolverSetup:
         for pkg_name, vid, value in sorted(def_info):
             self.gen.fact(fn.pkg_fact(pkg_name, fn.variant_possible_value(vid, value)))
 
-    def register_concrete_spec(self, spec, possible):
+    def register_concrete_spec(self, spec, possible: set):
         # tell the solver about any installed packages that could
         # be dependencies (don't tell it about the others)
         if spec.name not in possible:
@@ -2932,12 +2931,60 @@ class SpackSolverSetup:
                 self.possible_versions[dep.name][dep.version].append(provenance)
                 self.possible_oses.add(dep.os)
 
-    def define_concrete_input_specs(self, specs, possible):
+    def define_concrete_input_specs(self, specs: tuple, possible: set):
         # any concrete specs in the input spec list
         for input_spec in specs:
             for spec in input_spec.traverse():
                 if spec.concrete:
                     self.register_concrete_spec(spec, possible)
+
+    def impossible_dependencies_check(self, specs) -> None:
+        for edge in traverse.traverse_edges(specs):
+            possible_deps = self.pkgs
+            if spack.repo.PATH.is_virtual(edge.spec.name):
+                possible_deps = self.possible_virtuals
+            if edge.spec.name not in possible_deps and not str(edge.when):
+                raise InvalidDependencyError(
+                    f"'{edge.spec.name}' is not a possible dependency of any root spec"
+                )
+
+    def input_spec_version_check(self, specs, allow_deprecated: bool) -> None:
+        """Raise an error early if no versions available in the solve can satisfy the inputs."""
+        only_deprecated = []
+        impossible = []
+
+        for spec in traverse.traverse_nodes(specs):
+            if spack.repo.PATH.is_virtual(spec.name):
+                continue
+            if spec.name not in self.pkgs:
+                continue  # conditional dependency that won't be satisfied
+
+            deprecated = self.deprecated_versions.get(spec.name, set())
+            sat_deprecated = [v for v in deprecated if deprecated and v.satisfies(spec.versions)]
+
+            possible: Iterable = self.possible_versions.get(spec.name, set())
+            sat_possible = [v for v in possible if possible and v.satisfies(spec.versions)]
+
+            if sat_deprecated and not sat_possible:
+                only_deprecated.append(spec)
+
+            if not sat_deprecated and not sat_possible:
+                impossible.append(spec)
+
+        if not allow_deprecated and only_deprecated:
+            raise DeprecatedVersionError(
+                "The following input specs can only be satisfied by deprecated versions:",
+                "    "
+                + ", ".join(str(spec) for spec in only_deprecated)
+                + "\n"
+                + "Run with --deprecated to allow Spack to use these versions.",
+            )
+
+        if impossible:
+            raise InvalidVersionError(
+                "No version exists that satisfies these input specs:",
+                "    " + ", ".join(str(spec) for spec in impossible),
+            )
 
     def setup(
         self,
@@ -3115,6 +3162,11 @@ class SpackSolverSetup:
 
         self.gen.h1("Internal errors")
         self.internal_errors(_use_unsat_cores=_use_unsat_cores)
+
+        # once we've done a full traversal and know possible versions, check that the
+        # requested solve is at least consistent.
+        self.impossible_dependencies_check(specs)
+        self.input_spec_version_check(specs, allow_deprecated)
 
         return self.gen
 
@@ -4183,3 +4235,15 @@ class NoCompilerFoundError(spack.error.SpackError):
 
 class InvalidExternalError(spack.error.SpackError):
     """Raised when there is no possible compiler"""
+
+
+class DeprecatedVersionError(spack.error.SpackError):
+    """Raised when user directly requests a deprecated version."""
+
+
+class InvalidVersionError(spack.error.SpackError):
+    """Raised when a version can't be satisfied by any possible versions."""
+
+
+class InvalidDependencyError(spack.error.SpackError):
+    """Raised when an explicit dependency is not a possible dependency."""

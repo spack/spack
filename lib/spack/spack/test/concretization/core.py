@@ -827,7 +827,7 @@ spack:
 
     def test_no_matching_compiler_specs(self):
         s = Spec("pkg-a %gcc@0.0.0")
-        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        with pytest.raises(spack.solver.asp.InvalidVersionError):
             spack.concretize.concretize_one(s)
 
     def test_no_compilers_for_arch(self):
