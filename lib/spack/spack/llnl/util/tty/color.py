@@ -206,7 +206,7 @@ def set_color_when(when: Union[str, bool, None]) -> None:
 @contextmanager
 def color_when(value):
     """Context manager to temporarily use a particular color setting."""
-    old_value = value
+    old_value = _force_color
     set_color_when(value)
     yield
     set_color_when(old_value)
