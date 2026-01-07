@@ -35,6 +35,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="change all matching abstract specs (allow changing more than one abstract spec)",
     )
     subparser.add_argument(
+        "-c",
         "--concrete",
         action="store_true",
         default=False,
