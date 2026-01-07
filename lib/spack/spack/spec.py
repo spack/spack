@@ -4900,9 +4900,10 @@ class Spec:
             if variant == self.variants.get(name, None):
                 continue
 
-            # Special VariantValueRemoval type for variants that need to be removed
-            self.variants.pop(name, None)
-            if not isinstance(variant, vt.VariantValueRemoval):
+            old_variant = self.variants.pop(name, None)
+            if not isinstance(variant, vt.VariantValueRemoval):  # sigil type for removing variant
+                if old_variant:
+                    variant.type = old_variant.type  # coerce variant type to match
                 self.variants[name] = variant
             changed = True
 

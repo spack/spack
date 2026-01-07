@@ -27,7 +27,7 @@ change = SpackCommand("change")
     "orig_constraint,mutated_constraint",
     [
         ("@3.23.1", "@3.4.3"),
-        ("cflags=-O3", "cflags=-O0 -g"),
+        ("cflags=-O3", "cflags='-O0 -g'"),
         ("os=debian6", "os=redhat6"),
         (f"target={test_targets[0]}", f"target={test_targets[1]}"),
         ("build_system=generic", "build_system=foo"),
@@ -54,6 +54,7 @@ def test_mutate_internals(dep, orig_constraint, mutated_constraint):
 
     root_spec = next(env.roots()).copy()
     cmake_spec = root_spec["cmake"] if dep else root_spec
+    orig_cmake_spec = cmake_spec.copy()
     orig_hash = root_spec.dag_hash()
 
     for spec in env.all_specs_generator():
@@ -69,6 +70,10 @@ def test_mutate_internals(dep, orig_constraint, mutated_constraint):
         if spec.name == "cmake":
             assert spec.satisfies(mutated_constraint)
     assert cmake_spec.satisfies(mutated_constraint)
+
+    # Make sure that we're not changing variant types single/multi
+    for name, variant in cmake_spec.variants.items():
+        assert variant.type == orig_cmake_spec.variants[name].type
 
     new_hash = next(env.roots()).dag_hash()
     assert new_hash != orig_hash
