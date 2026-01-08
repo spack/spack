@@ -32,6 +32,7 @@ The available directives are:
 """
 import collections
 import collections.abc
+import functools
 import os
 import re
 import warnings
@@ -129,6 +130,23 @@ def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
 
     # This is conditional on the spec
     return spack.spec.Spec(value)
+
+
+def accept_multiple_when_clauses(func):
+    """Convert a list or tuple of ``when`` args into consecutive calls.
+
+    This simulates the action of invoking a directive within a ``for`` loop.
+    """
+
+    @functools.wraps(func)
+    def _multiple_when_impl(*args, **kwargs):
+        when_specs = kwargs.pop("when", None)
+        if not isinstance(when_specs, (list, tuple)):
+            when_specs = [when_specs]
+        for when in when_specs:
+            func(*args, when=when, **kwargs)
+
+    return _multiple_when_impl
 
 
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
@@ -324,6 +342,7 @@ def _depends_on(
         execute_patch(dependency)
 
 
+@accept_multiple_when_clauses
 @directive("conflicts")
 def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str] = None):
     """Declare a conflict for a package.
@@ -357,7 +376,8 @@ def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str]
     return _execute_conflicts
 
 
-@directive(("dependencies"))
+@accept_multiple_when_clauses
+@directive("dependencies")
 def depends_on(
     spec: SpecType,
     when: WhenType = None,
@@ -386,6 +406,7 @@ def depends_on(
     return _execute_depends_on
 
 
+@accept_multiple_when_clauses
 @directive("disable_redistribute")
 def redistribute(
     source: Optional[bool] = None, binary: Optional[bool] = None, when: WhenType = None
@@ -438,6 +459,7 @@ def _execute_redistribute(
         )
 
 
+@accept_multiple_when_clauses
 @directive(("extendees", "dependencies"))
 def extends(spec, when=None, type=("build", "run"), patches=None):
     """Same as :func:`depends_on`, but also adds this package to the extendee list.
@@ -467,6 +489,7 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
     return _execute_extends
 
 
+@accept_multiple_when_clauses
 @directive(dicts=("provided", "provided_together"))
 def provides(*specs: SpecType, when: WhenType = None):
     """Declare that this package provides a virtual dependency.
@@ -503,6 +526,7 @@ def provides(*specs: SpecType, when: WhenType = None):
     return _execute_provides
 
 
+@accept_multiple_when_clauses
 @directive("splice_specs")
 def can_splice(
     target: SpecType, *, when: SpecType, match_variants: Union[None, str, List[str]] = None
@@ -538,6 +562,7 @@ def can_splice(
     return _execute_can_splice
 
 
+@accept_multiple_when_clauses
 @directive("patches")
 def patch(
     url_or_filename: str,
@@ -623,6 +648,7 @@ def conditional(*values: Union[str, bool], when: Optional[WhenType] = None):
     )
 
 
+@accept_multiple_when_clauses
 @directive("variants")
 def variant(
     name: str,
@@ -631,7 +657,7 @@ def variant(
     values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]] = None,
     multi: Optional[bool] = None,
     validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]] = None,
-    when: Optional[Union[str, bool]] = None,
+    when: WhenType = None,
     sticky: bool = False,
 ):
     """Declare a variant for a package.
@@ -768,6 +794,7 @@ def variant(
     return _execute_variant
 
 
+@accept_multiple_when_clauses
 @directive("resources")
 def resource(
     *,
@@ -881,11 +908,12 @@ def _execute_license(
     pkg.licenses[when_spec] = license_identifier
 
 
+@accept_multiple_when_clauses
 @directive("licenses")
 def license(
     license_identifier: str,
     checked_by: Optional[Union[str, List[str]]] = None,
-    when: Optional[Union[str, bool]] = None,
+    when: WhenType = None,
 ):
     """Declare the license(s) the software is distributed under.
 
@@ -900,6 +928,7 @@ def license(
     return lambda pkg: _execute_license(pkg, license_identifier, when)
 
 
+@accept_multiple_when_clauses
 @directive("requirements")
 def requires(
     *requirement_specs: str, policy="one_of", when: Optional[str] = None, msg: Optional[str] = None
