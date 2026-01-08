@@ -230,10 +230,10 @@ def version(
         )
         if value is not None
     }
-    return partial(_execute_version, ver=ver, **kwargs)
+    return partial(_execute_version, ver=ver, kwargs=kwargs)
 
 
-def _execute_version(pkg: PackageType, ver: Union[str, int], **kwargs):
+def _execute_version(pkg: PackageType, ver: Union[str, int], kwargs: dict):
     if (
         (any(s in kwargs for s in spack.util.crypto.hashes) or "checksum" in kwargs)
         and hasattr(pkg, "has_code")
@@ -838,7 +838,7 @@ def resource(
         destination=destination,
         placement=placement,
         when=when,
-        **kwargs,
+        kwargs=kwargs,
     )
 
 
@@ -849,7 +849,7 @@ def _execute_resource(
     placement: Optional[str],
     when: WhenType,
     # additional kwargs are as for `version()`
-    **kwargs,
+    kwargs: dict,
 ):
     when_spec = _make_when_spec(when)
     if not when_spec:
