@@ -617,12 +617,6 @@ class SpackCIConfig:
                         f"spack buildcache update-index --keys {' '.join(update_index_extra_args)} buildcache-destination"]
                 }
             },
-            # Cleanup script
-            {
-                "cleanup-job": {
-                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
-                }
-            },
             # Add signing job tags
             {"signing-job": {"tags": ["aws", "protected", "notary"]}},
             # Remove reserved tags
