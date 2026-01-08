@@ -9,8 +9,8 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
-import spack.error
 import spack.llnl.util.lang
+import spack.package_base
 import spack.paths
 import spack.solver.asp
 import spack.spec
@@ -20,6 +20,7 @@ import spack.variant
 import spack.version as vn
 from spack.enums import PropagationPolicy
 from spack.error import SpecError, UnsatisfiableSpecError
+from spack.llnl.util.tty.color import colorize
 from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import (
     InvalidVariantValueError,
@@ -2464,3 +2465,32 @@ def test_attribute_existence_in_satisfies(spec_str, assertions, mock_packages, c
     s = Spec(spec_str)
     for test, expected in assertions:
         assert s.satisfies(test) is expected
+
+
+@pytest.mark.regression("51768")
+@pytest.mark.parametrize("spec_str", ["mpi", "%mpi", "^mpi", "%foo", "%c=gcc", "%[when=%c]c=gcc"])
+def test_specs_semantics_on_self(spec_str, mock_packages, config):
+    """Tests that an abstract spec satisfies and intersects with itself."""
+    s = Spec(spec_str)
+    assert s.satisfies(s)
+    assert s.intersects(s)
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected_fmt",
+    [
+        ("mpileaks@2.2", "mpileaks@_R{@=2.2}"),
+        ("mpileaks@2.3", "mpileaks@c{@=2.3}"),
+        ("mpileaks+debug", "@_R{+debug}"),
+    ],
+)
+def test_highlighting_spec_parts(spec_str, expected_fmt, default_mock_concretization):
+    """Tests correct highlighting of non-default versions and variants"""
+    s = default_mock_concretization(spec_str)
+    expected = colorize(expected_fmt, color=True)
+    colorized_str = s.format(
+        color=True,
+        highlight_version_fn=spack.package_base.non_preferred_version,
+        highlight_variant_fn=spack.package_base.non_default_variant,
+    )
+    assert expected in colorized_str

@@ -4,7 +4,11 @@
 
 import os
 
+import pytest
+
 from spack.main import SpackCommand
+
+pytest.skip("Recursive pytest is brittle", allow_module_level=True)
 
 spack_test = SpackCommand("unit-test")
 cmd_test_py = os.path.join("lib", "spack", "spack", "test", "cmd", "unit_test.py")

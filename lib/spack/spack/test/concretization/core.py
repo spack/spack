@@ -6,6 +6,7 @@ import json
 import os
 import pathlib
 import platform
+import re
 import sys
 from typing import Any, Dict
 
@@ -36,7 +37,6 @@ import spack.solver.core
 import spack.solver.reuse
 import spack.solver.runtimes
 import spack.spec
-import spack.test.conftest
 import spack.util.file_cache
 import spack.util.hash
 import spack.util.spack_yaml as syaml
@@ -85,6 +85,10 @@ def check_concretize(abstract_spec):
     return concrete
 
 
+def _true():
+    return True
+
+
 @pytest.fixture(scope="function", autouse=True)
 def binary_compatibility(monkeypatch, request):
     """Selects whether we use OS compatibility for binaries, or libc compatibility."""
@@ -99,9 +103,9 @@ def binary_compatibility(monkeypatch, request):
         # Databases have been created without glibc support
         return
 
-    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", lambda: True)
-    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", lambda: True)
-    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", lambda: True)
+    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", _true)
+    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", _true)
+    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", _true)
 
 
 @pytest.fixture(
@@ -828,7 +832,7 @@ spack:
 
     def test_no_matching_compiler_specs(self):
         s = Spec("pkg-a %gcc@0.0.0")
-        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        with pytest.raises(spack.solver.asp.InvalidVersionError):
             spack.concretize.concretize_one(s)
 
     def test_no_compilers_for_arch(self):
@@ -2020,7 +2024,7 @@ spack:
                 else:
                     weights["built"] = x.value
 
-            assert weights["reused"] == 1 and weights["built"] == 0
+            assert weights["reused"] == 3 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
@@ -3139,11 +3143,11 @@ def test_concretization_version_order():
     ]
     assert result == [
         Version("0.9"),  # preferred
+        Version("2.0"),  # deprecation is accounted for separately
         Version("1.1"),  # latest non-deprecated final version
         Version("1.0"),  # latest non-deprecated final version
         Version("1.1alpha1"),  # prereleases
         Version("develop"),  # likely development version
-        Version("2.0"),  # deprecated
     ]
 
 
@@ -3312,6 +3316,15 @@ def test_spec_unification(unify, mutable_config, mock_packages):
     maybe_fails = pytest.raises if unify is True else spack.llnl.util.lang.nullcontext
     with maybe_fails(spack.solver.asp.UnsatisfiableSpecError):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
+
+
+@pytest.mark.not_on_windows("parallelism unsupported on Windows")
+@pytest.mark.enable_parallelism
+def test_parallel_concretization(mutable_config, mock_packages):
+    """Test whether parallel unify-false style concretization works."""
+    specs = [(Spec("pkg-a"), None), (Spec("pkg-b"), None)]
+    result = spack.concretize.concretize_separately(specs)
+    assert {s.name for s, _ in result} == {"pkg-a", "pkg-b"}
 
 
 @pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
@@ -4232,10 +4245,10 @@ def test_commit_variant_enters_the_hash(mutable_config, mock_packages, monkeypat
 
     def _mock_resolve(spec) -> None:
         if first_call:
-            spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'b' * 40}")
+            spec.variants["commit"] = vt.SingleValuedVariant("commit", f"{'b' * 40}")
             return
 
-        spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", f"{'a' * 40}")
+        spec.variants["commit"] = vt.SingleValuedVariant("commit", f"{'a' * 40}")
 
     monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _mock_resolve)
 
@@ -4741,3 +4754,27 @@ def test_activating_variant_for_conditional_language_dependency(default_mock_con
     # Try just asking for fortran, without the provider
     s = default_mock_concretization("mpileaks %fortran %mpi=mpich")
     assert s.satisfies("+fortran")
+
+
+def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
+    """Tests that imposed dependenies triggered by identical conditions are grouped together,
+    and that imposed dependencies that differ on a deptype are not grouped together."""
+    # The trigger-and-effect-deps pkg has 4 conditions, 2 triggers, and 4 effects in total:
+    # +x -> depends on pkg-a with deptype link
+    # +x -> depends on pkg-b with deptype link
+    # +y -> depends on pkg-a with deptype run
+    # +y -> depends on pkg-b with deptype run
+    pkg = mock_packages.get_pkg_class("trigger-and-effect-deps")
+    setup = spack.solver.asp.SpackSolverSetup()
+    setup.gen = spack.solver.asp.ProblemInstanceBuilder()
+    setup.package_dependencies_rules(pkg)
+    setup.trigger_rules()
+    setup.effect_rules()
+    asp = setup.gen.asp_problem
+
+    # There should be 4 conditions total
+    assert len([line for line in asp if re.search(r"condition\(\d+\)", line)]) == 4
+    # There should be 2 triggers total
+    assert len([line for line in asp if re.search(r"trigger_id\(\d+\)", line)]) == 2
+    # There should be 4 effects total
+    assert len([line for line in asp if re.search(r"effect_id\(\d+\)", line)]) == 4

@@ -699,8 +699,9 @@ complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a downloa
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a prune -d 'prune buildcache entries from the mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a save-specfile -d 'get full spec for dependencies and write them to files in the specified output directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a sync -d 'sync binaries (and associated metadata) from one mirror to another'
-complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a update-index -d 'update a buildcache index'
-complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a rebuild-index -d 'update a buildcache index'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a check-index -d 'Check if a build cache index, manifests, and blobs are consistent'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a update-index -d 'update a buildcache index or index view if extra arguments are provided.'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a rebuild-index -d 'update a buildcache index or index view if extra arguments are provided.'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a migrate -d 'perform in-place binary mirror migration (2 to 3)'
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
@@ -860,21 +861,49 @@ complete -c spack -n '__fish_spack_using_command buildcache sync' -s h -l help -
 complete -c spack -n '__fish_spack_using_command buildcache sync' -l manifest-glob -r -f -a manifest_glob
 complete -c spack -n '__fish_spack_using_command buildcache sync' -l manifest-glob -r -d 'a quoted glob pattern identifying CI rebuild manifest files'
 
+# spack buildcache check-index
+set -g __fish_spack_optspecs_spack_buildcache_check_index h/help verify= n/name= o/output=
+
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l verify -r -f -a 'exists manifests blobs all'
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l verify -r -d 'List of items to verify along along with the index.'
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l name -s n -r -f -a name
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l name -s n -r -d 'Name of the view index to check'
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l output -s o -r -f -a output
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l output -s o -r -d 'File to write check details to'
+
 # spack buildcache update-index
-set -g __fish_spack_optspecs_spack_buildcache_update_index h/help k/keys
+set -g __fish_spack_optspecs_spack_buildcache_update_index h/help n/name= a/append f/force k/keys y/yes-to-all
 
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l name -s n -r -f -a name
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l name -s n -r -d 'Name of the view index to update'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l append -s a -f -a append
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarentee atomic write and should be run with care.'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -f -a force
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack buildcache rebuild-index
-set -g __fish_spack_optspecs_spack_buildcache_rebuild_index h/help k/keys
+set -g __fish_spack_optspecs_spack_buildcache_rebuild_index h/help n/name= a/append f/force k/keys y/yes-to-all
 
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l name -s n -r -f -a name
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l name -s n -r -d 'Name of the view index to update'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l append -s a -f -a append
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarentee atomic write and should be run with care.'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -f -a force
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack buildcache migrate
 set -g __fish_spack_optspecs_spack_buildcache_migrate h/help u/unsigned d/delete-existing y/yes-to-all
@@ -1166,7 +1195,7 @@ complete -c spack -n '__fish_spack_using_command compilers' -l remote -f -a remo
 complete -c spack -n '__fish_spack_using_command compilers' -l remote -d 'list also compilers from registered buildcaches'
 
 # spack concretize
-set -g __fish_spack_optspecs_spack_concretize h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_concretize h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs= non-defaults
 complete -c spack -n '__fish_spack_using_command concretize' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command concretize' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command concretize' -l test -r -f -a 'root all'
@@ -1185,9 +1214,11 @@ complete -c spack -n '__fish_spack_using_command concretize' -l deprecated -f -a
 complete -c spack -n '__fish_spack_using_command concretize' -l deprecated -d 'allow concretizer to select deprecated versions'
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command concretize' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
+complete -c spack -n '__fish_spack_using_command concretize' -l non-defaults -f -a non_defaults
+complete -c spack -n '__fish_spack_using_command concretize' -l non-defaults -d 'highlight non-default versions or variants'
 
 # spack concretise
-set -g __fish_spack_optspecs_spack_concretise h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs=
+set -g __fish_spack_optspecs_spack_concretise h/help test= q/quiet f/force U/fresh reuse fresh-roots deprecated j/jobs= non-defaults
 complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command concretise' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command concretise' -l test -r -f -a 'root all'
@@ -1206,6 +1237,8 @@ complete -c spack -n '__fish_spack_using_command concretise' -l deprecated -f -a
 complete -c spack -n '__fish_spack_using_command concretise' -l deprecated -d 'allow concretizer to select deprecated versions'
 complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command concretise' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
+complete -c spack -n '__fish_spack_using_command concretise' -l non-defaults -f -a non_defaults
+complete -c spack -n '__fish_spack_using_command concretise' -l non-defaults -d 'highlight non-default versions or variants'
 
 # spack config
 set -g __fish_spack_optspecs_spack_config h/help scope=
@@ -2365,7 +2398,7 @@ complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -
 complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -r -d 'find mirror to destroy by url'
 
 # spack mirror add
-set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
+set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed n/name= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror add' -f
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -d 'show this help message and exit'
@@ -2379,6 +2412,8 @@ complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -f -a s
 complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -d 'do not require signing and signature verification when pushing and installing from this build cache'
 complete -c spack -n '__fish_spack_using_command mirror add' -l signed -f -a signed
 complete -c spack -n '__fish_spack_using_command mirror add' -l signed -d 'require signing and signature verification when pushing and installing from this build cache'
+complete -c spack -n '__fish_spack_using_command mirror add' -l name -s n -r -f -a view_name
+complete -c spack -n '__fish_spack_using_command mirror add' -l name -s n -r -d 'Name of the index view for a binary mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id -r -f -a s3_access_key_id
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id -r -d 'ID string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id-variable -r -f -a s3_access_key_id_variable
@@ -2929,7 +2964,7 @@ complete -c spack -n '__fish_spack_using_command restage' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -d 'show this help message and exit'
 
 # spack solve
-set -g __fish_spack_optspecs_spack_solve h/help show= timers stats l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_solve h/help show= timers stats l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 solve' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -d 'show this help message and exit'
@@ -2955,6 +2990,8 @@ complete -c spack -n '__fish_spack_using_command solve' -s j -l json -f -a forma
 complete -c spack -n '__fish_spack_using_command solve' -s j -l json -d 'print concrete spec as JSON'
 complete -c spack -n '__fish_spack_using_command solve' -l format -r -f -a format
 complete -c spack -n '__fish_spack_using_command solve' -l format -r -d 'print concrete spec with the specified format string'
+complete -c spack -n '__fish_spack_using_command solve' -l non-defaults -f -a non_defaults
+complete -c spack -n '__fish_spack_using_command solve' -l non-defaults -d 'highlight non-default versions or variants'
 complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -f -a 'nodes edges paths'
 complete -c spack -n '__fish_spack_using_command solve' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
 complete -c spack -n '__fish_spack_using_command solve' -s t -l types -f -a types
@@ -2971,7 +3008,7 @@ complete -c spack -n '__fish_spack_using_command solve' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack spec
-set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 spec' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -d 'show this help message and exit'
@@ -2991,6 +3028,8 @@ complete -c spack -n '__fish_spack_using_command spec' -s j -l json -f -a format
 complete -c spack -n '__fish_spack_using_command spec' -s j -l json -d 'print concrete spec as JSON'
 complete -c spack -n '__fish_spack_using_command spec' -l format -r -f -a format
 complete -c spack -n '__fish_spack_using_command spec' -l format -r -d 'print concrete spec with the specified format string'
+complete -c spack -n '__fish_spack_using_command spec' -l non-defaults -f -a non_defaults
+complete -c spack -n '__fish_spack_using_command spec' -l non-defaults -d 'highlight non-default versions or variants'
 complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -f -a 'nodes edges paths'
 complete -c spack -n '__fish_spack_using_command spec' -s c -l cover -r -d 'how extensively to traverse the DAG (default: nodes)'
 complete -c spack -n '__fish_spack_using_command spec' -s t -l types -f -a types

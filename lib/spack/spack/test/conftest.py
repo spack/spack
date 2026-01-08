@@ -20,7 +20,7 @@ import sys
 import tempfile
 import xml.etree.ElementTree
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import pytest
 
@@ -272,9 +272,11 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 
     The structure of commits in this repo is as follows::
 
-       o diff-test: add v1.2 (from a git ref)
+       o diff-test: add v2.1.7 and v2.1.8 (invalid duplicated checksum)
        |
-       o diff-test: add v1.1 (from source tarball)
+       o diff-test: add v2.1.6 (from a git ref)
+       |
+       o diff-test: add v2.1.5 (from source tarball)
        |
        o diff-test: new package (testing multiple added versions)
 
@@ -317,22 +319,28 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 
         os.makedirs(os.path.dirname(filename))
 
-        # add pkg-a as a new package to the repository
+        # add diff-test as a new package to the repository
         shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-0.txt", filename)
         git("add", filename)
         commit("diff-test: new package")
         commits.append(latest_commit())
 
-        # add v2.1.5 to pkg-a
+        # add v2.1.5 to diff-test
         shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-1.txt", filename)
         git("add", filename)
         commit("diff-test: add v2.1.5")
         commits.append(latest_commit())
 
-        # add v2.1.6 to pkg-a
+        # add v2.1.6 to diff-test
         shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-2.txt", filename)
         git("add", filename)
         commit("diff-test: add v2.1.6")
+        commits.append(latest_commit())
+
+        # add v2.1.7 and v2.1.8 to diff-test
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-3.txt", filename)
+        git("add", filename)
+        commit("diff-test: add v2.1.7 and v2.1.8")
         commits.append(latest_commit())
 
         # The commits are ordered with the last commit first in the list
@@ -345,7 +353,7 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 @pytest.fixture(autouse=True)
 def clear_recorded_monkeypatches():
     yield
-    spack.subprocess_context.clear_patches()
+    spack.subprocess_context.MONKEYPATCHES.clear()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -355,7 +363,7 @@ def record_monkeypatch_setattr():
     saved_setattr = _pytest.monkeypatch.MonkeyPatch.setattr
 
     def record_setattr(cls, target, name, value, *args, **kwargs):
-        spack.subprocess_context.append_patch((target, name, value))
+        spack.subprocess_context.MONKEYPATCHES.append((target, name))
         saved_setattr(cls, target, name, value, *args, **kwargs)
 
     _pytest.monkeypatch.MonkeyPatch.setattr = record_setattr
@@ -2251,7 +2259,9 @@ def concretized_specs_cache():
 
 
 @pytest.fixture
-def default_mock_concretization(config, mock_packages, concretized_specs_cache):
+def default_mock_concretization(
+    config, mock_packages, concretized_specs_cache
+) -> Callable[[str], spack.spec.Spec]:
     """Return the default mock concretization of a spec literal, obtained using the mock
     repository and the mock configuration.
 
@@ -2310,14 +2320,12 @@ def pytest_runtest_setup(item):
         pytest.skip(*only_windows_marker.args)
 
 
-def _sequential_executor(*args, **kwargs):
-    return spack.util.parallel.SequentialExecutor()
-
-
 @pytest.fixture(autouse=True)
-def disable_parallel_buildcache_push(monkeypatch):
-    """Disable process pools in tests."""
-    monkeypatch.setattr(spack.util.parallel, "make_concurrent_executor", _sequential_executor)
+def disable_parallelism(monkeypatch, request):
+    """Disable process pools in tests. Enabled by default to avoid oversubscription when running
+    under pytest-xdist. Can be overridden with `@pytest.mark.enable_parallelism`."""
+    if "enable_parallelism" not in request.keywords:
+        monkeypatch.setattr(spack.util.parallel, "ENABLE_PARALLELISM", False)
 
 
 def _root_path(x, y, *, path):
@@ -2404,6 +2412,9 @@ class MockHTTPResponse(io.IOBase):
         """Create a mock HTTP response with JSON string as body"""
         body = io.BytesIO(json.dumps(body).encode("utf-8"))
         return cls(status, reason, headers, body)
+
+    def readable(self):
+        return True
 
     def read(self, *args, **kwargs):
         return self._body.read(*args, **kwargs)

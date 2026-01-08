@@ -15,10 +15,18 @@ class Gcc(CompilerPackage, Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/gcc-1.0.tar.gz"
 
+    version("14.0.1", md5="abcdef0123456789abcdef0123456789")
     version("14.0", md5="abcdef0123456789abcdef0123456789")
+    version("12.1.0", md5="abcdef0123456789abcdef0123456789")
+    version("10.2.1", md5="abcdef0123456789abcdef0123456789")
+    version("9.4.1", md5="abcdef0123456789abcdef0123456789")
+    version("9.4.0", md5="abcdef0123456789abcdef0123456789")
     version("3.0", md5="def0123456789abcdef0123456789abc")
     version("2.0", md5="abcdef0123456789abcdef0123456789")
     version("1.0", md5="0123456789abcdef0123456789abcdef")
+
+    with default_args(deprecated=True):
+        version("12.4.0", md5="abcdef0123456789abcdef0123456789")
 
     variant(
         "languages",

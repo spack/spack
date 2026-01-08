@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import abc
 import errno
-import getpass
 import glob
 import hashlib
 import io
@@ -82,7 +81,7 @@ def create_stage_root(path: str) -> None:
     user_uid = getuid()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
-    group_paths, user_node, user_paths = partition_path(path, getpass.getuser())
+    group_paths, user_node, user_paths = partition_path(path, sup.get_user())
 
     for p in group_paths:
         if not os.path.exists(p):
@@ -162,7 +161,7 @@ def _resolve_paths(candidates):
     $user and appending $user if it is not present in the path.
     """
     temp_path = sup.canonicalize_path("$tempdir")
-    user = getpass.getuser()
+    user = sup.get_user()
     tmp_has_usr = user in temp_path.split(os.path.sep)
 
     paths = []

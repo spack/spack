@@ -663,6 +663,7 @@ def test_upgrade_read_to_write(private_lock_path):
     assert lock._file is None
 
 
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
     """Test that read-only file can be read-locked but not write-locked."""
     # ensure lock file exists the first time

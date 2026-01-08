@@ -13,6 +13,8 @@ class Provenance(enum.IntEnum):
     DEV_SPEC = enum.auto()
     # The 'packages' section of the configuration
     PACKAGES_YAML = enum.auto()
+    # A git version in the 'packages' section of the configuration
+    PACKAGES_YAML_GIT_VERSION = enum.auto()
     # A package requirement
     PACKAGE_REQUIREMENT = enum.auto()
     # A 'package.py' file

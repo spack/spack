@@ -202,7 +202,7 @@ def pull_checkout_branch(
             raise ValueError("depth must be a positive integer")
         fetch_args.append(f"--depth={depth}")
 
-    git_exe("fetch", *fetch_args, remote, branch)
+    git_exe("fetch", *fetch_args, remote, f"{branch}:refs/remotes/{remote}/{branch}")
     git_exe("checkout", "--quiet", branch)
 
     try:
@@ -253,7 +253,7 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
 
             if query:
                 return query.strip().split()[0]
-        except spack.util.executable.ProcessError:
+        except exe.ProcessError:
             continue
 
     return None

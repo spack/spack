@@ -2577,16 +2577,46 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
     return details is not None and details.get("deprecated", False)
 
 
-def preferred_version(pkg: Union[PackageBase, Type[PackageBase]]):
-    """
-    Returns a sorted list of the preferred versions of the package.
+def preferred_version(
+    pkg: Union[PackageBase, Type[PackageBase]],
+) -> Union[StandardVersion, GitVersion]:
+    """Returns the preferred versions of the package according to package.py.
+
+    Accounts for version deprecation in the package recipe. Doesn't account for
+    any user configuration in packages.yaml.
 
     Arguments:
         pkg: The package whose versions are to be assessed.
     """
 
-    version, _ = max(pkg.versions.items(), key=concretization_version_order)
+    def _version_order(version_info):
+        version, info = version_info
+        deprecated_key = not info.get("deprecated", False)
+        return (deprecated_key, *concretization_version_order(version_info))
+
+    version, _ = max(pkg.versions.items(), key=_version_order)
     return version
+
+
+def non_preferred_version(node: spack.spec.Spec) -> bool:
+    """Returns True if the spec version is not the preferred one, according to the package.py"""
+    if not node.versions.concrete:
+        return False
+
+    try:
+        return node.version != preferred_version(node.package)
+    except ValueError:
+        return False
+
+
+def non_default_variant(node: spack.spec.Spec, variant_name: str) -> bool:
+    """Returns True if the variant in the spec has a non-default value."""
+    try:
+        default_variant = node.package.get_variant(variant_name).make_default()
+        return not node.satisfies(str(default_variant))
+    except ValueError:
+        # This is the case for special variants like "patches" etc.
+        return False
 
 
 def sort_by_pkg_preference(
@@ -2601,14 +2631,18 @@ def sort_by_pkg_preference(
     return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
 
 
-def concretization_version_order(version_info: Tuple[Union[GitVersion, StandardVersion], dict]):
+def concretization_version_order(
+    version_info: Tuple[Union[GitVersion, StandardVersion], dict],
+) -> Tuple[bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
     """Version order key for concretization, where preferred > not preferred,
-    not deprecated > deprecated, finite > any infinite component; only if all are
-    the same, do we use default version ordering."""
+    finite > any infinite component; only if all are the same, do we use default version
+    ordering.
+
+    Version deprecation needs to be accounted for separately.
+    """
     version, info = version_info
     return (
         info.get("preferred", False),
-        not info.get("deprecated", False),
         not isinstance(version, GitVersion),
         not version.isdevelop(),
         not version.is_prerelease(),

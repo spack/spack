@@ -1,0 +1,22 @@
+#-----------------------------------------------------------------------
+# DO NOT modify unless you really know what you are doing.
+#
+# See https://stackoverflow.com/a/74959635 for more info.
+# Talk to @alecbcs if you have questions/are not sure of a change's
+# possible impact to security.
+#-----------------------------------------------------------------------
+name: triage
+on:
+  pull_request_target:
+    branches:
+      - develop
+
+jobs:
+  pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+    - uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b

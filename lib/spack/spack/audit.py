@@ -606,7 +606,7 @@ def _ensure_packages_are_unparseable(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         try:
-            source = ph.canonical_source(pkg_name, filter_multimethods=False)
+            source = ph.canonical_source(spack.spec.Spec(pkg_name), filter_multimethods=False)
         except Exception as e:
             error_msg = "Package '{}' failed to unparse".format(pkg_name)
             details = ["{}".format(str(e))]
@@ -914,11 +914,14 @@ def _linting_package_file(pkgs, error_cls):
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
+        homepage = pkg_cls.homepage
+        if not homepage:
+            continue
+
         # Does the homepage have http, and if so, does https work?
-        if pkg_cls.homepage.startswith("http://"):
-            https = re.sub("http", "https", pkg_cls.homepage, 1)
+        if homepage.startswith("http://"):
             try:
-                response = urlopen(https)
+                response = urlopen(f"https://{homepage[7:]}")
             except Exception as e:
                 msg = 'Error with attempting https for "{0}": '
                 errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))

@@ -9,6 +9,7 @@ static DSL metadata for packages.
 """
 
 import os
+import pathlib
 import shutil
 
 import pytest
@@ -26,6 +27,7 @@ import spack.subprocess_context
 from spack.error import InstallError
 from spack.package_base import PackageBase
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
+from spack.version import Version
 
 
 @pytest.fixture(scope="module")
@@ -225,14 +227,14 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     shutil.rmtree(os.path.dirname(source_path))
 
 
-def test_cache_extra_sources_fails(install_mockery):
+def test_cache_extra_sources_fails(install_mockery, tmp_path: pathlib.Path):
     s = spack.concretize.concretize_one("pkg-a")
 
     with pytest.raises(InstallError) as exc_info:
-        spack.install_test.cache_extra_test_sources(s.package, ["/a/b", "no-such-file"])
+        spack.install_test.cache_extra_test_sources(s.package, [str(tmp_path), "no-such-file"])
 
     errors = str(exc_info.value)
-    assert "'/a/b') must be relative" in errors
+    assert f"'{tmp_path}') must be relative" in errors
     assert "'no-such-file') for the copy does not exist" in errors
 
 
@@ -387,3 +389,20 @@ def test_git_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, 
     captured = capfd.readouterr()
     assert "commit" not in spec.variants
     assert "Warning: Unable to resolve the git commit" in captured.err
+
+
+@pytest.mark.parametrize(
+    "pkg_name,preferred_version",
+    [
+        # This package has a deprecated v1.1.0 which should not be the preferred
+        ("deprecated_versions", "1.0.0"),
+        # Python has v2.7.11 marked as preferred and newer v3 versions
+        ("python", "2.7.11"),
+        # This package has various versions, some deprecated, plus "main" and "develop"
+        ("git-ref-package", "3.0.1"),
+    ],
+)
+def test_package_preferred_version(mock_packages, config, pkg_name, preferred_version):
+    """Tests retrieving the preferred version of a package."""
+    pkg_cls = mock_packages.get_pkg_class(pkg_name)
+    assert spack.package_base.preferred_version(pkg_cls) == Version(preferred_version)

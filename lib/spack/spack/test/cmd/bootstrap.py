@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import pathlib
-import sys
 
 import pytest
 
@@ -15,7 +14,6 @@ import spack.config
 import spack.environment as ev
 import spack.main
 import spack.spec
-from spack.llnl.path import convert_to_posix_path
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
 
@@ -34,15 +32,13 @@ def test_enable_and_disable(mutable_config, scope):
 
 
 @pytest.mark.parametrize("scope", [None, "site", "system", "user"])
-def test_root_get_and_set(mutable_config, scope):
-    scope_args, path = [], "/scratch/spack/bootstrap"
+def test_root_get_and_set(mutable_config, tmp_path, scope):
+    scope_args, path = [], str(tmp_path)
     if scope:
         scope_args = ["--scope={0}".format(scope)]
 
     _bootstrap("root", path, *scope_args)
     out = _bootstrap("root", *scope_args)
-    if sys.platform == "win32":
-        out = convert_to_posix_path(out)
     assert out.strip() == path
 
 

@@ -24,6 +24,7 @@ import spack.hash_types as ht
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
+import spack.package_base
 import spack.paths
 import spack.repo
 import spack.schema.env
@@ -951,10 +952,6 @@ class ViewDescriptor:
         return [x for x in nodes if x.name not in all_runtimes or runtimes_by_name[x.name] == x]
 
 
-def _create_environment(path):
-    return Environment(path)
-
-
 def env_subdir_path(manifest_dir: Union[str, pathlib.Path]) -> str:
     """Path to where the environment stores repos, logs, views, configs.
 
@@ -1038,6 +1035,8 @@ class Environment:
         state = self.__dict__.copy()
         state.pop("txlock", None)
         state.pop("_repo", None)
+        state.pop("repo_token", None)
+        state.pop("store_token", None)
         return state
 
     def __setstate__(self, state):
@@ -2545,11 +2544,13 @@ def _equiv_dict(first, second):
     return same_values and same_keys_with_same_overrides
 
 
-def display_specs(specs):
+def display_specs(specs: List[spack.spec.Spec], *, highlight_non_defaults: bool = False) -> None:
     """Displays a list of specs traversed breadth-first, covering nodes, with install status.
 
     Args:
-        specs (list): list of specs
+        specs: list of specs to be displayed
+        highlight_non_defaults: if True, highlights non-default versions and variants in the specs
+            being displayed
     """
     tree_string = spack.spec.tree(
         specs,
@@ -2557,6 +2558,12 @@ def display_specs(specs):
         hashes=True,
         hashlen=7,
         status_fn=spack.spec.Spec.install_status,
+        highlight_version_fn=(
+            spack.package_base.non_preferred_version if highlight_non_defaults else None
+        ),
+        highlight_variant_fn=(
+            spack.package_base.non_default_variant if highlight_non_defaults else None
+        ),
         key=traverse.by_dag_hash,
     )
     print(tree_string)

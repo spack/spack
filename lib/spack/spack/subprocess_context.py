@@ -14,9 +14,10 @@ child process.
 import importlib
 import io
 import multiprocessing
+import multiprocessing.context
 import pickle
 from types import ModuleType
-from typing import Any
+from typing import TYPE_CHECKING, Optional
 
 import spack.config
 import spack.paths
@@ -24,24 +25,21 @@ import spack.platforms
 import spack.repo
 import spack.store
 
-patches = None
+if TYPE_CHECKING:
+    import spack.package_base
+
+#: Used in tests to track monkeypatches that need to be restored in child processes
+MONKEYPATCHES: list = []
 
 
-def append_patch(patch):
-    global patches
-    if not patches:
-        patches = list()
-    patches.append(patch)
-
-
-def serialize(pkg) -> io.BytesIO:
+def serialize(pkg: "spack.package_base.PackageBase") -> io.BytesIO:
     serialized_pkg = io.BytesIO()
     pickle.dump(pkg, serialized_pkg)
     serialized_pkg.seek(0)
     return serialized_pkg
 
 
-def deserialize(serialized_pkg: io.BytesIO) -> Any:
+def deserialize(serialized_pkg: io.BytesIO) -> "spack.package_base.PackageBase":
     pkg = pickle.load(serialized_pkg)
     pkg.spec._package = pkg
     # ensure overwritten package class attributes get applied
@@ -63,70 +61,67 @@ class SpackTestProcess:
 
 
 class PackageInstallContext:
-    """Captures the in-memory process state of a package installation that
-    needs to be transmitted to a child process.
-    """
+    """Captures the in-memory process state of a package installation that needs to be transmitted
+    to a child process."""
 
-    def __init__(self, pkg, *, ctx=None):
+    def __init__(
+        self,
+        pkg: "spack.package_base.PackageBase",
+        *,
+        ctx: Optional[multiprocessing.context.BaseContext] = None,
+    ):
         ctx = ctx or multiprocessing.get_context()
-        self.serialize = ctx.get_start_method() != "fork"
-        from spack.environment import active_environment
-
-        if self.serialize:
-            self.serialized_pkg = serialize(pkg)
-            self.global_state = GlobalStateMarshaler()
-            self.test_patches = store_patches()
-            self.serialized_env = serialize(active_environment())
-        else:
-            self.pkg = pkg
-            self.global_state = None
-            self.test_patches = None
-            self.env = active_environment()
+        self.global_state = GlobalStateMarshaler(ctx=ctx)
+        self.pkg = pkg if ctx.get_start_method() == "fork" else serialize(pkg)
         self.spack_working_dir = spack.paths.spack_working_dir
 
-    def restore(self):
+    def restore(self) -> "spack.package_base.PackageBase":
         spack.paths.spack_working_dir = self.spack_working_dir
-        # Activating the environment modifies the global configuration, so globals have to
-        # be restored afterward, in case other modifications were applied on top (e.g. from
-        # command line)
-        if self.serialize:
-            self.global_state.restore()
-            self.test_patches.restore()
-
-        env = pickle.load(self.serialized_env) if self.serialize else self.env
-        if env:
-            from spack.environment import activate
-
-            activate(env)
-
-        # Order of operation is important, since the package might be retrieved
-        # from a repo defined within the environment configuration
-        return deserialize(self.serialized_pkg) if self.serialize else self.pkg
+        self.global_state.restore()
+        return deserialize(self.pkg) if isinstance(self.pkg, io.BytesIO) else self.pkg
 
 
 class GlobalStateMarshaler:
-    """Class to serialize and restore global state for child processes.
+    """Class to serialize and restore global state for child processes if needed.
 
     Spack may modify state that is normally read from disk or command line in memory;
     this object is responsible for properly serializing that state to be applied to a subprocess.
     """
 
-    def __init__(self):
+    def __init__(
+        self, *, ctx: Optional[Optional[multiprocessing.context.BaseContext]] = None
+    ) -> None:
+        ctx = ctx or multiprocessing.get_context()
+        self.is_forked = ctx.get_start_method() == "fork"
+        if self.is_forked:
+            return
+
+        from spack.environment import active_environment
+
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.platform = spack.platforms.host
         self.store = spack.store.STORE
+        self.test_patches = TestPatches.create()
+        self.env = active_environment()
 
     def restore(self):
+        if self.is_forked:
+            return
         spack.config.CONFIG = self.config
         spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
+        self.test_patches.restore()
+        if self.env:
+            from spack.environment import activate
+
+            activate(self.env)
 
 
 class TestPatches:
     def __init__(self, module_patches, class_patches):
-        self.module_patches = list((x, y, serialize(z)) for (x, y, z) in module_patches)
-        self.class_patches = list((x, y, serialize(z)) for (x, y, z) in class_patches)
+        self.module_patches = [(x, y, serialize(z)) for (x, y, z) in module_patches]
+        self.class_patches = [(x, y, serialize(z)) for (x, y, z) in class_patches]
 
     def restore(self):
         if not self.module_patches and not self.class_patches:
@@ -143,25 +138,18 @@ class TestPatches:
             cls = locate(class_fqn)
             setattr(cls, attr_name, value)
 
+    @staticmethod
+    def create():
+        module_patches = []
+        class_patches = []
+        for target, name in MONKEYPATCHES:
+            if isinstance(target, ModuleType):
+                new_val = getattr(target, name)
+                module_name = target.__name__
+                module_patches.append((module_name, name, new_val))
+            elif isinstance(target, type):
+                new_val = getattr(target, name)
+                class_fqn = ".".join([target.__module__, target.__name__])
+                class_patches.append((class_fqn, name, new_val))
 
-def store_patches():
-    module_patches = list()
-    class_patches = list()
-    if not patches:
-        return TestPatches(list(), list())
-    for target, name, _ in patches:
-        if isinstance(target, ModuleType):
-            new_val = getattr(target, name)
-            module_name = target.__name__
-            module_patches.append((module_name, name, new_val))
-        elif isinstance(target, type):
-            new_val = getattr(target, name)
-            class_fqn = ".".join([target.__module__, target.__name__])
-            class_patches.append((class_fqn, name, new_val))
-
-    return TestPatches(module_patches, class_patches)
-
-
-def clear_patches():
-    global patches
-    patches = None
+        return TestPatches(module_patches, class_patches)

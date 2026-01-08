@@ -56,6 +56,7 @@ import spack.paths
 import spack.report
 import spack.spec
 import spack.store
+import spack.traverse
 import spack.url_buildcache
 import spack.util.lock
 
@@ -215,7 +216,7 @@ class Tee:
 
 
 def install_from_buildcache(
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     spec: spack.spec.Spec,
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
@@ -326,7 +327,7 @@ class PrefixPivoter:
 def worker_function(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -414,7 +415,7 @@ def worker_function(
 def _install(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -429,7 +430,6 @@ def _install(
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
-    spack.build_environment.setup_package(pkg, dirty=dirty)
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
@@ -441,6 +441,7 @@ def _install(
             send_state("no binary available", state_stream)
             raise spack.error.InstallError(f"No binary available for {spec}")
 
+    spack.build_environment.setup_package(pkg, dirty=dirty)
     store.layout.create_install_directory(spec)
 
     stage = pkg.stage
@@ -568,7 +569,7 @@ class JobServer:
 def start_build(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -1110,16 +1111,19 @@ class BuildGraph:
         ]
 
         with database.read_transaction():
+            # Set the install prefix for each spec based on the db record or store layout
+            for s in spack.traverse.traverse_nodes(specs):
+                _, record = database.query_by_spec_hash(s.dag_hash())
+                if record and record.path:
+                    s.set_prefix(record.path)
+                else:
+                    s.set_prefix(spack.store.STORE.layout.path_for_spec(s))
+
+            # Build the graph and determine which specs to prune
             while stack:
                 spec, install_policy = stack.pop()
                 key = spec.dag_hash()
                 _, record = database.query_by_spec_hash(key)
-
-                # Set the install prefix for each spec based on the db record or store layout
-                if record and record.path:
-                    spec.set_prefix(record.path)
-                else:
-                    spec.set_prefix(spack.store.STORE.layout.path_for_spec(spec))
 
                 # Conditionally include build dependencies
                 if record and record.installed and key not in overwrite_set:
