@@ -971,7 +971,9 @@ class GitFetchStrategy(VCSFetchStrategy):
                 try:
                     spack.util.git.git_init_fetch(self.url, self.commit, depth, **kwargs)
                 except spack.util.executable.ProcessError:
-                    spack.util.git.git_clone(self.url, fetch_ref, True, depth, **kwargs)
+                    spack.util.git.git_clone(
+                        self.url, fetch_ref, self.get_full_repo, depth, **kwargs
+                    )
             else:
                 spack.util.git.git_clone(self.url, fetch_ref, self.get_full_repo, depth, **kwargs)
             repo_name = get_single_file(".")

@@ -241,8 +241,10 @@ def test_needs_stage(git):
 
 
 @pytest.mark.parametrize("get_full_repo", [True, False])
+@pytest.mark.parametrize("use_commit", [True, False])
 def test_get_full_repo(
     get_full_repo,
+    use_commit,
     git_version,
     mock_git_repository,
     default_mock_concretization,
@@ -259,10 +261,19 @@ def test_get_full_repo(
 
     t = mock_git_repository.checks[type_of_test]
 
-    s = default_mock_concretization("git-test")
+    spec_string = "git-test"
+
+    s = default_mock_concretization(spec_string)
+
     args = copy.copy(t.args)
     args["get_full_repo"] = get_full_repo
     monkeypatch.setitem(s.package.versions, Version("git"), args)
+
+    if use_commit:
+        git_exe = mock_git_repository.git_exe
+        url = mock_git_repository.url
+        commit = git_exe("ls-remote", url, t.revision, output=str).strip().split()[0]
+        s.variants["commit"] = SingleValuedVariant("commit", commit)
 
     with s.package.stage:
         with spack.config.override("config:verify_ssl", secure):
@@ -280,11 +291,11 @@ def test_get_full_repo(
                 ncommits = len(commits)
 
         if get_full_repo:
-            assert nbranches >= 5
-            assert ncommits == 2
+            assert nbranches >= 5, branches
+            assert ncommits == 2, commits
         else:
-            assert nbranches == 2
-            assert ncommits == 1
+            assert nbranches == 2, branches
+            assert ncommits == 1, commits
 
 
 @pytest.mark.disable_clean_stage_check
