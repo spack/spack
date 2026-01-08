@@ -1449,6 +1449,54 @@ def test_mirror_metadata():
         spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3@@4")
 
 
+def mirror_metadata_check_format(data, fmt, result):
+    assert fmt.format(data) == result.format(data)
+
+
+def test_mirror_metadata_format():
+    mirror_metadata = spack.binary_distribution.MirrorMetadata("https://dummy.io/__v3", 3)
+
+    # Check pass-through formatting
+    mirror_metadata_check_format(mirror_metadata, "{0:_url}", "{0.url}")
+    mirror_metadata_check_format(mirror_metadata, "{0:_version}", "{0.version}")
+    mirror_metadata_check_format(mirror_metadata, "{0:_view}", "{0.view}")
+
+    # Empty view
+    mirror_metadata_check_format(mirror_metadata, "{0:?_view}", "")
+    mirror_metadata_check_format(
+        mirror_metadata, "{0:_url?^_view^_version?^_version}", "{0.url}^{0.version}"
+    )
+    mirror_metadata_check_format(
+        mirror_metadata,
+        "{0:_url?^_view^_version?^_version?^_view^_version?^_url}",
+        "{0.url}^{0.version}^{0.url}",
+    )
+
+
+def test_mirror_metadata_format_with_view():
+    mirror_metadata = spack.binary_distribution.MirrorMetadata(
+        "https://dummy.io/__v3__@aview", 3, "aview"
+    )
+
+    # Check pass-through formatting
+    mirror_metadata_check_format(mirror_metadata, "{0:_url}", "{0.url}")
+    mirror_metadata_check_format(mirror_metadata, "{0:_version}", "{0.version}")
+    mirror_metadata_check_format(mirror_metadata, "{0:_view}", "{0.view}")
+
+    # View exists
+    mirror_metadata_check_format(mirror_metadata, "{0:?_view}", "{0.view}")
+    mirror_metadata_check_format(
+        mirror_metadata,
+        "{0:_url?^_view^_version?^_version}",
+        "{0.url}^{0.view}^{0.version}^{0.version}",
+    )
+    mirror_metadata_check_format(
+        mirror_metadata,
+        "{0:_url?^_view^_version?^_version?^_view^_version?^_url}",
+        "{0.url}^{0.view}^{0.version}^{0.version}^{0.view}^{0.version}^{0.url}",
+    )
+
+
 def test_mirror_metadata_with_view():
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
         "https://dummy.io/__v3__@aview", 3, "aview"

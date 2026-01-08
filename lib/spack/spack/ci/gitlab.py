@@ -396,10 +396,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
 
             final_job["stage"] = "stage-rebuild-index"
-            final_job["script"] = unpack_script(
-                final_job["script"],
-                op=main_script_replacements,
-            )
+            final_job["script"] = unpack_script(final_job["script"], op=main_script_replacements)
 
             final_job["when"] = "always"
             final_job["retry"] = service_job_retries
@@ -408,7 +405,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             # it also needs to wait until all of the other stages complete.
             final_job["needs"] = [
                 {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"},
-                "wait-for-build-jobs"
+                "wait-for-build-jobs",
             ]
 
             output_object["rebuild-index"] = final_job

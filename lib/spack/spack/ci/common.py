@@ -583,10 +583,7 @@ class SpackCIConfig:
         defaults = [
             {
                 "build-job": {
-                    "script": [
-                        "spack env activate --without-view {env_dir}",
-                        "spack ci rebuild",
-                    ]
+                    "script": ["spack env activate --without-view {env_dir}", "spack ci rebuild"]
                 }
             },
             {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
@@ -600,7 +597,7 @@ class SpackCIConfig:
             option = os.environ.get("SPACK_CI_BUILDCACHE_VIEW", "append")
             if option == "append":
                 # For CI, we have to assume that this is fine
-                tty.warn("Using --append to update buildache-destination mirror index view")
+                tty.warn("Using --append to update buildcache-destination mirror index view")
                 update_index_extra_args.extend(["-y", "--append"])
             elif option == "force":
                 update_index_extra_args.append("--force")
@@ -614,7 +611,9 @@ class SpackCIConfig:
                 "reindex-job": {
                     "script:": [
                         "spack env activate --without-view {env_dir}",
-                        f"spack buildcache update-index --keys {' '.join(update_index_extra_args)} buildcache-destination"]
+                        "spack buildcache update-index --keys "
+                        + f"{' '.join(update_index_extra_args)} buildcache-destination",
+                    ]
                 }
             },
             # Add signing job tags
