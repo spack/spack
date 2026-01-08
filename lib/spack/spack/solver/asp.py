@@ -221,9 +221,7 @@ def specify(spec):
     return spack.spec.Spec(spec)
 
 
-def remove_facts(
-    *to_be_removed: str,
-) -> Callable[[spack.spec.Spec, List[AspFunction]], List[AspFunction]]:
+def remove_facts(*to_be_removed: str) -> TransformFunction:
     """Returns a transformation function that removes facts from the input list of facts."""
 
     def _remove(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
@@ -1288,7 +1286,7 @@ class ConditionIdContext(SourceContext):
 
     def __init__(self):
         super().__init__()
-        self.transform = None
+        self.transform: Optional[TransformFunction] = None
 
 
 class ConditionContext(SourceContext):
@@ -1303,10 +1301,10 @@ class ConditionContext(SourceContext):
         super().__init__()
         # transformation applied to facts from the required spec. Defaults
         # to leave facts as they are.
-        self.transform_required = None
+        self.transform_required: Optional[TransformFunction] = None
         # transformation applied to facts from the imposed spec. Defaults
         # to removing "node" and "virtual_node" facts.
-        self.transform_imposed = None
+        self.transform_imposed: Optional[TransformFunction] = None
         # Whether to wrap direct dependency facts as node requirements,
         # imposed by the parent. If None, the default is used, which is:
         # - wrap head of rules
@@ -1328,7 +1326,9 @@ class ConditionContext(SourceContext):
         return ctxt
 
 
-def _track_dependencies(input_spec, requirements):
+def _track_dependencies(
+    input_spec: spack.spec.Spec, requirements: List[AspFunction]
+) -> List[AspFunction]:
     return requirements + [fn.attr("track_dependencies", input_spec.name)]
 
 
@@ -1424,31 +1424,32 @@ class SpackSolverSetup:
         for v in sorted(deprecated):
             self.gen.fact(fn.pkg_fact(pkg.name, fn.deprecated_version(v)))
 
-    def spec_versions(self, spec):
+    def spec_versions(self, spec: spack.spec.Spec) -> List[AspFunction]:
         """Return list of clauses expressing spec's version constraints."""
-        spec = specify(spec)
+        name = spec.name
         msg = "Internal Error: spec with no name occured. Please report to the spack maintainers."
-        assert spec.name, msg
+        assert name, msg
 
         if spec.concrete:
-            return [fn.attr("version", spec.name, spec.version)]
+            return [fn.attr("version", name, spec.version)]
 
         if spec.versions == vn.any_version:
             return []
 
         # record all version constraints for later
-        self.version_constraints.add((spec.name, spec.versions))
-        return [fn.attr("node_version_satisfies", spec.name, spec.versions)]
+        self.version_constraints.add((name, spec.versions))
+        return [fn.attr("node_version_satisfies", name, spec.versions)]
 
-    def target_ranges(self, spec, single_target_fn):
+    def target_ranges(self, spec: spack.spec.Spec, single_target_fn) -> List[AspFunction]:
+        name = spec.name
         target = spec.architecture.target
 
         # Check if the target is a concrete target
         if str(target) in spack.vendor.archspec.cpu.TARGETS:
-            return [single_target_fn(spec.name, target)]
+            return [single_target_fn(name, target)]
 
         self.target_constraints.add(target)
-        return [fn.attr("node_target_satisfies", spec.name, target)]
+        return [fn.attr("node_target_satisfies", name, target)]
 
     def conflict_rules(self, pkg):
         for when_spec, conflict_specs in pkg.conflicts.items():
@@ -1794,14 +1795,6 @@ class SpackSolverSetup:
 
         return condition_id
 
-    def impose(self, condition_id, imposed_spec, node=True, body=False):
-        imposed_constraints = self.spec_clauses(imposed_spec, body=body)
-        for pred in imposed_constraints:
-            # imposed "node"-like conditions are no-ops
-            if not node and pred.args[0] in ("node", "virtual_node"):
-                continue
-            self.gen.fact(fn.imposed_constraint(condition_id, *pred.args))
-
     def package_provider_rules(self, pkg):
         for vpkg_name in pkg.provided_virtual_names():
             if vpkg_name not in self.possible_virtuals:
@@ -1854,7 +1847,9 @@ class SpackSolverSetup:
 
                 msg = f"{pkg.name} depends on {dep.spec}{cond_str_suffix}"
 
-                def dependency_holds(input_spec, requirements):
+                def dependency_holds(
+                    input_spec: spack.spec.Spec, requirements: List[AspFunction]
+                ) -> List[AspFunction]:
                     # TODO: `dependency_holds` is used as a cache key, and is a unique object in
                     # every iteration of the loop. This prevents deduplication of identical
                     # "effects" when unique when specs impose the same dependency. We cannot move
@@ -2237,18 +2232,17 @@ class SpackSolverSetup:
         """
         clauses = []
         seen = seen if seen is not None else set()
+        name = spec.name
         seen.add(id(spec))
 
         f: Union[Type[_Head], Type[_Body]] = _Body if body else _Head
 
-        if spec.name:
+        if name:
             clauses.append(
-                f.node(spec.name)
-                if not spack.repo.PATH.is_virtual(spec.name)
-                else f.virtual_node(spec.name)
+                f.node(name) if not spack.repo.PATH.is_virtual(name) else f.virtual_node(name)
             )
         if spec.namespace:
-            clauses.append(f.namespace(spec.name, spec.namespace))
+            clauses.append(f.namespace(name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec))
 
@@ -2257,9 +2251,9 @@ class SpackSolverSetup:
         arch = spec.architecture
         if arch:
             if arch.platform:
-                clauses.append(f.node_platform(spec.name, arch.platform))
+                clauses.append(f.node_platform(name, arch.platform))
             if arch.os:
-                clauses.append(f.node_os(spec.name, arch.os))
+                clauses.append(f.node_os(name, arch.os))
             if arch.target:
                 clauses.extend(self.target_ranges(spec, f.node_target))
 
@@ -2273,22 +2267,22 @@ class SpackSolverSetup:
 
             for value in variant.values:
                 # ensure that the value *can* be valid for the spec
-                if spec.name and not spec.concrete and not spack.repo.PATH.is_virtual(spec.name):
+                if name and not spec.concrete and not spack.repo.PATH.is_virtual(name):
                     variant_defs = vt.prevalidate_variant_value(
-                        self.pkg_class(spec.name), variant, spec
+                        self.pkg_class(name), variant, spec
                     )
 
                     # Record that that this is a valid possible value. Accounts for
                     # int/str/etc., where valid values can't be listed in the package
                     for variant_def in variant_defs:
-                        self.variant_values_from_specs.add((spec.name, id(variant_def), value))
+                        self.variant_values_from_specs.add((name, id(variant_def), value))
 
                 if variant.propagate:
-                    clauses.append(f.propagate(spec.name, fn.variant_value(vname, value)))
-                    if self.pkg_class(spec.name).has_variant(vname):
-                        clauses.append(f.variant_value(spec.name, vname, value))
+                    clauses.append(f.propagate(name, fn.variant_value(vname, value)))
+                    if self.pkg_class(name).has_variant(vname):
+                        clauses.append(f.variant_value(name, vname, value))
                 else:
-                    variant_clause = f.variant_value(spec.name, vname, value)
+                    variant_clause = f.variant_value(name, vname, value)
                     if (
                         variant.concrete
                         and variant.type == vt.VariantType.MULTI
@@ -2300,9 +2294,7 @@ class SpackSolverSetup:
                                 *variant_clause.args[1:],
                             )
                         else:
-                            clauses.append(
-                                fn.attr("concrete_variant_request", spec.name, vname, value)
-                            )
+                            clauses.append(fn.attr("concrete_variant_request", name, vname, value))
                     clauses.append(variant_clause)
 
         # compiler flags
@@ -2311,12 +2303,12 @@ class SpackSolverSetup:
             flag_group = " ".join(flags)
             for flag in flags:
                 clauses.append(
-                    f.node_flag(spec.name, fn.node_flag(flag_type, flag, flag_group, source))
+                    f.node_flag(name, fn.node_flag(flag_type, flag, flag_group, source))
                 )
                 if not spec.concrete and flag.propagate is True:
                     clauses.append(
                         f.propagate(
-                            spec.name,
+                            name,
                             fn.node_flag(flag_type, flag, flag_group, source),
                             fn.edge_types("link", "run"),
                         )
@@ -2327,10 +2319,10 @@ class SpackSolverSetup:
             # older specs do not have package hashes, so we have to do this carefully
             package_hash = getattr(spec, "_package_hash", None)
             if package_hash:
-                clauses.append(fn.attr("package_hash", spec.name, package_hash))
-            clauses.append(fn.attr("hash", spec.name, spec.dag_hash()))
+                clauses.append(fn.attr("package_hash", name, package_hash))
+            clauses.append(fn.attr("hash", name, spec.dag_hash()))
             if spec.external:
-                clauses.append(fn.attr("external", spec.name))
+                clauses.append(fn.attr("external", name))
 
         edges = spec.edges_from_dependents()
         virtuals = sorted(
@@ -2338,17 +2330,17 @@ class SpackSolverSetup:
         )
         if not body and not spec.concrete:
             for virtual in virtuals:
-                clauses.append(fn.attr("provider_set", spec.name, virtual))
+                clauses.append(fn.attr("provider_set", name, virtual))
                 clauses.append(fn.attr("virtual_node", virtual))
         else:
             for virtual in virtuals:
-                clauses.append(fn.attr("virtual_on_incoming_edges", spec.name, virtual))
+                clauses.append(fn.attr("virtual_on_incoming_edges", name, virtual))
 
         # If the spec is external and concrete, we allow all the libcs on the system
         if spec.external and spec.concrete and using_libc_compatibility():
-            clauses.append(fn.attr("needs_libc", spec.name))
+            clauses.append(fn.attr("needs_libc", name))
             for libc in self.libcs:
-                clauses.append(fn.attr("compatible_libc", spec.name, libc.name, libc.version))
+                clauses.append(fn.attr("compatible_libc", name, libc.name, libc.version))
 
         if not transitive:
             return clauses
@@ -2367,7 +2359,7 @@ class SpackSolverSetup:
                 # the possibility to reuse specs built against a different runtime.
                 if dep.name == "gcc-runtime":
                     edge_clauses.append(
-                        fn.attr("compatible_runtime", spec.name, dep.name, f"{dep.version}:")
+                        fn.attr("compatible_runtime", name, dep.name, f"{dep.version}:")
                     )
                     constraint_spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
                     self.spec_versions(constraint_spec)
@@ -2377,11 +2369,11 @@ class SpackSolverSetup:
                 # libc is also solved again by clingo, but in this case the compatibility
                 # is not encoded in the parent node - so we need to emit explicit facts
                 if "libc" in dspec.virtuals:
-                    edge_clauses.append(fn.attr("needs_libc", spec.name))
+                    edge_clauses.append(fn.attr("needs_libc", name))
                     for libc in self.libcs:
                         if libc_is_compatible(libc, dep):
                             edge_clauses.append(
-                                fn.attr("compatible_libc", spec.name, libc.name, libc.version)
+                                fn.attr("compatible_libc", name, libc.name, libc.version)
                             )
                     if not include_runtimes:
                         continue
@@ -2394,11 +2386,11 @@ class SpackSolverSetup:
                     # skip build dependencies of already-installed specs
                     if concrete_build_deps or dtype != dt.BUILD:
                         edge_clauses.append(
-                            fn.attr("depends_on", spec.name, dep.name, dt.flag_to_string(dtype))
+                            fn.attr("depends_on", name, dep.name, dt.flag_to_string(dtype))
                         )
                         for virtual_name in dspec.virtuals:
                             edge_clauses.append(
-                                fn.attr("virtual_on_edge", spec.name, dep.name, virtual_name)
+                                fn.attr("virtual_on_edge", name, dep.name, virtual_name)
                             )
                             edge_clauses.append(fn.attr("virtual_node", virtual_name))
 
@@ -2408,11 +2400,11 @@ class SpackSolverSetup:
                     edge_clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
                 elif not concrete_build_deps and dspec.depflag:
                     edge_clauses.append(
-                        fn.attr("concrete_build_dependency", spec.name, dep.name, dep.dag_hash())
+                        fn.attr("concrete_build_dependency", name, dep.name, dep.dag_hash())
                     )
                     for virtual_name in dspec.virtuals:
                         edge_clauses.append(
-                            fn.attr("virtual_on_build_edge", spec.name, dep.name, virtual_name)
+                            fn.attr("virtual_on_build_edge", name, dep.name, virtual_name)
                         )
 
             # if the spec is abstract, descend into dependencies.
@@ -2438,9 +2430,7 @@ class SpackSolverSetup:
                 # Direct dependencies expressed with "%"
                 ###
                 for dependency_type in dt.flag_to_tuple(dspec.depflag):
-                    edge_clauses.append(
-                        fn.attr("depends_on", spec.name, dep.name, dependency_type)
-                    )
+                    edge_clauses.append(fn.attr("depends_on", name, dep.name, dependency_type))
 
                 # By default, wrap head of rules, unless the context says otherwise
                 wrap_node_requirement = body is False
@@ -2453,7 +2443,7 @@ class SpackSolverSetup:
 
                 for clause in dependency_clauses:
                     clause.name = "node_requirement"
-                    edge_clauses.append(fn.attr("direct_dependency", spec.name, clause))
+                    edge_clauses.append(fn.attr("direct_dependency", name, clause))
 
         clauses.extend(edge_clauses)
         return clauses
@@ -3204,7 +3194,9 @@ class SpackSolverSetup:
             # Cannot use "virtual_node" attr as key for condition
             # because reused specs do not track virtual nodes.
             # Instead, track whether the parent uses the virtual
-            def virtual_handler(input_spec, requirements):
+            def virtual_handler(
+                input_spec: spack.spec.Spec, requirements: List[AspFunction]
+            ) -> List[AspFunction]:
                 ret = remove_facts("virtual_node")(input_spec, requirements)
                 for edge in input_spec.traverse_edges(root=False, cover="edges"):
                     if spack.repo.PATH.is_virtual(edge.spec.name):
