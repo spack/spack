@@ -201,7 +201,7 @@ def info(
     cprint(
         "@%s{%s==>} %s%s"
         % (format, st_text, get_timestamp(), cescape(_output_filter(str(message)))),
-        stream=stream,
+        stream=stream,  # type: ignore[arg-type]
     )
     for arg in args:
         if wrap:
@@ -230,7 +230,7 @@ def debug(
     """Print a debug message if the debug level is set."""
     if is_debug(level):
         stream_arg = stream or sys.stderr
-        info(message, *args, format=format, stream=stream_arg, **kwargs)
+        info(message, *args, format=format, stream=stream_arg, **kwargs)  # type: ignore[arg-type]
 
 
 def error(
@@ -241,7 +241,13 @@ def error(
         return
 
     stream = stream or sys.stderr
-    info(f"Error: {message}", *args, format=format, stream=stream, **kwargs)
+    info(
+        f"Error: {message}",
+        *args,
+        format=format,
+        stream=stream,  # type: ignore[arg-type]
+        **kwargs,
+    )
 
 
 def warn(message, *args, format: str = "*Y", stream: Optional[io.IOBase] = None, **kwargs) -> None:
@@ -250,7 +256,13 @@ def warn(message, *args, format: str = "*Y", stream: Optional[io.IOBase] = None,
         return
 
     stream = stream or sys.stderr
-    info(f"Warning: {message}", *args, format=format, stream=stream, **kwargs)
+    info(
+        f"Warning: {message}",
+        *args,
+        format=format,
+        stream=stream,  # type: ignore[arg-type]
+        **kwargs,
+    )
 
 
 def die(message, *args, countback: int = 4, **kwargs) -> NoReturn:
