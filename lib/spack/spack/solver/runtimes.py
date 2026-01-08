@@ -134,8 +134,7 @@ class RuntimePropertyRecorder:
         when_substitutions = {}
         for s in when_spec.traverse(root=False):
             when_substitutions[f'"{s.name}"'] = self.node_for(s.name)
-        when_spec.name = node_placeholder
-        body_clauses = self._setup.spec_clauses(when_spec, body=True)
+        body_clauses = self._setup.spec_clauses(when_spec, name=node_placeholder, body=True)
         for clause in body_clauses:
             if clause.args[0] == "virtual_on_incoming_edges":
                 # Substitute: attr("virtual_on_incoming_edges", ProviderNode, Virtual)
