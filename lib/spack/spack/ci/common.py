@@ -52,16 +52,19 @@ spec_job_names = ["build", "test"]
 #: Names of all possible named jobs
 all_job_names = ["any"] + spec_job_names + core_job_names
 
-#: default job settings
-default_job_settings = {
+#: Names of script stages
+script_stage_names = ["before_script", "script", "after_script"]
+
+#: default job settings, keyed by job stage
+default_job_settings: Dict[str, Dict[str, Any]] = {
     "build-job": {
         "script": ["cd {env_dir}", "spack env activate --without-view .", "spack ci rebuild"]
     },
     "noop-job": {"script": ['echo "All specs already up-to-date, nothing to rebuild."']},
 }
 
-#: Override job settings
-override_job_settings = {
+#: Override job settings, keyed by job stage
+override_job_settings: Dict[str, Dict[str, Any]] = {
     "any-job-remove": {"tags": SPACK_RESERVED_TAGS},
     "cleanup-job": {"script": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]},
     "reindex-job": {"script": ["spack buildcache update-index --keys {index_target_mirror}"]},
@@ -174,19 +177,6 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
 
     with open(output_file, "w", encoding="utf-8") as fd:
         fd.write(json.dumps(buildcache_copies))
-
-
-class CIScriptStage(enum.Enum):
-    """Script stages."""
-
-    #: Script for setting up the job
-    BEFORE = "before_script"
-
-    #: Script that runs the job
-    DURING = "script"
-
-    #: Script that runs after the job
-    AFTER = "after_script"
 
 
 class CIScript:
@@ -337,23 +327,23 @@ class CIJobData:
         """
         self.name: str = name
         self.hash: str = spec.dag_hash() if spec else ""
-        self.job_name = f"{self.name}-job{'-remove' if self.remove else ''}"
         self.remove: bool = remove
+        self.job_name = f"{self.name}-job{'-remove' if remove else ''}"
         self.spec: Optional[spack.spec.Spec] = spec
 
         # TODO: These will need to be pushed to self.attributes before output
-        self.script: Dict[CIScriptStage, CIScript] = {}
+        self.script: Dict[str, CIScript] = {}
         if self.job_name in default_job_settings:
             for key, value in default_job_settings[self.job_name].items():
                 try:
-                    self.script[CIScriptStage(key)] = CIScript(value)
+                    self.script[key] = CIScript(value)
                 except KeyError:
                     try:
                         setattr(self, key, value)
                     except Exception as e:
                         tty.error(f"Failed to set {key} attribute with {value}: {str(e)}")
 
-        self.attributes: Dict[str, Union[str, int]] = {}
+        self.attributes: Dict[str, Union[str, Any]] = {}
         if spec:
             self.attributes["variables"] = {
                 "SPACK_JOB_SPEC_ARCH": spec.format("{architecture}"),
@@ -370,22 +360,39 @@ class CIJobData:
 
     def add_tags(self, tags: List[str]):
         if "tags" not in self.attributes:
-            self.attributes["tags"] = []
+            self.attributes["tags"]: List[str] = []
         self.attributes["tags"].extend(tags)
 
+    def remove_tags(self, tags: List[str]):
+        if "tags" not in self.attributes:
+            return
+
+        try:
+            self.attributes["tags"].remove(tag)
+        except ValueError:
+            # value is not in the list
+            pass
+
     def add_stage(self, stage: str):
+        """Sets the job state.
+
+        Args:
+            stage: name of the job stage
+        """
         self.attributes["stage"] = stage
 
-    def has_script(self, stage: CIScriptStage):
-        return stage in self.scripts
+    def has_script(self, stage: str) -> bool:
+        """Returns whether the script stage is implemented for the job.
+
+        Args:
+            stage: stage of the script
+
+        Returns: ``True`` if the script stage is implemented; ``False`` otherwise
+        """
+        return stage in self.script
 
     def remove_reserved_tags(self):
-        for tag in SPACK_RESERVED_TAGS:
-            try:
-                self.attributes["tags"].remove(tag)
-            except ValueError:
-                # value is not in the list
-                pass
+        self.remove_tags(SPACK_RESERVED_TAGS)
 
     def spec_query(self) -> Optional[str]:
         """Return the job's spec query."""
@@ -473,7 +480,22 @@ class CIJobData:
                 break
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"spec": self.spec, "attributes": self.attributes, "scripts": self.script}
+        result = {}
+        if self.spec:
+            result["spec"] = self.spec
+        if self.attributes:
+            result["attributes"] = self.attributes
+        tty.msg(f"TLD: to_dict: scripts: {self.script}")
+        for stage in self.script:
+            stage = str(stage)
+            tty.msg(f"TLD: .. stage {stage}")
+            try:
+                result[stage] = str(self.script[stage])
+                tty.msg(f"TLD: .. .. {self.script[stage]}")
+            except KeyError:
+                result["failure"] = f"{stage} does not exist in {self.script}"
+                raise
+        return result
 
 
 class CDashHandler:
@@ -808,12 +830,12 @@ class SpackCIConfig:
         # Prep for each possible job type
         self.jobs: Dict[str, List[CIJobData]] = {}
         for name in all_job_names:
-            self.jobs[name] = []
+            self.jobs[name]: List[CIJobData] = []
 
         # Add each core job along with its defaults
         for name in core_job_names:
             tty.debug(f"TLD: SpackCIConfig: instantiating '{name}' job")
-            self.jobs[name] = [CIJobData(name)]
+            self.jobs[name].append(CIJobData(name))
 
     def init_pipeline_jobs(self, pipeline: PipelineDag):
         """Create jobs for all the pipeline specs"""
@@ -824,7 +846,7 @@ class SpackCIConfig:
             names.append("test")
 
         for _, node in pipeline.traverse_nodes():
-            for name in enumerate(names):
+            for name in names:
                 self.jobs[name].append(CIJobData(name, node.spec))
 
     def job(self, name: str, spec: Optional[spack.spec.Spec] = None) -> Optional[CIJobData]:
@@ -977,16 +999,8 @@ class SpackCIConfig:
 
         # Merge/override the default CI job configurations
         pipeline_gen = [override_job_settings] + self.ci_config.get("pipeline-gen", [])
-        tty.debug("\nTLD: generate_ir: reversed(pipeline_gen):")
         for section in reversed(pipeline_gen):
-            tty.debug(f"TLD: .. {section}")
-        tty.debug()
-
-        for section in reversed(pipeline_gen):
-            tty.debug(f"TLD: generate_ir: processing (reversed) section {section}")
             section = cfg.InternalConfigScope._process_dict_keyname_overrides(section)
-            tty.debug(f"TLD: .. new section: {section}")
-
             job_name = self._named_job_name(section)
             if job_name:
                 self.update_job_attributes(job_name, section)
