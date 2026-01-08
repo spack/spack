@@ -14,7 +14,6 @@ import spack.config
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang as lang
-import spack.repo
 import spack.spec
 import spack.tengine as tengine
 import spack.util.environment
