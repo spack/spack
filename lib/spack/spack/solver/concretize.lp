@@ -839,9 +839,12 @@ concrete(PackageNode) :- attr("hash", PackageNode, _), attr("node", PackageNode)
 % Dependencies of any type imply that one package "depends on" another
 depends_on(PackageNode, DependencyNode) :- attr("depends_on", PackageNode, DependencyNode, _).
 
-% a dependency holds if its condition holds and if it is not concrete.
 % Dependencies of concrete specs don't need to be resolved -- they arise from the concrete specs themselves.
-attr("track_dependencies", Node) :- build(Node).
+do_not_impose(EffectID, node(X, Package)) :-
+     trigger_and_effect(Package, ConditionID, TriggerID, EffectID),
+     trigger_condition_holds(TriggerID, node(X, Package)),
+     imposed_constraint(EffectID, "dependency_holds", Package, _, _),
+     concrete(node(X, Package)).
 
 % If a dependency holds on a package node, there must be one and only one dependency node satisfying it
 1 { attr("depends_on", PackageNode, node(0..Y-1, Dependency), Type) : max_dupes(Dependency, Y) } 1

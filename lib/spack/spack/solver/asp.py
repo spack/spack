@@ -1338,12 +1338,6 @@ class ConditionContext(SourceContext):
         return ctxt
 
 
-def _track_dependencies(
-    name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
-) -> List[AspFunction]:
-    return requirements + [fn.attr("track_dependencies", name)]
-
-
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
@@ -1873,7 +1867,6 @@ class SpackSolverSetup:
                 context.source = ConstraintOrigin.append_type_suffix(
                     pkg.name, ConstraintOrigin.DEPENDS_ON
                 )
-                context.transform_required = _track_dependencies
                 context.transform_imposed = dependency_holds(dependency_flags=depflag, pkg_cls=pkg)
                 self.condition(cond, dep.spec, required_name=pkg.name, msg=msg, context=context)
                 self.gen.newline()
@@ -3444,7 +3437,6 @@ class SpecBuilder:
                 r"^dependency_holds$",
                 r"^package_hash$",
                 r"^root$",
-                r"^track_dependencies$",
                 r"^uses_virtual$",
                 r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
