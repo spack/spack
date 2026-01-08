@@ -53,8 +53,8 @@ def activate_with_prompt(shell, prompt):
 
     if shell == "csh":
         cmds += "if (! $?SPACK_OLD_PROMPT ) "
-        cmds += f"_spack_env_set SPACK_OLD_PROMPT {prompt};\n"
-        cmds += f'set prompt="${prompt}";\n'
+        cmds += f"_spack_env_set SPACK_OLD_PROMPT {prompt}\n"
+        cmds += f"_spack_env_set prompt {prompt}\n"
     elif shell == "fish":
         if "color" in os.getenv("TERM", ""):
             prompt = colorize(f"@G{prompt} ", color=True)

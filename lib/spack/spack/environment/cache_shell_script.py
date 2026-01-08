@@ -75,7 +75,7 @@ def write_env_activate_script(env, view):
             f.write(cmds)
 
 
-def update_env_activate_script(env, prompt, view):
+def update_env_activate_script(env, prompt="", view=""):
     """Overwrite existing environment activation script with new environment modifications
 
     Args:
@@ -101,22 +101,21 @@ def update_env_activate_script(env, prompt, view):
         activate_script_path = path_to_env_activate_shell_script(env, shell)
         prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
 
-        with open(activate_script_path, "w", encoding="utf-8") as f:
-            f.write(
-                f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
-            )
-            f.write(activate_cmds)
-            f.write(view_cmds)
-
         if prompt_cmds:
             with open(prompt_view_script_path, "w", encoding="utf-8") as f:
                 f.write(
                     f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
                 )
                 f.write(prompt_cmds)
+                f.write(view_cmds)
+        source_prompts = f"source {prompt_view_script_path}" if os.path.isfile(prompt_view_script_path) else ""
 
-        if view:
-            write_env_deactivate_script(env, view)
+        with open(activate_script_path, "w", encoding="utf-8") as f:
+            f.write(
+                f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
+            )
+            f.write(activate_cmds)
+            f.write(source_prompts)
 
 
 def write_env_deactivate_script(env, view):
