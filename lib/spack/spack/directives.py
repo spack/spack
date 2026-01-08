@@ -92,7 +92,8 @@ _patch_order_index = 0
 SpecType = str
 DepType = Union[Tuple[str, ...], str]
 WhenType = Optional[Union[spack.spec.Spec, str, bool]]
-Patcher = Callable[[Union[Type[spack.package_base.PackageBase], Dependency]], None]
+PackageType = Type[spack.package_base.PackageBase]
+Patcher = Callable[[Union[PackageType, Dependency]], None]
 PatchesType = Union[Patcher, str, List[Union[Patcher, str]]]
 
 
@@ -232,7 +233,7 @@ def version(
     return partial(_execute_version, ver=ver, **kwargs)
 
 
-def _execute_version(pkg: Type[spack.package_base.PackageBase], ver: Union[str, int], **kwargs):
+def _execute_version(pkg: PackageType, ver: Union[str, int], **kwargs):
     if (
         (any(s in kwargs for s in spack.util.crypto.hashes) or "checksum" in kwargs)
         and hasattr(pkg, "has_code")
@@ -282,7 +283,7 @@ def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str]
     return partial(_execute_conflicts, conflict_spec=conflict_spec, when=when, msg=msg)
 
 
-def _execute_conflicts(pkg: Type[spack.package_base.PackageBase], conflict_spec, when, msg):
+def _execute_conflicts(pkg: PackageType, conflict_spec, when, msg):
     # If when is not specified the conflict always holds
     when_spec = _make_when_spec(when)
     if not when_spec:
@@ -320,7 +321,7 @@ def depends_on(
 
 
 def _execute_depends_on(
-    pkg: Type[spack.package_base.PackageBase],
+    pkg: PackageType,
     spec: spack.spec.Spec,
     *,
     when: WhenType = None,
@@ -404,10 +405,7 @@ def redistribute(
 
 
 def _execute_redistribute(
-    pkg: Type[spack.package_base.PackageBase],
-    source: Optional[bool],
-    binary: Optional[bool],
-    when: WhenType,
+    pkg: PackageType, source: Optional[bool], binary: Optional[bool], when: WhenType
 ):
     if source is None and binary is None:
         return
@@ -461,11 +459,7 @@ def extends(
 
 
 def _execute_extends(
-    pkg: Type[spack.package_base.PackageBase],
-    spec: str,
-    when: WhenType,
-    type: DepType,
-    patches: Optional[PatchesType],
+    pkg: PackageType, spec: str, when: WhenType, type: DepType, patches: Optional[PatchesType]
 ):
     when_spec = _make_when_spec(when)
     if not when_spec:
@@ -498,9 +492,7 @@ def provides(*specs: SpecType, when: WhenType = None):
     return partial(_execute_provides, specs=specs, when=when)
 
 
-def _execute_provides(
-    pkg: Type[spack.package_base.PackageBase], specs: Tuple[SpecType, ...], when: WhenType
-):
+def _execute_provides(pkg: PackageType, specs: Tuple[SpecType, ...], when: WhenType):
     when_spec = _make_when_spec(when)
     if not when_spec:
         return
@@ -546,10 +538,7 @@ def can_splice(
 
 
 def _execute_can_splice(
-    pkg: Type[spack.package_base.PackageBase],
-    target: SpecType,
-    when: SpecType,
-    match_variants: Union[None, str, List[str]],
+    pkg: PackageType, target: SpecType, when: SpecType, match_variants: Union[None, str, List[str]]
 ):
     when_spec = _make_when_spec(when)
     if isinstance(match_variants, str) and match_variants != "*":
@@ -605,7 +594,7 @@ def patch(
 
 
 def _execute_patch(
-    pkg_or_dep: Union[Type[spack.package_base.PackageBase], Dependency],
+    pkg_or_dep: Union[PackageType, Dependency],
     url_or_filename: str,
     level: int,
     when: WhenType,
@@ -716,7 +705,7 @@ def _format_error(msg, pkg, name):
 
 
 def _execute_variant(
-    pkg: Type[spack.package_base.PackageBase],
+    pkg: PackageType,
     name: str,
     default: Optional[Union[bool, str, Tuple[str, ...]]],
     description: str,
@@ -854,7 +843,7 @@ def resource(
 
 
 def _execute_resource(
-    pkg: Type[spack.package_base.PackageBase],
+    pkg: PackageType,
     name: Optional[str],
     destination: str,
     placement: Optional[str],
@@ -916,7 +905,7 @@ def maintainers(*names: str):
     return partial(_execute_maintainer, names=names)
 
 
-def _execute_maintainer(pkg: Type[spack.package_base.PackageBase], names: Tuple[str, ...]):
+def _execute_maintainer(pkg: PackageType, names: Tuple[str, ...]):
     maintainers = set(getattr(pkg, "maintainers", []))
     maintainers.update(names)
     pkg.maintainers = sorted(maintainers)
@@ -941,11 +930,7 @@ def license(
     return partial(_execute_license, license_identifier=license_identifier, when=when)
 
 
-def _execute_license(
-    pkg: Type[spack.package_base.PackageBase],
-    license_identifier: str,
-    when: Optional[Union[str, bool]],
-):
+def _execute_license(pkg: PackageType, license_identifier: str, when: Optional[Union[str, bool]]):
     # If when is not specified the license always holds
     when_spec = _make_when_spec(when)
     if not when_spec:
@@ -1002,7 +987,7 @@ def requires(
 
 
 def _execute_requires(
-    pkg: Type[spack.package_base.PackageBase],
+    pkg: PackageType,
     requirement_specs: Tuple[str, ...],
     policy: str,
     when: Optional[str],
