@@ -13,6 +13,7 @@ lmod:
     - lapack
     - blas
     - mpi
+    - python
 
   filter_hierarchy_specs:
     'mpileaks@:2.1': [mpi]
