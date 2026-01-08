@@ -102,6 +102,11 @@ class DirectiveMeta(type):
 
     @staticmethod
     def _remove_directives(arg):
+        # If any of the arguments are executors returned by a directive passed as an argument,
+        # don't execute them lazily. Instead, let the called directive handle them. This allows
+        # nested directive calls in packages.  The caller can return the directive if it should be
+        # queued. Nasty, but it's the best way I can think of to avoid side effects if directive
+        # results are passed as args
         directives = DirectiveMeta._directives_to_be_executed
         if isinstance(arg, (list, tuple)):
             # Descend into args that are lists or tuples
@@ -203,13 +208,6 @@ class DirectiveMeta(type):
                         when_spec._constrain_symbolically(current, deps=True)
                     kwargs["when"] = when_spec
 
-                # If any of the arguments are executors returned by a
-                # directive passed as an argument, don't execute them
-                # lazily. Instead, let the called directive handle them.
-                # This allows nested directive calls in packages.  The
-                # caller can return the directive if it should be queued.
-                # Nasty, but it's the best way I can think of to avoid
-                # side effects if directive results are passed as args
                 DirectiveMeta._remove_directives(args)
                 DirectiveMeta._remove_directives(list(kwargs.values()))
 

@@ -29,6 +29,15 @@ The available directives are:
 * ``requires``
 * ``redistribute``
 
+They're implemented as functions that return partial functions that are later executed with a
+package class as first argument::
+
+    @directive("example")
+    def example_directive(arg1, arg2):
+        return partial(_execute_example_directive, arg1=arg1, arg2=arg2)
+
+    def _execute_example_directive(pkg, arg1, arg2):
+        # modify pkg.example based on arg1 and arg2
 """
 import collections
 import collections.abc
