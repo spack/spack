@@ -75,7 +75,7 @@ def post_install(spec, explicit=None):
     created_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", t)
 
     # Create path and dir for sbom
-    sbom_path = os.path.join(STORE.layout.metadata_path(spec), "sbom.json")
+    sbom_path = os.path.join(STORE.layout.metadata_path(spec), "spdx-2.3-sbom.json")
     os.makedirs(os.path.dirname(sbom_path), exist_ok=True)
 
     unique_str = f"{spec.name}-{spec.version}-{spec.dag_hash()}"
