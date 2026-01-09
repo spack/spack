@@ -44,17 +44,6 @@ def _unset_xdg_vars(env):
     return saved
 
 
-def _spack_xdg_or_backup(xdg_mapping):
-    if xdg_mapping.spack in os.environ:
-        val = os.environ[xdg_mapping.spack]
-    elif xdg_mapping.xdg in os.environ:
-        val = os.path.join(os.environ[xdg_mapping.xdg], "spack")
-    else:
-        val = os.path.join(xdg_mapping.xdg_default, "spack")
-
-    return os.path.expanduser(val)
-
-
 def dir_is_occupied(x, except_for=None):
     x = pathlib.Path(x)
     except_for = except_for or set()
