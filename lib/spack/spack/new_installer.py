@@ -27,7 +27,6 @@ import os
 import re
 import selectors
 import shutil
-import signal
 import sys
 import tempfile
 import termios
@@ -70,18 +69,6 @@ CLEANUP_TIMEOUT = 2.0
 OUTPUT_BUFFER_SIZE = 4096
 
 
-def setup_signal_handling() -> int:
-    """Set up signal handling for SIGCHLD using a wakeup pipe."""
-    # A handler is still needed for set_wakeup_fd to work, but it can be a no-op.
-    signal.signal(signal.SIGCHLD, lambda signum, frame: None)
-    signal_r, signal_w = os.pipe()
-    os.set_blocking(signal_r, False)
-    os.set_blocking(signal_w, False)
-    # This will write the signal number to the pipe, waking up select().
-    signal.set_wakeup_fd(signal_w)
-    return signal_r
-
-
 class ChildInfo:
     """Information about a child process."""
 
@@ -112,6 +99,10 @@ class ChildInfo:
         try:
             selector.unregister(self.state_r_conn.fileno())
         except KeyError:
+            pass
+        try:
+            selector.unregister(self.proc.sentinel)
+        except (KeyError, ValueError):
             pass
         self.output_r_conn.close()
         self.state_r_conn.close()
@@ -470,23 +461,13 @@ def start_build(
     return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, explicit)
 
 
-def reap_children(
-    child_data: Dict[int, ChildInfo], selector: selectors.BaseSelector, jobserver: JobServer
-) -> List[int]:
-    """Reap terminated child processes"""
-    to_delete: List[int] = []
-    for pid, child in child_data.items():
-        if child.proc.is_alive():
-            continue
-        to_delete.append(pid)
-        jobserver.release()
-        child.cleanup(selector)
-    return to_delete
+def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
+    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors.
 
-
-def get_jobserver_config() -> Optional[Union[str, Tuple[int, int]]]:
-    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors."""
-    makeflags = os.environ.get("MAKEFLAGS", "")
+    Args:
+        makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
+    """
+    makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
     if not makeflags:
         return None
     # We can have the following flags:
@@ -1106,9 +1087,6 @@ class PackageInstaller:
     def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
 
-        # Set up signal handling
-        signal_r = setup_signal_handling()
-
         # Set stdin to non-blocking for key press detection
         if sys.stdin.isatty():
             old_stdin_settings = termios.tcgetattr(sys.stdin)
@@ -1117,7 +1095,6 @@ class PackageInstaller:
             old_stdin_settings = None
 
         selector = selectors.DefaultSelector()
-        selector.register(signal_r, selectors.EVENT_READ, "signal")
         selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
 
         # Setup the database write lock. TODO: clean this up
@@ -1142,11 +1119,12 @@ class PackageInstaller:
                 elif not self.pending_builds and jobserver.r in selector.get_map():
                     selector.unregister(jobserver.r)
 
-                children_have_finished = False
                 jobserver_token_available = False
                 stdin_ready = False
 
                 events = selector.select(timeout=SPINNER_INTERVAL)
+
+                finished_pids = []
 
                 for key, _ in events:
                     data = key.data
@@ -1157,27 +1135,23 @@ class PackageInstaller:
                             self._handle_child_logs(key.fd, child_info, selector)
                         elif data.name == "state":
                             self._handle_child_state(key.fd, child_info, selector)
-                    elif data == "signal":
-                        children_have_finished = True
+                        elif data.name == "sentinel":
+                            finished_pids.append(data.pid)
                     elif data == "jobserver":
                         jobserver_token_available = True
                     elif data == "stdin":
                         stdin_ready = True
 
-                if children_have_finished:
-                    try:
-                        # Clear the signal pipe
-                        os.read(signal_r, OUTPUT_BUFFER_SIZE)
-                    except BlockingIOError:
-                        pass
-                    for pid in reap_children(self.running_builds, selector, jobserver):
-                        build = self.running_builds.pop(pid)
-                        if build.proc.exitcode == 0:
-                            to_insert_in_database.append(build)
-                            self.build_status.update_state(build.spec.dag_hash(), "finished")
-                        else:
-                            failures.append(build.spec)
-                            self.build_status.update_state(build.spec.dag_hash(), "failed")
+                for pid in finished_pids:
+                    build = self.running_builds.pop(pid)
+                    jobserver.release()
+                    build.cleanup(selector)
+                    if build.proc.exitcode == 0:
+                        to_insert_in_database.append(build)
+                        self.build_status.update_state(build.spec.dag_hash(), "finished")
+                    else:
+                        failures.append(build.spec)
+                        self.build_status.update_state(build.spec.dag_hash(), "failed")
 
                 if stdin_ready:
                     try:
@@ -1236,9 +1210,6 @@ class PackageInstaller:
             self.build_status.update(finalize=True)
             selector.close()
             jobserver.close()
-            old_wakeup_fd = signal.set_wakeup_fd(-1)
-            os.close(old_wakeup_fd)
-            os.close(signal_r)
 
         if failures:
             lines = [f"{s}: {s.package.log_path}" for s in failures]
@@ -1275,6 +1246,7 @@ class PackageInstaller:
         selector.register(
             child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state")
         )
+        selector.register(child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
         self.build_status.add_build(
             child_info.spec, explicit=explicit, control_w_conn=child_info.control_w_conn
         )
