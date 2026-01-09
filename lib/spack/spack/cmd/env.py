@@ -451,6 +451,9 @@ def env_deactivate(args):
 
     ev.deactivate()
 
+    if not os.path.isfile(env_deactivate_script):
+        shell_script.write_env_deactivate_script(env, args.view)
+
     print(f"source {env_deactivate_script}")
 
 
