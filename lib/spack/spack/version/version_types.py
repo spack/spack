@@ -773,39 +773,59 @@ class GitVersion(ConcreteVersion):
         return self.ref_version.up_to(index)
 
 
+def _str_range(lo: StandardVersion, hi: StandardVersion) -> str:
+    """Create a string representation from lo:hi range."""
+    if lo == _STANDARD_VERSION_TYPEMIN:
+        if hi == _STANDARD_VERSION_TYPEMAX:
+            return ":"
+        else:
+            return f":{hi}"
+    elif hi == _STANDARD_VERSION_TYPEMAX:
+        return f"{lo}:"
+    elif lo == hi:
+        return str(lo)
+    else:
+        return f"{lo}:{hi}"
+
+
 class ClosedOpenRange(VersionType):
-    __slots__ = ("lo", "hi")
+    __slots__ = ("lo", "hi", "_string", "_hash")
 
     def __init__(self, lo: StandardVersion, hi: StandardVersion):
         if hi < lo:
             raise EmptyRangeError(f"{lo}..{hi} is an empty range")
         self.lo: StandardVersion = lo
         self.hi: StandardVersion = hi
+        self._string: Optional[str] = None
+        self._hash: Optional[int] = None
 
     @classmethod
     def from_version_range(cls, lo: StandardVersion, hi: StandardVersion) -> "ClosedOpenRange":
         """Construct ClosedOpenRange from lo:hi range."""
         try:
-            return ClosedOpenRange(lo, _next_version(hi))
+            r = ClosedOpenRange(lo, _next_version(hi))
         except EmptyRangeError as e:
             raise EmptyRangeError(f"{lo}:{hi} is an empty range") from e
 
+        # Cache hash and string representation
+        r._hash = hash((lo, hi))
+        r._string = _str_range(lo, hi)
+        return r
+
     def __str__(self) -> str:
-        # This simplifies 3.1:<3.2 to 3.1:3.1 to 3.1
-        # 3:3 -> 3
-        hi_prev = _prev_version(self.hi)
-        if self.lo != StandardVersion.typemin() and self.lo == hi_prev:
-            return str(self.lo)
-        lhs = "" if self.lo == StandardVersion.typemin() else str(self.lo)
-        rhs = "" if hi_prev == StandardVersion.typemax() else str(hi_prev)
-        return f"{lhs}:{rhs}"
+        if self._string:
+            return self._string
+        self._string = _str_range(self.lo, _prev_version(self.hi))
+        return self._string
 
     def __repr__(self):
         return str(self)
 
     def __hash__(self):
-        # prev_version for backward compat.
-        return hash((self.lo, _prev_version(self.hi)))
+        if self._hash is not None:
+            return self._hash
+        self._hash = hash((self.lo, _prev_version(self.hi)))
+        return self._hash
 
     def __eq__(self, other):
         if isinstance(other, StandardVersion):
