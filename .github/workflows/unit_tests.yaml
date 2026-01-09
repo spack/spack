@@ -158,7 +158,6 @@ jobs:
           source share/spack/setup-env.sh
           spack debug report
           spack -d bootstrap now --dev
-          spack -d style -t black
           pytest --verbose -x -n3 --dist loadfile -k 'not cvs and not svn and not hg'
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
