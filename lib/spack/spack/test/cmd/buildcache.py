@@ -27,8 +27,8 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import copy_tree, find, getuid
-from spack.paths import locations as paths
 from spack.llnl.util.lang import nullcontext
+from spack.paths import locations as paths
 from spack.url_buildcache import (
     BuildcacheComponent,
     URLBuildcacheEntry,
