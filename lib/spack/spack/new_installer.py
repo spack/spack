@@ -54,6 +54,7 @@ import spack.llnl.util.tty
 import spack.paths
 import spack.report
 import spack.spec
+import spack.stage
 import spack.store
 import spack.traverse
 import spack.url_buildcache
@@ -167,16 +168,13 @@ def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
 
 class Tee:
     """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
-    process (if echoing is enabled). The control_fd is used to enable/disable echoing. The initial
-    log file is /dev/null and can be changed later with set_output_file()."""
+    process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
 
-    def __init__(self, control: Connection, parent: Connection) -> None:
+    def __init__(self, control: Connection, parent: Connection, log_fd: int) -> None:
         self.control = control
         self.parent = parent
-        dev_null_fd = os.open(os.devnull, os.O_WRONLY)
-        #: The file descriptor of the log file (initially /dev/null)
-        self.log_fd = os.dup(dev_null_fd)
-        os.close(dev_null_fd)
+        #: The file descriptor of the log file
+        self.log_fd = log_fd
         r, w = os.pipe()
         self.tee_thread = threading.Thread(
             target=tee,
@@ -188,15 +186,11 @@ class Tee:
         os.dup2(w, sys.stderr.fileno())
         os.close(w)
 
-    def set_output_file(self, path: str) -> None:
-        """Redirect output to the specified log file."""
-        log_fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
-        os.dup2(log_fd, self.log_fd)
-        os.close(log_fd)
-
     def close(self) -> None:
         # Closing stdout and stderr should close the last reference to the write end of the pipe,
         # causing the tee thread to wake up, flush the last data, and exit.
+        sys.stdout.flush()
+        sys.stderr.flush()
         os.close(sys.stdout.fileno())
         os.close(sys.stderr.fileno())
         self.tee_thread.join()
@@ -366,12 +360,18 @@ def worker_function(
     if spec.external:
         return
 
-    tee = Tee(echo_control, parent)
-
     os.environ["MAKEFLAGS"] = makeflags
     spack.store.STORE = store
     spack.config.CONFIG = config
     spack.paths.set_working_dir()
+
+    # Create a log file in the root of the stage dir.
+    log_fd, log_path = tempfile.mkstemp(
+        prefix=f"spack-stage-{spec.name}-{spec.dag_hash()}-",
+        suffix=".log",
+        dir=spack.stage.get_stage_root(),
+    )
+    tee = Tee(echo_control, parent, log_fd)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
@@ -390,7 +390,7 @@ def worker_function(
                 restage,
                 skip_patch,
                 state_stream,
-                tee,
+                log_path,
                 store,
             )
     except Exception:
@@ -399,6 +399,18 @@ def worker_function(
     finally:
         tee.close()
         state_stream.close()
+
+    if exit_code == 0 and not os.path.lexists(spec.package.install_log_path):
+        # Try to install the compressed log file
+        try:
+            with open(log_path, "rb") as f, open(spec.package.install_log_path, "wb") as g:
+                # Use GzipFile directly so we can omit filename / mtime in header
+                gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
+                shutil.copyfileobj(f, gzip_file)
+                gzip_file.close()
+            os.unlink(log_path)
+        except Exception:
+            pass  # don't fail the build just because log compression failed
 
     sys.exit(exit_code)
 
@@ -414,7 +426,7 @@ def _install(
     restage: bool,
     skip_patch: bool,
     state_stream: io.TextIOWrapper,
-    tee: Tee,
+    log_path: str,
     store: spack.store.Store = spack.store.STORE,
 ) -> None:
     """Install a spec from build cache or source."""
@@ -444,8 +456,7 @@ def _install(
             stage.destroy()
         stage.create()
 
-        # Start collecting logs.
-        tee.set_output_file(pkg.log_path)
+        os.symlink(log_path, pkg.log_path)
 
         send_state("staging", state_stream)
 
@@ -461,13 +472,6 @@ def _install(
         for phase in spack.builder.create(pkg):
             send_state(phase.name, state_stream)
             phase.execute()
-
-        # Install source build logs
-        with open(pkg.log_path, "rb") as f, open(pkg.install_log_path, "wb") as g:
-            # Use GzipFile directly so we can omit filename / mtime in header
-            gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
-            shutil.copyfileobj(f, gzip_file)
-            gzip_file.close()
 
         spack.hooks.post_install(spec, explicit)
 
