@@ -592,6 +592,20 @@ def test_015_write_and_read(mutable_database):
         assert new_rec.installed == rec.installed
 
 
+def test_016_roundtrip_spliced_spec(mutable_database):
+    build_spec = spack.concretize.concretize_one("splice-t")
+    replacement = spack.concretize.concretize_one("splice-h+foo")
+    spec = build_spec.splice(replacement)
+
+    spack.store.STORE.db.add(spec)
+    _, spec_record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+    _, buildspec_record = spack.store.STORE.db.query_by_spec_hash(spec.build_spec.dag_hash())
+
+    assert spec_record.spec == spec
+    assert spec_record.spec.build_spec == spec.build_spec
+    assert buildspec_record  # buildspec needs to be recorded in db
+
+
 def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
     monkeypatch.setattr(spack.database, "_use_uuid", False)
     # write and read DB

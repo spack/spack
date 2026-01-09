@@ -751,6 +751,25 @@ class Database:
         with self.read_transaction():
             return self._data.get(hash_key, None)
 
+    def _assign_build_spec(
+        self,
+        spec_reader: Type["spack.spec.SpecfileReaderBase"],
+        hash_key: str,
+        installs: dict,
+        data: Dict[str, InstallRecord],
+    ):
+        # Add dependencies from other records in the install DB to
+        # form a full spec.
+        spec = data[hash_key].spec
+        spec_node_dict = installs[hash_key]["spec"]
+        if "name" not in spec_node_dict:
+            # old format
+            spec_node_dict = spec_node_dict[spec.name]
+        if "build_spec" in spec_node_dict:
+            _, bhash, _ = spec_reader.extract_build_spec_info_from_node_dict(spec_node_dict)
+            build_spec = self.query_by_spec_hash(bhash, data=data)
+            spec._build_spec = build_spec
+
     def _assign_dependencies(
         self,
         spec_reader: Type["spack.spec.SpecfileReaderBase"],
@@ -865,6 +884,7 @@ class Database:
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
             try:
+                self._assign_build_spec(spec_reader, hash_key, installs, data)
                 self._assign_dependencies(spec_reader, hash_key, installs, data)
             except MissingDependenciesError:
                 raise
@@ -1190,6 +1210,9 @@ class Database:
                 # allow missing build / test only deps
                 allow_missing=allow_missing or edge.depflag & (dt.BUILD | dt.TEST) == edge.depflag,
             )
+
+        if spec.spliced:
+            self._add(spec.build_spec, explicit=False, allow_missing=True)
 
         # Make sure the directory layout agrees whether the spec is installed
         if not spec.external and self.layout:
