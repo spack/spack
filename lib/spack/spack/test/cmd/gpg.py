@@ -9,7 +9,6 @@ import pytest
 
 import spack.binary_distribution
 import spack.llnl.util.filesystem as fs
-import spack.util.executable
 import spack.util.gpg
 from spack.main import SpackCommand
 from spack.paths import locations as paths

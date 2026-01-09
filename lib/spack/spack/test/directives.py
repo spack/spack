@@ -84,7 +84,7 @@ def test_conditionally_extends_direct_dep(config, mock_packages):
 def test_error_on_anonymous_dependency(config, mock_packages):
     pkg = spack.repo.PATH.get_pkg_class("pkg-a")
     with pytest.raises(spack.directives.DependencyError):
-        spack.directives._depends_on(pkg, spack.spec.Spec("@4.5"))
+        spack.directives._execute_depends_on(pkg, spack.spec.Spec("@4.5"))
 
 
 @pytest.mark.regression("34879")
@@ -151,11 +151,11 @@ def test_version_type_validation():
 
     # Pass a float
     with pytest.raises(spack.version.VersionError, match=msg):
-        spack.directives._execute_version(package(name="python"), 3.10)
+        spack.directives._execute_version(package(name="python"), ver=3.10, kwargs={})
 
     # Try passing a bogus type; it's just that we want a nice error message
     with pytest.raises(spack.version.VersionError, match=msg):
-        spack.directives._execute_version(package(name="python"), {})
+        spack.directives._execute_version(package(name="python"), ver={}, kwargs={})
 
 
 @pytest.mark.parametrize(

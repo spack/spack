@@ -21,6 +21,7 @@ import pytest
 import spack.binary_distribution
 import spack.concretize
 import spack.config
+import spack.environment as ev
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirrors.mirror
@@ -28,6 +29,7 @@ import spack.oci.image
 import spack.spec
 import spack.stage
 import spack.store
+import spack.url_buildcache
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
@@ -284,6 +286,71 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     install_cmd("--fake", "--no-cache", s.name)
     buildcache_cmd("push", "-u", str(mirror_dir), s.name)
     buildcache_cmd("update-index", str(mirror_dir))
+
+    # Now the test
+    buildcache_cmd("list", "-al")
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex()
+    cache_list = buildcache_cmd("list", "-al")
+    assert "libdwarf" in cache_list
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+def test_use_bin_index_active_env_with_view(
+    monkeypatch, tmp_path: pathlib.Path, mutable_config, mutable_mock_env_path
+):
+    """Check use of binary cache index: perform an operation that
+    instantiates it, and a second operation that reconstructs it.
+    """
+    monkeypatch.setattr(
+        spack.binary_distribution, "BINARY_INDEX", spack.binary_distribution.BinaryCacheIndex()
+    )
+
+    # Create a mirror, configure us to point at it, install a spec, and
+    # put it in the mirror
+    mirror_dir = tmp_path / "mirror_dir"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
+    spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
+    s = spack.concretize.concretize_one("libdwarf")
+
+    # Create an environment and install specs for the view
+    ev.create("testenv")
+    with ev.read("testenv"):
+        install_cmd("--add", "--fake", "--no-cache", s.name)
+        buildcache_cmd("push", "-u", "test", s.name)
+        buildcache_cmd("update-index", "test")
+
+    # Now the test
+    buildcache_cmd("list", "-al")
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex()
+    cache_list = buildcache_cmd("list", "-al")
+    assert "libdwarf" in cache_list
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+def test_use_bin_index_with_view(
+    monkeypatch, tmp_path: pathlib.Path, mutable_config, mutable_mock_env_path
+):
+    """Check use of binary cache index: perform an operation that
+    instantiates it, and a second operation that reconstructs it.
+    """
+    monkeypatch.setattr(
+        spack.binary_distribution, "BINARY_INDEX", spack.binary_distribution.BinaryCacheIndex()
+    )
+
+    # Create a mirror, configure us to point at it, install a spec, and
+    # put it in the mirror
+    mirror_dir = tmp_path / "mirror_dir"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
+    spack.config.set("mirrors", {"test": {"url": mirror_url, "view": "test"}})
+    s = spack.concretize.concretize_one("libdwarf")
+
+    # Create an environment and install specs for the view
+    ev.create("testenv")
+    with ev.read("testenv"):
+        install_cmd("--add", "--fake", "--no-cache", s.name)
+        buildcache_cmd("push", "-u", "test", s.name)
+
+    buildcache_cmd("update-index", "test", "testenv")
 
     # Now the test
     buildcache_cmd("list", "-al")
@@ -1178,7 +1245,7 @@ def test_etag_fetching_304():
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.EtagIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
@@ -1205,7 +1272,7 @@ def test_etag_fetching_200(mock_index):
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.EtagIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
@@ -1233,7 +1300,7 @@ def test_etag_fetching_404():
         )
 
     fetcher = spack.binary_distribution.EtagIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
@@ -1259,7 +1326,7 @@ def test_default_index_fetch_200(mock_index):
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.DefaultIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         local_hash="outdated",
@@ -1288,7 +1355,7 @@ def test_default_index_404():
         )
 
     fetcher = spack.binary_distribution.DefaultIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         local_hash=None,
@@ -1315,7 +1382,7 @@ def test_default_index_not_modified(mock_index):
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.DefaultIndexFetcher(
-        spack.binary_distribution.MirrorURLAndVersion(
+        spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
         local_hash=mock_index.index_hash,
@@ -1362,3 +1429,39 @@ def test_get_entries_from_cache_nested_mirrors(monkeypatch, tmp_path: pathlib.Pa
     # Expected specs in nested mirror
     #   - zlib
     assert len(spec_manifests_nested) == 1
+
+
+def test_mirror_metadata():
+    mirror_metadata = spack.binary_distribution.MirrorMetadata("https://dummy.io/__v3", 3)
+    as_str = str(mirror_metadata)
+    from_str = spack.binary_distribution.MirrorMetadata.from_string(as_str)
+
+    # Verify values
+    assert mirror_metadata.url == "https://dummy.io/__v3"
+    assert mirror_metadata.version == 3
+    assert mirror_metadata.view is None
+
+    # Verify round trip
+    assert mirror_metadata == from_str
+    assert as_str == str(from_str)
+
+    with pytest.raises(spack.url_buildcache.MirrorMetadataError, match="Malformed string"):
+        spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3@@4")
+
+
+def test_mirror_metadata_with_view():
+    mirror_metadata = spack.binary_distribution.MirrorMetadata(
+        "https://dummy.io/__v3__@aview", 3, "aview"
+    )
+    as_str = str(mirror_metadata)
+    from_str = spack.binary_distribution.MirrorMetadata.from_string(as_str)
+
+    # Verify round trip
+    assert mirror_metadata.url == "https://dummy.io/__v3__@aview"
+    assert mirror_metadata.version == 3
+    assert mirror_metadata.view == "aview"
+    assert mirror_metadata == from_str
+    assert as_str == str(from_str)
+
+    with pytest.raises(spack.url_buildcache.MirrorMetadataError, match="Malformed string"):
+        spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3%asdf__@aview")

@@ -326,6 +326,12 @@ def foo(config: "spack.error.SpackError"):
     spack.util.executable.Executable("example")
     print(spack.__version__)
     print(spack.repo_utils.__file__)
+
+import spack.enums
+from spack.enums import ConfigScopePriority
+
+import spack.util.url as url_util
+def something(y: spack.util.url.Url): ...
 '''
     file.write_text(contents)
     root = str(tmp_path)
@@ -343,8 +349,10 @@ def foo(config: "spack.error.SpackError"):
     assert "issues.py: redundant import: spack.cmd" in output
     assert "issues.py: redundant import: spack.repo" in output
     assert "issues.py: redundant import: spack.config" not in output  # comment prevents removal
+    assert "issues.py: redundant import: spack.enums" in output  # imported via from-import
     assert "issues.py: missing import: spack" in output  # used by spack.__version__
     assert "issues.py: missing import: spack.util.executable" in output
+    assert "issues.py: missing import: spack.util.url" in output  # used in type hint
     assert "issues.py: missing import: spack.error" not in output  # not directly used
     assert exit_code == 1
     assert file.read_text() == contents  # fix=False should not change the file
@@ -362,8 +370,10 @@ def foo(config: "spack.error.SpackError"):
     output = output_buf.getvalue()
     assert exit_code == 1
     assert "issues.py: redundant import: spack.cmd" in output
+    assert "issues.py: redundant import: spack.enums" in output
     assert "issues.py: missing import: spack" in output
     assert "issues.py: missing import: spack.util.executable" in output
+    assert "issues.py: missing import: spack.util.url" in output
 
     # after fix a second fix is idempotent
     output_buf = io.StringIO()
@@ -382,8 +392,10 @@ def foo(config: "spack.error.SpackError"):
     # check that the file was fixed
     new_contents = file.read_text()
     assert "import spack.cmd" not in new_contents
+    assert "import spack.enums" not in new_contents
     assert "import spack\n" in new_contents
     assert "import spack.util.executable\n" in new_contents
+    assert "import spack.util.url\n" in new_contents
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires Python 3.9+")

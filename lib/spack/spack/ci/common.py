@@ -553,7 +553,7 @@ class SpackCIConfig:
                 if _spec_matches(spec, match_string):
                     matched = True
                     if "build-job-remove" in match_attrs:
-                        spack.config.remove_yaml(dest, attrs["build-job-remove"])
+                        cfg.remove_yaml(dest, attrs["build-job-remove"])
                     if "build-job" in match_attrs:
                         spack.schema.merge_yaml(dest, attrs["build-job"])
                     break
@@ -624,7 +624,7 @@ class SpackCIConfig:
 
                 def _apply_section(dest, src):
                     if do_remove:
-                        dest = spack.config.remove_yaml(dest, src[remove_job_name])
+                        dest = cfg.remove_yaml(dest, src[remove_job_name])
                     if do_merge:
                         dest = copy.copy(spack.schema.merge_yaml(dest, src[merge_job_name]))
 

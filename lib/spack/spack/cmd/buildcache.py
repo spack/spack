@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
+import enum
 import glob
 import json
+import os
 import sys
 import tempfile
 from typing import List, Optional, Tuple
@@ -25,6 +27,7 @@ import spack.store
 import spack.util.parallel
 import spack.util.web as web_util
 from spack import traverse
+from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.llnl.string import plural
@@ -39,12 +42,19 @@ from ..url_buildcache import (
     BuildcacheEntryError,
     URLBuildcacheEntry,
     check_mirror_for_layout,
+    get_entries_from_cache,
     get_url_buildcache_class,
 )
 
 description = "create, download and install binary packages"
 section = "packaging"
 level = "long"
+
+
+class ViewUpdateMode(enum.Enum):
+    CREATE = enum.auto()
+    OVERWRITE = enum.auto()
+    APPEND = enum.auto()
 
 
 def setup_parser(subparser: argparse.ArgumentParser):
@@ -280,12 +290,56 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     sync.set_defaults(func=sync_fn)
 
+    # Check the validity of a buildcache
+    check_index = subparsers.add_parser("check-index", help=check_index_fn.__doc__)
+    check_index.add_argument(
+        "--verify",
+        nargs="+",
+        choices=["exists", "manifests", "blobs", "all"],
+        default=["exists"],
+        help="List of items to verify along along with the index.",
+    )
+    check_index.add_argument(
+        "--name", "-n", action="store", help="Name of the view index to check"
+    )
+    check_index.add_argument(
+        "--output", "-o", action="store", help="File to write check details to"
+    )
+    check_index.add_argument(
+        "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
+    )
+    check_index.set_defaults(func=check_index_fn)
+
     # Update buildcache index without copying any additional packages
     update_index = subparsers.add_parser(
         "update-index", aliases=["rebuild-index"], help=update_index_fn.__doc__
     )
     update_index.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="destination mirror name, path, or URL"
+    )
+    update_index_view_args = update_index.add_argument_group("view arguments")
+    update_index_view_args.add_argument(
+        "sources", nargs="*", help="List of environments names or paths"
+    )
+    update_index_view_args.add_argument(
+        "--name", "-n", action="store", help="Name of the view index to update"
+    )
+    update_index_view_mode_args = update_index_view_args.add_mutually_exclusive_group(
+        required=False
+    )
+    update_index_view_mode_args.add_argument(
+        "--append",
+        "-a",
+        action="store_true",
+        help="Append the listed specs to the current view index if it already exists. "
+        "This operation does not guarentee atomic write and should be run with care.",
+    )
+    update_index_view_mode_args.add_argument(
+        "--force",
+        "-f",
+        action="store_true",
+        help="If a view index already exists, overwrite it and "
+        "suppress warnings (this is the default for non-view indices)",
     )
     update_index.add_argument(
         "-k",
@@ -294,6 +348,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="if provided, key index will be updated as well as package index",
     )
+    arguments.add_common_arguments(update_index, ["yes_to_all"])
     update_index.set_defaults(func=update_index_fn)
 
     # Migrate a buildcache from layout_version 2 to version 3
@@ -790,18 +845,265 @@ def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
         spack.binary_distribution._url_generate_package_index(url, tmpdir)
 
     if update_keys:
-        try:
-            with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-                spack.binary_distribution.generate_key_index(url, tmpdir)
-        except spack.binary_distribution.CannotListKeys as e:
-            # Do not error out if listing keys went wrong. This usually means that the _gpg path
-            # does not exist. TODO: distinguish between this and other errors.
-            tty.warn(f"did not update the key index: {e}")
+        mirror_update_keys(mirror)
+
+
+def mirror_update_keys(mirror: spack.mirrors.mirror.Mirror):
+    url = mirror.push_url
+    try:
+        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+            spack.binary_distribution.generate_key_index(url, tmpdir)
+    except spack.binary_distribution.CannotListKeys as e:
+        # Do not error out if listing keys went wrong. This usually means that the _gpg path
+        # does not exist. TODO: distinguish between this and other errors.
+        tty.warn(f"did not update the key index: {e}")
+
+
+def update_view(
+    mirror: spack.mirrors.mirror.Mirror,
+    update_mode: ViewUpdateMode,
+    *sources: str,
+    name: Optional[str] = None,
+    update_keys: bool = False,
+    yes_to_all: bool = False,
+):
+    """update a buildcache view index"""
+    # OCI images do not support views.
+    try:
+        spack.oci.oci.image_from_mirror(mirror)
+        raise spack.error.SpackError("OCI build caches do not support index views")
+    except ValueError:
+        pass
+
+    if update_mode == ViewUpdateMode.APPEND and not yes_to_all:
+        tty.warn(
+            "Appending to a view index does not guarantee idempotent write when contending "
+            "with multiple writers. This feature is meant to be used by a single process."
+        )
+        tty.get_yes_or_no("Do you want to proceed?", default=False)
+
+    # Otherwise, assume a normal mirror.
+    url = mirror.push_url
+
+    if (name and mirror.push_view) and not name == mirror.push_view:
+        tty.warn(
+            (
+                f"Updating index view with name ({name}), which is different than "
+                f"the configured name ({mirror.push_view}) for the mirror {mirror.name}"
+            )
+        )
+
+    name = name or mirror.push_view
+    if not name:
+        tty.die(
+            "Attempting to update a view but could not determine the view name.\n"
+            "    Either pass --name <view name> or configure the view name in mirrors.yaml"
+        )
+
+    mirror_metadata = spack.binary_distribution.MirrorMetadata(
+        url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, name
+    )
+
+    # Check if the index already exists, if it does make sure there is a copy in the
+    # local cache.
+    index_exists = True
+    try:
+        BINARY_INDEX._fetch_and_cache_index(mirror_metadata)
+    except spack.binary_distribution.BuildcacheIndexNotExists:
+        index_exists = False
+
+    if index_exists and update_mode == ViewUpdateMode.CREATE:
+        raise spack.error.SpackError(
+            "Index already exists. To overwrite or update pass --force or --append respectively"
+        )
+
+    hashes = []
+    if sources:
+        for source in sources:
+            tty.debug(f"reading specs from source: {source}")
+            env = ev.environment_from_name_or_dir(source)
+            hashes.extend(env.all_hashes())
+    else:
+        # Get hashes in the current active environment
+        hashes = spack.cmd.require_active_env(cmd_name="buildcache update-view").all_hashes()
+
+    if not hashes:
+        tty.warn("No specs found for view, creating an empty index")
+
+    filter_fn = lambda x: x in hashes
+
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        # Initialize a database
+        db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
+        db._write()
+
+        if update_mode == ViewUpdateMode.APPEND:
+            # Load the current state of the view index from the cache into the database
+            cache_index = BINARY_INDEX._local_index_cache.get(str(mirror_metadata))
+            if cache_index:
+                cache_key = cache_index["index_path"]
+                db._read_from_file(BINARY_INDEX._index_file_cache.cache_path(cache_key))
+
+        spack.binary_distribution._url_generate_package_index(url, tmpdir, db, name, filter_fn)
+
+    if update_keys:
+        mirror_update_keys(mirror)
+
+
+def check_index_fn(args):
+    """Check if a build cache index, manifests, and blobs are consistent"""
+    mirror = args.mirror
+    verify = set(args.verify)
+
+    checking_view_index = (args.name or mirror.fetch_view) is not None
+
+    if "all" in verify:
+        verify.update(["exists", "manifests", "blobs"])
+
+    try:
+        spack.oci.oci.image_from_mirror(mirror)
+        raise spack.error.SpackError("OCI build caches do not support index views")
+    except ValueError:
+        pass
+
+    # Check if the index exists, and cache it locally for next operations
+    mirror_metadata = spack.binary_distribution.MirrorMetadata(
+        mirror.fetch_url,
+        spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+        args.name or mirror.fetch_view,
+    )
+    index_exists = True
+    missing_index_blob = False
+    try:
+        BINARY_INDEX._fetch_and_cache_index(mirror_metadata)
+    except spack.binary_distribution.BuildcacheIndexNotExists:
+        index_exists = False
+    except spack.binary_distribution.FetchIndexError:
+        # Here the index manifest exists, but the index blob did not
+        # We can still run some of the other validations here, so let's try
+        index_exists = False
+        missing_index_blob = True
+
+    missing_specs = []
+    unindexed_specs = []
+    missing_blobs = {}
+    cache_hash_list = []
+    index_hash_list = []
+    # List the manifests and verify
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        # Get listing of spec manifests in mirror
+        manifest_files = []
+        if "manifests" in verify or "blobs" in verify:
+            manifest_files, read_fn = get_entries_from_cache(
+                mirror.fetch_url, tmpdir, BuildcacheComponent.SPEC
+            )
+        if "manifests" in verify and index_exists:
+            # Read the index file
+            db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
+            cache_entry = BINARY_INDEX._local_index_cache[str(mirror_metadata)]
+            cache_key = cache_entry["index_path"]
+            cache_path = BINARY_INDEX._index_file_cache.cache_path(cache_key)
+            with BINARY_INDEX._index_file_cache.read_transaction(cache_key):
+                db._read_from_file(cache_path)
+
+            index_hash_list = set(
+                [
+                    s.dag_hash()
+                    for s in db.query_local(installed=InstallRecordStatus.ANY)
+                    if db._data[s.dag_hash()].in_buildcache
+                ]
+            )
+
+        for spec_manifest in manifest_files:
+
+            # Spec manifests have a naming format
+            # <name>-<version>-<hash>.spec.manifest.json
+            spec_hash = spec_manifest.rsplit("-", 1)[1].split(".", 1)[0]
+            if checking_view_index and spec_hash not in index_hash_list:
+                continue
+
+            cache_hash_list.append(spec_hash)
+            if spec_hash not in index_hash_list:
+                unindexed_specs.append(spec_hash)
+
+            if "blobs" in verify:
+                entry = read_fn(spec_manifest)
+                entry.read_manifest()
+                for record in entry.manifest.data:
+                    if not entry.check_blob_exists(record):
+                        blobs = missing_blobs.get(spec_hash, [])
+                        blobs.append(record)
+                        missing_blobs[spec_hash] = blobs
+
+    for h in index_hash_list:
+        if h not in cache_hash_list:
+            missing_specs.append(h)
+
+    # Print summary
+    summary_msg = "Build cache check:\n\t"
+    if "exists" in verify:
+        if index_exists:
+            summary_msg = f"Index exists in mirror: {mirror.name}"
+        else:
+            summary_msg = f"Index does not exist in mirror: {mirror.name}"
+        if mirror.fetch_view:
+            summary_msg += f"@{mirror.fetch_view}"
+        summary_msg += "\n"
+        if missing_index_blob:
+            tty.warn("The index blob is missing")
+
+    if "manifests" in verify:
+        if checking_view_index:
+            count = "n/a"
+        else:
+            count = len(unindexed_specs)
+        summary_msg += f"\tUnindexed specs: {count}\n"
+
+    if "manifests" in verify:
+        summary_msg += f"\tMissing specs: {len(missing_specs)}\n"
+
+    if "blobs" in verify:
+        summary_msg += f"\tMissing blobs: {len(missing_blobs)}\n"
+
+    if args.output:
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+        with open(args.output, "w", encoding="utf-8") as fd:
+            json.dump(
+                {
+                    "exists": index_exists,
+                    "manifests": {"missing": missing_specs, "unindexed": unindexed_specs},
+                    "blobs": {"missing": missing_blobs},
+                },
+                fd,
+            )
+
+    tty.info(summary_msg)
 
 
 def update_index_fn(args):
-    """update a buildcache index"""
-    return update_index(args.mirror, update_keys=args.keys)
+    """update a buildcache index or index view if extra arguments are provided."""
+
+    update_view_index = (
+        args.append or args.force or args.name or args.sources or args.mirror.push_view
+    )
+
+    if update_view_index:
+        update_mode = ViewUpdateMode.CREATE
+        if args.force:
+            update_mode = ViewUpdateMode.OVERWRITE
+        elif args.append:
+            update_mode = ViewUpdateMode.APPEND
+
+        return update_view(
+            args.mirror,
+            update_mode,
+            *args.sources,
+            name=args.name,
+            update_keys=args.keys,
+            yes_to_all=args.yes_to_all,
+        )
+    else:
+        return update_index(args.mirror, update_keys=args.keys)
 
 
 def migrate_fn(args):

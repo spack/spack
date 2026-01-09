@@ -519,20 +519,20 @@ def test_disjoint_set_initialization():
 
     assert d.default == "none"
     assert d.multi is True
-    assert set(x for x in d) == set(["none", "a", "b", "c", "e", "f"])
+    assert list(d) == ["none", "a", "b", "c", "e", "f"]
 
 
 def test_disjoint_set_fluent_methods():
     # Construct an object without the empty set
     d = disjoint_sets(("a",), ("b", "c"), ("e", "f")).prohibit_empty_set()
-    assert set(("none",)) not in d.sets
+    assert ("none",) not in d.sets
 
     # Call this 2 times to check that no matter whether
     # the empty set was allowed or not before, the state
     # returned is consistent.
     for _ in range(2):
         d = d.allow_empty_set()
-        assert set(("none",)) in d.sets
+        assert ("none",) in d.sets
         assert "none" in d
         assert "none" in [x for x in d]
         assert "none" in d.feature_values
@@ -550,7 +550,7 @@ def test_disjoint_set_fluent_methods():
     # returned is consistent.
     for _ in range(2):
         d = d.prohibit_empty_set()
-        assert set(("none",)) not in d.sets
+        assert ("none",) not in d.sets
         assert "none" not in d
         assert "none" not in [x for x in d]
         assert "none" not in d.feature_values

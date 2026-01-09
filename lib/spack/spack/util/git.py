@@ -253,7 +253,7 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
 
             if query:
                 return query.strip().split()[0]
-        except spack.util.executable.ProcessError:
+        except exe.ProcessError:
             continue
 
     return None

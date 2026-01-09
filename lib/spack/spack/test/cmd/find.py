@@ -9,7 +9,7 @@ import pathlib
 
 import pytest
 
-import spack.cmd as cmd
+import spack.cmd
 import spack.cmd.find
 import spack.concretize
 import spack.environment as ev
@@ -190,11 +190,11 @@ def test_display_json(database, capfd):
         for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
-    cmd.display_specs_as_json(specs)
+    spack.cmd.display_specs_as_json(specs)
     spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output(spec_list)
 
-    cmd.display_specs_as_json(specs + specs + specs)
+    spack.cmd.display_specs_as_json(specs + specs + specs)
     spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output(spec_list)
 
@@ -206,11 +206,11 @@ def test_display_json_deps(database, capfd):
         for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
-    cmd.display_specs_as_json(specs, deps=True)
+    spack.cmd.display_specs_as_json(specs, deps=True)
     spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output_deps(spec_list)
 
-    cmd.display_specs_as_json(specs + specs + specs, deps=True)
+    spack.cmd.display_specs_as_json(specs + specs + specs, deps=True)
     spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output_deps(spec_list)
 

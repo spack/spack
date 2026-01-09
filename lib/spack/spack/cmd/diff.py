@@ -47,12 +47,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
 
-def shift(asp_function):
+def shift(asp_function: asp.AspFunction) -> asp.AspFunction:
     """Transforms ``attr("foo", "bar")`` into ``foo("bar")``."""
-    if not asp_function.args:
+    args = asp_function.args
+    if not args:
         raise ValueError(f"Can't shift ASP function with no arguments: {str(asp_function)}")
-    first, *rest = asp_function.args
-    return asp.AspFunction(first, rest)
+    return asp.AspFunction(args[0], args[1:])
 
 
 def compare_specs(a, b, to_string=False, color=None, ignore_packages=None):

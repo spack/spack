@@ -1377,10 +1377,10 @@ class Environment:
                 that should be changed. If not set, it is assumed we are
                 looking for a spec with the same name as ``change_spec``.
         """
-        if not (change_spec.name or (match_spec and match_spec.name)):
+        if not (change_spec.name or match_spec):
             raise ValueError(
-                "Must specify a spec name to identify a single spec"
-                " in the environment that will be changed"
+                "Must specify a spec name or match spec to identify a single spec"
+                " in the environment that will be changed (or multiple with '--all')"
             )
         match_spec = match_spec or Spec(change_spec.name)
 
@@ -1474,33 +1474,59 @@ class Environment:
     def apply_develop(self, spec: spack.spec.Spec, path: Optional[str] = None):
         """Mutate concrete specs to include dev_path provenance pointing to path.
 
-        This does not do any other aspect of concretization. It will fail if any existing concrete
-        spec for the same package does not satisfy the given develop spec."""
-        # Find all specs that this develop request applies to
+        This will fail if any existing concrete spec for the same package does not satisfy the
+
+        given develop spec."""
+        selector = spack.spec.Spec(spec.name)
+
+        mutator = spack.spec.Spec()
+        if path:
+            variant = vt.SingleValuedVariant("dev_path", path)
+        else:
+            variant = vt.VariantValueRemoval("dev_path")
+        mutator.variants["dev_path"] = variant
+
+        msg = (
+            f"Develop spec '{spec}' conflicts with concrete specs in environment."
+            " Try again with 'spack develop --no-modify-concrete-specs'"
+            " and run 'spack concretize --force' to apply your changes."
+        )
+        self.mutate(selector, mutator, validator=spec, msg=msg)
+
+    def mutate(
+        self,
+        selector: spack.spec.Spec,
+        mutator: spack.spec.Spec,
+        validator: Optional[spack.spec.Spec] = None,
+        msg: Optional[str] = None,
+    ):
+        """Mutate concrete specs of an environment
+
+        Mutate any spec that matches ``selector``. Invalidate caches on parents of mutated specs.
+        If a validator spec is supplied, throw an error if a selected spec does not satisfy the
+        validator.
+        """
+        # Find all specs that this mutation applies to
         modify_specs = []
+        modified_specs = []
         for dep in self.all_specs_generator():
-            if dep.name == spec.name:
-                if not dep.satisfies(spec):
-                    raise SpackEnvironmentDevelopError(
-                        f"Develop spec '{spec}' conflicts with concrete specs in environment."
-                        " Try again with 'spack develop --no-modify-concrete-specs'"
-                        " and run 'spack concretize --force' to apply your changes."
-                    )
+            if dep.satisfies(selector):
+                if not dep.satisfies(validator or selector):
+                    if not msg:
+                        msg = f"spec {dep} satisfies selector {selector}"
+                        msg += f" but not validator {validator}"
+                    raise SpackEnvironmentDevelopError(msg)
                 modify_specs.append(dep)
 
-        # Manipulate dev_path variant on modify_specs
+        # Manipulate selected specs
         for s in modify_specs:
-            # Remove any existing dev_path variant in all cases
-            # If setting a path, add the new variant
-            s.variants.pop("dev_path", None)
-            if path:
-                s.variants["dev_path"] = vt.VariantValue(
-                    vt.VariantType.SINGLE, "dev_path", (path,)
-                )
+            modified = s.mutate(mutator, rehash=False)
+            if modified:
+                modified_specs.append(s)
 
         # Identify roots modified and invalidate all dependent hashes
         modified_roots = []
-        for parent in traverse.traverse_nodes(modify_specs, direction="parents"):
+        for parent in traverse.traverse_nodes(modified_specs, direction="parents"):
             # record whether this parent is a root before we modify the hash
             if parent.dag_hash() in self.specs_by_hash:
                 modified_roots.append((parent, parent.dag_hash()))

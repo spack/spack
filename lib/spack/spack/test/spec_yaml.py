@@ -25,7 +25,6 @@ import spack.config
 import spack.hash_types as ht
 import spack.repo
 import spack.spec
-import spack.test.conftest
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.paths import locations as paths

@@ -696,16 +696,13 @@ class LockTransaction:
     """Simple nested transaction context manager that uses a file lock.
 
     Arguments:
-        lock (Lock): underlying lock for this transaction to be acquired on
-            enter and released on exit
-        acquire (typing.Callable or contextlib.contextmanager): function to be called
-            after lock is acquired, or contextmanager to enter after acquire and leave
-            before release.
-        release (typing.Callable): function to be called before release. If
-            ``acquire`` is a contextmanager, this will be called *after*
-            exiting the nexted context and before the lock is released.
-        timeout (float): number of seconds to set for the timeout when
-            acquiring the lock (default no timeout)
+        lock: underlying lock for this transaction to be acquired on enter and released on exit
+        acquire: function to be called after lock is acquired, or contextmanager to enter after
+            acquire and leave before release.
+        release: function to be called before release. If ``acquire`` is a contextmanager, this
+            will be called *after* exiting the nested context and before the lock is released.
+        timeout: number of seconds to set for the timeout when acquiring the lock (default no
+            timeout)
 
     If the ``acquire_fn`` returns a value, it is used as the return value for
     ``__enter__``, allowing it to be passed as the ``as`` argument of a

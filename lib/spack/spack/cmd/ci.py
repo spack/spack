@@ -111,8 +111,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_true",
         dest="prune_externals",
         default=True,
-        help="skip external specs\n\n"
-        "do not generate jobs for specs that are marked as external",
+        help="skip external specs\n\ndo not generate jobs for specs that are marked as external",
     )
     prune_ext_group.add_argument(
         "--no-prune-externals",
@@ -472,7 +471,7 @@ def ci_rebuild(args):
         spack_cmd.append("-k")
 
     install_args = [
-        f'--use-buildcache={spack_ci.common.win_quote("package:never,dependencies:only")}'
+        f"--use-buildcache={spack_ci.common.win_quote('package:never,dependencies:only')}"
     ]
 
     can_verify = spack_ci.can_verify_binaries()
@@ -604,8 +603,8 @@ def ci_rebuild(args):
             if not result.success:
                 install_exit_code = FAILED_CREATE_BUILDCACHE_CODE
             (tty.msg if result.success else tty.error)(
-                f'{"Pushed" if result.success else "Failed to push"} '
-                f'{job_spec.format("{name}{@version}{/hash:7}", color=clr.get_color_when())} '
+                f"{'Pushed' if result.success else 'Failed to push'} "
+                f"{job_spec.format('{name}{@version}{/hash:7}', color=clr.get_color_when())} "
                 f"to {result.url}"
             )
 
@@ -848,33 +847,31 @@ def ci_verify_versions(args):
             continue
 
         # Store versions checksums / commits for future loop
-        checksum_to_url_version: Dict[str, StandardVersion] = {}
-        checksum_to_git_version: Dict[str, StandardVersion] = {}
+        url_version_to_checksum: Dict[StandardVersion, str] = {}
+        git_version_to_checksum: Dict[StandardVersion, str] = {}
         for version in pkg.versions:
             # If the package version defines a sha256 we'll use that as the high entropy
             # string to detect which versions have been added between from_ref and to_ref
             if "sha256" in pkg.versions[version]:
-                checksum_to_url_version[pkg.versions[version]["sha256"]] = version
+                url_version_to_checksum[version] = pkg.versions[version]["sha256"]
 
             # If a package version instead defines a commit we'll use that as a
             # high entropy string to detect new versions.
             elif "commit" in pkg.versions[version]:
-                checksum_to_git_version[pkg.versions[version]["commit"]] = version
+                git_version_to_checksum[version] = pkg.versions[version]["commit"]
 
             # TODO: enforce every version have a commit or a sha256 defined if not
             # an infinite version (there are a lot of packages where this doesn't work yet.)
 
-        def filter_added_versions(checksums: Dict[str, StandardVersion]) -> List[StandardVersion]:
-            return [
-                checksums[c]
-                for c in spack_ci.filter_added_checksums(
-                    checksums, path, from_ref=args.from_ref, to_ref=args.to_ref
-                )
-            ]
+        def filter_added_versions(versions: Dict[StandardVersion, str]) -> List[StandardVersion]:
+            added_checksums = spack_ci.filter_added_checksums(
+                versions.values(), path, from_ref=args.from_ref, to_ref=args.to_ref
+            )
+            return [v for v, c in versions.items() if c in added_checksums]
 
         with fs.working_dir(os.path.dirname(path)):
-            new_url_versions = filter_added_versions(checksum_to_url_version)
-            new_git_versions = filter_added_versions(checksum_to_git_version)
+            new_url_versions = filter_added_versions(url_version_to_checksum)
+            new_git_versions = filter_added_versions(git_version_to_checksum)
 
         if new_url_versions:
             success &= validate_standard_versions(pkg, new_url_versions)

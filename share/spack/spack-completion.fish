@@ -701,8 +701,9 @@ complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a downloa
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a prune -d 'prune buildcache entries from the mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a save-specfile -d 'get full spec for dependencies and write them to files in the specified output directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a sync -d 'sync binaries (and associated metadata) from one mirror to another'
-complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a update-index -d 'update a buildcache index'
-complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a rebuild-index -d 'update a buildcache index'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a check-index -d 'Check if a build cache index, manifests, and blobs are consistent'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a update-index -d 'update a buildcache index or index view if extra arguments are provided.'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a rebuild-index -d 'update a buildcache index or index view if extra arguments are provided.'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a migrate -d 'perform in-place binary mirror migration (2 to 3)'
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
@@ -862,21 +863,49 @@ complete -c spack -n '__fish_spack_using_command buildcache sync' -s h -l help -
 complete -c spack -n '__fish_spack_using_command buildcache sync' -l manifest-glob -r -f -a manifest_glob
 complete -c spack -n '__fish_spack_using_command buildcache sync' -l manifest-glob -r -d 'a quoted glob pattern identifying CI rebuild manifest files'
 
+# spack buildcache check-index
+set -g __fish_spack_optspecs_spack_buildcache_check_index h/help verify= n/name= o/output=
+
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l verify -r -f -a 'exists manifests blobs all'
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l verify -r -d 'List of items to verify along along with the index.'
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l name -s n -r -f -a name
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l name -s n -r -d 'Name of the view index to check'
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l output -s o -r -f -a output
+complete -c spack -n '__fish_spack_using_command buildcache check-index' -l output -s o -r -d 'File to write check details to'
+
 # spack buildcache update-index
-set -g __fish_spack_optspecs_spack_buildcache_update_index h/help k/keys
+set -g __fish_spack_optspecs_spack_buildcache_update_index h/help n/name= a/append f/force k/keys y/yes-to-all
 
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l name -s n -r -f -a name
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l name -s n -r -d 'Name of the view index to update'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l append -s a -f -a append
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarentee atomic write and should be run with care.'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -f -a force
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack buildcache rebuild-index
-set -g __fish_spack_optspecs_spack_buildcache_rebuild_index h/help k/keys
+set -g __fish_spack_optspecs_spack_buildcache_rebuild_index h/help n/name= a/append f/force k/keys y/yes-to-all
 
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l name -s n -r -f -a name
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l name -s n -r -d 'Name of the view index to update'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l append -s a -f -a append
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarentee atomic write and should be run with care.'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -f -a force
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack buildcache migrate
 set -g __fish_spack_optspecs_spack_buildcache_migrate h/help u/unsigned d/delete-existing y/yes-to-all
@@ -919,16 +948,20 @@ complete -c spack -n '__fish_spack_using_command cd' -l first -f -a find_first
 complete -c spack -n '__fish_spack_using_command cd' -l first -d 'use the first match if multiple packages match the spec'
 
 # spack change
-set -g __fish_spack_optspecs_spack_change h/help l/list-name= match-spec= a/all
+set -g __fish_spack_optspecs_spack_change h/help l/list-name= match-spec= a/all c/concrete C/concrete-only
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 change' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command change' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command change' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command change' -s l -l list-name -r -f -a list_name
-complete -c spack -n '__fish_spack_using_command change' -s l -l list-name -r -d 'name of the list to remove specs from'
+complete -c spack -n '__fish_spack_using_command change' -s l -l list-name -r -d 'name of the list to remove abstract specs from'
 complete -c spack -n '__fish_spack_using_command change' -l match-spec -r -f -a match_spec
-complete -c spack -n '__fish_spack_using_command change' -l match-spec -r -d 'if name is ambiguous, supply a spec to match'
+complete -c spack -n '__fish_spack_using_command change' -l match-spec -r -d 'change all specs matching match-spec (default is match by spec name)'
 complete -c spack -n '__fish_spack_using_command change' -s a -l all -f -a all
-complete -c spack -n '__fish_spack_using_command change' -s a -l all -d 'change all matching specs (allow changing more than one spec)'
+complete -c spack -n '__fish_spack_using_command change' -s a -l all -d 'change all matching abstract specs (allow changing more than one abstract spec)'
+complete -c spack -n '__fish_spack_using_command change' -s c -l concrete -f -a concrete
+complete -c spack -n '__fish_spack_using_command change' -s c -l concrete -d 'change concrete specs in the environment'
+complete -c spack -n '__fish_spack_using_command change' -s C -l concrete-only -f -a concrete_only
+complete -c spack -n '__fish_spack_using_command change' -s C -l concrete-only -d 'change only concrete specs in the environment'
 
 # spack checksum
 set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package verify j/jobs=
@@ -2371,7 +2404,7 @@ complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -
 complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -r -d 'find mirror to destroy by url'
 
 # spack mirror add
-set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
+set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed n/name= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror add' -f
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -d 'show this help message and exit'
@@ -2385,6 +2418,8 @@ complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -f -a s
 complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -d 'do not require signing and signature verification when pushing and installing from this build cache'
 complete -c spack -n '__fish_spack_using_command mirror add' -l signed -f -a signed
 complete -c spack -n '__fish_spack_using_command mirror add' -l signed -d 'require signing and signature verification when pushing and installing from this build cache'
+complete -c spack -n '__fish_spack_using_command mirror add' -l name -s n -r -f -a view_name
+complete -c spack -n '__fish_spack_using_command mirror add' -l name -s n -r -d 'Name of the index view for a binary mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id -r -f -a s3_access_key_id
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id -r -d 'ID string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id-variable -r -f -a s3_access_key_id_variable

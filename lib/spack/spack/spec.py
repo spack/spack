@@ -1533,7 +1533,7 @@ class Spec:
 
         # init an empty spec that matches anything.
         self.name: str = ""
-        self.versions = vn.VersionList(":")
+        self.versions = vn.VersionList.any()
         self.variants = VariantMap(self)
         self.architecture = None
         self.compiler_flags = FlagMap(self)
@@ -4940,6 +4940,89 @@ class Spec:
 
         return spec
 
+    def mutate(self, mutator, rehash=True) -> bool:
+        """Mutate concrete spec to match constraints represented by mutator.
+
+        Mutation can modify the spec version, variants, compiler flags, and architecture.
+        Mutation cannot change the spec name, namespace, dependencies, or abstract_hash.
+        Any attribute which is unset will not be touched.
+        Variant values can be replaced with the literal ``None`` to remove the variant.
+        ``None`` as a variant value is represented by ``VariantValue(..., (None,))``.
+
+        If ``rehash``, concrete spec and its dependents have hashes updated.
+
+        Returns whether the spec was modified by the mutation"""
+        assert self.concrete
+
+        if mutator.name and mutator.name != self.name:
+            raise SpecMutationError(f"Cannot mutate spec name: spec {self} mutator {mutator}")
+
+        if mutator.namespace and mutator.namespace != self.namespace:
+            raise SpecMutationError(f"Cannot mutate spec namespace: spec {self} mutator {mutator}")
+
+        if len(mutator.dependencies()) > 0:
+            raise SpecMutationError(f"Cannot mutate dependencies: spec {self} mutator {mutator}")
+
+        if (
+            mutator.versions != vn.VersionList(":")
+            and not mutator.versions.concrete_range_as_version
+        ):
+            raise SpecMutationError(
+                f"Cannot mutate abstract version: spec {self} mutator {mutator}"
+            )
+
+        if mutator.abstract_hash and mutator.abstract_hash != self.abstract_hash:
+            raise SpecMutationError(f"Cannot mutate abstract_hash: spec {self} mutator {mutator}")
+
+        changed = False
+
+        if mutator.versions != vn.VersionList(":") and self.versions != mutator.versions:
+            self.versions = mutator.versions
+            changed = True
+
+        for name, variant in mutator.variants.items():
+            if variant == self.variants.get(name, None):
+                continue
+
+            old_variant = self.variants.pop(name, None)
+            if not isinstance(variant, vt.VariantValueRemoval):  # sigil type for removing variant
+                if old_variant:
+                    variant.type = old_variant.type  # coerce variant type to match
+                self.variants[name] = variant
+            changed = True
+
+        for name, flags in mutator.compiler_flags.items():
+            if not flags or flags == self.compiler_flags[name]:
+                continue
+            self.compiler_flags[name] = flags
+            changed = True
+
+        if mutator.architecture:
+            if mutator.platform and mutator.platform != self.architecture.platform:
+                self.architecture.platform = mutator.platform
+                changed = True
+            if mutator.os and mutator.os != self.architecture.os:
+                self.architecture.os = mutator.os
+                changed = True
+            if mutator.target and mutator.target != self.architecture.target:
+                self.architecture.target = mutator.target
+                changed = True
+
+        if changed and rehash:
+            roots = []
+            for parent in spack.traverse.traverse_nodes([self], direction="parents"):
+                if not parent.dependents():
+                    roots.append(parent)
+                # invalidate hashes
+                parent._mark_root_concrete(False)
+                parent.clear_caches()
+
+            for root in roots:
+                # compute new hashes on full DAGs
+                root._finalize_concretization()
+
+        return changed
+
     def clear_caches(self, ignore: Tuple[str, ...] = ()) -> None:
         """
         Clears all cached hashes in a Spec, while preserving other properties.
@@ -4972,6 +5055,12 @@ class Spec:
         state.pop("_package", None)
         # As with to_dict, do not include dependents. This avoids serializing more than intended.
         state.pop("_dependents", None)
+
+        # Do not pickle attributes dynamically set by SpecBuildInterface
+        state.pop("wrapped_obj", None)
+        state.pop("token", None)
+        state.pop("last_query", None)
+        state.pop("indirect_spec", None)
 
         # Optimize variants and compiler_flags serialization
         variants = state.pop("variants", None)
@@ -5911,3 +6000,7 @@ class SpliceError(spack.error.SpecError):
 
 class InvalidEdgeError(spack.error.SpecError):
     """Raised when an edge doesn't pass validation checks."""
+
+
+class SpecMutationError(spack.error.SpecError):
+    """Raised when a mutation is attempted with invalid attributes."""
