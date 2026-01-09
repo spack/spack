@@ -316,10 +316,10 @@ def gcc11_with_flags(compiler_factory):
 
 def weights_from_result(result: Result, *, name: str) -> Dict[str, int]:
     weights = {}
-    for x in [x for x in result.criteria if x.name == name]:
-        if x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
+    for x in result.criteria:
+        if x.name == name and x.kind == spack.solver.asp.OptimizationKind.CONCRETE:
             weights["reused"] = x.value
-        else:
+        elif x.name == name and x.kind == spack.solver.asp.OptimizationKind.BUILD:
             weights["built"] = x.value
     return weights
 

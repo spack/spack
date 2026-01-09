@@ -538,11 +538,10 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         # Sets should not intersect with each other
         cumulated: Set[str] = set()
         for current_set in self.sets:
-            intersection = cumulated.intersection(set(current_set))
-            if intersection:
+            if not cumulated.isdisjoint(current_set):
+                duplicates = ", ".join(sorted(cumulated.intersection(current_set)))
                 raise spack.error.SpecError(
-                    f"sets in input must be disjoint, but {', '.join(sorted(intersection))} "
-                    f"appeared more than once"
+                    f"sets in input must be disjoint, but {duplicates} appeared more than once"
                 )
             cumulated.update(current_set)
 
