@@ -319,7 +319,7 @@ def test_install_overwrite_multiple(
     ld_ignores = [
         ld_manifest,
         libdwarf.package.times_log_path,
-        os.path.join(libdwarf.prefix, ".spack", "spdx2.3-sbom.json"),
+        os.path.join(libdwarf.prefix, ".spack", "spdx-2.3-sbom.json"),
         os.path.join(cmake.prefix, ".spack", "spdx-2.3-sbom.json"),
     ]
 
