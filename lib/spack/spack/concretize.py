@@ -160,9 +160,9 @@ def concretize_separately(
         )
     ):
         ret.append((i, concrete))
-        percentage = (j + 1) / len(args) * 100
+        percentage = int((j + 1) / len(args) * 100)
         tty.verbose(
-            f"{duration:6.1f}s [{percentage:3.0f}%] {concrete.cformat('{hash:7}')} "
+            f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
             f"{to_concretize[i].colored_str}"
         )
         sys.stdout.flush()
