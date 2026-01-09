@@ -5,7 +5,7 @@
 import importlib
 import pathlib
 from types import ModuleType
-from typing import Any, Callable, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, NamedTuple, Optional, Tuple
 
 import spack.platforms
 from spack.llnl.util import lang
@@ -28,34 +28,13 @@ ast_type = _ast_getter("ast_type", "type")
 ast_sym = _ast_getter("symbol", "term")
 
 
-class AspObject:
-    """Object representing a piece of ASP code."""
-
-    __slots__ = ()
-
-
-def _id(thing: Any) -> Union[str, int, AspObject]:
-    """Quote string if needed for it to be a valid identifier."""
-    if thing is True or thing is False:
-        return f'"{thing}"'
-    elif isinstance(thing, (AspObject, int)):
-        return thing
-    else:
-        if isinstance(thing, str):
-            # escape characters that cannot be in clingo strings
-            thing = thing.replace("\\", r"\\")
-            thing = thing.replace("\n", r"\n")
-            thing = thing.replace('"', r"\"")
-        return f'"{thing}"'
-
-
-class AspVar(AspObject):
+class AspVar:
     """Represents a variable in an ASP rule, allows for conditionally generating
     rules"""
 
     __slots__ = ("name",)
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = name
 
     def __str__(self) -> str:
@@ -63,16 +42,16 @@ class AspVar(AspObject):
 
 
 @lang.key_ordering
-class AspFunction(AspObject):
+class AspFunction:
     """A term in the ASP logic program"""
 
     __slots__ = ("name", "args")
 
-    def __init__(self, name: str, args: Optional[Tuple[Any, ...]] = None) -> None:
+    def __init__(self, name: str, args: Tuple[Any, ...] = ()) -> None:
         self.name = name
-        self.args = () if args is None else tuple(args)
+        self.args = args
 
-    def _cmp_key(self) -> Tuple[str, Optional[Tuple[Any, ...]]]:
+    def _cmp_key(self) -> Tuple[str, Tuple[Any, ...]]:
         return self.name, self.args
 
     def __call__(self, *args: Any) -> "AspFunction":
@@ -99,15 +78,23 @@ class AspFunction(AspObject):
         return AspFunction(self.name, self.args + args)
 
     def __str__(self) -> str:
-        args = f"({','.join(str(_id(arg)) for arg in self.args)})"
-        return f"{self.name}{args}"
+        parts = []
+        for arg in self.args:
+            if type(arg) is str:
+                arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
+                parts.append(f'"{arg}"')
+            elif type(arg) is AspFunction or type(arg) is int or type(arg) is AspVar:
+                parts.append(str(arg))
+            else:
+                parts.append(f'"{arg}"')
+        return f"{self.name}({','.join(parts)})"
 
     def __repr__(self) -> str:
         return str(self)
 
 
 class _AspFunctionBuilder:
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> AspFunction:
         return AspFunction(name)
 
 
