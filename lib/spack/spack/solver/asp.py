@@ -1412,9 +1412,8 @@ class SpackSolverSetup:
         self, spec: spack.spec.Spec, *, name: Optional[str] = None
     ) -> List[AspFunction]:
         """Return list of clauses expressing spec's version constraints."""
-        name = name or spec.name
-        msg = "Internal Error: spec with no name occured. Please report to the spack maintainers."
-        assert name, msg
+        name = spec.name or name
+        assert name, "Internal Error: spec with no name occured. Please file an issue."
 
         if spec.concrete:
             return [fn.attr("version", name, spec.version)]
@@ -1429,7 +1428,8 @@ class SpackSolverSetup:
     def target_ranges(
         self, spec: spack.spec.Spec, single_target_fn, *, name: Optional[str] = None
     ) -> List[AspFunction]:
-        name = name or spec.name
+        name = spec.name or name
+        assert name, "Internal Error: spec with no name occured. Please file an issue."
         target = spec.architecture.target
 
         # Check if the target is a concrete target
@@ -2203,7 +2203,7 @@ class SpackSolverSetup:
 
         Arguments:
             spec: the spec to analyze
-            name: optional override of spec.name (used for anonymous roots)
+            name: optional fallback of spec.name (used for anonymous roots)
             body: if True, generate clauses to be used in rule bodies (final values) instead
                 of rule heads (setters).
             transitive: if False, don't generate clauses from dependencies (default True)
@@ -2224,7 +2224,7 @@ class SpackSolverSetup:
         """
         clauses = []
         seen = seen if seen is not None else set()
-        name = name or spec.name
+        name = spec.name or name or ""
         seen.add(id(spec))
 
         f: Union[Type[_Head], Type[_Body]] = _Body if body else _Head
