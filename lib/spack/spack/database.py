@@ -766,6 +766,7 @@ class Database:
             # old format
             spec_node_dict = spec_node_dict[spec.name]
         if "build_spec" in spec_node_dict:
+            assert isinstance(spec_reader, spack.spec.SpecfileV2)  # later inherit from it
             _, bhash, _ = spec_reader.extract_build_spec_info_from_node_dict(spec_node_dict)
             build_spec = self.query_by_spec_hash(bhash, data=data)
             spec._build_spec = build_spec
