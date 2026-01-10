@@ -62,7 +62,7 @@ class SpackPaths:
     @property
     def state_home(self):
         return self.resolve_a_home(
-            ["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME"],
+            ["SPACK_STATE_HOME", "SPACK_USER_CACHE_PATH"],
             "XDG_STATE_HOME",
             "state",
             os.path.join(".local", "state"),
@@ -160,6 +160,22 @@ class SpackPaths:
         return getattr(self.base, name)
 
     def resolve_a_home(self, env_vars, xdg_var, config_var, home_rel):
+        """
+        Data stored by spack is split into state, data, and cache components.
+        This function can resolve where each of these components should be
+        stored.
+
+        Args:
+            env_vars: spack-specific environment variables that indicate the
+                component location. Can be a list or a single variable. If this
+                is a list, earlier elements have precedence.
+            xdg_var: the XDG-based environment variable that indicates the
+                component location.
+            config_var: the spack config variable that indicates the component
+                location.
+            home_rel: for $SPACK_HOME and config:locations:home, this relative
+                path is appended to the result to get the component location.
+        """
         disable_env = config.get("config:locations:disable_env", False)
 
         def spack_env_check():
