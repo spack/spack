@@ -20,6 +20,9 @@ def test_install_location(working_env, tmp_path, mutable_config):
     # exist, place installs in $HOME
     base_prefix = _ensure_dir(tmp_path / "spack-root")
     home_prefix = _ensure_dir(tmp_path / "home-prefix")
+    os.environ.pop("USERPROFILE", None)
+    os.environ.pop("HOMEDRIVE", None)
+    os.environ.pop("HOMEPATH", None)
     os.environ["HOME"] = home_prefix
     p1 = SpackPaths(SpackPathsBase(base_prefix))
     assert p1.default_install_location == str(
