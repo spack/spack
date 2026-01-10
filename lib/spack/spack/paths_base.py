@@ -13,9 +13,6 @@ class SpackPathsBase:
         #: This file lives in $prefix/lib/spack/spack/__file__
         self.prefix = _prefix or str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
 
-        #: This file lives in $prefix/lib/spack/spack/__file__
-        self.prefix = _prefix or str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
-
         #: synonym for prefix
         self.spack_root = self.prefix
 
