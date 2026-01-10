@@ -127,12 +127,6 @@ class SpackPaths:
         return os.path.join(self.state_home, "package_repos")
 
     @property
-    def default_user_bootstrap_path(self):
-        #: bootstrap store for bootstrapping clingo and other tools
-        #: overridden by `bootstrap:root`
-        return os.path.join(self.state_home, "bootstrap")
-
-    @property
     def gpg_path(self):
         return self.prefer_old_location(
             self.base.old_gpg_path, os.path.join(self.data_home, "gpg")
