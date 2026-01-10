@@ -69,7 +69,6 @@ import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
 from spack.llnl.util.tty import color
-from spack.paths import locations as paths
 from spack.tokenize import Token, TokenBase, Tokenizer
 
 if TYPE_CHECKING:
