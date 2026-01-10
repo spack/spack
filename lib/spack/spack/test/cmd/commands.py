@@ -298,7 +298,7 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path, mutable_confi
     commands("--aliases", "--format", shell, "--header", header, "--update", new_script)
 
     # If there is a diff, something is wrong: in that case output what the diff is.
-    # TODO: if someone runs `spack commands --update-completion` when the site-admin
+    # TODO: if someone runs `spack commands --update-completion` when a non-default
     # scope is available, it will be added to the autocompletion scripts, and
     # cause a discrepancy with the runner; it might be worth changing the update
     # command to omit that.
