@@ -84,13 +84,13 @@ class SpackPaths:
 
     @property
     def default_install_location(self):
-        return self.prefer_old_location(
+        return self._fallback_old_location_if_used(
             self.base.old_install_path, os.path.join(self.data_home, "installs")
         )
 
     @property
     def default_envs_path(self):
-        return self.prefer_old_location(
+        return self._fallback_old_location_if_used(
             self.base.old_envs_path, os.path.join(self.data_home, "envs")
         )
 
@@ -128,13 +128,13 @@ class SpackPaths:
 
     @property
     def gpg_path(self):
-        return self.prefer_old_location(
+        return self._fallback_old_location_if_used(
             self.base.old_gpg_path, os.path.join(self.data_home, "gpg")
         )
 
     @property
     def gpg_keys_path(self):
-        return self.prefer_old_location(
+        return self._fallback_old_location_if_used(
             self.base.old_gpg_keys_path, os.path.join(self.data_home, "gpg-keys")
         )
 
@@ -206,10 +206,15 @@ class SpackPaths:
 
         return os.path.join(os.path.expanduser("~"), home_rel, "spack")
 
-    def prefer_old_location(self, old_location, new_location):
+    def _fallback_old_location_if_used(self, old_location, new_location):
         # TODO: perhaps it should be configurable whether old locations
         # are used. Other option is to relocate downloads & gpg keys.
-        if dir_is_occupied(old_location):
+        if dir_is_occupied(new_location):
+            return new_location
+        elif dir_is_occupied(old_location):
+            # TODO: should probably raise a deprecation warning here encouraging
+            # them to set their config explicitly back to the old value that
+            # will allow us to eventually remove these fallbacks
             return old_location
         else:
             return new_location
