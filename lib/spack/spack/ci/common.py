@@ -43,14 +43,14 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 # this exists purely for testing purposes
 _urlopen = web_util.urlopen
 
-#: Names of the core CI jobs, which are those not dependent on a specs
+#: Names of the core CI job types, which are those not dependent on a specs
 core_job_names = ["cleanup", "copy", "noop", "reindex", "signing"]
 
-#: Names of all jobs that can have a spec
+#: Names of all job types that can have a spec
 spec_job_names = ["build", "test"]
 
-#: Names of all possible named jobs
-all_job_names = ["any"] + spec_job_names + core_job_names
+#: Names of all possible named job types
+all_job_type_names = ["any"] + spec_job_names + core_job_names
 
 #: Names of script stages
 script_stage_names = ["before_script", "script", "after_script"]
@@ -320,6 +320,8 @@ class CIJobData:
 
     def __init__(self, name: str, spec: Optional[spack.spec.Spec] = None, remove: bool = False):
         """
+        Initialize the job data based on default settings.
+
         Args:
             name: standard job name
             spec: release spec
@@ -331,12 +333,16 @@ class CIJobData:
         self.job_name = f"{self.name}-job{'-remove' if remove else ''}"
         self.spec: Optional[spack.spec.Spec] = spec
 
-        # TODO: These will need to be pushed to self.attributes before output
+        # Use script instances to facilitate conversions
         self.script: Dict[str, CIScript] = {}
         if self.job_name in default_job_settings:
             for key, value in default_job_settings[self.job_name].items():
                 try:
-                    self.script[key] = CIScript(value)
+                    if key in script_stage_names:
+                        # Scripts will be saved as attributes later
+                        self.script[key] = CIScript(value)
+                    else:
+                        self.attributes[key] = value
                 except KeyError:
                     try:
                         setattr(self, key, value)
@@ -416,6 +422,9 @@ class CIJobData:
             attrs: attributes to be be merged
         """
         self.attributes = copy.copy(spack.schema.merge_yaml(self.attributes, attrs))
+        for stage in script_stage_names:
+            if stage in attrs:
+                self.script[stage] = self.attributes[stage]
 
     def remove_attributes(self, attrs: Dict[str, Any]):
         """Remove the attributes from the job
@@ -424,6 +433,9 @@ class CIJobData:
             attrs: attributes to be removed
         """
         self.attributes = spack.config.remove_yaml(self.attributes, attrs)
+        for stage in script_stage_names:
+            if stage in attrs and stage in self.script:
+                del self.script[stage]
 
     def update_attributes(self, section: Dict[str, Any]):
         """Update the job attributes with the attribute data for the job's name.
@@ -480,21 +492,27 @@ class CIJobData:
                 break
 
     def to_dict(self) -> Dict[str, Any]:
+        """Build a minimal dictionary representation of job options.
+
+        Returns: dictionary of the populated job options.
+        """
         result = {}
         if self.spec:
             result["spec"] = self.spec
+
+        # Save assumed to be already converted scripts as attributes
+        for stage in self.script:
+            try:
+                self.attributes[stage] = self.script[stage]
+            except KeyError:
+                # TODO/TLD: Remove this once finish debugging
+                result["failure"] = f"{stage} does not exist in {self.script}"
+                raise
+
         if self.attributes:
             result["attributes"] = self.attributes
         tty.msg(f"TLD: to_dict: scripts: {self.script}")
-        for stage in self.script:
-            stage = str(stage)
-            tty.msg(f"TLD: .. stage {stage}")
-            try:
-                result[stage] = str(self.script[stage])
-                tty.msg(f"TLD: .. .. {self.script[stage]}")
-            except KeyError:
-                result["failure"] = f"{stage} does not exist in {self.script}"
-                raise
+
         return result
 
 
@@ -827,15 +845,19 @@ class SpackCIConfig:
 
         self.add_tests = "test-job" in self.pipeline_gen
 
-        # Prep for each possible job type
+        # List of jobs keyed by job type name
         self.jobs: Dict[str, List[CIJobData]] = {}
-        for name in all_job_names:
-            self.jobs[name]: List[CIJobData] = []
+        for job_type_name in all_job_type_names:
+            self.jobs[job_type_name]: List[CIJobData] = []
 
-        # Add each core job along with its defaults
-        for name in core_job_names:
-            tty.debug(f"TLD: SpackCIConfig: instantiating '{name}' job")
-            self.jobs[name].append(CIJobData(name))
+        # Add each core job with its defaults
+        for job_type_name in core_job_names:
+            tty.debug(f"TLD: SpackCIConfig: instantiating '{job_type_name}' job")
+            self.jobs[job_type_name].append(CIJobData(job_type_name))
+
+        tty.msg(
+            f"TLD: initial jobs = {[self.jobs[name] for name in self.jobs.keys() if self.jobs[name]]}"
+        )
 
     def init_pipeline_jobs(self, pipeline: PipelineDag):
         """Create jobs for all the pipeline specs"""
@@ -846,22 +868,43 @@ class SpackCIConfig:
             names.append("test")
 
         for _, node in pipeline.traverse_nodes():
-            for name in names:
-                self.jobs[name].append(CIJobData(name, node.spec))
+            for job_type_name in names:
+                self.jobs[job_type_name].append(CIJobData(job_type_name, node.spec))
+
+    def all_jobs(self, job_names: Optional[List[str]] = None) -> List[CIJobData]:
+        """Return a list of all jobs of the given type(s).
+
+        Args:
+            job_names: names of job type(s) to be returned; default all types
+
+        Returns: list of all jobs of the given type(s) or all jobs if ``None``
+        """
+        tty.msg(f"TLD: jobs:")
+        for name, jobs in self.jobs.items():
+            tty.msg(f"TLD: {name}: {[str(job) for job in jobs]}")
+
+        if job_names:
+            return list(
+                chain.from_iterable(self.jobs[name] for name in job_names if name in self.jobs)
+            )
+
+        return list(chain.from_iterable(self.jobs.values()))
 
     def job(self, name: str, spec: Optional[spack.spec.Spec] = None) -> Optional[CIJobData]:
         """Retrieve the matching job
 
         Args:
-            name: the name of the desired job
+            name: the job type name of the desired job
             spec: the job spec
 
         Returns: the job instance or ``None`` if none match
         """
         spec_hash = spec.dag_hash() if spec else ""
-        for job in self.jobs[name]:
-            if not spec or job.hash == spec_hash:
-                return job
+
+        if name in self.jobs:
+            for job in self.jobs[name]:
+                if not spec or job.hash == spec_hash:
+                    return job
 
         return None
 
@@ -874,8 +917,8 @@ class SpackCIConfig:
         }
 
         # Include the representation of all of the jobs
-        all_jobs = {}
-        for job in chain(*[self.jobs[name] for name in all_job_names]):
+        jobs_dict = {}
+        for job in self.all_jobs():
             if job.name == "any":
                 # Not expecting 'any' jobs to be stored in memory since their
                 # data should've been applied to the other types of named jobs.
@@ -884,8 +927,8 @@ class SpackCIConfig:
 
             # TODO/TLD: how should these really be keyed given build and
             # TODO/TLD: test jobs will now have the same spec?
-            all_jobs[job.name] = job.to_dict()
-        intermediate_rep["jobs"] = all_jobs
+            jobs_dict[job.name] = job.to_dict()
+        intermediate_rep["jobs"] = jobs_dict
 
         return intermediate_rep
 
@@ -898,7 +941,7 @@ class SpackCIConfig:
 
         Returns: the base job name if the section exists; otherwise ``None``
         """
-        for _name in all_job_names:
+        for _name in all_job_type_names:
             keys = [f"{_name}-job", f"{_name}-job-remove"]
             if any([key for key in keys if key in section]):
                 return _name
@@ -915,7 +958,8 @@ class SpackCIConfig:
         if job_name in spec_job_names:
             # Apply the same attributes to all matching jobs that can have a spec
             for job in self.jobs[job_name]:
-                tty.debug(
+                # tty.debug(
+                tty.msg(
                     f"TLD: .. {job_name}, {job.spec}, {job.remove}: applying "
                     f"'{job_name}' section to attributes"
                 )
@@ -926,7 +970,8 @@ class SpackCIConfig:
             # Apply section attributes to all jobs
             for name, jobs in self.jobs.items():
                 for job in jobs:
-                    tty.debug(
+                    # tty.debug(
+                    tty.msg(
                         f"TLD: .. {name}, {job.spec}, {job.remove}: applying "
                         f"'{job_name}' section to attributes"
                     )
@@ -936,10 +981,10 @@ class SpackCIConfig:
         # Create a signing job if there is a script and the job
         # hasn't been initialized yet
         if job_name == "signing" and len(self.jobs[job_name]) == 0:
-            tty.debug("TLD: .. detected signing section and none in jobs")
             if "signing-job" in section:
                 if "script" not in section["signing-job"]:
-                    tty.debug("TLD: .. .. skipping signing job missing script")
+                    # tty.debug("TLD: .. .. skipping signing job missing script")
+                    tty.msg("TLD: .. .. skipping signing job missing script")
                     return
 
                 self.jobs[job_name].append(CIJobData(job_name))
@@ -966,7 +1011,7 @@ class SpackCIConfig:
         tty.debug(f"TLD: updating 'submapping' of section '{section}'")
 
         # Apply section jobs with specs to match
-        for job in chain(*[self.jobs[name] for name in spec_job_names]):
+        for job in self.all_jobs(spec_job_names):
             tty.debug(f"TLD: .. for job {job}")
             job.update_submapping_attributes(section)
 
@@ -983,7 +1028,7 @@ class SpackCIConfig:
         # Make sure required things are not also ignored
         assert not any([ikey in mapping.required for ikey in mapping.ignored])
 
-        for job in chain(*[self.jobs[name] for name in spec_job_names]):
+        for job in self.all_jobs(spec_job_names):
             # Create request for this spec job
             query = job.spec_query()
             if not query:
@@ -994,8 +1039,8 @@ class SpackCIConfig:
             if clean_config:
                 job.merge_attributes(clean_config)
 
-    def generate_ir(self):
-        """Generate the IR from the Spack CI configurations."""
+    def customize_ci_configs(self):
+        """Merge/override default CI configurations."""
 
         # Merge/override the default CI job configurations
         pipeline_gen = [override_job_settings] + self.ci_config.get("pipeline-gen", [])
@@ -1014,9 +1059,11 @@ class SpackCIConfig:
                 self.process_dynamic_job_mapping(section)
 
         # Replace the job's spec with the spec's name
-        for job in chain(*[self.jobs[name] for name in spec_job_names]):
+        for job in self.all_jobs(spec_job_names):
             job.spec = job.spec.name
 
+    def generate_ir(self) -> Dict[str, Any]:
+        self.customize_ci_configs()
         return self.ir()
 
 

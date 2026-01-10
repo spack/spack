@@ -28,8 +28,8 @@ from .common import (
     PipelineType,
     SpackCIConfig,
     SpackCIError,
+    all_job_type_names,
     ensure_expected_target_path,
-    script_stage_names,
     spec_job_names,
     write_pipeline_manifest,
 )
@@ -86,9 +86,9 @@ class GitlabJob(CIJobData):
         Raises:
             AttributeError: job does not have the expected script
         """
-        # skip conversions non-spec jobs
+        # skip conversions of non-spec jobs
         if self.name not in spec_job_names:
-            tty.debug(f"{self}: skipping script conversion")
+            tty.debug(f"{self}: skipping script conversion since non-spec job")
             return
 
         if "script" not in self.script:
@@ -125,14 +125,13 @@ class GitlabJob(CIJobData):
         elif self.options.pipeline_type == PipelineType.PULL_REQUEST:
             self.add_tags(["public"])
 
-    def update_build_data(self, job_id: int, build_group: str) -> int:
+    def update_build_data(self, job_id: int, stage: str, build_group: str):
         """Ensure the build job has the correct build data.
 
         Args:
             job_id: job number
+            name of the build stage
             build_group: name of the job's CDash build group
-
-        Returns: next build id
 
         Raises:
             AssertionError: job name does not match expected core name
@@ -146,7 +145,7 @@ class GitlabJob(CIJobData):
 
         # TODO/TLD: Resume here with processing job attributes
         self.attributes["stage"] = stage
-        job_name = get_job_name(release_spec, build_group)
+        job_name = get_job_name(self.spec, build_group)
 
         dep_nodes = pipeline.get_dependencies(node)
         self.attributes["needs"] = [
@@ -157,23 +156,21 @@ class GitlabJob(CIJobData):
             {"job": self.generate_job_name, "pipeline": self.generate_pipeline_id}
         )
 
-        # TODO/TLD: move variable handling to GitlabJob
-        job_vars = self.attributes["variables"]
-
         # Let downstream jobs know whether the spec needed rebuilding, regardless
         # whether DAG pruning was enabled or not.
         already_built = spack.binary_distribution.get_mirrors_for_spec(
-            spec=release_spec, index_only=True
+            spec=self.spec, index_only=True
         )
+        job_vars = self.attributes["variables"]
         job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
 
         if self.options.cdash_handler:
-            build_name = self.options.cdash_handler.build_name(release_spec)
+            build_name = self.options.cdash_handler.build_name(self.spec)
             job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
             build_stamp = self.options.cdash_handler.build_stamp
             job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
 
-        # TODO/TLD: shouldn't this be part of instantiating/converting
+        # TODO/TLD: can't this be part of instantiating or converting
         # TODO/TLD:  a build (and maybe test) GitlabJob?
         job.merge_attributes(
             {
@@ -199,8 +196,6 @@ class GitlabJob(CIJobData):
         if length_needs > self.config.max_length_needs:
             self.config.max_length_needs = length_needs
             self.config.max_needs_job = job_name
-
-        return job_id + 1
 
     def update_copy_data(self, job_id: int, stage: str):
         """Ensure the copy job has the correct dependency and buildcache setting.
@@ -236,7 +231,7 @@ class GitlabJob(CIJobData):
             }
         )
 
-    def update_noop_data(self):
+    def update_noop_data(self, stage: str) -> None:
         """Ensure the noop job has the appropriate data.
 
         Args:
@@ -250,6 +245,7 @@ class GitlabJob(CIJobData):
         # If this job fails ignore the status and carry on
         self.attributes["retry"] = 0
         self.attributes["allow_failure"] = True
+        self.attributes["stage"] = stage
 
     def update_reindex_data(self, stage: str):
         """Ensure the reindex job has the data.
@@ -321,12 +317,14 @@ class GitlabCI(SpackCIConfig):
             "CI_PIPELINE_ID", "pipeline-does-not-exist"
         )
         self.pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
-        self.rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
-
         self.options: PipelineOptions = options
         self.stages: List[List[str]] = []
         self.stage_names: List[str] = []
 
+        # TODO/TLD: Should output jobs be (stage, job) tuples or a stage dict?
+        # TODO/TLD: If a dict, wouldn't need stage_names UNLESS order important.
+
+        # The output jobs, with the first element the stage name
         self.output_jobs: List[Tuple(str, GitlabJob)] = []
         self.variables: Dict[str, str] = {}
 
@@ -337,8 +335,9 @@ class GitlabCI(SpackCIConfig):
         self.max_needs_job: str = ""
 
         # TODO/TBD: Should these start at 0 or at 1?
+        # TODO/TBD: Should these track (essentially) only spec jobs or include
+        # TODO/TBD:   test jobs?
         self.next_job_id: int = 0
-        self.next_stage_id: int = 0
 
     def _add_paths(self):
         """Add relevant CI paths."""
@@ -378,8 +377,11 @@ class GitlabCI(SpackCIConfig):
     def customize_jobs(self):
         """Convert each CIJobData instance into a GitlabJob instance."""
         gitlab_jobs: Dict[str, List[CIJobData]] = {}
-        for name, jobs in self.jobs.items():
-            gitlab_jobs[name] = [GitlabJob(job.name, job.spec, job.remove, self) for job in jobs]
+        for job in self.all_jobs(all_job_type_names):
+            if job.name not in gitlab_jobs:
+                gitlab_jobs[job.name] = []
+
+            gitlab_jobs[job.name].append(GitlabJob(job.name, job.spec, job.remove, self))
         self.jobs = gitlab_jobs
 
     def add_copy_stage(self):
@@ -403,9 +405,8 @@ class GitlabCI(SpackCIConfig):
         self.stage_names.append(stage)
         self.output_jobs.append((stage, job))
 
-    def no_specs(self):
-        # TBD/TODO: Why is this not checking the number of "build" jobs?
-        return self.next_job_id == 0
+    def no_build_specs(self):
+        return len(self.all_jobs(["build"])) == 0
 
     def add_no_specs_stage(self):
         """Add the no specs stage and update its data.
@@ -416,8 +417,11 @@ class GitlabCI(SpackCIConfig):
         job = self.job("noop")
         assert job, "The default core noop job is required."
 
-        job.update_noop_data()
-        self.output_jobs.append(("no-specs-to-rebuild", job))
+        stage = "no-specs-to-rebuild"
+        job.update_noop_data(stage)
+        self.stage_names.append(stage)
+
+        self.output_jobs.append((stage, job))
 
     def add_rebuild_index_stage(self):
         """Add the rebuild index stage and update its job data.
@@ -441,9 +445,14 @@ class GitlabCI(SpackCIConfig):
         Raises:
             AssertionError: the default core job is missing
         """
+        if self.next_job_id == 0:
+            tty.debug("Skipping signing stage since no jobs require it.")
+            return
+
         job = self.job("signing")
+        job_str = str(job)
+        num_signing = len(self.all_jobs("signing"))
         assert job, "The default core signing job is required."
-        assert self.next_job_id > 0, "Signing stage is for signing package specs"
 
         if not (
             job.has_script("script")
@@ -551,7 +560,8 @@ class GitlabCI(SpackCIConfig):
         return os.path.relpath(path, self._path["ci_project_dir"])
 
     def process_spec_stages(self, pipeline: PipelineDag):
-        """Process pipeline specs.
+        """Process pipeline specs, batching into multiple stages to ensure
+        dependencies processed before dependents.
 
         Assumes default pipeline build (and test) jobs have been created for
         each spec.
@@ -563,9 +573,18 @@ class GitlabCI(SpackCIConfig):
             self.options.cdash_handler.build_group if self.options.cdash_handler else None
         )
 
+        stage_id = 0
+        test_stage_id = 0
         for level, node in pipeline.traverse_nodes(direction="parents"):
             stage_id = level
-            if len(self.stages) == stage_id:
+            test_stage_id = level + 1 if self.add_tests else stage_id
+
+            # Ensure initialize the appropriate number of stage lists for this level.
+            if not self.stages:
+                self.stages.append([])
+                if self.add_tests:
+                    self.stages.append([])
+            elif len(self.stages) == test_stage_id:
                 self.stages.append([])
 
             self.stages[stage_id].append(node.spec)
@@ -577,20 +596,24 @@ class GitlabCI(SpackCIConfig):
             release_spec = node.spec
             release_spec_dag_hash = release_spec.dag_hash()
 
-            # TODO/TLD: Is this where we add a corresponding test job?
             job = self.job("build", node.spec)
             if not job:
                 tty.warn(f"No match found for {release_spec}, skipping it")
                 continue
 
-            self.job_id = job.update_build_data(self.job_id, build_group)
-            yaml_output[job_name] = job_object
+            # TODO/TLD: Should the corresponding test job get the same job id?
+            job.update_build_data(self.next_job_id, stage_name, build_group)
+            self.next_job_id += 1
 
-        tty.debug(f"{job_id} build jobs generated in {stage_id} stages")
+            # TODO/TLD: Should output jobs be (stage, job) tuples or a stage
+            # TODO/TLD: dictionary?
+            self.output_jobs.append(("build", job))
 
-        # TODO/TLD: Does this need to be kept separately? Internal?
+            # TODO/TLD: Need to ensure the corresponding build-remove job is listed or represented (and do not increase the job_id)
+            # TODO/TLD: add the corresponding test and test-remove jobs if self.add_tests
 
-        return job_id
+        extra = " and test" if self.add_tests else ""
+        tty.debug(f"{self.next_job_id} build{extra} jobs generated in {test_stage_id} stages")
 
     def add_final_spec_processing(self):
         """Add the final stages needed when rebuilding specs."""
@@ -598,6 +621,8 @@ class GitlabCI(SpackCIConfig):
 
         if self.options.rebuild_index:
             self.add_rebuild_index_stage()
+
+        rebuild_everything = not self.options.prune_up_to_date and not self.options.prune_untouched
 
         # Capture the version of Spack used to generate the pipeline, that can be
         # passed to `git checkout` for version consistency. If we aren't in a Git
@@ -614,12 +639,12 @@ class GitlabCI(SpackCIConfig):
                 "SPACK_JOB_REPRO_DIR": gitlab_ci.path("reproduction_artifacts_dir"),
                 "SPACK_JOB_TEST_DIR": gitlab_ci.path("test_artifacts_dir", absolute=False),
                 "SPACK_PIPELINE_TYPE": (
-                    self.options.pipeline_type.name if options.pipeline_type else "None"
+                    self.options.pipeline_type.name if self.options.pipeline_type else "None"
                 ),
                 "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
-                "SPACK_REBUILD_CHECK_UP_TO_DATE": str(options.prune_up_to_date),
-                "SPACK_REBUILD_EVERYTHING": str(gitlab_ci.rebuild_everything),
-                "SPACK_REQUIRE_SIGNING": str(options.require_signing),
+                "SPACK_REBUILD_CHECK_UP_TO_DATE": str(self.options.prune_up_to_date),
+                "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
+                "SPACK_REQUIRE_SIGNING": str(self.options.require_signing),
             }
         )
         self.variables.update(
@@ -633,19 +658,17 @@ class GitlabCI(SpackCIConfig):
         for item, val in output_vars.items():
             output_vars[item] = ensure_expected_target_path(val)
 
-    # TODO/TLD: Convert this to process self.output_jobs
-    def write_yaml_output(self):
+    def write_yaml_output(self) -> None:
         """Write the generated yaml output file"""
-        yaml_output = {}
+        yaml_output = self.ir()
 
-        # TODO/TLD: Should this be included for copy only or non-spec jobs?
         yaml_output["stages"] = self.stage_names
 
         if self.output_jobs:
-            # TODO/TLD: add jobs using self.output_jobs
-            pass
+            for job_type, job in self.output_jobs:
+                stage = job.attributes["stage"]
+                yaml_output[stage] = job.to_dict()
 
-        # TODO/TLD: Add configuration self.variables
         if self.variables:
             yaml_output["variables"] = self.variables
 
@@ -727,13 +750,16 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     gitlab_ci.copy_env_artifacts()
 
     # TODO/TLD: Switch this to process the jobs as GitlabJob's
-    spack_ci_ir = gitlab_ci.generate_ir()
+    # _ = gitlab_ci.generate_ir()
 
-    # TODO/TLD: RESUME HERE wrt processing specs
-    if not options.pipeline_type == PipelineType.COPY_ONLY:
+    # Update configurations with those defined for the pipeline
+    gitlab_ci.customize_ci_configs()
+
+    copy_only = options.pipeline_type == PipelineType.COPY_ONLY
+    if not copy_only:
         gitlab_ci.process_spec_stages(pipeline)
 
-    if not gitlab_ci.no_specs():
+    if gitlab_ci.all_jobs(spec_job_names):
         # tty.debug(  # TLD
         tty.msg(
             f"The max_needs_job is {gitlab_ci.max_needs_job}, with {gitlab_ci.max_length_needs} needs"
@@ -750,16 +776,14 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     )
     maybe_generate_manifest(pipeline, options, manifest_path)
 
-    if options.pipeline_type == PipelineType.COPY_ONLY:
+    if copy_only:
         gitlab_ci.add_copy_stage()
 
-    # TODO/TLD: Is this similar to pre-refactor check?
-    # TODO/TLD: Seems like there should be a separate copy-only process
-    # TODO/TLD:   that adds the signing stage, etc. instead of this stuff.
-    # TODO/TLD:   Even then is the rebuild-index relevant to copy only?
-    if gitlab_ci.no_specs():
+    # if gitlab_ci.no_build_specs() and not copy_only:
+    if gitlab_ci.next_job_id > 0:
         # No jobs were generated
-        tty.debug("No specs to rebuild, generating no-op job")
+        # tty.debug("No specs to rebuild, generating no-op job")
+        tty.msg("No specs to rebuild, generating no-op job")
         gitlab_ci.add_no_specs_stage()
 
     else:
