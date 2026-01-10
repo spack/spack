@@ -78,4 +78,6 @@ def warn_writes_into_spack():
     if sys.version_info[:2] >= (3, 8):
         sys.addaudithook(_guard_writes)  # novermin
     else:
-        raise ValueError(f"Cannot detect writes for Python {sys.version_info[:2]}")
+        raise ValueError(
+            f"Cannot detect writes for Python {sys.version_info[:2]} (supported in 3.8 and later)"
+        )
