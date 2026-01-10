@@ -43,9 +43,7 @@ def fetch_cache_location():
     This prevents Spack from repeatedly fetch the same files when
     building the same package different ways or multiple times.
     """
-    path = spack.config.get("config:source_cache")
-    if not path:
-        path = paths.default_fetch_cache_path
+    path = spack.config.get("config:source_cache", "$data_home/downloads")
     path = spack.util.path.canonicalize_path(path)
     return path
 

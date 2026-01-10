@@ -95,12 +95,6 @@ class SpackPaths:
         )
 
     @property
-    def default_fetch_cache_path(self):
-        return self.prefer_old_location(
-            self.base.old_fetch_cache_path, os.path.join(self.data_home, "downloads")
-        )
-
-    @property
     def reports_path(self):
         #: junit, cdash, etc. reports about builds
         return os.path.join(self.state_home, "reports")

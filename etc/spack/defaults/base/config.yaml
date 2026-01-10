@@ -83,12 +83,7 @@ config:
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
-  # If set to a non-default value, this setting has precedence.
-  # This default value tells spack to check (in order of precedence):
-  # $SPACK_DATA_HOME/downloads
-  # $XDG_DATA_HOME/spack/downloads
-  # $spack/var/spack/cache
-  source_cache: $default_download_root
+  source_cache: $data_home/downloads
 
 
   ## Directory where spack managed environments are created and stored
