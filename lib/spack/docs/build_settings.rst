@@ -167,9 +167,9 @@ If the value is ``minimal``, Spack will allow packages tagged as ``build-tools``
 This allows, for instance, to concretize specs whose nodes require different and incompatible ranges of some build tool.
 For instance, in the figure below, the latest `py-shapely` requires a newer `py-setuptools`, while `py-numpy` still needs an older version:
 
-.. figure::  images/shapely_duplicates.svg
-   :width: 100%
-   :align: center
+.. figure:: images/shapely_duplicates.svg
+   :width: 5580
+   :height: 1842
 
 Up to Spack v0.20, ``duplicates:strategy:none`` was the default (and only) behavior.
 From Spack v0.21, the default behavior is ``duplicates:strategy:minimal``.
@@ -191,7 +191,8 @@ The ``build_spec`` for a non-spliced spec is itself.
 The figure below shows examples of transitive and intransitive splices:
 
 .. figure:: images/splices.png
-   :align: center
+   :width: 2308
+   :height: 1248
 
 The concretizer can be configured to explicitly splice particular replacements for a target spec.
 Splicing will allow the user to make use of generically built public binary caches while swapping in highly optimized local builds for performance-critical components and/or components that interact closely with the specific hardware details of the system.

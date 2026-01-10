@@ -371,7 +371,7 @@ def _print_definition(
     formatted_name_and_values = f"{indent * ' '}{name_field}"
     if values_field:
         formatted_values = "\n".join(
-            spack.llnl.util.tty.color.cwrap(
+            color.cwrap(
                 values_field,
                 width=cols - 2,
                 initial_indent=value_indent,
@@ -591,7 +591,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
         def get_url(version: spack.version.VersionType) -> str:
             try:
                 return str(fs.for_package_version(pkg, version))
-            except spack.fetch_strategy.InvalidArgsError:
+            except fs.InvalidArgsError:
                 return "No URL"
 
         url = get_url(preferred) if pkg.has_code else ""

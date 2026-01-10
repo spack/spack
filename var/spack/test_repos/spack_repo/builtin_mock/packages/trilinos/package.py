@@ -21,3 +21,15 @@ class Trilinos(Package):
 
     depends_on("mpi")
     depends_on("callpath")
+
+    # The variant default value cannot be taken by the default version of the package
+    variant("disable17", default=False, description="Disable support for C++17")
+    variant(
+        "cxxstd",
+        default="14",
+        description="C++ standard",
+        values=["14", "17", "20", "23"],
+        multi=False,
+    )
+    conflicts("cxxstd=14", when="@16:")
+    conflicts("cxxstd=17", when="+disable17")

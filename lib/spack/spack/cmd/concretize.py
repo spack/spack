@@ -27,7 +27,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
     spack.cmd.common.arguments.add_concretizer_args(subparser)
-    spack.cmd.common.arguments.add_common_arguments(subparser, ["jobs"])
+    spack.cmd.common.arguments.add_common_arguments(subparser, ["jobs", "show_non_defaults"])
 
 
 def concretize(parser, args):
@@ -45,7 +45,10 @@ def concretize(parser, args):
         if not args.quiet:
             if concretized_specs:
                 tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}:")
-                ev.display_specs([concrete for _, concrete in concretized_specs])
+                ev.display_specs(
+                    [concrete for _, concrete in concretized_specs],
+                    highlight_non_defaults=args.non_defaults,
+                )
             else:
                 tty.msg("No new specs to concretize.")
         env.write()

@@ -4,10 +4,14 @@
 
 import os
 import pathlib
+import sys
+
+import pytest
 
 import spack.util.ld_so_conf as ld_so_conf
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix path")
 def test_ld_so_conf_parsing(tmp_path: pathlib.Path):
     cwd = os.getcwd()
     (tmp_path / "subdir").mkdir()

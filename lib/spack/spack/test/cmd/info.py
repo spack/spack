@@ -13,10 +13,9 @@ pytestmark = [pytest.mark.usefixtures("mock_packages")]
 info = SpackCommand("info")
 
 
-def test_deprecated_option_warns(capfd):
+def test_deprecated_option_warns():
     info("--variants-by-name", "vtk-m")
-    output = capfd.readouterr()
-    assert "--variants-by-name is deprecated" in output.err
+    assert "--variants-by-name is deprecated" in info.output
 
 
 # no specs, more than one spec
@@ -142,7 +141,8 @@ def test_info_fields(pkg_query, extra_args):
     ],
 )
 @pytest.mark.parametrize("by_name", [True, False])
-def test_info_output(by_name, args, in_output, not_in_output):
+def test_info_output(by_name, args, in_output, not_in_output, monkeypatch):
+    monkeypatch.setenv("COLUMNS", "80")
     by_name_arg = ["--by-name"] if by_name else ["--by-when"]
     output = info(*(by_name_arg + args))
 

@@ -70,7 +70,7 @@ def test_transitive_installed_dependents(mock_packages, database):
     with color_when(False):
         out = dependents("--installed", "--transitive", "fake")
 
-    lines = [li for li in out.strip().split("\n") if not li.startswith("--")]
+    lines = [li for li in out.strip().split("\n") if li and not li.startswith("--")]
     hashes = set([re.split(r"\s+", li)[0] for li in lines])
 
     expected = set(

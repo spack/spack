@@ -1229,14 +1229,14 @@ def windows_sfn(path: os.PathLike):
 
 
 @contextmanager
-def temp_cwd():
+def temp_cwd(ignore_cleanup_errors=False):
     tmp_dir = tempfile.mkdtemp()
     try:
         with working_dir(tmp_dir):
             yield tmp_dir
     finally:
         kwargs = {}
-        if sys.platform == "win32":
+        if sys.platform == "win32" or ignore_cleanup_errors:
             kwargs["ignore_errors"] = False
             kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
         shutil.rmtree(tmp_dir, **kwargs)

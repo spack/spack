@@ -54,7 +54,7 @@ def test_parse_www_authenticate():
     www_authenticate = 'Bearer realm="https://spack.io/authenticate",service="spack-registry",scope="repository:spack-registry:pull,push"'
     assert parse_www_authenticate(www_authenticate) == [
         Challenge(
-            "Bearer",
+            "bearer",
             [
                 ("realm", "https://spack.io/authenticate"),
                 ("service", "spack-registry"),
@@ -63,18 +63,18 @@ def test_parse_www_authenticate():
         )
     ]
 
-    assert parse_www_authenticate("Bearer") == [Challenge("Bearer")]
+    assert parse_www_authenticate("Bearer") == [Challenge("bearer")]
     assert parse_www_authenticate("MethodA, MethodB,MethodC") == [
-        Challenge("MethodA"),
-        Challenge("MethodB"),
-        Challenge("MethodC"),
+        Challenge("methoda"),
+        Challenge("methodb"),
+        Challenge("methodc"),
     ]
 
     assert parse_www_authenticate(
         'Digest realm="Digest Realm", nonce="1234567890", algorithm=MD5, qop="auth"'
     ) == [
         Challenge(
-            "Digest",
+            "digest",
             [
                 ("realm", "Digest Realm"),
                 ("nonce", "1234567890"),
@@ -87,8 +87,12 @@ def test_parse_www_authenticate():
     assert parse_www_authenticate(
         r'Newauth realm="apps", type=1, title="Login to \"apps\"", Basic realm="simple"'
     ) == [
-        Challenge("Newauth", [("realm", "apps"), ("type", "1"), ("title", 'Login to "apps"')]),
-        Challenge("Basic", [("realm", "simple")]),
+        Challenge("newauth", [("realm", "apps"), ("type", "1"), ("title", 'Login to "apps"')]),
+        Challenge("basic", [("realm", "simple")]),
+    ]
+
+    assert parse_www_authenticate(r'BASIC REALM="simple"') == [
+        Challenge("basic", [("realm", "simple")])
     ]
 
 
@@ -124,7 +128,7 @@ def test_get_basic_challenge():
         _get_basic_challenge(
             [
                 Challenge(
-                    "Bearer",
+                    "bearer",
                     [
                         ("realm", "https://spack.io/authenticate"),
                         ("service", "spack-registry"),
@@ -132,7 +136,7 @@ def test_get_basic_challenge():
                     ],
                 ),
                 Challenge(
-                    "Digest",
+                    "digest",
                     [
                         ("realm", "Digest Realm"),
                         ("nonce", "1234567890"),
@@ -150,16 +154,16 @@ def test_get_basic_challenge():
         _get_basic_challenge(
             [
                 Challenge(
-                    "Dummy",
+                    "dummy",
                     [
                         ("realm", "https://example.com/"),
                         ("service", "service"),
                         ("scope", "scope"),
                     ],
                 ),
-                Challenge("Basic", [("realm", "simple")]),
+                Challenge("basic", [("realm", "simple")]),
                 Challenge(
-                    "Bearer",
+                    "bearer",
                     [
                         ("realm", "https://spack.io/authenticate"),
                         ("service", "spack-registry"),
@@ -179,8 +183,8 @@ def test_get_bearer_challenge():
     assert (
         _get_bearer_challenge(
             [
-                Challenge("Bearer", [("realm", "https://spack.io/authenticate")]),
-                Challenge("Basic", [("realm", "simple")]),
+                Challenge("bearer", [("realm", "https://spack.io/authenticate")]),
+                Challenge("basic", [("realm", "simple")]),
                 Challenge(
                     "Digest",
                     [
@@ -199,11 +203,11 @@ def test_get_bearer_challenge():
     assert _get_bearer_challenge(
         [
             Challenge(
-                "Dummy",
+                "dummy",
                 [("realm", "https://example.com/"), ("service", "service"), ("scope", "scope")],
             ),
             Challenge(
-                "Bearer",
+                "bearer",
                 [
                     ("realm", "https://spack.io/authenticate"),
                     ("service", "spack-registry"),

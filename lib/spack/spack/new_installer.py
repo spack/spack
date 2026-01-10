@@ -27,7 +27,6 @@ import os
 import re
 import selectors
 import shutil
-import signal
 import sys
 import tempfile
 import termios
@@ -55,7 +54,9 @@ import spack.llnl.util.tty
 import spack.paths
 import spack.report
 import spack.spec
+import spack.stage
 import spack.store
+import spack.traverse
 import spack.url_buildcache
 import spack.util.lock
 
@@ -74,17 +75,11 @@ CLEANUP_TIMEOUT = 2.0
 #: Size of the output buffer for child processes
 OUTPUT_BUFFER_SIZE = 4096
 
+#: Suffix for temporary backup during overwrite install
+OVERWRITE_BACKUP_SUFFIX = ".old"
 
-def setup_signal_handling() -> int:
-    """Set up signal handling for SIGCHLD using a wakeup pipe."""
-    # A handler is still needed for set_wakeup_fd to work, but it can be a no-op.
-    signal.signal(signal.SIGCHLD, lambda signum, frame: None)
-    signal_r, signal_w = os.pipe()
-    os.set_blocking(signal_r, False)
-    os.set_blocking(signal_w, False)
-    # This will write the signal number to the pipe, waking up select().
-    signal.set_wakeup_fd(signal_w)
-    return signal_r
+#: Suffix for temporary cleanup during failed install
+OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 
 
 class ChildInfo:
@@ -117,6 +112,10 @@ class ChildInfo:
         try:
             selector.unregister(self.state_r_conn.fileno())
         except KeyError:
+            pass
+        try:
+            selector.unregister(self.proc.sentinel)
+        except (KeyError, ValueError):
             pass
         self.output_r_conn.close()
         self.state_r_conn.close()
@@ -169,16 +168,13 @@ def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
 
 class Tee:
     """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
-    process (if echoing is enabled). The control_fd is used to enable/disable echoing. The initial
-    log file is /dev/null and can be changed later with set_output_file()."""
+    process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
 
-    def __init__(self, control: Connection, parent: Connection) -> None:
+    def __init__(self, control: Connection, parent: Connection, log_fd: int) -> None:
         self.control = control
         self.parent = parent
-        dev_null_fd = os.open(os.devnull, os.O_WRONLY)
-        #: The file descriptor of the log file (initially /dev/null)
-        self.log_fd = os.dup(dev_null_fd)
-        os.close(dev_null_fd)
+        #: The file descriptor of the log file
+        self.log_fd = log_fd
         r, w = os.pipe()
         self.tee_thread = threading.Thread(
             target=tee,
@@ -190,15 +186,11 @@ class Tee:
         os.dup2(w, sys.stderr.fileno())
         os.close(w)
 
-    def set_output_file(self, path: str) -> None:
-        """Redirect output to the specified log file."""
-        log_fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
-        os.dup2(log_fd, self.log_fd)
-        os.close(log_fd)
-
     def close(self) -> None:
         # Closing stdout and stderr should close the last reference to the write end of the pipe,
         # causing the tee thread to wake up, flush the last data, and exit.
+        sys.stdout.flush()
+        sys.stderr.flush()
         os.close(sys.stdout.fileno())
         os.close(sys.stderr.fileno())
         self.tee_thread.join()
@@ -209,7 +201,7 @@ class Tee:
 
 
 def install_from_buildcache(
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     spec: spack.spec.Spec,
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
@@ -235,14 +227,99 @@ def install_from_buildcache(
     return True
 
 
+class PrefixPivoter:
+    """Manages the installation prefix during overwrite installations."""
+
+    def __init__(self, prefix: str, overwrite: bool, keep_prefix: bool = False) -> None:
+        """Initialize the prefix pivoter.
+
+        Args:
+            prefix: The installation prefix path
+            overwrite: Whether to allow overwriting an existing prefix
+            keep_prefix: Whether to keep a failed installation prefix (when not overwriting)
+        """
+        self.prefix = prefix
+        #: Whether to allow installation when the prefix exists
+        self.overwrite = overwrite
+        #: Whether to keep a failed installation prefix
+        self.keep_prefix = keep_prefix
+        #: Temporary location for the original prefix during overwrite
+        self.tmp_prefix: Optional[str] = None
+        self.parent = os.path.dirname(prefix)
+
+    def __enter__(self) -> "PrefixPivoter":
+        """Enter the context: move existing prefix to temporary location if needed."""
+        if not self._lexists(self.prefix):
+            return self
+        if not self.overwrite:
+            raise spack.error.InstallError(f"Install prefix {self.prefix} already exists")
+        # Move the existing prefix to a temporary location
+        self.tmp_prefix = self._mkdtemp(
+            dir=self.parent, prefix=".", suffix=OVERWRITE_BACKUP_SUFFIX
+        )
+        self._rename(self.prefix, self.tmp_prefix)
+        return self
+
+    def __exit__(
+        self, exc_type: Optional[type], exc_val: Optional[BaseException], exc_tb: Optional[object]
+    ) -> None:
+        """Exit the context: cleanup on success, restore on failure."""
+        if exc_type is None:
+            # Success: remove the backup in case of overwrite
+            if self.tmp_prefix is not None:
+                self._rmtree_ignore_errors(self.tmp_prefix)
+            return
+
+        # Failure handling:
+        # Priority 1: If we're overwriting, always restore the original prefix
+        # Priority 2: If keep_prefix is False, remove the failed installation
+
+        if self.overwrite and self.tmp_prefix is not None:
+            # Overwrite case: restore the original prefix if it existed
+            # The highest priority is to restore the original prefix, so we try to:
+            # rename prefix -> garbage: move failed dir out of the way
+            # rename tmp_prefix -> prefix: restore original prefix
+            # remove garbage (this is allowed to fail)
+            garbage = self._mkdtemp(dir=self.parent, prefix=".", suffix=OVERWRITE_GARBAGE_SUFFIX)
+            try:
+                self._rename(self.prefix, garbage)
+                has_failed_prefix = True
+            except FileNotFoundError:  # prefix dir does not exist, so we don't have to delete it.
+                has_failed_prefix = False
+            self._rename(self.tmp_prefix, self.prefix)
+            if has_failed_prefix:
+                self._rmtree_ignore_errors(garbage)
+        elif not self.keep_prefix and self._lexists(self.prefix):
+            # Not overwriting, keep_prefix is False: remove the failed installation
+            garbage = self._mkdtemp(dir=self.parent, prefix=".", suffix=OVERWRITE_GARBAGE_SUFFIX)
+            self._rename(self.prefix, garbage)
+            self._rmtree_ignore_errors(garbage)
+        # else: keep_prefix is True, leave the failed prefix in place
+
+    def _lexists(self, path: str) -> bool:
+        return os.path.lexists(path)
+
+    def _rename(self, src: str, dst: str) -> None:
+        os.rename(src, dst)
+
+    def _mkdtemp(self, dir: str, prefix: str, suffix: str) -> str:
+        return tempfile.mkdtemp(dir=dir, prefix=prefix, suffix=suffix)
+
+    def _rmtree_ignore_errors(self, path: str) -> None:
+        shutil.rmtree(path, ignore_errors=True)
+
+
 def worker_function(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
     keep_stage: bool,
+    restage: bool,
+    overwrite: bool,
+    keep_prefix: bool,
     skip_patch: bool,
     state: Connection,
     parent: Connection,
@@ -265,6 +342,9 @@ def worker_function(
         install_policy: ``"auto"``, ``"cache_only"``, or ``"source_only"``
         dirty: Whether to preserve user environment in the build environment
         keep_stage: Whether to keep the build stage after installation
+        restage: Whether to restage the source before building
+        overwrite: Whether to overwrite the existing install prefix
+        keep_prefix: Whether to keep a failed installation prefix
         skip_patch: Whether to skip the patch phase
         state: Connection to send state updates to
         parent: Connection to send build output to
@@ -281,23 +361,78 @@ def worker_function(
         return
 
     os.environ["MAKEFLAGS"] = makeflags
-
-    tee = Tee(echo_control, parent)
-
     spack.store.STORE = store
     spack.config.CONFIG = config
     spack.paths.set_working_dir()
 
-    # Create the stage and log file before starting the tee thread.
-    pkg = spec.package
-    spack.build_environment.setup_package(pkg, dirty=dirty)
+    # Create a log file in the root of the stage dir.
+    log_fd, log_path = tempfile.mkstemp(
+        prefix=f"spack-stage-{spec.name}-{spec.dag_hash()}-",
+        suffix=".log",
+        dir=spack.stage.get_stage_root(),
+    )
+    tee = Tee(echo_control, parent, log_fd)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
+    exit_code = 0
 
-    # Create the install dir
-    if os.path.exists(spec.prefix):
-        shutil.rmtree(spec.prefix)
+    try:
+        with PrefixPivoter(spec.prefix, overwrite, keep_prefix):
+            _install(
+                spec,
+                explicit,
+                mirrors,
+                unsigned,
+                install_policy,
+                dirty,
+                keep_stage,
+                restage,
+                skip_patch,
+                state_stream,
+                log_path,
+                store,
+            )
+    except Exception:
+        traceback.print_exc()  # log the traceback to the log file
+        exit_code = 1
+    finally:
+        tee.close()
+        state_stream.close()
+
+    if exit_code == 0 and not os.path.lexists(spec.package.install_log_path):
+        # Try to install the compressed log file
+        try:
+            with open(log_path, "rb") as f, open(spec.package.install_log_path, "wb") as g:
+                # Use GzipFile directly so we can omit filename / mtime in header
+                gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
+                shutil.copyfileobj(f, gzip_file)
+                gzip_file.close()
+            os.unlink(log_path)
+        except Exception:
+            pass  # don't fail the build just because log compression failed
+
+    sys.exit(exit_code)
+
+
+def _install(
+    spec: spack.spec.Spec,
+    explicit: bool,
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
+    unsigned: Optional[bool],
+    install_policy: InstallPolicy,
+    dirty: bool,
+    keep_stage: bool,
+    restage: bool,
+    skip_patch: bool,
+    state_stream: io.TextIOWrapper,
+    log_path: str,
+    store: spack.store.Store = spack.store.STORE,
+) -> None:
+    """Install a spec from build cache or source."""
+
+    # Create the stage and log file before starting the tee thread.
+    pkg = spec.package
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
@@ -307,58 +442,38 @@ def worker_function(
         elif install_policy == "cache_only":
             # Binary required but not available
             send_state("no binary available", state_stream)
-            tee.close()
-            state.close()
-            sys.exit(1)
+            raise spack.error.InstallError(f"No binary available for {spec}")
 
+    spack.build_environment.setup_package(pkg, dirty=dirty)
     store.layout.create_install_directory(spec)
+
     stage = pkg.stage
+    stage.keep = keep_stage
 
     # Then try a source build.
     with stage:
-        # Set whether to keep the stage after installation
-        stage.keep = keep_stage
-
-        stage.destroy()
+        if restage:
+            stage.destroy()
         stage.create()
 
-        # Start collecting logs.
-        tee.set_output_file(pkg.log_path)
+        os.symlink(log_path, pkg.log_path)
 
         send_state("staging", state_stream)
+
         if not skip_patch:
             pkg.do_patch()
         else:
             pkg.do_stage()
+
         os.chdir(stage.source_path)
 
-        exit_code = 0
+        spack.hooks.pre_install(spec)
 
-        try:
-            spack.hooks.pre_install(spec)
+        for phase in spack.builder.create(pkg):
+            send_state(phase.name, state_stream)
+            phase.execute()
 
-            for phase_fn in spack.builder.create(pkg):
-                send_state(phase_fn.name, state_stream)
-                phase_fn.execute()
-
-            # Install source build logs
-            with open(pkg.log_path, "rb") as f, open(pkg.install_log_path, "wb") as g:
-                # Use GzipFile directly so we can omit filename / mtime in header
-                gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
-                shutil.copyfileobj(f, gzip_file)
-                gzip_file.close()
-
-            spack.hooks.post_install(spec, explicit)
-
-        except Exception:
-            # Print all exceptions so they are logged by the tee thread.
-            traceback.print_exc()
-            exit_code = 1
-        finally:
-            tee.close()
-            state.close()
-
-        sys.exit(exit_code)
+        spack.hooks.post_install(spec, explicit)
 
 
 class JobServer:
@@ -449,11 +564,14 @@ class JobServer:
 def start_build(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorURLAndVersion],
+    mirrors: List[spack.url_buildcache.MirrorMetadata],
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
     keep_stage: bool,
+    restage: bool,
+    overwrite: bool,
+    keep_prefix: bool,
     skip_patch: bool,
     jobserver: JobServer,
 ) -> ChildInfo:
@@ -479,6 +597,9 @@ def start_build(
             install_policy,
             dirty,
             keep_stage,
+            restage,
+            overwrite,
+            keep_prefix,
             skip_patch,
             state_w_conn,
             output_w_conn,
@@ -502,20 +623,6 @@ def start_build(
     os.set_blocking(state_r_conn.fileno(), False)
 
     return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, explicit)
-
-
-def reap_children(
-    child_data: Dict[int, ChildInfo], selector: selectors.BaseSelector, jobserver: JobServer
-) -> List[int]:
-    """Reap terminated child processes"""
-    to_delete: List[int] = []
-    for pid, child in child_data.items():
-        if child.proc.is_alive():
-            continue
-        to_delete.append(pid)
-        jobserver.release()
-        child.cleanup(selector)
-    return to_delete
 
 
 def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
@@ -969,6 +1076,7 @@ class BuildGraph:
         install_package: bool,
         install_deps: bool,
         database: spack.database.Database,
+        overwrite_set: Optional[Set[str]] = None,
     ):
         """Construct a build graph from the given specs. This includes only packages that need to
         be installed. Installed packages are pruned from the graph, and build dependencies are only
@@ -977,25 +1085,29 @@ class BuildGraph:
         self.nodes = {s.dag_hash(): s for s in specs}
         self.parent_to_child: Dict[str, Set[str]] = {}
         self.child_to_parent: Dict[str, Set[str]] = {}
+        overwrite_set = overwrite_set or set()
         specs_to_prune: Set[str] = set()
         stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [
             (s, root_policy) for s in self.nodes.values()
         ]
 
         with database.read_transaction():
+            # Set the install prefix for each spec based on the db record or store layout
+            for s in spack.traverse.traverse_nodes(specs):
+                _, record = database.query_by_spec_hash(s.dag_hash())
+                if record and record.path:
+                    s.set_prefix(record.path)
+                else:
+                    s.set_prefix(spack.store.STORE.layout.path_for_spec(s))
+
+            # Build the graph and determine which specs to prune
             while stack:
                 spec, install_policy = stack.pop()
                 key = spec.dag_hash()
                 _, record = database.query_by_spec_hash(key)
 
-                # Set the install prefix for each spec based on the db record or store layout
-                if record and record.path:
-                    spec.set_prefix(record.path)
-                else:
-                    spec.set_prefix(spack.store.STORE.layout.path_for_spec(spec))
-
-                # Conditionally include build dependencies based on policy and install status
-                if record and record.installed:
+                # Conditionally include build dependencies
+                if record and record.installed and key not in overwrite_set:
                     specs_to_prune.add(key)
                     dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
                 elif install_policy == "cache_only" and not include_build_deps:
@@ -1102,18 +1214,12 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if overwrite:
-            raise NotImplementedError("Overwrite installs are not implemented")
-        elif fail_fast:
+        if fail_fast:
             raise NotImplementedError("Fail-fast installs are not implemented")
         elif fake:
             raise NotImplementedError("Fake installs are not implemented")
         elif install_source:
             raise NotImplementedError("Installing sources is not implemented")
-        elif keep_prefix:
-            raise NotImplementedError("Keeping install prefixes is not implemented")
-        elif not restage:
-            raise NotImplementedError("Restaging builds is not implemented")
         elif stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
         elif stop_before is not None:
@@ -1127,6 +1233,9 @@ class PackageInstaller:
         self.root_policy: InstallPolicy = root_policy
         self.dependencies_policy: InstallPolicy = dependencies_policy
         self.include_build_deps = include_build_deps
+        #: Set of DAG hashes to overwrite (if already installed)
+        self.overwrite: Set[str] = set(overwrite) if overwrite else set()
+        self.keep_prefix = keep_prefix
 
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
@@ -1140,6 +1249,7 @@ class PackageInstaller:
             install_package,
             install_deps,
             spack.store.STORE.db,
+            self.overwrite,
         )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
@@ -1150,6 +1260,7 @@ class PackageInstaller:
         }
         self.unsigned = unsigned
         self.dirty = dirty
+        self.restage = restage
         self.keep_stage = keep_stage
         self.skip_patch = skip_patch
 
@@ -1186,9 +1297,6 @@ class PackageInstaller:
     def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
 
-        # Set up signal handling
-        signal_r = setup_signal_handling()
-
         # Set stdin to non-blocking for key press detection
         if sys.stdin.isatty():
             old_stdin_settings = termios.tcgetattr(sys.stdin)
@@ -1197,7 +1305,6 @@ class PackageInstaller:
             old_stdin_settings = None
 
         selector = selectors.DefaultSelector()
-        selector.register(signal_r, selectors.EVENT_READ, "signal")
         selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
 
         # Setup the database write lock. TODO: clean this up
@@ -1222,11 +1329,12 @@ class PackageInstaller:
                 elif not self.pending_builds and jobserver.r in selector.get_map():
                     selector.unregister(jobserver.r)
 
-                children_have_finished = False
                 jobserver_token_available = False
                 stdin_ready = False
 
                 events = selector.select(timeout=SPINNER_INTERVAL)
+
+                finished_pids = []
 
                 for key, _ in events:
                     data = key.data
@@ -1237,27 +1345,23 @@ class PackageInstaller:
                             self._handle_child_logs(key.fd, child_info, selector)
                         elif data.name == "state":
                             self._handle_child_state(key.fd, child_info, selector)
-                    elif data == "signal":
-                        children_have_finished = True
+                        elif data.name == "sentinel":
+                            finished_pids.append(data.pid)
                     elif data == "jobserver":
                         jobserver_token_available = True
                     elif data == "stdin":
                         stdin_ready = True
 
-                if children_have_finished:
-                    try:
-                        # Clear the signal pipe
-                        os.read(signal_r, OUTPUT_BUFFER_SIZE)
-                    except BlockingIOError:
-                        pass
-                    for pid in reap_children(self.running_builds, selector, jobserver):
-                        build = self.running_builds.pop(pid)
-                        if build.proc.exitcode == 0:
-                            to_insert_in_database.append(build)
-                            self.build_status.update_state(build.spec.dag_hash(), "finished")
-                        else:
-                            failures.append(build.spec)
-                            self.build_status.update_state(build.spec.dag_hash(), "failed")
+                for pid in finished_pids:
+                    build = self.running_builds.pop(pid)
+                    jobserver.release()
+                    build.cleanup(selector)
+                    if build.proc.exitcode == 0:
+                        to_insert_in_database.append(build)
+                        self.build_status.update_state(build.spec.dag_hash(), "finished")
+                    else:
+                        failures.append(build.spec)
+                        self.build_status.update_state(build.spec.dag_hash(), "failed")
 
                 if stdin_ready:
                     try:
@@ -1301,11 +1405,7 @@ class PackageInstaller:
         except KeyboardInterrupt:
             # Cleanup running builds.
             for child in self.running_builds.values():
-                child.proc.terminate()
-            for child in self.running_builds.values():
                 child.proc.join()
-            for child in self.running_builds.values():
-                shutil.rmtree(child.spec.prefix, ignore_errors=True)
             raise
         finally:
             # Restore terminal settings
@@ -1318,9 +1418,6 @@ class PackageInstaller:
             self.build_status.update(finalize=True)
             selector.close()
             jobserver.close()
-            old_wakeup_fd = signal.set_wakeup_fd(-1)
-            os.close(old_wakeup_fd)
-            os.close(signal_r)
 
         if failures:
             lines = [f"{s}: {s.package.log_path}" for s in failures]
@@ -1346,20 +1443,26 @@ class PackageInstaller:
     def _start(self, selector: selectors.BaseSelector, jobserver: JobServer) -> None:
         dag_hash = self.pending_builds.pop()
         explicit = dag_hash in self.explicit
-        mirrors = self.binary_cache_for_spec[dag_hash]
-        install_policy = (
-            self.root_policy if dag_hash in self.build_graph.roots else self.dependencies_policy
-        )
+        spec = self.build_graph.nodes[dag_hash]
+        is_develop = spec.is_develop
         child_info = start_build(
-            self.build_graph.nodes[dag_hash],
-            explicit,
-            mirrors,
-            self.unsigned,
-            install_policy,
-            self.dirty,
-            self.keep_stage,
-            self.skip_patch,
-            jobserver,
+            spec,
+            explicit=explicit,
+            mirrors=self.binary_cache_for_spec[dag_hash],
+            unsigned=self.unsigned,
+            install_policy=(
+                self.root_policy
+                if dag_hash in self.build_graph.roots
+                else self.dependencies_policy
+            ),
+            dirty=self.dirty,
+            # keep_stage/restage logic taken from installer.py
+            keep_stage=self.keep_stage or is_develop,
+            restage=self.restage and not is_develop,
+            overwrite=dag_hash in self.overwrite,
+            keep_prefix=self.keep_prefix,
+            skip_patch=self.skip_patch,
+            jobserver=jobserver,
         )
         pid = child_info.proc.pid
         assert type(pid) is int
@@ -1370,6 +1473,7 @@ class PackageInstaller:
         selector.register(
             child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state")
         )
+        selector.register(child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
         self.build_status.add_build(
             child_info.spec, explicit=explicit, control_w_conn=child_info.control_w_conn
         )

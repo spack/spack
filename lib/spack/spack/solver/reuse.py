@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
 import functools
-from typing import Any, Callable, List, Mapping, Tuple
+from typing import Any, Callable, List, Mapping
 
 import spack.binary_distribution
 import spack.config
@@ -20,7 +20,7 @@ from spack.externals import (
     extract_dicts_from_configuration,
 )
 
-from .runtimes import all_libcs, external_config_with_implicit_externals
+from .runtimes import all_libcs
 
 
 class SpecFilter:
@@ -64,51 +64,58 @@ class SpecFilter:
         return [s for s in self.factory() if self.is_selected(s)]
 
     @staticmethod
-    def from_store(configuration, *, include, exclude) -> "SpecFilter":
+    def from_store(configuration, *, packages_with_externals, include, exclude) -> "SpecFilter":
         """Constructs a filter that takes the specs from the current store."""
-        packages = external_config_with_implicit_externals(configuration)
-        is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
+        is_reusable = functools.partial(
+            _is_reusable, packages_with_externals=packages_with_externals, local=True
+        )
         factory = functools.partial(_specs_from_store, configuration=configuration)
         return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
     @staticmethod
-    def from_buildcache(configuration, *, include, exclude) -> "SpecFilter":
+    def from_buildcache(*, packages_with_externals, include, exclude) -> "SpecFilter":
         """Constructs a filter that takes the specs from the configured buildcaches."""
-        packages = external_config_with_implicit_externals(configuration)
-        is_reusable = functools.partial(_is_reusable, packages=packages, local=False)
+        is_reusable = functools.partial(
+            _is_reusable, packages_with_externals=packages_with_externals, local=False
+        )
         return SpecFilter(
             factory=_specs_from_mirror, is_usable=is_reusable, include=include, exclude=exclude
         )
 
     @staticmethod
-    def from_environment(configuration, *, include, exclude, env) -> "SpecFilter":
-        packages = external_config_with_implicit_externals(configuration)
-        is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
+    def from_environment(*, packages_with_externals, include, exclude, env) -> "SpecFilter":
+        is_reusable = functools.partial(
+            _is_reusable, packages_with_externals=packages_with_externals, local=True
+        )
         factory = functools.partial(_specs_from_environment, env=env)
         return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
     @staticmethod
     def from_environment_included_concrete(
-        configuration,
         *,
+        packages_with_externals,
         include: List[str],
         exclude: List[str],
         env: spack.environment.Environment,
         included_concrete: str,
     ) -> "SpecFilter":
-        packages = external_config_with_implicit_externals(configuration)
-        is_reusable = functools.partial(_is_reusable, packages=packages, local=True)
+        is_reusable = functools.partial(
+            _is_reusable, packages_with_externals=packages_with_externals, local=True
+        )
         factory = functools.partial(
             _specs_from_environment_included_concrete, env=env, included_concrete=included_concrete
         )
         return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
     @staticmethod
-    def from_packages_yaml(configuration, *, include, exclude) -> "SpecFilter":
-        parser, packages_yaml = _create_external_parser(configuration)
-        is_reusable = functools.partial(_is_reusable, packages=packages_yaml, local=True)
+    def from_packages_yaml(
+        *, external_parser: ExternalSpecsParser, packages_with_externals, include, exclude
+    ) -> "SpecFilter":
+        is_reusable = functools.partial(
+            _is_reusable, packages_with_externals=packages_with_externals, local=True
+        )
         return SpecFilter(
-            parser.all_specs, is_usable=is_reusable, include=include, exclude=exclude
+            external_parser.all_specs, is_usable=is_reusable, include=include, exclude=exclude
         )
 
 
@@ -124,7 +131,7 @@ def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
     return True
 
 
-def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
+def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) -> bool:
     """A spec is reusable if it's not a dev spec, it's imported from the cray manifest, it's not
     external, or it's external with matching packages.yaml entry. The latter prevents two issues:
 
@@ -136,7 +143,7 @@ def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
 
     Arguments:
         spec: the spec to check
-        packages: the packages configuration
+        packages_with_externals: the pre-processed packages configuration
     """
     if "dev_path" in spec.variants:
         return False
@@ -159,7 +166,7 @@ def _is_reusable(spec: spack.spec.Spec, packages, local: bool) -> bool:
         provided = []
 
     for name in {spec.name, *provided}:
-        for entry in packages.get(name, {}).get("externals", []):
+        for entry in packages_with_externals.get(name, {}).get("externals", []):
             expected_prefix = entry.get("prefix")
             if expected_prefix is not None:
                 expected_prefix = spack.llnl.path.path_to_os_path(expected_prefix)[0]
@@ -212,25 +219,31 @@ class ReuseStrategy(enum.Enum):
     NONE = enum.auto()
 
 
-def _create_external_parser(
-    configuration: spack.config.Configuration,
-) -> Tuple[ExternalSpecsParser, Any]:
-    packages_yaml = external_config_with_implicit_externals(configuration)
-    external_dicts = extract_dicts_from_configuration(packages_yaml)
-    result = configuration.get("concretizer:externals:completion")
-    if result == "default_variants":
+def create_external_parser(
+    packages_with_externals: Any, completion_mode: str
+) -> ExternalSpecsParser:
+    """Get externals from a pre-processed packages.yaml (with implicit externals)."""
+    external_dicts = extract_dicts_from_configuration(packages_with_externals)
+    if completion_mode == "default_variants":
         complete_fn = complete_variants_and_architecture
-    elif result == "architecture_only":
+    elif completion_mode == "architecture_only":
         complete_fn = complete_architecture
     else:
-        raise ValueError(f"Unknown value for concretizer:externals:completion: {result!r}")
-    return ExternalSpecsParser(external_dicts, complete_node=complete_fn), packages_yaml
+        raise ValueError(
+            f"Unknown value for concretizer:externals:completion: {completion_mode!r}"
+        )
+    return ExternalSpecsParser(external_dicts, complete_node=complete_fn)
 
 
 class ReusableSpecsSelector:
     """Selects specs that can be reused during concretization."""
 
-    def __init__(self, configuration: spack.config.Configuration) -> None:
+    def __init__(
+        self,
+        configuration: spack.config.Configuration,
+        external_parser: ExternalSpecsParser,
+        packages_with_externals: Any,
+    ) -> None:
         self.configuration = configuration
         self.store = spack.store.create(configuration)
         self.reuse_strategy = ReuseStrategy.ROOTS
@@ -239,7 +252,12 @@ class ReusableSpecsSelector:
         self.reuse_sources = []
         if not isinstance(reuse_yaml, Mapping):
             self.reuse_sources.append(
-                SpecFilter.from_packages_yaml(configuration, include=[], exclude=[])
+                SpecFilter.from_packages_yaml(
+                    external_parser=external_parser,
+                    packages_with_externals=packages_with_externals,
+                    include=[],
+                    exclude=[],
+                )
             )
             if reuse_yaml is False:
                 self.reuse_strategy = ReuseStrategy.NONE
@@ -250,13 +268,16 @@ class ReusableSpecsSelector:
             self.reuse_sources.extend(
                 [
                     SpecFilter.from_store(
-                        configuration=self.configuration, include=[], exclude=[]
+                        configuration=self.configuration,
+                        packages_with_externals=packages_with_externals,
+                        include=[],
+                        exclude=[],
                     ),
                     SpecFilter.from_buildcache(
-                        configuration=self.configuration, include=[], exclude=[]
+                        packages_with_externals=packages_with_externals, include=[], exclude=[]
                     ),
                     SpecFilter.from_environment(
-                        configuration=self.configuration,
+                        packages_with_externals=packages_with_externals,
                         include=[],
                         exclude=[],
                         env=spack.environment.active_environment(),  # with all concrete includes
@@ -286,7 +307,7 @@ class ReusableSpecsSelector:
                         #       time, and reuse needs to match the included specs.
                         self.reuse_sources.append(
                             SpecFilter.from_environment_included_concrete(
-                                self.configuration,
+                                packages_with_externals=packages_with_externals,
                                 include=include,
                                 exclude=exclude,
                                 env=active_env,
@@ -298,7 +319,7 @@ class ReusableSpecsSelector:
                         # current specs from its lockfile.
                         self.reuse_sources.append(
                             SpecFilter.from_environment(
-                                self.configuration,
+                                packages_with_externals=packages_with_externals,
                                 include=include,
                                 exclude=exclude,
                                 env=spack.environment.environment_from_name_or_dir(env_dir),
@@ -309,7 +330,7 @@ class ReusableSpecsSelector:
                     # included concrete environments
                     self.reuse_sources.append(
                         SpecFilter.from_environment(
-                            self.configuration,
+                            packages_with_externals=packages_with_externals,
                             include=include,
                             exclude=exclude,
                             env=spack.environment.active_environment(),
@@ -317,12 +338,19 @@ class ReusableSpecsSelector:
                     )
                 elif source["type"] == "local":
                     self.reuse_sources.append(
-                        SpecFilter.from_store(self.configuration, include=include, exclude=exclude)
+                        SpecFilter.from_store(
+                            self.configuration,
+                            packages_with_externals=packages_with_externals,
+                            include=include,
+                            exclude=exclude,
+                        )
                     )
                 elif source["type"] == "buildcache":
                     self.reuse_sources.append(
                         SpecFilter.from_buildcache(
-                            self.configuration, include=include, exclude=exclude
+                            packages_with_externals=packages_with_externals,
+                            include=include,
+                            exclude=exclude,
                         )
                     )
                 elif source["type"] == "external":
@@ -332,14 +360,22 @@ class ReusableSpecsSelector:
                         include = include + sorted(all_libcs())  # type: ignore[type-var]
                     self.reuse_sources.append(
                         SpecFilter.from_packages_yaml(
-                            configuration, include=include, exclude=exclude
+                            external_parser=external_parser,
+                            packages_with_externals=packages_with_externals,
+                            include=include,
+                            exclude=exclude,
                         )
                     )
 
             # If "external" is not specified, we assume that all externals have to be included
             if not has_external_source:
                 self.reuse_sources.append(
-                    SpecFilter.from_packages_yaml(configuration, include=[], exclude=[])
+                    SpecFilter.from_packages_yaml(
+                        external_parser=external_parser,
+                        packages_with_externals=packages_with_externals,
+                        include=[],
+                        exclude=[],
+                    )
                 )
 
     def reusable_specs(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:

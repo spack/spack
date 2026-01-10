@@ -83,6 +83,7 @@ def test_write_and_remove_cache_file(file_cache):
 
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
+@pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
 def test_cache_init_entry_fails(file_cache):
     """Test init_entry failures."""
     relpath = fs.join_path("test-dir", "read-only-file.txt")
@@ -106,6 +107,7 @@ def test_cache_init_entry_fails(file_cache):
         file_cache.init_entry(relpath)
 
 
+@pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
 def test_cache_write_readonly_cache_fails(file_cache):
     """Test writing a read-only cached file."""
     filename = "read-only-file.txt"

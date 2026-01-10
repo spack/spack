@@ -15,18 +15,20 @@ from spack.llnl.util.tty.color import cextra, clen
 
 
 class ColumnConfig:
-    def __init__(self, cols):
+    def __init__(self, cols: int) -> None:
         self.cols = cols
         self.line_length = 0
         self.valid = True
         self.widths = [0] * cols  # does not include ansi colors
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         attrs = [(a, getattr(self, a)) for a in dir(self) if not a.startswith("__")]
-        return "<Config: %s>" % ", ".join("%s: %r" % a for a in attrs)
+        return f"<Config: {', '.join('%s: %r' % a for a in attrs)}>"
 
 
-def config_variable_cols(elts, console_width, padding, cols=0):
+def config_variable_cols(
+    elts: List[str], console_width: int, padding: int, cols: int = 0
+) -> ColumnConfig:
     """Variable-width column fitting algorithm.
 
     This function determines the most columns that can fit in the
@@ -85,7 +87,9 @@ def config_variable_cols(elts, console_width, padding, cols=0):
     return config
 
 
-def config_uniform_cols(elts, console_width, padding, cols=0):
+def config_uniform_cols(
+    elts: List[str], console_width: int, padding: int, cols: int = 0
+) -> ColumnConfig:
     """Uniform-width column fitting algorithm.
 
     Determines the longest element in the list, and determines how

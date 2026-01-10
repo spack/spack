@@ -33,6 +33,8 @@ The figure below helps you get a sense of the various parts that compose this sp
 
 .. figure:: images/spec_anatomy.svg
    :alt: Spack spec with annotations
+   :width: 740
+   :height: 180
 
 When installing this, you will get:
 
@@ -521,6 +523,8 @@ It is possible to be more explicit and tell Spack which dependency should provid
 Concretizing the spec above produces the following DAG:
 
 .. figure:: images/strumpack_virtuals.svg
+   :width: 3044
+   :height: 1683
 
 where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former.
 The ``lapack`` and ``blas`` dependencies are satisfied by ``openblas``.

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import base64
-import codecs
+import io
 import json
 import os
 import pathlib
@@ -576,7 +576,7 @@ def import_signing_key(base64_signing_key: str) -> None:
 
     # This command has the side-effect of creating the directory referred
     # to as GNUPGHOME in setup_environment()
-    list_output = spack_gpg("list", output=str)
+    list_output = spack_gpg("list")
 
     tty.debug("spack gpg list:")
     tty.debug(list_output)
@@ -588,13 +588,13 @@ def import_signing_key(base64_signing_key: str) -> None:
         with open(sign_key_path, "w", encoding="utf-8") as fd:
             fd.write(decoded_key)
 
-        key_import_output = spack_gpg("trust", sign_key_path, output=str)
+        key_import_output = spack_gpg("trust", sign_key_path)
         tty.debug(f"spack gpg trust {sign_key_path}")
         tty.debug(key_import_output)
 
     # Now print the keys we have for verifying and signing
-    trusted_keys_output = spack_gpg("list", "--trusted", output=str)
-    signing_keys_output = spack_gpg("list", "--signing", output=str)
+    trusted_keys_output = spack_gpg("list", "--trusted")
+    signing_keys_output = spack_gpg("list", "--signing")
 
     tty.debug("spack gpg list --trusted")
     tty.debug(trusted_keys_output)
@@ -1310,7 +1310,7 @@ def read_broken_spec(broken_spec_url):
         tty.warn(f"Unable to read broken spec from {broken_spec_url}")
         return None
 
-    broken_spec_contents = codecs.getreader("utf-8")(fs).read()
+    broken_spec_contents = io.TextIOWrapper(fs, encoding="utf-8").read()
     return syaml.load(broken_spec_contents)
 
 

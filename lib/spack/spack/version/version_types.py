@@ -172,6 +172,8 @@ class VersionType(SupportsRichComparison):
 
     """
 
+    __slots__ = ()
+
     def intersection(self, other: "VersionType") -> "VersionType":
         """Any versions contained in both self and other, or empty VersionList if no overlap."""
         raise NotImplementedError
@@ -199,6 +201,8 @@ class VersionType(SupportsRichComparison):
 class ConcreteVersion(VersionType):
     """Base type for versions that represents a single (non-range or list) version."""
 
+    __slots__ = ()
+
 
 def _stringify_version(versions: VersionTuple, separators: Tuple[str, ...]) -> str:
     """Create a string representation from version components."""
@@ -217,7 +221,7 @@ def _stringify_version(versions: VersionTuple, separators: Tuple[str, ...]) -> s
 class StandardVersion(ConcreteVersion):
     """Class to represent versions"""
 
-    __slots__ = ["version", "_string", "separators"]
+    __slots__ = ("version", "_string", "separators")
 
     _string: str
     version: VersionTuple
@@ -509,13 +513,6 @@ class StandardVersion(ConcreteVersion):
         return self.up_to(3)
 
 
-_STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
-
-_STANDARD_VERSION_TYPEMAX = StandardVersion(
-    "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
-)
-
-
 class GitVersion(ConcreteVersion):
     """Class to represent versions interpreted from git refs.
 
@@ -552,7 +549,7 @@ class GitVersion(ConcreteVersion):
     sufficient.
     """
 
-    __slots__ = ["has_git_prefix", "commit_sha", "ref", "std_version", "_ref_lookup"]
+    __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "std_version", "_ref_lookup")
 
     def __init__(self, string: str):
         # TODO will be required for concrete specs when commit lookup added
@@ -777,6 +774,8 @@ class GitVersion(ConcreteVersion):
 
 
 class ClosedOpenRange(VersionType):
+    __slots__ = ("lo", "hi")
+
     def __init__(self, lo: StandardVersion, hi: StandardVersion):
         if hi < lo:
             raise EmptyRangeError(f"{lo}..{hi} is an empty range")
@@ -1070,6 +1069,13 @@ class VersionList(VersionType):
             return VersionList([Version(dictionary["version"])])
         raise ValueError("Dict must have 'version' or 'versions' in it.")
 
+    @classmethod
+    def any(cls) -> "VersionList":
+        """Return a VersionList that matches any version."""
+        version_list = cls.__new__(cls)
+        version_list.versions = [_UNBOUNDED_RANGE]
+        return version_list
+
     def update(self, other: "VersionList") -> None:
         self.add(other)
 
@@ -1165,9 +1171,7 @@ class VersionList(VersionType):
         if not self.versions:
             return ""
 
-        return ",".join(
-            f"={v}" if isinstance(v, StandardVersion) else str(v) for v in self.versions
-        )
+        return ",".join(f"={v}" if type(v) is StandardVersion else str(v) for v in self.versions)
 
     def __repr__(self) -> str:
         return str(self.versions)
@@ -1330,3 +1334,14 @@ def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
         return from_string(str(obj))
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
+
+
+_STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
+
+_STANDARD_VERSION_TYPEMAX = StandardVersion(
+    "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
+)
+
+_UNBOUNDED_RANGE = ClosedOpenRange.from_version_range(
+    _STANDARD_VERSION_TYPEMIN, _STANDARD_VERSION_TYPEMAX
+)

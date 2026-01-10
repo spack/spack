@@ -47,9 +47,7 @@ def test_test_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
-def test_test_dup_alias(
-    mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery, capfd
-):
+def test_test_dup_alias(mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery):
     """Ensure re-using an alias fails with suggestion to change."""
     install("--fake", "libdwarf")
 
@@ -57,8 +55,7 @@ def test_test_dup_alias(
     spack_test("run", "--alias", "libdwarf", "libdwarf")
 
     # Try again with the alias but don't let it fail on the error
-    with capfd.disabled():
-        out = spack_test("run", "--alias", "libdwarf", "libdwarf", fail_on_error=False)
+    out = spack_test("run", "--alias", "libdwarf", "libdwarf", fail_on_error=False)
 
     assert "already exists" in out and "Try another alias" in out
 
@@ -143,7 +140,6 @@ def test_cdash_output_test_error(
     mock_packages,
     mock_archive,
     mock_test_stage,
-    capfd,
 ):
     """Confirm stand-alone test error expected outputs in CDash reporting."""
     install("test-error")
@@ -184,12 +180,10 @@ def test_cdash_upload_clean_test(
         assert "<Text>" not in content
 
 
-def test_test_help_does_not_show_cdash_options(mock_test_stage, capsys):
+def test_test_help_does_not_show_cdash_options(mock_test_stage):
     """Make sure `spack test --help` does not describe CDash arguments"""
-    with pytest.raises(SystemExit):
-        spack_test("run", "--help")
-        captured = capsys.readouterr()
-        assert "CDash URL" not in captured.out
+    spack_test("run", "--help")
+    assert "CDash URL" not in spack_test.output
 
 
 def test_test_help_cdash(mock_test_stage):

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import base64
 import collections
 import datetime
 import email.message
@@ -19,7 +20,7 @@ import sys
 import tempfile
 import xml.etree.ElementTree
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import pytest
 
@@ -28,7 +29,7 @@ import spack.vendor.archspec.cpu.microarchitecture
 import spack.vendor.archspec.cpu.schema
 
 import spack.binary_distribution
-import spack.bootstrap.core
+import spack.bootstrap
 import spack.caches
 import spack.compilers.config
 import spack.compilers.libraries
@@ -37,9 +38,12 @@ import spack.config
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
+import spack.extensions
+import spack.hash_types
 import spack.llnl.util.lang
 import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -268,9 +272,11 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 
     The structure of commits in this repo is as follows::
 
-       o diff-test: add v1.2 (from a git ref)
+       o diff-test: add v2.1.7 and v2.1.8 (invalid duplicated checksum)
        |
-       o diff-test: add v1.1 (from source tarball)
+       o diff-test: add v2.1.6 (from a git ref)
+       |
+       o diff-test: add v2.1.5 (from source tarball)
        |
        o diff-test: new package (testing multiple added versions)
 
@@ -313,22 +319,28 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 
         os.makedirs(os.path.dirname(filename))
 
-        # add pkg-a as a new package to the repository
+        # add diff-test as a new package to the repository
         shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-0.txt", filename)
         git("add", filename)
         commit("diff-test: new package")
         commits.append(latest_commit())
 
-        # add v2.1.5 to pkg-a
+        # add v2.1.5 to diff-test
         shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-1.txt", filename)
         git("add", filename)
         commit("diff-test: add v2.1.5")
         commits.append(latest_commit())
 
-        # add v2.1.6 to pkg-a
+        # add v2.1.6 to diff-test
         shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-2.txt", filename)
         git("add", filename)
         commit("diff-test: add v2.1.6")
+        commits.append(latest_commit())
+
+        # add v2.1.7 and v2.1.8 to diff-test
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-3.txt", filename)
+        git("add", filename)
+        commit("diff-test: add v2.1.7 and v2.1.8")
         commits.append(latest_commit())
 
         # The commits are ordered with the last commit first in the list
@@ -341,7 +353,7 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
 @pytest.fixture(autouse=True)
 def clear_recorded_monkeypatches():
     yield
-    spack.subprocess_context.clear_patches()
+    spack.subprocess_context.MONKEYPATCHES.clear()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -351,7 +363,7 @@ def record_monkeypatch_setattr():
     saved_setattr = _pytest.monkeypatch.MonkeyPatch.setattr
 
     def record_setattr(cls, target, name, value, *args, **kwargs):
-        spack.subprocess_context.append_patch((target, name, value))
+        spack.subprocess_context.MONKEYPATCHES.append((target, name))
         saved_setattr(cls, target, name, value, *args, **kwargs)
 
     _pytest.monkeypatch.MonkeyPatch.setattr = record_setattr
@@ -748,6 +760,7 @@ class RepoBuilder:
         namespace = f"test_namespace_{RepoBuilder._counter}"
         repo_root = os.path.join(root_directory, namespace)
         os.makedirs(repo_root, exist_ok=True)
+        self.template_dirs = (os.path.join(spack.paths.share_path, "templates"),)
         self.root, self.namespace = spack.repo.create_repo(repo_root, namespace)
         self.build_system_name = f"test_build_system_{self.namespace}"
         self._add_build_system()
@@ -770,7 +783,9 @@ class RepoBuilder:
             "cls_name": spack.util.naming.pkg_name_to_class_name(name),
             "dependencies": dependencies,
         }
-        template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
+        template = spack.tengine.make_environment_from_dirs(self.template_dirs).get_template(
+            "mock-repository/package.pyt"
+        )
         package_py = self._recipe_filename(name)
         os.makedirs(os.path.dirname(package_py), exist_ok=True)
         with open(package_py, "w", encoding="utf-8") as f:
@@ -783,7 +798,7 @@ class RepoBuilder:
     def _add_build_system(self) -> None:
         """Add spack_repo.<namespace>.build_systems.test_build_system with
         build_system=test_build_system_<namespace>."""
-        template = spack.tengine.make_environment().get_template(
+        template = spack.tengine.make_environment_from_dirs(self.template_dirs).get_template(
             "mock-repository/build_system.pyt"
         )
         text = template.render({"build_system_name": self.build_system_name})
@@ -994,16 +1009,10 @@ def monkeypatch_session():
         yield monkeypatch
 
 
-@pytest.fixture(scope="session", autouse=True)
-def mock_wsdk_externals(monkeypatch_session):
-    """Skip check for required external packages on Windows during testing
-    Note: In general this should cover this behavior for all tests,
-    however any session scoped fixture involving concretization should
-    include this fixture
-    """
-    monkeypatch_session.setattr(
-        spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none
-    )
+@pytest.fixture(autouse=True)
+def mock_wsdk_externals(monkeypatch):
+    """Skip check for required external packages on Windows during testing."""
+    monkeypatch.setattr(spack.bootstrap, "ensure_winsdk_external_or_raise", _return_none)
 
 
 @pytest.fixture(scope="function")
@@ -1040,6 +1049,49 @@ def mock_low_high_config(tmp_path: Path):
     ]
 
     with spack.config.use_configuration(*scopes) as config:
+        yield config
+
+
+def create_config_scope(path: Path, name: str) -> spack.config.DirectoryConfigScope:
+    """helper for creating config scopes with included file/directory scopes
+    that do not have existing representation on the filesystem"""
+    base_scope_dir = path / "base"
+    config_data = syaml.syaml_dict(
+        {
+            "include": [
+                {
+                    "name": "sub_base",
+                    "path": str(path / name),
+                    "optional": True,
+                    "prefer_modify": True,
+                }
+            ]
+        }
+    )
+    base_scope_dir.mkdir()
+    with open(str(base_scope_dir / "include.yaml"), "w+", encoding="utf-8") as f:
+        syaml.dump_config(config_data, stream=f, default_flow_style=False)
+    scope = spack.config.DirectoryConfigScope("base", str(base_scope_dir))
+    return scope
+
+
+@pytest.fixture()
+def mock_missing_dir_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional directory scope
+    includes that do not have represetation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub")
+
+    with spack.config.use_configuration(scope) as config:
+        yield config
+
+
+@pytest.fixture
+def mock_missing_file_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional file scope
+    includes that do not have represetation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub.yaml")
+
+    with spack.config.use_configuration(scope) as config:
         yield config
 
 
@@ -1089,7 +1141,6 @@ def _store_dir_and_cache(tmp_path_factory: pytest.TempPathFactory):
 @pytest.fixture(scope="session")
 def mock_store(
     tmp_path_factory: pytest.TempPathFactory,
-    mock_wsdk_externals,
     mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache: Tuple[Path, Path],
@@ -1104,6 +1155,7 @@ def mock_store(
 
     """
     store_path, store_cache = _store_dir_and_cache
+    _mock_wsdk_externals = spack.bootstrap.ensure_winsdk_external_or_raise
 
     # Make the DB filesystem read-only to ensure constructors don't modify anything in it.
     # We want Spack to be able to point to a DB on a read-only filesystem easily.
@@ -1116,7 +1168,11 @@ def mock_store(
                 with spack.repo.use_repositories(mock_packages_repo):
                     # make the DB filesystem writable only while we populate it
                     _recursive_chmod(store_path, 0o755)
-                    _populate(store.db)
+                    try:
+                        spack.bootstrap.ensure_winsdk_external_or_raise = _return_none
+                        _populate(store.db)
+                    finally:
+                        spack.bootstrap.ensure_winsdk_external_or_raise = _mock_wsdk_externals
                     _recursive_chmod(store_path, 0o555)
 
         _recursive_chmod(store_cache, 0o755)
@@ -2015,6 +2071,32 @@ def brand_new_binary_cache():
     )
 
 
+def _trivial_package_hash(spec: spack.spec.Spec) -> str:
+    """Return a trivial package hash for tests to avoid expensive AST parsing."""
+    # Pad package name to consistent length and cap at 32 chars for realistic hash length
+    return base64.b32encode(f"{spec.name:<32}".encode()[:32]).decode().lower()
+
+
+@pytest.fixture(autouse=True)
+def mock_package_hash_for_tests(request, monkeypatch):
+    """Replace expensive package hash computation with trivial one for tests.
+    Tests can force the real package hash by using the @pytest.mark.use_package_hash marker."""
+    if "use_package_hash" in request.keywords:
+        yield
+        return
+    pkg_hash = spack.hash_types.package_hash
+    idx = spack.hash_types.HASHES.index(pkg_hash)
+    mock_pkg_hash = spack.hash_types.SpecHashDescriptor(
+        depflag=0, package_hash=True, name="package_hash", override=_trivial_package_hash
+    )
+    monkeypatch.setattr(spack.hash_types, "package_hash", mock_pkg_hash)
+    try:
+        spack.hash_types.HASHES[idx] = mock_pkg_hash
+        yield
+    finally:
+        spack.hash_types.HASHES[idx] = pkg_hash
+
+
 @pytest.fixture()
 def noncyclical_dir_structure(tmp_path: Path):
     """
@@ -2116,7 +2198,10 @@ def mock_fetch_url_text(mock_config_data, monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_tty_stdout(monkeypatch):
+    """Make sys.stdout.isatty() return True, while forcing no color output."""
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+    with spack.llnl.util.tty.color.color_when("never"):
+        yield
 
 
 @pytest.fixture
@@ -2174,7 +2259,9 @@ def concretized_specs_cache():
 
 
 @pytest.fixture
-def default_mock_concretization(config, mock_packages, concretized_specs_cache):
+def default_mock_concretization(
+    config, mock_packages, concretized_specs_cache
+) -> Callable[[str], spack.spec.Spec]:
     """Return the default mock concretization of a spec literal, obtained using the mock
     repository and the mock configuration.
 
@@ -2233,14 +2320,12 @@ def pytest_runtest_setup(item):
         pytest.skip(*only_windows_marker.args)
 
 
-def _sequential_executor(*args, **kwargs):
-    return spack.util.parallel.SequentialExecutor()
-
-
 @pytest.fixture(autouse=True)
-def disable_parallel_buildcache_push(monkeypatch):
-    """Disable process pools in tests."""
-    monkeypatch.setattr(spack.util.parallel, "make_concurrent_executor", _sequential_executor)
+def disable_parallelism(monkeypatch, request):
+    """Disable process pools in tests. Enabled by default to avoid oversubscription when running
+    under pytest-xdist. Can be overridden with `@pytest.mark.enable_parallelism`."""
+    if "enable_parallelism" not in request.keywords:
+        monkeypatch.setattr(spack.util.parallel, "ENABLE_PARALLELISM", False)
 
 
 def _root_path(x, y, *, path):
@@ -2327,6 +2412,9 @@ class MockHTTPResponse(io.IOBase):
         """Create a mock HTTP response with JSON string as body"""
         body = io.BytesIO(json.dumps(body).encode("utf-8"))
         return cls(status, reason, headers, body)
+
+    def readable(self):
+        return True
 
     def read(self, *args, **kwargs):
         return self._body.read(*args, **kwargs)
@@ -2430,3 +2518,38 @@ def config_two_gccs(mutable_config):
             },
         ],
     )
+
+
+@pytest.fixture(scope="function")
+def mock_util_executable(monkeypatch):
+    logger = []
+    should_fail = []
+    registered_reponses = {}
+
+    def mock_call(self, *args, **kwargs):
+        cmd = self.exe + list(args)
+        str_cmd = " ".join(map(str, cmd))
+        logger.append(str_cmd)
+        for failure_key in should_fail:
+            if failure_key in str_cmd:
+                self.returncode = 1
+                if kwargs.get("fail_on_error", True):
+                    raise spack.util.executable.ProcessError(f"Failed: {str_cmd}")
+                return
+        for key, value in registered_reponses.items():
+            if key in str_cmd:
+                return value
+        self.returncode = 0
+
+    monkeypatch.setattr(spack.util.executable.Executable, "__call__", mock_call)
+    yield logger, should_fail, registered_reponses
+
+
+@pytest.fixture()
+def reset_extension_paths():
+    """Clears the cache used for entry points, both in setup and tear-down.
+    Needed if a test stresses parts related to computing paths for Spack extensions
+    """
+    spack.extensions.extension_paths_from_entry_points.cache_clear()
+    yield
+    spack.extensions.extension_paths_from_entry_points.cache_clear()

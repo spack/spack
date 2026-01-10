@@ -15,7 +15,6 @@ from contextlib import contextmanager
 
 import pytest
 
-import spack
 import spack.binary_distribution
 import spack.database
 import spack.deptypes as dt

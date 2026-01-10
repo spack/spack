@@ -8,6 +8,7 @@ import pytest
 from spack.vendor.archspec.cpu import TARGETS
 
 import spack.archspec
+import spack.traverse
 from spack.externals import (
     DuplicateExternalError,
     ExternalDict,
@@ -277,6 +278,10 @@ def test_externals_with_dependencies(externals_dicts: List[ExternalDict], expect
         assert len(result) == 1
         assert all(not result[0].satisfies(c) for c in not_expected_list)
 
+    # Assert all nodes have the namespace set
+    for node in spack.traverse.traverse_nodes(parser.all_specs()):
+        assert node.namespace is not None
+
 
 @pytest.mark.parametrize(
     "externals_dicts,expected_length,not_expected",
@@ -331,3 +336,7 @@ def test_external_node_completion(
         assert len(result) == 1
         for expected in expected_list:
             assert not result[0].satisfies(expected)
+
+    # Assert all nodes have the namespace set
+    for node in spack.traverse.traverse_nodes(parser.all_specs()):
+        assert node.namespace is not None

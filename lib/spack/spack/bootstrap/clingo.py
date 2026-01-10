@@ -41,8 +41,15 @@ def _select_best_version(
     node.versions.versions = [spack.version.from_string(f"={best_version}")]
 
 
+def _add_compilers_if_missing() -> None:
+    arch = spack.spec.ArchSpec.default_arch()
+    if not spack.compilers.config.compilers_for_arch(arch):
+        spack.compilers.config.find_compilers()
+
+
 class ClingoBootstrapConcretizer:
     def __init__(self, configuration):
+        _add_compilers_if_missing()
         self.host_platform = spack.platforms.host()
         self.host_os = self.host_platform.default_operating_system()
         self.host_target = spack.vendor.archspec.cpu.host().family

@@ -554,7 +554,9 @@ def ensure_winsdk_external_or_raise() -> None:
     """
     if set(["win-sdk", "wgl"]).issubset(spack.config.get("packages").keys()):
         return
-    externals = spack.detection.by_path(["win-sdk", "wgl"])
+    tty.debug("Detecting Windows SDK and WGL installations")
+    # find the externals sequentially to avoid subprocesses being spawned
+    externals = spack.detection.by_path(["win-sdk", "wgl"], max_workers=1)
     if not set(["win-sdk", "wgl"]) == externals.keys():
         missing_packages_lst = []
         if "wgl" not in externals:

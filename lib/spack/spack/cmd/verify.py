@@ -67,6 +67,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     arguments.add_common_arguments(libraries_subparser, ["constraint"])
 
+    versions_subparser = sp.add_parser(
+        "versions", help=verify_versions.__doc__, description=verify_versions.__doc__
+    )
+    arguments.add_common_arguments(versions_subparser, ["constraint"])
+
 
 def verify(parser, args):
     cmd = args.verify_command
@@ -74,7 +79,70 @@ def verify(parser, args):
         return verify_libraries(args)
     elif cmd == "manifest":
         return verify_manifest(args)
+    elif cmd == "versions":
+        return verify_versions(args)
     parser.error("invalid verify subcommand")
+
+
+def verify_versions(args):
+    """Check that all versions of installed packages are known to Spack and non-deprecated.
+
+    Reports errors for any of the following:
+
+    1. Installed package not loadable from the repo
+    2. Installed package version not known by the package recipe
+    3. Installed package version deprecated in the package recipe
+    """
+    if args.specs:
+        specs = args.specs(installed=True)
+    else:
+        specs = spack.store.db.query(installed=True)
+
+    msg_lines = _verify_version(specs)
+    if msg_lines:
+        tty.die("\n".join(msg_lines))
+
+
+def _verify_version(specs):
+    """Helper method for verify_versions."""
+    missing_package = []
+    unknown_version = []
+    deprecated_version = []
+
+    for spec in specs:
+        try:
+            pkg = spec.package
+        except Exception as e:
+            tty.debug(str(e))
+            missing_package.append(spec)
+            continue
+
+        if spec.version not in pkg.versions:
+            unknown_version.append(spec)
+            continue
+
+        if pkg.versions[spec.version].get("deprecated", False):
+            deprecated_version.append(spec)
+
+    msg_lines = []
+    if missing_package or unknown_version or deprecated_version:
+        errors = len(missing_package) + len(unknown_version) + len(deprecated_version)
+        msg_lines = [f"{errors} installed packages have unknown/deprecated versions\n"]
+
+        msg_lines += [
+            f"    Cannot check version for {spec} at {spec.prefix}. Cannot load package."
+            for spec in missing_package
+        ]
+        msg_lines += [
+            f"    Spec {spec} at {spec.prefix} has version {spec.version} unknown to Spack."
+            for spec in unknown_version
+        ]
+        msg_lines += [
+            f"    Spec {spec} at {spec.prefix} has deprecated version {spec.version}."
+            for spec in deprecated_version
+        ]
+
+    return msg_lines
 
 
 def verify_libraries(args):

@@ -140,7 +140,7 @@ def test_env_change_spec_in_matrix_raises_error(tmp_path: pathlib.Path, mutable_
     e.concretize()
     e.write()
 
-    with pytest.raises(spack.environment.SpackEnvironmentError) as error:
+    with pytest.raises(ev.SpackEnvironmentError) as error:
         e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"))
     assert "Cannot directly change specs in matrices" in str(error)
 
@@ -1558,3 +1558,75 @@ def test_static_analysis_in_environments(spack_yaml, tmp_path, mutable_config):
         static_analysis = {x.dag_hash() for x in e.concrete_roots()}
 
     assert no_static_analysis == static_analysis
+
+
+@pytest.mark.regression("51606")
+def test_ids_when_using_toolchain_twice_in_a_spec(tmp_path, mutable_config):
+    """Tests that using the same toolchain twice in a spec constructs different objects"""
+    spack_yaml = """
+spack:
+  toolchains:
+    llvmtc:
+    - spec: "%c=llvm"
+      when: "%c"
+    - spec: "%cxx=llvm"
+      when: "%cxx"
+    gnu:
+    - spec: "%c=gcc@10"
+      when: "%c"
+    - spec: "%cxx=gcc@10"
+      when: "%cxx"
+    # This is missing the conditional when= on purpose
+    - spec: "%fortran=gcc@10"
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path):
+        # We rely on this behavior when emitting facts for the solver
+        s = spack.spec.Spec("mpileaks %gnu ^callpath %gnu")
+        assert id(s["gcc"]) != id(s["callpath"]["gcc"])
+
+
+def test_installed_specs_disregards_deprecation(tmp_path, mutable_config):
+    """Tests that installed specs disregard deprecation. This is to avoid weird ordering issues,
+    where an old version that _is not_ declared in package.py is considered as _not_ deprecated,
+    and is preferred to a newer version that is explicitly marked as deprecated.
+    """
+    spack_yaml = """
+spack:
+  specs:
+  - mpileaks
+  packages:
+    c:
+      require:
+      - gcc
+    cxx:
+      require:
+      - gcc
+    gcc::
+      externals:
+      - spec: gcc@7.3.1 languages:='c,c++,fortran'
+        prefix: /path
+        extra_attributes:
+          compilers:
+            c: /path/bin/gcc
+            cxx: /path/bin/g++
+            fortran: /path/bin/gfortran
+      - spec: gcc@=12.4.0 languages:='c,c++,fortran'
+        prefix: /usr
+        extra_attributes:
+          compilers:
+            c: /usr/bin/gcc
+            cxx: /usr/bin/g++
+            fortran: /usr/bin/gfortran
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        mpileaks = e.concrete_roots()[0]
+
+    for node in mpileaks.traverse():
+        if node.satisfies("%c"):
+            assert node.satisfies("%c=gcc@12"), node.tree()
+            assert not node.satisfies("%c=gcc@7"), node.tree()
