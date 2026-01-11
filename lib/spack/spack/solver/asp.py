@@ -65,6 +65,7 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.llnl.util.lang import elide_list
+from spack.spec import EMPTY_SPEC
 from spack.util.compression import GZipFileType
 
 from .core import (
@@ -86,8 +87,6 @@ from .versions import Provenance
 GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 
 TransformFunction = Callable[[str, spack.spec.Spec, List[AspFunction]], List[AspFunction]]
-
-EMPTY_SPEC = spack.spec.EMPTY_SPEC
 
 
 class OutputConfiguration(NamedTuple):

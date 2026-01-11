@@ -3083,7 +3083,7 @@ class Spec:
         # If we are trying to constrain a concrete spec, either the spec
         # already satisfies the constraint (and the method returns False)
         # or it raises an exception
-        if self.concrete or self is EMPTY_SPEC:
+        if self.concrete:
             if self._satisfies(other, resolve_virtuals=resolve_virtuals):
                 return False
             else:
@@ -3360,7 +3360,6 @@ class Spec:
             other: spec to be satisfied
             deps: if True, descend to dependencies, otherwise only check root node
         """
-
         return self._satisfies(other=other, deps=deps, resolve_virtuals=True)
 
     def _satisfies(
@@ -6016,5 +6015,35 @@ class SpecMutationError(spack.error.SpecError):
     """Raised when a mutation is attempted with invalid attributes."""
 
 
-#: Global empty spec, immutable by convention. Used for fast comparisons and reducing memory usage.
-EMPTY_SPEC = Spec()
+class _EmptySpec(Spec):
+    """An immutable empty Spec that prevents a class of accidental mutations."""
+
+    def __init__(self) -> None:
+        object.__setattr__(self, "_mutable", True)
+        super().__init__()
+        object.__delattr__(self, "_mutable")
+
+    def __setstate__(self, state) -> None:
+        object.__setattr__(self, "_mutable", True)
+        super().__setstate__(state)
+        object.__delattr__(self, "_mutable")
+
+    def constrain(self, *args, **kwargs) -> bool:
+        raise TypeError("EmptySpec is immutable and cannot be modified")
+
+    def add_dependency_edge(self, *args, **kwargs):
+        raise TypeError("EmptySpec is immutable and cannot be modified")
+
+    def __setattr__(self, name, value) -> None:
+        if not getattr(self, "_mutable", False):
+            raise TypeError("EmptySpec is immutable and cannot be modified")
+        super().__setattr__(name, value)
+
+    def __delattr__(self, name) -> None:
+        if name != "_mutable":
+            raise TypeError("EmptySpec is immutable and cannot be modified")
+        object.__delattr__(self, name)
+
+
+#: Immutable empty spec, for fast comparisons and reduced memory usage.
+EMPTY_SPEC = _EmptySpec()
