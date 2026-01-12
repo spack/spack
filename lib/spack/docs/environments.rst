@@ -63,7 +63,7 @@ An environment is created by:
 
    $ spack env create myenv
 
-The directory ``$SPACK_ROOT/opt/data/environments/myenv`` is created to manage the environment.
+The directory ``$data_home/envs/myenv`` is created to manage the environment.
 
 .. note::
 
