@@ -107,7 +107,7 @@ def deactivate_commands(shell):
         cmds += "_spack_env_unset SPACK_ENV;\n"
         cmds += "_spack_env_unset SPACK_ENV_VIEW;\n"
         cmds += "if ( $?SPACK_OLD_PROMPT ) "
-        cmds += '    eval \'_spack_env_set prompt SPACK_OLD_PROMPT &&'
+        cmds += "    eval '_spack_env_set prompt SPACK_OLD_PROMPT &&"
         cmds += "          _spack_env_unset SPACK_OLD_PROMPT';\n"
         cmds += "unalias despacktivate;\n"
     elif shell == "fish":

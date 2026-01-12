@@ -17,6 +17,7 @@ import pytest
 import spack.cmd.env
 import spack.concretize
 import spack.config
+import spack.environment
 import spack.environment as ev
 import spack.environment.cache_shell_script as shell_script
 import spack.environment.depfile as depfile
@@ -33,10 +34,8 @@ import spack.package_base
 import spack.paths
 import spack.repo
 import spack.solver.asp
-import spack.spec
 import spack.stage
 import spack.store
-import spack.test.conftest
 import spack.util.environment
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml

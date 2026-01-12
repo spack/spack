@@ -1533,8 +1533,7 @@ class Environment:
             self.write()
 
     def concretize(
-        self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False,
-
+        self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
     ) -> Sequence[SpecPair]:
         """Concretize user_specs in this environment.
 

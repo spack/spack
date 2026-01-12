@@ -99,7 +99,6 @@ def update_env_activate_script(env, prompt="", view=""):
         prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
         view_cmd = spack.environment.shell.activate_view_cmds(shell, view)
 
-
         activate_script_path = path_to_env_activate_shell_script(env, shell)
         prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
 
@@ -111,7 +110,9 @@ def update_env_activate_script(env, prompt="", view=""):
                 f.write(despactivate_cmd)
                 f.write(prompt_cmds)
                 f.write(view_cmd)
-        source_prompts = f"source {prompt_view_script_path}" if os.path.isfile(prompt_view_script_path) else ""
+        source_prompts = (
+            f"source {prompt_view_script_path}" if os.path.isfile(prompt_view_script_path) else ""
+        )
 
         with open(activate_script_path, "w", encoding="utf-8") as f:
             f.write(
