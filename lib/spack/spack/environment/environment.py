@@ -2353,7 +2353,7 @@ class Environment:
                 msg += " You need to use a newer Spack version."
             raise SpackEnvironmentError(msg)
 
-        first_seen, self.concretized_order = self.filter_specs(
+        first_seen, self.concretized_order = self._filter_specs(
             reader, json_specs_by_hash, self.concretized_order
         )
 
@@ -2364,7 +2364,7 @@ class Environment:
             first_seen = {}
 
             for env_name, concretized_order in self.included_concretized_order.items():
-                filtered_spec, self.included_concretized_order[env_name] = self.filter_specs(
+                filtered_spec, self.included_concretized_order[env_name] = self._filter_specs(
                     reader, included_json_specs_by_hash, concretized_order
                 )
                 first_seen.update(filtered_spec)
@@ -2376,7 +2376,7 @@ class Environment:
                         {spec_dag_hash: first_seen[spec_dag_hash]}
                     )
 
-    def filter_specs(self, reader, json_specs_by_hash, order_concretized):
+    def _filter_specs(self, reader, json_specs_by_hash, order_concretized):
         # Track specs by their lockfile key.  Currently spack uses the finest
         # grained hash as the lockfile key, while older formats used the build
         # hash or a previous incarnation of the DAG hash (one that did not
