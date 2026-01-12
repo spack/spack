@@ -175,10 +175,9 @@ def substitute_config_variables(path):
     - $default_install_root  Where installs go by default
     - $default_envs_root     Where environments are managed by default
     - $default_download_root Where downloads go by default
-    - $spack_data_home       SPACK_DATA_HOME, XDG_DATA_HOME, or its default
-    - $spack_cache_home      SPACK_CACHE_HOME, XDG_CACHE_HOME, or its default
-    - $spack_state_home      SPACK_STATE_HOME, XDG_STATE_HOME, or its default
-    - $spack_config_home     SPACK_CONFIG_HOME, XDG_CONFIG_HOME, or its default
+    - $data_home             SPACK_DATA_HOME, XDG_DATA_HOME, or its default
+    - $cache_home            SPACK_CACHE_HOME, XDG_CACHE_HOME, or its default
+    - $state_home            SPACK_STATE_HOME, XDG_STATE_HOME, or its default
     - $spack_instance_id     Hash that distinguishes Spack instances on the filesystem
     - $architecture          The spack architecture triple for the current system
     - $arch                  The spack architecture triple for the current system
