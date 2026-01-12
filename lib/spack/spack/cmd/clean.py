@@ -67,7 +67,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def remove_python_cache():
-    for directory in [paths.lib_path, paths.repos_path]:
+    for directory in [paths.lib_path]:
         for root, dirs, files in os.walk(directory):
             for f in files:
                 if f.endswith(".pyc") or f.endswith(".pyo"):
