@@ -1906,16 +1906,17 @@ class Environment:
 
         return env_mod
 
-    def _add_concrete_spec(self, spec, concrete, new=True):
+    def _add_concrete_spec(
+        self, spec: spack.spec.Spec, concrete: spack.spec.Spec, *, new: bool = True
+    ):
         """Called when a new concretized spec is added to the environment.
 
         This ensures that all internal data structures are kept in sync.
 
         Arguments:
-            spec (Spec): user spec that resulted in the concrete spec
-            concrete (Spec): spec concretized within this environment
-            new (bool): whether to write this spec's package to the env
-                repo on write()
+            spec: user spec that resulted in the concrete spec
+            concrete: spec concretized within this environment
+            new: whether to write this spec's package to the env repo on write()
         """
         assert concrete.concrete
 
