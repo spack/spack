@@ -14,38 +14,38 @@ from spack.llnl.util.tty.color import colorize
 from spack.util.environment import EnvironmentModifications
 
 
-def activate_header(env, shell, view: Optional[str] = None):
+def activate_commands(env, shell, view: Optional[str] = None):
     # Construct the commands to run
     cmds = ""
     if shell == "csh":
         # TODO: figure out how to make color work for csh
         cmds += f"_spack_env_set SPACK_ENV {env.path};\n"
-        if view:
-            cmds += f"_spack_env_set SPACK_ENV_VIEW {view};\n"
-        cmds += 'alias despacktivate "spack env deactivate";\n'
     elif shell == "fish":
         cmds += f"_spack_env_set SPACK_ENV {env.path};\n"
-        cmds += "function despacktivate;\n"
-        cmds += "   spack env deactivate;\n"
-        cmds += "end;\n"
     elif shell == "bat":
         # TODO: Color
         cmds += f'set "SPACK_ENV={env.path}"\n'
-        if view:
-            cmds += f'set "SPACK_ENV_VIEW={view}"\n'
     elif shell == "pwsh":
         cmds += f"$Env:SPACK_ENV='{env.path}'\n"
-        if view:
-            cmds += f"$Env:SPACK_ENV_VIEW='{view}'\n"
     else:
         cmds += f"_spack_env_set SPACK_ENV {env.path}\n"
-        if view:
-            cmds += f"_spack_env_set SPACK_ENV_VIEW {view} \n"
-        cmds += "alias despacktivate='spack env deactivate';\n"
     return cmds
 
 
-def activate_with_prompt(shell, prompt):
+def despacktivate_cmds(shell):
+    cmd = ""
+    if shell == "csh":
+        cmd += 'alias despacktivate "spack env deactivate";\n'
+    elif shell == "fish":
+        cmd += "function despacktivate;\n"
+        cmd += "   spack env deactivate;\n"
+        cmd += "end;\n"
+    elif shell == "sh":
+        cmd += "alias despacktivate='spack env deactivate';\n"
+    return cmd
+
+
+def activate_prompt_cmds(shell, prompt):
     bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
     zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
 
@@ -88,7 +88,7 @@ def activate_with_prompt(shell, prompt):
     return cmds
 
 
-def activate_with_view(shell, view):
+def activate_view_cmds(shell, view):
     cmd = ""
     if shell == "csh":
         cmd = f"_spack_env_set SPACK_ENV_VIEW {view};\n"
@@ -101,7 +101,7 @@ def activate_with_view(shell, view):
     return cmd
 
 
-def deactivate_header(shell):
+def deactivate_commands(shell):
     cmds = ""
     if shell == "csh":
         cmds += "_spack_env_unset SPACK_ENV;\n"

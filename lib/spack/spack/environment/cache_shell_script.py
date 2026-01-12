@@ -60,7 +60,7 @@ def write_env_activate_script(env, view):
         shells_avail.extend(["bat", "pwsh"])
 
     for shell in shells_avail:
-        cmds = spack.environment.shell.activate_header(env, shell, view=view)
+        cmds = spack.environment.shell.activate_commands(env, shell, view=view)
 
         env_mods = EnvironmentModifications()
 
@@ -93,10 +93,12 @@ def update_env_activate_script(env, prompt="", view=""):
         env_mods = EnvironmentModifications()
         env_mods.extend(spack.environment.shell.activate(env=env, view=view))
 
-        activate_cmds = spack.environment.shell.activate_header(env, shell)
+        activate_cmds = spack.environment.shell.activate_commands(env, shell)
         activate_cmds += env_mods.shell_modifications(shell)
-        view_cmds = spack.environment.shell.activate_with_view(shell, view)
-        prompt_cmds = spack.environment.shell.activate_with_prompt(shell, prompt)
+        despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
+        prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
+        view_cmd = spack.environment.shell.activate_view_cmds(shell, view)
+
 
         activate_script_path = path_to_env_activate_shell_script(env, shell)
         prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
@@ -106,8 +108,9 @@ def update_env_activate_script(env, prompt="", view=""):
                 f.write(
                     f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
                 )
+                f.write(despactivate_cmd)
                 f.write(prompt_cmds)
-                f.write(view_cmds)
+                f.write(view_cmd)
         source_prompts = f"source {prompt_view_script_path}" if os.path.isfile(prompt_view_script_path) else ""
 
         with open(activate_script_path, "w", encoding="utf-8") as f:
@@ -132,7 +135,7 @@ def write_env_deactivate_script(env, view):
         shells_avail.extend(["bat", "pwsh"])
 
     for shell in shells_avail:
-        cmds = spack.environment.shell.deactivate_header(shell)
+        cmds = spack.environment.shell.deactivate_commands(shell)
         env_mods = spack.environment.shell.deactivate(env, view)
 
         cmds += env_mods.shell_modifications(shell)
