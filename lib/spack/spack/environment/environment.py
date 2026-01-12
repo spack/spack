@@ -1568,19 +1568,7 @@ class Environment:
         if force is None:
             force = spack.config.get("concretizer:force")
 
-        if force:
-            # Clear previously concretized specs
-            self.concretized_user_specs = []
-            self.concretized_order = []
-            self.specs_by_hash = {}
-
-        # Remove concrete specs that no longer correlate to a user spec
-        for spec in set(self.concretized_user_specs) - set(self.user_specs):
-            self.deconcretize(spec, concrete=False)
-
-        # If a combined env, check updated spec is in the linked envs
-        if self.included_concrete_envs:
-            self.include_concrete_envs()
+        self._prepare_for_concretization(force=force)
 
         # Pick the right concretization strategy
         if self.unify == "when_possible":
@@ -1594,6 +1582,22 @@ class Environment:
 
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
+
+    def _prepare_for_concretization(self, *, force: bool):
+        """Reset the environment concrete state and ensure consistency with user specs."""
+        if force:
+            # Clear previously concretized specs
+            self.concretized_user_specs = []
+            self.concretized_order = []
+            self.specs_by_hash = {}
+
+        # Remove concrete specs that no longer correlate to a user spec
+        for spec in set(self.concretized_user_specs) - set(self.user_specs):
+            self.deconcretize(spec, concrete=False)
+
+        # If a combined env, check updated spec is in the linked envs
+        if self.included_concrete_envs:
+            self.include_concrete_envs()
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
         """
