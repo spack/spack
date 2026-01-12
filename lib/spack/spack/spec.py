@@ -4509,9 +4509,8 @@ class Spec:
     @property
     def compilers(self):
         if self.original_spec_format() < 5:
-            # These specs don't have compilers as dependencies, return the
-            # specfile format and compiler
-            return f"[specfile v{self.original_spec_format()}] {self.compiler}"
+            # These specs don't have compilers as dependencies, return the compiler node attribute
+            return f" %{self.compiler}"
 
         # TODO: get rid of the space here and make formatting smarter
         return " " + self._format_dependencies(
