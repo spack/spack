@@ -2680,13 +2680,14 @@ def no_active_environment():
     """Deactivate the active environment for the duration of the context. Has no
     effect when there is no active environment."""
     env = active_environment()
+    view_var = os.environ.get(spack_env_view_var, "")
     try:
         deactivate()
         yield
     finally:
         # TODO: we don't handle `use_env_repo` here.
         if env:
-            activate(env)
+            activate(env, view=view_var)
 
 
 def initialize_environment_dir(
