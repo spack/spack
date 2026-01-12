@@ -5,10 +5,8 @@
 # sensible defaults out of the box. Spack maintainers should edit this
 # file to keep it current.
 #
-# Users can override these settings by editing
-# `$SPACK_ROOT/etc/spack/concretizer.yaml`,
-# `~/.config/spack/concretizer.yaml`, or by adding a `concretizer:`
-# section to an environment.
+# Users can override part or all of these settings by defining their
+# own instance of this config (see https://spack.readthedocs.io/en/latest/configuration.html).
 # -------------------------------------------------------------------------
 concretizer:
   # Whether to consider installed packages or packages from buildcaches when
