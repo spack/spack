@@ -37,11 +37,8 @@ class XDG_overrides(Enum):
 # these vars will affect .default_test_path for the running instance, but
 # the unit tests will not see the env vars
 def _unset_xdg_vars(env):
-    saved = {}
     for xdg_var in itertools.chain(XDG_vars, XDG_overrides):
-        if xdg_var.value in env:
-            saved[xdg_var.value] = env.pop(xdg_var.value)
-    return saved
+        env.pop(xdg_var.value, None)
 
 
 def dir_is_occupied(x, except_for=None):
