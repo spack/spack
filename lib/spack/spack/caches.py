@@ -20,8 +20,6 @@ def misc_cache_location():
     Currently the ``MISC_CACHE`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
-    import spack.paths
-
     path = spack.config.get("config:misc_cache", paths.default_misc_cache_path)
     return spack.util.path.canonicalize_path(path)
 
