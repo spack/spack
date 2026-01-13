@@ -16,6 +16,24 @@ from spack.error import MirrorError
 from spack.llnl.util.filesystem import mkdirp
 from spack.mirrors.mirror import Mirror, MirrorCollection
 
+_mirror_all_mode = False
+
+
+def get_mirror_all_mode():
+    return _mirror_all_mode
+
+
+def set_mirror_all(enable):
+    global _mirror_all_mode
+    _mirror_all_mode = enable
+
+
+def evaluate_or_true_if_mirror_all(expression):
+    if get_mirror_all_mode():
+        return True
+    else:
+        return bool(expression)
+
 
 def get_all_versions(specs):
     """Given a set of initial specs, return a new set of specs that includes

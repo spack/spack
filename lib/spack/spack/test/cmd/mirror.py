@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import importlib
 import os
 import pathlib
+import sys
 
 import pytest
 
@@ -753,3 +755,24 @@ def test_git_provenance_relative_to_mirror(
 
     spec_head = spack.concretize.concretize_one(f"git-test-commit@main commit={head_commit}")
     assert spec_head.variants["commit"].value == head_commit
+
+
+def test_evaluate_or_true_if_mirror_all(tmp_path: pathlib.Path, mock_packages, mock_fetch):
+    """Test platform aware mirroring"""
+
+    pkg_module_name = "spack_repo.builtin_mock.packages.arch_specific_pkg.package"
+
+    # Test WITHOUT --all for only current arch version
+    mirror_dir = str(tmp_path / "mirror")
+    spack.mirrors.utils.set_mirror_all(False)
+    with spack.config.override("config:checksum", False):
+        output = mirror("create", "-d", mirror_dir, "arch-specific-pkg")
+    assert "1    added" in output, f"Expected 1 version, got {output}"
+
+    # Test WITH --all for all arch versions
+    mirror_dir_all = str(tmp_path / "mirror-all")
+    spack.mirrors.utils.set_mirror_all(True)
+    importlib.reload(sys.modules[pkg_module_name])
+    with spack.config.override("config:checksum", False):
+        output = mirror("create", "-d", mirror_dir_all, "-n", "all", "arch-specific-pkg")
+    assert "2    added" in output, f"Expected 2 versions, got {output}"
