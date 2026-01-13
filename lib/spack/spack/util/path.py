@@ -171,12 +171,12 @@ def substitute_config_variables(path):
     - $spack                The Spack instance's prefix
     - $tempdir              Default temporary directory returned by tempfile.gettempdir()
     - $user                 The current user's username
-    - $user_cache_path      The user cache directory ($XDG_DATA_HOME, unless overridden)
     - $default_install_root Where installs go by default
     - $default_envs_root    Where environments are managed by default
     - $data_home            SPACK_DATA_HOME, XDG_DATA_HOME, or its default
     - $cache_home           SPACK_CACHE_HOME, XDG_CACHE_HOME, or its default
     - $state_home           SPACK_STATE_HOME, XDG_STATE_HOME, or its default
+    - $user_cache_path      The user cache directory (same as state_home)
     - $spack_instance_id    Hash that distinguishes Spack instances on the filesystem
     - $architecture         The spack architecture triple for the current system
     - $arch                 The spack architecture triple for the current system

@@ -509,7 +509,6 @@ These are:
 * ``$spack``: path to the prefix of this Spack installation
 * ``$tempdir``: default system temporary directory (as specified in Python's `tempfile.tempdir <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_ variable.
 * ``$user``: name of the current user
-* ``$user_cache_path``: user cache directory (``~/.local/share/spack`` unless :ref:`overridden <local-config-overrides>`)
 * ``$architecture``: the architecture triple of the current host, as detected by Spack.
 * ``$arch``: alias for ``$architecture``.
 * ``$platform``: the platform of the current host, as detected by Spack.
@@ -524,16 +523,48 @@ These are:
   ``x86_64`` or ``aarch64``.
 * ``$date``: the current date in the format YYYY-MM-DD
 * ``$spack_short_version``: the Spack version truncated to the first components.
-* ``$spack_instance_id``: a hash that distinguishes Spack instances on the filesystem.
-* ``$spack_state_home``: the XDG-derived location for long-lived but not-essential cache.
-* ``$spack_cache_home``: the XDG-derived location for temporary data.
-* ``$default_download_root``: the location where downloads go by default.
-* ``$default_envs_root``: the location where environments are managed by default.
-* ``$default_install_root``: the location where installs go by default.
 
 Note that, as with shell variables, you can write these as ``$varname`` or with braces to distinguish the variable from surrounding characters: ``${varname}``.
 Their names are also case insensitive, meaning that ``$SPACK`` works just as well as ``$spack``.
 These special variables are substituted first, so any environment variables with the same name will not be used.
+
+.. _configuration_data_variables:
+
+Spack-specific variables controlling data location
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Files generated and stored by spack are organized roughly into three categories:
+
+* Persistent, large quantities of data (e.g. installs and environments)
+* Temporary (or assumed temporary) large quantities of data (e.g. stages for installs)
+* Persistent caches/indices used by spack to speed up its commands (small quantities of data)
+
+The corresponding variables that describe where this data is placed are:
+
+* ``$data_home``
+* ``$cache_home``
+* ``$state_home``
+* ``$user_cache_path``: legacy variable, equivalent to ``$state_home``
+
+You can refer to these variables when configuring locations for stages, misc cache, etc. Furthermore each is controlled by a fall-through scheme. For example ``$data_home`` evaluates to one of the following (highest-priority first):
+
+#. ``SPACK_DATA_HOME`` env var if that is set
+#. ``XDG_DATA_HOME`` env var if that is set
+#. ``SPACK_HOME`` env var
+#. ``config:locations:data``
+#. ``config:locations:home``
+#. Under the default for ``XDG_DATA_HOME``: ``~/.local/share/spack``
+
+Of particular interest is where the environments and installs are placed by Spack, because these can take up a lot of space.
+Generally speaking these are controlled by ``$data_home``.
+Older installs of spack placed these within ``$spack``, and fallback scheme in these cases is augmented to prefer these old locations if no data is detected in the corresponding new locations:
+
+* ``$default_install_root``: the location where installs go by default.
+  Overridden by ``config:install_tree:root``.
+  Prefers ``$data_home/installs``, but if there are no installs there but there are installs in the old location within ``$spack``, then the old location will be used.
+* ``$default_envs_root``: the location where environments are managed by default.
+  Overridden by ``config:environments_root``.
+  Prefers ``$data_home/envs`` but if there are no envs there and there are envs in the old location in ``$spack``, then the old location will be used.
 
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^

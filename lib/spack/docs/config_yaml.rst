@@ -86,7 +86,7 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
    - $tempdir/$user/spack-stage
-   - $spack_cache_home/stage
+   - $cache_home/stage
 
 This can be an ordered list of paths that Spack should search when trying to find a temporary directory for the build stage.
 The list is searched in order, and Spack will use the first directory to which it has write access.
