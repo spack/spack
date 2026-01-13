@@ -16,12 +16,12 @@ To register the other Spack instance, you can add it as an entry to ``upstreams.
 .. code-block:: yaml
 
   upstreams:
-    spack-instance-1:
-      install_tree: /path/to/other/spack/opt/spack
-    spack-instance-2:
-      install_tree: /path/to/another/spack/opt/spack
+   install-tree-1:
+      install_tree: /path/to/other/dir/containing/.spack-db
+   install-tree-2:
+      install_tree: /path/to/another/dir/containing/.spack-db
 
-The ``install_tree`` must point to the ``opt/data/installs`` directory inside of the Spack base directory, or the location of the ``install_tree`` defined in :ref:`config.yaml <config-yaml>`.
+The ``install_tree`` must point to a directory containing ``.spack-db``, for example ``install_tree`` defined in :ref:`config.yaml <config-yaml>`.
 
 Once the upstream Spack instance has been added, ``spack find`` will automatically check the upstream instance when querying installed packages, and new package installations for the local Spack installation will use any dependencies that are installed in the upstream instance.
 
