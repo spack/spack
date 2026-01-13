@@ -156,7 +156,37 @@ def test_env_sh_shell_script_content():
         out = f.read()
 
     assert f"_spack_env_set SPACK_ENV {environ.path}" in out
-    assert "alias despacktivate='spack env deactivate';" in out
+
+
+def test_env_activate_script_concretize():
+    """Test does a thing"""
+    env("create", "test")
+    shell = "sh"
+    environ = ev.read("test")
+
+    path_to_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell)
+    with open(path_to_activate_script, "r", encoding="utf-8") as f:
+        env_mods = f.read()
+
+    environ.add("mpi")
+    environ.concretize()
+
+    with open(path_to_activate_script, "r", encoding="utf-8") as f:
+        concretized_env = f.read()
+
+    assert env_mods == concretized_env
+
+
+def test_env_missing_deactivation_script():
+    """Test does a thing"""
+    env("create", "test")
+    shell = "sh"
+    environ = ev.read("test")
+
+    path_to_deactivate_script = shell_script.path_to_env_deactivate_shell_script(environ, shell)
+
+    os.remove(path_to_deactivate_script)
+    env("deactivate")
 
 
 def test_env_track_existing_env_fails():
