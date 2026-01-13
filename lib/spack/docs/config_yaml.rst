@@ -18,7 +18,7 @@ You can see the default settings by looking at ``etc/spack/defaults/config.yaml`
 .. literalinclude:: _spack_root/etc/spack/defaults/base/config.yaml
    :language: yaml
 
-These settings can be overridden in ``etc/spack/config.yaml``, or ``~/.config/spack/config.yaml``, or ``~/.config/spack/$spack_instance_id/config.yaml``.
+These settings can be overridden in ``etc/spack/config.yaml``, or ``~/.config/spack/config.yaml``, or in an active environment.
 See :ref:`configuration-scopes` for details.
 
 ``install_tree:root``
