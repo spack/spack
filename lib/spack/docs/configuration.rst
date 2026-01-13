@@ -528,7 +528,7 @@ Note that, as with shell variables, you can write these as ``$varname`` or with 
 Their names are also case insensitive, meaning that ``$SPACK`` works just as well as ``$spack``.
 These special variables are substituted first, so any environment variables with the same name will not be used.
 
-.. _config_file_data_variables:
+.. _config-file-data-variables:
 
 Spack-specific variables controlling data location
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
