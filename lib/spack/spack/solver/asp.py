@@ -1587,8 +1587,9 @@ class SpackSolverSetup:
 
         # Deal with variants that use validator functions
         if variant_def.values_defined_by_validator():
-            for value in default_values:
+            for penalty, value in enumerate(default_values, 1):
                 pkg_fact(fn.variant_possible_value(vid, value))
+                pkg_fact(fn.variant_penalty(vid, value, penalty))
             self.gen.newline()
             return
 

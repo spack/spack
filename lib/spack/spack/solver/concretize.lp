@@ -1348,10 +1348,19 @@ variant_default_value(node(NodeID, Package), VariantName, Value) :-
     node_has_variant(node(NodeID, Package), VariantName, _),
     attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, Value).
 
+% Penalty from the variant definition
+possible_variant_penalty(VariantID, Value, Penalty) :- pkg_fact(Package, variant_penalty(VariantID, Value, Penalty)).
+
+% Use a very high penalty for variant values that are not defined in the package,
+% for instance those defined implicitly by a validator.
+possible_variant_penalty(VariantID, Value, 100) :-
+    pkg_fact(Package, variant_possible_value(VariantID, Value)),
+    not pkg_fact(Package, variant_penalty(VariantID, Value, _)).
+
 variant_penalty(node(NodeID, Package), Variant, Value, Penalty) :-
     node_has_variant(node(NodeID, Package), Variant, VariantID),
     attr("variant_value", node(NodeID, Package), Variant, Value),
-    pkg_fact(Package, variant_penalty(VariantID, Value, Penalty)),
+    possible_variant_penalty(VariantID, Value, Penalty),
     not variant_default_value(node(NodeID, Package), Variant, Value),
     % variants set explicitly from a directive don't count as non-default
     not attr("variant_set", node(NodeID, Package), Variant, _),
