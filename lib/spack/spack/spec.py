@@ -992,7 +992,7 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         return flag_type, [str(flag) for flag in self[flag_type]]
 
     def _cmp_iter(self):
-        for k, v in sorted(self.items()):
+        for k, v in sorted(self.dict.items()):
             yield k
 
             def flags():

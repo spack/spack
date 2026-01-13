@@ -211,7 +211,7 @@ done = object()
 
 def tuplify(seq):
     """Helper for lazy_lexicographic_ordering()."""
-    return tuple((tuplify(x) if callable(x) else x) for x in seq())
+    return tuple([(tuplify(x) if callable(x) else x) for x in seq()])
 
 
 def lazy_eq(lseq, rseq):
@@ -456,7 +456,7 @@ class HashableMap(typing.MutableMapping[K, V]):
         del self.dict[key]
 
     def _cmp_iter(self):
-        for _, v in sorted(self.items()):
+        for _, v in sorted(self.dict.items()):
             yield v
 
 

@@ -131,7 +131,7 @@ def parse_string_components(string: str) -> Tuple[VersionTuple, SeparatorTuple]:
         raise ValueError("Bad characters in version string: %s" % string)
 
     segments = SEGMENT_REGEX.findall(string)
-    separators: Tuple[str] = tuple(m[2] for m in segments)
+    separators: Tuple[str] = tuple([m[2] for m in segments])
     prerelease: Tuple[int, ...]
 
     # <version>(alpha|beta|rc)<number>
@@ -149,7 +149,7 @@ def parse_string_components(string: str) -> Tuple[VersionTuple, SeparatorTuple]:
         prerelease = (FINAL,)
 
     release: VersionComponentTuple = tuple(
-        int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments
+        [int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments]
     )
 
     return (release, prerelease), separators
@@ -245,7 +245,8 @@ class StandardVersion(ConcreteVersion):
 
     @staticmethod
     def from_string(string: str) -> "StandardVersion":
-        return StandardVersion(string, *parse_string_components(string))
+        version, separators = parse_string_components(string)
+        return StandardVersion(string, version, separators)
 
     @staticmethod
     def typemin() -> "StandardVersion":
