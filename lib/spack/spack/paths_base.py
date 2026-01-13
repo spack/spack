@@ -81,8 +81,6 @@ class SpackPathsBase:
         self.old_gpg_path = os.path.join(self.prefix, "opt", "spack", "gpg")
         self.old_gpg_keys_path = os.path.join(self.var_path, "gpg")
 
-        self.default_xdg_state_home = os.path.join("~", ".state", "spack")
-
         #: User configuration location
         self.user_config_path = os.path.expanduser(
             os.getenv("SPACK_USER_CONFIG_PATH") or os.path.join("~", ".config", "spack")
@@ -102,7 +100,7 @@ class SpackPathsBase:
         """
         override = lambda: os.environ.get(XDG_overrides.state_home.value)
         xdg = lambda: os.environ.get(XDG_vars.state_home.value)
-        default = lambda: self.default_xdg_state_home
+        default = lambda: os.path.expanduser(os.path.join("~", ".state", "spack"))
         return override() or xdg() or default()
 
 
@@ -131,7 +129,6 @@ test_repos_path = locations.test_repos_path
 mock_packages_path = locations.mock_packages_path
 mock_gpg_data_path = locations.mock_gpg_data_path
 mock_gpg_keys_path = locations.mock_gpg_keys_path
-default_xdg_state_home = locations.default_xdg_state_home
 system_config_path = locations.system_config_path
 user_config_path = locations.user_config_path
 
