@@ -546,7 +546,9 @@ The corresponding variables that describe where this data is placed are:
 * ``$state_home``
 * ``$user_cache_path``: legacy variable, equivalent to ``$state_home``
 
-You can refer to these variables when configuring locations for stages, misc cache, etc. Furthermore each is controlled by a fall-through scheme. For example ``$data_home`` evaluates to one of the following (highest-priority first):
+You can refer to these variables when configuring locations for stages, misc cache, etc.
+Furthermore each is controlled by a fall-through scheme.
+For example ``$data_home`` evaluates to one of the following (highest-priority first):
 
 #. ``SPACK_DATA_HOME`` env var if that is set
 #. ``XDG_DATA_HOME`` env var if that is set
