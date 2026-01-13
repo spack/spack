@@ -59,10 +59,9 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     env.concretize()
 
     # rewrite the hash
-    old_hash = env.concretized_order[0]
-    new_hash = "abc"
+    old_hash, new_hash = env.concretized_roots[0].hash, "abc"
     env.specs_by_hash[old_hash]._hash = new_hash  # type: ignore[attr-defined]
-    env.concretized_order[0] = new_hash
+    env.concretized_roots[0].hash = new_hash
     env.specs_by_hash[new_hash] = env.specs_by_hash[old_hash]
     del env.specs_by_hash[old_hash]
     env.write()
@@ -795,14 +794,15 @@ def test_env_with_include_def_missing(mutable_mock_env_path):
 
 
 @pytest.mark.regression("41292")
-def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path):
+@pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
+def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, unify):
     """Tests that, after having deconcretized a spec, we can reconcretize an environment which
     has 2 or more user specs mapping to the same concrete spec.
     """
     mutable_mock_env_path.mkdir()
     spack_yaml = mutable_mock_env_path / ev.manifest_name
     spack_yaml.write_text(
-        """spack:
+        f"""spack:
       specs:
       # These two specs concretize to the same hash
       - pkg-c
@@ -810,15 +810,30 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path):
       # Spec used to trigger the bug
       - pkg-a
       concretizer:
-        unify: true
+        unify: {unify}
     """
     )
     e = ev.Environment(mutable_mock_env_path)
+    # Initial state
+    assert len(e.user_specs) == 3
+    assert len(e.concretized_roots) == 0
+
     with e:
         e.concretize()
+        assert len(e.user_specs) == 3
+        assert len(e.concretized_roots) == 3
+        assert all(x.new for x in e.concretized_roots)
+
         e.deconcretize(spack.spec.Spec("pkg-a"), concrete=False)
+        assert len(e.user_specs) == 3
+        assert len(e.concretized_roots) == 2
+        assert all(x.new for x in e.concretized_roots)
+
         e.concretize()
-    assert len(e.concrete_roots()) == 3
+        assert len(e.user_specs) == 3
+        assert len(e.concretized_roots) == 3
+        assert all(x.new for x in e.concretized_roots)
+
     all_root_hashes = {x.dag_hash() for x in e.concrete_roots()}
     assert len(all_root_hashes) == 2
 
