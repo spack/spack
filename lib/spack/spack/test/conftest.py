@@ -411,7 +411,7 @@ def clean_user_environment():
 @pytest.fixture(scope="session", autouse=True)
 def clear_xdg_vars():
     saved = os.environ.copy()
-    spack.paths._unset_xdg_vars(os.environ)
+    spack.paths_base._unset_xdg_vars(os.environ)
     yield
     os.environ.update(saved)
 

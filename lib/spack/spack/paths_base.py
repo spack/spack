@@ -2,10 +2,35 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import os
+from enum import Enum
 from pathlib import PurePath
 
 import spack.llnl.util.filesystem
+
+
+class XDG_vars(Enum):
+    config_home = "XDG_CONFIG_HOME"
+    state_home = "XDG_STATE_HOME"
+    data_home = "XDG_DATA_HOME"
+    cache_home = "XDG_CACHE_HOME"
+
+
+class XDG_overrides(Enum):
+    config_home = "SPACK_CONFIG_HOME"
+    state_home = "SPACK_STATE_HOME"
+    data_home = "SPACK_DATA_HOME"
+    cache_home = "SPACK_CACHE_HOME"
+
+
+# This is for tests that want to clean the environment of XDG_ variables that
+# affect spack behavior (and the corresponding SPACK_ overrides). Note that
+# these vars will affect .default_test_path for the running instance, but
+# the unit tests will not see the env vars
+def _unset_xdg_vars(env):
+    for xdg_var in itertools.chain(XDG_vars, XDG_overrides):
+        env.pop(xdg_var.value, None)
 
 
 class SpackPathsBase:
@@ -56,7 +81,7 @@ class SpackPathsBase:
         self.old_gpg_path = os.path.join(self.prefix, "opt", "spack", "gpg")
         self.old_gpg_keys_path = os.path.join(self.var_path, "gpg")
 
-        self.default_xdg_cache_home = os.path.join("~", ".cache", "spack")
+        self.default_xdg_state_home = os.path.join("~", ".state", "spack")
 
         #: User configuration location
         self.user_config_path = os.path.expanduser(
@@ -67,6 +92,18 @@ class SpackPathsBase:
         self.system_config_path = os.path.expanduser(
             os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
         )
+
+    @property
+    def env_based_state_home(self):
+        """Spack has config-based logic for choosing a home for most state, but
+        this is specifically for caching state related to the config system
+        itself: it is based entirely on env vars and not on configuration
+        variables.
+        """
+        override = lambda: os.environ.get(XDG_overrides.state_home.value)
+        xdg = lambda: os.environ.get(XDG_vars.state_home.value)
+        default = lambda: self.default_xdg_state_home
+        return override() or xdg() or default()
 
 
 locations = SpackPathsBase()
@@ -94,7 +131,7 @@ test_repos_path = locations.test_repos_path
 mock_packages_path = locations.mock_packages_path
 mock_gpg_data_path = locations.mock_gpg_data_path
 mock_gpg_keys_path = locations.mock_gpg_keys_path
-default_xdg_cache_home = locations.default_xdg_cache_home
+default_xdg_state_home = locations.default_xdg_state_home
 system_config_path = locations.system_config_path
 user_config_path = locations.user_config_path
 

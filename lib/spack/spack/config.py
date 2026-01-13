@@ -138,7 +138,9 @@ MAX_RECURSIVE_INCLUDES = 100
 
 def _include_cache_location():
     """Location to cache included configuration files."""
-    return os.path.join(spack.paths_base.default_xdg_cache_home, "includes")
+    # This is always the default value of XDG_STATE_HOME: it is not
+    # influenced by XDG_STATE_HOME or any configuration values in Spack
+    return os.path.join(spack.paths_base.locations.env_based_state_home, "includes")
 
 
 class ConfigScope:

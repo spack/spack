@@ -8,37 +8,12 @@ Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
-import itertools
 import os
 import pathlib
-from enum import Enum
 
 import spack.config as config
 import spack.paths_base as paths_base
 import spack.util.hash as hash
-
-
-class XDG_vars(Enum):
-    config_home = "XDG_CONFIG_HOME"
-    state_home = "XDG_STATE_HOME"
-    data_home = "XDG_DATA_HOME"
-    cache_home = "XDG_CACHE_HOME"
-
-
-class XDG_overrides(Enum):
-    config_home = "SPACK_CONFIG_HOME"
-    state_home = "SPACK_STATE_HOME"
-    data_home = "SPACK_DATA_HOME"
-    cache_home = "SPACK_CACHE_HOME"
-
-
-# This is for tests that want to clean the environment of XDG_ variables that
-# affect spack behavior (and the corresponding SPACK_ overrides). Note that
-# these vars will affect .default_test_path for the running instance, but
-# the unit tests will not see the env vars
-def _unset_xdg_vars(env):
-    for xdg_var in itertools.chain(XDG_vars, XDG_overrides):
-        env.pop(xdg_var.value, None)
 
 
 def dir_is_occupied(x, except_for=None):
@@ -265,6 +240,5 @@ test_repos_path = locations.test_repos_path
 mock_packages_path = locations.mock_packages_path
 mock_gpg_data_path = locations.mock_gpg_data_path
 mock_gpg_keys_path = locations.mock_gpg_keys_path
-default_xdg_cache_home = locations.default_xdg_cache_home
 system_config_path = locations.system_config_path
 user_config_path = locations.user_config_path
