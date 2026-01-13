@@ -24,6 +24,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.store
+import spack.mirrors.utils
 
 patches = None
 
@@ -116,12 +117,14 @@ class GlobalStateMarshaler:
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.platform = spack.platforms.host
         self.store = spack.store.STORE
+        self.mirror_all_mode = spack.mirrors.utils.get_mirror_all_mode()
 
     def restore(self):
         spack.config.CONFIG = self.config
         spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
+        spack.mirrors.utils.set_mirror_all(self.mirror_all_mode)
 
 
 class TestPatches:
