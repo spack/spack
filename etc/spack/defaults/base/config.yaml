@@ -5,12 +5,8 @@
 # sensible defaults out of the box. Spack maintainers should edit this
 # file to keep it current.
 #
-# Users can override these settings by editing files in:
-#
-#  * $SPACK_ROOT/etc/spack/     - Spack instance settings
-#  * ~/.config/spack/           - user settings
-#  * $SPACK_ROOT/etc/spack/site - Spack "site" settings. Like instance settings
-#                                 but lower priority then user settings.
+# Users can override part or all of these settings by defining their
+# own instance of this config (see https://spack.readthedocs.io/en/latest/configuration.html).
 #
 # -------------------------------------------------------------------------
 config:
@@ -18,10 +14,10 @@ config:
   # You can use $spack here to refer to the root of the spack instance.
   install_tree:
     # If set to a non-default value, this setting has precedence.
-    # This default value tells spack to check (in order of precedence):
-    # $SPACK_DATA_HOME/installs
-    # $XDG_DATA_HOME/spack/installs
-    # $spack/opt/spack
+    # This default value tells spack to
+    # * Prefer $data_home/installs
+    # * The old install location is $spack/opt/spack: Spack will use this old
+    #   location if the new location is empty and the old one isn't
     root: $default_install_root
     projections:
       all: "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
@@ -53,11 +49,9 @@ config:
   # to specify `$user_cache_path/stage`, which ensures each user builds in their
   # home directory.
   #
-  # A more traditional path uses the value of `$spack/var/spack/stage`, which
-  # builds directly inside Spack's instance without staging them in a
-  # temporary space.  Problems with specifying a path inside a Spack instance
-  # are that it precludes its use as a system package and its ability to be
-  # pip installable.
+  # If you do Spack builds inside of allocations and want stages to persist
+  # after those allocations end, you will want to override this and avoid using
+  # a temporary directory.
   #
   # In Spack environment files, chaining onto existing system Spack
   # installations, the $env variable can be used to download, cache and build
@@ -88,10 +82,10 @@ config:
 
   ## Directory where spack managed environments are created and stored
   # If set to a non-default value, this setting has precedence.
-  # This default value tells spack to check (in order of precedence):
-  # $SPACK_DATA_HOME/environments
-  # $XDG_DATA_HOME/spack/environments
-  # $spack/var/spack/environments
+  # This default value tells spack to: 
+  # * Prefer $data_home/envs
+  # * The old location for envs is $spack/var/spack/environments: Spack will
+  #   use this old location if the new location is empty and the old one isn't
   # environments_root: $default_envs_root
 
 
