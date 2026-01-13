@@ -226,7 +226,6 @@ external_path = locations.external_path
 module_path = locations.module_path
 vendor_path = locations.vendor_path
 command_path = locations.command_path
-analyzers_path = locations.analyzers_path
 platform_path = locations.platform_path
 compilers_path = locations.compilers_path
 operating_system_path = locations.operating_system_path

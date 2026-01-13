@@ -56,7 +56,6 @@ class SpackPathsBase:
         self.module_path = os.path.join(self.lib_path, "spack")
         self.vendor_path = os.path.join(self.module_path, "vendor")
         self.command_path = os.path.join(self.module_path, "cmd")
-        self.analyzers_path = os.path.join(self.module_path, "analyzers")
         self.platform_path = os.path.join(self.module_path, "platforms")
         self.compilers_path = os.path.join(self.module_path, "compilers")
         self.operating_system_path = os.path.join(self.module_path, "operating_systems")
@@ -115,7 +114,6 @@ external_path = locations.external_path
 module_path = locations.module_path
 vendor_path = locations.vendor_path
 command_path = locations.command_path
-analyzers_path = locations.analyzers_path
 platform_path = locations.platform_path
 compilers_path = locations.compilers_path
 operating_system_path = locations.operating_system_path
