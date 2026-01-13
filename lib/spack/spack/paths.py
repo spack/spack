@@ -137,13 +137,16 @@ class SpackPaths:
 
     @property
     def modules_base(self):
-        modules_base = None
+        # This is similar to logic _fallback_old_location_if_used, but this
+        # moves the modules base if any component (typically one of lmod or
+        # tcl) has been relocated, so is examining one-layer deeper
+        for module_dir in ["lmod", "modules"]:
+            if dir_is_occupied(os.path.join(self.data_home, module_dir)):
+                return self.data_home
         for module_dir in ["lmod", "modules"]:
             if dir_is_occupied(os.path.join(self.base.share_path, module_dir)):
-                modules_base = self.base.share_path
-        if not modules_base:
-            modules_base = self.data_home
-        return modules_base
+                return self.base.share_path
+        return self.data_home
 
     @property
     def default_misc_cache_path(self):
