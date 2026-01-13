@@ -367,13 +367,17 @@ def mirror_remove(args):
 
     removed = False
     skipped_scopes = []
-    for scope in scopes:
+    # Traverse scopes in order from highest to lowest
+    for scope in reversed(scopes):
         try:
             removed_from_this_scope = spack.mirrors.utils.remove(name, scope)
         except spack.config.ConfigFileError as e:
             tty.debug(f"Skipping 'mirror rm' for scope: {scope}\nReason: {e}")
             skipped_scopes.append(scope)
-            continue
+            if not args.all_scopes:
+                break
+            else:
+                continue
 
         if removed_from_this_scope:
             tty.msg(f"Removed mirror {name} from {scope} scope")
@@ -385,7 +389,7 @@ def mirror_remove(args):
     rc = 0
     if skipped_scopes:
         msg = f"Could not edit scopes: {comma_or(skipped_scopes)}"
-        if args.all_scopes:
+        if args.all_scopes or args.scope:
             rc = 1
             tty.error(msg)
         elif not removed:
@@ -394,7 +398,8 @@ def mirror_remove(args):
     if not removed:
         visited_scopes = list(set(scopes) - set(skipped_scopes))
         rc = 1
-        tty.error(f"No mirror with name {name} in {comma_or(visited_scopes)} scope")
+        if visited_scopes:
+            tty.error(f"No mirror with name {name} in {comma_or(visited_scopes)} scope")
 
     return rc
 

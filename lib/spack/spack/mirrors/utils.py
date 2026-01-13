@@ -130,8 +130,20 @@ def remove(name, scope):
     if not mirrors:
         mirrors = syaml.syaml_dict()
 
+    mirrors_orig = {**mirrors}
     removed = mirrors.pop(name, False)
-    spack.config.CONFIG.set("mirrors", mirrors, scope=scope)
+    # If the mirror `name` was not removed from this scope, don't try to modify the scope
+    # This can lead to false errors
+    if not removed:
+        return removed
+
+    try:
+        spack.config.CONFIG.set("mirrors", mirrors, scope=scope)
+    except Exception as e:
+        # Preserve the in-memory state of the mirrors config if set fails
+        spack.config.CONFIG.set("mirrors", mirrors_orig, scope=scope)
+        raise e
+
     return bool(removed)
 
 

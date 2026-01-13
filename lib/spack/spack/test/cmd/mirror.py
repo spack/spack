@@ -4,6 +4,7 @@
 
 import os
 import pathlib
+import stat
 
 import pytest
 
@@ -298,6 +299,66 @@ mpich@1.0
     expected_exclude = {spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"]}
     assert expected_include <= set(mirror_specs)
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
+
+
+@pytest.mark.parametrize("ro_scope_name", ("system", "site"))
+def test_mirror_remove_read_only_scope(mutable_config, tmp_path: pathlib.Path, ro_scope_name):
+    # Expected scope ordering (highest to lowest):
+    #   - command_line
+    #   - user
+    #   - system
+    #   - site
+    #   - site:base
+    #   - _builtin
+
+    # add a new mirror to two scopes
+    mirror("add", "--scope=site", "mock", str(tmp_path / "mock_mirror"))
+    mirror("add", "--scope=system", "mock", str(tmp_path / "mock_mirror"))
+
+    w_scope_name = "system" if ro_scope_name == "site" else "site"
+
+    # Make the system scope unwritable
+    ro_scope = mutable_config.scopes.get(ro_scope_name)
+    os.chmod(os.path.join(getattr(ro_scope, "path")), stat.S_IREAD | stat.S_IEXEC)
+    os.chmod(os.path.join(getattr(ro_scope, "path"), "mirrors.yaml"), stat.S_IREAD)
+
+    # Remove the mock mirror from all scopes, should fail on unwritable scope
+    with pytest.raises(SpackCommandError):
+        mirror("rm", "--all-scopes", "mock")
+
+    w_scope_output = mirror("list", f"--scope={w_scope_name}")
+    ro_scope_output = mirror("list", f"--scope={ro_scope_name}")
+    assert "mock" not in w_scope_output
+    assert "mock" in ro_scope_output
+
+    # Fail to remove when only RO scope mirror is present
+    with pytest.raises(SpackCommandError):
+        mirror("rm", "mock")
+
+    w_scope_output = mirror("list", f"--scope={w_scope_name}")
+    ro_scope_output = mirror("list", f"--scope={ro_scope_name}")
+    assert "mock" not in w_scope_output
+    assert "mock" in ro_scope_output
+
+    # Check removing RO with either higher or lower scope containing mirror name
+    # being RO.
+    mirror("add", f"--scope={w_scope_name}", "mock", str(tmp_path / "mock_mirror"))
+    if ro_scope_name == "site":
+        out = mirror("rm", "mock")
+        assert "Removed mirror mock from system scope" in out
+
+        w_scope_output = mirror("list", f"--scope={w_scope_name}")
+        assert "mock" not in w_scope_output
+    else:  # ro_scope_name == "site"
+        # This fails to remove the from a higher scope mirror 'mock'
+        with pytest.raises(SpackCommandError):
+            mirror("rm", "mock")
+
+        w_scope_output = mirror("list", f"--scope={w_scope_name}")
+        assert "mock" in w_scope_output
+
+    ro_scope_output = mirror("list", f"--scope={ro_scope_name}")
+    assert "mock" in ro_scope_output
 
 
 def test_mirror_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
