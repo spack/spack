@@ -25,7 +25,7 @@ See :ref:`configuration-scopes` for details.
 ---------------------
 
 The location where Spack will install packages and their dependencies.
-The default is ``$spack/opt/data/installs``.
+The default is ``$data_home/installs``.
 
 ``projections``
 ---------------
@@ -91,7 +91,7 @@ By default, Spack's ``build_stage`` is configured like this:
 This can be an ordered list of paths that Spack should search when trying to find a temporary directory for the build stage.
 The list is searched in order, and Spack will use the first directory to which it has write access.
 
-Specifying `$cache_home` first will ensure each user builds in their home directory, or wherever the user overrides ``XDG_CACHE_HOME`` to be - see :ref:`config-file-variables` for more on ``$tempdir``, XDG variables, and ``$spack``.
+Specifying `$cache_home` first will ensure each user builds in their home directory, or whatever the user overrides ``XDG_CACHE_HOME`` to be - see :ref:`config-file-variables` and :ref:`config-file-data-variables` for more on ``$tempdir``, XDG variables, and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the ``build_stage``.
 After the package is successfully installed, Spack deletes the temporary directory it used to build.
@@ -105,7 +105,7 @@ Unsuccessful builds are not deleted, but you can manually purge them with ``spac
 --------------------
 
 Location to cache downloaded tarballs and repositories.
-By default, these are stored in ``$spack/opt/data/downloads``.
+By default, these are stored in ``$data_home/downloads``.
 These are stored indefinitely by default and can be purged with ``spack clean --downloads``.
 
 .. _Misc Cache:
@@ -114,14 +114,10 @@ These are stored indefinitely by default and can be purged with ``spack clean --
 --------------------
 
 Temporary directory to store long-lived cache files, such as indices of packages available in repositories.
-Defaults to ``~/.local/state/spack/$spack_instance_id/spack``.
+Defaults to ``$state_home/$spack_instance_id/spack``.
 Can be purged with ``spack clean --misc-cache``.
 
-In some cases, e.g., if you work with many Spack instances or many different versions of Spack, it makes sense to have a cache per instance or per version.
-You can do that by changing the value to either:
-
-* ``~/.spack/$spack_instance_id/cache`` for per-instance caches, or
-* ``~/.spack/$spack_short_version/cache`` for per-spack-version caches.
+If you have several Spack instances with the same version and want them to share this cache, you can use ``~/.spack/$spack_short_version/cache``.
 
 ``verify_ssl``
 --------------------

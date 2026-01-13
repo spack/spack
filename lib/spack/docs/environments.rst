@@ -67,10 +67,10 @@ The directory ``$data_home/envs/myenv`` is created to manage the environment.
 
 .. note::
 
-   By default, all managed environments are stored in the ``$SPACK_ROOT/opt/data/environments`` folder.
+   By default, all managed environments are stored in the ``$data_home/envs`` folder.
    This location can be changed by setting the ``environments_root`` variable in ``config.yaml``.
 
-Spack creates the file ``spack.yaml``, hidden directory ``.spack-env``, and ``spack.lock`` file under ``$SPACK_ROOT/opt/data/environments/environments/myenv``.
+Spack creates the file ``spack.yaml``, hidden directory ``.spack-env``, and ``spack.lock`` file under ``$data_home/envs/myenv``.
 User interaction occurs through the ``spack.yaml`` file and the Spack commands that affect it.
 Metadata and, by default, the view are stored in the ``.spack-env`` directory.
 When the environment is concretized, Spack creates the ``spack.lock`` file with the fully configured specs and dependencies for the environment.
@@ -124,7 +124,7 @@ It will also include any other files included in the environment directory, such
 
    Environment creation also accepts a full path to the file.
 
-   If the path is not under the ``$SPACK_ROOT/opt/data/environments`` directory then the source is referred to as an :ref:`independent environment <independent_environments>`.
+   If the path is not under the ``config:environments_root`` directory then the source is referred to as an :ref:`independent environment <independent_environments>`.
 
 The name of an environment can be a nested path to help organize environments via subdirectories.
 
