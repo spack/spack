@@ -123,14 +123,19 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env, tmp_path
 
 
 def test_user_cache_path_is_overridable(working_env, tmp_path):
-    redirect_usr_cache = str(pathlib.Path(tmp_path) / "redirected_usr_cache")
-    os.environ["SPACK_USER_CACHE_PATH"] = redirect_usr_cache
+    redirect1 = str(pathlib.Path(tmp_path) / "redirected_usr_cache")
+    os.environ["SPACK_USER_CACHE_PATH"] = redirect1
     p1 = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base-prefix")))
-    assert p1.user_cache_path == redirect_usr_cache
-
+    assert p1.user_cache_path == redirect1
     # Check that things that are supposed to be bundled inside of
     # $user_cache_path are also relocated
-    assert p1.package_repos_path == str(pathlib.Path(redirect_usr_cache) / "package_repos")
+    assert p1.package_repos_path == str(pathlib.Path(redirect1) / "package_repos")
+
+    # Now check that $SPACK_STATE_HOME takes precedence when both are set
+    redirect2 = str(pathlib.Path(tmp_path) / "redirected_usr_cache2")
+    os.environ["SPACK_STATE_HOME"] = redirect2
+    assert p1.user_cache_path == redirect2
+    assert p1.package_repos_path == str(pathlib.Path(redirect2) / "package_repos")
 
 
 def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
@@ -148,18 +153,30 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
     p1 = SpackPaths(SpackPathsBase(base_prefix))
     # Old dir exists, but is empty, so it should not be used
     assert p1.gpg_path == str(new_default_gpg_base / "gpg")
+
+    # Put something in the old dir: it should now redirect
     (old_gpg_dir / "something").touch()
     p1 = SpackPaths(SpackPathsBase(base_prefix))
-    # Now it should redirect
     assert p1.gpg_path == str(old_gpg_dir)
-    # But the keys are handled separately and should use the new path
-    assert p1.gpg_keys_path == str(new_default_gpg_base / "gpg-keys")
 
+    # But the keys are handled separately and should use the new path
+    new_gpg_keys_dir = pathlib.Path(new_default_gpg_base / "gpg-keys")
+    assert p1.gpg_keys_path == str(new_gpg_keys_dir)
+
+    # Check that the keys will also redirect
     old_gpg_keys_dir = pathlib.Path(base_prefix) / "var" / "spack" / "gpg"
     old_gpg_keys_dir.mkdir(parents=True)
     (old_gpg_keys_dir / "something").touch()
     p1 = SpackPaths(SpackPathsBase(base_prefix))
     assert p1.gpg_keys_path == str(old_gpg_keys_dir)
+
+    # When something is in both the new and old locations, prefer the new
+    new_gpg_keys_dir.mkdir(parents=True)
+    (new_gpg_keys_dir / "something").touch()
+    assert p1.gpg_keys_path == str(new_gpg_keys_dir)
+
+    # And the gpg dir itself remains the old dir: reaffirm that
+    assert p1.gpg_path == str(old_gpg_dir)
 
 
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env, tmp_path):
