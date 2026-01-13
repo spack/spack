@@ -140,18 +140,6 @@ If multiple scopes are provided:
 #. Each must be preceded with the ``--config-scope`` or ``-C`` flag.
 #. They must be ordered from lowest to highest precedence.
 
-.. _scopes-and-xdg-compliance:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Scopes and XDG Compliance
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack respects XDG variables, and the search location for user configuration files can be affected by them.
-When ``XDG_CONFIG_HOME`` is not defined, Spack assumes the XDG default value of ``~/.config``, and will apply user and this-spack configuration files located in ``~/.config/spack``.
-Defining ``XDG_CONFIG_HOME`` will change where Spack searches for configuration files.
-To override this behavior, define ``SPACK_USER_CONFIG_PATH`` to be the desired path.
-For more information, see the :ref:`xdg_overrides` for more details.
-
 
 """""""""""""""""""""""""""""""""""""""""""
 Example: scopes for release and development

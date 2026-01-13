@@ -91,7 +91,7 @@ By default, Spack's ``build_stage`` is configured like this:
 This can be an ordered list of paths that Spack should search when trying to find a temporary directory for the build stage.
 The list is searched in order, and Spack will use the first directory to which it has write access.
 
-Specifying `$spack_cache_home` first will ensure each user builds in their home directory, or wherever the user overrides ``XDG_CACHE_HOME`` to be - see :ref:`xdg_overrides` and :ref:`config-file-variables` for more on ``$tempdir``, XDG variables, and ``$spack``.
+Specifying `$cache_home` first will ensure each user builds in their home directory, or wherever the user overrides ``XDG_CACHE_HOME`` to be - see :ref:`config-file-variables` for more on ``$tempdir``, XDG variables, and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the ``build_stage``.
 After the package is successfully installed, Spack deletes the temporary directory it used to build.
