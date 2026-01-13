@@ -98,7 +98,7 @@ class SpackPathsBase:
         """Spack has config-based logic for choosing a home for most state, but
         this is specifically for caching state related to the config system
         itself: it is based entirely on env vars and not on configuration
-        variables.
+        variables. It is not affected by `config:locations:disable_env`.
         """
         override = lambda: os.environ.get(XDG_overrides.state_home.value)
         xdg = lambda: os.environ.get(XDG_vars.state_home.value)

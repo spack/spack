@@ -5,6 +5,8 @@
 import os
 import pathlib
 
+import pytest
+
 import spack.config
 from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
@@ -15,7 +17,22 @@ def _ensure_dir(pathlike):
     return str(pathlike)
 
 
-def test_install_location(working_env, tmp_path, mutable_config):
+@pytest.fixture
+def set_home():
+    def _set_home(val):
+        # Clear some env vars that can interfere w/ expanduser(~) on Windows
+        os.environ.pop("USERPROFILE", None)
+        os.environ.pop("HOMEDRIVE", None)
+        os.environ.pop("HOMEPATH", None)
+        os.environ["HOMEPATH"] = val
+
+        # For expanduser on Linux
+        os.environ["HOME"] = val
+
+    yield _set_home
+
+
+def test_install_location(working_env, tmp_path, mutable_config, set_home):
     # If prior default install dir inside spack prefix does not
     # exist, place installs in $HOME
     base_prefix = _ensure_dir(tmp_path / "spack-root")
@@ -28,14 +45,7 @@ def test_install_location(working_env, tmp_path, mutable_config):
         pb.old_install_path = empty_dir
         return pb
 
-    # Clear some env vars that can interfere w/ expanduser(~) on Windows
-    os.environ.pop("USERPROFILE", None)
-    os.environ.pop("HOMEDRIVE", None)
-    os.environ.pop("HOMEPATH", None)
-    os.environ["HOMEPATH"] = home_prefix
-
-    # For expanduser on Linux
-    os.environ["HOME"] = home_prefix
+    set_home(home_prefix)
 
     p1 = SpackPaths(paths_base_empty_old_install())
     assert p1.default_install_location == str(
@@ -114,9 +124,9 @@ def test_user_cache_path_is_overridable(working_env, tmp_path):
     assert p1.package_repos_path == str(pathlib.Path(redirect_usr_cache) / "package_repos")
 
 
-def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path):
+def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
     base_prefix = _ensure_dir(tmp_path / "base-prefix")
-    os.environ["HOME"] = base_prefix
+    set_home(base_prefix)
 
     new_default_gpg_base = pathlib.Path(base_prefix) / ".local" / "share" / "spack"
 
