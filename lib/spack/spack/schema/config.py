@@ -78,10 +78,12 @@ properties: Dict[str, Any] = {
                 "type": "object",
                 "properties": {
                     "home": {"type": "string"},
+                    "data": {"type": "string"},
                     "cache": {"type": "string"},
                     "state": {"type": "string"},
                     "disable_env": {"type": "boolean"},
                 },
+                "additionalProperties": False,
             },
             "install_hash_length": {
                 "type": "integer",

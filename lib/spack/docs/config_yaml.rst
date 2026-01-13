@@ -119,6 +119,18 @@ Can be purged with ``spack clean --misc-cache``.
 
 If you have several Spack instances with the same version and want them to share this cache, you can use ``~/.spack/$spack_short_version/cache``.
 
+``locations``
+--------------------
+
+The ``locations`` section includes variables that control where spack stores data it generates, as described in :ref:`config-file-data-variables`:
+
+* ``locations:data``
+* ``locations:state``
+* ``locations:cache``
+* ``locations:home``
+
+The additional flag setting ``locations:disable_env`` will prevent environment variables from influencing these locations.
+
 ``verify_ssl``
 --------------------
 
