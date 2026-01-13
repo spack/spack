@@ -93,17 +93,13 @@ def test_remove_python_cache(tmp_path: pathlib.Path, monkeypatch, override_path)
         assert not os.path.exists(fs.join_path(directory, "__pycache__"))
 
     source_dir = fs.join_path(tmp_path, "lib", "spack", "spack")
-    repos_dir = fs.join_path(tmp_path, "var", "spack", "repos")
 
-    for d in [source_dir, repos_dir]:
-        _setup_files(d)
+    _setup_files(source_dir)
 
     # spack.cmd.clean references paths from spack.paths: we want to
     # update them for the duration of this test.
     override_path("lib_path", source_dir)
-    override_path("repos_path", repos_dir)
 
     spack.cmd.clean.remove_python_cache()
 
-    for d in [source_dir, repos_dir]:
-        _check_files(d)
+    _check_files(source_dir)
