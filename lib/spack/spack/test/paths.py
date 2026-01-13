@@ -34,6 +34,9 @@ def test_install_location(working_env, tmp_path, mutable_config):
     os.environ.pop("HOMEPATH", None)
     os.environ["HOMEPATH"] = home_prefix
 
+    # For expanduser on Linux
+    os.environ["HOME"] = home_prefix
+
     p1 = SpackPaths(paths_base_empty_old_install())
     assert p1.default_install_location == str(
         pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs"
