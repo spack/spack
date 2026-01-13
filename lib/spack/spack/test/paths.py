@@ -8,6 +8,7 @@ import pathlib
 import pytest
 
 import spack.config
+import spack.paths_base
 from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
 
@@ -15,6 +16,14 @@ from spack.paths_base import SpackPathsBase
 def _ensure_dir(pathlike):
     pathlike.mkdir(parents=True, exist_ok=True)
     return str(pathlike)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def clear_xdg_vars():
+    saved = os.environ.copy()
+    spack.paths_base._unset_xdg_vars(os.environ)
+    yield
+    os.environ.update(saved)
 
 
 @pytest.fixture
