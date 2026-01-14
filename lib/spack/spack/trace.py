@@ -41,6 +41,17 @@ def _attempted_modify_internal(msg):
         warnings.warn(msg)
 
 
+def _real(path):
+    return pathlib.Path(path).absolute().resolve()
+
+
+_real_spack_prefix = _real(paths_base.prefix)
+
+
+def _is_in_spack_prefix(path):
+    return _real_spack_prefix in _real(path).parents
+
+
 def _guard_writes(event, args):
     # Note: this doesn't catch files opened in "r" mode and then
     # later upgraded to "w" mode (e.g. our locks). I think to track
@@ -58,18 +69,16 @@ def _guard_writes(event, args):
             return
         abs_path = os.path.abspath(path)
         intent_to_modify = bool((set(mode) & set("wax")) or "r+" in mode)
-        if abs_path.startswith(paths_base.prefix) and intent_to_modify:
+        if _is_in_spack_prefix(path) and intent_to_modify:
             _attempted_modify_internal(f"Open {path} in mode [{mode}]")
     elif event in ["shutil.copyfile", "os.rename", "shutil.move"]:
         _, dst = args[:2]
-        abs_dst = os.path.abspath(dst)
-        if abs_dst.startswith(paths_base.prefix):
-            _attempted_modify_internal(f"copy dst {abs_dst}")
+        if _is_in_spack_prefix(dst):
+            _attempted_modify_internal(f"copy dst {str(_real(dst))}")
     elif event == "os.mkdir":
         path = args[0]
-        abs_path = os.path.abspath(path)
-        if abs_path.startswith(paths_base.prefix):
-            _attempted_modify_internal(f"mkdir {abs_path}")
+        if _is_in_spack_prefix(path):
+            _attempted_modify_internal(f"mkdir {str(_real(path))}")
 
 
 def warn_writes_into_spack():
