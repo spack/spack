@@ -314,8 +314,9 @@ def test_checksum_verification_fails(default_mock_concretization, capfd, can_fet
     pkg = spec.package
     versions = list(pkg.versions.keys())
     version_hashes = {versions[0]: "abadhash", Version("0.1"): "123456789"}
+    url_dict = {versions[0]: pkg.versions[versions[0]]}
     with pytest.raises(SystemExit):
-        spack.cmd.checksum.print_checksum_status(pkg, version_hashes)
+        spack.cmd.checksum.print_checksum_status(pkg, version_hashes, url_dict)
     out = str(capfd.readouterr())
     assert out.count("Correct") == 0
     assert "No previous checksum" in out

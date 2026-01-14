@@ -212,7 +212,7 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict, url_dict: dict
             msg = "No previous checksum"
             status = "-"
 
-        if url_dict[version] not in pkg.all_urls_for_version(version):
+        elif url_dict[version] not in pkg.all_urls_for_version(version):
             msg = "URL for version does not exist"
             status = "x"
             failed = True
