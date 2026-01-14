@@ -3345,7 +3345,7 @@ def test_stack_view_multiple_views(installed_environment, tmp_path: pathlib.Path
             assert current_dir.exists() is not spec.satisfies("target=core2")
 
 
-def test_env_activate_sh_prints_shell_output(mock_stage, mock_fetch, install_mockery):
+def test_env_activate_sh_script_output():
     """Check the shell commands output by ``spack env activate --sh``.
 
     This is a cursory check; ``share/spack/qa/setup-env-test.sh`` checks
@@ -3361,22 +3361,21 @@ def test_env_activate_sh_prints_shell_output(mock_stage, mock_fetch, install_moc
     with open(env_activate_script, "r", encoding="utf-8") as f:
         out = f.read()
 
-    assert "_spack_env_set SPACK_ENV" in out
-    assert "alias despacktivate=" in out
+    assert "_spack_env_set SPACK_ENV " in out
+    assert "export PS1=" not in out
+    assert "alias despacktivate=" not in out
 
-    out = env("activate", "--sh", "--prompt", "test")
+    env_prompt_script = shell_script.path_to_env_prompt_view_shell_script(environ, shell="sh")
 
-    environ = ev.environment_from_name_or_dir("test")
-    env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="sh")
-
-    with open(env_activate_script, "r", encoding="utf-8") as f:
+    with open(env_prompt_script, "r", encoding="utf-8") as f:
         out = f.read()
 
-    assert "_spack_env_set SPACK_ENV" in out
+    assert "_spack_env_set SPACK_ENV " not in out
+    assert "export PS1=" in out
     assert "alias despacktivate=" in out
 
 
-def test_env_activate_csh_prints_shell_output(mock_stage, mock_fetch, install_mockery):
+def test_env_activate_csh_script_output():
     """Check the shell commands output by ``spack env activate --csh``."""
     env("create", "test")
 
@@ -3388,19 +3387,17 @@ def test_env_activate_csh_prints_shell_output(mock_stage, mock_fetch, install_mo
     with open(env_activate_script, "r", encoding="utf-8") as f:
         out = f.read()
 
-    assert "setenv SPACK_ENV" in out
-    assert "setenv set prompt" not in out
-    assert "alias despacktivate" in out
+    assert "_spack_env_set SPACK_ENV " in out
+    assert "_spack_env_set prompt" not in out
+    assert "alias despacktivate" not in out
 
-    out = env("activate", "--csh", "--prompt", "test")
+    env_prompt_script = shell_script.path_to_env_prompt_view_shell_script(environ, shell="csh")
 
-    environ = ev.environment_from_name_or_dir("test")
-    env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="csh")
-
-    with open(env_activate_script, "r", encoding="utf-8") as f:
+    with open(env_prompt_script, "r", encoding="utf-8") as f:
         out = f.read()
-    assert "setenv SPACK_ENV" in out
-    assert "set prompt=" in out
+
+    assert "_spack_env_set SPACK_ENV " not in out
+    assert "_spack_env_set prompt" in out
     assert "alias despacktivate" in out
 
 

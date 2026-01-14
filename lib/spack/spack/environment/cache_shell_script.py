@@ -102,7 +102,7 @@ def update_env_activate_script(env, prompt="", view=""):
         activate_script_path = path_to_env_activate_shell_script(env, shell)
         prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
 
-        if prompt_cmds:
+        if not os.path.isfile(prompt_view_script_path):
             with open(prompt_view_script_path, "w", encoding="utf-8") as f:
                 f.write(
                     f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
