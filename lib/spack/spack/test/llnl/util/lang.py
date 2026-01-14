@@ -339,7 +339,7 @@ def test_fnmatch_multiple():
     assert not regex.match("libbaz.so")
 
 
-def _factory():
+def _attr_error_factory():
     raise AttributeError("Could not make something")
 
 
@@ -348,7 +348,7 @@ def test_singleton_instantiation_attr_failure():
     If an AttributeError occurs during the instantiation of a Singleton
     object, we want to see that error.
     """
-    x = Singleton(_factory)
+    x = Singleton(_attr_error_factory)
     with pytest.raises(SingletonInstantiationError) as last_exception:
         x.something
 
