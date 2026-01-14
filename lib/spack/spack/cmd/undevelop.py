@@ -35,11 +35,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def _update_config(specs_to_remove, remove_all=False):
     def change_fn(dev_config):
         modified = False
-        for spec in specs_to_remove:
-            if spec.name in dev_config:
-                tty.msg("Undevelop: removing {0}".format(spec.name))
-                del dev_config[spec.name]
-                modified = True
+        if specs_to_remove:
+            for spec in specs_to_remove:
+                if spec.name in dev_config:
+                    tty.msg("Undevelop: removing {0}".format(spec.name))
+                    del dev_config[spec.name]
+                    modified = True
         if remove_all and dev_config:
             dev_config.clear()
             modified = True
@@ -62,15 +63,20 @@ def undevelop(parser, args):
     with env.write_transaction():
         _update_config(remove_specs, remove_all)
         if args.apply_changes:
-            for spec in remove_specs:
-                env.apply_develop(spec, path=None)
+            if remove_specs:
+                for spec in remove_specs:
+                    env.apply_develop(spec, path=None)
+            else:
+                for spec in env.all_specs_generator():
+                    if spec.is_develop:
+                        env.apply_develop(spec, path=None)
 
     updated_all_dev_specs = set(spack.config.get("develop"))
-    remove_spec_names = set(x.name for x in remove_specs)
 
     if remove_all:
         not_fully_removed = updated_all_dev_specs
     else:
+        remove_spec_names = set(x.name for x in remove_specs)
         not_fully_removed = updated_all_dev_specs & remove_spec_names
 
     if not_fully_removed:
