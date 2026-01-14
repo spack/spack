@@ -358,8 +358,7 @@ def test_singleton_instantiation_attr_failure():
             e = e.__cause__ or e.__context__
 
     assert any(
-        "Could not make something" in str(e)
-        for e in follow_exceptions(last_exception.value)
+        "Could not make something" in str(e) for e in follow_exceptions(last_exception.value)
     )
 
 
