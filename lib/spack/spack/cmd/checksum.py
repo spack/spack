@@ -170,11 +170,14 @@ def checksum(parser, args):
     )
 
     if args.verify:
-        print_checksum_status(pkg, version_hashes)
+        print_checksum_status(pkg, version_hashes, url_dict)
         sys.exit(0)
 
     # convert dict into package.py version statements
-    version_lines = get_version_lines(version_hashes)
+    version_lines = get_version_lines(
+        version_hashes,
+        url_changed_for_version={v: url_dict.get(v) for v in url_changed_for_version},
+    )
     print()
     print(version_lines)
     print()
@@ -187,7 +190,7 @@ def checksum(parser, args):
             editor(path)
 
 
-def print_checksum_status(pkg: PackageBase, version_hashes: dict):
+def print_checksum_status(pkg: PackageBase, version_hashes: dict, url_dict: dict):
     """
     Verify checksums present in version_hashes against those present
     in the package's instructions.
@@ -208,6 +211,11 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict):
         if version not in pkg.versions:
             msg = "No previous checksum"
             status = "-"
+
+        if url_dict[version] not in pkg.all_urls_for_version(version):
+            msg = "URL for version does not exist"
+            status = "x"
+            failed = True
 
         elif sha == pkg.versions[version]["sha256"]:
             msg = "Correct"
