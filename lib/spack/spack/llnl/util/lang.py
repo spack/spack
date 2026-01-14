@@ -723,16 +723,23 @@ class Singleton:
     @property
     def instance(self):
         if self._instance is None:
-            instance = self.factory()
+            try:
+                instance = self.factory()
 
-            if isinstance(instance, types.GeneratorType):
-                # if it's a generator, assign every value
-                for value in instance:
-                    self._instance = value
-            else:
-                # if not, just assign the result like a normal singleton
-                self._instance = instance
-
+                if isinstance(instance, types.GeneratorType):
+                    # if it's a generator, assign every value
+                    for value in instance:
+                        self._instance = value
+                else:
+                    # if not, just assign the result like a normal singleton
+                    self._instance = instance
+            except AttributeError as e:
+                # getattr will "absorb" an AttributeError that occurs
+                # during the execution of the factory method: we'd like
+                # to show that so wrap it in something that isn't absorbed
+                raise SingletonInstantiationError(
+                    "AttrbuteError during creation of Singleton instance"
+                ) from e
         return self._instance
 
     def __getattr__(self, name):
@@ -761,6 +768,10 @@ class Singleton:
 
     def __repr__(self):
         return repr(self.instance)
+
+
+class SingletonInstantiationError(Exception):
+    """Error that indicates a singleton that cannot instantiate."""
 
 
 def get_entry_points(*, group: str):
