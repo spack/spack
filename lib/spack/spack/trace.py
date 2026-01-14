@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
-import os
 import pathlib
 import warnings
 
@@ -67,7 +66,6 @@ def _guard_writes(event, args):
         if not isinstance(path, str):
             # Skip instances of open() that function like fdopen
             return
-        abs_path = os.path.abspath(path)
         intent_to_modify = bool((set(mode) & set("wax")) or "r+" in mode)
         if _is_in_spack_prefix(path) and intent_to_modify:
             _attempted_modify_internal(f"Open {path} in mode [{mode}]")
