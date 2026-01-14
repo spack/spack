@@ -16,13 +16,9 @@ from spack.util.environment import EnvironmentModifications
 
 def activate_commands(env, shell, view: Optional[str] = None):
     # Construct the commands to run
+    # TODO: figure out how to make color work for csh
     cmds = ""
-    if shell == "csh":
-        # TODO: figure out how to make color work for csh
-        cmds += f"_spack_env_set SPACK_ENV {env.path};\n"
-    elif shell == "fish":
-        cmds += f"_spack_env_set SPACK_ENV {env.path};\n"
-    elif shell == "bat":
+    if shell == "bat":
         # TODO: Color
         cmds += f'set "SPACK_ENV={env.path}"\n'
     elif shell == "pwsh":
@@ -90,13 +86,11 @@ def activate_prompt_cmds(shell, prompt):
 
 def activate_view_cmds(shell, view):
     cmd = ""
-    if shell == "csh":
-        cmd = f"_spack_env_set SPACK_ENV_VIEW {view};\n"
-    elif shell == "bat":
+    if shell == "bat":
         cmd = f'set "SPACK_ENV_VIEW={view}"\n'
     elif shell == "pwsh":
         cmd = f"$Env:SPACK_ENV_VIEW='{view}'\n"
-    elif shell == "sh":
+    else:
         cmd = f"_spack_env_set SPACK_ENV_VIEW {view}\n"
     return cmd
 
@@ -111,8 +105,8 @@ def deactivate_commands(shell):
         cmds += "          _spack_env_unset SPACK_OLD_PROMPT';\n"
         cmds += "unalias despacktivate;\n"
     elif shell == "fish":
-        cmds += "set -e SPACK_ENV;\n"
-        cmds += "set -e SPACK_ENV_VIEW;\n"
+        cmds += "_spack_env_unset SPACK_ENV;\n"
+        cmds += "_spack_env_unset SPACK_ENV_VIEW;\n"
         cmds += "functions -e despacktivate;\n"
         #
         # NOTE: Not changing fish_prompt (above) => no need to restore it here.

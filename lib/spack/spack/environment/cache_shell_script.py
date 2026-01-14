@@ -45,6 +45,13 @@ def path_to_env_deactivate_shell_script(env, shell) -> str:
     return os.path.join(env.path, ".spack-env", f"deactivate.{shell}")
 
 
+def get_activation_cmds(env_mods, env, view, shell) -> str:
+    cmds = spack.environment.shell.activate_commands(env, shell, view=view)
+    cmds += env_mods.shell_modifications(shell)
+
+    return cmds
+
+
 def write_env_activate_script(env, view):
     """Gets and writes the environment modifications for an activated environment to a
     cached shell script
@@ -60,11 +67,9 @@ def write_env_activate_script(env, view):
         shells_avail.extend(["bat", "pwsh"])
 
     for shell in shells_avail:
-        cmds = spack.environment.shell.activate_commands(env, shell, view=view)
-
         env_mods = EnvironmentModifications()
 
-        cmds += env_mods.shell_modifications(shell)
+        cmds = get_activation_cmds(env_mods, env, view, shell)
 
         activate_script_path = path_to_env_activate_shell_script(env, shell)
 
@@ -93,8 +98,7 @@ def update_env_activate_script(env, prompt="", view=""):
         env_mods = EnvironmentModifications()
         env_mods.extend(spack.environment.shell.activate(env=env, view=view))
 
-        activate_cmds = spack.environment.shell.activate_commands(env, shell)
-        activate_cmds += env_mods.shell_modifications(shell)
+        activate_cmds = get_activation_cmds(env_mods, env, view, shell)
         despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
         prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
         view_cmd = spack.environment.shell.activate_view_cmds(shell, view)

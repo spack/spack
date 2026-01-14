@@ -184,8 +184,9 @@ def test_env_missing_deactivation_script():
     environ = ev.read("test")
 
     path_to_deactivate_script = shell_script.path_to_env_deactivate_shell_script(environ, shell)
-
     os.remove(path_to_deactivate_script)
+
+    assert not os.path.isfile(path_to_deactivate_script)
     env("deactivate")
 
 
