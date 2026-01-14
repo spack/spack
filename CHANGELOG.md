@@ -1,3 +1,39 @@
+# v1.1.1 (2026-01-14)
+
+## Usability and performance enhancements
+
+* solver: do a precheck for non-existing and deprecated versions #51555
+* improvements to solver performance (PRs 51591, 51605, 51612, 51625)
+* python 3.14 support (PRs 51686, 51687, 51688, 51689, 51663)
+* display when conditions with dependencies in spack info #51588
+* spack repo remove: allow removing from unspecified scope #51563
+* spack compiler info: show non-external compilers too #51718
+
+## Improvements to the experimental new installer
+
+* support forkserver #51788 (for python 3.14 support)
+* support --dirty, --keep-stage, and `skip patch` arguments #51558
+* implement --use-buildcache, --cache-only, --use-cache and --only arguments #51593
+* implement overwrite, keep_prefix #51622
+* implement --dont-restage #51623
+* fix logging #51787
+
+## Bugfixes
+
+* repo.py: support rhel 7 #51617
+* solver: match glibc constraints by hash #51559
+* buildache list: list the component prefix not the root #51635
+* solver: fix issue with conditional language dependencies #51692
+* repo.py: fix checking out commits #51695
+* spec parser: ensure toolchains are expanded to different objects #51731
+* RHEL7 git 1.8.3.1 fix #51779
+* RewireTask.complete: return value from \_process\_binary\_cache\_tarball #51825
+
+## Documentation
+
+* docs: fix default projections setting discrepancy #51640
+
+
 # v1.1.0 (2025-11-14)
 
 `v1.1.0` features major improvements to **compiler handling** and **configuration management**, a significant refactoring of **externals**, and exciting new **experimental features** like a console UI for parallel installations and concretization caching.
