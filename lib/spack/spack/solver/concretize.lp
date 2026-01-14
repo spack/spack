@@ -1363,9 +1363,9 @@ variant_penalty(node(NodeID, Package), Variant, Value, Penalty) :-
     possible_variant_penalty(VariantID, Value, Penalty),
     not variant_default_value(node(NodeID, Package), Variant, Value),
     % variants set explicitly from a directive don't count as non-default
-    not attr("variant_set", node(NodeID, Package), Variant, _),
+    not attr("variant_set", node(NodeID, Package), Variant, Value),
     % variant values forced by propagation don't count as non-default
-    not propagate(node(NodeID, Package), variant_value(Variant, _, _)).
+    not propagate(node(NodeID, Package), variant_value(Variant, Value, _)).
 
 % -- Associate the definition's possible values with the node
 variant_possible_value(node(NodeID, Package), VariantName, Value) :-
